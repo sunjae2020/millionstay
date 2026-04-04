@@ -6,4 +6,29 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./availabilityDay";
+export * from "./blockAvailabilityBody";
+export * from "./createPropertyBody";
+export * from "./createSpaceBody";
+export * from "./createSpaceOptionBody";
+export * from "./createSpacePolicyBody";
+export * from "./createSuburbBody";
 export * from "./healthStatus";
+export * from "./listPropertiesParams";
+export * from "./listSpaceOptionsParams";
+export * from "./listSpacePoliciesParams";
+export * from "./listSpacesParams";
+export * from "./listSuburbsParams";
+export * from "./property";
+export * from "./propertyListItem";
+export * from "./space";
+export * from "./spaceListItem";
+export * from "./spaceOption";
+export * from "./spacePolicy";
+export * from "./suburb";
+export * from "./updatePropertyBody";
+export * from "./updatePropertyStatusBody";
+export * from "./updateSpaceBody";
+export * from "./updateSpaceOptionBody";
+export * from "./updateSpacePolicyBody";
+export * from "./updateSuburbBody";

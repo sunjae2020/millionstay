@@ -14,3 +14,635 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+/**
+ * @summary List suburbs
+ */
+export const ListSuburbsQueryParams = zod.object({
+  country_code: zod.coerce.string().optional(),
+  state: zod.coerce.string().optional(),
+  search: zod.coerce.string().optional(),
+});
+
+export const ListSuburbsResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  state: zod.string().nullish(),
+  postcode: zod.string().nullish(),
+  country_code: zod.string(),
+  area_name: zod.string().nullish(),
+  lat: zod.number().nullish(),
+  lng: zod.number().nullish(),
+  status: zod.string(),
+  created_at: zod.coerce.date(),
+  updated_at: zod.coerce.date(),
+});
+export const ListSuburbsResponse = zod.array(ListSuburbsResponseItem);
+
+/**
+ * @summary Create suburb
+ */
+export const createSuburbBodyStatusDefault = `Active`;
+
+export const CreateSuburbBody = zod.object({
+  name: zod.string(),
+  state: zod.string().nullish(),
+  postcode: zod.string().nullish(),
+  country_code: zod.string(),
+  area_name: zod.string().nullish(),
+  lat: zod.number().nullish(),
+  lng: zod.number().nullish(),
+  status: zod.string().default(createSuburbBodyStatusDefault),
+});
+
+/**
+ * @summary Get suburb
+ */
+export const GetSuburbParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetSuburbResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  state: zod.string().nullish(),
+  postcode: zod.string().nullish(),
+  country_code: zod.string(),
+  area_name: zod.string().nullish(),
+  lat: zod.number().nullish(),
+  lng: zod.number().nullish(),
+  status: zod.string(),
+  created_at: zod.coerce.date(),
+  updated_at: zod.coerce.date(),
+});
+
+/**
+ * @summary Update suburb
+ */
+export const UpdateSuburbParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateSuburbBody = zod.object({
+  name: zod.string().optional(),
+  state: zod.string().nullish(),
+  postcode: zod.string().nullish(),
+  country_code: zod.string().optional(),
+  area_name: zod.string().nullish(),
+  lat: zod.number().nullish(),
+  lng: zod.number().nullish(),
+  status: zod.string().optional(),
+});
+
+export const UpdateSuburbResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  state: zod.string().nullish(),
+  postcode: zod.string().nullish(),
+  country_code: zod.string(),
+  area_name: zod.string().nullish(),
+  lat: zod.number().nullish(),
+  lng: zod.number().nullish(),
+  status: zod.string(),
+  created_at: zod.coerce.date(),
+  updated_at: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete suburb
+ */
+export const DeleteSuburbParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary List properties
+ */
+export const ListPropertiesQueryParams = zod.object({
+  approval_status: zod.coerce.string().optional(),
+  owner_account_id: zod.coerce.number().optional(),
+  suburb_id: zod.coerce.number().optional(),
+  search: zod.coerce.string().optional(),
+});
+
+export const ListPropertiesResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  address: zod.string().nullish(),
+  approval_status: zod.string(),
+  owner_account_id: zod.number().nullish(),
+  owner_account_name: zod.string().nullish(),
+  suburb_id: zod.number().nullish(),
+  suburb_name: zod.string().nullish(),
+  created_at: zod.coerce.date(),
+  updated_at: zod.coerce.date(),
+});
+export const ListPropertiesResponse = zod.array(ListPropertiesResponseItem);
+
+/**
+ * @summary Create property
+ */
+export const createPropertyBodyApprovalStatusDefault = `Pending`;
+
+export const CreatePropertyBody = zod.object({
+  name: zod.string(),
+  address: zod.string().nullish(),
+  address2: zod.string().nullish(),
+  city: zod.string().nullish(),
+  state: zod.string().nullish(),
+  postcode: zod.string().nullish(),
+  country_code: zod.string().nullish(),
+  lat: zod.number().nullish(),
+  lng: zod.number().nullish(),
+  approval_status: zod
+    .string()
+    .default(createPropertyBodyApprovalStatusDefault),
+  owner_account_id: zod.number().nullish(),
+  suburb_id: zod.number().nullish(),
+  description: zod.string().nullish(),
+});
+
+/**
+ * @summary Get property
+ */
+export const GetPropertyParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetPropertyResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  address: zod.string().nullish(),
+  address2: zod.string().nullish(),
+  city: zod.string().nullish(),
+  state: zod.string().nullish(),
+  postcode: zod.string().nullish(),
+  country_code: zod.string().nullish(),
+  lat: zod.number().nullish(),
+  lng: zod.number().nullish(),
+  approval_status: zod.string(),
+  owner_account_id: zod.number().nullish(),
+  owner_account_name: zod.string().nullish(),
+  suburb_id: zod.number().nullish(),
+  suburb_name: zod.string().nullish(),
+  description: zod.string().nullish(),
+  created_at: zod.coerce.date(),
+  updated_at: zod.coerce.date(),
+});
+
+/**
+ * @summary Update property
+ */
+export const UpdatePropertyParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdatePropertyBody = zod.object({
+  name: zod.string().optional(),
+  address: zod.string().nullish(),
+  address2: zod.string().nullish(),
+  city: zod.string().nullish(),
+  state: zod.string().nullish(),
+  postcode: zod.string().nullish(),
+  country_code: zod.string().nullish(),
+  lat: zod.number().nullish(),
+  lng: zod.number().nullish(),
+  approval_status: zod.string().optional(),
+  owner_account_id: zod.number().nullish(),
+  suburb_id: zod.number().nullish(),
+  description: zod.string().nullish(),
+});
+
+export const UpdatePropertyResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  address: zod.string().nullish(),
+  address2: zod.string().nullish(),
+  city: zod.string().nullish(),
+  state: zod.string().nullish(),
+  postcode: zod.string().nullish(),
+  country_code: zod.string().nullish(),
+  lat: zod.number().nullish(),
+  lng: zod.number().nullish(),
+  approval_status: zod.string(),
+  owner_account_id: zod.number().nullish(),
+  owner_account_name: zod.string().nullish(),
+  suburb_id: zod.number().nullish(),
+  suburb_name: zod.string().nullish(),
+  description: zod.string().nullish(),
+  created_at: zod.coerce.date(),
+  updated_at: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete property
+ */
+export const DeletePropertyParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary Update property approval status
+ */
+export const UpdatePropertyStatusParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdatePropertyStatusBody = zod.object({
+  approval_status: zod.string(),
+});
+
+export const UpdatePropertyStatusResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  address: zod.string().nullish(),
+  address2: zod.string().nullish(),
+  city: zod.string().nullish(),
+  state: zod.string().nullish(),
+  postcode: zod.string().nullish(),
+  country_code: zod.string().nullish(),
+  lat: zod.number().nullish(),
+  lng: zod.number().nullish(),
+  approval_status: zod.string(),
+  owner_account_id: zod.number().nullish(),
+  owner_account_name: zod.string().nullish(),
+  suburb_id: zod.number().nullish(),
+  suburb_name: zod.string().nullish(),
+  description: zod.string().nullish(),
+  created_at: zod.coerce.date(),
+  updated_at: zod.coerce.date(),
+});
+
+/**
+ * @summary List space options
+ */
+export const ListSpaceOptionsQueryParams = zod.object({
+  search: zod.coerce.string().optional(),
+  category: zod.coerce.string().optional(),
+});
+
+export const ListSpaceOptionsResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  display_name: zod.string().nullish(),
+  category: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.coerce.date(),
+  updated_at: zod.coerce.date(),
+});
+export const ListSpaceOptionsResponse = zod.array(ListSpaceOptionsResponseItem);
+
+/**
+ * @summary Create space option
+ */
+export const createSpaceOptionBodyStatusDefault = `Active`;
+
+export const CreateSpaceOptionBody = zod.object({
+  name: zod.string(),
+  display_name: zod.string().nullish(),
+  category: zod.string().nullish(),
+  status: zod.string().default(createSpaceOptionBodyStatusDefault),
+});
+
+/**
+ * @summary Get space option
+ */
+export const GetSpaceOptionParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetSpaceOptionResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  display_name: zod.string().nullish(),
+  category: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.coerce.date(),
+  updated_at: zod.coerce.date(),
+});
+
+/**
+ * @summary Update space option
+ */
+export const UpdateSpaceOptionParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateSpaceOptionBody = zod.object({
+  name: zod.string().optional(),
+  display_name: zod.string().nullish(),
+  category: zod.string().nullish(),
+  status: zod.string().optional(),
+});
+
+export const UpdateSpaceOptionResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  display_name: zod.string().nullish(),
+  category: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.coerce.date(),
+  updated_at: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete space option
+ */
+export const DeleteSpaceOptionParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary List space policies
+ */
+export const ListSpacePoliciesQueryParams = zod.object({
+  search: zod.coerce.string().optional(),
+});
+
+export const ListSpacePoliciesResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  same_gender: zod.boolean(),
+  lady_only: zod.boolean(),
+  no_pet: zod.boolean(),
+  no_smoking: zod.boolean(),
+  meal_option: zod.boolean(),
+  minimum_age: zod.number().nullish(),
+  status: zod.string(),
+  created_at: zod.coerce.date(),
+  updated_at: zod.coerce.date(),
+});
+export const ListSpacePoliciesResponse = zod.array(
+  ListSpacePoliciesResponseItem,
+);
+
+/**
+ * @summary Create space policy
+ */
+export const createSpacePolicyBodySameGenderDefault = false;
+export const createSpacePolicyBodyLadyOnlyDefault = false;
+export const createSpacePolicyBodyNoPetDefault = false;
+export const createSpacePolicyBodyNoSmokingDefault = false;
+export const createSpacePolicyBodyMealOptionDefault = false;
+export const createSpacePolicyBodyStatusDefault = `Active`;
+
+export const CreateSpacePolicyBody = zod.object({
+  name: zod.string(),
+  same_gender: zod.boolean().default(createSpacePolicyBodySameGenderDefault),
+  lady_only: zod.boolean().default(createSpacePolicyBodyLadyOnlyDefault),
+  no_pet: zod.boolean().default(createSpacePolicyBodyNoPetDefault),
+  no_smoking: zod.boolean().default(createSpacePolicyBodyNoSmokingDefault),
+  meal_option: zod.boolean().default(createSpacePolicyBodyMealOptionDefault),
+  minimum_age: zod.number().nullish(),
+  status: zod.string().default(createSpacePolicyBodyStatusDefault),
+});
+
+/**
+ * @summary Get space policy
+ */
+export const GetSpacePolicyParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetSpacePolicyResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  same_gender: zod.boolean(),
+  lady_only: zod.boolean(),
+  no_pet: zod.boolean(),
+  no_smoking: zod.boolean(),
+  meal_option: zod.boolean(),
+  minimum_age: zod.number().nullish(),
+  status: zod.string(),
+  created_at: zod.coerce.date(),
+  updated_at: zod.coerce.date(),
+});
+
+/**
+ * @summary Update space policy
+ */
+export const UpdateSpacePolicyParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateSpacePolicyBody = zod.object({
+  name: zod.string().optional(),
+  same_gender: zod.boolean().optional(),
+  lady_only: zod.boolean().optional(),
+  no_pet: zod.boolean().optional(),
+  no_smoking: zod.boolean().optional(),
+  meal_option: zod.boolean().optional(),
+  minimum_age: zod.number().nullish(),
+  status: zod.string().optional(),
+});
+
+export const UpdateSpacePolicyResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  same_gender: zod.boolean(),
+  lady_only: zod.boolean(),
+  no_pet: zod.boolean(),
+  no_smoking: zod.boolean(),
+  meal_option: zod.boolean(),
+  minimum_age: zod.number().nullish(),
+  status: zod.string(),
+  created_at: zod.coerce.date(),
+  updated_at: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete space policy
+ */
+export const DeleteSpacePolicyParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary List spaces
+ */
+export const ListSpacesQueryParams = zod.object({
+  space_type: zod.coerce.string().optional(),
+  status: zod.coerce.string().optional(),
+  property_id: zod.coerce.number().optional(),
+  booking_mode: zod.coerce.string().optional(),
+  search: zod.coerce.string().optional(),
+});
+
+export const ListSpacesResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  space_type: zod.string().nullish(),
+  status: zod.string(),
+  booking_mode: zod.string().nullish(),
+  property_id: zod.number().nullish(),
+  property_name: zod.string().nullish(),
+  parent_space_id: zod.number().nullish(),
+  parent_space_name: zod.string().nullish(),
+  space_policy_id: zod.number().nullish(),
+  policy_name: zod.string().nullish(),
+  created_at: zod.coerce.date(),
+  updated_at: zod.coerce.date(),
+});
+export const ListSpacesResponse = zod.array(ListSpacesResponseItem);
+
+/**
+ * @summary Create space
+ */
+export const createSpaceBodyManualInputDefault = false;
+export const createSpaceBodyStatusDefault = `Active`;
+
+export const CreateSpaceBody = zod.object({
+  name: zod.string(),
+  manual_input: zod.boolean().default(createSpaceBodyManualInputDefault),
+  space_type: zod.string().nullish(),
+  custom_type_name: zod.string().nullish(),
+  max_occupancy: zod.number().nullish(),
+  booking_mode: zod.string().nullish(),
+  base_weekly_price: zod.number().nullish(),
+  base_currency: zod.string().nullish(),
+  min_stay_weeks: zod.number().nullish(),
+  floor_number: zod.number().nullish(),
+  floor_area_sqm: zod.number().nullish(),
+  description: zod.string().nullish(),
+  ical_import_url: zod.string().nullish(),
+  status: zod.string().default(createSpaceBodyStatusDefault),
+  property_id: zod.number().nullish(),
+  parent_space_id: zod.number().nullish(),
+  space_policy_id: zod.number().nullish(),
+  landlord_account_id: zod.number().nullish(),
+  space_option_ids: zod.array(zod.number()).optional(),
+});
+
+/**
+ * @summary Get space
+ */
+export const GetSpaceParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetSpaceResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  manual_input: zod.boolean(),
+  space_type: zod.string().nullish(),
+  custom_type_name: zod.string().nullish(),
+  max_occupancy: zod.number().nullish(),
+  booking_mode: zod.string().nullish(),
+  base_weekly_price: zod.number().nullish(),
+  base_currency: zod.string().nullish(),
+  min_stay_weeks: zod.number().nullish(),
+  floor_number: zod.number().nullish(),
+  floor_area_sqm: zod.number().nullish(),
+  description: zod.string().nullish(),
+  ical_import_url: zod.string().nullish(),
+  status: zod.string(),
+  property_id: zod.number().nullish(),
+  property_name: zod.string().nullish(),
+  parent_space_id: zod.number().nullish(),
+  parent_space_name: zod.string().nullish(),
+  space_policy_id: zod.number().nullish(),
+  policy_name: zod.string().nullish(),
+  landlord_account_id: zod.number().nullish(),
+  space_option_ids: zod.array(zod.number()),
+  created_at: zod.coerce.date(),
+  updated_at: zod.coerce.date(),
+});
+
+/**
+ * @summary Update space
+ */
+export const UpdateSpaceParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateSpaceBody = zod.object({
+  name: zod.string().optional(),
+  manual_input: zod.boolean().optional(),
+  space_type: zod.string().nullish(),
+  custom_type_name: zod.string().nullish(),
+  max_occupancy: zod.number().nullish(),
+  booking_mode: zod.string().nullish(),
+  base_weekly_price: zod.number().nullish(),
+  base_currency: zod.string().nullish(),
+  min_stay_weeks: zod.number().nullish(),
+  floor_number: zod.number().nullish(),
+  floor_area_sqm: zod.number().nullish(),
+  description: zod.string().nullish(),
+  ical_import_url: zod.string().nullish(),
+  status: zod.string().optional(),
+  property_id: zod.number().nullish(),
+  parent_space_id: zod.number().nullish(),
+  space_policy_id: zod.number().nullish(),
+  landlord_account_id: zod.number().nullish(),
+  space_option_ids: zod.array(zod.number()).optional(),
+});
+
+export const UpdateSpaceResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  manual_input: zod.boolean(),
+  space_type: zod.string().nullish(),
+  custom_type_name: zod.string().nullish(),
+  max_occupancy: zod.number().nullish(),
+  booking_mode: zod.string().nullish(),
+  base_weekly_price: zod.number().nullish(),
+  base_currency: zod.string().nullish(),
+  min_stay_weeks: zod.number().nullish(),
+  floor_number: zod.number().nullish(),
+  floor_area_sqm: zod.number().nullish(),
+  description: zod.string().nullish(),
+  ical_import_url: zod.string().nullish(),
+  status: zod.string(),
+  property_id: zod.number().nullish(),
+  property_name: zod.string().nullish(),
+  parent_space_id: zod.number().nullish(),
+  parent_space_name: zod.string().nullish(),
+  space_policy_id: zod.number().nullish(),
+  policy_name: zod.string().nullish(),
+  landlord_account_id: zod.number().nullish(),
+  space_option_ids: zod.array(zod.number()),
+  created_at: zod.coerce.date(),
+  updated_at: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete space
+ */
+export const DeleteSpaceParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary Get 30-day availability calendar
+ */
+export const GetSpaceAvailabilityParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetSpaceAvailabilityResponseItem = zod.object({
+  date: zod.coerce.date(),
+  status: zod.string().describe("available | blocked | booked"),
+});
+export const GetSpaceAvailabilityResponse = zod.array(
+  GetSpaceAvailabilityResponseItem,
+);
+
+/**
+ * @summary Manually block dates
+ */
+export const BlockSpaceAvailabilityParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const BlockSpaceAvailabilityBody = zod.object({
+  dates: zod.array(zod.coerce.date()),
+  action: zod.string().describe("block | unblock"),
+});
+
+export const BlockSpaceAvailabilityResponseItem = zod.object({
+  date: zod.coerce.date(),
+  status: zod.string().describe("available | blocked | booked"),
+});
+export const BlockSpaceAvailabilityResponse = zod.array(
+  BlockSpaceAvailabilityResponseItem,
+);

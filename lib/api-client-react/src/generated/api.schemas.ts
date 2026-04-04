@@ -8,3 +8,419 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface Suburb {
+  id: number;
+  name: string;
+  /** @nullable */
+  state?: string | null;
+  /** @nullable */
+  postcode?: string | null;
+  country_code: string;
+  /** @nullable */
+  area_name?: string | null;
+  /** @nullable */
+  lat?: number | null;
+  /** @nullable */
+  lng?: number | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateSuburbBody {
+  name: string;
+  /** @nullable */
+  state?: string | null;
+  /** @nullable */
+  postcode?: string | null;
+  country_code: string;
+  /** @nullable */
+  area_name?: string | null;
+  /** @nullable */
+  lat?: number | null;
+  /** @nullable */
+  lng?: number | null;
+  status?: string;
+}
+
+export interface UpdateSuburbBody {
+  name?: string;
+  /** @nullable */
+  state?: string | null;
+  /** @nullable */
+  postcode?: string | null;
+  country_code?: string;
+  /** @nullable */
+  area_name?: string | null;
+  /** @nullable */
+  lat?: number | null;
+  /** @nullable */
+  lng?: number | null;
+  status?: string;
+}
+
+export interface PropertyListItem {
+  id: number;
+  name: string;
+  /** @nullable */
+  address?: string | null;
+  approval_status: string;
+  /** @nullable */
+  owner_account_id?: number | null;
+  /** @nullable */
+  owner_account_name?: string | null;
+  /** @nullable */
+  suburb_id?: number | null;
+  /** @nullable */
+  suburb_name?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Property {
+  id: number;
+  name: string;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  address2?: string | null;
+  /** @nullable */
+  city?: string | null;
+  /** @nullable */
+  state?: string | null;
+  /** @nullable */
+  postcode?: string | null;
+  /** @nullable */
+  country_code?: string | null;
+  /** @nullable */
+  lat?: number | null;
+  /** @nullable */
+  lng?: number | null;
+  approval_status: string;
+  /** @nullable */
+  owner_account_id?: number | null;
+  /** @nullable */
+  owner_account_name?: string | null;
+  /** @nullable */
+  suburb_id?: number | null;
+  /** @nullable */
+  suburb_name?: string | null;
+  /** @nullable */
+  description?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreatePropertyBody {
+  name: string;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  address2?: string | null;
+  /** @nullable */
+  city?: string | null;
+  /** @nullable */
+  state?: string | null;
+  /** @nullable */
+  postcode?: string | null;
+  /** @nullable */
+  country_code?: string | null;
+  /** @nullable */
+  lat?: number | null;
+  /** @nullable */
+  lng?: number | null;
+  approval_status?: string;
+  /** @nullable */
+  owner_account_id?: number | null;
+  /** @nullable */
+  suburb_id?: number | null;
+  /** @nullable */
+  description?: string | null;
+}
+
+export interface UpdatePropertyBody {
+  name?: string;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  address2?: string | null;
+  /** @nullable */
+  city?: string | null;
+  /** @nullable */
+  state?: string | null;
+  /** @nullable */
+  postcode?: string | null;
+  /** @nullable */
+  country_code?: string | null;
+  /** @nullable */
+  lat?: number | null;
+  /** @nullable */
+  lng?: number | null;
+  approval_status?: string;
+  /** @nullable */
+  owner_account_id?: number | null;
+  /** @nullable */
+  suburb_id?: number | null;
+  /** @nullable */
+  description?: string | null;
+}
+
+export interface UpdatePropertyStatusBody {
+  approval_status: string;
+}
+
+export interface SpaceOption {
+  id: number;
+  name: string;
+  /** @nullable */
+  display_name?: string | null;
+  /** @nullable */
+  category?: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateSpaceOptionBody {
+  name: string;
+  /** @nullable */
+  display_name?: string | null;
+  /** @nullable */
+  category?: string | null;
+  status?: string;
+}
+
+export interface UpdateSpaceOptionBody {
+  name?: string;
+  /** @nullable */
+  display_name?: string | null;
+  /** @nullable */
+  category?: string | null;
+  status?: string;
+}
+
+export interface SpacePolicy {
+  id: number;
+  name: string;
+  same_gender: boolean;
+  lady_only: boolean;
+  no_pet: boolean;
+  no_smoking: boolean;
+  meal_option: boolean;
+  /** @nullable */
+  minimum_age?: number | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateSpacePolicyBody {
+  name: string;
+  same_gender?: boolean;
+  lady_only?: boolean;
+  no_pet?: boolean;
+  no_smoking?: boolean;
+  meal_option?: boolean;
+  /** @nullable */
+  minimum_age?: number | null;
+  status?: string;
+}
+
+export interface UpdateSpacePolicyBody {
+  name?: string;
+  same_gender?: boolean;
+  lady_only?: boolean;
+  no_pet?: boolean;
+  no_smoking?: boolean;
+  meal_option?: boolean;
+  /** @nullable */
+  minimum_age?: number | null;
+  status?: string;
+}
+
+export interface SpaceListItem {
+  id: number;
+  name: string;
+  /** @nullable */
+  space_type?: string | null;
+  status: string;
+  /** @nullable */
+  booking_mode?: string | null;
+  /** @nullable */
+  property_id?: number | null;
+  /** @nullable */
+  property_name?: string | null;
+  /** @nullable */
+  parent_space_id?: number | null;
+  /** @nullable */
+  parent_space_name?: string | null;
+  /** @nullable */
+  space_policy_id?: number | null;
+  /** @nullable */
+  policy_name?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Space {
+  id: number;
+  name: string;
+  manual_input: boolean;
+  /** @nullable */
+  space_type?: string | null;
+  /** @nullable */
+  custom_type_name?: string | null;
+  /** @nullable */
+  max_occupancy?: number | null;
+  /** @nullable */
+  booking_mode?: string | null;
+  /** @nullable */
+  base_weekly_price?: number | null;
+  /** @nullable */
+  base_currency?: string | null;
+  /** @nullable */
+  min_stay_weeks?: number | null;
+  /** @nullable */
+  floor_number?: number | null;
+  /** @nullable */
+  floor_area_sqm?: number | null;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  ical_import_url?: string | null;
+  status: string;
+  /** @nullable */
+  property_id?: number | null;
+  /** @nullable */
+  property_name?: string | null;
+  /** @nullable */
+  parent_space_id?: number | null;
+  /** @nullable */
+  parent_space_name?: string | null;
+  /** @nullable */
+  space_policy_id?: number | null;
+  /** @nullable */
+  policy_name?: string | null;
+  /** @nullable */
+  landlord_account_id?: number | null;
+  space_option_ids: number[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateSpaceBody {
+  name: string;
+  manual_input?: boolean;
+  /** @nullable */
+  space_type?: string | null;
+  /** @nullable */
+  custom_type_name?: string | null;
+  /** @nullable */
+  max_occupancy?: number | null;
+  /** @nullable */
+  booking_mode?: string | null;
+  /** @nullable */
+  base_weekly_price?: number | null;
+  /** @nullable */
+  base_currency?: string | null;
+  /** @nullable */
+  min_stay_weeks?: number | null;
+  /** @nullable */
+  floor_number?: number | null;
+  /** @nullable */
+  floor_area_sqm?: number | null;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  ical_import_url?: string | null;
+  status?: string;
+  /** @nullable */
+  property_id?: number | null;
+  /** @nullable */
+  parent_space_id?: number | null;
+  /** @nullable */
+  space_policy_id?: number | null;
+  /** @nullable */
+  landlord_account_id?: number | null;
+  space_option_ids?: number[];
+}
+
+export interface UpdateSpaceBody {
+  name?: string;
+  manual_input?: boolean;
+  /** @nullable */
+  space_type?: string | null;
+  /** @nullable */
+  custom_type_name?: string | null;
+  /** @nullable */
+  max_occupancy?: number | null;
+  /** @nullable */
+  booking_mode?: string | null;
+  /** @nullable */
+  base_weekly_price?: number | null;
+  /** @nullable */
+  base_currency?: string | null;
+  /** @nullable */
+  min_stay_weeks?: number | null;
+  /** @nullable */
+  floor_number?: number | null;
+  /** @nullable */
+  floor_area_sqm?: number | null;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  ical_import_url?: string | null;
+  status?: string;
+  /** @nullable */
+  property_id?: number | null;
+  /** @nullable */
+  parent_space_id?: number | null;
+  /** @nullable */
+  space_policy_id?: number | null;
+  /** @nullable */
+  landlord_account_id?: number | null;
+  space_option_ids?: number[];
+}
+
+export interface AvailabilityDay {
+  date: string;
+  /** available | blocked | booked */
+  status: string;
+}
+
+export interface BlockAvailabilityBody {
+  dates: string[];
+  /** block | unblock */
+  action: string;
+}
+
+export type ListSuburbsParams = {
+  country_code?: string;
+  state?: string;
+  search?: string;
+};
+
+export type ListPropertiesParams = {
+  approval_status?: string;
+  owner_account_id?: number;
+  suburb_id?: number;
+  search?: string;
+};
+
+export type ListSpaceOptionsParams = {
+  search?: string;
+  category?: string;
+};
+
+export type ListSpacePoliciesParams = {
+  search?: string;
+};
+
+export type ListSpacesParams = {
+  space_type?: string;
+  status?: string;
+  property_id?: number;
+  booking_mode?: string;
+  search?: string;
+};

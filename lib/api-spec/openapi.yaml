@@ -10,6 +10,17 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: suburbs
+    description: Suburb management
+  - name: properties
+    description: Property management
+  - name: space-options
+    description: Space option management
+  - name: space-policies
+    description: Space policy management
+  - name: spaces
+    description: Space management
+
 paths:
   /healthz:
     get:
@@ -24,6 +35,631 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ─────────────────────────────────────────────
+  # SUBURBS
+  # ─────────────────────────────────────────────
+  /v1/suburbs:
+    get:
+      operationId: listSuburbs
+      tags: [suburbs]
+      summary: List suburbs
+      parameters:
+        - name: country_code
+          in: query
+          schema:
+            type: string
+        - name: state
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of suburbs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Suburb"
+    post:
+      operationId: createSuburb
+      tags: [suburbs]
+      summary: Create suburb
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSuburbBody"
+      responses:
+        "201":
+          description: Created suburb
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Suburb"
+
+  /v1/suburbs/{id}:
+    get:
+      operationId: getSuburb
+      tags: [suburbs]
+      summary: Get suburb
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Suburb
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Suburb"
+        "404":
+          description: Not found
+    put:
+      operationId: updateSuburb
+      tags: [suburbs]
+      summary: Update suburb
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSuburbBody"
+      responses:
+        "200":
+          description: Updated suburb
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Suburb"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteSuburb
+      tags: [suburbs]
+      summary: Delete suburb
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  # ─────────────────────────────────────────────
+  # PROPERTIES
+  # ─────────────────────────────────────────────
+  /v1/properties:
+    get:
+      operationId: listProperties
+      tags: [properties]
+      summary: List properties
+      parameters:
+        - name: approval_status
+          in: query
+          schema:
+            type: string
+        - name: owner_account_id
+          in: query
+          schema:
+            type: integer
+        - name: suburb_id
+          in: query
+          schema:
+            type: integer
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of properties
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PropertyListItem"
+    post:
+      operationId: createProperty
+      tags: [properties]
+      summary: Create property
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePropertyBody"
+      responses:
+        "201":
+          description: Created property
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Property"
+
+  /v1/properties/{id}:
+    get:
+      operationId: getProperty
+      tags: [properties]
+      summary: Get property
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Property
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Property"
+        "404":
+          description: Not found
+    put:
+      operationId: updateProperty
+      tags: [properties]
+      summary: Update property
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePropertyBody"
+      responses:
+        "200":
+          description: Updated property
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Property"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteProperty
+      tags: [properties]
+      summary: Delete property
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /v1/properties/{id}/status:
+    patch:
+      operationId: updatePropertyStatus
+      tags: [properties]
+      summary: Update property approval status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePropertyStatusBody"
+      responses:
+        "200":
+          description: Updated property
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Property"
+        "404":
+          description: Not found
+
+  # ─────────────────────────────────────────────
+  # SPACE OPTIONS
+  # ─────────────────────────────────────────────
+  /v1/space-options:
+    get:
+      operationId: listSpaceOptions
+      tags: [space-options]
+      summary: List space options
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of space options
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SpaceOption"
+    post:
+      operationId: createSpaceOption
+      tags: [space-options]
+      summary: Create space option
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSpaceOptionBody"
+      responses:
+        "201":
+          description: Created space option
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpaceOption"
+
+  /v1/space-options/{id}:
+    get:
+      operationId: getSpaceOption
+      tags: [space-options]
+      summary: Get space option
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Space option
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpaceOption"
+        "404":
+          description: Not found
+    put:
+      operationId: updateSpaceOption
+      tags: [space-options]
+      summary: Update space option
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSpaceOptionBody"
+      responses:
+        "200":
+          description: Updated space option
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpaceOption"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteSpaceOption
+      tags: [space-options]
+      summary: Delete space option
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  # ─────────────────────────────────────────────
+  # SPACE POLICIES
+  # ─────────────────────────────────────────────
+  /v1/space-policies:
+    get:
+      operationId: listSpacePolicies
+      tags: [space-policies]
+      summary: List space policies
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of space policies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SpacePolicy"
+    post:
+      operationId: createSpacePolicy
+      tags: [space-policies]
+      summary: Create space policy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSpacePolicyBody"
+      responses:
+        "201":
+          description: Created space policy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpacePolicy"
+
+  /v1/space-policies/{id}:
+    get:
+      operationId: getSpacePolicy
+      tags: [space-policies]
+      summary: Get space policy
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Space policy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpacePolicy"
+        "404":
+          description: Not found
+    put:
+      operationId: updateSpacePolicy
+      tags: [space-policies]
+      summary: Update space policy
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSpacePolicyBody"
+      responses:
+        "200":
+          description: Updated space policy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpacePolicy"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteSpacePolicy
+      tags: [space-policies]
+      summary: Delete space policy
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  # ─────────────────────────────────────────────
+  # SPACES
+  # ─────────────────────────────────────────────
+  /v1/spaces:
+    get:
+      operationId: listSpaces
+      tags: [spaces]
+      summary: List spaces
+      parameters:
+        - name: space_type
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: property_id
+          in: query
+          schema:
+            type: integer
+        - name: booking_mode
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of spaces
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SpaceListItem"
+    post:
+      operationId: createSpace
+      tags: [spaces]
+      summary: Create space
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSpaceBody"
+      responses:
+        "201":
+          description: Created space
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Space"
+
+  /v1/spaces/{id}:
+    get:
+      operationId: getSpace
+      tags: [spaces]
+      summary: Get space
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Space
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Space"
+        "404":
+          description: Not found
+    put:
+      operationId: updateSpace
+      tags: [spaces]
+      summary: Update space
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSpaceBody"
+      responses:
+        "200":
+          description: Updated space
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Space"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteSpace
+      tags: [spaces]
+      summary: Delete space
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /v1/spaces/{id}/availability:
+    get:
+      operationId: getSpaceAvailability
+      tags: [spaces]
+      summary: Get 30-day availability calendar
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Availability data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AvailabilityDay"
+        "404":
+          description: Not found
+
+  /v1/spaces/{id}/availability/block:
+    post:
+      operationId: blockSpaceAvailability
+      tags: [spaces]
+      summary: Manually block dates
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BlockAvailabilityBody"
+      responses:
+        "200":
+          description: Updated availability
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AvailabilityDay"
+        "404":
+          description: Not found
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +670,601 @@ components:
       required:
         - status
 
+    # ─── SUBURB ───
+    Suburb:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        state:
+          type: ["string", "null"]
+        postcode:
+          type: ["string", "null"]
+        country_code:
+          type: string
+        area_name:
+          type: ["string", "null"]
+        lat:
+          type: ["number", "null"]
+        lng:
+          type: ["number", "null"]
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - country_code
+        - status
+        - created_at
+        - updated_at
+
+    CreateSuburbBody:
+      type: object
+      properties:
+        name:
+          type: string
+        state:
+          type: ["string", "null"]
+        postcode:
+          type: ["string", "null"]
+        country_code:
+          type: string
+        area_name:
+          type: ["string", "null"]
+        lat:
+          type: ["number", "null"]
+        lng:
+          type: ["number", "null"]
+        status:
+          type: string
+          default: Active
+      required:
+        - name
+        - country_code
+
+    UpdateSuburbBody:
+      type: object
+      properties:
+        name:
+          type: string
+        state:
+          type: ["string", "null"]
+        postcode:
+          type: ["string", "null"]
+        country_code:
+          type: string
+        area_name:
+          type: ["string", "null"]
+        lat:
+          type: ["number", "null"]
+        lng:
+          type: ["number", "null"]
+        status:
+          type: string
+
+    # ─── PROPERTY ───
+    PropertyListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        address:
+          type: ["string", "null"]
+        approval_status:
+          type: string
+        owner_account_id:
+          type: ["integer", "null"]
+        owner_account_name:
+          type: ["string", "null"]
+        suburb_id:
+          type: ["integer", "null"]
+        suburb_name:
+          type: ["string", "null"]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - approval_status
+        - created_at
+        - updated_at
+
+    Property:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        address:
+          type: ["string", "null"]
+        address2:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        state:
+          type: ["string", "null"]
+        postcode:
+          type: ["string", "null"]
+        country_code:
+          type: ["string", "null"]
+        lat:
+          type: ["number", "null"]
+        lng:
+          type: ["number", "null"]
+        approval_status:
+          type: string
+        owner_account_id:
+          type: ["integer", "null"]
+        owner_account_name:
+          type: ["string", "null"]
+        suburb_id:
+          type: ["integer", "null"]
+        suburb_name:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - approval_status
+        - created_at
+        - updated_at
+
+    CreatePropertyBody:
+      type: object
+      properties:
+        name:
+          type: string
+        address:
+          type: ["string", "null"]
+        address2:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        state:
+          type: ["string", "null"]
+        postcode:
+          type: ["string", "null"]
+        country_code:
+          type: ["string", "null"]
+        lat:
+          type: ["number", "null"]
+        lng:
+          type: ["number", "null"]
+        approval_status:
+          type: string
+          default: Pending
+        owner_account_id:
+          type: ["integer", "null"]
+        suburb_id:
+          type: ["integer", "null"]
+        description:
+          type: ["string", "null"]
+      required:
+        - name
+
+    UpdatePropertyBody:
+      type: object
+      properties:
+        name:
+          type: string
+        address:
+          type: ["string", "null"]
+        address2:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        state:
+          type: ["string", "null"]
+        postcode:
+          type: ["string", "null"]
+        country_code:
+          type: ["string", "null"]
+        lat:
+          type: ["number", "null"]
+        lng:
+          type: ["number", "null"]
+        approval_status:
+          type: string
+        owner_account_id:
+          type: ["integer", "null"]
+        suburb_id:
+          type: ["integer", "null"]
+        description:
+          type: ["string", "null"]
+
+    UpdatePropertyStatusBody:
+      type: object
+      properties:
+        approval_status:
+          type: string
+      required:
+        - approval_status
+
+    # ─── SPACE OPTION ───
+    SpaceOption:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        display_name:
+          type: ["string", "null"]
+        category:
+          type: ["string", "null"]
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - status
+        - created_at
+        - updated_at
+
+    CreateSpaceOptionBody:
+      type: object
+      properties:
+        name:
+          type: string
+        display_name:
+          type: ["string", "null"]
+        category:
+          type: ["string", "null"]
+        status:
+          type: string
+          default: Active
+      required:
+        - name
+
+    UpdateSpaceOptionBody:
+      type: object
+      properties:
+        name:
+          type: string
+        display_name:
+          type: ["string", "null"]
+        category:
+          type: ["string", "null"]
+        status:
+          type: string
+
+    # ─── SPACE POLICY ───
+    SpacePolicy:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        same_gender:
+          type: boolean
+        lady_only:
+          type: boolean
+        no_pet:
+          type: boolean
+        no_smoking:
+          type: boolean
+        meal_option:
+          type: boolean
+        minimum_age:
+          type: ["integer", "null"]
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - same_gender
+        - lady_only
+        - no_pet
+        - no_smoking
+        - meal_option
+        - status
+        - created_at
+        - updated_at
+
+    CreateSpacePolicyBody:
+      type: object
+      properties:
+        name:
+          type: string
+        same_gender:
+          type: boolean
+          default: false
+        lady_only:
+          type: boolean
+          default: false
+        no_pet:
+          type: boolean
+          default: false
+        no_smoking:
+          type: boolean
+          default: false
+        meal_option:
+          type: boolean
+          default: false
+        minimum_age:
+          type: ["integer", "null"]
+        status:
+          type: string
+          default: Active
+      required:
+        - name
+
+    UpdateSpacePolicyBody:
+      type: object
+      properties:
+        name:
+          type: string
+        same_gender:
+          type: boolean
+        lady_only:
+          type: boolean
+        no_pet:
+          type: boolean
+        no_smoking:
+          type: boolean
+        meal_option:
+          type: boolean
+        minimum_age:
+          type: ["integer", "null"]
+        status:
+          type: string
+
+    # ─── SPACE ───
+    SpaceListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        space_type:
+          type: ["string", "null"]
+        status:
+          type: string
+        booking_mode:
+          type: ["string", "null"]
+        property_id:
+          type: ["integer", "null"]
+        property_name:
+          type: ["string", "null"]
+        parent_space_id:
+          type: ["integer", "null"]
+        parent_space_name:
+          type: ["string", "null"]
+        space_policy_id:
+          type: ["integer", "null"]
+        policy_name:
+          type: ["string", "null"]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - status
+        - created_at
+        - updated_at
+
+    Space:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        manual_input:
+          type: boolean
+        space_type:
+          type: ["string", "null"]
+        custom_type_name:
+          type: ["string", "null"]
+        max_occupancy:
+          type: ["integer", "null"]
+        booking_mode:
+          type: ["string", "null"]
+        base_weekly_price:
+          type: ["number", "null"]
+        base_currency:
+          type: ["string", "null"]
+        min_stay_weeks:
+          type: ["integer", "null"]
+        floor_number:
+          type: ["integer", "null"]
+        floor_area_sqm:
+          type: ["number", "null"]
+        description:
+          type: ["string", "null"]
+        ical_import_url:
+          type: ["string", "null"]
+        status:
+          type: string
+        property_id:
+          type: ["integer", "null"]
+        property_name:
+          type: ["string", "null"]
+        parent_space_id:
+          type: ["integer", "null"]
+        parent_space_name:
+          type: ["string", "null"]
+        space_policy_id:
+          type: ["integer", "null"]
+        policy_name:
+          type: ["string", "null"]
+        landlord_account_id:
+          type: ["integer", "null"]
+        space_option_ids:
+          type: array
+          items:
+            type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - manual_input
+        - status
+        - space_option_ids
+        - created_at
+        - updated_at
+
+    CreateSpaceBody:
+      type: object
+      properties:
+        name:
+          type: string
+        manual_input:
+          type: boolean
+          default: false
+        space_type:
+          type: ["string", "null"]
+        custom_type_name:
+          type: ["string", "null"]
+        max_occupancy:
+          type: ["integer", "null"]
+        booking_mode:
+          type: ["string", "null"]
+        base_weekly_price:
+          type: ["number", "null"]
+        base_currency:
+          type: ["string", "null"]
+        min_stay_weeks:
+          type: ["integer", "null"]
+        floor_number:
+          type: ["integer", "null"]
+        floor_area_sqm:
+          type: ["number", "null"]
+        description:
+          type: ["string", "null"]
+        ical_import_url:
+          type: ["string", "null"]
+        status:
+          type: string
+          default: Active
+        property_id:
+          type: ["integer", "null"]
+        parent_space_id:
+          type: ["integer", "null"]
+        space_policy_id:
+          type: ["integer", "null"]
+        landlord_account_id:
+          type: ["integer", "null"]
+        space_option_ids:
+          type: array
+          items:
+            type: integer
+      required:
+        - name
+
+    UpdateSpaceBody:
+      type: object
+      properties:
+        name:
+          type: string
+        manual_input:
+          type: boolean
+        space_type:
+          type: ["string", "null"]
+        custom_type_name:
+          type: ["string", "null"]
+        max_occupancy:
+          type: ["integer", "null"]
+        booking_mode:
+          type: ["string", "null"]
+        base_weekly_price:
+          type: ["number", "null"]
+        base_currency:
+          type: ["string", "null"]
+        min_stay_weeks:
+          type: ["integer", "null"]
+        floor_number:
+          type: ["integer", "null"]
+        floor_area_sqm:
+          type: ["number", "null"]
+        description:
+          type: ["string", "null"]
+        ical_import_url:
+          type: ["string", "null"]
+        status:
+          type: string
+        property_id:
+          type: ["integer", "null"]
+        parent_space_id:
+          type: ["integer", "null"]
+        space_policy_id:
+          type: ["integer", "null"]
+        landlord_account_id:
+          type: ["integer", "null"]
+        space_option_ids:
+          type: array
+          items:
+            type: integer
+
+    AvailabilityDay:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        status:
+          type: string
+          description: "available | blocked | booked"
+      required:
+        - date
+        - status
+
+    BlockAvailabilityBody:
+      type: object
+      properties:
+        dates:
+          type: array
+          items:
+            type: string
+            format: date
+        action:
+          type: string
+          description: "block | unblock"
+      required:
+        - dates
+        - action
