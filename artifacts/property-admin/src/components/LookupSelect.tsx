@@ -1,0 +1,122 @@
+import { useState } from "react";
+import { Search, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+interface LookupSelectProps {
+  value: number | null | undefined;
+  onChange: (id: number | null) => void;
+  lookupUrl: string;
+  placeholder?: string;
+  displayValue?: string | null;
+}
+
+interface LookupItem {
+  id: number;
+  display: string;
+}
+
+export function LookupSelect({ value, onChange, lookupUrl, placeholder = "Search…", displayValue }: LookupSelectProps) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<LookupItem[]>([]);
+  const [selectedLabel, setSelectedLabel] = useState<string | null>(displayValue ?? null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSearch(q: string) {
+    setQuery(q);
+    setLoading(true);
+    try {
+      const url = `${lookupUrl}?q=${encodeURIComponent(q)}`;
+      const res = await fetch(url);
+      const data: LookupItem[] = await res.json();
+      setResults(data);
+    } catch {
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleOpen() {
+    setOpen(true);
+    handleSearch("");
+  }
+
+  function handleSelect(item: LookupItem) {
+    onChange(item.id);
+    setSelectedLabel(item.display);
+    setOpen(false);
+    setQuery("");
+  }
+
+  function handleClear(e: React.MouseEvent) {
+    e.stopPropagation();
+    onChange(null);
+    setSelectedLabel(null);
+  }
+
+  const display = value ? (selectedLabel ?? displayValue ?? `#${value}`) : null;
+
+  return (
+    <>
+      <div
+        className="flex items-center h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm cursor-pointer hover:border-ring transition-colors"
+        onClick={handleOpen}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === "Enter" && handleOpen()}
+      >
+        {display ? (
+          <span className="flex-1 truncate">{display}</span>
+        ) : (
+          <span className="flex-1 text-muted-foreground">{placeholder}</span>
+        )}
+        <div className="flex items-center gap-1 ml-2">
+          {display && (
+            <button type="button" onClick={handleClear} className="text-muted-foreground hover:text-foreground">
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+          <Search className="h-3.5 w-3.5 text-muted-foreground" />
+        </div>
+      </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Select</DialogTitle>
+          </DialogHeader>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              autoFocus
+              className="pl-8"
+              placeholder={placeholder}
+              value={query}
+              onChange={(e) => handleSearch(e.target.value)}
+            />
+          </div>
+          <ScrollArea className="max-h-64">
+            {loading && <p className="px-3 py-2 text-sm text-muted-foreground">Searching…</p>}
+            {!loading && results.length === 0 && (
+              <p className="px-3 py-2 text-sm text-muted-foreground">No results found</p>
+            )}
+            {results.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className="w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground rounded-sm transition-colors"
+                onClick={() => handleSelect(item)}
+              >
+                {item.display}
+              </button>
+            ))}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}

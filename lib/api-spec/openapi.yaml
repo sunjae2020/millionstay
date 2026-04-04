@@ -20,6 +20,16 @@ tags:
     description: Space policy management
   - name: spaces
     description: Space management
+  - name: commissions
+    description: Commission management
+  - name: payment-info
+    description: Payment info management
+  - name: contacts
+    description: Contact management
+  - name: accounts
+    description: Account management
+  - name: lookup
+    description: Lookup endpoints for LookupField dialogs
 
 paths:
   /healthz:
@@ -660,6 +670,513 @@ paths:
         "404":
           description: Not found
 
+  # ─────────────────────────────────────────────
+  # COMMISSIONS
+  # ─────────────────────────────────────────────
+  /v1/commissions:
+    get:
+      operationId: listCommissions
+      tags: [commissions]
+      summary: List commissions
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of commissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CommissionResponse"
+    post:
+      operationId: createCommission
+      tags: [commissions]
+      summary: Create commission
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCommissionBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommissionResponse"
+
+  /v1/commissions/{id}:
+    get:
+      operationId: getCommission
+      tags: [commissions]
+      summary: Get commission by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Commission detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommissionResponse"
+        "404":
+          description: Not found
+    put:
+      operationId: updateCommission
+      tags: [commissions]
+      summary: Update commission
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCommissionBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommissionResponse"
+    delete:
+      operationId: deleteCommission
+      tags: [commissions]
+      summary: Delete commission
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─────────────────────────────────────────────
+  # PAYMENT INFO
+  # ─────────────────────────────────────────────
+  /v1/payment-info:
+    get:
+      operationId: listPaymentInfo
+      tags: [payment-info]
+      summary: List payment info records
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: payment_type
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of payment info
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentInfoResponse"
+    post:
+      operationId: createPaymentInfo
+      tags: [payment-info]
+      summary: Create payment info
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePaymentInfoBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentInfoResponse"
+
+  /v1/payment-info/{id}:
+    get:
+      operationId: getPaymentInfo
+      tags: [payment-info]
+      summary: Get payment info by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Payment info detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentInfoResponse"
+        "404":
+          description: Not found
+    put:
+      operationId: updatePaymentInfo
+      tags: [payment-info]
+      summary: Update payment info
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePaymentInfoBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentInfoResponse"
+    delete:
+      operationId: deletePaymentInfo
+      tags: [payment-info]
+      summary: Delete payment info
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─────────────────────────────────────────────
+  # CONTACTS
+  # ─────────────────────────────────────────────
+  /v1/contacts:
+    get:
+      operationId: listContacts
+      tags: [contacts]
+      summary: List contacts
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: nationality
+          in: query
+          schema:
+            type: string
+        - name: gender
+          in: query
+          schema:
+            type: string
+        - name: portal_enabled
+          in: query
+          schema:
+            type: boolean
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of contacts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ContactResponse"
+    post:
+      operationId: createContact
+      tags: [contacts]
+      summary: Create contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateContactBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactResponse"
+
+  /v1/contacts/{id}:
+    get:
+      operationId: getContact
+      tags: [contacts]
+      summary: Get contact by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Contact detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactResponse"
+        "404":
+          description: Not found
+    put:
+      operationId: updateContact
+      tags: [contacts]
+      summary: Update contact
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateContactBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactResponse"
+    delete:
+      operationId: deleteContact
+      tags: [contacts]
+      summary: Delete contact
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─────────────────────────────────────────────
+  # ACCOUNTS
+  # ─────────────────────────────────────────────
+  /v1/accounts:
+    get:
+      operationId: listAccounts
+      tags: [accounts]
+      summary: List accounts
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: account_type
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AccountResponse"
+    post:
+      operationId: createAccount
+      tags: [accounts]
+      summary: Create account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAccountBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountResponse"
+
+  /v1/accounts/{id}:
+    get:
+      operationId: getAccount
+      tags: [accounts]
+      summary: Get account by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Account detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountResponse"
+        "404":
+          description: Not found
+    put:
+      operationId: updateAccount
+      tags: [accounts]
+      summary: Update account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAccountBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountResponse"
+    delete:
+      operationId: deleteAccount
+      tags: [accounts]
+      summary: Delete account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─────────────────────────────────────────────
+  # LOOKUP ENDPOINTS
+  # ─────────────────────────────────────────────
+  /v1/lookup/contacts:
+    get:
+      operationId: lookupContacts
+      tags: [lookup]
+      summary: Lookup contacts for LookupField
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lookup results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LookupItem"
+
+  /v1/lookup/accounts:
+    get:
+      operationId: lookupAccounts
+      tags: [lookup]
+      summary: Lookup accounts for LookupField
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lookup results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LookupItem"
+
+  /v1/lookup/commissions:
+    get:
+      operationId: lookupCommissions
+      tags: [lookup]
+      summary: Lookup commissions for LookupField
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lookup results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LookupItem"
+
+  /v1/lookup/payment-info:
+    get:
+      operationId: lookupPaymentInfo
+      tags: [lookup]
+      summary: Lookup payment info for LookupField
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lookup results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LookupItem"
+
 components:
   schemas:
     HealthStatus:
@@ -1268,3 +1785,518 @@ components:
       required:
         - dates
         - action
+
+    # ── COMMISSIONS ──────────────────────────────
+    CommissionResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        commission_type:
+          type: string
+        commission_rate:
+          type: ["number", "null"]
+        commission_amount:
+          type: ["number", "null"]
+        description:
+          type: ["string", "null"]
+        status:
+          type: string
+        created_at:
+          type: string
+        updated_at:
+          type: string
+      required: [id, name, commission_type, status, created_at, updated_at]
+
+    CreateCommissionBody:
+      type: object
+      properties:
+        name:
+          type: string
+        commission_type:
+          type: string
+          default: Percentage
+        commission_rate:
+          type: ["number", "null"]
+        commission_amount:
+          type: ["number", "null"]
+        description:
+          type: ["string", "null"]
+        status:
+          type: string
+          default: Active
+      required: [name, commission_type]
+
+    UpdateCommissionBody:
+      type: object
+      properties:
+        name:
+          type: string
+        commission_type:
+          type: string
+        commission_rate:
+          type: ["number", "null"]
+        commission_amount:
+          type: ["number", "null"]
+        description:
+          type: ["string", "null"]
+        status:
+          type: string
+
+    # ── PAYMENT INFO ──────────────────────────────
+    PaymentInfoResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        payment_type:
+          type: string
+        bank_name:
+          type: ["string", "null"]
+        swift_code:
+          type: ["string", "null"]
+        bsb_number:
+          type: ["string", "null"]
+        account_number:
+          type: ["string", "null"]
+        account_name:
+          type: ["string", "null"]
+        stripe_account_id:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        status:
+          type: string
+        created_at:
+          type: string
+        updated_at:
+          type: string
+      required: [id, name, payment_type, status, created_at, updated_at]
+
+    CreatePaymentInfoBody:
+      type: object
+      properties:
+        name:
+          type: string
+        payment_type:
+          type: string
+          default: BankTransfer
+        bank_name:
+          type: ["string", "null"]
+        swift_code:
+          type: ["string", "null"]
+        bsb_number:
+          type: ["string", "null"]
+        account_number:
+          type: ["string", "null"]
+        account_name:
+          type: ["string", "null"]
+        stripe_account_id:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        status:
+          type: string
+          default: Active
+      required: [name, payment_type]
+
+    UpdatePaymentInfoBody:
+      type: object
+      properties:
+        name:
+          type: string
+        payment_type:
+          type: string
+        bank_name:
+          type: ["string", "null"]
+        swift_code:
+          type: ["string", "null"]
+        bsb_number:
+          type: ["string", "null"]
+        account_number:
+          type: ["string", "null"]
+        account_name:
+          type: ["string", "null"]
+        stripe_account_id:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        status:
+          type: string
+
+    # ── CONTACTS ──────────────────────────────────
+    ContactResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        first_name:
+          type: string
+        last_name:
+          type: string
+        title:
+          type: ["string", "null"]
+        other_name:
+          type: ["string", "null"]
+        email:
+          type: string
+        mobile_number:
+          type: ["string", "null"]
+        office_number:
+          type: ["string", "null"]
+        date_of_birth:
+          type: ["string", "null"]
+        nationality:
+          type: ["string", "null"]
+        gender:
+          type: ["string", "null"]
+        sns_id:
+          type: ["string", "null"]
+        passport_number:
+          type: ["string", "null"]
+        passport_expiry:
+          type: ["string", "null"]
+        visa_type:
+          type: ["string", "null"]
+        visa_expiry:
+          type: ["string", "null"]
+        address_line1:
+          type: ["string", "null"]
+        suburb:
+          type: ["string", "null"]
+        state:
+          type: ["string", "null"]
+        postcode:
+          type: ["string", "null"]
+        country:
+          type: ["string", "null"]
+        portal_enabled:
+          type: boolean
+        portal_user_id:
+          type: ["string", "null"]
+        profile_photo_url:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        manual_input:
+          type: boolean
+        status:
+          type: string
+        created_at:
+          type: string
+        updated_at:
+          type: string
+      required: [id, first_name, last_name, email, portal_enabled, manual_input, status, created_at, updated_at]
+
+    CreateContactBody:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        title:
+          type: ["string", "null"]
+        other_name:
+          type: ["string", "null"]
+        email:
+          type: string
+        mobile_number:
+          type: ["string", "null"]
+        office_number:
+          type: ["string", "null"]
+        date_of_birth:
+          type: ["string", "null"]
+        nationality:
+          type: ["string", "null"]
+        gender:
+          type: ["string", "null"]
+        sns_id:
+          type: ["string", "null"]
+        passport_number:
+          type: ["string", "null"]
+        passport_expiry:
+          type: ["string", "null"]
+        visa_type:
+          type: ["string", "null"]
+        visa_expiry:
+          type: ["string", "null"]
+        address_line1:
+          type: ["string", "null"]
+        suburb:
+          type: ["string", "null"]
+        state:
+          type: ["string", "null"]
+        postcode:
+          type: ["string", "null"]
+        country:
+          type: ["string", "null"]
+        portal_enabled:
+          type: boolean
+          default: false
+        portal_user_id:
+          type: ["string", "null"]
+        profile_photo_url:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        manual_input:
+          type: boolean
+          default: false
+        status:
+          type: string
+          default: Active
+      required: [first_name, last_name, email]
+
+    UpdateContactBody:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        title:
+          type: ["string", "null"]
+        other_name:
+          type: ["string", "null"]
+        email:
+          type: string
+        mobile_number:
+          type: ["string", "null"]
+        office_number:
+          type: ["string", "null"]
+        date_of_birth:
+          type: ["string", "null"]
+        nationality:
+          type: ["string", "null"]
+        gender:
+          type: ["string", "null"]
+        sns_id:
+          type: ["string", "null"]
+        passport_number:
+          type: ["string", "null"]
+        passport_expiry:
+          type: ["string", "null"]
+        visa_type:
+          type: ["string", "null"]
+        visa_expiry:
+          type: ["string", "null"]
+        address_line1:
+          type: ["string", "null"]
+        suburb:
+          type: ["string", "null"]
+        state:
+          type: ["string", "null"]
+        postcode:
+          type: ["string", "null"]
+        country:
+          type: ["string", "null"]
+        portal_enabled:
+          type: boolean
+        portal_user_id:
+          type: ["string", "null"]
+        profile_photo_url:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        manual_input:
+          type: boolean
+        status:
+          type: string
+
+    # ── ACCOUNTS ──────────────────────────────────
+    AccountResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        account_type:
+          type: string
+        primary_contact_id:
+          type: ["integer", "null"]
+        primary_contact_name:
+          type: ["string", "null"]
+        secondary_contact_id:
+          type: ["integer", "null"]
+        secondary_contact_name:
+          type: ["string", "null"]
+        account_email:
+          type: ["string", "null"]
+        website_url:
+          type: ["string", "null"]
+        phone1:
+          type: ["string", "null"]
+        phone2:
+          type: ["string", "null"]
+        address_line1:
+          type: ["string", "null"]
+        address_suburb:
+          type: ["string", "null"]
+        address_state:
+          type: ["string", "null"]
+        address_postcode:
+          type: ["string", "null"]
+        address_country:
+          type: ["string", "null"]
+        secondary_address_line1:
+          type: ["string", "null"]
+        secondary_address_suburb:
+          type: ["string", "null"]
+        secondary_address_state:
+          type: ["string", "null"]
+        secondary_address_postcode:
+          type: ["string", "null"]
+        secondary_address_country:
+          type: ["string", "null"]
+        payment_info_id:
+          type: ["integer", "null"]
+        payment_info_name:
+          type: ["string", "null"]
+        default_commission_id:
+          type: ["integer", "null"]
+        default_commission_name:
+          type: ["string", "null"]
+        default_currency:
+          type: ["string", "null"]
+        parent_account_id:
+          type: ["integer", "null"]
+        parent_account_name:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        manual_input:
+          type: boolean
+        status:
+          type: string
+        created_at:
+          type: string
+        updated_at:
+          type: string
+      required: [id, name, account_type, manual_input, status, created_at, updated_at]
+
+    CreateAccountBody:
+      type: object
+      properties:
+        name:
+          type: string
+        account_type:
+          type: string
+        primary_contact_id:
+          type: ["integer", "null"]
+        secondary_contact_id:
+          type: ["integer", "null"]
+        account_email:
+          type: ["string", "null"]
+        website_url:
+          type: ["string", "null"]
+        phone1:
+          type: ["string", "null"]
+        phone2:
+          type: ["string", "null"]
+        address_line1:
+          type: ["string", "null"]
+        address_suburb:
+          type: ["string", "null"]
+        address_state:
+          type: ["string", "null"]
+        address_postcode:
+          type: ["string", "null"]
+        address_country:
+          type: ["string", "null"]
+        secondary_address_line1:
+          type: ["string", "null"]
+        secondary_address_suburb:
+          type: ["string", "null"]
+        secondary_address_state:
+          type: ["string", "null"]
+        secondary_address_postcode:
+          type: ["string", "null"]
+        secondary_address_country:
+          type: ["string", "null"]
+        payment_info_id:
+          type: ["integer", "null"]
+        default_commission_id:
+          type: ["integer", "null"]
+        default_currency:
+          type: ["string", "null"]
+        parent_account_id:
+          type: ["integer", "null"]
+        description:
+          type: ["string", "null"]
+        manual_input:
+          type: boolean
+          default: false
+        status:
+          type: string
+          default: Active
+      required: [name, account_type]
+
+    UpdateAccountBody:
+      type: object
+      properties:
+        name:
+          type: string
+        account_type:
+          type: string
+        primary_contact_id:
+          type: ["integer", "null"]
+        secondary_contact_id:
+          type: ["integer", "null"]
+        account_email:
+          type: ["string", "null"]
+        website_url:
+          type: ["string", "null"]
+        phone1:
+          type: ["string", "null"]
+        phone2:
+          type: ["string", "null"]
+        address_line1:
+          type: ["string", "null"]
+        address_suburb:
+          type: ["string", "null"]
+        address_state:
+          type: ["string", "null"]
+        address_postcode:
+          type: ["string", "null"]
+        address_country:
+          type: ["string", "null"]
+        secondary_address_line1:
+          type: ["string", "null"]
+        secondary_address_suburb:
+          type: ["string", "null"]
+        secondary_address_state:
+          type: ["string", "null"]
+        secondary_address_postcode:
+          type: ["string", "null"]
+        secondary_address_country:
+          type: ["string", "null"]
+        payment_info_id:
+          type: ["integer", "null"]
+        default_commission_id:
+          type: ["integer", "null"]
+        default_currency:
+          type: ["string", "null"]
+        parent_account_id:
+          type: ["integer", "null"]
+        description:
+          type: ["string", "null"]
+        manual_input:
+          type: boolean
+        status:
+          type: string
+
+    # ── LOOKUP ─────────────────────────────────────
+    LookupItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        display:
+          type: string
+      required: [id, display]

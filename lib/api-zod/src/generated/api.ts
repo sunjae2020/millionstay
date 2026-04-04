@@ -646,3 +646,657 @@ export const BlockSpaceAvailabilityResponseItem = zod.object({
 export const BlockSpaceAvailabilityResponse = zod.array(
   BlockSpaceAvailabilityResponseItem,
 );
+
+/**
+ * @summary List commissions
+ */
+export const ListCommissionsQueryParams = zod.object({
+  search: zod.coerce.string().optional(),
+  status: zod.coerce.string().optional(),
+});
+
+export const ListCommissionsResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  commission_type: zod.string(),
+  commission_rate: zod.number().nullish(),
+  commission_amount: zod.number().nullish(),
+  description: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+export const ListCommissionsResponse = zod.array(ListCommissionsResponseItem);
+
+/**
+ * @summary Create commission
+ */
+export const createCommissionBodyCommissionTypeDefault = `Percentage`;
+export const createCommissionBodyStatusDefault = `Active`;
+
+export const CreateCommissionBody = zod.object({
+  name: zod.string(),
+  commission_type: zod
+    .string()
+    .default(createCommissionBodyCommissionTypeDefault),
+  commission_rate: zod.number().nullish(),
+  commission_amount: zod.number().nullish(),
+  description: zod.string().nullish(),
+  status: zod.string().default(createCommissionBodyStatusDefault),
+});
+
+/**
+ * @summary Get commission by ID
+ */
+export const GetCommissionParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetCommissionResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  commission_type: zod.string(),
+  commission_rate: zod.number().nullish(),
+  commission_amount: zod.number().nullish(),
+  description: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Update commission
+ */
+export const UpdateCommissionParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateCommissionBody = zod.object({
+  name: zod.string().optional(),
+  commission_type: zod.string().optional(),
+  commission_rate: zod.number().nullish(),
+  commission_amount: zod.number().nullish(),
+  description: zod.string().nullish(),
+  status: zod.string().optional(),
+});
+
+export const UpdateCommissionResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  commission_type: zod.string(),
+  commission_rate: zod.number().nullish(),
+  commission_amount: zod.number().nullish(),
+  description: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Delete commission
+ */
+export const DeleteCommissionParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary List payment info records
+ */
+export const ListPaymentInfoQueryParams = zod.object({
+  search: zod.coerce.string().optional(),
+  payment_type: zod.coerce.string().optional(),
+});
+
+export const ListPaymentInfoResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  payment_type: zod.string(),
+  bank_name: zod.string().nullish(),
+  swift_code: zod.string().nullish(),
+  bsb_number: zod.string().nullish(),
+  account_number: zod.string().nullish(),
+  account_name: zod.string().nullish(),
+  stripe_account_id: zod.string().nullish(),
+  description: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+export const ListPaymentInfoResponse = zod.array(ListPaymentInfoResponseItem);
+
+/**
+ * @summary Create payment info
+ */
+export const createPaymentInfoBodyPaymentTypeDefault = `BankTransfer`;
+export const createPaymentInfoBodyStatusDefault = `Active`;
+
+export const CreatePaymentInfoBody = zod.object({
+  name: zod.string(),
+  payment_type: zod.string().default(createPaymentInfoBodyPaymentTypeDefault),
+  bank_name: zod.string().nullish(),
+  swift_code: zod.string().nullish(),
+  bsb_number: zod.string().nullish(),
+  account_number: zod.string().nullish(),
+  account_name: zod.string().nullish(),
+  stripe_account_id: zod.string().nullish(),
+  description: zod.string().nullish(),
+  status: zod.string().default(createPaymentInfoBodyStatusDefault),
+});
+
+/**
+ * @summary Get payment info by ID
+ */
+export const GetPaymentInfoParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetPaymentInfoResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  payment_type: zod.string(),
+  bank_name: zod.string().nullish(),
+  swift_code: zod.string().nullish(),
+  bsb_number: zod.string().nullish(),
+  account_number: zod.string().nullish(),
+  account_name: zod.string().nullish(),
+  stripe_account_id: zod.string().nullish(),
+  description: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Update payment info
+ */
+export const UpdatePaymentInfoParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdatePaymentInfoBody = zod.object({
+  name: zod.string().optional(),
+  payment_type: zod.string().optional(),
+  bank_name: zod.string().nullish(),
+  swift_code: zod.string().nullish(),
+  bsb_number: zod.string().nullish(),
+  account_number: zod.string().nullish(),
+  account_name: zod.string().nullish(),
+  stripe_account_id: zod.string().nullish(),
+  description: zod.string().nullish(),
+  status: zod.string().optional(),
+});
+
+export const UpdatePaymentInfoResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  payment_type: zod.string(),
+  bank_name: zod.string().nullish(),
+  swift_code: zod.string().nullish(),
+  bsb_number: zod.string().nullish(),
+  account_number: zod.string().nullish(),
+  account_name: zod.string().nullish(),
+  stripe_account_id: zod.string().nullish(),
+  description: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Delete payment info
+ */
+export const DeletePaymentInfoParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary List contacts
+ */
+export const ListContactsQueryParams = zod.object({
+  search: zod.coerce.string().optional(),
+  nationality: zod.coerce.string().optional(),
+  gender: zod.coerce.string().optional(),
+  portal_enabled: zod.coerce.boolean().optional(),
+  status: zod.coerce.string().optional(),
+});
+
+export const ListContactsResponseItem = zod.object({
+  id: zod.number(),
+  first_name: zod.string(),
+  last_name: zod.string(),
+  title: zod.string().nullish(),
+  other_name: zod.string().nullish(),
+  email: zod.string(),
+  mobile_number: zod.string().nullish(),
+  office_number: zod.string().nullish(),
+  date_of_birth: zod.string().nullish(),
+  nationality: zod.string().nullish(),
+  gender: zod.string().nullish(),
+  sns_id: zod.string().nullish(),
+  passport_number: zod.string().nullish(),
+  passport_expiry: zod.string().nullish(),
+  visa_type: zod.string().nullish(),
+  visa_expiry: zod.string().nullish(),
+  address_line1: zod.string().nullish(),
+  suburb: zod.string().nullish(),
+  state: zod.string().nullish(),
+  postcode: zod.string().nullish(),
+  country: zod.string().nullish(),
+  portal_enabled: zod.boolean(),
+  portal_user_id: zod.string().nullish(),
+  profile_photo_url: zod.string().nullish(),
+  description: zod.string().nullish(),
+  manual_input: zod.boolean(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+export const ListContactsResponse = zod.array(ListContactsResponseItem);
+
+/**
+ * @summary Create contact
+ */
+export const createContactBodyPortalEnabledDefault = false;
+export const createContactBodyManualInputDefault = false;
+export const createContactBodyStatusDefault = `Active`;
+
+export const CreateContactBody = zod.object({
+  first_name: zod.string(),
+  last_name: zod.string(),
+  title: zod.string().nullish(),
+  other_name: zod.string().nullish(),
+  email: zod.string(),
+  mobile_number: zod.string().nullish(),
+  office_number: zod.string().nullish(),
+  date_of_birth: zod.string().nullish(),
+  nationality: zod.string().nullish(),
+  gender: zod.string().nullish(),
+  sns_id: zod.string().nullish(),
+  passport_number: zod.string().nullish(),
+  passport_expiry: zod.string().nullish(),
+  visa_type: zod.string().nullish(),
+  visa_expiry: zod.string().nullish(),
+  address_line1: zod.string().nullish(),
+  suburb: zod.string().nullish(),
+  state: zod.string().nullish(),
+  postcode: zod.string().nullish(),
+  country: zod.string().nullish(),
+  portal_enabled: zod.boolean().default(createContactBodyPortalEnabledDefault),
+  portal_user_id: zod.string().nullish(),
+  profile_photo_url: zod.string().nullish(),
+  description: zod.string().nullish(),
+  manual_input: zod.boolean().default(createContactBodyManualInputDefault),
+  status: zod.string().default(createContactBodyStatusDefault),
+});
+
+/**
+ * @summary Get contact by ID
+ */
+export const GetContactParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetContactResponse = zod.object({
+  id: zod.number(),
+  first_name: zod.string(),
+  last_name: zod.string(),
+  title: zod.string().nullish(),
+  other_name: zod.string().nullish(),
+  email: zod.string(),
+  mobile_number: zod.string().nullish(),
+  office_number: zod.string().nullish(),
+  date_of_birth: zod.string().nullish(),
+  nationality: zod.string().nullish(),
+  gender: zod.string().nullish(),
+  sns_id: zod.string().nullish(),
+  passport_number: zod.string().nullish(),
+  passport_expiry: zod.string().nullish(),
+  visa_type: zod.string().nullish(),
+  visa_expiry: zod.string().nullish(),
+  address_line1: zod.string().nullish(),
+  suburb: zod.string().nullish(),
+  state: zod.string().nullish(),
+  postcode: zod.string().nullish(),
+  country: zod.string().nullish(),
+  portal_enabled: zod.boolean(),
+  portal_user_id: zod.string().nullish(),
+  profile_photo_url: zod.string().nullish(),
+  description: zod.string().nullish(),
+  manual_input: zod.boolean(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Update contact
+ */
+export const UpdateContactParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateContactBody = zod.object({
+  first_name: zod.string().optional(),
+  last_name: zod.string().optional(),
+  title: zod.string().nullish(),
+  other_name: zod.string().nullish(),
+  email: zod.string().optional(),
+  mobile_number: zod.string().nullish(),
+  office_number: zod.string().nullish(),
+  date_of_birth: zod.string().nullish(),
+  nationality: zod.string().nullish(),
+  gender: zod.string().nullish(),
+  sns_id: zod.string().nullish(),
+  passport_number: zod.string().nullish(),
+  passport_expiry: zod.string().nullish(),
+  visa_type: zod.string().nullish(),
+  visa_expiry: zod.string().nullish(),
+  address_line1: zod.string().nullish(),
+  suburb: zod.string().nullish(),
+  state: zod.string().nullish(),
+  postcode: zod.string().nullish(),
+  country: zod.string().nullish(),
+  portal_enabled: zod.boolean().optional(),
+  portal_user_id: zod.string().nullish(),
+  profile_photo_url: zod.string().nullish(),
+  description: zod.string().nullish(),
+  manual_input: zod.boolean().optional(),
+  status: zod.string().optional(),
+});
+
+export const UpdateContactResponse = zod.object({
+  id: zod.number(),
+  first_name: zod.string(),
+  last_name: zod.string(),
+  title: zod.string().nullish(),
+  other_name: zod.string().nullish(),
+  email: zod.string(),
+  mobile_number: zod.string().nullish(),
+  office_number: zod.string().nullish(),
+  date_of_birth: zod.string().nullish(),
+  nationality: zod.string().nullish(),
+  gender: zod.string().nullish(),
+  sns_id: zod.string().nullish(),
+  passport_number: zod.string().nullish(),
+  passport_expiry: zod.string().nullish(),
+  visa_type: zod.string().nullish(),
+  visa_expiry: zod.string().nullish(),
+  address_line1: zod.string().nullish(),
+  suburb: zod.string().nullish(),
+  state: zod.string().nullish(),
+  postcode: zod.string().nullish(),
+  country: zod.string().nullish(),
+  portal_enabled: zod.boolean(),
+  portal_user_id: zod.string().nullish(),
+  profile_photo_url: zod.string().nullish(),
+  description: zod.string().nullish(),
+  manual_input: zod.boolean(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Delete contact
+ */
+export const DeleteContactParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary List accounts
+ */
+export const ListAccountsQueryParams = zod.object({
+  search: zod.coerce.string().optional(),
+  account_type: zod.coerce.string().optional(),
+  status: zod.coerce.string().optional(),
+});
+
+export const ListAccountsResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  account_type: zod.string(),
+  primary_contact_id: zod.number().nullish(),
+  primary_contact_name: zod.string().nullish(),
+  secondary_contact_id: zod.number().nullish(),
+  secondary_contact_name: zod.string().nullish(),
+  account_email: zod.string().nullish(),
+  website_url: zod.string().nullish(),
+  phone1: zod.string().nullish(),
+  phone2: zod.string().nullish(),
+  address_line1: zod.string().nullish(),
+  address_suburb: zod.string().nullish(),
+  address_state: zod.string().nullish(),
+  address_postcode: zod.string().nullish(),
+  address_country: zod.string().nullish(),
+  secondary_address_line1: zod.string().nullish(),
+  secondary_address_suburb: zod.string().nullish(),
+  secondary_address_state: zod.string().nullish(),
+  secondary_address_postcode: zod.string().nullish(),
+  secondary_address_country: zod.string().nullish(),
+  payment_info_id: zod.number().nullish(),
+  payment_info_name: zod.string().nullish(),
+  default_commission_id: zod.number().nullish(),
+  default_commission_name: zod.string().nullish(),
+  default_currency: zod.string().nullish(),
+  parent_account_id: zod.number().nullish(),
+  parent_account_name: zod.string().nullish(),
+  description: zod.string().nullish(),
+  manual_input: zod.boolean(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+export const ListAccountsResponse = zod.array(ListAccountsResponseItem);
+
+/**
+ * @summary Create account
+ */
+export const createAccountBodyManualInputDefault = false;
+export const createAccountBodyStatusDefault = `Active`;
+
+export const CreateAccountBody = zod.object({
+  name: zod.string(),
+  account_type: zod.string(),
+  primary_contact_id: zod.number().nullish(),
+  secondary_contact_id: zod.number().nullish(),
+  account_email: zod.string().nullish(),
+  website_url: zod.string().nullish(),
+  phone1: zod.string().nullish(),
+  phone2: zod.string().nullish(),
+  address_line1: zod.string().nullish(),
+  address_suburb: zod.string().nullish(),
+  address_state: zod.string().nullish(),
+  address_postcode: zod.string().nullish(),
+  address_country: zod.string().nullish(),
+  secondary_address_line1: zod.string().nullish(),
+  secondary_address_suburb: zod.string().nullish(),
+  secondary_address_state: zod.string().nullish(),
+  secondary_address_postcode: zod.string().nullish(),
+  secondary_address_country: zod.string().nullish(),
+  payment_info_id: zod.number().nullish(),
+  default_commission_id: zod.number().nullish(),
+  default_currency: zod.string().nullish(),
+  parent_account_id: zod.number().nullish(),
+  description: zod.string().nullish(),
+  manual_input: zod.boolean().default(createAccountBodyManualInputDefault),
+  status: zod.string().default(createAccountBodyStatusDefault),
+});
+
+/**
+ * @summary Get account by ID
+ */
+export const GetAccountParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetAccountResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  account_type: zod.string(),
+  primary_contact_id: zod.number().nullish(),
+  primary_contact_name: zod.string().nullish(),
+  secondary_contact_id: zod.number().nullish(),
+  secondary_contact_name: zod.string().nullish(),
+  account_email: zod.string().nullish(),
+  website_url: zod.string().nullish(),
+  phone1: zod.string().nullish(),
+  phone2: zod.string().nullish(),
+  address_line1: zod.string().nullish(),
+  address_suburb: zod.string().nullish(),
+  address_state: zod.string().nullish(),
+  address_postcode: zod.string().nullish(),
+  address_country: zod.string().nullish(),
+  secondary_address_line1: zod.string().nullish(),
+  secondary_address_suburb: zod.string().nullish(),
+  secondary_address_state: zod.string().nullish(),
+  secondary_address_postcode: zod.string().nullish(),
+  secondary_address_country: zod.string().nullish(),
+  payment_info_id: zod.number().nullish(),
+  payment_info_name: zod.string().nullish(),
+  default_commission_id: zod.number().nullish(),
+  default_commission_name: zod.string().nullish(),
+  default_currency: zod.string().nullish(),
+  parent_account_id: zod.number().nullish(),
+  parent_account_name: zod.string().nullish(),
+  description: zod.string().nullish(),
+  manual_input: zod.boolean(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Update account
+ */
+export const UpdateAccountParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateAccountBody = zod.object({
+  name: zod.string().optional(),
+  account_type: zod.string().optional(),
+  primary_contact_id: zod.number().nullish(),
+  secondary_contact_id: zod.number().nullish(),
+  account_email: zod.string().nullish(),
+  website_url: zod.string().nullish(),
+  phone1: zod.string().nullish(),
+  phone2: zod.string().nullish(),
+  address_line1: zod.string().nullish(),
+  address_suburb: zod.string().nullish(),
+  address_state: zod.string().nullish(),
+  address_postcode: zod.string().nullish(),
+  address_country: zod.string().nullish(),
+  secondary_address_line1: zod.string().nullish(),
+  secondary_address_suburb: zod.string().nullish(),
+  secondary_address_state: zod.string().nullish(),
+  secondary_address_postcode: zod.string().nullish(),
+  secondary_address_country: zod.string().nullish(),
+  payment_info_id: zod.number().nullish(),
+  default_commission_id: zod.number().nullish(),
+  default_currency: zod.string().nullish(),
+  parent_account_id: zod.number().nullish(),
+  description: zod.string().nullish(),
+  manual_input: zod.boolean().optional(),
+  status: zod.string().optional(),
+});
+
+export const UpdateAccountResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  account_type: zod.string(),
+  primary_contact_id: zod.number().nullish(),
+  primary_contact_name: zod.string().nullish(),
+  secondary_contact_id: zod.number().nullish(),
+  secondary_contact_name: zod.string().nullish(),
+  account_email: zod.string().nullish(),
+  website_url: zod.string().nullish(),
+  phone1: zod.string().nullish(),
+  phone2: zod.string().nullish(),
+  address_line1: zod.string().nullish(),
+  address_suburb: zod.string().nullish(),
+  address_state: zod.string().nullish(),
+  address_postcode: zod.string().nullish(),
+  address_country: zod.string().nullish(),
+  secondary_address_line1: zod.string().nullish(),
+  secondary_address_suburb: zod.string().nullish(),
+  secondary_address_state: zod.string().nullish(),
+  secondary_address_postcode: zod.string().nullish(),
+  secondary_address_country: zod.string().nullish(),
+  payment_info_id: zod.number().nullish(),
+  payment_info_name: zod.string().nullish(),
+  default_commission_id: zod.number().nullish(),
+  default_commission_name: zod.string().nullish(),
+  default_currency: zod.string().nullish(),
+  parent_account_id: zod.number().nullish(),
+  parent_account_name: zod.string().nullish(),
+  description: zod.string().nullish(),
+  manual_input: zod.boolean(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Delete account
+ */
+export const DeleteAccountParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary Lookup contacts for LookupField
+ */
+export const LookupContactsQueryParams = zod.object({
+  q: zod.coerce.string().optional(),
+});
+
+export const LookupContactsResponseItem = zod.object({
+  id: zod.number(),
+  display: zod.string(),
+});
+export const LookupContactsResponse = zod.array(LookupContactsResponseItem);
+
+/**
+ * @summary Lookup accounts for LookupField
+ */
+export const LookupAccountsQueryParams = zod.object({
+  q: zod.coerce.string().optional(),
+  type: zod.coerce.string().optional(),
+});
+
+export const LookupAccountsResponseItem = zod.object({
+  id: zod.number(),
+  display: zod.string(),
+});
+export const LookupAccountsResponse = zod.array(LookupAccountsResponseItem);
+
+/**
+ * @summary Lookup commissions for LookupField
+ */
+export const LookupCommissionsQueryParams = zod.object({
+  q: zod.coerce.string().optional(),
+});
+
+export const LookupCommissionsResponseItem = zod.object({
+  id: zod.number(),
+  display: zod.string(),
+});
+export const LookupCommissionsResponse = zod.array(
+  LookupCommissionsResponseItem,
+);
+
+/**
+ * @summary Lookup payment info for LookupField
+ */
+export const LookupPaymentInfoQueryParams = zod.object({
+  q: zod.coerce.string().optional(),
+});
+
+export const LookupPaymentInfoResponseItem = zod.object({
+  id: zod.number(),
+  display: zod.string(),
+});
+export const LookupPaymentInfoResponse = zod.array(
+  LookupPaymentInfoResponseItem,
+);

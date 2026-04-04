@@ -9,6 +9,10 @@ import {
   LayoutDashboard,
   ChevronDown,
   ChevronRight,
+  Users,
+  CreditCard,
+  Percent,
+  User,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -18,6 +22,13 @@ const propertySubNav = [
   { href: "/property/space-options", label: "Space Options", icon: Tag },
   { href: "/property/space-policies", label: "Space Policies", icon: Settings },
   { href: "/property/spaces", label: "Spaces", icon: Layers },
+];
+
+const crmSubNav = [
+  { href: "/crm/contacts", label: "Contacts", icon: User },
+  { href: "/crm/accounts", label: "Accounts", icon: Users },
+  { href: "/crm/commissions", label: "Commissions", icon: Percent },
+  { href: "/crm/payment-info", label: "Payment Info", icon: CreditCard },
 ];
 
 function NavItem({
@@ -86,7 +97,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center">
               <Building2 className="h-4 w-4 text-white" />
             </div>
-            <span className="text-white font-semibold text-sm">PropertyAdmin</span>
+            <span className="text-white font-semibold text-sm">MillionStay</span>
           </div>
         </div>
 
@@ -101,11 +112,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <NavItem key={item.href} href={item.href} icon={item.icon} label={item.label} />
             ))}
           </SectionToggle>
+
+          <SectionToggle label="CRM">
+            {crmSubNav.map((item) => (
+              <NavItem key={item.href} href={item.href} icon={item.icon} label={item.label} />
+            ))}
+          </SectionToggle>
         </nav>
 
         {/* Footer */}
         <div className="h-12 flex items-center px-4 border-t border-sidebar-border">
-          <span className="text-xs text-white/40">Property Module v1.0</span>
+          <span className="text-xs text-white/40">MillionStay Admin v2</span>
         </div>
       </aside>
 
@@ -122,14 +139,14 @@ export function PageHeader({
   subtitle,
   actions,
 }: {
-  title: string;
+  title: React.ReactNode;
   subtitle?: string;
   actions?: React.ReactNode;
 }) {
   return (
     <div className="flex items-center justify-between px-6 py-4 border-b bg-card">
       <div>
-        <h1 className="text-lg font-semibold text-foreground">{title}</h1>
+        <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">{title}</h1>
         {subtitle && <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}

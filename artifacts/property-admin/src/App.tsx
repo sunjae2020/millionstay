@@ -14,6 +14,14 @@ import SpacePolicyList from "@/pages/property/SpacePolicyList";
 import SpacePolicyDetail from "@/pages/property/SpacePolicyDetail";
 import SpaceList from "@/pages/property/SpaceList";
 import SpaceDetail from "@/pages/property/SpaceDetail";
+import CommissionList from "@/pages/crm/CommissionList";
+import CommissionDetail from "@/pages/crm/CommissionDetail";
+import PaymentInfoList from "@/pages/crm/PaymentInfoList";
+import PaymentInfoDetail from "@/pages/crm/PaymentInfoDetail";
+import ContactList from "@/pages/crm/ContactList";
+import ContactDetail from "@/pages/crm/ContactDetail";
+import AccountList from "@/pages/crm/AccountList";
+import AccountDetail from "@/pages/crm/AccountDetail";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -53,6 +61,26 @@ function Router() {
       <Route path="/property/spaces" component={SpaceList} />
       <Route path="/property/spaces/new" component={SpaceDetail} />
       <Route path="/property/spaces/:id" component={SpaceDetail} />
+
+      {/* CRM - Commissions */}
+      <Route path="/crm/commissions" component={CommissionList} />
+      <Route path="/crm/commissions/new" component={CommissionDetail} />
+      <Route path="/crm/commissions/:id" component={CommissionDetail} />
+
+      {/* CRM - Payment Info */}
+      <Route path="/crm/payment-info" component={PaymentInfoList} />
+      <Route path="/crm/payment-info/new" component={PaymentInfoDetail} />
+      <Route path="/crm/payment-info/:id" component={PaymentInfoDetail} />
+
+      {/* CRM - Contacts */}
+      <Route path="/crm/contacts" component={ContactList} />
+      <Route path="/crm/contacts/new" component={ContactDetail} />
+      <Route path="/crm/contacts/:id" component={ContactDetail} />
+
+      {/* CRM - Accounts */}
+      <Route path="/crm/accounts" component={AccountList} />
+      <Route path="/crm/accounts/new" component={AccountDetail} />
+      <Route path="/crm/accounts/:id" component={AccountDetail} />
 
       <Route component={NotFound} />
     </Switch>

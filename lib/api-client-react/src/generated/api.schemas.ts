@@ -395,6 +395,423 @@ export interface BlockAvailabilityBody {
   action: string;
 }
 
+export interface CommissionResponse {
+  id: number;
+  name: string;
+  commission_type: string;
+  /** @nullable */
+  commission_rate?: number | null;
+  /** @nullable */
+  commission_amount?: number | null;
+  /** @nullable */
+  description?: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateCommissionBody {
+  name: string;
+  commission_type: string;
+  /** @nullable */
+  commission_rate?: number | null;
+  /** @nullable */
+  commission_amount?: number | null;
+  /** @nullable */
+  description?: string | null;
+  status?: string;
+}
+
+export interface UpdateCommissionBody {
+  name?: string;
+  commission_type?: string;
+  /** @nullable */
+  commission_rate?: number | null;
+  /** @nullable */
+  commission_amount?: number | null;
+  /** @nullable */
+  description?: string | null;
+  status?: string;
+}
+
+export interface PaymentInfoResponse {
+  id: number;
+  name: string;
+  payment_type: string;
+  /** @nullable */
+  bank_name?: string | null;
+  /** @nullable */
+  swift_code?: string | null;
+  /** @nullable */
+  bsb_number?: string | null;
+  /** @nullable */
+  account_number?: string | null;
+  /** @nullable */
+  account_name?: string | null;
+  /** @nullable */
+  stripe_account_id?: string | null;
+  /** @nullable */
+  description?: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreatePaymentInfoBody {
+  name: string;
+  payment_type: string;
+  /** @nullable */
+  bank_name?: string | null;
+  /** @nullable */
+  swift_code?: string | null;
+  /** @nullable */
+  bsb_number?: string | null;
+  /** @nullable */
+  account_number?: string | null;
+  /** @nullable */
+  account_name?: string | null;
+  /** @nullable */
+  stripe_account_id?: string | null;
+  /** @nullable */
+  description?: string | null;
+  status?: string;
+}
+
+export interface UpdatePaymentInfoBody {
+  name?: string;
+  payment_type?: string;
+  /** @nullable */
+  bank_name?: string | null;
+  /** @nullable */
+  swift_code?: string | null;
+  /** @nullable */
+  bsb_number?: string | null;
+  /** @nullable */
+  account_number?: string | null;
+  /** @nullable */
+  account_name?: string | null;
+  /** @nullable */
+  stripe_account_id?: string | null;
+  /** @nullable */
+  description?: string | null;
+  status?: string;
+}
+
+export interface ContactResponse {
+  id: number;
+  first_name: string;
+  last_name: string;
+  /** @nullable */
+  title?: string | null;
+  /** @nullable */
+  other_name?: string | null;
+  email: string;
+  /** @nullable */
+  mobile_number?: string | null;
+  /** @nullable */
+  office_number?: string | null;
+  /** @nullable */
+  date_of_birth?: string | null;
+  /** @nullable */
+  nationality?: string | null;
+  /** @nullable */
+  gender?: string | null;
+  /** @nullable */
+  sns_id?: string | null;
+  /** @nullable */
+  passport_number?: string | null;
+  /** @nullable */
+  passport_expiry?: string | null;
+  /** @nullable */
+  visa_type?: string | null;
+  /** @nullable */
+  visa_expiry?: string | null;
+  /** @nullable */
+  address_line1?: string | null;
+  /** @nullable */
+  suburb?: string | null;
+  /** @nullable */
+  state?: string | null;
+  /** @nullable */
+  postcode?: string | null;
+  /** @nullable */
+  country?: string | null;
+  portal_enabled: boolean;
+  /** @nullable */
+  portal_user_id?: string | null;
+  /** @nullable */
+  profile_photo_url?: string | null;
+  /** @nullable */
+  description?: string | null;
+  manual_input: boolean;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateContactBody {
+  first_name: string;
+  last_name: string;
+  /** @nullable */
+  title?: string | null;
+  /** @nullable */
+  other_name?: string | null;
+  email: string;
+  /** @nullable */
+  mobile_number?: string | null;
+  /** @nullable */
+  office_number?: string | null;
+  /** @nullable */
+  date_of_birth?: string | null;
+  /** @nullable */
+  nationality?: string | null;
+  /** @nullable */
+  gender?: string | null;
+  /** @nullable */
+  sns_id?: string | null;
+  /** @nullable */
+  passport_number?: string | null;
+  /** @nullable */
+  passport_expiry?: string | null;
+  /** @nullable */
+  visa_type?: string | null;
+  /** @nullable */
+  visa_expiry?: string | null;
+  /** @nullable */
+  address_line1?: string | null;
+  /** @nullable */
+  suburb?: string | null;
+  /** @nullable */
+  state?: string | null;
+  /** @nullable */
+  postcode?: string | null;
+  /** @nullable */
+  country?: string | null;
+  portal_enabled?: boolean;
+  /** @nullable */
+  portal_user_id?: string | null;
+  /** @nullable */
+  profile_photo_url?: string | null;
+  /** @nullable */
+  description?: string | null;
+  manual_input?: boolean;
+  status?: string;
+}
+
+export interface UpdateContactBody {
+  first_name?: string;
+  last_name?: string;
+  /** @nullable */
+  title?: string | null;
+  /** @nullable */
+  other_name?: string | null;
+  email?: string;
+  /** @nullable */
+  mobile_number?: string | null;
+  /** @nullable */
+  office_number?: string | null;
+  /** @nullable */
+  date_of_birth?: string | null;
+  /** @nullable */
+  nationality?: string | null;
+  /** @nullable */
+  gender?: string | null;
+  /** @nullable */
+  sns_id?: string | null;
+  /** @nullable */
+  passport_number?: string | null;
+  /** @nullable */
+  passport_expiry?: string | null;
+  /** @nullable */
+  visa_type?: string | null;
+  /** @nullable */
+  visa_expiry?: string | null;
+  /** @nullable */
+  address_line1?: string | null;
+  /** @nullable */
+  suburb?: string | null;
+  /** @nullable */
+  state?: string | null;
+  /** @nullable */
+  postcode?: string | null;
+  /** @nullable */
+  country?: string | null;
+  portal_enabled?: boolean;
+  /** @nullable */
+  portal_user_id?: string | null;
+  /** @nullable */
+  profile_photo_url?: string | null;
+  /** @nullable */
+  description?: string | null;
+  manual_input?: boolean;
+  status?: string;
+}
+
+export interface AccountResponse {
+  id: number;
+  name: string;
+  account_type: string;
+  /** @nullable */
+  primary_contact_id?: number | null;
+  /** @nullable */
+  primary_contact_name?: string | null;
+  /** @nullable */
+  secondary_contact_id?: number | null;
+  /** @nullable */
+  secondary_contact_name?: string | null;
+  /** @nullable */
+  account_email?: string | null;
+  /** @nullable */
+  website_url?: string | null;
+  /** @nullable */
+  phone1?: string | null;
+  /** @nullable */
+  phone2?: string | null;
+  /** @nullable */
+  address_line1?: string | null;
+  /** @nullable */
+  address_suburb?: string | null;
+  /** @nullable */
+  address_state?: string | null;
+  /** @nullable */
+  address_postcode?: string | null;
+  /** @nullable */
+  address_country?: string | null;
+  /** @nullable */
+  secondary_address_line1?: string | null;
+  /** @nullable */
+  secondary_address_suburb?: string | null;
+  /** @nullable */
+  secondary_address_state?: string | null;
+  /** @nullable */
+  secondary_address_postcode?: string | null;
+  /** @nullable */
+  secondary_address_country?: string | null;
+  /** @nullable */
+  payment_info_id?: number | null;
+  /** @nullable */
+  payment_info_name?: string | null;
+  /** @nullable */
+  default_commission_id?: number | null;
+  /** @nullable */
+  default_commission_name?: string | null;
+  /** @nullable */
+  default_currency?: string | null;
+  /** @nullable */
+  parent_account_id?: number | null;
+  /** @nullable */
+  parent_account_name?: string | null;
+  /** @nullable */
+  description?: string | null;
+  manual_input: boolean;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateAccountBody {
+  name: string;
+  account_type: string;
+  /** @nullable */
+  primary_contact_id?: number | null;
+  /** @nullable */
+  secondary_contact_id?: number | null;
+  /** @nullable */
+  account_email?: string | null;
+  /** @nullable */
+  website_url?: string | null;
+  /** @nullable */
+  phone1?: string | null;
+  /** @nullable */
+  phone2?: string | null;
+  /** @nullable */
+  address_line1?: string | null;
+  /** @nullable */
+  address_suburb?: string | null;
+  /** @nullable */
+  address_state?: string | null;
+  /** @nullable */
+  address_postcode?: string | null;
+  /** @nullable */
+  address_country?: string | null;
+  /** @nullable */
+  secondary_address_line1?: string | null;
+  /** @nullable */
+  secondary_address_suburb?: string | null;
+  /** @nullable */
+  secondary_address_state?: string | null;
+  /** @nullable */
+  secondary_address_postcode?: string | null;
+  /** @nullable */
+  secondary_address_country?: string | null;
+  /** @nullable */
+  payment_info_id?: number | null;
+  /** @nullable */
+  default_commission_id?: number | null;
+  /** @nullable */
+  default_currency?: string | null;
+  /** @nullable */
+  parent_account_id?: number | null;
+  /** @nullable */
+  description?: string | null;
+  manual_input?: boolean;
+  status?: string;
+}
+
+export interface UpdateAccountBody {
+  name?: string;
+  account_type?: string;
+  /** @nullable */
+  primary_contact_id?: number | null;
+  /** @nullable */
+  secondary_contact_id?: number | null;
+  /** @nullable */
+  account_email?: string | null;
+  /** @nullable */
+  website_url?: string | null;
+  /** @nullable */
+  phone1?: string | null;
+  /** @nullable */
+  phone2?: string | null;
+  /** @nullable */
+  address_line1?: string | null;
+  /** @nullable */
+  address_suburb?: string | null;
+  /** @nullable */
+  address_state?: string | null;
+  /** @nullable */
+  address_postcode?: string | null;
+  /** @nullable */
+  address_country?: string | null;
+  /** @nullable */
+  secondary_address_line1?: string | null;
+  /** @nullable */
+  secondary_address_suburb?: string | null;
+  /** @nullable */
+  secondary_address_state?: string | null;
+  /** @nullable */
+  secondary_address_postcode?: string | null;
+  /** @nullable */
+  secondary_address_country?: string | null;
+  /** @nullable */
+  payment_info_id?: number | null;
+  /** @nullable */
+  default_commission_id?: number | null;
+  /** @nullable */
+  default_currency?: string | null;
+  /** @nullable */
+  parent_account_id?: number | null;
+  /** @nullable */
+  description?: string | null;
+  manual_input?: boolean;
+  status?: string;
+}
+
+export interface LookupItem {
+  id: number;
+  display: string;
+}
+
 export type ListSuburbsParams = {
   country_code?: string;
   state?: string;
@@ -423,4 +840,45 @@ export type ListSpacesParams = {
   property_id?: number;
   booking_mode?: string;
   search?: string;
+};
+
+export type ListCommissionsParams = {
+  search?: string;
+  status?: string;
+};
+
+export type ListPaymentInfoParams = {
+  search?: string;
+  payment_type?: string;
+};
+
+export type ListContactsParams = {
+  search?: string;
+  nationality?: string;
+  gender?: string;
+  portal_enabled?: boolean;
+  status?: string;
+};
+
+export type ListAccountsParams = {
+  search?: string;
+  account_type?: string;
+  status?: string;
+};
+
+export type LookupContactsParams = {
+  q?: string;
+};
+
+export type LookupAccountsParams = {
+  q?: string;
+  type?: string;
+};
+
+export type LookupCommissionsParams = {
+  q?: string;
+};
+
+export type LookupPaymentInfoParams = {
+  q?: string;
 };
