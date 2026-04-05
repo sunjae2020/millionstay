@@ -139,7 +139,9 @@ export default function SpaceList() {
               ) : (
                 pagination.paginatedItems.map((space) => (
                   <tr key={space.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3 font-medium text-foreground">{space.name}</td>
+                    <td className="px-4 py-3 font-medium">
+                      <Link href={`/property/spaces/${space.id}`} className="hover:underline text-[#E8621A]">{space.name}</Link>
+                    </td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">{space.property_name ?? "—"}</td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">{space.space_type ?? "—"}</td>
                     <td className="px-4 py-3"><StatusBadge status={space.status} /></td>

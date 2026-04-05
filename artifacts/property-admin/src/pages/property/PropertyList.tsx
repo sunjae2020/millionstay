@@ -115,7 +115,9 @@ export default function PropertyList() {
               ) : (
                 pagination.paginatedItems.map((prop) => (
                   <tr key={prop.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3 font-medium text-foreground">{prop.name}</td>
+                    <td className="px-4 py-3 font-medium">
+                      <Link href={`/property/properties/${prop.id}`} className="hover:underline text-[#E8621A]">{prop.name}</Link>
+                    </td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">{prop.address ?? "—"}</td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">
                       {prop.owner_account_name ?? (prop.owner_account_id ? `#${prop.owner_account_id}` : "—")}

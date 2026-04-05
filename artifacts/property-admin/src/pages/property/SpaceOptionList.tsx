@@ -96,7 +96,9 @@ export default function SpaceOptionList() {
               ) : (
                 pagination.paginatedItems.map((opt) => (
                   <tr key={opt.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3 font-medium text-foreground">{opt.name}</td>
+                    <td className="px-4 py-3 font-medium">
+                      <Link href={`/property/space-options/${opt.id}`} className="hover:underline text-[#E8621A]">{opt.name}</Link>
+                    </td>
                     <td className="px-4 py-3 text-muted-foreground">{opt.display_name ?? "—"}</td>
                     <td className="px-4 py-3 text-muted-foreground">{opt.category ?? "—"}</td>
                     <td className="px-4 py-3"><StatusBadge status={opt.status} /></td>

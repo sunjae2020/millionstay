@@ -102,7 +102,9 @@ export default function SpacePolicyList() {
               ) : (
                 pagination.paginatedItems.map((policy) => (
                   <tr key={policy.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3 font-medium text-foreground">{policy.name}</td>
+                    <td className="px-4 py-3 font-medium">
+                      <Link href={`/property/space-policies/${policy.id}`} className="hover:underline text-[#E8621A]">{policy.name}</Link>
+                    </td>
                     <td className="px-4 py-3"><BoolCell value={policy.same_gender} /></td>
                     <td className="px-4 py-3"><BoolCell value={policy.lady_only} /></td>
                     <td className="px-4 py-3"><BoolCell value={policy.no_pet} /></td>

@@ -116,7 +116,9 @@ export default function SuburbList() {
               ) : (
                 pagination.paginatedItems.map((suburb) => (
                   <tr key={suburb.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3 font-medium text-foreground">{suburb.name}</td>
+                    <td className="px-4 py-3 font-medium">
+                      <Link href={`/property/suburbs/${suburb.id}`} className="hover:underline text-[#E8621A]">{suburb.name}</Link>
+                    </td>
                     <td className="px-4 py-3 text-muted-foreground">{suburb.area_name ?? "—"}</td>
                     <td className="px-4 py-3 text-muted-foreground">{suburb.state ?? "—"}</td>
                     <td className="px-4 py-3 text-muted-foreground">{suburb.country_code}</td>
