@@ -28,6 +28,7 @@ import emailLogsRouter from "./email-logs";
 import recurringSchedulesRouter from "./recurring-schedules";
 import stripeRouter from "./stripe";
 import integrationsRouter from "./integrations";
+import spaceImagesRouter from "./space-images";
 
 const router: IRouter = Router();
 
@@ -60,5 +61,6 @@ router.use(emailLogsRouter);
 router.use(recurringSchedulesRouter);
 router.use(stripeRouter);
 router.use(integrationsRouter);
+router.use(spaceImagesRouter);
 
 export default router;

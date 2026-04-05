@@ -52,7 +52,7 @@ router.post("/v1/spaces/:id/images", upload.array("images", 20), async (req, res
       thumbnailUrl = uploaded.thumbnail_url;
       cloudinaryId = uploaded.public_id;
     } else {
-      fileUrl = `data:${file.mimetype};base64,${file.buffer.toString("base64").slice(0, 100)}...`;
+      fileUrl = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
     }
 
     if (shouldBePrimary) {
