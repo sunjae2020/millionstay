@@ -38,6 +38,7 @@ import InvoiceList from "@/pages/finance/InvoiceList";
 import InvoiceDetail from "@/pages/finance/InvoiceDetail";
 import WorkOrderList from "@/pages/maintenance/WorkOrderList";
 import WorkOrderDetail from "@/pages/maintenance/WorkOrderDetail";
+import Settings from "@/pages/settings/Settings";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -135,6 +136,9 @@ function Router() {
       <Route path="/maintenance/work-orders" component={WorkOrderList} />
       <Route path="/maintenance/work-orders/new" component={WorkOrderDetail} />
       <Route path="/maintenance/work-orders/:id" component={WorkOrderDetail} />
+
+      {/* Settings */}
+      <Route path="/settings" component={Settings} />
 
       <Route component={NotFound} />
     </Switch>

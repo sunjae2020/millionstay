@@ -188,6 +188,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <NavItem key={item.href} href={item.href} icon={item.icon} label={item.label} />
             ))}
           </SectionToggle>
+
+          <div className="mt-auto pt-2 border-t border-sidebar-border">
+            <NavItem href="/settings" icon={Settings} label="Settings" />
+          </div>
         </nav>
 
         {/* Footer */}
