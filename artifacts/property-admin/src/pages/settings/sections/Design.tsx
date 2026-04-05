@@ -30,7 +30,7 @@ const PRESET_COLORS = [
 export function Design() {
   const { toast } = useToast();
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const { register, handleSubmit, control, watch } = useForm<DesignForm>({
+  const { register, handleSubmit, control, watch, setValue } = useForm<DesignForm>({
     defaultValues: {
       brand_name: "MillionStay",
       primary_color: "#6366f1",
@@ -134,10 +134,7 @@ export function Design() {
                 outline: primaryColor === c.value ? `2px solid ${c.value}` : "none",
                 outlineOffset: "2px",
               }}
-              onClick={() => {
-                const event = { target: { value: c.value } } as React.ChangeEvent<HTMLInputElement>;
-                register("primary_color").onChange(event);
-              }}
+              onClick={() => setValue("primary_color", c.value, { shouldDirty: true })}
             />
           ))}
         </div>
