@@ -1,45 +1,42 @@
+import { useState } from "react";
 import { Layout, PageHeader } from "@/components/Layout";
-import { Settings2, Bell, Shield, CreditCard, Mail, Globe, Users, Building2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  Settings2,
+  Building2,
+  Palette,
+  Users,
+  Bell,
+  Mail,
+  CreditCard,
+  Shield,
+  Globe,
+} from "lucide-react";
+import { CompanyInfo } from "./sections/CompanyInfo";
+import { Design } from "./sections/Design";
+import { UserManagement } from "./sections/UserManagement";
+import { Notifications } from "./sections/Notifications";
+import { Email } from "./sections/Email";
+import { Payments } from "./sections/Payments";
+import { Security } from "./sections/Security";
+import { Integrations } from "./sections/Integrations";
 
-const plannedSections = [
-  {
-    icon: Building2,
-    title: "General",
-    description: "Company name, logo, timezone, and locale settings",
-  },
-  {
-    icon: Users,
-    title: "User Management",
-    description: "Admin accounts, roles, and permission levels",
-  },
-  {
-    icon: Bell,
-    title: "Notifications",
-    description: "Email and in-app notification preferences",
-  },
-  {
-    icon: Mail,
-    title: "Email",
-    description: "SMTP configuration, email templates, and sender details",
-  },
-  {
-    icon: CreditCard,
-    title: "Payments",
-    description: "Stripe integration, payment methods, and billing settings",
-  },
-  {
-    icon: Shield,
-    title: "Security",
-    description: "Password policy, session timeout, and 2FA settings",
-  },
-  {
-    icon: Globe,
-    title: "Integrations",
-    description: "Third-party service connections and API keys",
-  },
+const SECTIONS = [
+  { key: "company", label: "회사 정보", icon: Building2, component: CompanyInfo },
+  { key: "design", label: "디자인", icon: Palette, component: Design },
+  { key: "users", label: "사용자 관리", icon: Users, component: UserManagement },
+  { key: "notifications", label: "알림", icon: Bell, component: Notifications },
+  { key: "email", label: "이메일", icon: Mail, component: Email },
+  { key: "payments", label: "결제", icon: CreditCard, component: Payments },
+  { key: "security", label: "보안", icon: Shield, component: Security },
+  { key: "integrations", label: "연동", icon: Globe, component: Integrations },
 ];
 
 export default function Settings() {
+  const [active, setActive] = useState("company");
+  const current = SECTIONS.find((s) => s.key === active)!;
+  const ActiveComponent = current.component;
+
   return (
     <Layout>
       <PageHeader
@@ -49,37 +46,42 @@ export default function Settings() {
             Settings
           </>
         }
-        subtitle="System configuration and preferences"
+        subtitle="시스템 설정 및 환경 구성"
       />
 
-      <div className="p-6 max-w-3xl">
-        <div className="rounded-lg border border-dashed border-border bg-muted/30 px-6 py-10 text-center mb-8">
-          <Settings2 className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
-          <p className="text-sm font-medium text-foreground">Coming Soon</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Settings will be configured here in a future update.
-          </p>
-        </div>
-
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-          Planned Sections
-        </h2>
-        <div className="grid gap-3">
-          {plannedSections.map(({ icon: Icon, title, description }) => (
-            <div
-              key={title}
-              className="flex items-start gap-4 rounded-lg border bg-card px-4 py-3 opacity-60"
+      <div className="flex h-[calc(100vh-65px)]">
+        {/* Left nav */}
+        <aside className="w-52 shrink-0 border-r bg-muted/20 py-4 px-2 flex flex-col gap-0.5 overflow-y-auto">
+          {SECTIONS.map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              onClick={() => setActive(key)}
+              className={cn(
+                "flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm text-left transition-colors",
+                active === key
+                  ? "bg-primary text-primary-foreground font-medium"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
+              )}
             >
-              <div className="mt-0.5 h-8 w-8 flex-shrink-0 rounded-md bg-muted flex items-center justify-center">
-                <Icon className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">{title}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-              </div>
-            </div>
+              <Icon className="h-4 w-4 shrink-0" />
+              {label}
+            </button>
           ))}
-        </div>
+        </aside>
+
+        {/* Right content */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="max-w-2xl px-8 py-6">
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <current.icon className="h-5 w-5 text-muted-foreground" />
+                {current.label}
+              </h2>
+              <div className="h-px bg-border mt-4" />
+            </div>
+            <ActiveComponent />
+          </div>
+        </main>
       </div>
     </Layout>
   );
