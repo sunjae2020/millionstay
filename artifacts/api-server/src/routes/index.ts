@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
+import dashboardRouter from "./dashboard";
 import suburbsRouter from "./suburbs";
 import propertiesRouter from "./properties";
 import spaceOptionsRouter from "./space-options";
@@ -27,6 +28,7 @@ import stripeRouter from "./stripe";
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(dashboardRouter);
 router.use(suburbsRouter);
 router.use(propertiesRouter);
 router.use(spaceOptionsRouter);
