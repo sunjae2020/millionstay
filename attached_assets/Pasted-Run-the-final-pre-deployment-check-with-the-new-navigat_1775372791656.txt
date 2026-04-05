@@ -1,0 +1,111 @@
+Run the final pre-deployment check with the new navigation structure.
+
+════════════════════════════════════════
+STEP 1 — NAVIGATION COUNT VERIFY
+════════════════════════════════════════
+Confirm sidebar has exactly 7 top-level categories:
+  1. Dashboard
+  2. Account    (4 items)
+  3. Property   (4 items)
+  4. Booking    (4 items)
+  5. Products   (3 items)
+  6. Finance    (5 items)
+  7. Settings   (11 items incl. Reports sub-menu)
+
+Total menu items (excluding Dashboard): 31
+Report: actual count matches expected ✅ / ❌
+
+════════════════════════════════════════
+STEP 2 — CRITICAL ROUTES TEST
+════════════════════════════════════════
+Verify these 10 key routes load without error:
+
+  /dashboard                    → Dashboard with KPI cards
+  /account/contacts             → Contact list page
+  /booking/bookings             → Booking list page
+  /booking/contracts            → Contract list page
+  /products/products            → Product list (81 items)
+  /finance/invoices             → Invoice list page
+  /settings                     → Settings hub (3 sections)
+  /settings/organisation        → Organisation form
+  /settings/contract-types      → Contract types list (8 items)
+  /settings/reports/bookings    → Booking report
+
+For each: ✅ loads correctly / ❌ error (show message)
+
+════════════════════════════════════════
+STEP 3 — REDIRECT VERIFY
+════════════════════════════════════════
+Test 5 key old paths redirect correctly:
+
+  /contracts/contracts          → /booking/contracts
+  /contracts/beneficiaries      → /products/beneficiaries
+  /sales/leads                  → /account/leads
+  /maintenance/organisation     → /settings/organisation
+  /reports/bookings             → /settings/reports/bookings
+
+Each should redirect without showing 404.
+Report: ✅ / ❌ per redirect
+
+════════════════════════════════════════
+STEP 4 — DATA INTEGRITY CHECK
+════════════════════════════════════════
+Run this SQL and show results:
+
+SELECT
+  (SELECT COUNT(*) FROM properties)     AS properties,
+  (SELECT COUNT(*) FROM spaces)         AS spaces,
+  (SELECT COUNT(*) FROM product_catalog) AS products,
+  (SELECT COUNT(*) FROM accounts)       AS accounts,
+  (SELECT COUNT(*) FROM email_template) AS email_templates,
+  (SELECT COUNT(*) FROM system_log)     AS audit_logs;
+
+Expected:
+  properties    : 6
+  spaces        : 21
+  products      : 81
+  accounts      : 7+
+  email_templates: 10
+  audit_logs    : 10+
+
+════════════════════════════════════════
+STEP 5 — ENVIRONMENT VARIABLES CHECK
+════════════════════════════════════════
+Check which production keys are set vs missing:
+
+Report status of each:
+  DATABASE_URL          → ✅ set (Replit PostgreSQL)
+  SESSION_SECRET        → ✅ set
+  NODE_ENV              → ✅/❌ (should be 'production')
+  STRIPE_SECRET_KEY     → ✅ live / ⚠️ test / ❌ missing
+  STRIPE_WEBHOOK_SECRET → ✅/❌
+  RESEND_API_KEY        → ✅/❌
+  EMAIL_FROM            → ✅/❌
+
+For any ❌ missing:
+  List exact Replit Secret key name to add.
+
+════════════════════════════════════════
+STEP 6 — BUILD TEST
+════════════════════════════════════════
+Run: pnpm run build
+
+Report:
+  Server build → ✅ success / ❌ errors (list them)
+  Client build → ✅ success / ❌ errors (list them)
+  Bundle size  → X KB (client)
+
+════════════════════════════════════════
+FINAL SUMMARY
+════════════════════════════════════════
+Show this checklist:
+
+  [ ] 7 nav categories confirmed
+  [ ] 10 key routes working
+  [ ] 5 redirects working
+  [ ] Data counts correct
+  [ ] Environment variables status
+  [ ] Build succeeds
+
+READY FOR DEPLOYMENT: YES / NO
+Blocking issues (if any):
