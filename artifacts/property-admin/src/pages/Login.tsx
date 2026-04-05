@@ -5,7 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useBrand } from "@/contexts/ThemeContext";
-import { Loader2, Lock, Mail } from "lucide-react";
+import { Loader2, Lock, Mail, ChevronDown } from "lucide-react";
+
+const DEMO_ACCOUNTS = [
+  { label: "Super Admin", email: "admin@millionstay.com.au", password: "MillionStay@2026!" },
+];
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -15,6 +19,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [demoOpen, setDemoOpen] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -28,6 +33,13 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function fillDemo(account: (typeof DEMO_ACCOUNTS)[number]) {
+    setEmail(account.email);
+    setPassword(account.password);
+    setDemoOpen(false);
+    setError("");
   }
 
   return (
@@ -94,8 +106,47 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="px-8 pb-6 text-center">
-            <p className="text-xs text-muted-foreground">
+          <div className="px-8 pb-6 space-y-4">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200" />
+              </div>
+              <div className="relative flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setDemoOpen(v => !v)}
+                  className="flex items-center gap-1.5 bg-white px-3 text-xs text-muted-foreground hover:text-slate-700 transition-colors select-none"
+                >
+                  Demo accounts — click to fill
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${demoOpen ? "rotate-180" : ""}`} />
+                </button>
+              </div>
+            </div>
+
+            {demoOpen && (
+              <div className="rounded-lg border border-slate-200 overflow-hidden divide-y divide-slate-100">
+                {DEMO_ACCOUNTS.map(account => (
+                  <button
+                    key={account.email}
+                    type="button"
+                    onClick={() => fillDemo(account)}
+                    className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-50 transition-colors group"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-slate-800 group-hover:text-blue-600 transition-colors">
+                        {account.label}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{account.email}</p>
+                    </div>
+                    <span className="text-xs text-blue-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                      Fill ↵
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <p className="text-center text-xs text-muted-foreground">
               Secure admin access · {brandName} v2
             </p>
           </div>
