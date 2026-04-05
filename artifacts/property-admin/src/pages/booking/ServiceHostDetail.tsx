@@ -122,6 +122,22 @@ export default function ServiceHostDetail() {
               )}
             />
           </div>
+          <div>
+            <Label>Contract Product</Label>
+            <Controller
+              name="contract_product_id"
+              control={control}
+              render={({ field }) => (
+                <LookupSelect
+                  lookupUrl={`${BASE}api/v1/lookup/contract-products`}
+                  placeholder="Search contract products..."
+                  value={field.value ?? null}
+                  onChange={field.onChange}
+                  displayText={(host as any)?.contract_product_name}
+                />
+              )}
+            />
+          </div>
         </div>
 
         <div className="rounded-lg border bg-white p-6 space-y-4">

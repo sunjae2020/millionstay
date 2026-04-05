@@ -15,11 +15,13 @@ import {
   useSubmitBooking, useConfirmBooking, useRejectBooking,
   useCheckInBooking, useCheckOutBooking, useCancelBooking, useExtendBooking,
   useListBookingDocuments, useCreateBookingDocument, useVerifyBookingDocument, useRejectBookingDocument,
+  useListInvoices,
   getListBookingsQueryKey, getGetBookingQueryKey, getListBookingDocumentsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Save, FileText, CheckCircle2, XCircle, Upload } from "lucide-react";
 import { LookupSelect } from "@/components/LookupSelect";
+import { Link } from "wouter";
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -85,6 +87,9 @@ export default function BookingDetail() {
   const { data: booking, refetch } = useGetBooking(Number(id), { query: { enabled: !isNew } });
   const { data: documents } = useListBookingDocuments(Number(id), {
     query: { enabled: !isNew, queryKey: getListBookingDocumentsQueryKey(Number(id)) },
+  });
+  const { data: invoices } = useListInvoices({ booking_id: isNew ? undefined : Number(id) }, {
+    query: { enabled: !isNew },
   });
 
   const { register, handleSubmit, reset, control, watch } = useForm<FormData>({
@@ -283,7 +288,7 @@ export default function BookingDetail() {
         </div>
 
         <div className="rounded-lg border bg-white p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-blue-600 uppercase tracking-wider border-b pb-2">SPACE</h3>
+          <h3 className="text-xs font-semibold text-blue-600 uppercase tracking-wider border-b pb-2">SPACE & PRODUCT</h3>
           <div>
             <Label>Space *</Label>
             <Controller name="space_id" control={control} render={({ field }) => (
@@ -306,6 +311,18 @@ export default function BookingDetail() {
               )}
             </div>
           )}
+          <div>
+            <Label>Contract Product</Label>
+            <Controller name="contract_product_id" control={control} render={({ field }) => (
+              <LookupSelect
+                lookupUrl={`${BASE}api/v1/lookup/contract-products`}
+                placeholder="Search contract products..."
+                value={field.value}
+                onChange={field.onChange}
+                displayText={(booking as any)?.contract_product_name ?? undefined}
+              />
+            )} />
+          </div>
         </div>
 
         <div className="rounded-lg border bg-white p-6 space-y-4">
@@ -355,13 +372,13 @@ export default function BookingDetail() {
         {!isNew && (
           <>
             <div className="flex border-b gap-1">
-              {["Documents", "Notes", "Activities"].map((tab) => (
+              {["Documents", "Invoices", "Notes", "Activities"].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab.toLowerCase())}
                   className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.toLowerCase() ? "border-blue-600 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground"}`}
                 >
-                  {tab}
+                  {tab}{tab === "Invoices" && invoices?.length ? ` (${invoices.length})` : ""}
                 </button>
               ))}
             </div>
@@ -412,6 +429,49 @@ export default function BookingDetail() {
                                 </Button>
                               )}
                             </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "invoices" && (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-medium text-sm">Invoices</h4>
+                  <Link href={`/finance/invoices/new`}>
+                    <button className="text-xs text-blue-600 hover:underline">+ New Invoice</button>
+                  </Link>
+                </div>
+                <div className="rounded-lg border bg-white overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 border-b">
+                      <tr>
+                        {["Ref", "Amount", "Currency", "Due Date", "Status"].map((h) => (
+                          <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {!invoices?.length ? (
+                        <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">No invoices for this booking</td></tr>
+                      ) : invoices.map((inv: any) => (
+                        <tr key={inv.id} className="border-b hover:bg-gray-50">
+                          <td className="px-4 py-3">
+                            <Link href={`/finance/invoices/${inv.id}`}>
+                              <span className="text-blue-600 hover:underline cursor-pointer">{inv.invoice_ref ?? `#${inv.id}`}</span>
+                            </Link>
+                          </td>
+                          <td className="px-4 py-3">{inv.amount != null ? Number(inv.amount).toFixed(2) : "—"}</td>
+                          <td className="px-4 py-3">{inv.currency ?? "—"}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{inv.due_date ?? "—"}</td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${inv.status === "Paid" ? "bg-green-100 text-green-700" : inv.status === "Sent" ? "bg-blue-100 text-blue-700" : inv.status === "Void" ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-600"}`}>
+                              {inv.status ?? "Draft"}
+                            </span>
                           </td>
                         </tr>
                       ))}
