@@ -1083,6 +1083,628 @@ export interface LookupSuburbsQueryParams {
   q?: string;
 }
 
+export interface ServiceHost {
+  id: number;
+  name: string;
+  /** @nullable */
+  account_id?: number | null;
+  /** @nullable */
+  account_name?: string | null;
+  /** @nullable */
+  contract_product_id?: number | null;
+  /** @nullable */
+  from_date?: string | null;
+  /** @nullable */
+  to_date?: string | null;
+  /** @nullable */
+  in_call?: boolean | null;
+  /** @nullable */
+  out_call?: boolean | null;
+  /** @nullable */
+  business_start_hour?: number | null;
+  /** @nullable */
+  business_end_hour?: number | null;
+  /** @nullable */
+  description?: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateServiceHostBody {
+  name: string;
+  /** @nullable */
+  account_id?: number | null;
+  /** @nullable */
+  contract_product_id?: number | null;
+  /** @nullable */
+  from_date?: string | null;
+  /** @nullable */
+  to_date?: string | null;
+  /** @nullable */
+  in_call?: boolean | null;
+  /** @nullable */
+  out_call?: boolean | null;
+  /** @nullable */
+  business_start_hour?: number | null;
+  /** @nullable */
+  business_end_hour?: number | null;
+  /** @nullable */
+  description?: string | null;
+  status?: string;
+}
+
+export interface ListServiceHostsQueryParams {
+  search?: string;
+  status?: string;
+}
+
+export interface GetServiceHostParams {
+  id: number;
+}
+
+export interface UpdateServiceHostParams {
+  id: number;
+}
+
+export interface DeleteServiceHostParams {
+  id: number;
+}
+
+export interface Booking {
+  id: number;
+  booking_ref: string;
+  /** @nullable */
+  name?: string | null;
+  /** @nullable */
+  account_id?: number | null;
+  /** @nullable */
+  account_name?: string | null;
+  /** @nullable */
+  contact_id?: number | null;
+  /** @nullable */
+  contact_name?: string | null;
+  booking_status: string;
+  /** @nullable */
+  booking_source?: string | null;
+  /** @nullable */
+  customer_notes?: string | null;
+  /** @nullable */
+  space_id?: number | null;
+  /** @nullable */
+  space_name?: string | null;
+  /** @nullable */
+  space_type?: string | null;
+  /** @nullable */
+  booking_mode?: string | null;
+  /** @nullable */
+  property_address?: string | null;
+  /** @nullable */
+  check_in_date?: string | null;
+  /** @nullable */
+  check_out_date?: string | null;
+  /** @nullable */
+  stay_nights?: number | null;
+  /** @nullable */
+  stay_weeks?: string | null;
+  /** @nullable */
+  agreed_weekly_rate?: string | null;
+  /** @nullable */
+  total_rent?: string | null;
+  /** @nullable */
+  currency?: string | null;
+  /** @nullable */
+  num_guests?: number | null;
+  /** @nullable */
+  contract_product_id?: number | null;
+  /** @nullable */
+  cancellation_reason?: string | null;
+  /** @nullable */
+  cancelled_at?: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BookingListItem {
+  id: number;
+  booking_ref: string;
+  booking_status: string;
+  /** @nullable */
+  booking_source?: string | null;
+  /** @nullable */
+  account_name?: string | null;
+  /** @nullable */
+  contact_name?: string | null;
+  /** @nullable */
+  space_name?: string | null;
+  /** @nullable */
+  space_type?: string | null;
+  /** @nullable */
+  property_address?: string | null;
+  /** @nullable */
+  check_in_date?: string | null;
+  /** @nullable */
+  check_out_date?: string | null;
+  /** @nullable */
+  stay_nights?: number | null;
+  /** @nullable */
+  agreed_weekly_rate?: string | null;
+  /** @nullable */
+  total_rent?: string | null;
+  status: string;
+  created_at: string;
+}
+
+export interface CreateBookingBody {
+  /** @nullable */
+  account_id?: number | null;
+  /** @nullable */
+  contact_id?: number | null;
+  /** @nullable */
+  booking_source?: string | null;
+  /** @nullable */
+  customer_notes?: string | null;
+  /** @nullable */
+  space_id?: number | null;
+  /** @nullable */
+  check_in_date?: string | null;
+  /** @nullable */
+  check_out_date?: string | null;
+  /** @nullable */
+  agreed_weekly_rate?: string | null;
+  /** @nullable */
+  currency?: string | null;
+  /** @nullable */
+  num_guests?: number | null;
+  /** @nullable */
+  contract_product_id?: number | null;
+  status?: string;
+}
+
+export interface ListBookingsQueryParams {
+  booking_status?: string;
+  booking_source?: string;
+  space_id?: number;
+  account_id?: number;
+  check_in_from?: string;
+  check_in_to?: string;
+  search?: string;
+  status?: string;
+}
+
+export interface GetBookingParams {
+  id: number;
+}
+
+export interface UpdateBookingParams {
+  id: number;
+}
+
+export interface DeleteBookingParams {
+  id: number;
+}
+
+export interface CancelBookingBody {
+  reason: string;
+}
+
+export interface ExtendBookingBody {
+  new_check_out_date: string;
+}
+
+export interface BookingDocument {
+  id: number;
+  booking_id: number;
+  /** @nullable */
+  doc_type?: string | null;
+  /** @nullable */
+  file_name?: string | null;
+  /** @nullable */
+  file_url?: string | null;
+  verified_status: string;
+  /** @nullable */
+  rejection_reason?: string | null;
+  /** @nullable */
+  expiry_date?: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateBookingDocumentBody {
+  /** @nullable */
+  doc_type?: string | null;
+  /** @nullable */
+  file_name?: string | null;
+  /** @nullable */
+  file_url?: string | null;
+  /** @nullable */
+  expiry_date?: string | null;
+}
+
+export interface RejectDocumentBody {
+  rejection_reason: string;
+}
+
+export interface ContractProduct {
+  id: number;
+  name: string;
+  /** @nullable */
+  description?: string | null;
+  product_type: string;
+  status: string;
+  /** @nullable */
+  space_id?: number | null;
+  /** @nullable */
+  space_name?: string | null;
+  /** @nullable */
+  weekly_rate?: number | null;
+  /** @nullable */
+  monthly_rate?: number | null;
+  currency: string;
+  /** @nullable */
+  bond_weeks?: number | null;
+  /** @nullable */
+  advance_weeks?: number | null;
+  /** @nullable */
+  min_stay_weeks?: number | null;
+  /** @nullable */
+  max_stay_weeks?: number | null;
+  includes_wifi: boolean;
+  includes_parking: boolean;
+  includes_utilities: boolean;
+  includes_meals: boolean;
+  includes_laundry: boolean;
+  includes_cleaning: boolean;
+  /** @nullable */
+  extra_inclusions?: string | null;
+  /** @nullable */
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateContractProductBody {
+  name: string;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  product_type?: string | null;
+  /** @nullable */
+  status?: string | null;
+  /** @nullable */
+  space_id?: number | null;
+  /** @nullable */
+  weekly_rate?: number | null;
+  /** @nullable */
+  monthly_rate?: number | null;
+  /** @nullable */
+  currency?: string | null;
+  /** @nullable */
+  bond_weeks?: number | null;
+  /** @nullable */
+  advance_weeks?: number | null;
+  /** @nullable */
+  min_stay_weeks?: number | null;
+  /** @nullable */
+  max_stay_weeks?: number | null;
+  /** @nullable */
+  includes_wifi?: boolean | null;
+  /** @nullable */
+  includes_parking?: boolean | null;
+  /** @nullable */
+  includes_utilities?: boolean | null;
+  /** @nullable */
+  includes_meals?: boolean | null;
+  /** @nullable */
+  includes_laundry?: boolean | null;
+  /** @nullable */
+  includes_cleaning?: boolean | null;
+  /** @nullable */
+  extra_inclusions?: string | null;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export interface Contract {
+  id: number;
+  contract_ref: string;
+  /** @nullable */
+  booking_id?: number | null;
+  /** @nullable */
+  contract_product_id?: number | null;
+  /** @nullable */
+  tenant_account_id?: number | null;
+  /** @nullable */
+  tenant_name?: string | null;
+  /** @nullable */
+  landlord_account_id?: number | null;
+  /** @nullable */
+  landlord_name?: string | null;
+  /** @nullable */
+  space_id?: number | null;
+  /** @nullable */
+  space_name?: string | null;
+  /** @nullable */
+  contract_product_name?: string | null;
+  /** @nullable */
+  start_date?: string | null;
+  /** @nullable */
+  end_date?: string | null;
+  /** @nullable */
+  weekly_rate?: number | null;
+  /** @nullable */
+  total_rent?: number | null;
+  /** @nullable */
+  bond_amount?: number | null;
+  /** @nullable */
+  advance_amount?: number | null;
+  currency: string;
+  status: string;
+  /** @nullable */
+  sent_at?: string | null;
+  /** @nullable */
+  signed_at?: string | null;
+  /** @nullable */
+  effective_date?: string | null;
+  /** @nullable */
+  expiry_date?: string | null;
+  /** @nullable */
+  termination_reason?: string | null;
+  /** @nullable */
+  document_url?: string | null;
+  /** @nullable */
+  terms_text?: string | null;
+  /** @nullable */
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateContractBody {
+  /** @nullable */
+  booking_id?: number | null;
+  /** @nullable */
+  contract_product_id?: number | null;
+  /** @nullable */
+  tenant_account_id?: number | null;
+  /** @nullable */
+  landlord_account_id?: number | null;
+  /** @nullable */
+  space_id?: number | null;
+  /** @nullable */
+  start_date?: string | null;
+  /** @nullable */
+  end_date?: string | null;
+  /** @nullable */
+  weekly_rate?: number | null;
+  /** @nullable */
+  total_rent?: number | null;
+  /** @nullable */
+  bond_amount?: number | null;
+  /** @nullable */
+  advance_amount?: number | null;
+  /** @nullable */
+  currency?: string | null;
+  /** @nullable */
+  document_url?: string | null;
+  /** @nullable */
+  terms_text?: string | null;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export interface TerminateContractBody {
+  termination_reason: string;
+}
+
+export type InvoiceStatus = (typeof InvoiceStatus)[keyof typeof InvoiceStatus];
+
+export const InvoiceStatus = {
+  Draft: "Draft",
+  Sent: "Sent",
+  Paid: "Paid",
+  Void: "Void",
+} as const;
+
+export interface Invoice {
+  id: number;
+  invoice_ref: string;
+  /** @nullable */
+  booking_id?: number | null;
+  /** @nullable */
+  contract_id?: number | null;
+  /** @nullable */
+  account_id?: number | null;
+  amount: number;
+  currency: string;
+  status: InvoiceStatus;
+  /** @nullable */
+  due_date?: string | null;
+  /** @nullable */
+  paid_at?: string | null;
+  /** @nullable */
+  payment_method?: string | null;
+  /** @nullable */
+  stripe_payment_intent_id?: string | null;
+  /** @nullable */
+  stripe_checkout_url?: string | null;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+  /** @nullable */
+  booking_ref?: string | null;
+  /** @nullable */
+  contract_ref?: string | null;
+  /** @nullable */
+  account_name?: string | null;
+}
+
+export interface CreateInvoiceBody {
+  /** @nullable */
+  booking_id?: number | null;
+  /** @nullable */
+  contract_id?: number | null;
+  /** @nullable */
+  account_id?: number | null;
+  amount: number;
+  currency?: string;
+  /** @nullable */
+  due_date?: string | null;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export interface UpdateInvoiceBody {
+  /** @nullable */
+  booking_id?: number | null;
+  /** @nullable */
+  contract_id?: number | null;
+  /** @nullable */
+  account_id?: number | null;
+  /** @nullable */
+  amount?: number | null;
+  /** @nullable */
+  currency?: string | null;
+  /** @nullable */
+  due_date?: string | null;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export interface MarkPaidBody {
+  payment_method: string;
+  /** @nullable */
+  paid_at?: string | null;
+}
+
+export type WorkOrderStatus =
+  (typeof WorkOrderStatus)[keyof typeof WorkOrderStatus];
+
+export const WorkOrderStatus = {
+  Open: "Open",
+  InProgress: "InProgress",
+  PendingReview: "PendingReview",
+  Completed: "Completed",
+  Cancelled: "Cancelled",
+} as const;
+
+export type WorkOrderPriority =
+  (typeof WorkOrderPriority)[keyof typeof WorkOrderPriority];
+
+export const WorkOrderPriority = {
+  Low: "Low",
+  Normal: "Normal",
+  High: "High",
+  Urgent: "Urgent",
+} as const;
+
+export interface WorkOrder {
+  id: number;
+  order_ref: string;
+  /** @nullable */
+  property_id?: number | null;
+  /** @nullable */
+  space_id?: number | null;
+  title: string;
+  /** @nullable */
+  description?: string | null;
+  status: WorkOrderStatus;
+  priority: WorkOrderPriority;
+  /** @nullable */
+  category?: string | null;
+  /** @nullable */
+  assigned_contact_id?: number | null;
+  /** @nullable */
+  reported_at?: string | null;
+  /** @nullable */
+  scheduled_at?: string | null;
+  /** @nullable */
+  completed_at?: string | null;
+  /** @nullable */
+  cost?: number | null;
+  currency: string;
+  /** @nullable */
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+  /** @nullable */
+  property_name?: string | null;
+  /** @nullable */
+  space_name?: string | null;
+  /** @nullable */
+  assigned_contact_name?: string | null;
+}
+
+export interface CreateWorkOrderBody {
+  /** @nullable */
+  property_id?: number | null;
+  /** @nullable */
+  space_id?: number | null;
+  title: string;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  priority?: string | null;
+  /** @nullable */
+  category?: string | null;
+  /** @nullable */
+  assigned_contact_id?: number | null;
+  /** @nullable */
+  reported_at?: string | null;
+  /** @nullable */
+  scheduled_at?: string | null;
+  /** @nullable */
+  cost?: number | null;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export interface UpdateWorkOrderBody {
+  /** @nullable */
+  property_id?: number | null;
+  /** @nullable */
+  space_id?: number | null;
+  /** @nullable */
+  title?: string | null;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  priority?: string | null;
+  /** @nullable */
+  category?: string | null;
+  /** @nullable */
+  assigned_contact_id?: number | null;
+  /** @nullable */
+  reported_at?: string | null;
+  /** @nullable */
+  scheduled_at?: string | null;
+  /** @nullable */
+  cost?: number | null;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export interface CompleteWorkOrderBody {
+  /** @nullable */
+  cost?: number | null;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export interface CancelWorkOrderBody {
+  /** @nullable */
+  notes?: string | null;
+}
+
 export type ListSuburbsParams = {
   country_code?: string;
   state?: string;
@@ -1188,4 +1810,81 @@ export type ConvertLead200 = {
   booking_id?: number;
   booking_ref: string;
   lead_ref: string;
+};
+
+export type ListServiceHostsParams = {
+  search?: string;
+  status?: string;
+};
+
+export type ListBookingsParams = {
+  booking_status?: string;
+  booking_source?: string;
+  space_id?: number;
+  account_id?: number;
+  check_in_from?: string;
+  check_in_to?: string;
+  search?: string;
+  status?: string;
+};
+
+export type ListContractProductsParams = {
+  q?: string;
+  status?: string;
+  product_type?: string;
+  space_id?: number;
+};
+
+export type LookupContractProductsParams = {
+  q?: string;
+};
+
+export type LookupContractProducts200Item = {
+  id: number;
+  name: string;
+};
+
+export type ListContractsParams = {
+  q?: string;
+  status?: string;
+  tenant_account_id?: number;
+  space_id?: number;
+};
+
+export type SignContractBody = {
+  /** @nullable */
+  document_url?: string | null;
+};
+
+export type LookupContractsParams = {
+  q?: string;
+};
+
+export type LookupContracts200Item = {
+  id: number;
+  display: string;
+};
+
+export type ListInvoicesParams = {
+  q?: string;
+  status?: string;
+  booking_id?: number;
+  contract_id?: number;
+  account_id?: number;
+};
+
+export type LookupInvoicesParams = {
+  q?: string;
+};
+
+export type LookupInvoices200Item = {
+  id: number;
+  display: string;
+};
+
+export type ListWorkOrdersParams = {
+  q?: string;
+  status?: string;
+  priority?: string;
+  property_id?: number;
 };

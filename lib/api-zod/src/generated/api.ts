@@ -1740,3 +1740,1858 @@ export const MarkLeadLostResponse = zod.object({
   created_at: zod.string(),
   updated_at: zod.string(),
 });
+
+/**
+ * @summary List service hosts
+ */
+export const ListServiceHostsQueryParams = zod.object({
+  search: zod.coerce.string().optional(),
+  status: zod.coerce.string().optional(),
+});
+
+export const ListServiceHostsResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  account_id: zod.number().nullish(),
+  account_name: zod.string().nullish(),
+  contract_product_id: zod.number().nullish(),
+  from_date: zod.string().nullish(),
+  to_date: zod.string().nullish(),
+  in_call: zod.boolean().nullish(),
+  out_call: zod.boolean().nullish(),
+  business_start_hour: zod.number().nullish(),
+  business_end_hour: zod.number().nullish(),
+  description: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+export const ListServiceHostsResponse = zod.array(ListServiceHostsResponseItem);
+
+/**
+ * @summary Create service host
+ */
+export const createServiceHostBodyStatusDefault = `Active`;
+
+export const CreateServiceHostBody = zod.object({
+  name: zod.string(),
+  account_id: zod.number().nullish(),
+  contract_product_id: zod.number().nullish(),
+  from_date: zod.string().nullish(),
+  to_date: zod.string().nullish(),
+  in_call: zod.boolean().nullish(),
+  out_call: zod.boolean().nullish(),
+  business_start_hour: zod.number().nullish(),
+  business_end_hour: zod.number().nullish(),
+  description: zod.string().nullish(),
+  status: zod.string().default(createServiceHostBodyStatusDefault),
+});
+
+/**
+ * @summary Get service host
+ */
+export const GetServiceHostParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetServiceHostResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  account_id: zod.number().nullish(),
+  account_name: zod.string().nullish(),
+  contract_product_id: zod.number().nullish(),
+  from_date: zod.string().nullish(),
+  to_date: zod.string().nullish(),
+  in_call: zod.boolean().nullish(),
+  out_call: zod.boolean().nullish(),
+  business_start_hour: zod.number().nullish(),
+  business_end_hour: zod.number().nullish(),
+  description: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Update service host
+ */
+export const UpdateServiceHostParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const updateServiceHostBodyStatusDefault = `Active`;
+
+export const UpdateServiceHostBody = zod.object({
+  name: zod.string(),
+  account_id: zod.number().nullish(),
+  contract_product_id: zod.number().nullish(),
+  from_date: zod.string().nullish(),
+  to_date: zod.string().nullish(),
+  in_call: zod.boolean().nullish(),
+  out_call: zod.boolean().nullish(),
+  business_start_hour: zod.number().nullish(),
+  business_end_hour: zod.number().nullish(),
+  description: zod.string().nullish(),
+  status: zod.string().default(updateServiceHostBodyStatusDefault),
+});
+
+export const UpdateServiceHostResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  account_id: zod.number().nullish(),
+  account_name: zod.string().nullish(),
+  contract_product_id: zod.number().nullish(),
+  from_date: zod.string().nullish(),
+  to_date: zod.string().nullish(),
+  in_call: zod.boolean().nullish(),
+  out_call: zod.boolean().nullish(),
+  business_start_hour: zod.number().nullish(),
+  business_end_hour: zod.number().nullish(),
+  description: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Delete service host
+ */
+export const DeleteServiceHostParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary List bookings
+ */
+export const ListBookingsQueryParams = zod.object({
+  booking_status: zod.coerce.string().optional(),
+  booking_source: zod.coerce.string().optional(),
+  space_id: zod.coerce.number().optional(),
+  account_id: zod.coerce.number().optional(),
+  check_in_from: zod.coerce.string().optional(),
+  check_in_to: zod.coerce.string().optional(),
+  search: zod.coerce.string().optional(),
+  status: zod.coerce.string().optional(),
+});
+
+export const ListBookingsResponseItem = zod.object({
+  id: zod.number(),
+  booking_ref: zod.string(),
+  booking_status: zod.string(),
+  booking_source: zod.string().nullish(),
+  account_name: zod.string().nullish(),
+  contact_name: zod.string().nullish(),
+  space_name: zod.string().nullish(),
+  space_type: zod.string().nullish(),
+  property_address: zod.string().nullish(),
+  check_in_date: zod.string().nullish(),
+  check_out_date: zod.string().nullish(),
+  stay_nights: zod.number().nullish(),
+  agreed_weekly_rate: zod.string().nullish(),
+  total_rent: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.string(),
+});
+export const ListBookingsResponse = zod.array(ListBookingsResponseItem);
+
+/**
+ * @summary Create booking
+ */
+export const createBookingBodyStatusDefault = `Active`;
+
+export const CreateBookingBody = zod.object({
+  account_id: zod.number().nullish(),
+  contact_id: zod.number().nullish(),
+  booking_source: zod.string().nullish(),
+  customer_notes: zod.string().nullish(),
+  space_id: zod.number().nullish(),
+  check_in_date: zod.string().nullish(),
+  check_out_date: zod.string().nullish(),
+  agreed_weekly_rate: zod.string().nullish(),
+  currency: zod.string().nullish(),
+  num_guests: zod.number().nullish(),
+  contract_product_id: zod.number().nullish(),
+  status: zod.string().default(createBookingBodyStatusDefault),
+});
+
+/**
+ * @summary Get booking
+ */
+export const GetBookingParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetBookingResponse = zod.object({
+  id: zod.number(),
+  booking_ref: zod.string(),
+  name: zod.string().nullish(),
+  account_id: zod.number().nullish(),
+  account_name: zod.string().nullish(),
+  contact_id: zod.number().nullish(),
+  contact_name: zod.string().nullish(),
+  booking_status: zod.string(),
+  booking_source: zod.string().nullish(),
+  customer_notes: zod.string().nullish(),
+  space_id: zod.number().nullish(),
+  space_name: zod.string().nullish(),
+  space_type: zod.string().nullish(),
+  booking_mode: zod.string().nullish(),
+  property_address: zod.string().nullish(),
+  check_in_date: zod.string().nullish(),
+  check_out_date: zod.string().nullish(),
+  stay_nights: zod.number().nullish(),
+  stay_weeks: zod.string().nullish(),
+  agreed_weekly_rate: zod.string().nullish(),
+  total_rent: zod.string().nullish(),
+  currency: zod.string().nullish(),
+  num_guests: zod.number().nullish(),
+  contract_product_id: zod.number().nullish(),
+  cancellation_reason: zod.string().nullish(),
+  cancelled_at: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Update booking
+ */
+export const UpdateBookingParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const updateBookingBodyStatusDefault = `Active`;
+
+export const UpdateBookingBody = zod.object({
+  account_id: zod.number().nullish(),
+  contact_id: zod.number().nullish(),
+  booking_source: zod.string().nullish(),
+  customer_notes: zod.string().nullish(),
+  space_id: zod.number().nullish(),
+  check_in_date: zod.string().nullish(),
+  check_out_date: zod.string().nullish(),
+  agreed_weekly_rate: zod.string().nullish(),
+  currency: zod.string().nullish(),
+  num_guests: zod.number().nullish(),
+  contract_product_id: zod.number().nullish(),
+  status: zod.string().default(updateBookingBodyStatusDefault),
+});
+
+export const UpdateBookingResponse = zod.object({
+  id: zod.number(),
+  booking_ref: zod.string(),
+  name: zod.string().nullish(),
+  account_id: zod.number().nullish(),
+  account_name: zod.string().nullish(),
+  contact_id: zod.number().nullish(),
+  contact_name: zod.string().nullish(),
+  booking_status: zod.string(),
+  booking_source: zod.string().nullish(),
+  customer_notes: zod.string().nullish(),
+  space_id: zod.number().nullish(),
+  space_name: zod.string().nullish(),
+  space_type: zod.string().nullish(),
+  booking_mode: zod.string().nullish(),
+  property_address: zod.string().nullish(),
+  check_in_date: zod.string().nullish(),
+  check_out_date: zod.string().nullish(),
+  stay_nights: zod.number().nullish(),
+  stay_weeks: zod.string().nullish(),
+  agreed_weekly_rate: zod.string().nullish(),
+  total_rent: zod.string().nullish(),
+  currency: zod.string().nullish(),
+  num_guests: zod.number().nullish(),
+  contract_product_id: zod.number().nullish(),
+  cancellation_reason: zod.string().nullish(),
+  cancelled_at: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Delete booking (soft, Draft only)
+ */
+export const DeleteBookingParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary Submit booking (Draft → PendingPayment)
+ */
+export const SubmitBookingParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const SubmitBookingResponse = zod.object({
+  id: zod.number(),
+  booking_ref: zod.string(),
+  name: zod.string().nullish(),
+  account_id: zod.number().nullish(),
+  account_name: zod.string().nullish(),
+  contact_id: zod.number().nullish(),
+  contact_name: zod.string().nullish(),
+  booking_status: zod.string(),
+  booking_source: zod.string().nullish(),
+  customer_notes: zod.string().nullish(),
+  space_id: zod.number().nullish(),
+  space_name: zod.string().nullish(),
+  space_type: zod.string().nullish(),
+  booking_mode: zod.string().nullish(),
+  property_address: zod.string().nullish(),
+  check_in_date: zod.string().nullish(),
+  check_out_date: zod.string().nullish(),
+  stay_nights: zod.number().nullish(),
+  stay_weeks: zod.string().nullish(),
+  agreed_weekly_rate: zod.string().nullish(),
+  total_rent: zod.string().nullish(),
+  currency: zod.string().nullish(),
+  num_guests: zod.number().nullish(),
+  contract_product_id: zod.number().nullish(),
+  cancellation_reason: zod.string().nullish(),
+  cancelled_at: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Confirm booking (PendingApproval → Confirmed)
+ */
+export const ConfirmBookingParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ConfirmBookingResponse = zod.object({
+  id: zod.number(),
+  booking_ref: zod.string(),
+  name: zod.string().nullish(),
+  account_id: zod.number().nullish(),
+  account_name: zod.string().nullish(),
+  contact_id: zod.number().nullish(),
+  contact_name: zod.string().nullish(),
+  booking_status: zod.string(),
+  booking_source: zod.string().nullish(),
+  customer_notes: zod.string().nullish(),
+  space_id: zod.number().nullish(),
+  space_name: zod.string().nullish(),
+  space_type: zod.string().nullish(),
+  booking_mode: zod.string().nullish(),
+  property_address: zod.string().nullish(),
+  check_in_date: zod.string().nullish(),
+  check_out_date: zod.string().nullish(),
+  stay_nights: zod.number().nullish(),
+  stay_weeks: zod.string().nullish(),
+  agreed_weekly_rate: zod.string().nullish(),
+  total_rent: zod.string().nullish(),
+  currency: zod.string().nullish(),
+  num_guests: zod.number().nullish(),
+  contract_product_id: zod.number().nullish(),
+  cancellation_reason: zod.string().nullish(),
+  cancelled_at: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Reject booking (PendingApproval → Cancelled)
+ */
+export const RejectBookingParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const RejectBookingBody = zod.object({
+  reason: zod.string(),
+});
+
+export const RejectBookingResponse = zod.object({
+  id: zod.number(),
+  booking_ref: zod.string(),
+  name: zod.string().nullish(),
+  account_id: zod.number().nullish(),
+  account_name: zod.string().nullish(),
+  contact_id: zod.number().nullish(),
+  contact_name: zod.string().nullish(),
+  booking_status: zod.string(),
+  booking_source: zod.string().nullish(),
+  customer_notes: zod.string().nullish(),
+  space_id: zod.number().nullish(),
+  space_name: zod.string().nullish(),
+  space_type: zod.string().nullish(),
+  booking_mode: zod.string().nullish(),
+  property_address: zod.string().nullish(),
+  check_in_date: zod.string().nullish(),
+  check_out_date: zod.string().nullish(),
+  stay_nights: zod.number().nullish(),
+  stay_weeks: zod.string().nullish(),
+  agreed_weekly_rate: zod.string().nullish(),
+  total_rent: zod.string().nullish(),
+  currency: zod.string().nullish(),
+  num_guests: zod.number().nullish(),
+  contract_product_id: zod.number().nullish(),
+  cancellation_reason: zod.string().nullish(),
+  cancelled_at: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Check in booking (Confirmed → Active)
+ */
+export const CheckInBookingParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const CheckInBookingResponse = zod.object({
+  id: zod.number(),
+  booking_ref: zod.string(),
+  name: zod.string().nullish(),
+  account_id: zod.number().nullish(),
+  account_name: zod.string().nullish(),
+  contact_id: zod.number().nullish(),
+  contact_name: zod.string().nullish(),
+  booking_status: zod.string(),
+  booking_source: zod.string().nullish(),
+  customer_notes: zod.string().nullish(),
+  space_id: zod.number().nullish(),
+  space_name: zod.string().nullish(),
+  space_type: zod.string().nullish(),
+  booking_mode: zod.string().nullish(),
+  property_address: zod.string().nullish(),
+  check_in_date: zod.string().nullish(),
+  check_out_date: zod.string().nullish(),
+  stay_nights: zod.number().nullish(),
+  stay_weeks: zod.string().nullish(),
+  agreed_weekly_rate: zod.string().nullish(),
+  total_rent: zod.string().nullish(),
+  currency: zod.string().nullish(),
+  num_guests: zod.number().nullish(),
+  contract_product_id: zod.number().nullish(),
+  cancellation_reason: zod.string().nullish(),
+  cancelled_at: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Check out booking (Active → CheckedOut)
+ */
+export const CheckOutBookingParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const CheckOutBookingResponse = zod.object({
+  id: zod.number(),
+  booking_ref: zod.string(),
+  name: zod.string().nullish(),
+  account_id: zod.number().nullish(),
+  account_name: zod.string().nullish(),
+  contact_id: zod.number().nullish(),
+  contact_name: zod.string().nullish(),
+  booking_status: zod.string(),
+  booking_source: zod.string().nullish(),
+  customer_notes: zod.string().nullish(),
+  space_id: zod.number().nullish(),
+  space_name: zod.string().nullish(),
+  space_type: zod.string().nullish(),
+  booking_mode: zod.string().nullish(),
+  property_address: zod.string().nullish(),
+  check_in_date: zod.string().nullish(),
+  check_out_date: zod.string().nullish(),
+  stay_nights: zod.number().nullish(),
+  stay_weeks: zod.string().nullish(),
+  agreed_weekly_rate: zod.string().nullish(),
+  total_rent: zod.string().nullish(),
+  currency: zod.string().nullish(),
+  num_guests: zod.number().nullish(),
+  contract_product_id: zod.number().nullish(),
+  cancellation_reason: zod.string().nullish(),
+  cancelled_at: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Cancel booking
+ */
+export const CancelBookingParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const CancelBookingBody = zod.object({
+  reason: zod.string(),
+});
+
+export const CancelBookingResponse = zod.object({
+  id: zod.number(),
+  booking_ref: zod.string(),
+  name: zod.string().nullish(),
+  account_id: zod.number().nullish(),
+  account_name: zod.string().nullish(),
+  contact_id: zod.number().nullish(),
+  contact_name: zod.string().nullish(),
+  booking_status: zod.string(),
+  booking_source: zod.string().nullish(),
+  customer_notes: zod.string().nullish(),
+  space_id: zod.number().nullish(),
+  space_name: zod.string().nullish(),
+  space_type: zod.string().nullish(),
+  booking_mode: zod.string().nullish(),
+  property_address: zod.string().nullish(),
+  check_in_date: zod.string().nullish(),
+  check_out_date: zod.string().nullish(),
+  stay_nights: zod.number().nullish(),
+  stay_weeks: zod.string().nullish(),
+  agreed_weekly_rate: zod.string().nullish(),
+  total_rent: zod.string().nullish(),
+  currency: zod.string().nullish(),
+  num_guests: zod.number().nullish(),
+  contract_product_id: zod.number().nullish(),
+  cancellation_reason: zod.string().nullish(),
+  cancelled_at: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Extend booking check-out date
+ */
+export const ExtendBookingParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ExtendBookingBody = zod.object({
+  new_check_out_date: zod.string(),
+});
+
+export const ExtendBookingResponse = zod.object({
+  id: zod.number(),
+  booking_ref: zod.string(),
+  name: zod.string().nullish(),
+  account_id: zod.number().nullish(),
+  account_name: zod.string().nullish(),
+  contact_id: zod.number().nullish(),
+  contact_name: zod.string().nullish(),
+  booking_status: zod.string(),
+  booking_source: zod.string().nullish(),
+  customer_notes: zod.string().nullish(),
+  space_id: zod.number().nullish(),
+  space_name: zod.string().nullish(),
+  space_type: zod.string().nullish(),
+  booking_mode: zod.string().nullish(),
+  property_address: zod.string().nullish(),
+  check_in_date: zod.string().nullish(),
+  check_out_date: zod.string().nullish(),
+  stay_nights: zod.number().nullish(),
+  stay_weeks: zod.string().nullish(),
+  agreed_weekly_rate: zod.string().nullish(),
+  total_rent: zod.string().nullish(),
+  currency: zod.string().nullish(),
+  num_guests: zod.number().nullish(),
+  contract_product_id: zod.number().nullish(),
+  cancellation_reason: zod.string().nullish(),
+  cancelled_at: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary List booking KYC documents
+ */
+export const ListBookingDocumentsParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ListBookingDocumentsResponseItem = zod.object({
+  id: zod.number(),
+  booking_id: zod.number(),
+  doc_type: zod.string().nullish(),
+  file_name: zod.string().nullish(),
+  file_url: zod.string().nullish(),
+  verified_status: zod.string(),
+  rejection_reason: zod.string().nullish(),
+  expiry_date: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+export const ListBookingDocumentsResponse = zod.array(
+  ListBookingDocumentsResponseItem,
+);
+
+/**
+ * @summary Upload booking document
+ */
+export const CreateBookingDocumentParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const CreateBookingDocumentBody = zod.object({
+  doc_type: zod.string().nullish(),
+  file_name: zod.string().nullish(),
+  file_url: zod.string().nullish(),
+  expiry_date: zod.string().nullish(),
+});
+
+/**
+ * @summary Verify booking document
+ */
+export const VerifyBookingDocumentParams = zod.object({
+  id: zod.coerce.number(),
+  doc_id: zod.coerce.number(),
+});
+
+export const VerifyBookingDocumentResponse = zod.object({
+  id: zod.number(),
+  booking_id: zod.number(),
+  doc_type: zod.string().nullish(),
+  file_name: zod.string().nullish(),
+  file_url: zod.string().nullish(),
+  verified_status: zod.string(),
+  rejection_reason: zod.string().nullish(),
+  expiry_date: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Reject booking document
+ */
+export const RejectBookingDocumentParams = zod.object({
+  id: zod.coerce.number(),
+  doc_id: zod.coerce.number(),
+});
+
+export const RejectBookingDocumentBody = zod.object({
+  rejection_reason: zod.string(),
+});
+
+export const RejectBookingDocumentResponse = zod.object({
+  id: zod.number(),
+  booking_id: zod.number(),
+  doc_type: zod.string().nullish(),
+  file_name: zod.string().nullish(),
+  file_url: zod.string().nullish(),
+  verified_status: zod.string(),
+  rejection_reason: zod.string().nullish(),
+  expiry_date: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary List contract products
+ */
+export const ListContractProductsQueryParams = zod.object({
+  q: zod.coerce.string().optional(),
+  status: zod.coerce.string().optional(),
+  product_type: zod.coerce.string().optional(),
+  space_id: zod.coerce.number().optional(),
+});
+
+export const ListContractProductsResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  description: zod.string().nullish(),
+  product_type: zod.string(),
+  status: zod.string(),
+  space_id: zod.number().nullish(),
+  space_name: zod.string().nullish(),
+  weekly_rate: zod.number().nullish(),
+  monthly_rate: zod.number().nullish(),
+  currency: zod.string(),
+  bond_weeks: zod.number().nullish(),
+  advance_weeks: zod.number().nullish(),
+  min_stay_weeks: zod.number().nullish(),
+  max_stay_weeks: zod.number().nullish(),
+  includes_wifi: zod.boolean(),
+  includes_parking: zod.boolean(),
+  includes_utilities: zod.boolean(),
+  includes_meals: zod.boolean(),
+  includes_laundry: zod.boolean(),
+  includes_cleaning: zod.boolean(),
+  extra_inclusions: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+export const ListContractProductsResponse = zod.array(
+  ListContractProductsResponseItem,
+);
+
+/**
+ * @summary Create contract product
+ */
+export const CreateContractProductBody = zod.object({
+  name: zod.string(),
+  description: zod.string().nullish(),
+  product_type: zod.string().nullish(),
+  status: zod.string().nullish(),
+  space_id: zod.number().nullish(),
+  weekly_rate: zod.number().nullish(),
+  monthly_rate: zod.number().nullish(),
+  currency: zod.string().nullish(),
+  bond_weeks: zod.number().nullish(),
+  advance_weeks: zod.number().nullish(),
+  min_stay_weeks: zod.number().nullish(),
+  max_stay_weeks: zod.number().nullish(),
+  includes_wifi: zod.boolean().nullish(),
+  includes_parking: zod.boolean().nullish(),
+  includes_utilities: zod.boolean().nullish(),
+  includes_meals: zod.boolean().nullish(),
+  includes_laundry: zod.boolean().nullish(),
+  includes_cleaning: zod.boolean().nullish(),
+  extra_inclusions: zod.string().nullish(),
+  notes: zod.string().nullish(),
+});
+
+/**
+ * @summary Get contract product
+ */
+export const GetContractProductParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetContractProductResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  description: zod.string().nullish(),
+  product_type: zod.string(),
+  status: zod.string(),
+  space_id: zod.number().nullish(),
+  space_name: zod.string().nullish(),
+  weekly_rate: zod.number().nullish(),
+  monthly_rate: zod.number().nullish(),
+  currency: zod.string(),
+  bond_weeks: zod.number().nullish(),
+  advance_weeks: zod.number().nullish(),
+  min_stay_weeks: zod.number().nullish(),
+  max_stay_weeks: zod.number().nullish(),
+  includes_wifi: zod.boolean(),
+  includes_parking: zod.boolean(),
+  includes_utilities: zod.boolean(),
+  includes_meals: zod.boolean(),
+  includes_laundry: zod.boolean(),
+  includes_cleaning: zod.boolean(),
+  extra_inclusions: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Update contract product
+ */
+export const UpdateContractProductParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateContractProductBody = zod.object({
+  name: zod.string(),
+  description: zod.string().nullish(),
+  product_type: zod.string().nullish(),
+  status: zod.string().nullish(),
+  space_id: zod.number().nullish(),
+  weekly_rate: zod.number().nullish(),
+  monthly_rate: zod.number().nullish(),
+  currency: zod.string().nullish(),
+  bond_weeks: zod.number().nullish(),
+  advance_weeks: zod.number().nullish(),
+  min_stay_weeks: zod.number().nullish(),
+  max_stay_weeks: zod.number().nullish(),
+  includes_wifi: zod.boolean().nullish(),
+  includes_parking: zod.boolean().nullish(),
+  includes_utilities: zod.boolean().nullish(),
+  includes_meals: zod.boolean().nullish(),
+  includes_laundry: zod.boolean().nullish(),
+  includes_cleaning: zod.boolean().nullish(),
+  extra_inclusions: zod.string().nullish(),
+  notes: zod.string().nullish(),
+});
+
+export const UpdateContractProductResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  description: zod.string().nullish(),
+  product_type: zod.string(),
+  status: zod.string(),
+  space_id: zod.number().nullish(),
+  space_name: zod.string().nullish(),
+  weekly_rate: zod.number().nullish(),
+  monthly_rate: zod.number().nullish(),
+  currency: zod.string(),
+  bond_weeks: zod.number().nullish(),
+  advance_weeks: zod.number().nullish(),
+  min_stay_weeks: zod.number().nullish(),
+  max_stay_weeks: zod.number().nullish(),
+  includes_wifi: zod.boolean(),
+  includes_parking: zod.boolean(),
+  includes_utilities: zod.boolean(),
+  includes_meals: zod.boolean(),
+  includes_laundry: zod.boolean(),
+  includes_cleaning: zod.boolean(),
+  extra_inclusions: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Delete contract product
+ */
+export const DeleteContractProductParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary Activate contract product
+ */
+export const ActivateContractProductParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ActivateContractProductResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  description: zod.string().nullish(),
+  product_type: zod.string(),
+  status: zod.string(),
+  space_id: zod.number().nullish(),
+  space_name: zod.string().nullish(),
+  weekly_rate: zod.number().nullish(),
+  monthly_rate: zod.number().nullish(),
+  currency: zod.string(),
+  bond_weeks: zod.number().nullish(),
+  advance_weeks: zod.number().nullish(),
+  min_stay_weeks: zod.number().nullish(),
+  max_stay_weeks: zod.number().nullish(),
+  includes_wifi: zod.boolean(),
+  includes_parking: zod.boolean(),
+  includes_utilities: zod.boolean(),
+  includes_meals: zod.boolean(),
+  includes_laundry: zod.boolean(),
+  includes_cleaning: zod.boolean(),
+  extra_inclusions: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Deactivate contract product
+ */
+export const DeactivateContractProductParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const DeactivateContractProductResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  description: zod.string().nullish(),
+  product_type: zod.string(),
+  status: zod.string(),
+  space_id: zod.number().nullish(),
+  space_name: zod.string().nullish(),
+  weekly_rate: zod.number().nullish(),
+  monthly_rate: zod.number().nullish(),
+  currency: zod.string(),
+  bond_weeks: zod.number().nullish(),
+  advance_weeks: zod.number().nullish(),
+  min_stay_weeks: zod.number().nullish(),
+  max_stay_weeks: zod.number().nullish(),
+  includes_wifi: zod.boolean(),
+  includes_parking: zod.boolean(),
+  includes_utilities: zod.boolean(),
+  includes_meals: zod.boolean(),
+  includes_laundry: zod.boolean(),
+  includes_cleaning: zod.boolean(),
+  extra_inclusions: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Archive contract product
+ */
+export const ArchiveContractProductParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ArchiveContractProductResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  description: zod.string().nullish(),
+  product_type: zod.string(),
+  status: zod.string(),
+  space_id: zod.number().nullish(),
+  space_name: zod.string().nullish(),
+  weekly_rate: zod.number().nullish(),
+  monthly_rate: zod.number().nullish(),
+  currency: zod.string(),
+  bond_weeks: zod.number().nullish(),
+  advance_weeks: zod.number().nullish(),
+  min_stay_weeks: zod.number().nullish(),
+  max_stay_weeks: zod.number().nullish(),
+  includes_wifi: zod.boolean(),
+  includes_parking: zod.boolean(),
+  includes_utilities: zod.boolean(),
+  includes_meals: zod.boolean(),
+  includes_laundry: zod.boolean(),
+  includes_cleaning: zod.boolean(),
+  extra_inclusions: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Lookup contract products
+ */
+export const LookupContractProductsQueryParams = zod.object({
+  q: zod.coerce.string().optional(),
+});
+
+export const LookupContractProductsResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+});
+export const LookupContractProductsResponse = zod.array(
+  LookupContractProductsResponseItem,
+);
+
+/**
+ * @summary List contracts
+ */
+export const ListContractsQueryParams = zod.object({
+  q: zod.coerce.string().optional(),
+  status: zod.coerce.string().optional(),
+  tenant_account_id: zod.coerce.number().optional(),
+  space_id: zod.coerce.number().optional(),
+});
+
+export const ListContractsResponseItem = zod.object({
+  id: zod.number(),
+  contract_ref: zod.string(),
+  booking_id: zod.number().nullish(),
+  contract_product_id: zod.number().nullish(),
+  tenant_account_id: zod.number().nullish(),
+  tenant_name: zod.string().nullish(),
+  landlord_account_id: zod.number().nullish(),
+  landlord_name: zod.string().nullish(),
+  space_id: zod.number().nullish(),
+  space_name: zod.string().nullish(),
+  contract_product_name: zod.string().nullish(),
+  start_date: zod.string().nullish(),
+  end_date: zod.string().nullish(),
+  weekly_rate: zod.number().nullish(),
+  total_rent: zod.number().nullish(),
+  bond_amount: zod.number().nullish(),
+  advance_amount: zod.number().nullish(),
+  currency: zod.string(),
+  status: zod.string(),
+  sent_at: zod.string().nullish(),
+  signed_at: zod.string().nullish(),
+  effective_date: zod.string().nullish(),
+  expiry_date: zod.string().nullish(),
+  termination_reason: zod.string().nullish(),
+  document_url: zod.string().nullish(),
+  terms_text: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+export const ListContractsResponse = zod.array(ListContractsResponseItem);
+
+/**
+ * @summary Create contract
+ */
+export const CreateContractBody = zod.object({
+  booking_id: zod.number().nullish(),
+  contract_product_id: zod.number().nullish(),
+  tenant_account_id: zod.number().nullish(),
+  landlord_account_id: zod.number().nullish(),
+  space_id: zod.number().nullish(),
+  start_date: zod.string().nullish(),
+  end_date: zod.string().nullish(),
+  weekly_rate: zod.number().nullish(),
+  total_rent: zod.number().nullish(),
+  bond_amount: zod.number().nullish(),
+  advance_amount: zod.number().nullish(),
+  currency: zod.string().nullish(),
+  document_url: zod.string().nullish(),
+  terms_text: zod.string().nullish(),
+  notes: zod.string().nullish(),
+});
+
+/**
+ * @summary Get contract
+ */
+export const GetContractParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetContractResponse = zod.object({
+  id: zod.number(),
+  contract_ref: zod.string(),
+  booking_id: zod.number().nullish(),
+  contract_product_id: zod.number().nullish(),
+  tenant_account_id: zod.number().nullish(),
+  tenant_name: zod.string().nullish(),
+  landlord_account_id: zod.number().nullish(),
+  landlord_name: zod.string().nullish(),
+  space_id: zod.number().nullish(),
+  space_name: zod.string().nullish(),
+  contract_product_name: zod.string().nullish(),
+  start_date: zod.string().nullish(),
+  end_date: zod.string().nullish(),
+  weekly_rate: zod.number().nullish(),
+  total_rent: zod.number().nullish(),
+  bond_amount: zod.number().nullish(),
+  advance_amount: zod.number().nullish(),
+  currency: zod.string(),
+  status: zod.string(),
+  sent_at: zod.string().nullish(),
+  signed_at: zod.string().nullish(),
+  effective_date: zod.string().nullish(),
+  expiry_date: zod.string().nullish(),
+  termination_reason: zod.string().nullish(),
+  document_url: zod.string().nullish(),
+  terms_text: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Update contract
+ */
+export const UpdateContractParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateContractBody = zod.object({
+  booking_id: zod.number().nullish(),
+  contract_product_id: zod.number().nullish(),
+  tenant_account_id: zod.number().nullish(),
+  landlord_account_id: zod.number().nullish(),
+  space_id: zod.number().nullish(),
+  start_date: zod.string().nullish(),
+  end_date: zod.string().nullish(),
+  weekly_rate: zod.number().nullish(),
+  total_rent: zod.number().nullish(),
+  bond_amount: zod.number().nullish(),
+  advance_amount: zod.number().nullish(),
+  currency: zod.string().nullish(),
+  document_url: zod.string().nullish(),
+  terms_text: zod.string().nullish(),
+  notes: zod.string().nullish(),
+});
+
+export const UpdateContractResponse = zod.object({
+  id: zod.number(),
+  contract_ref: zod.string(),
+  booking_id: zod.number().nullish(),
+  contract_product_id: zod.number().nullish(),
+  tenant_account_id: zod.number().nullish(),
+  tenant_name: zod.string().nullish(),
+  landlord_account_id: zod.number().nullish(),
+  landlord_name: zod.string().nullish(),
+  space_id: zod.number().nullish(),
+  space_name: zod.string().nullish(),
+  contract_product_name: zod.string().nullish(),
+  start_date: zod.string().nullish(),
+  end_date: zod.string().nullish(),
+  weekly_rate: zod.number().nullish(),
+  total_rent: zod.number().nullish(),
+  bond_amount: zod.number().nullish(),
+  advance_amount: zod.number().nullish(),
+  currency: zod.string(),
+  status: zod.string(),
+  sent_at: zod.string().nullish(),
+  signed_at: zod.string().nullish(),
+  effective_date: zod.string().nullish(),
+  expiry_date: zod.string().nullish(),
+  termination_reason: zod.string().nullish(),
+  document_url: zod.string().nullish(),
+  terms_text: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Delete contract
+ */
+export const DeleteContractParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary Send contract to tenant
+ */
+export const SendContractParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const SendContractResponse = zod.object({
+  id: zod.number(),
+  contract_ref: zod.string(),
+  booking_id: zod.number().nullish(),
+  contract_product_id: zod.number().nullish(),
+  tenant_account_id: zod.number().nullish(),
+  tenant_name: zod.string().nullish(),
+  landlord_account_id: zod.number().nullish(),
+  landlord_name: zod.string().nullish(),
+  space_id: zod.number().nullish(),
+  space_name: zod.string().nullish(),
+  contract_product_name: zod.string().nullish(),
+  start_date: zod.string().nullish(),
+  end_date: zod.string().nullish(),
+  weekly_rate: zod.number().nullish(),
+  total_rent: zod.number().nullish(),
+  bond_amount: zod.number().nullish(),
+  advance_amount: zod.number().nullish(),
+  currency: zod.string(),
+  status: zod.string(),
+  sent_at: zod.string().nullish(),
+  signed_at: zod.string().nullish(),
+  effective_date: zod.string().nullish(),
+  expiry_date: zod.string().nullish(),
+  termination_reason: zod.string().nullish(),
+  document_url: zod.string().nullish(),
+  terms_text: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Mark contract as signed
+ */
+export const SignContractParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const SignContractBody = zod.object({
+  document_url: zod.string().nullish(),
+});
+
+export const SignContractResponse = zod.object({
+  id: zod.number(),
+  contract_ref: zod.string(),
+  booking_id: zod.number().nullish(),
+  contract_product_id: zod.number().nullish(),
+  tenant_account_id: zod.number().nullish(),
+  tenant_name: zod.string().nullish(),
+  landlord_account_id: zod.number().nullish(),
+  landlord_name: zod.string().nullish(),
+  space_id: zod.number().nullish(),
+  space_name: zod.string().nullish(),
+  contract_product_name: zod.string().nullish(),
+  start_date: zod.string().nullish(),
+  end_date: zod.string().nullish(),
+  weekly_rate: zod.number().nullish(),
+  total_rent: zod.number().nullish(),
+  bond_amount: zod.number().nullish(),
+  advance_amount: zod.number().nullish(),
+  currency: zod.string(),
+  status: zod.string(),
+  sent_at: zod.string().nullish(),
+  signed_at: zod.string().nullish(),
+  effective_date: zod.string().nullish(),
+  expiry_date: zod.string().nullish(),
+  termination_reason: zod.string().nullish(),
+  document_url: zod.string().nullish(),
+  terms_text: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Activate contract
+ */
+export const ActivateContractParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ActivateContractResponse = zod.object({
+  id: zod.number(),
+  contract_ref: zod.string(),
+  booking_id: zod.number().nullish(),
+  contract_product_id: zod.number().nullish(),
+  tenant_account_id: zod.number().nullish(),
+  tenant_name: zod.string().nullish(),
+  landlord_account_id: zod.number().nullish(),
+  landlord_name: zod.string().nullish(),
+  space_id: zod.number().nullish(),
+  space_name: zod.string().nullish(),
+  contract_product_name: zod.string().nullish(),
+  start_date: zod.string().nullish(),
+  end_date: zod.string().nullish(),
+  weekly_rate: zod.number().nullish(),
+  total_rent: zod.number().nullish(),
+  bond_amount: zod.number().nullish(),
+  advance_amount: zod.number().nullish(),
+  currency: zod.string(),
+  status: zod.string(),
+  sent_at: zod.string().nullish(),
+  signed_at: zod.string().nullish(),
+  effective_date: zod.string().nullish(),
+  expiry_date: zod.string().nullish(),
+  termination_reason: zod.string().nullish(),
+  document_url: zod.string().nullish(),
+  terms_text: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Terminate contract
+ */
+export const TerminateContractParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const TerminateContractBody = zod.object({
+  termination_reason: zod.string(),
+});
+
+export const TerminateContractResponse = zod.object({
+  id: zod.number(),
+  contract_ref: zod.string(),
+  booking_id: zod.number().nullish(),
+  contract_product_id: zod.number().nullish(),
+  tenant_account_id: zod.number().nullish(),
+  tenant_name: zod.string().nullish(),
+  landlord_account_id: zod.number().nullish(),
+  landlord_name: zod.string().nullish(),
+  space_id: zod.number().nullish(),
+  space_name: zod.string().nullish(),
+  contract_product_name: zod.string().nullish(),
+  start_date: zod.string().nullish(),
+  end_date: zod.string().nullish(),
+  weekly_rate: zod.number().nullish(),
+  total_rent: zod.number().nullish(),
+  bond_amount: zod.number().nullish(),
+  advance_amount: zod.number().nullish(),
+  currency: zod.string(),
+  status: zod.string(),
+  sent_at: zod.string().nullish(),
+  signed_at: zod.string().nullish(),
+  effective_date: zod.string().nullish(),
+  expiry_date: zod.string().nullish(),
+  termination_reason: zod.string().nullish(),
+  document_url: zod.string().nullish(),
+  terms_text: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Mark contract as expired
+ */
+export const ExpireContractParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ExpireContractResponse = zod.object({
+  id: zod.number(),
+  contract_ref: zod.string(),
+  booking_id: zod.number().nullish(),
+  contract_product_id: zod.number().nullish(),
+  tenant_account_id: zod.number().nullish(),
+  tenant_name: zod.string().nullish(),
+  landlord_account_id: zod.number().nullish(),
+  landlord_name: zod.string().nullish(),
+  space_id: zod.number().nullish(),
+  space_name: zod.string().nullish(),
+  contract_product_name: zod.string().nullish(),
+  start_date: zod.string().nullish(),
+  end_date: zod.string().nullish(),
+  weekly_rate: zod.number().nullish(),
+  total_rent: zod.number().nullish(),
+  bond_amount: zod.number().nullish(),
+  advance_amount: zod.number().nullish(),
+  currency: zod.string(),
+  status: zod.string(),
+  sent_at: zod.string().nullish(),
+  signed_at: zod.string().nullish(),
+  effective_date: zod.string().nullish(),
+  expiry_date: zod.string().nullish(),
+  termination_reason: zod.string().nullish(),
+  document_url: zod.string().nullish(),
+  terms_text: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Lookup contracts
+ */
+export const LookupContractsQueryParams = zod.object({
+  q: zod.coerce.string().optional(),
+});
+
+export const LookupContractsResponseItem = zod.object({
+  id: zod.number(),
+  display: zod.string(),
+});
+export const LookupContractsResponse = zod.array(LookupContractsResponseItem);
+
+/**
+ * @summary List invoices
+ */
+export const ListInvoicesQueryParams = zod.object({
+  q: zod.coerce.string().optional(),
+  status: zod.coerce.string().optional(),
+  booking_id: zod.coerce.number().optional(),
+  contract_id: zod.coerce.number().optional(),
+  account_id: zod.coerce.number().optional(),
+});
+
+export const ListInvoicesResponseItem = zod.object({
+  id: zod.number(),
+  invoice_ref: zod.string(),
+  booking_id: zod.number().nullish(),
+  contract_id: zod.number().nullish(),
+  account_id: zod.number().nullish(),
+  amount: zod.number(),
+  currency: zod.string(),
+  status: zod.enum(["Draft", "Sent", "Paid", "Void"]),
+  due_date: zod.string().nullish(),
+  paid_at: zod.string().nullish(),
+  payment_method: zod.string().nullish(),
+  stripe_payment_intent_id: zod.string().nullish(),
+  stripe_checkout_url: zod.string().nullish(),
+  description: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+  booking_ref: zod.string().nullish(),
+  contract_ref: zod.string().nullish(),
+  account_name: zod.string().nullish(),
+});
+export const ListInvoicesResponse = zod.array(ListInvoicesResponseItem);
+
+/**
+ * @summary Create invoice
+ */
+export const CreateInvoiceBody = zod.object({
+  booking_id: zod.number().nullish(),
+  contract_id: zod.number().nullish(),
+  account_id: zod.number().nullish(),
+  amount: zod.number(),
+  currency: zod.string().optional(),
+  due_date: zod.string().nullish(),
+  description: zod.string().nullish(),
+  notes: zod.string().nullish(),
+});
+
+/**
+ * @summary Get invoice
+ */
+export const GetInvoiceParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetInvoiceResponse = zod.object({
+  id: zod.number(),
+  invoice_ref: zod.string(),
+  booking_id: zod.number().nullish(),
+  contract_id: zod.number().nullish(),
+  account_id: zod.number().nullish(),
+  amount: zod.number(),
+  currency: zod.string(),
+  status: zod.enum(["Draft", "Sent", "Paid", "Void"]),
+  due_date: zod.string().nullish(),
+  paid_at: zod.string().nullish(),
+  payment_method: zod.string().nullish(),
+  stripe_payment_intent_id: zod.string().nullish(),
+  stripe_checkout_url: zod.string().nullish(),
+  description: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+  booking_ref: zod.string().nullish(),
+  contract_ref: zod.string().nullish(),
+  account_name: zod.string().nullish(),
+});
+
+/**
+ * @summary Update invoice
+ */
+export const UpdateInvoiceParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateInvoiceBody = zod.object({
+  booking_id: zod.number().nullish(),
+  contract_id: zod.number().nullish(),
+  account_id: zod.number().nullish(),
+  amount: zod.number().nullish(),
+  currency: zod.string().nullish(),
+  due_date: zod.string().nullish(),
+  description: zod.string().nullish(),
+  notes: zod.string().nullish(),
+});
+
+export const UpdateInvoiceResponse = zod.object({
+  id: zod.number(),
+  invoice_ref: zod.string(),
+  booking_id: zod.number().nullish(),
+  contract_id: zod.number().nullish(),
+  account_id: zod.number().nullish(),
+  amount: zod.number(),
+  currency: zod.string(),
+  status: zod.enum(["Draft", "Sent", "Paid", "Void"]),
+  due_date: zod.string().nullish(),
+  paid_at: zod.string().nullish(),
+  payment_method: zod.string().nullish(),
+  stripe_payment_intent_id: zod.string().nullish(),
+  stripe_checkout_url: zod.string().nullish(),
+  description: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+  booking_ref: zod.string().nullish(),
+  contract_ref: zod.string().nullish(),
+  account_name: zod.string().nullish(),
+});
+
+/**
+ * @summary Delete invoice
+ */
+export const DeleteInvoiceParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary Send invoice to client (Draft → Sent)
+ */
+export const SendInvoiceParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const SendInvoiceResponse = zod.object({
+  id: zod.number(),
+  invoice_ref: zod.string(),
+  booking_id: zod.number().nullish(),
+  contract_id: zod.number().nullish(),
+  account_id: zod.number().nullish(),
+  amount: zod.number(),
+  currency: zod.string(),
+  status: zod.enum(["Draft", "Sent", "Paid", "Void"]),
+  due_date: zod.string().nullish(),
+  paid_at: zod.string().nullish(),
+  payment_method: zod.string().nullish(),
+  stripe_payment_intent_id: zod.string().nullish(),
+  stripe_checkout_url: zod.string().nullish(),
+  description: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+  booking_ref: zod.string().nullish(),
+  contract_ref: zod.string().nullish(),
+  account_name: zod.string().nullish(),
+});
+
+/**
+ * @summary Mark invoice as paid (Sent → Paid)
+ */
+export const PayInvoiceParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const PayInvoiceBody = zod.object({
+  payment_method: zod.string(),
+  paid_at: zod.string().nullish(),
+});
+
+export const PayInvoiceResponse = zod.object({
+  id: zod.number(),
+  invoice_ref: zod.string(),
+  booking_id: zod.number().nullish(),
+  contract_id: zod.number().nullish(),
+  account_id: zod.number().nullish(),
+  amount: zod.number(),
+  currency: zod.string(),
+  status: zod.enum(["Draft", "Sent", "Paid", "Void"]),
+  due_date: zod.string().nullish(),
+  paid_at: zod.string().nullish(),
+  payment_method: zod.string().nullish(),
+  stripe_payment_intent_id: zod.string().nullish(),
+  stripe_checkout_url: zod.string().nullish(),
+  description: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+  booking_ref: zod.string().nullish(),
+  contract_ref: zod.string().nullish(),
+  account_name: zod.string().nullish(),
+});
+
+/**
+ * @summary Void invoice
+ */
+export const VoidInvoiceParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const VoidInvoiceResponse = zod.object({
+  id: zod.number(),
+  invoice_ref: zod.string(),
+  booking_id: zod.number().nullish(),
+  contract_id: zod.number().nullish(),
+  account_id: zod.number().nullish(),
+  amount: zod.number(),
+  currency: zod.string(),
+  status: zod.enum(["Draft", "Sent", "Paid", "Void"]),
+  due_date: zod.string().nullish(),
+  paid_at: zod.string().nullish(),
+  payment_method: zod.string().nullish(),
+  stripe_payment_intent_id: zod.string().nullish(),
+  stripe_checkout_url: zod.string().nullish(),
+  description: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+  booking_ref: zod.string().nullish(),
+  contract_ref: zod.string().nullish(),
+  account_name: zod.string().nullish(),
+});
+
+/**
+ * @summary Lookup invoices
+ */
+export const LookupInvoicesQueryParams = zod.object({
+  q: zod.coerce.string().optional(),
+});
+
+export const LookupInvoicesResponseItem = zod.object({
+  id: zod.number(),
+  display: zod.string(),
+});
+export const LookupInvoicesResponse = zod.array(LookupInvoicesResponseItem);
+
+/**
+ * @summary List work orders
+ */
+export const ListWorkOrdersQueryParams = zod.object({
+  q: zod.coerce.string().optional(),
+  status: zod.coerce.string().optional(),
+  priority: zod.coerce.string().optional(),
+  property_id: zod.coerce.number().optional(),
+});
+
+export const ListWorkOrdersResponseItem = zod.object({
+  id: zod.number(),
+  order_ref: zod.string(),
+  property_id: zod.number().nullish(),
+  space_id: zod.number().nullish(),
+  title: zod.string(),
+  description: zod.string().nullish(),
+  status: zod.enum([
+    "Open",
+    "InProgress",
+    "PendingReview",
+    "Completed",
+    "Cancelled",
+  ]),
+  priority: zod.enum(["Low", "Normal", "High", "Urgent"]),
+  category: zod.string().nullish(),
+  assigned_contact_id: zod.number().nullish(),
+  reported_at: zod.string().nullish(),
+  scheduled_at: zod.string().nullish(),
+  completed_at: zod.string().nullish(),
+  cost: zod.number().nullish(),
+  currency: zod.string(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+  property_name: zod.string().nullish(),
+  space_name: zod.string().nullish(),
+  assigned_contact_name: zod.string().nullish(),
+});
+export const ListWorkOrdersResponse = zod.array(ListWorkOrdersResponseItem);
+
+/**
+ * @summary Create work order
+ */
+export const CreateWorkOrderBody = zod.object({
+  property_id: zod.number().nullish(),
+  space_id: zod.number().nullish(),
+  title: zod.string(),
+  description: zod.string().nullish(),
+  priority: zod.string().nullish(),
+  category: zod.string().nullish(),
+  assigned_contact_id: zod.number().nullish(),
+  reported_at: zod.string().nullish(),
+  scheduled_at: zod.string().nullish(),
+  cost: zod.number().nullish(),
+  notes: zod.string().nullish(),
+});
+
+/**
+ * @summary Get work order
+ */
+export const GetWorkOrderParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetWorkOrderResponse = zod.object({
+  id: zod.number(),
+  order_ref: zod.string(),
+  property_id: zod.number().nullish(),
+  space_id: zod.number().nullish(),
+  title: zod.string(),
+  description: zod.string().nullish(),
+  status: zod.enum([
+    "Open",
+    "InProgress",
+    "PendingReview",
+    "Completed",
+    "Cancelled",
+  ]),
+  priority: zod.enum(["Low", "Normal", "High", "Urgent"]),
+  category: zod.string().nullish(),
+  assigned_contact_id: zod.number().nullish(),
+  reported_at: zod.string().nullish(),
+  scheduled_at: zod.string().nullish(),
+  completed_at: zod.string().nullish(),
+  cost: zod.number().nullish(),
+  currency: zod.string(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+  property_name: zod.string().nullish(),
+  space_name: zod.string().nullish(),
+  assigned_contact_name: zod.string().nullish(),
+});
+
+/**
+ * @summary Update work order
+ */
+export const UpdateWorkOrderParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateWorkOrderBody = zod.object({
+  property_id: zod.number().nullish(),
+  space_id: zod.number().nullish(),
+  title: zod.string().nullish(),
+  description: zod.string().nullish(),
+  priority: zod.string().nullish(),
+  category: zod.string().nullish(),
+  assigned_contact_id: zod.number().nullish(),
+  reported_at: zod.string().nullish(),
+  scheduled_at: zod.string().nullish(),
+  cost: zod.number().nullish(),
+  notes: zod.string().nullish(),
+});
+
+export const UpdateWorkOrderResponse = zod.object({
+  id: zod.number(),
+  order_ref: zod.string(),
+  property_id: zod.number().nullish(),
+  space_id: zod.number().nullish(),
+  title: zod.string(),
+  description: zod.string().nullish(),
+  status: zod.enum([
+    "Open",
+    "InProgress",
+    "PendingReview",
+    "Completed",
+    "Cancelled",
+  ]),
+  priority: zod.enum(["Low", "Normal", "High", "Urgent"]),
+  category: zod.string().nullish(),
+  assigned_contact_id: zod.number().nullish(),
+  reported_at: zod.string().nullish(),
+  scheduled_at: zod.string().nullish(),
+  completed_at: zod.string().nullish(),
+  cost: zod.number().nullish(),
+  currency: zod.string(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+  property_name: zod.string().nullish(),
+  space_name: zod.string().nullish(),
+  assigned_contact_name: zod.string().nullish(),
+});
+
+/**
+ * @summary Delete work order
+ */
+export const DeleteWorkOrderParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary Start work order (Open → InProgress)
+ */
+export const StartWorkOrderParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const StartWorkOrderResponse = zod.object({
+  id: zod.number(),
+  order_ref: zod.string(),
+  property_id: zod.number().nullish(),
+  space_id: zod.number().nullish(),
+  title: zod.string(),
+  description: zod.string().nullish(),
+  status: zod.enum([
+    "Open",
+    "InProgress",
+    "PendingReview",
+    "Completed",
+    "Cancelled",
+  ]),
+  priority: zod.enum(["Low", "Normal", "High", "Urgent"]),
+  category: zod.string().nullish(),
+  assigned_contact_id: zod.number().nullish(),
+  reported_at: zod.string().nullish(),
+  scheduled_at: zod.string().nullish(),
+  completed_at: zod.string().nullish(),
+  cost: zod.number().nullish(),
+  currency: zod.string(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+  property_name: zod.string().nullish(),
+  space_name: zod.string().nullish(),
+  assigned_contact_name: zod.string().nullish(),
+});
+
+/**
+ * @summary Move work order to PendingReview (InProgress → PendingReview)
+ */
+export const ReviewWorkOrderParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ReviewWorkOrderResponse = zod.object({
+  id: zod.number(),
+  order_ref: zod.string(),
+  property_id: zod.number().nullish(),
+  space_id: zod.number().nullish(),
+  title: zod.string(),
+  description: zod.string().nullish(),
+  status: zod.enum([
+    "Open",
+    "InProgress",
+    "PendingReview",
+    "Completed",
+    "Cancelled",
+  ]),
+  priority: zod.enum(["Low", "Normal", "High", "Urgent"]),
+  category: zod.string().nullish(),
+  assigned_contact_id: zod.number().nullish(),
+  reported_at: zod.string().nullish(),
+  scheduled_at: zod.string().nullish(),
+  completed_at: zod.string().nullish(),
+  cost: zod.number().nullish(),
+  currency: zod.string(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+  property_name: zod.string().nullish(),
+  space_name: zod.string().nullish(),
+  assigned_contact_name: zod.string().nullish(),
+});
+
+/**
+ * @summary Complete work order (PendingReview → Completed)
+ */
+export const CompleteWorkOrderParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const CompleteWorkOrderBody = zod.object({
+  cost: zod.number().nullish(),
+  notes: zod.string().nullish(),
+});
+
+export const CompleteWorkOrderResponse = zod.object({
+  id: zod.number(),
+  order_ref: zod.string(),
+  property_id: zod.number().nullish(),
+  space_id: zod.number().nullish(),
+  title: zod.string(),
+  description: zod.string().nullish(),
+  status: zod.enum([
+    "Open",
+    "InProgress",
+    "PendingReview",
+    "Completed",
+    "Cancelled",
+  ]),
+  priority: zod.enum(["Low", "Normal", "High", "Urgent"]),
+  category: zod.string().nullish(),
+  assigned_contact_id: zod.number().nullish(),
+  reported_at: zod.string().nullish(),
+  scheduled_at: zod.string().nullish(),
+  completed_at: zod.string().nullish(),
+  cost: zod.number().nullish(),
+  currency: zod.string(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+  property_name: zod.string().nullish(),
+  space_name: zod.string().nullish(),
+  assigned_contact_name: zod.string().nullish(),
+});
+
+/**
+ * @summary Cancel work order
+ */
+export const CancelWorkOrderParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const CancelWorkOrderBody = zod.object({
+  notes: zod.string().nullish(),
+});
+
+export const CancelWorkOrderResponse = zod.object({
+  id: zod.number(),
+  order_ref: zod.string(),
+  property_id: zod.number().nullish(),
+  space_id: zod.number().nullish(),
+  title: zod.string(),
+  description: zod.string().nullish(),
+  status: zod.enum([
+    "Open",
+    "InProgress",
+    "PendingReview",
+    "Completed",
+    "Cancelled",
+  ]),
+  priority: zod.enum(["Low", "Normal", "High", "Urgent"]),
+  category: zod.string().nullish(),
+  assigned_contact_id: zod.number().nullish(),
+  reported_at: zod.string().nullish(),
+  scheduled_at: zod.string().nullish(),
+  completed_at: zod.string().nullish(),
+  cost: zod.number().nullish(),
+  currency: zod.string(),
+  notes: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+  property_name: zod.string().nullish(),
+  space_name: zod.string().nullish(),
+  assigned_contact_name: zod.string().nullish(),
+});

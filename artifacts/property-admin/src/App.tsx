@@ -26,6 +26,18 @@ import TaskList from "@/pages/sales/TaskList";
 import TaskDetail from "@/pages/sales/TaskDetail";
 import LeadList from "@/pages/sales/LeadList";
 import LeadDetail from "@/pages/sales/LeadDetail";
+import ServiceHostList from "@/pages/booking/ServiceHostList";
+import ServiceHostDetail from "@/pages/booking/ServiceHostDetail";
+import BookingList from "@/pages/booking/BookingList";
+import BookingDetail from "@/pages/booking/BookingDetail";
+import ContractProductList from "@/pages/products/ContractProductList";
+import ContractProductDetail from "@/pages/products/ContractProductDetail";
+import ContractList from "@/pages/contracts/ContractList";
+import ContractDetail from "@/pages/contracts/ContractDetail";
+import InvoiceList from "@/pages/finance/InvoiceList";
+import InvoiceDetail from "@/pages/finance/InvoiceDetail";
+import WorkOrderList from "@/pages/maintenance/WorkOrderList";
+import WorkOrderDetail from "@/pages/maintenance/WorkOrderDetail";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -95,6 +107,34 @@ function Router() {
       <Route path="/sales/leads" component={LeadList} />
       <Route path="/sales/leads/new" component={LeadDetail} />
       <Route path="/sales/leads/:id" component={LeadDetail} />
+
+      {/* Booking - Service Hosts */}
+      <Route path="/booking/service-hosts" component={ServiceHostList} />
+      <Route path="/booking/service-hosts/new" component={ServiceHostDetail} />
+      <Route path="/booking/service-hosts/:id" component={ServiceHostDetail} />
+
+      {/* Booking - Bookings */}
+      <Route path="/booking/bookings" component={BookingList} />
+      <Route path="/booking/bookings/new" component={BookingDetail} />
+      <Route path="/booking/bookings/:id" component={BookingDetail} />
+
+      {/* Products */}
+      <Route path="/products/contract-products" component={ContractProductList} />
+      <Route path="/products/contract-products/new" component={ContractProductDetail} />
+      <Route path="/products/contract-products/:id" component={ContractProductDetail} />
+
+      {/* Contracts */}
+      <Route path="/contracts/contracts" component={ContractList} />
+      <Route path="/contracts/contracts/new" component={ContractDetail} />
+      <Route path="/contracts/contracts/:id" component={ContractDetail} />
+
+      {/* Finance */}
+      <Route path="/finance/invoices" component={InvoiceList} />
+      <Route path="/finance/invoices/new" component={InvoiceDetail} />
+      <Route path="/finance/invoices/:id" component={InvoiceDetail} />
+      <Route path="/maintenance/work-orders" component={WorkOrderList} />
+      <Route path="/maintenance/work-orders/new" component={WorkOrderDetail} />
+      <Route path="/maintenance/work-orders/:id" component={WorkOrderDetail} />
 
       <Route component={NotFound} />
     </Switch>

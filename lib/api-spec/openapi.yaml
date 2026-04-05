@@ -34,6 +34,10 @@ tags:
     description: Task management
   - name: leads
     description: Lead management
+  - name: service-hosts
+    description: Service host management
+  - name: bookings
+    description: Booking management
 
 paths:
   /healthz:
@@ -1542,6 +1546,1207 @@ paths:
               schema:
                 $ref: "#/components/schemas/Lead"
 
+  /v1/service-hosts:
+    get:
+      operationId: listServiceHosts
+      tags: [service-hosts]
+      summary: List service hosts
+      parameters:
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: List of service hosts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ServiceHost"
+    post:
+      operationId: createServiceHost
+      tags: [service-hosts]
+      summary: Create service host
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateServiceHostBody"
+      responses:
+        "201":
+          description: Created service host
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceHost"
+
+  /v1/service-hosts/{id}:
+    get:
+      operationId: getServiceHost
+      tags: [service-hosts]
+      summary: Get service host
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Service host detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceHost"
+    put:
+      operationId: updateServiceHost
+      tags: [service-hosts]
+      summary: Update service host
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateServiceHostBody"
+      responses:
+        "200":
+          description: Updated service host
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceHost"
+    delete:
+      operationId: deleteServiceHost
+      tags: [service-hosts]
+      summary: Delete service host
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Deleted
+
+  /v1/bookings:
+    get:
+      operationId: listBookings
+      tags: [bookings]
+      summary: List bookings
+      parameters:
+        - name: booking_status
+          in: query
+          schema: { type: string }
+        - name: booking_source
+          in: query
+          schema: { type: string }
+        - name: space_id
+          in: query
+          schema: { type: integer }
+        - name: account_id
+          in: query
+          schema: { type: integer }
+        - name: check_in_from
+          in: query
+          schema: { type: string }
+        - name: check_in_to
+          in: query
+          schema: { type: string }
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: List of bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BookingListItem"
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Create booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBookingBody"
+      responses:
+        "201":
+          description: Created booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "409":
+          description: Space not available
+
+  /v1/bookings/{id}:
+    get:
+      operationId: getBooking
+      tags: [bookings]
+      summary: Get booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Booking detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+    put:
+      operationId: updateBooking
+      tags: [bookings]
+      summary: Update booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBookingBody"
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+    delete:
+      operationId: deleteBooking
+      tags: [bookings]
+      summary: Delete booking (soft, Draft only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Deleted
+
+  /v1/bookings/{id}/submit:
+    patch:
+      operationId: submitBooking
+      tags: [bookings]
+      summary: Submit booking (Draft → PendingPayment)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /v1/bookings/{id}/confirm:
+    patch:
+      operationId: confirmBooking
+      tags: [bookings]
+      summary: Confirm booking (PendingApproval → Confirmed)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /v1/bookings/{id}/reject:
+    patch:
+      operationId: rejectBooking
+      tags: [bookings]
+      summary: Reject booking (PendingApproval → Cancelled)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelBookingBody"
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /v1/bookings/{id}/check-in:
+    patch:
+      operationId: checkInBooking
+      tags: [bookings]
+      summary: Check in booking (Confirmed → Active)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /v1/bookings/{id}/check-out:
+    patch:
+      operationId: checkOutBooking
+      tags: [bookings]
+      summary: Check out booking (Active → CheckedOut)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /v1/bookings/{id}/cancel:
+    patch:
+      operationId: cancelBooking
+      tags: [bookings]
+      summary: Cancel booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelBookingBody"
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /v1/bookings/{id}/extend:
+    patch:
+      operationId: extendBooking
+      tags: [bookings]
+      summary: Extend booking check-out date
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExtendBookingBody"
+      responses:
+        "200":
+          description: Updated booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /v1/bookings/{id}/documents:
+    get:
+      operationId: listBookingDocuments
+      tags: [bookings]
+      summary: List booking KYC documents
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Documents list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BookingDocument"
+    post:
+      operationId: createBookingDocument
+      tags: [bookings]
+      summary: Upload booking document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBookingDocumentBody"
+      responses:
+        "201":
+          description: Created document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingDocument"
+
+  /v1/bookings/{id}/documents/{doc_id}/verify:
+    patch:
+      operationId: verifyBookingDocument
+      tags: [bookings]
+      summary: Verify booking document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: doc_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Verified document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingDocument"
+
+  /v1/bookings/{id}/documents/{doc_id}/reject:
+    patch:
+      operationId: rejectBookingDocument
+      tags: [bookings]
+      summary: Reject booking document
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: doc_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectDocumentBody"
+      responses:
+        "200":
+          description: Rejected document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingDocument"
+
+  /v1/contract-products:
+    get:
+      operationId: listContractProducts
+      tags: [products]
+      summary: List contract products
+      parameters:
+        - name: q
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: product_type
+          in: query
+          schema: { type: string }
+        - name: space_id
+          in: query
+          schema: { type: integer }
+      responses:
+        "200":
+          description: List of contract products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ContractProduct"
+    post:
+      operationId: createContractProduct
+      tags: [products]
+      summary: Create contract product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateContractProductBody"
+      responses:
+        "201":
+          description: Created contract product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContractProduct"
+
+  /v1/contract-products/{id}:
+    get:
+      operationId: getContractProduct
+      tags: [products]
+      summary: Get contract product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Contract product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContractProduct"
+    put:
+      operationId: updateContractProduct
+      tags: [products]
+      summary: Update contract product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateContractProductBody"
+      responses:
+        "200":
+          description: Updated contract product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContractProduct"
+    delete:
+      operationId: deleteContractProduct
+      tags: [products]
+      summary: Delete contract product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  /v1/contract-products/{id}/activate:
+    post:
+      operationId: activateContractProduct
+      tags: [products]
+      summary: Activate contract product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Activated contract product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContractProduct"
+
+  /v1/contract-products/{id}/deactivate:
+    post:
+      operationId: deactivateContractProduct
+      tags: [products]
+      summary: Deactivate contract product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Deactivated contract product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContractProduct"
+
+  /v1/contract-products/{id}/archive:
+    post:
+      operationId: archiveContractProduct
+      tags: [products]
+      summary: Archive contract product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Archived contract product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContractProduct"
+
+  /v1/lookup/contract-products:
+    get:
+      operationId: lookupContractProducts
+      tags: [products]
+      summary: Lookup contract products
+      parameters:
+        - name: q
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Lookup results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id: { type: integer }
+                    name: { type: string }
+                  required: [id, name]
+
+  /v1/contracts:
+    get:
+      operationId: listContracts
+      tags: [contracts]
+      summary: List contracts
+      parameters:
+        - name: q
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: tenant_account_id
+          in: query
+          schema: { type: integer }
+        - name: space_id
+          in: query
+          schema: { type: integer }
+      responses:
+        "200":
+          description: List of contracts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Contract"
+    post:
+      operationId: createContract
+      tags: [contracts]
+      summary: Create contract
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateContractBody"
+      responses:
+        "201":
+          description: Created contract
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contract"
+
+  /v1/contracts/{id}:
+    get:
+      operationId: getContract
+      tags: [contracts]
+      summary: Get contract
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Contract
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contract"
+    put:
+      operationId: updateContract
+      tags: [contracts]
+      summary: Update contract
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateContractBody"
+      responses:
+        "200":
+          description: Updated contract
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contract"
+    delete:
+      operationId: deleteContract
+      tags: [contracts]
+      summary: Delete contract
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  /v1/contracts/{id}/send:
+    post:
+      operationId: sendContract
+      tags: [contracts]
+      summary: Send contract to tenant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Contract sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contract"
+
+  /v1/contracts/{id}/sign:
+    post:
+      operationId: signContract
+      tags: [contracts]
+      summary: Mark contract as signed
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                document_url:
+                  type: ["string", "null"]
+      responses:
+        "200":
+          description: Contract signed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contract"
+
+  /v1/contracts/{id}/activate:
+    post:
+      operationId: activateContract
+      tags: [contracts]
+      summary: Activate contract
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Activated contract
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contract"
+
+  /v1/contracts/{id}/terminate:
+    post:
+      operationId: terminateContract
+      tags: [contracts]
+      summary: Terminate contract
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TerminateContractBody"
+      responses:
+        "200":
+          description: Terminated contract
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contract"
+
+  /v1/contracts/{id}/expire:
+    post:
+      operationId: expireContract
+      tags: [contracts]
+      summary: Mark contract as expired
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Expired contract
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contract"
+
+  /v1/lookup/contracts:
+    get:
+      operationId: lookupContracts
+      tags: [contracts]
+      summary: Lookup contracts
+      parameters:
+        - name: q
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Lookup results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id: { type: integer }
+                    display: { type: string }
+                  required: [id, display]
+
+  /v1/invoices:
+    get:
+      operationId: listInvoices
+      tags: [finance]
+      summary: List invoices
+      parameters:
+        - name: q
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: booking_id
+          in: query
+          schema: { type: integer }
+        - name: contract_id
+          in: query
+          schema: { type: integer }
+        - name: account_id
+          in: query
+          schema: { type: integer }
+      responses:
+        "200":
+          description: List of invoices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Invoice"
+    post:
+      operationId: createInvoice
+      tags: [finance]
+      summary: Create invoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInvoiceBody"
+      responses:
+        "201":
+          description: Created invoice
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  /v1/invoices/{id}:
+    get:
+      operationId: getInvoice
+      tags: [finance]
+      summary: Get invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Invoice
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+    put:
+      operationId: updateInvoice
+      tags: [finance]
+      summary: Update invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateInvoiceBody"
+      responses:
+        "200":
+          description: Updated invoice
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+    delete:
+      operationId: deleteInvoice
+      tags: [finance]
+      summary: Delete invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  /v1/invoices/{id}/send:
+    post:
+      operationId: sendInvoice
+      tags: [finance]
+      summary: Send invoice to client (Draft → Sent)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Updated invoice
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  /v1/invoices/{id}/pay:
+    post:
+      operationId: payInvoice
+      tags: [finance]
+      summary: Mark invoice as paid (Sent → Paid)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MarkPaidBody"
+      responses:
+        "200":
+          description: Updated invoice
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  /v1/invoices/{id}/void:
+    post:
+      operationId: voidInvoice
+      tags: [finance]
+      summary: Void invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Updated invoice
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+
+  /v1/lookup/invoices:
+    get:
+      operationId: lookupInvoices
+      tags: [finance]
+      summary: Lookup invoices
+      parameters:
+        - name: q
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Lookup results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id: { type: integer }
+                    display: { type: string }
+                  required: [id, display]
+
+  /v1/work-orders:
+    get:
+      operationId: listWorkOrders
+      tags: [maintenance]
+      summary: List work orders
+      parameters:
+        - name: q
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: priority
+          in: query
+          schema: { type: string }
+        - name: property_id
+          in: query
+          schema: { type: integer }
+      responses:
+        "200":
+          description: List of work orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkOrder"
+    post:
+      operationId: createWorkOrder
+      tags: [maintenance]
+      summary: Create work order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWorkOrderBody"
+      responses:
+        "201":
+          description: Created work order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkOrder"
+
+  /v1/work-orders/{id}:
+    get:
+      operationId: getWorkOrder
+      tags: [maintenance]
+      summary: Get work order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Work order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkOrder"
+    put:
+      operationId: updateWorkOrder
+      tags: [maintenance]
+      summary: Update work order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateWorkOrderBody"
+      responses:
+        "200":
+          description: Updated work order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkOrder"
+    delete:
+      operationId: deleteWorkOrder
+      tags: [maintenance]
+      summary: Delete work order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  /v1/work-orders/{id}/start:
+    post:
+      operationId: startWorkOrder
+      tags: [maintenance]
+      summary: Start work order (Open → InProgress)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Updated work order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkOrder"
+
+  /v1/work-orders/{id}/review:
+    post:
+      operationId: reviewWorkOrder
+      tags: [maintenance]
+      summary: Move work order to PendingReview (InProgress → PendingReview)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Updated work order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkOrder"
+
+  /v1/work-orders/{id}/complete:
+    post:
+      operationId: completeWorkOrder
+      tags: [maintenance]
+      summary: Complete work order (PendingReview → Completed)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompleteWorkOrderBody"
+      responses:
+        "200":
+          description: Updated work order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkOrder"
+
+  /v1/work-orders/{id}/cancel:
+    post:
+      operationId: cancelWorkOrder
+      tags: [maintenance]
+      summary: Cancel work order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelWorkOrderBody"
+      responses:
+        "200":
+          description: Updated work order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkOrder"
+
 components:
   schemas:
     HealthStatus:
@@ -3041,3 +4246,746 @@ components:
       properties:
         q:
           type: string
+
+    ServiceHost:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        account_id:
+          type: ["integer", "null"]
+        account_name:
+          type: ["string", "null"]
+        contract_product_id:
+          type: ["integer", "null"]
+        from_date:
+          type: ["string", "null"]
+        to_date:
+          type: ["string", "null"]
+        in_call:
+          type: ["boolean", "null"]
+        out_call:
+          type: ["boolean", "null"]
+        business_start_hour:
+          type: ["integer", "null"]
+        business_end_hour:
+          type: ["integer", "null"]
+        description:
+          type: ["string", "null"]
+        status:
+          type: string
+        created_at:
+          type: string
+        updated_at:
+          type: string
+      required: [id, name, status, created_at, updated_at]
+
+    CreateServiceHostBody:
+      type: object
+      properties:
+        name:
+          type: string
+        account_id:
+          type: ["integer", "null"]
+        contract_product_id:
+          type: ["integer", "null"]
+        from_date:
+          type: ["string", "null"]
+        to_date:
+          type: ["string", "null"]
+        in_call:
+          type: ["boolean", "null"]
+        out_call:
+          type: ["boolean", "null"]
+        business_start_hour:
+          type: ["integer", "null"]
+        business_end_hour:
+          type: ["integer", "null"]
+        description:
+          type: ["string", "null"]
+        status:
+          type: string
+          default: Active
+      required: [name]
+
+    ListServiceHostsQueryParams:
+      type: object
+      properties:
+        search:
+          type: string
+        status:
+          type: string
+
+    GetServiceHostParams:
+      type: object
+      properties:
+        id:
+          type: integer
+      required: [id]
+
+    UpdateServiceHostParams:
+      type: object
+      properties:
+        id:
+          type: integer
+      required: [id]
+
+    DeleteServiceHostParams:
+      type: object
+      properties:
+        id:
+          type: integer
+      required: [id]
+
+    Booking:
+      type: object
+      properties:
+        id:
+          type: integer
+        booking_ref:
+          type: string
+        name:
+          type: ["string", "null"]
+        account_id:
+          type: ["integer", "null"]
+        account_name:
+          type: ["string", "null"]
+        contact_id:
+          type: ["integer", "null"]
+        contact_name:
+          type: ["string", "null"]
+        booking_status:
+          type: string
+        booking_source:
+          type: ["string", "null"]
+        customer_notes:
+          type: ["string", "null"]
+        space_id:
+          type: ["integer", "null"]
+        space_name:
+          type: ["string", "null"]
+        space_type:
+          type: ["string", "null"]
+        booking_mode:
+          type: ["string", "null"]
+        property_address:
+          type: ["string", "null"]
+        check_in_date:
+          type: ["string", "null"]
+        check_out_date:
+          type: ["string", "null"]
+        stay_nights:
+          type: ["integer", "null"]
+        stay_weeks:
+          type: ["string", "null"]
+        agreed_weekly_rate:
+          type: ["string", "null"]
+        total_rent:
+          type: ["string", "null"]
+        currency:
+          type: ["string", "null"]
+        num_guests:
+          type: ["integer", "null"]
+        contract_product_id:
+          type: ["integer", "null"]
+        cancellation_reason:
+          type: ["string", "null"]
+        cancelled_at:
+          type: ["string", "null"]
+        status:
+          type: string
+        created_at:
+          type: string
+        updated_at:
+          type: string
+      required: [id, booking_ref, booking_status, status, created_at, updated_at]
+
+    BookingListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        booking_ref:
+          type: string
+        booking_status:
+          type: string
+        booking_source:
+          type: ["string", "null"]
+        account_name:
+          type: ["string", "null"]
+        contact_name:
+          type: ["string", "null"]
+        space_name:
+          type: ["string", "null"]
+        space_type:
+          type: ["string", "null"]
+        property_address:
+          type: ["string", "null"]
+        check_in_date:
+          type: ["string", "null"]
+        check_out_date:
+          type: ["string", "null"]
+        stay_nights:
+          type: ["integer", "null"]
+        agreed_weekly_rate:
+          type: ["string", "null"]
+        total_rent:
+          type: ["string", "null"]
+        status:
+          type: string
+        created_at:
+          type: string
+      required: [id, booking_ref, booking_status, status, created_at]
+
+    CreateBookingBody:
+      type: object
+      properties:
+        account_id:
+          type: ["integer", "null"]
+        contact_id:
+          type: ["integer", "null"]
+        booking_source:
+          type: ["string", "null"]
+        customer_notes:
+          type: ["string", "null"]
+        space_id:
+          type: ["integer", "null"]
+        check_in_date:
+          type: ["string", "null"]
+        check_out_date:
+          type: ["string", "null"]
+        agreed_weekly_rate:
+          type: ["string", "null"]
+        currency:
+          type: ["string", "null"]
+        num_guests:
+          type: ["integer", "null"]
+        contract_product_id:
+          type: ["integer", "null"]
+        status:
+          type: string
+          default: Active
+      required: []
+
+    ListBookingsQueryParams:
+      type: object
+      properties:
+        booking_status:
+          type: string
+        booking_source:
+          type: string
+        space_id:
+          type: integer
+        account_id:
+          type: integer
+        check_in_from:
+          type: string
+        check_in_to:
+          type: string
+        search:
+          type: string
+        status:
+          type: string
+
+    GetBookingParams:
+      type: object
+      properties:
+        id:
+          type: integer
+      required: [id]
+
+    UpdateBookingParams:
+      type: object
+      properties:
+        id:
+          type: integer
+      required: [id]
+
+    DeleteBookingParams:
+      type: object
+      properties:
+        id:
+          type: integer
+      required: [id]
+
+    CancelBookingBody:
+      type: object
+      properties:
+        reason:
+          type: string
+      required: [reason]
+
+    ExtendBookingBody:
+      type: object
+      properties:
+        new_check_out_date:
+          type: string
+      required: [new_check_out_date]
+
+    BookingDocument:
+      type: object
+      properties:
+        id:
+          type: integer
+        booking_id:
+          type: integer
+        doc_type:
+          type: ["string", "null"]
+        file_name:
+          type: ["string", "null"]
+        file_url:
+          type: ["string", "null"]
+        verified_status:
+          type: string
+        rejection_reason:
+          type: ["string", "null"]
+        expiry_date:
+          type: ["string", "null"]
+        status:
+          type: string
+        created_at:
+          type: string
+        updated_at:
+          type: string
+      required: [id, booking_id, verified_status, status, created_at, updated_at]
+
+    CreateBookingDocumentBody:
+      type: object
+      properties:
+        doc_type:
+          type: ["string", "null"]
+        file_name:
+          type: ["string", "null"]
+        file_url:
+          type: ["string", "null"]
+        expiry_date:
+          type: ["string", "null"]
+      required: []
+
+    RejectDocumentBody:
+      type: object
+      properties:
+        rejection_reason:
+          type: string
+      required: [rejection_reason]
+
+    ContractProduct:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        product_type:
+          type: string
+        status:
+          type: string
+        space_id:
+          type: ["integer", "null"]
+        space_name:
+          type: ["string", "null"]
+        weekly_rate:
+          type: ["number", "null"]
+        monthly_rate:
+          type: ["number", "null"]
+        currency:
+          type: string
+        bond_weeks:
+          type: ["number", "null"]
+        advance_weeks:
+          type: ["number", "null"]
+        min_stay_weeks:
+          type: ["integer", "null"]
+        max_stay_weeks:
+          type: ["integer", "null"]
+        includes_wifi:
+          type: boolean
+        includes_parking:
+          type: boolean
+        includes_utilities:
+          type: boolean
+        includes_meals:
+          type: boolean
+        includes_laundry:
+          type: boolean
+        includes_cleaning:
+          type: boolean
+        extra_inclusions:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        created_at:
+          type: string
+        updated_at:
+          type: string
+      required: [id, name, product_type, status, currency, includes_wifi, includes_parking, includes_utilities, includes_meals, includes_laundry, includes_cleaning, created_at, updated_at]
+
+    CreateContractProductBody:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        product_type:
+          type: ["string", "null"]
+        status:
+          type: ["string", "null"]
+        space_id:
+          type: ["integer", "null"]
+        weekly_rate:
+          type: ["number", "null"]
+        monthly_rate:
+          type: ["number", "null"]
+        currency:
+          type: ["string", "null"]
+        bond_weeks:
+          type: ["number", "null"]
+        advance_weeks:
+          type: ["number", "null"]
+        min_stay_weeks:
+          type: ["integer", "null"]
+        max_stay_weeks:
+          type: ["integer", "null"]
+        includes_wifi:
+          type: ["boolean", "null"]
+        includes_parking:
+          type: ["boolean", "null"]
+        includes_utilities:
+          type: ["boolean", "null"]
+        includes_meals:
+          type: ["boolean", "null"]
+        includes_laundry:
+          type: ["boolean", "null"]
+        includes_cleaning:
+          type: ["boolean", "null"]
+        extra_inclusions:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+      required: [name]
+
+    Contract:
+      type: object
+      properties:
+        id:
+          type: integer
+        contract_ref:
+          type: string
+        booking_id:
+          type: ["integer", "null"]
+        contract_product_id:
+          type: ["integer", "null"]
+        tenant_account_id:
+          type: ["integer", "null"]
+        tenant_name:
+          type: ["string", "null"]
+        landlord_account_id:
+          type: ["integer", "null"]
+        landlord_name:
+          type: ["string", "null"]
+        space_id:
+          type: ["integer", "null"]
+        space_name:
+          type: ["string", "null"]
+        contract_product_name:
+          type: ["string", "null"]
+        start_date:
+          type: ["string", "null"]
+        end_date:
+          type: ["string", "null"]
+        weekly_rate:
+          type: ["number", "null"]
+        total_rent:
+          type: ["number", "null"]
+        bond_amount:
+          type: ["number", "null"]
+        advance_amount:
+          type: ["number", "null"]
+        currency:
+          type: string
+        status:
+          type: string
+        sent_at:
+          type: ["string", "null"]
+        signed_at:
+          type: ["string", "null"]
+        effective_date:
+          type: ["string", "null"]
+        expiry_date:
+          type: ["string", "null"]
+        termination_reason:
+          type: ["string", "null"]
+        document_url:
+          type: ["string", "null"]
+        terms_text:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        created_at:
+          type: string
+        updated_at:
+          type: string
+      required: [id, contract_ref, currency, status, created_at, updated_at]
+
+    CreateContractBody:
+      type: object
+      properties:
+        booking_id:
+          type: ["integer", "null"]
+        contract_product_id:
+          type: ["integer", "null"]
+        tenant_account_id:
+          type: ["integer", "null"]
+        landlord_account_id:
+          type: ["integer", "null"]
+        space_id:
+          type: ["integer", "null"]
+        start_date:
+          type: ["string", "null"]
+        end_date:
+          type: ["string", "null"]
+        weekly_rate:
+          type: ["number", "null"]
+        total_rent:
+          type: ["number", "null"]
+        bond_amount:
+          type: ["number", "null"]
+        advance_amount:
+          type: ["number", "null"]
+        currency:
+          type: ["string", "null"]
+        document_url:
+          type: ["string", "null"]
+        terms_text:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+      required: []
+
+    TerminateContractBody:
+      type: object
+      properties:
+        termination_reason:
+          type: string
+      required: [termination_reason]
+
+    Invoice:
+      type: object
+      properties:
+        id:
+          type: integer
+        invoice_ref:
+          type: string
+        booking_id:
+          type: ["integer", "null"]
+        contract_id:
+          type: ["integer", "null"]
+        account_id:
+          type: ["integer", "null"]
+        amount:
+          type: number
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [Draft, Sent, Paid, Void]
+        due_date:
+          type: ["string", "null"]
+        paid_at:
+          type: ["string", "null"]
+        payment_method:
+          type: ["string", "null"]
+        stripe_payment_intent_id:
+          type: ["string", "null"]
+        stripe_checkout_url:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        created_at:
+          type: string
+        updated_at:
+          type: string
+        booking_ref:
+          type: ["string", "null"]
+        contract_ref:
+          type: ["string", "null"]
+        account_name:
+          type: ["string", "null"]
+      required: [id, invoice_ref, amount, currency, status, created_at, updated_at]
+
+    CreateInvoiceBody:
+      type: object
+      properties:
+        booking_id:
+          type: ["integer", "null"]
+        contract_id:
+          type: ["integer", "null"]
+        account_id:
+          type: ["integer", "null"]
+        amount:
+          type: number
+        currency:
+          type: string
+        due_date:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+      required: [amount]
+
+    UpdateInvoiceBody:
+      type: object
+      properties:
+        booking_id:
+          type: ["integer", "null"]
+        contract_id:
+          type: ["integer", "null"]
+        account_id:
+          type: ["integer", "null"]
+        amount:
+          type: ["number", "null"]
+        currency:
+          type: ["string", "null"]
+        due_date:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+      required: []
+
+    MarkPaidBody:
+      type: object
+      properties:
+        payment_method:
+          type: string
+        paid_at:
+          type: ["string", "null"]
+      required: [payment_method]
+
+    WorkOrder:
+      type: object
+      properties:
+        id:
+          type: integer
+        order_ref:
+          type: string
+        property_id:
+          type: ["integer", "null"]
+        space_id:
+          type: ["integer", "null"]
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [Open, InProgress, PendingReview, Completed, Cancelled]
+        priority:
+          type: string
+          enum: [Low, Normal, High, Urgent]
+        category:
+          type: ["string", "null"]
+        assigned_contact_id:
+          type: ["integer", "null"]
+        reported_at:
+          type: ["string", "null"]
+        scheduled_at:
+          type: ["string", "null"]
+        completed_at:
+          type: ["string", "null"]
+        cost:
+          type: ["number", "null"]
+        currency:
+          type: string
+        notes:
+          type: ["string", "null"]
+        created_at:
+          type: string
+        updated_at:
+          type: string
+        property_name:
+          type: ["string", "null"]
+        space_name:
+          type: ["string", "null"]
+        assigned_contact_name:
+          type: ["string", "null"]
+      required: [id, order_ref, title, status, priority, currency, created_at, updated_at]
+
+    CreateWorkOrderBody:
+      type: object
+      properties:
+        property_id:
+          type: ["integer", "null"]
+        space_id:
+          type: ["integer", "null"]
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        priority:
+          type: ["string", "null"]
+        category:
+          type: ["string", "null"]
+        assigned_contact_id:
+          type: ["integer", "null"]
+        reported_at:
+          type: ["string", "null"]
+        scheduled_at:
+          type: ["string", "null"]
+        cost:
+          type: ["number", "null"]
+        notes:
+          type: ["string", "null"]
+      required: [title]
+
+    UpdateWorkOrderBody:
+      type: object
+      properties:
+        property_id:
+          type: ["integer", "null"]
+        space_id:
+          type: ["integer", "null"]
+        title:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        priority:
+          type: ["string", "null"]
+        category:
+          type: ["string", "null"]
+        assigned_contact_id:
+          type: ["integer", "null"]
+        reported_at:
+          type: ["string", "null"]
+        scheduled_at:
+          type: ["string", "null"]
+        cost:
+          type: ["number", "null"]
+        notes:
+          type: ["string", "null"]
+      required: []
+
+    CompleteWorkOrderBody:
+      type: object
+      properties:
+        cost:
+          type: ["number", "null"]
+        notes:
+          type: ["string", "null"]
+      required: []
+
+    CancelWorkOrderBody:
+      type: object
+      properties:
+        notes:
+          type: ["string", "null"]
+      required: []

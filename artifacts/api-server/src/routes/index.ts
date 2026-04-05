@@ -12,6 +12,12 @@ import accountsRouter from "./accounts";
 import lookupRouter from "./lookup";
 import tasksRouter from "./tasks";
 import leadsRouter from "./leads";
+import serviceHostsRouter from "./service-hosts";
+import bookingsRouter from "./bookings";
+import productsRouter from "./products";
+import contractsRouter from "./contracts";
+import invoicesRouter from "./invoices";
+import workOrdersRouter from "./work-orders";
 
 const router: IRouter = Router();
 
@@ -28,5 +34,11 @@ router.use(accountsRouter);
 router.use(lookupRouter);
 router.use(tasksRouter);
 router.use(leadsRouter);
+router.use(serviceHostsRouter);
+router.use(bookingsRouter);
+router.use(productsRouter);
+router.use(contractsRouter);
+router.use(invoicesRouter);
+router.use(workOrdersRouter);
 
 export default router;

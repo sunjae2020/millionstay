@@ -15,6 +15,12 @@ import {
   User,
   CheckSquare,
   TrendingUp,
+  CalendarDays,
+  UserCheck,
+  Package,
+  FileText,
+  Receipt,
+  Wrench,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -36,6 +42,27 @@ const crmSubNav = [
 const salesSubNav = [
   { href: "/sales/tasks", label: "Tasks", icon: CheckSquare },
   { href: "/sales/leads", label: "Leads", icon: TrendingUp },
+];
+
+const bookingSubNav = [
+  { href: "/booking/service-hosts", label: "Service Hosts", icon: UserCheck },
+  { href: "/booking/bookings", label: "Bookings", icon: CalendarDays },
+];
+
+const productsSubNav = [
+  { href: "/products/contract-products", label: "Contract Products", icon: Package },
+];
+
+const contractsSubNav = [
+  { href: "/contracts/contracts", label: "Contracts", icon: FileText },
+];
+
+const financeSubNav = [
+  { href: "/finance/invoices", label: "Invoices", icon: Receipt },
+];
+
+const maintenanceSubNav = [
+  { href: "/maintenance/work-orders", label: "Work Orders", icon: Wrench },
 ];
 
 function NavItem({
@@ -128,6 +155,36 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
           <SectionToggle label="Sales" defaultOpen={false}>
             {salesSubNav.map((item) => (
+              <NavItem key={item.href} href={item.href} icon={item.icon} label={item.label} />
+            ))}
+          </SectionToggle>
+
+          <SectionToggle label="Booking" defaultOpen={false}>
+            {bookingSubNav.map((item) => (
+              <NavItem key={item.href} href={item.href} icon={item.icon} label={item.label} />
+            ))}
+          </SectionToggle>
+
+          <SectionToggle label="Products" defaultOpen={false}>
+            {productsSubNav.map((item) => (
+              <NavItem key={item.href} href={item.href} icon={item.icon} label={item.label} />
+            ))}
+          </SectionToggle>
+
+          <SectionToggle label="Contracts" defaultOpen={false}>
+            {contractsSubNav.map((item) => (
+              <NavItem key={item.href} href={item.href} icon={item.icon} label={item.label} />
+            ))}
+          </SectionToggle>
+
+          <SectionToggle label="Finance" defaultOpen={false}>
+            {financeSubNav.map((item) => (
+              <NavItem key={item.href} href={item.href} icon={item.icon} label={item.label} />
+            ))}
+          </SectionToggle>
+
+          <SectionToggle label="Maintenance" defaultOpen={false}>
+            {maintenanceSubNav.map((item) => (
               <NavItem key={item.href} href={item.href} icon={item.icon} label={item.label} />
             ))}
           </SectionToggle>

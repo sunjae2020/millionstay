@@ -31,39 +31,69 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 ### Property Admin (`artifacts/property-admin`)
 - **Kind**: web (React + Vite)
 - **Port**: 23339
-- **Purpose**: Internal admin tool for managing rental property listings
-- **Tech**: React, Vite, wouter, shadcn/ui, TanStack Query, react-hook-form
+- **Purpose**: MillionStay — multi-module property management SaaS admin tool
 
-**Property Section:**
-1. **Dashboard** — summary stat cards + pending approval alert
-2. **Suburbs** — CRUD with search, country/state filters
-3. **Properties** — CRUD with approval status workflow (Pending → Active)
-4. **Space Options** — amenity tag CRUD
-5. **Space Policies** — house rules templates (boolean Yes/No radio fields)
-6. **Spaces** — most complex, tabbed form with lookup fields + 30-day availability calendar
+**Modules (10 complete):**
 
-**CRM Section (Prompt 3):**
-7. **Contacts** — full contact detail (basic info, KYC/passport/visa with expiry warnings, address, portal toggle)
-8. **Accounts** — account CRUD with color-coded type badges, LookupSelect for contacts/commission/payment
-9. **Commissions** — percentage and fixed-amount commission templates
-10. **Payment Info** — bank transfer (BSB/account/bank), Stripe, Cash payment records
+**Property:**
+- Dashboard — full KPI stats across all modules + booking calendar + alerts
+- Suburbs — CRUD with search, country/state filters
+- Properties — CRUD with approval status workflow (Pending → Active)
+- Space Options — amenity tag CRUD
+- Space Policies — house rules templates
+- Spaces — tabbed form with LookupField, 30-day availability calendar
+
+**CRM:**
+- Contacts — full detail (basic info, KYC/passport/visa with expiry warnings, address, portal toggle)
+- Accounts — account CRUD, LookupSelect for contacts/commission/payment
+- Commissions — percentage and fixed-amount templates
+- Payment Info — bank transfer (BSB/account), Stripe, Cash records
+
+**Sales:**
+- Tasks — CRUD with FSM (Todo→InProgress→Done)
+- Leads — CRUD with pipeline status, contact/account lookups
+
+**Booking:**
+- Bookings — full FSM (Draft→PendingApproval→Confirmed→Active→CheckedOut; Cancel/NoShow)
+- Service Hosts — host management
+
+**Products:**
+- Contract Products — product catalog CRUD
+
+**Contracts:**
+- Contracts — CRUD + booking_ref enrichment, contract details
+
+**Finance:**
+- Invoices — FSM (Draft→Sent→Paid; Void from Draft/Sent); ref format MS-INV-YYYY-NNNNN
+
+**Maintenance:**
+- Work Orders — FSM (Open→InProgress→PendingReview→Completed; Cancel any); priority Low/Normal/High/Urgent; ref format MS-WO-YYYY-NNNNN
 
 **Components:**
 - `StatusBadge` — colored badge for Active/Pending/Suspended/Rejected
-- `LookupField` — single-select modal lookup (dialog-based, used by Space module)
-- `LookupSelect` — simplified lookup with internal fetch state (used by CRM module)
+- `LookupField` — single-select modal lookup (dialog-based)
+- `LookupSelect` — simplified lookup with internal fetch state
 - `MultiLookupField` — multi-select modal lookup with tag display
 - `Layout` + `PageHeader` — sidebar nav (MillionStay branding) + page header
 
 ### API Server (`artifacts/api-server`)
 - **Kind**: api
 - **Port**: 8080
-- **Routes**: `/api/v1/suburbs`, `/api/v1/properties`, `/api/v1/space-options`, `/api/v1/space-policies`, `/api/v1/spaces`, `/api/v1/spaces/:id/availability`, `/api/v1/commissions`, `/api/v1/payment-info`, `/api/v1/contacts`, `/api/v1/accounts`, `/api/v1/lookup/contacts`, `/api/v1/lookup/accounts`, `/api/v1/lookup/commissions`, `/api/v1/lookup/payment-info`
+- **Routes**: All modules under `/api/v1/...`; lookup endpoints return `{ id, display }` format
 
 ## Database Schema (`lib/db`)
 
-Tables: `suburbs`, `properties`, `space_options`, `space_policies`, `spaces`, `space_option_maps`, `space_blocked_dates`, `commissions`, `payment_info`, `contacts`, `accounts`
+Tables: `suburbs`, `properties`, `space_options`, `space_policies`, `spaces`, `space_option_maps`, `space_blocked_dates`, `commissions`, `payment_info`, `contacts`, `accounts`, `tasks`, `leads`, `service_hosts`, `bookings`, `contract_products`, `contracts`, `invoices`, `work_orders`
 
 ## API Client (`lib/api-client-react`)
 
-Generated from OpenAPI spec via Orval. Hooks for all entities: `useListX`, `useGetX`, `useCreateX`, `useUpdateX`, `useDeleteX` plus lookup hooks `useLookupContacts`, `useLookupAccounts`, `useLookupCommissions`, `useLookupPaymentInfo`.
+Generated from OpenAPI spec (`lib/api-spec/openapi.yaml`) via Orval. Hooks for all entities. Zod schemas in `lib/api-zod`. Always run codegen after updating openapi.yaml.
+
+## Important Patterns
+
+- **Lookup endpoints**: return `{ id, display }` format
+- **enrichXxx()**: server-side function that joins related data and adds enriched fields (e.g., `property_name`, `booking_ref`)
+- **FSM transitions**: separate POST endpoints e.g. `/v1/work-orders/:id/start`
+- **Ref format**: MS-{TYPE}-YYYY-NNNNN (e.g., MS-WO-2026-00001)
+- **Zod imports**: use `@workspace/api-zod` (never `zod` directly in api-server)
+- **DB imports**: use `@workspace/db` (not `@workspace/db/client`)
