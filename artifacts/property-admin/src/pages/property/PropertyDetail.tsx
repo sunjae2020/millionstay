@@ -21,7 +21,7 @@ import {
   getGetPropertyQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Save, CheckCircle, Layers } from "lucide-react";
+import { ArrowLeft, Save, CheckCircle, Layers, MapPin, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
 
@@ -69,7 +69,10 @@ export default function PropertyDetail() {
     sublabel: [s.state, s.country_code].filter(Boolean).join(", "),
   }));
 
-  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<PropertyForm>({
+  const [detectingCoords, setDetectingCoords] = useState(false);
+  const [coordsMsg, setCoordsMsg] = useState("");
+
+  const { register, handleSubmit, reset, control, setValue, watch, formState: { errors } } = useForm<PropertyForm>({
     defaultValues: {
       name: "", address: "", address2: "", city: "", state: "",
       postcode: "", country_code: "AU", lat: "", lng: "",
@@ -124,6 +127,35 @@ export default function PropertyDetail() {
       },
     },
   });
+
+  const watchedAddress = watch("address");
+  const watchedCity = watch("city");
+  const watchedState = watch("state");
+  const watchedPostcode = watch("postcode");
+
+  async function handleAutoDetect() {
+    const parts = [watchedAddress, watchedCity, watchedState, watchedPostcode, "Australia"].filter(Boolean);
+    const q = parts.join(", ");
+    if (!q.trim()) { setCoordsMsg("Enter an address first."); return; }
+    setDetectingCoords(true);
+    setCoordsMsg("");
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`;
+      const res = await fetch(url, { headers: { "Accept-Language": "en" } });
+      const data = await res.json();
+      if (data.length > 0) {
+        setValue("lat", parseFloat(data[0].lat).toFixed(6));
+        setValue("lng", parseFloat(data[0].lon).toFixed(6));
+        setCoordsMsg(`Detected: ${data[0].display_name.slice(0, 60)}...`);
+      } else {
+        setCoordsMsg("Location not found. Enter coordinates manually.");
+      }
+    } catch {
+      setCoordsMsg("Auto-detect failed. Enter coordinates manually.");
+    } finally {
+      setDetectingCoords(false);
+    }
+  }
 
   function onSubmit(data: PropertyForm) {
     const payload = {
@@ -254,13 +286,30 @@ export default function PropertyDetail() {
                       )}
                     />
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Latitude</Label>
-                    <Input {...register("lat")} type="number" step="any" placeholder="e.g. -33.8688" />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Longitude</Label>
-                    <Input {...register("lng")} type="number" step="any" placeholder="e.g. 151.2093" />
+                  <div className="col-span-2 flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Coordinates (Lat / Lng)</Label>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs gap-1.5"
+                        onClick={handleAutoDetect}
+                        disabled={detectingCoords}
+                      >
+                        {detectingCoords
+                          ? <><Loader2 className="h-3 w-3 animate-spin" />Detecting...</>
+                          : <><MapPin className="h-3 w-3" />Auto-detect</>
+                        }
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input {...register("lat")} type="number" step="any" placeholder="Lat e.g. -37.8102" />
+                      <Input {...register("lng")} type="number" step="any" placeholder="Lng e.g. 144.9628" />
+                    </div>
+                    {coordsMsg && (
+                      <p className="text-xs text-muted-foreground">{coordsMsg}</p>
+                    )}
                   </div>
 
                   <div className="col-span-2">

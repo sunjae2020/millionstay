@@ -26,7 +26,8 @@ import {
   getGetSpaceAvailabilityQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Save, CalendarDays } from "lucide-react";
+import { ArrowLeft, Save, CalendarDays, Images } from "lucide-react";
+import { SpacePhotoManager } from "@/components/SpacePhotoManager";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
@@ -240,6 +241,11 @@ export default function SpaceDetail() {
           <TabsList className="mb-5 flex-wrap h-auto gap-1">
             <TabsTrigger value="details">Details</TabsTrigger>
             {!isNew && <TabsTrigger value="availability">Availability</TabsTrigger>}
+            {!isNew && (
+              <TabsTrigger value="photos" className="gap-1.5">
+                <Images className="h-3.5 w-3.5" /> Photos
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="details">
@@ -543,6 +549,12 @@ export default function SpaceDetail() {
                   </div>
                 </div>
               </div>
+            </TabsContent>
+          )}
+
+          {!isNew && id && (
+            <TabsContent value="photos">
+              <SpacePhotoManager spaceId={id} />
             </TabsContent>
           )}
         </Tabs>

@@ -6,6 +6,8 @@ import session from "express-session";
 import router from "./routes";
 import authRouter from "./routes/auth";
 import healthRouter from "./routes/health";
+import publicRouter from "./routes/public";
+import spaceImagesRouter from "./routes/space-images";
 import { logger } from "./lib/logger";
 import { requireAuth } from "./middlewares/requireAuth";
 
@@ -71,9 +73,11 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", authRouter);
 app.use("/api", healthRouter);
+app.use("/api", publicRouter);
 
 app.use("/api/v1", requireAuth);
 
+app.use("/api", spaceImagesRouter);
 app.use("/api", router);
 
 export default app;
