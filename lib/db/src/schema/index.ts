@@ -1,4 +1,5 @@
 export * from "./suburbs";
+export * from "./integration_settings";
 export * from "./properties";
 export * from "./space_options";
 export * from "./space_policies";

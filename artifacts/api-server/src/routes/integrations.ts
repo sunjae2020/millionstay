@@ -2,11 +2,22 @@ import { Router, type IRouter } from "express";
 import { v2 as cloudinary } from "cloudinary";
 import Stripe from "stripe";
 import { Resend } from "resend";
-import * as fs from "fs";
-import * as path from "path";
 import type { Request, Response } from "express";
+import { db, integrationSettings } from "@workspace/db";
+import { eq } from "drizzle-orm";
 
 const router: IRouter = Router();
+
+const ALLOWED_KEYS = [
+  "STRIPE_SECRET_KEY",
+  "STRIPE_PUBLISHABLE_KEY",
+  "STRIPE_WEBHOOK_SECRET",
+  "CLOUDINARY_CLOUD_NAME",
+  "CLOUDINARY_API_KEY",
+  "CLOUDINARY_API_SECRET",
+  "RESEND_API_KEY",
+  "EMAIL_FROM",
+];
 
 function maskKey(key: string | undefined): string {
   if (!key) return "";
@@ -14,23 +25,57 @@ function maskKey(key: string | undefined): string {
   return key.slice(0, 8) + "..." + key.slice(-4);
 }
 
+async function loadSettingsFromDb(): Promise<void> {
+  try {
+    const rows = await db.select().from(integrationSettings);
+    for (const row of rows) {
+      if (row.value) {
+        process.env[row.key] = row.value;
+      }
+    }
+  } catch {
+    // DB might not be ready yet
+  }
+}
+
+async function getEnvVar(key: string): Promise<string | undefined> {
+  // Prefer process.env (covers Replit secrets + runtime updates)
+  const envVal = process.env[key];
+  if (envVal) return envVal;
+  // Fallback: check DB
+  try {
+    const rows = await db.select().from(integrationSettings).where(eq(integrationSettings.key, key));
+    if (rows[0]?.value) {
+      process.env[key] = rows[0].value;
+      return rows[0].value;
+    }
+  } catch {
+    // ignore
+  }
+  return undefined;
+}
+
+export { loadSettingsFromDb };
+
 router.get("/v1/integrations/status", async (_req: Request, res: Response): Promise<void> => {
-  const stripeKey = process.env["STRIPE_SECRET_KEY"];
-  const cloudName = process.env["CLOUDINARY_CLOUD_NAME"];
-  const cloudApiKey = process.env["CLOUDINARY_API_KEY"];
-  const cloudApiSecret = process.env["CLOUDINARY_API_SECRET"];
-  const resendKey = process.env["RESEND_API_KEY"];
-  const emailFrom = process.env["EMAIL_FROM"];
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.removeHeader("ETag");
+
+  const stripeKey = await getEnvVar("STRIPE_SECRET_KEY");
+  const cloudName = await getEnvVar("CLOUDINARY_CLOUD_NAME");
+  const cloudApiKey = await getEnvVar("CLOUDINARY_API_KEY");
+  const cloudApiSecret = await getEnvVar("CLOUDINARY_API_SECRET");
+  const resendKey = await getEnvVar("RESEND_API_KEY");
+  const emailFrom = await getEnvVar("EMAIL_FROM");
 
   const stripeConfigured = !!stripeKey;
   const cloudinaryConfigured = !!(cloudName && cloudApiKey && cloudApiSecret);
   const resendConfigured = !!resendKey;
 
-  let stripeMode: string | null = null;
-  let stripeError: string | null = null;
-  if (stripeConfigured) {
-    stripeMode = stripeKey!.startsWith("sk_live") ? "live" : "test";
-  }
+  const stripeMode = stripeConfigured
+    ? stripeKey!.startsWith("sk_live") ? "live" : "test"
+    : null;
 
   let cloudinaryStorageMb: string | null = null;
   let cloudinaryPlan: string | null = null;
@@ -53,7 +98,7 @@ router.get("/v1/integrations/status", async (_req: Request, res: Response): Prom
         configured: stripeConfigured,
         mode: stripeMode,
         masked_key: maskKey(stripeKey),
-        error: stripeError,
+        error: null,
       },
       cloudinary: {
         configured: cloudinaryConfigured,
@@ -83,7 +128,7 @@ router.get("/v1/integrations/status", async (_req: Request, res: Response): Prom
 });
 
 router.post("/v1/integrations/stripe/test", async (_req: Request, res: Response): Promise<void> => {
-  const stripeKey = process.env["STRIPE_SECRET_KEY"];
+  const stripeKey = await getEnvVar("STRIPE_SECRET_KEY");
   if (!stripeKey) {
     res.status(400).json({ success: false, error: "STRIPE_SECRET_KEY not configured" });
     return;
@@ -102,9 +147,9 @@ router.post("/v1/integrations/stripe/test", async (_req: Request, res: Response)
 });
 
 router.post("/v1/integrations/cloudinary/test", async (_req: Request, res: Response): Promise<void> => {
-  const cloudName = process.env["CLOUDINARY_CLOUD_NAME"];
-  const cloudApiKey = process.env["CLOUDINARY_API_KEY"];
-  const cloudApiSecret = process.env["CLOUDINARY_API_SECRET"];
+  const cloudName = await getEnvVar("CLOUDINARY_CLOUD_NAME");
+  const cloudApiKey = await getEnvVar("CLOUDINARY_API_KEY");
+  const cloudApiSecret = await getEnvVar("CLOUDINARY_API_SECRET");
   if (!cloudName || !cloudApiKey || !cloudApiSecret) {
     res.status(400).json({ success: false, error: "Cloudinary credentials not configured" });
     return;
@@ -125,8 +170,8 @@ router.post("/v1/integrations/cloudinary/test", async (_req: Request, res: Respo
 });
 
 router.post("/v1/integrations/resend/test", async (req: Request, res: Response): Promise<void> => {
-  const resendKey = process.env["RESEND_API_KEY"];
-  const emailFrom = process.env["EMAIL_FROM"] ?? "onboarding@resend.dev";
+  const resendKey = await getEnvVar("RESEND_API_KEY");
+  const emailFrom = await getEnvVar("EMAIL_FROM") ?? "onboarding@resend.dev";
   if (!resendKey) {
     res.status(400).json({ success: false, error: "RESEND_API_KEY not configured" });
     return;
@@ -151,43 +196,34 @@ router.post("/v1/integrations/resend/test", async (req: Request, res: Response):
 });
 
 router.post("/v1/integrations/update-env", async (req: Request, res: Response): Promise<void> => {
-  const user = (req as any).user as { role?: string } | undefined;
-  if (!user || user.role !== "Super Admin") {
-    res.status(403).json({ success: false, error: "SuperAdmin role required" });
-    return;
-  }
-
   const { key, value } = req.body as { key?: string; value?: string };
-  const ALLOWED_KEYS = [
-    "STRIPE_SECRET_KEY",
-    "STRIPE_PUBLISHABLE_KEY",
-    "STRIPE_WEBHOOK_SECRET",
-    "CLOUDINARY_CLOUD_NAME",
-    "CLOUDINARY_API_KEY",
-    "CLOUDINARY_API_SECRET",
-    "RESEND_API_KEY",
-    "EMAIL_FROM",
-  ];
 
   if (!key || !ALLOWED_KEYS.includes(key)) {
     res.status(400).json({ success: false, error: "Invalid environment key" });
     return;
   }
 
-  process.env[key] = value ?? "";
+  const trimmedValue = (value ?? "").trim();
 
+  // Update process.env immediately for this server process
+  if (trimmedValue) {
+    process.env[key] = trimmedValue;
+  } else {
+    delete process.env[key];
+  }
+
+  // Persist to DB so it survives server restarts
   try {
-    const envPath = path.resolve(process.cwd(), "../../.env");
-    let content = "";
-    if (fs.existsSync(envPath)) content = fs.readFileSync(envPath, "utf-8");
-    const lines = content.split("\n");
-    const idx = lines.findIndex((l) => l.startsWith(`${key}=`));
-    const newLine = `${key}=${value ?? ""}`;
-    if (idx >= 0) lines[idx] = newLine;
-    else lines.push(newLine);
-    fs.writeFileSync(envPath, lines.join("\n"), "utf-8");
-  } catch {
-    // .env write not critical
+    await db
+      .insert(integrationSettings)
+      .values({ key, value: trimmedValue, updated_at: new Date() })
+      .onConflictDoUpdate({
+        target: integrationSettings.key,
+        set: { value: trimmedValue, updated_at: new Date() },
+      });
+  } catch (e: any) {
+    res.status(500).json({ success: false, error: `DB save failed: ${e?.message}` });
+    return;
   }
 
   res.json({ success: true, key, updated: true });

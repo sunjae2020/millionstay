@@ -416,7 +416,7 @@ export default function IntegrationsPage() {
   async function fetchStatus() {
     setLoading(true);
     try {
-      const res = await apiFetch("/api/v1/integrations/status");
+      const res = await apiFetch(`/api/v1/integrations/status?t=${Date.now()}`);
       const data = await res.json();
       if (data.success) setStatus(data.data);
     } finally {

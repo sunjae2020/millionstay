@@ -135,7 +135,7 @@ function IntegrationStatusWidget() {
   const [status, setStatus] = useState<IntegrationStatus | null>(null);
 
   useEffect(() => {
-    apiFetch("/api/v1/integrations/status")
+    apiFetch(`/api/v1/integrations/status?t=${Date.now()}`)
       .then((r) => r.json())
       .then((d) => { if (d.success) setStatus(d.data); })
       .catch(() => {});
