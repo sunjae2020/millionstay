@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, asc, desc } from "drizzle-orm";
+import { eq, and, asc, desc, inArray } from "drizzle-orm";
 import { db, spacesTable, propertiesTable, spaceOptionMapsTable, spaceAvailabilityTable } from "@workspace/db";
 import { spaceImagesTable } from "@workspace/db";
 import { spaceOptionsTable, productCatalogTable } from "@workspace/db";
@@ -20,6 +20,7 @@ router.get("/v1/public/spaces", async (_req, res): Promise<void> => {
       description: spacesTable.description,
       status: spacesTable.status,
       property_id: spacesTable.property_id,
+      parent_space_id: spacesTable.parent_space_id,
       property_name: propertiesTable.name,
       property_address: propertiesTable.address,
       property_city: propertiesTable.city,
@@ -34,10 +35,19 @@ router.get("/v1/public/spaces", async (_req, res): Promise<void> => {
 
   const spaceIds = spaces.map((s) => s.id);
 
+  // Collect all parent IDs that we may need images from
+  const parentIds = [...new Set(
+    spaces.map((s) => s.parent_space_id).filter((id): id is number => id != null),
+  )];
+  const allRelevantIds = [...new Set([...spaceIds, ...parentIds])];
+
   const [allImages, allOptionMaps] = await Promise.all([
-    spaceIds.length > 0
+    allRelevantIds.length > 0
       ? db.select().from(spaceImagesTable)
-          .where(eq(spaceImagesTable.is_primary, true))
+          .where(and(
+            inArray(spaceImagesTable.space_id, allRelevantIds),
+            eq(spaceImagesTable.is_primary, true),
+          ))
           .orderBy(desc(spaceImagesTable.is_primary))
       : Promise.resolve([]),
     spaceIds.length > 0
@@ -50,6 +60,7 @@ router.get("/v1/public/spaces", async (_req, res): Promise<void> => {
       : Promise.resolve([]),
   ]);
 
+  // Map primary images by space id
   const primaryBySpace = new Map<number, (typeof allImages)[number]>();
   for (const img of allImages) {
     if (!primaryBySpace.has(img.space_id)) primaryBySpace.set(img.space_id, img);
@@ -63,11 +74,19 @@ router.get("/v1/public/spaces", async (_req, res): Promise<void> => {
   }
 
   const data = spaces.map((s) => {
-    const primary = primaryBySpace.get(s.id);
+    // Own primary image first; fall back to parent's primary image if none
+    let primary = primaryBySpace.get(s.id);
+    let imageFromParent = false;
+    if (!primary && s.parent_space_id) {
+      primary = primaryBySpace.get(s.parent_space_id);
+      if (primary) imageFromParent = true;
+    }
+
     return {
       ...s,
       primary_image: primary?.file_url ?? null,
       primary_thumbnail: primary?.thumbnail_url ?? null,
+      image_from_parent: imageFromParent,
       space_options: optionsBySpace.get(s.id) ?? [],
     };
   });
@@ -94,6 +113,7 @@ router.get("/v1/public/spaces/:id", async (req, res): Promise<void> => {
       floor_number: spacesTable.floor_number,
       floor_area_sqm: spacesTable.floor_area_sqm,
       property_id: spacesTable.property_id,
+      parent_space_id: spacesTable.parent_space_id,
       property_name: propertiesTable.name,
       property_address: propertiesTable.address,
       property_city: propertiesTable.city,
@@ -108,7 +128,7 @@ router.get("/v1/public/spaces/:id", async (req, res): Promise<void> => {
 
   if (!space) { res.status(404).json({ error: "Space not found" }); return; }
 
-  const [images, optionMaps, pricingTiers] = await Promise.all([
+  const [ownImages, optionMaps, pricingTiers] = await Promise.all([
     db.select().from(spaceImagesTable)
       .where(eq(spaceImagesTable.space_id, spaceId))
       .orderBy(desc(spaceImagesTable.is_primary), asc(spaceImagesTable.display_order)),
@@ -130,16 +150,32 @@ router.get("/v1/public/spaces/:id", async (req, res): Promise<void> => {
       .from(productCatalogTable)
       .where(and(
         eq(productCatalogTable.space_id, spaceId),
-        eq(productCatalogTable.is_active, true),
+        eq(productCatalogTable.status, "Active"),
       ))
       .orderBy(asc(productCatalogTable.price)),
   ]);
+
+  // If this space has no own images and has a parent, fall back to parent's images
+  let images = ownImages;
+  let imagesFromParent = false;
+
+  if (images.length === 0 && space.parent_space_id) {
+    const parentImages = await db.select().from(spaceImagesTable)
+      .where(eq(spaceImagesTable.space_id, space.parent_space_id))
+      .orderBy(desc(spaceImagesTable.is_primary), asc(spaceImagesTable.display_order));
+
+    if (parentImages.length > 0) {
+      images = parentImages;
+      imagesFromParent = true;
+    }
+  }
 
   res.json({
     success: true,
     data: {
       ...space,
       images,
+      images_from_parent: imagesFromParent,
       space_options: optionMaps.filter((o) => o.name),
       pricing_tiers: pricingTiers,
     },
