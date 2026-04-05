@@ -25,13 +25,15 @@ export function usePagination<T>(items: T[] | undefined | null, defaultPageSize 
   };
 
   return {
-    paged,
+    paginatedItems: paged,
     page: safePage,
     pageSize,
     totalPages,
     total,
     setPage,
     setPageSize: setPageSizeAndReset,
+    onPage: setPage,
+    onPageSize: setPageSizeAndReset,
     hasNext: safePage < totalPages,
     hasPrev: safePage > 1,
   };
