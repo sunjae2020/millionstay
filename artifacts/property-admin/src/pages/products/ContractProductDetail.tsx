@@ -36,9 +36,9 @@ const TERM_COLORS: Record<string, string> = {
   LongTerm: "bg-amber-100 text-amber-700 border-amber-200",
 };
 const TERM_LABELS: Record<string, string> = {
-  ShortTerm: "단기 — Short-term (< 4 weeks)",
-  MidTerm: "중기 — Mid-term (4–25 weeks)",
-  LongTerm: "장기 — Long-term (≥ 26 weeks)",
+  ShortTerm: "Short-term (under 4 weeks)",
+  MidTerm: "Mid-term (4–25 weeks)",
+  LongTerm: "Long-term (26+ weeks)",
 };
 
 interface FormData {
@@ -353,9 +353,9 @@ export default function ContractProductDetail() {
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Weekly">Weekly (주간)</SelectItem>
-                        <SelectItem value="Biweekly">Biweekly — 격주</SelectItem>
-                        <SelectItem value="Monthly">Monthly (월간)</SelectItem>
+                        <SelectItem value="Weekly">Weekly</SelectItem>
+                        <SelectItem value="Biweekly">Biweekly (every 2 weeks)</SelectItem>
+                        <SelectItem value="Monthly">Monthly</SelectItem>
                       </SelectContent>
                     </Select>
                   )} />

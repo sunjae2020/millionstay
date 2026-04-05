@@ -22,9 +22,9 @@ const TERM_COLORS: Record<string, string> = {
   LongTerm: "bg-amber-100 text-amber-700",
 };
 const TERM_LABELS: Record<string, string> = {
-  ShortTerm: "단기 Short",
-  MidTerm: "중기 Mid",
-  LongTerm: "장기 Long",
+  ShortTerm: "Short-term",
+  MidTerm: "Mid-term",
+  LongTerm: "Long-term",
 };
 
 const PRODUCT_TYPES = ["Room", "Suite", "Apartment", "House", "Studio", "Service"];
@@ -69,9 +69,9 @@ export default function ContractProductList() {
             <SelectTrigger className="w-44"><SelectValue placeholder="All terms" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="_all">All term types</SelectItem>
-              <SelectItem value="ShortTerm">단기 — Short-term</SelectItem>
-              <SelectItem value="MidTerm">중기 — Mid-term</SelectItem>
-              <SelectItem value="LongTerm">장기 — Long-term</SelectItem>
+              <SelectItem value="ShortTerm">Short-term (under 4 weeks)</SelectItem>
+              <SelectItem value="MidTerm">Mid-term (4–25 weeks)</SelectItem>
+              <SelectItem value="LongTerm">Long-term (26+ weeks)</SelectItem>
             </SelectContent>
           </Select>
           <Select value={status} onValueChange={setStatus}>

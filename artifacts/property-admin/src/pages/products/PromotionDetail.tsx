@@ -20,9 +20,9 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const TERM_TYPE_META: Record<string, { label: string; minWeeks: string; maxWeeks: string; freq: string; color: string }> = {
-  ShortTerm: { label: "Short-term (단기)", minWeeks: "1", maxWeeks: "3", freq: "Weekly", color: "bg-sky-50 border-sky-200 text-sky-700" },
-  MidTerm:   { label: "Mid-term (중기)",   minWeeks: "4", maxWeeks: "25", freq: "Biweekly", color: "bg-violet-50 border-violet-200 text-violet-700" },
-  LongTerm:  { label: "Long-term (장기)",  minWeeks: "26", maxWeeks: "", freq: "Monthly", color: "bg-amber-50 border-amber-200 text-amber-700" },
+  ShortTerm: { label: "Short-term", minWeeks: "1", maxWeeks: "3", freq: "Weekly", color: "bg-sky-50 border-sky-200 text-sky-700" },
+  MidTerm:   { label: "Mid-term",   minWeeks: "4", maxWeeks: "25", freq: "Biweekly", color: "bg-violet-50 border-violet-200 text-violet-700" },
+  LongTerm:  { label: "Long-term",  minWeeks: "26", maxWeeks: "", freq: "Monthly", color: "bg-amber-50 border-amber-200 text-amber-700" },
 };
 
 interface PromotionForm {
@@ -212,9 +212,9 @@ export default function PromotionDetail() {
                   <Select value={field.value} onValueChange={(v) => { field.onChange(v); handleTermTypeChange(v); }}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ShortTerm">단기 — Short-term (&lt; 4 weeks)</SelectItem>
-                      <SelectItem value="MidTerm">중기 — Mid-term (4–25 weeks)</SelectItem>
-                      <SelectItem value="LongTerm">장기 — Long-term (≥ 26 weeks)</SelectItem>
+                      <SelectItem value="ShortTerm">Short-term (under 4 weeks)</SelectItem>
+                      <SelectItem value="MidTerm">Mid-term (4–25 weeks)</SelectItem>
+                      <SelectItem value="LongTerm">Long-term (26+ weeks)</SelectItem>
                     </SelectContent>
                   </Select>
                 )} />
@@ -233,9 +233,9 @@ export default function PromotionDetail() {
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Weekly">Weekly (주간)</SelectItem>
-                      <SelectItem value="Biweekly">Biweekly — 격주 (2주마다)</SelectItem>
-                      <SelectItem value="Monthly">Monthly (월간)</SelectItem>
+                      <SelectItem value="Weekly">Weekly</SelectItem>
+                      <SelectItem value="Biweekly">Biweekly (every 2 weeks)</SelectItem>
+                      <SelectItem value="Monthly">Monthly</SelectItem>
                     </SelectContent>
                   </Select>
                 )} />
