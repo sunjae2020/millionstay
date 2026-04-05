@@ -413,14 +413,14 @@ export default function IntegrationsPage() {
   const [status, setStatus] = useState<IntegrationStatus | null>(null);
   const [loading, setLoading] = useState(true);
 
-  async function fetchStatus() {
-    setLoading(true);
+  async function fetchStatus(silent = false) {
+    if (!silent) setLoading(true);
     try {
       const res = await apiFetch(`/api/v1/integrations/status?t=${Date.now()}`);
       const data = await res.json();
       if (data.success) setStatus(data.data);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }
 
@@ -451,7 +451,7 @@ export default function IntegrationsPage() {
                 key={card.id}
                 card={card}
                 status={status}
-                onRefresh={fetchStatus}
+                onRefresh={() => fetchStatus(true)}
               />
             ))}
           </div>
