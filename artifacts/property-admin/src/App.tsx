@@ -1,10 +1,12 @@
 import { useEffect } from "react";
-import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
+import { Switch, Route, Router as WouterRouter, Redirect, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { initTheme } from "@/lib/theme";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import LoginPage from "@/pages/Login";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import { ComingSoonPage } from "@/pages/ComingSoon";
@@ -75,9 +77,38 @@ const queryClient = new QueryClient({
   },
 });
 
+function ProtectedRouter() {
+  const { user, isLoading } = useAuth();
+  const [location] = useLocation();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user && location !== "/login") {
+    return <Redirect to="/login" />;
+  }
+
+  if (user && location === "/login") {
+    return <Redirect to="/dashboard" />;
+  }
+
+  return <Router />;
+}
+
 function Router() {
   return (
     <Switch>
+      {/* ── Auth ───────────────────────────────────────── */}
+      <Route path="/login" component={LoginPage} />
+
       {/* ── Dashboard ──────────────────────────────────── */}
       <Route path="/" component={Dashboard} />
       <Route path="/dashboard" component={Dashboard} />
@@ -305,10 +336,12 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <ThemeProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
-          </WouterRouter>
-          <Toaster />
+          <AuthProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <ProtectedRouter />
+            </WouterRouter>
+            <Toaster />
+          </AuthProvider>
         </ThemeProvider>
       </TooltipProvider>
     </QueryClientProvider>

@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useBrand } from "@/contexts/ThemeContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -33,6 +34,7 @@ import {
   ScrollText,
   BarChart3,
   Palette,
+  LogOut,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -257,6 +259,33 @@ function SectionToggle({
   );
 }
 
+function SidebarFooter() {
+  const { user, logout } = useAuth();
+  return (
+    <div className="border-t border-sidebar-border px-3 py-2">
+      <div className="flex items-center gap-2 mb-1">
+        <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+          <User className="h-3.5 w-3.5 text-primary" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-medium text-sidebar-foreground truncate">
+            {user ? `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() || user.email : "Admin"}
+          </p>
+          <p className="text-[10px] text-sidebar-foreground/40 truncate">{user?.role ?? ""}</p>
+        </div>
+        <button
+          onClick={logout}
+          className="flex-shrink-0 p-1.5 rounded hover:bg-sidebar-accent text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors"
+          title="Sign out"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+        </button>
+      </div>
+      <p className="text-[10px] text-sidebar-foreground/30 pl-9">MillionStay Admin v2</p>
+    </div>
+  );
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { logo, brandName } = useBrand();
@@ -308,9 +337,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </nav>
 
         {/* Footer */}
-        <div className="h-12 flex items-center px-4 border-t border-sidebar-border">
-          <span className="text-xs text-sidebar-foreground/40">MillionStay Admin v2</span>
-        </div>
+        <SidebarFooter />
       </aside>
 
       {/* Main content */}
