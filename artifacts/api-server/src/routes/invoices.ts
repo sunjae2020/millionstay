@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { db, invoicesTable, bookingsTable, contractsTable, accountsTable } from "@workspace/db";
 import { eq, ilike, and } from "drizzle-orm";
+import { logAction } from "../utils/auditLog";
 import {
   CreateInvoiceBody,
   UpdateInvoiceBody,
@@ -118,6 +119,7 @@ router.post("/v1/invoices/:id/send", async (req, res): Promise<void> => {
     .where(and(eq(invoicesTable.id, Number(req.params.id)), eq(invoicesTable.status, "Draft")))
     .returning();
   if (!row) { res.status(400).json({ error: "Invoice not in Draft status" }); return; }
+  await logAction({ entityType: "invoice", entityId: row.id, action: "STATUS_CHANGE", oldValue: { status: "Draft" }, newValue: { status: "Sent" } });
   const [result] = await enrichInvoices([row]);
   res.json(result);
 });
@@ -131,16 +133,19 @@ router.post("/v1/invoices/:id/pay", async (req, res): Promise<void> => {
     .where(and(eq(invoicesTable.id, Number(req.params.id)), eq(invoicesTable.status, "Sent")))
     .returning();
   if (!row) { res.status(400).json({ error: "Invoice not in Sent status" }); return; }
+  await logAction({ entityType: "invoice", entityId: row.id, action: "PAYMENT", oldValue: { status: "Sent" }, newValue: { status: "Paid", payment_method: parsed.data.payment_method } });
   const [result] = await enrichInvoices([row]);
   res.json(result);
 });
 
 router.post("/v1/invoices/:id/void", async (req, res): Promise<void> => {
+  const existing = await db.select({ status: invoicesTable.status }).from(invoicesTable).where(eq(invoicesTable.id, Number(req.params.id))).then(r => r[0]);
   const [row] = await db.update(invoicesTable)
     .set({ status: "Void", updated_at: new Date() })
     .where(eq(invoicesTable.id, Number(req.params.id)))
     .returning();
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  await logAction({ entityType: "invoice", entityId: row.id, action: "STATUS_CHANGE", oldValue: { status: existing?.status }, newValue: { status: "Void" } });
   const [result] = await enrichInvoices([row]);
   res.json(result);
 });

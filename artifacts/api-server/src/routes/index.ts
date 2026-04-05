@@ -18,6 +18,10 @@ import productsRouter from "./products";
 import contractsRouter from "./contracts";
 import invoicesRouter from "./invoices";
 import workOrdersRouter from "./work-orders";
+import systemLogsRouter from "./system-logs";
+import emailTemplatesRouter from "./email-templates";
+import emailLogsRouter from "./email-logs";
+import recurringSchedulesRouter from "./recurring-schedules";
 
 const router: IRouter = Router();
 
@@ -40,5 +44,9 @@ router.use(productsRouter);
 router.use(contractsRouter);
 router.use(invoicesRouter);
 router.use(workOrdersRouter);
+router.use(systemLogsRouter);
+router.use(emailTemplatesRouter);
+router.use(emailLogsRouter);
+router.use(recurringSchedulesRouter);
 
 export default router;

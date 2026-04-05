@@ -10,6 +10,7 @@ import {
   propertiesTable,
   spaceBlockedDatesTable,
 } from "@workspace/db";
+import { logAction } from "../utils/auditLog";
 import {
   ListBookingsQueryParams,
   CreateBookingBody,
@@ -265,6 +266,7 @@ router.patch("/v1/bookings/:id/confirm", async (req, res): Promise<void> => {
     await blockDatesForBooking(existing.space_id, existing.check_in_date, existing.check_out_date);
   }
   const [row] = await db.update(bookingsTable).set({ booking_status: "Confirmed" }).where(eq(bookingsTable.id, parsed.data.id)).returning();
+  await logAction({ entityType: "booking", entityId: parsed.data.id, action: "STATUS_CHANGE", oldValue: { status: existing.booking_status }, newValue: { status: "Confirmed" } });
   res.json(await buildBookingResponse(row));
 });
 
@@ -280,6 +282,7 @@ router.patch("/v1/bookings/:id/reject", async (req, res): Promise<void> => {
     return;
   }
   const [row] = await db.update(bookingsTable).set({ booking_status: "Cancelled", cancellation_reason: bodyParsed.data.reason, cancelled_at: new Date() }).where(eq(bookingsTable.id, parsed.data.id)).returning();
+  await logAction({ entityType: "booking", entityId: parsed.data.id, action: "STATUS_CHANGE", oldValue: { status: "PendingApproval" }, newValue: { status: "Cancelled", reason: bodyParsed.data.reason } });
   res.json(await buildBookingResponse(row));
 });
 
@@ -293,6 +296,7 @@ router.patch("/v1/bookings/:id/check-in", async (req, res): Promise<void> => {
     return;
   }
   const [row] = await db.update(bookingsTable).set({ booking_status: "Active" }).where(eq(bookingsTable.id, parsed.data.id)).returning();
+  await logAction({ entityType: "booking", entityId: parsed.data.id, action: "STATUS_CHANGE", oldValue: { status: "Confirmed" }, newValue: { status: "Active" } });
   res.json(await buildBookingResponse(row));
 });
 
@@ -306,6 +310,7 @@ router.patch("/v1/bookings/:id/check-out", async (req, res): Promise<void> => {
     return;
   }
   const [row] = await db.update(bookingsTable).set({ booking_status: "CheckedOut" }).where(eq(bookingsTable.id, parsed.data.id)).returning();
+  await logAction({ entityType: "booking", entityId: parsed.data.id, action: "STATUS_CHANGE", oldValue: { status: "Active" }, newValue: { status: "CheckedOut" } });
   res.json(await buildBookingResponse(row));
 });
 
@@ -325,6 +330,7 @@ router.patch("/v1/bookings/:id/cancel", async (req, res): Promise<void> => {
     await unblockDatesForBooking(existing.space_id, existing.check_in_date, existing.check_out_date);
   }
   const [row] = await db.update(bookingsTable).set({ booking_status: "Cancelled", cancellation_reason: bodyParsed.data.reason, cancelled_at: new Date() }).where(eq(bookingsTable.id, parsed.data.id)).returning();
+  await logAction({ entityType: "booking", entityId: parsed.data.id, action: "STATUS_CHANGE", oldValue: { status: existing.booking_status }, newValue: { status: "Cancelled", reason: bodyParsed.data.reason } });
   res.json(await buildBookingResponse(row));
 });
 

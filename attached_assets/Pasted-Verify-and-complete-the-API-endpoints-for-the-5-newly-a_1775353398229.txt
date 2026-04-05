@@ -1,0 +1,226 @@
+Verify and complete the API endpoints for the 5 newly added tables.
+Check if these routes already exist. If missing, add them.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. SPACE AVAILABILITY ENDPOINTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET    /api/v1/spaces/:id/availability
+  Query: from=YYYY-MM-DD, to=YYYY-MM-DD
+  Default range: today → today + 30 days
+  Returns:
+  {
+    "success": true,
+    "data": {
+      "space_id": 1,
+      "space_name": "Room A",
+      "from": "2026-04-05",
+      "to": "2026-05-05",
+      "calendar": [
+        { "date": "2026-04-05", "is_available": true,
+          "block_reason": null, "booking_id": null },
+        { "date": "2026-04-06", "is_available": false,
+          "block_reason": "Booking", "booking_id": 3 }
+      ],
+      "available_count": 25,
+      "blocked_count": 5
+    }
+  }
+
+POST   /api/v1/spaces/:id/availability/block
+  Body: {
+    "dates": ["2026-04-10", "2026-04-11"],
+    "reason": "Manual"
+  }
+  Logic:
+    For each date: INSERT INTO space_availability
+      ON CONFLICT (space_id, date)
+      DO UPDATE SET is_available=false, block_reason=reason
+  Returns: { "success": true, "blocked_count": 2 }
+
+POST   /api/v1/spaces/:id/availability/unblock
+  Body: { "dates": ["2026-04-10"] }
+  Logic: UPDATE space_availability
+    SET is_available=true, block_reason=null, booking_id=null
+    WHERE space_id=X AND date IN (...)
+  Returns: { "success": true, "unblocked_count": 1 }
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. SYSTEM LOG ENDPOINTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET    /api/v1/system-logs
+  Query params:
+    entity_type (string, optional)
+    action      (string, optional)
+    actor_email (string, optional)
+    from        (date, optional)
+    to          (date, optional)
+    limit       (number, default 50, max 200)
+    offset      (number, default 0)
+  Returns: paginated list, newest first (ORDER BY created_at DESC)
+  NOTE: Read-only — no POST/PUT/DELETE
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. EMAIL TEMPLATE ENDPOINTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET    /api/v1/email-templates        list all
+GET    /api/v1/email-templates/:id    get one
+PUT    /api/v1/email-templates/:id    update subject + body_html only
+  (template_code is immutable — cannot be changed)
+
+POST   /api/v1/email-templates/:id/test
+  Body: { "to_email": "test@example.com" }
+  Sends a test email with dummy variable values
+  Returns: { "success": true, "resend_message_id": "..." }
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. EMAIL LOG ENDPOINTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET    /api/v1/email-logs
+  Query: entity_type, entity_id, status, limit=20, offset=0
+  Returns: paginated, newest first
+  NOTE: Read-only
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5. RECURRING SCHEDULE ENDPOINTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET    /api/v1/recurring-schedules
+  Query: booking_id, is_active, next_due_date_from, next_due_date_to
+  Include: booking_ref, account_name
+
+POST   /api/v1/recurring-schedules
+  Body: {
+    booking_id, contract_id (optional),
+    account_id, schedule_type, frequency,
+    amount, currency, gst_included,
+    start_date, end_date (optional), next_due_date
+  }
+
+PUT    /api/v1/recurring-schedules/:id
+PATCH  /api/v1/recurring-schedules/:id/deactivate
+  Sets is_active = false
+
+POST   /api/v1/recurring-schedules/generate-due
+  Purpose: Cron trigger — generates invoices for overdue schedules
+  Logic:
+    1. SELECT all WHERE is_active=true AND next_due_date <= TODAY
+    2. For each schedule:
+       a. Create invoice:
+          invoice_ref = 'MS-INV-' + YYYY + '-' + padded_sequence
+          booking_id = schedule.booking_id
+          account_id = schedule.account_id
+          invoice_type = schedule.schedule_type
+          subtotal = schedule.gst_included
+                     ? ROUND(amount / 1.1, 2)
+                     : amount
+          gst_amount = schedule.gst_included
+                       ? amount - subtotal
+                       : 0
+          total_amount = amount
+          currency = schedule.currency
+          issue_date = TODAY
+          due_date = TODAY + 7 days
+          invoice_status = 'Unpaid'
+
+       b. Create invoice_product line:
+          description = schedule.schedule_type + ' — ' +
+                        frequency + ' payment'
+          quantity = 1
+          unit_price = subtotal
+          gst_amount = schedule.gst_amount
+          line_total = amount
+
+       c. Update schedule:
+          last_generated_at = NOW()
+          next_due_date =
+            frequency='Weekly'   → next_due_date + 7 days
+            frequency='Biweekly' → next_due_date + 14 days
+            frequency='Monthly'  → next_due_date + 1 month
+
+    3. Return:
+       { generated_count: N,
+         invoice_refs: ["MS-INV-2026-00001", ...],
+         errors: [] }
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+6. WIRE UP AUDIT LOG MIDDLEWARE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Create a reusable logAction() utility function:
+
+// server/utils/auditLog.ts
+export async function logAction({
+  entityType,
+  entityId,
+  action,
+  actorId,
+  actorEmail,
+  oldValue = null,
+  newValue = null,
+  ipAddress = null,
+}: {
+  entityType: string;
+  entityId: number | string;
+  action: 'CREATE'|'UPDATE'|'DELETE'|'STATUS_CHANGE'|
+          'LOGIN'|'PAYMENT'|'VERIFY'|'BLOCK'|'UNBLOCK';
+  actorId?: number;
+  actorEmail?: string;
+  oldValue?: object | null;
+  newValue?: object | null;
+  ipAddress?: string | null;
+}) {
+  try {
+    await db.insert(systemLogs).values({
+      entityType,
+      entityId: String(entityId),
+      action,
+      actorType: actorId ? 'User' : 'System',
+      actorId: actorId ? String(actorId) : null,
+      actorEmail,
+      oldValue: oldValue ? JSON.stringify(oldValue) : null,
+      newValue: newValue ? JSON.stringify(newValue) : null,
+      ipAddress,
+    });
+  } catch (err) {
+    // Log failure should never crash the main request
+    console.error('Audit log failed:', err);
+  }
+}
+
+Apply logAction() to these critical operations:
+  - bookings: CREATE, STATUS_CHANGE (confirm/cancel/checkin/checkout)
+  - invoices: CREATE, STATUS_CHANGE (paid/void)
+  - contracts: CREATE, STATUS_CHANGE
+  - booking_documents: VERIFY, reject (action: 'VERIFY')
+  - user login: action: 'LOGIN'
+  - space_availability: BLOCK, UNBLOCK
+
+Example usage in booking confirmation:
+  await logAction({
+    entityType: 'booking',
+    entityId: booking.id,
+    action: 'STATUS_CHANGE',
+    actorId: req.user.id,
+    actorEmail: req.user.email,
+    oldValue: { status: 'PendingApproval' },
+    newValue: { status: 'Confirmed' },
+    ipAddress: req.ip,
+  });
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+7. FINAL VERIFICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Test all new endpoints with curl or the browser:
+
+  GET /api/v1/spaces/1/availability
+  → should return 30-day calendar
+
+  GET /api/v1/system-logs
+  → should return empty array (no logs yet)
+
+  GET /api/v1/email-templates
+  → should return 10 seeded templates
+
+  POST /api/v1/recurring-schedules/generate-due
+  → should return { generated_count: 0, invoice_refs: [] }
+     (no schedules yet — that's correct)
+
+Show me the response for each of these 4 test calls.

@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
-import { eq, ilike, and, inArray, SQL } from "drizzle-orm";
-import { db, spacesTable, propertiesTable, spacePoliciesTable, spaceOptionMapsTable, spaceBlockedDatesTable } from "@workspace/db";
+import { eq, ilike, and, inArray, gte, lte, SQL } from "drizzle-orm";
+import { db, spacesTable, propertiesTable, spacePoliciesTable, spaceOptionMapsTable, spaceBlockedDatesTable, spaceAvailabilityTable } from "@workspace/db";
+import { logAction } from "../utils/auditLog";
 import {
   ListSpacesQueryParams,
   CreateSpaceBody,
@@ -207,113 +208,107 @@ router.delete("/v1/spaces/:id", async (req, res): Promise<void> => {
 });
 
 router.get("/v1/spaces/:id/availability", async (req, res): Promise<void> => {
-  const params = GetSpaceAvailabilityParams.safeParse(req.params);
-  if (!params.success) {
-    res.status(400).json({ error: params.error.message });
-    return;
-  }
+  const spaceId = Number(req.params.id);
+  if (!spaceId) { res.status(400).json({ error: "Invalid space id" }); return; }
 
-  const [space] = await db
-    .select()
-    .from(spacesTable)
-    .where(eq(spacesTable.id, params.data.id));
-
-  if (!space) {
-    res.status(404).json({ error: "Space not found" });
-    return;
-  }
-
-  const blockedDates = await db
-    .select()
-    .from(spaceBlockedDatesTable)
-    .where(eq(spaceBlockedDatesTable.space_id, params.data.id));
-
-  const blockedSet = new Set(blockedDates.map((d) => d.date));
+  const [space] = await db.select().from(spacesTable).where(eq(spacesTable.id, spaceId));
+  if (!space) { res.status(404).json({ error: "Space not found" }); return; }
 
   const today = new Date();
-  const days: { date: string; status: string }[] = [];
-  for (let i = 0; i < 30; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    const dateStr = d.toISOString().split("T")[0];
-    days.push({
+  const fromStr = (req.query.from as string) ?? today.toISOString().slice(0, 10);
+  const toDefault = new Date(today);
+  toDefault.setDate(today.getDate() + 30);
+  const toStr = (req.query.to as string) ?? toDefault.toISOString().slice(0, 10);
+
+  const records = await db.select().from(spaceAvailabilityTable)
+    .where(and(
+      eq(spaceAvailabilityTable.space_id, spaceId),
+      gte(spaceAvailabilityTable.date, fromStr),
+      lte(spaceAvailabilityTable.date, toStr),
+    ));
+  const recordMap = new Map(records.map(r => [r.date, r]));
+
+  const calendar: { date: string; is_available: boolean; block_reason: string | null; booking_id: number | null }[] = [];
+  const from = new Date(fromStr);
+  const to = new Date(toStr);
+  for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
+    const dateStr = d.toISOString().slice(0, 10);
+    const rec = recordMap.get(dateStr);
+    calendar.push({
       date: dateStr,
-      status: blockedSet.has(dateStr) ? "blocked" : "available",
+      is_available: rec ? rec.is_available : true,
+      block_reason: rec?.block_reason ?? null,
+      booking_id: rec?.booking_id ?? null,
     });
   }
 
-  res.json(GetSpaceAvailabilityResponse.parse(days));
+  const available_count = calendar.filter(c => c.is_available).length;
+  const blocked_count = calendar.filter(c => !c.is_available).length;
+
+  res.json({
+    success: true,
+    data: {
+      space_id: spaceId,
+      space_name: space.name,
+      from: fromStr,
+      to: toStr,
+      calendar,
+      available_count,
+      blocked_count,
+    },
+  });
 });
 
 router.post("/v1/spaces/:id/availability/block", async (req, res): Promise<void> => {
-  const params = BlockSpaceAvailabilityParams.safeParse(req.params);
-  if (!params.success) {
-    res.status(400).json({ error: params.error.message });
-    return;
+  const spaceId = Number(req.params.id);
+  if (!spaceId) { res.status(400).json({ error: "Invalid space id" }); return; }
+
+  const [space] = await db.select().from(spacesTable).where(eq(spacesTable.id, spaceId));
+  if (!space) { res.status(404).json({ error: "Space not found" }); return; }
+
+  const { dates, reason = "Manual" } = req.body as { dates?: string[]; reason?: string };
+  if (!Array.isArray(dates) || dates.length === 0) {
+    res.status(400).json({ error: "dates array is required" }); return;
   }
 
-  const parsed = BlockSpaceAvailabilityBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
-    return;
+  for (const date of dates) {
+    await db.insert(spaceAvailabilityTable)
+      .values({ space_id: spaceId, date, is_available: false, block_reason: reason })
+      .onConflictDoUpdate({
+        target: [spaceAvailabilityTable.space_id, spaceAvailabilityTable.date],
+        set: { is_available: false, block_reason: reason },
+      });
   }
 
-  const [space] = await db
-    .select()
-    .from(spacesTable)
-    .where(eq(spacesTable.id, params.data.id));
+  await logAction({ entityType: "space", entityId: spaceId, action: "BLOCK", newValue: { dates, reason } });
 
-  if (!space) {
-    res.status(404).json({ error: "Space not found" });
-    return;
+  res.json({ success: true, blocked_count: dates.length });
+});
+
+router.post("/v1/spaces/:id/availability/unblock", async (req, res): Promise<void> => {
+  const spaceId = Number(req.params.id);
+  if (!spaceId) { res.status(400).json({ error: "Invalid space id" }); return; }
+
+  const [space] = await db.select().from(spacesTable).where(eq(spacesTable.id, spaceId));
+  if (!space) { res.status(404).json({ error: "Space not found" }); return; }
+
+  const { dates } = req.body as { dates?: string[] };
+  if (!Array.isArray(dates) || dates.length === 0) {
+    res.status(400).json({ error: "dates array is required" }); return;
   }
 
-  const { dates, action } = parsed.data;
-
-  if (action === "block") {
-    const existing = await db
-      .select()
-      .from(spaceBlockedDatesTable)
-      .where(eq(spaceBlockedDatesTable.space_id, params.data.id));
-    const existingDates = new Set(existing.map((d) => d.date));
-    const newDates = dates.filter((d) => !existingDates.has(d));
-    if (newDates.length > 0) {
-      await db.insert(spaceBlockedDatesTable).values(
-        newDates.map((d) => ({ space_id: params.data.id, date: d }))
-      );
-    }
-  } else if (action === "unblock") {
-    for (const d of dates) {
-      await db
-        .delete(spaceBlockedDatesTable)
-        .where(
-          and(
-            eq(spaceBlockedDatesTable.space_id, params.data.id),
-            eq(spaceBlockedDatesTable.date, d)
-          )
-        );
-    }
+  for (const date of dates) {
+    await db.insert(spaceAvailabilityTable)
+      .values({ space_id: spaceId, date, is_available: true, block_reason: null, booking_id: null })
+      .onConflictDoUpdate({
+        target: [spaceAvailabilityTable.space_id, spaceAvailabilityTable.date],
+        set: { is_available: true, block_reason: null, booking_id: null },
+      });
   }
 
-  const blockedDates = await db
-    .select()
-    .from(spaceBlockedDatesTable)
-    .where(eq(spaceBlockedDatesTable.space_id, params.data.id));
-  const blockedSet = new Set(blockedDates.map((d) => d.date));
+  await logAction({ entityType: "space", entityId: spaceId, action: "UNBLOCK", newValue: { dates } });
 
-  const today = new Date();
-  const days: { date: string; status: string }[] = [];
-  for (let i = 0; i < 30; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    const dateStr = d.toISOString().split("T")[0];
-    days.push({
-      date: dateStr,
-      status: blockedSet.has(dateStr) ? "blocked" : "available",
-    });
-  }
-
-  res.json(BlockSpaceAvailabilityResponse.parse(days));
+  res.json({ success: true, unblocked_count: dates.length });
 });
 
 export default router;

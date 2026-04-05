@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { db, contractsTable, accountsTable, spacesTable, contractProductsTable, bookingsTable } from "@workspace/db";
 import { eq, ilike, and } from "drizzle-orm";
+import { logAction } from "../utils/auditLog";
 
 const router = Router();
 
@@ -136,6 +137,7 @@ router.post("/v1/contracts/:id/send", async (req, res): Promise<void> => {
     .set({ status: "Sent", sent_at: new Date() })
     .where(eq(contractsTable.id, id)).returning();
   if (!row) { res.status(404).json({ error: "NOT_FOUND" }); return; }
+  await logAction({ entityType: "contract", entityId: id, action: "STATUS_CHANGE", newValue: { status: "Sent" } });
   const [result] = await enrichContracts([row]);
   res.json(result);
 });
@@ -147,6 +149,7 @@ router.post("/v1/contracts/:id/sign", async (req, res): Promise<void> => {
     .set({ status: "Signed", signed_at: new Date(), document_url: document_url ?? null })
     .where(eq(contractsTable.id, id)).returning();
   if (!row) { res.status(404).json({ error: "NOT_FOUND" }); return; }
+  await logAction({ entityType: "contract", entityId: id, action: "STATUS_CHANGE", newValue: { status: "Signed" } });
   const [result] = await enrichContracts([row]);
   res.json(result);
 });
@@ -157,6 +160,7 @@ router.post("/v1/contracts/:id/activate", async (req, res): Promise<void> => {
     .set({ status: "Active", effective_date: new Date().toISOString().slice(0, 10) })
     .where(eq(contractsTable.id, id)).returning();
   if (!row) { res.status(404).json({ error: "NOT_FOUND" }); return; }
+  await logAction({ entityType: "contract", entityId: id, action: "STATUS_CHANGE", newValue: { status: "Active" } });
   const [result] = await enrichContracts([row]);
   res.json(result);
 });
@@ -168,6 +172,7 @@ router.post("/v1/contracts/:id/terminate", async (req, res): Promise<void> => {
     .set({ status: "Terminated", termination_reason })
     .where(eq(contractsTable.id, id)).returning();
   if (!row) { res.status(404).json({ error: "NOT_FOUND" }); return; }
+  await logAction({ entityType: "contract", entityId: id, action: "STATUS_CHANGE", newValue: { status: "Terminated", termination_reason } });
   const [result] = await enrichContracts([row]);
   res.json(result);
 });
@@ -178,6 +183,7 @@ router.post("/v1/contracts/:id/expire", async (req, res): Promise<void> => {
     .set({ status: "Expired", expiry_date: new Date().toISOString().slice(0, 10) })
     .where(eq(contractsTable.id, id)).returning();
   if (!row) { res.status(404).json({ error: "NOT_FOUND" }); return; }
+  await logAction({ entityType: "contract", entityId: id, action: "STATUS_CHANGE", newValue: { status: "Expired" } });
   const [result] = await enrichContracts([row]);
   res.json(result);
 });
