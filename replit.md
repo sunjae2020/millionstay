@@ -83,7 +83,7 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 
 ## Database Schema (`lib/db`)
 
-Tables: `suburbs`, `properties`, `space_options`, `space_policies`, `spaces`, `space_option_maps`, `space_blocked_dates`, `commissions`, `payment_info`, `contacts`, `accounts`, `tasks`, `leads`, `service_hosts`, `bookings`, `contract_products`, `contracts`, `invoices`, `work_orders`
+Tables (25 total): `suburbs`, `properties`, `space_options`, `space_policies`, `spaces`, `space_option_maps`, `space_blocked_dates`, `commissions`, `payment_info`, `contacts`, `accounts`, `tasks`, `leads`, `service_hosts`, `bookings`, `booking_documents`, `contract_products`, `contracts`, `invoices`, `work_orders`, `space_availability`, `recurring_schedule`, `system_log`, `email_template` (10 seeded templates), `email_log`
 
 ## API Client (`lib/api-client-react`)
 
