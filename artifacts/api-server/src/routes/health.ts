@@ -8,4 +8,8 @@ router.get("/healthz", (_req, res) => {
   res.json(data);
 });
 
+router.get("/v1/health", (_req, res) => {
+  res.json({ status: "ok", service: "MillionStay API", timestamp: new Date().toISOString() });
+});
+
 export default router;
