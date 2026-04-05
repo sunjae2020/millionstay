@@ -38,7 +38,7 @@ import {
   Plug,
   LogOut,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 type NavChild = {
   href: string;
@@ -155,19 +155,31 @@ function NavLeaf({
 }) {
   const [location] = useLocation();
   const active = location === href || location.startsWith(href + "/");
+  const ref = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    if (active && ref.current) {
+      ref.current.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  }, [active]);
+
   return (
     <Link
+      ref={ref}
       href={href}
       className={cn(
         "flex items-center gap-2.5 rounded-md text-sm font-medium transition-colors",
         indent ? "px-3 py-1.5 ml-4 pl-5" : "px-3 py-2",
         active
-          ? "bg-sidebar-primary/20 text-sidebar-primary"
+          ? "bg-sidebar-primary/20 text-sidebar-primary font-semibold"
           : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
       )}
     >
-      <Icon className="h-3.5 w-3.5 flex-shrink-0" />
+      <Icon className={cn("h-3.5 w-3.5 flex-shrink-0", active && "text-sidebar-primary")} />
       {label}
+      {active && (
+        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-sidebar-primary flex-shrink-0" />
+      )}
     </Link>
   );
 }
@@ -226,9 +238,11 @@ function SectionToggle({
       location.startsWith(item.href + "/") ||
       item.children?.some((c) => location === c.href || location.startsWith(c.href + "/"))
   );
-  const [open, setOpen] = useState(section.defaultOpen ?? anyActive);
 
-  // Auto-open when any child route becomes active
+  // Fix: anyActive takes priority over defaultOpen (was using ?? which ignores false)
+  const [open, setOpen] = useState(anyActive || !!section.defaultOpen);
+
+  // Auto-open whenever any child route becomes active
   useEffect(() => {
     if (anyActive) setOpen(true);
   }, [anyActive]);
@@ -237,9 +251,14 @@ function SectionToggle({
     <div>
       <button
         type="button"
-        className="flex items-center gap-1.5 w-full px-3 py-1.5 text-xs font-semibold text-sidebar-foreground/40 uppercase tracking-wider hover:text-sidebar-foreground/60 transition-colors"
+        className={cn(
+          "flex items-center gap-1.5 w-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors",
+          anyActive
+            ? "text-sidebar-primary/80"
+            : "text-sidebar-foreground/40 hover:text-sidebar-foreground/60"
+        )}
         onClick={() => {
-          // Don't allow closing a section that has an active child
+          // Don't collapse a section that has an active child
           if (anyActive && open) return;
           setOpen((o) => !o);
         }}
@@ -247,6 +266,7 @@ function SectionToggle({
         {open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
         <section.icon className="h-3 w-3" />
         {section.label}
+        {anyActive && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-sidebar-primary/60 flex-shrink-0" />}
       </button>
       {open && (
         <div className="flex flex-col gap-0.5 mt-0.5">

@@ -33,7 +33,7 @@ export default function InvoiceList() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Invoices</h1>
-            <p className="text-sm text-muted-foreground">{invoices.length} total</p>
+            <p className="text-sm text-muted-foreground">{invoicesRaw.length} total</p>
           </div>
           <Button onClick={() => navigate("/finance/invoices/new")}>
             <Plus className="h-4 w-4 mr-1" />
@@ -100,7 +100,7 @@ export default function InvoiceList() {
                   </td>
                 </tr>
               ))}
-              {invoices.length === 0 && (
+              {invoicesRaw.length === 0 && (
                 <tr>
                   <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No invoices found</td>
                 </tr>
