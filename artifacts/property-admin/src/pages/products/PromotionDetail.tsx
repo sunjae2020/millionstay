@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLocation, useParams } from "wouter";
-import { Layout, PageHeader } from "@/components/Layout";
+import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,19 +19,29 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+const TERM_TYPE_META: Record<string, { label: string; minWeeks: string; maxWeeks: string; freq: string; color: string }> = {
+  ShortTerm: { label: "Short-term (단기)", minWeeks: "1", maxWeeks: "3", freq: "Weekly", color: "bg-sky-50 border-sky-200 text-sky-700" },
+  MidTerm:   { label: "Mid-term (중기)",   minWeeks: "4", maxWeeks: "25", freq: "Biweekly", color: "bg-violet-50 border-violet-200 text-violet-700" },
+  LongTerm:  { label: "Long-term (장기)",  minWeeks: "26", maxWeeks: "", freq: "Monthly", color: "bg-amber-50 border-amber-200 text-amber-700" },
+};
+
 interface PromotionForm {
   name: string;
   code: string;
+  term_type: string;
   promotion_type: string;
   discount_percentage: string;
   discount_amount: string;
   free_nights: string;
-  valid_from: string;
-  valid_to: string;
+  min_stay_weeks: string;
+  max_stay_weeks: string;
   min_stay_nights: string;
+  billing_frequency: string;
   max_uses: string;
   max_uses_per_account: string;
   applicable_to: string;
+  valid_from: string;
+  valid_to: string;
   description: string;
   terms: string;
   status: string;
@@ -48,49 +58,60 @@ export default function PromotionDetail() {
     id!, { query: { enabled: !isNew && !!id, queryKey: getGetPromotionQueryKey(id!) } }
   );
 
-  const { register, handleSubmit, reset, control, watch, formState: { errors, isDirty } } = useForm<PromotionForm>({
+  const { register, handleSubmit, reset, control, watch, setValue, formState: { errors } } = useForm<PromotionForm>({
     defaultValues: {
-      name: "", code: "", promotion_type: "Percentage",
+      name: "", code: "", term_type: "ShortTerm", promotion_type: "Percentage",
       discount_percentage: "", discount_amount: "", free_nights: "",
-      valid_from: "", valid_to: "", min_stay_nights: "",
+      min_stay_weeks: "1", max_stay_weeks: "3",
+      min_stay_nights: "", billing_frequency: "Weekly",
       max_uses: "", max_uses_per_account: "",
-      applicable_to: "AllSpaces", description: "", terms: "", status: "Draft",
+      applicable_to: "AllSpaces", valid_from: "", valid_to: "",
+      description: "", terms: "", status: "Active",
     },
   });
 
+  const termType = watch("term_type");
   const promotionType = watch("promotion_type");
+
+  // Auto-fill defaults when term_type changes
+  const handleTermTypeChange = (val: string) => {
+    const meta = TERM_TYPE_META[val];
+    if (meta) {
+      setValue("min_stay_weeks", meta.minWeeks);
+      setValue("max_stay_weeks", meta.maxWeeks);
+      setValue("billing_frequency", meta.freq);
+    }
+  };
 
   useEffect(() => {
     if (promotion) {
       reset({
         name: promotion.name ?? "",
         code: promotion.code ?? "",
+        term_type: promotion.term_type ?? "ShortTerm",
         promotion_type: promotion.promotion_type ?? "Percentage",
         discount_percentage: promotion.discount_percentage?.toString() ?? "",
         discount_amount: promotion.discount_amount?.toString() ?? "",
         free_nights: promotion.free_nights?.toString() ?? "",
-        valid_from: promotion.valid_from ?? "",
-        valid_to: promotion.valid_to ?? "",
+        min_stay_weeks: promotion.min_stay_weeks?.toString() ?? "",
+        max_stay_weeks: promotion.max_stay_weeks?.toString() ?? "",
         min_stay_nights: promotion.min_stay_nights?.toString() ?? "",
+        billing_frequency: promotion.billing_frequency ?? "Biweekly",
         max_uses: promotion.max_uses?.toString() ?? "",
         max_uses_per_account: promotion.max_uses_per_account?.toString() ?? "",
         applicable_to: promotion.applicable_to ?? "AllSpaces",
+        valid_from: promotion.valid_from ?? "",
+        valid_to: promotion.valid_to ?? "",
         description: promotion.description ?? "",
         terms: promotion.terms ?? "",
-        status: promotion.status ?? "Draft",
+        status: promotion.status ?? "Active",
       });
     }
   }, [promotion, reset]);
 
   const createMutation = useCreatePromotion({
-    mutation: {
-      onSuccess: () => {
-        qc.invalidateQueries({ queryKey: getListPromotionsQueryKey() });
-        navigate("/products/promotions");
-      },
-    },
+    mutation: { onSuccess: () => { qc.invalidateQueries({ queryKey: getListPromotionsQueryKey() }); navigate("/products/promotions"); } },
   });
-
   const updateMutation = useUpdatePromotion({
     mutation: {
       onSuccess: () => {
@@ -100,49 +121,41 @@ export default function PromotionDetail() {
       },
     },
   });
-
   const deleteMutation = useDeletePromotion({
-    mutation: {
-      onSuccess: () => {
-        qc.invalidateQueries({ queryKey: getListPromotionsQueryKey() });
-        navigate("/products/promotions");
-      },
-    },
+    mutation: { onSuccess: () => { qc.invalidateQueries({ queryKey: getListPromotionsQueryKey() }); navigate("/products/promotions"); } },
   });
 
   const onSubmit = (values: PromotionForm) => {
     const data = {
       name: values.name,
       code: values.code || null,
+      term_type: values.term_type,
       promotion_type: values.promotion_type,
       discount_percentage: values.discount_percentage ? parseFloat(values.discount_percentage) : null,
       discount_amount: values.discount_amount ? parseFloat(values.discount_amount) : null,
       free_nights: values.free_nights ? parseInt(values.free_nights) : null,
-      valid_from: values.valid_from || null,
-      valid_to: values.valid_to || null,
+      min_stay_weeks: values.min_stay_weeks ? parseInt(values.min_stay_weeks) : null,
+      max_stay_weeks: values.max_stay_weeks ? parseInt(values.max_stay_weeks) : null,
       min_stay_nights: values.min_stay_nights ? parseInt(values.min_stay_nights) : null,
+      billing_frequency: values.billing_frequency || null,
       max_uses: values.max_uses ? parseInt(values.max_uses) : null,
       max_uses_per_account: values.max_uses_per_account ? parseInt(values.max_uses_per_account) : null,
       applicable_to: values.applicable_to || null,
+      valid_from: values.valid_from || null,
+      valid_to: values.valid_to || null,
       description: values.description || null,
       terms: values.terms || null,
       status: values.status,
     };
-    if (isNew) {
-      createMutation.mutate({ data });
-    } else if (id) {
-      updateMutation.mutate({ id, data });
-    }
+    if (isNew) createMutation.mutate({ data });
+    else if (id) updateMutation.mutate({ id, data });
   };
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
+  const termMeta = TERM_TYPE_META[termType];
 
   if (!isNew && isLoading) {
-    return (
-      <Layout>
-        <div className="p-8 text-center text-muted-foreground">Loading...</div>
-      </Layout>
-    );
+    return <Layout><div className="p-8 text-center text-muted-foreground">Loading...</div></Layout>;
   }
 
   return (
@@ -151,14 +164,15 @@ export default function PromotionDetail() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <Link href="/products/promotions">
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8"><ArrowLeft className="h-4 w-4" /></Button>
             </Link>
             <div className="flex items-center gap-2">
               <Tag className="h-5 w-5 text-primary" />
               <h1 className="text-xl font-bold">{isNew ? "New Promotion" : (promotion?.name ?? "Promotion")}</h1>
             </div>
+            {termMeta && (
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded border ${termMeta.color}`}>{termMeta.label}</span>
+            )}
           </div>
           <div className="flex items-center gap-2">
             {!isNew && (
@@ -175,10 +189,8 @@ export default function PromotionDetail() {
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      onClick={() => id && deleteMutation.mutate({ id })}
-                    >Delete</AlertDialogAction>
+                    <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      onClick={() => id && deleteMutation.mutate({ id })}>Delete</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
@@ -189,17 +201,63 @@ export default function PromotionDetail() {
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-5">
+          {/* Term Type — most important, shown first */}
+          <div className="bg-white border rounded-lg overflow-hidden">
+            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Term Type &amp; Billing</div>
+            <div className="p-5 grid grid-cols-3 gap-4">
+              <div>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Term Type *</Label>
+                <Controller name="term_type" control={control} render={({ field }) => (
+                  <Select value={field.value} onValueChange={(v) => { field.onChange(v); handleTermTypeChange(v); }}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ShortTerm">단기 — Short-term (&lt; 4 weeks)</SelectItem>
+                      <SelectItem value="MidTerm">중기 — Mid-term (4–25 weeks)</SelectItem>
+                      <SelectItem value="LongTerm">장기 — Long-term (≥ 26 weeks)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )} />
+              </div>
+              <div>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Min Stay (weeks)</Label>
+                <Input {...register("min_stay_weeks")} type="number" min="1" />
+              </div>
+              <div>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Max Stay (weeks){termType === "LongTerm" ? " — blank = unlimited" : ""}</Label>
+                <Input {...register("max_stay_weeks")} type="number" min="1" placeholder={termType === "LongTerm" ? "Unlimited" : ""} />
+              </div>
+              <div>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Billing Frequency</Label>
+                <Controller name="billing_frequency" control={control} render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Weekly">Weekly (주간)</SelectItem>
+                      <SelectItem value="Biweekly">Biweekly — 격주 (2주마다)</SelectItem>
+                      <SelectItem value="Monthly">Monthly (월간)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )} />
+              </div>
+              <div>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Min Stay (nights) — per space</Label>
+                <Input {...register("min_stay_nights")} type="number" min="1" placeholder="Optional" />
+              </div>
+            </div>
+          </div>
+
+          {/* General */}
           <div className="bg-white border rounded-lg overflow-hidden">
             <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">General</div>
             <div className="p-5 grid grid-cols-2 gap-4">
               <div className="col-span-2">
-                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Name *</Label>
-                <Input {...register("name", { required: true })} placeholder="e.g. Early Bird Discount" className={errors.name ? "border-destructive" : ""} />
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Promotion Name *</Label>
+                <Input {...register("name", { required: true })} placeholder="e.g. Mid-term 5% Discount" className={errors.name ? "border-destructive" : ""} />
               </div>
               <div>
                 <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Promo Code</Label>
-                <Input {...register("code")} placeholder="e.g. EARLY10" className="font-mono uppercase" />
+                <Input {...register("code")} placeholder="e.g. MID5" className="font-mono uppercase" />
               </div>
               <div>
                 <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Status</Label>
@@ -219,9 +277,10 @@ export default function PromotionDetail() {
             </div>
           </div>
 
+          {/* Discount */}
           <div className="bg-white border rounded-lg overflow-hidden">
             <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Discount</div>
-            <div className="p-5 grid grid-cols-2 gap-4">
+            <div className="p-5 grid grid-cols-3 gap-4">
               <div>
                 <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Promotion Type</Label>
                 <Controller name="promotion_type" control={control} render={({ field }) => (
@@ -231,6 +290,7 @@ export default function PromotionDetail() {
                       <SelectItem value="Percentage">Percentage (%)</SelectItem>
                       <SelectItem value="Fixed">Fixed Amount ($)</SelectItem>
                       <SelectItem value="FreeNights">Free Nights</SelectItem>
+                      <SelectItem value="None">No Discount</SelectItem>
                     </SelectContent>
                   </Select>
                 )} />
@@ -238,13 +298,13 @@ export default function PromotionDetail() {
               {promotionType === "Percentage" && (
                 <div>
                   <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Discount %</Label>
-                  <Input {...register("discount_percentage")} type="number" step="0.01" min="0" max="100" placeholder="e.g. 10" />
+                  <Input {...register("discount_percentage")} type="number" step="0.5" min="0" max="100" placeholder="e.g. 5" />
                 </div>
               )}
               {promotionType === "Fixed" && (
                 <div>
                   <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Discount Amount ($)</Label>
-                  <Input {...register("discount_amount")} type="number" step="0.01" min="0" placeholder="e.g. 200" />
+                  <Input {...register("discount_amount")} type="number" step="0.01" min="0" placeholder="e.g. 50" />
                 </div>
               )}
               {promotionType === "FreeNights" && (
@@ -256,8 +316,9 @@ export default function PromotionDetail() {
             </div>
           </div>
 
+          {/* Validity & Limits */}
           <div className="bg-white border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Validity & Limits</div>
+            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Validity &amp; Limits</div>
             <div className="p-5 grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Valid From</Label>
@@ -268,16 +329,12 @@ export default function PromotionDetail() {
                 <Input {...register("valid_to")} type="date" />
               </div>
               <div>
-                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Min Stay (nights)</Label>
-                <Input {...register("min_stay_nights")} type="number" min="1" placeholder="Leave blank for no minimum" />
-              </div>
-              <div>
                 <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Max Uses (total)</Label>
-                <Input {...register("max_uses")} type="number" min="1" placeholder="Leave blank for unlimited" />
+                <Input {...register("max_uses")} type="number" min="1" placeholder="Unlimited" />
               </div>
               <div>
                 <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Max Uses Per Account</Label>
-                <Input {...register("max_uses_per_account")} type="number" min="1" placeholder="Leave blank for unlimited" />
+                <Input {...register("max_uses_per_account")} type="number" min="1" placeholder="Unlimited" />
               </div>
               <div>
                 <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Applicable To</Label>
@@ -294,16 +351,17 @@ export default function PromotionDetail() {
             </div>
           </div>
 
+          {/* Description & Terms */}
           <div className="bg-white border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Description & Terms</div>
+            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Description &amp; Terms</div>
             <div className="p-5 space-y-4">
               <div>
                 <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Description</Label>
-                <Textarea {...register("description")} rows={3} placeholder="Brief description of the promotion..." />
+                <Textarea {...register("description")} rows={3} placeholder="Brief description..." />
               </div>
               <div>
-                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Terms & Conditions</Label>
-                <Textarea {...register("terms")} rows={4} placeholder="Terms and conditions for this promotion..." />
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Terms &amp; Conditions</Label>
+                <Textarea {...register("terms")} rows={4} placeholder="Terms and conditions..." />
               </div>
             </div>
           </div>

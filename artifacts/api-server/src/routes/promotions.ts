@@ -61,4 +61,25 @@ router.delete("/v1/promotions/:id", async (req, res): Promise<void> => {
   res.status(204).end();
 });
 
+router.get("/v1/lookup/promotions", async (req, res): Promise<void> => {
+  const { q, term_type } = req.query as Record<string, string>;
+  const conditions: SQL[] = [];
+  if (q) conditions.push(ilike(promotionsTable.name, `%${q}%`));
+  if (term_type) conditions.push(eq(promotionsTable.term_type, term_type));
+  const rows = await db.select({
+    id: promotionsTable.id,
+    name: promotionsTable.name,
+    term_type: promotionsTable.term_type,
+    discount_percentage: promotionsTable.discount_percentage,
+  })
+    .from(promotionsTable)
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(promotionsTable.name)
+    .limit(30);
+  res.json(rows.map(r => ({
+    id: r.id,
+    display: `${r.name}${r.term_type ? ` [${r.term_type}]` : ""}${r.discount_percentage ? ` ${r.discount_percentage}%` : ""}`,
+  })));
+});
+
 export default router;

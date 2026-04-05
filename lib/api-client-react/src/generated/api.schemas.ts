@@ -1339,10 +1339,20 @@ export interface ContractProduct {
   /** @nullable */
   space_name?: string | null;
   /** @nullable */
+  promotion_id?: number | null;
+  /** @nullable */
+  promotion_name?: string | null;
+  /** @nullable */
+  term_type?: string | null;
+  /** @nullable */
   weekly_rate?: number | null;
   /** @nullable */
   monthly_rate?: number | null;
+  /** @nullable */
+  effective_weekly_rate?: number | null;
   currency: string;
+  /** @nullable */
+  billing_frequency?: string | null;
   /** @nullable */
   bond_weeks?: number | null;
   /** @nullable */
@@ -1376,11 +1386,19 @@ export interface CreateContractProductBody {
   /** @nullable */
   space_id?: number | null;
   /** @nullable */
+  promotion_id?: number | null;
+  /** @nullable */
+  term_type?: string | null;
+  /** @nullable */
   weekly_rate?: number | null;
   /** @nullable */
   monthly_rate?: number | null;
   /** @nullable */
+  effective_weekly_rate?: number | null;
+  /** @nullable */
   currency?: string | null;
+  /** @nullable */
+  billing_frequency?: string | null;
   /** @nullable */
   bond_weeks?: number | null;
   /** @nullable */
@@ -1894,6 +1912,8 @@ export interface PromotionResponse {
   name: string;
   /** @nullable */
   code?: string | null;
+  /** @nullable */
+  term_type?: string | null;
   promotion_type: string;
   /** @nullable */
   discount_percentage?: number | null;
@@ -1901,6 +1921,12 @@ export interface PromotionResponse {
   discount_amount?: number | null;
   /** @nullable */
   free_nights?: number | null;
+  /** @nullable */
+  min_stay_weeks?: number | null;
+  /** @nullable */
+  max_stay_weeks?: number | null;
+  /** @nullable */
+  billing_frequency?: string | null;
   /** @nullable */
   valid_from?: string | null;
   /** @nullable */
@@ -1926,6 +1952,8 @@ export interface CreatePromotionBody {
   name: string;
   /** @nullable */
   code?: string | null;
+  /** @nullable */
+  term_type?: string | null;
   promotion_type: string;
   /** @nullable */
   discount_percentage?: number | null;
@@ -1933,6 +1961,12 @@ export interface CreatePromotionBody {
   discount_amount?: number | null;
   /** @nullable */
   free_nights?: number | null;
+  /** @nullable */
+  min_stay_weeks?: number | null;
+  /** @nullable */
+  max_stay_weeks?: number | null;
+  /** @nullable */
+  billing_frequency?: string | null;
   /** @nullable */
   valid_from?: string | null;
   /** @nullable */
@@ -1956,6 +1990,8 @@ export interface UpdatePromotionBody {
   name?: string;
   /** @nullable */
   code?: string | null;
+  /** @nullable */
+  term_type?: string | null;
   promotion_type?: string;
   /** @nullable */
   discount_percentage?: number | null;
@@ -1963,6 +1999,12 @@ export interface UpdatePromotionBody {
   discount_amount?: number | null;
   /** @nullable */
   free_nights?: number | null;
+  /** @nullable */
+  min_stay_weeks?: number | null;
+  /** @nullable */
+  max_stay_weeks?: number | null;
+  /** @nullable */
+  billing_frequency?: string | null;
   /** @nullable */
   valid_from?: string | null;
   /** @nullable */

@@ -58,8 +58,8 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 - Service Hosts — host management
 
 **Products:**
-- Contract Products — product catalog CRUD
-- Promotions — discount code CRUD (Percentage/Fixed/FreeNights types, validity dates, usage limits, status FSM: Draft→Scheduled→Active→Expired/Disabled)
+- Contract Products — Space × Promotion = Product; new fields: promotion_id (FK), term_type, effective_weekly_rate (auto-calc), billing_frequency; list shows Term/Promotion/Eff.Rate/Billing columns
+- Promotions — 3 term types: ShortTerm (<4w, Weekly, no discount), MidTerm (4–25w, Biweekly, 5%), LongTerm (≥26w, Monthly, 7.5%); fields: term_type, min/max_stay_weeks, billing_frequency, discount_percentage; 3 seed records created; lookup endpoint at /v1/lookup/promotions
 
 **Contracts:**
 - Contracts — CRUD + booking_ref enrichment, contract details
