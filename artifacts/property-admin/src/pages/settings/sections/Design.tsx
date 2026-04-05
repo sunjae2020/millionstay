@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { applyPrimaryColor, saveTheme, loadTheme } from "@/lib/theme";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,20 +32,32 @@ export function Design() {
   const { toast } = useToast();
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [faviconPreview, setFaviconPreview] = useState<string | null>(null);
+
+  const saved = loadTheme();
+
   const { register, handleSubmit, control, watch } = useForm<DesignForm>({
     defaultValues: {
-      brand_name: "MillionStay",
-      primary_color: "#6366f1",
+      brand_name: saved.brand_name ?? "MillionStay",
+      primary_color: saved.primary_color ?? "#6366f1",
       date_format: "DD/MM/YYYY",
       currency: "AUD",
       currency_position: "prefix",
-      sidebar_theme: "dark",
+      sidebar_theme: saved.sidebar_theme ?? "dark",
     },
   });
 
   const primaryColor = watch("primary_color");
 
-  function onSubmit(_data: DesignForm) {
+  useEffect(() => {
+    applyPrimaryColor(primaryColor);
+  }, [primaryColor]);
+
+  function onSubmit(data: DesignForm) {
+    saveTheme({
+      primary_color: data.primary_color,
+      brand_name: data.brand_name,
+      sidebar_theme: data.sidebar_theme,
+    });
     toast({ title: "Saved", description: "Design settings have been updated." });
   }
 
