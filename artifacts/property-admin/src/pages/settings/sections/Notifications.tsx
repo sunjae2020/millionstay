@@ -15,16 +15,16 @@ interface NotifItem {
 }
 
 const INITIAL: NotifItem[] = [
-  { key: "new_booking", label: "신규 예약", desc: "새 예약이 생성될 때", email: true, inapp: true },
-  { key: "booking_cancelled", label: "예약 취소", desc: "예약이 취소될 때", email: true, inapp: true },
-  { key: "invoice_paid", label: "인보이스 결제 완료", desc: "인보이스 결제가 확인될 때", email: true, inapp: true },
-  { key: "invoice_overdue", label: "인보이스 연체", desc: "인보이스 결제 기한이 초과될 때", email: true, inapp: false },
-  { key: "contract_signed", label: "계약 서명 완료", desc: "입주자가 계약서에 서명할 때", email: true, inapp: true },
-  { key: "contract_expiring", label: "계약 만료 임박", desc: "계약 만료 30일 전 알림", email: true, inapp: false },
-  { key: "work_order_created", label: "정비 요청 접수", desc: "새 정비 요청이 생성될 때", email: false, inapp: true },
-  { key: "work_order_completed", label: "정비 완료", desc: "정비 작업이 완료 처리될 때", email: false, inapp: true },
-  { key: "lead_assigned", label: "리드 배정", desc: "리드가 담당자에게 배정될 때", email: true, inapp: true },
-  { key: "daily_summary", label: "일일 요약 리포트", desc: "매일 오전 9시 운영 현황 요약", email: true, inapp: false },
+  { key: "new_booking", label: "New Booking", desc: "When a new booking is created", email: true, inapp: true },
+  { key: "booking_cancelled", label: "Booking Cancelled", desc: "When a booking is cancelled", email: true, inapp: true },
+  { key: "invoice_paid", label: "Invoice Paid", desc: "When an invoice payment is confirmed", email: true, inapp: true },
+  { key: "invoice_overdue", label: "Invoice Overdue", desc: "When an invoice payment deadline is exceeded", email: true, inapp: false },
+  { key: "contract_signed", label: "Contract Signed", desc: "When a tenant signs a contract", email: true, inapp: true },
+  { key: "contract_expiring", label: "Contract Expiring Soon", desc: "30 days before a contract expires", email: true, inapp: false },
+  { key: "work_order_created", label: "Work Order Created", desc: "When a new maintenance request is submitted", email: false, inapp: true },
+  { key: "work_order_completed", label: "Work Order Completed", desc: "When a maintenance task is marked complete", email: false, inapp: true },
+  { key: "lead_assigned", label: "Lead Assigned", desc: "When a lead is assigned to a team member", email: true, inapp: true },
+  { key: "daily_summary", label: "Daily Summary Report", desc: "Daily operations summary sent at 9am", email: true, inapp: false },
 ];
 
 export function Notifications() {
@@ -40,21 +40,21 @@ export function Notifications() {
   }
 
   function handleSave() {
-    toast({ title: "저장됨", description: "알림 설정이 저장되었습니다." });
+    toast({ title: "Saved", description: "Notification preferences have been updated." });
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-base font-semibold">알림 설정</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">이벤트별 이메일/인앱 알림을 설정합니다</p>
+        <h3 className="text-base font-semibold">Notification Preferences</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">Configure email and in-app alerts per event type</p>
       </div>
 
       <div className="rounded-lg border overflow-hidden">
         <div className="grid grid-cols-[1fr_80px_80px] bg-muted/50 px-4 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          <span>이벤트</span>
-          <span className="text-center">이메일</span>
-          <span className="text-center">인앱</span>
+          <span>Event</span>
+          <span className="text-center">Email</span>
+          <span className="text-center">In-App</span>
         </div>
         <div className="divide-y">
           {items.map((item) => (
@@ -83,21 +83,21 @@ export function Notifications() {
       <Separator />
 
       <div>
-        <h3 className="text-base font-semibold">일괄 설정</h3>
+        <h3 className="text-base font-semibold">Bulk Actions</h3>
         <div className="flex gap-2 mt-3">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setItems((prev) => prev.map((i) => ({ ...i, email: true, inapp: true })))}
           >
-            전체 활성화
+            Enable All
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setItems((prev) => prev.map((i) => ({ ...i, email: false, inapp: false })))}
           >
-            전체 비활성화
+            Disable All
           </Button>
         </div>
       </div>
@@ -105,7 +105,7 @@ export function Notifications() {
       <div className="flex justify-end">
         <Button onClick={handleSave}>
           <Save className="h-4 w-4 mr-2" />
-          저장
+          Save
         </Button>
       </div>
     </div>

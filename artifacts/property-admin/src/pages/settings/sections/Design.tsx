@@ -44,7 +44,7 @@ export function Design() {
   const primaryColor = watch("primary_color");
 
   function onSubmit(_data: DesignForm) {
-    toast({ title: "저장됨", description: "디자인 설정이 저장되었습니다." });
+    toast({ title: "Saved", description: "Design settings have been updated." });
   }
 
   function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -59,15 +59,13 @@ export function Design() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
-        <h3 className="text-base font-semibold">브랜드</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">로고 및 브랜드명 설정</p>
+        <h3 className="text-base font-semibold">Branding</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">Logo and brand name configuration</p>
       </div>
 
       <div className="flex items-start gap-6">
         <div className="flex flex-col items-center gap-3">
-          <div
-            className="h-20 w-20 rounded-xl border-2 border-dashed border-border flex items-center justify-center bg-muted/30 overflow-hidden"
-          >
+          <div className="h-20 w-20 rounded-xl border-2 border-dashed border-border flex items-center justify-center bg-muted/30 overflow-hidden">
             {logoPreview ? (
               <img src={logoPreview} alt="Logo" className="h-full w-full object-contain" />
             ) : (
@@ -83,21 +81,21 @@ export function Design() {
             <input type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
             <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors border rounded-md px-2 py-1">
               <Upload className="h-3 w-3" />
-              로고 업로드
+              Upload logo
             </span>
           </label>
-          <p className="text-xs text-muted-foreground text-center">PNG, SVG 권장<br />최대 1MB</p>
+          <p className="text-xs text-muted-foreground text-center">PNG or SVG recommended<br />Max 1MB</p>
         </div>
 
         <div className="flex-1 space-y-4">
           <div className="space-y-1.5">
-            <Label>브랜드명</Label>
+            <Label>Brand Name</Label>
             <Input {...register("brand_name")} placeholder="MillionStay" />
-            <p className="text-xs text-muted-foreground">사이드바 및 이메일에 표시되는 이름</p>
+            <p className="text-xs text-muted-foreground">Displayed in the sidebar and emails</p>
           </div>
 
           <div className="space-y-1.5">
-            <Label>사이드바 테마</Label>
+            <Label>Sidebar Theme</Label>
             <Controller
               name="sidebar_theme"
               control={control}
@@ -105,7 +103,7 @@ export function Design() {
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="dark">Dark (기본)</SelectItem>
+                    <SelectItem value="dark">Dark (default)</SelectItem>
                     <SelectItem value="light">Light</SelectItem>
                   </SelectContent>
                 </Select>
@@ -118,8 +116,8 @@ export function Design() {
       <Separator />
 
       <div>
-        <h3 className="text-base font-semibold">컬러</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">UI 강조 색상 설정</p>
+        <h3 className="text-base font-semibold">Accent Color</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">Primary UI highlight color</p>
       </div>
 
       <div className="space-y-3">
@@ -154,7 +152,7 @@ export function Design() {
             className="h-8 px-3 rounded-md flex items-center text-white text-xs font-medium"
             style={{ backgroundColor: primaryColor }}
           >
-            미리보기
+            Preview
           </div>
         </div>
       </div>
@@ -162,13 +160,13 @@ export function Design() {
       <Separator />
 
       <div>
-        <h3 className="text-base font-semibold">형식</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">날짜 및 통화 표시 형식</p>
+        <h3 className="text-base font-semibold">Format</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">Date and currency display preferences</p>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-1.5">
-          <Label>날짜 형식</Label>
+          <Label>Date Format</Label>
           <Controller
             name="date_format"
             control={control}
@@ -186,7 +184,7 @@ export function Design() {
           />
         </div>
         <div className="space-y-1.5">
-          <Label>통화</Label>
+          <Label>Currency</Label>
           <Controller
             name="currency"
             control={control}
@@ -205,7 +203,7 @@ export function Design() {
           />
         </div>
         <div className="space-y-1.5">
-          <Label>통화 위치</Label>
+          <Label>Currency Position</Label>
           <Controller
             name="currency_position"
             control={control}
@@ -213,8 +211,8 @@ export function Design() {
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="prefix">앞 ($100)</SelectItem>
-                  <SelectItem value="suffix">뒤 (100$)</SelectItem>
+                  <SelectItem value="prefix">Prefix ($100)</SelectItem>
+                  <SelectItem value="suffix">Suffix (100$)</SelectItem>
                 </SelectContent>
               </Select>
             )}
@@ -225,7 +223,7 @@ export function Design() {
       <div className="flex justify-end pt-2">
         <Button type="submit">
           <Save className="h-4 w-4 mr-2" />
-          저장
+          Save
         </Button>
       </div>
     </form>

@@ -22,14 +22,14 @@ import { Security } from "./sections/Security";
 import { Integrations } from "./sections/Integrations";
 
 const SECTIONS = [
-  { key: "company", label: "회사 정보", icon: Building2, component: CompanyInfo },
-  { key: "design", label: "디자인", icon: Palette, component: Design },
-  { key: "users", label: "사용자 관리", icon: Users, component: UserManagement },
-  { key: "notifications", label: "알림", icon: Bell, component: Notifications },
-  { key: "email", label: "이메일", icon: Mail, component: Email },
-  { key: "payments", label: "결제", icon: CreditCard, component: Payments },
-  { key: "security", label: "보안", icon: Shield, component: Security },
-  { key: "integrations", label: "연동", icon: Globe, component: Integrations },
+  { key: "company", label: "Company Info", icon: Building2, component: CompanyInfo },
+  { key: "design", label: "Design", icon: Palette, component: Design },
+  { key: "users", label: "User Management", icon: Users, component: UserManagement },
+  { key: "notifications", label: "Notifications", icon: Bell, component: Notifications },
+  { key: "email", label: "Email", icon: Mail, component: Email },
+  { key: "payments", label: "Payments", icon: CreditCard, component: Payments },
+  { key: "security", label: "Security", icon: Shield, component: Security },
+  { key: "integrations", label: "Integrations", icon: Globe, component: Integrations },
 ];
 
 export default function Settings() {
@@ -46,7 +46,7 @@ export default function Settings() {
             Settings
           </>
         }
-        subtitle="시스템 설정 및 환경 구성"
+        subtitle="System configuration and preferences"
       />
 
       <div className="flex h-[calc(100vh-65px)]">

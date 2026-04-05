@@ -1,4 +1,4 @@
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,7 +6,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Controller } from "react-hook-form";
 
 interface CompanyForm {
   company_name: string;
@@ -45,23 +44,23 @@ export function CompanyInfo() {
   });
 
   function onSubmit(_data: CompanyForm) {
-    toast({ title: "저장됨", description: "회사 정보가 저장되었습니다." });
+    toast({ title: "Saved", description: "Company information has been updated." });
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
-        <h3 className="text-base font-semibold">기본 정보</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">회사 법인명 및 사업자 정보</p>
+        <h3 className="text-base font-semibold">Basic Information</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">Legal entity name and business details</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label>회사명 (법인)</Label>
+          <Label>Company Name (Legal)</Label>
           <Input {...register("company_name")} placeholder="MillionStay Pty Ltd" />
         </div>
         <div className="space-y-1.5">
-          <Label>상호명 (거래용)</Label>
+          <Label>Trading Name</Label>
           <Input {...register("trading_name")} placeholder="MillionStay" />
         </div>
         <div className="space-y-1.5">
@@ -69,15 +68,15 @@ export function CompanyInfo() {
           <Input {...register("abn")} placeholder="XX XXX XXX XXX" />
         </div>
         <div className="space-y-1.5">
-          <Label>대표 전화</Label>
+          <Label>Phone</Label>
           <Input {...register("phone")} placeholder="+61 3 XXXX XXXX" />
         </div>
         <div className="space-y-1.5">
-          <Label>대표 이메일</Label>
+          <Label>Email</Label>
           <Input {...register("email")} type="email" placeholder="admin@millionstay.com.au" />
         </div>
         <div className="space-y-1.5">
-          <Label>웹사이트</Label>
+          <Label>Website</Label>
           <Input {...register("website")} placeholder="https://millionstay.com.au" />
         </div>
       </div>
@@ -85,17 +84,17 @@ export function CompanyInfo() {
       <Separator />
 
       <div>
-        <h3 className="text-base font-semibold">주소</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">사업장 주소</p>
+        <h3 className="text-base font-semibold">Address</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">Principal place of business</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2 space-y-1.5">
-          <Label>주소 1</Label>
+          <Label>Address Line 1</Label>
           <Input {...register("address1")} placeholder="Street address" />
         </div>
         <div className="col-span-2 space-y-1.5">
-          <Label>주소 2 (선택)</Label>
+          <Label>Address Line 2 (optional)</Label>
           <Input {...register("address2")} placeholder="Suite, level, unit..." />
         </div>
         <div className="space-y-1.5">
@@ -111,7 +110,7 @@ export function CompanyInfo() {
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {["ACT","NSW","NT","QLD","SA","TAS","VIC","WA"].map(s => (
+                  {["ACT", "NSW", "NT", "QLD", "SA", "TAS", "VIC", "WA"].map((s) => (
                     <SelectItem key={s} value={s}>{s}</SelectItem>
                   ))}
                 </SelectContent>
@@ -146,8 +145,8 @@ export function CompanyInfo() {
       <Separator />
 
       <div>
-        <h3 className="text-base font-semibold">지역 설정</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">시간대 및 표시 형식</p>
+        <h3 className="text-base font-semibold">Regional Settings</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">Timezone and display preferences</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -178,7 +177,7 @@ export function CompanyInfo() {
       <div className="flex justify-end pt-2">
         <Button type="submit">
           <Save className="h-4 w-4 mr-2" />
-          저장
+          Save
         </Button>
       </div>
     </form>

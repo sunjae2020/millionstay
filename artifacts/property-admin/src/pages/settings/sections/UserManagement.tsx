@@ -47,24 +47,24 @@ export function UserManagement() {
     setUsers((prev) => [...prev, newUser]);
     setForm({ name: "", email: "", role: "Admin" });
     setOpen(false);
-    toast({ title: "초대 전송됨", description: `${form.email}로 초대 이메일이 발송되었습니다.` });
+    toast({ title: "Invitation sent", description: `An invite has been sent to ${form.email}.` });
   }
 
   function handleRemove(id: number) {
     setUsers((prev) => prev.filter((u) => u.id !== id));
-    toast({ title: "사용자 제거됨" });
+    toast({ title: "User removed" });
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-base font-semibold">관리자 계정</h3>
-          <p className="text-sm text-muted-foreground mt-0.5">시스템 접근 권한을 가진 관리자 목록</p>
+          <h3 className="text-base font-semibold">Admin Accounts</h3>
+          <p className="text-sm text-muted-foreground mt-0.5">Users with access to the admin panel</p>
         </div>
         <Button size="sm" onClick={() => setOpen(true)}>
           <UserPlus className="h-4 w-4 mr-2" />
-          관리자 초대
+          Invite Admin
         </Button>
       </div>
 
@@ -87,7 +87,7 @@ export function UserManagement() {
             <div className="flex items-center gap-3">
               <Badge variant={ROLE_COLORS[user.role] as "default" | "destructive" | "secondary"}>{user.role}</Badge>
               {user.status === "Invited" && (
-                <Badge variant="outline" className="text-amber-600 border-amber-300">초대됨</Badge>
+                <Badge variant="outline" className="text-amber-600 border-amber-300">Invited</Badge>
               )}
               {user.role !== "Super Admin" && (
                 <Button
@@ -107,12 +107,12 @@ export function UserManagement() {
       <Separator />
 
       <div>
-        <h3 className="text-base font-semibold">권한 설명</h3>
+        <h3 className="text-base font-semibold">Role Descriptions</h3>
         <div className="mt-3 space-y-2 text-sm">
           {[
-            { role: "Super Admin", desc: "모든 기능 접근 + 시스템 설정 변경" },
-            { role: "Admin", desc: "모든 데이터 읽기/쓰기, 설정 일부 접근" },
-            { role: "Viewer", desc: "읽기 전용 접근" },
+            { role: "Super Admin", desc: "Full access to all features including system settings" },
+            { role: "Admin", desc: "Read and write access to all data, limited settings access" },
+            { role: "Viewer", desc: "Read-only access across all modules" },
           ].map(({ role, desc }) => (
             <div key={role} className="flex items-start gap-2">
               <Badge variant={ROLE_COLORS[role] as "default" | "destructive" | "secondary"} className="mt-0.5 shrink-0">{role}</Badge>
@@ -125,19 +125,19 @@ export function UserManagement() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>관리자 초대</DialogTitle>
+            <DialogTitle>Invite Admin</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label>이름</Label>
+              <Label>Name</Label>
               <Input
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                placeholder="홍길동"
+                placeholder="Full name"
               />
             </div>
             <div className="space-y-1.5">
-              <Label>이메일</Label>
+              <Label>Email</Label>
               <Input
                 type="email"
                 value={form.email}
@@ -146,7 +146,7 @@ export function UserManagement() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label>권한</Label>
+              <Label>Role</Label>
               <Select value={form.role} onValueChange={(v) => setForm((f) => ({ ...f, role: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -157,8 +157,8 @@ export function UserManagement() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>취소</Button>
-            <Button onClick={handleInvite}>초대 전송</Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button onClick={handleInvite}>Send Invite</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

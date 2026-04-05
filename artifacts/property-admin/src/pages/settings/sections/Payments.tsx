@@ -31,8 +31,11 @@ function KeyStatus({ label, configured, live }: { label: string; configured: boo
             {live ? "Live" : "Test"}
           </Badge>
         )}
-        <Badge variant={configured ? "outline" : "secondary"} className={configured ? "text-emerald-600 border-emerald-300" : ""}>
-          {configured ? "설정됨" : "미설정"}
+        <Badge
+          variant={configured ? "outline" : "secondary"}
+          className={configured ? "text-emerald-600 border-emerald-300" : ""}
+        >
+          {configured ? "Configured" : "Not configured"}
         </Badge>
       </div>
     </div>
@@ -52,14 +55,14 @@ export function Payments() {
   });
 
   function onSubmit(_data: PaymentsForm) {
-    toast({ title: "저장됨", description: "결제 설정이 저장되었습니다." });
+    toast({ title: "Saved", description: "Payment settings have been updated." });
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
-        <h3 className="text-base font-semibold">Stripe 연동 상태</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">환경변수 기반 키 설정 현황</p>
+        <h3 className="text-base font-semibold">Stripe Integration Status</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">Key configuration based on environment variables</p>
       </div>
 
       <div className="rounded-lg border divide-y">
@@ -69,13 +72,13 @@ export function Payments() {
       </div>
 
       <div className="rounded-lg bg-muted/40 border px-4 py-3 text-sm">
-        <p className="font-medium mb-1">Stripe 키 설정 방법</p>
+        <p className="font-medium mb-1">How to configure Stripe</p>
         <ol className="text-muted-foreground space-y-1 text-xs list-decimal list-inside">
-          <li>Replit 좌측 패널 → <strong>Secrets</strong> 탭 열기</li>
-          <li><code className="bg-muted px-1 rounded">STRIPE_SECRET_KEY</code> 추가 (sk_live_... 또는 sk_test_...)</li>
-          <li><code className="bg-muted px-1 rounded">STRIPE_PUBLISHABLE_KEY</code> 추가</li>
-          <li><code className="bg-muted px-1 rounded">STRIPE_WEBHOOK_SECRET</code> 추가</li>
-          <li>API 서버 재시작 → <code className="bg-muted px-1 rounded">/api/v1/health</code>로 상태 확인</li>
+          <li>Open <strong>Secrets</strong> in the Replit left panel</li>
+          <li>Add <code className="bg-muted px-1 rounded">STRIPE_SECRET_KEY</code> (sk_live_... or sk_test_...)</li>
+          <li>Add <code className="bg-muted px-1 rounded">STRIPE_PUBLISHABLE_KEY</code></li>
+          <li>Add <code className="bg-muted px-1 rounded">STRIPE_WEBHOOK_SECRET</code></li>
+          <li>Restart the API server and verify at <code className="bg-muted px-1 rounded">/api/v1/health</code></li>
         </ol>
         <a
           href="https://dashboard.stripe.com/apikeys"
@@ -84,45 +87,45 @@ export function Payments() {
           className="inline-flex items-center gap-1 text-xs text-primary mt-2 hover:underline"
         >
           <ExternalLink className="h-3 w-3" />
-          Stripe 대시보드 열기
+          Open Stripe Dashboard
         </a>
       </div>
 
       <div className="rounded-lg border px-4 py-3">
-        <p className="text-sm font-medium mb-1">웹훅 URL</p>
+        <p className="text-sm font-medium mb-1">Webhook URL</p>
         <code className="text-xs bg-muted px-2 py-1 rounded block break-all">
           {window.location.origin}/api/v1/stripe/webhook
         </code>
-        <p className="text-xs text-muted-foreground mt-1">Stripe 대시보드 → Webhooks에 등록하세요</p>
+        <p className="text-xs text-muted-foreground mt-1">Register this URL in Stripe Dashboard → Webhooks</p>
       </div>
 
       <Separator />
 
       <div>
-        <h3 className="text-base font-semibold">결제 정책</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">인보이스 및 결제 기본값 설정</p>
+        <h3 className="text-base font-semibold">Payment Policy</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">Invoice and payment default settings</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label>결제 기간 (일)</Label>
+          <Label>Payment Terms (days)</Label>
           <Input {...register("payment_terms_days")} type="number" placeholder="14" />
-          <p className="text-xs text-muted-foreground">인보이스 발행 후 결제 기한</p>
+          <p className="text-xs text-muted-foreground">Due date from invoice issue date</p>
         </div>
         <div className="space-y-1.5">
-          <Label>연체 수수료 (%)</Label>
+          <Label>Late Fee (%)</Label>
           <Input {...register("late_fee_percent")} type="number" step="0.1" placeholder="5" />
         </div>
         <div className="space-y-1.5">
-          <Label>GST 세율 (%)</Label>
+          <Label>GST Rate (%)</Label>
           <Input {...register("gst_rate")} type="number" placeholder="10" />
         </div>
         <div className="space-y-1.5">
-          <Label>인보이스 번호 접두어</Label>
+          <Label>Invoice Number Prefix</Label>
           <Input {...register("invoice_prefix")} placeholder="MS-INV" />
         </div>
         <div className="space-y-1.5">
-          <Label>인보이스 자동 발송</Label>
+          <Label>Auto-send Invoice</Label>
           <Controller
             name="auto_send_invoice"
             control={control}
@@ -130,8 +133,8 @@ export function Payments() {
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="true">활성화 (생성 즉시 발송)</SelectItem>
-                  <SelectItem value="false">비활성화 (수동 발송)</SelectItem>
+                  <SelectItem value="true">Enabled (send immediately on create)</SelectItem>
+                  <SelectItem value="false">Disabled (send manually)</SelectItem>
                 </SelectContent>
               </Select>
             )}
@@ -142,7 +145,7 @@ export function Payments() {
       <div className="flex justify-end pt-2">
         <Button type="submit">
           <Save className="h-4 w-4 mr-2" />
-          저장
+          Save
         </Button>
       </div>
     </form>
