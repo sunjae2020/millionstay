@@ -27,6 +27,7 @@ import {
   ArrowRightLeft,
   RefreshCw,
   Percent,
+  ImagePlus,
   UserCog,
   Landmark,
   Wallet,
@@ -74,6 +75,7 @@ const NAV: NavSection[] = [
       { href: "/property/spaces", label: "Space", icon: Layers },
       { href: "/property/space-options", label: "Space Options", icon: Tag },
       { href: "/property/space-policies", label: "Space Policy", icon: FileText },
+      { href: "/property/bulk-photo-upload", label: "Bulk Photo Upload", icon: ImagePlus },
     ],
   },
   {

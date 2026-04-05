@@ -22,6 +22,7 @@ import SpacePolicyList from "@/pages/property/SpacePolicyList";
 import SpacePolicyDetail from "@/pages/property/SpacePolicyDetail";
 import SpaceList from "@/pages/property/SpaceList";
 import SpaceDetail from "@/pages/property/SpaceDetail";
+import BulkPhotoUpload from "@/pages/property/BulkPhotoUpload";
 
 // Account (was CRM + Sales)
 import ContactList from "@/pages/crm/ContactList";
@@ -139,6 +140,8 @@ function Router() {
       <Route path="/property/spaces" component={SpaceList} />
       <Route path="/property/spaces/new" component={SpaceDetail} />
       <Route path="/property/spaces/:id" component={SpaceDetail} />
+
+      <Route path="/property/bulk-photo-upload" component={BulkPhotoUpload} />
 
       <Route path="/property/space-options" component={SpaceOptionList} />
       <Route path="/property/space-options/new" component={SpaceOptionDetail} />
