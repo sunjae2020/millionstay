@@ -1,5 +1,7 @@
 import { Link } from "wouter";
+import { useState, useEffect } from "react";
 import { Layout, PageHeader } from "@/components/Layout";
+import { apiFetch } from "@/lib/apiFetch";
 import {
   useListSuburbs, useListProperties, useListSpaces, useListSpaceOptions,
   useListSpacePolicies, useListContacts, useListAccounts, useListTasks,
@@ -117,6 +119,95 @@ function BookingMiniCalendar({ bookings }: { bookings: any[] }) {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+interface IntegrationStatus {
+  stripe: { configured: boolean; mode: string | null; error: string | null };
+  cloudinary: { configured: boolean; storage_mb: string | null; error: string | null };
+  resend: { configured: boolean; error: string | null };
+  maps: { provider: string; configured: boolean };
+  ical: { configured: boolean };
+}
+
+function IntegrationStatusWidget() {
+  const [status, setStatus] = useState<IntegrationStatus | null>(null);
+
+  useEffect(() => {
+    apiFetch("/api/v1/integrations/status")
+      .then((r) => r.json())
+      .then((d) => { if (d.success) setStatus(d.data); })
+      .catch(() => {});
+  }, []);
+
+  const items = status
+    ? [
+        {
+          emoji: status.stripe.error ? "⚠️" : status.stripe.configured ? "✅" : "⚠️",
+          label: "Stripe",
+          note: status.stripe.error
+            ? "Error"
+            : status.stripe.configured
+            ? status.stripe.mode === "live"
+              ? "Live Mode"
+              : "Test Mode"
+            : "Not configured",
+          warn: !status.stripe.configured || !!status.stripe.error,
+        },
+        {
+          emoji: status.cloudinary.error ? "⚠️" : status.cloudinary.configured ? "✅" : "⚠️",
+          label: "Cloudinary",
+          note: status.cloudinary.error
+            ? "Error"
+            : status.cloudinary.configured
+            ? `${status.cloudinary.storage_mb ?? "?"}MB used`
+            : "Not configured",
+          warn: !status.cloudinary.configured || !!status.cloudinary.error,
+        },
+        {
+          emoji: status.resend.error ? "⚠️" : status.resend.configured ? "✅" : "⚠️",
+          label: "Resend",
+          note: status.resend.error ? "Error" : status.resend.configured ? "Connected" : "Not configured",
+          warn: !status.resend.configured || !!status.resend.error,
+        },
+        {
+          emoji: "🗺️",
+          label: "Maps",
+          note: "OpenStreetMap",
+          warn: false,
+        },
+      ]
+    : [];
+
+  const hasWarning = items.some((i) => i.warn);
+
+  return (
+    <div className="bg-card rounded-lg border p-4">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold">Integrations</h3>
+        <Link href="/settings/integrations" className="text-xs text-blue-600 hover:underline">
+          Manage →
+        </Link>
+      </div>
+      {!status ? (
+        <p className="text-xs text-muted-foreground">Loading...</p>
+      ) : (
+        <div className="space-y-1.5">
+          {items.map((item) => (
+            <div key={item.label} className="flex items-center gap-2 text-xs">
+              <span>{item.emoji}</span>
+              <span className="font-medium w-20 shrink-0">{item.label}</span>
+              <span className={item.warn ? "text-amber-600" : "text-muted-foreground"}>{item.note}</span>
+            </div>
+          ))}
+          {hasWarning && (
+            <p className="text-xs text-amber-600 mt-2 pt-2 border-t">
+              ⚠️ Some integrations need configuration
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -255,6 +346,9 @@ export default function Dashboard() {
             <StatCard label="Completed This Month" value={completedThisMonth} icon={CheckSquare} color="bg-green-500" sublabel="Closed in current month" />
           </div>
         </div>
+
+        {/* Integrations Status Widget */}
+        <IntegrationStatusWidget />
 
         {/* Alerts */}
         <div className="space-y-3">

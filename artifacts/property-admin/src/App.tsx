@@ -65,6 +65,7 @@ import EmailTemplatesPage from "@/pages/settings/sub/EmailTemplates";
 import DesignPage from "@/pages/settings/sub/Design";
 import ContractTypesPage from "@/pages/settings/sub/ContractTypes";
 import BookingReportPage from "@/pages/settings/sub/BookingReport";
+import IntegrationsPage from "@/pages/settings/sub/Integrations";
 import PaymentInfoList from "@/pages/crm/PaymentInfoList";
 import PaymentInfoDetail from "@/pages/crm/PaymentInfoDetail";
 
@@ -198,6 +199,7 @@ function Router() {
       <Route path="/settings/users" component={UsersPage} />
       <Route path="/settings/email-templates" component={EmailTemplatesPage} />
       <Route path="/settings/design" component={DesignPage} />
+      <Route path="/settings/integrations" component={IntegrationsPage} />
 
       <Route path="/settings/contract-types" component={ContractTypesPage} />
       <Route path="/settings/product-groups">

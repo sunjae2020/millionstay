@@ -16,6 +16,7 @@ import {
   TrendingUp,
   Settings2,
   Palette,
+  Plug,
 } from "lucide-react";
 
 type CardDef = {
@@ -49,6 +50,12 @@ const ADMIN_CARDS: CardDef[] = [
     description: "Customise system email notifications",
     icon: Mail,
     href: "/settings/email-templates",
+  },
+  {
+    title: "Integrations",
+    description: "Stripe, Cloudinary, Resend and more",
+    icon: Plug,
+    href: "/settings/integrations",
   },
   {
     title: "System Log",

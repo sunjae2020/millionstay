@@ -1,0 +1,111 @@
+Add a dedicated Integrations page to the Settings section.
+Replace any scattered API key fields with this central hub.
+
+════════════════════════════════════════
+ROUTE: /settings/integrations
+════════════════════════════════════════
+Add to Settings hub (Section C or new section):
+  Integrations card → /settings/integrations
+
+════════════════════════════════════════
+PAGE LAYOUT
+════════════════════════════════════════
+Header: "Integrations"
+Subtitle: "Manage all external service connections"
+
+6 integration cards in a 2-column grid:
+
+  1. Stripe Payments
+  2. Cloudinary Storage
+  3. Resend Email
+  4. Maps
+  5. OTA / iCal Sync
+  6. AI Chatbot (Coming Soon)
+
+Each card:
+  - Service icon (emoji) + name + description
+  - Status badge:
+      green "Connected"
+      amber "Test Mode"
+      blue  "Not Required" (OpenStreetMap)
+      gray  "Not Configured"
+      red   "Error — check credentials"
+  - Collapsible settings form (click card to expand)
+  - [Test Connection] button
+  - [Save Changes] button (orange)
+
+════════════════════════════════════════
+BACKEND: INTEGRATION TEST ENDPOINTS
+════════════════════════════════════════
+POST /api/v1/integrations/stripe/test
+  const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+  await stripe.paymentIntents.list({ limit: 1 });
+  return { success, mode: key.startsWith('sk_live') ? 'live' : 'test',
+           account: 'Million Stay' }
+
+POST /api/v1/integrations/cloudinary/test
+  await cloudinary.api.ping();
+  const usage = await cloudinary.api.usage();
+  return { success, plan: usage.plan,
+           storage_mb: (usage.storage.usage/1024/1024).toFixed(1),
+           credits_used: usage.credits.usage }
+
+POST /api/v1/integrations/resend/test
+  body: { to_email }
+  Send test email via Resend
+  return { success, message_id }
+
+GET /api/v1/integrations/status
+  Returns status of all integrations:
+  {
+    stripe:     { configured, mode, error },
+    cloudinary: { configured, storage_mb, error },
+    resend:     { configured, from_email, error },
+    maps:       { provider: 'openstreetmap', configured: true },
+    ical:       { spaces_synced, last_sync }
+  }
+
+════════════════════════════════════════
+SECURE KEY DISPLAY
+════════════════════════════════════════
+API keys must be masked by default:
+  sk_test_xxxx...xxxx (show first 8 + last 4 only)
+  [👁 Show] button to reveal full key (admin only)
+  [📋 Copy] button
+
+Keys are read from environment variables.
+Saving from UI updates the env vars via:
+  POST /api/v1/integrations/update-env
+  body: { key: 'STRIPE_SECRET_KEY', value: 'sk_...' }
+  → updates process.env AND writes to .env file
+  SECURITY: This endpoint requires SuperAdmin role
+
+════════════════════════════════════════
+DASHBOARD WIDGET
+════════════════════════════════════════
+Add small "Integrations Status" widget to Dashboard:
+
+  Integrations         [Manage →]
+  ✅ Stripe · Test Mode
+  ✅ Cloudinary · 24MB / 25GB
+  ✅ Resend · Connected
+  🗺️ Maps · OpenStreetMap
+  ⚠️ Stripe Live · Not configured
+
+Shows immediately if any integration has an error.
+
+════════════════════════════════════════
+SIDEBAR UPDATE
+════════════════════════════════════════
+Update SETTINGS sidebar section:
+
+  SETTINGS
+    Organisation
+    Users
+    Email Templates
+    Integrations    ← add here
+    System Log
+    Reports ▼
+      Booking Report
+      Revenue Report
+      Occupancy Report

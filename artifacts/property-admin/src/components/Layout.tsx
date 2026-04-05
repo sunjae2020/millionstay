@@ -34,6 +34,7 @@ import {
   ScrollText,
   BarChart3,
   Palette,
+  Plug,
   LogOut,
 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -122,6 +123,7 @@ const NAV: NavSection[] = [
       { href: "/settings/cost-center", label: "Cost Center", icon: Wallet },
       { href: "/settings/suburbs", label: "Suburb", icon: MapPin },
       { href: "/settings/email-templates", label: "Email Templates", icon: Mail },
+      { href: "/settings/integrations", label: "Integrations", icon: Plug },
       { href: "/settings/system-log", label: "System Log", icon: ScrollText },
       { href: "/settings/design", label: "Design & Branding", icon: Palette },
       {
