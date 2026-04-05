@@ -1,0 +1,197 @@
+import { Router, type IRouter } from "express";
+import { eq, ilike, and, or, SQL } from "drizzle-orm";
+import { db, leadsTable, suburbsTable } from "@workspace/db";
+import {
+  ListLeadsQueryParams,
+  CreateLeadBody,
+  GetLeadParams,
+  UpdateLeadParams,
+  UpdateLeadBody,
+  DeleteLeadParams,
+  ConvertLeadBody,
+} from "@workspace/api-zod";
+
+const router: IRouter = Router();
+
+async function generateLeadRef(): Promise<string> {
+  const year = new Date().getFullYear();
+  const rows = await db.select({ lead_ref: leadsTable.lead_ref })
+    .from(leadsTable)
+    .orderBy(leadsTable.id);
+  const thisYearRefs = rows.filter((r) => r.lead_ref.startsWith(`LEAD-${year}-`));
+  const maxNum = thisYearRefs.reduce((max, r) => {
+    const num = parseInt(r.lead_ref.split("-")[2] ?? "0", 10);
+    return num > max ? num : max;
+  }, 0);
+  return `LEAD-${year}-${String(maxNum + 1).padStart(5, "0")}`;
+}
+
+router.get("/v1/leads", async (req, res): Promise<void> => {
+  const parsed = ListLeadsQueryParams.safeParse(req.query);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  const { search, lead_status, lead_source, nationality, preferred_space_type, status } = parsed.data;
+  const conditions: SQL[] = [];
+  if (lead_status) conditions.push(eq(leadsTable.lead_status, lead_status));
+  if (lead_source) conditions.push(eq(leadsTable.lead_source, lead_source));
+  if (nationality) conditions.push(eq(leadsTable.nationality, nationality));
+  if (preferred_space_type) conditions.push(eq(leadsTable.preferred_space_type, preferred_space_type));
+  if (status) conditions.push(eq(leadsTable.status, status));
+  if (search) {
+    conditions.push(or(
+      ilike(leadsTable.first_name, `%${search}%`),
+      ilike(leadsTable.last_name, `%${search}%`),
+      ilike(leadsTable.email, `%${search}%`),
+      ilike(leadsTable.phone, `%${search}%`),
+    )!);
+  }
+
+  const rows = await db
+    .select({
+      id: leadsTable.id,
+      lead_ref: leadsTable.lead_ref,
+      first_name: leadsTable.first_name,
+      last_name: leadsTable.last_name,
+      email: leadsTable.email,
+      phone: leadsTable.phone,
+      nationality: leadsTable.nationality,
+      lead_source: leadsTable.lead_source,
+      lead_status: leadsTable.lead_status,
+      inquiry_type: leadsTable.inquiry_type,
+      message: leadsTable.message,
+      preferred_space_type: leadsTable.preferred_space_type,
+      preferred_check_in_date: leadsTable.preferred_check_in_date,
+      preferred_duration_weeks: leadsTable.preferred_duration_weeks,
+      preferred_suburb_id: leadsTable.preferred_suburb_id,
+      budget_min: leadsTable.budget_min,
+      budget_max: leadsTable.budget_max,
+      budget_currency: leadsTable.budget_currency,
+      converted_booking_id: leadsTable.converted_booking_id,
+      converted_at: leadsTable.converted_at,
+      assigned_to: leadsTable.assigned_to,
+      description: leadsTable.description,
+      manual_input: leadsTable.manual_input,
+      status: leadsTable.status,
+      created_at: leadsTable.created_at,
+      updated_at: leadsTable.updated_at,
+      preferred_suburb_name: suburbsTable.name,
+    })
+    .from(leadsTable)
+    .leftJoin(suburbsTable, eq(leadsTable.preferred_suburb_id, suburbsTable.id))
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(leadsTable.created_at);
+
+  res.json(rows);
+});
+
+router.post("/v1/leads", async (req, res): Promise<void> => {
+  const parsed = CreateLeadBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  const lead_ref = await generateLeadRef();
+  const [row] = await db.insert(leadsTable).values({ ...parsed.data, lead_ref }).returning();
+  res.status(201).json(row);
+});
+
+router.get("/v1/leads/:id", async (req, res): Promise<void> => {
+  const parsed = GetLeadParams.safeParse(req.params);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  const rows = await db
+    .select({
+      id: leadsTable.id,
+      lead_ref: leadsTable.lead_ref,
+      first_name: leadsTable.first_name,
+      last_name: leadsTable.last_name,
+      email: leadsTable.email,
+      phone: leadsTable.phone,
+      nationality: leadsTable.nationality,
+      lead_source: leadsTable.lead_source,
+      lead_status: leadsTable.lead_status,
+      inquiry_type: leadsTable.inquiry_type,
+      message: leadsTable.message,
+      preferred_space_type: leadsTable.preferred_space_type,
+      preferred_check_in_date: leadsTable.preferred_check_in_date,
+      preferred_duration_weeks: leadsTable.preferred_duration_weeks,
+      preferred_suburb_id: leadsTable.preferred_suburb_id,
+      budget_min: leadsTable.budget_min,
+      budget_max: leadsTable.budget_max,
+      budget_currency: leadsTable.budget_currency,
+      converted_booking_id: leadsTable.converted_booking_id,
+      converted_at: leadsTable.converted_at,
+      assigned_to: leadsTable.assigned_to,
+      description: leadsTable.description,
+      manual_input: leadsTable.manual_input,
+      status: leadsTable.status,
+      created_at: leadsTable.created_at,
+      updated_at: leadsTable.updated_at,
+      preferred_suburb_name: suburbsTable.name,
+    })
+    .from(leadsTable)
+    .leftJoin(suburbsTable, eq(leadsTable.preferred_suburb_id, suburbsTable.id))
+    .where(eq(leadsTable.id, parsed.data.id));
+  if (!rows[0]) { res.status(404).json({ error: "Not found" }); return; }
+  res.json(rows[0]);
+});
+
+router.put("/v1/leads/:id", async (req, res): Promise<void> => {
+  const paramsParsed = UpdateLeadParams.safeParse(req.params);
+  if (!paramsParsed.success) { res.status(400).json({ error: paramsParsed.error.message }); return; }
+  const bodyParsed = UpdateLeadBody.safeParse(req.body);
+  if (!bodyParsed.success) { res.status(400).json({ error: bodyParsed.error.message }); return; }
+  const [row] = await db.update(leadsTable)
+    .set({ ...bodyParsed.data, updated_at: new Date() })
+    .where(eq(leadsTable.id, paramsParsed.data.id))
+    .returning();
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  res.json(row);
+});
+
+router.delete("/v1/leads/:id", async (req, res): Promise<void> => {
+  const parsed = DeleteLeadParams.safeParse(req.params);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  await db.update(leadsTable)
+    .set({ status: "Inactive", updated_at: new Date() })
+    .where(eq(leadsTable.id, parsed.data.id));
+  res.status(204).end();
+});
+
+router.patch("/v1/leads/:id/convert", async (req, res): Promise<void> => {
+  const paramsParsed = GetLeadParams.safeParse(req.params);
+  if (!paramsParsed.success) { res.status(400).json({ error: paramsParsed.error.message }); return; }
+  const bodyParsed = ConvertLeadBody.safeParse(req.body);
+  if (!bodyParsed.success) { res.status(400).json({ error: bodyParsed.error.message }); return; }
+
+  const [lead] = await db.select().from(leadsTable).where(eq(leadsTable.id, paramsParsed.data.id));
+  if (!lead) { res.status(404).json({ error: "Not found" }); return; }
+  if (lead.lead_status === "ConvertedToBooking") {
+    res.status(400).json({ error: "Lead already converted" }); return;
+  }
+
+  const year = new Date().getFullYear();
+  const bookingRef = `BK-${year}-${String(Math.floor(Math.random() * 90000) + 10000)}`;
+
+  const [updated] = await db.update(leadsTable)
+    .set({
+      lead_status: "ConvertedToBooking",
+      converted_at: new Date(),
+      updated_at: new Date(),
+    })
+    .where(eq(leadsTable.id, paramsParsed.data.id))
+    .returning();
+
+  res.json({
+    booking_ref: bookingRef,
+    lead_ref: updated!.lead_ref,
+  });
+});
+
+router.patch("/v1/leads/:id/mark-lost", async (req, res): Promise<void> => {
+  const parsed = GetLeadParams.safeParse(req.params);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  const [row] = await db.update(leadsTable)
+    .set({ lead_status: "Lost", updated_at: new Date() })
+    .where(eq(leadsTable.id, parsed.data.id))
+    .returning();
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  res.json(row);
+});
+
+export default router;

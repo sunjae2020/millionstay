@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { ilike, and, eq, SQL } from "drizzle-orm";
-import { db, contactsTable, accountsTable, commissionsTable, paymentInfoTable } from "@workspace/db";
+import { db, contactsTable, accountsTable, commissionsTable, paymentInfoTable, spacesTable, suburbsTable, propertiesTable } from "@workspace/db";
 
 const router: IRouter = Router();
 
@@ -89,6 +89,48 @@ router.get("/v1/lookup/payment-info", async (req, res): Promise<void> => {
     display: r.bsb_number
       ? `${r.bank_name ?? r.name} — BSB ${r.bsb_number} (${r.payment_type})`
       : `${r.name} (${r.payment_type})`,
+  })));
+});
+
+router.get("/v1/lookup/spaces", async (req, res): Promise<void> => {
+  const q = (req.query["q"] as string) || "";
+  const property_id = req.query["property_id"] ? parseInt(req.query["property_id"] as string, 10) : null;
+  const conditions: SQL[] = [];
+  if (property_id) conditions.push(eq(spacesTable.property_id, property_id));
+  if (q) conditions.push(ilike(spacesTable.name, `%${q}%`));
+
+  const rows = await db.select({
+    id: spacesTable.id,
+    name: spacesTable.name,
+    space_type: spacesTable.space_type,
+    property_address: propertiesTable.address_line1,
+    base_weekly_price: spacesTable.base_weekly_price,
+  })
+    .from(spacesTable)
+    .leftJoin(propertiesTable, eq(spacesTable.property_id, propertiesTable.id))
+    .where(conditions.length ? and(...conditions) : undefined)
+    .limit(20);
+
+  res.json(rows.map((r) => ({
+    id: r.id,
+    display: `${r.name} (${r.space_type}) — ${r.property_address ?? ""}`,
+    base_weekly_price: r.base_weekly_price,
+  })));
+});
+
+router.get("/v1/lookup/suburbs", async (req, res): Promise<void> => {
+  const q = (req.query["q"] as string) || "";
+  const rows = await db.select({
+    id: suburbsTable.id,
+    name: suburbsTable.name,
+    state: suburbsTable.state,
+    postcode: suburbsTable.postcode,
+  }).from(suburbsTable)
+    .where(q ? ilike(suburbsTable.name, `%${q}%`) : undefined)
+    .limit(20);
+  res.json(rows.map((r) => ({
+    id: r.id,
+    display: `${r.name} ${r.state ?? ""} ${r.postcode ?? ""}`.trim(),
   })));
 });
 

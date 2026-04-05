@@ -10,6 +10,8 @@ import paymentInfoRouter from "./payment-info";
 import contactsRouter from "./contacts";
 import accountsRouter from "./accounts";
 import lookupRouter from "./lookup";
+import tasksRouter from "./tasks";
+import leadsRouter from "./leads";
 
 const router: IRouter = Router();
 
@@ -24,5 +26,7 @@ router.use(paymentInfoRouter);
 router.use(contactsRouter);
 router.use(accountsRouter);
 router.use(lookupRouter);
+router.use(tasksRouter);
+router.use(leadsRouter);
 
 export default router;

@@ -22,6 +22,10 @@ import ContactList from "@/pages/crm/ContactList";
 import ContactDetail from "@/pages/crm/ContactDetail";
 import AccountList from "@/pages/crm/AccountList";
 import AccountDetail from "@/pages/crm/AccountDetail";
+import TaskList from "@/pages/sales/TaskList";
+import TaskDetail from "@/pages/sales/TaskDetail";
+import LeadList from "@/pages/sales/LeadList";
+import LeadDetail from "@/pages/sales/LeadDetail";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -81,6 +85,16 @@ function Router() {
       <Route path="/crm/accounts" component={AccountList} />
       <Route path="/crm/accounts/new" component={AccountDetail} />
       <Route path="/crm/accounts/:id" component={AccountDetail} />
+
+      {/* Sales - Tasks */}
+      <Route path="/sales/tasks" component={TaskList} />
+      <Route path="/sales/tasks/new" component={TaskDetail} />
+      <Route path="/sales/tasks/:id" component={TaskDetail} />
+
+      {/* Sales - Leads */}
+      <Route path="/sales/leads" component={LeadList} />
+      <Route path="/sales/leads/new" component={LeadDetail} />
+      <Route path="/sales/leads/:id" component={LeadDetail} />
 
       <Route component={NotFound} />
     </Switch>

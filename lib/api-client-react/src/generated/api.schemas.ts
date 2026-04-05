@@ -812,6 +812,277 @@ export interface LookupItem {
   display: string;
 }
 
+export interface Task {
+  id: number;
+  name: string;
+  /** @nullable */
+  subject?: string | null;
+  task_status: string;
+  priority: string;
+  /** @nullable */
+  task_category?: string | null;
+  /** @nullable */
+  primary_contact_id?: number | null;
+  /** @nullable */
+  secondary_contact_id?: number | null;
+  /** @nullable */
+  account_id?: number | null;
+  /** @nullable */
+  booking_id?: number | null;
+  /** @nullable */
+  start_date?: string | null;
+  /** @nullable */
+  due_date?: string | null;
+  /** @nullable */
+  completed_at?: string | null;
+  /** @nullable */
+  description?: string | null;
+  manual_input: boolean;
+  status: string;
+  /** @nullable */
+  primary_contact_name?: string | null;
+  /** @nullable */
+  account_name?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateTaskBody {
+  name: string;
+  /** @nullable */
+  subject?: string | null;
+  task_status?: string;
+  priority?: string;
+  /** @nullable */
+  task_category?: string | null;
+  /** @nullable */
+  primary_contact_id?: number | null;
+  /** @nullable */
+  secondary_contact_id?: number | null;
+  /** @nullable */
+  account_id?: number | null;
+  /** @nullable */
+  booking_id?: number | null;
+  /** @nullable */
+  start_date?: string | null;
+  /** @nullable */
+  due_date?: string | null;
+  /** @nullable */
+  description?: string | null;
+  manual_input?: boolean;
+  status?: string;
+}
+
+export interface UpdateTaskBody {
+  name?: string;
+  /** @nullable */
+  subject?: string | null;
+  task_status?: string;
+  priority?: string;
+  /** @nullable */
+  task_category?: string | null;
+  /** @nullable */
+  primary_contact_id?: number | null;
+  /** @nullable */
+  secondary_contact_id?: number | null;
+  /** @nullable */
+  account_id?: number | null;
+  /** @nullable */
+  booking_id?: number | null;
+  /** @nullable */
+  start_date?: string | null;
+  /** @nullable */
+  due_date?: string | null;
+  /** @nullable */
+  description?: string | null;
+  manual_input?: boolean;
+  status?: string;
+}
+
+export interface ListTasksQueryParams {
+  task_status?: string;
+  priority?: string;
+  task_category?: string;
+  assigned_to?: string;
+  due_date_from?: string;
+  due_date_to?: string;
+  search?: string;
+  status?: string;
+}
+
+export interface GetTaskParams {
+  id: number;
+}
+
+export interface UpdateTaskParams {
+  id: number;
+}
+
+export interface DeleteTaskParams {
+  id: number;
+}
+
+export interface Lead {
+  id: number;
+  lead_ref: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  nationality?: string | null;
+  /** @nullable */
+  lead_source?: string | null;
+  lead_status: string;
+  /** @nullable */
+  inquiry_type?: string | null;
+  /** @nullable */
+  message?: string | null;
+  /** @nullable */
+  preferred_space_type?: string | null;
+  /** @nullable */
+  preferred_check_in_date?: string | null;
+  /** @nullable */
+  preferred_duration_weeks?: number | null;
+  /** @nullable */
+  preferred_suburb_id?: number | null;
+  /** @nullable */
+  budget_min?: string | null;
+  /** @nullable */
+  budget_max?: string | null;
+  /** @nullable */
+  budget_currency?: string | null;
+  /** @nullable */
+  converted_booking_id?: number | null;
+  /** @nullable */
+  converted_at?: string | null;
+  /** @nullable */
+  assigned_to?: string | null;
+  /** @nullable */
+  description?: string | null;
+  manual_input: boolean;
+  status: string;
+  /** @nullable */
+  preferred_suburb_name?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateLeadBody {
+  lead_ref?: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  nationality?: string | null;
+  /** @nullable */
+  lead_source?: string | null;
+  lead_status?: string;
+  /** @nullable */
+  inquiry_type?: string | null;
+  /** @nullable */
+  message?: string | null;
+  /** @nullable */
+  preferred_space_type?: string | null;
+  /** @nullable */
+  preferred_check_in_date?: string | null;
+  /** @nullable */
+  preferred_duration_weeks?: number | null;
+  /** @nullable */
+  preferred_suburb_id?: number | null;
+  /** @nullable */
+  budget_min?: string | null;
+  /** @nullable */
+  budget_max?: string | null;
+  /** @nullable */
+  budget_currency?: string | null;
+  /** @nullable */
+  assigned_to?: string | null;
+  /** @nullable */
+  description?: string | null;
+  manual_input?: boolean;
+  status?: string;
+}
+
+export interface UpdateLeadBody {
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  nationality?: string | null;
+  /** @nullable */
+  lead_source?: string | null;
+  lead_status?: string;
+  /** @nullable */
+  inquiry_type?: string | null;
+  /** @nullable */
+  message?: string | null;
+  /** @nullable */
+  preferred_space_type?: string | null;
+  /** @nullable */
+  preferred_check_in_date?: string | null;
+  /** @nullable */
+  preferred_duration_weeks?: number | null;
+  /** @nullable */
+  preferred_suburb_id?: number | null;
+  /** @nullable */
+  budget_min?: string | null;
+  /** @nullable */
+  budget_max?: string | null;
+  /** @nullable */
+  budget_currency?: string | null;
+  /** @nullable */
+  assigned_to?: string | null;
+  /** @nullable */
+  description?: string | null;
+  manual_input?: boolean;
+  status?: string;
+}
+
+export interface ListLeadsQueryParams {
+  lead_status?: string;
+  lead_source?: string;
+  assigned_to?: string;
+  nationality?: string;
+  preferred_space_type?: string;
+  search?: string;
+  status?: string;
+}
+
+export interface GetLeadParams {
+  id: number;
+}
+
+export interface UpdateLeadParams {
+  id: number;
+}
+
+export interface DeleteLeadParams {
+  id: number;
+}
+
+export interface ConvertLeadBody {
+  space_id: number;
+  check_in_date: string;
+  check_out_date: string;
+  /** @nullable */
+  agreed_weekly_rate?: string | null;
+}
+
+export interface LookupSpacesQueryParams {
+  q?: string;
+  property_id?: number;
+}
+
+export interface LookupSuburbsQueryParams {
+  q?: string;
+}
+
 export type ListSuburbsParams = {
   country_code?: string;
   state?: string;
@@ -881,4 +1152,40 @@ export type LookupCommissionsParams = {
 
 export type LookupPaymentInfoParams = {
   q?: string;
+};
+
+export type LookupSpacesParams = {
+  q?: string;
+  property_id?: number;
+};
+
+export type LookupSuburbsParams = {
+  q?: string;
+};
+
+export type ListTasksParams = {
+  task_status?: string;
+  priority?: string;
+  task_category?: string;
+  assigned_to?: string;
+  due_date_from?: string;
+  due_date_to?: string;
+  search?: string;
+  status?: string;
+};
+
+export type ListLeadsParams = {
+  lead_status?: string;
+  lead_source?: string;
+  assigned_to?: string;
+  nationality?: string;
+  preferred_space_type?: string;
+  search?: string;
+  status?: string;
+};
+
+export type ConvertLead200 = {
+  booking_id?: number;
+  booking_ref: string;
+  lead_ref: string;
 };

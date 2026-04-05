@@ -30,6 +30,10 @@ tags:
     description: Account management
   - name: lookup
     description: Lookup endpoints for LookupField dialogs
+  - name: tasks
+    description: Task management
+  - name: leads
+    description: Lead management
 
 paths:
   /healthz:
@@ -1177,6 +1181,367 @@ paths:
                 items:
                   $ref: "#/components/schemas/LookupItem"
 
+  /v1/lookup/spaces:
+    get:
+      operationId: lookupSpaces
+      tags: [lookup]
+      summary: Lookup spaces for LookupField
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: property_id
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lookup results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LookupItem"
+
+  /v1/lookup/suburbs:
+    get:
+      operationId: lookupSuburbs
+      tags: [lookup]
+      summary: Lookup suburbs for LookupField
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lookup results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LookupItem"
+
+  # ─────────────────────────────────────────────
+  # TASKS
+  # ─────────────────────────────────────────────
+  /v1/tasks:
+    get:
+      operationId: listTasks
+      tags: [tasks]
+      summary: List tasks
+      parameters:
+        - name: task_status
+          in: query
+          schema:
+            type: string
+        - name: priority
+          in: query
+          schema:
+            type: string
+        - name: task_category
+          in: query
+          schema:
+            type: string
+        - name: assigned_to
+          in: query
+          schema:
+            type: string
+        - name: due_date_from
+          in: query
+          schema:
+            type: string
+        - name: due_date_to
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+    post:
+      operationId: createTask
+      tags: [tasks]
+      summary: Create task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTaskBody"
+      responses:
+        "201":
+          description: Created task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  /v1/tasks/{id}:
+    get:
+      operationId: getTask
+      tags: [tasks]
+      summary: Get task detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Task detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "404":
+          description: Not found
+    put:
+      operationId: updateTask
+      tags: [tasks]
+      summary: Update task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTaskBody"
+      responses:
+        "200":
+          description: Updated task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+    delete:
+      operationId: deleteTask
+      tags: [tasks]
+      summary: Delete (soft) task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /v1/tasks/{id}/complete:
+    patch:
+      operationId: completeTask
+      tags: [tasks]
+      summary: Mark task as complete
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Completed task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  # ─────────────────────────────────────────────
+  # LEADS
+  # ─────────────────────────────────────────────
+  /v1/leads:
+    get:
+      operationId: listLeads
+      tags: [leads]
+      summary: List leads
+      parameters:
+        - name: lead_status
+          in: query
+          schema:
+            type: string
+        - name: lead_source
+          in: query
+          schema:
+            type: string
+        - name: assigned_to
+          in: query
+          schema:
+            type: string
+        - name: nationality
+          in: query
+          schema:
+            type: string
+        - name: preferred_space_type
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of leads
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Lead"
+    post:
+      operationId: createLead
+      tags: [leads]
+      summary: Create lead
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLeadBody"
+      responses:
+        "201":
+          description: Created lead
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+
+  /v1/leads/{id}:
+    get:
+      operationId: getLead
+      tags: [leads]
+      summary: Get lead detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lead detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+        "404":
+          description: Not found
+    put:
+      operationId: updateLead
+      tags: [leads]
+      summary: Update lead
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLeadBody"
+      responses:
+        "200":
+          description: Updated lead
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+    delete:
+      operationId: deleteLead
+      tags: [leads]
+      summary: Delete (soft) lead
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /v1/leads/{id}/convert:
+    patch:
+      operationId: convertLead
+      tags: [leads]
+      summary: Convert lead to booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConvertLeadBody"
+      responses:
+        "200":
+          description: Conversion result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  booking_id:
+                    type: integer
+                  booking_ref:
+                    type: string
+                  lead_ref:
+                    type: string
+                required: [booking_ref, lead_ref]
+
+  /v1/leads/{id}/mark-lost:
+    patch:
+      operationId: markLeadLost
+      tags: [leads]
+      summary: Mark lead as lost
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated lead
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+
 components:
   schemas:
     HealthStatus:
@@ -2300,3 +2665,379 @@ components:
         display:
           type: string
       required: [id, display]
+
+    # ── TASK ───────────────────────────────────
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        subject:
+          type: ["string", "null"]
+        task_status:
+          type: string
+        priority:
+          type: string
+        task_category:
+          type: ["string", "null"]
+        primary_contact_id:
+          type: ["integer", "null"]
+        secondary_contact_id:
+          type: ["integer", "null"]
+        account_id:
+          type: ["integer", "null"]
+        booking_id:
+          type: ["integer", "null"]
+        start_date:
+          type: ["string", "null"]
+        due_date:
+          type: ["string", "null"]
+        completed_at:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        manual_input:
+          type: boolean
+        status:
+          type: string
+        primary_contact_name:
+          type: ["string", "null"]
+        account_name:
+          type: ["string", "null"]
+        created_at:
+          type: string
+        updated_at:
+          type: string
+      required: [id, name, task_status, priority, manual_input, status, created_at, updated_at]
+
+    CreateTaskBody:
+      type: object
+      properties:
+        name:
+          type: string
+        subject:
+          type: ["string", "null"]
+        task_status:
+          type: string
+          default: Todo
+        priority:
+          type: string
+          default: Medium
+        task_category:
+          type: ["string", "null"]
+        primary_contact_id:
+          type: ["integer", "null"]
+        secondary_contact_id:
+          type: ["integer", "null"]
+        account_id:
+          type: ["integer", "null"]
+        booking_id:
+          type: ["integer", "null"]
+        start_date:
+          type: ["string", "null"]
+        due_date:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        manual_input:
+          type: boolean
+          default: false
+        status:
+          type: string
+          default: Active
+      required: [name]
+
+    UpdateTaskBody:
+      type: object
+      properties:
+        name:
+          type: string
+        subject:
+          type: ["string", "null"]
+        task_status:
+          type: string
+        priority:
+          type: string
+        task_category:
+          type: ["string", "null"]
+        primary_contact_id:
+          type: ["integer", "null"]
+        secondary_contact_id:
+          type: ["integer", "null"]
+        account_id:
+          type: ["integer", "null"]
+        booking_id:
+          type: ["integer", "null"]
+        start_date:
+          type: ["string", "null"]
+        due_date:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        manual_input:
+          type: boolean
+        status:
+          type: string
+
+    ListTasksQueryParams:
+      type: object
+      properties:
+        task_status:
+          type: string
+        priority:
+          type: string
+        task_category:
+          type: string
+        assigned_to:
+          type: string
+        due_date_from:
+          type: string
+        due_date_to:
+          type: string
+        search:
+          type: string
+        status:
+          type: string
+
+    GetTaskParams:
+      type: object
+      properties:
+        id:
+          type: integer
+      required: [id]
+
+    UpdateTaskParams:
+      type: object
+      properties:
+        id:
+          type: integer
+      required: [id]
+
+    DeleteTaskParams:
+      type: object
+      properties:
+        id:
+          type: integer
+      required: [id]
+
+    # ── LEAD ───────────────────────────────────
+    Lead:
+      type: object
+      properties:
+        id:
+          type: integer
+        lead_ref:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: ["string", "null"]
+        nationality:
+          type: ["string", "null"]
+        lead_source:
+          type: ["string", "null"]
+        lead_status:
+          type: string
+        inquiry_type:
+          type: ["string", "null"]
+        message:
+          type: ["string", "null"]
+        preferred_space_type:
+          type: ["string", "null"]
+        preferred_check_in_date:
+          type: ["string", "null"]
+        preferred_duration_weeks:
+          type: ["integer", "null"]
+        preferred_suburb_id:
+          type: ["integer", "null"]
+        budget_min:
+          type: ["string", "null"]
+        budget_max:
+          type: ["string", "null"]
+        budget_currency:
+          type: ["string", "null"]
+        converted_booking_id:
+          type: ["integer", "null"]
+        converted_at:
+          type: ["string", "null"]
+        assigned_to:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        manual_input:
+          type: boolean
+        status:
+          type: string
+        preferred_suburb_name:
+          type: ["string", "null"]
+        created_at:
+          type: string
+        updated_at:
+          type: string
+      required: [id, lead_ref, first_name, last_name, email, lead_status, manual_input, status, created_at, updated_at]
+
+    CreateLeadBody:
+      type: object
+      properties:
+        lead_ref:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: ["string", "null"]
+        nationality:
+          type: ["string", "null"]
+        lead_source:
+          type: ["string", "null"]
+        lead_status:
+          type: string
+          default: New
+        inquiry_type:
+          type: ["string", "null"]
+        message:
+          type: ["string", "null"]
+        preferred_space_type:
+          type: ["string", "null"]
+        preferred_check_in_date:
+          type: ["string", "null"]
+        preferred_duration_weeks:
+          type: ["integer", "null"]
+        preferred_suburb_id:
+          type: ["integer", "null"]
+        budget_min:
+          type: ["string", "null"]
+        budget_max:
+          type: ["string", "null"]
+        budget_currency:
+          type: ["string", "null"]
+        assigned_to:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        manual_input:
+          type: boolean
+          default: false
+        status:
+          type: string
+          default: Active
+      required: [first_name, last_name, email]
+
+    UpdateLeadBody:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: ["string", "null"]
+        nationality:
+          type: ["string", "null"]
+        lead_source:
+          type: ["string", "null"]
+        lead_status:
+          type: string
+        inquiry_type:
+          type: ["string", "null"]
+        message:
+          type: ["string", "null"]
+        preferred_space_type:
+          type: ["string", "null"]
+        preferred_check_in_date:
+          type: ["string", "null"]
+        preferred_duration_weeks:
+          type: ["integer", "null"]
+        preferred_suburb_id:
+          type: ["integer", "null"]
+        budget_min:
+          type: ["string", "null"]
+        budget_max:
+          type: ["string", "null"]
+        budget_currency:
+          type: ["string", "null"]
+        assigned_to:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        manual_input:
+          type: boolean
+        status:
+          type: string
+
+    ListLeadsQueryParams:
+      type: object
+      properties:
+        lead_status:
+          type: string
+        lead_source:
+          type: string
+        assigned_to:
+          type: string
+        nationality:
+          type: string
+        preferred_space_type:
+          type: string
+        search:
+          type: string
+        status:
+          type: string
+
+    GetLeadParams:
+      type: object
+      properties:
+        id:
+          type: integer
+      required: [id]
+
+    UpdateLeadParams:
+      type: object
+      properties:
+        id:
+          type: integer
+      required: [id]
+
+    DeleteLeadParams:
+      type: object
+      properties:
+        id:
+          type: integer
+      required: [id]
+
+    ConvertLeadBody:
+      type: object
+      properties:
+        space_id:
+          type: integer
+        check_in_date:
+          type: string
+        check_out_date:
+          type: string
+        agreed_weekly_rate:
+          type: ["string", "null"]
+      required: [space_id, check_in_date, check_out_date]
+
+    LookupSpacesQueryParams:
+      type: object
+      properties:
+        q:
+          type: string
+        property_id:
+          type: integer
+
+    LookupSuburbsQueryParams:
+      type: object
+      properties:
+        q:
+          type: string

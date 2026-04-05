@@ -1300,3 +1300,443 @@ export const LookupPaymentInfoResponseItem = zod.object({
 export const LookupPaymentInfoResponse = zod.array(
   LookupPaymentInfoResponseItem,
 );
+
+/**
+ * @summary Lookup spaces for LookupField
+ */
+export const LookupSpacesQueryParams = zod.object({
+  q: zod.coerce.string().optional(),
+  property_id: zod.coerce.number().optional(),
+});
+
+export const LookupSpacesResponseItem = zod.object({
+  id: zod.number(),
+  display: zod.string(),
+});
+export const LookupSpacesResponse = zod.array(LookupSpacesResponseItem);
+
+/**
+ * @summary Lookup suburbs for LookupField
+ */
+export const LookupSuburbsQueryParams = zod.object({
+  q: zod.coerce.string().optional(),
+});
+
+export const LookupSuburbsResponseItem = zod.object({
+  id: zod.number(),
+  display: zod.string(),
+});
+export const LookupSuburbsResponse = zod.array(LookupSuburbsResponseItem);
+
+/**
+ * @summary List tasks
+ */
+export const ListTasksQueryParams = zod.object({
+  task_status: zod.coerce.string().optional(),
+  priority: zod.coerce.string().optional(),
+  task_category: zod.coerce.string().optional(),
+  assigned_to: zod.coerce.string().optional(),
+  due_date_from: zod.coerce.string().optional(),
+  due_date_to: zod.coerce.string().optional(),
+  search: zod.coerce.string().optional(),
+  status: zod.coerce.string().optional(),
+});
+
+export const ListTasksResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  subject: zod.string().nullish(),
+  task_status: zod.string(),
+  priority: zod.string(),
+  task_category: zod.string().nullish(),
+  primary_contact_id: zod.number().nullish(),
+  secondary_contact_id: zod.number().nullish(),
+  account_id: zod.number().nullish(),
+  booking_id: zod.number().nullish(),
+  start_date: zod.string().nullish(),
+  due_date: zod.string().nullish(),
+  completed_at: zod.string().nullish(),
+  description: zod.string().nullish(),
+  manual_input: zod.boolean(),
+  status: zod.string(),
+  primary_contact_name: zod.string().nullish(),
+  account_name: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+export const ListTasksResponse = zod.array(ListTasksResponseItem);
+
+/**
+ * @summary Create task
+ */
+export const createTaskBodyTaskStatusDefault = `Todo`;
+export const createTaskBodyPriorityDefault = `Medium`;
+export const createTaskBodyManualInputDefault = false;
+export const createTaskBodyStatusDefault = `Active`;
+
+export const CreateTaskBody = zod.object({
+  name: zod.string(),
+  subject: zod.string().nullish(),
+  task_status: zod.string().default(createTaskBodyTaskStatusDefault),
+  priority: zod.string().default(createTaskBodyPriorityDefault),
+  task_category: zod.string().nullish(),
+  primary_contact_id: zod.number().nullish(),
+  secondary_contact_id: zod.number().nullish(),
+  account_id: zod.number().nullish(),
+  booking_id: zod.number().nullish(),
+  start_date: zod.string().nullish(),
+  due_date: zod.string().nullish(),
+  description: zod.string().nullish(),
+  manual_input: zod.boolean().default(createTaskBodyManualInputDefault),
+  status: zod.string().default(createTaskBodyStatusDefault),
+});
+
+/**
+ * @summary Get task detail
+ */
+export const GetTaskParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetTaskResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  subject: zod.string().nullish(),
+  task_status: zod.string(),
+  priority: zod.string(),
+  task_category: zod.string().nullish(),
+  primary_contact_id: zod.number().nullish(),
+  secondary_contact_id: zod.number().nullish(),
+  account_id: zod.number().nullish(),
+  booking_id: zod.number().nullish(),
+  start_date: zod.string().nullish(),
+  due_date: zod.string().nullish(),
+  completed_at: zod.string().nullish(),
+  description: zod.string().nullish(),
+  manual_input: zod.boolean(),
+  status: zod.string(),
+  primary_contact_name: zod.string().nullish(),
+  account_name: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Update task
+ */
+export const UpdateTaskParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateTaskBody = zod.object({
+  name: zod.string().optional(),
+  subject: zod.string().nullish(),
+  task_status: zod.string().optional(),
+  priority: zod.string().optional(),
+  task_category: zod.string().nullish(),
+  primary_contact_id: zod.number().nullish(),
+  secondary_contact_id: zod.number().nullish(),
+  account_id: zod.number().nullish(),
+  booking_id: zod.number().nullish(),
+  start_date: zod.string().nullish(),
+  due_date: zod.string().nullish(),
+  description: zod.string().nullish(),
+  manual_input: zod.boolean().optional(),
+  status: zod.string().optional(),
+});
+
+export const UpdateTaskResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  subject: zod.string().nullish(),
+  task_status: zod.string(),
+  priority: zod.string(),
+  task_category: zod.string().nullish(),
+  primary_contact_id: zod.number().nullish(),
+  secondary_contact_id: zod.number().nullish(),
+  account_id: zod.number().nullish(),
+  booking_id: zod.number().nullish(),
+  start_date: zod.string().nullish(),
+  due_date: zod.string().nullish(),
+  completed_at: zod.string().nullish(),
+  description: zod.string().nullish(),
+  manual_input: zod.boolean(),
+  status: zod.string(),
+  primary_contact_name: zod.string().nullish(),
+  account_name: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Delete (soft) task
+ */
+export const DeleteTaskParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary Mark task as complete
+ */
+export const CompleteTaskParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const CompleteTaskResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  subject: zod.string().nullish(),
+  task_status: zod.string(),
+  priority: zod.string(),
+  task_category: zod.string().nullish(),
+  primary_contact_id: zod.number().nullish(),
+  secondary_contact_id: zod.number().nullish(),
+  account_id: zod.number().nullish(),
+  booking_id: zod.number().nullish(),
+  start_date: zod.string().nullish(),
+  due_date: zod.string().nullish(),
+  completed_at: zod.string().nullish(),
+  description: zod.string().nullish(),
+  manual_input: zod.boolean(),
+  status: zod.string(),
+  primary_contact_name: zod.string().nullish(),
+  account_name: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary List leads
+ */
+export const ListLeadsQueryParams = zod.object({
+  lead_status: zod.coerce.string().optional(),
+  lead_source: zod.coerce.string().optional(),
+  assigned_to: zod.coerce.string().optional(),
+  nationality: zod.coerce.string().optional(),
+  preferred_space_type: zod.coerce.string().optional(),
+  search: zod.coerce.string().optional(),
+  status: zod.coerce.string().optional(),
+});
+
+export const ListLeadsResponseItem = zod.object({
+  id: zod.number(),
+  lead_ref: zod.string(),
+  first_name: zod.string(),
+  last_name: zod.string(),
+  email: zod.string(),
+  phone: zod.string().nullish(),
+  nationality: zod.string().nullish(),
+  lead_source: zod.string().nullish(),
+  lead_status: zod.string(),
+  inquiry_type: zod.string().nullish(),
+  message: zod.string().nullish(),
+  preferred_space_type: zod.string().nullish(),
+  preferred_check_in_date: zod.string().nullish(),
+  preferred_duration_weeks: zod.number().nullish(),
+  preferred_suburb_id: zod.number().nullish(),
+  budget_min: zod.string().nullish(),
+  budget_max: zod.string().nullish(),
+  budget_currency: zod.string().nullish(),
+  converted_booking_id: zod.number().nullish(),
+  converted_at: zod.string().nullish(),
+  assigned_to: zod.string().nullish(),
+  description: zod.string().nullish(),
+  manual_input: zod.boolean(),
+  status: zod.string(),
+  preferred_suburb_name: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+export const ListLeadsResponse = zod.array(ListLeadsResponseItem);
+
+/**
+ * @summary Create lead
+ */
+export const createLeadBodyLeadStatusDefault = `New`;
+export const createLeadBodyManualInputDefault = false;
+export const createLeadBodyStatusDefault = `Active`;
+
+export const CreateLeadBody = zod.object({
+  lead_ref: zod.string().optional(),
+  first_name: zod.string(),
+  last_name: zod.string(),
+  email: zod.string(),
+  phone: zod.string().nullish(),
+  nationality: zod.string().nullish(),
+  lead_source: zod.string().nullish(),
+  lead_status: zod.string().default(createLeadBodyLeadStatusDefault),
+  inquiry_type: zod.string().nullish(),
+  message: zod.string().nullish(),
+  preferred_space_type: zod.string().nullish(),
+  preferred_check_in_date: zod.string().nullish(),
+  preferred_duration_weeks: zod.number().nullish(),
+  preferred_suburb_id: zod.number().nullish(),
+  budget_min: zod.string().nullish(),
+  budget_max: zod.string().nullish(),
+  budget_currency: zod.string().nullish(),
+  assigned_to: zod.string().nullish(),
+  description: zod.string().nullish(),
+  manual_input: zod.boolean().default(createLeadBodyManualInputDefault),
+  status: zod.string().default(createLeadBodyStatusDefault),
+});
+
+/**
+ * @summary Get lead detail
+ */
+export const GetLeadParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetLeadResponse = zod.object({
+  id: zod.number(),
+  lead_ref: zod.string(),
+  first_name: zod.string(),
+  last_name: zod.string(),
+  email: zod.string(),
+  phone: zod.string().nullish(),
+  nationality: zod.string().nullish(),
+  lead_source: zod.string().nullish(),
+  lead_status: zod.string(),
+  inquiry_type: zod.string().nullish(),
+  message: zod.string().nullish(),
+  preferred_space_type: zod.string().nullish(),
+  preferred_check_in_date: zod.string().nullish(),
+  preferred_duration_weeks: zod.number().nullish(),
+  preferred_suburb_id: zod.number().nullish(),
+  budget_min: zod.string().nullish(),
+  budget_max: zod.string().nullish(),
+  budget_currency: zod.string().nullish(),
+  converted_booking_id: zod.number().nullish(),
+  converted_at: zod.string().nullish(),
+  assigned_to: zod.string().nullish(),
+  description: zod.string().nullish(),
+  manual_input: zod.boolean(),
+  status: zod.string(),
+  preferred_suburb_name: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Update lead
+ */
+export const UpdateLeadParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateLeadBody = zod.object({
+  first_name: zod.string().optional(),
+  last_name: zod.string().optional(),
+  email: zod.string().optional(),
+  phone: zod.string().nullish(),
+  nationality: zod.string().nullish(),
+  lead_source: zod.string().nullish(),
+  lead_status: zod.string().optional(),
+  inquiry_type: zod.string().nullish(),
+  message: zod.string().nullish(),
+  preferred_space_type: zod.string().nullish(),
+  preferred_check_in_date: zod.string().nullish(),
+  preferred_duration_weeks: zod.number().nullish(),
+  preferred_suburb_id: zod.number().nullish(),
+  budget_min: zod.string().nullish(),
+  budget_max: zod.string().nullish(),
+  budget_currency: zod.string().nullish(),
+  assigned_to: zod.string().nullish(),
+  description: zod.string().nullish(),
+  manual_input: zod.boolean().optional(),
+  status: zod.string().optional(),
+});
+
+export const UpdateLeadResponse = zod.object({
+  id: zod.number(),
+  lead_ref: zod.string(),
+  first_name: zod.string(),
+  last_name: zod.string(),
+  email: zod.string(),
+  phone: zod.string().nullish(),
+  nationality: zod.string().nullish(),
+  lead_source: zod.string().nullish(),
+  lead_status: zod.string(),
+  inquiry_type: zod.string().nullish(),
+  message: zod.string().nullish(),
+  preferred_space_type: zod.string().nullish(),
+  preferred_check_in_date: zod.string().nullish(),
+  preferred_duration_weeks: zod.number().nullish(),
+  preferred_suburb_id: zod.number().nullish(),
+  budget_min: zod.string().nullish(),
+  budget_max: zod.string().nullish(),
+  budget_currency: zod.string().nullish(),
+  converted_booking_id: zod.number().nullish(),
+  converted_at: zod.string().nullish(),
+  assigned_to: zod.string().nullish(),
+  description: zod.string().nullish(),
+  manual_input: zod.boolean(),
+  status: zod.string(),
+  preferred_suburb_name: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Delete (soft) lead
+ */
+export const DeleteLeadParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary Convert lead to booking
+ */
+export const ConvertLeadParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ConvertLeadBody = zod.object({
+  space_id: zod.number(),
+  check_in_date: zod.string(),
+  check_out_date: zod.string(),
+  agreed_weekly_rate: zod.string().nullish(),
+});
+
+export const ConvertLeadResponse = zod.object({
+  booking_id: zod.number().optional(),
+  booking_ref: zod.string(),
+  lead_ref: zod.string(),
+});
+
+/**
+ * @summary Mark lead as lost
+ */
+export const MarkLeadLostParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const MarkLeadLostResponse = zod.object({
+  id: zod.number(),
+  lead_ref: zod.string(),
+  first_name: zod.string(),
+  last_name: zod.string(),
+  email: zod.string(),
+  phone: zod.string().nullish(),
+  nationality: zod.string().nullish(),
+  lead_source: zod.string().nullish(),
+  lead_status: zod.string(),
+  inquiry_type: zod.string().nullish(),
+  message: zod.string().nullish(),
+  preferred_space_type: zod.string().nullish(),
+  preferred_check_in_date: zod.string().nullish(),
+  preferred_duration_weeks: zod.number().nullish(),
+  preferred_suburb_id: zod.number().nullish(),
+  budget_min: zod.string().nullish(),
+  budget_max: zod.string().nullish(),
+  budget_currency: zod.string().nullish(),
+  converted_booking_id: zod.number().nullish(),
+  converted_at: zod.string().nullish(),
+  assigned_to: zod.string().nullish(),
+  description: zod.string().nullish(),
+  manual_input: zod.boolean(),
+  status: zod.string(),
+  preferred_suburb_name: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});

@@ -13,6 +13,8 @@ import {
   CreditCard,
   Percent,
   User,
+  CheckSquare,
+  TrendingUp,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -29,6 +31,11 @@ const crmSubNav = [
   { href: "/crm/accounts", label: "Accounts", icon: Users },
   { href: "/crm/commissions", label: "Commissions", icon: Percent },
   { href: "/crm/payment-info", label: "Payment Info", icon: CreditCard },
+];
+
+const salesSubNav = [
+  { href: "/sales/tasks", label: "Tasks", icon: CheckSquare },
+  { href: "/sales/leads", label: "Leads", icon: TrendingUp },
 ];
 
 function NavItem({
@@ -115,6 +122,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
           <SectionToggle label="CRM">
             {crmSubNav.map((item) => (
+              <NavItem key={item.href} href={item.href} icon={item.icon} label={item.label} />
+            ))}
+          </SectionToggle>
+
+          <SectionToggle label="Sales" defaultOpen={false}>
+            {salesSubNav.map((item) => (
               <NavItem key={item.href} href={item.href} icon={item.icon} label={item.label} />
             ))}
           </SectionToggle>
