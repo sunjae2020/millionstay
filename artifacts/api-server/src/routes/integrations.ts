@@ -147,16 +147,24 @@ router.post("/v1/integrations/cloudinary/test", async (_req: Request, res: Respo
   }
   try {
     cloudinary.config({ cloud_name: cloudName, api_key: cloudApiKey, api_secret: cloudApiSecret });
-    await (cloudinary.api as any).ping();
-    const usage = await (cloudinary.api as any).usage();
-    res.json({
-      success: true,
-      plan: usage.plan ?? "free",
-      storage_mb: (usage.storage.usage / 1024 / 1024).toFixed(1),
-      credits_used: usage.credits?.usage ?? 0,
-    });
+    const pingResult = await (cloudinary.api as any).ping();
+    const status = pingResult?.status ?? "ok";
+
+    // Try usage (may fail if API key lacks admin permissions — that's OK)
+    let storageMb: string | null = null;
+    let plan: string | null = null;
+    try {
+      const usage = await (cloudinary.api as any).usage();
+      storageMb = (usage.storage.usage / 1024 / 1024).toFixed(1);
+      plan = usage.plan ?? "free";
+    } catch {
+      // Non-root keys don't have usage permission — ignore
+    }
+
+    res.json({ success: true, status, cloud_name: cloudName, storage_mb: storageMb, plan });
   } catch (e: any) {
-    res.status(400).json({ success: false, error: e?.message ?? "Cloudinary connection failed" });
+    const msg = e?.error?.message ?? e?.message ?? "Cloudinary connection failed";
+    res.status(400).json({ success: false, error: msg });
   }
 });
 
