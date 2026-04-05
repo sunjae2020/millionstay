@@ -31,7 +31,7 @@ export function Design() {
   const { toast } = useToast();
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [faviconPreview, setFaviconPreview] = useState<string | null>(null);
-  const { register, handleSubmit, control, watch, setValue } = useForm<DesignForm>({
+  const { register, handleSubmit, control, watch } = useForm<DesignForm>({
     defaultValues: {
       brand_name: "MillionStay",
       primary_color: "#6366f1",
@@ -193,39 +193,54 @@ export function Design() {
         <p className="text-sm text-muted-foreground mt-0.5">Primary UI highlight color</p>
       </div>
 
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          {PRESET_COLORS.map((c) => (
-            <button
-              key={c.value}
-              type="button"
-              title={c.label}
-              className="h-7 w-7 rounded-full border-2 transition-all"
-              style={{
-                backgroundColor: c.value,
-                borderColor: primaryColor === c.value ? c.value : "transparent",
-                outline: primaryColor === c.value ? `2px solid ${c.value}` : "none",
-                outlineOffset: "2px",
-              }}
-              onClick={() => setValue("primary_color", c.value, { shouldDirty: true })}
-            />
-          ))}
-        </div>
-        <div className="flex items-center gap-2">
-          <input
-            type="color"
-            {...register("primary_color")}
-            className="h-8 w-8 rounded cursor-pointer border border-border"
-          />
-          <Input {...register("primary_color")} className="w-32 font-mono text-sm" placeholder="#6366f1" />
-          <div
-            className="h-8 px-3 rounded-md flex items-center text-white text-xs font-medium"
-            style={{ backgroundColor: primaryColor }}
-          >
-            Preview
+      <Controller
+        name="primary_color"
+        control={control}
+        render={({ field }) => (
+          <div className="space-y-3">
+            {/* Preset swatches */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {PRESET_COLORS.map((c) => (
+                <button
+                  key={c.value}
+                  type="button"
+                  title={c.label}
+                  className="h-7 w-7 rounded-full border-2 transition-all"
+                  style={{
+                    backgroundColor: c.value,
+                    borderColor: field.value === c.value ? c.value : "transparent",
+                    outline: field.value === c.value ? `2px solid ${c.value}` : "none",
+                    outlineOffset: "2px",
+                  }}
+                  onClick={() => field.onChange(c.value)}
+                />
+              ))}
+            </div>
+
+            {/* Native color picker + hex text + preview */}
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={field.value}
+                onChange={(e) => field.onChange(e.target.value)}
+                className="h-8 w-8 rounded cursor-pointer border border-border"
+              />
+              <Input
+                value={field.value}
+                onChange={(e) => field.onChange(e.target.value)}
+                className="w-32 font-mono text-sm"
+                placeholder="#6366f1"
+              />
+              <div
+                className="h-8 px-3 rounded-md flex items-center text-white text-xs font-medium transition-colors"
+                style={{ backgroundColor: field.value }}
+              >
+                Preview
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        )}
+      />
 
       <Separator />
 
