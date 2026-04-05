@@ -95,7 +95,7 @@ export default function ContractList() {
               ) : pagination.paginatedItems.map(c => (
                 <TableRow key={c.id}>
                   <TableCell>
-                    <Link href={`/contracts/contracts/${c.id}`} className="text-blue-600 hover:underline font-medium font-mono">
+                    <Link href={`/contracts/contracts/${c.id}`} className="text-[#E8621A] hover:underline font-medium font-mono">
                       {c.contract_ref}
                     </Link>
                   </TableCell>

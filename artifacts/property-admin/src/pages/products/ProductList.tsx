@@ -107,7 +107,7 @@ export default function ProductList() {
               ) : pagination.paginatedItems.map((p: any) => (
                 <TableRow key={p.id}>
                   <TableCell>
-                    <Link href={`/products/products/${p.id}`} className="text-blue-600 hover:underline font-medium">
+                    <Link href={`/products/products/${p.id}`} className="text-[#E8621A] hover:underline font-medium">
                       {p.name}
                     </Link>
                     {p.item_description && (

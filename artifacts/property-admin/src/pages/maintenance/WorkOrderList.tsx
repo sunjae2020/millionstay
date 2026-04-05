@@ -18,7 +18,7 @@ const statusColors: Record<string, string> = {
 
 const priorityColors: Record<string, string> = {
   Low: "bg-gray-100 text-gray-600",
-  Normal: "bg-blue-50 text-blue-600",
+  Normal: "bg-orange-50 text-[#E8621A]",
   High: "bg-orange-100 text-orange-600",
   Urgent: "bg-red-100 text-red-600",
 };
@@ -109,7 +109,7 @@ export default function WorkOrderList() {
                   className="border-b last:border-0 hover:bg-muted/20 cursor-pointer"
                   onClick={() => navigate(`/maintenance/work-orders/${wo.id}`)}
                 >
-                  <td className="px-4 py-3 font-medium text-blue-600">{wo.order_ref}</td>
+                  <td className="px-4 py-3 font-medium text-[#E8621A]">{wo.order_ref}</td>
                   <td className="px-4 py-3 font-medium">{wo.title}</td>
                   <td className="px-4 py-3 text-muted-foreground">{(wo as any).property_name ?? "—"}</td>
                   <td className="px-4 py-3 text-muted-foreground">{(wo as any).space_name ?? "—"}</td>

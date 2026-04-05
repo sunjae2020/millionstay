@@ -153,7 +153,7 @@ export default function TaskDetail() {
         <div className="grid gap-5">
           {/* General */}
           <div className="border rounded-lg overflow-hidden">
-            <div className="bg-blue-50 border-b px-4 py-2 text-xs font-semibold text-blue-700 uppercase tracking-wider">General</div>
+            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">General</div>
             <div className="p-4 grid gap-4">
               <div className="grid gap-1.5">
                 <Label>Name *</Label>
@@ -169,7 +169,7 @@ export default function TaskDetail() {
 
           {/* Main */}
           <div className="border rounded-lg overflow-hidden">
-            <div className="bg-blue-50 border-b px-4 py-2 text-xs font-semibold text-blue-700 uppercase tracking-wider">Details</div>
+            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Details</div>
             <div className="p-4 grid gap-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
@@ -237,7 +237,7 @@ export default function TaskDetail() {
 
           {/* Links */}
           <div className="border rounded-lg overflow-hidden">
-            <div className="bg-blue-50 border-b px-4 py-2 text-xs font-semibold text-blue-700 uppercase tracking-wider">Links</div>
+            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Links</div>
             <div className="p-4 grid gap-4">
               <div className="grid gap-1.5">
                 <Label>Primary Contact</Label>
@@ -277,7 +277,7 @@ export default function TaskDetail() {
 
           {/* Description */}
           <div className="border rounded-lg overflow-hidden">
-            <div className="bg-blue-50 border-b px-4 py-2 text-xs font-semibold text-blue-700 uppercase tracking-wider">Description</div>
+            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Description</div>
             <div className="p-4">
               <Textarea {...register("description")} placeholder="Task notes…" rows={4} />
             </div>
@@ -285,7 +285,7 @@ export default function TaskDetail() {
 
           {/* Admin */}
           <div className="border rounded-lg overflow-hidden">
-            <div className="bg-blue-50 border-b px-4 py-2 text-xs font-semibold text-blue-700 uppercase tracking-wider">Admin</div>
+            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Admin</div>
             <div className="p-4 grid gap-4">
               <div className="grid gap-1.5">
                 <Label>Record Status</Label>

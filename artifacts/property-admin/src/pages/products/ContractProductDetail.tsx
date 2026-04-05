@@ -204,7 +204,7 @@ export default function ContractProductDetail() {
           <div className="grid grid-cols-1 gap-6 max-w-4xl">
             {/* General */}
             <div className="border rounded-lg bg-white p-6">
-              <h2 className="text-sm font-semibold uppercase text-blue-600 tracking-wide mb-4">General</h2>
+              <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">General</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <Label>Name *</Label>
@@ -241,7 +241,7 @@ export default function ContractProductDetail() {
 
             {/* Pricing */}
             <div className="border rounded-lg bg-white p-6">
-              <h2 className="text-sm font-semibold uppercase text-blue-600 tracking-wide mb-4">Pricing</h2>
+              <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Pricing</h2>
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <Label>Currency</Label>
@@ -286,7 +286,7 @@ export default function ContractProductDetail() {
 
             {/* Inclusions */}
             <div className="border rounded-lg bg-white p-6">
-              <h2 className="text-sm font-semibold uppercase text-blue-600 tracking-wide mb-4">Inclusions</h2>
+              <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Inclusions</h2>
               <div className="grid grid-cols-3 gap-3 mb-4">
                 {(["includes_wifi", "includes_parking", "includes_utilities", "includes_meals", "includes_laundry", "includes_cleaning"] as const).map(field => {
                   const labels: Record<string, string> = {
@@ -311,7 +311,7 @@ export default function ContractProductDetail() {
 
             {/* Notes */}
             <div className="border rounded-lg bg-white p-6">
-              <h2 className="text-sm font-semibold uppercase text-blue-600 tracking-wide mb-4">Notes</h2>
+              <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Notes</h2>
               <Textarea {...register("notes")} placeholder="Internal notes..." rows={4} />
             </div>
           </div>

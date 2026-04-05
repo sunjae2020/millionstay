@@ -308,7 +308,7 @@ export default function BulkPhotoUpload() {
                         <span className="text-muted-foreground text-xs">대기</span>
                       )}
                       {st?.status === "uploading" && (
-                        <span className="inline-flex items-center gap-1 text-blue-600 text-xs">
+                        <span className="inline-flex items-center gap-1 text-[#E8621A] text-xs">
                           <Loader2 className="h-3 w-3 animate-spin" />
                           업로드 중
                         </span>

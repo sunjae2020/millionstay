@@ -194,10 +194,10 @@ export function SpacePhotoManager({ spaceId }: SpacePhotoManagerProps) {
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-blue-800">{pendingFiles.length} photo(s) ready to upload</p>
-            <p className="text-xs text-blue-600 mt-0.5">{pendingFiles.map((f) => f.name).join(", ")}</p>
+            <p className="text-xs text-[#E8621A] mt-0.5">{pendingFiles.map((f) => f.name).join(", ")}</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="text-blue-600" onClick={() => setPendingFiles([])}>
+            <Button variant="ghost" size="sm" className="text-[#E8621A]" onClick={() => setPendingFiles([])}>
               Clear
             </Button>
             <Button size="sm" className="gap-1.5" onClick={handleUpload} disabled={uploading}>

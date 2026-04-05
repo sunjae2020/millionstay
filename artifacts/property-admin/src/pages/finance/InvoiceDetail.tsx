@@ -163,7 +163,7 @@ export default function InvoiceDetail() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Links */}
           <div className="border rounded-lg bg-white p-6">
-            <h2 className="text-sm font-semibold uppercase text-blue-600 tracking-wide mb-4">Links</h2>
+            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Links</h2>
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <Label>Linked Booking</Label>
@@ -206,7 +206,7 @@ export default function InvoiceDetail() {
 
           {/* Financials */}
           <div className="border rounded-lg bg-white p-6">
-            <h2 className="text-sm font-semibold uppercase text-blue-600 tracking-wide mb-4">Financial Details</h2>
+            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Financial Details</h2>
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <Label>Amount *</Label>
@@ -252,7 +252,7 @@ export default function InvoiceDetail() {
 
           {/* Description + Notes */}
           <div className="border rounded-lg bg-white p-6">
-            <h2 className="text-sm font-semibold uppercase text-blue-600 tracking-wide mb-4">Details</h2>
+            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Details</h2>
             <div className="space-y-4">
               <div>
                 <Label>Description</Label>

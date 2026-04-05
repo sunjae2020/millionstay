@@ -183,7 +183,7 @@ export default function WorkOrderDetail() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Details */}
           <div className="border rounded-lg bg-white p-6">
-            <h2 className="text-sm font-semibold uppercase text-blue-600 tracking-wide mb-4">Work Order Details</h2>
+            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Work Order Details</h2>
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <Label>Title *</Label>
@@ -233,7 +233,7 @@ export default function WorkOrderDetail() {
 
           {/* Location */}
           <div className="border rounded-lg bg-white p-6">
-            <h2 className="text-sm font-semibold uppercase text-blue-600 tracking-wide mb-4">Location</h2>
+            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Location</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Property</Label>
@@ -264,7 +264,7 @@ export default function WorkOrderDetail() {
 
           {/* Schedule */}
           <div className="border rounded-lg bg-white p-6">
-            <h2 className="text-sm font-semibold uppercase text-blue-600 tracking-wide mb-4">Schedule & Assignment</h2>
+            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Schedule & Assignment</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Reported Date</Label>
@@ -306,7 +306,7 @@ export default function WorkOrderDetail() {
 
           {/* Notes */}
           <div className="border rounded-lg bg-white p-6">
-            <h2 className="text-sm font-semibold uppercase text-blue-600 tracking-wide mb-4">Notes</h2>
+            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Notes</h2>
             <Textarea rows={3} placeholder="Internal notes..." {...register("notes")} />
           </div>
         </form>

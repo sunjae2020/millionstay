@@ -85,7 +85,7 @@ export default function InvoiceList() {
                   className="border-b last:border-0 hover:bg-muted/20 cursor-pointer"
                   onClick={() => navigate(`/finance/invoices/${inv.id}`)}
                 >
-                  <td className="px-4 py-3 font-medium text-blue-600">{inv.invoice_ref}</td>
+                  <td className="px-4 py-3 font-medium text-[#E8621A]">{inv.invoice_ref}</td>
                   <td className="px-4 py-3 text-muted-foreground">{(inv as any).booking_ref ?? "—"}</td>
                   <td className="px-4 py-3 text-muted-foreground">{(inv as any).contract_ref ?? "—"}</td>
                   <td className="px-4 py-3 text-muted-foreground">{(inv as any).account_name ?? "—"}</td>

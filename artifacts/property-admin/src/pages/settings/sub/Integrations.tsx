@@ -101,7 +101,7 @@ function MaskedKeyInput({ value, envKey, onSaved }: { value: string; envKey: str
           </button>
         </>
       )}
-      <button className="text-xs text-blue-600 hover:underline ml-1" onClick={() => setEditing(true)}>
+      <button className="text-xs text-[#E8621A] hover:underline ml-1" onClick={() => setEditing(true)}>
         {value ? "Change" : "Set"}
       </button>
     </div>

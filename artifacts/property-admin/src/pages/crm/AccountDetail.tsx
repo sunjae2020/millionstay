@@ -252,7 +252,7 @@ export default function AccountDetail() {
                 <Label>Primary Contact</Label>
                 {primaryContactId && (
                   <Link href={`/crm/contacts/${primaryContactId}`}>
-                    <span className="text-xs text-blue-600 hover:underline flex items-center gap-1 cursor-pointer">
+                    <span className="text-xs text-[#E8621A] hover:underline flex items-center gap-1 cursor-pointer">
                       <ExternalLink className="h-3 w-3" /> View
                     </span>
                   </Link>
@@ -273,7 +273,7 @@ export default function AccountDetail() {
                 <Label>Secondary Contact</Label>
                 {secondaryContactId && (
                   <Link href={`/crm/contacts/${secondaryContactId}`}>
-                    <span className="text-xs text-blue-600 hover:underline flex items-center gap-1 cursor-pointer">
+                    <span className="text-xs text-[#E8621A] hover:underline flex items-center gap-1 cursor-pointer">
                       <ExternalLink className="h-3 w-3" /> View
                     </span>
                   </Link>

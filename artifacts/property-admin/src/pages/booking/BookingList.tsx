@@ -72,7 +72,7 @@ function CalendarView({ bookings }: { bookings: any[] }) {
         <div className="flex border-b sticky top-0 bg-white z-10">
           <div className="w-40 shrink-0 px-3 py-2 text-xs font-semibold text-muted-foreground border-r">Space</div>
           {dates.map((d) => (
-            <div key={d.toISOString()} className={`w-8 shrink-0 text-center py-2 border-r text-xs ${d.toDateString() === today.toDateString() ? "bg-blue-50 font-bold text-blue-700" : "text-muted-foreground"}`}>
+            <div key={d.toISOString()} className={`w-8 shrink-0 text-center py-2 border-r text-xs ${d.toDateString() === today.toDateString() ? "bg-orange-50 font-bold text-[#E8621A]" : "text-muted-foreground"}`}>
               <div>{d.getDate()}</div>
               <div className="text-[10px]">{d.toLocaleDateString("en", { weekday: "short" })}</div>
             </div>
@@ -201,7 +201,7 @@ export default function BookingList() {
                 ) : bookings.map((b) => (
                   <tr key={b.id} className="border-b hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3">
-                      <Link href={`/booking/bookings/${b.id}`} className="font-mono text-xs text-blue-600 hover:underline">{b.booking_ref}</Link>
+                      <Link href={`/booking/bookings/${b.id}`} className="font-mono text-xs text-[#E8621A] hover:underline">{b.booking_ref}</Link>
                     </td>
                     <td className="px-4 py-3">{b.account_name ?? b.contact_name ?? "—"}</td>
                     <td className="px-4 py-3 text-muted-foreground">{b.space_name ?? "—"}</td>
@@ -219,7 +219,7 @@ export default function BookingList() {
                           </Button>
                         )}
                         {b.booking_status === "Confirmed" && (
-                          <Button size="sm" variant="outline" className="h-7 text-xs text-blue-700 border-blue-300" onClick={() => checkInMutation.mutate({ id: b.id })}>
+                          <Button size="sm" variant="outline" className="h-7 text-xs text-[#E8621A] border-orange-300" onClick={() => checkInMutation.mutate({ id: b.id })}>
                             ✓ Check In
                           </Button>
                         )}

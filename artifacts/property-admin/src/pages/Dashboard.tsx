@@ -186,7 +186,7 @@ function IntegrationStatusWidget() {
     <div className="bg-card rounded-lg border p-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold">Integrations</h3>
-        <Link href="/settings/integrations" className="text-xs text-blue-600 hover:underline">
+        <Link href="/settings/integrations" className="text-xs text-[#E8621A] hover:underline">
           Manage →
         </Link>
       </div>
@@ -313,7 +313,7 @@ export default function Dashboard() {
           <div className="bg-card rounded-lg border p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold">Booking Calendar (Next 7 Days)</h3>
-              <Link href="/booking/bookings" className="text-xs text-blue-600 hover:underline">View all →</Link>
+              <Link href="/booking/bookings" className="text-xs text-[#E8621A] hover:underline">View all →</Link>
             </div>
             <BookingMiniCalendar bookings={bookings ?? []} />
           </div>
@@ -381,7 +381,7 @@ export default function Dashboard() {
               <p className="text-sm font-medium text-blue-800">
                 {sentInvoices} invoice{sentInvoices === 1 ? "" : "s"} awaiting payment
               </p>
-              <p className="text-xs text-blue-600 mt-1">Go to Finance → Invoices to follow up on outstanding payments.</p>
+              <p className="text-xs text-[#E8621A] mt-1">Go to Finance → Invoices to follow up on outstanding payments.</p>
             </div>
           )}
           {urgentWorkOrders !== undefined && urgentWorkOrders > 0 && (

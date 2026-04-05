@@ -138,7 +138,7 @@ export default function ContractDetail() {
     return (
       <div className="flex gap-2">
         {status === "Draft" && (
-          <Button type="button" size="sm" className="bg-blue-600 hover:bg-blue-700 text-white"
+          <Button type="button" size="sm" className="bg-[#E8621A] hover:bg-[#d4561a] text-white"
             onClick={() => sendMutation.mutate({ id: Number(id) })}>
             Send to Tenant
           </Button>
@@ -213,7 +213,7 @@ export default function ContractDetail() {
           <div className="grid grid-cols-1 gap-6 max-w-4xl">
             {/* General */}
             <div className="border rounded-lg bg-white p-6">
-              <h2 className="text-sm font-semibold uppercase text-blue-600 tracking-wide mb-4">General</h2>
+              <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">General</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Linked Booking</Label>
@@ -256,7 +256,7 @@ export default function ContractDetail() {
 
             {/* Parties */}
             <div className="border rounded-lg bg-white p-6">
-              <h2 className="text-sm font-semibold uppercase text-blue-600 tracking-wide mb-4">Parties</h2>
+              <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Parties</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Tenant (Guest Account) *</Label>
@@ -287,7 +287,7 @@ export default function ContractDetail() {
 
             {/* Terms */}
             <div className="border rounded-lg bg-white p-6">
-              <h2 className="text-sm font-semibold uppercase text-blue-600 tracking-wide mb-4">Financial Terms</h2>
+              <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Financial Terms</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Start Date</Label>
@@ -329,7 +329,7 @@ export default function ContractDetail() {
 
             {/* Document */}
             <div className="border rounded-lg bg-white p-6">
-              <h2 className="text-sm font-semibold uppercase text-blue-600 tracking-wide mb-4">Document & Terms</h2>
+              <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Document & Terms</h2>
               <div className="space-y-4">
                 <div>
                   <Label>Document URL (Signed Copy)</Label>

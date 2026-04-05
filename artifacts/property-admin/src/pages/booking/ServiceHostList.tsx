@@ -69,7 +69,7 @@ export default function ServiceHostList() {
               ) : pagination.paginatedItems.map((host) => (
                 <tr key={host.id} className="border-b hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3 font-medium">
-                    <Link href={`/booking/service-hosts/${host.id}`} className="text-blue-600 hover:underline">{host.name}</Link>
+                    <Link href={`/booking/service-hosts/${host.id}`} className="text-[#E8621A] hover:underline">{host.name}</Link>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{(host as any).account_name ?? "—"}</td>
                   <td className="px-4 py-3 text-muted-foreground">
