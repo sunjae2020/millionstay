@@ -31,7 +31,6 @@ interface SpacePhotoManagerProps {
 }
 
 export function SpacePhotoManager({ spaceId }: SpacePhotoManagerProps) {
-  const qc = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [images, setImages] = useState<SpaceImage[]>([]);
