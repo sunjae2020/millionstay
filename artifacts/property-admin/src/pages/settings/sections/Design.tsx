@@ -30,6 +30,7 @@ const PRESET_COLORS = [
 export function Design() {
   const { toast } = useToast();
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [faviconPreview, setFaviconPreview] = useState<string | null>(null);
   const { register, handleSubmit, control, watch, setValue } = useForm<DesignForm>({
     defaultValues: {
       brand_name: "MillionStay",
@@ -47,69 +48,141 @@ export function Design() {
     toast({ title: "Saved", description: "Design settings have been updated." });
   }
 
-  function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) {
+  function makePreviewHandler(setter: (v: string) => void) {
+    return (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
       const reader = new FileReader();
-      reader.onload = (ev) => setLogoPreview(ev.target?.result as string);
+      reader.onload = (ev) => setter(ev.target?.result as string);
       reader.readAsDataURL(file);
-    }
+    };
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
         <h3 className="text-base font-semibold">Branding</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">Logo and brand name configuration</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Logo, favicon, and brand name configuration</p>
       </div>
 
-      <div className="flex items-start gap-6">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-20 w-20 rounded-xl border-2 border-dashed border-border flex items-center justify-center bg-muted/30 overflow-hidden">
+      {/* Logo + Favicon side by side */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Logo */}
+        <div className="rounded-lg border bg-muted/20 p-4 flex flex-col items-center gap-3">
+          <p className="text-xs font-medium text-muted-foreground self-start uppercase tracking-wide">Logo</p>
+          <div className="h-24 w-full max-w-[160px] rounded-xl border-2 border-dashed border-border flex items-center justify-center bg-background overflow-hidden">
             {logoPreview ? (
-              <img src={logoPreview} alt="Logo" className="h-full w-full object-contain" />
+              <img src={logoPreview} alt="Logo" className="h-full w-full object-contain p-2" />
             ) : (
               <div
-                className="h-10 w-10 rounded-lg flex items-center justify-center"
+                className="h-12 w-12 rounded-lg flex items-center justify-center"
                 style={{ backgroundColor: primaryColor }}
               >
-                <Building2 className="h-6 w-6 text-white" />
+                <Building2 className="h-7 w-7 text-white" />
               </div>
             )}
           </div>
           <label className="cursor-pointer">
-            <input type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
-            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors border rounded-md px-2 py-1">
+            <input
+              type="file"
+              accept="image/png,image/svg+xml,image/jpeg,image/webp"
+              className="hidden"
+              onChange={makePreviewHandler(setLogoPreview)}
+            />
+            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors border rounded-md px-3 py-1.5 bg-background">
               <Upload className="h-3 w-3" />
-              Upload logo
+              Upload Logo
             </span>
           </label>
-          <p className="text-xs text-muted-foreground text-center">PNG or SVG recommended<br />Max 1MB</p>
+          <p className="text-xs text-muted-foreground text-center leading-relaxed">
+            PNG, SVG or WebP<br />Recommended: 200×60px<br />Max 2MB
+          </p>
+          {logoPreview && (
+            <button
+              type="button"
+              onClick={() => setLogoPreview(null)}
+              className="text-xs text-destructive hover:underline"
+            >
+              Remove
+            </button>
+          )}
         </div>
 
-        <div className="flex-1 space-y-4">
-          <div className="space-y-1.5">
-            <Label>Brand Name</Label>
-            <Input {...register("brand_name")} placeholder="MillionStay" />
-            <p className="text-xs text-muted-foreground">Displayed in the sidebar and emails</p>
+        {/* Favicon */}
+        <div className="rounded-lg border bg-muted/20 p-4 flex flex-col items-center gap-3">
+          <p className="text-xs font-medium text-muted-foreground self-start uppercase tracking-wide">Favicon</p>
+          <div className="h-24 w-full max-w-[160px] rounded-xl border-2 border-dashed border-border flex items-center justify-center bg-background overflow-hidden">
+            {faviconPreview ? (
+              <img src={faviconPreview} alt="Favicon" className="h-10 w-10 object-contain" />
+            ) : (
+              <div
+                className="h-10 w-10 rounded-md flex items-center justify-center"
+                style={{ backgroundColor: primaryColor }}
+              >
+                <span className="text-white font-bold text-lg leading-none">M</span>
+              </div>
+            )}
           </div>
-
-          <div className="space-y-1.5">
-            <Label>Sidebar Theme</Label>
-            <Controller
-              name="sidebar_theme"
-              control={control}
-              render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="dark">Dark (default)</SelectItem>
-                    <SelectItem value="light">Light</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
+          <label className="cursor-pointer">
+            <input
+              type="file"
+              accept="image/png,image/x-icon,image/svg+xml"
+              className="hidden"
+              onChange={makePreviewHandler(setFaviconPreview)}
             />
+            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors border rounded-md px-3 py-1.5 bg-background">
+              <Upload className="h-3 w-3" />
+              Upload Favicon
+            </span>
+          </label>
+          <p className="text-xs text-muted-foreground text-center leading-relaxed">
+            PNG, ICO or SVG<br />Recommended: 32×32px<br />Max 256KB
+          </p>
+          {faviconPreview && (
+            <button
+              type="button"
+              onClick={() => setFaviconPreview(null)}
+              className="text-xs text-destructive hover:underline"
+            >
+              Remove
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Browser tab preview */}
+      {faviconPreview && (
+        <div className="rounded-lg border bg-muted/30 px-4 py-3">
+          <p className="text-xs text-muted-foreground mb-2">Browser tab preview</p>
+          <div className="inline-flex items-center gap-2 bg-background border rounded-t-md px-3 py-1.5 text-xs shadow-sm">
+            <img src={faviconPreview} alt="tab icon" className="h-3.5 w-3.5 object-contain" />
+            <span className="text-foreground font-medium">MillionStay Admin</span>
           </div>
+        </div>
+      )}
+
+      <div className="space-y-4">
+        <div className="space-y-1.5">
+          <Label>Brand Name</Label>
+          <Input {...register("brand_name")} placeholder="MillionStay" />
+          <p className="text-xs text-muted-foreground">Displayed in the sidebar and emails</p>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label>Sidebar Theme</Label>
+          <Controller
+            name="sidebar_theme"
+            control={control}
+            render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="dark">Dark (default)</SelectItem>
+                  <SelectItem value="light">Light</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
         </div>
       </div>
 
