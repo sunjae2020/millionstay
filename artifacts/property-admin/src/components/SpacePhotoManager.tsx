@@ -34,6 +34,7 @@ export function SpacePhotoManager({ spaceId }: SpacePhotoManagerProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [images, setImages] = useState<SpaceImage[]>([]);
+  const [imageSource, setImageSource] = useState<"own" | "parent" | "property">("own");
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
@@ -51,6 +52,7 @@ export function SpacePhotoManager({ spaceId }: SpacePhotoManagerProps) {
       const data = await res.json();
       if (data.success) {
         setImages(data.data);
+        setImageSource(data.source ?? "own");
         const edits: Record<number, string> = {};
         for (const img of data.data) edits[img.id] = img.caption ?? "";
         setCaptionEdits(edits);
@@ -149,8 +151,22 @@ export function SpacePhotoManager({ spaceId }: SpacePhotoManagerProps) {
     );
   }
 
+  const isFallback = imageSource !== "own";
+
   return (
     <div className="max-w-4xl space-y-6">
+      {isFallback && images.length > 0 && (
+        <div className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <span className="mt-0.5 shrink-0 text-amber-500">⚠</span>
+          <span>
+            {imageSource === "parent"
+              ? "이 스페이스에 등록된 사진이 없습니다. 상위(부모) 스페이스의 사진을 표시하고 있습니다."
+              : "이 스페이스에 등록된 사진이 없습니다. 동일 Property의 대표 스페이스 사진을 표시하고 있습니다."}
+            {" "}아래에서 사진을 업로드하면 이 스페이스 전용으로 저장됩니다.
+          </span>
+        </div>
+      )}
+
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -229,61 +245,63 @@ export function SpacePhotoManager({ spaceId }: SpacePhotoManagerProps) {
                 )}
               </div>
 
-              <div className="p-3 space-y-3">
-                <div className="flex gap-1.5">
-                  <Input
-                    value={captionEdits[image.id] ?? ""}
-                    onChange={(e) => setCaptionEdits((prev) => ({ ...prev, [image.id]: e.target.value }))}
-                    placeholder="Add caption..."
-                    className="h-8 text-xs"
-                  />
-                  {captionEdits[image.id] !== (image.caption ?? "") && (
+              {!isFallback && (
+                <div className="p-3 space-y-3">
+                  <div className="flex gap-1.5">
+                    <Input
+                      value={captionEdits[image.id] ?? ""}
+                      onChange={(e) => setCaptionEdits((prev) => ({ ...prev, [image.id]: e.target.value }))}
+                      placeholder="Add caption..."
+                      className="h-8 text-xs"
+                    />
+                    {captionEdits[image.id] !== (image.caption ?? "") && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 px-2 shrink-0"
+                        onClick={() => handleSaveCaption(image.id)}
+                        disabled={savingCaption === image.id}
+                      >
+                        {savingCaption === image.id
+                          ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          : <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+                        }
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {!image.is_primary && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 h-7 text-xs gap-1"
+                        onClick={() => handleSetPrimary(image.id)}
+                        disabled={settingPrimaryId === image.id}
+                      >
+                        {settingPrimaryId === image.id
+                          ? <Loader2 className="h-3 w-3 animate-spin" />
+                          : <Star className="h-3 w-3" />
+                        }
+                        Set Primary
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-8 px-2 shrink-0"
-                      onClick={() => handleSaveCaption(image.id)}
-                      disabled={savingCaption === image.id}
+                      className="h-7 text-xs text-red-500 hover:text-red-700 hover:bg-red-50 gap-1 ml-auto"
+                      onClick={() => handleDelete(image.id)}
+                      disabled={deletingId === image.id}
                     >
-                      {savingCaption === image.id
-                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        : <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
-                      }
-                    </Button>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  {!image.is_primary && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1 h-7 text-xs gap-1"
-                      onClick={() => handleSetPrimary(image.id)}
-                      disabled={settingPrimaryId === image.id}
-                    >
-                      {settingPrimaryId === image.id
+                      {deletingId === image.id
                         ? <Loader2 className="h-3 w-3 animate-spin" />
-                        : <Star className="h-3 w-3" />
+                        : <Trash2 className="h-3 w-3" />
                       }
-                      Set Primary
+                      Delete
                     </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 text-xs text-red-500 hover:text-red-700 hover:bg-red-50 gap-1 ml-auto"
-                    onClick={() => handleDelete(image.id)}
-                    disabled={deletingId === image.id}
-                  >
-                    {deletingId === image.id
-                      ? <Loader2 className="h-3 w-3 animate-spin" />
-                      : <Trash2 className="h-3 w-3" />
-                    }
-                    Delete
-                  </Button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           ))}
         </div>

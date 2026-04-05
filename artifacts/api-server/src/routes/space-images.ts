@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
-import { eq, asc, desc } from "drizzle-orm";
+import { eq, asc, desc, isNull } from "drizzle-orm";
 import { db, spacesTable } from "@workspace/db";
 import { spaceImagesTable } from "@workspace/db";
 import { isCloudinaryConfigured, uploadToCloudinary, deleteFromCloudinary } from "../utils/cloudinary";
@@ -8,17 +8,55 @@ import { isCloudinaryConfigured, uploadToCloudinary, deleteFromCloudinary } from
 const router: IRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
-router.get("/v1/spaces/:id/images", async (req, res): Promise<void> => {
-  const spaceId = Number(req.params.id);
-  if (!spaceId) { res.status(400).json({ error: "Invalid space id" }); return; }
-
-  const images = await db
+async function getImagesForSpace(spaceId: number) {
+  return db
     .select()
     .from(spaceImagesTable)
     .where(eq(spaceImagesTable.space_id, spaceId))
     .orderBy(desc(spaceImagesTable.is_primary), asc(spaceImagesTable.display_order), asc(spaceImagesTable.created_at));
+}
 
-  res.json({ success: true, data: images });
+router.get("/v1/spaces/:id/images", async (req, res): Promise<void> => {
+  const spaceId = Number(req.params.id);
+  if (!spaceId) { res.status(400).json({ error: "Invalid space id" }); return; }
+
+  // 1. Own photos
+  const ownImages = await getImagesForSpace(spaceId);
+  if (ownImages.length > 0) {
+    res.json({ success: true, data: ownImages, source: "own" });
+    return;
+  }
+
+  // 2. Fallback: parent space photos
+  const [space] = await db.select().from(spacesTable).where(eq(spacesTable.id, spaceId));
+  if (!space) { res.json({ success: true, data: [], source: "own" }); return; }
+
+  if (space.parent_space_id) {
+    const parentImages = await getImagesForSpace(space.parent_space_id);
+    if (parentImages.length > 0) {
+      res.json({ success: true, data: parentImages, source: "parent", source_space_id: space.parent_space_id });
+      return;
+    }
+  }
+
+  // 3. Fallback: root space of same property (parent_space_id IS NULL, same property_id)
+  if (space.property_id) {
+    const [rootSpace] = await db
+      .select()
+      .from(spacesTable)
+      .where(eq(spacesTable.property_id, space.property_id))
+      .orderBy(asc(spacesTable.id));
+
+    if (rootSpace && rootSpace.id !== spaceId) {
+      const propertyRootImages = await getImagesForSpace(rootSpace.id);
+      if (propertyRootImages.length > 0) {
+        res.json({ success: true, data: propertyRootImages, source: "property", source_space_id: rootSpace.id });
+        return;
+      }
+    }
+  }
+
+  res.json({ success: true, data: [], source: "own" });
 });
 
 router.post("/v1/spaces/:id/images", upload.array("images", 20), async (req, res): Promise<void> => {
