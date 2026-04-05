@@ -22,6 +22,7 @@ import systemLogsRouter from "./system-logs";
 import emailTemplatesRouter from "./email-templates";
 import emailLogsRouter from "./email-logs";
 import recurringSchedulesRouter from "./recurring-schedules";
+import stripeRouter from "./stripe";
 
 const router: IRouter = Router();
 
@@ -48,5 +49,6 @@ router.use(systemLogsRouter);
 router.use(emailTemplatesRouter);
 router.use(emailLogsRouter);
 router.use(recurringSchedulesRouter);
+router.use(stripeRouter);
 
 export default router;

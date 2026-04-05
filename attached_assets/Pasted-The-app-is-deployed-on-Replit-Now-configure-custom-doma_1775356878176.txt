@@ -1,0 +1,123 @@
+The app is deployed on Replit.
+Now configure custom domain and production settings.
+
+════════════════════════════════════════
+TASK 1 — VERIFY PRODUCTION ENVIRONMENT
+════════════════════════════════════════
+Check current environment and report:
+
+1. What is the current DATABASE_URL pointing to?
+   (Replit PostgreSQL or external Supabase?)
+
+2. Run this query and show result:
+   SELECT COUNT(*) as total_products FROM product_catalog;
+   → Should be 81
+
+3. Test login works on the deployed URL:
+   POST https://YOUR_REPLIT_URL.replit.app/api/v1/auth/login
+   body: { email, password }
+
+4. Show all currently set environment variables
+   (names only, not values):
+   Object.keys(process.env).filter(k =>
+     !k.startsWith('npm_') && !k.startsWith('NODE')
+   ).sort()
+
+════════════════════════════════════════
+TASK 2 — PRODUCTION HARDENING
+════════════════════════════════════════
+Add these production settings to server/src/index.ts:
+
+// Trust proxy (required for Replit)
+app.set('trust proxy', 1);
+
+// Security: remove X-Powered-By header
+app.disable('x-powered-by');
+
+// Health check with more detail
+app.get('/api/v1/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    service: 'MillionStay API',
+    version: '1.0.0',
+    environment: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString(),
+    uptime: Math.floor(process.uptime()) + 's',
+  });
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  process.exit(0);
+});
+
+════════════════════════════════════════
+TASK 3 — ADD STRIPE LIVE KEYS
+════════════════════════════════════════
+Add these to Replit Secrets (NOT in code):
+
+Key: STRIPE_SECRET_KEY
+Value: sk_live_... (from Stripe Dashboard)
+
+Key: STRIPE_PUBLISHABLE_KEY
+Value: pk_live_... (from Stripe Dashboard)
+
+Key: STRIPE_WEBHOOK_SECRET
+Value: whsec_... (from Stripe Webhook settings)
+
+Key: RESEND_API_KEY
+Value: re_... (from Resend Dashboard)
+
+Key: EMAIL_FROM
+Value: noreply@millionstay.com.au
+
+Key: CLIENT_URL
+Value: https://YOUR_REPLIT_URL.replit.app
+
+After adding secrets, verify they load:
+  process.env.STRIPE_SECRET_KEY?.startsWith('sk_live_')
+  → true (Live mode confirmed)
+  → false (still using test key)
+
+════════════════════════════════════════
+TASK 4 — STRIPE WEBHOOK ENDPOINT
+════════════════════════════════════════
+The Stripe webhook endpoint must be registered
+with the production URL.
+
+Show me the current webhook handler code at:
+  POST /api/v1/stripe/webhook
+
+Verify it:
+1. Reads raw body (not parsed JSON)
+2. Verifies Stripe-Signature header
+3. Handles these events:
+   - payment_intent.succeeded
+   - payment_intent.payment_failed
+   - charge.refunded
+
+If any of these are missing, add them.
+
+The webhook URL to register in Stripe Dashboard:
+  https://YOUR_REPLIT_URL.replit.app/api/v1/stripe/webhook
+
+════════════════════════════════════════
+TASK 5 — CUSTOM DOMAIN SETUP
+════════════════════════════════════════
+Show instructions for connecting custom domain
+in Replit Deployments settings.
+
+Target domain: admin.millionstay.com.au
+
+DNS records needed (for domain registrar):
+  Type: CNAME
+  Name: admin
+  Value: [Replit provides this — show placeholder]
+  TTL: 3600
+
+After DNS propagation (up to 24h):
+  https://admin.millionstay.com.au → app
+
+Report current deployment URL and
+what DNS records are needed.
