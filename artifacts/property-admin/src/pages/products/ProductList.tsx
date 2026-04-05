@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Search, Package } from "lucide-react";
+import { usePagination, TablePagination } from "@/components/ui/TablePagination";
 
 const STATUS_COLORS: Record<string, string> = {
   Active: "bg-green-100 text-green-700",
@@ -38,6 +39,8 @@ export default function ProductList() {
 
   const products = data?.data ?? [];
   const total = data?.meta?.total ?? 0;
+
+  const pagination = usePagination(products);
 
   return (
     <Layout>
@@ -77,7 +80,8 @@ export default function ProductList() {
           </Select>
         </div>
 
-        <div className="border rounded-lg bg-white">
+        <div className="border rounded-lg bg-white overflow-hidden">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -100,7 +104,7 @@ export default function ProductList() {
                 <TableRow>
                   <TableCell colSpan={8} className="text-center text-muted-foreground py-12">No products found</TableCell>
                 </TableRow>
-              ) : products.map((p: any) => (
+              ) : pagination.paginatedItems.map((p: any) => (
                 <TableRow key={p.id}>
                   <TableCell>
                     <Link href={`/products/products/${p.id}`} className="text-blue-600 hover:underline font-medium">
@@ -131,7 +135,9 @@ export default function ProductList() {
               ))}
             </TableBody>
           </Table>
+          </div>
         </div>
+        <TablePagination {...pagination} />
       </div>
     </Layout>
   );

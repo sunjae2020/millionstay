@@ -12,6 +12,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2, Check, X } from "lucide-react";
 import { format } from "date-fns";
+import { usePagination, TablePagination } from "@/components/ui/TablePagination";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,6 +41,8 @@ export default function SpacePolicyList() {
     { search: search || undefined },
     { query: { queryKey: getListSpacePoliciesQueryKey({ search: search || undefined }) } }
   );
+
+  const pagination = usePagination(policies ?? []);
 
   const deleteMutation = useDeleteSpacePolicy({
     mutation: {
@@ -77,7 +80,8 @@ export default function SpacePolicyList() {
         </div>
 
         <div className="rounded-md border bg-card overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-max text-sm">
             <thead className="bg-muted/50 border-b">
               <tr>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Name</th>
@@ -96,7 +100,7 @@ export default function SpacePolicyList() {
               ) : policies?.length === 0 ? (
                 <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground text-sm">No policies found</td></tr>
               ) : (
-                policies?.map((policy) => (
+                pagination.paginatedItems.map((policy) => (
                   <tr key={policy.id} className="hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3 font-medium text-foreground">{policy.name}</td>
                     <td className="px-4 py-3"><BoolCell value={policy.same_gender} /></td>
@@ -122,7 +126,9 @@ export default function SpacePolicyList() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
+        <TablePagination {...pagination} />
       </div>
 
       <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>

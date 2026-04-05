@@ -13,6 +13,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { format } from "date-fns";
+import { usePagination, TablePagination } from "@/components/ui/TablePagination";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,6 +39,8 @@ export default function PropertyList() {
   const { data: properties, isLoading } = useListProperties(params, {
     query: { queryKey: getListPropertiesQueryKey(params) },
   });
+
+  const pagination = usePagination(properties ?? []);
 
   const deleteMutation = useDeleteProperty({
     mutation: {
@@ -87,7 +90,8 @@ export default function PropertyList() {
         </div>
 
         <div className="rounded-md border bg-card overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-max text-sm">
             <thead className="bg-muted/50 border-b">
               <tr>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Name</th>
@@ -109,7 +113,7 @@ export default function PropertyList() {
                   <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground text-sm">No properties found</td>
                 </tr>
               ) : (
-                properties?.map((prop) => (
+                pagination.paginatedItems.map((prop) => (
                   <tr key={prop.id} className="hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3 font-medium text-foreground">{prop.name}</td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">{prop.address ?? "—"}</td>
@@ -141,7 +145,9 @@ export default function PropertyList() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
+        <TablePagination {...pagination} />
       </div>
 
       <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
+import { usePagination, TablePagination } from "@/components/ui/TablePagination";
 
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-600",
@@ -19,10 +20,12 @@ export default function InvoiceList() {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("_all");
 
-  const { data: invoices = [] } = useListInvoices({
+  const { data: invoicesRaw = [] } = useListInvoices({
     q: q || undefined,
     status: status === "_all" ? undefined : status,
   });
+
+  const pagination = usePagination(invoicesRaw);
 
   return (
     <Layout>
@@ -62,7 +65,8 @@ export default function InvoiceList() {
         </div>
 
         <div className="border rounded-lg overflow-hidden bg-white">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-max text-sm">
             <thead className="border-b bg-muted/30">
               <tr>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Invoice Ref</th>
@@ -75,7 +79,7 @@ export default function InvoiceList() {
               </tr>
             </thead>
             <tbody>
-              {invoices.map((inv) => (
+              {pagination.paginatedItems.map((inv) => (
                 <tr
                   key={inv.id}
                   className="border-b last:border-0 hover:bg-muted/20 cursor-pointer"
@@ -103,7 +107,9 @@ export default function InvoiceList() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
+        <TablePagination {...pagination} />
       </div>
     </Layout>
   );

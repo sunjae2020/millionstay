@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useListContractProducts } from "@workspace/api-client-react";
 import { Plus, Search, Package } from "lucide-react";
+import { usePagination, TablePagination } from "@/components/ui/TablePagination";
 
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-700",
@@ -28,6 +29,8 @@ export default function ContractProductList() {
     status: status === "_all" ? undefined : status,
     product_type: productType === "_all" ? undefined : productType,
   });
+
+  const pagination = usePagination(products ?? []);
 
   return (
     <Layout>
@@ -77,7 +80,8 @@ export default function ContractProductList() {
           </Select>
         </div>
 
-        <div className="border rounded-lg bg-white">
+        <div className="border rounded-lg bg-white overflow-hidden">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -99,7 +103,7 @@ export default function ContractProductList() {
                     No contract products found
                   </TableCell>
                 </TableRow>
-              ) : products.map(p => {
+              ) : pagination.paginatedItems.map(p => {
                 const inclusions = [
                   p.includes_wifi && "WiFi",
                   p.includes_parking && "Parking",
@@ -140,7 +144,9 @@ export default function ContractProductList() {
               })}
             </TableBody>
           </Table>
+          </div>
         </div>
+        <TablePagination {...pagination} />
       </div>
     </Layout>
   );

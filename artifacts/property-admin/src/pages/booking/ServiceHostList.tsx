@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useListServiceHosts, useDeleteServiceHost, getListServiceHostsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
+import { usePagination, TablePagination } from "@/components/ui/TablePagination";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -20,6 +21,8 @@ export default function ServiceHostList() {
   const { data: hosts, isLoading } = useListServiceHosts(params, {
     query: { queryKey: getListServiceHostsQueryKey(params) },
   });
+
+  const pagination = usePagination(hosts ?? []);
 
   const deleteMutation = useDeleteServiceHost({
     mutation: {
@@ -49,7 +52,8 @@ export default function ServiceHostList() {
           </div>
         </div>
         <div className="rounded-lg border bg-white overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-max text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
                 {["Name", "Account", "Service Type", "Period", "Status", ""].map((h) => (
@@ -62,7 +66,7 @@ export default function ServiceHostList() {
                 <tr><td colSpan={6} className="text-center py-12 text-muted-foreground">Loading...</td></tr>
               ) : !hosts?.length ? (
                 <tr><td colSpan={6} className="text-center py-12 text-muted-foreground">No service hosts found</td></tr>
-              ) : hosts.map((host) => (
+              ) : pagination.paginatedItems.map((host) => (
                 <tr key={host.id} className="border-b hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3 font-medium">
                     <Link href={`/booking/service-hosts/${host.id}`} className="text-blue-600 hover:underline">{host.name}</Link>
@@ -97,7 +101,9 @@ export default function ServiceHostList() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
+        <TablePagination {...pagination} />
       </div>
       <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>

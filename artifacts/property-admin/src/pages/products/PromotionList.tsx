@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tag, Plus } from "lucide-react";
+import { usePagination, TablePagination } from "@/components/ui/TablePagination";
 
 const MOCK_PROMOS = [
   { id: 1, name: "Early Bird Discount", type: "Percentage", discount: "10%", code: "EARLY10", valid_from: "2026-05-01", valid_to: "2026-06-30", status: "Scheduled" },
@@ -17,6 +18,8 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function PromotionList() {
+  const pagination = usePagination(MOCK_PROMOS);
+
   return (
     <Layout>
       <div className="p-6">
@@ -31,7 +34,8 @@ export default function PromotionList() {
           <Button><Plus className="h-4 w-4 mr-2" />New Promotion</Button>
         </div>
 
-        <div className="border rounded-lg bg-white">
+        <div className="border rounded-lg bg-white overflow-hidden">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -45,7 +49,7 @@ export default function PromotionList() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {MOCK_PROMOS.map(p => (
+              {pagination.paginatedItems.map(p => (
                 <TableRow key={p.id} className="cursor-pointer hover:bg-muted/50">
                   <TableCell className="font-medium">{p.name}</TableCell>
                   <TableCell className="text-sm">{p.type}</TableCell>
@@ -60,7 +64,9 @@ export default function PromotionList() {
               ))}
             </TableBody>
           </Table>
+          </div>
         </div>
+        <TablePagination {...pagination} />
       </div>
     </Layout>
   );

@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useListContracts } from "@workspace/api-client-react";
 import { Plus, Search } from "lucide-react";
+import { usePagination, TablePagination } from "@/components/ui/TablePagination";
 
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-700",
@@ -26,6 +27,8 @@ export default function ContractList() {
     q: q || undefined,
     status: status === "_all" ? undefined : status,
   });
+
+  const pagination = usePagination(contracts ?? []);
 
   return (
     <Layout>
@@ -66,7 +69,8 @@ export default function ContractList() {
           </Select>
         </div>
 
-        <div className="border rounded-lg bg-white">
+        <div className="border rounded-lg bg-white overflow-hidden">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -88,7 +92,7 @@ export default function ContractList() {
                     No contracts found
                   </TableCell>
                 </TableRow>
-              ) : contracts.map(c => (
+              ) : pagination.paginatedItems.map(c => (
                 <TableRow key={c.id}>
                   <TableCell>
                     <Link href={`/contracts/contracts/${c.id}`} className="text-blue-600 hover:underline font-medium font-mono">
@@ -115,7 +119,9 @@ export default function ContractList() {
               ))}
             </TableBody>
           </Table>
+          </div>
         </div>
+        <TablePagination {...pagination} />
       </div>
     </Layout>
   );

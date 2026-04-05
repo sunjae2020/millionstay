@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
+import { usePagination, TablePagination } from "@/components/ui/TablePagination";
 
 const statusColors: Record<string, string> = {
   Open: "bg-blue-100 text-blue-700",
@@ -28,11 +29,13 @@ export default function WorkOrderList() {
   const [status, setStatus] = useState("_all");
   const [priority, setPriority] = useState("_all");
 
-  const { data: workOrders = [] } = useListWorkOrders({
+  const { data: workOrdersRaw = [] } = useListWorkOrders({
     q: q || undefined,
     status: status === "_all" ? undefined : status,
     priority: priority === "_all" ? undefined : priority,
   });
+
+  const pagination = usePagination(workOrdersRaw);
 
   return (
     <Layout>
@@ -85,7 +88,8 @@ export default function WorkOrderList() {
         </div>
 
         <div className="border rounded-lg overflow-hidden bg-white">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-max text-sm">
             <thead className="border-b bg-muted/30">
               <tr>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Ref</th>
@@ -99,7 +103,7 @@ export default function WorkOrderList() {
               </tr>
             </thead>
             <tbody>
-              {workOrders.map((wo) => (
+              {pagination.paginatedItems.map((wo) => (
                 <tr
                   key={wo.id}
                   className="border-b last:border-0 hover:bg-muted/20 cursor-pointer"
@@ -123,14 +127,16 @@ export default function WorkOrderList() {
                   </td>
                 </tr>
               ))}
-              {workOrders.length === 0 && (
+              {workOrdersRaw.length === 0 && (
                 <tr>
                   <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">No work orders found</td>
                 </tr>
               )}
             </tbody>
           </table>
+          </div>
         </div>
+        <TablePagination {...pagination} />
       </div>
     </Layout>
   );

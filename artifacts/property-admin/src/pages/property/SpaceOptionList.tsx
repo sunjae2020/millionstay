@@ -12,6 +12,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { format } from "date-fns";
+import { usePagination, TablePagination } from "@/components/ui/TablePagination";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +33,8 @@ export default function SpaceOptionList() {
     { search: search || undefined },
     { query: { queryKey: getListSpaceOptionsQueryKey({ search: search || undefined }) } }
   );
+
+  const pagination = usePagination(options ?? []);
 
   const deleteMutation = useDeleteSpaceOption({
     mutation: {
@@ -69,7 +72,8 @@ export default function SpaceOptionList() {
         </div>
 
         <div className="rounded-md border bg-card overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-max text-sm">
             <thead className="bg-muted/50 border-b">
               <tr>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Name</th>
@@ -90,7 +94,7 @@ export default function SpaceOptionList() {
                   <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-sm">No space options found</td>
                 </tr>
               ) : (
-                options?.map((opt) => (
+                pagination.paginatedItems.map((opt) => (
                   <tr key={opt.id} className="hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3 font-medium text-foreground">{opt.name}</td>
                     <td className="px-4 py-3 text-muted-foreground">{opt.display_name ?? "—"}</td>
@@ -119,7 +123,9 @@ export default function SpaceOptionList() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
+        <TablePagination {...pagination} />
       </div>
 
       <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>

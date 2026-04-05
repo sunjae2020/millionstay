@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Users2, Plus, CheckCircle, DollarSign } from "lucide-react";
+import { usePagination, TablePagination } from "@/components/ui/TablePagination";
 
 const MOCK_BENS = [
   { id: 1, name: "Dynamic Residential", account: "Dynamic Residential_Agent", contract_product: "Standard Room - Weekly", commission: "10%", amount: "$140.00", settlement_status: "Pending" },
@@ -17,6 +18,8 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function BeneficiaryList() {
+  const pagination = usePagination(MOCK_BENS);
+
   return (
     <Layout>
       <div className="p-6">
@@ -31,7 +34,8 @@ export default function BeneficiaryList() {
           <Button><Plus className="h-4 w-4 mr-2" />New Beneficiary</Button>
         </div>
 
-        <div className="border rounded-lg bg-white">
+        <div className="border rounded-lg bg-white overflow-hidden">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -45,7 +49,7 @@ export default function BeneficiaryList() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {MOCK_BENS.map(b => (
+              {pagination.paginatedItems.map(b => (
                 <TableRow key={b.id}>
                   <TableCell className="font-medium">{b.name}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{b.account}</TableCell>
@@ -75,7 +79,9 @@ export default function BeneficiaryList() {
               ))}
             </TableBody>
           </Table>
+          </div>
         </div>
+        <TablePagination {...pagination} />
       </div>
     </Layout>
   );

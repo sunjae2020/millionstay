@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useListAccounts, useDeleteAccount, getListAccountsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
+import { usePagination, TablePagination } from "@/components/ui/TablePagination";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -35,6 +36,8 @@ export default function AccountList() {
   const { data: accounts, isLoading } = useListAccounts(params, {
     query: { queryKey: getListAccountsQueryKey(params) },
   });
+
+  const pagination = usePagination(accounts ?? []);
 
   const deleteMutation = useDeleteAccount({
     mutation: {
@@ -86,7 +89,8 @@ export default function AccountList() {
           <p className="text-sm text-muted-foreground">Loading…</p>
         ) : (
           <div className="rounded-lg border overflow-hidden">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-max text-sm">
               <thead className="bg-muted/50">
                 <tr>
                   <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Name</th>
@@ -98,7 +102,7 @@ export default function AccountList() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {accounts?.map((a) => (
+                {pagination.paginatedItems.map((a) => (
                   <tr key={a.id} className="hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-2.5">
                       <Link href={`/crm/accounts/${a.id}`} className="font-medium hover:underline">{a.name}</Link>
@@ -129,8 +133,10 @@ export default function AccountList() {
                 )}
               </tbody>
             </table>
+            </div>
           </div>
         )}
+        <TablePagination {...pagination} />
       </div>
 
       <AlertDialog open={deleteId !== null} onOpenChange={(o) => !o && setDeleteId(null)}>
