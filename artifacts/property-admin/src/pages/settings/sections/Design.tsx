@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { applyPrimaryColor, saveTheme, loadTheme } from "@/lib/theme";
+import { useBrand } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,10 +31,12 @@ const PRESET_COLORS = [
 
 export function Design() {
   const { toast } = useToast();
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const [faviconPreview, setFaviconPreview] = useState<string | null>(null);
+  const { refresh } = useBrand();
 
   const saved = loadTheme();
+
+  const [logoPreview, setLogoPreview] = useState<string | null>(saved.logo ?? null);
+  const [faviconPreview, setFaviconPreview] = useState<string | null>(saved.favicon ?? null);
 
   const { register, handleSubmit, control, watch } = useForm<DesignForm>({
     defaultValues: {
@@ -57,18 +60,42 @@ export function Design() {
       primary_color: data.primary_color,
       brand_name: data.brand_name,
       sidebar_theme: data.sidebar_theme,
+      logo: logoPreview,
+      favicon: faviconPreview,
     });
+    refresh();
     toast({ title: "Saved", description: "Design settings have been updated." });
   }
 
-  function makePreviewHandler(setter: (v: string) => void) {
+  function makeUploadHandler(
+    setter: (v: string | null) => void,
+    themeKey: "logo" | "favicon"
+  ) {
     return (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = (ev) => setter(ev.target?.result as string);
+      reader.onload = (ev) => {
+        const dataUrl = ev.target?.result as string;
+        setter(dataUrl);
+        // Save immediately so sidebar updates without requiring Save
+        saveTheme({ [themeKey]: dataUrl });
+        refresh();
+      };
       reader.readAsDataURL(file);
     };
+  }
+
+  function handleRemoveLogo() {
+    setLogoPreview(null);
+    saveTheme({ logo: null });
+    refresh();
+  }
+
+  function handleRemoveFavicon() {
+    setFaviconPreview(null);
+    saveTheme({ favicon: null });
+    refresh();
   }
 
   return (
@@ -100,7 +127,7 @@ export function Design() {
               type="file"
               accept="image/png,image/svg+xml,image/jpeg,image/webp"
               className="hidden"
-              onChange={makePreviewHandler(setLogoPreview)}
+              onChange={makeUploadHandler(setLogoPreview, "logo")}
             />
             <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors border rounded-md px-3 py-1.5 bg-background">
               <Upload className="h-3 w-3" />
@@ -113,7 +140,7 @@ export function Design() {
           {logoPreview && (
             <button
               type="button"
-              onClick={() => setLogoPreview(null)}
+              onClick={handleRemoveLogo}
               className="text-xs text-destructive hover:underline"
             >
               Remove
@@ -141,7 +168,7 @@ export function Design() {
               type="file"
               accept="image/png,image/x-icon,image/svg+xml"
               className="hidden"
-              onChange={makePreviewHandler(setFaviconPreview)}
+              onChange={makeUploadHandler(setFaviconPreview, "favicon")}
             />
             <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors border rounded-md px-3 py-1.5 bg-background">
               <Upload className="h-3 w-3" />
@@ -154,7 +181,7 @@ export function Design() {
           {faviconPreview && (
             <button
               type="button"
-              onClick={() => setFaviconPreview(null)}
+              onClick={handleRemoveFavicon}
               className="text-xs text-destructive hover:underline"
             >
               Remove

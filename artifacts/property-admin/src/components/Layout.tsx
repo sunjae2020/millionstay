@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import { useBrand } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -258,6 +259,7 @@ function SectionToggle({
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
+  const { logo, brandName } = useBrand();
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
@@ -265,12 +267,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <aside className="w-56 flex-shrink-0 bg-sidebar flex flex-col">
         {/* Logo */}
         <div className="h-14 flex items-center px-4 border-b border-sidebar-border">
-          <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center">
-              <Building2 className="h-4 w-4 text-white" />
+          {logo ? (
+            <img
+              src={logo}
+              alt={brandName}
+              className="max-h-8 max-w-[160px] object-contain"
+            />
+          ) : (
+            <div className="flex items-center gap-2">
+              <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center">
+                <Building2 className="h-4 w-4 text-white" />
+              </div>
+              <span className="text-sidebar-foreground font-semibold text-sm">{brandName}</span>
             </div>
-            <span className="text-sidebar-foreground font-semibold text-sm">MillionStay</span>
-          </div>
+          )}
         </div>
 
         {/* Navigation */}
