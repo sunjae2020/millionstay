@@ -55,6 +55,7 @@ import Settings from "@/pages/settings/Settings";
 import OrganisationPage from "@/pages/settings/sub/Organisation";
 import UsersPage from "@/pages/settings/sub/Users";
 import EmailTemplatesPage from "@/pages/settings/sub/EmailTemplates";
+import DesignPage from "@/pages/settings/sub/Design";
 import PaymentInfoList from "@/pages/crm/PaymentInfoList";
 import PaymentInfoDetail from "@/pages/crm/PaymentInfoDetail";
 
@@ -162,6 +163,7 @@ function Router() {
       <Route path="/settings/organisation" component={OrganisationPage} />
       <Route path="/settings/users" component={UsersPage} />
       <Route path="/settings/email-templates" component={EmailTemplatesPage} />
+      <Route path="/settings/design" component={DesignPage} />
 
       <Route path="/settings/contract-types">
         {() => <ComingSoonPage title="Contract Types" subtitle="Define contract type categories" />}

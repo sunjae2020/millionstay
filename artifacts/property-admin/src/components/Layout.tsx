@@ -31,8 +31,9 @@ import {
   Mail,
   ScrollText,
   BarChart3,
+  Palette,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type NavChild = {
   href: string;
@@ -119,6 +120,7 @@ const NAV: NavSection[] = [
       { href: "/settings/suburbs", label: "Suburb", icon: MapPin },
       { href: "/settings/email-templates", label: "Email Templates", icon: Mail },
       { href: "/settings/system-log", label: "System Log", icon: ScrollText },
+      { href: "/settings/design", label: "Design & Branding", icon: Palette },
       {
         href: "/settings/reports",
         label: "Reports",
@@ -171,6 +173,10 @@ function NavItemWithChildren({ item }: { item: NavChild }) {
   const [open, setOpen] = useState(!!anyChildActive);
   const selfActive = location === item.href || location.startsWith(item.href + "/");
 
+  useEffect(() => {
+    if (anyChildActive) setOpen(true);
+  }, [anyChildActive]);
+
   return (
     <div>
       <button
@@ -215,11 +221,21 @@ function SectionToggle({
   );
   const [open, setOpen] = useState(section.defaultOpen ?? anyActive);
 
+  // Auto-open when any child route becomes active
+  useEffect(() => {
+    if (anyActive) setOpen(true);
+  }, [anyActive]);
+
   return (
     <div>
       <button
+        type="button"
         className="flex items-center gap-1.5 w-full px-3 py-1.5 text-xs font-semibold text-sidebar-foreground/40 uppercase tracking-wider hover:text-sidebar-foreground/60 transition-colors"
-        onClick={() => setOpen(!open)}
+        onClick={() => {
+          // Don't allow closing a section that has an active child
+          if (anyActive && open) return;
+          setOpen((o) => !o);
+        }}
       >
         {open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
         <section.icon className="h-3 w-3" />

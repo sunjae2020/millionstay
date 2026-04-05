@@ -15,6 +15,7 @@ import {
   CalendarDays,
   TrendingUp,
   Settings2,
+  Palette,
 } from "lucide-react";
 
 type CardDef = {
@@ -27,7 +28,7 @@ type CardDef = {
 const ADMIN_CARDS: CardDef[] = [
   {
     title: "Organisation",
-    description: "Company profile and branding",
+    description: "Company profile and contact details",
     icon: Building,
     href: "/settings/organisation",
   },
@@ -38,8 +39,14 @@ const ADMIN_CARDS: CardDef[] = [
     href: "/settings/users",
   },
   {
+    title: "Design & Branding",
+    description: "Logo, favicon, colours and fonts",
+    icon: Palette,
+    href: "/settings/design",
+  },
+  {
     title: "Email Templates",
-    description: "Customise system email templates",
+    description: "Customise system email notifications",
     icon: Mail,
     href: "/settings/email-templates",
   },
