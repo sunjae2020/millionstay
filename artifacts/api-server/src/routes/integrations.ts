@@ -80,20 +80,6 @@ router.get("/v1/integrations/status", async (_req: Request, res: Response): Prom
     ? stripeKey!.startsWith("sk_live") ? "live" : "test"
     : null;
 
-  let cloudinaryStorageMb: string | null = null;
-  let cloudinaryPlan: string | null = null;
-  let cloudinaryError: string | null = null;
-  if (cloudinaryConfigured) {
-    try {
-      cloudinary.config({ cloud_name: cloudName, api_key: cloudApiKey, api_secret: cloudApiSecret });
-      const usage = await (cloudinary.api as any).usage();
-      cloudinaryStorageMb = (usage.storage.usage / 1024 / 1024).toFixed(1);
-      cloudinaryPlan = usage.plan ?? "free";
-    } catch (e: any) {
-      cloudinaryError = e?.message ?? "Connection failed";
-    }
-  }
-
   res.json({
     success: true,
     data: {
@@ -108,9 +94,9 @@ router.get("/v1/integrations/status", async (_req: Request, res: Response): Prom
         cloud_name: cloudName ?? null,
         masked_api_key: maskedCloudApiKey,
         masked_api_secret: maskedCloudApiSecret,
-        plan: cloudinaryPlan,
-        storage_mb: cloudinaryStorageMb,
-        error: cloudinaryError,
+        plan: null,
+        storage_mb: null,
+        error: null,
       },
       resend: {
         configured: resendConfigured,

@@ -257,7 +257,7 @@ const CARDS: CardDef[] = [
       if (!s) return { variant: "not-configured", label: "Not Configured" };
       if (s.cloudinary.error) return { variant: "error", label: "Error — check credentials" };
       if (!s.cloudinary.configured) return { variant: "not-configured", label: "Not Configured" };
-      return { variant: "connected", label: `Connected · ${s.cloudinary.storage_mb ?? "?"}MB` };
+      return { variant: "connected", label: s.cloudinary.storage_mb ? `Connected · ${s.cloudinary.storage_mb}MB` : "Connected" };
     },
     Fields: CloudinaryFields,
     testEndpoint: "/api/v1/integrations/cloudinary/test",
