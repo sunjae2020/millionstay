@@ -1,0 +1,134 @@
+Fix the following in one pass:
+
+════════════════════════════════════════
+1. /api/v1/products ROUTE — MISSING
+════════════════════════════════════════
+The product_catalog table has 81 records but
+no API route exists. Add it now.
+
+In the server routes, register:
+
+GET    /api/v1/products
+  Query: product_group_id, product_type_id,
+         is_active, limit, offset
+  Search: name, item_description
+  Include (JOIN):
+    product_groups.name   AS group_name
+    product_types.name    AS type_name
+    spaces.name           AS space_name
+    accounts.name         AS provider_name
+      (where id = product_provider_account_id)
+  Order: name ASC
+  Returns: { success, data: [...], meta: { total } }
+
+GET    /api/v1/products/:id
+  Returns full product detail with all joins above
+
+POST   /api/v1/products
+  Required: name, price, product_group_id
+  Optional: all other fields
+
+PUT    /api/v1/products/:id
+PATCH  /api/v1/products/:id/deactivate
+
+Also add to lookup endpoint:
+GET /api/v1/lookup/products?q=
+  Returns: [{ id, display: "Name — $430/wk" }]
+  Max 20 results
+
+Verify: GET /api/v1/products → total: 81 ✅
+
+════════════════════════════════════════
+2. IMPLEMENT 7 COMING SOON PAGES
+════════════════════════════════════════
+Wire up these 7 pages using existing API data:
+
+── A. /products/products ──
+DataTable with columns:
+  Name | Group | Type | Space | Price
+  | GST | Min Period | Status
+API: GET /api/v1/products
+Row click → detail (read-only view of all fields)
+[+ New] button → create form
+
+── B. /products/promotions ──
+API: GET /api/v1/promotions
+Columns: Name | Type | Discount | Code
+         | Valid From | Valid To | Status
+Detail: all promotion fields
+
+── C. /products/beneficiaries ──
+API: GET /api/v1/beneficiaries
+Columns: Name | Account | Contract Product
+         | Commission | Amount | Settlement Status
+Detail: all beneficiary fields
+Action buttons: [Approve] [Mark as Paid]
+
+── D. /booking/contract-products ──
+API: GET /api/v1/contract-products
+Columns: Name | Contract | Product
+         | Qty | Unit Price | Total | Status
+Detail: all contract product fields
+
+── E. /settings/contract-types ──
+API: GET /api/v1/contract-types
+Columns: Name | Security | Passport
+         | Visa | Enrollment | Status
+Full CRUD (8 records already seeded)
+
+── F. /settings/users ──
+API: GET /api/v1/users (or /api/v1/user-accounts)
+Columns: Name | Email | Role | Status
+[+ New User] button → create form
+  Fields: first_name, last_name, email, role
+  Role dropdown: Admin | Staff | Coordinator | ReadOnly
+[Deactivate] button on each row
+
+── G. /settings/reports/bookings ──
+API: GET /api/v1/reports/bookings
+Filters: Date range (from/to) | Status dropdown
+Table columns:
+  Booking Ref | Guest | Space | Check-In
+  | Check-Out | Weeks | Rate | Total | Status
+Summary row: Total: N bookings | Revenue: $XX,XXX AUD
+[Export CSV] button
+
+SQL for the report endpoint:
+SELECT
+  b.booking_ref,
+  c.first_name || ' ' || c.last_name AS guest_name,
+  s.name AS space_name,
+  b.check_in_date,
+  b.check_out_date,
+  CEIL((b.check_out_date::date -
+        b.check_in_date::date) / 7.0) AS weeks,
+  b.agreed_weekly_rate,
+  ROUND(b.agreed_weekly_rate *
+    CEIL((b.check_out_date::date -
+          b.check_in_date::date) / 7.0), 2) AS total_rent,
+  b.booking_status,
+  b.booking_source
+FROM bookings b
+JOIN contacts c ON b.contact_id = c.id
+JOIN spaces s   ON b.space_id   = s.id
+WHERE b.is_active = true
+  AND (b.check_in_date >= $1 OR $1 IS NULL)
+  AND (b.check_in_date <= $2 OR $2 IS NULL)
+  AND (b.booking_status = $3 OR $3 IS NULL)
+ORDER BY b.created_at DESC
+
+════════════════════════════════════════
+3. VERIFY ALL FIXED
+════════════════════════════════════════
+After implementation confirm:
+
+  GET /api/v1/products → { meta.total: 81 }  ✅/❌
+  /products/products page → 81 rows           ✅/❌
+  /products/promotions → loads data           ✅/❌
+  /products/beneficiaries → loads data        ✅/❌
+  /booking/contract-products → loads data     ✅/❌
+  /settings/contract-types → 8 records        ✅/❌
+  /settings/users → staff list                ✅/❌
+  /settings/reports/bookings → booking table  ✅/❌
+
+Pages working: should be 28 / 28

@@ -40,6 +40,10 @@ import ContractList from "@/pages/contracts/ContractList";
 import ContractDetail from "@/pages/contracts/ContractDetail";
 import ContractProductList from "@/pages/products/ContractProductList";
 import ContractProductDetail from "@/pages/products/ContractProductDetail";
+import ProductList from "@/pages/products/ProductList";
+import ProductDetail from "@/pages/products/ProductDetail";
+import PromotionList from "@/pages/products/PromotionList";
+import BeneficiaryList from "@/pages/products/BeneficiaryList";
 
 // Finance
 import InvoiceList from "@/pages/finance/InvoiceList";
@@ -57,6 +61,8 @@ import OrganisationPage from "@/pages/settings/sub/Organisation";
 import UsersPage from "@/pages/settings/sub/Users";
 import EmailTemplatesPage from "@/pages/settings/sub/EmailTemplates";
 import DesignPage from "@/pages/settings/sub/Design";
+import ContractTypesPage from "@/pages/settings/sub/ContractTypes";
+import BookingReportPage from "@/pages/settings/sub/BookingReport";
 import PaymentInfoList from "@/pages/crm/PaymentInfoList";
 import PaymentInfoDetail from "@/pages/crm/PaymentInfoDetail";
 
@@ -128,15 +134,11 @@ function Router() {
       <Route path="/booking/service-hosts/:id" component={ServiceHostDetail} />
 
       {/* ── PRODUCTS ──────────────────────────────────── */}
-      <Route path="/products/products">
-        {() => <ComingSoonPage title="Products" subtitle="Manage product catalogue" />}
-      </Route>
-      <Route path="/products/promotions">
-        {() => <ComingSoonPage title="Promotions" subtitle="Manage promotional offers" />}
-      </Route>
-      <Route path="/products/beneficiaries">
-        {() => <ComingSoonPage title="Beneficiaries" subtitle="Manage beneficiary records" />}
-      </Route>
+      <Route path="/products/products/new" component={ProductDetail} />
+      <Route path="/products/products/:id" component={ProductDetail} />
+      <Route path="/products/products" component={ProductList} />
+      <Route path="/products/promotions" component={PromotionList} />
+      <Route path="/products/beneficiaries" component={BeneficiaryList} />
 
       {/* ── FINANCE ───────────────────────────────────── */}
       <Route path="/finance/invoices" component={InvoiceList} />
@@ -166,9 +168,7 @@ function Router() {
       <Route path="/settings/email-templates" component={EmailTemplatesPage} />
       <Route path="/settings/design" component={DesignPage} />
 
-      <Route path="/settings/contract-types">
-        {() => <ComingSoonPage title="Contract Types" subtitle="Define contract type categories" />}
-      </Route>
+      <Route path="/settings/contract-types" component={ContractTypesPage} />
       <Route path="/settings/product-groups">
         {() => <ComingSoonPage title="Product Groups" subtitle="Organise products into groups" />}
       </Route>
@@ -192,12 +192,7 @@ function Router() {
         {() => <ComingSoonPage title="System Log" subtitle="Audit trail of system events" />}
       </Route>
 
-      <Route path="/settings/reports">
-        {() => <ComingSoonPage title="Reports" subtitle="Analytics and operational reports" />}
-      </Route>
-      <Route path="/settings/reports/bookings">
-        {() => <ComingSoonPage title="Booking Report" subtitle="Occupancy and booking analytics" />}
-      </Route>
+      <Route path="/settings/reports/bookings" component={BookingReportPage} />
       <Route path="/settings/reports/revenue">
         {() => <ComingSoonPage title="Revenue Report" subtitle="Revenue breakdown and trends" />}
       </Route>

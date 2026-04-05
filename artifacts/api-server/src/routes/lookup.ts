@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { ilike, and, eq, SQL } from "drizzle-orm";
-import { db, contactsTable, accountsTable, commissionsTable, paymentInfoTable, spacesTable, suburbsTable, propertiesTable } from "@workspace/db";
+import { ilike, and, eq, SQL, asc } from "drizzle-orm";
+import { db, contactsTable, accountsTable, commissionsTable, paymentInfoTable, spacesTable, suburbsTable, propertiesTable, productCatalogTable, productGroupsTable, productTypesTable, contractTypesTable } from "@workspace/db";
 
 const router: IRouter = Router();
 
@@ -132,6 +132,53 @@ router.get("/v1/lookup/suburbs", async (req, res): Promise<void> => {
     id: r.id,
     display: `${r.name} ${r.state ?? ""} ${r.postcode ?? ""}`.trim(),
   })));
+});
+
+router.get("/v1/lookup/product-groups", async (req, res): Promise<void> => {
+  const q = (req.query["q"] as string) || "";
+  const rows = await db
+    .select({ id: productGroupsTable.id, name: productGroupsTable.name })
+    .from(productGroupsTable)
+    .where(q ? ilike(productGroupsTable.name, `%${q}%`) : undefined)
+    .orderBy(asc(productGroupsTable.name))
+    .limit(50);
+  res.json(rows.map(r => ({ id: r.id, display: r.name })));
+});
+
+router.get("/v1/lookup/product-types", async (req, res): Promise<void> => {
+  const q = (req.query["q"] as string) || "";
+  const rows = await db
+    .select({ id: productTypesTable.id, name: productTypesTable.name })
+    .from(productTypesTable)
+    .where(q ? ilike(productTypesTable.name, `%${q}%`) : undefined)
+    .orderBy(asc(productTypesTable.name))
+    .limit(50);
+  res.json(rows.map(r => ({ id: r.id, display: r.name })));
+});
+
+router.get("/v1/lookup/products", async (req, res): Promise<void> => {
+  const q = (req.query["q"] as string) || "";
+  const rows = await db
+    .select({ id: productCatalogTable.id, name: productCatalogTable.name, price: productCatalogTable.price })
+    .from(productCatalogTable)
+    .where(q ? ilike(productCatalogTable.name, `%${q}%`) : undefined)
+    .orderBy(asc(productCatalogTable.name))
+    .limit(20);
+  res.json(rows.map(r => ({
+    id: r.id,
+    display: `${r.name}${r.price != null ? ` — $${r.price}/wk` : ""}`,
+  })));
+});
+
+router.get("/v1/lookup/contract-types", async (req, res): Promise<void> => {
+  const q = (req.query["q"] as string) || "";
+  const rows = await db
+    .select({ id: contractTypesTable.id, name: contractTypesTable.name })
+    .from(contractTypesTable)
+    .where(q ? ilike(contractTypesTable.name, `%${q}%`) : undefined)
+    .orderBy(asc(contractTypesTable.name))
+    .limit(20);
+  res.json(rows.map(r => ({ id: r.id, display: r.name })));
 });
 
 export default router;

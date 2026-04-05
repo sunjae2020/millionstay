@@ -1,6 +1,9 @@
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
 import dashboardRouter from "./dashboard";
+import productCatalogRouter from "./product-catalog";
+import contractTypesRouter from "./contract-types";
+import reportsRouter from "./reports";
 import suburbsRouter from "./suburbs";
 import propertiesRouter from "./properties";
 import spaceOptionsRouter from "./space-options";
@@ -29,6 +32,9 @@ const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(dashboardRouter);
+router.use(productCatalogRouter);
+router.use(contractTypesRouter);
+router.use(reportsRouter);
 router.use(suburbsRouter);
 router.use(propertiesRouter);
 router.use(spaceOptionsRouter);
