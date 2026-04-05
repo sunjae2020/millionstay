@@ -519,9 +519,9 @@ export default function SpaceDetail() {
                     <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-primary/20 border border-primary/50 inline-block"></span>Selected</span>
                   </div>
                   <div className="grid grid-cols-7 gap-1.5">
-                    {availability?.map((day) => {
+                    {availability?.data?.calendar?.map((day) => {
                       const isSelected = selectedDates.includes(day.date);
-                      const isBlocked = day.status === "blocked";
+                      const isBlocked = !day.is_available;
                       return (
                         <button
                           key={day.date}
@@ -541,7 +541,7 @@ export default function SpaceDetail() {
                         </button>
                       );
                     })}
-                    {!availability?.length && (
+                    {!availability?.data?.calendar?.length && (
                       <div className="col-span-7 py-8 text-center text-sm text-muted-foreground">
                         Loading availability...
                       </div>
