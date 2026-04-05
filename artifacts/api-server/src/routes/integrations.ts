@@ -73,6 +73,9 @@ router.get("/v1/integrations/status", async (_req: Request, res: Response): Prom
   const cloudinaryConfigured = !!(cloudName && cloudApiKey && cloudApiSecret);
   const resendConfigured = !!resendKey;
 
+  const maskedCloudApiKey = maskKey(cloudApiKey);
+  const maskedCloudApiSecret = maskKey(cloudApiSecret);
+
   const stripeMode = stripeConfigured
     ? stripeKey!.startsWith("sk_live") ? "live" : "test"
     : null;
@@ -103,6 +106,8 @@ router.get("/v1/integrations/status", async (_req: Request, res: Response): Prom
       cloudinary: {
         configured: cloudinaryConfigured,
         cloud_name: cloudName ?? null,
+        masked_api_key: maskedCloudApiKey,
+        masked_api_secret: maskedCloudApiSecret,
         plan: cloudinaryPlan,
         storage_mb: cloudinaryStorageMb,
         error: cloudinaryError,

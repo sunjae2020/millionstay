@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 interface IntegrationStatus {
   stripe: { configured: boolean; mode: string | null; masked_key: string; error: string | null };
-  cloudinary: { configured: boolean; cloud_name: string | null; plan: string | null; storage_mb: string | null; error: string | null };
+  cloudinary: { configured: boolean; cloud_name: string | null; masked_api_key: string; masked_api_secret: string; plan: string | null; storage_mb: string | null; error: string | null };
   resend: { configured: boolean; from_email: string | null; masked_key: string; error: string | null };
   maps: { provider: string; configured: boolean; note: string };
   ical: { provider: string; configured: boolean; note: string };
@@ -132,11 +132,11 @@ function CloudinaryFields({ status, onRefresh }: { status: IntegrationStatus | n
       </div>
       <div className="flex flex-col gap-1">
         <Label className="text-xs text-muted-foreground">API Key (CLOUDINARY_API_KEY)</Label>
-        <MaskedKeyInput value="" envKey="CLOUDINARY_API_KEY" onSaved={onRefresh} />
+        <MaskedKeyInput value={status?.cloudinary.masked_api_key ?? ""} envKey="CLOUDINARY_API_KEY" onSaved={onRefresh} />
       </div>
       <div className="flex flex-col gap-1">
         <Label className="text-xs text-muted-foreground">API Secret (CLOUDINARY_API_SECRET)</Label>
-        <MaskedKeyInput value="" envKey="CLOUDINARY_API_SECRET" onSaved={onRefresh} />
+        <MaskedKeyInput value={status?.cloudinary.masked_api_secret ?? ""} envKey="CLOUDINARY_API_SECRET" onSaved={onRefresh} />
       </div>
       {status?.cloudinary.plan && (
         <p className="text-xs text-muted-foreground">
