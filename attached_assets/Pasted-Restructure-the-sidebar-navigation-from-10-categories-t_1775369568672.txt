@@ -1,0 +1,185 @@
+Restructure the sidebar navigation from 10 categories to 7.
+Update the sidebar component and all route definitions.
+
+════════════════════════════════════════
+NEW NAVIGATION STRUCTURE
+════════════════════════════════════════
+
+DASHBOARD        → /dashboard
+
+ACCOUNT          (4 items)
+  Contact        → /account/contacts
+  Account        → /account/accounts
+  Lead           → /account/leads
+  Task           → /account/tasks
+
+PROPERTY         (4 items)
+  Property       → /property/properties
+  Space          → /property/spaces
+  Space Options  → /property/space-options
+  Space Policy   → /property/space-policies
+
+BOOKING          (4 items)
+  Booking        → /booking/bookings
+  Contract       → /booking/contracts
+  Contract Product → /booking/contract-products
+  Service Host   → /booking/service-hosts
+
+PRODUCTS         (3 items)
+  Product        → /products/products
+  Promotion      → /products/promotions
+  Beneficiary    → /products/beneficiaries
+
+FINANCE          (5 items)
+  Invoice        → /finance/invoices
+  Transaction    → /finance/transactions
+  Receipt        → /finance/receipts
+  Commission     → /finance/commissions
+  Recurring      → /finance/recurring
+
+SETTINGS         (11 items — all reference/config data)
+  Organisation   → /settings/organisation
+  Users          → /settings/users
+  Contract Types → /settings/contract-types
+  Product Groups → /settings/product-groups
+  Product Types  → /settings/product-types
+  Payment Info   → /settings/payment-info
+  Cost Center    → /settings/cost-center
+  Suburb         → /settings/suburbs
+  Email Templates→ /settings/email-templates
+  System Log     → /settings/system-log
+  Reports        → /settings/reports  (sub-items: Booking, Revenue, Occupancy)
+
+════════════════════════════════════════
+TASK 1 — UPDATE SIDEBAR COMPONENT
+════════════════════════════════════════
+Rewrite the sidebar nav config array.
+Each category has: { label, icon, items: [{ label, path }] }
+
+Use these lucide-react icons:
+  DASHBOARD  → LayoutDashboard
+  ACCOUNT    → Users
+  PROPERTY   → Building2
+  BOOKING    → CalendarCheck
+  PRODUCTS   → Package
+  FINANCE    → CreditCard
+  SETTINGS   → Settings
+
+Settings section items use smaller sub-icons:
+  Organisation   → Building
+  Users          → UserCog
+  Contract Types → FileText
+  Product Groups → Layers
+  Product Types  → Tag
+  Payment Info   → Landmark
+  Cost Center    → Wallet
+  Suburb         → MapPin
+  Email Templates→ Mail
+  System Log     → ScrollText
+  Reports        → BarChart3
+
+════════════════════════════════════════
+TASK 2 — UPDATE REACT ROUTER ROUTES
+════════════════════════════════════════
+Update App.tsx (or router file) with new paths.
+
+Key path changes to update:
+  OLD: /contracts/contracts      → NEW: /booking/contracts
+  OLD: /contracts/contract-products → NEW: /booking/contract-products
+  OLD: /booking/service-hosts    → stays: /booking/service-hosts
+  OLD: /contracts/beneficiaries  → NEW: /products/beneficiaries
+  OLD: /sales/tasks              → NEW: /account/tasks
+  OLD: /sales/leads              → NEW: /account/leads
+  OLD: /maintenance/organisation → NEW: /settings/organisation
+  OLD: /maintenance/users        → NEW: /settings/users
+  OLD: /maintenance/system-log   → NEW: /settings/system-log
+  OLD: /finance/payment-info     → NEW: /settings/payment-info
+  OLD: /finance/cost-centers     → NEW: /settings/cost-center
+  OLD: /contracts/contract-types → NEW: /settings/contract-types
+  OLD: /products/product-groups  → NEW: /settings/product-groups
+  OLD: /products/product-types   → NEW: /settings/product-types
+  OLD: /property/suburbs         → NEW: /settings/suburbs
+  OLD: /reports/bookings         → NEW: /settings/reports/bookings
+  OLD: /reports/revenue          → NEW: /settings/reports/revenue
+  OLD: /reports/occupancy        → NEW: /settings/reports/occupancy
+
+Add redirects for old paths → new paths so bookmarks don't break:
+  <Route path="/contracts/contracts" element={<Navigate to="/booking/contracts" replace />} />
+  (add one redirect per changed path)
+
+════════════════════════════════════════
+TASK 3 — SETTINGS PAGE REDESIGN
+════════════════════════════════════════
+The /settings page currently shows placeholder cards.
+Redesign it as a hub with two sections:
+
+Section A — "Administration" (top):
+  Organisation | Users | Email Templates | System Log
+
+Section B — "Reference Data" (below):
+  Contract Types | Product Groups | Product Types
+  Payment Info | Cost Center | Suburb
+
+Section C — "Reports" (bottom, full width):
+  Booking Report | Revenue Report | Occupancy Report
+  (3 cards side by side, each with a BarChart icon and "View Report" button)
+
+Each card:
+  - Icon (lucide-react, 24px, orange)
+  - Title
+  - Short description (1 line)
+  - Click → navigate to the sub-route
+
+════════════════════════════════════════
+TASK 4 — UPDATE BREADCRUMBS
+════════════════════════════════════════
+Update breadcrumb logic to use new paths.
+
+Examples:
+  /booking/contracts        → Booking > Contract
+  /products/beneficiaries   → Products > Beneficiary
+  /settings/contract-types  → Settings > Contract Types
+  /settings/reports/bookings→ Settings > Reports > Booking
+
+════════════════════════════════════════
+TASK 5 — SETTINGS SUB-NAVIGATION
+════════════════════════════════════════
+For the Settings section in the sidebar,
+add a collapsible sub-section for Reports:
+
+SETTINGS
+  ├── Organisation
+  ├── Users
+  ├── Contract Types
+  ├── Product Groups
+  ├── Product Types
+  ├── Payment Info
+  ├── Cost Center
+  ├── Suburb
+  ├── Email Templates
+  ├── System Log
+  └── Reports ▼ (expandable)
+        ├── Booking Report
+        ├── Revenue Report
+        └── Occupancy Report
+
+════════════════════════════════════════
+TASK 6 — VERIFY
+════════════════════════════════════════
+After all changes:
+
+1. Count sidebar categories → should be exactly 7
+   (Dashboard + Account + Property + Booking +
+    Products + Finance + Settings)
+
+2. Click every menu item → confirm it navigates
+   without 404 errors
+
+3. Confirm old paths redirect correctly:
+   Navigate to /contracts/contracts
+   → Should redirect to /booking/contracts
+
+4. Show the final sidebar structure as a
+   console.log() tree for verification.
+
+Report: categories count, any broken routes.

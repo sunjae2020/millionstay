@@ -1,11 +1,14 @@
 import { useEffect } from "react";
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { initTheme } from "@/lib/theme";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
+import { ComingSoonPage } from "@/pages/ComingSoon";
+
+// Property
 import SuburbList from "@/pages/property/SuburbList";
 import SuburbDetail from "@/pages/property/SuburbDetail";
 import PropertyList from "@/pages/property/PropertyList";
@@ -16,10 +19,8 @@ import SpacePolicyList from "@/pages/property/SpacePolicyList";
 import SpacePolicyDetail from "@/pages/property/SpacePolicyDetail";
 import SpaceList from "@/pages/property/SpaceList";
 import SpaceDetail from "@/pages/property/SpaceDetail";
-import CommissionList from "@/pages/crm/CommissionList";
-import CommissionDetail from "@/pages/crm/CommissionDetail";
-import PaymentInfoList from "@/pages/crm/PaymentInfoList";
-import PaymentInfoDetail from "@/pages/crm/PaymentInfoDetail";
+
+// Account (was CRM + Sales)
 import ContactList from "@/pages/crm/ContactList";
 import ContactDetail from "@/pages/crm/ContactDetail";
 import AccountList from "@/pages/crm/AccountList";
@@ -28,19 +29,34 @@ import TaskList from "@/pages/sales/TaskList";
 import TaskDetail from "@/pages/sales/TaskDetail";
 import LeadList from "@/pages/sales/LeadList";
 import LeadDetail from "@/pages/sales/LeadDetail";
+
+// Booking
 import ServiceHostList from "@/pages/booking/ServiceHostList";
 import ServiceHostDetail from "@/pages/booking/ServiceHostDetail";
 import BookingList from "@/pages/booking/BookingList";
 import BookingDetail from "@/pages/booking/BookingDetail";
-import ContractProductList from "@/pages/products/ContractProductList";
-import ContractProductDetail from "@/pages/products/ContractProductDetail";
 import ContractList from "@/pages/contracts/ContractList";
 import ContractDetail from "@/pages/contracts/ContractDetail";
+import ContractProductList from "@/pages/products/ContractProductList";
+import ContractProductDetail from "@/pages/products/ContractProductDetail";
+
+// Finance
 import InvoiceList from "@/pages/finance/InvoiceList";
 import InvoiceDetail from "@/pages/finance/InvoiceDetail";
+import CommissionList from "@/pages/crm/CommissionList";
+import CommissionDetail from "@/pages/crm/CommissionDetail";
+
+// Maintenance (kept for legacy, not in sidebar)
 import WorkOrderList from "@/pages/maintenance/WorkOrderList";
 import WorkOrderDetail from "@/pages/maintenance/WorkOrderDetail";
+
+// Settings
 import Settings from "@/pages/settings/Settings";
+import OrganisationPage from "@/pages/settings/sub/Organisation";
+import UsersPage from "@/pages/settings/sub/Users";
+import EmailTemplatesPage from "@/pages/settings/sub/EmailTemplates";
+import PaymentInfoList from "@/pages/crm/PaymentInfoList";
+import PaymentInfoDetail from "@/pages/crm/PaymentInfoDetail";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,93 +70,228 @@ const queryClient = new QueryClient({
 function Router() {
   return (
     <Switch>
+      {/* ── Dashboard ──────────────────────────────────── */}
       <Route path="/" component={Dashboard} />
+      <Route path="/dashboard" component={Dashboard} />
 
-      {/* Suburbs */}
-      <Route path="/property/suburbs" component={SuburbList} />
-      <Route path="/property/suburbs/new" component={SuburbDetail} />
-      <Route path="/property/suburbs/:id" component={SuburbDetail} />
+      {/* ── ACCOUNT ───────────────────────────────────── */}
+      <Route path="/account/contacts" component={ContactList} />
+      <Route path="/account/contacts/new" component={ContactDetail} />
+      <Route path="/account/contacts/:id" component={ContactDetail} />
 
-      {/* Properties */}
+      <Route path="/account/accounts" component={AccountList} />
+      <Route path="/account/accounts/new" component={AccountDetail} />
+      <Route path="/account/accounts/:id" component={AccountDetail} />
+
+      <Route path="/account/leads" component={LeadList} />
+      <Route path="/account/leads/new" component={LeadDetail} />
+      <Route path="/account/leads/:id" component={LeadDetail} />
+
+      <Route path="/account/tasks" component={TaskList} />
+      <Route path="/account/tasks/new" component={TaskDetail} />
+      <Route path="/account/tasks/:id" component={TaskDetail} />
+
+      {/* ── PROPERTY ──────────────────────────────────── */}
       <Route path="/property/properties" component={PropertyList} />
       <Route path="/property/properties/new" component={PropertyDetail} />
       <Route path="/property/properties/:id" component={PropertyDetail} />
 
-      {/* Space Options */}
-      <Route path="/property/space-options" component={SpaceOptionList} />
-      <Route path="/property/space-options/new" component={SpaceOptionDetail} />
-      <Route path="/property/space-options/:id" component={SpaceOptionDetail} />
-
-      {/* Space Policies */}
-      <Route path="/property/space-policies" component={SpacePolicyList} />
-      <Route path="/property/space-policies/new" component={SpacePolicyDetail} />
-      <Route path="/property/space-policies/:id" component={SpacePolicyDetail} />
-
-      {/* Spaces */}
       <Route path="/property/spaces" component={SpaceList} />
       <Route path="/property/spaces/new" component={SpaceDetail} />
       <Route path="/property/spaces/:id" component={SpaceDetail} />
 
-      {/* CRM - Commissions */}
-      <Route path="/crm/commissions" component={CommissionList} />
-      <Route path="/crm/commissions/new" component={CommissionDetail} />
-      <Route path="/crm/commissions/:id" component={CommissionDetail} />
+      <Route path="/property/space-options" component={SpaceOptionList} />
+      <Route path="/property/space-options/new" component={SpaceOptionDetail} />
+      <Route path="/property/space-options/:id" component={SpaceOptionDetail} />
 
-      {/* CRM - Payment Info */}
-      <Route path="/crm/payment-info" component={PaymentInfoList} />
-      <Route path="/crm/payment-info/new" component={PaymentInfoDetail} />
-      <Route path="/crm/payment-info/:id" component={PaymentInfoDetail} />
+      <Route path="/property/space-policies" component={SpacePolicyList} />
+      <Route path="/property/space-policies/new" component={SpacePolicyDetail} />
+      <Route path="/property/space-policies/:id" component={SpacePolicyDetail} />
 
-      {/* CRM - Contacts */}
-      <Route path="/crm/contacts" component={ContactList} />
-      <Route path="/crm/contacts/new" component={ContactDetail} />
-      <Route path="/crm/contacts/:id" component={ContactDetail} />
-
-      {/* CRM - Accounts */}
-      <Route path="/crm/accounts" component={AccountList} />
-      <Route path="/crm/accounts/new" component={AccountDetail} />
-      <Route path="/crm/accounts/:id" component={AccountDetail} />
-
-      {/* Sales - Tasks */}
-      <Route path="/sales/tasks" component={TaskList} />
-      <Route path="/sales/tasks/new" component={TaskDetail} />
-      <Route path="/sales/tasks/:id" component={TaskDetail} />
-
-      {/* Sales - Leads */}
-      <Route path="/sales/leads" component={LeadList} />
-      <Route path="/sales/leads/new" component={LeadDetail} />
-      <Route path="/sales/leads/:id" component={LeadDetail} />
-
-      {/* Booking - Service Hosts */}
-      <Route path="/booking/service-hosts" component={ServiceHostList} />
-      <Route path="/booking/service-hosts/new" component={ServiceHostDetail} />
-      <Route path="/booking/service-hosts/:id" component={ServiceHostDetail} />
-
-      {/* Booking - Bookings */}
+      {/* ── BOOKING ───────────────────────────────────── */}
       <Route path="/booking/bookings" component={BookingList} />
       <Route path="/booking/bookings/new" component={BookingDetail} />
       <Route path="/booking/bookings/:id" component={BookingDetail} />
 
-      {/* Products */}
-      <Route path="/products/contract-products" component={ContractProductList} />
-      <Route path="/products/contract-products/new" component={ContractProductDetail} />
-      <Route path="/products/contract-products/:id" component={ContractProductDetail} />
+      <Route path="/booking/contracts" component={ContractList} />
+      <Route path="/booking/contracts/new" component={ContractDetail} />
+      <Route path="/booking/contracts/:id" component={ContractDetail} />
 
-      {/* Contracts */}
-      <Route path="/contracts/contracts" component={ContractList} />
-      <Route path="/contracts/contracts/new" component={ContractDetail} />
-      <Route path="/contracts/contracts/:id" component={ContractDetail} />
+      <Route path="/booking/contract-products" component={ContractProductList} />
+      <Route path="/booking/contract-products/new" component={ContractProductDetail} />
+      <Route path="/booking/contract-products/:id" component={ContractProductDetail} />
 
-      {/* Finance */}
+      <Route path="/booking/service-hosts" component={ServiceHostList} />
+      <Route path="/booking/service-hosts/new" component={ServiceHostDetail} />
+      <Route path="/booking/service-hosts/:id" component={ServiceHostDetail} />
+
+      {/* ── PRODUCTS ──────────────────────────────────── */}
+      <Route path="/products/products">
+        {() => <ComingSoonPage title="Products" subtitle="Manage product catalogue" />}
+      </Route>
+      <Route path="/products/promotions">
+        {() => <ComingSoonPage title="Promotions" subtitle="Manage promotional offers" />}
+      </Route>
+      <Route path="/products/beneficiaries">
+        {() => <ComingSoonPage title="Beneficiaries" subtitle="Manage beneficiary records" />}
+      </Route>
+
+      {/* ── FINANCE ───────────────────────────────────── */}
       <Route path="/finance/invoices" component={InvoiceList} />
       <Route path="/finance/invoices/new" component={InvoiceDetail} />
       <Route path="/finance/invoices/:id" component={InvoiceDetail} />
+
+      <Route path="/finance/transactions">
+        {() => <ComingSoonPage title="Transactions" subtitle="View all financial transactions" />}
+      </Route>
+      <Route path="/finance/receipts">
+        {() => <ComingSoonPage title="Receipts" subtitle="Manage receipts and payments" />}
+      </Route>
+
+      <Route path="/finance/commissions" component={CommissionList} />
+      <Route path="/finance/commissions/new" component={CommissionDetail} />
+      <Route path="/finance/commissions/:id" component={CommissionDetail} />
+
+      <Route path="/finance/recurring">
+        {() => <ComingSoonPage title="Recurring" subtitle="Manage recurring billing schedules" />}
+      </Route>
+
+      {/* ── SETTINGS HUB ──────────────────────────────── */}
+      <Route path="/settings" component={Settings} />
+
+      <Route path="/settings/organisation" component={OrganisationPage} />
+      <Route path="/settings/users" component={UsersPage} />
+      <Route path="/settings/email-templates" component={EmailTemplatesPage} />
+
+      <Route path="/settings/contract-types">
+        {() => <ComingSoonPage title="Contract Types" subtitle="Define contract type categories" />}
+      </Route>
+      <Route path="/settings/product-groups">
+        {() => <ComingSoonPage title="Product Groups" subtitle="Organise products into groups" />}
+      </Route>
+      <Route path="/settings/product-types">
+        {() => <ComingSoonPage title="Product Types" subtitle="Manage product type definitions" />}
+      </Route>
+
+      <Route path="/settings/payment-info" component={PaymentInfoList} />
+      <Route path="/settings/payment-info/new" component={PaymentInfoDetail} />
+      <Route path="/settings/payment-info/:id" component={PaymentInfoDetail} />
+
+      <Route path="/settings/cost-center">
+        {() => <ComingSoonPage title="Cost Center" subtitle="Cost centre configuration" />}
+      </Route>
+
+      <Route path="/settings/suburbs" component={SuburbList} />
+      <Route path="/settings/suburbs/new" component={SuburbDetail} />
+      <Route path="/settings/suburbs/:id" component={SuburbDetail} />
+
+      <Route path="/settings/system-log">
+        {() => <ComingSoonPage title="System Log" subtitle="Audit trail of system events" />}
+      </Route>
+
+      <Route path="/settings/reports">
+        {() => <ComingSoonPage title="Reports" subtitle="Analytics and operational reports" />}
+      </Route>
+      <Route path="/settings/reports/bookings">
+        {() => <ComingSoonPage title="Booking Report" subtitle="Occupancy and booking analytics" />}
+      </Route>
+      <Route path="/settings/reports/revenue">
+        {() => <ComingSoonPage title="Revenue Report" subtitle="Revenue breakdown and trends" />}
+      </Route>
+      <Route path="/settings/reports/occupancy">
+        {() => <ComingSoonPage title="Occupancy Report" subtitle="Space occupancy over time" />}
+      </Route>
+
+      {/* ── MAINTENANCE (legacy, not in sidebar) ─────── */}
       <Route path="/maintenance/work-orders" component={WorkOrderList} />
       <Route path="/maintenance/work-orders/new" component={WorkOrderDetail} />
       <Route path="/maintenance/work-orders/:id" component={WorkOrderDetail} />
 
-      {/* Settings */}
-      <Route path="/settings" component={Settings} />
+      {/* ── REDIRECTS — old paths → new paths ─────────── */}
+      <Route path="/crm/contacts">
+        {() => <Redirect to="/account/contacts" />}
+      </Route>
+      <Route path="/crm/contacts/:id">
+        {(params) => <Redirect to={`/account/contacts/${params.id}`} />}
+      </Route>
+      <Route path="/crm/accounts">
+        {() => <Redirect to="/account/accounts" />}
+      </Route>
+      <Route path="/crm/accounts/:id">
+        {(params) => <Redirect to={`/account/accounts/${params.id}`} />}
+      </Route>
+      <Route path="/crm/commissions">
+        {() => <Redirect to="/finance/commissions" />}
+      </Route>
+      <Route path="/crm/commissions/:id">
+        {(params) => <Redirect to={`/finance/commissions/${params.id}`} />}
+      </Route>
+      <Route path="/crm/payment-info">
+        {() => <Redirect to="/settings/payment-info" />}
+      </Route>
+      <Route path="/crm/payment-info/:id">
+        {(params) => <Redirect to={`/settings/payment-info/${params.id}`} />}
+      </Route>
+      <Route path="/sales/tasks">
+        {() => <Redirect to="/account/tasks" />}
+      </Route>
+      <Route path="/sales/tasks/:id">
+        {(params) => <Redirect to={`/account/tasks/${params.id}`} />}
+      </Route>
+      <Route path="/sales/leads">
+        {() => <Redirect to="/account/leads" />}
+      </Route>
+      <Route path="/sales/leads/:id">
+        {(params) => <Redirect to={`/account/leads/${params.id}`} />}
+      </Route>
+      <Route path="/contracts/contracts">
+        {() => <Redirect to="/booking/contracts" />}
+      </Route>
+      <Route path="/contracts/contracts/:id">
+        {(params) => <Redirect to={`/booking/contracts/${params.id}`} />}
+      </Route>
+      <Route path="/products/contract-products">
+        {() => <Redirect to="/booking/contract-products" />}
+      </Route>
+      <Route path="/products/contract-products/:id">
+        {(params) => <Redirect to={`/booking/contract-products/${params.id}`} />}
+      </Route>
+      <Route path="/property/suburbs">
+        {() => <Redirect to="/settings/suburbs" />}
+      </Route>
+      <Route path="/property/suburbs/:id">
+        {(params) => <Redirect to={`/settings/suburbs/${params.id}`} />}
+      </Route>
+      <Route path="/maintenance/organisation">
+        {() => <Redirect to="/settings/organisation" />}
+      </Route>
+      <Route path="/maintenance/users">
+        {() => <Redirect to="/settings/users" />}
+      </Route>
+      <Route path="/maintenance/system-log">
+        {() => <Redirect to="/settings/system-log" />}
+      </Route>
+      <Route path="/finance/payment-info">
+        {() => <Redirect to="/settings/payment-info" />}
+      </Route>
+      <Route path="/finance/cost-centers">
+        {() => <Redirect to="/settings/cost-center" />}
+      </Route>
+      <Route path="/contracts/contract-types">
+        {() => <Redirect to="/settings/contract-types" />}
+      </Route>
+      <Route path="/contracts/beneficiaries">
+        {() => <Redirect to="/products/beneficiaries" />}
+      </Route>
+      <Route path="/reports/bookings">
+        {() => <Redirect to="/settings/reports/bookings" />}
+      </Route>
+      <Route path="/reports/revenue">
+        {() => <Redirect to="/settings/reports/revenue" />}
+      </Route>
+      <Route path="/reports/occupancy">
+        {() => <Redirect to="/settings/reports/occupancy" />}
+      </Route>
 
       <Route component={NotFound} />
     </Switch>
