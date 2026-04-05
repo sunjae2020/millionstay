@@ -59,6 +59,7 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 
 **Products:**
 - Contract Products — product catalog CRUD
+- Promotions — discount code CRUD (Percentage/Fixed/FreeNights types, validity dates, usage limits, status FSM: Draft→Scheduled→Active→Expired/Disabled)
 
 **Contracts:**
 - Contracts — CRUD + booking_ref enrichment, contract details
@@ -83,7 +84,7 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 
 ## Database Schema (`lib/db`)
 
-Tables (25 total): `suburbs`, `properties`, `space_options`, `space_policies`, `spaces`, `space_option_maps`, `space_blocked_dates`, `commissions`, `payment_info`, `contacts`, `accounts`, `tasks`, `leads`, `service_hosts`, `bookings`, `booking_documents`, `contract_products`, `contracts`, `invoices`, `work_orders`, `space_availability`, `recurring_schedule`, `system_log`, `email_template` (10 seeded templates), `email_log`
+Tables (26 total): `suburbs`, `properties`, `space_options`, `space_policies`, `spaces`, `space_option_maps`, `space_blocked_dates`, `commissions`, `payment_info`, `contacts`, `accounts`, `tasks`, `leads`, `service_hosts`, `bookings`, `booking_documents`, `contract_products`, `contracts`, `invoices`, `work_orders`, `space_availability`, `recurring_schedule`, `system_log`, `email_template` (10 seeded templates), `email_log`, `promotions`
 
 ## API Client (`lib/api-client-react`)
 

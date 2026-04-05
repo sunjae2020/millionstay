@@ -1888,3 +1888,102 @@ export type ListWorkOrdersParams = {
   priority?: string;
   property_id?: number;
 };
+
+export interface PromotionResponse {
+  id: number;
+  name: string;
+  /** @nullable */
+  code?: string | null;
+  promotion_type: string;
+  /** @nullable */
+  discount_percentage?: number | null;
+  /** @nullable */
+  discount_amount?: number | null;
+  /** @nullable */
+  free_nights?: number | null;
+  /** @nullable */
+  valid_from?: string | null;
+  /** @nullable */
+  valid_to?: string | null;
+  /** @nullable */
+  min_stay_nights?: number | null;
+  /** @nullable */
+  max_uses?: number | null;
+  /** @nullable */
+  max_uses_per_account?: number | null;
+  /** @nullable */
+  applicable_to?: string | null;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  terms?: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreatePromotionBody {
+  name: string;
+  /** @nullable */
+  code?: string | null;
+  promotion_type: string;
+  /** @nullable */
+  discount_percentage?: number | null;
+  /** @nullable */
+  discount_amount?: number | null;
+  /** @nullable */
+  free_nights?: number | null;
+  /** @nullable */
+  valid_from?: string | null;
+  /** @nullable */
+  valid_to?: string | null;
+  /** @nullable */
+  min_stay_nights?: number | null;
+  /** @nullable */
+  max_uses?: number | null;
+  /** @nullable */
+  max_uses_per_account?: number | null;
+  /** @nullable */
+  applicable_to?: string | null;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  terms?: string | null;
+  status: string;
+}
+
+export interface UpdatePromotionBody {
+  name?: string;
+  /** @nullable */
+  code?: string | null;
+  promotion_type?: string;
+  /** @nullable */
+  discount_percentage?: number | null;
+  /** @nullable */
+  discount_amount?: number | null;
+  /** @nullable */
+  free_nights?: number | null;
+  /** @nullable */
+  valid_from?: string | null;
+  /** @nullable */
+  valid_to?: string | null;
+  /** @nullable */
+  min_stay_nights?: number | null;
+  /** @nullable */
+  max_uses?: number | null;
+  /** @nullable */
+  max_uses_per_account?: number | null;
+  /** @nullable */
+  applicable_to?: string | null;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  terms?: string | null;
+  status?: string;
+}
+
+export type ListPromotionsParams = {
+  search?: string;
+  status?: string;
+  promotion_type?: string;
+};

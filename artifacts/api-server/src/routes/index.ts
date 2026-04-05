@@ -29,6 +29,7 @@ import recurringSchedulesRouter from "./recurring-schedules";
 import stripeRouter from "./stripe";
 import integrationsRouter from "./integrations";
 import spaceImagesRouter from "./space-images";
+import promotionsRouter from "./promotions";
 
 const router: IRouter = Router();
 
@@ -62,5 +63,6 @@ router.use(recurringSchedulesRouter);
 router.use(stripeRouter);
 router.use(integrationsRouter);
 router.use(spaceImagesRouter);
+router.use(promotionsRouter);
 
 export default router;

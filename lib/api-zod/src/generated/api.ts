@@ -3595,3 +3595,115 @@ export const CancelWorkOrderResponse = zod.object({
   space_name: zod.string().nullish(),
   assigned_contact_name: zod.string().nullish(),
 });
+
+/**
+ * @summary List promotions
+ */
+export const ListPromotionsQueryParams = zod.object({
+  search: zod.coerce.string().optional(),
+  status: zod.coerce.string().optional(),
+  promotion_type: zod.coerce.string().optional(),
+});
+
+export const ListPromotionsResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  code: zod.string().nullish(),
+  promotion_type: zod.string(),
+  discount_percentage: zod.number().nullish(),
+  discount_amount: zod.number().nullish(),
+  free_nights: zod.number().nullish(),
+  valid_from: zod.string().nullish(),
+  valid_to: zod.string().nullish(),
+  min_stay_nights: zod.number().nullish(),
+  max_uses: zod.number().nullish(),
+  max_uses_per_account: zod.number().nullish(),
+  applicable_to: zod.string().nullish(),
+  description: zod.string().nullish(),
+  terms: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+export const ListPromotionsResponse = zod.array(ListPromotionsResponseItem);
+
+/**
+ * @summary Create promotion
+ */
+export const CreatePromotionBody = zod.object({
+  name: zod.string(),
+  code: zod.string().nullish(),
+  promotion_type: zod.string().default("Percentage"),
+  discount_percentage: zod.number().nullish(),
+  discount_amount: zod.number().nullish(),
+  free_nights: zod.number().nullish(),
+  valid_from: zod.string().nullish(),
+  valid_to: zod.string().nullish(),
+  min_stay_nights: zod.number().nullish(),
+  max_uses: zod.number().nullish(),
+  max_uses_per_account: zod.number().nullish(),
+  applicable_to: zod.string().nullish(),
+  description: zod.string().nullish(),
+  terms: zod.string().nullish(),
+  status: zod.string().default("Draft"),
+});
+
+/**
+ * @summary Get promotion by ID
+ */
+export const GetPromotionParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetPromotionResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  code: zod.string().nullish(),
+  promotion_type: zod.string(),
+  discount_percentage: zod.number().nullish(),
+  discount_amount: zod.number().nullish(),
+  free_nights: zod.number().nullish(),
+  valid_from: zod.string().nullish(),
+  valid_to: zod.string().nullish(),
+  min_stay_nights: zod.number().nullish(),
+  max_uses: zod.number().nullish(),
+  max_uses_per_account: zod.number().nullish(),
+  applicable_to: zod.string().nullish(),
+  description: zod.string().nullish(),
+  terms: zod.string().nullish(),
+  status: zod.string(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Update promotion
+ */
+export const UpdatePromotionParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdatePromotionBody = zod.object({
+  name: zod.string().optional(),
+  code: zod.string().nullish(),
+  promotion_type: zod.string().optional(),
+  discount_percentage: zod.number().nullish(),
+  discount_amount: zod.number().nullish(),
+  free_nights: zod.number().nullish(),
+  valid_from: zod.string().nullish(),
+  valid_to: zod.string().nullish(),
+  min_stay_nights: zod.number().nullish(),
+  max_uses: zod.number().nullish(),
+  max_uses_per_account: zod.number().nullish(),
+  applicable_to: zod.string().nullish(),
+  description: zod.string().nullish(),
+  terms: zod.string().nullish(),
+  status: zod.string().optional(),
+});
+
+/**
+ * @summary Delete promotion
+ */
+export const DeletePromotionParams = zod.object({
+  id: zod.coerce.number(),
+});

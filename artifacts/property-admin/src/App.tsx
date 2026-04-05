@@ -46,6 +46,7 @@ import ContractProductDetail from "@/pages/products/ContractProductDetail";
 import ProductList from "@/pages/products/ProductList";
 import ProductDetail from "@/pages/products/ProductDetail";
 import PromotionList from "@/pages/products/PromotionList";
+import PromotionDetail from "@/pages/products/PromotionDetail";
 import BeneficiaryList from "@/pages/products/BeneficiaryList";
 
 // Finance
@@ -173,6 +174,8 @@ function Router() {
       <Route path="/products/products/:id" component={ProductDetail} />
       <Route path="/products/products" component={ProductList} />
       <Route path="/products/promotions" component={PromotionList} />
+      <Route path="/products/promotions/new" component={PromotionDetail} />
+      <Route path="/products/promotions/:id" component={PromotionDetail} />
       <Route path="/products/beneficiaries" component={BeneficiaryList} />
 
       {/* ── FINANCE ───────────────────────────────────── */}
