@@ -20,3 +20,7 @@ export * from "./recurring_schedules";
 export * from "./system_logs";
 export * from "./email_templates";
 export * from "./email_logs";
+export * from "./contract_types";
+export * from "./product_groups";
+export * from "./product_types";
+export * from "./product_catalog";
