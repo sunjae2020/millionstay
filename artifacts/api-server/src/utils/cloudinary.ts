@@ -14,53 +14,60 @@ export function isCloudinaryConfigured(): boolean {
   );
 }
 
+/**
+ * Upload an image to Cloudinary with automatic optimisation:
+ *   - quality: auto   → Cloudinary picks the best quality (typically ~75-85 for web)
+ *   - fetch_format: auto → serves WebP / AVIF to browsers that support it, JPEG otherwise
+ *   - width: 1920, height: 1440, crop: limit → never upscales; caps at 1920×1440 px (≈ 2 MP)
+ *   - strip_profile / exif removal is handled by Cloudinary automatically on upload
+ *
+ * Thumbnail URL is derived from the uploaded public_id via URL transformation
+ * (no second upload needed — Cloudinary generates the variant on first request and caches it).
+ */
 export async function uploadToCloudinary(
   buffer: Buffer,
   options: Record<string, unknown> = {}
 ): Promise<{ secure_url: string; thumbnail_url: string; public_id: string; bytes: number; format: string }> {
-  const uploadResult = await new Promise<{ secure_url: string; public_id: string; bytes: number; format: string }>(
-    (resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        {
-          folder: "millionstay/spaces",
-          transformation: [
-            { quality: "auto", fetch_format: "auto" },
-            { width: 1200, height: 900, crop: "limit" },
-          ],
-          ...options,
-        },
-        (error, result) => {
-          if (error || !result) reject(error ?? new Error("Upload failed"));
-          else resolve(result as { secure_url: string; public_id: string; bytes: number; format: string });
-        }
-      );
-      stream.end(buffer);
-    }
-  );
-
-  const thumbResult = await new Promise<{ secure_url: string }>((resolve, reject) => {
+  const result = await new Promise<{
+    secure_url: string;
+    public_id: string;
+    bytes: number;
+    format: string;
+    version: number;
+  }>((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
-        folder: "millionstay/thumbnails",
+        folder: "millionstay/spaces",
         transformation: [
-          { width: 400, height: 300, crop: "fill", gravity: "auto" },
-          { quality: "auto", fetch_format: "auto" },
+          { quality: "auto:good", fetch_format: "auto" },
+          { width: 1920, height: 1440, crop: "limit" },
+          { dpr: "auto" },
         ],
+        ...options,
       },
-      (error, result) => {
-        if (error || !result) reject(error ?? new Error("Thumbnail upload failed"));
-        else resolve(result as { secure_url: string });
+      (error, res) => {
+        if (error || !res) reject(error ?? new Error("Cloudinary upload failed"));
+        else resolve(res as { secure_url: string; public_id: string; bytes: number; format: string; version: number });
       }
     );
     stream.end(buffer);
   });
 
+  const thumbnailUrl = cloudinary.url(result.public_id, {
+    secure: true,
+    transformation: [
+      { width: 480, height: 360, crop: "fill", gravity: "auto" },
+      { quality: "auto:eco", fetch_format: "auto" },
+    ],
+    version: result.version,
+  });
+
   return {
-    secure_url: uploadResult.secure_url,
-    thumbnail_url: thumbResult.secure_url,
-    public_id: uploadResult.public_id,
-    bytes: uploadResult.bytes,
-    format: uploadResult.format,
+    secure_url: result.secure_url,
+    thumbnail_url: thumbnailUrl,
+    public_id: result.public_id,
+    bytes: result.bytes,
+    format: result.format,
   };
 }
 
