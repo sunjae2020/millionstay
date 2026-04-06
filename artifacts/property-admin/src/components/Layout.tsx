@@ -421,19 +421,15 @@ function SidebarLogo({
   if (collapsed) {
     return (
       <div className="h-14 flex items-center justify-center border-b border-sidebar-border flex-shrink-0 relative">
-        {/* Favicon symbol only */}
-        {logo ? (
-          <img src={logo} alt={brandName} className="h-7 w-7 object-contain rounded" />
-        ) : (
-          <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center">
-            <Building2 className="h-4 w-4 text-white" />
-          </div>
-        )}
-        {/* Expand triangle — right edge */}
+        {/* Always show favicon symbol (building icon) when collapsed */}
+        <div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
+          <Building2 className="h-5 w-5 text-white" />
+        </div>
+        {/* Expand triangle — inside right edge */}
         <button
           onClick={onToggle}
           title="Expand sidebar"
-          className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10 h-5 w-5 rounded-full bg-sidebar border border-sidebar-border items-center justify-center text-sidebar-foreground/50 hover:text-sidebar-primary hover:border-sidebar-primary transition-colors shadow-sm"
+          className="hidden md:flex absolute right-1 top-1/2 -translate-y-1/2 z-10 h-5 w-5 rounded-full bg-sidebar-accent border border-sidebar-border items-center justify-center text-sidebar-foreground/50 hover:text-sidebar-primary hover:border-sidebar-primary transition-colors"
         >
           <TriangleRight className="h-2.5 w-2.5" />
         </button>
@@ -518,7 +514,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* ── Sidebar ──────────────────────────────────────────── */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 bg-sidebar flex flex-col",
+          "fixed inset-y-0 left-0 z-50 bg-sidebar flex flex-col overflow-hidden",
           "transition-all duration-200 ease-in-out",
           "md:static md:z-auto md:flex-shrink-0 md:translate-x-0 md:opacity-100 md:visible md:pointer-events-auto",
           /* Mobile: always full width when open */
