@@ -172,8 +172,12 @@ function Router() {
       <Route path="/booking/service-hosts/:id" component={ServiceHostDetail} />
 
       {/* ── PRODUCTS ──────────────────────────────────── */}
-      <Route path="/products/products/new" component={ProductDetail} />
-      <Route path="/products/products/:id" component={ProductDetail} />
+      <Route path="/products/products/new">
+        {() => <Redirect to="/booking/contract-products/new" />}
+      </Route>
+      <Route path="/products/products/:id">
+        {(params) => <Redirect to={`/booking/contract-products/${params.id}`} />}
+      </Route>
       <Route path="/products/products" component={ProductList} />
       <Route path="/products/promotions" component={PromotionList} />
       <Route path="/products/promotions/new" component={PromotionDetail} />
