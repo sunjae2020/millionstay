@@ -194,7 +194,7 @@ function NavLeaf({
         indent ? "px-3 py-1.5 ml-4 pl-5" : "px-3 py-2",
         active
           ? "bg-sidebar-primary/20 text-sidebar-primary font-semibold"
-          : "text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+          : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
       )}
     >
       <Icon className={cn("h-3.5 w-3.5 flex-shrink-0", active && "text-sidebar-primary")} />
@@ -243,7 +243,7 @@ function NavItemWithChildren({ item, collapsed }: { item: NavChild; collapsed?: 
           "flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm font-medium transition-colors",
           selfActive || anyChildActive
             ? "bg-sidebar-primary/20 text-sidebar-primary"
-            : "text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+            : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
         )}
       >
         <item.icon className="h-3.5 w-3.5 flex-shrink-0" />
@@ -316,10 +316,10 @@ function SectionToggle({
       <button
         type="button"
         className={cn(
-          "flex items-center gap-1.5 w-full px-3 py-1.5 text-[15px] font-bold uppercase tracking-widest transition-colors",
+          "flex items-center gap-1.5 w-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors",
           anyActive
-            ? "text-sidebar-primary"
-            : "text-sidebar-foreground/85 hover:text-sidebar-foreground"
+            ? "text-sidebar-primary/80"
+            : "text-sidebar-foreground/40 hover:text-sidebar-foreground/60"
         )}
         onClick={() => {
           if (anyActive && open) return;
@@ -561,7 +561,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   : "gap-2.5 px-3 py-2",
                 location === "/" || location === "/dashboard"
                   ? "bg-sidebar-primary/20 text-sidebar-primary"
-                  : "text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                  : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
               )}
             >
               <LayoutDashboard className={cn("flex-shrink-0", collapsed ? "h-4 w-4" : "h-4 w-4")} />
