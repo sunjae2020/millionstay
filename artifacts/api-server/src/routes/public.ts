@@ -1,12 +1,26 @@
 import { Router, type IRouter } from "express";
-import { eq, and, asc, desc, inArray } from "drizzle-orm";
-import { db, spacesTable, propertiesTable, spaceOptionMapsTable, spaceAvailabilityTable } from "@workspace/db";
-import { spaceImagesTable } from "@workspace/db";
-import { spaceOptionsTable, productCatalogTable } from "@workspace/db";
+import { eq, and, asc, desc, inArray, gte, lte, between, or, sql } from "drizzle-orm";
+import {
+  db,
+  spacesTable,
+  propertiesTable,
+  spaceOptionMapsTable,
+  spaceAvailabilityTable,
+  bookingsTable,
+  spaceImagesTable,
+  spaceOptionsTable,
+  productCatalogTable,
+} from "@workspace/db";
 
 const router: IRouter = Router();
 
-router.get("/v1/public/spaces", async (_req, res): Promise<void> => {
+/* ───────────────────────────────────────────────────────
+   GET /api/v1/public/spaces
+   Query params: city, min_price, max_price, start_date, end_date
+──────────────────────────────────────────────────────── */
+router.get("/v1/public/spaces", async (req, res): Promise<void> => {
+  const { city, min_price, max_price, start_date, end_date } = req.query as Record<string, string>;
+
   const spaces = await db
     .select({
       id: spacesTable.id,
@@ -33,13 +47,60 @@ router.get("/v1/public/spaces", async (_req, res): Promise<void> => {
     .where(eq(spacesTable.status, "Active"))
     .orderBy(asc(spacesTable.id));
 
-  const spaceIds = spaces.map((s) => s.id);
+  // Filter by city
+  let filtered = city
+    ? spaces.filter((s) => s.property_city?.toLowerCase().includes(city.toLowerCase()))
+    : spaces;
 
-  // Collect all parent IDs that we may need images from
-  const parentIds = [...new Set(
-    spaces.map((s) => s.parent_space_id).filter((id): id is number => id != null),
-  )];
+  // Filter by price
+  if (min_price) filtered = filtered.filter((s) => Number(s.base_weekly_price) >= Number(min_price));
+  if (max_price) filtered = filtered.filter((s) => Number(s.base_weekly_price) <= Number(max_price));
+
+  const spaceIds = filtered.map((s) => s.id);
+  const parentIds = [...new Set(filtered.map((s) => s.parent_space_id).filter((id): id is number => id != null))];
   const allRelevantIds = [...new Set([...spaceIds, ...parentIds])];
+
+  // If date range provided, check availability
+  let unavailableIds = new Set<number>();
+  if (start_date && end_date && spaceIds.length > 0) {
+    const blocked = await db
+      .select({ space_id: spaceAvailabilityTable.space_id })
+      .from(spaceAvailabilityTable)
+      .where(
+        and(
+          inArray(spaceAvailabilityTable.space_id, spaceIds),
+          eq(spaceAvailabilityTable.is_available, false),
+          gte(spaceAvailabilityTable.date, start_date),
+          lte(spaceAvailabilityTable.date, end_date),
+        ),
+      );
+
+    // Also check active bookings that overlap
+    const bookedSpaces = await db
+      .select({ space_id: bookingsTable.space_id })
+      .from(bookingsTable)
+      .where(
+        and(
+          inArray(bookingsTable.space_id as any, spaceIds),
+          or(
+            and(
+              lte(bookingsTable.check_in_date as any, end_date),
+              gte(bookingsTable.check_out_date as any, start_date),
+            ),
+          ),
+          inArray(bookingsTable.booking_status, ["Confirmed", "Pending", "Active"]),
+        ),
+      );
+
+    unavailableIds = new Set([
+      ...blocked.map((b) => b.space_id),
+      ...bookedSpaces.map((b) => b.space_id).filter((id): id is number => id != null),
+    ]);
+
+    if (unavailableIds.size > 0) {
+      filtered = filtered.filter((s) => !unavailableIds.has(s.id));
+    }
+  }
 
   const [allImages, allOptionMaps] = await Promise.all([
     allRelevantIds.length > 0
@@ -52,15 +113,14 @@ router.get("/v1/public/spaces", async (_req, res): Promise<void> => {
       : Promise.resolve([]),
     spaceIds.length > 0
       ? db.select({
-          space_id: spaceOptionMapsTable.space_id,
-          name: spaceOptionsTable.name,
-        })
+            space_id: spaceOptionMapsTable.space_id,
+            name: spaceOptionsTable.name,
+          })
           .from(spaceOptionMapsTable)
           .leftJoin(spaceOptionsTable, eq(spaceOptionMapsTable.space_option_id, spaceOptionsTable.id))
       : Promise.resolve([]),
   ]);
 
-  // Map primary images by space id
   const primaryBySpace = new Map<number, (typeof allImages)[number]>();
   for (const img of allImages) {
     if (!primaryBySpace.has(img.space_id)) primaryBySpace.set(img.space_id, img);
@@ -73,15 +133,13 @@ router.get("/v1/public/spaces", async (_req, res): Promise<void> => {
     optionsBySpace.set(row.space_id, arr);
   }
 
-  const data = spaces.map((s) => {
-    // Own primary image first; fall back to parent's primary image if none
+  const data = filtered.map((s) => {
     let primary = primaryBySpace.get(s.id);
     let imageFromParent = false;
     if (!primary && s.parent_space_id) {
       primary = primaryBySpace.get(s.parent_space_id);
       if (primary) imageFromParent = true;
     }
-
     return {
       ...s,
       primary_image: primary?.file_url ?? null,
@@ -94,6 +152,9 @@ router.get("/v1/public/spaces", async (_req, res): Promise<void> => {
   res.json({ success: true, data, meta: { total: data.length } });
 });
 
+/* ───────────────────────────────────────────────────────
+   GET /api/v1/public/spaces/:id
+──────────────────────────────────────────────────────── */
 router.get("/v1/public/spaces/:id", async (req, res): Promise<void> => {
   const spaceId = Number(req.params.id);
   if (!spaceId) { res.status(400).json({ error: "Invalid space id" }); return; }
@@ -133,20 +194,20 @@ router.get("/v1/public/spaces/:id", async (req, res): Promise<void> => {
       .where(eq(spaceImagesTable.space_id, spaceId))
       .orderBy(desc(spaceImagesTable.is_primary), asc(spaceImagesTable.display_order)),
     db.select({
-      name: spaceOptionsTable.name,
-      display_name: spaceOptionsTable.display_name,
-      option_category: spaceOptionsTable.category,
-    })
+        name: spaceOptionsTable.name,
+        display_name: spaceOptionsTable.display_name,
+        option_category: spaceOptionsTable.category,
+      })
       .from(spaceOptionMapsTable)
       .leftJoin(spaceOptionsTable, eq(spaceOptionMapsTable.space_option_id, spaceOptionsTable.id))
       .where(eq(spaceOptionMapsTable.space_id, spaceId)),
     db.select({
-      id: productCatalogTable.id,
-      name: productCatalogTable.name,
-      price: productCatalogTable.price,
-      min_contract_period: productCatalogTable.min_contract_period,
-      min_contract_period_unit: productCatalogTable.min_contract_period_unit,
-    })
+        id: productCatalogTable.id,
+        name: productCatalogTable.name,
+        price: productCatalogTable.price,
+        min_contract_period: productCatalogTable.min_contract_period,
+        min_contract_period_unit: productCatalogTable.min_contract_period_unit,
+      })
       .from(productCatalogTable)
       .where(and(
         eq(productCatalogTable.space_id, spaceId),
@@ -155,7 +216,6 @@ router.get("/v1/public/spaces/:id", async (req, res): Promise<void> => {
       .orderBy(asc(productCatalogTable.price)),
   ]);
 
-  // If this space has no own images and has a parent, fall back to parent's images
   let images = ownImages;
   let imagesFromParent = false;
 
@@ -180,6 +240,128 @@ router.get("/v1/public/spaces/:id", async (req, res): Promise<void> => {
       pricing_tiers: pricingTiers,
     },
   });
+});
+
+/* ───────────────────────────────────────────────────────
+   GET /api/v1/public/spaces/:id/availability
+   Query: start_date (YYYY-MM-DD), end_date (YYYY-MM-DD)
+──────────────────────────────────────────────────────── */
+router.get("/v1/public/spaces/:id/availability", async (req, res): Promise<void> => {
+  const spaceId = Number(req.params.id);
+  if (!spaceId) { res.status(400).json({ error: "Invalid space id" }); return; }
+
+  const { start_date, end_date } = req.query as Record<string, string>;
+  if (!start_date || !end_date) {
+    res.status(400).json({ error: "start_date and end_date are required (YYYY-MM-DD)" });
+    return;
+  }
+
+  // Get blocked dates from space_availability table
+  const blockedDates = await db
+    .select({
+      date: spaceAvailabilityTable.date,
+      is_available: spaceAvailabilityTable.is_available,
+      block_reason: spaceAvailabilityTable.block_reason,
+    })
+    .from(spaceAvailabilityTable)
+    .where(
+      and(
+        eq(spaceAvailabilityTable.space_id, spaceId),
+        gte(spaceAvailabilityTable.date, start_date),
+        lte(spaceAvailabilityTable.date, end_date),
+      ),
+    );
+
+  // Get confirmed bookings that overlap the date range
+  const overlappingBookings = await db
+    .select({
+      id: bookingsTable.id,
+      booking_ref: bookingsTable.booking_ref,
+      check_in_date: bookingsTable.check_in_date,
+      check_out_date: bookingsTable.check_out_date,
+      booking_status: bookingsTable.booking_status,
+    })
+    .from(bookingsTable)
+    .where(
+      and(
+        eq(bookingsTable.space_id, spaceId),
+        or(
+          and(
+            lte(bookingsTable.check_in_date as any, end_date),
+            gte(bookingsTable.check_out_date as any, start_date),
+          ),
+        ),
+        inArray(bookingsTable.booking_status, ["Confirmed", "Pending", "Active"]),
+        eq(bookingsTable.status, "Active"),
+      ),
+    );
+
+  // Determine overall availability
+  const manuallyBlocked = blockedDates.filter((d) => !d.is_available);
+  const isAvailable = manuallyBlocked.length === 0 && overlappingBookings.length === 0;
+
+  res.json({
+    success: true,
+    data: {
+      space_id: spaceId,
+      start_date,
+      end_date,
+      is_available: isAvailable,
+      blocked_dates: manuallyBlocked.map((d) => ({
+        date: d.date,
+        reason: d.block_reason ?? "Unavailable",
+      })),
+      booked_periods: overlappingBookings.map((b) => ({
+        booking_ref: b.booking_ref,
+        check_in: b.check_in_date,
+        check_out: b.check_out_date,
+        status: b.booking_status,
+      })),
+    },
+  });
+});
+
+/* ───────────────────────────────────────────────────────
+   GET /api/v1/public/properties
+──────────────────────────────────────────────────────── */
+router.get("/v1/public/properties", async (_req, res): Promise<void> => {
+  const properties = await db
+    .select({
+      id: propertiesTable.id,
+      name: propertiesTable.name,
+      address: propertiesTable.address,
+      city: propertiesTable.city,
+      state: propertiesTable.state,
+      postcode: propertiesTable.postcode,
+      country: propertiesTable.country_code,
+      lat: propertiesTable.lat,
+      lng: propertiesTable.lng,
+      description: propertiesTable.description,
+      approval_status: propertiesTable.approval_status,
+    })
+    .from(propertiesTable)
+    .orderBy(asc(propertiesTable.name));
+
+  const allSpaces = await db
+    .select({ property_id: spacesTable.property_id })
+    .from(spacesTable)
+    .where(eq(spacesTable.status, "Active"));
+
+  const spacesCountByProperty = new Map<number, number>();
+  for (const s of allSpaces) {
+    if (s.property_id) {
+      spacesCountByProperty.set(s.property_id, (spacesCountByProperty.get(s.property_id) ?? 0) + 1);
+    }
+  }
+
+  const data = properties
+    .filter((p) => p.approval_status === "Approved" || true) // show all; landing page can filter
+    .map((p) => ({
+      ...p,
+      active_spaces: spacesCountByProperty.get(p.id) ?? 0,
+    }));
+
+  res.json({ success: true, data, meta: { total: data.length } });
 });
 
 export default router;

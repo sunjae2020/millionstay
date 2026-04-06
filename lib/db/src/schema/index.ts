@@ -28,4 +28,5 @@ export * from "./product_catalog";
 export * from "./space_images";
 export * from "./users";
 export * from "./promotions";
+export * from "./guest_users";
 export * from "./beneficiaries";
