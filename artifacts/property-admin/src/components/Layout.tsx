@@ -37,6 +37,8 @@ import {
   Palette,
   Plug,
   LogOut,
+  Menu,
+  X,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
@@ -310,30 +312,78 @@ function SidebarFooter() {
   );
 }
 
+function SidebarLogo({ logo, brandName }: { logo?: string; brandName: string }) {
+  return (
+    <div className="h-14 flex items-center px-4 border-b border-sidebar-border flex-shrink-0">
+      {logo ? (
+        <img
+          src={logo}
+          alt={brandName}
+          className="max-h-8 max-w-[160px] object-contain"
+        />
+      ) : (
+        <div className="flex items-center gap-2">
+          <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center">
+            <Building2 className="h-4 w-4 text-white" />
+          </div>
+          <span className="text-sidebar-foreground font-semibold text-sm">{brandName}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { logo, brandName } = useBrand();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  /* Auto-close sidebar on route change (mobile) */
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location]);
+
+  /* Prevent body scroll when sidebar is open on mobile */
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [sidebarOpen]);
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-56 flex-shrink-0 bg-sidebar flex flex-col">
-        {/* Logo */}
-        <div className="h-14 flex items-center px-4 border-b border-sidebar-border">
-          {logo ? (
-            <img
-              src={logo}
-              alt={brandName}
-              className="max-h-8 max-w-[160px] object-contain"
-            />
-          ) : (
-            <div className="flex items-center gap-2">
-              <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center">
-                <Building2 className="h-4 w-4 text-white" />
-              </div>
-              <span className="text-sidebar-foreground font-semibold text-sm">{brandName}</span>
-            </div>
-          )}
+      {/* ── Mobile backdrop ───────────────────────────────────── */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* ── Sidebar ──────────────────────────────────────────── */}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 w-56 bg-sidebar flex flex-col",
+          "transition-all duration-300 ease-in-out",
+          "lg:static lg:z-auto lg:flex-shrink-0 lg:translate-x-0 lg:opacity-100 lg:visible lg:pointer-events-auto",
+          sidebarOpen
+            ? "translate-x-0 opacity-100 visible pointer-events-auto"
+            : "-translate-x-full opacity-0 invisible pointer-events-none"
+        )}
+      >
+        {/* Logo — with close button on mobile */}
+        <div className="relative flex-shrink-0">
+          <SidebarLogo logo={logo} brandName={brandName} />
+          <button
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md hover:bg-sidebar-accent text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close menu"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
 
         {/* Navigation */}
@@ -364,8 +414,38 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <SidebarFooter />
       </aside>
 
-      {/* Main content */}
-      <main className="flex-1 overflow-auto">{children}</main>
+      {/* ── Main content area ─────────────────────────────────── */}
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+        {/* Mobile top bar (hidden on lg+) */}
+        <header className="h-14 flex items-center gap-3 px-4 border-b bg-card flex-shrink-0 lg:hidden">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 rounded-md hover:bg-muted transition-colors text-foreground/70 hover:text-foreground"
+            aria-label="Open menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+
+          {/* Logo / brand in mobile header */}
+          {logo ? (
+            <img
+              src={logo}
+              alt={brandName}
+              className="max-h-7 max-w-[130px] object-contain"
+            />
+          ) : (
+            <div className="flex items-center gap-2">
+              <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
+                <Building2 className="h-4 w-4 text-white" />
+              </div>
+              <span className="font-semibold text-sm truncate">{brandName}</span>
+            </div>
+          )}
+        </header>
+
+        {/* Page content */}
+        <main className="flex-1 overflow-auto">{children}</main>
+      </div>
     </div>
   );
 }
