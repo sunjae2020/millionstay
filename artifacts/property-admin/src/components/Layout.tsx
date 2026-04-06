@@ -39,8 +39,6 @@ import {
   LogOut,
   Menu,
   X,
-  PanelLeftClose,
-  PanelLeftOpen,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
@@ -393,10 +391,37 @@ function SidebarFooter({ collapsed }: { collapsed?: boolean }) {
   );
 }
 
-function SidebarLogo({ logo, brandName, collapsed }: { logo?: string; brandName: string; collapsed?: boolean }) {
+function TriangleLeft({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 10 10" className={className} fill="currentColor">
+      <polygon points="8,1 1.5,5 8,9" />
+    </svg>
+  );
+}
+
+function TriangleRight({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 10 10" className={className} fill="currentColor">
+      <polygon points="2,1 8.5,5 2,9" />
+    </svg>
+  );
+}
+
+function SidebarLogo({
+  logo,
+  brandName,
+  collapsed,
+  onToggle,
+}: {
+  logo?: string;
+  brandName: string;
+  collapsed?: boolean;
+  onToggle?: () => void;
+}) {
   if (collapsed) {
     return (
-      <div className="h-14 flex items-center justify-center border-b border-sidebar-border flex-shrink-0">
+      <div className="h-14 flex items-center justify-center border-b border-sidebar-border flex-shrink-0 relative">
+        {/* Favicon symbol only */}
         {logo ? (
           <img src={logo} alt={brandName} className="h-7 w-7 object-contain rounded" />
         ) : (
@@ -404,26 +429,41 @@ function SidebarLogo({ logo, brandName, collapsed }: { logo?: string; brandName:
             <Building2 className="h-4 w-4 text-white" />
           </div>
         )}
+        {/* Expand triangle — right edge */}
+        <button
+          onClick={onToggle}
+          title="Expand sidebar"
+          className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10 h-5 w-5 rounded-full bg-sidebar border border-sidebar-border items-center justify-center text-sidebar-foreground/50 hover:text-sidebar-primary hover:border-sidebar-primary transition-colors shadow-sm"
+        >
+          <TriangleRight className="h-2.5 w-2.5" />
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="h-14 flex items-center px-4 border-b border-sidebar-border flex-shrink-0">
-      {logo ? (
-        <img
-          src={logo}
-          alt={brandName}
-          className="max-h-8 max-w-[160px] object-contain"
-        />
-      ) : (
-        <div className="flex items-center gap-2">
-          <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center">
-            <Building2 className="h-4 w-4 text-white" />
-          </div>
-          <span className="text-sidebar-foreground font-semibold text-sm">{brandName}</span>
-        </div>
-      )}
+    <div className="h-14 flex items-center px-3 border-b border-sidebar-border flex-shrink-0 gap-2">
+      {/* Logo or icon+name */}
+      <div className="flex-1 min-w-0 flex items-center gap-2">
+        {logo ? (
+          <img src={logo} alt={brandName} className="max-h-8 max-w-[130px] object-contain" />
+        ) : (
+          <>
+            <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
+              <Building2 className="h-4 w-4 text-white" />
+            </div>
+            <span className="text-sidebar-foreground font-semibold text-sm truncate">{brandName}</span>
+          </>
+        )}
+      </div>
+      {/* Collapse triangle button — desktop only */}
+      <button
+        onClick={onToggle}
+        title="Collapse sidebar"
+        className="hidden md:flex flex-shrink-0 h-6 w-6 rounded items-center justify-center text-sidebar-foreground/40 hover:text-sidebar-primary hover:bg-sidebar-accent transition-colors"
+      >
+        <TriangleLeft className="h-3 w-3" />
+      </button>
     </div>
   );
 }
@@ -490,9 +530,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
             : "-translate-x-full opacity-0 invisible pointer-events-none"
         )}
       >
-        {/* Logo */}
+        {/* Logo + collapse toggle */}
         <div className="relative flex-shrink-0">
-          <SidebarLogo logo={logo} brandName={brandName} collapsed={collapsed} />
+          <SidebarLogo
+            logo={logo}
+            brandName={brandName}
+            collapsed={collapsed}
+            onToggle={toggleCollapsed}
+          />
           {/* Mobile close button */}
           <button
             className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md hover:bg-sidebar-accent text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors md:hidden"
@@ -536,26 +581,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Footer */}
         <SidebarFooter collapsed={collapsed} />
-
-        {/* Collapse toggle — desktop only */}
-        <button
-          onClick={toggleCollapsed}
-          className={cn(
-            "hidden md:flex items-center justify-center border-t border-sidebar-border",
-            "h-9 w-full text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors",
-            collapsed ? "px-0" : "gap-2 px-3 text-xs"
-          )}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? (
-            <PanelLeftOpen className="h-4 w-4" />
-          ) : (
-            <>
-              <PanelLeftClose className="h-4 w-4" />
-              <span>Collapse</span>
-            </>
-          )}
-        </button>
       </aside>
 
       {/* ── Main content area ─────────────────────────────────── */}
