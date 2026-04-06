@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
-import { applyPrimaryColor, saveTheme, loadTheme } from "@/lib/theme";
+import { applyPrimaryColor, applySidebarTheme, saveTheme, loadTheme } from "@/lib/theme";
 import { useBrand } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,10 +50,15 @@ export function Design() {
   });
 
   const primaryColor = watch("primary_color");
+  const sidebarTheme = watch("sidebar_theme");
 
   useEffect(() => {
     applyPrimaryColor(primaryColor);
   }, [primaryColor]);
+
+  useEffect(() => {
+    applySidebarTheme(sidebarTheme);
+  }, [sidebarTheme]);
 
   function onSubmit(data: DesignForm) {
     saveTheme({
@@ -63,6 +68,8 @@ export function Design() {
       logo: logoPreview,
       favicon: faviconPreview,
     });
+    applyPrimaryColor(data.primary_color);
+    applySidebarTheme(data.sidebar_theme);
     refresh();
     toast({ title: "Saved", description: "Design settings have been updated." });
   }

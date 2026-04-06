@@ -58,6 +58,24 @@ export function applyPrimaryColor(hex: string) {
   root.style.setProperty("--sidebar-primary-foreground", "0 0% 100%");
 }
 
+export function applySidebarTheme(theme: string) {
+  const root = document.documentElement;
+  if (theme === "light") {
+    root.style.setProperty("--sidebar", "0 0% 98%");
+    root.style.setProperty("--sidebar-foreground", "222 47% 15%");
+    root.style.setProperty("--sidebar-border", "220 13% 88%");
+    root.style.setProperty("--sidebar-accent", "220 14% 93%");
+    root.style.setProperty("--sidebar-accent-foreground", "222 47% 15%");
+  } else {
+    // dark (default)
+    root.style.setProperty("--sidebar", "222 47% 11%");
+    root.style.setProperty("--sidebar-foreground", "210 40% 90%");
+    root.style.setProperty("--sidebar-border", "222 40% 18%");
+    root.style.setProperty("--sidebar-accent", "222 40% 18%");
+    root.style.setProperty("--sidebar-accent-foreground", "210 40% 90%");
+  }
+}
+
 const THEME_KEY = "ms_theme_settings";
 
 export function saveTheme(settings: Partial<ThemeSettings>) {
@@ -79,4 +97,5 @@ export function initTheme() {
   if (theme.primary_color) {
     applyPrimaryColor(theme.primary_color);
   }
+  applySidebarTheme(theme.sidebar_theme ?? "dark");
 }
