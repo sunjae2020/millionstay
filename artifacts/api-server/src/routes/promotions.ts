@@ -1,14 +1,32 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, and, SQL } from "drizzle-orm";
 import { db, promotionsTable } from "@workspace/db";
-import {
-  ListPromotionsQueryParams,
-  CreatePromotionBody,
-  GetPromotionParams,
-  UpdatePromotionParams,
-  UpdatePromotionBody,
-  DeletePromotionParams,
-} from "@workspace/api-zod";
+import * as z from "zod/v4";
+
+const ListPromotionsQueryParams = z.object({
+  search: z.string().optional(),
+  status: z.string().optional(),
+  promotion_type: z.string().optional(),
+});
+
+const CreatePromotionBody = z.object({
+  name: z.string(),
+  description: z.string().optional().nullable(),
+  promotion_type: z.string().optional().nullable(),
+  discount_percentage: z.coerce.number().optional().nullable(),
+  fixed_discount: z.coerce.number().optional().nullable(),
+  term_type: z.string().optional().nullable(),
+  max_uses: z.coerce.number().int().optional().nullable(),
+  start_date: z.coerce.date().optional().nullable(),
+  end_date: z.coerce.date().optional().nullable(),
+  status: z.string().optional().default("Active"),
+  notes: z.string().optional().nullable(),
+});
+
+const GetPromotionParams = z.object({ id: z.coerce.number().int() });
+const UpdatePromotionParams = z.object({ id: z.coerce.number().int() });
+const UpdatePromotionBody = CreatePromotionBody.partial();
+const DeletePromotionParams = z.object({ id: z.coerce.number().int() });
 
 const router: IRouter = Router();
 

@@ -28,6 +28,8 @@ tags:
     description: Contact management
   - name: accounts
     description: Account management
+  - name: beneficiaries
+    description: Beneficiary management
   - name: lookup
     description: Lookup endpoints for LookupField dialogs
   - name: tasks
@@ -38,6 +40,16 @@ tags:
     description: Service host management
   - name: bookings
     description: Booking management
+  - name: promotions
+    description: Promotion management
+  - name: work-orders
+    description: Work order management
+  - name: invoices
+    description: Invoice management
+  - name: contracts
+    description: Contract management
+  - name: contract-products
+    description: Contract product management
 
 paths:
   /healthz:
@@ -2747,6 +2759,237 @@ paths:
               schema:
                 $ref: "#/components/schemas/WorkOrder"
 
+  # ─────────────────────────────────────────────
+  # BENEFICIARIES
+  # ─────────────────────────────────────────────
+  /v1/beneficiaries:
+    get:
+      operationId: listBeneficiaries
+      tags: [beneficiaries]
+      summary: List beneficiaries
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: contract_product_id
+          in: query
+          schema:
+            type: integer
+        - name: account_id
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of beneficiaries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BeneficiaryResponse"
+    post:
+      operationId: createBeneficiary
+      tags: [beneficiaries]
+      summary: Create beneficiary
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBeneficiaryBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BeneficiaryResponse"
+
+  /v1/beneficiaries/{id}:
+    get:
+      operationId: getBeneficiary
+      tags: [beneficiaries]
+      summary: Get beneficiary by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Beneficiary detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BeneficiaryResponse"
+        "404":
+          description: Not found
+    put:
+      operationId: updateBeneficiary
+      tags: [beneficiaries]
+      summary: Update beneficiary
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBeneficiaryBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BeneficiaryResponse"
+    delete:
+      operationId: deleteBeneficiary
+      tags: [beneficiaries]
+      summary: Delete beneficiary
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /v1/promotions:
+    get:
+      operationId: listPromotions
+      tags: [promotions]
+      summary: List promotions
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: promotion_type
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of promotions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PromotionResponse"
+    post:
+      operationId: createPromotion
+      tags: [promotions]
+      summary: Create promotion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePromotionBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PromotionResponse"
+  /v1/promotions/{id}:
+    get:
+      operationId: getPromotion
+      tags: [promotions]
+      summary: Get promotion
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Promotion
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PromotionResponse"
+    put:
+      operationId: updatePromotion
+      tags: [promotions]
+      summary: Update promotion
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePromotionBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PromotionResponse"
+    delete:
+      operationId: deletePromotion
+      tags: [promotions]
+      summary: Delete promotion
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+  /v1/lookup/promotions:
+    get:
+      operationId: lookupPromotions
+      tags: [lookup]
+      summary: Lookup promotions
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: term_type
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Promotion lookup results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LookupItem"
+
 components:
   schemas:
     HealthStatus:
@@ -4988,4 +5231,234 @@ components:
       properties:
         notes:
           type: ["string", "null"]
+      required: []
+
+    # ── BENEFICIARIES ──────────────────────────────
+    BeneficiaryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        contract_product_id:
+          type: ["integer", "null"]
+        account_id:
+          type: integer
+        commission_id:
+          type: ["integer", "null"]
+        commission_type:
+          type: string
+        split_percentage:
+          type: ["number", "null"]
+        fixed_amount:
+          type: ["number", "null"]
+        priority:
+          type: ["integer", "null"]
+        notes:
+          type: ["string", "null"]
+        status:
+          type: string
+        account_name:
+          type: ["string", "null"]
+        commission_name:
+          type: ["string", "null"]
+        contract_product_name:
+          type: ["string", "null"]
+        created_at:
+          type: string
+        updated_at:
+          type: string
+      required: [id, name, account_id, commission_type, status, created_at, updated_at]
+
+    CreateBeneficiaryBody:
+      type: object
+      properties:
+        name:
+          type: string
+        contract_product_id:
+          type: ["integer", "null"]
+        account_id:
+          type: integer
+        commission_id:
+          type: ["integer", "null"]
+        commission_type:
+          type: string
+          default: Percentage
+        split_percentage:
+          type: ["number", "null"]
+        fixed_amount:
+          type: ["number", "null"]
+        priority:
+          type: ["integer", "null"]
+        notes:
+          type: ["string", "null"]
+        status:
+          type: string
+          default: Active
+      required: [name, account_id, commission_type]
+
+    UpdateBeneficiaryBody:
+      type: object
+      properties:
+        name:
+          type: string
+        contract_product_id:
+          type: ["integer", "null"]
+        account_id:
+          type: integer
+        commission_id:
+          type: ["integer", "null"]
+        commission_type:
+          type: string
+        split_percentage:
+          type: ["number", "null"]
+        fixed_amount:
+          type: ["number", "null"]
+        priority:
+          type: ["integer", "null"]
+        notes:
+          type: ["string", "null"]
+        status:
+          type: string
+      required: []
+
+    PromotionResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        code:
+          type: ["string", "null"]
+        term_type:
+          type: string
+        promotion_type:
+          type: string
+        discount_percentage:
+          type: ["number", "null"]
+        discount_amount:
+          type: ["number", "null"]
+        free_nights:
+          type: ["integer", "null"]
+        min_stay_weeks:
+          type: ["integer", "null"]
+        max_stay_weeks:
+          type: ["integer", "null"]
+        min_stay_nights:
+          type: ["integer", "null"]
+        max_uses:
+          type: ["integer", "null"]
+        max_uses_per_account:
+          type: ["integer", "null"]
+        applicable_to:
+          type: ["string", "null"]
+        billing_frequency:
+          type: ["string", "null"]
+        valid_from:
+          type: ["string", "null"]
+        valid_to:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        terms:
+          type: ["string", "null"]
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required: [id, name]
+
+    CreatePromotionBody:
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: ["string", "null"]
+        term_type:
+          type: string
+          default: ShortTerm
+        promotion_type:
+          type: string
+          default: Percentage
+        discount_percentage:
+          type: ["number", "null"]
+        discount_amount:
+          type: ["number", "null"]
+        free_nights:
+          type: ["integer", "null"]
+        min_stay_weeks:
+          type: ["integer", "null"]
+        max_stay_weeks:
+          type: ["integer", "null"]
+        min_stay_nights:
+          type: ["integer", "null"]
+        max_uses:
+          type: ["integer", "null"]
+        max_uses_per_account:
+          type: ["integer", "null"]
+        applicable_to:
+          type: ["string", "null"]
+        billing_frequency:
+          type: ["string", "null"]
+        valid_from:
+          type: ["string", "null"]
+        valid_to:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        terms:
+          type: ["string", "null"]
+        status:
+          type: string
+          default: Draft
+      required: [name]
+
+    UpdatePromotionBody:
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: ["string", "null"]
+        term_type:
+          type: string
+        promotion_type:
+          type: string
+        discount_percentage:
+          type: ["number", "null"]
+        discount_amount:
+          type: ["number", "null"]
+        free_nights:
+          type: ["integer", "null"]
+        min_stay_weeks:
+          type: ["integer", "null"]
+        max_stay_weeks:
+          type: ["integer", "null"]
+        min_stay_nights:
+          type: ["integer", "null"]
+        max_uses:
+          type: ["integer", "null"]
+        max_uses_per_account:
+          type: ["integer", "null"]
+        applicable_to:
+          type: ["string", "null"]
+        billing_frequency:
+          type: ["string", "null"]
+        valid_from:
+          type: ["string", "null"]
+        valid_to:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        terms:
+          type: ["string", "null"]
+        status:
+          type: string
       required: []

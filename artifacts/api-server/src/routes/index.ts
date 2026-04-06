@@ -30,6 +30,7 @@ import stripeRouter from "./stripe";
 import integrationsRouter from "./integrations";
 import spaceImagesRouter from "./space-images";
 import promotionsRouter from "./promotions";
+import beneficiariesRouter from "./beneficiaries";
 
 const router: IRouter = Router();
 
@@ -64,5 +65,6 @@ router.use(stripeRouter);
 router.use(integrationsRouter);
 router.use(spaceImagesRouter);
 router.use(promotionsRouter);
+router.use(beneficiariesRouter);
 
 export default router;

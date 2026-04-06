@@ -22,14 +22,14 @@ import { Link } from "wouter";
 const ACCOUNT_TYPE_COLORS: Record<string, string> = {
   Guest: "bg-blue-100 text-blue-700 border-blue-200",
   SpaceOwner: "bg-purple-100 text-purple-700 border-purple-200",
-  Landlord: "bg-purple-100 text-purple-700 border-purple-200",
-  Agent: "bg-teal-100 text-teal-700 border-teal-200",
+  Broker: "bg-teal-100 text-teal-700 border-teal-200",
+  Manager: "bg-cyan-100 text-cyan-700 border-cyan-200",
+  RealEstateAgent: "bg-emerald-100 text-emerald-700 border-emerald-200",
   ServiceHost: "bg-orange-100 text-orange-700 border-orange-200",
-  Staff: "bg-gray-100 text-gray-700 border-gray-200",
   Partner: "bg-indigo-100 text-indigo-700 border-indigo-200",
 };
 
-const ACCOUNT_TYPES_WITH_FINANCE = ["SpaceOwner", "Agent", "ServiceHost", "Partner", "Landlord"];
+const ACCOUNT_TYPES_WITH_FINANCE = ["SpaceOwner", "Broker", "Manager", "RealEstateAgent", "ServiceHost", "Partner"];
 
 const CURRENCIES = ["AUD", "USD", "CNY", "KRW", "JPY", "GBP", "EUR", "SGD", "NZD"];
 
@@ -236,10 +236,10 @@ export default function AccountDetail() {
                   <SelectContent>
                     <SelectItem value="Guest">Guest</SelectItem>
                     <SelectItem value="SpaceOwner">Space Owner</SelectItem>
-                    <SelectItem value="Landlord">Landlord</SelectItem>
-                    <SelectItem value="Agent">Agent</SelectItem>
+                    <SelectItem value="Broker">Broker</SelectItem>
+                    <SelectItem value="Manager">Manager</SelectItem>
+                    <SelectItem value="RealEstateAgent">Real Estate Agent</SelectItem>
                     <SelectItem value="ServiceHost">Service Host</SelectItem>
-                    <SelectItem value="Staff">Staff</SelectItem>
                     <SelectItem value="Partner">Partner</SelectItem>
                   </SelectContent>
                 </Select>

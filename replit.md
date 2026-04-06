@@ -59,7 +59,8 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 
 **Products:**
 - Contract Products — Space × Promotion = Product; new fields: promotion_id (FK), term_type, effective_weekly_rate (auto-calc), billing_frequency; list shows Term/Promotion/Eff.Rate/Billing columns
-- Promotions — 3 term types: ShortTerm (<4w, Weekly, no discount), MidTerm (4–25w, Biweekly, 5%), LongTerm (≥26w, Monthly, 7.5%); fields: term_type, min/max_stay_weeks, billing_frequency, discount_percentage; 3 seed records created; lookup endpoint at /v1/lookup/promotions
+- Promotions — 3 term types: ShortTerm (<4w, Weekly, no discount), MidTerm (4–25w, Biweekly, 5%), LongTerm (≥26w, Monthly, 7.5%); fields: term_type, min/max_stay_weeks, billing_frequency, discount_percentage; 3 seed records created; lookup endpoint at /v1/lookup/promotions; CRUD in openapi.yaml + codegen done
+- Beneficiaries — full-stack CRUD; links Account + Commission + Contract Product; commission_type (Percentage/Fixed), split_percentage, fixed_amount, priority; DB schema + API route + BeneficiaryList + BeneficiaryDetail + App.tsx routing all done
 
 **Contracts:**
 - Contracts — CRUD + booking_ref enrichment, contract details
@@ -84,7 +85,7 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 
 ## Database Schema (`lib/db`)
 
-Tables (26 total): `suburbs`, `properties`, `space_options`, `space_policies`, `spaces`, `space_option_maps`, `space_blocked_dates`, `commissions`, `payment_info`, `contacts`, `accounts`, `tasks`, `leads`, `service_hosts`, `bookings`, `booking_documents`, `contract_products`, `contracts`, `invoices`, `work_orders`, `space_availability`, `recurring_schedule`, `system_log`, `email_template` (10 seeded templates), `email_log`, `promotions`
+Tables (27 total): `suburbs`, `properties`, `space_options`, `space_policies`, `spaces`, `space_option_maps`, `space_blocked_dates`, `commissions`, `payment_info`, `contacts`, `accounts`, `tasks`, `leads`, `service_hosts`, `bookings`, `booking_documents`, `contract_products`, `contracts`, `invoices`, `work_orders`, `space_availability`, `recurring_schedule`, `system_log`, `email_template` (10 seeded templates), `email_log`, `promotions`, `beneficiaries`
 
 ## API Client (`lib/api-client-react`)
 
@@ -96,5 +97,6 @@ Generated from OpenAPI spec (`lib/api-spec/openapi.yaml`) via Orval. Hooks for a
 - **enrichXxx()**: server-side function that joins related data and adds enriched fields (e.g., `property_name`, `booking_ref`)
 - **FSM transitions**: separate POST endpoints e.g. `/v1/work-orders/:id/start`
 - **Ref format**: MS-{TYPE}-YYYY-NNNNN (e.g., MS-WO-2026-00001)
-- **Zod imports**: use `@workspace/api-zod` (never `zod` directly in api-server)
+- **Zod imports**: use `@workspace/api-zod` (preferred in api-server routes); if types not yet generated (missing from openapi.yaml), use inline `zod/v4` schemas instead
+- **Account types**: Guest, SpaceOwner (absorbed Landlord), Broker (renamed Agent), Manager, RealEstateAgent, ServiceHost, Partner — Staff removed from accounts → admin_users
 - **DB imports**: use `@workspace/db` (not `@workspace/db/client`)

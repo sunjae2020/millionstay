@@ -49,6 +49,7 @@ import ProductDetail from "@/pages/products/ProductDetail";
 import PromotionList from "@/pages/products/PromotionList";
 import PromotionDetail from "@/pages/products/PromotionDetail";
 import BeneficiaryList from "@/pages/products/BeneficiaryList";
+import BeneficiaryDetail from "@/pages/products/BeneficiaryDetail";
 
 // Finance
 import InvoiceList from "@/pages/finance/InvoiceList";
@@ -183,6 +184,8 @@ function Router() {
       <Route path="/products/promotions/new" component={PromotionDetail} />
       <Route path="/products/promotions/:id" component={PromotionDetail} />
       <Route path="/products/beneficiaries" component={BeneficiaryList} />
+      <Route path="/products/beneficiaries/new" component={BeneficiaryDetail} />
+      <Route path="/products/beneficiaries/:id" component={BeneficiaryDetail} />
 
       {/* ── FINANCE ───────────────────────────────────── */}
       <Route path="/finance/invoices" component={InvoiceList} />

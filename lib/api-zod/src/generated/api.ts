@@ -2405,14 +2405,9 @@ export const ListContractProductsResponseItem = zod.object({
   status: zod.string(),
   space_id: zod.number().nullish(),
   space_name: zod.string().nullish(),
-  promotion_id: zod.number().nullish(),
-  promotion_name: zod.string().nullish(),
-  term_type: zod.string().nullish(),
   weekly_rate: zod.number().nullish(),
   monthly_rate: zod.number().nullish(),
-  effective_weekly_rate: zod.number().nullish(),
   currency: zod.string(),
-  billing_frequency: zod.string().nullish(),
   bond_weeks: zod.number().nullish(),
   advance_weeks: zod.number().nullish(),
   min_stay_weeks: zod.number().nullish(),
@@ -2441,13 +2436,9 @@ export const CreateContractProductBody = zod.object({
   product_type: zod.string().nullish(),
   status: zod.string().nullish(),
   space_id: zod.number().nullish(),
-  promotion_id: zod.number().nullish(),
-  term_type: zod.string().nullish(),
   weekly_rate: zod.number().nullish(),
   monthly_rate: zod.number().nullish(),
-  effective_weekly_rate: zod.number().nullish(),
   currency: zod.string().nullish(),
-  billing_frequency: zod.string().nullish(),
   bond_weeks: zod.number().nullish(),
   advance_weeks: zod.number().nullish(),
   min_stay_weeks: zod.number().nullish(),
@@ -2477,14 +2468,9 @@ export const GetContractProductResponse = zod.object({
   status: zod.string(),
   space_id: zod.number().nullish(),
   space_name: zod.string().nullish(),
-  promotion_id: zod.number().nullish(),
-  promotion_name: zod.string().nullish(),
-  term_type: zod.string().nullish(),
   weekly_rate: zod.number().nullish(),
   monthly_rate: zod.number().nullish(),
-  effective_weekly_rate: zod.number().nullish(),
   currency: zod.string(),
-  billing_frequency: zod.string().nullish(),
   bond_weeks: zod.number().nullish(),
   advance_weeks: zod.number().nullish(),
   min_stay_weeks: zod.number().nullish(),
@@ -2514,13 +2500,9 @@ export const UpdateContractProductBody = zod.object({
   product_type: zod.string().nullish(),
   status: zod.string().nullish(),
   space_id: zod.number().nullish(),
-  promotion_id: zod.number().nullish(),
-  term_type: zod.string().nullish(),
   weekly_rate: zod.number().nullish(),
   monthly_rate: zod.number().nullish(),
-  effective_weekly_rate: zod.number().nullish(),
   currency: zod.string().nullish(),
-  billing_frequency: zod.string().nullish(),
   bond_weeks: zod.number().nullish(),
   advance_weeks: zod.number().nullish(),
   min_stay_weeks: zod.number().nullish(),
@@ -3615,6 +3597,131 @@ export const CancelWorkOrderResponse = zod.object({
 });
 
 /**
+ * @summary List beneficiaries
+ */
+export const ListBeneficiariesQueryParams = zod.object({
+  q: zod.coerce.string().optional(),
+  contract_product_id: zod.coerce.number().optional(),
+  account_id: zod.coerce.number().optional(),
+  status: zod.coerce.string().optional(),
+});
+
+export const ListBeneficiariesResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  contract_product_id: zod.number().nullish(),
+  account_id: zod.number(),
+  commission_id: zod.number().nullish(),
+  commission_type: zod.string(),
+  split_percentage: zod.number().nullish(),
+  fixed_amount: zod.number().nullish(),
+  priority: zod.number().nullish(),
+  notes: zod.string().nullish(),
+  status: zod.string(),
+  account_name: zod.string().nullish(),
+  commission_name: zod.string().nullish(),
+  contract_product_name: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+export const ListBeneficiariesResponse = zod.array(
+  ListBeneficiariesResponseItem,
+);
+
+/**
+ * @summary Create beneficiary
+ */
+export const createBeneficiaryBodyCommissionTypeDefault = `Percentage`;
+export const createBeneficiaryBodyStatusDefault = `Active`;
+
+export const CreateBeneficiaryBody = zod.object({
+  name: zod.string(),
+  contract_product_id: zod.number().nullish(),
+  account_id: zod.number(),
+  commission_id: zod.number().nullish(),
+  commission_type: zod
+    .string()
+    .default(createBeneficiaryBodyCommissionTypeDefault),
+  split_percentage: zod.number().nullish(),
+  fixed_amount: zod.number().nullish(),
+  priority: zod.number().nullish(),
+  notes: zod.string().nullish(),
+  status: zod.string().default(createBeneficiaryBodyStatusDefault),
+});
+
+/**
+ * @summary Get beneficiary by ID
+ */
+export const GetBeneficiaryParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetBeneficiaryResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  contract_product_id: zod.number().nullish(),
+  account_id: zod.number(),
+  commission_id: zod.number().nullish(),
+  commission_type: zod.string(),
+  split_percentage: zod.number().nullish(),
+  fixed_amount: zod.number().nullish(),
+  priority: zod.number().nullish(),
+  notes: zod.string().nullish(),
+  status: zod.string(),
+  account_name: zod.string().nullish(),
+  commission_name: zod.string().nullish(),
+  contract_product_name: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Update beneficiary
+ */
+export const UpdateBeneficiaryParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateBeneficiaryBody = zod.object({
+  name: zod.string().optional(),
+  contract_product_id: zod.number().nullish(),
+  account_id: zod.number().optional(),
+  commission_id: zod.number().nullish(),
+  commission_type: zod.string().optional(),
+  split_percentage: zod.number().nullish(),
+  fixed_amount: zod.number().nullish(),
+  priority: zod.number().nullish(),
+  notes: zod.string().nullish(),
+  status: zod.string().optional(),
+});
+
+export const UpdateBeneficiaryResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  contract_product_id: zod.number().nullish(),
+  account_id: zod.number(),
+  commission_id: zod.number().nullish(),
+  commission_type: zod.string(),
+  split_percentage: zod.number().nullish(),
+  fixed_amount: zod.number().nullish(),
+  priority: zod.number().nullish(),
+  notes: zod.string().nullish(),
+  status: zod.string(),
+  account_name: zod.string().nullish(),
+  commission_name: zod.string().nullish(),
+  contract_product_name: zod.string().nullish(),
+  created_at: zod.string(),
+  updated_at: zod.string(),
+});
+
+/**
+ * @summary Delete beneficiary
+ */
+export const DeleteBeneficiaryParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
  * @summary List promotions
  */
 export const ListPromotionsQueryParams = zod.object({
@@ -3627,8 +3734,8 @@ export const ListPromotionsResponseItem = zod.object({
   id: zod.number(),
   name: zod.string(),
   code: zod.string().nullish(),
-  term_type: zod.string(),
-  promotion_type: zod.string(),
+  term_type: zod.string().optional(),
+  promotion_type: zod.string().optional(),
   discount_percentage: zod.number().nullish(),
   discount_amount: zod.number().nullish(),
   free_nights: zod.number().nullish(),
@@ -3643,20 +3750,24 @@ export const ListPromotionsResponseItem = zod.object({
   valid_to: zod.string().nullish(),
   description: zod.string().nullish(),
   terms: zod.string().nullish(),
-  status: zod.string(),
-  created_at: zod.string(),
-  updated_at: zod.string(),
+  status: zod.string().optional(),
+  created_at: zod.coerce.date().optional(),
+  updated_at: zod.coerce.date().optional(),
 });
 export const ListPromotionsResponse = zod.array(ListPromotionsResponseItem);
 
 /**
  * @summary Create promotion
  */
+export const createPromotionBodyTermTypeDefault = `ShortTerm`;
+export const createPromotionBodyPromotionTypeDefault = `Percentage`;
+export const createPromotionBodyStatusDefault = `Draft`;
+
 export const CreatePromotionBody = zod.object({
   name: zod.string(),
   code: zod.string().nullish(),
-  term_type: zod.string().default("ShortTerm"),
-  promotion_type: zod.string().default("Percentage"),
+  term_type: zod.string().default(createPromotionBodyTermTypeDefault),
+  promotion_type: zod.string().default(createPromotionBodyPromotionTypeDefault),
   discount_percentage: zod.number().nullish(),
   discount_amount: zod.number().nullish(),
   free_nights: zod.number().nullish(),
@@ -3671,11 +3782,11 @@ export const CreatePromotionBody = zod.object({
   valid_to: zod.string().nullish(),
   description: zod.string().nullish(),
   terms: zod.string().nullish(),
-  status: zod.string().default("Draft"),
+  status: zod.string().default(createPromotionBodyStatusDefault),
 });
 
 /**
- * @summary Get promotion by ID
+ * @summary Get promotion
  */
 export const GetPromotionParams = zod.object({
   id: zod.coerce.number(),
@@ -3685,8 +3796,8 @@ export const GetPromotionResponse = zod.object({
   id: zod.number(),
   name: zod.string(),
   code: zod.string().nullish(),
-  term_type: zod.string(),
-  promotion_type: zod.string(),
+  term_type: zod.string().optional(),
+  promotion_type: zod.string().optional(),
   discount_percentage: zod.number().nullish(),
   discount_amount: zod.number().nullish(),
   free_nights: zod.number().nullish(),
@@ -3701,9 +3812,9 @@ export const GetPromotionResponse = zod.object({
   valid_to: zod.string().nullish(),
   description: zod.string().nullish(),
   terms: zod.string().nullish(),
-  status: zod.string(),
-  created_at: zod.string(),
-  updated_at: zod.string(),
+  status: zod.string().optional(),
+  created_at: zod.coerce.date().optional(),
+  updated_at: zod.coerce.date().optional(),
 });
 
 /**
@@ -3735,9 +3846,48 @@ export const UpdatePromotionBody = zod.object({
   status: zod.string().optional(),
 });
 
+export const UpdatePromotionResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  code: zod.string().nullish(),
+  term_type: zod.string().optional(),
+  promotion_type: zod.string().optional(),
+  discount_percentage: zod.number().nullish(),
+  discount_amount: zod.number().nullish(),
+  free_nights: zod.number().nullish(),
+  min_stay_weeks: zod.number().nullish(),
+  max_stay_weeks: zod.number().nullish(),
+  min_stay_nights: zod.number().nullish(),
+  max_uses: zod.number().nullish(),
+  max_uses_per_account: zod.number().nullish(),
+  applicable_to: zod.string().nullish(),
+  billing_frequency: zod.string().nullish(),
+  valid_from: zod.string().nullish(),
+  valid_to: zod.string().nullish(),
+  description: zod.string().nullish(),
+  terms: zod.string().nullish(),
+  status: zod.string().optional(),
+  created_at: zod.coerce.date().optional(),
+  updated_at: zod.coerce.date().optional(),
+});
+
 /**
  * @summary Delete promotion
  */
 export const DeletePromotionParams = zod.object({
   id: zod.coerce.number(),
 });
+
+/**
+ * @summary Lookup promotions
+ */
+export const LookupPromotionsQueryParams = zod.object({
+  q: zod.coerce.string().optional(),
+  term_type: zod.coerce.string().optional(),
+});
+
+export const LookupPromotionsResponseItem = zod.object({
+  id: zod.number(),
+  display: zod.string(),
+});
+export const LookupPromotionsResponse = zod.array(LookupPromotionsResponseItem);

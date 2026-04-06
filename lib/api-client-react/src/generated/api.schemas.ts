@@ -1339,20 +1339,10 @@ export interface ContractProduct {
   /** @nullable */
   space_name?: string | null;
   /** @nullable */
-  promotion_id?: number | null;
-  /** @nullable */
-  promotion_name?: string | null;
-  /** @nullable */
-  term_type?: string | null;
-  /** @nullable */
   weekly_rate?: number | null;
   /** @nullable */
   monthly_rate?: number | null;
-  /** @nullable */
-  effective_weekly_rate?: number | null;
   currency: string;
-  /** @nullable */
-  billing_frequency?: string | null;
   /** @nullable */
   bond_weeks?: number | null;
   /** @nullable */
@@ -1386,19 +1376,11 @@ export interface CreateContractProductBody {
   /** @nullable */
   space_id?: number | null;
   /** @nullable */
-  promotion_id?: number | null;
-  /** @nullable */
-  term_type?: string | null;
-  /** @nullable */
   weekly_rate?: number | null;
   /** @nullable */
   monthly_rate?: number | null;
   /** @nullable */
-  effective_weekly_rate?: number | null;
-  /** @nullable */
   currency?: string | null;
-  /** @nullable */
-  billing_frequency?: string | null;
   /** @nullable */
   bond_weeks?: number | null;
   /** @nullable */
@@ -1723,6 +1705,186 @@ export interface CancelWorkOrderBody {
   notes?: string | null;
 }
 
+export interface BeneficiaryResponse {
+  id: number;
+  name: string;
+  /** @nullable */
+  contract_product_id?: number | null;
+  account_id: number;
+  /** @nullable */
+  commission_id?: number | null;
+  commission_type: string;
+  /** @nullable */
+  split_percentage?: number | null;
+  /** @nullable */
+  fixed_amount?: number | null;
+  /** @nullable */
+  priority?: number | null;
+  /** @nullable */
+  notes?: string | null;
+  status: string;
+  /** @nullable */
+  account_name?: string | null;
+  /** @nullable */
+  commission_name?: string | null;
+  /** @nullable */
+  contract_product_name?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateBeneficiaryBody {
+  name: string;
+  /** @nullable */
+  contract_product_id?: number | null;
+  account_id: number;
+  /** @nullable */
+  commission_id?: number | null;
+  commission_type: string;
+  /** @nullable */
+  split_percentage?: number | null;
+  /** @nullable */
+  fixed_amount?: number | null;
+  /** @nullable */
+  priority?: number | null;
+  /** @nullable */
+  notes?: string | null;
+  status?: string;
+}
+
+export interface UpdateBeneficiaryBody {
+  name?: string;
+  /** @nullable */
+  contract_product_id?: number | null;
+  account_id?: number;
+  /** @nullable */
+  commission_id?: number | null;
+  commission_type?: string;
+  /** @nullable */
+  split_percentage?: number | null;
+  /** @nullable */
+  fixed_amount?: number | null;
+  /** @nullable */
+  priority?: number | null;
+  /** @nullable */
+  notes?: string | null;
+  status?: string;
+}
+
+export interface PromotionResponse {
+  id: number;
+  name: string;
+  /** @nullable */
+  code?: string | null;
+  term_type?: string;
+  promotion_type?: string;
+  /** @nullable */
+  discount_percentage?: number | null;
+  /** @nullable */
+  discount_amount?: number | null;
+  /** @nullable */
+  free_nights?: number | null;
+  /** @nullable */
+  min_stay_weeks?: number | null;
+  /** @nullable */
+  max_stay_weeks?: number | null;
+  /** @nullable */
+  min_stay_nights?: number | null;
+  /** @nullable */
+  max_uses?: number | null;
+  /** @nullable */
+  max_uses_per_account?: number | null;
+  /** @nullable */
+  applicable_to?: string | null;
+  /** @nullable */
+  billing_frequency?: string | null;
+  /** @nullable */
+  valid_from?: string | null;
+  /** @nullable */
+  valid_to?: string | null;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  terms?: string | null;
+  status?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CreatePromotionBody {
+  name: string;
+  /** @nullable */
+  code?: string | null;
+  term_type?: string;
+  promotion_type?: string;
+  /** @nullable */
+  discount_percentage?: number | null;
+  /** @nullable */
+  discount_amount?: number | null;
+  /** @nullable */
+  free_nights?: number | null;
+  /** @nullable */
+  min_stay_weeks?: number | null;
+  /** @nullable */
+  max_stay_weeks?: number | null;
+  /** @nullable */
+  min_stay_nights?: number | null;
+  /** @nullable */
+  max_uses?: number | null;
+  /** @nullable */
+  max_uses_per_account?: number | null;
+  /** @nullable */
+  applicable_to?: string | null;
+  /** @nullable */
+  billing_frequency?: string | null;
+  /** @nullable */
+  valid_from?: string | null;
+  /** @nullable */
+  valid_to?: string | null;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  terms?: string | null;
+  status?: string;
+}
+
+export interface UpdatePromotionBody {
+  name?: string;
+  /** @nullable */
+  code?: string | null;
+  term_type?: string;
+  promotion_type?: string;
+  /** @nullable */
+  discount_percentage?: number | null;
+  /** @nullable */
+  discount_amount?: number | null;
+  /** @nullable */
+  free_nights?: number | null;
+  /** @nullable */
+  min_stay_weeks?: number | null;
+  /** @nullable */
+  max_stay_weeks?: number | null;
+  /** @nullable */
+  min_stay_nights?: number | null;
+  /** @nullable */
+  max_uses?: number | null;
+  /** @nullable */
+  max_uses_per_account?: number | null;
+  /** @nullable */
+  applicable_to?: string | null;
+  /** @nullable */
+  billing_frequency?: string | null;
+  /** @nullable */
+  valid_from?: string | null;
+  /** @nullable */
+  valid_to?: string | null;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  terms?: string | null;
+  status?: string;
+}
+
 export type ListSuburbsParams = {
   country_code?: string;
   state?: string;
@@ -1907,125 +2069,20 @@ export type ListWorkOrdersParams = {
   property_id?: number;
 };
 
-export interface PromotionResponse {
-  id: number;
-  name: string;
-  /** @nullable */
-  code?: string | null;
-  /** @nullable */
-  term_type?: string | null;
-  promotion_type: string;
-  /** @nullable */
-  discount_percentage?: number | null;
-  /** @nullable */
-  discount_amount?: number | null;
-  /** @nullable */
-  free_nights?: number | null;
-  /** @nullable */
-  min_stay_weeks?: number | null;
-  /** @nullable */
-  max_stay_weeks?: number | null;
-  /** @nullable */
-  billing_frequency?: string | null;
-  /** @nullable */
-  valid_from?: string | null;
-  /** @nullable */
-  valid_to?: string | null;
-  /** @nullable */
-  min_stay_nights?: number | null;
-  /** @nullable */
-  max_uses?: number | null;
-  /** @nullable */
-  max_uses_per_account?: number | null;
-  /** @nullable */
-  applicable_to?: string | null;
-  /** @nullable */
-  description?: string | null;
-  /** @nullable */
-  terms?: string | null;
-  status: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface CreatePromotionBody {
-  name: string;
-  /** @nullable */
-  code?: string | null;
-  /** @nullable */
-  term_type?: string | null;
-  promotion_type: string;
-  /** @nullable */
-  discount_percentage?: number | null;
-  /** @nullable */
-  discount_amount?: number | null;
-  /** @nullable */
-  free_nights?: number | null;
-  /** @nullable */
-  min_stay_weeks?: number | null;
-  /** @nullable */
-  max_stay_weeks?: number | null;
-  /** @nullable */
-  billing_frequency?: string | null;
-  /** @nullable */
-  valid_from?: string | null;
-  /** @nullable */
-  valid_to?: string | null;
-  /** @nullable */
-  min_stay_nights?: number | null;
-  /** @nullable */
-  max_uses?: number | null;
-  /** @nullable */
-  max_uses_per_account?: number | null;
-  /** @nullable */
-  applicable_to?: string | null;
-  /** @nullable */
-  description?: string | null;
-  /** @nullable */
-  terms?: string | null;
-  status: string;
-}
-
-export interface UpdatePromotionBody {
-  name?: string;
-  /** @nullable */
-  code?: string | null;
-  /** @nullable */
-  term_type?: string | null;
-  promotion_type?: string;
-  /** @nullable */
-  discount_percentage?: number | null;
-  /** @nullable */
-  discount_amount?: number | null;
-  /** @nullable */
-  free_nights?: number | null;
-  /** @nullable */
-  min_stay_weeks?: number | null;
-  /** @nullable */
-  max_stay_weeks?: number | null;
-  /** @nullable */
-  billing_frequency?: string | null;
-  /** @nullable */
-  valid_from?: string | null;
-  /** @nullable */
-  valid_to?: string | null;
-  /** @nullable */
-  min_stay_nights?: number | null;
-  /** @nullable */
-  max_uses?: number | null;
-  /** @nullable */
-  max_uses_per_account?: number | null;
-  /** @nullable */
-  applicable_to?: string | null;
-  /** @nullable */
-  description?: string | null;
-  /** @nullable */
-  terms?: string | null;
+export type ListBeneficiariesParams = {
+  q?: string;
+  contract_product_id?: number;
+  account_id?: number;
   status?: string;
-}
+};
 
 export type ListPromotionsParams = {
   search?: string;
   status?: string;
   promotion_type?: string;
+};
+
+export type LookupPromotionsParams = {
+  q?: string;
+  term_type?: string;
 };
