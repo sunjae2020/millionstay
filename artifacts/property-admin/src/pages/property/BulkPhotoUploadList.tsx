@@ -72,6 +72,7 @@ export default function BulkPhotoUploadList() {
 
       <div className="p-6">
         <div className="border rounded-lg overflow-hidden bg-card">
+          <div className="overflow-x-auto">
           <table className="w-full min-w-max text-sm">
             <thead className="bg-muted/50 border-b">
               <tr>
@@ -139,6 +140,7 @@ export default function BulkPhotoUploadList() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
 

@@ -185,7 +185,8 @@ export default function BookingList() {
           <CalendarView bookings={bookings ?? []} />
         ) : (
           <div className="rounded-lg border bg-white overflow-hidden">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-max text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>
                   {["Booking Ref", "Guest", "Space", "Check-In", "Check-Out", "Nights", "Rate", "Status", "Source", "Actions"].map((h) => (
@@ -232,6 +233,7 @@ export default function BookingList() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </div>

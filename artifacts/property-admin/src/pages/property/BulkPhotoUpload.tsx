@@ -267,7 +267,8 @@ export default function BulkPhotoUpload() {
         {/* Matching table */}
         {groups.length > 0 && (
           <div className="border rounded-lg overflow-hidden bg-card">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-max text-sm">
               <thead className="bg-muted/50 border-b">
                 <tr>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Folder</th>
@@ -356,6 +357,7 @@ export default function BulkPhotoUpload() {
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         )}
 
