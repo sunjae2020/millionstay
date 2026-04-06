@@ -1,0 +1,40 @@
+{
+  "nav": {
+    "search": "Find a room",
+    "login": "Log in",
+    "signup": "Sign up",
+    "myBookings": "My Bookings"
+  },
+  "home": {
+    "hero_title": "Find your perfect home in Melbourne",
+    "hero_subtitle": "Safe, furnished rooms for students and digital nomads",
+    "search_button": "Search"
+  },
+  "space": {
+    "per_week": "/ week",
+    "min_stay": "Min {{weeks}} weeks",
+    "book_now": "Book Now",
+    "female_only": "Female Only",
+    "mixed": "Mixed Gender",
+    "entire": "Entire Space",
+    "room": "Room Space",
+    "bed": "Bed Space"
+  },
+  "booking": {
+    "step1": "Stay Details",
+    "step2": "Guest Info",
+    "step3": "Documents",
+    "step4": "Confirmed",
+    "check_in": "Check In",
+    "check_out": "Check Out",
+    "total_price": "Total Price",
+    "deposit": "Security Deposit",
+    "admin_fee": "Admin Fee",
+    "cleaning_fee": "Cleaning Fee"
+  },
+  "portal": {
+    "my_bookings": "My Bookings",
+    "my_invoices": "My Invoices",
+    "my_documents": "My Documents"
+  }
+}

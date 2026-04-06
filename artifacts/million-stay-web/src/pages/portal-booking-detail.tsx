@@ -1,0 +1,257 @@
+import React, { useEffect } from "react";
+import { useLocation, useParams, Link } from "wouter";
+import { useAuthStore } from "@/lib/store";
+import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { motion } from "framer-motion";
+import {
+  MapPin, Home, Calendar, Users, FileText, FileImage,
+  CheckCircle2, Clock, AlertCircle, Download, ChevronLeft,
+  CreditCard,
+} from "lucide-react";
+import { format } from "date-fns";
+
+function formatDate(d: string | null) {
+  if (!d) return "—";
+  try { return format(new Date(d), "dd/MM/yyyy"); } catch { return d; }
+}
+
+const STATUS_COLORS: Record<string, string> = {
+  Draft: "bg-gray-100 text-gray-700",
+  PendingPayment: "bg-yellow-100 text-yellow-700",
+  PendingApproval: "bg-amber-100 text-amber-700",
+  Confirmed: "bg-blue-100 text-blue-700",
+  Active: "bg-green-100 text-green-700",
+  Cancelled: "bg-red-100 text-red-700",
+  Completed: "bg-blue-100 text-blue-700",
+};
+
+const DOC_STATUS: Record<string, { color: string; icon: typeof CheckCircle2 }> = {
+  Pending: { color: "text-amber-600 bg-amber-50 border-amber-100", icon: Clock },
+  Approved: { color: "text-green-700 bg-green-50 border-green-100", icon: CheckCircle2 },
+  Rejected: { color: "text-red-600 bg-red-50 border-red-100", icon: AlertCircle },
+};
+
+export default function PortalBookingDetail() {
+  const { id } = useParams<{ id: string }>();
+  const [, setLocation] = useLocation();
+  const { token } = useAuthStore();
+
+  useEffect(() => {
+    if (!token) setLocation(`/login?redirect=/portal/bookings/${id}`);
+  }, [token, setLocation, id]);
+
+  const [bookingData, setBookingData] = React.useState<Record<string, unknown> | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    if (!token || !id) return;
+    fetch(`${import.meta.env.VITE_API_URL ?? ""}/api/v1/guest/bookings/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((j) => { setBookingData(j.data); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [token, id]);
+
+  if (!token) return null;
+
+  const b = bookingData;
+
+  const TIMELINE_EVENTS = b ? [
+    { label: "Booking created", date: b.created_at as string, done: true },
+    { label: "Payment received", date: (b.invoices as Array<{paid_date: string|null}>)?.[0]?.paid_date ?? null, done: !!(b.invoices as [])?.length },
+    { label: "Booking confirmed", date: null, done: b.contract_status === "Confirmed" || b.contract_status === "Active" },
+    { label: "Check-in", date: b.check_in_date as string, done: false },
+    { label: "Check-out", date: b.check_out_date as string, done: false },
+  ] : [];
+
+  return (
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      <Navbar />
+
+      <div className="bg-gradient-to-r from-[#c05010] via-[#e07828] to-[#c86820] py-8 px-4">
+        <div className="max-w-4xl mx-auto">
+          <Link href="/portal/bookings">
+            <button className="flex items-center gap-1 text-white/70 hover:text-white text-sm mb-2 transition-colors">
+              <ChevronLeft className="h-4 w-4" /> Back to bookings
+            </button>
+          </Link>
+          <p className="font-cursive text-white/80 text-sm italic mb-1">Your account</p>
+          <h1 className="text-2xl font-bold uppercase text-white tracking-wide">
+            {b ? (b.space_name as string) : "Booking Details"}
+          </h1>
+        </div>
+      </div>
+
+      <div className="flex-1 max-w-4xl mx-auto w-full px-4 py-8">
+        {loading ? (
+          <div className="space-y-4">
+            {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
+          </div>
+        ) : !b ? (
+          <div className="text-center py-16 text-gray-400">
+            <p>Booking not found</p>
+            <Link href="/portal/bookings"><p className="text-primary mt-2 hover:underline">Return to bookings</p></Link>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Status card */}
+            <div className="bg-white rounded-2xl border p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-3">
+                  <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-bold ${STATUS_COLORS[b.contract_status as string] ?? "bg-gray-100 text-gray-700"}`}>
+                    {b.contract_status as string}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-500">Ref: <span className="font-mono font-semibold text-gray-700">{b.booking_ref as string}</span></p>
+              </div>
+              <div className="flex gap-3">
+                <Button variant="outline" size="sm" className="gap-1.5">
+                  <Download className="h-4 w-4" /> Receipt
+                </Button>
+              </div>
+            </div>
+
+            {/* Tabs */}
+            <Tabs defaultValue="overview">
+              <TabsList className="bg-white border mb-4">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="documents">Documents</TabsTrigger>
+                <TabsTrigger value="invoice">Invoices</TabsTrigger>
+                <TabsTrigger value="timeline">Timeline</TabsTrigger>
+              </TabsList>
+
+              {/* OVERVIEW */}
+              <TabsContent value="overview">
+                <div className="bg-white rounded-2xl border p-6 space-y-4">
+                  <div className="grid sm:grid-cols-2 gap-4 text-sm">
+                    {[
+                      { icon: Home, label: "Room", value: b.space_name as string },
+                      { icon: MapPin, label: "Address", value: b.property_address as string },
+                      { icon: Calendar, label: "Check-in", value: formatDate(b.check_in_date as string) },
+                      { icon: Calendar, label: "Check-out", value: formatDate(b.check_out_date as string) },
+                      { icon: Users, label: "Guests", value: String(b.num_guests) },
+                      { icon: CreditCard, label: "Total Amount", value: b.total_amount ? `$${(b.total_amount as number).toLocaleString()} AUD` : "—" },
+                    ].map(({ icon: Icon, label, value }) => (
+                      <div key={label} className="flex items-start gap-3">
+                        <Icon className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                        <div>
+                          <p className="text-xs text-gray-500">{label}</p>
+                          <p className="font-medium text-gray-800">{value ?? "—"}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {b.special_requests && (
+                    <>
+                      <Separator />
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Special Requests</p>
+                        <p className="text-sm text-gray-700">{b.special_requests as string}</p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* DOCUMENTS */}
+              <TabsContent value="documents">
+                <div className="space-y-3">
+                  {((b.documents as Array<{id: number; document_type: string; status: string; uploaded_at: string | null}>) ?? []).length === 0 ? (
+                    <div className="bg-white rounded-2xl border text-center py-12 text-gray-400">
+                      <FileImage className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                      <p className="text-sm">No documents uploaded for this booking</p>
+                      <Link href="/portal/documents">
+                        <Button variant="outline" size="sm" className="mt-3 gap-1.5">
+                          <FileImage className="h-3.5 w-3.5" /> Upload documents
+                        </Button>
+                      </Link>
+                    </div>
+                  ) : (
+                    (b.documents as Array<{id: number; document_type: string; status: string; uploaded_at: string | null}>).map((doc) => {
+                      const info = DOC_STATUS[doc.status] ?? DOC_STATUS["Pending"]!;
+                      const Icon = info.icon;
+                      return (
+                        <div key={doc.id} className={`bg-white rounded-xl border p-4 flex items-center justify-between ${doc.status === "Rejected" ? "border-red-200" : ""}`}>
+                          <div className="flex items-center gap-3">
+                            <FileImage className="h-5 w-5 text-primary" />
+                            <div>
+                              <p className="text-sm font-medium text-gray-800 capitalize">{doc.document_type.replace("_", " ")}</p>
+                              {doc.uploaded_at && <p className="text-xs text-gray-400">Uploaded {formatDate(doc.uploaded_at)}</p>}
+                            </div>
+                          </div>
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border ${info.color}`}>
+                            <Icon className="h-3 w-3" />
+                            {doc.status}
+                          </span>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* INVOICES */}
+              <TabsContent value="invoice">
+                <div className="space-y-3">
+                  {((b.invoices as Array<{id: number; invoice_number: string|null; amount: number; status: string; due_date: string|null; paid_date: string|null}>) ?? []).length === 0 ? (
+                    <div className="bg-white rounded-2xl border text-center py-12 text-gray-400">
+                      <FileText className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                      <p className="text-sm">No invoices yet</p>
+                    </div>
+                  ) : (
+                    (b.invoices as Array<{id: number; invoice_number: string|null; amount: number; status: string; due_date: string|null; paid_date: string|null}>).map((inv) => (
+                      <div key={inv.id} className="bg-white rounded-xl border p-4 flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-800">{inv.invoice_number ?? `INV-${inv.id}`}</p>
+                          <p className="text-xs text-gray-500">Due {formatDate(inv.due_date)}</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className={`text-xs font-semibold px-2 py-1 rounded-full ${inv.status === "Paid" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>{inv.status}</span>
+                          <p className="font-bold text-gray-900">${inv.amount.toLocaleString()}</p>
+                          <Button size="sm" variant="outline" className="h-7 text-xs gap-1">
+                            <Download className="h-3 w-3" /> PDF
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* TIMELINE */}
+              <TabsContent value="timeline">
+                <div className="bg-white rounded-2xl border p-6">
+                  <div className="relative">
+                    <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-100" />
+                    <div className="space-y-6">
+                      {TIMELINE_EVENTS.map(({ label, date, done }, i) => (
+                        <div key={i} className="flex items-start gap-4">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 z-10 ${done ? "bg-primary" : "bg-gray-100 border-2 border-gray-200"}`}>
+                            {done ? <CheckCircle2 className="h-4 w-4 text-white" /> : <div className="w-2 h-2 rounded-full bg-gray-300" />}
+                          </div>
+                          <div>
+                            <p className={`text-sm font-medium ${done ? "text-gray-900" : "text-gray-400"}`}>{label}</p>
+                            {date && <p className="text-xs text-gray-400 mt-0.5">{formatDate(date)}</p>}
+                            {!date && !done && <p className="text-xs text-gray-300 mt-0.5">Upcoming</p>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
+      </div>
+
+      <Footer />
+    </div>
+  );
+}

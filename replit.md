@@ -78,6 +78,33 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 - `MultiLookupField` — multi-select modal lookup with tag display
 - `Layout` + `PageHeader` — sidebar nav (MillionStay branding) + page header
 
+### MillionStay Guest Portal (`artifacts/million-stay-web`)
+- **Kind**: web (React + Vite)
+- **Port**: 20546
+- **Purpose**: Guest-facing booking portal for MillionStay
+- **Brand color**: `#E8621A` (orange)
+- **i18n**: EN/JA/KO/ZH via react-i18next
+- **State**: Zustand (persisted in `ms-auth-storage` localStorage)
+- **Auth**: JWT stored as `ms_auth_token` in localStorage; guest JWT via `GUEST_JWT_SECRET`
+- **Custom API hooks**: `artifacts/million-stay-web/src/lib/guest-api.ts` — wraps all guest-specific endpoints not in the OpenAPI spec
+
+**Pages**: Home, Search (with Leaflet map), Space Detail, Stay Plan, About, FAQ, Contact, For Students, For Agent, House Rules, Privacy Policy, Login, Register, Booking (inline auth), Portal Bookings, Portal Invoices, Portal Documents
+
+**Backend guest routes** (not in OpenAPI spec):
+- `GET/POST /api/v1/auth/guest/register` — register
+- `POST /api/v1/auth/guest/login` — login
+- `GET /api/v1/auth/guest/me` — current user
+- `GET /api/v1/public/spaces` — public listing with filters + availability check
+- `GET /api/v1/public/spaces/:id` — space detail with images/options/policies
+- `GET /api/v1/public/properties` — public property list
+- `GET /api/v1/guest/bookings` — guest's bookings
+- `POST /api/v1/guest/bookings` — create booking
+- `GET /api/v1/guest/bookings/:id` — booking detail
+- `GET /api/v1/guest/invoices` — guest's invoices
+- `GET /api/v1/guest/documents` — guest's documents (stub)
+- `GET /api/v1/guest/profile` — profile
+- `PUT /api/v1/guest/profile` — update profile
+
 ### API Server (`artifacts/api-server`)
 - **Kind**: api
 - **Port**: 8080

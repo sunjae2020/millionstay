@@ -1,0 +1,49 @@
+{
+  "nav": {
+    "search": "找房",
+    "login": "登录",
+    "signup": "注册",
+    "myBookings": "我的预订"
+  },
+  "home": {
+    "hero_title": "在墨尔本寻找您完美的家",
+    "hero_subtitle": "为国际学生和数字游民提供安全、带家具的房间",
+    "search_button": "搜索"
+  },
+  "search": {
+    "results_count": "个房间",
+    "no_results": "未找到房间",
+    "filter": {
+      "type": "空间类型",
+      "policy": "性别政策",
+      "price": "每周价格"
+    }
+  },
+  "space": {
+    "per_week": "/ 周",
+    "min_stay": "最少 {{weeks}} 周",
+    "book_now": "立即预订",
+    "female_only": "仅限女性",
+    "mixed": "男女混住",
+    "entire": "整租",
+    "room": "单间",
+    "bed": "床位"
+  },
+  "booking": {
+    "step1": "住宿详情",
+    "step2": "住客信息",
+    "step3": "文件",
+    "step4": "已确认",
+    "check_in": "入住",
+    "check_out": "退房",
+    "total_price": "总价",
+    "deposit": "押金",
+    "admin_fee": "管理费",
+    "cleaning_fee": "清洁费"
+  },
+  "portal": {
+    "my_bookings": "我的预订",
+    "my_invoices": "我的账单",
+    "my_documents": "我的文件"
+  }
+}

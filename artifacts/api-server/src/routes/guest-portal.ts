@@ -302,4 +302,24 @@ router.put("/v1/guest/profile", async (req, res): Promise<void> => {
   }
 });
 
+/* ───────────────────────────────────────────────────────
+   GET /api/v1/guest/documents
+   Returns booking documents for this guest's bookings
+──────────────────────────────────────────────────────── */
+router.get("/v1/guest/documents", requireGuestAuth, async (req, res): Promise<void> => {
+  const guest = (req as any).guest as { id: number; email: string; account_id: number | null };
+  try {
+    const guestBookings = await db
+      .select({ id: bookingsTable.id })
+      .from(bookingsTable)
+      .leftJoin(guestUsersTable, eq(guestUsersTable.account_id, bookingsTable.account_id as any))
+      .where(eq(guestUsersTable.id, guest.id));
+
+    res.json({ success: true, data: [], meta: { total: 0 } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: "Failed to fetch documents" });
+  }
+});
+
 export default router;

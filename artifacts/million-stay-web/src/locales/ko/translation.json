@@ -1,0 +1,49 @@
+{
+  "nav": {
+    "search": "방 찾기",
+    "login": "로그인",
+    "signup": "회원가입",
+    "myBookings": "내 예약"
+  },
+  "home": {
+    "hero_title": "멜버른에서 완벽한 집을 찾으세요",
+    "hero_subtitle": "유학생과 디지털 노마드를 위한 안전하고 가구가 완비된 방",
+    "search_button": "검색"
+  },
+  "search": {
+    "results_count": "개 방 검색됨",
+    "no_results": "방을 찾을 수 없습니다",
+    "filter": {
+      "type": "공간 유형",
+      "policy": "성별 정책",
+      "price": "주간 가격"
+    }
+  },
+  "space": {
+    "per_week": "/ 주",
+    "min_stay": "최소 {{weeks}}주",
+    "book_now": "지금 예약하기",
+    "female_only": "여성 전용",
+    "mixed": "남녀 공용",
+    "entire": "전체 공간",
+    "room": "개인실",
+    "bed": "다인실"
+  },
+  "booking": {
+    "step1": "숙박 상세 정보",
+    "step2": "게스트 정보",
+    "step3": "문서 제출",
+    "step4": "예약 완료",
+    "check_in": "체크인",
+    "check_out": "체크아웃",
+    "total_price": "총 가격",
+    "deposit": "보증금",
+    "admin_fee": "관리비",
+    "cleaning_fee": "청소비"
+  },
+  "portal": {
+    "my_bookings": "내 예약",
+    "my_invoices": "내 청구서",
+    "my_documents": "내 문서"
+  }
+}

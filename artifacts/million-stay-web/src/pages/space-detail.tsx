@@ -1,0 +1,633 @@
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useParams, useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
+import { useGetPublicSpace, getGetPublicSpaceQueryKey, useListPublicSpaces } from "@/lib/guest-api";
+import { useAuthStore } from "@/lib/store";
+import { Navbar } from "@/components/navbar";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
+import {
+  MapPin, Star, ChevronLeft, ChevronRight,
+  Camera, X, Check, MapPinned, FileText,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Footer } from "@/components/footer";
+import { addWeeks, format, parseISO } from "date-fns";
+
+/* ─── Emoji-icon map ─── */
+const optionEmojis: Record<string, string> = {
+  "High-speed Wi-Fi": "📶", "High-speed WiFi": "📶",
+  "Air-conditioning / Heating": "❄️", "Air Conditioning": "❄️",
+  "Washing Machine": "🧺", "Refrigerator": "🧊",
+  "Desk & Ergonomic Chair": "🪑", "Wardrobe / Built-in Closet": "👔",
+  "Private Bathroom (Own Bath)": "🚿", "Shared Bathroom": "🚿",
+  "Queen Bed": "🛏️", "Smart TV / TV in Room": "📺",
+  "Microwave": "📦", "Electric Kettle": "☕",
+  "No Smoking": "🚭", "Elevator (Lift)": "🛗",
+  "Gym / Fitness Centre": "💪", "Swimming Pool": "🏊",
+  "Parking": "🅿️", "Kitchen Access": "🍳", "Furnished": "🛋️",
+};
+
+/* ─── Photo Modal ─── */
+function PhotoModal({
+  images, initialIndex, onClose,
+}: {
+  images: Array<{ id?: number | string | null; file_url: string; thumbnail_url?: string | null; caption?: string | null }>;
+  initialIndex: number;
+  onClose: () => void;
+}) {
+  const [current, setCurrent] = useState(initialIndex);
+  const thumbRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") setCurrent((c) => Math.max(0, c - 1));
+      if (e.key === "ArrowRight") setCurrent((c) => Math.min(images.length - 1, c + 1));
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [images.length, onClose]);
+
+  useEffect(() => {
+    const el = thumbRef.current?.querySelector(`[data-idx="${current}"]`) as HTMLElement | null;
+    el?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }, [current]);
+
+  return (
+    <div className="fixed inset-0 z-[200] bg-black/95 flex flex-col" role="dialog">
+      <div className="flex items-center justify-between px-6 py-4 shrink-0">
+        <button onClick={onClose} className="flex items-center gap-2 text-white/80 hover:text-white text-sm">
+          <X className="h-4 w-4" /> Close
+        </button>
+        <span className="text-white/70 text-sm">{current + 1} / {images.length}</span>
+        <div className="w-16" />
+      </div>
+      <div className="flex-1 flex items-center justify-center relative px-16 min-h-0">
+        <button onClick={() => setCurrent((c) => Math.max(0, c - 1))} disabled={current === 0}
+          className="absolute left-4 text-white/80 hover:text-white disabled:opacity-20 bg-white/10 hover:bg-white/20 rounded-full h-10 w-10 flex items-center justify-center">
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+        <AnimatePresence mode="wait">
+          <motion.img key={current} src={images[current]?.file_url} alt={images[current]?.caption ?? `Photo ${current + 1}`}
+            initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.97 }}
+            transition={{ duration: 0.18 }} className="max-h-[75vh] max-w-full object-contain rounded-lg select-none" draggable={false} />
+        </AnimatePresence>
+        <button onClick={() => setCurrent((c) => Math.min(images.length - 1, c + 1))} disabled={current === images.length - 1}
+          className="absolute right-4 text-white/80 hover:text-white disabled:opacity-20 bg-white/10 hover:bg-white/20 rounded-full h-10 w-10 flex items-center justify-center">
+          <ChevronRight className="h-6 w-6" />
+        </button>
+      </div>
+      {images[current]?.caption && (
+        <p className="text-center text-white/60 text-sm pb-2">{images[current].caption}</p>
+      )}
+      <div ref={thumbRef} className="flex gap-2 overflow-x-auto px-6 py-3 justify-center shrink-0">
+        {images.map((img, i) => (
+          <button key={img.id ?? i} data-idx={i} onClick={() => setCurrent(i)}
+            className={`flex-shrink-0 rounded transition-all ${i === current ? "ring-2 ring-primary opacity-100 scale-105" : "opacity-40 hover:opacity-70"}`}>
+            <img src={img.thumbnail_url ?? img.file_url} alt="" className="w-16 h-12 object-cover rounded" draggable={false} />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Photo Gallery (3-photo layout matching mockup) ─── */
+function PhotoGallery({
+  images, spaceName,
+}: {
+  images: Array<{ id?: number | string | null; file_url: string; thumbnail_url?: string | null; caption?: string | null }>;
+  spaceName: string;
+}) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [carouselIdx, setCarouselIdx] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const open = (idx: number) => { setActiveIdx(idx); setModalOpen(true); };
+
+  const handleScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCarouselIdx(Math.round(el.scrollLeft / el.offsetWidth));
+  };
+
+  if (images.length === 0) {
+    return (
+      <div className="h-56 md:h-72 rounded-xl bg-gradient-to-br from-orange-400 to-amber-300 flex flex-col items-center justify-center gap-3">
+        <span className="text-5xl">📸</span>
+        <p className="text-white font-semibold">{spaceName}</p>
+        <p className="text-white/70 text-sm">Photos coming soon</p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {/* Mobile carousel */}
+      <div className="md:hidden relative overflow-hidden rounded-xl">
+        <div ref={scrollRef} onScroll={handleScroll}
+          className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth" style={{ scrollbarWidth: "none" }}>
+          {images.map((img, i) => (
+            <div key={img.id ?? i} className="flex-shrink-0 w-full snap-center h-56 cursor-pointer" onClick={() => open(i)}>
+              <img src={img.file_url} alt={img.caption ?? spaceName} className="w-full h-full object-cover rounded-xl"
+                loading={i === 0 ? "eager" : "lazy"} />
+            </div>
+          ))}
+        </div>
+        {images.length > 1 && (
+          <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 pointer-events-none">
+            {images.map((_, i) => (
+              <div key={i} className={`h-1.5 rounded-full bg-white transition-all duration-200 ${i === carouselIdx ? "w-4 opacity-100" : "w-1.5 opacity-50"}`} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Desktop: main + 2 stacked thumbnails */}
+      <div className="hidden md:grid grid-cols-3 gap-2 rounded-xl overflow-hidden h-[280px] relative">
+        {/* Main image — 2/3 width */}
+        <div className="col-span-2 overflow-hidden cursor-pointer" onClick={() => open(0)}>
+          <img src={images[0]!.file_url} alt={spaceName}
+            className="w-full h-full object-cover hover:brightness-95 transition-all duration-300" />
+        </div>
+        {/* 2 stacked thumbnails — 1/3 width */}
+        <div className="flex flex-col gap-2">
+          {[1, 2].map((i) => (
+            images[i] ? (
+              <div key={images[i]!.id ?? i} className="flex-1 overflow-hidden cursor-pointer relative" onClick={() => open(i)}>
+                <img src={images[i]!.thumbnail_url ?? images[i]!.file_url} alt={images[i]!.caption ?? `Photo ${i + 1}`}
+                  className="w-full h-full object-cover hover:brightness-95 transition-all duration-300" loading="lazy" />
+                {i === 2 && images.length > 3 && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer" onClick={(e) => { e.stopPropagation(); open(2); }}>
+                    <span className="text-white font-bold text-sm">+{images.length - 3} more</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div key={i} className="flex-1 bg-gray-100" />
+            )
+          ))}
+        </div>
+        {/* Show all photos */}
+        <button onClick={() => open(0)}
+          className="absolute bottom-3 right-3 bg-white text-gray-800 px-3 py-1.5 rounded-lg shadow text-xs font-semibold hover:bg-gray-50 flex items-center gap-1.5 transition-colors">
+          <Camera className="h-3.5 w-3.5" />
+          All {images.length} photos
+        </button>
+      </div>
+
+      {modalOpen && <PhotoModal images={images} initialIndex={activeIdx} onClose={() => setModalOpen(false)} />}
+    </>
+  );
+}
+
+/* ─── Mini map ─── */
+function SpaceMiniMap({ lat, lng, name, address }: { lat: number; lng: number; name: string; address?: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!containerRef.current) return;
+    let map: import("leaflet").Map | null = null;
+    import("leaflet").then((L) => {
+      if (!containerRef.current) return;
+      map = L.map(containerRef.current, { center: [lat, lng], zoom: 15, scrollWheelZoom: false, zoomControl: true });
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap", maxZoom: 19 }).addTo(map);
+      const icon = L.divIcon({
+        className: "",
+        html: `<div style="background:#F97316;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,.3)"></div>`,
+        iconAnchor: [7, 7],
+      });
+      L.marker([lat, lng], { icon }).addTo(map)
+        .bindPopup(`<div style="font-family:Inter,sans-serif;font-size:12px"><strong>${name}</strong>${address ? `<br/><span style="color:#666">${address}</span>` : ""}</div>`)
+        .openPopup();
+    });
+    return () => { map?.remove(); };
+  }, [lat, lng, name, address]);
+  return <div ref={containerRef} className="w-full h-full" />;
+}
+
+/* ─── Related space card ─── */
+function RelatedCard({ space }: { space: Record<string, unknown> }) {
+  const [, setLocation] = useLocation();
+  const img = (space.primary_thumbnail as string | null)
+    ?? `https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=600&q=75`;
+  return (
+    <div onClick={() => setLocation(`/spaces/${space.id}`)}
+      className="bg-white rounded-xl overflow-hidden border cursor-pointer hover:shadow-md transition-shadow">
+      <div className="relative h-36 overflow-hidden">
+        <img src={img} alt={space.name as string} className="w-full h-full object-cover" />
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+          <p className="text-white text-xs font-semibold truncate">{space.room_type as string ?? "Private Room"} · Queen Bed</p>
+          <p className="text-white/80 text-xs">{space.suburb as string ?? "Melbourne"} · {space.property_type as string ?? "Apartment"}</p>
+        </div>
+        <div className="absolute top-2 left-2 bg-primary text-white text-xs font-bold px-2 py-0.5 rounded">
+          {(space.room_type as string ?? "Room")}
+        </div>
+      </div>
+      <div className="p-3 flex items-center justify-between">
+        <div className="flex gap-0.5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Star key={i} className={`h-3 w-3 ${i < 4 ? "fill-primary text-primary" : "text-gray-200"}`} />
+          ))}
+        </div>
+        <p className="text-primary font-bold text-sm">${space.price_per_week as number ?? 440}<span className="text-gray-400 font-normal text-xs">/wk</span></p>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Main page ─── */
+export default function SpaceDetail() {
+  const { id } = useParams<{ id: string }>();
+  const [, setLocation] = useLocation();
+  const { t } = useTranslation();
+  const { token } = useAuthStore();
+  const [selectedProduct, setSelectedProduct] = useState<number | null>(null);
+  const [checkIn, setCheckIn] = useState<string>("");
+  const [checkOut, setCheckOut] = useState<string>("");
+
+  const spaceId = parseInt(id ?? "0", 10);
+
+  const { data: spaceData, isLoading } = useGetPublicSpace(spaceId, {
+    query: { enabled: !!spaceId, queryKey: getGetPublicSpaceQueryKey(spaceId) },
+  });
+  const { data: allSpaces } = useListPublicSpaces({
+    query: { queryKey: ["related-spaces", spaceId] },
+  });
+
+  const space = spaceData?.data;
+
+  const relatedSpaces = useMemo(() => {
+    const list = (allSpaces?.data ?? []) as Record<string, unknown>[];
+    return list.filter((s) => s.id !== spaceId).slice(0, 3);
+  }, [allSpaces, spaceId]);
+
+  const handleCheckInChange = useCallback((date: string) => {
+    setCheckIn(date);
+    if (!date || !space) { setCheckOut(""); return; }
+    try {
+      const product = space.products?.find((p) => p.id === selectedProduct);
+      const weeks = product?.min_contract_period ?? space.min_stay_weeks ?? space.min_contract_period ?? 4;
+      const parsed = parseISO(date);
+      if (isNaN(parsed.getTime())) { setCheckOut(""); return; }
+      setCheckOut(format(addWeeks(parsed, weeks), "yyyy-MM-dd"));
+    } catch { setCheckOut(""); }
+  }, [space, selectedProduct]);
+
+  const stayWeeks = useMemo(() => {
+    if (!checkIn || !checkOut) return null;
+    return Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (7 * 24 * 60 * 60 * 1000));
+  }, [checkIn, checkOut]);
+
+  const selectedPriceProduct = space?.products?.find((p) => p.id === selectedProduct);
+  const weeklyRate = selectedPriceProduct?.price ?? space?.base_weekly_price ?? 0;
+  const rentTotal = stayWeeks ? stayWeeks * weeklyRate : null;
+  const deposit = space?.bond_amount ?? 1000;
+  const adminFee = space?.admin_fee ?? 200;
+  const cleaningFee = space?.cleaning_fee ?? 300;
+  const totalToday = deposit + adminFee + cleaningFee;
+
+  const handleEnquire = () => {
+    if (!space) return;
+    const params = new URLSearchParams();
+    if (selectedProduct) params.set("product_id", String(selectedProduct));
+    if (checkIn) params.set("check_in", checkIn);
+    if (checkOut) params.set("check_out", checkOut);
+    params.set("space_id", String(space.id));
+
+    /* Determine stay type — long-term (≥ 4 weeks) can proceed without login */
+    const stayWeeks = (checkIn && checkOut)
+      ? Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (7 * 24 * 60 * 60 * 1000))
+      : 0;
+    const isLong = stayWeeks >= 4;
+
+    if (!token && !isLong) {
+      setLocation(`/login?redirect=${encodeURIComponent(`/booking/new?${params.toString()}`)}`);
+      return;
+    }
+    setLocation(`/booking/new?${params.toString()}`);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="max-w-6xl mx-auto w-full px-6 py-8 space-y-6">
+          <Skeleton className="h-[280px] w-full rounded-xl" />
+          <div className="grid grid-cols-3 gap-8">
+            <div className="col-span-2 space-y-4">
+              <Skeleton className="h-7 w-2/3" />
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-32 w-full" />
+            </div>
+            <Skeleton className="h-80 rounded-xl" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!space) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="max-w-6xl mx-auto py-16 text-center">
+          <h1 className="text-2xl font-bold">Space not found</h1>
+          <Button onClick={() => setLocation("/search")} className="mt-4">Browse spaces</Button>
+        </div>
+      </div>
+    );
+  }
+
+  const images = (space.images ?? []) as Array<{ id?: number | string | null; file_url: string; thumbnail_url?: string | null; caption?: string | null }>;
+  const addressParts = [space.address_line1, space.suburb_name, space.state].filter(Boolean);
+  const addressStr = addressParts.join(", ") + (space.postcode ? ` ${space.postcode}` : "");
+  const amenities = (space.options ?? []) as Array<{ id: number | string; name: string }>;
+  const lat = Number((space as Record<string, unknown>).latitude);
+  const lng = Number((space as Record<string, unknown>).longitude);
+  const hasMap = !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[#faf9f7]">
+      <Navbar />
+
+      {/* Banner */}
+      <div className="h-20 flex items-center px-6" style={{ background: "linear-gradient(135deg, #c05010 0%, #e07828 60%, #c86820 100%)" }}>
+        <div className="max-w-6xl mx-auto w-full flex items-center gap-2">
+          <button onClick={() => setLocation("/search")} className="text-white/70 hover:text-white transition-colors">
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <div>
+            <p className="font-cursive text-white/70 text-xs italic">Room Details</p>
+            <h1 className="text-white text-xl font-bold italic">Booking</h1>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto w-full px-4 md:px-6 py-6">
+        {/* Photo Gallery */}
+        <div className="mb-6">
+          <PhotoGallery images={images} spaceName={space.name} />
+        </div>
+
+        {/* Two-column layout */}
+        <div className="flex flex-col lg:flex-row gap-6">
+
+          {/* ── Left column ── */}
+          <div className="flex-1 min-w-0 space-y-6">
+
+            {/* Price + distance */}
+            <div className="flex flex-wrap items-center gap-4">
+              <div>
+                <span className="text-3xl font-bold text-primary">${weeklyRate}</span>
+                <span className="text-sm text-gray-500 ml-1">/Per Week</span>
+              </div>
+              {addressParts.length > 0 && (
+                <p className="text-sm text-gray-500 flex items-center gap-1">
+                  <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
+                  {space.suburb_name ?? ""}, Melbourne
+                </p>
+              )}
+            </div>
+
+            {/* Title + badges */}
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-3">{space.name}</h1>
+              <div className="flex flex-wrap gap-2">
+                {space.bedrooms != null && (
+                  <span className="bg-orange-50 text-primary text-xs font-semibold px-3 py-1 rounded-full border border-orange-200">
+                    🛏️ {space.bedrooms} Bedroom{space.bedrooms > 1 ? "s" : ""}
+                  </span>
+                )}
+                {space.bathrooms != null && (
+                  <span className="bg-orange-50 text-primary text-xs font-semibold px-3 py-1 rounded-full border border-orange-200">
+                    🚿 {space.bathrooms} Bathroom{space.bathrooms > 1 ? "s" : ""}
+                  </span>
+                )}
+                <span className="bg-orange-50 text-primary text-xs font-semibold px-3 py-1 rounded-full border border-orange-200">
+                  📅 {space.min_stay_weeks ?? space.min_contract_period ?? 4} Weeks min.
+                </span>
+                {space.max_occupancy && (
+                  <span className="bg-orange-50 text-primary text-xs font-semibold px-3 py-1 rounded-full border border-orange-200">
+                    👤 {space.max_occupancy} Guest{space.max_occupancy > 1 ? "s" : ""}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Description */}
+            {space.description && (
+              <div>
+                <p className="text-gray-600 leading-relaxed text-sm">{space.description}</p>
+              </div>
+            )}
+
+            {/* Key Features */}
+            {amenities.length > 0 && (
+              <>
+                <Separator />
+                <div>
+                  <h2 className="text-base font-bold text-gray-800 mb-4">Key Features</h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {amenities.map((opt) => (
+                      <div key={opt.id} className="flex items-center gap-2.5 text-sm text-gray-700">
+                        <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <Check className="h-3 w-3 text-primary" />
+                        </div>
+                        <span>{optionEmojis[opt.name] ? `${optionEmojis[opt.name]} ` : ""}{opt.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Stay Plans */}
+            {space.products && space.products.length > 0 && (
+              <>
+                <Separator />
+                <div>
+                  <h2 className="text-base font-bold text-gray-800 mb-4">Stay Plans</h2>
+                  <div className="space-y-2">
+                    {space.products.map((p) => {
+                      const baseRate = space.base_weekly_price ?? 0;
+                      const saving = baseRate > (p.price ?? 0) ? baseRate - (p.price ?? 0) : null;
+                      return (
+                        <button key={p.id} onClick={() => { setSelectedProduct(p.id); handleCheckInChange(checkIn); }}
+                          className={`w-full rounded-xl border p-4 text-left text-sm transition-all ${
+                            selectedProduct === p.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-gray-200 bg-white hover:border-primary/40"
+                          }`}>
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-semibold text-gray-800">{p.name}</span>
+                              {p.product_tag === "best_value" && (
+                                <span className="text-xs bg-green-100 text-green-700 font-semibold px-1.5 py-0.5 rounded">Best Value</span>
+                              )}
+                              {saving && saving > 0 && (
+                                <span className="text-xs bg-orange-100 text-primary font-semibold px-1.5 py-0.5 rounded">Save ${saving}/wk</span>
+                              )}
+                            </div>
+                            <span className="font-bold text-primary text-base">${p.price}<span className="text-xs font-normal text-gray-400">/wk</span></span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Fee breakdown */}
+            <Separator />
+            <div>
+              <h2 className="text-base font-bold text-gray-800 mb-3">Fee Breakdown</h2>
+              <div className="rounded-xl border bg-white p-4 space-y-2.5 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Weekly rent</span>
+                  <span className="font-semibold">${space.base_weekly_price}</span>
+                </div>
+                {space.admin_fee != null && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Admission Fee (one-time)</span>
+                    <span>${space.admin_fee}</span>
+                  </div>
+                )}
+                {space.cleaning_fee != null && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Cleaning Fee (one-time)</span>
+                    <span>${space.cleaning_fee}</span>
+                  </div>
+                )}
+                {space.bond_amount != null && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Bond / Deposit</span>
+                    <span>${space.bond_amount}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+          </div>
+
+          {/* ── Right column (sticky booking card) ── */}
+          <div className="w-full lg:w-72 shrink-0">
+            <div className="sticky top-24 space-y-4">
+
+              {/* Booking section card */}
+              <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+                <div className="bg-primary px-5 py-3">
+                  <p className="text-white font-semibold text-sm tracking-wide">Booking Section</p>
+                </div>
+                <div className="p-5 space-y-4">
+                  <div>
+                    <div className="flex items-end gap-1 mb-1">
+                      <span className="text-2xl font-bold text-gray-900">${weeklyRate}</span>
+                      <span className="text-sm text-gray-500 mb-0.5">/week</span>
+                    </div>
+                    <div className="flex items-center gap-1 mb-3">
+                      <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                      <span className="text-xs font-medium">5.0</span>
+                      <span className="text-xs text-gray-400">· {space.suburb_name ?? "Melbourne"}</span>
+                    </div>
+                    <p className="text-xs text-gray-500 leading-relaxed">
+                      Secure your room today with a simple deposit. Our team will contact you within 24 hours to confirm availability and guide you through the move-in process.
+                    </p>
+                  </div>
+
+                  {/* Date inputs */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 mb-1">Check In</label>
+                      <input type="date" value={checkIn} min={format(new Date(), "yyyy-MM-dd")}
+                        onChange={(e) => handleCheckInChange(e.target.value)}
+                        className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 mb-1">Check Out</label>
+                      <input type="date" value={checkOut} min={checkIn || format(new Date(), "yyyy-MM-dd")}
+                        onChange={(e) => setCheckOut(e.target.value)}
+                        className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                    </div>
+                  </div>
+
+                  {/* Fee summary when dates picked */}
+                  {stayWeeks && stayWeeks > 0 && (
+                    <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+                      className="rounded-xl bg-orange-50 border border-orange-100 p-3 space-y-1.5 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">${weeklyRate}/wk × {stayWeeks} wks</span>
+                        <span className="font-semibold">${rentTotal?.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Due today (deposit + fees)</span>
+                        <span className="font-bold text-primary">${totalToday.toLocaleString()}</span>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  <Button onClick={handleEnquire}
+                    className="w-full bg-primary hover:bg-primary/90 text-white font-bold rounded-xl py-5 gap-2">
+                    <FileText className="h-4 w-4" />
+                    APPLY / ENQUIRE FORM
+                  </Button>
+
+                  <Separator />
+
+                  {/* Map */}
+                  {hasMap ? (
+                    <div>
+                      <div className="h-44 rounded-xl overflow-hidden border border-gray-200 mb-3">
+                        <SpaceMiniMap lat={lat} lng={lng} name={space.name} address={addressStr} />
+                      </div>
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Button variant="outline" className="w-full border-primary text-primary hover:bg-orange-50 gap-2 rounded-xl">
+                          <MapPinned className="h-4 w-4" />
+                          VIEW LOCATION
+                        </Button>
+                      </a>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="h-44 rounded-xl overflow-hidden border border-gray-200 mb-3 bg-gray-100 flex items-center justify-center">
+                        <div className="text-center text-gray-400">
+                          <MapPin className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                          <p className="text-xs">{addressStr || "Melbourne, VIC"}</p>
+                        </div>
+                      </div>
+                      <Button variant="outline" disabled className="w-full border-gray-300 text-gray-400 gap-2 rounded-xl">
+                        <MapPinned className="h-4 w-4" />
+                        VIEW LOCATION
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Choose Your Room ── */}
+        {relatedSpaces.length > 0 && (
+          <div className="mt-12">
+            <div className="text-center mb-6">
+              <p className="font-cursive text-primary text-xl italic">Choose Your Room</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {relatedSpaces.map((s) => <RelatedCard key={s.id as number} space={s} />)}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <Footer />
+    </div>
+  );
+}
