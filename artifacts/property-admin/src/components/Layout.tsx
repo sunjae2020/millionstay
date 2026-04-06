@@ -190,17 +190,17 @@ function NavLeaf({
       ref={ref}
       href={href}
       className={cn(
-        "flex items-center gap-2.5 rounded-md text-sm font-medium transition-colors",
-        indent ? "px-3 py-1.5 ml-4 pl-5" : "px-3 py-2",
+        "flex items-center gap-2 rounded-md text-xs font-medium transition-colors",
+        indent ? "py-1.5 ml-6 pl-4 pr-3" : "py-1.5 pl-5 pr-3",
         active
-          ? "bg-sidebar-primary/20 text-sidebar-primary font-semibold"
-          : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+          ? "bg-sidebar-primary/10 text-sidebar-primary font-semibold"
+          : "text-sidebar-foreground/40 hover:text-sidebar-foreground/70 hover:bg-sidebar-accent"
       )}
     >
-      <Icon className={cn("h-3.5 w-3.5 flex-shrink-0", active && "text-sidebar-primary")} />
+      <Icon className={cn("h-3 w-3 flex-shrink-0", active && "text-sidebar-primary")} />
       {label}
       {active && (
-        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-sidebar-primary flex-shrink-0" />
+        <span className="ml-auto w-1 h-1 rounded-full bg-sidebar-primary flex-shrink-0" />
       )}
     </Link>
   );
@@ -240,13 +240,13 @@ function NavItemWithChildren({ item, collapsed }: { item: NavChild; collapsed?: 
       <button
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          "flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm font-medium transition-colors",
+          "flex items-center gap-2 w-full py-1.5 pl-5 pr-3 rounded-md text-xs font-medium transition-colors",
           selfActive || anyChildActive
-            ? "bg-sidebar-primary/20 text-sidebar-primary"
-            : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+            ? "bg-sidebar-primary/10 text-sidebar-primary"
+            : "text-sidebar-foreground/40 hover:text-sidebar-foreground/70 hover:bg-sidebar-accent"
         )}
       >
-        <item.icon className="h-3.5 w-3.5 flex-shrink-0" />
+        <item.icon className="h-3 w-3 flex-shrink-0" />
         <span className="flex-1 text-left">{item.label}</span>
         {open ? (
           <ChevronDown className="h-3 w-3 opacity-60" />
@@ -316,10 +316,10 @@ function SectionToggle({
       <button
         type="button"
         className={cn(
-          "flex items-center gap-1.5 w-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors",
+          "flex items-center gap-1.5 w-full px-2 py-1.5 text-sm font-semibold uppercase tracking-wider transition-colors",
           anyActive
-            ? "text-sidebar-primary/80"
-            : "text-sidebar-foreground/40 hover:text-sidebar-foreground/60"
+            ? "text-sidebar-primary"
+            : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
         )}
         onClick={() => {
           if (anyActive && open) return;
@@ -555,16 +555,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
               href="/"
               title={collapsed ? "Dashboard" : undefined}
               className={cn(
-                "flex items-center rounded-md text-sm font-medium transition-colors",
+                "flex items-center rounded-md text-xs font-medium transition-colors",
                 collapsed
                   ? "justify-center w-9 h-9 mx-auto"
-                  : "gap-2.5 px-3 py-2",
+                  : "gap-2 py-1.5 pl-5 pr-3",
                 location === "/" || location === "/dashboard"
-                  ? "bg-sidebar-primary/20 text-sidebar-primary"
-                  : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                  ? "bg-sidebar-primary/10 text-sidebar-primary font-semibold"
+                  : "text-sidebar-foreground/40 hover:text-sidebar-foreground/70 hover:bg-sidebar-accent"
               )}
             >
-              <LayoutDashboard className={cn("flex-shrink-0", collapsed ? "h-4 w-4" : "h-4 w-4")} />
+              <LayoutDashboard className={cn("flex-shrink-0", collapsed ? "h-4 w-4" : "h-3 w-3")} />
               {!collapsed && "Dashboard"}
             </Link>
           </div>
