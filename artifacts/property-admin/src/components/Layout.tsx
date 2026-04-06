@@ -358,7 +358,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* ── Mobile backdrop ───────────────────────────────────── */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -368,7 +368,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         className={cn(
           "fixed inset-y-0 left-0 z-50 w-56 bg-sidebar flex flex-col",
           "transition-all duration-300 ease-in-out",
-          "lg:static lg:z-auto lg:flex-shrink-0 lg:translate-x-0 lg:opacity-100 lg:visible lg:pointer-events-auto",
+          "md:static md:z-auto md:flex-shrink-0 md:translate-x-0 md:opacity-100 md:visible md:pointer-events-auto",
           sidebarOpen
             ? "translate-x-0 opacity-100 visible pointer-events-auto"
             : "-translate-x-full opacity-0 invisible pointer-events-none"
@@ -378,7 +378,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="relative flex-shrink-0">
           <SidebarLogo logo={logo} brandName={brandName} />
           <button
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md hover:bg-sidebar-accent text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors lg:hidden"
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md hover:bg-sidebar-accent text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors md:hidden"
             onClick={() => setSidebarOpen(false)}
             aria-label="Close menu"
           >
@@ -416,8 +416,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {/* ── Main content area ─────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        {/* Mobile top bar (hidden on lg+) */}
-        <header className="h-14 flex items-center gap-3 px-4 border-b bg-card flex-shrink-0 lg:hidden">
+        {/* Mobile top bar (hidden on md+) */}
+        <header className="h-14 flex items-center gap-3 px-4 border-b bg-card flex-shrink-0 md:hidden">
           <button
             onClick={() => setSidebarOpen(true)}
             className="p-2 rounded-md hover:bg-muted transition-colors text-foreground/70 hover:text-foreground"
