@@ -39,6 +39,8 @@ import {
   LogOut,
   Menu,
   X,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
@@ -149,11 +151,13 @@ function NavLeaf({
   icon: Icon,
   label,
   indent = false,
+  collapsed = false,
 }: {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   indent?: boolean;
+  collapsed?: boolean;
 }) {
   const [location] = useLocation();
   const active = location === href || location.startsWith(href + "/");
@@ -164,6 +168,24 @@ function NavLeaf({
       ref.current.scrollIntoView({ block: "nearest", behavior: "smooth" });
     }
   }, [active]);
+
+  if (collapsed) {
+    return (
+      <Link
+        ref={ref}
+        href={href}
+        title={label}
+        className={cn(
+          "flex items-center justify-center w-9 h-9 rounded-md mx-auto transition-colors",
+          active
+            ? "bg-sidebar-primary/20 text-sidebar-primary"
+            : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+        )}
+      >
+        <Icon className="h-4 w-4 flex-shrink-0" />
+      </Link>
+    );
+  }
 
   return (
     <Link
@@ -186,7 +208,7 @@ function NavLeaf({
   );
 }
 
-function NavItemWithChildren({ item }: { item: NavChild }) {
+function NavItemWithChildren({ item, collapsed }: { item: NavChild; collapsed?: boolean }) {
   const [location] = useLocation();
   const anyChildActive = item.children?.some(
     (c) => location === c.href || location.startsWith(c.href + "/")
@@ -197,6 +219,23 @@ function NavItemWithChildren({ item }: { item: NavChild }) {
   useEffect(() => {
     if (anyChildActive) setOpen(true);
   }, [anyChildActive]);
+
+  if (collapsed) {
+    return (
+      <Link
+        href={item.href}
+        title={item.label}
+        className={cn(
+          "flex items-center justify-center w-9 h-9 rounded-md mx-auto transition-colors",
+          selfActive || anyChildActive
+            ? "bg-sidebar-primary/20 text-sidebar-primary"
+            : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+        )}
+      >
+        <item.icon className="h-4 w-4" />
+      </Link>
+    );
+  }
 
   return (
     <div>
@@ -230,8 +269,10 @@ function NavItemWithChildren({ item }: { item: NavChild }) {
 
 function SectionToggle({
   section,
+  collapsed,
 }: {
   section: NavSection;
+  collapsed?: boolean;
 }) {
   const [location] = useLocation();
   const anyActive = section.items.some(
@@ -241,13 +282,36 @@ function SectionToggle({
       item.children?.some((c) => location === c.href || location.startsWith(c.href + "/"))
   );
 
-  // Fix: anyActive takes priority over defaultOpen (was using ?? which ignores false)
   const [open, setOpen] = useState(anyActive || !!section.defaultOpen);
 
-  // Auto-open whenever any child route becomes active
   useEffect(() => {
     if (anyActive) setOpen(true);
   }, [anyActive]);
+
+  if (collapsed) {
+    return (
+      <div className="flex flex-col gap-0.5 items-center">
+        {/* Section icon as divider/header */}
+        <div
+          className={cn(
+            "flex items-center justify-center w-9 h-6 rounded mx-auto",
+            anyActive ? "text-sidebar-primary/70" : "text-sidebar-foreground/30"
+          )}
+          title={section.label}
+        >
+          <section.icon className="h-3 w-3" />
+        </div>
+        {/* Show all items as icon buttons */}
+        {section.items.map((item) =>
+          item.children ? (
+            <NavItemWithChildren key={item.href} item={item} collapsed />
+          ) : (
+            <NavLeaf key={item.href} href={item.href} icon={item.icon} label={item.label} collapsed />
+          )
+        )}
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -260,7 +324,6 @@ function SectionToggle({
             : "text-sidebar-foreground/40 hover:text-sidebar-foreground/60"
         )}
         onClick={() => {
-          // Don't collapse a section that has an active child
           if (anyActive && open) return;
           setOpen((o) => !o);
         }}
@@ -285,8 +348,26 @@ function SectionToggle({
   );
 }
 
-function SidebarFooter() {
+function SidebarFooter({ collapsed }: { collapsed?: boolean }) {
   const { user, logout } = useAuth();
+
+  if (collapsed) {
+    return (
+      <div className="border-t border-sidebar-border px-2 py-2 flex flex-col items-center gap-1">
+        <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center" title={user ? `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() || user.email : "Admin"}>
+          <User className="h-3.5 w-3.5 text-primary" />
+        </div>
+        <button
+          onClick={logout}
+          className="flex-shrink-0 p-1.5 rounded hover:bg-sidebar-accent text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors"
+          title="Sign out"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="border-t border-sidebar-border px-3 py-2">
       <div className="flex items-center gap-2 mb-1">
@@ -312,7 +393,21 @@ function SidebarFooter() {
   );
 }
 
-function SidebarLogo({ logo, brandName }: { logo?: string; brandName: string }) {
+function SidebarLogo({ logo, brandName, collapsed }: { logo?: string; brandName: string; collapsed?: boolean }) {
+  if (collapsed) {
+    return (
+      <div className="h-14 flex items-center justify-center border-b border-sidebar-border flex-shrink-0">
+        {logo ? (
+          <img src={logo} alt={brandName} className="h-7 w-7 object-contain rounded" />
+        ) : (
+          <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center">
+            <Building2 className="h-4 w-4 text-white" />
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="h-14 flex items-center px-4 border-b border-sidebar-border flex-shrink-0">
       {logo ? (
@@ -333,10 +428,27 @@ function SidebarLogo({ logo, brandName }: { logo?: string; brandName: string }) 
   );
 }
 
+const COLLAPSED_KEY = "ms_sidebar_collapsed";
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { logo, brandName } = useBrand();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(COLLAPSED_KEY) === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleCollapsed = () => {
+    setCollapsed((c) => {
+      const next = !c;
+      try { localStorage.setItem(COLLAPSED_KEY, String(next)); } catch {}
+      return next;
+    });
+  };
 
   /* Auto-close sidebar on route change (mobile) */
   useEffect(() => {
@@ -366,17 +478,22 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* ── Sidebar ──────────────────────────────────────────── */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-56 bg-sidebar flex flex-col",
-          "transition-all duration-300 ease-in-out",
+          "fixed inset-y-0 left-0 z-50 bg-sidebar flex flex-col",
+          "transition-all duration-200 ease-in-out",
           "md:static md:z-auto md:flex-shrink-0 md:translate-x-0 md:opacity-100 md:visible md:pointer-events-auto",
+          /* Mobile: always full width when open */
+          "w-56",
+          /* Desktop: collapsed = narrow, expanded = w-56 */
+          collapsed ? "md:w-14" : "md:w-56",
           sidebarOpen
             ? "translate-x-0 opacity-100 visible pointer-events-auto"
             : "-translate-x-full opacity-0 invisible pointer-events-none"
         )}
       >
-        {/* Logo — with close button on mobile */}
+        {/* Logo */}
         <div className="relative flex-shrink-0">
-          <SidebarLogo logo={logo} brandName={brandName} />
+          <SidebarLogo logo={logo} brandName={brandName} collapsed={collapsed} />
+          {/* Mobile close button */}
           <button
             className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md hover:bg-sidebar-accent text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors md:hidden"
             onClick={() => setSidebarOpen(false)}
@@ -387,31 +504,58 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-3 px-2 flex flex-col gap-3">
+        <nav className={cn(
+          "flex-1 overflow-y-auto py-3 flex flex-col gap-3",
+          collapsed ? "px-1 items-center" : "px-2"
+        )}>
           {/* Dashboard */}
-          <div className="flex flex-col gap-0.5">
+          <div className={cn("flex flex-col gap-0.5", collapsed && "w-full items-center")}>
             <Link
               href="/"
+              title={collapsed ? "Dashboard" : undefined}
               className={cn(
-                "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                "flex items-center rounded-md text-sm font-medium transition-colors",
+                collapsed
+                  ? "justify-center w-9 h-9 mx-auto"
+                  : "gap-2.5 px-3 py-2",
                 location === "/" || location === "/dashboard"
                   ? "bg-sidebar-primary/20 text-sidebar-primary"
                   : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
               )}
             >
-              <LayoutDashboard className="h-4 w-4 flex-shrink-0" />
-              Dashboard
+              <LayoutDashboard className={cn("flex-shrink-0", collapsed ? "h-4 w-4" : "h-4 w-4")} />
+              {!collapsed && "Dashboard"}
             </Link>
           </div>
 
           {/* All sections */}
           {NAV.map((section) => (
-            <SectionToggle key={section.label} section={section} />
+            <SectionToggle key={section.label} section={section} collapsed={collapsed} />
           ))}
         </nav>
 
         {/* Footer */}
-        <SidebarFooter />
+        <SidebarFooter collapsed={collapsed} />
+
+        {/* Collapse toggle — desktop only */}
+        <button
+          onClick={toggleCollapsed}
+          className={cn(
+            "hidden md:flex items-center justify-center border-t border-sidebar-border",
+            "h-9 w-full text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors",
+            collapsed ? "px-0" : "gap-2 px-3 text-xs"
+          )}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? (
+            <PanelLeftOpen className="h-4 w-4" />
+          ) : (
+            <>
+              <PanelLeftClose className="h-4 w-4" />
+              <span>Collapse</span>
+            </>
+          )}
+        </button>
       </aside>
 
       {/* ── Main content area ─────────────────────────────────── */}
@@ -426,7 +570,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Menu className="h-5 w-5" />
           </button>
 
-          {/* Logo / brand in mobile header */}
           {logo ? (
             <img
               src={logo}
