@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, and, SQL } from "drizzle-orm";
-import { db, beneficiariesTable, accountsTable, commissionsTable } from "@workspace/db";
+import { db, beneficiariesTable, accountsTable, commissionsTable, contractProductsTable } from "@workspace/db";
 import {
   ListBeneficiariesQueryParams,
   CreateBeneficiaryBody,
@@ -11,6 +11,25 @@ import {
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
+
+const SELECT_FIELDS = {
+  id: beneficiariesTable.id,
+  name: beneficiariesTable.name,
+  contract_product_id: beneficiariesTable.contract_product_id,
+  account_id: beneficiariesTable.account_id,
+  commission_id: beneficiariesTable.commission_id,
+  commission_type: beneficiariesTable.commission_type,
+  split_percentage: beneficiariesTable.split_percentage,
+  fixed_amount: beneficiariesTable.fixed_amount,
+  priority: beneficiariesTable.priority,
+  notes: beneficiariesTable.notes,
+  status: beneficiariesTable.status,
+  account_name: accountsTable.name,
+  commission_name: commissionsTable.name,
+  contract_product_name: contractProductsTable.name,
+  created_at: beneficiariesTable.created_at,
+  updated_at: beneficiariesTable.updated_at,
+};
 
 router.get("/v1/beneficiaries", async (req, res): Promise<void> => {
   const parsed = ListBeneficiariesQueryParams.safeParse(req.query);
@@ -24,26 +43,11 @@ router.get("/v1/beneficiaries", async (req, res): Promise<void> => {
   if (q) conditions.push(ilike(beneficiariesTable.name, `%${q}%`));
 
   const rows = await db
-    .select({
-      id: beneficiariesTable.id,
-      name: beneficiariesTable.name,
-      contract_product_id: beneficiariesTable.contract_product_id,
-      account_id: beneficiariesTable.account_id,
-      commission_id: beneficiariesTable.commission_id,
-      commission_type: beneficiariesTable.commission_type,
-      split_percentage: beneficiariesTable.split_percentage,
-      fixed_amount: beneficiariesTable.fixed_amount,
-      priority: beneficiariesTable.priority,
-      notes: beneficiariesTable.notes,
-      status: beneficiariesTable.status,
-      account_name: accountsTable.name,
-      commission_name: commissionsTable.name,
-      created_at: beneficiariesTable.created_at,
-      updated_at: beneficiariesTable.updated_at,
-    })
+    .select(SELECT_FIELDS)
     .from(beneficiariesTable)
     .leftJoin(accountsTable, eq(beneficiariesTable.account_id, accountsTable.id))
     .leftJoin(commissionsTable, eq(beneficiariesTable.commission_id, commissionsTable.id))
+    .leftJoin(contractProductsTable, eq(beneficiariesTable.contract_product_id, contractProductsTable.id))
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(beneficiariesTable.priority, beneficiariesTable.name);
 
@@ -62,26 +66,11 @@ router.get("/v1/beneficiaries/:id", async (req, res): Promise<void> => {
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
   const [row] = await db
-    .select({
-      id: beneficiariesTable.id,
-      name: beneficiariesTable.name,
-      contract_product_id: beneficiariesTable.contract_product_id,
-      account_id: beneficiariesTable.account_id,
-      commission_id: beneficiariesTable.commission_id,
-      commission_type: beneficiariesTable.commission_type,
-      split_percentage: beneficiariesTable.split_percentage,
-      fixed_amount: beneficiariesTable.fixed_amount,
-      priority: beneficiariesTable.priority,
-      notes: beneficiariesTable.notes,
-      status: beneficiariesTable.status,
-      account_name: accountsTable.name,
-      commission_name: commissionsTable.name,
-      created_at: beneficiariesTable.created_at,
-      updated_at: beneficiariesTable.updated_at,
-    })
+    .select(SELECT_FIELDS)
     .from(beneficiariesTable)
     .leftJoin(accountsTable, eq(beneficiariesTable.account_id, accountsTable.id))
     .leftJoin(commissionsTable, eq(beneficiariesTable.commission_id, commissionsTable.id))
+    .leftJoin(contractProductsTable, eq(beneficiariesTable.contract_product_id, contractProductsTable.id))
     .where(eq(beneficiariesTable.id, parsed.data.id));
 
   if (!row) { res.status(404).json({ error: "Not found" }); return; }

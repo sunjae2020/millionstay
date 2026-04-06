@@ -39,8 +39,8 @@ type FormValues = {
 const NULL_VAL = "__none";
 
 export default function BeneficiaryDetail() {
-  const params = useParams<{ id: string }>();
-  const isNew = params.id === "new";
+  const params = useParams<{ id?: string }>();
+  const isNew = !params.id || params.id === "new";
   const id = isNew ? null : Number(params.id);
   const [, navigate] = useLocation();
   const qc = useQueryClient();
