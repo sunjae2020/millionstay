@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/"
-title = "Property Admin"
+title = "MillionStay Admin"
 version = "1.0.0"
 id = "artifacts/property-admin"
 router = "path"

@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/million-stay-web/"
-title = "MillionStay Guest Portal"
+title = "MillionStay Web"
 version = "1.0.0"
 id = "artifacts/million-stay-web"
 router = "path"
