@@ -421,10 +421,12 @@ function SidebarLogo({
   if (collapsed) {
     return (
       <div className="h-14 flex items-center justify-center border-b border-sidebar-border flex-shrink-0 relative">
-        {/* Always show favicon symbol (building icon) when collapsed */}
-        <div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
-          <Building2 className="h-5 w-5 text-white" />
-        </div>
+        {/* Favicon symbol */}
+        <img
+          src={`${import.meta.env.BASE_URL}favicon-symbol.png`}
+          alt={brandName}
+          className="h-8 w-8 object-contain"
+        />
         {/* Expand triangle — inside right edge */}
         <button
           onClick={onToggle}
