@@ -14,8 +14,8 @@ import { sendBookingConfirmation } from "../lib/email";
 
 const router: IRouter = Router();
 
-// All routes require guest auth
-router.use(requireGuestAuth);
+// All guest portal routes require guest auth (scoped to /v1/guest/* only)
+router.use("/v1/guest", requireGuestAuth);
 
 /* ───────────────────────────────────────────────────────
    GET /api/v1/guest/bookings — 내 예약 목록
