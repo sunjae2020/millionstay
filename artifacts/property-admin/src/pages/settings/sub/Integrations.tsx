@@ -56,7 +56,8 @@ function MaskedKeyInput({ value, envKey, onSaved }: { value: string; envKey: str
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setSaveError((data as any).error ?? `Save failed (${res.status})`);
+        const err = (data as any).error;
+        setSaveError(typeof err === "string" ? err : err?.message ?? `Save failed (${res.status})`);
         return;
       }
       setEditing(false);
@@ -176,8 +177,9 @@ function ResendFields({ status, onRefresh }: { status: IntegrationStatus | null;
         method: "POST",
         body: JSON.stringify({ to_email: testEmail }),
       });
-      const data = await res.json() as { success: boolean; message_id?: string; error?: string };
-      setSendResult(data.success ? `✓ Sent! Message ID: ${data.message_id}` : `✗ Error: ${data.error}`);
+      const data = await res.json() as { success: boolean; message_id?: string; error?: string | { code?: string; message?: string } };
+      const errMsg = typeof data.error === "string" ? data.error : data.error?.message ?? "Unknown error";
+      setSendResult(data.success ? `✓ Sent! Message ID: ${data.message_id}` : `✗ Error: ${errMsg}`);
     } catch {
       setSendResult("✗ Network error — check API server");
     } finally {
