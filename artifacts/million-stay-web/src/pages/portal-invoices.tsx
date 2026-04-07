@@ -26,14 +26,16 @@ function formatDate(d: string | null) {
 
 interface Invoice {
   id: number;
-  invoice_number: string | null;
-  booking_ref: string;
-  booking_id: number;
+  invoice_ref: string | null;
+  booking_ref: string | null;
+  booking_id: number | null;
   space_name: string | null;
   amount: number;
+  currency: string | null;
   status: string;
   due_date: string | null;
-  paid_date: string | null;
+  paid_at: string | null;
+  description: string | null;
   created_at: string;
 }
 
@@ -73,15 +75,15 @@ function downloadInvoicePDF(inv: Invoice) {
   lines.push(`INVOICE`);
   lines.push(`=======`);
   lines.push(``);
-  lines.push(`Invoice Number: ${inv.invoice_number ?? `INV-${inv.id}`}`);
-  lines.push(`Booking Reference: ${inv.booking_ref}`);
+  lines.push(`Invoice Number: ${inv.invoice_ref ?? `INV-${inv.id}`}`);
+  lines.push(`Booking Reference: ${inv.booking_ref ?? "—"}`);
   lines.push(`Property: ${inv.space_name ?? "—"}`);
   lines.push(``);
-  lines.push(`Amount Due: $${inv.amount.toLocaleString()} AUD`);
+  lines.push(`Amount Due: $${inv.amount.toLocaleString()} ${inv.currency ?? "AUD"}`);
   lines.push(`Status: ${inv.status}`);
   lines.push(`Issue Date: ${formatDate(inv.created_at)}`);
   lines.push(`Due Date: ${formatDate(inv.due_date)}`);
-  if (inv.paid_date) lines.push(`Paid Date: ${formatDate(inv.paid_date)}`);
+  if (inv.paid_at) lines.push(`Paid Date: ${formatDate(inv.paid_at)}`);
   lines.push(``);
   lines.push(`--`);
   lines.push(`MillionStay | Melbourne Student Accommodation`);
@@ -103,7 +105,7 @@ function InvoiceRow({ inv }: { inv: Invoice }) {
 
   const handleDownload = () => {
     downloadInvoicePDF(inv);
-    toast({ title: "Invoice downloaded", description: `${inv.invoice_number ?? `INV-${inv.id}`} saved to your device.` });
+    toast({ title: "Invoice downloaded", description: `${inv.invoice_ref ?? `INV-${inv.id}`} saved to your device.` });
   };
 
   return (
@@ -118,11 +120,11 @@ function InvoiceRow({ inv }: { inv: Invoice }) {
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-sm font-semibold text-gray-800">{inv.invoice_number ?? `INV-${inv.id}`}</p>
+            <p className="text-sm font-semibold text-gray-800">{inv.invoice_ref ?? `INV-${inv.id}`}</p>
             {overdue && <span className="text-xs bg-red-100 text-red-600 font-bold px-1.5 py-0.5 rounded">OVERDUE</span>}
           </div>
           <p className="text-xs text-gray-500 truncate">
-            {inv.space_name ?? inv.booking_ref} · Due {formatDate(inv.due_date)}
+            {inv.space_name ?? inv.booking_ref ?? "—"} · Due {formatDate(inv.due_date)}
           </p>
         </div>
       </div>
@@ -130,7 +132,7 @@ function InvoiceRow({ inv }: { inv: Invoice }) {
         <span className={`hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${STATUS_COLORS[inv.status] ?? "bg-gray-100 text-gray-600"}`}>
           {inv.status}
         </span>
-        <p className="font-bold text-gray-900">${inv.amount.toLocaleString()}</p>
+        <p className="font-bold text-gray-900">${(inv.amount ?? 0).toLocaleString()} {inv.currency ?? "AUD"}</p>
         <Button size="sm" variant="outline" className="h-8 gap-1 text-xs hidden sm:flex" onClick={handleDownload}>
           <Download className="h-3.5 w-3.5" /> Download
         </Button>

@@ -54,7 +54,7 @@ export default function Login() {
       { data },
       {
         onSuccess: (res) => {
-          setAuth(res.token, res.guest);
+          setAuth(res.token, res.user);
           setLocation(redirectTo);
         },
         onError: (error: unknown) => {

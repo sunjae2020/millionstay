@@ -66,8 +66,9 @@ export default function Register() {
       { data: { ...data, phone: phoneWithPrefix } },
       {
         onSuccess: (res) => {
-          setAuth(res.token, res.guest);
-          toast({ title: "Welcome to Million Stay!", description: `Account created for ${res.guest.name}` });
+          setAuth(res.token, res.user);
+          const displayName = [res.user.first_name, res.user.last_name].filter(Boolean).join(" ") || res.user.email;
+          toast({ title: "Welcome to Million Stay!", description: `Account created for ${displayName}` });
           setLocation(redirectTo);
         },
         onError: (error: unknown) => {

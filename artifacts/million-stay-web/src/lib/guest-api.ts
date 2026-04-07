@@ -126,9 +126,10 @@ export function useGetPublicSpace(
 
 // ─── Guest Auth ───────────────────────────────────────────────────────────────
 
-interface GuestAuthResponse {
+export interface GuestAuthResponse {
+  success?: boolean;
   token: string;
-  guest: {
+  user: {
     id: number;
     email: string;
     first_name: string | null;
@@ -250,14 +251,16 @@ export function useListMyBookings(
 
 export interface MyInvoice {
   id: number;
-  invoice_number?: string | null;
-  invoice_status?: string | null;
-  amount?: string | null;
+  invoice_ref?: string | null;
+  amount?: number | null;
   currency?: string | null;
+  status?: string | null;
   due_date?: string | null;
-  paid_date?: string | null;
+  paid_at?: string | null;
+  description?: string | null;
   created_at?: string | null;
-  booking_reference?: string | null;
+  booking_id?: number | null;
+  booking_ref?: string | null;
   space_name?: string | null;
 }
 

@@ -48,12 +48,13 @@ interface Booking {
   id: number;
   booking_ref: string;
   space_name: string | null;
+  property_name: string | null;
   property_address: string | null;
   check_in_date: string | null;
   check_out_date: string | null;
-  contract_status: string;
-  base_weekly_price: number | null;
-  total_amount: number | null;
+  booking_status: string;
+  agreed_weekly_rate: number | null;
+  total_rent: number | null;
   created_at: string;
 }
 
@@ -79,7 +80,7 @@ function BookingCard({ booking }: { booking: Booking }) {
                 </div>
               )}
             </div>
-            <StatusBadge status={booking.contract_status} />
+            <StatusBadge status={booking.booking_status} />
           </div>
           <div className="flex items-center gap-3 text-xs text-gray-500">
             <div className="flex items-center gap-1">
@@ -155,10 +156,10 @@ export default function PortalBookings() {
 
   const filterBookings = (status: string) => {
     if (status === "all") return bookings;
-    if (status === "active") return bookings.filter((b) => ["Active", "Confirmed"].includes(b.contract_status));
-    if (status === "upcoming") return bookings.filter((b) => b.contract_status === "PendingApproval");
-    if (status === "past") return bookings.filter((b) => ["Completed", "CheckedOut"].includes(b.contract_status));
-    if (status === "cancelled") return bookings.filter((b) => b.contract_status === "Cancelled");
+    if (status === "active") return bookings.filter((b) => ["Active", "Confirmed"].includes(b.booking_status));
+    if (status === "upcoming") return bookings.filter((b) => ["PendingApproval", "Pending"].includes(b.booking_status));
+    if (status === "past") return bookings.filter((b) => ["Completed", "CheckedOut"].includes(b.booking_status));
+    if (status === "cancelled") return bookings.filter((b) => b.booking_status === "Cancelled");
     return bookings;
   };
 
@@ -180,7 +181,7 @@ export default function PortalBookings() {
           <PortalSideMenu active="/portal/bookings" />
           <div className="flex-1">
         {/* Action Required Banner for PendingPayment bookings */}
-        {bookings.filter((b) => b.contract_status === "PendingPayment" || b.contract_status === "Draft").map((b) => (
+        {bookings.filter((b) => b.booking_status === "PendingPayment" || b.booking_status === "Draft").map((b) => (
           <div key={b.id} className="mb-4 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <div className="flex items-center gap-2 shrink-0">
               <AlertTriangle className="h-5 w-5 text-amber-600" />

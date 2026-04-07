@@ -69,13 +69,16 @@ router.post("/v1/guest/bookings", async (req, res): Promise<void> => {
       check_out_date,
       num_guests,
       customer_notes,
+      special_requests,
     } = req.body as {
       space_id: number;
       check_in_date: string;
       check_out_date: string;
       num_guests?: number;
       customer_notes?: string;
+      special_requests?: string;
     };
+    const notes = customer_notes ?? special_requests ?? null;
 
     if (!space_id || !check_in_date || !check_out_date) {
       res.status(400).json({ success: false, error: "space_id, check_in_date, check_out_date are required" });
@@ -108,7 +111,7 @@ router.post("/v1/guest/bookings", async (req, res): Promise<void> => {
         check_in_date,
         check_out_date,
         num_guests: num_guests ?? 1,
-        customer_notes: customer_notes ?? null,
+        customer_notes: notes,
         booking_status: "Pending",
         booking_source: "Guest Portal",
         status: "Active",
@@ -184,12 +187,26 @@ router.get("/v1/guest/invoices", async (req, res): Promise<void> => {
   const guest = (req as any).guest;
 
   const invoices = await db
-    .select()
+    .select({
+      id: invoicesTable.id,
+      invoice_ref: invoicesTable.invoice_ref,
+      amount: invoicesTable.amount,
+      currency: invoicesTable.currency,
+      status: invoicesTable.status,
+      due_date: invoicesTable.due_date,
+      paid_at: invoicesTable.paid_at,
+      description: invoicesTable.description,
+      created_at: invoicesTable.created_at,
+      booking_id: invoicesTable.booking_id,
+      booking_ref: bookingsTable.booking_ref,
+      space_name: spacesTable.name,
+    })
     .from(invoicesTable)
+    .leftJoin(bookingsTable, eq(invoicesTable.booking_id, bookingsTable.id))
+    .leftJoin(spacesTable, eq(bookingsTable.space_id, spacesTable.id))
     .where(
       and(
         eq(invoicesTable.account_id, guest.account_id),
-        eq(invoicesTable.status, "Active"),
       ),
     )
     .orderBy(desc(invoicesTable.created_at));
