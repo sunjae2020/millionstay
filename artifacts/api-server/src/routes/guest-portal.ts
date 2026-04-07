@@ -10,6 +10,7 @@ import {
   accountsTable,
 } from "@workspace/db";
 import { requireGuestAuth } from "../middlewares/requireGuestAuth";
+import { sendBookingConfirmation } from "../lib/email";
 
 const router: IRouter = Router();
 
@@ -85,22 +86,43 @@ router.post("/v1/guest/bookings", async (req, res): Promise<void> => {
       return;
     }
 
-    // Verify space exists and is active
-    const [space] = await db
-      .select({ id: spacesTable.id, base_weekly_price: spacesTable.base_weekly_price })
+    // Verify space exists and is active, join property for email
+    const [spaceRow] = await db
+      .select({
+        id: spacesTable.id,
+        name: spacesTable.name,
+        base_weekly_price: spacesTable.base_weekly_price,
+        property_name: propertiesTable.name,
+        property_address: propertiesTable.address,
+        property_city: propertiesTable.city,
+      })
       .from(spacesTable)
+      .leftJoin(propertiesTable, eq(spacesTable.property_id, propertiesTable.id))
       .where(and(eq(spacesTable.id, space_id), eq(spacesTable.status, "Active")))
       .limit(1);
 
-    if (!space) {
+    if (!spaceRow) {
       res.status(404).json({ success: false, error: "Space not found or unavailable" });
       return;
     }
+
+    // Fetch guest info for email
+    const [guestUser] = await db
+      .select({ first_name: guestUsersTable.first_name, last_name: guestUsersTable.last_name, email: guestUsersTable.email })
+      .from(guestUsersTable)
+      .where(eq(guestUsersTable.account_id, guest.account_id))
+      .limit(1);
 
     // Generate booking reference
     const timestamp = Date.now().toString(36).toUpperCase();
     const random = Math.random().toString(36).substring(2, 5).toUpperCase();
     const booking_ref = `GBK-${timestamp}-${random}`;
+
+    // Calculate stay weeks for email
+    const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+    const stayMs = new Date(check_out_date).getTime() - new Date(check_in_date).getTime();
+    const stayWeeks = Math.max(1, Math.round(stayMs / msPerWeek));
+    const isLongTerm = stayWeeks >= 4;
 
     const [newBooking] = await db
       .insert(bookingsTable)
@@ -110,6 +132,7 @@ router.post("/v1/guest/bookings", async (req, res): Promise<void> => {
         space_id,
         check_in_date,
         check_out_date,
+        stay_weeks: stayWeeks,
         num_guests: num_guests ?? 1,
         customer_notes: notes,
         booking_status: "Pending",
@@ -124,6 +147,23 @@ router.post("/v1/guest/bookings", async (req, res): Promise<void> => {
         check_out_date: bookingsTable.check_out_date,
         created_at: bookingsTable.created_at,
       });
+
+    // Send confirmation email (non-blocking, fail silently)
+    if (guestUser?.email) {
+      const guestName = [guestUser.first_name, guestUser.last_name].filter(Boolean).join(" ") || "Guest";
+      const propertyAddress = [spaceRow.property_address, spaceRow.property_city].filter(Boolean).join(", ") || "Melbourne";
+      sendBookingConfirmation({
+        to: guestUser.email,
+        guestName,
+        bookingRef: booking_ref,
+        spaceName: spaceRow.name ?? "Room",
+        propertyAddress,
+        checkIn: check_in_date,
+        checkOut: check_out_date,
+        weeklyRate: spaceRow.base_weekly_price ? Number(spaceRow.base_weekly_price) : null,
+        isLongTerm,
+      }).catch(() => {/* fail silently */});
+    }
 
     res.status(201).json({ success: true, data: newBooking });
   } catch (err) {

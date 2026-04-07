@@ -214,7 +214,13 @@ export default function BookingNew() {
   const [step, setStep] = useState(0);
   const [session, setSession] = useState<Record<string, unknown>>(() => {
     const saved = loadSession();
-    return { check_in_date: checkInParam, check_out_date: checkOutParam, num_guests: 1, ...saved };
+    // URL params always override stale saved session dates
+    return {
+      num_guests: 1,
+      ...saved,
+      ...(checkInParam  ? { check_in_date:  checkInParam  } : {}),
+      ...(checkOutParam ? { check_out_date: checkOutParam } : {}),
+    };
   });
 
   /* form state */
@@ -233,6 +239,7 @@ export default function BookingNew() {
   const [bookingRef, setBookingRef]         = useState("");
   const [confirmed, setConfirmed]           = useState(false);
   const [paymentMethod, setPaymentMethod]   = useState<"card" | "bank">("card");
+  const [redirectCountdown, setRedirectCountdown] = useState(3);
 
   /* login / register form for long-term step 4 */
   const [loginEmail, setLoginEmail]       = useState("");
@@ -246,6 +253,24 @@ export default function BookingNew() {
   });
   const createBooking = useCreateGuestBooking();
   const space = spaceData?.data;
+
+  /* Auto-redirect to portal after confirmation (logged-in users) */
+  useEffect(() => {
+    if (!confirmed || !token) return;
+    setRedirectCountdown(3);
+    const interval = setInterval(() => {
+      setRedirectCountdown((c) => {
+        if (c <= 1) {
+          clearInterval(interval);
+          sessionStorage.removeItem(SESSION_KEY);
+          setLocation("/portal/bookings");
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [confirmed, token]);
 
   /* Derive stay type */
   const stayWeeks = (() => {
@@ -321,7 +346,7 @@ export default function BookingNew() {
     }
     setPaying(true);
     try {
-      const res = await new Promise<{ booking_id: number; booking_ref: string }>((resolve, reject) => {
+      const res = await new Promise<{ id: number; booking_ref: string }>((resolve, reject) => {
         createBooking.mutate(
           { data: { space_id: session.space_id as number, product_id: session.product_id as number | undefined,
               check_in_date: session.check_in_date as string, check_out_date: session.check_out_date as string,
@@ -330,17 +355,9 @@ export default function BookingNew() {
         );
       });
 
-      if (paymentMethod === "card") {
-        const payRes = await fetch(`${import.meta.env.VITE_API_URL ?? ""}/api/v1/guest/payment/confirm`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ booking_id: res.booking_id, amount: totalDue }),
-        });
-        if (!payRes.ok) throw new Error("Payment failed");
-      }
-      /* Bank transfer: booking created, confirmation email simulated */
-      setBookingRef(res.booking_ref);
+      /* Booking created successfully — confirmation email sent by backend */
       sessionStorage.removeItem(SESSION_KEY);
+      setBookingRef(res.booking_ref);
       setConfirmed(true);
     } catch {
       toast({ title: "Submission failed", description: "Please check your details and try again.", variant: "destructive" });
@@ -389,9 +406,12 @@ export default function BookingNew() {
     setLoggingIn(true);
     try {
       /* 1. Register or Login */
-      const apiPath = loginMode === "register" ? "/api/v1/guest/register" : "/api/v1/auth/login";
+      const apiPath = loginMode === "register" ? "/api/v1/auth/guest/register" : "/api/v1/auth/guest/login";
+      const nameParts = registerName.trim().split(" ");
+      const regFirstName = nameParts[0] ?? "";
+      const regLastName = nameParts.slice(1).join(" ") || (nameParts[0] ?? "");
       const body = loginMode === "register"
-        ? { name: registerName.trim(), email: loginEmail, password: loginPassword }
+        ? { first_name: regFirstName, last_name: regLastName, email: loginEmail, password: loginPassword }
         : { email: loginEmail, password: loginPassword };
 
       const authRes = await fetch(`${import.meta.env.VITE_API_URL ?? ""}${apiPath}`, {
@@ -408,7 +428,7 @@ export default function BookingNew() {
 
       const authData = await authRes.json();
       const newToken = authData.token;
-      useAuthStore.getState().setAuth(newToken, authData.guest);
+      useAuthStore.getState().setAuth(newToken, authData.user);
 
       toast({ title: loginMode === "register" ? "Account created! Creating your booking…" : "Signed in! Creating your booking…" });
 
@@ -510,11 +530,11 @@ export default function BookingNew() {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-xs text-gray-500 font-medium">First Name</label>
-                      <div className="mt-1 h-10 border border-gray-100 bg-gray-50 rounded-lg px-3 flex items-center text-sm text-gray-700">{guest.name?.split(" ")[0]}</div>
+                      <div className="mt-1 h-10 border border-gray-100 bg-gray-50 rounded-lg px-3 flex items-center text-sm text-gray-700">{guest.first_name ?? ""}</div>
                     </div>
                     <div>
                       <label className="text-xs text-gray-500 font-medium">Last Name</label>
-                      <div className="mt-1 h-10 border border-gray-100 bg-gray-50 rounded-lg px-3 flex items-center text-sm text-gray-700">{guest.name?.split(" ").slice(1).join(" ")}</div>
+                      <div className="mt-1 h-10 border border-gray-100 bg-gray-50 rounded-lg px-3 flex items-center text-sm text-gray-700">{guest.last_name ?? ""}</div>
                     </div>
                     <div className="col-span-2">
                       <label className="text-xs text-gray-500 font-medium">Email</label>
@@ -674,7 +694,7 @@ export default function BookingNew() {
                     <p className="text-xs text-gray-400 flex items-center gap-1.5"><Lock className="h-3 w-3" />Payments are encrypted and secure.</p>
                   </div>
                 ) : (
-                  <BankTransferDetails total={totalShort} ref_={`${guest?.name ?? "Guest"} ${session.check_in_date ?? ""}`} />
+                  <BankTransferDetails total={totalShort} ref_={`${[guest?.first_name, guest?.last_name].filter(Boolean).join(" ") || "Guest"} ${session.check_in_date ?? ""}`} />
                 )}
               </div>
 
@@ -927,7 +947,7 @@ export default function BookingNew() {
             {paymentMethod === "bank" && (
               <BankTransferDetails
                 total={isLong ? totalLong : totalShort}
-                ref_={bookingRef || `${guest?.name ?? guestName} ${session.check_in_date ?? ""}`}
+                ref_={bookingRef || `${[guest?.first_name, guest?.last_name].filter(Boolean).join(" ") || guestName || "Guest"} ${session.check_in_date ?? ""}`}
               />
             )}
 
@@ -954,11 +974,16 @@ export default function BookingNew() {
                 ))}
               </div>
               {token ? (
-                <Button onClick={() => setLocation("/portal/bookings")}
-                  className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12 rounded-xl">
-                  <LayoutDashboard className="h-4 w-4 mr-2" /> Open Guest Portal
-                  <ExternalLink className="h-4 w-4 ml-2 opacity-70" />
-                </Button>
+                <div className="space-y-2">
+                  <Button onClick={() => setLocation("/portal/bookings")}
+                    className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12 rounded-xl">
+                    <LayoutDashboard className="h-4 w-4 mr-2" /> Open Guest Portal
+                    <ExternalLink className="h-4 w-4 ml-2 opacity-70" />
+                  </Button>
+                  <p className="text-center text-xs text-gray-400">
+                    자동으로 이동합니다 <span className="font-semibold text-primary">{redirectCountdown}초</span> 후…
+                  </p>
+                </div>
               ) : (
                 <Button onClick={() => setLocation("/login?redirect=/portal/bookings")}
                   className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12 rounded-xl">
