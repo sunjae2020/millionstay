@@ -3,13 +3,14 @@ import { CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface DateInputProps {
-  value: string;             // ISO YYYY-MM-DD
+  value: string;
   onChange: (iso: string) => void;
-  min?: string;              // ISO YYYY-MM-DD
-  max?: string;              // ISO YYYY-MM-DD
+  min?: string;
+  max?: string;
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  "data-testid"?: string;
 }
 
 function isoToDmy(iso: string): string {
@@ -45,6 +46,7 @@ export function DateInput({
   placeholder = "DD/MM/YYYY",
   className,
   disabled,
+  "data-testid": testId,
 }: DateInputProps) {
   const [display, setDisplay] = useState(isoToDmy(value));
   const [error, setError] = useState(false);
@@ -73,18 +75,8 @@ export function DateInput({
   };
 
   const handleBlur = () => {
-    if (display.length > 0 && display.length < 10) {
-      setError(true);
-    }
+    if (display.length > 0 && display.length < 10) setError(true);
     if (display.length === 0) setError(false);
-  };
-
-  const openPicker = () => {
-    try {
-      hiddenRef.current?.showPicker?.();
-    } catch {
-      hiddenRef.current?.click();
-    }
   };
 
   return (
@@ -96,6 +88,7 @@ export function DateInput({
         onBlur={handleBlur}
         placeholder={placeholder}
         disabled={disabled}
+        data-testid={testId}
         className={cn(
           "w-full pr-9 focus:outline-none focus:ring-2 focus:ring-primary",
           error && "ring-2 ring-red-400",
@@ -104,28 +97,27 @@ export function DateInput({
         maxLength={10}
         inputMode="numeric"
       />
-      <button
-        type="button"
-        onClick={openPicker}
-        disabled={disabled}
-        tabIndex={-1}
-        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors"
-      >
+
+      {/* Calendar icon — purely decorative, pointer events pass through to the native input below */}
+      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
         <CalendarDays className="h-4 w-4" />
-      </button>
+      </span>
+
+      {/* Native date input overlaid on the calendar icon area so clicking it opens the picker natively */}
       <input
         ref={hiddenRef}
         type="date"
         value={value}
         min={min}
         max={max}
+        disabled={disabled}
         tabIndex={-1}
         onChange={(e) => {
           onChange(e.target.value);
           setDisplay(isoToDmy(e.target.value));
           setError(false);
         }}
-        className="absolute inset-0 opacity-0 pointer-events-none w-full h-full"
+        className="absolute right-0 top-0 h-full w-10 opacity-0 cursor-pointer"
         aria-hidden="true"
       />
     </div>

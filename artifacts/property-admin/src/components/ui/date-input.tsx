@@ -3,7 +3,7 @@ import { CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface DateInputProps {
-  value: string;             // ISO YYYY-MM-DD
+  value: string;
   onChange?: (iso: string) => void;
   min?: string;
   max?: string;
@@ -79,14 +79,6 @@ export function DateInput({
     if (display.length === 0) setError(false);
   };
 
-  const openPicker = () => {
-    try {
-      hiddenRef.current?.showPicker?.();
-    } catch {
-      hiddenRef.current?.click();
-    }
-  };
-
   return (
     <div className="relative">
       <input
@@ -107,32 +99,31 @@ export function DateInput({
         maxLength={10}
         inputMode="numeric"
       />
+
+      {/* Calendar icon — decorative only; pointer events pass through to the native input below */}
+      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+        <CalendarDays className="h-4 w-4" />
+      </span>
+
+      {/* Native date input overlaid on the icon area; clicking it opens the picker natively */}
       {!readOnly && (
-        <button
-          type="button"
-          onClick={openPicker}
+        <input
+          ref={hiddenRef}
+          type="date"
+          value={value}
+          min={min}
+          max={max}
           disabled={disabled}
           tabIndex={-1}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <CalendarDays className="h-4 w-4" />
-        </button>
+          onChange={(e) => {
+            onChange?.(e.target.value);
+            setDisplay(isoToDmy(e.target.value));
+            setError(false);
+          }}
+          className="absolute right-0 top-0 h-full w-10 opacity-0 cursor-pointer"
+          aria-hidden="true"
+        />
       )}
-      <input
-        ref={hiddenRef}
-        type="date"
-        value={value}
-        min={min}
-        max={max}
-        tabIndex={-1}
-        onChange={(e) => {
-          onChange?.(e.target.value);
-          setDisplay(isoToDmy(e.target.value));
-          setError(false);
-        }}
-        className="absolute inset-0 opacity-0 pointer-events-none w-full h-full"
-        aria-hidden="true"
-      />
     </div>
   );
 }
