@@ -43,17 +43,28 @@ function MaskedKeyInput({ value, envKey, onSaved }: { value: string; envKey: str
   const [newVal, setNewVal] = useState("");
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   async function handleSave() {
+    if (!newVal.trim()) return;
     setSaving(true);
+    setSaveError(null);
     try {
-      await apiFetch("/api/v1/integrations/update-env", {
+      const res = await apiFetch("/api/v1/integrations/update-env", {
         method: "POST",
-        body: JSON.stringify({ key: envKey, value: newVal }),
+        body: JSON.stringify({ key: envKey, value: newVal.trim() }),
       });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setSaveError((data as any).error ?? `Save failed (${res.status})`);
+        return;
+      }
       setEditing(false);
       setNewVal("");
+      setSaveError(null);
       onSaved();
+    } catch {
+      setSaveError("Network error — please try again");
     } finally {
       setSaving(false);
     }
@@ -69,19 +80,23 @@ function MaskedKeyInput({ value, envKey, onSaved }: { value: string; envKey: str
 
   if (editing) {
     return (
-      <div className="flex gap-2">
-        <Input
-          type="text"
-          value={newVal}
-          onChange={(e) => setNewVal(e.target.value)}
-          placeholder={`Enter new ${envKey}`}
-          className="h-8 text-xs font-mono flex-1"
-          autoFocus
-        />
-        <Button size="sm" className="h-8 text-xs" onClick={handleSave} disabled={saving || !newVal}>
-          {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : "Save"}
-        </Button>
-        <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setEditing(false)}>Cancel</Button>
+      <div className="space-y-1">
+        <div className="flex gap-2">
+          <Input
+            type="text"
+            value={newVal}
+            onChange={(e) => { setNewVal(e.target.value); setSaveError(null); }}
+            placeholder={`Enter ${envKey}`}
+            className="h-8 text-xs font-mono flex-1"
+            autoFocus
+            onKeyDown={(e) => e.key === "Enter" && handleSave()}
+          />
+          <Button size="sm" className="h-8 text-xs" onClick={handleSave} disabled={saving || !newVal.trim()}>
+            {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : "Save"}
+          </Button>
+          <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => { setEditing(false); setSaveError(null); }}>Cancel</Button>
+        </div>
+        {saveError && <p className="text-xs text-red-600">{saveError}</p>}
       </div>
     );
   }
@@ -161,12 +176,16 @@ function ResendFields({ status, onRefresh }: { status: IntegrationStatus | null;
         method: "POST",
         body: JSON.stringify({ to_email: testEmail }),
       });
-      const data = await res.json();
-      setSendResult(data.success ? `Sent! ID: ${data.message_id}` : `Error: ${data.error}`);
+      const data = await res.json() as { success: boolean; message_id?: string; error?: string };
+      setSendResult(data.success ? `✓ Sent! Message ID: ${data.message_id}` : `✗ Error: ${data.error}`);
+    } catch {
+      setSendResult("✗ Network error — check API server");
     } finally {
       setSending(false);
     }
   }
+
+  const notConfigured = !status?.resend.configured;
 
   return (
     <div className="space-y-3">
@@ -178,24 +197,36 @@ function ResendFields({ status, onRefresh }: { status: IntegrationStatus | null;
         <Label className="text-xs text-muted-foreground">From Email (EMAIL_FROM)</Label>
         <MaskedKeyInput value={status?.resend.from_email ?? ""} envKey="EMAIL_FROM" onSaved={onRefresh} />
       </div>
-      <div className="flex gap-2">
-        <Input
-          type="email"
-          placeholder="Send test to: you@example.com"
-          className="h-8 text-xs flex-1"
-          value={testEmail}
-          onChange={(e) => setTestEmail(e.target.value)}
-        />
-        <Button
-          size="sm"
-          className="h-8 text-xs"
-          onClick={sendTest}
-          disabled={sending || !testEmail || !status?.resend.configured}
-        >
-          {sending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Send Test"}
-        </Button>
+      <div className="space-y-1">
+        <div className="flex gap-2">
+          <Input
+            type="email"
+            placeholder="Test recipient: you@example.com"
+            className="h-8 text-xs flex-1"
+            value={testEmail}
+            onChange={(e) => setTestEmail(e.target.value)}
+            disabled={notConfigured}
+          />
+          <Button
+            size="sm"
+            className="h-8 text-xs"
+            onClick={sendTest}
+            disabled={sending || !testEmail || notConfigured}
+          >
+            {sending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Send Test"}
+          </Button>
+        </div>
+        {notConfigured && (
+          <p className="text-xs text-amber-600">
+            ↑ Save the RESEND_API_KEY first, then you can send a test email.
+          </p>
+        )}
       </div>
-      {sendResult && <p className="text-xs text-muted-foreground">{sendResult}</p>}
+      {sendResult && (
+        <p className={`text-xs font-medium ${sendResult.startsWith("✓") ? "text-green-600" : "text-red-600"}`}>
+          {sendResult}
+        </p>
+      )}
     </div>
   );
 }
