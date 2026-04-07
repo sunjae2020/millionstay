@@ -11,9 +11,11 @@ interface SpaceCardProps {
   space: SpaceSummary;
   index?: number;
   highlighted?: boolean;
+  checkIn?: string;
+  checkOut?: string;
 }
 
-export function SpaceCard({ space, index = 0, highlighted = false }: SpaceCardProps) {
+export function SpaceCard({ space, index = 0, highlighted = false, checkIn = "", checkOut = "" }: SpaceCardProps) {
   const { t } = useTranslation();
   const [imgError, setImgError] = useState(false);
 
@@ -37,7 +39,7 @@ export function SpaceCard({ space, index = 0, highlighted = false }: SpaceCardPr
       className={`group relative flex flex-col overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition-all hover:shadow-md hover:-translate-y-1 ${highlighted ? "ring-2 ring-primary shadow-md -translate-y-1" : ""}`}
       data-testid={`space-card-${space.id}`}
     >
-      <Link href={`/spaces/${space.id}`} className="absolute inset-0 z-10">
+      <Link href={`/spaces/${space.id}${checkIn || checkOut ? `?${new URLSearchParams([["check_in", checkIn], ["check_out", checkOut]].filter(([, v]) => v) as [string, string][]).toString()}` : ""}`} className="absolute inset-0 z-10">
         <span className="sr-only">View Space</span>
       </Link>
       

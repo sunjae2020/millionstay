@@ -22,7 +22,15 @@ function SectionTitle({ italic, normal, sub }: { italic: string; normal?: string
   );
 }
 
-function ListingCard({ space, index = 0 }: { space: any; index?: number }) {
+function buildSpaceUrl(id: number | string, checkIn: string, checkOut: string) {
+  const p = new URLSearchParams();
+  if (checkIn) p.set("check_in", checkIn);
+  if (checkOut) p.set("check_out", checkOut);
+  const qs = p.toString();
+  return `/spaces/${id}${qs ? `?${qs}` : ""}`;
+}
+
+function ListingCard({ space, index = 0, checkIn = "", checkOut = "" }: { space: any; index?: number; checkIn?: string; checkOut?: string }) {
   const [, setLocation] = useLocation();
   return (
     <motion.div
@@ -30,7 +38,7 @@ function ListingCard({ space, index = 0 }: { space: any; index?: number }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.07 }}
       className="bg-white rounded-lg overflow-hidden shadow hover:shadow-md transition-shadow cursor-pointer group"
-      onClick={() => setLocation(`/spaces/${space.id}`)}
+      onClick={() => setLocation(buildSpaceUrl(space.id, checkIn, checkOut))}
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-orange-50">
         {space.primary_image ? (
@@ -60,7 +68,7 @@ function ListingCard({ space, index = 0 }: { space: any; index?: number }) {
             <span className="text-xs text-gray-400 ml-1">/ week</span>
           </div>
           <button
-            onClick={(e) => { e.stopPropagation(); setLocation(`/spaces/${space.id}`); }}
+            onClick={(e) => { e.stopPropagation(); setLocation(buildSpaceUrl(space.id, checkIn, checkOut)); }}
             className="px-3 py-1.5 bg-primary text-white text-xs font-semibold rounded hover:bg-primary/90 transition-colors"
           >
             Book Now
@@ -286,7 +294,7 @@ export default function Home() {
                   Fully furnished private room in a shared house. Weekly rate is all-inclusive — WiFi, utilities, and cleaning included.
                 </p>
                 <button
-                  onClick={() => setLocation(`/spaces/${spotlightSpace.id}`)}
+                  onClick={() => setLocation(buildSpaceUrl(spotlightSpace.id, checkIn, checkOut))}
                   className="w-fit px-6 py-3 bg-primary text-white font-bold text-sm uppercase tracking-wide rounded hover:bg-primary/90 transition-colors"
                 >
                   Book Now
@@ -326,7 +334,7 @@ export default function Home() {
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
               {featured.slice(0, 4).map((space, i) => (
-                <ListingCard key={space.id} space={space} index={i} />
+                <ListingCard key={space.id} space={space} index={i} checkIn={checkIn} checkOut={checkOut} />
               ))}
             </div>
           )}
@@ -386,7 +394,7 @@ export default function Home() {
           {allSpaces.length > 0 && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
               {allSpaces.slice(0, 4).map((space, i) => (
-                <ListingCard key={space.id} space={space} index={i} />
+                <ListingCard key={space.id} space={space} index={i} checkIn={checkIn} checkOut={checkOut} />
               ))}
             </div>
           )}

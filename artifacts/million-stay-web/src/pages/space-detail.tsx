@@ -246,8 +246,11 @@ export default function SpaceDetail() {
   const { t } = useTranslation();
   const { token } = useAuthStore();
   const [selectedProduct, setSelectedProduct] = useState<number | null>(null);
-  const [checkIn, setCheckIn] = useState<string>("");
-  const [checkOut, setCheckOut] = useState<string>("");
+
+  // Read dates from URL search params (passed from home/search pages)
+  const urlParams = new URLSearchParams(window.location.search);
+  const [checkIn, setCheckIn] = useState<string>(urlParams.get("check_in") ?? "");
+  const [checkOut, setCheckOut] = useState<string>(urlParams.get("check_out") ?? "");
 
   const spaceId = parseInt(id ?? "0", 10);
 

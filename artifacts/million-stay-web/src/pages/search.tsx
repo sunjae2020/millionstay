@@ -37,6 +37,8 @@ export default function Search() {
       gender_policy: p.get("gender_policy") ?? "all",
       min_price: Number(p.get("min_price") ?? 100),
       max_price: Number(p.get("max_price") ?? 1200),
+      check_in: p.get("check_in") ?? "",
+      check_out: p.get("check_out") ?? "",
     };
   };
 
@@ -45,6 +47,8 @@ export default function Search() {
   const [spaceType, setSpaceType] = useState(init.space_type);
   const [genderPolicy, setGenderPolicy] = useState(init.gender_policy);
   const [priceRange, setPriceRange] = useState<[number, number]>([init.min_price, init.max_price]);
+  const [checkIn] = useState(init.check_in);
+  const [checkOut] = useState(init.check_out);
   const [offset, setOffset] = useState(0);
   const [allSpaces, setAllSpaces] = useState<Record<string, unknown>[]>([]);
   const [openDropdown, setOpenDropdown] = useState<DropdownKey>(null);
@@ -346,7 +350,7 @@ export default function Search() {
                     <div key={space.id as number} id={`space-card-${space.id}`}
                       onMouseEnter={() => setHoveredId(space.id as number)}
                       onMouseLeave={() => setHoveredId(null)}>
-                      <SpaceCard space={space as Parameters<typeof SpaceCard>[0]["space"]} index={i} highlighted={hoveredId === space.id} />
+                      <SpaceCard space={space as Parameters<typeof SpaceCard>[0]["space"]} index={i} highlighted={hoveredId === space.id} checkIn={checkIn} checkOut={checkOut} />
                     </div>
                   ))}
                 </div>
