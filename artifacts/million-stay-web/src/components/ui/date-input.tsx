@@ -80,8 +80,11 @@ export function DateInput({
   };
 
   const openPicker = () => {
-    hiddenRef.current?.showPicker?.();
-    hiddenRef.current?.click();
+    try {
+      hiddenRef.current?.showPicker?.();
+    } catch {
+      hiddenRef.current?.click();
+    }
   };
 
   return (
