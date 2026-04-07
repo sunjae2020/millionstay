@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 const BASE = "/api/v1";
 
 function authHeaders(): Record<string, string> {
-  const token = localStorage.getItem("ms_auth_token");
+  const token = localStorage.getItem("ms_guest_token");
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 

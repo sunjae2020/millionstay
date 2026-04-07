@@ -563,12 +563,27 @@ export default function SpaceDetail() {
                     <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
                       className="rounded-xl bg-orange-50 border border-orange-100 p-3 space-y-1.5 text-xs">
                       <div className="flex justify-between">
-                        <span className="text-gray-500">${weeklyRate}/wk × {stayWeeks} wks</span>
+                        <span className="text-gray-500">${weeklyRate}/wk × {stayWeeks} wks (rent)</span>
                         <span className="font-semibold">${rentTotal?.toLocaleString()}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Due today (deposit + fees)</span>
-                        <span className="font-bold text-primary">${totalToday.toLocaleString()}</span>
+                      <div className="border-t border-orange-200 pt-1.5 space-y-1">
+                        <p className="text-gray-400 font-medium">Initial payment (once-off):</p>
+                        <div className="flex justify-between text-gray-500">
+                          <span>Security Bond (refundable)</span>
+                          <span>${deposit.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-gray-500">
+                          <span>Admin Fee</span>
+                          <span>${adminFee.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-gray-500">
+                          <span>Cleaning Fee</span>
+                          <span>${cleaningFee.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between font-bold text-gray-800 border-t border-orange-200 pt-1">
+                          <span>Due today</span>
+                          <span className="text-primary">${totalToday.toLocaleString()}</span>
+                        </div>
                       </div>
                     </motion.div>
                   )}

@@ -19,6 +19,8 @@ interface AuthState {
   logout: () => void;
 }
 
+const GUEST_TOKEN_KEY = "ms_guest_token";
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -26,21 +28,21 @@ export const useAuthStore = create<AuthState>()(
       guest: null,
       setAuth: (token, guest) => {
         set({ token, guest });
-        localStorage.setItem("ms_auth_token", token);
+        localStorage.setItem(GUEST_TOKEN_KEY, token);
       },
       setGuest: (guest) => set({ guest }),
       logout: () => {
         set({ token: null, guest: null });
-        localStorage.removeItem("ms_auth_token");
+        localStorage.removeItem(GUEST_TOKEN_KEY);
       },
     }),
     {
-      name: "ms-auth-storage",
+      name: "ms-guest-storage",
     }
   )
 );
 
 // Initialize token getter for custom fetch
 setAuthTokenGetter(() => {
-  return localStorage.getItem("ms_auth_token") || null;
+  return localStorage.getItem(GUEST_TOKEN_KEY) || null;
 });
