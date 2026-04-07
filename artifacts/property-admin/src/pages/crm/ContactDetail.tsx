@@ -3,6 +3,7 @@ import { useLocation, useParams } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -249,7 +250,9 @@ export default function ContactDetail() {
               <div className="grid grid-cols-3 gap-3">
                 <div className="grid gap-1.5">
                   <Label>Date of Birth</Label>
-                  <Input {...register("date_of_birth")} type="date" />
+                  <Controller name="date_of_birth" control={control} render={({ field }) => (
+                    <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                  )} />
                 </div>
                 <div className="grid gap-1.5">
                   <Label>Gender</Label>
@@ -295,7 +298,9 @@ export default function ContactDetail() {
                 </div>
                 <div className="grid gap-1.5">
                   <Label>Passport Expiry</Label>
-                  <Input {...register("passport_expiry")} type="date" />
+                  <Controller name="passport_expiry" control={control} render={({ field }) => (
+                    <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                  )} />
                   <ExpiryWarning label="Passport" dateStr={passportExpiry} />
                 </div>
               </div>
@@ -306,7 +311,9 @@ export default function ContactDetail() {
                 </div>
                 <div className="grid gap-1.5">
                   <Label>Visa Expiry</Label>
-                  <Input {...register("visa_expiry")} type="date" />
+                  <Controller name="visa_expiry" control={control} render={({ field }) => (
+                    <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                  )} />
                   <ExpiryWarning label="Visa" dateStr={visaExpiry} />
                 </div>
               </div>

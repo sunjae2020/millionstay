@@ -3,6 +3,7 @@ import heroImage from "@assets/MS_Homepage_Photo_1920x1080_1775403929888.jpg";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DateInput } from "@/components/ui/date-input";
 import { useLocation } from "wouter";
 import { useState } from "react";
 import { useListSuburbs } from "@workspace/api-client-react";
@@ -105,6 +106,8 @@ export default function Home() {
   const [suburbId, setSuburbId] = useState<string>("");
   const [spaceType, setSpaceType] = useState<string>("");
   const [guests, setGuests] = useState<string>("1");
+  const [checkIn, setCheckIn] = useState<string>("");
+  const [checkOut, setCheckOut] = useState<string>("");
 
   const { data: featuredData, isLoading: loadingFeatured } = useListFeaturedSpaces();
   const { data: spacesData } = useListPublicSpaces({ limit: 4, offset: 0 });
@@ -114,6 +117,8 @@ export default function Home() {
     const params = new URLSearchParams();
     if (suburbId && suburbId !== "all") params.append("suburb_id", suburbId);
     if (spaceType && spaceType !== "all") params.append("space_type", spaceType);
+    if (checkIn) params.append("check_in", checkIn);
+    if (checkOut) params.append("check_out", checkOut);
     setLocation(`/search?${params.toString()}`);
   };
 
@@ -203,12 +208,23 @@ export default function Home() {
 
                 <div className="space-y-1">
                   <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Check In</label>
-                  <input type="date" className="h-10 w-full border border-input rounded-md px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary" data-testid="search-date" />
+                  <DateInput
+                    value={checkIn}
+                    onChange={setCheckIn}
+                    min={new Date().toISOString().slice(0, 10)}
+                    className="h-10 border border-input rounded-md px-3 text-sm text-gray-700"
+                    data-testid="search-date"
+                  />
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Check Out</label>
-                  <input type="date" className="h-10 w-full border border-input rounded-md px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary" />
+                  <DateInput
+                    value={checkOut}
+                    onChange={setCheckOut}
+                    min={checkIn || new Date().toISOString().slice(0, 10)}
+                    className="h-10 border border-input rounded-md px-3 text-sm text-gray-700"
+                  />
                 </div>
 
                 <div>

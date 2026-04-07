@@ -7,6 +7,7 @@ import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { DateInput } from "@/components/ui/date-input";
 import {
   MapPin, Star, ChevronLeft, ChevronRight,
   Camera, X, Check, MapPinned, FileText,
@@ -542,15 +543,15 @@ export default function SpaceDetail() {
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="block text-xs font-medium text-gray-500 mb-1">Check In</label>
-                      <input type="date" value={checkIn} min={format(new Date(), "yyyy-MM-dd")}
-                        onChange={(e) => handleCheckInChange(e.target.value)}
-                        className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                      <DateInput value={checkIn} onChange={(v) => handleCheckInChange(v)}
+                        min={format(new Date(), "yyyy-MM-dd")}
+                        className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:ring-primary/30" />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-500 mb-1">Check Out</label>
-                      <input type="date" value={checkOut} min={checkIn || format(new Date(), "yyyy-MM-dd")}
-                        onChange={(e) => setCheckOut(e.target.value)}
-                        className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                      <DateInput value={checkOut} onChange={setCheckOut}
+                        min={checkIn || format(new Date(), "yyyy-MM-dd")}
+                        className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:ring-primary/30" />
                     </div>
                   </div>
 

@@ -7,6 +7,7 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -497,15 +498,18 @@ export default function BookingNew() {
                   ) : null}
 
                 <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { label: "Check In", key: "check_in_date" },
+                  {([
+                    { label: "Check In",  key: "check_in_date" },
                     { label: "Check Out", key: "check_out_date" },
-                  ].map(({ label, key }) => (
+                  ] as const).map(({ label, key }) => (
                     <div key={key}>
                       <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</label>
-                      <input type="date" value={session[key] as string}
-                        onChange={(e) => updateSession({ [key]: e.target.value })}
-                        className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+                      <DateInput
+                        value={(session[key] as string) ?? ""}
+                        onChange={(v) => updateSession({ [key]: v })}
+                        min={key === "check_out_date" ? ((session.check_in_date as string) || new Date().toISOString().slice(0, 10)) : new Date().toISOString().slice(0, 10)}
+                        className="mt-1 border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-primary"
+                      />
                     </div>
                   ))}
                 </div>

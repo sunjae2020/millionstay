@@ -1,9 +1,10 @@
 import { useEffect } from "react";
 import { useLocation, useParams } from "wouter";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,7 +15,6 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Save } from "lucide-react";
 import { LookupSelect } from "@/components/LookupSelect";
-import { Controller } from "react-hook-form";
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -145,11 +145,15 @@ export default function ServiceHostDetail() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>From Date</Label>
-              <Input type="date" {...register("from_date")} className="mt-1" />
+              <Controller name="from_date" control={control} render={({ field }) => (
+                <DateInput value={field.value ?? ""} onChange={field.onChange} className="mt-1" />
+              )} />
             </div>
             <div>
               <Label>To Date</Label>
-              <Input type="date" {...register("to_date")} className="mt-1" />
+              <Controller name="to_date" control={control} render={({ field }) => (
+                <DateInput value={field.value ?? ""} onChange={field.onChange} className="mt-1" />
+              )} />
             </div>
           </div>
         </div>

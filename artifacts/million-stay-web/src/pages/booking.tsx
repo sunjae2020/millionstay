@@ -9,6 +9,7 @@ import { useAuthStore } from "@/lib/store";
 import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -252,7 +253,10 @@ export default function Booking() {
                             <FormItem>
                               <FormLabel>{t("booking.check_in")}</FormLabel>
                               <FormControl>
-                                <Input {...field} type="date" data-testid="input-check-in" />
+                                <DateInput value={field.value ?? ""} onChange={field.onChange}
+                                  min={new Date().toISOString().slice(0, 10)}
+                                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                  data-testid="input-check-in" />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -265,7 +269,10 @@ export default function Booking() {
                             <FormItem>
                               <FormLabel>{t("booking.check_out")}</FormLabel>
                               <FormControl>
-                                <Input {...field} type="date" data-testid="input-check-out" />
+                                <DateInput value={field.value ?? ""} onChange={field.onChange}
+                                  min={stayForm.watch("check_in_date") || new Date().toISOString().slice(0, 10)}
+                                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                  data-testid="input-check-out" />
                               </FormControl>
                               <FormMessage />
                             </FormItem>

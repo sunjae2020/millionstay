@@ -3,6 +3,7 @@ import { useParams, useLocation } from "wouter";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -291,11 +292,15 @@ export default function ContractDetail() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Start Date</Label>
-                  <Input {...register("start_date")} type="date" />
+                  <Controller name="start_date" control={control} render={({ field }) => (
+                    <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                  )} />
                 </div>
                 <div>
                   <Label>End Date</Label>
-                  <Input {...register("end_date")} type="date" />
+                  <Controller name="end_date" control={control} render={({ field }) => (
+                    <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                  )} />
                 </div>
                 <div>
                   <Label>Currency</Label>

@@ -3,6 +3,7 @@ import { useLocation, useParams } from "wouter";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -322,11 +323,15 @@ export default function PromotionDetail() {
             <div className="p-5 grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Valid From</Label>
-                <Input {...register("valid_from")} type="date" />
+                <Controller name="valid_from" control={control} render={({ field }) => (
+                  <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                )} />
               </div>
               <div>
                 <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Valid To</Label>
-                <Input {...register("valid_to")} type="date" />
+                <Controller name="valid_to" control={control} render={({ field }) => (
+                  <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                )} />
               </div>
               <div>
                 <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Max Uses (total)</Label>

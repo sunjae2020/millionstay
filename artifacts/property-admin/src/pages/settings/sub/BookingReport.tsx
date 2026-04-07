@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -66,11 +67,11 @@ export default function BookingReportPage() {
         <div className="bg-white border rounded-lg p-4 mb-4 flex flex-wrap gap-4 items-end">
           <div>
             <Label className="text-xs">From Date</Label>
-            <Input type="date" value={from} onChange={e => setFrom(e.target.value)} className="mt-1 w-40" />
+            <DateInput value={from} onChange={setFrom} className="mt-1 w-40" />
           </div>
           <div>
             <Label className="text-xs">To Date</Label>
-            <Input type="date" value={to} onChange={e => setTo(e.target.value)} className="mt-1 w-40" />
+            <DateInput value={to} onChange={setTo} className="mt-1 w-40" />
           </div>
           <div>
             <Label className="text-xs">Status</Label>

@@ -3,6 +3,7 @@ import { useLocation, useParams } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -221,15 +222,19 @@ export default function TaskDetail() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
                   <Label>Start Date</Label>
-                  <Input {...register("start_date")} type="date" />
+                  <Controller name="start_date" control={control} render={({ field }) => (
+                    <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                  )} />
                 </div>
                 <div className="grid gap-1.5">
                   <Label>
                     Due Date
                     {isOverdue && <span className="ml-2 text-xs text-red-600 font-medium">⚠ Overdue</span>}
                   </Label>
-                  <Input {...register("due_date")} type="date"
-                    className={isOverdue ? "border-red-400 focus-visible:ring-red-400" : ""} />
+                  <Controller name="due_date" control={control} render={({ field }) => (
+                    <DateInput value={field.value ?? ""} onChange={field.onChange}
+                      className={isOverdue ? "border-red-400 focus-visible:ring-red-400" : ""} />
+                  )} />
                 </div>
               </div>
             </div>

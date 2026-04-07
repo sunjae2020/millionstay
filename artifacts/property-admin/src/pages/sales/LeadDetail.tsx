@@ -3,6 +3,7 @@ import { useLocation, useParams } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -340,7 +341,9 @@ export default function LeadDetail() {
                 </div>
                 <div className="grid gap-1.5">
                   <Label>Preferred Check-In</Label>
-                  <Input {...register("preferred_check_in_date")} type="date" />
+                  <Controller name="preferred_check_in_date" control={control} render={({ field }) => (
+                    <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                  )} />
                 </div>
               </div>
 
@@ -463,13 +466,13 @@ export default function LeadDetail() {
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-1.5">
                 <Label>Check-In Date *</Label>
-                <Input type="date" value={convertForm.check_in_date}
-                  onChange={(e) => setConvertForm((f) => ({ ...f, check_in_date: e.target.value }))} />
+                <DateInput value={convertForm.check_in_date}
+                  onChange={(v) => setConvertForm((f) => ({ ...f, check_in_date: v }))} />
               </div>
               <div className="grid gap-1.5">
                 <Label>Check-Out Date *</Label>
-                <Input type="date" value={convertForm.check_out_date}
-                  onChange={(e) => setConvertForm((f) => ({ ...f, check_out_date: e.target.value }))} />
+                <DateInput value={convertForm.check_out_date}
+                  onChange={(v) => setConvertForm((f) => ({ ...f, check_out_date: v }))} />
               </div>
             </div>
             <div className="grid gap-1.5">

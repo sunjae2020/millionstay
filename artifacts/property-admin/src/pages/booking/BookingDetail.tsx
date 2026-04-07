@@ -4,6 +4,7 @@ import { useForm, Controller } from "react-hook-form";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -330,11 +331,15 @@ export default function BookingDetail() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Check-In Date *</Label>
-              <Input type="date" {...register("check_in_date")} className="mt-1" />
+              <Controller name="check_in_date" control={control} render={({ field }) => (
+                <DateInput value={field.value ?? ""} onChange={field.onChange} className="mt-1" />
+              )} />
             </div>
             <div>
               <Label>Check-Out Date *</Label>
-              <Input type="date" {...register("check_out_date")} className="mt-1" />
+              <Controller name="check_out_date" control={control} render={({ field }) => (
+                <DateInput value={field.value ?? ""} onChange={field.onChange} className="mt-1" />
+              )} />
             </div>
           </div>
           {stay && (
@@ -524,7 +529,7 @@ export default function BookingDetail() {
           <DialogHeader><DialogTitle>Extend Stay</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <Label>New Check-Out Date *</Label>
-            <Input type="date" value={extendDate} onChange={(e) => setExtendDate(e.target.value)} min={booking?.check_out_date ?? ""} />
+            <DateInput value={extendDate} onChange={setExtendDate} min={booking?.check_out_date ?? ""} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setExtendDialogOpen(false)}>Cancel</Button>
@@ -558,7 +563,7 @@ export default function BookingDetail() {
             </div>
             <div>
               <Label>Document Expiry</Label>
-              <Input type="date" value={docExpiry} onChange={(e) => setDocExpiry(e.target.value)} className="mt-1" />
+              <DateInput value={docExpiry} onChange={setDocExpiry} className="mt-1" />
             </div>
           </div>
           <DialogFooter>

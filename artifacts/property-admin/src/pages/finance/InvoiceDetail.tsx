@@ -17,6 +17,7 @@ import { Layout } from "@/components/Layout";
 import { LookupSelect } from "@/components/LookupSelect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -228,7 +229,9 @@ export default function InvoiceDetail() {
               </div>
               <div>
                 <Label>Due Date</Label>
-                <Input type="date" {...register("due_date")} />
+                <Controller name="due_date" control={control} render={({ field }) => (
+                  <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                )} />
               </div>
             </div>
           </div>
