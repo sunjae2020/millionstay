@@ -87,9 +87,10 @@ function SummaryCard({
   isLong: boolean;
 }) {
   const weeklyRate  = (session.agreed_weekly_rate as number) ?? 0;
-  const bond        = (session.bond_amount as number) ?? 1000;
-  const adminFee    = (session.admin_fee as number) ?? 200;
-  const cleaningFee = (session.cleaning_fee as number) ?? 300;
+  // null = fee not charged for this product
+  const bond        = (session.bond_amount  as number | null) ?? 0;
+  const adminFee    = (session.admin_fee    as number | null) ?? 0;
+  const cleaningFee = (session.cleaning_fee as number | null) ?? 0;
   const servicesTotal = selectedServices.reduce((sum, id) => {
     const svc = EXTRA_SERVICES.find((s) => s.id === id);
     return sum + (svc?.price ?? 0);
@@ -104,8 +105,9 @@ function SummaryCard({
   const cardProRata = weeklyRate > 0 && cardDays > 0 && !isLong
     ? Math.round((weeklyRate / 7) * cardDays * 100) / 100
     : 0;
-  const shortTotal = bond + adminFee + cleaningFee + servicesTotal + cardProRata;
-  const longInitial = bond + adminFee + cleaningFee + (weeklyRate * 2) + servicesTotal;
+  const cardLongBond = bond > 0 ? bond : weeklyRate * 4;
+  const shortTotal   = cardProRata + bond + adminFee + cleaningFee + servicesTotal;
+  const longInitial  = cardLongBond + adminFee + cleaningFee + (weeklyRate * 2) + servicesTotal;
 
   return (
     <div className="rounded-2xl border bg-white shadow-sm p-5 space-y-4 sticky top-24">
@@ -131,9 +133,12 @@ function SummaryCard({
 
       {isLong ? (
         <div className="space-y-1.5 text-xs">
-          <div className="flex justify-between text-gray-500"><span>Security Bond (4 wk)</span><span>${(weeklyRate * 4 || bond).toLocaleString()}</span></div>
-          <div className="flex justify-between text-gray-500"><span>Admin Fee</span><span>${adminFee}</span></div>
-          <div className="flex justify-between text-gray-500"><span>Cleaning Fee</span><span>${cleaningFee}</span></div>
+          <div className="flex justify-between text-gray-500">
+            <span>Security Bond{bond > 0 ? "" : " (4 wk)"}</span>
+            <span>${cardLongBond.toLocaleString()}</span>
+          </div>
+          {adminFee > 0 && <div className="flex justify-between text-gray-500"><span>Admin Fee</span><span>${adminFee}</span></div>}
+          {cleaningFee > 0 && <div className="flex justify-between text-gray-500"><span>Cleaning Fee</span><span>${cleaningFee}</span></div>}
           <div className="flex justify-between text-gray-500"><span>Initial Rent (2 wk)</span><span>${(weeklyRate * 2).toLocaleString()}</span></div>
           {servicesTotal > 0 && <div className="flex justify-between text-gray-500"><span>Extra Services</span><span>${servicesTotal}</span></div>}
           <Separator />
@@ -148,9 +153,9 @@ function SummaryCard({
               <span>${cardProRata.toLocaleString()}</span>
             </div>
           )}
-          <div className="flex justify-between text-gray-500"><span>Security Bond</span><span>${bond}</span></div>
-          <div className="flex justify-between text-gray-500"><span>Admin Fee</span><span>${adminFee}</span></div>
-          <div className="flex justify-between text-gray-500"><span>Cleaning Fee</span><span>${cleaningFee}</span></div>
+          {bond > 0 && <div className="flex justify-between text-gray-500"><span>Security Bond</span><span>${bond.toLocaleString()}</span></div>}
+          {adminFee > 0 && <div className="flex justify-between text-gray-500"><span>Admin Fee</span><span>${adminFee}</span></div>}
+          {cleaningFee > 0 && <div className="flex justify-between text-gray-500"><span>Cleaning Fee</span><span>${cleaningFee}</span></div>}
           {servicesTotal > 0 && <div className="flex justify-between text-gray-500"><span>Extra Services</span><span>${servicesTotal}</span></div>}
           <Separator />
           <div className="flex justify-between font-bold text-sm"><span>Total Due Today</span><span className="text-primary">${shortTotal.toLocaleString()}</span></div>
@@ -318,9 +323,10 @@ export default function BookingNew() {
         property_address:  space.address ?? space.suburb_name ?? "Melbourne",
         agreed_weekly_rate: weeklyRate,
         stay_weeks:        stayWeeks,
-        bond_amount:       space.bond_amount  ?? 1000,
-        admin_fee:         space.admin_fee    ?? 200,
-        cleaning_fee:      space.cleaning_fee ?? 300,
+        // Fees come from the selected product (null = not charged for this product)
+        bond_amount:    product?.bond_amount  ?? null,
+        admin_fee:      product?.admin_fee    ?? null,
+        cleaning_fee:   product?.cleaning_fee ?? null,
       };
       setSession(updated);
       saveSession(updated);
@@ -346,16 +352,19 @@ export default function BookingNew() {
   }, 0);
 
   const weeklyRate  = (session.agreed_weekly_rate as number) ?? 0;
-  const bond        = (session.bond_amount as number) ?? 1000;
-  const adminFee    = (session.admin_fee as number) ?? 200;
-  const cleaningFee = (session.cleaning_fee as number) ?? 300;
+  // null = fee not charged for this product; use 0 for calculation
+  const bond        = (session.bond_amount  as number | null) ?? 0;
+  const adminFee    = (session.admin_fee    as number | null) ?? 0;
+  const cleaningFee = (session.cleaning_fee as number | null) ?? 0;
   // Pro-rata rent: weekly_rate / 7 × days
   const proRataRent = weeklyRate > 0 && stayDays > 0
     ? Math.round((weeklyRate / 7) * stayDays * 100) / 100
     : 0;
-  const totalShort  = bond + adminFee + cleaningFee + servicesTotal + proRataRent;
-  const totalLong   = (weeklyRate * 4 || bond) + adminFee + cleaningFee + (weeklyRate * 2) + servicesTotal;
-  const totalDue    = isLong ? totalLong : totalShort;
+  const totalShort = proRataRent + bond + adminFee + cleaningFee + servicesTotal;
+  // Long-term: bond = product bond_amount OR (bond_weeks × weeklyRate), default 4 wk
+  const longBond   = bond > 0 ? bond : weeklyRate * 4;
+  const totalLong  = longBond + adminFee + cleaningFee + (weeklyRate * 2) + servicesTotal;
+  const totalDue   = isLong ? totalLong : totalShort;
 
   /* ─── Payment / Submit ─── */
   const handlePayment = async () => {
@@ -689,12 +698,12 @@ export default function BookingNew() {
                       <span>${proRataRent.toLocaleString()}</span>
                     </div>
                   )}
-                  {[
-                    ["Security Bond", bond], ["Admin Fee", adminFee], ["Cleaning Fee", cleaningFee],
-                    ...selectedServices.map((id) => { const s = EXTRA_SERVICES.find((x) => x.id === id)!; return [s.label, s.price]; }),
-                  ].map(([label, amount], i) => (
-                    <div key={i} className="flex justify-between text-gray-600"><span>{label as string}</span><span>${(amount as number).toLocaleString()}</span></div>
-                  ))}
+                  {bond > 0 && <div className="flex justify-between text-gray-600"><span>Security Bond</span><span>${bond.toLocaleString()}</span></div>}
+                  {adminFee > 0 && <div className="flex justify-between text-gray-600"><span>Admin Fee</span><span>${adminFee.toLocaleString()}</span></div>}
+                  {cleaningFee > 0 && <div className="flex justify-between text-gray-600"><span>Cleaning Fee</span><span>${cleaningFee.toLocaleString()}</span></div>}
+                  {selectedServices.map((id) => { const s = EXTRA_SERVICES.find((x) => x.id === id)!; return (
+                    <div key={id} className="flex justify-between text-gray-600"><span>{s.label}</span><span>${s.price.toLocaleString()}</span></div>
+                  ); })}
                   <Separator />
                   <div className="flex justify-between font-bold text-base"><span>Total</span><span className="text-primary">${totalShort.toLocaleString()}</span></div>
                 </div>
@@ -757,10 +766,10 @@ export default function BookingNew() {
                 </div>
 
                 {[
-                  { label: "Security Bond (4 weeks)", amount: weeklyRate * 4 || bond, note: "Refundable at end of tenancy (subject to condition)", color: "blue" },
-                  { label: "Admin Fee",               amount: adminFee,               note: "One-time application processing fee", color: "orange" },
-                  { label: "Cleaning Fee",             amount: cleaningFee,            note: "End-of-stay deep cleaning", color: "orange" },
-                  { label: "Initial Rent (2 weeks)",  amount: weeklyRate * 2,          note: "Advance rent — due before check-in", color: "green" },
+                  { label: `Security Bond${bond > 0 ? "" : " (4 weeks)"}`, amount: longBond,      note: "Refundable at end of tenancy (subject to condition)", color: "blue" },
+                  ...(adminFee > 0   ? [{ label: "Admin Fee",    amount: adminFee,    note: "One-time application processing fee", color: "orange" }] : []),
+                  ...(cleaningFee > 0 ? [{ label: "Cleaning Fee", amount: cleaningFee, note: "End-of-stay deep cleaning",            color: "orange" }] : []),
+                  { label: "Initial Rent (2 weeks)",  amount: weeklyRate * 2, note: "Advance rent — due before check-in", color: "green" },
                   ...(servicesTotal > 0 ? [{ label: "Extra Services", amount: servicesTotal, note: selectedServices.map((id) => EXTRA_SERVICES.find((s) => s.id === id)?.label).join(", "), color: "purple" }] : []),
                 ].map(({ label, amount, note, color }) => (
                   <div key={label} className={`flex items-start justify-between gap-4 p-4 rounded-xl border ${

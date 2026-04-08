@@ -262,6 +262,9 @@ router.get("/v1/public/spaces/:id", async (req, res): Promise<void> => {
         price: productCatalogTable.price,
         min_contract_period: productCatalogTable.min_contract_period,
         min_contract_period_unit: productCatalogTable.min_contract_period_unit,
+        bond_amount: productCatalogTable.bond_amount,
+        admin_fee: productCatalogTable.admin_fee,
+        cleaning_fee: productCatalogTable.cleaning_fee,
       })
       .from(productCatalogTable)
       .where(and(
@@ -292,7 +295,7 @@ router.get("/v1/public/spaces/:id", async (req, res): Promise<void> => {
       images,
       images_from_parent: imagesFromParent,
       space_options: optionMaps.filter((o) => o.name),
-      pricing_tiers: pricingTiers,
+      products: pricingTiers,
     },
   });
 });

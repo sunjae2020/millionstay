@@ -57,6 +57,9 @@ export default function ProductDetail() {
       gst_included: product.gst_included ?? false,
       min_contract_period: product.min_contract_period ?? "",
       min_contract_period_unit: product.min_contract_period_unit ?? "weeks",
+      bond_amount: product.bond_amount != null ? String(product.bond_amount) : "",
+      admin_fee: product.admin_fee != null ? String(product.admin_fee) : "",
+      cleaning_fee: product.cleaning_fee != null ? String(product.cleaning_fee) : "",
       status: product.status ?? "Active",
       display_on_booking_page: product.display_on_booking_page ?? true,
       display_on_invoice: product.display_on_invoice ?? true,
@@ -64,6 +67,7 @@ export default function ProductDetail() {
       name: "", item_description: "", price: "", currency: "AUD",
       product_group_id: "", product_type_id: "", gst_included: false,
       min_contract_period: "", min_contract_period_unit: "weeks",
+      bond_amount: "", admin_fee: "", cleaning_fee: "",
       status: "Active", display_on_booking_page: true, display_on_invoice: true,
     },
   });
@@ -76,6 +80,9 @@ export default function ProductDetail() {
         product_group_id: values.product_group_id ? Number(values.product_group_id) : null,
         product_type_id: values.product_type_id ? Number(values.product_type_id) : null,
         min_contract_period: values.min_contract_period ? Number(values.min_contract_period) : null,
+        bond_amount:   values.bond_amount   !== "" ? Number(values.bond_amount)   : null,
+        admin_fee:     values.admin_fee     !== "" ? Number(values.admin_fee)     : null,
+        cleaning_fee:  values.cleaning_fee  !== "" ? Number(values.cleaning_fee)  : null,
       };
       const url = isNew ? "/api/v1/products" : `/api/v1/products/${id}`;
       const method = isNew ? "POST" : "PUT";
@@ -178,6 +185,30 @@ export default function ProductDetail() {
                     <SelectItem value="months">Months</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white border rounded-lg p-6 space-y-4">
+            <div>
+              <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Booking Fees</h2>
+              <p className="text-xs text-muted-foreground mt-1">Leave blank = fee not charged for this product. Set to 0 to explicitly waive.</p>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label>Security Bond (AUD)</Label>
+                <Input {...register("bond_amount")} type="number" step="0.01" min="0" placeholder="Blank = no bond" className="mt-1" />
+                <p className="text-xs text-muted-foreground mt-1">Fixed amount. Blank = none.</p>
+              </div>
+              <div>
+                <Label>Admin Fee (AUD)</Label>
+                <Input {...register("admin_fee")} type="number" step="0.01" min="0" placeholder="Blank = no fee" className="mt-1" />
+                <p className="text-xs text-muted-foreground mt-1">One-time application fee.</p>
+              </div>
+              <div>
+                <Label>Cleaning Fee (AUD)</Label>
+                <Input {...register("cleaning_fee")} type="number" step="0.01" min="0" placeholder="Blank = no fee" className="mt-1" />
+                <p className="text-xs text-muted-foreground mt-1">End-of-stay cleaning.</p>
               </div>
             </div>
           </div>
