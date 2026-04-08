@@ -112,7 +112,9 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 
 ## Database Schema (`lib/db`)
 
-Tables (27 total): `suburbs`, `properties`, `space_options`, `space_policies`, `spaces`, `space_option_maps`, `space_blocked_dates`, `commissions`, `payment_info`, `contacts`, `accounts`, `tasks`, `leads`, `service_hosts`, `bookings`, `booking_documents`, `contract_products`, `contracts`, `invoices`, `work_orders`, `space_availability`, `recurring_schedule`, `system_log`, `email_template` (10 seeded templates), `email_log`, `promotions`, `beneficiaries`
+Tables (28 total): `suburbs`, `properties`, `space_options`, `space_policies`, `spaces`, `space_option_maps`, `space_blocked_dates`, `commissions`, `payment_info`, `contacts`, `accounts`, `tasks`, `leads`, `service_hosts`, `bookings`, `booking_documents`, `contract_products`, `contracts`, `invoices`, `work_orders`, `space_availability`, `recurring_schedule`, `system_log`, `email_template` (10 seeded templates), `email_log`, `promotions`, `beneficiaries`, `service_catalog`
+
+**service_catalog** — Ancillary services separate from accommodation products. Types: `one_time` (flat fee e.g. Cleaning, Deposit), `scheduled` (date-based e.g. Airport Pickup), `physical` (goods e.g. SIM Card, Linen). Billing triggers: `at_booking`, `at_checkout`, `on_request`. Fields: `is_optional`, `is_refundable`, `billing_trigger`, `requires_scheduling`, `scheduling_notes`, `stock_tracked`, `stock_qty`, `has_variants`, `variant_options`, `display_on_booking_page`.
 
 ## API Client (`lib/api-client-react`)
 

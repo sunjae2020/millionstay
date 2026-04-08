@@ -30,3 +30,4 @@ export * from "./users";
 export * from "./promotions";
 export * from "./guest_users";
 export * from "./beneficiaries";
+export * from "./service_catalog";
