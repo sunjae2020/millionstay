@@ -3,7 +3,7 @@ import {
   contractTypesTable,
   productGroupsTable,
   productTypesTable,
-  productCatalogTable,
+  accommodationCatalogTable,
   spaceOptionsTable,
   spaceOptionMapsTable,
   suburbsTable,
@@ -522,10 +522,10 @@ async function seedAccommodationProducts(
     for (const tier of tiers) {
       const productName = `${sp.label} ${tier.suffix}`;
       const price = sp[tier.priceKey];
-      const existing = await db.select().from(productCatalogTable).where(eq(productCatalogTable.name, productName)).limit(1);
+      const existing = await db.select().from(accommodationCatalogTable).where(eq(accommodationCatalogTable.name, productName)).limit(1);
       if (existing.length > 0) { skip(`Product: ${productName}`); continue; }
       try {
-        await db.insert(productCatalogTable).values({
+        await db.insert(accommodationCatalogTable).values({
           name: productName,
           product_group_id: accGroupId,
           product_type_id: typeId,
@@ -575,10 +575,10 @@ async function seedFeeProducts(
   ];
 
   for (const p of feeProducts) {
-    const existing = await db.select().from(productCatalogTable).where(eq(productCatalogTable.name, p.name)).limit(1);
+    const existing = await db.select().from(accommodationCatalogTable).where(eq(accommodationCatalogTable.name, p.name)).limit(1);
     if (existing.length > 0) { skip(`FeeProduct: ${p.name}`); continue; }
     try {
-      await db.insert(productCatalogTable).values({
+      await db.insert(accommodationCatalogTable).values({
         name: p.name,
         item_description: p.desc,
         product_group_id: p.groupId,
@@ -607,7 +607,7 @@ async function verifyData() {
     SELECT 'contract_types'  AS table_name, COUNT(*)::text AS count FROM contract_types
     UNION ALL SELECT 'product_groups',  COUNT(*)::text FROM product_groups
     UNION ALL SELECT 'product_types',   COUNT(*)::text FROM product_types
-    UNION ALL SELECT 'product_catalog', COUNT(*)::text FROM product_catalog
+    UNION ALL SELECT 'accommodation_catalog', COUNT(*)::text FROM accommodation_catalog
     UNION ALL SELECT 'space_options',   COUNT(*)::text FROM space_options
     UNION ALL SELECT 'suburbs',         COUNT(*)::text FROM suburbs
     UNION ALL SELECT 'commissions',     COUNT(*)::text FROM commissions

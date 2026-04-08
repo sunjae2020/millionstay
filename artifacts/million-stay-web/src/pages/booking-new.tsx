@@ -16,6 +16,7 @@ import {
   CreditCard, Sparkles, Home, Calendar, Upload, X, Lock,
   Car, Briefcase, Map, Smartphone, LogIn,
   AlertCircle, Info, Banknote, Mail, ExternalLink, LayoutDashboard,
+  Package, Zap, ConciergeBell,
 } from "lucide-react";
 
 /* ────────────────────────────────────────────── */
@@ -25,12 +26,28 @@ import {
 const SHORT_STEPS = ["Stay Details", "Extra Services", "Payment", "Confirmed"];
 const LONG_STEPS  = ["Stay Details", "Extra Services", "Payment Plans", "Review", "Account"];
 
-const EXTRA_SERVICES = [
-  { id: "pickup",     icon: Car,         label: "Airport / Station Pickup",  price: 80,  desc: "We pick you up from Melbourne Airport, Southern Cross or Flinders St Station on your arrival day." },
-  { id: "settlement", icon: Briefcase,   label: "Settlement Assistance",     price: 150, desc: "Help with opening a bank account, SIM card setup, Myki card, and local area orientation." },
-  { id: "daytour",   icon: Map,          label: "Melbourne Day Tour",        price: 100, desc: "Guided half-day tour covering Melbourne's top attractions, markets, and student-friendly spots." },
-  { id: "simcard",   icon: Smartphone,   label: "Mobile Phone SIM Card",     price: 30,  desc: "Pre-loaded Australian SIM card (Optus/Telstra network, 30-day starter plan with data)." },
-];
+type ServiceItem = {
+  id: number;
+  name: string;
+  description: string | null;
+  service_type: string;
+  base_price: number | null;
+  is_refundable: boolean;
+  billing_trigger: string;
+  requires_scheduling: boolean;
+  scheduling_notes: string | null;
+};
+
+function serviceIcon(item: ServiceItem) {
+  const n = item.name.toLowerCase();
+  if (n.includes("airport") || n.includes("pickup") || n.includes("transfer")) return Car;
+  if (n.includes("sim") || n.includes("phone") || n.includes("mobile")) return Smartphone;
+  if (n.includes("tour") || n.includes("map")) return Map;
+  if (n.includes("linen") || n.includes("bed") || n.includes("settle")) return Briefcase;
+  if (item.service_type === "scheduled") return Calendar;
+  if (item.service_type === "physical") return Package;
+  return ConciergeBell;
+}
 
 const SESSION_KEY = "ms_booking_v2";
 
@@ -80,10 +97,11 @@ function StepIndicator({ steps, current }: { steps: string[]; current: number })
 /* ────────────────────────────────────────────── */
 
 function SummaryCard({
-  session, selectedServices, isLong,
+  session, selectedServices, serviceItems, isLong,
 }: {
   session: Record<string, unknown>;
-  selectedServices: string[];
+  selectedServices: number[];
+  serviceItems: ServiceItem[];
   isLong: boolean;
 }) {
   const weeklyRate  = (session.agreed_weekly_rate as number) ?? 0;
@@ -92,8 +110,8 @@ function SummaryCard({
   const adminFee    = (session.admin_fee    as number | null) ?? 0;
   const cleaningFee = (session.cleaning_fee as number | null) ?? 0;
   const servicesTotal = selectedServices.reduce((sum, id) => {
-    const svc = EXTRA_SERVICES.find((s) => s.id === id);
-    return sum + (svc?.price ?? 0);
+    const svc = serviceItems.find((s) => s.id === id);
+    return sum + (svc?.base_price ?? 0);
   }, 0);
   // Calculate days and pro-rata rent
   const cardDays = (() => {
@@ -168,8 +186,9 @@ function SummaryCard({
           <div className="space-y-1">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Add-ons Selected</p>
             {selectedServices.map((id) => {
-              const svc = EXTRA_SERVICES.find((s) => s.id === id)!;
-              return <div key={id} className="flex justify-between text-xs text-gray-600"><span>{svc.label}</span><span>${svc.price}</span></div>;
+              const svc = serviceItems.find((s) => s.id === id);
+              if (!svc) return null;
+              return <div key={id} className="flex justify-between text-xs text-gray-600"><span>{svc.name}</span><span>${svc.base_price ?? 0}</span></div>;
             })}
           </div>
         </>
@@ -249,7 +268,8 @@ export default function BookingNew() {
   const [guestName, setGuestName]           = useState(guest?.name ?? "");
   const [guestEmail, setGuestEmail]         = useState(guest?.email ?? "");
   const [guestPhone, setGuestPhone]         = useState("");
-  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [selectedServices, setSelectedServices] = useState<number[]>([]);
+  const [serviceItems, setServiceItems]         = useState<ServiceItem[]>([]);
   const [documents, setDocuments]           = useState<{ type: string; name: string }[]>([]);
   const [cardName, setCardName]             = useState("");
   const [cardNumber, setCardNumber]         = useState("");
@@ -273,6 +293,14 @@ export default function BookingNew() {
   });
   const createBooking = useCreateGuestBooking();
   const space = spaceData?.data;
+
+  /* Fetch optional add-on services from API */
+  useEffect(() => {
+    fetch("/api/v1/public/services")
+      .then((r) => r.json())
+      .then((j) => { if (j.success) setServiceItems(j.data); })
+      .catch(() => {});
+  }, []);
 
   /* Auto-redirect to portal after confirmation (logged-in users) */
   useEffect(() => {
@@ -339,7 +367,7 @@ export default function BookingNew() {
     saveSession(updated);
   };
 
-  const toggleService = (id: string) =>
+  const toggleService = (id: number) =>
     setSelectedServices((prev) => prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]);
 
   const handleFileUpload = (docType: string, file: File) => {
@@ -348,7 +376,7 @@ export default function BookingNew() {
 
   /* Services total */
   const servicesTotal = selectedServices.reduce((sum, id) => {
-    return sum + (EXTRA_SERVICES.find((s) => s.id === id)?.price ?? 0);
+    return sum + (serviceItems.find((s) => s.id === id)?.base_price ?? 0);
   }, 0);
 
   const weeklyRate  = (session.agreed_weekly_rate as number) ?? 0;
@@ -619,7 +647,7 @@ export default function BookingNew() {
               </Button>
             </div>
             <div className="lg:col-span-1">
-              <SummaryCard session={session} selectedServices={selectedServices} isLong={isLong} />
+              <SummaryCard session={session} selectedServices={selectedServices} serviceItems={serviceItems} isLong={isLong} />
             </div>
           </div>
         )}
@@ -632,10 +660,14 @@ export default function BookingNew() {
                 <h2 className="font-semibold text-lg text-gray-800 mb-1">Extra Services</h2>
                 <p className="text-sm text-gray-500 mb-5">Enhance your arrival experience — all services are optional.</p>
                 <div className="space-y-3">
-                  {EXTRA_SERVICES.map(({ id, icon: Icon, label, price, desc }) => {
-                    const selected = selectedServices.includes(id);
+                  {serviceItems.length === 0 && (
+                    <p className="text-xs text-gray-400 text-center py-4">Loading available services…</p>
+                  )}
+                  {serviceItems.map((svc) => {
+                    const selected = selectedServices.includes(svc.id);
+                    const Icon = serviceIcon(svc);
                     return (
-                      <button key={id} onClick={() => toggleService(id)}
+                      <button key={svc.id} onClick={() => toggleService(svc.id)}
                         className={`w-full flex items-start gap-4 p-4 rounded-xl border-2 text-left transition-all ${
                           selected ? "border-primary bg-orange-50" : "border-gray-100 hover:border-orange-200 bg-white"
                         }`}>
@@ -644,9 +676,9 @@ export default function BookingNew() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
-                            <p className={`font-semibold text-sm ${selected ? "text-primary" : "text-gray-800"}`}>{label}</p>
+                            <p className={`font-semibold text-sm ${selected ? "text-primary" : "text-gray-800"}`}>{svc.name}</p>
                             <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-sm font-bold text-gray-700">+${price}</span>
+                              <span className="text-sm font-bold text-gray-700">+${svc.base_price ?? 0}</span>
                               <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
                                 selected ? "border-primary bg-primary" : "border-gray-300"
                               }`}>
@@ -654,7 +686,7 @@ export default function BookingNew() {
                               </div>
                             </div>
                           </div>
-                          <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{desc}</p>
+                          <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{svc.description}</p>
                         </div>
                       </button>
                     );
@@ -673,7 +705,7 @@ export default function BookingNew() {
               </div>
             </div>
             <div className="lg:col-span-1">
-              <SummaryCard session={session} selectedServices={selectedServices} isLong={isLong} />
+              <SummaryCard session={session} selectedServices={selectedServices} serviceItems={serviceItems} isLong={isLong} />
             </div>
           </div>
         )}
@@ -701,8 +733,8 @@ export default function BookingNew() {
                   {bond > 0 && <div className="flex justify-between text-gray-600"><span>Security Bond</span><span>${bond.toLocaleString()}</span></div>}
                   {adminFee > 0 && <div className="flex justify-between text-gray-600"><span>Admin Fee</span><span>${adminFee.toLocaleString()}</span></div>}
                   {cleaningFee > 0 && <div className="flex justify-between text-gray-600"><span>Cleaning Fee</span><span>${cleaningFee.toLocaleString()}</span></div>}
-                  {selectedServices.map((id) => { const s = EXTRA_SERVICES.find((x) => x.id === id)!; return (
-                    <div key={id} className="flex justify-between text-gray-600"><span>{s.label}</span><span>${s.price.toLocaleString()}</span></div>
+                  {selectedServices.map((id) => { const s = serviceItems.find((x) => x.id === id); if (!s) return null; return (
+                    <div key={id} className="flex justify-between text-gray-600"><span>{s.name}</span><span>${(s.base_price ?? 0).toLocaleString()}</span></div>
                   ); })}
                   <Separator />
                   <div className="flex justify-between font-bold text-base"><span>Total</span><span className="text-primary">${totalShort.toLocaleString()}</span></div>
@@ -750,7 +782,7 @@ export default function BookingNew() {
               </div>
             </div>
             <div className="lg:col-span-1">
-              <SummaryCard session={session} selectedServices={selectedServices} isLong={false} />
+              <SummaryCard session={session} selectedServices={selectedServices} serviceItems={serviceItems} isLong={false} />
             </div>
           </div>
         )}
@@ -770,7 +802,7 @@ export default function BookingNew() {
                   ...(adminFee > 0   ? [{ label: "Admin Fee",    amount: adminFee,    note: "One-time application processing fee", color: "orange" }] : []),
                   ...(cleaningFee > 0 ? [{ label: "Cleaning Fee", amount: cleaningFee, note: "End-of-stay deep cleaning",            color: "orange" }] : []),
                   { label: "Initial Rent (2 weeks)",  amount: weeklyRate * 2, note: "Advance rent — due before check-in", color: "green" },
-                  ...(servicesTotal > 0 ? [{ label: "Extra Services", amount: servicesTotal, note: selectedServices.map((id) => EXTRA_SERVICES.find((s) => s.id === id)?.label).join(", "), color: "purple" }] : []),
+                  ...(servicesTotal > 0 ? [{ label: "Extra Services", amount: servicesTotal, note: selectedServices.map((id) => serviceItems.find((s) => s.id === id)?.name).join(", "), color: "purple" }] : []),
                 ].map(({ label, amount, note, color }) => (
                   <div key={label} className={`flex items-start justify-between gap-4 p-4 rounded-xl border ${
                     color === "blue"   ? "border-blue-100 bg-blue-50" :
@@ -817,7 +849,7 @@ export default function BookingNew() {
               </div>
             </div>
             <div className="lg:col-span-1">
-              <SummaryCard session={session} selectedServices={selectedServices} isLong={true} />
+              <SummaryCard session={session} selectedServices={selectedServices} serviceItems={serviceItems} isLong={true} />
             </div>
           </div>
         )}
@@ -837,7 +869,7 @@ export default function BookingNew() {
                     ["Stay Duration", `${stayWeeks} weeks`],
                     ["Weekly Rate", weeklyRate ? `$${weeklyRate}/week` : "TBD"],
                     ["Guests", String(session.num_guests ?? numGuests)],
-                    ...(selectedServices.length > 0 ? [["Extra Services", selectedServices.map((id) => EXTRA_SERVICES.find((s) => s.id === id)?.label).join(", ")]] : []),
+                    ...(selectedServices.length > 0 ? [["Extra Services", selectedServices.map((id) => serviceItems.find((s) => s.id === id)?.name).join(", ")]] : []),
                     ...(session.special_requests ? [["Special Requests", session.special_requests as string]] : []),
                   ].map(([label, value]) => value ? (
                     <div key={label} className="flex gap-3">
@@ -867,7 +899,7 @@ export default function BookingNew() {
               </div>
             </div>
             <div className="lg:col-span-1">
-              <SummaryCard session={session} selectedServices={selectedServices} isLong={true} />
+              <SummaryCard session={session} selectedServices={selectedServices} serviceItems={serviceItems} isLong={true} />
             </div>
           </div>
         )}

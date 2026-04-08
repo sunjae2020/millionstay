@@ -112,9 +112,11 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 
 ## Database Schema (`lib/db`)
 
-Tables (28 total): `suburbs`, `properties`, `space_options`, `space_policies`, `spaces`, `space_option_maps`, `space_blocked_dates`, `commissions`, `payment_info`, `contacts`, `accounts`, `tasks`, `leads`, `service_hosts`, `bookings`, `booking_documents`, `contract_products`, `contracts`, `invoices`, `work_orders`, `space_availability`, `recurring_schedule`, `system_log`, `email_template` (10 seeded templates), `email_log`, `promotions`, `beneficiaries`, `service_catalog`
+Tables (28 total): `suburbs`, `properties`, `space_options`, `space_policies`, `spaces`, `space_option_maps`, `space_blocked_dates`, `commissions`, `payment_info`, `contacts`, `accounts`, `tasks`, `leads`, `service_hosts`, `bookings`, `booking_documents`, `contract_products`, `contracts`, `invoices`, `work_orders`, `space_availability`, `recurring_schedule`, `system_log`, `email_template` (10 seeded templates), `email_log`, `promotions`, `beneficiaries`, `accommodation_catalog`, `service_catalog`
 
-**service_catalog** — Ancillary services separate from accommodation products. Types: `one_time` (flat fee e.g. Cleaning, Deposit), `scheduled` (date-based e.g. Airport Pickup), `physical` (goods e.g. SIM Card, Linen). Billing triggers: `at_booking`, `at_checkout`, `on_request`. Fields: `is_optional`, `is_refundable`, `billing_trigger`, `requires_scheduling`, `scheduling_notes`, `stock_tracked`, `stock_qty`, `has_variants`, `variant_options`, `display_on_booking_page`.
+**accommodation_catalog** (formerly product_catalog) — Guest-facing accommodation pricing per space. Admin API: `/api/v1/accommodations`. Drizzle: `accommodationCatalogTable`. Fields include `bond_amount`, `admin_fee`, `cleaning_fee` per product.
+
+**service_catalog** — Ancillary services. Types: `one_time`, `scheduled`, `physical`. Admin API: `/api/v1/services`. Public API: `GET /api/v1/public/services` (returns optional, active, display_on_booking_page=true services). Seeded with 6 services: Room Deposit, Admission Fee, Cleaning Fee (required), Airport Pickup, Vodafone SIM Card, Linen Pack (optional). Guest booking page fetches and displays optional services from this catalog.
 
 ## API Client (`lib/api-client-react`)
 

@@ -100,14 +100,6 @@ const NAV: NavSection[] = [
       { href: "/products/products", label: "Product", icon: Package },
       { href: "/products/promotions", label: "Promotion", icon: Tag },
       { href: "/products/beneficiaries", label: "Beneficiary", icon: Users },
-    ],
-  },
-  {
-    label: "Services",
-    icon: ConciergeBell,
-    defaultOpen: false,
-    href: "/services",
-    items: [
       { href: "/services", label: "Service Catalog", icon: ConciergeBell },
     ],
   },

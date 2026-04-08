@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { ilike, and, eq, SQL, asc } from "drizzle-orm";
-import { db, contactsTable, accountsTable, commissionsTable, paymentInfoTable, spacesTable, suburbsTable, propertiesTable, productCatalogTable, productGroupsTable, productTypesTable, contractTypesTable } from "@workspace/db";
+import { db, contactsTable, accountsTable, commissionsTable, paymentInfoTable, spacesTable, suburbsTable, propertiesTable, accommodationCatalogTable, productGroupsTable, productTypesTable, contractTypesTable } from "@workspace/db";
 
 const router: IRouter = Router();
 
@@ -159,10 +159,10 @@ router.get("/v1/lookup/product-types", async (req, res): Promise<void> => {
 router.get("/v1/lookup/products", async (req, res): Promise<void> => {
   const q = (req.query["q"] as string) || "";
   const rows = await db
-    .select({ id: productCatalogTable.id, name: productCatalogTable.name, price: productCatalogTable.price })
-    .from(productCatalogTable)
-    .where(q ? ilike(productCatalogTable.name, `%${q}%`) : undefined)
-    .orderBy(asc(productCatalogTable.name))
+    .select({ id: accommodationCatalogTable.id, name: accommodationCatalogTable.name, price: accommodationCatalogTable.price })
+    .from(accommodationCatalogTable)
+    .where(q ? ilike(accommodationCatalogTable.name, `%${q}%`) : undefined)
+    .orderBy(asc(accommodationCatalogTable.name))
     .limit(20);
   res.json(rows.map(r => ({
     id: r.id,

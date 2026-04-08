@@ -19,7 +19,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 async function fetchProduct(id: string) {
-  const res = await fetch(`/api/v1/products/${id}`);
+  const res = await fetch(`/api/v1/accommodations/${id}`);
   if (!res.ok) throw new Error("Not found");
   return res.json();
 }
@@ -84,7 +84,7 @@ export default function ProductDetail() {
         admin_fee:     values.admin_fee     !== "" ? Number(values.admin_fee)     : null,
         cleaning_fee:  values.cleaning_fee  !== "" ? Number(values.cleaning_fee)  : null,
       };
-      const url = isNew ? "/api/v1/products" : `/api/v1/products/${id}`;
+      const url = isNew ? "/api/v1/accommodations" : `/api/v1/accommodations/${id}`;
       const method = isNew ? "POST" : "PUT";
       const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       if (!res.ok) throw new Error(await res.text());

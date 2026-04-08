@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { eq, ilike, and, sql, SQL, asc, inArray } from "drizzle-orm";
 import {
   db,
-  productCatalogTable,
+  accommodationCatalogTable,
   productGroupsTable,
   productTypesTable,
   spacesTable,
@@ -11,32 +11,32 @@ import {
 
 const router: IRouter = Router();
 
-router.get("/v1/products", async (req, res): Promise<void> => {
+router.get("/v1/accommodations", async (req, res): Promise<void> => {
   try {
     const { q, product_group_id, product_type_id, is_active, limit = "100", offset = "0" } = req.query as Record<string, string>;
 
     const conditions: SQL[] = [];
     if (q) {
       conditions.push(
-        sql`(${ilike(productCatalogTable.name, `%${q}%`)} OR ${ilike(productCatalogTable.item_description, `%${q}%`)})`
+        sql`(${ilike(accommodationCatalogTable.name, `%${q}%`)} OR ${ilike(accommodationCatalogTable.item_description, `%${q}%`)})`
       );
     }
-    if (product_group_id) conditions.push(eq(productCatalogTable.product_group_id, Number(product_group_id)));
-    if (product_type_id) conditions.push(eq(productCatalogTable.product_type_id, Number(product_type_id)));
-    if (is_active === "true") conditions.push(eq(productCatalogTable.status, "Active"));
-    if (is_active === "false") conditions.push(eq(productCatalogTable.status, "Inactive"));
+    if (product_group_id) conditions.push(eq(accommodationCatalogTable.product_group_id, Number(product_group_id)));
+    if (product_type_id) conditions.push(eq(accommodationCatalogTable.product_type_id, Number(product_type_id)));
+    if (is_active === "true") conditions.push(eq(accommodationCatalogTable.status, "Active"));
+    if (is_active === "false") conditions.push(eq(accommodationCatalogTable.status, "Inactive"));
 
     const where = conditions.length > 0 ? and(...conditions) : undefined;
 
     const [rows, [{ count }]] = await Promise.all([
       db
         .select()
-        .from(productCatalogTable)
+        .from(accommodationCatalogTable)
         .where(where)
-        .orderBy(asc(productCatalogTable.name))
+        .orderBy(asc(accommodationCatalogTable.name))
         .limit(Number(limit))
         .offset(Number(offset)),
-      db.select({ count: sql<number>`count(*)::int` }).from(productCatalogTable).where(where),
+      db.select({ count: sql<number>`count(*)::int` }).from(accommodationCatalogTable).where(where),
     ]);
 
     const groupIds = [...new Set(rows.map(r => r.product_group_id).filter(Boolean))] as number[];
@@ -71,10 +71,10 @@ router.get("/v1/products", async (req, res): Promise<void> => {
   }
 });
 
-router.get("/v1/products/:id", async (req, res): Promise<void> => {
+router.get("/v1/accommodations/:id", async (req, res): Promise<void> => {
   try {
     const id = Number(req.params.id);
-    const [row] = await db.select().from(productCatalogTable).where(eq(productCatalogTable.id, id));
+    const [row] = await db.select().from(accommodationCatalogTable).where(eq(accommodationCatalogTable.id, id));
     if (!row) { res.status(404).json({ error: "Not found" }); return; }
 
     const [group] = row.product_group_id
@@ -98,11 +98,11 @@ router.get("/v1/products/:id", async (req, res): Promise<void> => {
   }
 });
 
-router.post("/v1/products", async (req, res): Promise<void> => {
+router.post("/v1/accommodations", async (req, res): Promise<void> => {
   try {
     const { name, price, product_group_id, ...rest } = req.body;
     if (!name) { res.status(400).json({ error: "name is required" }); return; }
-    const [row] = await db.insert(productCatalogTable).values({ name, price, product_group_id, ...rest }).returning();
+    const [row] = await db.insert(accommodationCatalogTable).values({ name, price, product_group_id, ...rest }).returning();
     res.status(201).json(row);
   } catch (err) {
     console.error(err);
@@ -110,11 +110,11 @@ router.post("/v1/products", async (req, res): Promise<void> => {
   }
 });
 
-router.put("/v1/products/:id", async (req, res): Promise<void> => {
+router.put("/v1/accommodations/:id", async (req, res): Promise<void> => {
   try {
     const id = Number(req.params.id);
     const { id: _id, created_at, ...updates } = req.body;
-    const [row] = await db.update(productCatalogTable).set(updates).where(eq(productCatalogTable.id, id)).returning();
+    const [row] = await db.update(accommodationCatalogTable).set(updates).where(eq(accommodationCatalogTable.id, id)).returning();
     if (!row) { res.status(404).json({ error: "Not found" }); return; }
     res.json(row);
   } catch (err) {
@@ -122,10 +122,10 @@ router.put("/v1/products/:id", async (req, res): Promise<void> => {
   }
 });
 
-router.patch("/v1/products/:id/deactivate", async (req, res): Promise<void> => {
+router.patch("/v1/accommodations/:id/deactivate", async (req, res): Promise<void> => {
   try {
     const id = Number(req.params.id);
-    const [row] = await db.update(productCatalogTable).set({ status: "Inactive" }).where(eq(productCatalogTable.id, id)).returning();
+    const [row] = await db.update(accommodationCatalogTable).set({ status: "Inactive" }).where(eq(accommodationCatalogTable.id, id)).returning();
     if (!row) { res.status(404).json({ error: "Not found" }); return; }
     res.json(row);
   } catch (err) {

@@ -9,7 +9,8 @@ import {
   bookingsTable,
   spaceImagesTable,
   spaceOptionsTable,
-  productCatalogTable,
+  accommodationCatalogTable,
+  serviceCatalogTable,
 } from "@workspace/db";
 
 function daysBetween(a: string, b: string): number {
@@ -124,15 +125,15 @@ router.get("/v1/public/spaces", async (req, res): Promise<void> => {
     if (remainingIds.length > 0) {
       const products = await db
         .select({
-          space_id: productCatalogTable.space_id,
-          min_contract_period: productCatalogTable.min_contract_period,
-          min_contract_period_unit: productCatalogTable.min_contract_period_unit,
+          space_id: accommodationCatalogTable.space_id,
+          min_contract_period: accommodationCatalogTable.min_contract_period,
+          min_contract_period_unit: accommodationCatalogTable.min_contract_period_unit,
         })
-        .from(productCatalogTable)
+        .from(accommodationCatalogTable)
         .where(
           and(
-            inArray(productCatalogTable.space_id, remainingIds),
-            eq(productCatalogTable.status, "Active"),
+            inArray(accommodationCatalogTable.space_id, remainingIds),
+            eq(accommodationCatalogTable.status, "Active"),
           ),
         );
 
@@ -257,21 +258,21 @@ router.get("/v1/public/spaces/:id", async (req, res): Promise<void> => {
       .leftJoin(spaceOptionsTable, eq(spaceOptionMapsTable.space_option_id, spaceOptionsTable.id))
       .where(eq(spaceOptionMapsTable.space_id, spaceId)),
     db.select({
-        id: productCatalogTable.id,
-        name: productCatalogTable.name,
-        price: productCatalogTable.price,
-        min_contract_period: productCatalogTable.min_contract_period,
-        min_contract_period_unit: productCatalogTable.min_contract_period_unit,
-        bond_amount: productCatalogTable.bond_amount,
-        admin_fee: productCatalogTable.admin_fee,
-        cleaning_fee: productCatalogTable.cleaning_fee,
+        id: accommodationCatalogTable.id,
+        name: accommodationCatalogTable.name,
+        price: accommodationCatalogTable.price,
+        min_contract_period: accommodationCatalogTable.min_contract_period,
+        min_contract_period_unit: accommodationCatalogTable.min_contract_period_unit,
+        bond_amount: accommodationCatalogTable.bond_amount,
+        admin_fee: accommodationCatalogTable.admin_fee,
+        cleaning_fee: accommodationCatalogTable.cleaning_fee,
       })
-      .from(productCatalogTable)
+      .from(accommodationCatalogTable)
       .where(and(
-        eq(productCatalogTable.space_id, spaceId),
-        eq(productCatalogTable.status, "Active"),
+        eq(accommodationCatalogTable.space_id, spaceId),
+        eq(accommodationCatalogTable.status, "Active"),
       ))
-      .orderBy(asc(productCatalogTable.price)),
+      .orderBy(asc(accommodationCatalogTable.price)),
   ]);
 
   let images = ownImages;
@@ -420,6 +421,42 @@ router.get("/v1/public/properties", async (_req, res): Promise<void> => {
     }));
 
   res.json({ success: true, data, meta: { total: data.length } });
+});
+
+/* ───────────────────────────────────────────────────────
+   GET /api/v1/public/services
+   Returns optional services for display on booking page
+──────────────────────────────────────────────────────── */
+router.get("/v1/public/services", async (req, res): Promise<void> => {
+  try {
+    const services = await db
+      .select({
+        id: serviceCatalogTable.id,
+        name: serviceCatalogTable.name,
+        description: serviceCatalogTable.description,
+        service_type: serviceCatalogTable.service_type,
+        base_price: serviceCatalogTable.base_price,
+        currency: serviceCatalogTable.currency,
+        is_optional: serviceCatalogTable.is_optional,
+        is_refundable: serviceCatalogTable.is_refundable,
+        billing_trigger: serviceCatalogTable.billing_trigger,
+        requires_scheduling: serviceCatalogTable.requires_scheduling,
+        scheduling_notes: serviceCatalogTable.scheduling_notes,
+        sort_order: serviceCatalogTable.sort_order,
+      })
+      .from(serviceCatalogTable)
+      .where(and(
+        eq(serviceCatalogTable.status, "Active"),
+        eq(serviceCatalogTable.display_on_booking_page, true),
+        eq(serviceCatalogTable.is_optional, true),
+      ))
+      .orderBy(asc(serviceCatalogTable.sort_order), asc(serviceCatalogTable.name));
+
+    res.json({ success: true, data: services });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch services" });
+  }
 });
 
 export default router;
