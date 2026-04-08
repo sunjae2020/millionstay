@@ -23,9 +23,13 @@ publicDir = "artifacts/property-admin/dist/public"
 serve = "static"
 
 [[services.production.rewrites]]
+from = "/admin"
+to = "/index.html"
+
+[[services.production.rewrites]]
 from = "/admin/*"
 to = "/index.html"
 
 [services.env]
 PORT = "23339"
-BASE_PATH = "/"
+BASE_PATH = "/admin"
