@@ -10,7 +10,7 @@ const BRAND = "#E8621A";
 const BRAND_DARK = "#C4511500";
 
 const DEMO_ACCOUNTS = [
-  { label: "Super Admin", email: "admin@millionstay.com.au", password: "MillionStay@2026!" },
+  { label: "Super Admin", email: "admin@millionstay.com", password: "MillionStay@2026!" },
 ];
 
 export default function LoginPage() {
@@ -126,7 +126,7 @@ export default function LoginPage() {
                 type="email"
                 autoComplete="email"
                 required
-                placeholder="admin@millionstay.com.au"
+                placeholder="admin@millionstay.com"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400"

@@ -3,7 +3,7 @@ import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
 async function seedAdmin() {
-  const email = "admin@millionstay.com.au";
+  const email = "admin@millionstay.com";
   const password = "MillionStay@2026!";
 
   const [existing] = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);

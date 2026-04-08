@@ -25,7 +25,7 @@ const ROLE_COLORS: Record<string, string> = {
 };
 
 const INITIAL_USERS: AdminUser[] = [
-  { id: 1, name: "System Admin", email: "admin@millionstay.com.au", role: "Super Admin", status: "Active", created_at: "2026-01-01" },
+  { id: 1, name: "System Admin", email: "admin@millionstay.com", role: "Super Admin", status: "Active", created_at: "2026-01-01" },
 ];
 
 export function UserManagement() {

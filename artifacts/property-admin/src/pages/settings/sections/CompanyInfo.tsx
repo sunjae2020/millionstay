@@ -73,7 +73,7 @@ export function CompanyInfo() {
         </div>
         <div className="space-y-1.5">
           <Label>Email</Label>
-          <Input {...register("email")} type="email" placeholder="admin@millionstay.com.au" />
+          <Input {...register("email")} type="email" placeholder="admin@millionstay.com" />
         </div>
         <div className="space-y-1.5">
           <Label>Website</Label>
