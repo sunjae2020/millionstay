@@ -87,7 +87,6 @@ function SummaryCard({
   isLong: boolean;
 }) {
   const weeklyRate  = (session.agreed_weekly_rate as number) ?? 0;
-  const stayWeeks   = (session.stay_weeks as number) ?? 0;
   const bond        = (session.bond_amount as number) ?? 1000;
   const adminFee    = (session.admin_fee as number) ?? 200;
   const cleaningFee = (session.cleaning_fee as number) ?? 300;
@@ -95,8 +94,17 @@ function SummaryCard({
     const svc = EXTRA_SERVICES.find((s) => s.id === id);
     return sum + (svc?.price ?? 0);
   }, 0);
-
-  const shortTotal = bond + adminFee + cleaningFee + servicesTotal;
+  // Calculate days and pro-rata rent
+  const cardDays = (() => {
+    const ci = session.check_in_date as string;
+    const co = session.check_out_date as string;
+    if (!ci || !co) return 0;
+    return Math.max(1, Math.round((new Date(co).getTime() - new Date(ci).getTime()) / (24 * 60 * 60 * 1000)));
+  })();
+  const cardProRata = weeklyRate > 0 && cardDays > 0 && !isLong
+    ? Math.round((weeklyRate / 7) * cardDays * 100) / 100
+    : 0;
+  const shortTotal = bond + adminFee + cleaningFee + servicesTotal + cardProRata;
   const longInitial = bond + adminFee + cleaningFee + (weeklyRate * 2) + servicesTotal;
 
   return (
@@ -112,7 +120,7 @@ function SummaryCard({
               {(() => { try { return format(new Date(session.check_in_date as string), "dd/MM/yyyy"); } catch { return session.check_in_date as string; } })()}
               {" → "}
               {(() => { try { return format(new Date(session.check_out_date as string), "dd/MM/yyyy"); } catch { return session.check_out_date as string; } })()}
-              {stayWeeks ? ` (${stayWeeks}w)` : ""}
+              {cardDays > 0 ? ` (${cardDays}d)` : ""}
             </span>
           </div>
         )}
@@ -134,6 +142,12 @@ function SummaryCard({
         </div>
       ) : (
         <div className="space-y-1.5 text-xs">
+          {cardProRata > 0 && (
+            <div className="flex justify-between text-gray-500">
+              <span>Rent <span className="text-gray-400">({cardDays}d)</span></span>
+              <span>${cardProRata.toLocaleString()}</span>
+            </div>
+          )}
           <div className="flex justify-between text-gray-500"><span>Security Bond</span><span>${bond}</span></div>
           <div className="flex justify-between text-gray-500"><span>Admin Fee</span><span>${adminFee}</span></div>
           <div className="flex justify-between text-gray-500"><span>Cleaning Fee</span><span>${cleaningFee}</span></div>
@@ -274,14 +288,14 @@ export default function BookingNew() {
   }, [confirmed, token]);
 
   /* Derive stay type */
-  const stayWeeks = (() => {
+  const stayDays = (() => {
     const ci = session.check_in_date as string;
     const co = session.check_out_date as string;
     if (!ci || !co) return 0;
-    const ms = new Date(co).getTime() - new Date(ci).getTime();
-    return Math.max(1, Math.round(ms / (7 * 24 * 60 * 60 * 1000)));
+    return Math.max(1, Math.round((new Date(co).getTime() - new Date(ci).getTime()) / (24 * 60 * 60 * 1000)));
   })();
-  const isLong = stayWeeks >= 4;
+  const stayWeeks = Math.round(stayDays / 7);
+  const isLong = stayDays >= 28;
   const STEPS = isLong ? LONG_STEPS : SHORT_STEPS;
 
   /* For short-term: require login upfront */
@@ -335,7 +349,11 @@ export default function BookingNew() {
   const bond        = (session.bond_amount as number) ?? 1000;
   const adminFee    = (session.admin_fee as number) ?? 200;
   const cleaningFee = (session.cleaning_fee as number) ?? 300;
-  const totalShort  = bond + adminFee + cleaningFee + servicesTotal;
+  // Pro-rata rent: weekly_rate / 7 × days
+  const proRataRent = weeklyRate > 0 && stayDays > 0
+    ? Math.round((weeklyRate / 7) * stayDays * 100) / 100
+    : 0;
+  const totalShort  = bond + adminFee + cleaningFee + servicesTotal + proRataRent;
   const totalLong   = (weeklyRate * 4 || bond) + adminFee + cleaningFee + (weeklyRate * 2) + servicesTotal;
   const totalDue    = isLong ? totalLong : totalShort;
 
@@ -660,6 +678,17 @@ export default function BookingNew() {
 
                 {/* Amount breakdown */}
                 <div className="bg-orange-50 border border-orange-100 rounded-xl px-5 py-4 space-y-2 text-sm">
+                  {proRataRent > 0 && (
+                    <div className="flex justify-between text-gray-600">
+                      <span>
+                        Rent
+                        {weeklyRate > 0 && stayDays > 0 && (
+                          <span className="text-xs text-gray-400 ml-1">(${weeklyRate}/wk ÷ 7 × {stayDays} days)</span>
+                        )}
+                      </span>
+                      <span>${proRataRent.toLocaleString()}</span>
+                    </div>
+                  )}
                   {[
                     ["Security Bond", bond], ["Admin Fee", adminFee], ["Cleaning Fee", cleaningFee],
                     ...selectedServices.map((id) => { const s = EXTRA_SERVICES.find((x) => x.id === id)!; return [s.label, s.price]; }),
@@ -762,6 +791,12 @@ export default function BookingNew() {
                 <div className="bg-gray-50 rounded-xl px-4 py-3 space-y-1.5">
                   <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Ongoing Rent</p>
                   {weeklyRate > 0 && <p className="text-sm text-gray-700"><span className="font-bold">${weeklyRate}/week</span> — due weekly in advance after check-in</p>}
+                  {proRataRent > 0 && stayDays > 0 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Estimated total rent: <span className="font-semibold text-gray-700">${proRataRent.toLocaleString()}</span>
+                      <span className="text-gray-400"> (${weeklyRate}/wk ÷ 7 × {stayDays} days)</span>
+                    </p>
+                  )}
                 </div>
               </div>
 

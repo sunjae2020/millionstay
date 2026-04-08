@@ -280,14 +280,18 @@ export default function SpaceDetail() {
     } catch { setCheckOut(""); }
   }, [space, selectedProduct]);
 
-  const stayWeeks = useMemo(() => {
+  const stayDays = useMemo(() => {
     if (!checkIn || !checkOut) return null;
-    return Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (7 * 24 * 60 * 60 * 1000));
+    const d = Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (24 * 60 * 60 * 1000));
+    return d > 0 ? d : null;
   }, [checkIn, checkOut]);
+
+  const stayWeeks = stayDays ? stayDays / 7 : null;
 
   const selectedPriceProduct = space?.products?.find((p) => p.id === selectedProduct);
   const weeklyRate = selectedPriceProduct?.price ?? space?.base_weekly_price ?? 0;
-  const rentTotal = stayWeeks ? stayWeeks * weeklyRate : null;
+  // Pro-rata: weekly_rate / 7 × days
+  const rentTotal = stayDays && weeklyRate ? Math.round((weeklyRate / 7) * stayDays * 100) / 100 : null;
   const deposit = space?.bond_amount ?? 1000;
   const adminFee = space?.admin_fee ?? 200;
   const cleaningFee = space?.cleaning_fee ?? 300;
@@ -559,11 +563,11 @@ export default function SpaceDetail() {
                   </div>
 
                   {/* Fee summary when dates picked */}
-                  {stayWeeks && stayWeeks > 0 && (
+                  {stayDays && stayDays > 0 && (
                     <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
                       className="rounded-xl bg-orange-50 border border-orange-100 p-3 space-y-1.5 text-xs">
                       <div className="flex justify-between">
-                        <span className="text-gray-500">${weeklyRate}/wk × {stayWeeks} wks (rent)</span>
+                        <span className="text-gray-500">${weeklyRate}/wk ÷ 7 × {stayDays} days</span>
                         <span className="font-semibold">${rentTotal?.toLocaleString()}</span>
                       </div>
                       <div className="border-t border-orange-200 pt-1.5 space-y-1">
