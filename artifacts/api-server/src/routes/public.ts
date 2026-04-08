@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, asc, desc, inArray, gte, lte, between, or, sql } from "drizzle-orm";
+import { eq, and, asc, desc, inArray, gte, lte, or } from "drizzle-orm";
 import {
   db,
   spacesTable,
@@ -11,6 +11,20 @@ import {
   spaceOptionsTable,
   productCatalogTable,
 } from "@workspace/db";
+
+function daysBetween(a: string, b: string): number {
+  return Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86_400_000);
+}
+
+function productMinDays(period: number | null, unit: string | null): number | null {
+  if (!period) return null;
+  switch ((unit ?? "").toLowerCase()) {
+    case "nights": return period;
+    case "weeks":  return period * 7;
+    case "months": return period * 30;
+    default:       return period * 7;
+  }
+}
 
 const router: IRouter = Router();
 
@@ -60,9 +74,12 @@ router.get("/v1/public/spaces", async (req, res): Promise<void> => {
   const parentIds = [...new Set(filtered.map((s) => s.parent_space_id).filter((id): id is number => id != null))];
   const allRelevantIds = [...new Set([...spaceIds, ...parentIds])];
 
-  // If date range provided, check availability
+  // If date range provided, check availability + minimum stay
   let unavailableIds = new Set<number>();
   if (start_date && end_date && spaceIds.length > 0) {
+    const requestedDays = daysBetween(start_date, end_date);
+
+    // 1. Manual blocks (space_availability table)
     const blocked = await db
       .select({ space_id: spaceAvailabilityTable.space_id })
       .from(spaceAvailabilityTable)
@@ -75,7 +92,7 @@ router.get("/v1/public/spaces", async (req, res): Promise<void> => {
         ),
       );
 
-    // Also check active bookings that overlap
+    // 2. Already-booked spaces (Confirmed / Pending / Active overlap)
     const bookedSpaces = await db
       .select({ space_id: bookingsTable.space_id })
       .from(bookingsTable)
@@ -99,6 +116,44 @@ router.get("/v1/public/spaces", async (req, res): Promise<void> => {
 
     if (unavailableIds.size > 0) {
       filtered = filtered.filter((s) => !unavailableIds.has(s.id));
+    }
+
+    // 3. Minimum stay filter — products & promotions
+    //    Fetch active products for remaining spaces to determine effective minimum
+    const remainingIds = filtered.map((s) => s.id);
+    if (remainingIds.length > 0) {
+      const products = await db
+        .select({
+          space_id: productCatalogTable.space_id,
+          min_contract_period: productCatalogTable.min_contract_period,
+          min_contract_period_unit: productCatalogTable.min_contract_period_unit,
+        })
+        .from(productCatalogTable)
+        .where(
+          and(
+            inArray(productCatalogTable.space_id, remainingIds),
+            eq(productCatalogTable.status, "Active"),
+          ),
+        );
+
+      // Build per-space minimum days map from products
+      const productMinBySpace = new Map<number, number>();
+      for (const p of products) {
+        if (!p.space_id) continue;
+        const days = productMinDays(p.min_contract_period, p.min_contract_period_unit);
+        if (days == null) continue;
+        const cur = productMinBySpace.get(p.space_id);
+        // Use the LOWEST product minimum (most permissive plan available)
+        if (cur == null || days < cur) productMinBySpace.set(p.space_id, days);
+      }
+
+      filtered = filtered.filter((s) => {
+        // Effective minimum: lowest product min if products exist, else space.min_stay_weeks * 7
+        const effectiveMin = productMinBySpace.has(s.id)
+          ? productMinBySpace.get(s.id)!
+          : (s.min_stay_weeks ?? 4) * 7;
+        return requestedDays >= effectiveMin;
+      });
     }
   }
 

@@ -10,13 +10,13 @@ import { SpaceMap } from "@/components/space-map";
 import { Slider } from "@/components/ui/slider";
 import {
   MapPin, X, ChevronDown, Map as MapIcon, Search as SearchIcon,
-  Home, Building2, BedDouble, ChevronRight,
+  Home, Building2, BedDouble, ChevronRight, Calendar,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import heroBg from "@assets/MS_Homepage_Photo_1920x1080_1775403929888.jpg";
 
 const PAGE_SIZE = 20;
-type DropdownKey = "suburb" | "type" | "price" | "gender" | null;
+type DropdownKey = "suburb" | "type" | "price" | "gender" | "dates" | null;
 
 const SPACE_TYPES = [
   { value: "all", label: "Any Type", icon: Home },
@@ -47,8 +47,8 @@ export default function Search() {
   const [spaceType, setSpaceType] = useState(init.space_type);
   const [genderPolicy, setGenderPolicy] = useState(init.gender_policy);
   const [priceRange, setPriceRange] = useState<[number, number]>([init.min_price, init.max_price]);
-  const [checkIn] = useState(init.check_in);
-  const [checkOut] = useState(init.check_out);
+  const [checkIn, setCheckIn] = useState(init.check_in);
+  const [checkOut, setCheckOut] = useState(init.check_out);
   const [offset, setOffset] = useState(0);
   const [allSpaces, setAllSpaces] = useState<Record<string, unknown>[]>([]);
   const [openDropdown, setOpenDropdown] = useState<DropdownKey>(null);
@@ -64,6 +64,8 @@ export default function Search() {
     gender_policy: genderPolicy !== "all" ? (genderPolicy as "FemaleOnly" | "Mixed") : undefined,
     min_price: priceRange[0] > 100 ? priceRange[0] : undefined,
     max_price: priceRange[1] < 1200 ? priceRange[1] : undefined,
+    start_date: checkIn || undefined,
+    end_date: checkOut || undefined,
     limit: PAGE_SIZE,
     offset,
   };
@@ -90,11 +92,15 @@ export default function Search() {
 
   const clearFilters = () => {
     setSuburbId(""); setSpaceType("all"); setGenderPolicy("all");
-    setPriceRange([100, 1200]); resetOffset(); setOpenDropdown(null);
+    setPriceRange([100, 1200]); setCheckIn(""); setCheckOut("");
+    resetOffset(); setOpenDropdown(null);
   };
 
-  const hasActiveFilters = suburbId !== "" || spaceType !== "all" || genderPolicy !== "all" || priceRange[0] > 100 || priceRange[1] < 1200;
-  const activeCount = [suburbId !== "", spaceType !== "all", genderPolicy !== "all", priceRange[0] > 100 || priceRange[1] < 1200].filter(Boolean).length;
+  const hasActiveFilters = suburbId !== "" || spaceType !== "all" || genderPolicy !== "all" || priceRange[0] > 100 || priceRange[1] < 1200 || !!checkIn;
+  const activeCount = [suburbId !== "", spaceType !== "all", genderPolicy !== "all", priceRange[0] > 100 || priceRange[1] < 1200, !!checkIn].filter(Boolean).length;
+
+  const formatDateLabel = (d: string) => d ? new Date(d + "T00:00").toLocaleDateString("en-AU", { day: "numeric", month: "short" }) : "";
+  const datesLabel = checkIn ? `${formatDateLabel(checkIn)}${checkOut ? ` → ${formatDateLabel(checkOut)}` : ""}` : "Dates";
   const suburbName = suburbs.find((s) => String(s.id) === suburbId)?.name ?? null;
 
   const toggleDropdown = (key: DropdownKey) => setOpenDropdown((prev) => (prev === key ? null : key));
@@ -210,6 +216,59 @@ export default function Search() {
                       className="w-full py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary/90">
                       Apply
                     </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Dates */}
+            <div className="relative shrink-0">
+              <button onClick={() => toggleDropdown("dates")}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-medium transition-all ${
+                  checkIn ? "bg-primary border-primary text-white shadow-sm" : "bg-white border-gray-200 text-gray-700 hover:border-primary hover:text-primary"
+                }`}>
+                <Calendar className="h-3.5 w-3.5" />
+                {datesLabel}
+                <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+              </button>
+              <AnimatePresence>
+                {openDropdown === "dates" && (
+                  <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }}
+                    className="absolute top-full left-0 mt-2 w-72 bg-white rounded-2xl border shadow-xl z-50 p-5">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">Stay Dates</p>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-xs text-gray-500 mb-1 block">Check-in</label>
+                        <input type="date" value={checkIn}
+                          min={new Date().toISOString().split("T")[0]}
+                          onChange={(e) => { setCheckIn(e.target.value); if (checkOut && e.target.value > checkOut) setCheckOut(""); resetOffset(); }}
+                          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-primary" />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-500 mb-1 block">Check-out</label>
+                        <input type="date" value={checkOut}
+                          min={checkIn || new Date().toISOString().split("T")[0]}
+                          onChange={(e) => { setCheckOut(e.target.value); resetOffset(); }}
+                          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-primary" />
+                      </div>
+                    </div>
+                    <div className="flex gap-2 mt-4">
+                      {checkIn && (
+                        <button onClick={() => { setCheckIn(""); setCheckOut(""); resetOffset(); }}
+                          className="flex-1 py-2 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50">
+                          Clear
+                        </button>
+                      )}
+                      <button onClick={() => setOpenDropdown(null)}
+                        className="flex-1 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary/90">
+                        Apply
+                      </button>
+                    </div>
+                    {checkIn && (
+                      <p className="text-xs text-gray-400 mt-3 text-center">
+                        Only showing rooms available on selected dates
+                      </p>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
