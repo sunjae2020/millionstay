@@ -20,9 +20,9 @@ export interface CreateSpaceBody {
   /** @nullable */
   base_weekly_price?: number | null;
   /** @nullable */
-  base_currency?: string | null;
+  base_daily_price?: number | null;
   /** @nullable */
-  min_stay_weeks?: number | null;
+  base_currency?: string | null;
   /** @nullable */
   floor_number?: number | null;
   /** @nullable */

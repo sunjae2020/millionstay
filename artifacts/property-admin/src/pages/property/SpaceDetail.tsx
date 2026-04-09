@@ -45,8 +45,8 @@ interface SpaceForm {
   max_occupancy: string;
   booking_mode: string;
   base_weekly_price: string;
+  base_daily_price: string;
   base_currency: string;
-  min_stay_weeks: string;
   floor_number: string;
   floor_area_sqm: string;
   description: string;
@@ -193,8 +193,8 @@ export default function SpaceDetail() {
   const { register, handleSubmit, reset, control, watch, formState: { errors } } = useForm<SpaceForm>({
     defaultValues: {
       name: "", manual_input: false, space_type: "", custom_type_name: "",
-      max_occupancy: "", booking_mode: "", base_weekly_price: "", base_currency: "AUD",
-      min_stay_weeks: "", floor_number: "", floor_area_sqm: "", description: "",
+      max_occupancy: "", booking_mode: "", base_weekly_price: "", base_daily_price: "", base_currency: "AUD",
+      floor_number: "", floor_area_sqm: "", description: "",
       ical_import_url: "", status: "Active", landlord_account_id: "",
     },
   });
@@ -211,8 +211,8 @@ export default function SpaceDetail() {
         max_occupancy: space.max_occupancy?.toString() ?? "",
         booking_mode: space.booking_mode ?? "",
         base_weekly_price: space.base_weekly_price?.toString() ?? "",
+        base_daily_price: space.base_daily_price?.toString() ?? "",
         base_currency: space.base_currency ?? "AUD",
-        min_stay_weeks: space.min_stay_weeks?.toString() ?? "",
         floor_number: space.floor_number?.toString() ?? "",
         floor_area_sqm: space.floor_area_sqm?.toString() ?? "",
         description: space.description ?? "",
@@ -273,8 +273,8 @@ export default function SpaceDetail() {
       max_occupancy: data.max_occupancy ? parseInt(data.max_occupancy, 10) : null,
       booking_mode: data.booking_mode || null,
       base_weekly_price: data.base_weekly_price ? parseFloat(data.base_weekly_price) : null,
+      base_daily_price: data.base_daily_price ? parseFloat(data.base_daily_price) : null,
       base_currency: data.base_currency || null,
-      min_stay_weeks: data.min_stay_weeks ? parseInt(data.min_stay_weeks, 10) : null,
       floor_number: data.floor_number ? parseInt(data.floor_number, 10) : null,
       floor_area_sqm: data.floor_area_sqm ? parseFloat(data.floor_area_sqm) : null,
       description: data.description || null,
@@ -521,12 +521,13 @@ export default function SpaceDetail() {
                     <Input {...register("base_weekly_price")} type="number" step="0.01" min={0} placeholder="0.00" />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Currency</Label>
-                    <Input {...register("base_currency")} placeholder="AUD" maxLength={3} />
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Daily Price</Label>
+                    <Input {...register("base_daily_price")} type="number" step="5" min={0} placeholder="0.00" />
+                    <p className="text-xs text-muted-foreground">Auto-calculated: Weekly ÷ 4, rounded to $5</p>
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Min Stay (weeks)</Label>
-                    <Input {...register("min_stay_weeks")} type="number" min={1} placeholder="e.g. 4" />
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Currency</Label>
+                    <Input {...register("base_currency")} placeholder="AUD" maxLength={3} />
                   </div>
                 </div>
               </div>

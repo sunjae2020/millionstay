@@ -46,8 +46,8 @@ router.get("/v1/public/spaces", async (req, res): Promise<void> => {
       booking_mode: spacesTable.booking_mode,
       max_occupancy: spacesTable.max_occupancy,
       base_weekly_price: spacesTable.base_weekly_price,
+      base_daily_price: spacesTable.base_daily_price,
       base_currency: spacesTable.base_currency,
-      min_stay_weeks: spacesTable.min_stay_weeks,
       description: spacesTable.description,
       status: spacesTable.status,
       property_id: spacesTable.property_id,
@@ -151,10 +151,10 @@ router.get("/v1/public/spaces", async (req, res): Promise<void> => {
       }
 
       filtered = filtered.filter((s) => {
-        // Effective minimum: lowest product min if products exist, else space.min_stay_weeks * 7
+        // Effective minimum: lowest product min if products exist, else 1 night
         const effectiveMin = productMinBySpace.has(s.id)
           ? productMinBySpace.get(s.id)!
-          : (s.min_stay_weeks ?? 4) * 7;
+          : 1;
         return requestedDays >= effectiveMin;
       });
     }
@@ -225,8 +225,8 @@ router.get("/v1/public/spaces/:id", async (req, res): Promise<void> => {
       booking_mode: spacesTable.booking_mode,
       max_occupancy: spacesTable.max_occupancy,
       base_weekly_price: spacesTable.base_weekly_price,
+      base_daily_price: spacesTable.base_daily_price,
       base_currency: spacesTable.base_currency,
-      min_stay_weeks: spacesTable.min_stay_weeks,
       description: spacesTable.description,
       status: spacesTable.status,
       floor_number: spacesTable.floor_number,
