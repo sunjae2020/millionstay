@@ -12,10 +12,10 @@ const CS_CATEGORIES = ["General", "Accommodation", "Billing", "Maintenance", "Ot
 
 async function generateTicketRef(): Promise<string> {
   const year = new Date().getFullYear();
-  const [{ count }] = await db.execute(
-    sql`SELECT COUNT(*) as count FROM cs_tickets WHERE EXTRACT(YEAR FROM created_at) = ${year}`
-  ) as any;
-  const seq = (Number(count) + 1).toString().padStart(4, "0");
+  const result = await db.select({ count: sql<number>`COUNT(*)::int` })
+    .from(csTicketsTable)
+    .where(sql`EXTRACT(YEAR FROM ${csTicketsTable.created_at}) = ${year}`);
+  const seq = ((result[0]?.count ?? 0) + 1).toString().padStart(4, "0");
   return `CS-${year}-${seq}`;
 }
 
@@ -46,10 +46,10 @@ router.get("/v1/guest/cs-tickets", requireGuestAuth, async (req, res): Promise<v
       .orderBy(desc(csTicketsTable.created_at));
 
     const ticketsWithCount = await Promise.all(tickets.map(async (t) => {
-      const [{ count }] = await db.execute(
-        sql`SELECT COUNT(*) as count FROM cs_messages WHERE ticket_id = ${t.id}`
-      ) as any;
-      return { ...t, message_count: Number(count) };
+      const countResult = await db.select({ count: sql<number>`COUNT(*)::int` })
+        .from(csMessagesTable)
+        .where(eq(csMessagesTable.ticket_id, t.id));
+      return { ...t, message_count: countResult[0]?.count ?? 0 };
     }));
 
     res.json({ success: true, data: ticketsWithCount });

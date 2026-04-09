@@ -55,12 +55,13 @@ router.get("/v1/cs-tickets", requireAuth, async (req, res): Promise<void> => {
       .limit(Number(limit))
       .offset(Number(offset));
 
-    const [{ total }] = await db.execute(sql`SELECT COUNT(*) as total FROM cs_tickets`) as any;
+    const totalResult = await db.select({ total: sql<number>`COUNT(*)::int` }).from(csTicketsTable)
+      .where(conditions.length ? and(...conditions) : undefined);
 
     res.json({
       success: true,
       data: tickets.map(r => ({ ...r.ticket, guest_name: r.guest_name, guest_email: r.guest_email, booking_ref: r.booking_ref })),
-      meta: { total: Number(total) },
+      meta: { total: totalResult[0]?.total ?? 0 },
     });
   } catch {
     res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to list tickets" } });
