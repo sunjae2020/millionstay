@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Save, Calendar, Package, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { apiFetch } from "@/lib/apiFetch";
 
 const STATUS_COLORS: Record<string, string> = {
   Active: "bg-green-100 text-green-700",
@@ -26,7 +27,7 @@ const TYPE_CONFIG: Record<string, { label: string; icon: React.ElementType; desc
 };
 
 async function fetchService(id: string) {
-  const res = await fetch(`/api/v1/services/${id}`);
+  const res = await apiFetch(`/api/v1/services/${id}`);
   if (!res.ok) throw new Error("Not found");
   return res.json();
 }
@@ -114,9 +115,8 @@ export default function ServiceDetail() {
         has_variants:        values.service_type === "physical"  ? values.has_variants        : false,
       };
       const url = isNew ? "/api/v1/services" : `/api/v1/services/${id}`;
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method: isNew ? "POST" : "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error(await res.text());

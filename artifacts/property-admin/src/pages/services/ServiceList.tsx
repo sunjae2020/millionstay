@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Plus, Search, Pencil, Archive, Calendar, Package, Zap } from "lucide-react";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { apiFetch } from "@/lib/apiFetch";
 
 const STATUS_COLORS: Record<string, string> = {
   Active: "bg-green-100 text-green-700",
@@ -30,13 +31,13 @@ async function fetchServices(q?: string, service_type?: string, status?: string)
   if (q) params.set("q", q);
   if (service_type) params.set("service_type", service_type);
   if (status) params.set("status", status);
-  const res = await fetch(`/api/v1/services?${params}`);
+  const res = await apiFetch(`/api/v1/services?${params}`);
   if (!res.ok) throw new Error("Failed to fetch services");
   return res.json();
 }
 
 async function archiveService(id: number) {
-  const res = await fetch(`/api/v1/services/${id}`, { method: "DELETE" });
+  const res = await apiFetch(`/api/v1/services/${id}`, { method: "DELETE" });
   if (!res.ok) throw new Error("Failed to archive");
   return res.json();
 }
