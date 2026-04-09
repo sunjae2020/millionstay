@@ -72,6 +72,8 @@ import UsersPage from "@/pages/settings/sub/Users";
 import EmailTemplatesPage from "@/pages/settings/sub/EmailTemplates";
 import DesignPage from "@/pages/settings/sub/Design";
 import ContractTypesPage from "@/pages/settings/sub/ContractTypes";
+import ProductGroupsPage from "@/pages/settings/sub/ProductGroups";
+import ProductTypesPage from "@/pages/settings/sub/ProductTypes";
 import BookingReportPage from "@/pages/settings/sub/BookingReport";
 import IntegrationsPage from "@/pages/settings/sub/Integrations";
 import PaymentInfoList from "@/pages/crm/PaymentInfoList";
@@ -217,12 +219,8 @@ function Router() {
       <Route path="/settings/integrations" component={IntegrationsPage} />
 
       <Route path="/settings/contract-types" component={ContractTypesPage} />
-      <Route path="/settings/product-groups">
-        {() => <ComingSoonPage title="Product Groups" subtitle="Organise products into groups" />}
-      </Route>
-      <Route path="/settings/product-types">
-        {() => <ComingSoonPage title="Product Types" subtitle="Manage product type definitions" />}
-      </Route>
+      <Route path="/settings/product-groups" component={ProductGroupsPage} />
+      <Route path="/settings/product-types" component={ProductTypesPage} />
 
       <Route path="/settings/payment-info" component={PaymentInfoList} />
       <Route path="/settings/payment-info/new" component={PaymentInfoDetail} />
