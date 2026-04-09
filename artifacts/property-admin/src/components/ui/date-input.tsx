@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 
 interface DateInputProps {
@@ -20,24 +20,6 @@ function isoToDmy(iso: string): string {
   const [y, m, d] = iso.split("-");
   if (!y || !m || !d) return iso;
   return `${d}/${m}/${y}`;
-}
-
-function dmyToIso(dmy: string): string {
-  const clean = dmy.replace(/\D/g, "");
-  if (clean.length < 8) return "";
-  const d = clean.slice(0, 2);
-  const m = clean.slice(2, 4);
-  const y = clean.slice(4, 8);
-  const date = new Date(`${y}-${m}-${d}`);
-  if (isNaN(date.getTime())) return "";
-  return `${y}-${m}-${d}`;
-}
-
-function autoSlash(raw: string): string {
-  const digits = raw.replace(/\D/g, "").slice(0, 8);
-  if (digits.length <= 2) return digits;
-  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
 }
 
 function isoToDate(iso: string): Date | undefined {
@@ -64,44 +46,17 @@ export function DateInput({
   readOnly,
 }: DateInputProps) {
   const [display, setDisplay] = useState(isoToDmy(value));
-  const [error, setError] = useState(false);
   const [open, setOpen] = useState(false);
-  const wrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setDisplay(isoToDmy(value));
   }, [value]);
-
-  const handleTextChange = (raw: string) => {
-    if (readOnly) return;
-    const formatted = autoSlash(raw);
-    setDisplay(formatted);
-    if (formatted.length === 10) {
-      const iso = dmyToIso(formatted);
-      if (iso) {
-        setError(false);
-        onChange?.(iso);
-      } else {
-        setError(true);
-      }
-    } else {
-      setError(false);
-      if (formatted.length === 0) onChange?.("");
-    }
-  };
-
-  const handleBlur = (e: React.FocusEvent) => {
-    if (wrapRef.current?.contains(e.relatedTarget as Node)) return;
-    if (display.length > 0 && display.length < 10) setError(true);
-    if (display.length === 0) setError(false);
-  };
 
   const handleCalendarSelect = (date: Date | undefined) => {
     if (!date) return;
     const iso = dateToIso(date);
     onChange?.(iso);
     setDisplay(isoToDmy(iso));
-    setError(false);
     setOpen(false);
   };
 
@@ -111,58 +66,49 @@ export function DateInput({
 
   const isDisabledDay = (date: Date) => {
     if (minDate) {
-      const minMidnight = new Date(minDate);
-      minMidnight.setHours(0, 0, 0, 0);
-      if (date < minMidnight) return true;
+      const d = new Date(date); d.setHours(0, 0, 0, 0);
+      const mn = new Date(minDate); mn.setHours(0, 0, 0, 0);
+      if (d < mn) return true;
     }
     if (maxDate) {
-      const maxMidnight = new Date(maxDate);
-      maxMidnight.setHours(23, 59, 59, 999);
-      if (date > maxMidnight) return true;
+      const d = new Date(date); d.setHours(0, 0, 0, 0);
+      const mx = new Date(maxDate); mx.setHours(0, 0, 0, 0);
+      if (d > mx) return true;
     }
     return false;
   };
 
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <div ref={wrapRef} className="relative" onBlur={handleBlur}>
-        <PopoverAnchor asChild>
-          <input
-            type="text"
-            value={display}
-            onFocus={() => !disabled && !readOnly && setOpen(true)}
-            onChange={(e) => handleTextChange(e.target.value)}
-            placeholder={placeholder}
-            disabled={disabled}
-            readOnly={readOnly}
-            className={cn(
-              "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background pr-9",
-              "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-              "disabled:cursor-not-allowed disabled:opacity-50",
-              error && "ring-2 ring-destructive ring-offset-0",
-              className,
-            )}
-            maxLength={10}
-            inputMode="numeric"
-            autoComplete="off"
-          />
-        </PopoverAnchor>
+  const isInteractive = !disabled && !readOnly;
 
-        {!readOnly && (
-          <button
-            type="button"
-            tabIndex={-1}
-            disabled={disabled}
-            onMouseDown={(e) => {
-              e.preventDefault();
-              if (!readOnly) setOpen((p) => !p);
-            }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <CalendarDays className="h-4 w-4" />
-          </button>
-        )}
-        {readOnly && (
+  return (
+    <Popover open={open} onOpenChange={isInteractive ? setOpen : undefined}>
+      <div className="relative">
+        <input
+          type="text"
+          value={display}
+          placeholder={placeholder}
+          disabled={disabled}
+          readOnly
+          onClick={() => isInteractive && setOpen(true)}
+          className={cn(
+            "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background pr-9",
+            "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+            "disabled:cursor-not-allowed disabled:opacity-50",
+            isInteractive && "cursor-pointer",
+            className,
+          )}
+        />
+        {isInteractive ? (
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors focus:outline-none"
+              aria-label="Open calendar"
+            >
+              <CalendarDays className="h-4 w-4" />
+            </button>
+          </PopoverTrigger>
+        ) : (
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
             <CalendarDays className="h-4 w-4" />
           </span>
