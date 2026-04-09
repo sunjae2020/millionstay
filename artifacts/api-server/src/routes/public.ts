@@ -223,7 +223,7 @@ router.get("/v1/public/spaces", async (req, res): Promise<void> => {
   const parentIds = [...new Set(paginated.map((s) => s.parent_space_id).filter((id): id is number => id != null))];
   const allRelevantIds = [...new Set([...paginatedIds, ...parentIds])];
 
-  const [allImages, allOptionMaps] = await Promise.all([
+  const [allImages, allOptionMaps, mandatoryServiceRows] = await Promise.all([
     allRelevantIds.length > 0
       ? db.select().from(spaceImagesTable)
           .where(and(
@@ -233,10 +233,33 @@ router.get("/v1/public/spaces", async (req, res): Promise<void> => {
           .orderBy(desc(spaceImagesTable.is_primary))
       : Promise.resolve([]),
     paginatedIds.length > 0
-      ? db.select({ space_id: spaceOptionMapsTable.space_id, name: spaceOptionsTable.name })
+      ? db.select({
+            space_id: spaceOptionMapsTable.space_id,
+            name: spaceOptionsTable.name,
+            display_name: spaceOptionsTable.display_name,
+          })
           .from(spaceOptionMapsTable)
           .leftJoin(spaceOptionsTable, eq(spaceOptionMapsTable.space_option_id, spaceOptionsTable.id))
           .where(inArray(spaceOptionMapsTable.space_id, paginatedIds))
+      : Promise.resolve([]),
+    // Mandatory services: fetch via accommodation product → service mapping
+    paginatedIds.length > 0
+      ? db.select({
+            space_id: accommodationCatalogTable.space_id,
+            service_name: serviceCatalogTable.name,
+          })
+          .from(accommodationCatalogTable)
+          .innerJoin(
+            accommodationServiceCatalogTable,
+            eq(accommodationServiceCatalogTable.accommodation_id, accommodationCatalogTable.id),
+          )
+          .innerJoin(serviceCatalogTable, eq(accommodationServiceCatalogTable.service_id, serviceCatalogTable.id))
+          .where(and(
+            inArray(accommodationCatalogTable.space_id, paginatedIds),
+            eq(accommodationCatalogTable.status, "Active"),
+            eq(accommodationServiceCatalogTable.is_mandatory, true),
+            eq(serviceCatalogTable.status, "Active"),
+          ))
       : Promise.resolve([]),
   ]);
 
@@ -248,8 +271,18 @@ router.get("/v1/public/spaces", async (req, res): Promise<void> => {
   const optionsBySpace = new Map<number, string[]>();
   for (const row of allOptionMaps) {
     const arr = optionsBySpace.get(row.space_id) ?? [];
-    if (row.name) arr.push(row.name);
+    const label = row.display_name ?? row.name;
+    if (label) arr.push(label);
     optionsBySpace.set(row.space_id, arr);
+  }
+
+  // Unique mandatory services per space
+  const mandatoryBySpace = new Map<number, string[]>();
+  for (const row of mandatoryServiceRows) {
+    if (!row.space_id || !row.service_name) continue;
+    const arr = mandatoryBySpace.get(row.space_id) ?? [];
+    if (!arr.includes(row.service_name)) arr.push(row.service_name);
+    mandatoryBySpace.set(row.space_id, arr);
   }
 
   const data = paginated.map((s) => {
@@ -265,6 +298,7 @@ router.get("/v1/public/spaces", async (req, res): Promise<void> => {
       primary_thumbnail: primary?.thumbnail_url ?? null,
       image_from_parent: imageFromParent,
       space_options: optionsBySpace.get(s.id) ?? [],
+      mandatory_services: mandatoryBySpace.get(s.id) ?? [],
     };
   });
 

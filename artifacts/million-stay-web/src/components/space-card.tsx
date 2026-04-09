@@ -19,17 +19,34 @@ export function SpaceCard({ space, index = 0, highlighted = false, checkIn = "",
   const { t } = useTranslation();
   const [imgError, setImgError] = useState(false);
 
+  const s = space as any;
+
   const getSpaceTypeLabel = (type: string) => {
     switch (type) {
-      case "EntireSpace": return t('space.entire');
-      case "RoomSpace": return t('space.room');
-      case "BedSpace": return t('space.bed');
+      case "EntireSpace":   return t('space.entire');
+      case "RoomSpace":     return t('space.room');
+      case "BedSpace":      return t('space.bed');
+      case "Whole Property": return "Entire Space";
+      case "Private Room":  return "Private Room";
+      case "Shared Room":   return "Shared Room";
       default: return type;
     }
   };
 
-  // Prefer thumbnail for card (faster load), fall back to full image
-  const imgSrc = (space as any).primary_thumbnail ?? space.primary_image;
+  const imgSrc = s.primary_thumbnail ?? s.primary_image;
+
+  // Gender label
+  const genderLabel = s.policy_lady_only
+    ? { text: "👩 Female Only", cls: "text-pink-600 border-pink-200 bg-pink-50" }
+    : s.policy_same_gender
+    ? { text: "👥 Same Gender", cls: "text-blue-600 border-blue-200 bg-blue-50" }
+    : null;
+
+  // Space options / highlights — show first 4 items in one compact line
+  const highlights: string[] = Array.isArray(s.space_options) ? s.space_options.slice(0, 4) : [];
+
+  // Mandatory services (unique names)
+  const mandatoryServices: string[] = Array.isArray(s.mandatory_services) ? s.mandatory_services : [];
 
   return (
     <motion.div
@@ -42,7 +59,8 @@ export function SpaceCard({ space, index = 0, highlighted = false, checkIn = "",
       <Link href={`/spaces/${space.id}${checkIn || checkOut ? `?${new URLSearchParams([["check_in", checkIn], ["check_out", checkOut]].filter(([, v]) => v) as [string, string][]).toString()}` : ""}`} className="absolute inset-0 z-10">
         <span className="sr-only">View Space</span>
       </Link>
-      
+
+      {/* ── Image ── */}
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         {imgSrc && !imgError ? (
           <img
@@ -70,43 +88,62 @@ export function SpaceCard({ space, index = 0, highlighted = false, checkIn = "",
           <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm font-medium">
             {getSpaceTypeLabel(space.space_type)}
           </Badge>
-          {(space as any).booking_mode === "Instant" && (
+          {s.booking_mode === "Instant" && (
             <Badge className="bg-green-500 hover:bg-green-500 text-white font-medium border-0">
               ⚡ Instant
             </Badge>
           )}
         </div>
       </div>
-      
+
+      {/* ── Body ── */}
       <div className="p-4 flex flex-col flex-1">
-        <div className="flex justify-between items-start mb-1 gap-2">
-          <h3 className="font-semibold text-lg line-clamp-1 group-hover:text-primary transition-colors">
-            {space.name}
-          </h3>
-          <div className="flex items-center text-sm font-medium whitespace-nowrap">
-            <span className="text-yellow-500 mr-1">★</span> 5.0
-          </div>
-        </div>
-        
-        <p className="text-sm text-muted-foreground line-clamp-1 mb-2">
-          {space.suburb_name ? `${space.suburb_name}` : ''} {space.address_line1 && `• ${space.address_line1}`}
+
+        {/* Name */}
+        <h3 className="font-semibold text-base line-clamp-1 group-hover:text-primary transition-colors mb-1">
+          {space.name}
+        </h3>
+
+        {/* Address / suburb */}
+        <p className="text-xs text-muted-foreground line-clamp-1 mb-2">
+          {s.suburb_name ? s.suburb_name : s.property_city ?? ""}
+          {s.property_address ? ` · ${s.property_address}` : ""}
         </p>
 
-        <div className="flex flex-wrap gap-2 mb-4">
-          {space.lady_only ? (
-            <Badge variant="outline" className="text-pink-600 border-pink-200 bg-pink-50">{t('space.female_only')}</Badge>
-          ) : space.same_gender ? (
-             <Badge variant="outline">{t('space.mixed')}</Badge>
-          ) : null}
-        </div>
-        
-        <div className="mt-auto pt-4 border-t flex items-end justify-between">
+        {/* Gender badge */}
+        {genderLabel && (
+          <div className="mb-2">
+            <Badge variant="outline" className={`text-xs ${genderLabel.cls}`}>
+              {genderLabel.text}
+            </Badge>
+          </div>
+        )}
+
+        {/* Highlights (space options) — 1 compact line */}
+        {highlights.length > 0 && (
+          <p className="text-xs text-muted-foreground line-clamp-1 mb-1">
+            ✨ {highlights.join(" · ")}
+          </p>
+        )}
+
+        {/* Mandatory services — 1 compact line */}
+        {mandatoryServices.length > 0 && (
+          <p className="text-xs text-muted-foreground line-clamp-1 mb-2">
+            📋 {mandatoryServices.join(" · ")}
+          </p>
+        )}
+
+        {/* Price */}
+        <div className="mt-auto pt-3 border-t flex items-end justify-between">
           <div>
-            <div className="text-xs text-muted-foreground mb-0.5">
-              {space.min_contract_period ? t('space.min_stay', { weeks: space.min_contract_period }) : ''}
-            </div>
+            {s.min_contract_period ? (
+              <div className="text-xs text-muted-foreground mb-0.5">
+                {t('space.min_stay', { weeks: s.min_contract_period })}
+              </div>
+            ) : null}
             <div className="font-bold text-lg">
-              ${space.base_weekly_price} <span className="text-sm font-normal text-muted-foreground">{t('space.per_week')}</span>
+              ${s.base_weekly_price}{" "}
+              <span className="text-sm font-normal text-muted-foreground">{t('space.per_week')}</span>
             </div>
           </div>
         </div>
