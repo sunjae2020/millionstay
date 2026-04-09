@@ -56,6 +56,8 @@ import ServiceDetail from "@/pages/services/ServiceDetail";
 // Finance
 import InvoiceList from "@/pages/finance/InvoiceList";
 import InvoiceDetail from "@/pages/finance/InvoiceDetail";
+import ReceiptList from "@/pages/finance/ReceiptList";
+import RecurringScheduleList from "@/pages/finance/RecurringScheduleList";
 import CommissionList from "@/pages/crm/CommissionList";
 import CommissionDetail from "@/pages/crm/CommissionDetail";
 
@@ -201,17 +203,13 @@ function Router() {
       <Route path="/finance/transactions">
         {() => <ComingSoonPage title="Transactions" subtitle="View all financial transactions" />}
       </Route>
-      <Route path="/finance/receipts">
-        {() => <ComingSoonPage title="Receipts" subtitle="Manage receipts and payments" />}
-      </Route>
+      <Route path="/finance/receipts" component={ReceiptList} />
 
       <Route path="/finance/commissions" component={CommissionList} />
       <Route path="/finance/commissions/new" component={CommissionDetail} />
       <Route path="/finance/commissions/:id" component={CommissionDetail} />
 
-      <Route path="/finance/recurring">
-        {() => <ComingSoonPage title="Recurring" subtitle="Manage recurring billing schedules" />}
-      </Route>
+      <Route path="/finance/recurring" component={RecurringScheduleList} />
 
       {/* ── SETTINGS HUB ──────────────────────────────── */}
       <Route path="/settings" component={Settings} />

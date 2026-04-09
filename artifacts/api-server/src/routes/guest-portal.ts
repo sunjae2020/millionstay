@@ -217,7 +217,25 @@ router.get("/v1/guest/bookings/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  res.json({ success: true, data: booking });
+  // Include invoices for this booking
+  const invoices = await db
+    .select({
+      id: invoicesTable.id,
+      invoice_ref: invoicesTable.invoice_ref,
+      amount: invoicesTable.amount,
+      currency: invoicesTable.currency,
+      status: invoicesTable.status,
+      due_date: invoicesTable.due_date,
+      paid_at: invoicesTable.paid_at,
+      payment_method: invoicesTable.payment_method,
+      description: invoicesTable.description,
+      created_at: invoicesTable.created_at,
+    })
+    .from(invoicesTable)
+    .where(eq(invoicesTable.booking_id, bookingId))
+    .orderBy(asc(invoicesTable.id));
+
+  res.json({ success: true, data: { ...booking, invoices } });
 });
 
 /* ───────────────────────────────────────────────────────
@@ -356,6 +374,133 @@ router.put("/v1/guest/profile", async (req, res): Promise<void> => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, error: "Failed to update profile" });
+  }
+});
+
+/* ───────────────────────────────────────────────────────
+   POST /api/v1/guest/payment/confirm — 결제 확인
+──────────────────────────────────────────────────────── */
+router.post("/v1/guest/payment/confirm", async (req, res): Promise<void> => {
+  const guest = (req as any).guest;
+  const { booking_id, amount, payment_method = "bank_transfer" } = req.body as {
+    booking_id: number;
+    amount?: number;
+    payment_method?: string;
+  };
+
+  if (!booking_id) {
+    res.status(400).json({ success: false, error: "booking_id is required" });
+    return;
+  }
+
+  try {
+    // Verify the booking belongs to this guest
+    const [booking] = await db
+      .select({
+        id: bookingsTable.id,
+        booking_ref: bookingsTable.booking_ref,
+        booking_status: bookingsTable.booking_status,
+        account_id: bookingsTable.account_id,
+        space_id: bookingsTable.space_id,
+        check_in_date: bookingsTable.check_in_date,
+        check_out_date: bookingsTable.check_out_date,
+        agreed_weekly_rate: bookingsTable.agreed_weekly_rate,
+        total_rent: bookingsTable.total_rent,
+      })
+      .from(bookingsTable)
+      .where(
+        and(
+          eq(bookingsTable.id, booking_id),
+          eq(bookingsTable.account_id, guest.account_id),
+        ),
+      )
+      .limit(1);
+
+    if (!booking) {
+      res.status(404).json({ success: false, error: "Booking not found" });
+      return;
+    }
+
+    if (booking.booking_status === "Cancelled") {
+      res.status(400).json({ success: false, error: "Cannot pay a cancelled booking" });
+      return;
+    }
+
+    // Generate invoice ref
+    const year = new Date().getFullYear();
+    const existingInvRows = await db
+      .select({ id: invoicesTable.id })
+      .from(invoicesTable)
+      .where(eq(invoicesTable.booking_id, booking_id));
+
+    // Only create an invoice if none exists for this booking
+    let invoice;
+    if (existingInvRows.length === 0) {
+      const allInvRows = await db.select({ id: invoicesTable.id }).from(invoicesTable);
+      const invCount = allInvRows.length + 1;
+      const invoice_ref = `MS-INV-${year}-${String(invCount).padStart(5, "0")}`;
+      const invoiceAmount = amount ?? (booking.total_rent ? Number(booking.total_rent) : 0);
+
+      const [newInvoice] = await db
+        .insert(invoicesTable)
+        .values({
+          invoice_ref,
+          booking_id: booking.id,
+          account_id: booking.account_id ?? undefined,
+          amount: invoiceAmount,
+          currency: "AUD",
+          status: payment_method === "bank_transfer" ? "Sent" : "Paid",
+          paid_at: payment_method === "bank_transfer" ? null : new Date(),
+          payment_method,
+          description: `Booking payment — ${booking.booking_ref}`,
+        })
+        .returning();
+      invoice = newInvoice;
+    } else {
+      // Update existing invoice to paid if card payment
+      if (payment_method !== "bank_transfer") {
+        const [updated] = await db
+          .update(invoicesTable)
+          .set({ status: "Paid", paid_at: new Date(), payment_method })
+          .where(eq(invoicesTable.booking_id, booking_id))
+          .returning();
+        invoice = updated;
+      } else {
+        const [existing] = await db
+          .select()
+          .from(invoicesTable)
+          .where(eq(invoicesTable.booking_id, booking_id))
+          .limit(1);
+        invoice = existing;
+      }
+    }
+
+    // Update booking status
+    const newStatus = payment_method === "bank_transfer" ? "PendingApproval" : "PendingApproval";
+    await db
+      .update(bookingsTable)
+      .set({ booking_status: newStatus })
+      .where(eq(bookingsTable.id, booking_id));
+
+    res.json({
+      success: true,
+      data: {
+        booking_ref: booking.booking_ref,
+        invoice_ref: invoice?.invoice_ref,
+        invoice_id: invoice?.id,
+        amount: invoice?.amount,
+        currency: invoice?.currency ?? "AUD",
+        status: invoice?.status,
+        payment_method,
+        paid_at: invoice?.paid_at,
+        message: payment_method === "bank_transfer"
+          ? "Bank transfer initiated. Booking will be confirmed once payment is received."
+          : "Payment recorded. Our team will review and confirm your booking shortly.",
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: "Payment confirmation failed" });
   }
 });
 

@@ -189,16 +189,23 @@ export default function PortalPayment() {
       toast({ title: "Please complete all card fields", variant: "destructive" });
       return;
     }
+    if (!bookingId) {
+      toast({ title: "Booking not found", variant: "destructive" });
+      return;
+    }
     setPaying(true);
     try {
-      if (paymentMethod === "card" && bookingId) {
-        const res = await fetch(`${import.meta.env.VITE_API_URL ?? ""}/api/v1/guest/payment/confirm`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ booking_id: parseInt(bookingId, 10), amount: totalDue }),
-        });
-        if (!res.ok) throw new Error("Payment failed");
-      }
+      const apiMethod = paymentMethod === "card" ? "card" : "bank_transfer";
+      const res = await fetch(`${import.meta.env.VITE_API_URL ?? ""}/api/v1/guest/payment/confirm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          booking_id: parseInt(bookingId, 10),
+          amount: totalDue,
+          payment_method: apiMethod,
+        }),
+      });
+      if (!res.ok) throw new Error("Payment confirmation failed");
       setPaid(true);
     } catch {
       toast({ title: "Payment failed", description: "Please check your details and try again.", variant: "destructive" });
