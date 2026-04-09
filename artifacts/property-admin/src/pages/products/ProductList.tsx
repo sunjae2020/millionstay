@@ -49,6 +49,8 @@ type Product = {
   display_on_booking_page: boolean;
   status: string;
   created_at: string | null;
+  promotion_valid_from: string | null;
+  promotion_valid_to: string | null;
 };
 
 type Promotion = { id: number; display: string };
@@ -191,10 +193,15 @@ export default function ProductList() {
                           {p.name}
                         </Link>
                       </td>
-                      <td className="px-4 py-3 max-w-[160px]">
+                      <td className="px-4 py-3 max-w-[200px]">
                         <div className="text-xs text-muted-foreground truncate">{p.promotion_name ?? "—"}</div>
                         {p.promotion_id != null && PROMO_PERIOD[p.promotion_id] && (
                           <div className="text-[10px] text-muted-foreground/60 mt-0.5">{PROMO_PERIOD[p.promotion_id]}</div>
+                        )}
+                        {(p.promotion_valid_from || p.promotion_valid_to) && (
+                          <div className="text-[10px] text-muted-foreground/50 mt-0.5">
+                            {fmtDate(p.promotion_valid_from)} – {fmtDate(p.promotion_valid_to)}
+                          </div>
                         )}
                       </td>
                       <td className="px-4 py-3 text-right text-xs tabular-nums text-muted-foreground">

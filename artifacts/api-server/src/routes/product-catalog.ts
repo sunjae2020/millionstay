@@ -55,7 +55,7 @@ router.get("/v1/accommodations", async (req, res): Promise<void> => {
       typeIds.length ? db.select().from(productTypesTable).where(inArray(productTypesTable.id, typeIds)) : [],
       spaceIds.length ? db.select({ id: spacesTable.id, name: spacesTable.name }).from(spacesTable).where(inArray(spacesTable.id, spaceIds)) : [],
       providerIds.length ? db.select({ id: accountsTable.id, name: accountsTable.name }).from(accountsTable).where(inArray(accountsTable.id, providerIds)) : [],
-      promoIds.length ? db.select({ id: promotionsTable.id, name: promotionsTable.name }).from(promotionsTable).where(inArray(promotionsTable.id, promoIds)) : [],
+      promoIds.length ? db.select({ id: promotionsTable.id, name: promotionsTable.name, valid_from: promotionsTable.valid_from, valid_to: promotionsTable.valid_to }).from(promotionsTable).where(inArray(promotionsTable.id, promoIds)) : [],
       accIds.length ? db.select({
         accommodation_id: accommodationServiceCatalogTable.accommodation_id,
         service_name: serviceCatalogTable.name,
@@ -70,7 +70,7 @@ router.get("/v1/accommodations", async (req, res): Promise<void> => {
     const typeMap = Object.fromEntries(types.map(t => [t.id, t.name]));
     const spaceMap = Object.fromEntries(spaces.map(s => [s.id, s.name]));
     const providerMap = Object.fromEntries(providers.map(a => [a.id, a.name]));
-    const promoMap = Object.fromEntries(promos.map(p => [p.id, p.name]));
+    const promoMap = Object.fromEntries(promos.map(p => [p.id, { name: p.name, valid_from: p.valid_from, valid_to: p.valid_to }]));
     const svcMap: Record<number, string[]> = {};
     for (const s of svcRows as Array<{ accommodation_id: number; service_name: string; is_mandatory: boolean }>) {
       if (!s.is_mandatory) continue;
@@ -84,7 +84,9 @@ router.get("/v1/accommodations", async (req, res): Promise<void> => {
       type_name: r.product_type_id ? typeMap[r.product_type_id] ?? null : null,
       space_name: r.space_id ? spaceMap[r.space_id] ?? null : null,
       provider_name: r.product_provider_account_id ? providerMap[r.product_provider_account_id] ?? null : null,
-      promotion_name: r.promotion_id ? promoMap[r.promotion_id] ?? null : null,
+      promotion_name: r.promotion_id ? promoMap[r.promotion_id]?.name ?? null : null,
+      promotion_valid_from: r.promotion_id ? promoMap[r.promotion_id]?.valid_from ?? null : null,
+      promotion_valid_to: r.promotion_id ? promoMap[r.promotion_id]?.valid_to ?? null : null,
       packed_services: svcMap[r.id] ?? [],
     }));
 
