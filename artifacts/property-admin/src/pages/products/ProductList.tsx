@@ -3,10 +3,9 @@ import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
 import {
   AlertDialog,
@@ -20,12 +19,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
-
-const STATUS_COLORS: Record<string, string> = {
-  Active: "bg-green-100 text-green-700",
-  Inactive: "bg-yellow-100 text-yellow-700",
-  Archived: "bg-red-100 text-red-600",
-};
 
 type Product = {
   id: number;
@@ -167,23 +160,20 @@ export default function ProductList() {
               <thead className="bg-muted/50 border-b">
                 <tr>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Name</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Space</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Promotion</th>
                   <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Unit</th>
                   <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Price</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Services</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
-                  <th className="px-4 py-3 w-20"></th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground text-sm">Loading...</td>
+                    <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">Loading...</td>
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground text-sm">No products found</td>
+                    <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">No products found</td>
                   </tr>
                 ) : (
                   pagination.paginatedItems.map((p) => (
@@ -195,9 +185,6 @@ export default function ProductList() {
                         >
                           {p.name}
                         </Link>
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground text-xs max-w-[160px] truncate">
-                        {p.space_name ?? "—"}
                       </td>
                       <td className="px-4 py-3 text-xs text-muted-foreground max-w-[160px] truncate">
                         {p.promotion_name ?? "—"}
@@ -213,26 +200,6 @@ export default function ProductList() {
                           ? <span className="text-muted-foreground/50">—</span>
                           : <span className="line-clamp-2">{(p.packed_services ?? []).join(", ")}</span>
                         }
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge className={`text-xs ${STATUS_COLORS[p.status] ?? "bg-gray-100 text-gray-600"}`}>
-                          {p.status}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1">
-                          <Link href={`/products/products/${p.id}`}>
-                            <button className="p-1.5 rounded hover:bg-muted transition-colors">
-                              <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                            </button>
-                          </Link>
-                          <button
-                            className="p-1.5 rounded hover:bg-destructive/10 transition-colors"
-                            onClick={() => setDeleteId(p.id)}
-                          >
-                            <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
-                          </button>
-                        </div>
                       </td>
                     </tr>
                   ))
