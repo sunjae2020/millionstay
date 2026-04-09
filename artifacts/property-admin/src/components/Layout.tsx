@@ -71,6 +71,14 @@ const NAV: NavSection[] = [
     ],
   },
   {
+    label: "CS",
+    icon: HeadphonesIcon,
+    defaultOpen: false,
+    items: [
+      { href: "/cs/tickets", label: "CS Tickets", icon: HeadphonesIcon },
+    ],
+  },
+  {
     label: "Property",
     icon: Building2,
     defaultOpen: true,
@@ -114,14 +122,6 @@ const NAV: NavSection[] = [
       { href: "/finance/receipts", label: "Receipt", icon: Receipt },
       { href: "/finance/commissions", label: "Commission", icon: Percent },
       { href: "/finance/recurring", label: "Recurring", icon: RefreshCw },
-    ],
-  },
-  {
-    label: "CS",
-    icon: HeadphonesIcon,
-    defaultOpen: false,
-    items: [
-      { href: "/cs/tickets", label: "CS Tickets", icon: HeadphonesIcon },
     ],
   },
   {
