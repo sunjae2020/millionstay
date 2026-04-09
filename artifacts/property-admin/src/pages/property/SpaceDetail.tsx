@@ -523,7 +523,7 @@ export default function SpaceDetail() {
                   <div className="flex flex-col gap-1.5">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Daily Price</Label>
                     <Input {...register("base_daily_price")} type="number" step="5" min={0} placeholder="0.00" />
-                    <p className="text-xs text-muted-foreground">Auto-calculated: Weekly ÷ 4, rounded to $5</p>
+                    <p className="text-xs text-muted-foreground">Auto-calculated: Weekly ÷ 2, rounded to $5</p>
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Currency</Label>
