@@ -18,6 +18,9 @@ import PortalDocuments from "@/pages/portal-documents";
 import PortalBookingDetail from "@/pages/portal-booking-detail";
 import PortalProfile from "@/pages/portal-profile";
 import PortalPayment from "@/pages/portal-payment";
+import PortalCs from "@/pages/portal-cs";
+import PortalCsNew from "@/pages/portal-cs-new";
+import PortalCsDetail from "@/pages/portal-cs-detail";
 import About from "@/pages/about";
 import Contact from "@/pages/contact";
 import StayPlan from "@/pages/stay-plan";
@@ -59,6 +62,9 @@ function Router() {
       <Route path="/portal/documents" component={PortalDocuments} />
       <Route path="/portal/profile" component={PortalProfile} />
       <Route path="/portal/payment" component={PortalPayment} />
+      <Route path="/portal/cs/new" component={PortalCsNew} />
+      <Route path="/portal/cs/:id" component={PortalCsDetail} />
+      <Route path="/portal/cs" component={PortalCs} />
       <Route path="/about" component={About} />
       <Route path="/contact" component={Contact} />
       <Route path="/stay-plan" component={StayPlan} />

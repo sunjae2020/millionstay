@@ -65,6 +65,10 @@ import CommissionDetail from "@/pages/crm/CommissionDetail";
 import WorkOrderList from "@/pages/maintenance/WorkOrderList";
 import WorkOrderDetail from "@/pages/maintenance/WorkOrderDetail";
 
+// CS
+import CsTicketList from "@/pages/cs/CsTicketList";
+import CsTicketDetail from "@/pages/cs/CsTicketDetail";
+
 // Settings
 import Settings from "@/pages/settings/Settings";
 import OrganisationPage from "@/pages/settings/sub/Organisation";
@@ -192,6 +196,10 @@ function Router() {
       <Route path="/services" component={ServiceList} />
       <Route path="/services/new" component={ServiceDetail} />
       <Route path="/services/:id" component={ServiceDetail} />
+
+      {/* ── CS ────────────────────────────────────────── */}
+      <Route path="/cs/tickets" component={CsTicketList} />
+      <Route path="/cs/tickets/:id" component={CsTicketDetail} />
 
       {/* ── FINANCE ───────────────────────────────────── */}
       <Route path="/finance/invoices" component={InvoiceList} />

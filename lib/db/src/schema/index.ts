@@ -33,3 +33,4 @@ export * from "./beneficiaries";
 export * from "./service_catalog";
 export * from "./space_service_catalog";
 export * from "./accommodation_service_catalog";
+export * from "./cs_tickets";

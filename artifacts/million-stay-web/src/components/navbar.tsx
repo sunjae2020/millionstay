@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { Menu, X, BookOpen, FileText, FileImage, LogOut, ChevronDown, User } from "lucide-react";
+import { Menu, X, BookOpen, FileText, FileImage, LogOut, ChevronDown, User, HeadphonesIcon } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 import logoHorizontal from "@assets/06.OR_NB_horizontal_ver_1775381659303.png";
 import logoMark from "@assets/05.OR_NB_Mark_simple_ver_1775381659302.png";
@@ -168,6 +168,10 @@ export function Navbar() {
                     <FileImage className="h-4 w-4 text-gray-500" />
                     {t("portal.my_documents")}
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLocation("/portal/cs")} className="gap-2">
+                    <HeadphonesIcon className="h-4 w-4 text-gray-500" />
+                    My Inquiries
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setLocation("/portal/profile")} className="gap-2">
                     <User className="h-4 w-4 text-gray-500" />
                     My Profile
@@ -247,6 +251,7 @@ export function Navbar() {
                 <button onClick={() => { setMobileOpen(false); setLocation("/portal/bookings"); }} className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:text-primary hover:bg-orange-50 rounded">{t("portal.my_bookings")}</button>
                 <button onClick={() => { setMobileOpen(false); setLocation("/portal/invoices"); }} className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:text-primary hover:bg-orange-50 rounded">{t("portal.my_invoices")}</button>
                 <button onClick={() => { setMobileOpen(false); setLocation("/portal/documents"); }} className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:text-primary hover:bg-orange-50 rounded">{t("portal.my_documents")}</button>
+                <button onClick={() => { setMobileOpen(false); setLocation("/portal/cs"); }} className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:text-primary hover:bg-orange-50 rounded">My Inquiries</button>
                 <button onClick={() => { setMobileOpen(false); setLocation("/portal/profile"); }} className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:text-primary hover:bg-orange-50 rounded">My Profile</button>
                 <button onClick={() => { setMobileOpen(false); handleLogout(); }} className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded">{t("nav.logout")}</button>
               </div>

@@ -46,6 +46,7 @@ function PortalSideMenu({ active }: { active: string }) {
     { href: "/portal/bookings", label: "My Bookings", icon: "📋" },
     { href: "/portal/invoices", label: "My Invoices", icon: "🧾" },
     { href: "/portal/documents", label: "Documents", icon: "📎" },
+    { href: "/portal/cs", label: "My Inquiries", icon: "🎧" },
     { href: "/portal/profile", label: "My Profile", icon: "👤" },
   ];
   return (

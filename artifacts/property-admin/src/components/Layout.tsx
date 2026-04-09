@@ -40,6 +40,7 @@ import {
   Menu,
   X,
   ConciergeBell,
+  HeadphonesIcon,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
@@ -113,6 +114,14 @@ const NAV: NavSection[] = [
       { href: "/finance/receipts", label: "Receipt", icon: Receipt },
       { href: "/finance/commissions", label: "Commission", icon: Percent },
       { href: "/finance/recurring", label: "Recurring", icon: RefreshCw },
+    ],
+  },
+  {
+    label: "CS",
+    icon: HeadphonesIcon,
+    defaultOpen: false,
+    items: [
+      { href: "/cs/tickets", label: "CS Tickets", icon: HeadphonesIcon },
     ],
   },
   {

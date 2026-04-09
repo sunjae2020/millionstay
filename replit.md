@@ -104,6 +104,11 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 - `GET /api/v1/guest/documents` — guest's documents (stub)
 - `GET /api/v1/guest/profile` — profile
 - `PUT /api/v1/guest/profile` — update profile
+- `GET /api/v1/guest/cs-tickets` — list guest's support tickets
+- `POST /api/v1/guest/cs-tickets` — create new support ticket (with optional booking_id + image_urls)
+- `GET /api/v1/guest/cs-tickets/:id` — ticket detail with messages (non-internal only) + booking info
+- `POST /api/v1/guest/cs-tickets/:id/messages` — send reply to ticket (reopens Resolved tickets)
+- `POST /api/v1/cs/upload-image` — upload image for CS ticket (Cloudinary, requires guest auth)
 
 ### API Server (`artifacts/api-server`)
 - **Kind**: api
@@ -112,7 +117,11 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 
 ## Database Schema (`lib/db`)
 
-Tables (28 total): `suburbs`, `properties`, `space_options`, `space_policies`, `spaces`, `space_option_maps`, `space_blocked_dates`, `commissions`, `payment_info`, `contacts`, `accounts`, `tasks`, `leads`, `service_hosts`, `bookings`, `booking_documents`, `contract_products`, `contracts`, `invoices`, `work_orders`, `space_availability`, `recurring_schedule`, `system_log`, `email_template` (10 seeded templates), `email_log`, `promotions`, `beneficiaries`, `accommodation_catalog`, `service_catalog`
+Tables (30 total): `suburbs`, `properties`, `space_options`, `space_policies`, `spaces`, `space_option_maps`, `space_blocked_dates`, `commissions`, `payment_info`, `contacts`, `accounts`, `tasks`, `leads`, `service_hosts`, `bookings`, `booking_documents`, `contract_products`, `contracts`, `invoices`, `work_orders`, `space_availability`, `recurring_schedule`, `system_log`, `email_template` (10 seeded templates), `email_log`, `promotions`, `beneficiaries`, `accommodation_catalog`, `service_catalog`, `cs_tickets`, `cs_messages`
+
+**cs_tickets** — Guest support tickets. Fields: `ticket_ref` (CS-YYYY-NNNN), `guest_user_id`, `booking_id` (optional link), `category` (General/Accommodation/Billing/Maintenance/Other), `subject`, `description`, `status` (Open/InProgress/Resolved/Closed), `priority` (Low/Normal/High/Urgent), `assigned_admin_id`, `closed_at`. Admin API: `/api/v1/cs-tickets`. Guest API: `/api/v1/guest/cs-tickets`.
+
+**cs_messages** — Thread messages per ticket. Fields: `ticket_id`, `sender_type` (guest/admin), `sender_id`, `message`, `image_urls` (JSON array of Cloudinary URLs), `is_internal` (1 = internal admin note, not visible to guest).
 
 **accommodation_catalog** (formerly product_catalog) — Guest-facing accommodation pricing per space. Admin API: `/api/v1/accommodations`. Drizzle: `accommodationCatalogTable`. Fields include `bond_amount`, `admin_fee`, `cleaning_fee` per product.
 
