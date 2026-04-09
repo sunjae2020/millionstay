@@ -5,7 +5,6 @@ import { useAuthStore } from "@/lib/store";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, MessageCircle, ChevronRight, HeadphonesIcon, Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import { format } from "date-fns";

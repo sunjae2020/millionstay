@@ -97,7 +97,7 @@ export default function PortalCsNew() {
       toast({ title: "Inquiry submitted!", description: "We'll get back to you as soon as possible." });
       navigate(`/portal/cs/${res.data.id}`);
     } catch (err: any) {
-      toast({ title: "Error", description: err?.error || "Failed to submit. Please try again.", variant: "destructive" });
+      toast({ title: "Error", description: err?.error?.message || err?.message || "Failed to submit. Please try again.", variant: "destructive" });
     } finally {
       setSubmitting(false);
     }

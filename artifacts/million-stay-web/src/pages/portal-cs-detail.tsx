@@ -6,7 +6,6 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { ArrowLeft, Send, ImageIcon, X, Loader2, Clock, CheckCircle2, XCircle, AlertCircle, Calendar, User } from "lucide-react";
@@ -112,7 +111,7 @@ export default function PortalCsDetail() {
       qc.invalidateQueries({ queryKey: ["cs-ticket", id] });
       qc.invalidateQueries({ queryKey: ["guest-cs-tickets"] });
     },
-    onError: (e: any) => toast({ title: "Error", description: e?.error || "Failed to send message.", variant: "destructive" }),
+    onError: (e: any) => toast({ title: "Error", description: e?.error?.message || e?.message || "Failed to send message.", variant: "destructive" }),
   });
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
