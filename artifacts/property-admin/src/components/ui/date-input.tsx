@@ -1,6 +1,8 @@
-import { useRef, useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 
 interface DateInputProps {
   value: string;
@@ -38,6 +40,19 @@ function autoSlash(raw: string): string {
   return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
 }
 
+function isoToDate(iso: string): Date | undefined {
+  if (!iso) return undefined;
+  const d = new Date(iso + "T00:00:00");
+  return isNaN(d.getTime()) ? undefined : d;
+}
+
+function dateToIso(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 export function DateInput({
   value,
   onChange,
@@ -50,16 +65,17 @@ export function DateInput({
 }: DateInputProps) {
   const [display, setDisplay] = useState(isoToDmy(value));
   const [error, setError] = useState(false);
-  const hiddenRef = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setDisplay(isoToDmy(value));
   }, [value]);
 
   const handleTextChange = (raw: string) => {
+    if (readOnly) return;
     const formatted = autoSlash(raw);
     setDisplay(formatted);
-
     if (formatted.length === 10) {
       const iso = dmyToIso(formatted);
       if (iso) {
@@ -74,56 +90,99 @@ export function DateInput({
     }
   };
 
-  const handleBlur = () => {
+  const handleBlur = (e: React.FocusEvent) => {
+    if (wrapRef.current?.contains(e.relatedTarget as Node)) return;
     if (display.length > 0 && display.length < 10) setError(true);
     if (display.length === 0) setError(false);
   };
 
+  const handleCalendarSelect = (date: Date | undefined) => {
+    if (!date) return;
+    const iso = dateToIso(date);
+    onChange?.(iso);
+    setDisplay(isoToDmy(iso));
+    setError(false);
+    setOpen(false);
+  };
+
+  const minDate = isoToDate(min ?? "");
+  const maxDate = isoToDate(max ?? "");
+  const selectedDate = isoToDate(value);
+
+  const isDisabledDay = (date: Date) => {
+    if (minDate) {
+      const minMidnight = new Date(minDate);
+      minMidnight.setHours(0, 0, 0, 0);
+      if (date < minMidnight) return true;
+    }
+    if (maxDate) {
+      const maxMidnight = new Date(maxDate);
+      maxMidnight.setHours(23, 59, 59, 999);
+      if (date > maxMidnight) return true;
+    }
+    return false;
+  };
+
   return (
-    <div className="relative">
-      <input
-        type="text"
-        value={display}
-        onChange={(e) => handleTextChange(e.target.value)}
-        onBlur={handleBlur}
-        placeholder={placeholder}
-        disabled={disabled}
-        readOnly={readOnly}
-        className={cn(
-          "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background pr-9",
-          "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-          "disabled:cursor-not-allowed disabled:opacity-50",
-          error && "ring-2 ring-destructive ring-offset-0",
-          className,
+    <Popover open={open} onOpenChange={setOpen}>
+      <div ref={wrapRef} className="relative" onBlur={handleBlur}>
+        <PopoverAnchor asChild>
+          <input
+            type="text"
+            value={display}
+            onFocus={() => !disabled && !readOnly && setOpen(true)}
+            onChange={(e) => handleTextChange(e.target.value)}
+            placeholder={placeholder}
+            disabled={disabled}
+            readOnly={readOnly}
+            className={cn(
+              "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background pr-9",
+              "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+              "disabled:cursor-not-allowed disabled:opacity-50",
+              error && "ring-2 ring-destructive ring-offset-0",
+              className,
+            )}
+            maxLength={10}
+            inputMode="numeric"
+            autoComplete="off"
+          />
+        </PopoverAnchor>
+
+        {!readOnly && (
+          <button
+            type="button"
+            tabIndex={-1}
+            disabled={disabled}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              if (!readOnly) setOpen((p) => !p);
+            }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <CalendarDays className="h-4 w-4" />
+          </button>
         )}
-        maxLength={10}
-        inputMode="numeric"
-      />
+        {readOnly && (
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+            <CalendarDays className="h-4 w-4" />
+          </span>
+        )}
+      </div>
 
-      {/* Calendar icon — decorative only; pointer events pass through to the native input below */}
-      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
-        <CalendarDays className="h-4 w-4" />
-      </span>
-
-      {/* Native date input overlaid on the icon area; clicking it opens the picker natively */}
-      {!readOnly && (
-        <input
-          ref={hiddenRef}
-          type="date"
-          value={value}
-          min={min}
-          max={max}
-          disabled={disabled}
-          tabIndex={-1}
-          onChange={(e) => {
-            onChange?.(e.target.value);
-            setDisplay(isoToDmy(e.target.value));
-            setError(false);
-          }}
-          className="absolute right-0 top-0 h-full w-10 opacity-0 cursor-pointer"
-          aria-hidden="true"
+      <PopoverContent
+        className="w-auto p-0"
+        align="start"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
+        <Calendar
+          mode="single"
+          selected={selectedDate}
+          onSelect={handleCalendarSelect}
+          disabled={isDisabledDay}
+          defaultMonth={selectedDate ?? minDate}
+          captionLayout="dropdown"
         />
-      )}
-    </div>
+      </PopoverContent>
+    </Popover>
   );
 }
