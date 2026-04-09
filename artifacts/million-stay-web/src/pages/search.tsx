@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation, Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useListSuburbs } from "@workspace/api-client-react";
@@ -10,7 +10,7 @@ import { SpaceMap } from "@/components/space-map";
 import { Slider } from "@/components/ui/slider";
 import {
   MapPin, X, ChevronDown, Map as MapIcon, Search as SearchIcon,
-  Home, Building2, BedDouble, ChevronRight, Calendar,
+  Home, Building2, BedDouble, ChevronRight, Calendar, ArrowRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import heroBg from "@assets/MS_Homepage_Photo_1920x1080_1775403929888.jpg";
@@ -99,8 +99,6 @@ export default function Search() {
   const hasActiveFilters = suburbId !== "" || spaceType !== "all" || genderPolicy !== "all" || priceRange[0] > 100 || priceRange[1] < 1200 || !!checkIn;
   const activeCount = [suburbId !== "", spaceType !== "all", genderPolicy !== "all", priceRange[0] > 100 || priceRange[1] < 1200, !!checkIn].filter(Boolean).length;
 
-  const formatDateLabel = (d: string) => d ? new Date(d + "T00:00").toLocaleDateString("en-AU", { day: "numeric", month: "short" }) : "";
-  const datesLabel = checkIn ? `${formatDateLabel(checkIn)}${checkOut ? ` → ${formatDateLabel(checkOut)}` : ""}` : "Dates";
   const suburbName = suburbs.find((s) => String(s.id) === suburbId)?.name ?? null;
 
   const toggleDropdown = (key: DropdownKey) => setOpenDropdown((prev) => (prev === key ? null : key));
@@ -221,57 +219,61 @@ export default function Search() {
               </AnimatePresence>
             </div>
 
-            {/* Dates */}
+            {/* Check In — inline date pill */}
             <div className="relative shrink-0">
-              <button onClick={() => toggleDropdown("dates")}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-medium transition-all ${
-                  checkIn ? "bg-primary border-primary text-white shadow-sm" : "bg-white border-gray-200 text-gray-700 hover:border-primary hover:text-primary"
-                }`}>
-                <Calendar className="h-3.5 w-3.5" />
-                {datesLabel}
-                <ChevronDown className="h-3.5 w-3.5 opacity-60" />
-              </button>
-              <AnimatePresence>
-                {openDropdown === "dates" && (
-                  <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }}
-                    className="absolute top-full left-0 mt-2 w-72 bg-white rounded-2xl border shadow-xl z-50 p-5">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">Stay Dates</p>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="text-xs text-gray-500 mb-1 block">Check-in</label>
-                        <input type="date" value={checkIn}
-                          min={new Date().toISOString().split("T")[0]}
-                          onChange={(e) => { setCheckIn(e.target.value); if (checkOut && e.target.value > checkOut) setCheckOut(""); resetOffset(); }}
-                          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-primary" />
-                      </div>
-                      <div>
-                        <label className="text-xs text-gray-500 mb-1 block">Check-out</label>
-                        <input type="date" value={checkOut}
-                          min={checkIn || new Date().toISOString().split("T")[0]}
-                          onChange={(e) => { setCheckOut(e.target.value); resetOffset(); }}
-                          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-primary" />
-                      </div>
-                    </div>
-                    <div className="flex gap-2 mt-4">
-                      {checkIn && (
-                        <button onClick={() => { setCheckIn(""); setCheckOut(""); resetOffset(); }}
-                          className="flex-1 py-2 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50">
-                          Clear
-                        </button>
-                      )}
-                      <button onClick={() => setOpenDropdown(null)}
-                        className="flex-1 py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary/90">
-                        Apply
-                      </button>
-                    </div>
-                    {checkIn && (
-                      <p className="text-xs text-gray-400 mt-3 text-center">
-                        Only showing rooms available on selected dates
-                      </p>
-                    )}
-                  </motion.div>
+              <div className={`flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-full border transition-all ${
+                checkIn ? "border-primary bg-orange-50" : "border-gray-200 bg-white hover:border-primary/50"
+              }`}>
+                <Calendar className={`h-3.5 w-3.5 shrink-0 ${checkIn ? "text-primary" : "text-gray-400"}`} />
+                <div className="flex flex-col leading-none">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Check In</span>
+                  <input
+                    type="date"
+                    value={checkIn}
+                    min={new Date().toISOString().split("T")[0]}
+                    onChange={(e) => {
+                      setCheckIn(e.target.value);
+                      if (checkOut && e.target.value > checkOut) setCheckOut("");
+                      resetOffset();
+                    }}
+                    className={`bg-transparent text-xs font-semibold focus:outline-none cursor-pointer w-[90px] ${checkIn ? "text-primary" : "text-gray-500"}`}
+                  />
+                </div>
+                {checkIn && (
+                  <button onClick={() => { setCheckIn(""); setCheckOut(""); resetOffset(); }}
+                    className="ml-0.5 h-4 w-4 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors">
+                    <X className="h-2.5 w-2.5 text-primary" />
+                  </button>
                 )}
-              </AnimatePresence>
+              </div>
+            </div>
+
+            {/* Separator arrow */}
+            <ArrowRight className="h-3.5 w-3.5 text-gray-300 shrink-0 -mx-0.5" />
+
+            {/* Check Out — inline date pill */}
+            <div className="relative shrink-0">
+              <div className={`flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-full border transition-all ${
+                checkOut ? "border-primary bg-orange-50" : "border-gray-200 bg-white hover:border-primary/50"
+              }`}>
+                <Calendar className={`h-3.5 w-3.5 shrink-0 ${checkOut ? "text-primary" : "text-gray-400"}`} />
+                <div className="flex flex-col leading-none">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Check Out</span>
+                  <input
+                    type="date"
+                    value={checkOut}
+                    min={checkIn || new Date().toISOString().split("T")[0]}
+                    onChange={(e) => { setCheckOut(e.target.value); resetOffset(); }}
+                    className={`bg-transparent text-xs font-semibold focus:outline-none cursor-pointer w-[90px] ${checkOut ? "text-primary" : "text-gray-500"}`}
+                  />
+                </div>
+                {checkOut && (
+                  <button onClick={() => { setCheckOut(""); resetOffset(); }}
+                    className="ml-0.5 h-4 w-4 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors">
+                    <X className="h-2.5 w-2.5 text-primary" />
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Gender */}
@@ -329,6 +331,42 @@ export default function Search() {
         {/* Results Panel */}
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
+
+            {/* Date availability notice */}
+            <AnimatePresence>
+              {(checkIn || checkOut) && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  className="flex items-center gap-3 bg-orange-50 border border-orange-100 rounded-xl px-4 py-3 mb-5"
+                >
+                  <Calendar className="h-4 w-4 text-primary shrink-0" />
+                  <div className="flex-1 text-sm text-gray-700">
+                    {checkIn && checkOut ? (
+                      <>
+                        Showing rooms available{" "}
+                        <span className="font-semibold text-primary">
+                          {new Date(checkIn + "T00:00").toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}
+                          {" → "}
+                          {new Date(checkOut + "T00:00").toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}
+                        </span>
+                      </>
+                    ) : checkIn ? (
+                      <>Check-in from <span className="font-semibold text-primary">{new Date(checkIn + "T00:00").toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}</span> — select a check-out date to filter availability</>
+                    ) : (
+                      <>Select a check-in date to see available rooms</>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => { setCheckIn(""); setCheckOut(""); resetOffset(); }}
+                    className="text-xs text-gray-400 hover:text-primary font-medium transition-colors shrink-0"
+                  >
+                    Clear dates
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Result header */}
             <div className="flex items-center justify-between mb-6">
