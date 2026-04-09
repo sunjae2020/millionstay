@@ -13,7 +13,7 @@ import {
   getListPromotionsQueryKey, getGetPromotionQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Save, Tag, Trash2, Package, Wrench, ExternalLink } from "lucide-react";
+import { ArrowLeft, Save, Tag, Trash2, Copy, Package, Wrench, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
 import { apiFetch } from "@/lib/apiFetch";
 import {
@@ -192,6 +192,27 @@ export default function PromotionDetail() {
     else if (id) updateMutation.mutate({ id, data });
   };
 
+  const [isCloning, setIsCloning] = useState(false);
+
+  async function handleClone() {
+    if (!promotion) return;
+    setIsCloning(true);
+    try {
+      const { id: _id, created_at, updated_at, code, ...rest } = promotion as any;
+      const res = await apiFetch("/api/v1/promotions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...rest, name: `Copy of ${promotion.name}`, status: "Draft", code: null }),
+      });
+      if (!res.ok) throw new Error("Clone failed");
+      const cloned = await res.json();
+      qc.invalidateQueries({ queryKey: getListPromotionsQueryKey() });
+      navigate(`/products/promotions/${cloned.id}`);
+    } finally {
+      setIsCloning(false);
+    }
+  }
+
   const isSaving = createMutation.isPending || updateMutation.isPending;
   const termMeta = TERM_TYPE_META[termType];
 
@@ -216,6 +237,16 @@ export default function PromotionDetail() {
             )}
           </div>
           <div className="flex items-center gap-2">
+            {!isNew && (
+              <Button
+                variant="outline" size="sm"
+                disabled={isCloning}
+                onClick={handleClone}
+              >
+                <Copy className={`h-3.5 w-3.5 mr-1 ${isCloning ? "animate-pulse" : ""}`} />
+                {isCloning ? "Cloning..." : "Clone"}
+              </Button>
+            )}
             {!isNew && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>

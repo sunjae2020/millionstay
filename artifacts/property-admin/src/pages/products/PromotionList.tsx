@@ -6,9 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tag, Plus, Search, Pencil } from "lucide-react";
+import { Tag, Plus, Search, Pencil, Copy } from "lucide-react";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
 import { useListPromotions } from "@workspace/api-client-react";
+import { useLocation } from "wouter";
+import { apiFetch } from "@/lib/apiFetch";
 
 const STATUS_COLORS: Record<string, string> = {
   Active: "bg-green-100 text-green-700",
@@ -54,6 +56,25 @@ export default function PromotionList() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("_all");
   const [termType, setTermType] = useState("_all");
+  const [cloningId, setCloningId] = useState<number | null>(null);
+  const [, navigate] = useLocation();
+
+  async function handleClone(p: any) {
+    setCloningId(p.id);
+    try {
+      const { id: _id, created_at, updated_at, code, ...rest } = p;
+      const res = await apiFetch("/api/v1/promotions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...rest, name: `Copy of ${p.name}`, status: "Draft", code: null }),
+      });
+      if (!res.ok) throw new Error("Clone failed");
+      const cloned = await res.json();
+      navigate(`/products/promotions/${cloned.id}`);
+    } finally {
+      setCloningId(null);
+    }
+  }
 
   const { data: promotions = [], isLoading } = useListPromotions({
     search: search || undefined,
@@ -125,7 +146,7 @@ export default function PromotionList() {
                   <TableHead>Billing</TableHead>
                   <TableHead>Code</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="w-16"></TableHead>
+                  <TableHead className="w-24"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -151,9 +172,19 @@ export default function PromotionList() {
                       <Badge className={STATUS_COLORS[p.status] ?? "bg-gray-100 text-gray-700"}>{p.status}</Badge>
                     </TableCell>
                     <TableCell>
-                      <Link href={`/products/promotions/${p.id}`}>
-                        <Button variant="ghost" size="icon" className="h-7 w-7"><Pencil className="h-3.5 w-3.5" /></Button>
-                      </Link>
+                      <div className="flex items-center gap-1">
+                        <Link href={`/products/promotions/${p.id}`}>
+                          <Button variant="ghost" size="icon" className="h-7 w-7"><Pencil className="h-3.5 w-3.5" /></Button>
+                        </Link>
+                        <Button
+                          variant="ghost" size="icon" className="h-7 w-7"
+                          disabled={cloningId === p.id}
+                          onClick={() => handleClone(p)}
+                          title="Clone promotion"
+                        >
+                          <Copy className={`h-3.5 w-3.5 ${cloningId === p.id ? "animate-pulse" : ""}`} />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
