@@ -9,64 +9,85 @@ import { Footer } from "@/components/footer";
 import { SpaceMap } from "@/components/space-map";
 import { Slider } from "@/components/ui/slider";
 import {
-  MapPin, X, ChevronDown, Map as MapIcon, Search as SearchIcon,
-  Home, Building2, BedDouble, ChevronRight, Calendar, ArrowRight,
+  MapPin, X, ChevronDown, ChevronUp, Search as SearchIcon,
+  Home, Building2, BedDouble, ChevronRight, Calendar, SlidersHorizontal,
+  ArrowRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import heroBg from "@assets/MS_Homepage_Photo_1920x1080_1775403929888.jpg";
 
 const PAGE_SIZE = 20;
-type DropdownKey = "suburb" | "type" | "price" | "gender" | "dates" | null;
+type SuburbDropdown = "suburb" | null;
 
 const SPACE_TYPES = [
-  { value: "all", label: "Any Type", icon: Home },
-  { value: "EntireSpace", label: "Entire Space", icon: Building2 },
-  { value: "RoomSpace", label: "Private Room", icon: BedDouble },
-  { value: "BedSpace", label: "Shared Room", icon: BedDouble },
+  { value: "all",         label: "Any Type",      icon: Home },
+  { value: "EntireSpace", label: "Entire Space",  icon: Building2 },
+  { value: "RoomSpace",   label: "Private Room",  icon: BedDouble },
+  { value: "BedSpace",    label: "Shared Room",   icon: BedDouble },
 ];
+
+const GENDER_OPTIONS = [
+  { value: "all",        label: "Any" },
+  { value: "FemaleOnly", label: "👩 Female Only" },
+  { value: "Mixed",      label: "👥 Mixed" },
+];
+
+const today = new Date().toISOString().split("T")[0];
 
 export default function Search() {
   const { t } = useTranslation();
-  const [location] = useLocation();
+  const [_location] = useLocation();
 
+  /* ── Read initial state from URL params ── */
   const getUrlParams = () => {
     const p = new URLSearchParams(window.location.search);
     return {
-      suburb_id: p.get("suburb_id") ?? "",
-      space_type: p.get("space_type") ?? "all",
+      suburb_id:    p.get("suburb_id") ?? "",
+      space_type:   p.get("space_type") ?? "all",
       gender_policy: p.get("gender_policy") ?? "all",
-      min_price: Number(p.get("min_price") ?? 100),
-      max_price: Number(p.get("max_price") ?? 1200),
-      check_in: p.get("check_in") ?? "",
-      check_out: p.get("check_out") ?? "",
+      min_price:    Number(p.get("min_price") ?? 100),
+      max_price:    Number(p.get("max_price") ?? 1200),
+      check_in:     p.get("check_in") ?? "",
+      check_out:    p.get("check_out") ?? "",
     };
   };
 
   const init = getUrlParams();
-  const [suburbId, setSuburbId] = useState(init.suburb_id);
-  const [spaceType, setSpaceType] = useState(init.space_type);
+
+  /* ── Basic search state ── */
+  const [suburbId, setSuburbId]   = useState(init.suburb_id);
+  const [checkIn,  setCheckIn]    = useState(init.check_in);
+  const [checkOut, setCheckOut]   = useState(init.check_out);
+
+  /* ── Advanced filter state ── */
+  const [spaceType,    setSpaceType]    = useState(init.space_type);
   const [genderPolicy, setGenderPolicy] = useState(init.gender_policy);
-  const [priceRange, setPriceRange] = useState<[number, number]>([init.min_price, init.max_price]);
-  const [checkIn, setCheckIn] = useState(init.check_in);
-  const [checkOut, setCheckOut] = useState(init.check_out);
-  const [offset, setOffset] = useState(0);
-  const [allSpaces, setAllSpaces] = useState<Record<string, unknown>[]>([]);
-  const [openDropdown, setOpenDropdown] = useState<DropdownKey>(null);
-  const [showMap, setShowMap] = useState(false);
-  const [hoveredId, setHoveredId] = useState<number | string | null>(null);
+  const [priceRange,   setPriceRange]   = useState<[number, number]>([init.min_price, init.max_price]);
+
+  /* ── UI state ── */
+  const [offset,          setOffset]          = useState(0);
+  const [allSpaces,       setAllSpaces]        = useState<Record<string, unknown>[]>([]);
+  const [suburbOpen,      setSuburbOpen]       = useState<SuburbDropdown>(null);
+  const [showAdvanced,    setShowAdvanced]     = useState(
+    // Auto-open advanced if any advanced filter is active from URL
+    init.space_type !== "all" || init.gender_policy !== "all" ||
+    init.min_price > 100 || init.max_price < 1200
+  );
+  const [hoveredId,       setHoveredId]        = useState<number | string | null>(null);
 
   const { data: suburbsData } = useListSuburbs();
   const suburbs = suburbsData?.data ?? [];
 
+  /* ── API query params ── */
   const queryParams = {
-    suburb_id: suburbId ? parseInt(suburbId) : undefined,
-    space_type: spaceType !== "all" ? (spaceType as "EntireSpace" | "RoomSpace" | "BedSpace") : undefined,
+    suburb_id:    suburbId ? parseInt(suburbId) : undefined,
+    space_type:   spaceType !== "all" ? (spaceType as "EntireSpace" | "RoomSpace" | "BedSpace") : undefined,
     gender_policy: genderPolicy !== "all" ? (genderPolicy as "FemaleOnly" | "Mixed") : undefined,
-    min_price: priceRange[0] > 100 ? priceRange[0] : undefined,
-    max_price: priceRange[1] < 1200 ? priceRange[1] : undefined,
-    start_date: checkIn || undefined,
-    end_date: checkOut || undefined,
-    limit: PAGE_SIZE,
+    min_price:    priceRange[0] > 100  ? priceRange[0] : undefined,
+    max_price:    priceRange[1] < 1200 ? priceRange[1] : undefined,
+    start_date:   checkIn  || undefined,
+    end_date:     checkOut || undefined,
+    limit:        PAGE_SIZE,
     offset,
   };
 
@@ -90,18 +111,22 @@ export default function Search() {
 
   const resetOffset = () => setOffset(0);
 
-  const clearFilters = () => {
-    setSuburbId(""); setSpaceType("all"); setGenderPolicy("all");
-    setPriceRange([100, 1200]); setCheckIn(""); setCheckOut("");
-    resetOffset(); setOpenDropdown(null);
+  const clearBasic = () => {
+    setSuburbId(""); setCheckIn(""); setCheckOut(""); resetOffset();
   };
+  const clearAdvanced = () => {
+    setSpaceType("all"); setGenderPolicy("all"); setPriceRange([100, 1200]); resetOffset();
+  };
+  const clearAll = () => { clearBasic(); clearAdvanced(); };
 
-  const hasActiveFilters = suburbId !== "" || spaceType !== "all" || genderPolicy !== "all" || priceRange[0] > 100 || priceRange[1] < 1200 || !!checkIn;
-  const activeCount = [suburbId !== "", spaceType !== "all", genderPolicy !== "all", priceRange[0] > 100 || priceRange[1] < 1200, !!checkIn].filter(Boolean).length;
+  /* ── Active filter counts ── */
+  const hasBasicFilters   = !!suburbId || !!checkIn;
+  const advancedFilters   = [spaceType !== "all", genderPolicy !== "all", priceRange[0] > 100 || priceRange[1] < 1200];
+  const advancedCount     = advancedFilters.filter(Boolean).length;
+  const hasAdvancedFilters = advancedCount > 0;
+  const hasAnyFilters      = hasBasicFilters || hasAdvancedFilters;
 
   const suburbName = suburbs.find((s) => String(s.id) === suburbId)?.name ?? null;
-
-  const toggleDropdown = (key: DropdownKey) => setOpenDropdown((prev) => (prev === key ? null : key));
 
   const handleMarkerClick = useCallback((id: number | string) => {
     const el = document.getElementById(`space-card-${id}`);
@@ -109,6 +134,10 @@ export default function Search() {
     setHoveredId(id);
     setTimeout(() => setHoveredId(null), 2000);
   }, []);
+
+  /* ── Date label helper ── */
+  const fmtDate = (d: string) =>
+    d ? new Date(d + "T00:00").toLocaleDateString("en-AU", { day: "numeric", month: "short" }) : "";
 
   return (
     <div className="min-h-screen flex flex-col bg-[#faf9f7]">
@@ -131,97 +160,59 @@ export default function Search() {
         <span className="text-gray-600 font-medium">Location</span>
       </div>
 
-      {/* ── Sticky Filter Bar ── */}
-      <div className="sticky top-16 z-40 bg-white border-b border-gray-100 shadow-sm shrink-0">
-        <div className="max-w-7xl mx-auto px-4 md:px-6">
-          <div className="flex items-center gap-2 py-3 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+      {/* ══════════════════════════════════════════════════════════
+          Sticky Search Area
+      ══════════════════════════════════════════════════════════ */}
+      <div className="sticky top-16 z-40 bg-white shadow-sm shrink-0">
 
-            {/* Suburb */}
-            <div className="relative shrink-0">
-              <button onClick={() => toggleDropdown("suburb")}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-medium transition-all ${
-                  suburbId ? "bg-primary border-primary text-white shadow-sm" : "bg-white border-gray-200 text-gray-700 hover:border-primary hover:text-primary"
-                }`}>
-                <MapPin className="h-3.5 w-3.5" />
-                {suburbName ?? "Location"}
-                <ChevronDown className="h-3.5 w-3.5 opacity-60" />
-              </button>
-              <AnimatePresence>
-                {openDropdown === "suburb" && (
-                  <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }}
-                    className="absolute top-full left-0 mt-2 w-56 bg-white rounded-2xl border shadow-xl z-50 py-2 max-h-64 overflow-y-auto">
-                    <button onClick={() => { setSuburbId(""); resetOffset(); setOpenDropdown(null); }}
-                      className={`w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50 flex items-center gap-2 ${!suburbId ? "text-primary font-semibold" : "text-gray-700"}`}>
-                      <MapPin className="h-3.5 w-3.5 opacity-50" />All Suburbs
-                    </button>
-                    {suburbs.map((s) => (
-                      <button key={s.id} onClick={() => { setSuburbId(String(s.id)); resetOffset(); setOpenDropdown(null); }}
-                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50 flex items-center gap-2 ${suburbId === String(s.id) ? "text-primary font-semibold" : "text-gray-700"}`}>
-                        <MapPin className="h-3.5 w-3.5 opacity-50" />{s.name}
+        {/* ── Row 1: Basic Search ── */}
+        <div className="border-b border-gray-100">
+          <div className="max-w-7xl mx-auto px-4 md:px-6 py-3">
+            <div className="flex items-center gap-2 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+
+              {/* Suburb */}
+              <div className="relative shrink-0">
+                <button
+                  onClick={() => setSuburbOpen((p) => (p === "suburb" ? null : "suburb"))}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-medium transition-all ${
+                    suburbId ? "bg-primary border-primary text-white shadow-sm" : "bg-white border-gray-200 text-gray-700 hover:border-primary hover:text-primary"
+                  }`}
+                >
+                  <MapPin className="h-3.5 w-3.5" />
+                  {suburbName ?? "Location"}
+                  <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                </button>
+                <AnimatePresence>
+                  {suburbOpen === "suburb" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }}
+                      className="absolute top-full left-0 mt-2 w-56 bg-white rounded-2xl border shadow-xl z-50 py-2 max-h-64 overflow-y-auto"
+                    >
+                      <button
+                        onClick={() => { setSuburbId(""); resetOffset(); setSuburbOpen(null); }}
+                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50 flex items-center gap-2 ${!suburbId ? "text-primary font-semibold" : "text-gray-700"}`}
+                      >
+                        <MapPin className="h-3.5 w-3.5 opacity-50" />All Suburbs
                       </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                      {suburbs.map((s) => (
+                        <button
+                          key={s.id}
+                          onClick={() => { setSuburbId(String(s.id)); resetOffset(); setSuburbOpen(null); }}
+                          className={`w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50 flex items-center gap-2 ${suburbId === String(s.id) ? "text-primary font-semibold" : "text-gray-700"}`}
+                        >
+                          <MapPin className="h-3.5 w-3.5 opacity-50" />{s.name}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
-            {/* Space Type */}
-            <div className="relative shrink-0">
-              <button onClick={() => toggleDropdown("type")}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-medium transition-all ${
-                  spaceType !== "all" ? "bg-primary border-primary text-white shadow-sm" : "bg-white border-gray-200 text-gray-700 hover:border-primary hover:text-primary"
-                }`}>
-                <Home className="h-3.5 w-3.5" />
-                {spaceType === "all" ? "Room Type" : spaceType === "EntireSpace" ? "Entire" : spaceType === "RoomSpace" ? "Private Room" : "Shared Room"}
-                <ChevronDown className="h-3.5 w-3.5 opacity-60" />
-              </button>
-              <AnimatePresence>
-                {openDropdown === "type" && (
-                  <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }}
-                    className="absolute top-full left-0 mt-2 w-48 bg-white rounded-2xl border shadow-xl z-50 py-2">
-                    {SPACE_TYPES.map((opt) => (
-                      <button key={opt.value} onClick={() => { setSpaceType(opt.value); resetOffset(); setOpenDropdown(null); }}
-                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50 flex items-center gap-2 ${spaceType === opt.value ? "text-primary font-semibold" : "text-gray-700"}`}>
-                        <opt.icon className="h-3.5 w-3.5 opacity-50" />{opt.label}
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+              {/* Divider */}
+              <div className="h-6 w-px bg-gray-200 shrink-0" />
 
-            {/* Price */}
-            <div className="relative shrink-0">
-              <button onClick={() => toggleDropdown("price")}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-medium transition-all ${
-                  priceRange[0] > 100 || priceRange[1] < 1200 ? "bg-primary border-primary text-white shadow-sm" : "bg-white border-gray-200 text-gray-700 hover:border-primary hover:text-primary"
-                }`}>
-                {priceRange[0] > 100 || priceRange[1] < 1200 ? `$${priceRange[0]}–$${priceRange[1]}/wk` : "Budget"}
-                <ChevronDown className="h-3.5 w-3.5 opacity-60" />
-              </button>
-              <AnimatePresence>
-                {openDropdown === "price" && (
-                  <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }}
-                    className="absolute top-full left-0 mt-2 w-68 bg-white rounded-2xl border shadow-xl z-50 p-5">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">Weekly Budget</p>
-                    <div className="flex justify-between text-sm font-bold text-gray-800 mb-4">
-                      <span>${priceRange[0]}<span className="font-normal text-gray-400">/wk</span></span>
-                      <span>${priceRange[1]}<span className="font-normal text-gray-400">/wk</span></span>
-                    </div>
-                    <Slider min={100} max={1200} step={25} value={priceRange}
-                      onValueChange={(v) => setPriceRange(v as [number, number])} className="mb-4" />
-                    <button onClick={() => { resetOffset(); setOpenDropdown(null); }}
-                      className="w-full py-2 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary/90">
-                      Apply
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Check In — inline date pill */}
-            <div className="relative shrink-0">
-              <div className={`flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-full border transition-all ${
+              {/* Check In */}
+              <div className={`flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-full border transition-all shrink-0 ${
                 checkIn ? "border-primary bg-orange-50" : "border-gray-200 bg-white hover:border-primary/50"
               }`}>
                 <Calendar className={`h-3.5 w-3.5 shrink-0 ${checkIn ? "text-primary" : "text-gray-400"}`} />
@@ -230,7 +221,7 @@ export default function Search() {
                   <input
                     type="date"
                     value={checkIn}
-                    min={new Date().toISOString().split("T")[0]}
+                    min={today}
                     onChange={(e) => {
                       setCheckIn(e.target.value);
                       if (checkOut && e.target.value > checkOut) setCheckOut("");
@@ -240,20 +231,19 @@ export default function Search() {
                   />
                 </div>
                 {checkIn && (
-                  <button onClick={() => { setCheckIn(""); setCheckOut(""); resetOffset(); }}
-                    className="ml-0.5 h-4 w-4 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors">
+                  <button
+                    onClick={() => { setCheckIn(""); setCheckOut(""); resetOffset(); }}
+                    className="ml-0.5 h-4 w-4 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center"
+                  >
                     <X className="h-2.5 w-2.5 text-primary" />
                   </button>
                 )}
               </div>
-            </div>
 
-            {/* Separator arrow */}
-            <ArrowRight className="h-3.5 w-3.5 text-gray-300 shrink-0 -mx-0.5" />
+              <ArrowRight className="h-3.5 w-3.5 text-gray-300 shrink-0 -mx-0.5" />
 
-            {/* Check Out — inline date pill */}
-            <div className="relative shrink-0">
-              <div className={`flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-full border transition-all ${
+              {/* Check Out */}
+              <div className={`flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-full border transition-all shrink-0 ${
                 checkOut ? "border-primary bg-orange-50" : "border-gray-200 bg-white hover:border-primary/50"
               }`}>
                 <Calendar className={`h-3.5 w-3.5 shrink-0 ${checkOut ? "text-primary" : "text-gray-400"}`} />
@@ -262,68 +252,169 @@ export default function Search() {
                   <input
                     type="date"
                     value={checkOut}
-                    min={checkIn || new Date().toISOString().split("T")[0]}
+                    min={checkIn || today}
                     onChange={(e) => { setCheckOut(e.target.value); resetOffset(); }}
                     className={`bg-transparent text-xs font-semibold focus:outline-none cursor-pointer w-[90px] ${checkOut ? "text-primary" : "text-gray-500"}`}
                   />
                 </div>
                 {checkOut && (
-                  <button onClick={() => { setCheckOut(""); resetOffset(); }}
-                    className="ml-0.5 h-4 w-4 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors">
+                  <button
+                    onClick={() => { setCheckOut(""); resetOffset(); }}
+                    className="ml-0.5 h-4 w-4 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center"
+                  >
                     <X className="h-2.5 w-2.5 text-primary" />
                   </button>
                 )}
               </div>
-            </div>
 
-            {/* Gender */}
-            <div className="relative shrink-0">
-              <button onClick={() => toggleDropdown("gender")}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-medium transition-all ${
-                  genderPolicy !== "all" ? "bg-primary border-primary text-white shadow-sm" : "bg-white border-gray-200 text-gray-700 hover:border-primary hover:text-primary"
-                }`}>
-                {genderPolicy === "all" ? "Gender Policy" : genderPolicy === "FemaleOnly" ? "👩 Female Only" : "👥 Mixed"}
-                <ChevronDown className="h-3.5 w-3.5 opacity-60" />
-              </button>
-              <AnimatePresence>
-                {openDropdown === "gender" && (
-                  <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }}
-                    className="absolute top-full left-0 mt-2 w-48 bg-white rounded-2xl border shadow-xl z-50 py-2">
-                    {[
-                      { value: "all", label: "Any Policy" },
-                      { value: "FemaleOnly", label: "👩 Female Only" },
-                      { value: "Mixed", label: "👥 Mixed Gender" },
-                    ].map((opt) => (
-                      <button key={opt.value} onClick={() => { setGenderPolicy(opt.value); resetOffset(); setOpenDropdown(null); }}
-                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50 ${genderPolicy === opt.value ? "text-primary font-semibold" : "text-gray-700"}`}>
-                        {opt.label}
-                      </button>
-                    ))}
-                  </motion.div>
+              {/* Divider */}
+              <div className="h-6 w-px bg-gray-200 shrink-0" />
+
+              {/* Advanced Search Toggle */}
+              <button
+                onClick={() => setShowAdvanced((p) => !p)}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-medium transition-all shrink-0 ${
+                  showAdvanced || hasAdvancedFilters
+                    ? "bg-gray-800 border-gray-800 text-white shadow-sm"
+                    : "bg-white border-gray-200 text-gray-700 hover:border-gray-400"
+                }`}
+              >
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                Advanced
+                {advancedCount > 0 && (
+                  <span className="ml-0.5 inline-flex items-center justify-center h-4 w-4 rounded-full bg-primary text-white text-[9px] font-bold">
+                    {advancedCount}
+                  </span>
                 )}
-              </AnimatePresence>
-            </div>
-
-            {/* Clear */}
-            {hasActiveFilters && (
-              <button onClick={clearFilters}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-full border border-red-200 bg-red-50 text-red-500 text-sm font-medium hover:bg-red-100 transition-colors shrink-0">
-                <X className="h-3.5 w-3.5" />
-                Clear {activeCount > 1 ? `(${activeCount})` : ""}
+                {showAdvanced
+                  ? <ChevronUp className="h-3.5 w-3.5 opacity-60" />
+                  : <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                }
               </button>
-            )}
 
-            {/* Result count */}
-            <div className="ml-auto shrink-0 flex items-center gap-1.5 text-sm text-gray-500 hidden md:flex">
-              <SearchIcon className="h-3.5 w-3.5 text-primary" />
-              {isLoading ? "Searching…" : `${total} rooms found`}
+              {/* Clear all */}
+              {hasAnyFilters && (
+                <button
+                  onClick={clearAll}
+                  className="flex items-center gap-1 px-3 py-2 rounded-full border border-red-200 bg-red-50 text-red-500 text-sm font-medium hover:bg-red-100 transition-colors shrink-0"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Clear
+                </button>
+              )}
+
+              {/* Result count */}
+              <div className="ml-auto shrink-0 hidden md:flex items-center gap-1.5 text-sm text-gray-500">
+                <SearchIcon className="h-3.5 w-3.5 text-primary" />
+                {isLoading ? "Searching…" : `${total} rooms found`}
+              </div>
             </div>
           </div>
         </div>
+
+        {/* ── Row 2: Advanced Filters (persistent) ── */}
+        <AnimatePresence initial={false}>
+          {showAdvanced && (
+            <motion.div
+              key="advanced"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.22, ease: "easeInOut" }}
+              className="overflow-hidden border-b border-gray-100 bg-gray-50"
+            >
+              <div className="max-w-7xl mx-auto px-4 md:px-6 py-4">
+                <div className="flex flex-wrap gap-x-8 gap-y-4 items-start">
+
+                  {/* Room Type */}
+                  <div className="shrink-0">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Room Type</p>
+                    <div className="flex gap-1.5 flex-wrap">
+                      {SPACE_TYPES.map((opt) => {
+                        const active = spaceType === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            onClick={() => { setSpaceType(opt.value); resetOffset(); }}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                              active
+                                ? "bg-primary border-primary text-white shadow-sm"
+                                : "bg-white border-gray-200 text-gray-600 hover:border-primary/50 hover:text-primary"
+                            }`}
+                          >
+                            <opt.icon className="h-3 w-3" />
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Vertical divider */}
+                  <div className="hidden md:block h-14 w-px bg-gray-200 self-center" />
+
+                  {/* Budget */}
+                  <div className="shrink-0 min-w-[220px]">
+                    <div className="flex justify-between mb-2">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Weekly Budget</p>
+                      <p className="text-xs font-semibold text-primary">
+                        ${priceRange[0]} – ${priceRange[1]}<span className="font-normal text-gray-400">/wk</span>
+                      </p>
+                    </div>
+                    <Slider
+                      min={100} max={1200} step={25}
+                      value={priceRange}
+                      onValueChange={(v) => { setPriceRange(v as [number, number]); resetOffset(); }}
+                      className="mt-1"
+                    />
+                  </div>
+
+                  {/* Vertical divider */}
+                  <div className="hidden md:block h-14 w-px bg-gray-200 self-center" />
+
+                  {/* Gender Policy */}
+                  <div className="shrink-0">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Gender Policy</p>
+                    <div className="flex gap-1.5 flex-wrap">
+                      {GENDER_OPTIONS.map((opt) => {
+                        const active = genderPolicy === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            onClick={() => { setGenderPolicy(opt.value); resetOffset(); }}
+                            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                              active
+                                ? "bg-primary border-primary text-white shadow-sm"
+                                : "bg-white border-gray-200 text-gray-600 hover:border-primary/50 hover:text-primary"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Clear advanced */}
+                  {hasAdvancedFilters && (
+                    <div className="self-end ml-auto shrink-0">
+                      <button
+                        onClick={clearAdvanced}
+                        className="text-xs text-gray-400 hover:text-red-500 font-medium transition-colors flex items-center gap-1"
+                      >
+                        <X className="h-3 w-3" /> Clear filters
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Close dropdown overlay */}
-      {openDropdown && <div className="fixed inset-0 z-30" onClick={() => setOpenDropdown(null)} />}
+      {/* Close suburb dropdown overlay */}
+      {suburbOpen && <div className="fixed inset-0 z-30" onClick={() => setSuburbOpen(null)} />}
 
       {/* ── Main body ── */}
       <div className="flex-1 flex overflow-hidden">
@@ -347,16 +438,12 @@ export default function Search() {
                       <>
                         Showing rooms available{" "}
                         <span className="font-semibold text-primary">
-                          {new Date(checkIn + "T00:00").toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}
-                          {" → "}
-                          {new Date(checkOut + "T00:00").toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}
+                          {fmtDate(checkIn)} → {fmtDate(checkOut)}
                         </span>
                       </>
                     ) : checkIn ? (
-                      <>Check-in from <span className="font-semibold text-primary">{new Date(checkIn + "T00:00").toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}</span> — select a check-out date to filter availability</>
-                    ) : (
-                      <>Select a check-in date to see available rooms</>
-                    )}
+                      <>Check-in from <span className="font-semibold text-primary">{fmtDate(checkIn)}</span> — add a check-out date to filter availability</>
+                    ) : null}
                   </div>
                   <button
                     onClick={() => { setCheckIn(""); setCheckOut(""); resetOffset(); }}
@@ -371,34 +458,39 @@ export default function Search() {
             {/* Result header */}
             <div className="flex items-center justify-between mb-6">
               <div>
-                {hasActiveFilters && suburbName && (
+                {suburbName && (
                   <p className="font-cursive text-primary text-lg italic mb-0.5">Rooms in {suburbName}</p>
                 )}
                 <h2 className="text-lg font-bold text-gray-800">
                   {isLoading ? "Searching…" : `${total} room${total !== 1 ? "s" : ""} in Melbourne`}
                 </h2>
-                {hasActiveFilters && (
+                {hasAnyFilters && (
                   <p className="text-xs text-gray-400 mt-0.5">
                     Filtered results ·{" "}
-                    <button onClick={clearFilters} className="text-primary hover:underline font-medium">clear all</button>
+                    <button onClick={clearAll} className="text-primary hover:underline font-medium">clear all</button>
                   </p>
                 )}
               </div>
-              <div className="hidden lg:flex items-center gap-2">
-                <div className="flex gap-1">
-                  {[
-                    { v: "all", l: "All" },
-                    { v: "RoomSpace", l: "Rooms" },
-                    { v: "EntireSpace", l: "Entire" },
-                  ].map((opt) => (
-                    <button key={opt.v} onClick={() => { setSpaceType(opt.v); resetOffset(); }}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
-                        spaceType === opt.v ? "bg-primary border-primary text-white" : "bg-white border-gray-200 text-gray-600 hover:border-primary/40"
-                      }`}>
-                      {opt.l}
-                    </button>
-                  ))}
-                </div>
+              {/* Quick type tabs (desktop) */}
+              <div className="hidden lg:flex gap-1">
+                {[
+                  { v: "all",         l: "All" },
+                  { v: "RoomSpace",   l: "Private" },
+                  { v: "EntireSpace", l: "Entire" },
+                  { v: "BedSpace",    l: "Shared" },
+                ].map((opt) => (
+                  <button
+                    key={opt.v}
+                    onClick={() => { setSpaceType(opt.v); resetOffset(); }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
+                      spaceType === opt.v
+                        ? "bg-primary border-primary text-white"
+                        : "bg-white border-gray-200 text-gray-600 hover:border-primary/40"
+                    }`}
+                  >
+                    {opt.l}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -406,8 +498,11 @@ export default function Search() {
             {!suburbId && suburbs.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-6">
                 {suburbs.slice(0, 8).map((s) => (
-                  <button key={s.id} onClick={() => { setSuburbId(String(s.id)); resetOffset(); }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-600 hover:border-primary hover:text-primary hover:bg-orange-50 transition-all">
+                  <button
+                    key={s.id}
+                    onClick={() => { setSuburbId(String(s.id)); resetOffset(); }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-600 hover:border-primary hover:text-primary hover:bg-orange-50 transition-all"
+                  >
                     <MapPin className="h-3 w-3" />{s.name}
                   </button>
                 ))}
@@ -435,8 +530,10 @@ export default function Search() {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-700 mb-2">No rooms found</h3>
                 <p className="text-gray-400 mb-5 text-sm">Try adjusting your filters to see more results</p>
-                <button onClick={clearFilters}
-                  className="px-8 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors">
+                <button
+                  onClick={clearAll}
+                  className="px-8 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors"
+                >
                   Clear filters
                 </button>
               </motion.div>
@@ -444,10 +541,19 @@ export default function Search() {
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                   {allSpaces.map((space, i) => (
-                    <div key={space.id as number} id={`space-card-${space.id}`}
+                    <div
+                      key={space.id as number}
+                      id={`space-card-${space.id}`}
                       onMouseEnter={() => setHoveredId(space.id as number)}
-                      onMouseLeave={() => setHoveredId(null)}>
-                      <SpaceCard space={space as Parameters<typeof SpaceCard>[0]["space"]} index={i} highlighted={hoveredId === space.id} checkIn={checkIn} checkOut={checkOut} />
+                      onMouseLeave={() => setHoveredId(null)}
+                    >
+                      <SpaceCard
+                        space={space as Parameters<typeof SpaceCard>[0]["space"]}
+                        index={i}
+                        highlighted={hoveredId === space.id}
+                        checkIn={checkIn}
+                        checkOut={checkOut}
+                      />
                     </div>
                   ))}
                 </div>
@@ -459,8 +565,11 @@ export default function Search() {
                     <span className="font-semibold text-gray-600">{total}</span> rooms
                   </p>
                   {allSpaces.length < total && (
-                    <button onClick={() => setOffset((p) => p + PAGE_SIZE)} disabled={isLoading}
-                      className="px-10 py-3 bg-primary text-white font-semibold text-sm rounded-xl hover:bg-primary/90 disabled:opacity-60 transition-colors shadow-sm">
+                    <button
+                      onClick={() => setOffset((p) => p + PAGE_SIZE)}
+                      disabled={isLoading}
+                      className="px-10 py-3 bg-primary text-white font-semibold text-sm rounded-xl hover:bg-primary/90 disabled:opacity-60 transition-colors shadow-sm"
+                    >
                       {isLoading ? "Loading…" : "Load More"}
                     </button>
                   )}
@@ -477,46 +586,11 @@ export default function Search() {
             <SpaceMap
               spaces={allSpaces.filter((s) => s.latitude != null && s.longitude != null) as Parameters<typeof SpaceMap>[0]["spaces"]}
               hoveredId={hoveredId}
-              onMarkerHover={setHoveredId}
               onMarkerClick={handleMarkerClick}
-              className="w-full h-full"
             />
           </div>
         </div>
       </div>
-
-      {/* ── Mobile floating map button ── */}
-      <div className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-        <button onClick={() => setShowMap(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-semibold text-sm rounded-full shadow-xl hover:bg-gray-800 transition-colors"
-          data-testid="button-show-map">
-          <MapIcon className="h-4 w-4" /> Show map
-        </button>
-      </div>
-
-      {/* ── Mobile map overlay ── */}
-      <AnimatePresence>
-        {showMap && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="lg:hidden fixed inset-0 z-50 flex flex-col">
-            <div className="flex items-center gap-3 bg-white px-4 py-3 border-b shadow-sm">
-              <button onClick={() => setShowMap(false)} className="p-2 rounded-full hover:bg-gray-100">
-                <X className="h-5 w-5" />
-              </button>
-              <h3 className="font-semibold text-gray-800">Map View — {total} rooms</h3>
-            </div>
-            <div className="flex-1">
-              <SpaceMap
-                spaces={allSpaces.filter((s) => s.latitude != null && s.longitude != null) as Parameters<typeof SpaceMap>[0]["spaces"]}
-                hoveredId={hoveredId}
-                onMarkerHover={setHoveredId}
-                onMarkerClick={(id) => { handleMarkerClick(id); setShowMap(false); }}
-                className="w-full h-full"
-              />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
