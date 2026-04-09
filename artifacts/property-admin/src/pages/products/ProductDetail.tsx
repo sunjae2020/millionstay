@@ -234,6 +234,16 @@ export default function ProductDetail() {
                     {(promotions as any[]).map((p: any) => <SelectItem key={p.id} value={String(p.id)}>{p.display}</SelectItem>)}
                   </SelectContent>
                 </Select>
+                {(() => {
+                  const selPromo = (promotions as any[]).find((p: any) => String(p.id) === String(watch("promotion_id")));
+                  if (!selPromo?.valid_from && !selPromo?.valid_to) return null;
+                  const fmt = (v: string | null) => v ? new Date(v).toLocaleDateString("en-AU", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+                  return (
+                    <p className="text-[11px] text-muted-foreground mt-1.5">
+                      Valid: {fmt(selPromo.valid_from)} – {fmt(selPromo.valid_to)}
+                    </p>
+                  );
+                })()}
               </div>
             </div>
           </div>

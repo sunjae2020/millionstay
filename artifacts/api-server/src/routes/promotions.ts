@@ -127,6 +127,8 @@ router.get("/v1/lookup/promotions", async (req, res): Promise<void> => {
     name: promotionsTable.name,
     term_type: promotionsTable.term_type,
     discount_percentage: promotionsTable.discount_percentage,
+    valid_from: promotionsTable.valid_from,
+    valid_to: promotionsTable.valid_to,
   })
     .from(promotionsTable)
     .where(conditions.length ? and(...conditions) : undefined)
@@ -135,6 +137,8 @@ router.get("/v1/lookup/promotions", async (req, res): Promise<void> => {
   res.json(rows.map(r => ({
     id: r.id,
     display: `${r.name}${r.term_type ? ` [${r.term_type}]` : ""}${r.discount_percentage ? ` ${r.discount_percentage}%` : ""}`,
+    valid_from: r.valid_from,
+    valid_to: r.valid_to,
   })));
 });
 
