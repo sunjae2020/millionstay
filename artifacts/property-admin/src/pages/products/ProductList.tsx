@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
 import {
   AlertDialog,
@@ -171,16 +171,17 @@ export default function ProductList() {
                   <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Price</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Services</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Created</th>
+                  <th className="px-4 py-3 w-20"></th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-sm">Loading...</td>
+                    <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground text-sm">Loading...</td>
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-sm">No products found</td>
+                    <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground text-sm">No products found</td>
                   </tr>
                 ) : (
                   pagination.paginatedItems.map((p) => (
@@ -218,6 +219,21 @@ export default function ProductList() {
                       </td>
                       <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
                         {fmtDate(p.created_at)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1">
+                          <Link href={`/products/products/${p.id}`}>
+                            <button className="p-1.5 rounded hover:bg-muted transition-colors">
+                              <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                            </button>
+                          </Link>
+                          <button
+                            className="p-1.5 rounded hover:bg-destructive/10 transition-colors"
+                            onClick={() => setDeleteId(p.id)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
