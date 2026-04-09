@@ -72,7 +72,7 @@ export default function ServiceList() {
   return (
     <Layout>
       <PageHeader
-        title="Service Catalog"
+        title="Service Products"
         subtitle={`${rows.length} services`}
         actions={
           <Link href="/services/new">

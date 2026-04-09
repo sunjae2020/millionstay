@@ -224,15 +224,6 @@ export default function ServiceDetail() {
               )} />
             </div>
             <div className="flex items-center gap-3">
-              <Controller name="is_optional" control={control} render={({ field }) => (
-                <Switch checked={field.value} onCheckedChange={field.onChange} />
-              )} />
-              <div>
-                <Label className="cursor-pointer">Optional Service</Label>
-                <p className="text-xs text-muted-foreground">Guests can choose to add this</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
               <Controller name="is_refundable" control={control} render={({ field }) => (
                 <Switch checked={field.value} onCheckedChange={field.onChange} />
               )} />
