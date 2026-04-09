@@ -10,11 +10,12 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Tag, Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { apiFetch } from "@/lib/apiFetch";
 
 const API = "/api/v1/product-types";
 
 async function fetchTypes() {
-  const res = await fetch(API);
+  const res = await apiFetch(API);
   if (!res.ok) throw new Error("Failed");
   const json = await res.json();
   return (json.data ?? []) as { id: number; name: string; description: string | null; created_at: string }[];
@@ -39,7 +40,7 @@ export default function ProductTypesPage() {
     mutationFn: async () => {
       const url = editing ? `${API}/${editing.id}` : API;
       const method = editing ? "PUT" : "POST";
-      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+      const res = await apiFetch(url, { method, body: JSON.stringify(form) });
       if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
@@ -53,7 +54,7 @@ export default function ProductTypesPage() {
 
   const remove = useMutation({
     mutationFn: async (id: number) => {
-      const res = await fetch(`${API}/${id}`, { method: "DELETE" });
+      const res = await apiFetch(`${API}/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error(await res.text());
     },
     onSuccess: () => {
