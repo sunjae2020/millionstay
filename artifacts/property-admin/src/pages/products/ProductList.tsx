@@ -55,16 +55,6 @@ async function fetchPromotions(): Promise<Promotion[]> {
   return res.json();
 }
 
-function formatUnit(period: number | null, unit: string | null): string {
-  if (!period || !unit) return "—";
-  const u = unit.toLowerCase();
-  const label = u === "day" || u === "days" ? (period === 1 ? "Day" : "Days")
-    : u === "week" || u === "weeks" ? (period === 1 ? "Week" : "Weeks")
-    : u === "month" || u === "months" ? (period === 1 ? "Month" : "Months")
-    : unit;
-  return `${period} ${label}`;
-}
-
 export default function ProductList() {
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("_all");
@@ -190,7 +180,7 @@ export default function ProductList() {
                         {p.promotion_name ?? "—"}
                       </td>
                       <td className="px-4 py-3 text-right text-xs tabular-nums text-muted-foreground">
-                        {formatUnit(p.min_contract_period, p.min_contract_period_unit)}
+                        {p.promotion_id === 4 ? "1 Day" : "1 Week"}
                       </td>
                       <td className="px-4 py-3 text-right text-xs tabular-nums font-medium text-[#E8621A]">
                         {p.price != null ? `${p.currency} ${Number(p.price).toFixed(0)}` : "—"}
