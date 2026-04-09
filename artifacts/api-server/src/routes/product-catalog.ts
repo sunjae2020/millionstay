@@ -9,13 +9,14 @@ import {
   productTypesTable,
   spacesTable,
   accountsTable,
+  promotionsTable,
 } from "@workspace/db";
 
 const router: IRouter = Router();
 
 router.get("/v1/accommodations", async (req, res): Promise<void> => {
   try {
-    const { q, product_group_id, product_type_id, is_active, limit = "100", offset = "0" } = req.query as Record<string, string>;
+    const { q, product_group_id, product_type_id, promotion_id, is_active, limit = "100", offset = "0" } = req.query as Record<string, string>;
 
     const conditions: SQL[] = [];
     if (q) {
@@ -25,6 +26,7 @@ router.get("/v1/accommodations", async (req, res): Promise<void> => {
     }
     if (product_group_id) conditions.push(eq(accommodationCatalogTable.product_group_id, Number(product_group_id)));
     if (product_type_id) conditions.push(eq(accommodationCatalogTable.product_type_id, Number(product_type_id)));
+    if (promotion_id) conditions.push(eq(accommodationCatalogTable.promotion_id, Number(promotion_id)));
     if (is_active === "true") conditions.push(eq(accommodationCatalogTable.status, "Active"));
     if (is_active === "false") conditions.push(eq(accommodationCatalogTable.status, "Inactive"));
 
@@ -45,18 +47,35 @@ router.get("/v1/accommodations", async (req, res): Promise<void> => {
     const typeIds = [...new Set(rows.map(r => r.product_type_id).filter(Boolean))] as number[];
     const spaceIds = [...new Set(rows.map(r => r.space_id).filter(Boolean))] as number[];
     const providerIds = [...new Set(rows.map(r => r.product_provider_account_id).filter(Boolean))] as number[];
+    const promoIds = [...new Set(rows.map(r => r.promotion_id).filter(Boolean))] as number[];
+    const accIds = rows.map(r => r.id);
 
-    const [groups, types, spaces, providers] = await Promise.all([
+    const [groups, types, spaces, providers, promos, svcRows] = await Promise.all([
       groupIds.length ? db.select().from(productGroupsTable).where(inArray(productGroupsTable.id, groupIds)) : [],
       typeIds.length ? db.select().from(productTypesTable).where(inArray(productTypesTable.id, typeIds)) : [],
       spaceIds.length ? db.select({ id: spacesTable.id, name: spacesTable.name }).from(spacesTable).where(inArray(spacesTable.id, spaceIds)) : [],
       providerIds.length ? db.select({ id: accountsTable.id, name: accountsTable.name }).from(accountsTable).where(inArray(accountsTable.id, providerIds)) : [],
+      promoIds.length ? db.select({ id: promotionsTable.id, name: promotionsTable.name }).from(promotionsTable).where(inArray(promotionsTable.id, promoIds)) : [],
+      accIds.length ? db.select({
+        accommodation_id: accommodationServiceCatalogTable.accommodation_id,
+        service_name: serviceCatalogTable.name,
+        is_mandatory: accommodationServiceCatalogTable.is_mandatory,
+      })
+        .from(accommodationServiceCatalogTable)
+        .innerJoin(serviceCatalogTable, eq(accommodationServiceCatalogTable.service_id, serviceCatalogTable.id))
+        .where(inArray(accommodationServiceCatalogTable.accommodation_id, accIds)) : [],
     ]);
 
     const groupMap = Object.fromEntries(groups.map(g => [g.id, g.name]));
     const typeMap = Object.fromEntries(types.map(t => [t.id, t.name]));
     const spaceMap = Object.fromEntries(spaces.map(s => [s.id, s.name]));
     const providerMap = Object.fromEntries(providers.map(a => [a.id, a.name]));
+    const promoMap = Object.fromEntries(promos.map(p => [p.id, p.name]));
+    const svcMap: Record<number, string[]> = {};
+    for (const s of svcRows as Array<{ accommodation_id: number; service_name: string; is_mandatory: boolean }>) {
+      if (!svcMap[s.accommodation_id]) svcMap[s.accommodation_id] = [];
+      svcMap[s.accommodation_id].push(s.service_name);
+    }
 
     const data = rows.map(r => ({
       ...r,
@@ -64,6 +83,8 @@ router.get("/v1/accommodations", async (req, res): Promise<void> => {
       type_name: r.product_type_id ? typeMap[r.product_type_id] ?? null : null,
       space_name: r.space_id ? spaceMap[r.space_id] ?? null : null,
       provider_name: r.product_provider_account_id ? providerMap[r.product_provider_account_id] ?? null : null,
+      promotion_name: r.promotion_id ? promoMap[r.promotion_id] ?? null : null,
+      packed_services: svcMap[r.id] ?? [],
     }));
 
     res.json({ success: true, data, meta: { total: count, limit: Number(limit), offset: Number(offset) } });

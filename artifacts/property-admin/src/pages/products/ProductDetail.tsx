@@ -1,6 +1,7 @@
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,8 +13,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Package, Save, Plus, Trash2, PackagePlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
-import { useState } from "react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
@@ -51,7 +50,6 @@ export default function ProductDetail() {
   const qc = useQueryClient();
   const isNew = id === "new";
 
-  /* ── Services tab state ── */
   const [accSvcs, setAccSvcs] = useState<AccSvc[]>([]);
   const [catalogSvcs, setCatalogSvcs] = useState<CatalogSvc[]>([]);
   const [svcLoading, setSvcLoading] = useState(false);
@@ -74,6 +72,10 @@ export default function ProductDetail() {
       if (cj.success) setCatalogSvcs(cj.data ?? []);
     } finally { setSvcLoading(false); }
   };
+
+  useEffect(() => {
+    if (!isNew) loadSvcs();
+  }, [id]);
 
   const handleAddSvc = async () => {
     if (!id || !addId) return;
@@ -190,17 +192,10 @@ export default function ProductDetail() {
           )}
         </div>
 
-        <Tabs defaultValue="details" onValueChange={v => { if (v === "services") loadSvcs(); }}>
-          <TabsList className="mb-6">
-            <TabsTrigger value="details">Details</TabsTrigger>
-            {!isNew && <TabsTrigger value="services">Services</TabsTrigger>}
-          </TabsList>
-
-          <TabsContent value="details">
         <form onSubmit={handleSubmit(v => save.mutate(v))} className="space-y-6">
+          {/* Basic Information */}
           <div className="bg-white border rounded-lg p-6 space-y-4">
             <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Basic Information</h2>
-
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <Label>Product Name *</Label>
@@ -243,6 +238,7 @@ export default function ProductDetail() {
             </div>
           </div>
 
+          {/* Pricing */}
           <div className="bg-white border rounded-lg p-6 space-y-4">
             <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Pricing</h2>
             <div className="grid grid-cols-3 gap-4">
@@ -273,8 +269,11 @@ export default function ProductDetail() {
                 <Select value={watch("min_contract_period_unit")} onValueChange={v => setValue("min_contract_period_unit", v)}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="Day">Day</SelectItem>
                     <SelectItem value="days">Days</SelectItem>
+                    <SelectItem value="Week">Week</SelectItem>
                     <SelectItem value="weeks">Weeks</SelectItem>
+                    <SelectItem value="Month">Month</SelectItem>
                     <SelectItem value="months">Months</SelectItem>
                   </SelectContent>
                 </Select>
@@ -282,30 +281,7 @@ export default function ProductDetail() {
             </div>
           </div>
 
-          <div className="bg-white border rounded-lg p-6 space-y-4">
-            <div>
-              <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Booking Fees</h2>
-              <p className="text-xs text-muted-foreground mt-1">Leave blank = fee not charged for this product. Set to 0 to explicitly waive.</p>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <Label>Security Bond (AUD)</Label>
-                <Input {...register("bond_amount")} type="number" step="0.01" min="0" placeholder="Blank = no bond" className="mt-1" />
-                <p className="text-xs text-muted-foreground mt-1">Fixed amount. Blank = none.</p>
-              </div>
-              <div>
-                <Label>Admin Fee (AUD)</Label>
-                <Input {...register("admin_fee")} type="number" step="0.01" min="0" placeholder="Blank = no fee" className="mt-1" />
-                <p className="text-xs text-muted-foreground mt-1">One-time application fee.</p>
-              </div>
-              <div>
-                <Label>Cleaning Fee (AUD)</Label>
-                <Input {...register("cleaning_fee")} type="number" step="0.01" min="0" placeholder="Blank = no fee" className="mt-1" />
-                <p className="text-xs text-muted-foreground mt-1">End-of-stay cleaning.</p>
-              </div>
-            </div>
-          </div>
-
+          {/* Display Options */}
           <div className="bg-white border rounded-lg p-6 space-y-4">
             <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Display Options</h2>
             <div className="space-y-3">
@@ -338,66 +314,63 @@ export default function ProductDetail() {
             </Button>
           </div>
         </form>
-          </TabsContent>
 
-          {!isNew && (
-            <TabsContent value="services">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="font-semibold">Service Packages</h2>
-                    <p className="text-sm text-muted-foreground">Services assigned to this accommodation product take priority over space-level services during booking.</p>
-                  </div>
-                  <Button size="sm" onClick={() => setAddOpen(true)}>
-                    <Plus className="h-4 w-4 mr-1" /> Add Service
-                  </Button>
-                </div>
-
-                {svcLoading ? (
-                  <div className="text-sm text-muted-foreground py-8 text-center">Loading services…</div>
-                ) : accSvcs.length === 0 ? (
-                  <div className="border-2 border-dashed rounded-lg p-8 text-center text-muted-foreground">
-                    <PackagePlus className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                    <p className="text-sm">No services assigned yet.</p>
-                    <p className="text-xs mt-1">Click "Add Service" to attach services to this product.</p>
-                  </div>
-                ) : (
-                  <div className="border rounded-lg divide-y bg-white">
-                    {accSvcs.map(s => (
-                      <div key={s.id} className="flex items-center justify-between p-4">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{s.service_name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {s.service_type} ·{" "}
-                            {s.custom_price != null
-                              ? `${s.currency} $${s.custom_price.toFixed(2)} (custom)`
-                              : s.base_price != null
-                              ? `${s.currency} $${s.base_price.toFixed(2)}`
-                              : "No price"}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-4 ml-4">
-                          <div className="flex items-center gap-2">
-                            <Switch
-                              checked={s.is_mandatory}
-                              onCheckedChange={v => toggleMandatory(s.id, v)}
-                            />
-                            <Label className={cn("text-xs", s.is_mandatory ? "text-orange-600 font-medium" : "text-muted-foreground")}>
-                              {s.is_mandatory ? "Mandatory" : "Optional"}
-                            </Label>
-                          </div>
-                          <Button variant="ghost" size="icon" className="text-red-400 hover:text-red-600 h-8 w-8" onClick={() => removeSvc(s.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+        {/* Packed Services — shown directly below form (existing products only) */}
+        {!isNew && (
+          <div className="mt-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Packed Services</h2>
+                <p className="text-xs text-muted-foreground mt-1">Services assigned here take priority over space-level services during booking.</p>
               </div>
-            </TabsContent>
-          )}
-        </Tabs>
+              <Button size="sm" onClick={() => setAddOpen(true)}>
+                <Plus className="h-4 w-4 mr-1" /> Add Service
+              </Button>
+            </div>
+
+            {svcLoading ? (
+              <div className="text-sm text-muted-foreground py-8 text-center">Loading services…</div>
+            ) : accSvcs.length === 0 ? (
+              <div className="border-2 border-dashed rounded-lg p-8 text-center text-muted-foreground">
+                <PackagePlus className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                <p className="text-sm">No services assigned yet.</p>
+                <p className="text-xs mt-1">Click "Add Service" to attach services to this product.</p>
+              </div>
+            ) : (
+              <div className="border rounded-lg divide-y bg-white">
+                {accSvcs.map(s => (
+                  <div key={s.id} className="flex items-center justify-between p-4">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{s.service_name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {s.service_type} ·{" "}
+                        {s.custom_price != null
+                          ? `${s.currency} $${s.custom_price.toFixed(2)} (custom)`
+                          : s.base_price != null
+                          ? `${s.currency} $${s.base_price.toFixed(2)}`
+                          : "No price"}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-4 ml-4">
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={s.is_mandatory}
+                          onCheckedChange={v => toggleMandatory(s.id, v)}
+                        />
+                        <Label className={cn("text-xs", s.is_mandatory ? "text-orange-600 font-medium" : "text-muted-foreground")}>
+                          {s.is_mandatory ? "Mandatory" : "Optional"}
+                        </Label>
+                      </div>
+                      <Button variant="ghost" size="icon" className="text-red-400 hover:text-red-600 h-8 w-8" onClick={() => removeSvc(s.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Add Service Dialog */}

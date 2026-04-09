@@ -35,32 +35,59 @@ type Product = {
   currency: string;
   space_name: string | null;
   space_id: number | null;
-  bond_amount: number | null;
-  admin_fee: number | null;
-  cleaning_fee: number | null;
+  promotion_id: number | null;
+  promotion_name: string | null;
+  min_contract_period: number | null;
+  min_contract_period_unit: string | null;
+  packed_services: string[];
   display_on_booking_page: boolean;
   status: string;
 };
 
-async function fetchProducts(q: string): Promise<Product[]> {
+type Promotion = { id: number; display: string };
+
+async function fetchProducts(q: string, promotionId: string): Promise<Product[]> {
   const params = new URLSearchParams({ limit: "200" });
   if (q) params.set("q", q);
+  if (promotionId && promotionId !== "_all") params.set("promotion_id", promotionId);
   const res = await apiFetch(`/api/v1/accommodations?${params}`);
   if (!res.ok) return [];
   const json = await res.json();
   return json.data ?? [];
 }
 
+async function fetchPromotions(): Promise<Promotion[]> {
+  const res = await apiFetch("/api/v1/lookup/promotions");
+  if (!res.ok) return [];
+  return res.json();
+}
+
+function formatUnit(period: number | null, unit: string | null): string {
+  if (!period || !unit) return "—";
+  const u = unit.toLowerCase();
+  const label = u === "day" || u === "days" ? (period === 1 ? "Day" : "Days")
+    : u === "week" || u === "weeks" ? (period === 1 ? "Week" : "Weeks")
+    : u === "month" || u === "months" ? (period === 1 ? "Month" : "Months")
+    : unit;
+  return `${period} ${label}`;
+}
+
 export default function ProductList() {
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("_all");
+  const [promotionFilter, setPromotionFilter] = useState("_all");
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const qc = useQueryClient();
   const { toast } = useToast();
 
   const { data: products = [], isLoading } = useQuery({
-    queryKey: ["accommodation-products", q],
-    queryFn: () => fetchProducts(q),
+    queryKey: ["accommodation-products", q, promotionFilter],
+    queryFn: () => fetchProducts(q, promotionFilter),
+  });
+
+  const { data: promotions = [] } = useQuery<Promotion[]>({
+    queryKey: ["lookup-promotions"],
+    queryFn: fetchPromotions,
   });
 
   const deleteMutation = useMutation({
@@ -82,7 +109,6 @@ export default function ProductList() {
   });
 
   const pagination = usePagination(filtered);
-
   const deleteTarget = products.find(p => p.id === deleteId);
 
   return (
@@ -111,6 +137,17 @@ export default function ProductList() {
               onChange={(e) => setQ(e.target.value)}
             />
           </div>
+          <Select value={promotionFilter} onValueChange={setPromotionFilter}>
+            <SelectTrigger className="w-52">
+              <SelectValue placeholder="All Promotions" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_all">All Promotions</SelectItem>
+              {promotions.map((p) => (
+                <SelectItem key={p.id} value={String(p.id)}>{p.display}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-36">
               <SelectValue placeholder="All Statuses" />
@@ -131,9 +168,10 @@ export default function ProductList() {
                 <tr>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Name</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Space</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Promotion</th>
+                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Unit</th>
                   <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Price</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Bond</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Admin Fee</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Services</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
                   <th className="px-4 py-3 w-20"></th>
                 </tr>
@@ -141,37 +179,40 @@ export default function ProductList() {
               <tbody className="divide-y">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground text-sm">Loading...</td>
+                    <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground text-sm">Loading...</td>
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground text-sm">No products found</td>
+                    <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground text-sm">No products found</td>
                   </tr>
                 ) : (
                   pagination.paginatedItems.map((p) => (
                     <tr key={p.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3 font-medium max-w-[260px]">
+                      <td className="px-4 py-3 font-medium max-w-[220px]">
                         <Link
                           href={`/products/products/${p.id}`}
                           className="text-[#E8621A] hover:underline line-clamp-2"
                         >
                           {p.name}
                         </Link>
-                        {p.item_description && (
-                          <p className="text-xs text-muted-foreground truncate max-w-[220px]">{p.item_description}</p>
-                        )}
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground text-xs">
+                      <td className="px-4 py-3 text-muted-foreground text-xs max-w-[160px] truncate">
                         {p.space_name ?? "—"}
                       </td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground max-w-[160px] truncate">
+                        {p.promotion_name ?? "—"}
+                      </td>
+                      <td className="px-4 py-3 text-right text-xs tabular-nums text-muted-foreground">
+                        {formatUnit(p.min_contract_period, p.min_contract_period_unit)}
+                      </td>
                       <td className="px-4 py-3 text-right text-xs tabular-nums font-medium text-[#E8621A]">
-                        {p.price != null ? `${p.currency} ${Number(p.price).toFixed(2)}` : "—"}
+                        {p.price != null ? `${p.currency} ${Number(p.price).toFixed(0)}` : "—"}
                       </td>
-                      <td className="px-4 py-3 text-right text-xs tabular-nums">
-                        {p.bond_amount != null ? `$${Number(p.bond_amount).toFixed(0)}` : "—"}
-                      </td>
-                      <td className="px-4 py-3 text-right text-xs tabular-nums">
-                        {p.admin_fee != null ? `$${Number(p.admin_fee).toFixed(0)}` : "—"}
+                      <td className="px-4 py-3 text-xs text-muted-foreground max-w-[180px]">
+                        {(p.packed_services ?? []).length === 0
+                          ? <span className="text-muted-foreground/50">—</span>
+                          : <span className="line-clamp-2">{(p.packed_services ?? []).join(", ")}</span>
+                        }
                       </td>
                       <td className="px-4 py-3">
                         <Badge className={`text-xs ${STATUS_COLORS[p.status] ?? "bg-gray-100 text-gray-600"}`}>
