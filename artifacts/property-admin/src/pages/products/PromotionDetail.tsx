@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { useLocation, useParams } from "wouter";
+import { useEffect, useState } from "react";
+import { useLocation, useParams, Link as WouterLink } from "wouter";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,12 +13,30 @@ import {
   getListPromotionsQueryKey, getGetPromotionQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Save, Tag, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, Tag, Trash2, Package, Wrench, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
+import { apiFetch } from "@/lib/apiFetch";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+
+const STATUS_COLORS: Record<string, string> = {
+  Active: "bg-green-100 text-green-700",
+  Inactive: "bg-yellow-100 text-yellow-700",
+  Archived: "bg-gray-100 text-gray-600",
+  Draft: "bg-blue-50 text-blue-600",
+};
+
+type AssocAccommodation = {
+  id: number; name: string; status: string;
+  price: number | null; currency: string;
+  min_contract_period: number | null; min_contract_period_unit: string | null;
+};
+type AssocService = {
+  id: number; name: string; status: string;
+  base_price: number | null; currency: string; service_type: string;
+};
 
 const TERM_TYPE_META: Record<string, { label: string; minWeeks: string; maxWeeks: string; freq: string; color: string }> = {
   ShortTerm: { label: "Short-term", minWeeks: "1", maxWeeks: "3", freq: "Weekly", color: "bg-sky-50 border-sky-200 text-sky-700" },
@@ -58,6 +76,28 @@ export default function PromotionDetail() {
   const { data: promotion, isLoading } = useGetPromotion(
     id!, { query: { enabled: !isNew && !!id, queryKey: getGetPromotionQueryKey(id!) } }
   );
+
+  const [assocAccommodations, setAssocAccommodations] = useState<AssocAccommodation[]>([]);
+  const [assocServices, setAssocServices] = useState<AssocService[]>([]);
+  const [assocLoading, setAssocLoading] = useState(false);
+
+  useEffect(() => {
+    if (!id || isNew) return;
+    setAssocLoading(true);
+    apiFetch(`/api/v1/promotions/${id}/associated-products`)
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then(j => {
+        if (j.success) {
+          setAssocAccommodations(j.data.accommodations ?? []);
+          setAssocServices(j.data.services ?? []);
+        }
+      })
+      .catch(() => { /* silently ignore — show empty state */ })
+      .finally(() => setAssocLoading(false));
+  }, [id, isNew]);
 
   const { register, handleSubmit, reset, control, watch, setValue, formState: { errors } } = useForm<PromotionForm>({
     defaultValues: {
@@ -370,6 +410,85 @@ export default function PromotionDetail() {
               </div>
             </div>
           </div>
+
+          {/* Associated Products — shown only for existing promotions */}
+          {!isNew && (
+            <div className="bg-white border rounded-lg overflow-hidden">
+              <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Associated Products</div>
+              {assocLoading ? (
+                <div className="p-8 text-center text-sm text-muted-foreground">Loading associated products…</div>
+              ) : (assocAccommodations.length === 0 && assocServices.length === 0) ? (
+                <div className="p-8 text-center text-sm text-muted-foreground">
+                  No products are currently linked to this promotion.
+                  <p className="text-xs mt-1">Assign this promotion to an Accommodation or Service product to see it here.</p>
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {/* Accommodation Products */}
+                  {assocAccommodations.length > 0 && (
+                    <div className="p-5">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Package className="h-4 w-4 text-[#E8621A]" />
+                        <span className="text-sm font-semibold">Accommodation Products</span>
+                        <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full font-medium">{assocAccommodations.length}</span>
+                      </div>
+                      <div className="space-y-2">
+                        {assocAccommodations.map(a => (
+                          <WouterLink key={a.id} href={`/products/products/${a.id}`}>
+                            <div className="flex items-center justify-between p-3 rounded-lg border hover:border-[#E8621A]/40 hover:bg-orange-50/40 transition-colors cursor-pointer group">
+                              <div className="flex items-center gap-3">
+                                <span className="text-sm font-medium group-hover:text-[#E8621A] transition-colors">{a.name}</span>
+                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[a.status] ?? "bg-gray-100 text-gray-600"}`}>{a.status}</span>
+                                {a.min_contract_period && (
+                                  <span className="text-xs text-muted-foreground">Min {a.min_contract_period} {a.min_contract_period_unit}</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                {a.price != null && (
+                                  <span className="text-xs">{a.currency} ${a.price.toFixed(2)}</span>
+                                )}
+                                <ExternalLink className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </div>
+                            </div>
+                          </WouterLink>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Service Products */}
+                  {assocServices.length > 0 && (
+                    <div className="p-5">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Wrench className="h-4 w-4 text-[#E8621A]" />
+                        <span className="text-sm font-semibold">Service Products</span>
+                        <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full font-medium">{assocServices.length}</span>
+                      </div>
+                      <div className="space-y-2">
+                        {assocServices.map(s => (
+                          <WouterLink key={s.id} href={`/products/services/${s.id}`}>
+                            <div className="flex items-center justify-between p-3 rounded-lg border hover:border-[#E8621A]/40 hover:bg-orange-50/40 transition-colors cursor-pointer group">
+                              <div className="flex items-center gap-3">
+                                <span className="text-sm font-medium group-hover:text-[#E8621A] transition-colors">{s.name}</span>
+                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[s.status] ?? "bg-gray-100 text-gray-600"}`}>{s.status}</span>
+                                <span className="text-xs text-muted-foreground capitalize">{s.service_type.replace("_", " ")}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                {s.base_price != null && (
+                                  <span className="text-xs">{s.currency} ${s.base_price.toFixed(2)}</span>
+                                )}
+                                <ExternalLink className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </div>
+                            </div>
+                          </WouterLink>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </Layout>

@@ -11,6 +11,7 @@ export const accommodationCatalogTable = pgTable("accommodation_catalog", {
   currency: text("currency").notNull().default("AUD"),
   product_tag: text("product_tag"),
   gst_included: boolean("gst_included").notNull().default(false),
+  promotion_id: integer("promotion_id"),
   commission_id: integer("commission_id"),
   product_source_account_id: integer("product_source_account_id"),
   product_provider_account_id: integer("product_provider_account_id"),

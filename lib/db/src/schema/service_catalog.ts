@@ -21,6 +21,7 @@ export const serviceCatalogTable = pgTable("service_catalog", {
   stock_qty: integer("stock_qty"),
   has_variants: boolean("has_variants").notNull().default(false),
   variant_options: text("variant_options"),
+  promotion_id: integer("promotion_id"),
   // display
   display_on_booking_page: boolean("display_on_booking_page").notNull().default(true),
   sort_order: integer("sort_order").notNull().default(0),

@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, and, SQL } from "drizzle-orm";
-import { db, promotionsTable } from "@workspace/db";
+import { db, promotionsTable, accommodationCatalogTable, serviceCatalogTable } from "@workspace/db";
 import * as z from "zod/v4";
 
 const ListPromotionsQueryParams = z.object({
@@ -77,6 +77,44 @@ router.delete("/v1/promotions/:id", async (req, res): Promise<void> => {
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   await db.delete(promotionsTable).where(eq(promotionsTable.id, parsed.data.id));
   res.status(204).end();
+});
+
+/* GET /v1/promotions/:id/associated-products
+   Returns accommodation + service products that have this promotion_id */
+router.get("/v1/promotions/:id/associated-products", async (req, res): Promise<void> => {
+  const parsed = GetPromotionParams.safeParse(req.params);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  const promoId = parsed.data.id;
+  try {
+    const [accommodations, services] = await Promise.all([
+      db.select({
+        id: accommodationCatalogTable.id,
+        name: accommodationCatalogTable.name,
+        status: accommodationCatalogTable.status,
+        price: accommodationCatalogTable.price,
+        currency: accommodationCatalogTable.currency,
+        min_contract_period: accommodationCatalogTable.min_contract_period,
+        min_contract_period_unit: accommodationCatalogTable.min_contract_period_unit,
+      })
+        .from(accommodationCatalogTable)
+        .where(eq(accommodationCatalogTable.promotion_id, promoId))
+        .orderBy(accommodationCatalogTable.name),
+      db.select({
+        id: serviceCatalogTable.id,
+        name: serviceCatalogTable.name,
+        status: serviceCatalogTable.status,
+        base_price: serviceCatalogTable.base_price,
+        currency: serviceCatalogTable.currency,
+        service_type: serviceCatalogTable.service_type,
+      })
+        .from(serviceCatalogTable)
+        .where(eq(serviceCatalogTable.promotion_id, promoId))
+        .orderBy(serviceCatalogTable.name),
+    ]);
+    res.json({ success: true, data: { accommodations, services } });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch associated products" });
+  }
 });
 
 router.get("/v1/lookup/promotions", async (req, res): Promise<void> => {

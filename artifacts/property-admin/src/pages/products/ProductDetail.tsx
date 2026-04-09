@@ -116,6 +116,7 @@ export default function ProductDetail() {
 
   const { data: groups = [] } = useQuery({ queryKey: ["lookup-product-groups"], queryFn: () => fetchLookup("/api/v1/lookup/product-groups") });
   const { data: types = [] } = useQuery({ queryKey: ["lookup-product-types"], queryFn: () => fetchLookup("/api/v1/lookup/product-types") });
+  const { data: promotions = [] } = useQuery({ queryKey: ["lookup-promotions"], queryFn: () => fetchLookup("/api/v1/lookup/promotions") });
 
   const { register, handleSubmit, setValue, watch } = useForm({
     values: product ? {
@@ -125,6 +126,7 @@ export default function ProductDetail() {
       currency: product.currency ?? "AUD",
       product_group_id: product.product_group_id ?? "",
       product_type_id: product.product_type_id ?? "",
+      promotion_id: product.promotion_id ?? "",
       gst_included: product.gst_included ?? false,
       min_contract_period: product.min_contract_period ?? "",
       min_contract_period_unit: product.min_contract_period_unit ?? "weeks",
@@ -136,7 +138,7 @@ export default function ProductDetail() {
       display_on_invoice: product.display_on_invoice ?? true,
     } : {
       name: "", item_description: "", price: "", currency: "AUD",
-      product_group_id: "", product_type_id: "", gst_included: false,
+      product_group_id: "", product_type_id: "", promotion_id: "", gst_included: false,
       min_contract_period: "", min_contract_period_unit: "weeks",
       bond_amount: "", admin_fee: "", cleaning_fee: "",
       status: "Active", display_on_booking_page: true, display_on_invoice: true,
@@ -150,6 +152,7 @@ export default function ProductDetail() {
         price: values.price ? Number(values.price) : null,
         product_group_id: values.product_group_id ? Number(values.product_group_id) : null,
         product_type_id: values.product_type_id ? Number(values.product_type_id) : null,
+        promotion_id: values.promotion_id ? Number(values.promotion_id) : null,
         min_contract_period: values.min_contract_period ? Number(values.min_contract_period) : null,
         bond_amount:   values.bond_amount   !== "" ? Number(values.bond_amount)   : null,
         admin_fee:     values.admin_fee     !== "" ? Number(values.admin_fee)     : null,
@@ -224,6 +227,16 @@ export default function ProductDetail() {
                   <SelectContent>
                     <SelectItem value="_none">None</SelectItem>
                     {(types as any[]).map((t: any) => <SelectItem key={t.id} value={String(t.id)}>{t.display}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2">
+                <Label>Promotion</Label>
+                <Select value={String(watch("promotion_id") || "_none")} onValueChange={v => setValue("promotion_id", v === "_none" ? "" : v)}>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder="No promotion" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">No Promotion</SelectItem>
+                    {(promotions as any[]).map((p: any) => <SelectItem key={p.id} value={String(p.id)}>{p.display}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
