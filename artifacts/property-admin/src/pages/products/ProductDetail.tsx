@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Package, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { apiFetch } from "@/lib/apiFetch";
 
 const STATUS_COLORS: Record<string, string> = {
   Active: "bg-green-100 text-green-700",
@@ -19,13 +20,13 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 async function fetchProduct(id: string) {
-  const res = await fetch(`/api/v1/accommodations/${id}`);
+  const res = await apiFetch(`/api/v1/accommodations/${id}`);
   if (!res.ok) throw new Error("Not found");
   return res.json();
 }
 
 async function fetchLookup(url: string) {
-  const res = await fetch(url);
+  const res = await apiFetch(url);
   if (!res.ok) return [];
   return res.json();
 }
@@ -86,7 +87,7 @@ export default function ProductDetail() {
       };
       const url = isNew ? "/api/v1/accommodations" : `/api/v1/accommodations/${id}`;
       const method = isNew ? "POST" : "PUT";
-      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const res = await apiFetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       if (!res.ok) throw new Error(await res.text());
       return res.json();
     },

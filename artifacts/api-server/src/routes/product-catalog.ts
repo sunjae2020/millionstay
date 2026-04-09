@@ -133,4 +133,16 @@ router.patch("/v1/accommodations/:id/deactivate", async (req, res): Promise<void
   }
 });
 
+router.delete("/v1/accommodations/:id", async (req, res): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
+    const [deleted] = await db.delete(accommodationCatalogTable).where(eq(accommodationCatalogTable.id, id)).returning();
+    if (!deleted) { res.status(404).json({ error: "Not found" }); return; }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete product" });
+  }
+});
+
 export default router;

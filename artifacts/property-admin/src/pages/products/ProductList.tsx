@@ -5,12 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  useListContractProducts,
-  getListContractProductsQueryKey,
-  useDeleteContractProduct,
-} from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
 import {
@@ -23,55 +18,80 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { apiFetch } from "@/lib/apiFetch";
+import { useToast } from "@/hooks/use-toast";
 
 const STATUS_COLORS: Record<string, string> = {
   Active: "bg-green-100 text-green-700",
-  Draft: "bg-gray-100 text-gray-600",
+  Inactive: "bg-yellow-100 text-yellow-700",
   Archived: "bg-red-100 text-red-600",
 };
 
-const TERM_LABELS: Record<string, string> = {
-  ShortTerm: "Short-term",
-  MidTerm: "Mid-term",
-  LongTerm: "Long-term",
+type Product = {
+  id: number;
+  name: string;
+  item_description: string | null;
+  price: number | null;
+  currency: string;
+  space_name: string | null;
+  space_id: number | null;
+  bond_amount: number | null;
+  admin_fee: number | null;
+  cleaning_fee: number | null;
+  display_on_booking_page: boolean;
+  status: string;
 };
+
+async function fetchProducts(q: string): Promise<Product[]> {
+  const params = new URLSearchParams({ limit: "200" });
+  if (q) params.set("q", q);
+  const res = await apiFetch(`/api/v1/accommodations?${params}`);
+  if (!res.ok) return [];
+  const json = await res.json();
+  return json.data ?? [];
+}
 
 export default function ProductList() {
   const [q, setQ] = useState("");
-  const [termType, setTermType] = useState("_all");
   const [statusFilter, setStatusFilter] = useState("_all");
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const qc = useQueryClient();
+  const { toast } = useToast();
 
-  const { data: products, isLoading } = useListContractProducts(
-    { q: q || undefined },
-    { query: { queryKey: getListContractProductsQueryKey({ q: q || undefined }) } }
-  );
-
-  const deleteMutation = useDeleteContractProduct({
-    mutation: {
-      onSuccess: () => {
-        qc.invalidateQueries({ queryKey: getListContractProductsQueryKey() });
-        setDeleteId(null);
-      },
-    },
+  const { data: products = [], isLoading } = useQuery({
+    queryKey: ["accommodation-products", q],
+    queryFn: () => fetchProducts(q),
   });
 
-  const filtered = (products ?? []).filter((p) => {
-    if (termType !== "_all" && p.term_type !== termType) return false;
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiFetch(`/api/v1/accommodations/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Delete failed");
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["accommodation-products"] });
+      toast({ title: "Product deleted" });
+      setDeleteId(null);
+    },
+    onError: () => toast({ title: "Error", description: "Failed to delete product.", variant: "destructive" }),
+  });
+
+  const filtered = products.filter((p) => {
     if (statusFilter !== "_all" && p.status !== statusFilter) return false;
     return true;
   });
 
   const pagination = usePagination(filtered);
 
+  const deleteTarget = products.find(p => p.id === deleteId);
+
   return (
     <Layout>
       <PageHeader
         title="Products"
-        subtitle={`${filtered.length} of ${products?.length ?? 0} total`}
+        subtitle={`${filtered.length} of ${products.length} total`}
         actions={
-          <Link href="/products/contract-products/new">
+          <Link href="/products/products/new">
             <Button>
               <Plus className="h-4 w-4 mr-2" />
               New Product
@@ -81,7 +101,6 @@ export default function ProductList() {
       />
 
       <div className="p-6">
-        {/* Filters */}
         <div className="flex gap-3 mb-4 flex-wrap">
           <div className="relative flex-1 min-w-[200px] max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -92,17 +111,6 @@ export default function ProductList() {
               onChange={(e) => setQ(e.target.value)}
             />
           </div>
-          <Select value={termType} onValueChange={setTermType}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="All Terms" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">All Terms</SelectItem>
-              <SelectItem value="ShortTerm">Short-term</SelectItem>
-              <SelectItem value="MidTerm">Mid-term</SelectItem>
-              <SelectItem value="LongTerm">Long-term</SelectItem>
-            </SelectContent>
-          </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-36">
               <SelectValue placeholder="All Statuses" />
@@ -110,25 +118,22 @@ export default function ProductList() {
             <SelectContent>
               <SelectItem value="_all">All Statuses</SelectItem>
               <SelectItem value="Active">Active</SelectItem>
-              <SelectItem value="Draft">Draft</SelectItem>
+              <SelectItem value="Inactive">Inactive</SelectItem>
               <SelectItem value="Archived">Archived</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        {/* Table */}
         <div className="border rounded-lg overflow-hidden bg-card">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-max text-sm">
+            <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b">
                 <tr>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Name</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Space</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Promotion</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Term</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Rate / wk</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Eff. Rate</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Billing</th>
+                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Price</th>
+                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Bond</th>
+                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Admin Fee</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
                   <th className="px-4 py-3 w-20"></th>
                 </tr>
@@ -136,53 +141,46 @@ export default function ProductList() {
               <tbody className="divide-y">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground text-sm">Loading...</td>
+                    <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground text-sm">Loading...</td>
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground text-sm">No products found</td>
+                    <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground text-sm">No products found</td>
                   </tr>
                 ) : (
                   pagination.paginatedItems.map((p) => (
                     <tr key={p.id} className="hover:bg-muted/30 transition-colors">
                       <td className="px-4 py-3 font-medium max-w-[260px]">
                         <Link
-                          href={`/products/contract-products/${p.id}`}
+                          href={`/products/products/${p.id}`}
                           className="text-[#E8621A] hover:underline line-clamp-2"
                         >
                           {p.name}
                         </Link>
+                        {p.item_description && (
+                          <p className="text-xs text-muted-foreground truncate max-w-[220px]">{p.item_description}</p>
+                        )}
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground text-xs max-w-[180px] truncate">
+                      <td className="px-4 py-3 text-muted-foreground text-xs">
                         {p.space_name ?? "—"}
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground text-xs">
-                        {p.promotion_name ?? "—"}
-                      </td>
-                      <td className="px-4 py-3 text-xs">
-                        {p.term_type ? (
-                          <Badge variant="outline" className="text-xs font-normal">
-                            {TERM_LABELS[p.term_type] ?? p.term_type}
-                          </Badge>
-                        ) : "—"}
+                      <td className="px-4 py-3 text-right text-xs tabular-nums font-medium text-[#E8621A]">
+                        {p.price != null ? `${p.currency} ${Number(p.price).toFixed(2)}` : "—"}
                       </td>
                       <td className="px-4 py-3 text-right text-xs tabular-nums">
-                        {p.weekly_rate != null ? `$${Number(p.weekly_rate).toFixed(0)}` : "—"}
+                        {p.bond_amount != null ? `$${Number(p.bond_amount).toFixed(0)}` : "—"}
                       </td>
-                      <td className="px-4 py-3 text-right text-xs tabular-nums font-medium text-[#E8621A]">
-                        {p.effective_weekly_rate != null ? `$${Number(p.effective_weekly_rate).toFixed(2)}` : "—"}
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground text-xs">
-                        {p.billing_frequency ?? "—"}
+                      <td className="px-4 py-3 text-right text-xs tabular-nums">
+                        {p.admin_fee != null ? `$${Number(p.admin_fee).toFixed(0)}` : "—"}
                       </td>
                       <td className="px-4 py-3">
-                        <Badge className={`text-xs ${STATUS_COLORS[p.status ?? ""] ?? "bg-gray-100 text-gray-600"}`}>
+                        <Badge className={`text-xs ${STATUS_COLORS[p.status] ?? "bg-gray-100 text-gray-600"}`}>
                           {p.status}
                         </Badge>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1">
-                          <Link href={`/products/contract-products/${p.id}`}>
+                          <Link href={`/products/products/${p.id}`}>
                             <button className="p-1.5 rounded hover:bg-muted transition-colors">
                               <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                             </button>
@@ -201,23 +199,27 @@ export default function ProductList() {
               </tbody>
             </table>
           </div>
+          {filtered.length > 0 && (
+            <div className="border-t p-3">
+              <TablePagination {...pagination} />
+            </div>
+          )}
         </div>
-        <TablePagination {...pagination} />
       </div>
 
-      <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
+      <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Product</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this product. This action cannot be undone.
+              Are you sure you want to delete <strong>{deleteTarget?.name}</strong>? This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive hover:bg-destructive/90"
-              onClick={() => deleteId && deleteMutation.mutate({ id: deleteId })}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deleteId !== null && deleteMutation.mutate(deleteId)}
             >
               Delete
             </AlertDialogAction>
