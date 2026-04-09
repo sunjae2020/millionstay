@@ -97,10 +97,10 @@ const NAV: NavSection[] = [
     icon: Package,
     defaultOpen: false,
     items: [
-      { href: "/products/products", label: "Product", icon: Package },
+      { href: "/products/products", label: "Accommodation Product", icon: Package },
+      { href: "/services", label: "Service Product", icon: ConciergeBell },
       { href: "/products/promotions", label: "Promotion", icon: Tag },
       { href: "/products/beneficiaries", label: "Beneficiary", icon: Users },
-      { href: "/services", label: "Service Catalog", icon: ConciergeBell },
     ],
   },
   {
