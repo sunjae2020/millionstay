@@ -274,7 +274,7 @@ export default function PromotionDetail() {
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Upfront">Upfront (일시불 — paid at signing)</SelectItem>
+                      <SelectItem value="Upfront">Upfront (paid at signing)</SelectItem>
                       <SelectItem value="Weekly">Weekly</SelectItem>
                       <SelectItem value="Biweekly">Biweekly (every 2 weeks)</SelectItem>
                       <SelectItem value="Monthly">Monthly</SelectItem>
