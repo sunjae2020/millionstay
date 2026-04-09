@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, asc, desc, inArray, gte, lte, or } from "drizzle-orm";
+import { eq, and, asc, desc, inArray, gte, lte, or, isNull, SQL } from "drizzle-orm";
 import {
   db,
   spacesTable,
@@ -13,6 +13,8 @@ import {
   accommodationServiceCatalogTable,
   serviceCatalogTable,
   spaceServiceCatalogTable,
+  spacePoliciesTable,
+  contractsTable,
 } from "@workspace/db";
 
 function daysBetween(a: string, b: string): number {
@@ -33,12 +35,66 @@ const router: IRouter = Router();
 
 /* ───────────────────────────────────────────────────────
    GET /api/v1/public/spaces
-   Query params: city, min_price, max_price, start_date, end_date
+   Query params: suburb_id, city, space_type, gender_policy,
+                 min_price, max_price, start_date, end_date,
+                 limit, offset
 ──────────────────────────────────────────────────────── */
 router.get("/v1/public/spaces", async (req, res): Promise<void> => {
-  const { city, min_price, max_price, start_date, end_date } = req.query as Record<string, string>;
+  const {
+    city, suburb_id, space_type, gender_policy,
+    min_price, max_price, start_date, end_date,
+    limit: limitStr = "20", offset: offsetStr = "0",
+  } = req.query as Record<string, string>;
 
-  const spaces = await db
+  const limit  = Math.min(Number(limitStr)  || 20, 100);
+  const offset = Number(offsetStr) || 0;
+  const today  = new Date().toISOString().split("T")[0];
+
+  /* ── Step 1: Always-on occupancy exclusions ──────────────────── */
+  // Exclude spaces with any active/ongoing booking (check_out hasn't passed)
+  // Exclude spaces with any Signed/Active contract that hasn't ended yet
+  const [ongoingBookings, ongoingContracts] = await Promise.all([
+    db.select({ space_id: bookingsTable.space_id })
+      .from(bookingsTable)
+      .where(and(
+        inArray(bookingsTable.booking_status, ["Confirmed", "Pending", "Active"]),
+        gte(bookingsTable.check_out_date as any, today),
+        eq(bookingsTable.status, "Active"),
+      )),
+    db.select({ space_id: contractsTable.space_id })
+      .from(contractsTable)
+      .where(and(
+        inArray(contractsTable.status, ["Signed", "Active"]),
+        or(isNull(contractsTable.end_date), gte(contractsTable.end_date as any, today)),
+      )),
+  ]);
+
+  const alwaysExcluded = new Set<number>([
+    ...ongoingBookings.map((r) => r.space_id).filter((id): id is number => id != null),
+    ...ongoingContracts.map((r) => r.space_id).filter((id): id is number => id != null),
+  ]);
+
+  /* ── Step 2: Build base DB conditions ───────────────────────── */
+  // Map frontend space_type values to DB values
+  const SPACE_TYPE_MAP: Record<string, string> = {
+    EntireSpace: "Whole Property",
+    RoomSpace:   "Private Room",
+    BedSpace:    "Shared Room",
+  };
+  const dbSpaceType = space_type ? (SPACE_TYPE_MAP[space_type] ?? space_type) : null;
+
+  const conditions: SQL[] = [eq(spacesTable.status, "Active")];
+  if (dbSpaceType) conditions.push(eq(spacesTable.space_type, dbSpaceType));
+  if (suburb_id)  conditions.push(eq(propertiesTable.suburb_id, Number(suburb_id)));
+  // Gender policy via space_policies join
+  if (gender_policy === "FemaleOnly") {
+    conditions.push(eq(spacePoliciesTable.lady_only, true));
+  } else if (gender_policy === "Mixed") {
+    conditions.push(or(isNull(spacePoliciesTable.id), eq(spacePoliciesTable.lady_only, false)) as SQL);
+  }
+
+  /* ── Step 3: Fetch all matching spaces ──────────────────────── */
+  const allSpaces = await db
     .select({
       id: spacesTable.id,
       name: spacesTable.name,
@@ -56,75 +112,79 @@ router.get("/v1/public/spaces", async (req, res): Promise<void> => {
       property_address: propertiesTable.address,
       property_city: propertiesTable.city,
       property_state: propertiesTable.state,
+      property_suburb_id: propertiesTable.suburb_id,
       latitude: propertiesTable.lat,
       longitude: propertiesTable.lng,
+      policy_lady_only: spacePoliciesTable.lady_only,
+      policy_same_gender: spacePoliciesTable.same_gender,
     })
     .from(spacesTable)
     .leftJoin(propertiesTable, eq(spacesTable.property_id, propertiesTable.id))
-    .where(eq(spacesTable.status, "Active"))
+    .leftJoin(spacePoliciesTable, eq(spacesTable.space_policy_id, spacePoliciesTable.id))
+    .where(and(...conditions))
     .orderBy(asc(spacesTable.id));
 
-  // Filter by city
-  let filtered = city
-    ? spaces.filter((s) => s.property_city?.toLowerCase().includes(city.toLowerCase()))
-    : spaces;
+  /* ── Step 4: In-memory filters ─────────────────────────────── */
+  let filtered = allSpaces;
 
-  // Filter by price
+  // City text search
+  if (city) filtered = filtered.filter((s) => s.property_city?.toLowerCase().includes(city.toLowerCase()));
+
+  // Always-on occupancy exclusion
+  filtered = filtered.filter((s) => !alwaysExcluded.has(s.id));
+
+  // Price range
   if (min_price) filtered = filtered.filter((s) => Number(s.base_weekly_price) >= Number(min_price));
   if (max_price) filtered = filtered.filter((s) => Number(s.base_weekly_price) <= Number(max_price));
 
-  const spaceIds = filtered.map((s) => s.id);
-  const parentIds = [...new Set(filtered.map((s) => s.parent_space_id).filter((id): id is number => id != null))];
-  const allRelevantIds = [...new Set([...spaceIds, ...parentIds])];
-
-  // If date range provided, check availability + minimum stay
-  let unavailableIds = new Set<number>();
-  if (start_date && end_date && spaceIds.length > 0) {
+  /* ── Step 5: Date-range specific exclusions ─────────────────── */
+  if (start_date && end_date && filtered.length > 0) {
     const requestedDays = daysBetween(start_date, end_date);
+    const filteredIds = filtered.map((s) => s.id);
 
-    // 1. Manual blocks (space_availability table)
-    const blocked = await db
-      .select({ space_id: spaceAvailabilityTable.space_id })
-      .from(spaceAvailabilityTable)
-      .where(
-        and(
-          inArray(spaceAvailabilityTable.space_id, spaceIds),
+    const [blocked, bookedSpaces, contractedSpaces] = await Promise.all([
+      // Manual availability blocks
+      db.select({ space_id: spaceAvailabilityTable.space_id })
+        .from(spaceAvailabilityTable)
+        .where(and(
+          inArray(spaceAvailabilityTable.space_id, filteredIds),
           eq(spaceAvailabilityTable.is_available, false),
           gte(spaceAvailabilityTable.date, start_date),
           lte(spaceAvailabilityTable.date, end_date),
-        ),
-      );
-
-    // 2. Already-booked spaces (Confirmed / Pending / Active overlap)
-    const bookedSpaces = await db
-      .select({ space_id: bookingsTable.space_id })
-      .from(bookingsTable)
-      .where(
-        and(
-          inArray(bookingsTable.space_id as any, spaceIds),
-          or(
-            and(
-              lte(bookingsTable.check_in_date as any, end_date),
-              gte(bookingsTable.check_out_date as any, start_date),
-            ),
-          ),
+        )),
+      // Overlapping bookings
+      db.select({ space_id: bookingsTable.space_id })
+        .from(bookingsTable)
+        .where(and(
+          inArray(bookingsTable.space_id as any, filteredIds),
+          or(and(
+            lte(bookingsTable.check_in_date as any, end_date),
+            gte(bookingsTable.check_out_date as any, start_date),
+          )),
           inArray(bookingsTable.booking_status, ["Confirmed", "Pending", "Active"]),
-        ),
-      );
-
-    unavailableIds = new Set([
-      ...blocked.map((b) => b.space_id),
-      ...bookedSpaces.map((b) => b.space_id).filter((id): id is number => id != null),
+        )),
+      // Overlapping contracts
+      db.select({ space_id: contractsTable.space_id })
+        .from(contractsTable)
+        .where(and(
+          inArray(contractsTable.space_id as any, filteredIds),
+          inArray(contractsTable.status, ["Signed", "Active"]),
+          lte(contractsTable.start_date as any, end_date),
+          or(isNull(contractsTable.end_date), gte(contractsTable.end_date as any, start_date)),
+        )),
     ]);
 
-    if (unavailableIds.size > 0) {
-      filtered = filtered.filter((s) => !unavailableIds.has(s.id));
-    }
+    const dateUnavailable = new Set<number>([
+      ...blocked.map((b) => b.space_id),
+      ...bookedSpaces.map((b) => b.space_id).filter((id): id is number => id != null),
+      ...contractedSpaces.map((c) => c.space_id).filter((id): id is number => id != null),
+    ]);
 
-    // 3. Minimum stay filter — products & promotions
-    //    Fetch active products for remaining spaces to determine effective minimum
-    const remainingIds = filtered.map((s) => s.id);
-    if (remainingIds.length > 0) {
+    filtered = filtered.filter((s) => !dateUnavailable.has(s.id));
+
+    // Minimum contract period check
+    if (filtered.length > 0) {
+      const remainingIds = filtered.map((s) => s.id);
       const products = await db
         .select({
           space_id: accommodationCatalogTable.space_id,
@@ -132,33 +192,36 @@ router.get("/v1/public/spaces", async (req, res): Promise<void> => {
           min_contract_period_unit: accommodationCatalogTable.min_contract_period_unit,
         })
         .from(accommodationCatalogTable)
-        .where(
-          and(
-            inArray(accommodationCatalogTable.space_id, remainingIds),
-            eq(accommodationCatalogTable.status, "Active"),
-          ),
-        );
+        .where(and(
+          inArray(accommodationCatalogTable.space_id, remainingIds),
+          eq(accommodationCatalogTable.status, "Active"),
+        ));
 
-      // Build per-space minimum days map from products
       const productMinBySpace = new Map<number, number>();
       for (const p of products) {
         if (!p.space_id) continue;
         const days = productMinDays(p.min_contract_period, p.min_contract_period_unit);
         if (days == null) continue;
         const cur = productMinBySpace.get(p.space_id);
-        // Use the LOWEST product minimum (most permissive plan available)
+        // Use the lowest minimum (most permissive plan)
         if (cur == null || days < cur) productMinBySpace.set(p.space_id, days);
       }
 
       filtered = filtered.filter((s) => {
-        // Effective minimum: lowest product min if products exist, else 1 night
-        const effectiveMin = productMinBySpace.has(s.id)
-          ? productMinBySpace.get(s.id)!
-          : 1;
+        const effectiveMin = productMinBySpace.has(s.id) ? productMinBySpace.get(s.id)! : 1;
         return requestedDays >= effectiveMin;
       });
     }
   }
+
+  /* ── Step 6: Total count + pagination ───────────────────────── */
+  const total = filtered.length;
+  const paginated = filtered.slice(offset, offset + limit);
+
+  /* ── Step 7: Fetch images + options for paginated results ────── */
+  const paginatedIds = paginated.map((s) => s.id);
+  const parentIds = [...new Set(paginated.map((s) => s.parent_space_id).filter((id): id is number => id != null))];
+  const allRelevantIds = [...new Set([...paginatedIds, ...parentIds])];
 
   const [allImages, allOptionMaps] = await Promise.all([
     allRelevantIds.length > 0
@@ -169,13 +232,11 @@ router.get("/v1/public/spaces", async (req, res): Promise<void> => {
           ))
           .orderBy(desc(spaceImagesTable.is_primary))
       : Promise.resolve([]),
-    spaceIds.length > 0
-      ? db.select({
-            space_id: spaceOptionMapsTable.space_id,
-            name: spaceOptionsTable.name,
-          })
+    paginatedIds.length > 0
+      ? db.select({ space_id: spaceOptionMapsTable.space_id, name: spaceOptionsTable.name })
           .from(spaceOptionMapsTable)
           .leftJoin(spaceOptionsTable, eq(spaceOptionMapsTable.space_option_id, spaceOptionsTable.id))
+          .where(inArray(spaceOptionMapsTable.space_id, paginatedIds))
       : Promise.resolve([]),
   ]);
 
@@ -191,7 +252,7 @@ router.get("/v1/public/spaces", async (req, res): Promise<void> => {
     optionsBySpace.set(row.space_id, arr);
   }
 
-  const data = filtered.map((s) => {
+  const data = paginated.map((s) => {
     let primary = primaryBySpace.get(s.id);
     let imageFromParent = false;
     if (!primary && s.parent_space_id) {
@@ -207,7 +268,7 @@ router.get("/v1/public/spaces", async (req, res): Promise<void> => {
     };
   });
 
-  res.json({ success: true, data, meta: { total: data.length } });
+  res.json({ success: true, data, meta: { total, limit, offset } });
 });
 
 /* ───────────────────────────────────────────────────────
