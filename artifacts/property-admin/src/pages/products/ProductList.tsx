@@ -114,7 +114,7 @@ export default function ProductList() {
   return (
     <Layout>
       <PageHeader
-        title="Products"
+        title="Accommodation Products"
         subtitle={`${filtered.length} of ${products.length} total`}
         actions={
           <Link href="/products/products/new">
