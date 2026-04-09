@@ -10,6 +10,7 @@ import {
   spaceImagesTable,
   spaceOptionsTable,
   accommodationCatalogTable,
+  accommodationServiceCatalogTable,
   serviceCatalogTable,
   spaceServiceCatalogTable,
 } from "@workspace/db";
@@ -430,10 +431,50 @@ router.get("/v1/public/properties", async (_req, res): Promise<void> => {
 ──────────────────────────────────────────────────────── */
 router.get("/v1/public/services", async (req, res): Promise<void> => {
   try {
-    const { space_id } = req.query as { space_id?: string };
+    const { space_id, accommodation_product_id } = req.query as { space_id?: string; accommodation_product_id?: string };
     const spaceId = space_id ? parseInt(space_id, 10) : null;
+    const accProductId = accommodation_product_id ? parseInt(accommodation_product_id, 10) : null;
 
-    // If space_id provided — check if the space has specific services assigned
+    // Priority 1: accommodation product-level services
+    if (accProductId) {
+      const accMappings = await db
+        .select({
+          map_id: accommodationServiceCatalogTable.id,
+          is_mandatory: accommodationServiceCatalogTable.is_mandatory,
+          custom_price: accommodationServiceCatalogTable.custom_price,
+          sort_order: accommodationServiceCatalogTable.sort_order,
+          id: serviceCatalogTable.id,
+          name: serviceCatalogTable.name,
+          description: serviceCatalogTable.description,
+          service_type: serviceCatalogTable.service_type,
+          base_price: serviceCatalogTable.base_price,
+          currency: serviceCatalogTable.currency,
+          is_optional: serviceCatalogTable.is_optional,
+          is_refundable: serviceCatalogTable.is_refundable,
+          billing_trigger: serviceCatalogTable.billing_trigger,
+          requires_scheduling: serviceCatalogTable.requires_scheduling,
+          scheduling_notes: serviceCatalogTable.scheduling_notes,
+        })
+        .from(accommodationServiceCatalogTable)
+        .innerJoin(serviceCatalogTable, eq(accommodationServiceCatalogTable.service_id, serviceCatalogTable.id))
+        .where(and(
+          eq(accommodationServiceCatalogTable.accommodation_id, accProductId),
+          eq(serviceCatalogTable.status, "Active"),
+        ))
+        .orderBy(asc(accommodationServiceCatalogTable.sort_order), asc(serviceCatalogTable.name));
+
+      if (accMappings.length > 0) {
+        const data = accMappings.map(row => ({
+          ...row,
+          base_price: row.custom_price ?? row.base_price,
+        }));
+        res.json({ success: true, data, source: "accommodation_product" });
+        return;
+      }
+      // Fall through to space-level if accommodation product has no services defined
+    }
+
+    // Priority 2: space-level services
     if (spaceId) {
       const spaceMappings = await db
         .select({

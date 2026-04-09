@@ -3,6 +3,8 @@ import { eq, ilike, and, sql, SQL, asc, inArray } from "drizzle-orm";
 import {
   db,
   accommodationCatalogTable,
+  accommodationServiceCatalogTable,
+  serviceCatalogTable,
   productGroupsTable,
   productTypesTable,
   spacesTable,
@@ -142,6 +144,99 @@ router.delete("/v1/accommodations/:id", async (req, res): Promise<void> => {
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: "Failed to delete product" });
+  }
+});
+
+/* ── Accommodation Product Services (accommodation_service_catalog) ── */
+
+/* GET /v1/accommodations/:id/services */
+router.get("/v1/accommodations/:id/services", async (req, res): Promise<void> => {
+  const accId = Number(req.params.id);
+  if (!accId) { res.status(400).json({ error: "Invalid accommodation id" }); return; }
+  try {
+    const rows = await db
+      .select({
+        id: accommodationServiceCatalogTable.id,
+        accommodation_id: accommodationServiceCatalogTable.accommodation_id,
+        service_id: accommodationServiceCatalogTable.service_id,
+        is_mandatory: accommodationServiceCatalogTable.is_mandatory,
+        custom_price: accommodationServiceCatalogTable.custom_price,
+        sort_order: accommodationServiceCatalogTable.sort_order,
+        service_name: serviceCatalogTable.name,
+        service_type: serviceCatalogTable.service_type,
+        base_price: serviceCatalogTable.base_price,
+        currency: serviceCatalogTable.currency,
+        billing_trigger: serviceCatalogTable.billing_trigger,
+        is_optional: serviceCatalogTable.is_optional,
+        status: serviceCatalogTable.status,
+      })
+      .from(accommodationServiceCatalogTable)
+      .innerJoin(serviceCatalogTable, eq(accommodationServiceCatalogTable.service_id, serviceCatalogTable.id))
+      .where(eq(accommodationServiceCatalogTable.accommodation_id, accId))
+      .orderBy(asc(accommodationServiceCatalogTable.sort_order), asc(serviceCatalogTable.name));
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to list accommodation services" });
+  }
+});
+
+/* POST /v1/accommodations/:id/services */
+router.post("/v1/accommodations/:id/services", async (req, res): Promise<void> => {
+  const accId = Number(req.params.id);
+  if (!accId) { res.status(400).json({ error: "Invalid accommodation id" }); return; }
+  const { service_id, is_mandatory = false, custom_price, sort_order = 0 } = req.body as {
+    service_id: number; is_mandatory?: boolean; custom_price?: number | null; sort_order?: number;
+  };
+  if (!service_id) { res.status(400).json({ error: "service_id is required" }); return; }
+  try {
+    const [existing] = await db.select().from(accommodationServiceCatalogTable)
+      .where(and(eq(accommodationServiceCatalogTable.accommodation_id, accId), eq(accommodationServiceCatalogTable.service_id, service_id)));
+    if (existing) { res.status(409).json({ error: "Service already assigned to this product" }); return; }
+    const [row] = await db.insert(accommodationServiceCatalogTable)
+      .values({ accommodation_id: accId, service_id, is_mandatory, custom_price: custom_price ?? null, sort_order })
+      .returning();
+    res.status(201).json({ success: true, data: row });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to add service to accommodation" });
+  }
+});
+
+/* PUT /v1/accommodations/:id/services/:mapId */
+router.put("/v1/accommodations/:id/services/:mapId", async (req, res): Promise<void> => {
+  const accId = Number(req.params.id);
+  const mapId = Number(req.params.mapId);
+  if (!accId || !mapId) { res.status(400).json({ error: "Invalid ids" }); return; }
+  const { is_mandatory, custom_price, sort_order } = req.body as {
+    is_mandatory?: boolean; custom_price?: number | null; sort_order?: number;
+  };
+  try {
+    const updates: Record<string, unknown> = { updated_at: new Date() };
+    if (is_mandatory !== undefined) updates.is_mandatory = is_mandatory;
+    if (custom_price !== undefined) updates.custom_price = custom_price;
+    if (sort_order !== undefined) updates.sort_order = sort_order;
+    const [row] = await db.update(accommodationServiceCatalogTable).set(updates)
+      .where(and(eq(accommodationServiceCatalogTable.id, mapId), eq(accommodationServiceCatalogTable.accommodation_id, accId)))
+      .returning();
+    if (!row) { res.status(404).json({ error: "Mapping not found" }); return; }
+    res.json({ success: true, data: row });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update accommodation service" });
+  }
+});
+
+/* DELETE /v1/accommodations/:id/services/:mapId */
+router.delete("/v1/accommodations/:id/services/:mapId", async (req, res): Promise<void> => {
+  const accId = Number(req.params.id);
+  const mapId = Number(req.params.mapId);
+  if (!accId || !mapId) { res.status(400).json({ error: "Invalid ids" }); return; }
+  try {
+    const [deleted] = await db.delete(accommodationServiceCatalogTable)
+      .where(and(eq(accommodationServiceCatalogTable.id, mapId), eq(accommodationServiceCatalogTable.accommodation_id, accId)))
+      .returning();
+    if (!deleted) { res.status(404).json({ error: "Mapping not found" }); return; }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to remove service from accommodation" });
   }
 });
 

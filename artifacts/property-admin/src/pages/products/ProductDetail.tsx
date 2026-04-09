@@ -9,9 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Package, Save } from "lucide-react";
+import { ArrowLeft, Package, Save, Plus, Trash2, PackagePlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
+import { useState } from "react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 const STATUS_COLORS: Record<string, string> = {
   Active: "bg-green-100 text-green-700",
@@ -31,12 +35,78 @@ async function fetchLookup(url: string) {
   return res.json();
 }
 
+type AccSvc = {
+  id: number; accommodation_id: number; service_id: number;
+  service_name: string; service_type: string;
+  base_price: number | null; custom_price: number | null;
+  currency: string; billing_trigger: string;
+  is_optional: boolean; is_mandatory: boolean; sort_order: number;
+};
+type CatalogSvc = { id: number; name: string; service_type: string; base_price: number | null; currency: string; };
+
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const qc = useQueryClient();
   const isNew = id === "new";
+
+  /* ── Services tab state ── */
+  const [accSvcs, setAccSvcs] = useState<AccSvc[]>([]);
+  const [catalogSvcs, setCatalogSvcs] = useState<CatalogSvc[]>([]);
+  const [svcLoading, setSvcLoading] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [addId, setAddId] = useState("");
+  const [addMandatory, setAddMandatory] = useState(false);
+  const [addPrice, setAddPrice] = useState("");
+  const [addSaving, setAddSaving] = useState(false);
+
+  const loadSvcs = async () => {
+    if (!id || isNew) return;
+    setSvcLoading(true);
+    try {
+      const [sRes, cRes] = await Promise.all([
+        apiFetch(`/api/v1/accommodations/${id}/services`),
+        apiFetch(`/api/v1/services?status=Active&limit=200`),
+      ]);
+      const sj = await sRes.json(); const cj = await cRes.json();
+      if (sj.success) setAccSvcs(sj.data ?? []);
+      if (cj.success) setCatalogSvcs(cj.data ?? []);
+    } finally { setSvcLoading(false); }
+  };
+
+  const handleAddSvc = async () => {
+    if (!id || !addId) return;
+    setAddSaving(true);
+    try {
+      const res = await apiFetch(`/api/v1/accommodations/${id}/services`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ service_id: parseInt(addId, 10), is_mandatory: addMandatory, custom_price: addPrice ? parseFloat(addPrice) : null }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Failed");
+      toast({ title: "Service added" });
+      setAddOpen(false); setAddId(""); setAddMandatory(false); setAddPrice("");
+      await loadSvcs();
+    } catch (e: unknown) {
+      toast({ title: "Error", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
+    } finally { setAddSaving(false); }
+  };
+
+  const toggleMandatory = async (mapId: number, val: boolean) => {
+    if (!id) return;
+    await apiFetch(`/api/v1/accommodations/${id}/services/${mapId}`, {
+      method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ is_mandatory: val }),
+    });
+    setAccSvcs(prev => prev.map(s => s.id === mapId ? { ...s, is_mandatory: val } : s));
+  };
+
+  const removeSvc = async (mapId: number) => {
+    if (!id || !confirm("Remove this service from the product?")) return;
+    const res = await apiFetch(`/api/v1/accommodations/${id}/services/${mapId}`, { method: "DELETE" });
+    if (res.ok) { toast({ title: "Service removed" }); setAccSvcs(prev => prev.filter(s => s.id !== mapId)); }
+  };
 
   const { data: product } = useQuery({
     queryKey: ["product", id],
@@ -99,6 +169,8 @@ export default function ProductDetail() {
     onError: () => toast({ title: "Error", description: "Failed to save product.", variant: "destructive" }),
   });
 
+  const availableToAdd = catalogSvcs.filter(c => !accSvcs.some(a => a.service_id === c.id));
+
   return (
     <Layout>
       <div className="p-6 max-w-3xl">
@@ -115,6 +187,13 @@ export default function ProductDetail() {
           )}
         </div>
 
+        <Tabs defaultValue="details" onValueChange={v => { if (v === "services") loadSvcs(); }}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="details">Details</TabsTrigger>
+            {!isNew && <TabsTrigger value="services">Services</TabsTrigger>}
+          </TabsList>
+
+          <TabsContent value="details">
         <form onSubmit={handleSubmit(v => save.mutate(v))} className="space-y-6">
           <div className="bg-white border rounded-lg p-6 space-y-4">
             <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Basic Information</h2>
@@ -246,7 +325,104 @@ export default function ProductDetail() {
             </Button>
           </div>
         </form>
+          </TabsContent>
+
+          {!isNew && (
+            <TabsContent value="services">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="font-semibold">Service Packages</h2>
+                    <p className="text-sm text-muted-foreground">Services assigned to this accommodation product take priority over space-level services during booking.</p>
+                  </div>
+                  <Button size="sm" onClick={() => setAddOpen(true)}>
+                    <Plus className="h-4 w-4 mr-1" /> Add Service
+                  </Button>
+                </div>
+
+                {svcLoading ? (
+                  <div className="text-sm text-muted-foreground py-8 text-center">Loading services…</div>
+                ) : accSvcs.length === 0 ? (
+                  <div className="border-2 border-dashed rounded-lg p-8 text-center text-muted-foreground">
+                    <PackagePlus className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                    <p className="text-sm">No services assigned yet.</p>
+                    <p className="text-xs mt-1">Click "Add Service" to attach services to this product.</p>
+                  </div>
+                ) : (
+                  <div className="border rounded-lg divide-y bg-white">
+                    {accSvcs.map(s => (
+                      <div key={s.id} className="flex items-center justify-between p-4">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{s.service_name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {s.service_type} ·{" "}
+                            {s.custom_price != null
+                              ? `${s.currency} $${s.custom_price.toFixed(2)} (custom)`
+                              : s.base_price != null
+                              ? `${s.currency} $${s.base_price.toFixed(2)}`
+                              : "No price"}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-4 ml-4">
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={s.is_mandatory}
+                              onCheckedChange={v => toggleMandatory(s.id, v)}
+                            />
+                            <Label className={cn("text-xs", s.is_mandatory ? "text-orange-600 font-medium" : "text-muted-foreground")}>
+                              {s.is_mandatory ? "Mandatory" : "Optional"}
+                            </Label>
+                          </div>
+                          <Button variant="ghost" size="icon" className="text-red-400 hover:text-red-600 h-8 w-8" onClick={() => removeSvc(s.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          )}
+        </Tabs>
       </div>
+
+      {/* Add Service Dialog */}
+      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Service to Product</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label>Service *</Label>
+              <Select value={addId} onValueChange={setAddId}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Select a service" /></SelectTrigger>
+                <SelectContent>
+                  {availableToAdd.map(c => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.name}{c.base_price != null ? ` — ${c.currency} $${c.base_price.toFixed(2)}` : ""}
+                    </SelectItem>
+                  ))}
+                  {availableToAdd.length === 0 && <SelectItem value="_none" disabled>All services already added</SelectItem>}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Custom Price (leave blank to use catalogue price)</Label>
+              <Input type="number" step="0.01" min="0" value={addPrice} onChange={e => setAddPrice(e.target.value)} placeholder="e.g. 150.00" className="mt-1" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch checked={addMandatory} onCheckedChange={setAddMandatory} />
+              <Label>Mandatory (auto-selected for guests, cannot opt out)</Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddSvc} disabled={!addId || addSaving}>{addSaving ? "Adding…" : "Add Service"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }
