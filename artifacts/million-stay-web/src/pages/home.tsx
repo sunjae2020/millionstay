@@ -200,7 +200,7 @@ export default function Home() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Location</label>
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Search</label>
                   <Select value={suburbId} onValueChange={setSuburbId}>
                     <SelectTrigger className="h-10 text-sm" data-testid="search-suburb">
                       <SelectValue placeholder="Any suburb" />

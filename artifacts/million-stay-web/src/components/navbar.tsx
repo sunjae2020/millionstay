@@ -14,7 +14,7 @@ import logoHorizontal from "@assets/06.OR_NB_horizontal_ver_1775381659303.png";
 import logoMark from "@assets/05.OR_NB_Mark_simple_ver_1775381659302.png";
 
 const navLinks = [
-  { label: "Location", href: "/search" },
+  { label: "Search", href: "/search" },
   { label: "Stay Plans", href: "/stay-plan" },
   { label: "About Us", href: "/about" },
   { label: "For Students", href: "/for-student" },
