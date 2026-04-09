@@ -169,19 +169,17 @@ export default function ProductList() {
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Promotion</th>
                   <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Unit</th>
                   <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Price</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Services</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Created</th>
                   <th className="px-4 py-3 w-20"></th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground text-sm">Loading...</td>
+                    <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">Loading...</td>
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground text-sm">No products found</td>
+                    <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">No products found</td>
                   </tr>
                 ) : (
                   pagination.paginatedItems.map((p) => (
@@ -210,15 +208,6 @@ export default function ProductList() {
                       </td>
                       <td className="px-4 py-3 text-right text-xs tabular-nums font-medium text-[#E8621A]">
                         {p.price != null ? `${p.currency} ${Number(p.price).toFixed(0)}` : "—"}
-                      </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground max-w-[180px]">
-                        {(p.packed_services ?? []).length === 0
-                          ? <span className="text-muted-foreground/50">—</span>
-                          : <span className="line-clamp-2">{(p.packed_services ?? []).join(", ")}</span>
-                        }
-                      </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
-                        {fmtDate(p.created_at)}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1">
