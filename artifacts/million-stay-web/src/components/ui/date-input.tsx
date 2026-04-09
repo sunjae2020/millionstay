@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -52,7 +52,6 @@ export function DateInput({
 }: DateInputProps) {
   const [display, setDisplay] = useState(isoToDmy(value));
   const [error, setError] = useState(false);
-  const hiddenRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setDisplay(isoToDmy(value));
@@ -101,29 +100,11 @@ export function DateInput({
         inputMode="numeric"
       />
 
-      {/* Calendar icon + native picker overlay (hidden when noIcon=true) */}
+      {/* Calendar icon — decorative only, no native picker */}
       {!noIcon && (
-        <>
-          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-            <CalendarDays className="h-4 w-4" />
-          </span>
-          <input
-            ref={hiddenRef}
-            type="date"
-            value={value}
-            min={min}
-            max={max}
-            disabled={disabled}
-            tabIndex={-1}
-            onChange={(e) => {
-              onChange(e.target.value);
-              setDisplay(isoToDmy(e.target.value));
-              setError(false);
-            }}
-            className="absolute right-0 top-0 h-full w-10 opacity-0 cursor-pointer"
-            aria-hidden="true"
-          />
-        </>
+        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+          <CalendarDays className="h-4 w-4" />
+        </span>
       )}
     </div>
   );
