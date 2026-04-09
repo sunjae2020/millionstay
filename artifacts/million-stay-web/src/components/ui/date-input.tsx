@@ -10,6 +10,7 @@ interface DateInputProps {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  noIcon?: boolean;
   "data-testid"?: string;
 }
 
@@ -46,6 +47,7 @@ export function DateInput({
   placeholder = "DD/MM/YYYY",
   className,
   disabled,
+  noIcon = false,
   "data-testid": testId,
 }: DateInputProps) {
   const [display, setDisplay] = useState(isoToDmy(value));
@@ -90,7 +92,8 @@ export function DateInput({
         disabled={disabled}
         data-testid={testId}
         className={cn(
-          "w-full pr-9 focus:outline-none focus:ring-2 focus:ring-primary",
+          "w-full focus:outline-none focus:ring-2 focus:ring-primary",
+          !noIcon && "pr-9",
           error && "ring-2 ring-red-400",
           className,
         )}
@@ -98,28 +101,30 @@ export function DateInput({
         inputMode="numeric"
       />
 
-      {/* Calendar icon — purely decorative, pointer events pass through to the native input below */}
-      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-        <CalendarDays className="h-4 w-4" />
-      </span>
-
-      {/* Native date input overlaid on the calendar icon area so clicking it opens the picker natively */}
-      <input
-        ref={hiddenRef}
-        type="date"
-        value={value}
-        min={min}
-        max={max}
-        disabled={disabled}
-        tabIndex={-1}
-        onChange={(e) => {
-          onChange(e.target.value);
-          setDisplay(isoToDmy(e.target.value));
-          setError(false);
-        }}
-        className="absolute right-0 top-0 h-full w-10 opacity-0 cursor-pointer"
-        aria-hidden="true"
-      />
+      {/* Calendar icon + native picker overlay (hidden when noIcon=true) */}
+      {!noIcon && (
+        <>
+          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+            <CalendarDays className="h-4 w-4" />
+          </span>
+          <input
+            ref={hiddenRef}
+            type="date"
+            value={value}
+            min={min}
+            max={max}
+            disabled={disabled}
+            tabIndex={-1}
+            onChange={(e) => {
+              onChange(e.target.value);
+              setDisplay(isoToDmy(e.target.value));
+              setError(false);
+            }}
+            className="absolute right-0 top-0 h-full w-10 opacity-0 cursor-pointer"
+            aria-hidden="true"
+          />
+        </>
+      )}
     </div>
   );
 }

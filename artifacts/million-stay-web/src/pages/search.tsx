@@ -14,6 +14,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { DateInput } from "@/components/ui/date-input";
 import heroBg from "@assets/MS_Homepage_Photo_1920x1080_1775403929888.jpg";
 
 const PAGE_SIZE = 20;
@@ -212,22 +213,22 @@ export default function Search() {
               <div className="h-6 w-px bg-gray-200 shrink-0" />
 
               {/* Check In */}
-              <div className={`flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-full border transition-all shrink-0 ${
+              <div className={`flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-full border transition-all shrink-0 ${
                 checkIn ? "border-primary bg-orange-50" : "border-gray-200 bg-white hover:border-primary/50"
               }`}>
                 <Calendar className={`h-3.5 w-3.5 shrink-0 ${checkIn ? "text-primary" : "text-gray-400"}`} />
-                <div className="flex flex-col leading-none">
+                <div className="flex flex-col leading-none min-w-[88px]">
                   <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Check In</span>
-                  <input
-                    type="date"
+                  <DateInput
+                    noIcon
                     value={checkIn}
                     min={today}
-                    onChange={(e) => {
-                      setCheckIn(e.target.value);
-                      if (checkOut && e.target.value > checkOut) setCheckOut("");
+                    onChange={(iso) => {
+                      setCheckIn(iso);
+                      if (checkOut && iso > checkOut) setCheckOut("");
                       resetOffset();
                     }}
-                    className={`bg-transparent text-xs font-semibold focus:outline-none cursor-pointer w-[90px] ${checkIn ? "text-primary" : "text-gray-500"}`}
+                    className={`bg-transparent text-xs font-semibold p-0 w-full ${checkIn ? "text-primary" : "text-gray-500"}`}
                   />
                 </div>
                 {checkIn && (
@@ -243,18 +244,18 @@ export default function Search() {
               <ArrowRight className="h-3.5 w-3.5 text-gray-300 shrink-0 -mx-0.5" />
 
               {/* Check Out */}
-              <div className={`flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-full border transition-all shrink-0 ${
+              <div className={`flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-full border transition-all shrink-0 ${
                 checkOut ? "border-primary bg-orange-50" : "border-gray-200 bg-white hover:border-primary/50"
               }`}>
                 <Calendar className={`h-3.5 w-3.5 shrink-0 ${checkOut ? "text-primary" : "text-gray-400"}`} />
-                <div className="flex flex-col leading-none">
+                <div className="flex flex-col leading-none min-w-[88px]">
                   <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Check Out</span>
-                  <input
-                    type="date"
+                  <DateInput
+                    noIcon
                     value={checkOut}
                     min={checkIn || today}
-                    onChange={(e) => { setCheckOut(e.target.value); resetOffset(); }}
-                    className={`bg-transparent text-xs font-semibold focus:outline-none cursor-pointer w-[90px] ${checkOut ? "text-primary" : "text-gray-500"}`}
+                    onChange={(iso) => { setCheckOut(iso); resetOffset(); }}
+                    className={`bg-transparent text-xs font-semibold p-0 w-full ${checkOut ? "text-primary" : "text-gray-500"}`}
                   />
                 </div>
                 {checkOut && (
