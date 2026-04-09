@@ -20,6 +20,19 @@ import {
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 
+const PROMO_PERIOD: Record<number, string> = {
+  1: "Weekly",
+  2: "Biweekly",
+  3: "Monthly",
+  4: "Daily",
+};
+
+function fmtDate(val: string | null | undefined): string {
+  if (!val) return "—";
+  const d = new Date(val);
+  return d.toLocaleDateString("en-AU", { day: "2-digit", month: "short", year: "numeric" });
+}
+
 type Product = {
   id: number;
   name: string;
@@ -35,6 +48,7 @@ type Product = {
   packed_services: string[];
   display_on_booking_page: boolean;
   status: string;
+  created_at: string | null;
 };
 
 type Promotion = { id: number; display: string };
@@ -154,16 +168,17 @@ export default function ProductList() {
                   <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Unit</th>
                   <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Price</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Services</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Created</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">Loading...</td>
+                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-sm">Loading...</td>
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">No products found</td>
+                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-sm">No products found</td>
                   </tr>
                 ) : (
                   pagination.paginatedItems.map((p) => (
@@ -176,8 +191,11 @@ export default function ProductList() {
                           {p.name}
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground max-w-[160px] truncate">
-                        {p.promotion_name ?? "—"}
+                      <td className="px-4 py-3 max-w-[160px]">
+                        <div className="text-xs text-muted-foreground truncate">{p.promotion_name ?? "—"}</div>
+                        {p.promotion_id != null && PROMO_PERIOD[p.promotion_id] && (
+                          <div className="text-[10px] text-muted-foreground/60 mt-0.5">{PROMO_PERIOD[p.promotion_id]}</div>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-right text-xs tabular-nums text-muted-foreground">
                         {p.promotion_id === 4 ? "1 Day" : "1 Week"}
@@ -190,6 +208,9 @@ export default function ProductList() {
                           ? <span className="text-muted-foreground/50">—</span>
                           : <span className="line-clamp-2">{(p.packed_services ?? []).join(", ")}</span>
                         }
+                      </td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
+                        {fmtDate(p.created_at)}
                       </td>
                     </tr>
                   ))

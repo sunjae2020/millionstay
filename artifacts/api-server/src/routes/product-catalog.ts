@@ -73,6 +73,7 @@ router.get("/v1/accommodations", async (req, res): Promise<void> => {
     const promoMap = Object.fromEntries(promos.map(p => [p.id, p.name]));
     const svcMap: Record<number, string[]> = {};
     for (const s of svcRows as Array<{ accommodation_id: number; service_name: string; is_mandatory: boolean }>) {
+      if (!s.is_mandatory) continue;
       if (!svcMap[s.accommodation_id]) svcMap[s.accommodation_id] = [];
       svcMap[s.accommodation_id].push(s.service_name);
     }
