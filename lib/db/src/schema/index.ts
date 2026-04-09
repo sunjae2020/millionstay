@@ -31,3 +31,4 @@ export * from "./promotions";
 export * from "./guest_users";
 export * from "./beneficiaries";
 export * from "./service_catalog";
+export * from "./space_service_catalog";

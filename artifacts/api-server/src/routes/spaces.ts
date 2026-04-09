@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, and, inArray, gte, lte, SQL } from "drizzle-orm";
-import { db, spacesTable, propertiesTable, spacePoliciesTable, spaceOptionMapsTable, spaceBlockedDatesTable, spaceAvailabilityTable } from "@workspace/db";
+import { db, spacesTable, propertiesTable, spacePoliciesTable, spaceOptionMapsTable, spaceBlockedDatesTable, spaceAvailabilityTable, spaceServiceCatalogTable, serviceCatalogTable } from "@workspace/db";
 import { logAction } from "../utils/auditLog";
 import {
   ListSpacesQueryParams,
@@ -309,6 +309,133 @@ router.post("/v1/spaces/:id/availability/unblock", async (req, res): Promise<voi
   await logAction({ entityType: "space", entityId: spaceId, action: "UNBLOCK", newValue: { dates } });
 
   res.json({ success: true, unblocked_count: dates.length });
+});
+
+/* ── Space Services (space_service_catalog) ─────────────────────── */
+
+/* GET /v1/spaces/:id/services — list services assigned to a space */
+router.get("/v1/spaces/:id/services", async (req, res): Promise<void> => {
+  const spaceId = Number(req.params.id);
+  if (!spaceId) { res.status(400).json({ error: "Invalid space id" }); return; }
+
+  try {
+    const rows = await db
+      .select({
+        id: spaceServiceCatalogTable.id,
+        space_id: spaceServiceCatalogTable.space_id,
+        service_id: spaceServiceCatalogTable.service_id,
+        is_mandatory: spaceServiceCatalogTable.is_mandatory,
+        custom_price: spaceServiceCatalogTable.custom_price,
+        sort_order: spaceServiceCatalogTable.sort_order,
+        service_name: serviceCatalogTable.name,
+        service_type: serviceCatalogTable.service_type,
+        base_price: serviceCatalogTable.base_price,
+        currency: serviceCatalogTable.currency,
+        billing_trigger: serviceCatalogTable.billing_trigger,
+        is_optional: serviceCatalogTable.is_optional,
+        status: serviceCatalogTable.status,
+      })
+      .from(spaceServiceCatalogTable)
+      .innerJoin(serviceCatalogTable, eq(spaceServiceCatalogTable.service_id, serviceCatalogTable.id))
+      .where(eq(spaceServiceCatalogTable.space_id, spaceId))
+      .orderBy(spaceServiceCatalogTable.sort_order, serviceCatalogTable.name);
+
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to list space services" });
+  }
+});
+
+/* POST /v1/spaces/:id/services — add a service to a space */
+router.post("/v1/spaces/:id/services", async (req, res): Promise<void> => {
+  const spaceId = Number(req.params.id);
+  if (!spaceId) { res.status(400).json({ error: "Invalid space id" }); return; }
+
+  const { service_id, is_mandatory = false, custom_price, sort_order = 0 } = req.body as {
+    service_id: number;
+    is_mandatory?: boolean;
+    custom_price?: number | null;
+    sort_order?: number;
+  };
+
+  if (!service_id) { res.status(400).json({ error: "service_id is required" }); return; }
+
+  try {
+    const [existing] = await db
+      .select()
+      .from(spaceServiceCatalogTable)
+      .where(and(eq(spaceServiceCatalogTable.space_id, spaceId), eq(spaceServiceCatalogTable.service_id, service_id)));
+
+    if (existing) {
+      res.status(409).json({ error: "This service is already assigned to the space" });
+      return;
+    }
+
+    const [row] = await db
+      .insert(spaceServiceCatalogTable)
+      .values({ space_id: spaceId, service_id, is_mandatory, custom_price: custom_price ?? null, sort_order })
+      .returning();
+
+    await logAction({ entityType: "space", entityId: spaceId, action: "ADD_SERVICE", newValue: { service_id } });
+    res.status(201).json({ success: true, data: row });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to add service to space" });
+  }
+});
+
+/* PUT /v1/spaces/:id/services/:mapId — update mapping (mandatory / custom_price / sort_order) */
+router.put("/v1/spaces/:id/services/:mapId", async (req, res): Promise<void> => {
+  const spaceId = Number(req.params.id);
+  const mapId = Number(req.params.mapId);
+  if (!spaceId || !mapId) { res.status(400).json({ error: "Invalid ids" }); return; }
+
+  const { is_mandatory, custom_price, sort_order } = req.body as {
+    is_mandatory?: boolean;
+    custom_price?: number | null;
+    sort_order?: number;
+  };
+
+  try {
+    const updates: Record<string, unknown> = { updated_at: new Date() };
+    if (is_mandatory !== undefined) updates.is_mandatory = is_mandatory;
+    if (custom_price !== undefined) updates.custom_price = custom_price;
+    if (sort_order !== undefined) updates.sort_order = sort_order;
+
+    const [row] = await db
+      .update(spaceServiceCatalogTable)
+      .set(updates)
+      .where(and(eq(spaceServiceCatalogTable.id, mapId), eq(spaceServiceCatalogTable.space_id, spaceId)))
+      .returning();
+
+    if (!row) { res.status(404).json({ error: "Mapping not found" }); return; }
+    res.json({ success: true, data: row });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update space service" });
+  }
+});
+
+/* DELETE /v1/spaces/:id/services/:mapId — remove a service from a space */
+router.delete("/v1/spaces/:id/services/:mapId", async (req, res): Promise<void> => {
+  const spaceId = Number(req.params.id);
+  const mapId = Number(req.params.mapId);
+  if (!spaceId || !mapId) { res.status(400).json({ error: "Invalid ids" }); return; }
+
+  try {
+    const [deleted] = await db
+      .delete(spaceServiceCatalogTable)
+      .where(and(eq(spaceServiceCatalogTable.id, mapId), eq(spaceServiceCatalogTable.space_id, spaceId)))
+      .returning();
+
+    if (!deleted) { res.status(404).json({ error: "Mapping not found" }); return; }
+    await logAction({ entityType: "space", entityId: spaceId, action: "REMOVE_SERVICE", newValue: { map_id: mapId } });
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to remove service from space" });
+  }
 });
 
 export default router;

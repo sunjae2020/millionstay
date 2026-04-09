@@ -36,6 +36,7 @@ type ServiceItem = {
   billing_trigger: string;
   requires_scheduling: boolean;
   scheduling_notes: string | null;
+  is_mandatory?: boolean;
 };
 
 function serviceIcon(item: ServiceItem) {
@@ -294,13 +295,25 @@ export default function BookingNew() {
   const createBooking = useCreateGuestBooking();
   const space = spaceData?.data;
 
-  /* Fetch optional add-on services from API */
+  /* Fetch add-on services from API — space-specific if available, else global */
   useEffect(() => {
-    fetch("/api/v1/public/services")
+    if (!spaceId) return;
+    const url = `/api/v1/public/services?space_id=${spaceId}`;
+    fetch(url)
       .then((r) => r.json())
-      .then((j) => { if (j.success) setServiceItems(j.data); })
+      .then((j) => {
+        if (!j.success) return;
+        setServiceItems(j.data);
+        // Auto-select mandatory services
+        const mandatoryIds = (j.data as { id: number; is_mandatory?: boolean }[])
+          .filter(s => s.is_mandatory)
+          .map(s => s.id);
+        if (mandatoryIds.length > 0) {
+          setSelectedServices(prev => Array.from(new Set([...prev, ...mandatoryIds])));
+        }
+      })
       .catch(() => {});
-  }, []);
+  }, [spaceId]);
 
   /* Auto-redirect to portal after confirmation (logged-in users) */
   useEffect(() => {
@@ -665,24 +678,34 @@ export default function BookingNew() {
                   )}
                   {serviceItems.map((svc) => {
                     const selected = selectedServices.includes(svc.id);
+                    const mandatory = !!svc.is_mandatory;
                     const Icon = serviceIcon(svc);
                     return (
-                      <button key={svc.id} onClick={() => toggleService(svc.id)}
+                      <button key={svc.id}
+                        onClick={() => !mandatory && toggleService(svc.id)}
+                        disabled={mandatory}
                         className={`w-full flex items-start gap-4 p-4 rounded-xl border-2 text-left transition-all ${
-                          selected ? "border-primary bg-orange-50" : "border-gray-100 hover:border-orange-200 bg-white"
+                          mandatory
+                            ? "border-orange-300 bg-orange-50 cursor-default"
+                            : selected ? "border-primary bg-orange-50" : "border-gray-100 hover:border-orange-200 bg-white"
                         }`}>
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${selected ? "bg-primary text-white" : "bg-gray-100 text-gray-500"}`}>
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${selected || mandatory ? "bg-primary text-white" : "bg-gray-100 text-gray-500"}`}>
                           <Icon className="h-5 w-5" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
-                            <p className={`font-semibold text-sm ${selected ? "text-primary" : "text-gray-800"}`}>{svc.name}</p>
+                            <div className="flex items-center gap-2">
+                              <p className={`font-semibold text-sm ${selected || mandatory ? "text-primary" : "text-gray-800"}`}>{svc.name}</p>
+                              {mandatory && (
+                                <span className="text-xs bg-orange-100 text-orange-700 font-semibold px-1.5 py-0.5 rounded">Included</span>
+                              )}
+                            </div>
                             <div className="flex items-center gap-2 shrink-0">
                               <span className="text-sm font-bold text-gray-700">+${svc.base_price ?? 0}</span>
                               <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                                selected ? "border-primary bg-primary" : "border-gray-300"
+                                selected || mandatory ? "border-primary bg-primary" : "border-gray-300"
                               }`}>
-                                {selected && <CheckCircle2 className="h-3.5 w-3.5 text-white" />}
+                                {(selected || mandatory) && <CheckCircle2 className="h-3.5 w-3.5 text-white" />}
                               </div>
                             </div>
                           </div>

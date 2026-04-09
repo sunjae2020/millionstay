@@ -26,7 +26,12 @@ import {
   getGetSpaceAvailabilityQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Save, CalendarDays, Images } from "lucide-react";
+import { ArrowLeft, Save, CalendarDays, Images, Plus, Trash2, PackagePlus } from "lucide-react";
+import { apiFetch } from "@/lib/apiFetch";
+import { useToast } from "@/hooks/use-toast";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { SpacePhotoManager } from "@/components/SpacePhotoManager";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
@@ -76,6 +81,87 @@ export default function SpaceDetail() {
 
   // Availability state
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
+
+  // Space services state
+  type SpaceService = {
+    id: number; space_id: number; service_id: number;
+    service_name: string; service_type: string;
+    base_price: number | null; custom_price: number | null;
+    currency: string; billing_trigger: string;
+    is_optional: boolean; is_mandatory: boolean;
+    sort_order: number; status: string;
+  };
+  type CatalogService = { id: number; name: string; service_type: string; base_price: number | null; currency: string; status: string; };
+  const [spaceServices, setSpaceServices] = useState<SpaceService[]>([]);
+  const [catalogServices, setCatalogServices] = useState<CatalogService[]>([]);
+  const [svcLoading, setSvcLoading] = useState(false);
+  const [addSvcOpen, setAddSvcOpen] = useState(false);
+  const [addSvcId, setAddSvcId] = useState<string>("");
+  const [addSvcMandatory, setAddSvcMandatory] = useState(false);
+  const [addSvcPrice, setAddSvcPrice] = useState<string>("");
+  const [addSvcSaving, setAddSvcSaving] = useState(false);
+  const { toast } = useToast();
+
+  const loadSpaceServices = async () => {
+    if (!id) return;
+    setSvcLoading(true);
+    try {
+      const [sRes, cRes] = await Promise.all([
+        apiFetch(`/api/v1/spaces/${id}/services`),
+        apiFetch(`/api/v1/services?status=Active&limit=200`),
+      ]);
+      const sJson = await sRes.json();
+      const cJson = await cRes.json();
+      if (sJson.success) setSpaceServices(sJson.data ?? []);
+      if (cJson.success) setCatalogServices(cJson.data ?? []);
+    } finally {
+      setSvcLoading(false);
+    }
+  };
+
+  const handleAddService = async () => {
+    if (!id || !addSvcId) return;
+    setAddSvcSaving(true);
+    try {
+      const res = await apiFetch(`/api/v1/spaces/${id}/services`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          service_id: parseInt(addSvcId, 10),
+          is_mandatory: addSvcMandatory,
+          custom_price: addSvcPrice ? parseFloat(addSvcPrice) : null,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Failed to add service");
+      toast({ title: "Service added" });
+      setAddSvcOpen(false);
+      setAddSvcId(""); setAddSvcMandatory(false); setAddSvcPrice("");
+      await loadSpaceServices();
+    } catch (e: unknown) {
+      toast({ title: "Error", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
+    } finally {
+      setAddSvcSaving(false);
+    }
+  };
+
+  const handleToggleMandatory = async (mapId: number, val: boolean) => {
+    if (!id) return;
+    await apiFetch(`/api/v1/spaces/${id}/services/${mapId}`, {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ is_mandatory: val }),
+    });
+    setSpaceServices(prev => prev.map(s => s.id === mapId ? { ...s, is_mandatory: val } : s));
+  };
+
+  const handleRemoveService = async (mapId: number) => {
+    if (!id || !confirm("Remove this service from the space?")) return;
+    const res = await apiFetch(`/api/v1/spaces/${id}/services/${mapId}`, { method: "DELETE" });
+    if (res.ok) {
+      toast({ title: "Service removed" });
+      setSpaceServices(prev => prev.filter(s => s.id !== mapId));
+    }
+  };
 
   const { data: space, isLoading } = useGetSpace(
     id!,
@@ -237,13 +323,18 @@ export default function SpaceDetail() {
       />
 
       <div className="p-6">
-        <Tabs defaultValue="details">
+        <Tabs defaultValue="details" onValueChange={(v) => { if (v === "services") loadSpaceServices(); }}>
           <TabsList className="mb-5 flex-wrap h-auto gap-1">
             <TabsTrigger value="details">Details</TabsTrigger>
             {!isNew && <TabsTrigger value="availability">Availability</TabsTrigger>}
             {!isNew && (
               <TabsTrigger value="photos" className="gap-1.5">
                 <Images className="h-3.5 w-3.5" /> Photos
+              </TabsTrigger>
+            )}
+            {!isNew && (
+              <TabsTrigger value="services" className="gap-1.5">
+                <PackagePlus className="h-3.5 w-3.5" /> Services
               </TabsTrigger>
             )}
           </TabsList>
@@ -554,6 +645,145 @@ export default function SpaceDetail() {
           {!isNew && id && (
             <TabsContent value="photos">
               <SpacePhotoManager spaceId={id} />
+            </TabsContent>
+          )}
+
+          {!isNew && id && (
+            <TabsContent value="services">
+              <div className="max-w-3xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-base">Service Packages</h3>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      Services assigned to this space. Guests see only these services during booking.
+                      {spaceServices.length === 0 && !svcLoading && (
+                        <span className="text-amber-600"> (None assigned — all active services will be shown to guests)</span>
+                      )}
+                    </p>
+                  </div>
+                  <Button size="sm" className="gap-1.5" onClick={() => setAddSvcOpen(true)}>
+                    <Plus className="h-4 w-4" /> Add Service
+                  </Button>
+                </div>
+
+                {svcLoading ? (
+                  <p className="text-sm text-muted-foreground py-8 text-center">Loading…</p>
+                ) : spaceServices.length === 0 ? (
+                  <div className="border border-dashed rounded-lg py-12 text-center text-muted-foreground text-sm">
+                    No services assigned yet. Click "Add Service" to get started.
+                  </div>
+                ) : (
+                  <div className="border rounded-lg overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b bg-muted/40 text-xs text-muted-foreground uppercase tracking-wider">
+                          <th className="px-4 py-2.5 text-left font-medium">Service</th>
+                          <th className="px-4 py-2.5 text-left font-medium">Type</th>
+                          <th className="px-4 py-2.5 text-right font-medium">Price</th>
+                          <th className="px-4 py-2.5 text-center font-medium">Mandatory</th>
+                          <th className="px-4 py-2.5 text-center font-medium">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {spaceServices.map((svc, idx) => (
+                          <tr key={svc.id} className={cn("border-b last:border-0", idx % 2 === 0 ? "bg-background" : "bg-muted/20")}>
+                            <td className="px-4 py-3 font-medium">
+                              {svc.service_name}
+                              {!svc.is_optional && (
+                                <Badge variant="secondary" className="ml-2 text-xs">Required</Badge>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-muted-foreground capitalize">
+                              {svc.service_type.replace("_", " ")}
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              {svc.custom_price != null ? (
+                                <span className="font-semibold text-orange-600">
+                                  {svc.currency} {svc.custom_price.toFixed(2)}
+                                  <span className="ml-1 text-xs text-muted-foreground font-normal">(custom)</span>
+                                </span>
+                              ) : svc.base_price != null ? (
+                                <span>{svc.currency} {svc.base_price.toFixed(2)}</span>
+                              ) : (
+                                <span className="text-muted-foreground">—</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <Switch
+                                checked={svc.is_mandatory}
+                                onCheckedChange={(val) => handleToggleMandatory(svc.id, val)}
+                              />
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <Button
+                                variant="ghost" size="icon"
+                                className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => handleRemoveService(svc.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* Add Service Dialog */}
+              <Dialog open={addSvcOpen} onOpenChange={setAddSvcOpen}>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Add Service to Space</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 py-2">
+                    <div className="flex flex-col gap-1.5">
+                      <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Service *</Label>
+                      <Select value={addSvcId} onValueChange={setAddSvcId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a service…" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {catalogServices
+                            .filter(c => !spaceServices.some(s => s.service_id === c.id))
+                            .map(c => (
+                              <SelectItem key={c.id} value={String(c.id)}>
+                                {c.name}
+                                {c.base_price != null && (
+                                  <span className="text-muted-foreground ml-1">({c.currency} {c.base_price})</span>
+                                )}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        Custom Price (AUD) — leave blank to use catalog price
+                      </Label>
+                      <Input
+                        type="number" min="0" step="0.01"
+                        placeholder="e.g. 50.00"
+                        value={addSvcPrice}
+                        onChange={e => setAddSvcPrice(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Switch checked={addSvcMandatory} onCheckedChange={setAddSvcMandatory} id="mandatory-sw" />
+                      <Label htmlFor="mandatory-sw" className="cursor-pointer text-sm font-normal">
+                        Mandatory (auto-included in every booking)
+                      </Label>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setAddSvcOpen(false)}>Cancel</Button>
+                    <Button disabled={!addSvcId || addSvcSaving} onClick={handleAddService}>
+                      {addSvcSaving ? "Adding…" : "Add Service"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </TabsContent>
           )}
         </Tabs>

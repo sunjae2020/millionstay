@@ -11,6 +11,7 @@ import {
   spaceOptionsTable,
   accommodationCatalogTable,
   serviceCatalogTable,
+  spaceServiceCatalogTable,
 } from "@workspace/db";
 
 function daysBetween(a: string, b: string): number {
@@ -429,6 +430,50 @@ router.get("/v1/public/properties", async (_req, res): Promise<void> => {
 ──────────────────────────────────────────────────────── */
 router.get("/v1/public/services", async (req, res): Promise<void> => {
   try {
+    const { space_id } = req.query as { space_id?: string };
+    const spaceId = space_id ? parseInt(space_id, 10) : null;
+
+    // If space_id provided — check if the space has specific services assigned
+    if (spaceId) {
+      const spaceMappings = await db
+        .select({
+          map_id: spaceServiceCatalogTable.id,
+          is_mandatory: spaceServiceCatalogTable.is_mandatory,
+          custom_price: spaceServiceCatalogTable.custom_price,
+          sort_order: spaceServiceCatalogTable.sort_order,
+          id: serviceCatalogTable.id,
+          name: serviceCatalogTable.name,
+          description: serviceCatalogTable.description,
+          service_type: serviceCatalogTable.service_type,
+          base_price: serviceCatalogTable.base_price,
+          currency: serviceCatalogTable.currency,
+          is_optional: serviceCatalogTable.is_optional,
+          is_refundable: serviceCatalogTable.is_refundable,
+          billing_trigger: serviceCatalogTable.billing_trigger,
+          requires_scheduling: serviceCatalogTable.requires_scheduling,
+          scheduling_notes: serviceCatalogTable.scheduling_notes,
+        })
+        .from(spaceServiceCatalogTable)
+        .innerJoin(serviceCatalogTable, eq(spaceServiceCatalogTable.service_id, serviceCatalogTable.id))
+        .where(and(
+          eq(spaceServiceCatalogTable.space_id, spaceId),
+          eq(serviceCatalogTable.status, "Active"),
+        ))
+        .orderBy(asc(spaceServiceCatalogTable.sort_order), asc(serviceCatalogTable.name));
+
+      if (spaceMappings.length > 0) {
+        const data = spaceMappings.map(row => ({
+          ...row,
+          // Use custom_price if set, otherwise fall back to base_price
+          base_price: row.custom_price ?? row.base_price,
+        }));
+        res.json({ success: true, data, source: "space" });
+        return;
+      }
+      // Fall through to global catalog if no space-specific services defined
+    }
+
+    // Global fallback: all active optional services shown on booking page
     const services = await db
       .select({
         id: serviceCatalogTable.id,
@@ -452,7 +497,7 @@ router.get("/v1/public/services", async (req, res): Promise<void> => {
       ))
       .orderBy(asc(serviceCatalogTable.sort_order), asc(serviceCatalogTable.name));
 
-    res.json({ success: true, data: services });
+    res.json({ success: true, data: services, source: "global" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch services" });
