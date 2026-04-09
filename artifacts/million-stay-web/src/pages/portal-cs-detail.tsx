@@ -25,12 +25,21 @@ async function gFetch<T>(path: string, opts?: RequestInit): Promise<T> {
   return res.json();
 }
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  Open:       { label: "Open",        color: "bg-blue-100 text-blue-700",   icon: <Clock className="h-3 w-3" /> },
-  InProgress: { label: "In Progress", color: "bg-amber-100 text-amber-700", icon: <AlertCircle className="h-3 w-3" /> },
-  Resolved:   { label: "Resolved",    color: "bg-green-100 text-green-700", icon: <CheckCircle2 className="h-3 w-3" /> },
-  Closed:     { label: "Closed",      color: "bg-gray-100 text-gray-500",   icon: <XCircle className="h-3 w-3" /> },
+const STATUS_LABELS: Record<string, string> = {
+  Open: "Open", InProgress: "In Progress", Resolved: "Resolved", Closed: "Closed",
 };
+const STATUS_COLORS: Record<string, string> = {
+  Open: "bg-blue-100 text-blue-700",
+  InProgress: "bg-amber-100 text-amber-700",
+  Resolved: "bg-green-100 text-green-700",
+  Closed: "bg-gray-100 text-gray-500",
+};
+function StatusIcon({ status }: { status: string }) {
+  if (status === "Open") return <Clock className="h-3 w-3" />;
+  if (status === "InProgress") return <AlertCircle className="h-3 w-3" />;
+  if (status === "Resolved") return <CheckCircle2 className="h-3 w-3" />;
+  return <XCircle className="h-3 w-3" />;
+}
 
 const PRIORITY_COLORS: Record<string, string> = {
   Low: "bg-gray-100 text-gray-600",
@@ -74,8 +83,8 @@ interface TicketDetail {
 
 export default function PortalCsDetail() {
   const { id } = useParams<{ id: string }>();
-  const [, navigate] = useLocation();
-  const { token, guest } = useAuthStore();
+  const [, setLocation] = useLocation();
+  const { token } = useAuthStore();
   const { toast } = useToast();
   const qc = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -93,6 +102,10 @@ export default function PortalCsDetail() {
   });
 
   const ticket = data?.data;
+
+  useEffect(() => {
+    if (!token) setLocation(`/login?redirect=/portal/cs/${id}`);
+  }, [token, id, setLocation]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -139,7 +152,7 @@ export default function PortalCsDetail() {
     }
   };
 
-  if (!token) { navigate(`/login?redirect=/portal/cs/${id}`); return null; }
+  if (!token) return null;
 
   if (isLoading) {
     return (
@@ -168,14 +181,15 @@ export default function PortalCsDetail() {
     );
   }
 
-  const st = STATUS_CONFIG[ticket.status] ?? STATUS_CONFIG.Open;
+  const stColor = STATUS_COLORS[ticket.status] ?? STATUS_COLORS.Open;
+  const stLabel = STATUS_LABELS[ticket.status] ?? "Open";
   const isClosed = ticket.status === "Closed";
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
       <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-8">
-        <button onClick={() => navigate("/portal/cs")} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary mb-5 transition-colors">
+        <button onClick={() => setLocation("/portal/cs")} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary mb-5 transition-colors">
           <ArrowLeft className="h-4 w-4" /> Back to Inquiries
         </button>
 
@@ -188,8 +202,8 @@ export default function PortalCsDetail() {
                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${CATEGORY_COLORS[ticket.category] ?? "bg-gray-100 text-gray-600"}`}>
                   {ticket.category}
                 </span>
-                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${st.color}`}>
-                  {st.icon}{st.label}
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${stColor}`}>
+                  <StatusIcon status={ticket.status} />{stLabel}
                 </span>
                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${PRIORITY_COLORS[ticket.priority] ?? ""}`}>
                   {ticket.priority}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "@/lib/store";
@@ -20,11 +20,14 @@ async function gFetch<T>(path: string): Promise<T> {
   return res.json();
 }
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  Open:       { label: "Open",        color: "bg-blue-100 text-blue-700",   icon: <Clock className="h-3 w-3" /> },
-  InProgress: { label: "In Progress", color: "bg-amber-100 text-amber-700", icon: <AlertCircle className="h-3 w-3" /> },
-  Resolved:   { label: "Resolved",    color: "bg-green-100 text-green-700", icon: <CheckCircle2 className="h-3 w-3" /> },
-  Closed:     { label: "Closed",      color: "bg-gray-100 text-gray-500",   icon: <XCircle className="h-3 w-3" /> },
+const STATUS_LABELS: Record<string, string> = {
+  Open: "Open", InProgress: "In Progress", Resolved: "Resolved", Closed: "Closed",
+};
+const STATUS_COLORS: Record<string, string> = {
+  Open: "bg-blue-100 text-blue-700",
+  InProgress: "bg-amber-100 text-amber-700",
+  Resolved: "bg-green-100 text-green-700",
+  Closed: "bg-gray-100 text-gray-500",
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -34,6 +37,13 @@ const CATEGORY_COLORS: Record<string, string> = {
   Maintenance:   "bg-red-100 text-red-700",
   Other:         "bg-gray-100 text-gray-600",
 };
+
+function StatusIcon({ status }: { status: string }) {
+  if (status === "Open") return <Clock className="h-3 w-3" />;
+  if (status === "InProgress") return <AlertCircle className="h-3 w-3" />;
+  if (status === "Resolved") return <CheckCircle2 className="h-3 w-3" />;
+  return <XCircle className="h-3 w-3" />;
+}
 
 interface CsTicket {
   id: number;
@@ -48,8 +58,12 @@ interface CsTicket {
 }
 
 export default function PortalCs() {
-  const [, navigate] = useLocation();
+  const [, setLocation] = useLocation();
   const { token } = useAuthStore();
+
+  useEffect(() => {
+    if (!token) setLocation("/login?redirect=/portal/cs");
+  }, [token, setLocation]);
 
   const { data, isLoading } = useQuery<{ success: boolean; data: CsTicket[] }>({
     queryKey: ["guest-cs-tickets"],
@@ -59,10 +73,7 @@ export default function PortalCs() {
 
   const tickets = data?.data ?? [];
 
-  if (!token) {
-    navigate("/login?redirect=/portal/cs");
-    return null;
-  }
+  if (!token) return null;
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -105,7 +116,8 @@ export default function PortalCs() {
         ) : (
           <div className="space-y-3">
             {tickets.map(ticket => {
-              const st = STATUS_CONFIG[ticket.status] ?? STATUS_CONFIG.Open;
+              const stColor = STATUS_COLORS[ticket.status] ?? STATUS_COLORS.Open;
+              const stLabel = STATUS_LABELS[ticket.status] ?? ticket.status;
               return (
                 <Link key={ticket.id} href={`/portal/cs/${ticket.id}`}>
                   <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:border-primary/30 hover:shadow-md transition-all cursor-pointer group">
@@ -116,8 +128,8 @@ export default function PortalCs() {
                           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${CATEGORY_COLORS[ticket.category] ?? "bg-gray-100 text-gray-600"}`}>
                             {ticket.category}
                           </span>
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${st.color}`}>
-                            {st.icon}{st.label}
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${stColor}`}>
+                            <StatusIcon status={ticket.status} />{stLabel}
                           </span>
                         </div>
                         <p className="font-semibold text-gray-900 text-sm truncate">{ticket.subject}</p>
