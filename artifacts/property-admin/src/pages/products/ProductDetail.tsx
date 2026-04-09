@@ -209,20 +209,20 @@ export default function ProductDetail() {
               </div>
               <div>
                 <Label>Group</Label>
-                <Select value={String(watch("product_group_id") || "")} onValueChange={v => setValue("product_group_id", v)}>
+                <Select value={String(watch("product_group_id") || "_none")} onValueChange={v => setValue("product_group_id", v === "_none" ? "" : v)}>
                   <SelectTrigger className="mt-1"><SelectValue placeholder="Select group" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="_none">None</SelectItem>
                     {(groups as any[]).map((g: any) => <SelectItem key={g.id} value={String(g.id)}>{g.display}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div>
                 <Label>Type</Label>
-                <Select value={String(watch("product_type_id") || "")} onValueChange={v => setValue("product_type_id", v)}>
+                <Select value={String(watch("product_type_id") || "_none")} onValueChange={v => setValue("product_type_id", v === "_none" ? "" : v)}>
                   <SelectTrigger className="mt-1"><SelectValue placeholder="Select type" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="_none">None</SelectItem>
                     {(types as any[]).map((t: any) => <SelectItem key={t.id} value={String(t.id)}>{t.display}</SelectItem>)}
                   </SelectContent>
                 </Select>
