@@ -11,16 +11,24 @@ const ListPromotionsQueryParams = z.object({
 
 const CreatePromotionBody = z.object({
   name: z.string(),
-  description: z.string().optional().nullable(),
+  code: z.string().optional().nullable(),
+  term_type: z.string().optional().nullable(),
   promotion_type: z.string().optional().nullable(),
   discount_percentage: z.coerce.number().optional().nullable(),
-  fixed_discount: z.coerce.number().optional().nullable(),
-  term_type: z.string().optional().nullable(),
+  discount_amount: z.coerce.number().optional().nullable(),
+  free_nights: z.coerce.number().int().optional().nullable(),
+  min_stay_weeks: z.coerce.number().int().optional().nullable(),
+  max_stay_weeks: z.coerce.number().int().optional().nullable(),
+  min_stay_nights: z.coerce.number().int().optional().nullable(),
+  billing_frequency: z.string().optional().nullable(),
   max_uses: z.coerce.number().int().optional().nullable(),
-  start_date: z.coerce.date().optional().nullable(),
-  end_date: z.coerce.date().optional().nullable(),
-  status: z.string().optional().default("Active"),
-  notes: z.string().optional().nullable(),
+  max_uses_per_account: z.coerce.number().int().optional().nullable(),
+  applicable_to: z.string().optional().nullable(),
+  valid_from: z.string().optional().nullable(),
+  valid_to: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
+  terms: z.string().optional().nullable(),
+  status: z.string().optional().default("Draft"),
 });
 
 const GetPromotionParams = z.object({ id: z.coerce.number().int() });
