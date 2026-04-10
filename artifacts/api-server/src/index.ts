@@ -47,10 +47,6 @@ async function ensureAdminExists() {
 
 async function autoMigrateIfEmpty() {
   try {
-    const [row] = await db.select({ cnt: sql<number>`COUNT(*)::int` }).from(suburbsTable);
-    const count = Number(row?.cnt ?? 0);
-    if (count > 0) return;
-
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
     const sqlFilePath = path.resolve(__dirname, "seed-migration.sql");
     if (!fs.existsSync(sqlFilePath)) {
@@ -58,11 +54,25 @@ async function autoMigrateIfEmpty() {
       return;
     }
 
-    logger.info("Database appears empty — running auto-migration from seed file...");
-    const rawSql = fs.readFileSync(sqlFilePath, "utf-8");
+    // Only auto-migrate in production — dev DB is managed manually
+    if (process.env.NODE_ENV !== "production") return;
+
+    // Count expected suburbs rows from seed file (count rows = lines starting with "(")
+    const seedSql = fs.readFileSync(sqlFilePath, "utf-8");
+    const suburbInsert = seedSql.match(/INSERT INTO public\.suburbs [\s\S]+?;(?=\n|$)/);
+    const expectedSuburbs = suburbInsert
+      ? (suburbInsert[0].match(/^\s*\(/gm) || []).length
+      : 1;
+
+    const [row] = await db.select({ cnt: sql<number>`COUNT(*)::int` }).from(suburbsTable);
+    const count = Number(row?.cnt ?? 0);
+    // Skip only if data looks fully seeded (count >= expected)
+    if (count >= expectedSuburbs && count > 0) return;
+
+    logger.info({ currentSuburbs: count, expectedSuburbs }, "Incomplete seed — running auto-migration...");
     // Only extract INSERT INTO and setval statements — skip all SET/config commands
     // which require superuser privilege and abort the transaction in hosted Postgres (Neon)
-    const statements = rawSql
+    const statements = seedSql
       .split(/;\s*\n/)
       .map((s) => s.trim())
       .filter((s) =>

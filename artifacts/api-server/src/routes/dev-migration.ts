@@ -20,63 +20,47 @@ router.post("/run-migration", async (req, res) => {
   try {
     const sqlFilePath = path.resolve(__dirname, "seed-migration.sql");
     if (!fs.existsSync(sqlFilePath)) {
-      return res.status(404).json({ error: "Migration SQL file not found" });
+      return res.status(404).json({ error: "seed-migration.sql not found" });
     }
 
     const rawSql = fs.readFileSync(sqlFilePath, "utf-8");
-
     const statements = rawSql
       .split(/;\s*\n/)
       .map((s) => s.trim())
-      .filter(
-        (s) =>
-          s.length > 0 &&
-          !s.startsWith("--") &&
-          !s.startsWith("\\")
+      .filter((s) =>
+        s.length > 0 &&
+        (s.startsWith("INSERT INTO") || s.startsWith("SELECT pg_catalog.setval"))
       );
 
     let executed = 0;
-    let errors: string[] = [];
+    const errors: string[] = [];
 
     await db.transaction(async (tx) => {
-      await tx.execute(sql.raw(`SET CONSTRAINTS ALL DEFERRED`));
+      await tx.execute(sql.raw(`TRUNCATE TABLE
+        suburbs, product_groups, product_types, contract_types, payment_info,
+        contacts, accounts, leads, tasks,
+        admin_users, guest_users,
+        properties, spaces, space_options, space_policies,
+        space_images, space_availability, space_blocked_dates, space_option_maps,
+        service_catalog, accommodation_catalog, accommodation_service_catalog,
+        space_service_catalog, promotions, beneficiaries, commissions,
+        contracts, bookings, booking_documents, contract_products,
+        invoices, recurring_schedule,
+        integration_settings, email_template, email_log,
+        service_hosts, system_log, work_orders,
+        cs_tickets, cs_messages
+        RESTART IDENTITY CASCADE`));
 
-      await tx.execute(
-        sql.raw(`TRUNCATE TABLE
-          suburbs, product_groups, product_types, contract_types, payment_info,
-          contacts, accounts, leads, tasks,
-          admin_users, guest_users,
-          properties, spaces, space_options, space_policies,
-          space_images, space_availability, space_blocked_dates, space_option_maps,
-          service_catalog, accommodation_catalog, accommodation_service_catalog,
-          space_service_catalog, promotions, beneficiaries, commissions,
-          contracts, bookings, booking_documents, contract_products,
-          invoices, recurring_schedule,
-          integration_settings, email_template, email_log,
-          service_hosts, system_log, work_orders,
-          cs_tickets, cs_messages
-        RESTART IDENTITY CASCADE`)
-      );
-
-      for (const stmt of statements) {
-        if (
-          stmt.startsWith("SET ") ||
-          stmt.startsWith("SELECT pg_catalog.set_config") ||
-          stmt.startsWith("INSERT INTO")
-        ) {
-          try {
-            await tx.execute(sql.raw(stmt));
-            executed++;
-          } catch (err: any) {
-            errors.push(`${stmt.slice(0, 60)}... => ${err.message}`);
-          }
-        } else if (stmt.startsWith("SELECT pg_catalog.setval")) {
-          try {
-            await tx.execute(sql.raw(stmt));
-            executed++;
-          } catch (err: any) {
-            errors.push(`setval error: ${err.message}`);
-          }
+      for (let i = 0; i < statements.length; i++) {
+        const stmt = statements[i];
+        const sp = `sp_mig_${i}`;
+        try {
+          await tx.execute(sql.raw(`SAVEPOINT ${sp}`));
+          await tx.execute(sql.raw(stmt));
+          executed++;
+        } catch (err: any) {
+          try { await tx.execute(sql.raw(`ROLLBACK TO SAVEPOINT ${sp}`)); } catch {}
+          errors.push(`[${i}] ${stmt.slice(0, 60)}... => ${err?.message ?? "unknown"}`);
         }
       }
     });
@@ -84,8 +68,9 @@ router.post("/run-migration", async (req, res) => {
     return res.json({
       success: true,
       executed,
-      errors,
-      message: `Migration complete. ${executed} statements executed. ${errors.length} errors.`,
+      errorCount: errors.length,
+      errors: errors.slice(0, 20),
+      message: `Migration complete. ${executed} executed, ${errors.length} errors.`,
     });
   } catch (err: any) {
     console.error("Migration failed:", err);
