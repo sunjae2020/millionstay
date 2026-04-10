@@ -142,7 +142,7 @@ export default function Home() {
   const [checkOut, setCheckOut] = useState<string>("");
 
   const { data: featuredData, isLoading: loadingFeatured } = useListFeaturedSpaces();
-  const { data: spacesData } = useListPublicSpaces({ limit: 8, offset: 0 });
+  const { data: spacesData } = useListPublicSpaces({ limit: 6, offset: 0 });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -343,8 +343,8 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <SectionTitle italic="Million Homestay Listing" sub="AVAILABLE NOW" />
           {loadingFeatured ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-              {Array.from({ length: 8 }).map((_, i) => (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+              {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="rounded-lg overflow-hidden shadow animate-pulse">
                   <div className="aspect-[4/3] bg-gray-200" />
                   <div className="p-4 space-y-2">
@@ -357,13 +357,13 @@ export default function Home() {
             </div>
           ) : (
             <>
-              {/* 4 × 2 그리드 (8개) */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+              {/* 3 × 2 그리드 (6개) */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
                 {(() => {
                   const combined = [
                     ...featured,
                     ...allSpaces.filter((s) => !featured.some((f) => f.id === s.id)),
-                  ].slice(0, 8);
+                  ].slice(0, 6);
                   return combined.map((space, i) => (
                     <ListingCard key={space.id} space={space} index={i} checkIn={checkIn} checkOut={checkOut} />
                   ));

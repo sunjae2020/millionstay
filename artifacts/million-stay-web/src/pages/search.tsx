@@ -16,7 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { DateInput } from "@/components/ui/date-input";
 import heroBg from "@assets/MS_Homepage_Photo_1920x1080_1775403929888.jpg";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 9;
 type SuburbDropdown = "suburb" | null;
 
 const SPACE_TYPES = [
@@ -84,8 +84,7 @@ export default function Search() {
     priceRange[1] !== applied.max_price;
 
   /* ── UI state ── */
-  const [offset,       setOffset]    = useState(0);
-  const [allSpaces,    setAllSpaces] = useState<Record<string, unknown>[]>([]);
+  const [page,         setPage]      = useState(1);
   const [suburbOpen,   setSuburbOpen] = useState<SuburbDropdown>(null);
   const [showAdvanced, setShowAdvanced] = useState(
     init.space_type !== "all" || init.gender_policy !== "all" ||
@@ -107,11 +106,11 @@ export default function Search() {
       min_price:     priceRange[0],
       max_price:     priceRange[1],
     });
-    setOffset(0);
+    setPage(1);
     setSuburbOpen(null);
   };
 
-  /* ── API query params (applied 기반) ── */
+  /* ── API query params (applied 기반, page 기반) ── */
   const queryParams = {
     suburb_id:    applied.suburb_id ? parseInt(applied.suburb_id) : undefined,
     space_type:   applied.space_type !== "all" ? (applied.space_type as "EntireSpace" | "RoomSpace" | "BedSpace") : undefined,
@@ -121,7 +120,7 @@ export default function Search() {
     start_date:   applied.check_in  || undefined,
     end_date:     applied.check_out || undefined,
     limit:        PAGE_SIZE,
-    offset,
+    offset:       (page - 1) * PAGE_SIZE,
   };
 
   const { data: spacesData, isLoading } = useListPublicSpaces(queryParams, {
@@ -129,18 +128,14 @@ export default function Search() {
   });
 
   const total = (spacesData?.meta as Record<string, unknown>)?.total as number ?? 0;
+  const allSpaces = (spacesData?.data ?? []) as Record<string, unknown>[];
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  useEffect(() => {
-    const spaces = (spacesData?.data ?? []) as Record<string, unknown>[];
-    if (offset === 0) {
-      setAllSpaces(spaces);
-    } else {
-      setAllSpaces((prev) => {
-        const ids = new Set(prev.map((s) => s.id));
-        return [...prev, ...spaces.filter((s) => !ids.has(s.id))];
-      });
-    }
-  }, [spacesData, offset]);
+  /* 페이지 변경 시 결과 영역으로 스크롤 */
+  const goToPage = (p: number) => {
+    setPage(p);
+    document.getElementById("search-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   const clearBasic = () => {
     setSuburbId(""); setCheckIn(""); setCheckOut("");
@@ -152,7 +147,7 @@ export default function Search() {
     setSuburbId(""); setCheckIn(""); setCheckOut("");
     setSpaceType("all"); setGenderPolicy("all"); setPriceRange([100, 1200]);
     setApplied({ suburb_id: "", check_in: "", check_out: "", space_type: "all", gender_policy: "all", min_price: 100, max_price: 1200 });
-    setOffset(0);
+    setPage(1);
   };
 
   /* ── Active filter counts (applied 기준으로 표시) ── */
@@ -166,7 +161,7 @@ export default function Search() {
   const clearAdvancedAll = () => {
     clearAdvanced();
     setApplied((p) => ({ ...p, space_type: "all", gender_policy: "all", min_price: 100, max_price: 1200 }));
-    setOffset(0);
+    setPage(1);
   };
 
   const suburbName = suburbs.find((s) => String(s.id) === suburbId)?.name ?? null;
@@ -506,7 +501,7 @@ export default function Search() {
                     onClick={() => {
                       setCheckIn(""); setCheckOut("");
                       setApplied((p) => ({ ...p, check_in: "", check_out: "" }));
-                      setOffset(0);
+                      setPage(1);
                     }}
                     className="text-xs text-gray-400 hover:text-primary font-medium transition-colors shrink-0"
                   >
@@ -545,7 +540,7 @@ export default function Search() {
                     onClick={() => {
                       setSpaceType(opt.v);
                       setApplied((p) => ({ ...p, space_type: opt.v }));
-                      setOffset(0);
+                      setPage(1);
                     }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
                       applied.space_type === opt.v
@@ -569,7 +564,7 @@ export default function Search() {
                       const sid = String(s.id);
                       setSuburbId(sid);
                       setApplied((p) => ({ ...p, suburb_id: sid }));
-                      setOffset(0);
+                      setPage(1);
                     }}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-600 hover:border-primary hover:text-primary hover:bg-orange-50 transition-all"
                   >
@@ -580,9 +575,10 @@ export default function Search() {
             )}
 
             {/* Cards */}
-            {isLoading && allSpaces.length === 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                {Array.from({ length: 6 }).map((_, i) => (
+            <div id="search-results" />
+            {isLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+                {Array.from({ length: PAGE_SIZE }).map((_, i) => (
                   <div key={i} className="rounded-2xl border overflow-hidden bg-white animate-pulse">
                     <div className="aspect-[4/3] bg-gray-200" />
                     <div className="p-4 space-y-2">
@@ -609,7 +605,7 @@ export default function Search() {
               </motion.div>
             ) : (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
                   {allSpaces.map((space, i) => (
                     <div
                       key={space.id as number}
@@ -628,22 +624,68 @@ export default function Search() {
                   ))}
                 </div>
 
-                {/* Pagination */}
-                <div className="mt-10 flex flex-col items-center gap-3">
-                  <p className="text-sm text-gray-400">
-                    Showing <span className="font-semibold text-gray-600">{allSpaces.length}</span> of{" "}
-                    <span className="font-semibold text-gray-600">{total}</span> rooms
-                  </p>
-                  {allSpaces.length < total && (
-                    <button
-                      onClick={() => setOffset((p) => p + PAGE_SIZE)}
-                      disabled={isLoading}
-                      className="px-10 py-3 bg-primary text-white font-semibold text-sm rounded-xl hover:bg-primary/90 disabled:opacity-60 transition-colors shadow-sm"
-                    >
-                      {isLoading ? "Loading…" : "Load More"}
-                    </button>
-                  )}
-                </div>
+                {/* Numbered Pagination */}
+                {totalPages > 1 && (
+                  <div className="mt-10 flex flex-col items-center gap-4">
+                    <p className="text-sm text-gray-400">
+                      Page <span className="font-semibold text-gray-600">{page}</span> of{" "}
+                      <span className="font-semibold text-gray-600">{totalPages}</span>
+                      {" "}·{" "}
+                      <span className="font-semibold text-gray-600">{total}</span> rooms total
+                    </p>
+                    <div className="flex items-center gap-1.5">
+                      {/* Prev */}
+                      <button
+                        onClick={() => goToPage(page - 1)}
+                        disabled={page === 1}
+                        className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-sm text-gray-500 hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-white"
+                        aria-label="Previous page"
+                      >
+                        ‹
+                      </button>
+
+                      {/* Page numbers */}
+                      {(() => {
+                        const range: (number | "…")[] = [];
+                        const delta = 2;
+                        for (let i = 1; i <= totalPages; i++) {
+                          if (i === 1 || i === totalPages || (i >= page - delta && i <= page + delta)) {
+                            range.push(i);
+                          } else if (range[range.length - 1] !== "…") {
+                            range.push("…");
+                          }
+                        }
+                        return range.map((r, idx) =>
+                          r === "…" ? (
+                            <span key={`ellipsis-${idx}`} className="w-9 h-9 flex items-center justify-center text-gray-400 text-sm">…</span>
+                          ) : (
+                            <button
+                              key={r}
+                              onClick={() => goToPage(r as number)}
+                              className={`w-9 h-9 rounded-lg border text-sm font-medium transition-colors ${
+                                page === r
+                                  ? "bg-primary border-primary text-white shadow-sm"
+                                  : "bg-white border-gray-200 text-gray-600 hover:border-primary hover:text-primary"
+                              }`}
+                            >
+                              {r}
+                            </button>
+                          )
+                        );
+                      })()}
+
+                      {/* Next */}
+                      <button
+                        onClick={() => goToPage(page + 1)}
+                        disabled={page === totalPages}
+                        className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-sm text-gray-500 hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-white"
+                        aria-label="Next page"
+                      >
+                        ›
+                      </button>
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>
