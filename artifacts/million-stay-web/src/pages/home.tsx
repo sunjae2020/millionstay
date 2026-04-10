@@ -9,7 +9,7 @@ import { useState } from "react";
 import { useListSuburbs } from "@workspace/api-client-react";
 import { useListFeaturedSpaces, useListPublicSpaces } from "@/lib/guest-api";
 import { motion } from "framer-motion";
-import { Star, Wifi, ShoppingBag, Shield, DollarSign, Plane, Bed, PlayCircle, MapPin, ChevronRight } from "lucide-react";
+import { Wifi, ShoppingBag, Shield, DollarSign, Plane, Bed, PlayCircle, MapPin, ChevronRight } from "lucide-react";
 function SectionTitle({ italic, normal, sub }: { italic: string; normal?: string; sub?: string }) {
   return (
     <div className="text-center mb-10">
@@ -30,13 +30,32 @@ function buildSpaceUrl(id: number | string, checkIn: string, checkOut: string) {
   return `/spaces/${id}${qs ? `?${qs}` : ""}`;
 }
 
+const SPACE_FEATURES: Record<string, { icon: string; label: string }[]> = {
+  EntireSpace: [
+    { icon: "🏠", label: "Entire unit" },
+    { icon: "🔑", label: "Private entry" },
+    { icon: "📶", label: "Free Wi-Fi" },
+  ],
+  RoomSpace: [
+    { icon: "🛏", label: "Private room" },
+    { icon: "🚿", label: "Shared bathroom" },
+    { icon: "📶", label: "Free Wi-Fi" },
+  ],
+  BedSpace: [
+    { icon: "🛏", label: "Shared room" },
+    { icon: "💰", label: "Best value" },
+    { icon: "📶", label: "Free Wi-Fi" },
+  ],
+};
+
 function ListingCard({ space, index = 0, checkIn = "", checkOut = "" }: { space: any; index?: number; checkIn?: string; checkOut?: string }) {
   const [, setLocation] = useLocation();
+  const features = SPACE_FEATURES[space.space_type] ?? SPACE_FEATURES.RoomSpace;
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.07 }}
+      transition={{ delay: index * 0.05 }}
       className="bg-white rounded-lg overflow-hidden shadow hover:shadow-md transition-shadow cursor-pointer group"
       onClick={() => setLocation(buildSpaceUrl(space.id, checkIn, checkOut))}
     >
@@ -55,12 +74,17 @@ function ListingCard({ space, index = 0, checkIn = "", checkOut = "" }: { space:
       <div className="p-4">
         <h3 className="font-semibold text-gray-800 text-sm leading-snug mb-1 line-clamp-1">{space.name}</h3>
         {space.suburb_name && (
-          <p className="text-xs text-gray-400 flex items-center gap-1 mb-2">
+          <p className="text-xs text-gray-400 flex items-center gap-1 mb-2.5">
             <MapPin className="h-3 w-3" /> {space.suburb_name}
           </p>
         )}
-        <div className="flex items-center gap-1 mb-3">
-          {[1,2,3,4,5].map(i => <Star key={i} className="h-3 w-3 fill-amber-400 text-amber-400" />)}
+        {/* 특장점 */}
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {features.map((f) => (
+            <span key={f.label} className="inline-flex items-center gap-1 text-[11px] text-gray-600 bg-orange-50 border border-orange-100 px-2 py-0.5 rounded-full">
+              {f.icon} {f.label}
+            </span>
+          ))}
         </div>
         <div className="flex items-center justify-between">
           <div>
@@ -118,7 +142,7 @@ export default function Home() {
   const [checkOut, setCheckOut] = useState<string>("");
 
   const { data: featuredData, isLoading: loadingFeatured } = useListFeaturedSpaces();
-  const { data: spacesData } = useListPublicSpaces({ limit: 4, offset: 0 });
+  const { data: spacesData } = useListPublicSpaces({ limit: 8, offset: 0 });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -320,7 +344,7 @@ export default function Home() {
           <SectionTitle italic="Million Homestay Listing" sub="AVAILABLE NOW" />
           {loadingFeatured ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-              {[1,2,3,4].map(i => (
+              {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="rounded-lg overflow-hidden shadow animate-pulse">
                   <div className="aspect-[4/3] bg-gray-200" />
                   <div className="p-4 space-y-2">
@@ -332,11 +356,20 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-              {featured.slice(0, 4).map((space, i) => (
-                <ListingCard key={space.id} space={space} index={i} checkIn={checkIn} checkOut={checkOut} />
-              ))}
-            </div>
+            <>
+              {/* 4 × 2 그리드 (8개) */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+                {(() => {
+                  const combined = [
+                    ...featured,
+                    ...allSpaces.filter((s) => !featured.some((f) => f.id === s.id)),
+                  ].slice(0, 8);
+                  return combined.map((space, i) => (
+                    <ListingCard key={space.id} space={space} index={i} checkIn={checkIn} checkOut={checkOut} />
+                  ));
+                })()}
+              </div>
+            </>
           )}
           <div className="text-center mt-10">
             <button
