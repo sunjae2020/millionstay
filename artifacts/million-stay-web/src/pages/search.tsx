@@ -146,11 +146,11 @@ export default function Search() {
 
       {/* ── Hero Banner ── */}
       <div className="relative h-52 md:h-60 overflow-hidden shrink-0">
-        <img src={heroBg} alt="Location" className="absolute inset-0 w-full h-full object-cover object-center" />
+        <img src={heroBg} alt="Search" className="absolute inset-0 w-full h-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/30 to-black/55" />
         <div className="absolute inset-0 flex flex-col items-start justify-end px-8 pb-8 max-w-7xl mx-auto w-full">
           <p className="font-cursive text-white/80 text-lg italic mb-1">Find Your Perfect</p>
-          <h1 className="text-3xl md:text-4xl font-bold text-white italic">Location</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-white italic">Search</h1>
         </div>
       </div>
 
@@ -158,7 +158,7 @@ export default function Search() {
       <div className="max-w-7xl mx-auto w-full px-6 py-3 flex items-center gap-1.5 text-xs text-gray-400 shrink-0">
         <Link href="/" className="hover:text-primary transition-colors">Home</Link>
         <ChevronRight className="h-3 w-3" />
-        <span className="text-gray-600 font-medium">Location</span>
+        <span className="text-gray-600 font-medium">Search</span>
       </div>
 
       {/* ══════════════════════════════════════════════════════════
@@ -180,7 +180,7 @@ export default function Search() {
                   }`}
                 >
                   <MapPin className="h-3.5 w-3.5" />
-                  {suburbName ?? "Location"}
+                  {suburbName ?? "Any suburb"}
                   <ChevronDown className="h-3.5 w-3.5 opacity-60" />
                 </button>
                 <AnimatePresence>
