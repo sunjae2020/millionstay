@@ -60,16 +60,22 @@ async function autoMigrateIfEmpty() {
 
     logger.info("Database appears empty — running auto-migration from seed file...");
     const rawSql = fs.readFileSync(sqlFilePath, "utf-8");
+    // Only extract INSERT INTO and setval statements — skip all SET/config commands
+    // which require superuser privilege and abort the transaction in hosted Postgres (Neon)
     const statements = rawSql
       .split(/;\s*\n/)
       .map((s) => s.trim())
-      .filter((s) => s.length > 0 && !s.startsWith("--") && !s.startsWith("\\"));
+      .filter((s) =>
+        s.length > 0 &&
+        (s.startsWith("INSERT INTO") || s.startsWith("SELECT pg_catalog.setval"))
+      );
 
     let executed = 0;
     let errors = 0;
 
+    // Drizzle transaction with per-statement savepoints
     await db.transaction(async (tx) => {
-      await tx.execute(sql.raw(`SET CONSTRAINTS ALL DEFERRED`));
+      // TRUNCATE all tables first — CASCADE handles FK order
       await tx.execute(sql.raw(`TRUNCATE TABLE
         suburbs, product_groups, product_types, contract_types, payment_info,
         contacts, accounts, leads, tasks,
@@ -85,19 +91,17 @@ async function autoMigrateIfEmpty() {
         cs_tickets, cs_messages
         RESTART IDENTITY CASCADE`));
 
-      for (const stmt of statements) {
-        if (
-          stmt.startsWith("SET ") ||
-          stmt.startsWith("SELECT pg_catalog.set_config") ||
-          stmt.startsWith("INSERT INTO") ||
-          stmt.startsWith("SELECT pg_catalog.setval")
-        ) {
-          try {
-            await tx.execute(sql.raw(stmt));
-            executed++;
-          } catch {
-            errors++;
-          }
+      for (let i = 0; i < statements.length; i++) {
+        const stmt = statements[i];
+        const sp = `sp_${i}`;
+        try {
+          await tx.execute(sql.raw(`SAVEPOINT ${sp}`));
+          await tx.execute(sql.raw(stmt));
+          executed++;
+        } catch {
+          // Roll back to the savepoint so the transaction stays alive
+          try { await tx.execute(sql.raw(`ROLLBACK TO SAVEPOINT ${sp}`)); } catch {}
+          errors++;
         }
       }
     });
