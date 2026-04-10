@@ -354,11 +354,53 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <SectionTitle italic="Choose Your Stay Plan" sub="FLEXIBLE OPTIONS" />
           <p className="text-center text-sm text-gray-400 -mt-6 mb-10">The longer you stay, the more you save — select a plan that fits your timeline.</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { period: "1-Month", label: "Flexible Contract", price: null, highlight: false, desc: "Ideal for short trips or trial stays. Full flexibility with a 2-week notice period." },
-              { period: "3-Month", label: "Better Value", price: null, highlight: true, desc: "Our most popular option for semester students. Save 5% vs monthly rate." },
-              { period: "6-Month", label: "Best Deal", price: null, highlight: false, desc: "Maximum savings for long-term residents. Save 10% and lock in your preferred room." },
+              {
+                period: "1-Month",
+                label: "Flexible Contract",
+                highlight: false,
+                desc: "Ideal for short trips or trial stays. Full flexibility with a 2-week notice period.",
+                features: [
+                  "2-week cancellation notice",
+                  "Month-to-month renewal",
+                  "All utilities included",
+                  "Fully furnished room",
+                  "Shared common areas",
+                  "Move in anytime",
+                ],
+                savings: null,
+              },
+              {
+                period: "3-Month",
+                label: "Better Value",
+                highlight: true,
+                desc: "Our most popular option for semester students. Save 5% vs monthly rate.",
+                features: [
+                  "5% discount on weekly rate",
+                  "Priority room selection",
+                  "All utilities included",
+                  "Fully furnished room",
+                  "Dedicated study space",
+                  "Free airport pickup",
+                ],
+                savings: "Save 5%",
+              },
+              {
+                period: "6-Month",
+                label: "Best Deal",
+                highlight: false,
+                desc: "Maximum savings for long-term residents. Save 10% and lock in your preferred room.",
+                features: [
+                  "10% discount on weekly rate",
+                  "Guaranteed room lock-in",
+                  "All utilities included",
+                  "Fully furnished room",
+                  "Free airport pickup",
+                  "Complimentary cleaning",
+                ],
+                savings: "Save 10%",
+              },
             ].map((plan, i) => (
               <motion.div
                 key={plan.period}
@@ -366,18 +408,43 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className={`rounded-lg overflow-hidden border-2 ${plan.highlight ? "border-primary shadow-lg" : "border-gray-200 shadow"}`}
+                className={`rounded-lg overflow-hidden border-2 flex flex-col ${plan.highlight ? "border-primary shadow-xl scale-[1.02]" : "border-gray-200 shadow"}`}
               >
-                <div className={`py-4 px-5 ${plan.highlight ? "bg-primary text-white" : "bg-gray-700 text-white"}`}>
-                  <p className="text-xs font-semibold uppercase tracking-widest opacity-80 mb-1">{plan.label}</p>
-                  <h3 className="text-2xl font-bold">{plan.period}</h3>
-                  <p className="text-sm opacity-80">Stay</p>
+                {/* Header */}
+                <div className={`py-6 px-6 ${plan.highlight ? "bg-primary text-white" : "bg-gray-700 text-white"}`}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-widest opacity-80 mb-1">{plan.label}</p>
+                      <h3 className="text-3xl font-bold">{plan.period}</h3>
+                      <p className="text-sm opacity-80 mt-0.5">Stay</p>
+                    </div>
+                    {plan.savings && (
+                      <span className="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full border border-white/30">
+                        {plan.savings}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="p-5 bg-white">
-                  <p className="text-sm text-gray-500 mb-5">{plan.desc}</p>
+
+                {/* Body */}
+                <div className="p-6 bg-white flex flex-col flex-1">
+                  <p className="text-sm text-gray-500 mb-6 leading-relaxed">{plan.desc}</p>
+
+                  {/* Feature list */}
+                  <ul className="space-y-3 mb-8 flex-1">
+                    {plan.features.map((f) => (
+                      <li key={f} className="flex items-center gap-2.5 text-sm text-gray-700">
+                        <span className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${plan.highlight ? "bg-primary" : "bg-gray-600"}`}>
+                          ✓
+                        </span>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+
                   <button
                     onClick={() => setLocation("/search")}
-                    className={`w-full py-2.5 text-sm font-bold uppercase tracking-wide rounded transition-colors ${
+                    className={`w-full py-3 text-sm font-bold uppercase tracking-wide rounded transition-colors ${
                       plan.highlight
                         ? "bg-primary text-white hover:bg-primary/90"
                         : "bg-gray-700 text-white hover:bg-gray-600"
@@ -389,15 +456,6 @@ export default function Home() {
               </motion.div>
             ))}
           </div>
-
-          {/* Plan option listings */}
-          {allSpaces.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-              {allSpaces.slice(0, 4).map((space, i) => (
-                <ListingCard key={space.id} space={space} index={i} checkIn={checkIn} checkOut={checkOut} />
-              ))}
-            </div>
-          )}
         </div>
       </section>
 
