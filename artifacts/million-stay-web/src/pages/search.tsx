@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useListSuburbs } from "@workspace/api-client-react";
@@ -6,7 +6,6 @@ import { useListPublicSpaces, getListPublicSpacesQueryKey } from "@/lib/guest-ap
 import { Navbar } from "@/components/navbar";
 import { SpaceCard } from "@/components/space-card";
 import { Footer } from "@/components/footer";
-import { SpaceMap } from "@/components/space-map";
 import { Slider } from "@/components/ui/slider";
 import {
   MapPin, X, ChevronDown, ChevronUp, Search as SearchIcon,
@@ -129,12 +128,6 @@ export default function Search() {
 
   const suburbName = suburbs.find((s) => String(s.id) === suburbId)?.name ?? null;
 
-  const handleMarkerClick = useCallback((id: number | string) => {
-    const el = document.getElementById(`space-card-${id}`);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-    setHoveredId(id);
-    setTimeout(() => setHoveredId(null), 2000);
-  }, []);
 
   /* ── Date label helper ── */
   const fmtDate = (d: string) =>
@@ -581,16 +574,6 @@ export default function Search() {
           <Footer />
         </div>
 
-        {/* ── Map Panel (desktop right) ── */}
-        <div className="hidden lg:flex w-[400px] xl:w-[440px] shrink-0 flex-col sticky top-[185px] h-[calc(100vh-185px)]">
-          <div className="flex-1 overflow-hidden">
-            <SpaceMap
-              spaces={allSpaces.filter((s) => s.latitude != null && s.longitude != null) as Parameters<typeof SpaceMap>[0]["spaces"]}
-              hoveredId={hoveredId}
-              onMarkerClick={handleMarkerClick}
-            />
-          </div>
-        </div>
       </div>
     </div>
   );
