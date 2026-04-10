@@ -54,39 +54,72 @@ export default function Search() {
 
   const init = getUrlParams();
 
-  /* ── Basic search state ── */
-  const [suburbId, setSuburbId]   = useState(init.suburb_id);
-  const [checkIn,  setCheckIn]    = useState(init.check_in);
-  const [checkOut, setCheckOut]   = useState(init.check_out);
-
-  /* ── Advanced filter state ── */
+  /* ── Input filter state (편집 중) ── */
+  const [suburbId,     setSuburbId]     = useState(init.suburb_id);
+  const [checkIn,      setCheckIn]      = useState(init.check_in);
+  const [checkOut,     setCheckOut]     = useState(init.check_out);
   const [spaceType,    setSpaceType]    = useState(init.space_type);
   const [genderPolicy, setGenderPolicy] = useState(init.gender_policy);
   const [priceRange,   setPriceRange]   = useState<[number, number]>([init.min_price, init.max_price]);
 
+  /* ── Applied filter state (실제 쿼리에 사용) ── */
+  const [applied, setApplied] = useState({
+    suburb_id:     init.suburb_id,
+    check_in:      init.check_in,
+    check_out:     init.check_out,
+    space_type:    init.space_type,
+    gender_policy: init.gender_policy,
+    min_price:     init.min_price,
+    max_price:     init.max_price,
+  });
+
+  /* ── Dirty: 입력값이 applied와 다를 때 ── */
+  const isDirty =
+    suburbId !== applied.suburb_id ||
+    checkIn  !== applied.check_in  ||
+    checkOut !== applied.check_out ||
+    spaceType    !== applied.space_type    ||
+    genderPolicy !== applied.gender_policy ||
+    priceRange[0] !== applied.min_price   ||
+    priceRange[1] !== applied.max_price;
+
   /* ── UI state ── */
-  const [offset,          setOffset]          = useState(0);
-  const [allSpaces,       setAllSpaces]        = useState<Record<string, unknown>[]>([]);
-  const [suburbOpen,      setSuburbOpen]       = useState<SuburbDropdown>(null);
-  const [showAdvanced,    setShowAdvanced]     = useState(
-    // Auto-open advanced if any advanced filter is active from URL
+  const [offset,       setOffset]    = useState(0);
+  const [allSpaces,    setAllSpaces] = useState<Record<string, unknown>[]>([]);
+  const [suburbOpen,   setSuburbOpen] = useState<SuburbDropdown>(null);
+  const [showAdvanced, setShowAdvanced] = useState(
     init.space_type !== "all" || init.gender_policy !== "all" ||
     init.min_price > 100 || init.max_price < 1200
   );
-  const [hoveredId,       setHoveredId]        = useState<number | string | null>(null);
+  const [hoveredId, setHoveredId] = useState<number | string | null>(null);
 
   const { data: suburbsData } = useListSuburbs();
   const suburbs = suburbsData?.data ?? [];
 
-  /* ── API query params ── */
+  /* ── Search 버튼 클릭: 현재 입력값을 applied에 반영 ── */
+  const handleSearch = () => {
+    setApplied({
+      suburb_id:     suburbId,
+      check_in:      checkIn,
+      check_out:     checkOut,
+      space_type:    spaceType,
+      gender_policy: genderPolicy,
+      min_price:     priceRange[0],
+      max_price:     priceRange[1],
+    });
+    setOffset(0);
+    setSuburbOpen(null);
+  };
+
+  /* ── API query params (applied 기반) ── */
   const queryParams = {
-    suburb_id:    suburbId ? parseInt(suburbId) : undefined,
-    space_type:   spaceType !== "all" ? (spaceType as "EntireSpace" | "RoomSpace" | "BedSpace") : undefined,
-    gender_policy: genderPolicy !== "all" ? (genderPolicy as "FemaleOnly" | "Mixed") : undefined,
-    min_price:    priceRange[0] > 100  ? priceRange[0] : undefined,
-    max_price:    priceRange[1] < 1200 ? priceRange[1] : undefined,
-    start_date:   checkIn  || undefined,
-    end_date:     checkOut || undefined,
+    suburb_id:    applied.suburb_id ? parseInt(applied.suburb_id) : undefined,
+    space_type:   applied.space_type !== "all" ? (applied.space_type as "EntireSpace" | "RoomSpace" | "BedSpace") : undefined,
+    gender_policy: applied.gender_policy !== "all" ? (applied.gender_policy as "FemaleOnly" | "Mixed") : undefined,
+    min_price:    applied.min_price > 100  ? applied.min_price : undefined,
+    max_price:    applied.max_price < 1200 ? applied.max_price : undefined,
+    start_date:   applied.check_in  || undefined,
+    end_date:     applied.check_out || undefined,
     limit:        PAGE_SIZE,
     offset,
   };
@@ -109,24 +142,35 @@ export default function Search() {
     }
   }, [spacesData, offset]);
 
-  const resetOffset = () => setOffset(0);
-
   const clearBasic = () => {
-    setSuburbId(""); setCheckIn(""); setCheckOut(""); resetOffset();
+    setSuburbId(""); setCheckIn(""); setCheckOut("");
   };
   const clearAdvanced = () => {
-    setSpaceType("all"); setGenderPolicy("all"); setPriceRange([100, 1200]); resetOffset();
+    setSpaceType("all"); setGenderPolicy("all"); setPriceRange([100, 1200]);
   };
-  const clearAll = () => { clearBasic(); clearAdvanced(); };
+  const clearAll = () => {
+    setSuburbId(""); setCheckIn(""); setCheckOut("");
+    setSpaceType("all"); setGenderPolicy("all"); setPriceRange([100, 1200]);
+    setApplied({ suburb_id: "", check_in: "", check_out: "", space_type: "all", gender_policy: "all", min_price: 100, max_price: 1200 });
+    setOffset(0);
+  };
 
-  /* ── Active filter counts ── */
-  const hasBasicFilters   = !!suburbId || !!checkIn;
-  const advancedFilters   = [spaceType !== "all", genderPolicy !== "all", priceRange[0] > 100 || priceRange[1] < 1200];
-  const advancedCount     = advancedFilters.filter(Boolean).length;
+  /* ── Active filter counts (applied 기준으로 표시) ── */
+  const hasBasicFilters    = !!applied.suburb_id || !!applied.check_in;
+  const advancedFilters    = [applied.space_type !== "all", applied.gender_policy !== "all", applied.min_price > 100 || applied.max_price < 1200];
+  const advancedCount      = advancedFilters.filter(Boolean).length;
   const hasAdvancedFilters = advancedCount > 0;
   const hasAnyFilters      = hasBasicFilters || hasAdvancedFilters;
 
+  /* ── Advanced clear: input + applied 함께 초기화 ── */
+  const clearAdvancedAll = () => {
+    clearAdvanced();
+    setApplied((p) => ({ ...p, space_type: "all", gender_policy: "all", min_price: 100, max_price: 1200 }));
+    setOffset(0);
+  };
+
   const suburbName = suburbs.find((s) => String(s.id) === suburbId)?.name ?? null;
+  const appliedSuburbName = suburbs.find((s) => String(s.id) === applied.suburb_id)?.name ?? null;
 
 
   /* ── Date label helper ── */
@@ -183,7 +227,7 @@ export default function Search() {
                       className="absolute top-full left-0 mt-2 w-56 bg-white rounded-2xl border shadow-xl z-50 py-2 max-h-64 overflow-y-auto"
                     >
                       <button
-                        onClick={() => { setSuburbId(""); resetOffset(); setSuburbOpen(null); }}
+                        onClick={() => { setSuburbId(""); setSuburbOpen(null); }}
                         className={`w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50 flex items-center gap-2 ${!suburbId ? "text-primary font-semibold" : "text-gray-700"}`}
                       >
                         <MapPin className="h-3.5 w-3.5 opacity-50" />All Suburbs
@@ -191,7 +235,7 @@ export default function Search() {
                       {suburbs.map((s) => (
                         <button
                           key={s.id}
-                          onClick={() => { setSuburbId(String(s.id)); resetOffset(); setSuburbOpen(null); }}
+                          onClick={() => { setSuburbId(String(s.id)); setSuburbOpen(null); }}
                           className={`w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50 flex items-center gap-2 ${suburbId === String(s.id) ? "text-primary font-semibold" : "text-gray-700"}`}
                         >
                           <MapPin className="h-3.5 w-3.5 opacity-50" />{s.name}
@@ -219,14 +263,13 @@ export default function Search() {
                     onChange={(iso) => {
                       setCheckIn(iso);
                       if (checkOut && iso > checkOut) setCheckOut("");
-                      resetOffset();
                     }}
                     className={`bg-transparent text-xs font-semibold p-0 w-full ${checkIn ? "text-primary" : "text-gray-500"}`}
                   />
                 </div>
                 {checkIn && (
                   <button
-                    onClick={() => { setCheckIn(""); setCheckOut(""); resetOffset(); }}
+                    onClick={() => { setCheckIn(""); setCheckOut(""); }}
                     className="ml-0.5 h-4 w-4 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center"
                   >
                     <X className="h-2.5 w-2.5 text-primary" />
@@ -247,13 +290,13 @@ export default function Search() {
                     noIcon
                     value={checkOut}
                     min={checkIn || today}
-                    onChange={(iso) => { setCheckOut(iso); resetOffset(); }}
+                    onChange={(iso) => { setCheckOut(iso); }}
                     className={`bg-transparent text-xs font-semibold p-0 w-full ${checkOut ? "text-primary" : "text-gray-500"}`}
                   />
                 </div>
                 {checkOut && (
                   <button
-                    onClick={() => { setCheckOut(""); resetOffset(); }}
+                    onClick={() => { setCheckOut(""); }}
                     className="ml-0.5 h-4 w-4 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center"
                   >
                     <X className="h-2.5 w-2.5 text-primary" />
@@ -285,6 +328,26 @@ export default function Search() {
                   : <ChevronDown className="h-3.5 w-3.5 opacity-60" />
                 }
               </button>
+
+              {/* ── Search Button ── */}
+              <button
+                onClick={handleSearch}
+                disabled={isLoading}
+                className={`relative flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold transition-all shrink-0 shadow-sm ${
+                  isDirty
+                    ? "bg-primary border border-primary text-white hover:bg-primary/90 animate-pulse"
+                    : "bg-primary border border-primary text-white hover:bg-primary/90"
+                }`}
+              >
+                <SearchIcon className="h-3.5 w-3.5" />
+                Search
+                {isDirty && (
+                  <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-yellow-400 border-2 border-white" />
+                )}
+              </button>
+
+              {/* Divider */}
+              <div className="h-6 w-px bg-gray-200 shrink-0" />
 
               {/* Clear all */}
               {hasAnyFilters && (
@@ -329,7 +392,7 @@ export default function Search() {
                         return (
                           <button
                             key={opt.value}
-                            onClick={() => { setSpaceType(opt.value); resetOffset(); }}
+                            onClick={() => { setSpaceType(opt.value); }}
                             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
                               active
                                 ? "bg-primary border-primary text-white shadow-sm"
@@ -358,7 +421,7 @@ export default function Search() {
                     <Slider
                       min={100} max={1200} step={25}
                       value={priceRange}
-                      onValueChange={(v) => { setPriceRange(v as [number, number]); resetOffset(); }}
+                      onValueChange={(v) => { setPriceRange(v as [number, number]); }}
                       className="mt-1"
                     />
                   </div>
@@ -375,7 +438,7 @@ export default function Search() {
                         return (
                           <button
                             key={opt.value}
-                            onClick={() => { setGenderPolicy(opt.value); resetOffset(); }}
+                            onClick={() => { setGenderPolicy(opt.value); }}
                             className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
                               active
                                 ? "bg-primary border-primary text-white shadow-sm"
@@ -393,7 +456,7 @@ export default function Search() {
                   {hasAdvancedFilters && (
                     <div className="self-end ml-auto shrink-0">
                       <button
-                        onClick={clearAdvanced}
+                        onClick={clearAdvancedAll}
                         className="text-xs text-gray-400 hover:text-red-500 font-medium transition-colors flex items-center gap-1"
                       >
                         <X className="h-3 w-3" /> Clear filters
@@ -417,9 +480,9 @@ export default function Search() {
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
 
-            {/* Date availability notice */}
+            {/* Date availability notice (applied 기반) */}
             <AnimatePresence>
-              {(checkIn || checkOut) && (
+              {(applied.check_in || applied.check_out) && (
                 <motion.div
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -428,19 +491,23 @@ export default function Search() {
                 >
                   <Calendar className="h-4 w-4 text-primary shrink-0" />
                   <div className="flex-1 text-sm text-gray-700">
-                    {checkIn && checkOut ? (
+                    {applied.check_in && applied.check_out ? (
                       <>
                         Showing rooms available{" "}
                         <span className="font-semibold text-primary">
-                          {fmtDate(checkIn)} → {fmtDate(checkOut)}
+                          {fmtDate(applied.check_in)} → {fmtDate(applied.check_out)}
                         </span>
                       </>
-                    ) : checkIn ? (
-                      <>Check-in from <span className="font-semibold text-primary">{fmtDate(checkIn)}</span> — add a check-out date to filter availability</>
+                    ) : applied.check_in ? (
+                      <>Check-in from <span className="font-semibold text-primary">{fmtDate(applied.check_in)}</span> — add a check-out date to filter availability</>
                     ) : null}
                   </div>
                   <button
-                    onClick={() => { setCheckIn(""); setCheckOut(""); resetOffset(); }}
+                    onClick={() => {
+                      setCheckIn(""); setCheckOut("");
+                      setApplied((p) => ({ ...p, check_in: "", check_out: "" }));
+                      setOffset(0);
+                    }}
                     className="text-xs text-gray-400 hover:text-primary font-medium transition-colors shrink-0"
                   >
                     Clear dates
@@ -452,8 +519,8 @@ export default function Search() {
             {/* Result header */}
             <div className="flex items-center justify-between mb-6">
               <div>
-                {suburbName && (
-                  <p className="font-cursive text-primary text-lg italic mb-0.5">Rooms in {suburbName}</p>
+                {appliedSuburbName && (
+                  <p className="font-cursive text-primary text-lg italic mb-0.5">Rooms in {appliedSuburbName}</p>
                 )}
                 <h2 className="text-lg font-bold text-gray-800">
                   {isLoading ? "Searching…" : `${total} room${total !== 1 ? "s" : ""} in Melbourne`}
@@ -465,7 +532,7 @@ export default function Search() {
                   </p>
                 )}
               </div>
-              {/* Quick type tabs (desktop) */}
+              {/* Quick type tabs (desktop) — 즉시 Search 적용 */}
               <div className="hidden lg:flex gap-1">
                 {[
                   { v: "all",         l: "All" },
@@ -475,9 +542,13 @@ export default function Search() {
                 ].map((opt) => (
                   <button
                     key={opt.v}
-                    onClick={() => { setSpaceType(opt.v); resetOffset(); }}
+                    onClick={() => {
+                      setSpaceType(opt.v);
+                      setApplied((p) => ({ ...p, space_type: opt.v }));
+                      setOffset(0);
+                    }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
-                      spaceType === opt.v
+                      applied.space_type === opt.v
                         ? "bg-primary border-primary text-white"
                         : "bg-white border-gray-200 text-gray-600 hover:border-primary/40"
                     }`}
@@ -488,13 +559,18 @@ export default function Search() {
               </div>
             </div>
 
-            {/* Suburb quick-filters */}
-            {!suburbId && suburbs.length > 0 && (
+            {/* Suburb quick-filters — 즉시 Search 적용 */}
+            {!applied.suburb_id && suburbs.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-6">
                 {suburbs.slice(0, 8).map((s) => (
                   <button
                     key={s.id}
-                    onClick={() => { setSuburbId(String(s.id)); resetOffset(); }}
+                    onClick={() => {
+                      const sid = String(s.id);
+                      setSuburbId(sid);
+                      setApplied((p) => ({ ...p, suburb_id: sid }));
+                      setOffset(0);
+                    }}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-600 hover:border-primary hover:text-primary hover:bg-orange-50 transition-all"
                   >
                     <MapPin className="h-3 w-3" />{s.name}
