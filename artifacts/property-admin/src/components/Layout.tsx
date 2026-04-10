@@ -12,6 +12,8 @@ import {
   Settings,
   ChevronDown,
   ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   User,
   Briefcase,
   CheckSquare,
@@ -402,22 +404,6 @@ function SidebarFooter({ collapsed }: { collapsed?: boolean }) {
   );
 }
 
-function TriangleLeft({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 10 10" className={className} fill="currentColor">
-      <polygon points="8,1 1.5,5 8,9" />
-    </svg>
-  );
-}
-
-function TriangleRight({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 10 10" className={className} fill="currentColor">
-      <polygon points="2,1 8.5,5 2,9" />
-    </svg>
-  );
-}
-
 function SidebarLogo({
   logo,
   brandName,
@@ -438,13 +424,13 @@ function SidebarLogo({
           alt={brandName}
           className="h-8 w-8 object-contain"
         />
-        {/* Expand triangle — inside right edge */}
+        {/* Expand button — inside right edge */}
         <button
           onClick={onToggle}
           title="Expand sidebar"
           className="hidden md:flex absolute right-1 top-1/2 -translate-y-1/2 z-10 h-5 w-5 rounded-full bg-sidebar-accent border border-sidebar-border items-center justify-center text-sidebar-foreground/50 hover:text-sidebar-primary hover:border-sidebar-primary transition-colors"
         >
-          <TriangleRight className="h-2.5 w-2.5" />
+          <ChevronsRight className="h-3 w-3" />
         </button>
       </div>
     );
@@ -465,13 +451,13 @@ function SidebarLogo({
           </>
         )}
       </div>
-      {/* Collapse triangle button — desktop only */}
+      {/* Collapse button — desktop only */}
       <button
         onClick={onToggle}
         title="Collapse sidebar"
         className="hidden md:flex flex-shrink-0 h-6 w-6 rounded items-center justify-center text-sidebar-foreground/40 hover:text-sidebar-primary hover:bg-sidebar-accent transition-colors"
       >
-        <TriangleLeft className="h-3 w-3" />
+        <ChevronsLeft className="h-4 w-4" />
       </button>
     </div>
   );
