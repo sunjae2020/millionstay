@@ -417,20 +417,22 @@ function SidebarLogo({
 }) {
   if (collapsed) {
     return (
-      <div className="h-14 flex items-center justify-center border-b border-sidebar-border flex-shrink-0 relative">
-        {/* Favicon symbol */}
-        <img
-          src={`${import.meta.env.BASE_URL}favicon-symbol.png`}
-          alt={brandName}
-          className="h-8 w-8 object-contain"
-        />
-        {/* Expand button — inside right edge */}
+      <div className="h-14 flex flex-col items-center justify-center border-b border-sidebar-border flex-shrink-0 gap-1">
+        {/* Icon: logo image or default Building2 */}
+        {logo ? (
+          <img src={logo} alt={brandName} className="h-6 w-6 object-contain rounded" />
+        ) : (
+          <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
+            <Building2 className="h-4 w-4 text-white" />
+          </div>
+        )}
+        {/* Expand button below icon */}
         <button
           onClick={onToggle}
           title="Expand sidebar"
-          className="hidden md:flex absolute right-1 top-1/2 -translate-y-1/2 z-10 h-5 w-5 rounded-full bg-sidebar-accent border border-sidebar-border items-center justify-center text-sidebar-foreground/50 hover:text-sidebar-primary hover:border-sidebar-primary transition-colors"
+          className="hidden md:flex h-4 w-4 items-center justify-center text-sidebar-foreground/30 hover:text-sidebar-primary transition-colors"
         >
-          <ChevronsRight className="h-3 w-3" />
+          <ChevronsRight className="h-3.5 w-3.5" />
         </button>
       </div>
     );
