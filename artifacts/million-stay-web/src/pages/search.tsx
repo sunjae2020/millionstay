@@ -150,7 +150,7 @@ export default function Search() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/30 to-black/55" />
         <div className="absolute inset-0 flex flex-col items-start justify-end px-8 pb-8 max-w-7xl mx-auto w-full">
           <p className="font-cursive text-white/80 text-lg italic mb-1">Find Your Perfect</p>
-          <h1 className="text-3xl md:text-4xl font-bold text-white italic">Search</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-white italic">Place</h1>
         </div>
       </div>
 
