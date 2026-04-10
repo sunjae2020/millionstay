@@ -11,6 +11,7 @@ import spaceImagesRouter from "./routes/space-images";
 import guestAuthRouter from "./routes/guest-auth";
 import guestPortalRouter from "./routes/guest-portal";
 import guestCsRouter from "./routes/guest-cs";
+import devMigrationRouter from "./routes/dev-migration";
 import { logger } from "./lib/logger";
 import { requireAuth } from "./middlewares/requireAuth";
 
@@ -80,6 +81,7 @@ app.use("/api", publicRouter);
 app.use("/api", guestAuthRouter);
 app.use("/api", guestPortalRouter);
 app.use("/api", guestCsRouter);
+app.use("/api/v1/admin", devMigrationRouter);
 
 app.use("/api/v1", requireAuth);
 
