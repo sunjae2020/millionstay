@@ -2,8 +2,11 @@ import app from "./app";
 import { logger } from "./lib/logger";
 import { loadSettingsFromDb } from "./routes/integrations";
 import bcrypt from "bcryptjs";
-import { db, usersTable } from "@workspace/db";
+import { db, usersTable, suburbsTable } from "@workspace/db";
 import { sql } from "drizzle-orm";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const rawPort = process.env["PORT"];
 
@@ -42,9 +45,73 @@ async function ensureAdminExists() {
   }
 }
 
+async function autoMigrateIfEmpty() {
+  try {
+    const [row] = await db.select({ cnt: sql<number>`COUNT(*)::int` }).from(suburbsTable);
+    const count = Number(row?.cnt ?? 0);
+    if (count > 0) return;
+
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const sqlFilePath = path.resolve(__dirname, "seed-migration.sql");
+    if (!fs.existsSync(sqlFilePath)) {
+      logger.warn("seed-migration.sql not found — skipping auto-migration");
+      return;
+    }
+
+    logger.info("Database appears empty — running auto-migration from seed file...");
+    const rawSql = fs.readFileSync(sqlFilePath, "utf-8");
+    const statements = rawSql
+      .split(/;\s*\n/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0 && !s.startsWith("--") && !s.startsWith("\\"));
+
+    let executed = 0;
+    let errors = 0;
+
+    await db.transaction(async (tx) => {
+      await tx.execute(sql.raw(`SET CONSTRAINTS ALL DEFERRED`));
+      await tx.execute(sql.raw(`TRUNCATE TABLE
+        suburbs, product_groups, product_types, contract_types, payment_info,
+        contacts, accounts, leads, tasks,
+        admin_users, guest_users,
+        properties, spaces, space_options, space_policies,
+        space_images, space_availability, space_blocked_dates, space_option_maps,
+        service_catalog, accommodation_catalog, accommodation_service_catalog,
+        space_service_catalog, promotions, beneficiaries, commissions,
+        contracts, bookings, booking_documents, contract_products,
+        invoices, recurring_schedule,
+        integration_settings, email_template, email_log,
+        service_hosts, system_log, work_orders,
+        cs_tickets, cs_messages
+        RESTART IDENTITY CASCADE`));
+
+      for (const stmt of statements) {
+        if (
+          stmt.startsWith("SET ") ||
+          stmt.startsWith("SELECT pg_catalog.set_config") ||
+          stmt.startsWith("INSERT INTO") ||
+          stmt.startsWith("SELECT pg_catalog.setval")
+        ) {
+          try {
+            await tx.execute(sql.raw(stmt));
+            executed++;
+          } catch {
+            errors++;
+          }
+        }
+      }
+    });
+
+    logger.info({ executed, errors }, "Auto-migration complete");
+  } catch (err) {
+    logger.error({ err }, "Auto-migration failed");
+  }
+}
+
 // Load persisted integration settings from DB into process.env before starting
 loadSettingsFromDb().catch(() => {});
 ensureAdminExists().catch(() => {});
+autoMigrateIfEmpty().catch(() => {});
 
 const server = app.listen(port, (err) => {
   if (err) {
