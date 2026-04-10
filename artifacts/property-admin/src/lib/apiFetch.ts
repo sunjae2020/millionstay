@@ -6,8 +6,10 @@ export function getStoredToken(): string | null {
 
 export function apiFetch(path: string, init?: RequestInit): Promise<Response> {
   const token = getStoredToken();
+  // FormData는 브라우저가 Content-Type + boundary를 자동 설정 — 절대 덮어쓰면 안 됨
+  const isFormData = init?.body instanceof FormData;
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(init?.headers as Record<string, string> ?? {}),
   };
   if (token) headers["Authorization"] = `Bearer ${token}`;
