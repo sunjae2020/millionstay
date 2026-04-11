@@ -10,17 +10,18 @@ import { User, Lock, ChevronRight, Save, Eye, EyeOff, Phone, Globe } from "lucid
 
 export default function PortalProfile() {
   const [, setLocation] = useLocation();
-  const { token, guest, setGuest } = useAuthStore();
+  const { token, guest, setGuest, logout } = useAuthStore();
   const { toast } = useToast();
+  const API = import.meta.env.VITE_API_URL ?? "";
 
   useEffect(() => {
     if (!token) setLocation("/login?redirect=/portal/profile");
   }, [token, setLocation]);
 
   const [profileForm, setProfileForm] = useState({
-    first_name: guest?.name?.split(" ")[0] ?? "",
-    last_name: guest?.name?.split(" ").slice(1).join(" ") ?? "",
-    phone: "",
+    first_name: guest?.first_name ?? "",
+    last_name: guest?.last_name ?? "",
+    phone: guest?.phone ?? "",
     nationality: "",
   });
   const [profileLoading, setProfileLoading] = useState(false);
@@ -34,13 +35,19 @@ export default function PortalProfile() {
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
 
+  function handleUnauthorized() {
+    logout();
+    setLocation("/login?reason=session_expired");
+  }
+
   useEffect(() => {
     if (!token) return;
-    fetch(`${import.meta.env.VITE_API_URL ?? ""}/api/v1/guest/profile`, {
+    fetch(`${API}/api/v1/guest/profile`, {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then((r) => r.json())
-      .then((j) => {
+      .then(async (r) => {
+        if (r.status === 401) { handleUnauthorized(); return; }
+        const j = await r.json();
         if (j.data) {
           setProfileForm({
             first_name: j.data.first_name ?? "",
@@ -56,16 +63,19 @@ export default function PortalProfile() {
   const handleProfileSave = async () => {
     setProfileLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL ?? ""}/api/v1/guest/profile`, {
+      const res = await fetch(`${API}/api/v1/guest/profile`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(profileForm),
       });
+      if (res.status === 401) { handleUnauthorized(); return; }
       const j = await res.json();
       if (!res.ok) throw new Error(typeof j.error === "string" ? j.error : (j.error?.message ?? "Update failed"));
       setGuest({
         ...guest!,
-        name: `${j.data.first_name} ${j.data.last_name}`,
+        first_name: j.data.first_name ?? null,
+        last_name: j.data.last_name ?? null,
+        phone: j.data.phone ?? null,
       });
       toast({ title: "Profile updated", description: "Your information has been saved." });
     } catch (e: unknown) {
@@ -86,7 +96,7 @@ export default function PortalProfile() {
     }
     setPasswordLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL ?? ""}/api/v1/guest/change-password`, {
+      const res = await fetch(`${API}/api/v1/guest/change-password`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
@@ -94,8 +104,9 @@ export default function PortalProfile() {
           new_password: passwordForm.new_password,
         }),
       });
+      if (res.status === 401) { handleUnauthorized(); return; }
       const j = await res.json();
-      if (!res.ok) throw new Error(j.error ?? "Change failed");
+      if (!res.ok) throw new Error(typeof j.error === "string" ? j.error : (j.error?.message ?? "Change failed"));
       toast({ title: "Password changed", description: "Your password has been updated." });
       setPasswordForm({ current_password: "", new_password: "", confirm_password: "" });
     } catch (e: unknown) {

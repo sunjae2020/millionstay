@@ -12,7 +12,7 @@ export interface GuestAuthPayload {
 }
 
 export function signGuestJWT(payload: Omit<GuestAuthPayload, "role">): string {
-  return jwt.sign({ ...payload, role: "guest" }, GUEST_JWT_SECRET, { expiresIn: "24h" });
+  return jwt.sign({ ...payload, role: "guest" }, GUEST_JWT_SECRET, { expiresIn: "7d" });
 }
 
 export function verifyGuestJWT(token: string): GuestAuthPayload {

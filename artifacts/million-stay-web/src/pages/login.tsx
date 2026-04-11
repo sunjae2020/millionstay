@@ -34,6 +34,7 @@ export default function Login() {
 
   const params = new URLSearchParams(location.split("?")[1] ?? "");
   const redirectTo = params.get("redirect") ?? "/portal/bookings";
+  const sessionExpired = params.get("reason") === "session_expired";
 
   const loginMutation = useGuestLogin();
 
@@ -85,6 +86,14 @@ export default function Login() {
               <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
               <p className="text-sm text-gray-500">Sign in to manage your Melbourne room</p>
             </div>
+
+            {/* Session expired notice */}
+            {sessionExpired && (
+              <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800 flex items-center gap-2">
+                <span className="text-base">⚠️</span>
+                <span>Your session has expired. Please sign in again.</span>
+              </div>
+            )}
 
             {/* Demo account banner */}
             <motion.button

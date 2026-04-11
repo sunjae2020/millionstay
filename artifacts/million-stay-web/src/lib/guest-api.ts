@@ -1,10 +1,20 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const BASE = "/api/v1";
+const GUEST_TOKEN_KEY = "ms_guest_token";
+const GUEST_STORAGE_KEY = "ms-guest-storage";
 
 function authHeaders(): Record<string, string> {
-  const token = localStorage.getItem("ms_guest_token");
+  const token = localStorage.getItem(GUEST_TOKEN_KEY);
   return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+function clearAuthAndRedirect() {
+  localStorage.removeItem(GUEST_TOKEN_KEY);
+  try {
+    localStorage.removeItem(GUEST_STORAGE_KEY);
+  } catch {}
+  window.location.href = "/login?reason=session_expired";
 }
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
@@ -12,6 +22,10 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
     headers: { "Content-Type": "application/json", ...authHeaders(), ...((options?.headers as Record<string, string>) ?? {}) },
     ...options,
   });
+  if (res.status === 401) {
+    clearAuthAndRedirect();
+    throw { status: 401, data: { error: "Session expired" } };
+  }
   const json = await res.json();
   if (!res.ok) {
     throw { status: res.status, data: json };

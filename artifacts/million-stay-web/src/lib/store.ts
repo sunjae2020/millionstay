@@ -21,6 +21,15 @@ interface AuthState {
 
 const GUEST_TOKEN_KEY = "ms_guest_token";
 
+function isTokenExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return typeof payload.exp === "number" && payload.exp * 1000 < Date.now();
+  } catch {
+    return true;
+  }
+}
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -38,11 +47,21 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "ms-guest-storage",
+      onRehydrateStorage: () => (state) => {
+        if (state?.token && isTokenExpired(state.token)) {
+          state.logout();
+        }
+      },
     }
   )
 );
 
 // Initialize token getter for custom fetch
 setAuthTokenGetter(() => {
-  return localStorage.getItem(GUEST_TOKEN_KEY) || null;
+  const token = localStorage.getItem(GUEST_TOKEN_KEY);
+  if (token && isTokenExpired(token)) {
+    localStorage.removeItem(GUEST_TOKEN_KEY);
+    return null;
+  }
+  return token;
 });
