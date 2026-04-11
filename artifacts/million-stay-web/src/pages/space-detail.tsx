@@ -15,6 +15,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { Footer } from "@/components/footer";
 import { addWeeks, format, parseISO } from "date-fns";
+import "leaflet/dist/leaflet.css";
 
 /* ─── Emoji-icon map ─── */
 const optionEmojis: Record<string, string> = {
