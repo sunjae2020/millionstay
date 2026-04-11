@@ -40,7 +40,8 @@ export function PortalLayout({ children, active }: PortalLayoutProps) {
   const { guest, logout } = useAuthStore();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const initials = guest?.name ? getInitials(guest.name) : "G";
+  const displayName = [guest?.first_name, guest?.last_name].filter(Boolean).join(" ") || guest?.email || "Guest";
+  const initials = displayName ? getInitials(displayName) : "G";
 
   const handleLogout = () => {
     logout();
@@ -101,11 +102,15 @@ export function PortalLayout({ children, active }: PortalLayoutProps) {
         {/* User + Logout */}
         <div className="border-t border-gray-100 px-3 py-3 shrink-0">
           <div className="flex items-center gap-2.5 px-2 py-1.5 mb-1">
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold shrink-0">
-              {initials}
-            </div>
+            {guest?.avatar_url ? (
+              <img src={guest.avatar_url} alt={displayName} className="w-8 h-8 rounded-full object-cover shrink-0 border border-gray-200" />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold shrink-0">
+                {initials}
+              </div>
+            )}
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-gray-800 truncate">{guest?.name ?? "Guest"}</p>
+              <p className="text-sm font-semibold text-gray-800 truncate">{displayName}</p>
               <p className="text-xs text-gray-400 truncate">{guest?.email ?? ""}</p>
             </div>
           </div>
@@ -176,11 +181,15 @@ export function PortalLayout({ children, active }: PortalLayoutProps) {
             </div>
             <div className="border-t border-gray-100 px-3 py-3">
               <div className="flex items-center gap-2.5 px-2 py-1.5 mb-1">
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold">
-                  {initials}
-                </div>
+                {guest?.avatar_url ? (
+                  <img src={guest.avatar_url} alt={displayName} className="w-8 h-8 rounded-full object-cover shrink-0 border border-gray-200" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold">
+                    {initials}
+                  </div>
+                )}
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-gray-800 truncate">{guest?.name ?? "Guest"}</p>
+                  <p className="text-sm font-semibold text-gray-800 truncate">{displayName}</p>
                   <p className="text-xs text-gray-400 truncate">{guest?.email ?? ""}</p>
                 </div>
               </div>

@@ -9,6 +9,7 @@ export interface GuestInfo {
   last_name: string | null;
   phone: string | null;
   account_id: number | null;
+  avatar_url?: string | null;
 }
 
 interface AuthState {

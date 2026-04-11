@@ -24,6 +24,9 @@ export const guestUsersTable = pgTable("guest_users", {
   bank_bsb: text("bank_bsb"),
   bank_account_number: text("bank_account_number"),
   preferred_payment_method: text("preferred_payment_method"),
+  // Profile avatar
+  avatar_url: text("avatar_url"),
+  avatar_public_id: text("avatar_public_id"),
   is_active: boolean("is_active").notNull().default(true),
   email_verified: boolean("email_verified").notNull().default(false),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

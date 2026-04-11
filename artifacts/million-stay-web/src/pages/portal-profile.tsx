@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { useAuthStore } from "@/lib/store";
 import { PortalLayout } from "@/components/portal-layout";
@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   User, Lock, Phone, Globe, GraduationCap, ShieldAlert,
   Banknote, Eye, EyeOff, Save, Plus, Pencil, Trash2,
-  CreditCard, ChevronDown, X, Check, Mail,
+  CreditCard, ChevronDown, X, Check, Mail, Camera, Loader2,
 } from "lucide-react";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
@@ -86,6 +86,11 @@ export default function PortalProfile() {
     if (!token) setLocation("/login?redirect=/portal/profile");
   }, [token, setLocation]);
 
+  // ─── Avatar state ─────────────────────────────────────────────────────────
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(guest?.avatar_url ?? null);
+  const [avatarLoading, setAvatarLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // ─── Section loading states ───────────────────────────────────────────────
   const [loadingPersonal, setLoadingPersonal] = useState(false);
   const [loadingStudy, setLoadingStudy] = useState(false);
@@ -159,6 +164,7 @@ export default function PortalProfile() {
           preferred_payment_method: d.preferred_payment_method ?? "",
         });
         setContacts(d.emergency_contacts ?? []);
+        setAvatarUrl(d.avatar_url ?? null);
       })
       .catch(() => {});
   }, [token]);
@@ -189,6 +195,59 @@ export default function PortalProfile() {
   const savePersonal = () => putProfile(profileForm, setLoadingPersonal, "Personal information");
   const saveStudy = () => putProfile(studyForm, setLoadingStudy, "Study information");
   const saveBank = () => putProfile(bankForm, setLoadingBank, "Bank information");
+
+  // ─── Avatar upload ────────────────────────────────────────────────────────
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Invalid file type", description: "Please select an image file.", variant: "destructive" }); return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Maximum file size is 5MB.", variant: "destructive" }); return;
+    }
+    setAvatarLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("avatar", file);
+      const res = await fetch(`${API_BASE}/api/v1/guest/profile/avatar`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      if (res.status === 401) { handleUnauthorized(); return; }
+      const j = await res.json();
+      if (!res.ok) throw new Error(j.error ?? "Upload failed");
+      const newUrl = j.data.avatar_url;
+      setAvatarUrl(newUrl);
+      setGuest({ ...guest!, avatar_url: newUrl });
+      toast({ title: "Profile photo updated", description: "Your photo has been saved." });
+    } catch (e: unknown) {
+      toast({ title: "Upload failed", description: e instanceof Error ? e.message : "Please try again.", variant: "destructive" });
+    } finally {
+      setAvatarLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleAvatarDelete = async () => {
+    setAvatarLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/guest/profile/avatar`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.status === 401) { handleUnauthorized(); return; }
+      if (!res.ok) throw new Error("Delete failed");
+      setAvatarUrl(null);
+      setGuest({ ...guest!, avatar_url: null });
+      toast({ title: "Profile photo removed" });
+    } catch (e: unknown) {
+      toast({ title: "Failed", description: e instanceof Error ? e.message : "Please try again.", variant: "destructive" });
+    } finally {
+      setAvatarLoading(false);
+    }
+  };
 
   // ─── Password change ──────────────────────────────────────────────────────
   const handlePasswordSave = async () => {
@@ -288,6 +347,74 @@ export default function PortalProfile() {
   return (
     <PortalLayout active="/portal/profile">
       <div className="flex-1 max-w-3xl mx-auto w-full px-4 py-8 space-y-6">
+
+        {/* ── 0. Profile Photo ── */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}
+          className="bg-white rounded-2xl border p-6">
+          <div className="flex items-center gap-2 mb-5">
+            <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
+              <Camera className="h-4 w-4 text-primary" />
+            </div>
+            <h2 className="font-semibold text-gray-800">Profile Photo</h2>
+          </div>
+
+          <div className="flex items-center gap-6">
+            {/* Avatar Preview */}
+            <div className="relative shrink-0">
+              <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-gray-200 bg-gray-100 flex items-center justify-center">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-3xl font-bold text-gray-400">
+                    {(profileForm.first_name?.[0] ?? guest?.email?.[0] ?? "G").toUpperCase()}
+                  </span>
+                )}
+              </div>
+              {avatarLoading && (
+                <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center">
+                  <Loader2 className="h-5 w-5 text-white animate-spin" />
+                </div>
+              )}
+            </div>
+
+            {/* Upload Controls */}
+            <div className="flex-1">
+              <p className="text-sm text-gray-600 mb-3">
+                Upload a profile photo. Recommended: square image, at least 200×200px, max 5MB.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={avatarLoading}
+                  className="bg-primary hover:bg-primary/90 gap-2"
+                  size="sm"
+                >
+                  <Camera className="h-4 w-4" />
+                  {avatarUrl ? "Change Photo" : "Upload Photo"}
+                </Button>
+                {avatarUrl && (
+                  <Button
+                    onClick={handleAvatarDelete}
+                    disabled={avatarLoading}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Remove
+                  </Button>
+                )}
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarChange}
+              />
+            </div>
+          </div>
+        </motion.div>
 
         {/* ── 1. Personal Information ── */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}

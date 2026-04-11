@@ -12,6 +12,20 @@ import {
 } from "@workspace/db";
 import { requireGuestAuth } from "../middlewares/requireGuestAuth";
 import { sendBookingConfirmation } from "../lib/email";
+import multer from "multer";
+import { isCloudinaryConfigured, uploadToCloudinary, deleteFromCloudinary } from "../utils/cloudinary";
+
+const avatarUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (!file.mimetype.startsWith("image/")) {
+      cb(new Error("Only image files are allowed"));
+    } else {
+      cb(null, true);
+    }
+  },
+});
 
 const router: IRouter = Router();
 
@@ -357,6 +371,7 @@ router.get("/v1/guest/profile", async (req, res): Promise<void> => {
       bank_bsb: guestUsersTable.bank_bsb,
       bank_account_number: guestUsersTable.bank_account_number,
       preferred_payment_method: guestUsersTable.preferred_payment_method,
+      avatar_url: guestUsersTable.avatar_url,
       account_id: guestUsersTable.account_id,
       created_at: guestUsersTable.created_at,
     })
@@ -428,6 +443,75 @@ router.put("/v1/guest/profile", async (req, res): Promise<void> => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, error: "Failed to update profile" });
+  }
+});
+
+/* ───────────────────────────────────────────────────────
+   POST /api/v1/guest/profile/avatar — 프로필 사진 업로드
+──────────────────────────────────────────────────────── */
+router.post("/v1/guest/profile/avatar", avatarUpload.single("avatar"), async (req: any, res): Promise<void> => {
+  const guest = req.guest;
+  const file = req.file;
+
+  if (!file) {
+    res.status(400).json({ success: false, error: "No image file provided" });
+    return;
+  }
+
+  if (!isCloudinaryConfigured()) {
+    res.status(503).json({ success: false, error: "Image upload service not configured" });
+    return;
+  }
+
+  try {
+    const [existing] = await db.select({ avatar_public_id: guestUsersTable.avatar_public_id })
+      .from(guestUsersTable).where(eq(guestUsersTable.id, guest.id));
+
+    if (existing?.avatar_public_id) {
+      await deleteFromCloudinary(existing.avatar_public_id);
+    }
+
+    const result = await uploadToCloudinary(file.buffer, {
+      folder: "millionstay/avatars",
+      transformation: [
+        { width: 400, height: 400, crop: "fill", gravity: "face" },
+        { quality: "auto:good", fetch_format: "auto" },
+      ],
+    });
+
+    const [updated] = await db.update(guestUsersTable)
+      .set({ avatar_url: result.secure_url, avatar_public_id: result.public_id })
+      .where(eq(guestUsersTable.id, guest.id))
+      .returning({ avatar_url: guestUsersTable.avatar_url, avatar_public_id: guestUsersTable.avatar_public_id });
+
+    res.json({ success: true, data: { avatar_url: updated?.avatar_url } });
+  } catch (err) {
+    console.error("Avatar upload error:", err);
+    res.status(500).json({ success: false, error: "Failed to upload avatar" });
+  }
+});
+
+/* ───────────────────────────────────────────────────────
+   DELETE /api/v1/guest/profile/avatar — 프로필 사진 삭제
+──────────────────────────────────────────────────────── */
+router.delete("/v1/guest/profile/avatar", async (req: any, res): Promise<void> => {
+  const guest = req.guest;
+  try {
+    const [existing] = await db.select({ avatar_public_id: guestUsersTable.avatar_public_id })
+      .from(guestUsersTable).where(eq(guestUsersTable.id, guest.id));
+
+    if (existing?.avatar_public_id) {
+      await deleteFromCloudinary(existing.avatar_public_id);
+    }
+
+    await db.update(guestUsersTable)
+      .set({ avatar_url: null, avatar_public_id: null })
+      .where(eq(guestUsersTable.id, guest.id));
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Avatar delete error:", err);
+    res.status(500).json({ success: false, error: "Failed to delete avatar" });
   }
 });
 
