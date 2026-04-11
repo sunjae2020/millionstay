@@ -353,7 +353,7 @@ export default function SpaceDetail() {
           <TabsContent value="details">
             <form className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl">
 
-              {/* GENERAL */}
+              {/* ① GENERAL — 기본 정보 */}
               <div className="col-span-2 bg-card rounded-lg border p-5 flex flex-col gap-4">
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">General</h3>
                 <div className="grid grid-cols-2 gap-4">
@@ -366,20 +366,6 @@ export default function SpaceDetail() {
                       placeholder="Space name"
                       className={errors.name ? "border-destructive" : ""}
                     />
-                  </div>
-                  <div className="flex items-center gap-2 col-span-2">
-                    <Controller
-                      name="manual_input"
-                      control={control}
-                      render={({ field }) => (
-                        <Checkbox
-                          id="manual_input"
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      )}
-                    />
-                    <Label htmlFor="manual_input" className="font-normal cursor-pointer text-sm">Manual Input</Label>
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Status</Label>
@@ -400,69 +386,26 @@ export default function SpaceDetail() {
                       )}
                     />
                   </div>
-                </div>
-              </div>
-
-              {/* PROPERTY */}
-              <div className="bg-card rounded-lg border p-5 flex flex-col gap-4">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Property</h3>
-                <LookupField
-                  label="Property"
-                  value={propertyId}
-                  displayText={propertyName}
-                  onSelect={(id, label) => { setPropertyId(id); setPropertyName(label); }}
-                  onClear={() => { setPropertyId(null); setPropertyName(null); }}
-                  options={propertyOptions}
-                  onSearch={setPropertySearch}
-                  searchPlaceholder="Search properties..."
-                />
-              </div>
-
-              {/* PRIVACY */}
-              <div className="bg-card rounded-lg border p-5 flex flex-col gap-4">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Privacy</h3>
-                <p className="text-xs text-muted-foreground -mt-2">Controls what address &amp; map information is shown to the public.</p>
-                <div className="flex items-center justify-between py-1">
-                  <div>
-                    <p className="text-sm font-medium">Hide Unit / Apartment Number</p>
-                    <p className="text-xs text-muted-foreground">Removes unit number from public address (e.g. "1/285 → 285 La Trobe St")</p>
+                  <div className="flex items-center gap-2 pt-6">
+                    <Controller
+                      name="manual_input"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          id="manual_input"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      )}
+                    />
+                    <Label htmlFor="manual_input" className="font-normal cursor-pointer text-sm">Manual Input</Label>
                   </div>
-                  <Switch checked={privacyHideUnitNo} onCheckedChange={setPrivacyHideUnitNo} />
-                </div>
-                <div className="flex items-center justify-between py-1">
-                  <div>
-                    <p className="text-sm font-medium">Hide Street Number</p>
-                    <p className="text-xs text-muted-foreground">Removes street number for house/townhouse listings (e.g. "285 La Trobe → La Trobe St")</p>
-                  </div>
-                  <Switch checked={privacyHideStreetNo} onCheckedChange={setPrivacyHideStreetNo} />
-                </div>
-                <div className="flex items-center justify-between py-1">
-                  <div>
-                    <p className="text-sm font-medium">Blur Map Pin Location</p>
-                    <p className="text-xs text-muted-foreground">Offsets the map pin by ~35 m and shows an approximate area circle instead of exact pin</p>
-                  </div>
-                  <Switch checked={privacyMapBlur} onCheckedChange={setPrivacyMapBlur} />
                 </div>
               </div>
 
-              {/* PARENT SPACE */}
-              <div className="bg-card rounded-lg border p-5 flex flex-col gap-4">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Parent Space</h3>
-                <LookupField
-                  label="Parent Space"
-                  value={parentSpaceId}
-                  displayText={parentSpaceName}
-                  onSelect={(id, label) => { setParentSpaceId(id); setParentSpaceName(label); }}
-                  onClear={() => { setParentSpaceId(null); setParentSpaceName(null); }}
-                  options={spaceOptions2}
-                  onSearch={setParentSpaceSearch}
-                  searchPlaceholder="Search spaces..."
-                />
-              </div>
-
-              {/* MAIN */}
+              {/* ② MAIN — 매물 유형 및 설정 */}
               <div className="col-span-2 bg-card rounded-lg border p-5 flex flex-col gap-4">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Main</h3>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Space Settings</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Space Type</Label>
@@ -515,7 +458,7 @@ export default function SpaceDetail() {
                   </div>
                   <div className="col-span-2">
                     <MultiLookupField
-                      label="Space Options"
+                      label="Space Options / Amenities"
                       values={optionIds}
                       displayTexts={optionNames}
                       onSelect={(id, label) => {
@@ -532,10 +475,62 @@ export default function SpaceDetail() {
                       searchPlaceholder="Search space options..."
                     />
                   </div>
+                  <div className="col-span-2 flex flex-col gap-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Description</Label>
+                    <Textarea {...register("description")} rows={4} placeholder="Describe the space — layout, furnishings, highlights..." />
+                  </div>
                 </div>
               </div>
 
-              {/* POLICY */}
+              {/* ③ PROPERTY & PARENT SPACE — 나란히 */}
+              <div className="bg-card rounded-lg border p-5 flex flex-col gap-4">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Property</h3>
+                <LookupField
+                  label="Property"
+                  value={propertyId}
+                  displayText={propertyName}
+                  onSelect={(id, label) => { setPropertyId(id); setPropertyName(label); }}
+                  onClear={() => { setPropertyId(null); setPropertyName(null); }}
+                  options={propertyOptions}
+                  onSearch={setPropertySearch}
+                  searchPlaceholder="Search properties..."
+                />
+              </div>
+
+              <div className="bg-card rounded-lg border p-5 flex flex-col gap-4">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Parent Space</h3>
+                <LookupField
+                  label="Parent Space"
+                  value={parentSpaceId}
+                  displayText={parentSpaceName}
+                  onSelect={(id, label) => { setParentSpaceId(id); setParentSpaceName(label); }}
+                  onClear={() => { setParentSpaceId(null); setParentSpaceName(null); }}
+                  options={spaceOptions2}
+                  onSearch={setParentSpaceSearch}
+                  searchPlaceholder="Search spaces..."
+                />
+              </div>
+
+              {/* ④ PRICING & POLICY — 나란히 */}
+              <div className="bg-card rounded-lg border p-5 flex flex-col gap-4">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Pricing</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Weekly Price</Label>
+                    <Input {...register("base_weekly_price")} type="number" step="0.01" min={0} placeholder="0.00" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Daily Price</Label>
+                    <Input {...register("base_daily_price")} type="number" step="5" min={0} placeholder="0.00" />
+                    <p className="text-xs text-muted-foreground">Auto: Weekly ÷ 2, rounded to $5</p>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Currency</Label>
+                    <Input {...register("base_currency")} placeholder="AUD" maxLength={3} />
+                  </div>
+                </div>
+              </div>
+
               <div className="bg-card rounded-lg border p-5 flex flex-col gap-4">
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Policy</h3>
                 <LookupField
@@ -550,38 +545,9 @@ export default function SpaceDetail() {
                 />
               </div>
 
-              {/* PRICING */}
+              {/* ⑤ PHYSICAL DETAILS & ACCOUNTS — 나란히 */}
               <div className="bg-card rounded-lg border p-5 flex flex-col gap-4">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Pricing</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Weekly Price</Label>
-                    <Input {...register("base_weekly_price")} type="number" step="0.01" min={0} placeholder="0.00" />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Daily Price</Label>
-                    <Input {...register("base_daily_price")} type="number" step="5" min={0} placeholder="0.00" />
-                    <p className="text-xs text-muted-foreground">Auto-calculated: Weekly ÷ 2, rounded to $5</p>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Currency</Label>
-                    <Input {...register("base_currency")} placeholder="AUD" maxLength={3} />
-                  </div>
-                </div>
-              </div>
-
-              {/* ACCOUNTS */}
-              <div className="bg-card rounded-lg border p-5 flex flex-col gap-4">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Accounts</h3>
-                <div className="flex flex-col gap-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Landlord Account ID</Label>
-                  <Input {...register("landlord_account_id")} type="number" placeholder="Account ID" />
-                </div>
-              </div>
-
-              {/* OTHERS */}
-              <div className="bg-card rounded-lg border p-5 flex flex-col gap-4">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Others</h3>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Physical Details</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Floor Number</Label>
@@ -591,14 +557,49 @@ export default function SpaceDetail() {
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Floor Area (sqm)</Label>
                     <Input {...register("floor_area_sqm")} type="number" step="0.1" placeholder="e.g. 25.5" />
                   </div>
-                  <div className="col-span-2 flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Description</Label>
-                    <Textarea {...register("description")} rows={3} placeholder="Space description..." />
+                </div>
+              </div>
+
+              <div className="bg-card rounded-lg border p-5 flex flex-col gap-4">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Accounts</h3>
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Landlord Account ID</Label>
+                  <Input {...register("landlord_account_id")} type="number" placeholder="Account ID" />
+                </div>
+              </div>
+
+              {/* ⑥ PRIVACY — 전체 너비 */}
+              <div className="col-span-2 bg-card rounded-lg border p-5 flex flex-col gap-3">
+                <div className="border-b pb-2">
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Privacy</h3>
+                  <p className="text-xs text-muted-foreground mt-1">Controls what address &amp; location information is shown to the public.</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+                  <div className="flex items-start justify-between gap-4 rounded-lg bg-muted/40 border px-4 py-3">
+                    <div>
+                      <p className="text-sm font-medium leading-tight">Hide Unit / Apt No.</p>
+                      <p className="text-xs text-muted-foreground mt-1">"1/285 La Trobe" → "285 La Trobe St"</p>
+                    </div>
+                    <Switch checked={privacyHideUnitNo} onCheckedChange={setPrivacyHideUnitNo} className="shrink-0 mt-0.5" />
+                  </div>
+                  <div className="flex items-start justify-between gap-4 rounded-lg bg-muted/40 border px-4 py-3">
+                    <div>
+                      <p className="text-sm font-medium leading-tight">Hide Street Number</p>
+                      <p className="text-xs text-muted-foreground mt-1">"285 La Trobe" → "La Trobe St"</p>
+                    </div>
+                    <Switch checked={privacyHideStreetNo} onCheckedChange={setPrivacyHideStreetNo} className="shrink-0 mt-0.5" />
+                  </div>
+                  <div className="flex items-start justify-between gap-4 rounded-lg bg-muted/40 border px-4 py-3">
+                    <div>
+                      <p className="text-sm font-medium leading-tight">Blur Map Location</p>
+                      <p className="text-xs text-muted-foreground mt-1">Shows ~35 m offset with area circle</p>
+                    </div>
+                    <Switch checked={privacyMapBlur} onCheckedChange={setPrivacyMapBlur} className="shrink-0 mt-0.5" />
                   </div>
                 </div>
               </div>
 
-              {/* OTA SYNC */}
+              {/* ⑦ OTA SYNC — 하단 고급 설정 */}
               <div className="col-span-2 bg-card rounded-lg border p-5 flex flex-col gap-4">
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">OTA Sync</h3>
                 <div className="flex flex-col gap-1.5">
