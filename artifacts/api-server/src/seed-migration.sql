@@ -570,7 +570,7 @@ INSERT INTO public.accounts (id, name, account_type, primary_contact_id, seconda
 	(16, 'Test User', 'Guest', NULL, NULL, 'test_e2e_1775540496445@example.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'AUD', NULL, NULL, false, 'Active', '2026-04-07 05:41:50.283818+00', '2026-04-07 05:41:50.283818+00'),
 	(17, 'Gildong HONG', 'Guest', NULL, NULL, 'teswt@timest.co.kr', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'AUD', NULL, NULL, false, 'Active', '2026-04-09 05:11:01.06402+00', '2026-04-09 05:11:01.06402+00');
 INSERT INTO public.admin_users (id, email, password_hash, role, first_name, last_name, is_active, force_password_change, last_login_at, created_at, updated_at) VALUES
-	(1, 'admin@millionstay.com', '$2b$10$FX2diLhEDwiXWzaGJtZoXeOS1x/pizNnsMOqPkpnwaR3DxlC.OBU.', 'Super Admin', 'Million', 'Stay', true, false, '2026-04-10 09:52:45.987+00', '2026-04-05 08:29:14.152582+00', '2026-04-10 09:52:45.987+00');
+	(1, 'admin@millionstay.com', '$2b$10$FX2diLhEDwiXWzaGJtZoXeOS1x/pizNnsMOqPkpnwaR3DxlC.OBU.', 'Super Admin', 'Million', 'Stay', true, false, '2026-04-10 23:59:29.551+00', '2026-04-05 08:29:14.152582+00', '2026-04-10 23:59:29.552+00');
 INSERT INTO public.beneficiaries (id, name, contract_product_id, account_id, commission_id, commission_type, split_percentage, fixed_amount, priority, notes, status, created_at, updated_at) VALUES
 	(2, 'Million Stay - Platform Fee', NULL, 5, NULL, 'Fixed', NULL, 80, 2, 'Platform management fixed fee per week', 'Active', '2026-04-06 05:39:43.002011+00', '2026-04-06 05:39:43.002011+00'),
 	(3, 'Time Study Education - Agent Commission', 30, 6, 2, 'Percentage', 7, NULL, 1, 'Agent 7% for mid-term bookings', 'Active', '2026-04-06 05:39:43.1224+00', '2026-04-06 05:39:43.1224+00'),
@@ -962,14 +962,14 @@ INSERT INTO public.space_images (id, space_id, file_url, thumbnail_url, cloudina
 	(51, 17, 'https://res.cloudinary.com/dthc3gmdr/image/upload/v1775460126/millionstay/spaces/ufulrjgjkbwy5vxwkm59.jpg', 'https://res.cloudinary.com/dthc3gmdr/image/upload/c_fill,g_auto,h_360,w_480/f_auto,q_auto:eco/v1775460126/millionstay/spaces/ufulrjgjkbwy5vxwkm59?_a=BAMAAAUs0', 'millionstay/spaces/ufulrjgjkbwy5vxwkm59', NULL, false, 15, 6043590, 'image/jpeg', '2026-04-06 07:22:08.019394+00'),
 	(52, 17, 'https://res.cloudinary.com/dthc3gmdr/image/upload/v1775460129/millionstay/spaces/pufl7dwzfohushhud2iy.jpg', 'https://res.cloudinary.com/dthc3gmdr/image/upload/c_fill,g_auto,h_360,w_480/f_auto,q_auto:eco/v1775460129/millionstay/spaces/pufl7dwzfohushhud2iy?_a=BAMAAAUs0', 'millionstay/spaces/pufl7dwzfohushhud2iy', NULL, false, 16, 6222127, 'image/jpeg', '2026-04-06 07:22:10.440928+00'),
 	(53, 17, 'https://res.cloudinary.com/dthc3gmdr/image/upload/v1775460132/millionstay/spaces/g4uoltfjqx21h2idi0oj.jpg', 'https://res.cloudinary.com/dthc3gmdr/image/upload/c_fill,g_auto,h_360,w_480/f_auto,q_auto:eco/v1775460132/millionstay/spaces/g4uoltfjqx21h2idi0oj?_a=BAMAAAUs0', 'millionstay/spaces/g4uoltfjqx21h2idi0oj', NULL, false, 17, 8738375, 'image/jpeg', '2026-04-06 07:22:13.325531+00'),
-	(54, 28, 'https://res.cloudinary.com/dthc3gmdr/image/upload/v1775835104/millionstay/spaces/igzfsm0sirq4apgjvt3d.jpg', 'https://res.cloudinary.com/dthc3gmdr/image/upload/c_fill,g_auto,h_360,w_480/f_auto,q_auto:eco/v1775835104/millionstay/spaces/igzfsm0sirq4apgjvt3d?_a=BAMAAAUs0', 'millionstay/spaces/igzfsm0sirq4apgjvt3d', NULL, true, 0, 5442644, 'image/jpeg', '2026-04-10 15:31:46.854999+00'),
+	(54, 28, 'https://res.cloudinary.com/dthc3gmdr/image/upload/v1775835104/millionstay/spaces/igzfsm0sirq4apgjvt3d.jpg', 'https://res.cloudinary.com/dthc3gmdr/image/upload/c_fill,g_auto,h_360,w_480/f_auto,q_auto:eco/v1775835104/millionstay/spaces/igzfsm0sirq4apgjvt3d?_a=BAMAAAUs0', 'millionstay/spaces/igzfsm0sirq4apgjvt3d', NULL, false, 0, 5442644, 'image/jpeg', '2026-04-10 15:31:46.854999+00'),
 	(55, 28, 'https://res.cloudinary.com/dthc3gmdr/image/upload/v1775835107/millionstay/spaces/w8edshlrwwgv0zbeaiik.jpg', 'https://res.cloudinary.com/dthc3gmdr/image/upload/c_fill,g_auto,h_360,w_480/f_auto,q_auto:eco/v1775835107/millionstay/spaces/w8edshlrwwgv0zbeaiik?_a=BAMAAAUs0', 'millionstay/spaces/w8edshlrwwgv0zbeaiik', NULL, false, 1, 4561596, 'image/jpeg', '2026-04-10 15:31:50.86325+00'),
-	(56, 28, 'https://res.cloudinary.com/dthc3gmdr/image/upload/v1775835112/millionstay/spaces/bx6m4sw50uyqfizvgfud.jpg', 'https://res.cloudinary.com/dthc3gmdr/image/upload/c_fill,g_auto,h_360,w_480/f_auto,q_auto:eco/v1775835112/millionstay/spaces/bx6m4sw50uyqfizvgfud?_a=BAMAAAUs0', 'millionstay/spaces/bx6m4sw50uyqfizvgfud', NULL, false, 2, 6597667, 'image/jpeg', '2026-04-10 15:31:54.006579+00'),
 	(57, 28, 'https://res.cloudinary.com/dthc3gmdr/image/upload/v1775835115/millionstay/spaces/wba0mb8aymab8si8ycv7.jpg', 'https://res.cloudinary.com/dthc3gmdr/image/upload/c_fill,g_auto,h_360,w_480/f_auto,q_auto:eco/v1775835115/millionstay/spaces/wba0mb8aymab8si8ycv7?_a=BAMAAAUs0', 'millionstay/spaces/wba0mb8aymab8si8ycv7', NULL, false, 3, 5597125, 'image/jpeg', '2026-04-10 15:31:56.539936+00'),
 	(58, 28, 'https://res.cloudinary.com/dthc3gmdr/image/upload/v1775835117/millionstay/spaces/rsbmps1fsjetg5eupqwr.jpg', 'https://res.cloudinary.com/dthc3gmdr/image/upload/c_fill,g_auto,h_360,w_480/f_auto,q_auto:eco/v1775835117/millionstay/spaces/rsbmps1fsjetg5eupqwr?_a=BAMAAAUs0', 'millionstay/spaces/rsbmps1fsjetg5eupqwr', NULL, false, 4, 3751291, 'image/jpeg', '2026-04-10 15:31:58.867286+00'),
 	(59, 28, 'https://res.cloudinary.com/dthc3gmdr/image/upload/v1775835119/millionstay/spaces/eapjbztnwwaa46sp6hfl.jpg', 'https://res.cloudinary.com/dthc3gmdr/image/upload/c_fill,g_auto,h_360,w_480/f_auto,q_auto:eco/v1775835119/millionstay/spaces/eapjbztnwwaa46sp6hfl?_a=BAMAAAUs0', 'millionstay/spaces/eapjbztnwwaa46sp6hfl', NULL, false, 5, 4331263, 'image/jpeg', '2026-04-10 15:32:01.067694+00'),
 	(60, 28, 'https://res.cloudinary.com/dthc3gmdr/image/upload/v1775835122/millionstay/spaces/meedwbneqzs6gnnhrhw4.jpg', 'https://res.cloudinary.com/dthc3gmdr/image/upload/c_fill,g_auto,h_360,w_480/f_auto,q_auto:eco/v1775835122/millionstay/spaces/meedwbneqzs6gnnhrhw4?_a=BAMAAAUs0', 'millionstay/spaces/meedwbneqzs6gnnhrhw4', NULL, false, 6, 5144055, 'image/jpeg', '2026-04-10 15:32:03.867027+00'),
-	(61, 28, 'https://res.cloudinary.com/dthc3gmdr/image/upload/v1775835124/millionstay/spaces/t7aqmivspyrxmejoeggk.jpg', 'https://res.cloudinary.com/dthc3gmdr/image/upload/c_fill,g_auto,h_360,w_480/f_auto,q_auto:eco/v1775835124/millionstay/spaces/t7aqmivspyrxmejoeggk?_a=BAMAAAUs0', 'millionstay/spaces/t7aqmivspyrxmejoeggk', NULL, false, 7, 5873108, 'image/jpeg', '2026-04-10 15:32:06.279351+00');
+	(61, 28, 'https://res.cloudinary.com/dthc3gmdr/image/upload/v1775835124/millionstay/spaces/t7aqmivspyrxmejoeggk.jpg', 'https://res.cloudinary.com/dthc3gmdr/image/upload/c_fill,g_auto,h_360,w_480/f_auto,q_auto:eco/v1775835124/millionstay/spaces/t7aqmivspyrxmejoeggk?_a=BAMAAAUs0', 'millionstay/spaces/t7aqmivspyrxmejoeggk', NULL, false, 7, 5873108, 'image/jpeg', '2026-04-10 15:32:06.279351+00'),
+	(56, 28, 'https://res.cloudinary.com/dthc3gmdr/image/upload/v1775835112/millionstay/spaces/bx6m4sw50uyqfizvgfud.jpg', 'https://res.cloudinary.com/dthc3gmdr/image/upload/c_fill,g_auto,h_360,w_480/f_auto,q_auto:eco/v1775835112/millionstay/spaces/bx6m4sw50uyqfizvgfud?_a=BAMAAAUs0', 'millionstay/spaces/bx6m4sw50uyqfizvgfud', NULL, true, 2, 6597667, 'image/jpeg', '2026-04-10 15:31:54.006579+00');
 INSERT INTO public.space_option_maps (id, space_id, space_option_id, created_at) VALUES
 	(1, 1, 1, '2026-04-04 23:25:07.362835+00'),
 	(2, 1, 2, '2026-04-04 23:25:07.362835+00'),
@@ -1079,16 +1079,16 @@ INSERT INTO public.space_option_maps (id, space_id, space_option_id, created_at)
 	(110, 26, 28, '2026-04-05 02:20:39.672007+00'),
 	(111, 27, 20, '2026-04-05 02:20:39.67795+00'),
 	(112, 27, 44, '2026-04-05 02:20:39.680782+00'),
-	(113, 28, 20, '2026-04-05 02:20:39.686446+00'),
-	(114, 28, 23, '2026-04-05 02:20:39.689341+00'),
-	(115, 28, 44, '2026-04-05 02:20:39.692429+00'),
-	(116, 28, 28, '2026-04-05 02:20:39.695563+00'),
-	(117, 28, 45, '2026-04-05 02:20:39.699127+00'),
-	(118, 28, 47, '2026-04-05 02:20:39.702022+00'),
 	(123, 9, 44, '2026-04-06 00:30:46.410651+00'),
 	(124, 9, 28, '2026-04-06 00:30:46.410651+00'),
 	(125, 9, 45, '2026-04-06 00:30:46.410651+00'),
-	(126, 9, 47, '2026-04-06 00:30:46.410651+00');
+	(126, 9, 47, '2026-04-06 00:30:46.410651+00'),
+	(127, 28, 20, '2026-04-11 00:18:16.300148+00'),
+	(128, 28, 23, '2026-04-11 00:18:16.300148+00'),
+	(129, 28, 44, '2026-04-11 00:18:16.300148+00'),
+	(130, 28, 28, '2026-04-11 00:18:16.300148+00'),
+	(131, 28, 45, '2026-04-11 00:18:16.300148+00'),
+	(132, 28, 47, '2026-04-11 00:18:16.300148+00');
 INSERT INTO public.space_options (id, name, display_name, category, status, created_at, updated_at) VALUES
 	(1, 'wifi', 'WiFi', 'Utilities', 'Active', '2026-04-04 23:24:51.148172+00', '2026-04-04 23:24:51.148172+00'),
 	(2, 'air_conditioning', 'Air Conditioning', 'Utilities', 'Active', '2026-04-04 23:24:51.187385+00', '2026-04-04 23:24:51.187385+00'),
@@ -1158,7 +1158,6 @@ INSERT INTO public.spaces (id, name, manual_input, space_type, custom_type_name,
 	(12, '139 Bourke St, Melbourne_Entire Apartment', false, 'Whole Property', NULL, 4, 'Request', 980, NULL, NULL, NULL, NULL, NULL, 'Active', 6, NULL, 3, 12, '2026-04-05 02:20:39.439694+00', '2026-04-05 02:20:39.439694+00', 490),
 	(17, '336 Russell St, Melbourne_Entire Apartment', false, 'Whole Property', NULL, 5, 'Request', 1040, NULL, NULL, NULL, NULL, NULL, 'Active', 7, NULL, 4, 13, '2026-04-05 02:20:39.518953+00', '2026-04-05 02:20:39.518953+00', 520),
 	(23, '250 City Rd, Southbank_Entire Apartment', false, 'Whole Property', NULL, 4, 'Request', 1020, NULL, NULL, NULL, NULL, NULL, 'Active', 8, NULL, 3, 10, '2026-04-05 02:20:39.613554+00', '2026-04-05 02:20:39.613554+00', 510),
-	(28, '53 Batman St, West Melbourne_Entire Apartment', false, 'Whole Property', NULL, 4, 'Request', 790, NULL, NULL, NULL, NULL, NULL, 'Active', 9, NULL, 4, 11, '2026-04-05 02:20:39.683715+00', '2026-04-05 02:20:39.683715+00', 395),
 	(10, '118 Kavanagh St_Room A-1 — Shared Room', false, 'Shared Room', NULL, 1, 'Request', 430, NULL, NULL, NULL, NULL, NULL, 'Active', 5, 9, 4, 9, '2026-04-05 02:20:39.396337+00', '2026-04-05 02:20:39.396337+00', 215),
 	(11, '118 Kavanagh St_Room A-2 — Shared Room', false, 'Shared Room', NULL, 1, 'Request', 430, NULL, NULL, NULL, NULL, NULL, 'Active', 5, 9, 4, 9, '2026-04-05 02:20:39.417902+00', '2026-04-05 02:20:39.417902+00', 215),
 	(5, '285 La Trobe St_Room A — Single Room', false, 'Private Room', NULL, 1, 'Request', 530, NULL, NULL, NULL, NULL, NULL, 'Active', 4, 4, 3, 8, '2026-04-05 02:20:39.302617+00', '2026-04-05 02:20:39.302617+00', 265),
@@ -1177,7 +1176,8 @@ INSERT INTO public.spaces (id, name, manual_input, space_type, custom_type_name,
 	(24, '250 City Rd_Room A — Single Room', false, 'Private Room', NULL, 1, 'Request', 510, NULL, NULL, NULL, NULL, NULL, 'Active', 8, 23, 3, 10, '2026-04-05 02:20:39.631961+00', '2026-04-05 02:20:39.631961+00', 255),
 	(25, '250 City Rd_Room A — Couple Room', false, 'Private Room', NULL, 2, 'Request', 530, NULL, NULL, NULL, NULL, NULL, 'Active', 8, 23, 3, 10, '2026-04-05 02:20:39.64875+00', '2026-04-05 02:20:39.64875+00', 265),
 	(26, '250 City Rd_Room B — Single Room', false, 'Private Room', NULL, 1, 'Request', 510, NULL, NULL, NULL, NULL, NULL, 'Active', 8, 23, 3, 10, '2026-04-05 02:20:39.660119+00', '2026-04-05 02:20:39.660119+00', 255),
-	(27, '250 City Rd_Room B — Couple Room', false, 'Private Room', NULL, 2, 'Request', 530, NULL, NULL, NULL, NULL, NULL, 'Active', 8, 23, 3, 10, '2026-04-05 02:20:39.675009+00', '2026-04-05 02:20:39.675009+00', 265);
+	(27, '250 City Rd_Room B — Couple Room', false, 'Private Room', NULL, 2, 'Request', 530, NULL, NULL, NULL, NULL, NULL, 'Active', 8, 23, 3, 10, '2026-04-05 02:20:39.675009+00', '2026-04-05 02:20:39.675009+00', 265),
+	(28, '53 Batman St, West Melbourne_Entire Apartment', false, NULL, NULL, 4, NULL, 790, 'AUD', NULL, NULL, NULL, NULL, 'Active', 9, NULL, 4, 11, '2026-04-05 02:20:39.683715+00', '2026-04-11 00:18:16.283+00', 395);
 INSERT INTO public.suburbs (id, name, state, postcode, country_code, area_name, lat, lng, status, created_at, updated_at) VALUES
 	(1, 'Surry Hills', 'NSW', '2010', 'AU', 'Inner East', -33.8866, 151.2094, 'Active', '2026-04-04 23:24:44.118415+00', '2026-04-04 23:24:44.118415+00'),
 	(2, 'Newtown', 'NSW', '2042', 'AU', 'Inner West', -33.8975, 151.1782, 'Active', '2026-04-04 23:24:44.159749+00', '2026-04-04 23:24:44.159749+00'),
@@ -1227,7 +1227,7 @@ SELECT pg_catalog.setval('public.service_hosts_id_seq', 1, false);
 SELECT pg_catalog.setval('public.space_availability_id_seq', 1, false);
 SELECT pg_catalog.setval('public.space_blocked_dates_id_seq', 55, true);
 SELECT pg_catalog.setval('public.space_images_id_seq', 61, true);
-SELECT pg_catalog.setval('public.space_option_maps_id_seq', 126, true);
+SELECT pg_catalog.setval('public.space_option_maps_id_seq', 132, true);
 SELECT pg_catalog.setval('public.space_options_id_seq', 53, true);
 SELECT pg_catalog.setval('public.space_policies_id_seq', 5, true);
 SELECT pg_catalog.setval('public.space_service_catalog_id_seq', 1, false);

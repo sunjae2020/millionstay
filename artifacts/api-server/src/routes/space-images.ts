@@ -6,7 +6,10 @@ import { spaceImagesTable } from "@workspace/db";
 import { isCloudinaryConfigured, uploadToCloudinary, deleteFromCloudinary } from "../utils/cloudinary";
 
 const router: IRouter = Router();
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 },
+});
 
 async function getImagesForSpace(spaceId: number) {
   return db
@@ -59,15 +62,23 @@ router.get("/v1/spaces/:id/images", async (req, res): Promise<void> => {
   res.json({ success: true, data: [], source: "own" });
 });
 
-router.post("/v1/spaces/:id/images", upload.array("images", 20), async (req, res): Promise<void> => {
+router.post("/v1/spaces/:id/images", (req, res, next) => {
+  upload.any()(req, res, (err) => {
+    if (err) {
+      res.status(400).json({ error: `Upload error: ${err.message}` });
+      return;
+    }
+    next();
+  });
+}, async (req, res): Promise<void> => {
   const spaceId = Number(req.params.id);
   if (!spaceId) { res.status(400).json({ error: "Invalid space id" }); return; }
 
   const [space] = await db.select().from(spacesTable).where(eq(spacesTable.id, spaceId));
   if (!space) { res.status(404).json({ error: "Space not found" }); return; }
 
-  const files = req.files as Express.Multer.File[];
-  if (!files || files.length === 0) { res.status(400).json({ error: "No files provided" }); return; }
+  const files = (req.files as Express.Multer.File[]) ?? [];
+  if (files.length === 0) { res.status(400).json({ error: "No files provided" }); return; }
 
   const existingImages = await db
     .select({ id: spaceImagesTable.id })
