@@ -145,6 +145,7 @@ router.post("/v1/auth/guest/login", async (req, res): Promise<void> => {
         first_name: guest.first_name,
         last_name: guest.last_name,
         account_id: guest.account_id,
+        avatar_url: guest.avatar_url,
       },
     });
   } catch (err) {
@@ -167,6 +168,7 @@ router.get("/v1/auth/guest/me", requireGuestAuth, async (req, res): Promise<void
       last_name: guestUsersTable.last_name,
       phone: guestUsersTable.phone,
       account_id: guestUsersTable.account_id,
+      avatar_url: guestUsersTable.avatar_url,
       is_active: guestUsersTable.is_active,
       created_at: guestUsersTable.created_at,
     })

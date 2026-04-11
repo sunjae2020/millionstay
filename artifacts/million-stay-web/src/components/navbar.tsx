@@ -77,7 +77,8 @@ export function Navbar() {
     setLocation("/");
   };
 
-  const initials = guest?.name ? getInitials(guest.name) : "G";
+  const displayName = [guest?.first_name, guest?.last_name].filter(Boolean).join(" ") || guest?.email || "Guest";
+  const initials = getInitials(displayName);
   const currentLang = LANGUAGES.find((l) => l.code === i18n.language) ?? LANGUAGES[0]!;
 
   return (
@@ -144,16 +145,23 @@ export function Navbar() {
             {token && guest ? (
               <DropdownMenu>
                 <DropdownMenuTrigger className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-orange-50 transition-colors group">
-                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm shrink-0">
-                    {initials}
-                  </div>
+                  {guest.avatar_url ? (
+                    <img src={guest.avatar_url} alt={displayName} className="w-8 h-8 rounded-full object-cover shrink-0 border border-gray-200" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm shrink-0">
+                      {initials}
+                    </div>
+                  )}
                   <span className="hidden sm:inline text-sm font-medium text-gray-700 max-w-[100px] truncate group-hover:text-primary transition-colors">
-                    {guest.name?.split(" ")[0]}
+                    {displayName.split(" ")[0]}
                   </span>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52">
                   <div className="px-3 py-2 border-b border-gray-100 mb-1">
-                    <p className="text-sm font-semibold text-gray-800">{guest.name}</p>
+                    {guest.avatar_url && (
+                      <img src={guest.avatar_url} alt={displayName} className="w-10 h-10 rounded-full object-cover border border-gray-200 mb-2" />
+                    )}
+                    <p className="text-sm font-semibold text-gray-800">{displayName}</p>
                     <p className="text-xs text-gray-500 truncate">{guest.email}</p>
                   </div>
                   <DropdownMenuItem onClick={() => setLocation("/portal/bookings")} className="gap-2">
@@ -232,9 +240,18 @@ export function Navbar() {
 
             {token && guest ? (
               <div className="border-t border-gray-100 mt-2 pt-2 space-y-1">
-                <div className="px-3 py-1.5">
-                  <p className="text-xs font-semibold text-gray-800">{guest.name}</p>
-                  <p className="text-xs text-gray-400 truncate">{guest.email}</p>
+                <div className="px-3 py-1.5 flex items-center gap-2.5">
+                  {guest.avatar_url ? (
+                    <img src={guest.avatar_url} alt={displayName} className="w-9 h-9 rounded-full object-cover shrink-0 border border-gray-200" />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm shrink-0">
+                      {initials}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-gray-800 truncate">{displayName}</p>
+                    <p className="text-xs text-gray-400 truncate">{guest.email}</p>
+                  </div>
                 </div>
                 <button onClick={() => { setMobileOpen(false); setLocation("/portal/bookings"); }} className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:text-primary hover:bg-orange-50 rounded flex items-center gap-2">
                   <LayoutDashboard className="h-4 w-4" /> My Portal
