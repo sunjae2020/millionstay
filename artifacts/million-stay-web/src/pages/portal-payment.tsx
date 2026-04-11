@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import { useAuthStore } from "@/lib/store";
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
+import { PortalLayout } from "@/components/portal-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -95,34 +94,6 @@ function BookingSummary({ booking }: { booking: Record<string, unknown> | null }
 /* ─────────────────────────────────────────────────── */
 /*  Portal side menu                                   */
 /* ─────────────────────────────────────────────────── */
-function PortalSideMenu({ active }: { active: string }) {
-  const [, setLocation] = useLocation();
-  const { logout } = useAuthStore();
-  const items = [
-    { href: "/portal/bookings",  label: "My Bookings", icon: "📋" },
-    { href: "/portal/invoices",  label: "My Invoices", icon: "🧾" },
-    { href: "/portal/documents", label: "Documents",   icon: "📎" },
-    { href: "/portal/profile",   label: "My Profile",  icon: "👤" },
-  ];
-  return (
-    <aside className="w-full md:w-56 shrink-0">
-      <nav className="bg-white rounded-2xl border overflow-hidden">
-        {items.map((item) => (
-          <button key={item.href} onClick={() => setLocation(item.href)}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium border-b last:border-b-0 transition-colors ${
-              active === item.href ? "bg-orange-50 text-primary border-l-2 border-l-primary" : "text-gray-600 hover:bg-gray-50 hover:text-primary"
-            }`}>
-            <span>{item.icon}</span>{item.label}
-          </button>
-        ))}
-        <button onClick={() => { logout(); setLocation("/"); }}
-          className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors">
-          <span>🚪</span>Log out
-        </button>
-      </nav>
-    </aside>
-  );
-}
 
 /* ─────────────────────────────────────────────────── */
 /*  Document types                                     */
@@ -219,8 +190,7 @@ export default function PortalPayment() {
   /* ── Confirmed screen ── */
   if (paid) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
-        <Navbar />
+      <PortalLayout active="/portal/bookings">
         <div className="flex-1 max-w-2xl mx-auto w-full px-4 py-12 text-center">
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200 }}
             className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-5">
@@ -252,31 +222,14 @@ export default function PortalPayment() {
             <Button variant="outline" onClick={() => setLocation("/")} className="rounded-xl">Back to Home</Button>
           </div>
         </div>
-        <Footer />
-      </div>
+        </PortalLayout>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <Navbar />
-
-      <div className="bg-gradient-to-r from-[#c05010] via-[#e07828] to-[#c86820] py-8 px-4">
-        <div className="max-w-5xl mx-auto">
-          <button onClick={() => setLocation("/portal/bookings")}
-            className="flex items-center gap-1 text-white/70 hover:text-white text-sm mb-2 transition-colors">
-            <ChevronLeft className="h-4 w-4" /> My Bookings
-          </button>
-          <p className="text-white/70 text-sm italic mb-1">Your account</p>
-          <h1 className="text-2xl font-bold text-white tracking-wide">Payment & Documents</h1>
-        </div>
-      </div>
-
+    <PortalLayout active="/portal/bookings">
       <div className="flex-1 max-w-5xl mx-auto w-full px-4 py-8">
-        <div className="flex flex-col md:flex-row gap-6">
-          <PortalSideMenu active="/portal/payment" />
-
-          <div className="flex-1 space-y-6">
+        <div className="space-y-6">
 
             {/* Booking not found */}
             {!loadingBooking && !booking && (
@@ -451,9 +404,7 @@ export default function PortalPayment() {
             )}
           </div>
         </div>
-      </div>
 
-      <Footer />
-    </div>
+    </PortalLayout>
   );
 }

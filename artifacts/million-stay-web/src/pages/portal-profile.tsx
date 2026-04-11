@@ -1,54 +1,12 @@
 import { useEffect, useState } from "react";
 import { useLocation, Link } from "wouter";
 import { useAuthStore } from "@/lib/store";
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
+import { PortalLayout } from "@/components/portal-layout";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { User, Lock, ChevronRight, Save, Eye, EyeOff, Phone, Globe } from "lucide-react";
 
-function PortalSideMenu({ active }: { active: string }) {
-  const [, setLocation] = useLocation();
-  const { logout } = useAuthStore();
-
-  const items = [
-    { href: "/portal/bookings", label: "My Bookings", icon: "📋" },
-    { href: "/portal/invoices", label: "My Invoices", icon: "🧾" },
-    { href: "/portal/documents", label: "Documents", icon: "📎" },
-    { href: "/portal/cs", label: "My Inquiries", icon: "🎧" },
-    { href: "/portal/profile", label: "My Profile", icon: "👤" },
-  ];
-
-  return (
-    <aside className="w-full md:w-56 shrink-0">
-      <nav className="bg-white rounded-2xl border overflow-hidden">
-        {items.map((item) => (
-          <button
-            key={item.href}
-            onClick={() => setLocation(item.href)}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium border-b last:border-b-0 transition-colors ${
-              active === item.href
-                ? "bg-orange-50 text-primary border-l-2 border-l-primary"
-                : "text-gray-600 hover:bg-gray-50 hover:text-primary"
-            }`}
-          >
-            <span>{item.icon}</span>
-            {item.label}
-            <ChevronRight className="h-3.5 w-3.5 ml-auto opacity-40" />
-          </button>
-        ))}
-        <button
-          onClick={() => { logout(); setLocation("/"); }}
-          className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
-        >
-          <span>🚪</span>
-          Log out
-        </button>
-      </nav>
-    </aside>
-  );
-}
 
 export default function PortalProfile() {
   const [, setLocation] = useLocation();
@@ -150,21 +108,9 @@ export default function PortalProfile() {
   if (!token) return null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <Navbar />
-
-      <div className="bg-gradient-to-r from-[#c05010] via-[#e07828] to-[#c86820] py-8 px-4">
-        <div className="max-w-5xl mx-auto">
-          <p className="font-cursive text-white/80 text-sm italic mb-1">Your account</p>
-          <h1 className="text-2xl font-bold uppercase text-white tracking-wide">My Profile</h1>
-        </div>
-      </div>
-
+    <PortalLayout active="/portal/profile">
       <div className="flex-1 max-w-5xl mx-auto w-full px-4 py-8">
-        <div className="flex flex-col md:flex-row gap-6">
-          <PortalSideMenu active="/portal/profile" />
-
-          <div className="flex-1 space-y-6">
+        <div className="space-y-6">
             {/* Personal info */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -340,11 +286,8 @@ export default function PortalProfile() {
               <p className="text-xs text-gray-400 font-medium">Email address (cannot be changed)</p>
               <p className="text-sm font-semibold text-gray-700 mt-0.5">{guest?.email}</p>
             </motion.div>
-          </div>
         </div>
       </div>
-
-      <Footer />
-    </div>
+    </PortalLayout>
   );
 }

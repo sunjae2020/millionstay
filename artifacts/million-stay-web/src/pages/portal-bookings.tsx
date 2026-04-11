@@ -4,8 +4,7 @@ import { ChevronRight, AlertTriangle, CreditCard } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useListMyBookings, getListMyBookingsQueryKey } from "@/lib/guest-api";
 import { useAuthStore } from "@/lib/store";
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
+import { PortalLayout } from "@/components/portal-layout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
@@ -105,37 +104,6 @@ function BookingCard({ booking }: { booking: Booking }) {
   );
 }
 
-function PortalSideMenu({ active }: { active: string }) {
-  const [, setLocation] = useLocation();
-  const { logout } = useAuthStore();
-  const items = [
-    { href: "/portal/bookings", label: "My Bookings", icon: "📋" },
-    { href: "/portal/invoices", label: "My Invoices", icon: "🧾" },
-    { href: "/portal/documents", label: "Documents", icon: "📎" },
-    { href: "/portal/cs", label: "My Inquiries", icon: "🎧" },
-    { href: "/portal/profile", label: "My Profile", icon: "👤" },
-  ];
-  return (
-    <aside className="w-full md:w-56 shrink-0">
-      <nav className="bg-white rounded-2xl border overflow-hidden">
-        {items.map((item) => (
-          <button key={item.href} onClick={() => setLocation(item.href)}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium border-b last:border-b-0 transition-colors ${
-              active === item.href ? "bg-orange-50 text-primary border-l-2 border-l-primary" : "text-gray-600 hover:bg-gray-50 hover:text-primary"
-            }`}
-          >
-            <span>{item.icon}</span>{item.label}
-            <ChevronRight className="h-3.5 w-3.5 ml-auto opacity-40" />
-          </button>
-        ))}
-        <button onClick={() => { logout(); setLocation("/"); }}
-          className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors">
-          <span>🚪</span>Log out
-        </button>
-      </nav>
-    </aside>
-  );
-}
 
 export default function PortalBookings() {
   const { t } = useTranslation();
@@ -167,20 +135,9 @@ export default function PortalBookings() {
   if (!token) return null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <Navbar />
-
-      <div className="bg-gradient-to-r from-[#c05010] via-[#e07828] to-[#c86820] py-8 px-4">
-        <div className="max-w-5xl mx-auto">
-          <p className="font-cursive text-white/80 text-sm italic mb-1">Your account</p>
-          <h1 className="text-2xl font-bold uppercase text-white tracking-wide">My Bookings</h1>
-        </div>
-      </div>
-
+    <PortalLayout active="/portal/bookings">
       <div className="flex-1 max-w-5xl mx-auto w-full px-4 py-8">
-        <div className="flex flex-col md:flex-row gap-6">
-          <PortalSideMenu active="/portal/bookings" />
-          <div className="flex-1">
+        <h1 className="text-xl font-bold text-gray-900 mb-6">My Bookings</h1>
         {/* Action Required Banner for PendingPayment bookings */}
         {bookings.filter((b) => b.booking_status === "PendingPayment" || b.booking_status === "Draft").map((b) => (
           <div key={b.id} className="mb-4 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
@@ -230,11 +187,7 @@ export default function PortalBookings() {
             </TabsContent>
           ))}
         </Tabs>
-          </div>
-        </div>
       </div>
-
-      <Footer />
-    </div>
+    </PortalLayout>
   );
 }

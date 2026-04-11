@@ -2,8 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useParams, useLocation, Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/lib/store";
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
+import { PortalLayout } from "@/components/portal-layout";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -156,28 +155,24 @@ export default function PortalCsDetail() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
-        <Navbar />
-        <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-8 space-y-4">
+      <PortalLayout active="/portal/cs">
+        <div className="flex-1 max-w-3xl mx-auto w-full px-4 py-8 space-y-4">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-32 w-full rounded-xl" />
           <Skeleton className="h-48 w-full rounded-xl" />
-        </main>
-        <Footer />
-      </div>
+        </div>
+      </PortalLayout>
     );
   }
 
   if (!ticket) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
-        <Navbar />
-        <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-8 text-center">
+      <PortalLayout active="/portal/cs">
+        <div className="flex-1 max-w-3xl mx-auto w-full px-4 py-8 text-center">
           <p className="text-gray-500">Inquiry not found.</p>
           <Link href="/portal/cs"><Button className="mt-4">Back to Inquiries</Button></Link>
-        </main>
-        <Footer />
-      </div>
+        </div>
+      </PortalLayout>
     );
   }
 
@@ -186,9 +181,8 @@ export default function PortalCsDetail() {
   const isClosed = ticket.status === "Closed";
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <Navbar />
-      <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-8">
+    <PortalLayout active="/portal/cs">
+      <div className="flex-1 max-w-3xl mx-auto w-full px-4 py-8">
         <button onClick={() => setLocation("/portal/cs")} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary mb-5 transition-colors">
           <ArrowLeft className="h-4 w-4" /> Back to Inquiries
         </button>
@@ -321,8 +315,7 @@ export default function PortalCsDetail() {
             </div>
           </div>
         )}
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </PortalLayout>
   );
 }

@@ -1,8 +1,7 @@
 import React, { useEffect } from "react";
 import { useLocation, useParams, Link } from "wouter";
 import { useAuthStore } from "@/lib/store";
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
+import { PortalLayout } from "@/components/portal-layout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -71,8 +70,8 @@ export default function PortalBookingDetail() {
   ] : [];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <Navbar />
+    <PortalLayout active="/portal/bookings">
+      <div className="bg-gray-50 flex-1 flex flex-col">
 
       <div className="bg-gradient-to-r from-[#c05010] via-[#e07828] to-[#c86820] py-8 px-4">
         <div className="max-w-4xl mx-auto">
@@ -251,7 +250,7 @@ export default function PortalBookingDetail() {
         )}
       </div>
 
-      <Footer />
-    </div>
+      </div>
+    </PortalLayout>
   );
 }

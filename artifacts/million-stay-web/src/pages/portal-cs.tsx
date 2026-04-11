@@ -2,8 +2,7 @@ import { useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "@/lib/store";
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
+import { PortalLayout } from "@/components/portal-layout";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, MessageCircle, ChevronRight, HeadphonesIcon, Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
@@ -76,9 +75,8 @@ export default function PortalCs() {
   if (!token) return null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <Navbar />
-      <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-8">
+    <PortalLayout active="/portal/cs">
+      <div className="flex-1 max-w-3xl mx-auto w-full px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -149,8 +147,7 @@ export default function PortalCs() {
             })}
           </div>
         )}
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </PortalLayout>
   );
 }

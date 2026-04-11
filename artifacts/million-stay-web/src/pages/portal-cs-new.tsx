@@ -2,8 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "@/lib/store";
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
+import { PortalLayout } from "@/components/portal-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -109,9 +108,8 @@ export default function PortalCsNew() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <Navbar />
-      <main className="flex-1 max-w-2xl mx-auto w-full px-4 py-8">
+    <PortalLayout active="/portal/cs">
+      <div className="flex-1 max-w-2xl mx-auto w-full px-4 py-8">
         <button onClick={() => setLocation("/portal/cs")} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary mb-6 transition-colors">
           <ArrowLeft className="h-4 w-4" /> Back to Inquiries
         </button>
@@ -207,8 +205,7 @@ export default function PortalCsNew() {
             </div>
           </form>
         </div>
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </PortalLayout>
   );
 }
