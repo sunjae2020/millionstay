@@ -285,6 +285,7 @@ router.get("/v1/guest/profile", async (req, res): Promise<void> => {
       first_name: guestUsersTable.first_name,
       last_name: guestUsersTable.last_name,
       phone: guestUsersTable.phone,
+      nationality: guestUsersTable.nationality,
       account_id: guestUsersTable.account_id,
       created_at: guestUsersTable.created_at,
     })
@@ -327,10 +328,11 @@ router.put("/v1/guest/profile", async (req, res): Promise<void> => {
   const guest = (req as any).guest;
 
   try {
-    const { first_name, last_name, phone } = req.body as {
+    const { first_name, last_name, phone, nationality } = req.body as {
       first_name?: string;
       last_name?: string;
       phone?: string;
+      nationality?: string;
     };
 
     const [updated] = await db
@@ -339,6 +341,7 @@ router.put("/v1/guest/profile", async (req, res): Promise<void> => {
         first_name: first_name ?? undefined,
         last_name: last_name ?? undefined,
         phone: phone ?? undefined,
+        nationality: nationality ?? undefined,
       })
       .where(eq(guestUsersTable.id, guest.id))
       .returning({
@@ -347,6 +350,7 @@ router.put("/v1/guest/profile", async (req, res): Promise<void> => {
         first_name: guestUsersTable.first_name,
         last_name: guestUsersTable.last_name,
         phone: guestUsersTable.phone,
+        nationality: guestUsersTable.nationality,
       });
 
     // Also update account name if provided

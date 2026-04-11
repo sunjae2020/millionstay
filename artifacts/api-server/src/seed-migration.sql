@@ -758,11 +758,11 @@ INSERT INTO public.email_template (id, template_code, subject, body_html, body_t
   <p>Click the link below to reset your password:</p>
   <p><a href="{{reset_link}}">Reset Password</a></p>
   <p>This link expires in 1 hour.</p>', NULL, '["user_name", "reset_link"]', true, '2026-04-05 01:24:07.022866+00', '2026-04-05 01:24:07.022866+00');
-INSERT INTO public.guest_users (id, account_id, email, password_hash, first_name, last_name, phone, is_active, email_verified, created_at, updated_at) VALUES
-	(1, 14, 'testguest@millionstay.com', '$2b$10$K0kxZhDyECoEHDMT2XF0m.eo5/CK7M3L8BKc8cAmZq6hzMMotbFo.', 'Test', 'Guest', '+61 400 000 000', true, false, '2026-04-06 09:46:17.913442+00', '2026-04-06 09:46:38.934+00'),
-	(2, 15, 'demo@millionstay.com.au', '$2b$10$os1S0YL5oru33AHaguKba.AbUnKQpkgJ37u.yYp2xsfnt3HlAjZdK', 'Demo', 'Guest', NULL, true, false, '2026-04-07 05:35:40.663648+00', '2026-04-07 05:35:40.663648+00'),
-	(3, 16, 'test_e2e_1775540496445@example.com', '$2b$10$SAYrHE6AqGF0L5OK7I/0SuEQNpwTOJHwiptFzpkh13UCWwuvst1t6', 'Test', 'User', NULL, true, false, '2026-04-07 05:41:50.288412+00', '2026-04-07 05:41:50.288412+00'),
-	(4, 17, 'teswt@timest.co.kr', '$2b$10$eVyV.erreliM73FLem0x4e5RYdA0T2tXVqZEGSIN1J4we84YG5jDK', 'Gildong', 'HONG', NULL, true, false, '2026-04-09 05:11:01.100757+00', '2026-04-09 05:11:01.100757+00');
+INSERT INTO public.guest_users (id, account_id, email, password_hash, first_name, last_name, phone, is_active, email_verified, created_at, updated_at, nationality) VALUES
+	(1, 14, 'testguest@millionstay.com', '$2b$10$K0kxZhDyECoEHDMT2XF0m.eo5/CK7M3L8BKc8cAmZq6hzMMotbFo.', 'Test', 'Guest', '+61 400 000 000', true, false, '2026-04-06 09:46:17.913442+00', '2026-04-06 09:46:38.934+00', NULL),
+	(2, 15, 'demo@millionstay.com.au', '$2b$10$os1S0YL5oru33AHaguKba.AbUnKQpkgJ37u.yYp2xsfnt3HlAjZdK', 'Demo', 'Guest', NULL, true, false, '2026-04-07 05:35:40.663648+00', '2026-04-07 05:35:40.663648+00', NULL),
+	(3, 16, 'test_e2e_1775540496445@example.com', '$2b$10$SAYrHE6AqGF0L5OK7I/0SuEQNpwTOJHwiptFzpkh13UCWwuvst1t6', 'Test', 'User', NULL, true, false, '2026-04-07 05:41:50.288412+00', '2026-04-07 05:41:50.288412+00', NULL),
+	(4, 17, 'teswt@timest.co.kr', '$2b$10$eVyV.erreliM73FLem0x4e5RYdA0T2tXVqZEGSIN1J4we84YG5jDK', 'Gildong', 'HONG', NULL, true, false, '2026-04-09 05:11:01.100757+00', '2026-04-09 05:11:01.100757+00', NULL);
 INSERT INTO public.integration_settings (key, value, updated_at) VALUES
 	('STRIPE_SECRET_KEY', '', '2026-04-05 14:25:02.592'),
 	('CLOUDINARY_CLOUD_NAME', 'dthc3gmdr', '2026-04-05 14:26:04.598'),

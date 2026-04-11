@@ -36,7 +36,7 @@ export default function PortalProfile() {
 
   useEffect(() => {
     if (!token) return;
-    fetch(`${import.meta.env.VITE_API_URL ?? ""}/api/v1/guest/me`, {
+    fetch(`${import.meta.env.VITE_API_URL ?? ""}/api/v1/guest/profile`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())
@@ -57,12 +57,12 @@ export default function PortalProfile() {
     setProfileLoading(true);
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL ?? ""}/api/v1/guest/profile`, {
-        method: "PATCH",
+        method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(profileForm),
       });
       const j = await res.json();
-      if (!res.ok) throw new Error(j.error ?? "Update failed");
+      if (!res.ok) throw new Error(typeof j.error === "string" ? j.error : (j.error?.message ?? "Update failed"));
       setGuest({
         ...guest!,
         name: `${j.data.first_name} ${j.data.last_name}`,

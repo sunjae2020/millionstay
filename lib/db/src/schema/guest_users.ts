@@ -10,6 +10,7 @@ export const guestUsersTable = pgTable("guest_users", {
   first_name: text("first_name"),
   last_name: text("last_name"),
   phone: text("phone"),
+  nationality: text("nationality"),
   is_active: boolean("is_active").notNull().default(true),
   email_verified: boolean("email_verified").notNull().default(false),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
