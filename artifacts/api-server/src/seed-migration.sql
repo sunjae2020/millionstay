@@ -568,7 +568,7 @@ INSERT INTO public.accounts (id, name, account_type, primary_contact_id, seconda
 	(14, 'Test Guest', 'Guest', NULL, NULL, 'testguest@millionstay.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'AUD', NULL, NULL, false, 'Active', '2026-04-06 09:46:17.901618+00', '2026-04-06 09:46:17.901618+00'),
 	(16, 'Test User', 'Guest', NULL, NULL, 'test_e2e_1775540496445@example.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'AUD', NULL, NULL, false, 'Active', '2026-04-07 05:41:50.283818+00', '2026-04-07 05:41:50.283818+00'),
 	(17, 'Gildong HONG', 'Guest', NULL, NULL, 'teswt@timest.co.kr', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'AUD', NULL, NULL, false, 'Active', '2026-04-09 05:11:01.06402+00', '2026-04-09 05:11:01.06402+00'),
-	(15, 'Demo Guest', 'Guest', NULL, NULL, 'demo@millionstay.com.au', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'AUD', NULL, NULL, false, 'Active', '2026-04-07 05:35:30.26358+00', '2026-04-11 10:39:18.977+00');
+	(15, 'Demo Guest', 'Guest', NULL, NULL, 'demo@millionstay.com.au', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'AUD', NULL, NULL, false, 'Active', '2026-04-07 05:35:30.26358+00', '2026-04-11 11:07:52.985+00');
 INSERT INTO public.admin_users (id, email, password_hash, role, first_name, last_name, is_active, force_password_change, last_login_at, created_at, updated_at) VALUES
 	(1, 'admin@millionstay.com', '$2b$10$FX2diLhEDwiXWzaGJtZoXeOS1x/pizNnsMOqPkpnwaR3DxlC.OBU.', 'Super Admin', 'Million', 'Stay', true, false, '2026-04-11 04:57:42.92+00', '2026-04-05 08:29:14.152582+00', '2026-04-11 04:57:42.92+00');
 INSERT INTO public.beneficiaries (id, name, contract_product_id, account_id, commission_id, commission_type, split_percentage, fixed_amount, priority, notes, status, created_at, updated_at) VALUES
@@ -758,11 +758,11 @@ INSERT INTO public.email_template (id, template_code, subject, body_html, body_t
   <p>Click the link below to reset your password:</p>
   <p><a href="{{reset_link}}">Reset Password</a></p>
   <p>This link expires in 1 hour.</p>', NULL, '["user_name", "reset_link"]', true, '2026-04-05 01:24:07.022866+00', '2026-04-05 01:24:07.022866+00');
-INSERT INTO public.guest_users (id, account_id, email, password_hash, first_name, last_name, phone, is_active, email_verified, created_at, updated_at, nationality) VALUES
-	(1, 14, 'testguest@millionstay.com', '$2b$10$K0kxZhDyECoEHDMT2XF0m.eo5/CK7M3L8BKc8cAmZq6hzMMotbFo.', 'Test', 'Guest', '+61 400 000 000', true, false, '2026-04-06 09:46:17.913442+00', '2026-04-06 09:46:38.934+00', NULL),
-	(3, 16, 'test_e2e_1775540496445@example.com', '$2b$10$SAYrHE6AqGF0L5OK7I/0SuEQNpwTOJHwiptFzpkh13UCWwuvst1t6', 'Test', 'User', NULL, true, false, '2026-04-07 05:41:50.288412+00', '2026-04-07 05:41:50.288412+00', NULL),
-	(4, 17, 'teswt@timest.co.kr', '$2b$10$eVyV.erreliM73FLem0x4e5RYdA0T2tXVqZEGSIN1J4we84YG5jDK', 'Gildong', 'HONG', NULL, true, false, '2026-04-09 05:11:01.100757+00', '2026-04-09 05:11:01.100757+00', NULL),
-	(2, 15, 'demo@millionstay.com.au', '$2b$10$os1S0YL5oru33AHaguKba.AbUnKQpkgJ37u.yYp2xsfnt3HlAjZdK', 'Demo', 'Guest', '+61412345678', true, false, '2026-04-07 05:35:40.663648+00', '2026-04-11 10:39:18.943+00', 'Korean');
+INSERT INTO public.guest_users (id, account_id, email, password_hash, first_name, last_name, phone, is_active, email_verified, created_at, updated_at, nationality, date_of_birth, gender, university, department, student_id, study_year, bank_name, bank_account_name, bank_bsb, bank_account_number, preferred_payment_method) VALUES
+	(1, 14, 'testguest@millionstay.com', '$2b$10$K0kxZhDyECoEHDMT2XF0m.eo5/CK7M3L8BKc8cAmZq6hzMMotbFo.', 'Test', 'Guest', '+61 400 000 000', true, false, '2026-04-06 09:46:17.913442+00', '2026-04-06 09:46:38.934+00', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+	(3, 16, 'test_e2e_1775540496445@example.com', '$2b$10$SAYrHE6AqGF0L5OK7I/0SuEQNpwTOJHwiptFzpkh13UCWwuvst1t6', 'Test', 'User', NULL, true, false, '2026-04-07 05:41:50.288412+00', '2026-04-07 05:41:50.288412+00', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+	(4, 17, 'teswt@timest.co.kr', '$2b$10$eVyV.erreliM73FLem0x4e5RYdA0T2tXVqZEGSIN1J4we84YG5jDK', 'Gildong', 'HONG', NULL, true, false, '2026-04-09 05:11:01.100757+00', '2026-04-09 05:11:01.100757+00', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+	(2, 15, 'demo@millionstay.com.au', '$2b$10$os1S0YL5oru33AHaguKba.AbUnKQpkgJ37u.yYp2xsfnt3HlAjZdK', 'Demo', 'Guest', '+61412345678', true, false, '2026-04-07 05:35:40.663648+00', '2026-04-11 11:07:52.95+00', 'Korean', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 INSERT INTO public.integration_settings (key, value, updated_at) VALUES
 	('STRIPE_SECRET_KEY', '', '2026-04-05 14:25:02.592'),
 	('CLOUDINARY_CLOUD_NAME', 'dthc3gmdr', '2026-04-05 14:26:04.598'),
@@ -1242,6 +1242,7 @@ SELECT pg_catalog.setval('public.cs_messages_id_seq', 8, true);
 SELECT pg_catalog.setval('public.cs_tickets_id_seq', 5, true);
 SELECT pg_catalog.setval('public.email_log_id_seq', 1, false);
 SELECT pg_catalog.setval('public.email_template_id_seq', 10, true);
+SELECT pg_catalog.setval('public.guest_emergency_contacts_id_seq', 1, false);
 SELECT pg_catalog.setval('public.guest_users_id_seq', 4, true);
 SELECT pg_catalog.setval('public.invoices_id_seq', 6, true);
 SELECT pg_catalog.setval('public.leads_id_seq', 4, true);

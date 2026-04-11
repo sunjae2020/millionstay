@@ -3,6 +3,7 @@ import { eq, and, desc, asc } from "drizzle-orm";
 import {
   db,
   guestUsersTable,
+  guestEmergencyContactsTable,
   bookingsTable,
   spacesTable,
   propertiesTable,
@@ -273,7 +274,7 @@ router.get("/v1/guest/invoices", async (req, res): Promise<void> => {
 });
 
 /* ───────────────────────────────────────────────────────
-   GET /api/v1/guest/profile — 내 프로필
+   GET /api/v1/guest/profile — 내 프로필 (전체)
 ──────────────────────────────────────────────────────── */
 router.get("/v1/guest/profile", async (req, res): Promise<void> => {
   const guest = (req as any).guest;
@@ -286,6 +287,17 @@ router.get("/v1/guest/profile", async (req, res): Promise<void> => {
       last_name: guestUsersTable.last_name,
       phone: guestUsersTable.phone,
       nationality: guestUsersTable.nationality,
+      date_of_birth: guestUsersTable.date_of_birth,
+      gender: guestUsersTable.gender,
+      university: guestUsersTable.university,
+      department: guestUsersTable.department,
+      student_id: guestUsersTable.student_id,
+      study_year: guestUsersTable.study_year,
+      bank_name: guestUsersTable.bank_name,
+      bank_account_name: guestUsersTable.bank_account_name,
+      bank_bsb: guestUsersTable.bank_bsb,
+      bank_account_number: guestUsersTable.bank_account_number,
+      preferred_payment_method: guestUsersTable.preferred_payment_method,
       account_id: guestUsersTable.account_id,
       created_at: guestUsersTable.created_at,
     })
@@ -298,42 +310,27 @@ router.get("/v1/guest/profile", async (req, res): Promise<void> => {
     return;
   }
 
-  // Get account details if exists
-  let account = null;
-  if (profile.account_id) {
-    const [acc] = await db
-      .select({
-        name: accountsTable.name,
-        account_email: accountsTable.account_email,
-        phone1: accountsTable.phone1,
-        address_line1: accountsTable.address_line1,
-        address_suburb: accountsTable.address_suburb,
-        address_state: accountsTable.address_state,
-        address_postcode: accountsTable.address_postcode,
-        address_country: accountsTable.address_country,
-      })
-      .from(accountsTable)
-      .where(eq(accountsTable.id, profile.account_id))
-      .limit(1);
-    account = acc ?? null;
-  }
+  const emergencyContacts = await db
+    .select()
+    .from(guestEmergencyContactsTable)
+    .where(eq(guestEmergencyContactsTable.guest_user_id, guest.id))
+    .orderBy(asc(guestEmergencyContactsTable.id));
 
-  res.json({ success: true, data: { ...profile, account } });
+  res.json({ success: true, data: { ...profile, emergency_contacts: emergencyContacts } });
 });
 
 /* ───────────────────────────────────────────────────────
-   PUT /api/v1/guest/profile — 프로필 수정
+   PUT /api/v1/guest/profile — 프로필 수정 (전체)
 ──────────────────────────────────────────────────────── */
 router.put("/v1/guest/profile", async (req, res): Promise<void> => {
   const guest = (req as any).guest;
 
   try {
-    const { first_name, last_name, phone, nationality } = req.body as {
-      first_name?: string;
-      last_name?: string;
-      phone?: string;
-      nationality?: string;
-    };
+    const {
+      first_name, last_name, phone, nationality, date_of_birth, gender,
+      university, department, student_id, study_year,
+      bank_name, bank_account_name, bank_bsb, bank_account_number, preferred_payment_method,
+    } = req.body as Record<string, string | undefined>;
 
     const [updated] = await db
       .update(guestUsersTable)
@@ -342,35 +339,29 @@ router.put("/v1/guest/profile", async (req, res): Promise<void> => {
         last_name: last_name ?? undefined,
         phone: phone ?? undefined,
         nationality: nationality ?? undefined,
+        date_of_birth: date_of_birth ?? undefined,
+        gender: gender ?? undefined,
+        university: university ?? undefined,
+        department: department ?? undefined,
+        student_id: student_id ?? undefined,
+        study_year: study_year ?? undefined,
+        bank_name: bank_name ?? undefined,
+        bank_account_name: bank_account_name ?? undefined,
+        bank_bsb: bank_bsb ?? undefined,
+        bank_account_number: bank_account_number ?? undefined,
+        preferred_payment_method: preferred_payment_method ?? undefined,
       })
       .where(eq(guestUsersTable.id, guest.id))
-      .returning({
-        id: guestUsersTable.id,
-        email: guestUsersTable.email,
-        first_name: guestUsersTable.first_name,
-        last_name: guestUsersTable.last_name,
-        phone: guestUsersTable.phone,
-        nationality: guestUsersTable.nationality,
-      });
+      .returning();
 
     // Also update account name if provided
     if (guest.account_id && (first_name || last_name)) {
-      const [currentGuest] = await db
-        .select({ first_name: guestUsersTable.first_name, last_name: guestUsersTable.last_name })
-        .from(guestUsersTable)
-        .where(eq(guestUsersTable.id, guest.id))
-        .limit(1);
-
       const fullName = [
-        first_name ?? currentGuest?.first_name,
-        last_name ?? currentGuest?.last_name,
+        first_name ?? updated?.first_name,
+        last_name ?? updated?.last_name,
       ].filter(Boolean).join(" ");
-
       if (fullName) {
-        await db
-          .update(accountsTable)
-          .set({ name: fullName })
-          .where(eq(accountsTable.id, guest.account_id));
+        await db.update(accountsTable).set({ name: fullName }).where(eq(accountsTable.id, guest.account_id));
       }
     }
 
@@ -378,6 +369,127 @@ router.put("/v1/guest/profile", async (req, res): Promise<void> => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, error: "Failed to update profile" });
+  }
+});
+
+/* ───────────────────────────────────────────────────────
+   GET /api/v1/guest/emergency-contacts
+──────────────────────────────────────────────────────── */
+router.get("/v1/guest/emergency-contacts", async (req, res): Promise<void> => {
+  const guest = (req as any).guest;
+  const contacts = await db
+    .select()
+    .from(guestEmergencyContactsTable)
+    .where(eq(guestEmergencyContactsTable.guest_user_id, guest.id))
+    .orderBy(asc(guestEmergencyContactsTable.id));
+  res.json({ success: true, data: contacts });
+});
+
+/* ───────────────────────────────────────────────────────
+   POST /api/v1/guest/emergency-contacts
+──────────────────────────────────────────────────────── */
+router.post("/v1/guest/emergency-contacts", async (req, res): Promise<void> => {
+  const guest = (req as any).guest;
+  try {
+    const { name, relationship, phone, email, is_primary } = req.body as {
+      name: string;
+      relationship?: string;
+      phone?: string;
+      email?: string;
+      is_primary?: boolean;
+    };
+    if (!name) {
+      res.status(400).json({ success: false, error: "Name is required" });
+      return;
+    }
+    if (is_primary) {
+      await db.update(guestEmergencyContactsTable)
+        .set({ is_primary: false })
+        .where(eq(guestEmergencyContactsTable.guest_user_id, guest.id));
+    }
+    const [created] = await db.insert(guestEmergencyContactsTable).values({
+      guest_user_id: guest.id,
+      name,
+      relationship: relationship ?? null,
+      phone: phone ?? null,
+      email: email ?? null,
+      is_primary: is_primary ?? false,
+    }).returning();
+    res.status(201).json({ success: true, data: created });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: "Failed to create emergency contact" });
+  }
+});
+
+/* ───────────────────────────────────────────────────────
+   PUT /api/v1/guest/emergency-contacts/:id
+──────────────────────────────────────────────────────── */
+router.put("/v1/guest/emergency-contacts/:id", async (req, res): Promise<void> => {
+  const guest = (req as any).guest;
+  const contactId = Number(req.params.id);
+  try {
+    const { name, relationship, phone, email, is_primary } = req.body as {
+      name?: string;
+      relationship?: string;
+      phone?: string;
+      email?: string;
+      is_primary?: boolean;
+    };
+    const [existing] = await db.select({ id: guestEmergencyContactsTable.id })
+      .from(guestEmergencyContactsTable)
+      .where(and(
+        eq(guestEmergencyContactsTable.id, contactId),
+        eq(guestEmergencyContactsTable.guest_user_id, guest.id),
+      )).limit(1);
+    if (!existing) {
+      res.status(404).json({ success: false, error: "Contact not found" });
+      return;
+    }
+    if (is_primary) {
+      await db.update(guestEmergencyContactsTable)
+        .set({ is_primary: false })
+        .where(eq(guestEmergencyContactsTable.guest_user_id, guest.id));
+    }
+    const [updated] = await db.update(guestEmergencyContactsTable)
+      .set({
+        name: name ?? undefined,
+        relationship: relationship ?? undefined,
+        phone: phone ?? undefined,
+        email: email ?? undefined,
+        is_primary: is_primary ?? undefined,
+      })
+      .where(and(
+        eq(guestEmergencyContactsTable.id, contactId),
+        eq(guestEmergencyContactsTable.guest_user_id, guest.id),
+      )).returning();
+    res.json({ success: true, data: updated });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: "Failed to update emergency contact" });
+  }
+});
+
+/* ───────────────────────────────────────────────────────
+   DELETE /api/v1/guest/emergency-contacts/:id
+──────────────────────────────────────────────────────── */
+router.delete("/v1/guest/emergency-contacts/:id", async (req, res): Promise<void> => {
+  const guest = (req as any).guest;
+  const contactId = Number(req.params.id);
+  try {
+    const [deleted] = await db.delete(guestEmergencyContactsTable)
+      .where(and(
+        eq(guestEmergencyContactsTable.id, contactId),
+        eq(guestEmergencyContactsTable.guest_user_id, guest.id),
+      )).returning({ id: guestEmergencyContactsTable.id });
+    if (!deleted) {
+      res.status(404).json({ success: false, error: "Contact not found" });
+      return;
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: "Failed to delete emergency contact" });
   }
 });
 
