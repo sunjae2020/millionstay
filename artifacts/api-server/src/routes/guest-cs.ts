@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
-import { eq, desc, and, sql } from "drizzle-orm";
-import { db, csTicketsTable, csMessagesTable, bookingsTable } from "@workspace/db";
+import { eq, desc, and, sql, lte } from "drizzle-orm";
+import { db, csTicketsTable, csMessagesTable, bookingsTable, announcementsTable, guestDirectMessagesTable } from "@workspace/db";
 import { requireGuestAuth } from "../middlewares/requireGuestAuth";
 import { isCloudinaryConfigured, uploadToCloudinary } from "../utils/cloudinary";
 
@@ -175,6 +175,82 @@ router.post("/v1/guest/cs-tickets/:id/messages", requireGuestAuth, async (req, r
     res.status(201).json({ success: true, data: msg });
   } catch {
     res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to send message" } });
+  }
+});
+
+/* ─────────────────────────────────────────────
+   ANNOUNCEMENTS: List published (guest)
+───────────────────────────────────────────── */
+router.get("/v1/guest/announcements", requireGuestAuth, async (req, res): Promise<void> => {
+  try {
+    const now = new Date();
+    const rows = await db
+      .select()
+      .from(announcementsTable)
+      .where(
+        and(
+          eq(announcementsTable.is_published, 1),
+          lte(announcementsTable.published_at, now),
+        )
+      )
+      .orderBy(desc(announcementsTable.published_at));
+
+    // Filter out expired announcements
+    const active = rows.filter(
+      (r) => !r.expires_at || new Date(r.expires_at) > now
+    );
+
+    res.json({ success: true, data: active });
+  } catch {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to list announcements" } });
+  }
+});
+
+/* ─────────────────────────────────────────────
+   DIRECT MESSAGES: List for guest
+───────────────────────────────────────────── */
+router.get("/v1/guest/direct-messages", requireGuestAuth, async (req, res): Promise<void> => {
+  try {
+    const guestId = (req as any).guest.id;
+    const rows = await db
+      .select()
+      .from(guestDirectMessagesTable)
+      .where(eq(guestDirectMessagesTable.guest_user_id, guestId))
+      .orderBy(desc(guestDirectMessagesTable.created_at));
+
+    const unreadCount = rows.filter((r) => r.is_read === 0).length;
+    res.json({ success: true, data: rows, meta: { unread_count: unreadCount } });
+  } catch {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to list messages" } });
+  }
+});
+
+/* ─────────────────────────────────────────────
+   DIRECT MESSAGES: Mark as read
+───────────────────────────────────────────── */
+router.patch("/v1/guest/direct-messages/:id/read", requireGuestAuth, async (req, res): Promise<void> => {
+  try {
+    const guestId = (req as any).guest.id;
+    const id = Number(req.params.id);
+
+    const [updated] = await db
+      .update(guestDirectMessagesTable)
+      .set({ is_read: 1, read_at: new Date() })
+      .where(
+        and(
+          eq(guestDirectMessagesTable.id, id),
+          eq(guestDirectMessagesTable.guest_user_id, guestId),
+        )
+      )
+      .returning();
+
+    if (!updated) {
+      res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Message not found" } });
+      return;
+    }
+    res.json({ success: true, data: updated });
+  } catch {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to mark message as read" } });
   }
 });
 

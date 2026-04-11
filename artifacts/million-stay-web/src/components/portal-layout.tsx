@@ -20,7 +20,7 @@ const NAV_ITEMS = [
   { href: "/portal/bookings", label: "My Bookings", icon: BookOpen },
   { href: "/portal/invoices", label: "My Invoices", icon: FileText },
   { href: "/portal/documents", label: "Documents", icon: FileImage },
-  { href: "/portal/cs", label: "My Inquiries", icon: Headphones },
+  { href: "/portal/cs", label: "Communications", icon: Headphones },
   { href: "/portal/profile", label: "My Profile", icon: User },
 ];
 
