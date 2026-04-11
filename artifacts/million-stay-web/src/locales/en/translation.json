@@ -1,14 +1,128 @@
 {
   "nav": {
-    "search": "Find a room",
+    "search": "Find a Room",
     "login": "Log in",
     "signup": "Sign up",
-    "myBookings": "My Bookings"
+    "logout": "Log out",
+    "myBookings": "My Bookings",
+    "myPortal": "My Portal",
+    "language": "Language",
+    "links": {
+      "search": "Search",
+      "stayPlans": "Stay Plans",
+      "aboutUs": "About Us",
+      "forStudents": "For Students",
+      "forAgent": "For Agent"
+    }
   },
   "home": {
-    "hero_title": "Find your perfect home in Melbourne",
-    "hero_subtitle": "Safe, furnished rooms for students and digital nomads",
-    "search_button": "Search"
+    "hero_tagline": "Million Homestay Australia",
+    "hero_title": "WELCOME",
+    "hero_subtitle": "Your trusted home away from home in Melbourne, Australia",
+    "search": {
+      "space_type": "Space Type",
+      "any_type": "Any type",
+      "any_suburb": "Any suburb",
+      "check_in": "Check In",
+      "check_out": "Check Out",
+      "search": "Search"
+    },
+    "why": {
+      "sub": "OUR ADVANTAGES",
+      "title": "Why Choose Us",
+      "item1_title": "Testimonials Network",
+      "item1_desc": "Thousands of happy students and nomads have found their perfect Melbourne home through our verified listings and trusted community.",
+      "item2_title": "Student & Multi-Sport Focus",
+      "item2_desc": "We understand the needs of international students — from university proximity to flexible leases that match your enrollment period.",
+      "item3_title": "All-Inclusive Comfort",
+      "item3_desc": "Utilities, Wi-Fi, cleaning, and furnishings are all included. Move in with just your luggage — we handle everything else."
+    },
+    "listing": {
+      "sub": "AVAILABLE NOW",
+      "title": "Million Homestay Listing",
+      "view_all": "View All Listings",
+      "per_week": "/ week",
+      "book_now": "Book Now"
+    },
+    "spotlight": {
+      "per_week": "/ Per Week",
+      "desc": "Fully furnished private room in a shared house. Weekly rate is all-inclusive — WiFi, utilities, and cleaning included.",
+      "book_now": "Book Now"
+    },
+    "plans": {
+      "sub": "FLEXIBLE OPTIONS",
+      "title": "Choose Your Stay Plan",
+      "note": "The longer you stay, the more you save — select a plan that fits your timeline.",
+      "book_now": "Book Now",
+      "stay": "Stay",
+      "save5": "Save 5%",
+      "save10": "Save 10%",
+      "m1_period": "1-Month",
+      "m1_label": "Flexible Contract",
+      "m1_desc": "Ideal for short trips or trial stays. Full flexibility with a 2-week notice period.",
+      "m1_f1": "2-week cancellation notice",
+      "m1_f2": "Month-to-month renewal",
+      "m1_f3": "All utilities included",
+      "m1_f4": "Fully furnished room",
+      "m1_f5": "Shared common areas",
+      "m1_f6": "Move in anytime",
+      "m3_period": "3-Month",
+      "m3_label": "Better Value",
+      "m3_desc": "Our most popular option for semester students. Save 5% vs monthly rate.",
+      "m3_f1": "5% discount on weekly rate",
+      "m3_f2": "Priority room selection",
+      "m3_f3": "All utilities included",
+      "m3_f4": "Fully furnished room",
+      "m3_f5": "Dedicated study space",
+      "m3_f6": "Free airport pickup",
+      "m6_period": "6-Month",
+      "m6_label": "Best Deal",
+      "m6_desc": "Maximum savings for long-term residents. Save 10% and lock in your preferred room.",
+      "m6_f1": "10% discount on weekly rate",
+      "m6_f2": "Guaranteed room lock-in",
+      "m6_f3": "All utilities included",
+      "m6_f4": "Fully furnished room",
+      "m6_f5": "Free airport pickup",
+      "m6_f6": "Complimentary cleaning"
+    },
+    "cta": {
+      "tagline": "Million Homestay Australia...",
+      "title": "YOUR BEST CHOICE"
+    },
+    "amenities": {
+      "sub": "ALL-INCLUSIVE",
+      "title": "What's Included in Your Stay",
+      "wifi": "High-Speed Wi-Fi",
+      "flexible": "Flexible Stay Options",
+      "furnished": "Fully Furnished Rooms",
+      "safe": "Safe & Secure Listing",
+      "pricing": "All-Inclusive Pricing",
+      "pickup": "Optional Airport Pickup"
+    },
+    "features": {
+      "entire_unit": "Entire unit",
+      "private_entry": "Private entry",
+      "free_wifi": "Free Wi-Fi",
+      "private_room": "Private room",
+      "shared_bathroom": "Shared bathroom",
+      "shared_room": "Shared room",
+      "best_value": "Best value"
+    }
+  },
+  "footer": {
+    "desc": "Safe, affordable, and fully furnished accommodation for international students and digital nomads in Melbourne.",
+    "nav_heading": "Navigation",
+    "support_heading": "Support",
+    "copyright": "© {{year}} Million Homestay Australia. All Rights Reserved.",
+    "serving": "Serving Melbourne's international community since 2015",
+    "home": "Home",
+    "find_room": "Find a Room",
+    "booking": "Booking",
+    "for_students": "For Students",
+    "faq": "FAQ",
+    "house_rules": "House Rules",
+    "privacy_policy": "Privacy Policy",
+    "contact": "Contact Us"
   },
   "search": {
     "results_count": "rooms found",

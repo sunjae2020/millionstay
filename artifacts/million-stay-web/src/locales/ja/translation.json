@@ -5,11 +5,22 @@
     "contact": "お問い合わせ",
     "login": "ログイン",
     "signup": "新規登録",
+    "logout": "ログアウト",
     "my_bookings": "予約一覧",
     "my_invoices": "請求書",
     "my_documents": "書類",
     "profile": "プロフィール",
-    "logout": "ログアウト"
+    "search": "部屋を探す",
+    "myBookings": "予約一覧",
+    "myPortal": "マイポータル",
+    "language": "言語",
+    "links": {
+      "search": "検索",
+      "stayPlans": "滞在プラン",
+      "aboutUs": "会社概要",
+      "forStudents": "留学生の方へ",
+      "forAgent": "エージェントの方へ"
+    }
   },
   "home": {
     "hero_title": "メルボルンで、あなたの新しい住まいを",
@@ -30,7 +41,119 @@
     "why2": "光熱費・WiFi込み",
     "why3": "24時間サポート",
     "why4": "敷金の安全保証",
-    "testimonials_title": "ご利用者の声"
+    "testimonials_title": "ご利用者の声",
+    "hero_tagline": "Million Homestay Australia",
+    "hero_subtitle_new": "メルボルンで信頼できるアットホームな住まいを",
+    "search": {
+      "space_type": "部屋タイプ",
+      "any_type": "すべてのタイプ",
+      "any_suburb": "すべてのエリア",
+      "check_in": "チェックイン",
+      "check_out": "チェックアウト",
+      "search": "検索"
+    },
+    "why": {
+      "sub": "私たちの強み",
+      "title": "なぜ MillionStay なのか？",
+      "item1_title": "利用者の声",
+      "item1_desc": "数千人の留学生やデジタルノマドが、認証済み物件と信頼できるコミュニティを通じてメルボルンで理想の住まいを見つけました。",
+      "item2_title": "留学生・スポーツ特化",
+      "item2_desc": "大学へのアクセスや学期に合わせた柔軟な契約など、留学生のニーズを深く理解しています。",
+      "item3_title": "オールインクルーシブの快適さ",
+      "item3_desc": "光熱費・Wi-Fi・清掃・家具はすべて込み。荷物だけ持って入居してください — 残りは私たちにお任せを。"
+    },
+    "listing": {
+      "sub": "入居可能",
+      "title": "Million Homestay 物件一覧",
+      "view_all": "すべての物件を見る",
+      "per_week": "/ 週",
+      "book_now": "予約する"
+    },
+    "spotlight": {
+      "per_week": "/ 週",
+      "desc": "シェアハウス内の完全家具付き個室。週額料金はWi-Fi・光熱費・清掃費すべて込みです。",
+      "book_now": "予約する"
+    },
+    "plans": {
+      "sub": "柔軟な選択肢",
+      "title": "滞在プランを選択",
+      "note": "長く滞在するほどお得になります — あなたのスケジュールに合ったプランをお選びください。",
+      "book_now": "予約する",
+      "stay": "滞在",
+      "save5": "5%オフ",
+      "save10": "10%オフ",
+      "m1_period": "1ヶ月",
+      "m1_label": "フレキシブル契約",
+      "m1_desc": "短期旅行や試し入居に最適。2週間前の通知で退去できる完全な柔軟性。",
+      "m1_f1": "2週間前の解約通知",
+      "m1_f2": "月ごとの自動更新",
+      "m1_f3": "光熱費すべて込み",
+      "m1_f4": "完全家具付きの部屋",
+      "m1_f5": "共用エリアの利用",
+      "m1_f6": "いつでも入居可",
+      "m3_period": "3ヶ月",
+      "m3_label": "お得な選択",
+      "m3_desc": "学期留学生に最も人気のオプション。月額より5%割引。",
+      "m3_f1": "週額料金5%割引",
+      "m3_f2": "優先部屋選択",
+      "m3_f3": "光熱費すべて込み",
+      "m3_f4": "完全家具付きの部屋",
+      "m3_f5": "専用学習スペース",
+      "m3_f6": "空港送迎無料",
+      "m6_period": "6ヶ月",
+      "m6_label": "最大お得",
+      "m6_desc": "長期入居者向けの最大割引プラン。10%割引＋希望部屋の優先確保。",
+      "m6_f1": "週額料金10%割引",
+      "m6_f2": "部屋の優先確保保証",
+      "m6_f3": "光熱費すべて込み",
+      "m6_f4": "完全家具付きの部屋",
+      "m6_f5": "空港送迎無料",
+      "m6_f6": "清掃サービス無料"
+    },
+    "cta": {
+      "tagline": "Million Homestay Australia...",
+      "title": "あなたへの最高の選択"
+    },
+    "amenities": {
+      "sub": "オールインクルーシブ",
+      "title": "滞在に含まれるすべて",
+      "wifi": "高速Wi-Fi",
+      "flexible": "柔軟な滞在オプション",
+      "furnished": "完全家具付きの部屋",
+      "safe": "安心・審査済み物件",
+      "pricing": "オールインクルーシブ料金",
+      "pickup": "空港送迎オプション"
+    },
+    "features": {
+      "entire_unit": "アパート全体",
+      "private_entry": "専用エントランス",
+      "free_wifi": "Wi-Fi無料",
+      "private_room": "個室",
+      "shared_bathroom": "共用バスルーム",
+      "shared_room": "相部屋",
+      "best_value": "コスパ最高"
+    }
+  },
+  "footer": {
+    "tagline": "外国人ゲスト向けの安心・家具付き住宅",
+    "find_rooms": "部屋を探す",
+    "how_it_works": "ご利用方法",
+    "contact": "お問い合わせ",
+    "faq": "よくある質問",
+    "terms": "利用規約",
+    "privacy": "プライバシーポリシー",
+    "copyright": "© {{year}} Million Homestay Australia. 無断転載禁止。",
+    "language": "言語",
+    "desc": "メルボルンの留学生とデジタルノマドのための、安全で手頃な家具付き住宅です。",
+    "nav_heading": "ナビゲーション",
+    "support_heading": "サポート",
+    "serving": "2015年よりメルボルンの国際コミュニティにサービスを提供",
+    "home": "ホーム",
+    "find_room": "部屋を探す",
+    "booking": "予約",
+    "for_students": "留学生の方へ",
+    "house_rules": "ハウスルール",
+    "privacy_policy": "プライバシーポリシー"
   },
   "search": {
     "title": "メルボルンの部屋",
@@ -46,7 +169,12 @@
     "sort_price_desc": "価格の高い順",
     "sort_newest": "新着順",
     "showing": "{{total}}件中{{shown}}件を表示",
-    "results_count": "件の部屋が見つかりました"
+    "results_count": "件の部屋が見つかりました",
+    "filter": {
+      "type": "部屋タイプ",
+      "policy": "性別ポリシー",
+      "price": "週額料金"
+    }
   },
   "filter": {
     "location": "エリア",
@@ -209,17 +337,6 @@
     "email_exists": "このメールアドレスはすでに登録されています",
     "invalid_credentials": "メールアドレスまたはパスワードが正しくありません",
     "register_error": "登録に失敗しました。もう一度お試しください。"
-  },
-  "footer": {
-    "tagline": "外国人ゲスト向けの安心・家具付き住宅",
-    "find_rooms": "部屋を探す",
-    "how_it_works": "ご利用方法",
-    "contact": "お問い合わせ",
-    "faq": "よくある質問",
-    "terms": "利用規約",
-    "privacy": "プライバシーポリシー",
-    "copyright": "© {{year}} Million Stay Pty Ltd · オーストラリア・メルボルン",
-    "language": "言語"
   },
   "errors": {
     "not_found": "ページが見つかりません",

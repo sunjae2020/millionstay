@@ -13,12 +13,12 @@ import { useAuthStore } from "@/lib/store";
 import logoHorizontal from "@assets/06.OR_NB_horizontal_ver_1775381659303.png";
 import logoMark from "@assets/05.OR_NB_Mark_simple_ver_1775381659302.png";
 
-const navLinks = [
-  { label: "Search", href: "/search" },
-  { label: "Stay Plans", href: "/stay-plan" },
-  { label: "About Us", href: "/about" },
-  { label: "For Students", href: "/for-student" },
-  { label: "For Agent", href: "/for-agent" },
+const NAV_HREFS = [
+  { key: "links.search", href: "/search" },
+  { key: "links.stayPlans", href: "/stay-plan" },
+  { key: "links.aboutUs", href: "/about" },
+  { key: "links.forStudents", href: "/for-student" },
+  { key: "links.forAgent", href: "/for-agent" },
 ];
 
 const LANGUAGES = [
@@ -93,15 +93,15 @@ export function Navbar() {
 
           {/* Desktop Nav */}
           <nav className="hidden min-[880px]:flex items-center">
-            {navLinks.map((link) => (
+            {NAV_HREFS.map((link) => (
               <Link
-                key={link.label}
+                key={link.href}
                 href={link.href}
                 className={`px-2.5 py-2 text-sm font-medium transition-colors whitespace-nowrap hover:text-primary ${
                   location === link.href ? "text-primary" : "text-gray-600"
                 }`}
               >
-                {link.label}
+                {t(`nav.${link.key}`)}
               </Link>
             ))}
           </nav>
@@ -166,7 +166,7 @@ export function Navbar() {
                   </div>
                   <DropdownMenuItem onClick={() => setLocation("/portal/bookings")} className="gap-2">
                     <LayoutDashboard className="h-4 w-4 text-gray-500" />
-                    My Portal
+                    {t("nav.myPortal")}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="gap-2 text-red-600 focus:text-red-600">
@@ -205,20 +205,20 @@ export function Navbar() {
         {/* Mobile Nav */}
         {mobileOpen && (
           <div className="min-[880px]:hidden border-t border-gray-100 py-3 space-y-1">
-            {navLinks.map((link) => (
+            {NAV_HREFS.map((link) => (
               <Link
-                key={link.label}
+                key={link.href}
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
                 className="block px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary hover:bg-orange-50 rounded transition-colors"
               >
-                {link.label}
+                {t(`nav.${link.key}`)}
               </Link>
             ))}
 
             {/* Mobile language switcher */}
             <div className="border-t border-gray-100 mt-2 pt-2">
-              <p className="px-3 py-1 text-xs text-gray-400 font-medium uppercase tracking-wide">Language</p>
+              <p className="px-3 py-1 text-xs text-gray-400 font-medium uppercase tracking-wide">{t("nav.language")}</p>
               <div className="grid grid-cols-5 gap-1 px-3 py-2">
                 {LANGUAGES.map((lang) => {
                   const isActive = i18n.language === lang.code;
@@ -254,7 +254,7 @@ export function Navbar() {
                   </div>
                 </div>
                 <button onClick={() => { setMobileOpen(false); setLocation("/portal/bookings"); }} className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:text-primary hover:bg-orange-50 rounded flex items-center gap-2">
-                  <LayoutDashboard className="h-4 w-4" /> My Portal
+                  <LayoutDashboard className="h-4 w-4" /> {t("nav.myPortal")}
                 </button>
                 <button onClick={() => { setMobileOpen(false); handleLogout(); }} className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded flex items-center gap-2">
                   <LogOut className="h-4 w-4" /> {t("nav.logout")}

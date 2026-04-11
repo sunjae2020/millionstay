@@ -10,6 +10,7 @@ import { useListSuburbs } from "@workspace/api-client-react";
 import { useListFeaturedSpaces, useListPublicSpaces } from "@/lib/guest-api";
 import { motion } from "framer-motion";
 import { Wifi, ShoppingBag, Shield, DollarSign, Plane, Bed, PlayCircle, MapPin, ChevronRight } from "lucide-react";
+
 function SectionTitle({ italic, normal, sub }: { italic: string; normal?: string; sub?: string }) {
   return (
     <div className="text-center mb-10">
@@ -30,26 +31,28 @@ function buildSpaceUrl(id: number | string, checkIn: string, checkOut: string) {
   return `/spaces/${id}${qs ? `?${qs}` : ""}`;
 }
 
-const SPACE_FEATURES: Record<string, { icon: string; label: string }[]> = {
-  EntireSpace: [
-    { icon: "🏠", label: "Entire unit" },
-    { icon: "🔑", label: "Private entry" },
-    { icon: "📶", label: "Free Wi-Fi" },
-  ],
-  RoomSpace: [
-    { icon: "🛏", label: "Private room" },
-    { icon: "🚿", label: "Shared bathroom" },
-    { icon: "📶", label: "Free Wi-Fi" },
-  ],
-  BedSpace: [
-    { icon: "🛏", label: "Shared room" },
-    { icon: "💰", label: "Best value" },
-    { icon: "📶", label: "Free Wi-Fi" },
-  ],
-};
-
 function ListingCard({ space, index = 0, checkIn = "", checkOut = "" }: { space: any; index?: number; checkIn?: string; checkOut?: string }) {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
+
+  const SPACE_FEATURES: Record<string, { icon: string; label: string }[]> = {
+    EntireSpace: [
+      { icon: "🏠", label: t("home.features.entire_unit") },
+      { icon: "🔑", label: t("home.features.private_entry") },
+      { icon: "📶", label: t("home.features.free_wifi") },
+    ],
+    RoomSpace: [
+      { icon: "🛏", label: t("home.features.private_room") },
+      { icon: "🚿", label: t("home.features.shared_bathroom") },
+      { icon: "📶", label: t("home.features.free_wifi") },
+    ],
+    BedSpace: [
+      { icon: "🛏", label: t("home.features.shared_room") },
+      { icon: "💰", label: t("home.features.best_value") },
+      { icon: "📶", label: t("home.features.free_wifi") },
+    ],
+  };
+
   const features = SPACE_FEATURES[space.space_type] ?? SPACE_FEATURES.RoomSpace;
   return (
     <motion.div
@@ -68,7 +71,7 @@ function ListingCard({ space, index = 0, checkIn = "", checkOut = "" }: { space:
           </div>
         )}
         <div className="absolute top-3 left-3 bg-primary text-white text-xs font-semibold px-2 py-1 rounded">
-          {space.space_type === "EntireSpace" ? "Entire" : space.space_type === "RoomSpace" ? "Room" : "Bed"}
+          {space.space_type === "EntireSpace" ? t("space.entire") : space.space_type === "RoomSpace" ? t("space.room") : t("space.bed")}
         </div>
       </div>
       <div className="p-4">
@@ -78,7 +81,6 @@ function ListingCard({ space, index = 0, checkIn = "", checkOut = "" }: { space:
             <MapPin className="h-3 w-3" /> {space.suburb_name}
           </p>
         )}
-        {/* 특장점 */}
         <div className="flex flex-wrap gap-1.5 mb-3">
           {features.map((f) => (
             <span key={f.label} className="inline-flex items-center gap-1 text-[11px] text-gray-600 bg-orange-50 border border-orange-100 px-2 py-0.5 rounded-full">
@@ -89,46 +91,19 @@ function ListingCard({ space, index = 0, checkIn = "", checkOut = "" }: { space:
         <div className="flex items-center justify-between">
           <div>
             <span className="text-lg font-bold text-primary">${space.base_weekly_price}</span>
-            <span className="text-xs text-gray-400 ml-1">/ week</span>
+            <span className="text-xs text-gray-400 ml-1">{t("home.listing.per_week")}</span>
           </div>
           <button
             onClick={(e) => { e.stopPropagation(); setLocation(buildSpaceUrl(space.id, checkIn, checkOut)); }}
             className="px-3 py-1.5 bg-primary text-white text-xs font-semibold rounded hover:bg-primary/90 transition-colors"
           >
-            Book Now
+            {t("home.listing.book_now")}
           </button>
         </div>
       </div>
     </motion.div>
   );
 }
-
-const amenities = [
-  { icon: Wifi, label: "High-Speed Wi-Fi" },
-  { icon: ShoppingBag, label: "Flexible Stay Options" },
-  { icon: Bed, label: "Fully Furnished Rooms" },
-  { icon: Shield, label: "Safe & Secure Listing" },
-  { icon: DollarSign, label: "All-Inclusive Pricing" },
-  { icon: Plane, label: "Optional Airport Pickup" },
-];
-
-const whyChooseUs = [
-  {
-    num: "01",
-    title: "Testimonials Network",
-    desc: "Thousands of happy students and nomads have found their perfect Melbourne home through our verified listings and trusted community."
-  },
-  {
-    num: "02",
-    title: "Student & Multi-Sport Focus",
-    desc: "We understand the needs of international students — from university proximity to flexible leases that match your enrollment period."
-  },
-  {
-    num: "03",
-    title: "All-Inclusive Comfort",
-    desc: "Utilities, Wi-Fi, cleaning, and furnishings are all included. Move in with just your luggage — we handle everything else."
-  },
-];
 
 export default function Home() {
   const { t } = useTranslation();
@@ -137,7 +112,6 @@ export default function Home() {
 
   const [suburbId, setSuburbId] = useState<string>("");
   const [spaceType, setSpaceType] = useState<string>("");
-  const [guests, setGuests] = useState<string>("1");
   const [checkIn, setCheckIn] = useState<string>("");
   const [checkOut, setCheckOut] = useState<string>("");
 
@@ -158,13 +132,63 @@ export default function Home() {
   const allSpaces = spacesData?.data ?? [];
   const spotlightSpace = featured[0] ?? allSpaces[0];
 
+  const whyChooseUs = [
+    { num: "01", title: t("home.why.item1_title"), desc: t("home.why.item1_desc") },
+    { num: "02", title: t("home.why.item2_title"), desc: t("home.why.item2_desc") },
+    { num: "03", title: t("home.why.item3_title"), desc: t("home.why.item3_desc") },
+  ];
+
+  const amenities = [
+    { icon: Wifi, label: t("home.amenities.wifi") },
+    { icon: ShoppingBag, label: t("home.amenities.flexible") },
+    { icon: Bed, label: t("home.amenities.furnished") },
+    { icon: Shield, label: t("home.amenities.safe") },
+    { icon: DollarSign, label: t("home.amenities.pricing") },
+    { icon: Plane, label: t("home.amenities.pickup") },
+  ];
+
+  const stayPlans = [
+    {
+      period: t("home.plans.m1_period"),
+      label: t("home.plans.m1_label"),
+      highlight: false,
+      desc: t("home.plans.m1_desc"),
+      features: [
+        t("home.plans.m1_f1"), t("home.plans.m1_f2"), t("home.plans.m1_f3"),
+        t("home.plans.m1_f4"), t("home.plans.m1_f5"), t("home.plans.m1_f6"),
+      ],
+      savings: null,
+    },
+    {
+      period: t("home.plans.m3_period"),
+      label: t("home.plans.m3_label"),
+      highlight: true,
+      desc: t("home.plans.m3_desc"),
+      features: [
+        t("home.plans.m3_f1"), t("home.plans.m3_f2"), t("home.plans.m3_f3"),
+        t("home.plans.m3_f4"), t("home.plans.m3_f5"), t("home.plans.m3_f6"),
+      ],
+      savings: t("home.plans.save5"),
+    },
+    {
+      period: t("home.plans.m6_period"),
+      label: t("home.plans.m6_label"),
+      highlight: false,
+      desc: t("home.plans.m6_desc"),
+      features: [
+        t("home.plans.m6_f1"), t("home.plans.m6_f2"), t("home.plans.m6_f3"),
+        t("home.plans.m6_f4"), t("home.plans.m6_f5"), t("home.plans.m6_f6"),
+      ],
+      savings: t("home.plans.save10"),
+    },
+  ];
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Navbar />
 
       {/* ── Hero ── */}
       <section className="relative">
-        {/* Background */}
         <div className="relative h-[460px] md:h-[540px] overflow-hidden">
           <img
             src={heroImage}
@@ -172,8 +196,6 @@ export default function Home() {
             className="absolute inset-0 w-full h-full object-cover object-center"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/50" />
-
-          {/* Overlay text */}
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
             <motion.p
               initial={{ opacity: 0, y: -10 }}
@@ -182,7 +204,7 @@ export default function Home() {
               className="text-white/90 text-lg md:text-xl mb-2"
               style={{ fontFamily: "'Dancing Script', cursive" }}
             >
-              Million Homestay Australia
+              {t("home.hero_tagline")}
             </motion.p>
             <motion.h1
               initial={{ opacity: 0, scale: 0.95 }}
@@ -190,7 +212,7 @@ export default function Home() {
               transition={{ duration: 0.7, delay: 0.15 }}
               className="text-white font-bold text-6xl md:text-8xl tracking-wide uppercase drop-shadow-lg"
             >
-              WELCOME
+              {t("home.hero_title")}
             </motion.h1>
             <motion.p
               initial={{ opacity: 0 }}
@@ -198,24 +220,24 @@ export default function Home() {
               transition={{ delay: 0.4 }}
               className="text-white/80 text-sm md:text-base mt-4 max-w-md"
             >
-              Your trusted home away from home in Melbourne, Australia
+              {t("home.hero_subtitle")}
             </motion.p>
           </div>
         </div>
 
-        {/* Search Card — floats out of hero */}
+        {/* Search Card */}
         <div className="max-w-5xl mx-auto px-4 -mt-16 relative z-10">
           <div className="bg-white rounded-lg shadow-xl p-4 md:p-6">
             <form onSubmit={handleSearch}>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3 items-end">
                 <div className="col-span-2 md:col-span-1 space-y-1">
-                  <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Space Type</label>
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">{t("home.search.space_type")}</label>
                   <Select value={spaceType} onValueChange={setSpaceType}>
                     <SelectTrigger className="h-10 text-sm" data-testid="search-type">
-                      <SelectValue placeholder="Any type" />
+                      <SelectValue placeholder={t("home.search.any_type")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Any type</SelectItem>
+                      <SelectItem value="all">{t("home.search.any_type")}</SelectItem>
                       <SelectItem value="EntireSpace">{t("space.entire")}</SelectItem>
                       <SelectItem value="RoomSpace">{t("space.room")}</SelectItem>
                       <SelectItem value="BedSpace">{t("space.bed")}</SelectItem>
@@ -224,13 +246,13 @@ export default function Home() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Search</label>
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">{t("home.search.any_suburb")}</label>
                   <Select value={suburbId} onValueChange={setSuburbId}>
                     <SelectTrigger className="h-10 text-sm" data-testid="search-suburb">
-                      <SelectValue placeholder="Any suburb" />
+                      <SelectValue placeholder={t("home.search.any_suburb")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Any suburb</SelectItem>
+                      <SelectItem value="all">{t("home.search.any_suburb")}</SelectItem>
                       {suburbsData?.data?.map((s) => (
                         <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
                       ))}
@@ -239,7 +261,7 @@ export default function Home() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Check In</label>
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">{t("home.search.check_in")}</label>
                   <DateInput
                     value={checkIn}
                     onChange={setCheckIn}
@@ -250,7 +272,7 @@ export default function Home() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Check Out</label>
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">{t("home.search.check_out")}</label>
                   <DateInput
                     value={checkOut}
                     onChange={setCheckOut}
@@ -265,7 +287,7 @@ export default function Home() {
                     className="w-full h-10 bg-primary hover:bg-primary/90 text-white font-bold text-sm uppercase tracking-wider rounded transition-colors"
                     data-testid="button-search"
                   >
-                    Search
+                    {t("home.search.search")}
                   </button>
                 </div>
               </div>
@@ -277,7 +299,7 @@ export default function Home() {
       {/* ── Why Choose Us ── */}
       <section className="pt-24 pb-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionTitle italic="Why Choose Us" sub="OUR ADVANTAGES" />
+          <SectionTitle italic={t("home.why.title")} sub={t("home.why.sub")} />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {whyChooseUs.map((item) => (
               <motion.div
@@ -306,7 +328,7 @@ export default function Home() {
               <div className="p-8 md:p-10 flex flex-col justify-center">
                 <div className="inline-block bg-primary text-white text-2xl font-bold px-4 py-2 rounded mb-4 w-fit">
                   ${spotlightSpace.base_weekly_price}
-                  <span className="text-xs font-normal ml-1">/ Per Week</span>
+                  <span className="text-xs font-normal ml-1">{t("home.spotlight.per_week")}</span>
                 </div>
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">{spotlightSpace.name}</h2>
                 {spotlightSpace.suburb_name && (
@@ -315,13 +337,13 @@ export default function Home() {
                   </p>
                 )}
                 <p className="text-sm text-gray-500 leading-relaxed mb-6">
-                  Fully furnished private room in a shared house. Weekly rate is all-inclusive — WiFi, utilities, and cleaning included.
+                  {t("home.spotlight.desc")}
                 </p>
                 <button
                   onClick={() => setLocation(buildSpaceUrl(spotlightSpace.id, checkIn, checkOut))}
                   className="w-fit px-6 py-3 bg-primary text-white font-bold text-sm uppercase tracking-wide rounded hover:bg-primary/90 transition-colors"
                 >
-                  Book Now
+                  {t("home.spotlight.book_now")}
                 </button>
               </div>
               <div className="relative aspect-[4/3] md:aspect-auto md:min-h-[300px] overflow-hidden">
@@ -341,7 +363,7 @@ export default function Home() {
       {/* ── Million Homestay Listing ── */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionTitle italic="Million Homestay Listing" sub="AVAILABLE NOW" />
+          <SectionTitle italic={t("home.listing.title")} sub={t("home.listing.sub")} />
           {loadingFeatured ? (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -356,27 +378,24 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <>
-              {/* 3 × 2 그리드 (6개) */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
-                {(() => {
-                  const combined = [
-                    ...featured,
-                    ...allSpaces.filter((s) => !featured.some((f) => f.id === s.id)),
-                  ].slice(0, 6);
-                  return combined.map((space, i) => (
-                    <ListingCard key={space.id} space={space} index={i} checkIn={checkIn} checkOut={checkOut} />
-                  ));
-                })()}
-              </div>
-            </>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+              {(() => {
+                const combined = [
+                  ...featured,
+                  ...allSpaces.filter((s) => !featured.some((f) => f.id === s.id)),
+                ].slice(0, 6);
+                return combined.map((space, i) => (
+                  <ListingCard key={space.id} space={space} index={i} checkIn={checkIn} checkOut={checkOut} />
+                ));
+              })()}
+            </div>
           )}
           <div className="text-center mt-10">
             <button
               onClick={() => setLocation("/search")}
               className="px-8 py-3 bg-primary text-white font-bold text-sm uppercase tracking-wider rounded hover:bg-primary/90 transition-colors inline-flex items-center gap-2"
             >
-              View All Listings <ChevronRight className="h-4 w-4" />
+              {t("home.listing.view_all")} <ChevronRight className="h-4 w-4" />
             </button>
           </div>
         </div>
@@ -385,56 +404,10 @@ export default function Home() {
       {/* ── Choose Your Stay Plan ── */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionTitle italic="Choose Your Stay Plan" sub="FLEXIBLE OPTIONS" />
-          <p className="text-center text-sm text-gray-400 -mt-6 mb-10">The longer you stay, the more you save — select a plan that fits your timeline.</p>
+          <SectionTitle italic={t("home.plans.title")} sub={t("home.plans.sub")} />
+          <p className="text-center text-sm text-gray-400 -mt-6 mb-10">{t("home.plans.note")}</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                period: "1-Month",
-                label: "Flexible Contract",
-                highlight: false,
-                desc: "Ideal for short trips or trial stays. Full flexibility with a 2-week notice period.",
-                features: [
-                  "2-week cancellation notice",
-                  "Month-to-month renewal",
-                  "All utilities included",
-                  "Fully furnished room",
-                  "Shared common areas",
-                  "Move in anytime",
-                ],
-                savings: null,
-              },
-              {
-                period: "3-Month",
-                label: "Better Value",
-                highlight: true,
-                desc: "Our most popular option for semester students. Save 5% vs monthly rate.",
-                features: [
-                  "5% discount on weekly rate",
-                  "Priority room selection",
-                  "All utilities included",
-                  "Fully furnished room",
-                  "Dedicated study space",
-                  "Free airport pickup",
-                ],
-                savings: "Save 5%",
-              },
-              {
-                period: "6-Month",
-                label: "Best Deal",
-                highlight: false,
-                desc: "Maximum savings for long-term residents. Save 10% and lock in your preferred room.",
-                features: [
-                  "10% discount on weekly rate",
-                  "Guaranteed room lock-in",
-                  "All utilities included",
-                  "Fully furnished room",
-                  "Free airport pickup",
-                  "Complimentary cleaning",
-                ],
-                savings: "Save 10%",
-              },
-            ].map((plan, i) => (
+            {stayPlans.map((plan, i) => (
               <motion.div
                 key={plan.period}
                 initial={{ opacity: 0, y: 16 }}
@@ -443,13 +416,12 @@ export default function Home() {
                 transition={{ delay: i * 0.1 }}
                 className={`rounded-lg overflow-hidden border-2 flex flex-col ${plan.highlight ? "border-primary shadow-xl scale-[1.02]" : "border-gray-200 shadow"}`}
               >
-                {/* Header */}
                 <div className={`py-6 px-6 ${plan.highlight ? "bg-primary text-white" : "bg-gray-700 text-white"}`}>
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-widest opacity-80 mb-1">{plan.label}</p>
                       <h3 className="text-3xl font-bold">{plan.period}</h3>
-                      <p className="text-sm opacity-80 mt-0.5">Stay</p>
+                      <p className="text-sm opacity-80 mt-0.5">{t("home.plans.stay")}</p>
                     </div>
                     {plan.savings && (
                       <span className="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full border border-white/30">
@@ -458,12 +430,8 @@ export default function Home() {
                     )}
                   </div>
                 </div>
-
-                {/* Body */}
                 <div className="p-6 bg-white flex flex-col flex-1">
                   <p className="text-sm text-gray-500 mb-6 leading-relaxed">{plan.desc}</p>
-
-                  {/* Feature list */}
                   <ul className="space-y-3 mb-8 flex-1">
                     {plan.features.map((f) => (
                       <li key={f} className="flex items-center gap-2.5 text-sm text-gray-700">
@@ -474,7 +442,6 @@ export default function Home() {
                       </li>
                     ))}
                   </ul>
-
                   <button
                     onClick={() => setLocation("/search")}
                     className={`w-full py-3 text-sm font-bold uppercase tracking-wide rounded transition-colors ${
@@ -483,7 +450,7 @@ export default function Home() {
                         : "bg-gray-700 text-white hover:bg-gray-600"
                     }`}
                   >
-                    Book Now
+                    {t("home.plans.book_now")}
                   </button>
                 </div>
               </motion.div>
@@ -503,10 +470,10 @@ export default function Home() {
             className="text-white/90 text-2xl md:text-3xl mb-2"
             style={{ fontFamily: "'Dancing Script', cursive" }}
           >
-            Million Homestay Australia...
+            {t("home.cta.tagline")}
           </p>
           <h2 className="text-white font-bold text-4xl md:text-5xl uppercase tracking-widest mb-8">
-            YOUR BEST CHOICE
+            {t("home.cta.title")}
           </h2>
           <button className="w-20 h-20 rounded-full bg-white/20 border-4 border-white flex items-center justify-center mx-auto hover:bg-white/30 transition-colors group">
             <PlayCircle className="h-10 w-10 text-white group-hover:scale-105 transition-transform" />
@@ -517,7 +484,7 @@ export default function Home() {
       {/* ── What's Included ── */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionTitle italic="What's Included in Your Stay" sub="ALL-INCLUSIVE" />
+          <SectionTitle italic={t("home.amenities.title")} sub={t("home.amenities.sub")} />
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
             {amenities.map((item, i) => {
               const Icon = item.icon;

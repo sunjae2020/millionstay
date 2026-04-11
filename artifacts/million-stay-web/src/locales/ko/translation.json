@@ -3,12 +3,126 @@
     "search": "방 찾기",
     "login": "로그인",
     "signup": "회원가입",
-    "myBookings": "내 예약"
+    "logout": "로그아웃",
+    "myBookings": "내 예약",
+    "myPortal": "내 포털",
+    "language": "언어",
+    "links": {
+      "search": "검색",
+      "stayPlans": "숙박 플랜",
+      "aboutUs": "회사 소개",
+      "forStudents": "유학생 안내",
+      "forAgent": "에이전트 안내"
+    }
   },
   "home": {
-    "hero_title": "멜버른에서 완벽한 집을 찾으세요",
-    "hero_subtitle": "유학생과 디지털 노마드를 위한 안전하고 가구가 완비된 방",
-    "search_button": "검색"
+    "hero_tagline": "Million Homestay Australia",
+    "hero_title": "WELCOME",
+    "hero_subtitle": "멜버른에서 당신만의 편안한 집을 만나보세요",
+    "search": {
+      "space_type": "공간 유형",
+      "any_type": "전체 유형",
+      "any_suburb": "전체 지역",
+      "check_in": "체크인",
+      "check_out": "체크아웃",
+      "search": "검색"
+    },
+    "why": {
+      "sub": "저희만의 장점",
+      "title": "왜 MillionStay인가요?",
+      "item1_title": "검증된 입주 후기",
+      "item1_desc": "수천 명의 유학생과 디지털 노마드가 MillionStay의 검증된 매물과 신뢰할 수 있는 커뮤니티를 통해 멜버른에서 완벽한 집을 찾았습니다.",
+      "item2_title": "유학생 맞춤 서비스",
+      "item2_desc": "대학교 근접성, 학기에 맞는 유연한 계약 등 유학생의 필요를 누구보다 잘 이해합니다.",
+      "item3_title": "올인클루시브 편의시설",
+      "item3_desc": "공과금, Wi-Fi, 청소, 가구 모두 포함되어 있습니다. 짐만 챙겨 오세요 — 나머지는 저희가 처리합니다."
+    },
+    "listing": {
+      "sub": "지금 입주 가능",
+      "title": "Million Homestay 매물",
+      "view_all": "전체 매물 보기",
+      "per_week": "/ 주",
+      "book_now": "지금 예약"
+    },
+    "spotlight": {
+      "per_week": "/ 주",
+      "desc": "쉐어하우스 내 완전히 가구가 갖춰진 개인실. 주간 요금에 Wi-Fi, 공과금, 청소가 모두 포함되어 있습니다.",
+      "book_now": "지금 예약"
+    },
+    "plans": {
+      "sub": "유연한 선택지",
+      "title": "숙박 플랜 선택",
+      "note": "오래 머물수록 더 많이 절약됩니다 — 나에게 맞는 플랜을 선택하세요.",
+      "book_now": "지금 예약",
+      "stay": "숙박",
+      "save5": "5% 할인",
+      "save10": "10% 할인",
+      "m1_period": "1개월",
+      "m1_label": "유연한 계약",
+      "m1_desc": "단기 여행이나 체험 입주에 적합합니다. 2주 통보만으로 계약 종료 가능한 완전한 유연성을 제공합니다.",
+      "m1_f1": "2주 전 해지 통보",
+      "m1_f2": "월 단위 자동 연장",
+      "m1_f3": "공과금 전체 포함",
+      "m1_f4": "가구 완비 방",
+      "m1_f5": "공용 공간 이용",
+      "m1_f6": "언제든 입주 가능",
+      "m3_period": "3개월",
+      "m3_label": "합리적 선택",
+      "m3_desc": "한 학기 유학생에게 가장 인기 있는 옵션입니다. 월 요금 대비 5% 절약.",
+      "m3_f1": "주간 요금 5% 할인",
+      "m3_f2": "우선 방 선택권",
+      "m3_f3": "공과금 전체 포함",
+      "m3_f4": "가구 완비 방",
+      "m3_f5": "전용 공부 공간",
+      "m3_f6": "공항 픽업 무료",
+      "m6_period": "6개월",
+      "m6_label": "최고 혜택",
+      "m6_desc": "장기 거주자를 위한 최대 절약 플랜. 10% 할인과 선호 방 우선 배정.",
+      "m6_f1": "주간 요금 10% 할인",
+      "m6_f2": "방 우선 배정 보장",
+      "m6_f3": "공과금 전체 포함",
+      "m6_f4": "가구 완비 방",
+      "m6_f5": "공항 픽업 무료",
+      "m6_f6": "청소 서비스 무료"
+    },
+    "cta": {
+      "tagline": "Million Homestay Australia...",
+      "title": "최고의 선택"
+    },
+    "amenities": {
+      "sub": "올인클루시브",
+      "title": "숙박에 포함된 것들",
+      "wifi": "고속 Wi-Fi",
+      "flexible": "유연한 숙박 옵션",
+      "furnished": "가구 완비 방",
+      "safe": "안전하고 검증된 매물",
+      "pricing": "올인클루시브 요금",
+      "pickup": "공항 픽업 서비스"
+    },
+    "features": {
+      "entire_unit": "전체 유닛",
+      "private_entry": "개인 출입구",
+      "free_wifi": "Wi-Fi 무료",
+      "private_room": "개인실",
+      "shared_bathroom": "공용 욕실",
+      "shared_room": "다인실",
+      "best_value": "최고 가성비"
+    }
+  },
+  "footer": {
+    "desc": "멜버른의 유학생과 디지털 노마드를 위한 안전하고 저렴하며 가구가 완비된 숙소입니다.",
+    "nav_heading": "메뉴",
+    "support_heading": "고객지원",
+    "copyright": "© {{year}} Million Homestay Australia. 모든 권리 보유.",
+    "serving": "2015년부터 멜버른 국제 커뮤니티를 위해 서비스 중",
+    "home": "홈",
+    "find_room": "방 찾기",
+    "booking": "예약",
+    "for_students": "유학생 안내",
+    "faq": "자주 묻는 질문",
+    "house_rules": "입주 규칙",
+    "privacy_policy": "개인정보 처리방침",
+    "contact": "문의하기"
   },
   "search": {
     "results_count": "개 방 검색됨",
@@ -22,7 +136,7 @@
   "space": {
     "per_week": "/ 주",
     "min_stay": "최소 {{weeks}}주",
-    "book_now": "지금 예약하기",
+    "book_now": "지금 예약",
     "female_only": "여성 전용",
     "mixed": "남녀 공용",
     "entire": "전체 공간",

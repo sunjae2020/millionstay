@@ -1,39 +1,153 @@
 {
   "nav": {
-    "search": "找房",
+    "search": "找房间",
     "login": "登录",
     "signup": "注册",
-    "myBookings": "我的预订"
+    "logout": "退出登录",
+    "myBookings": "我的预订",
+    "myPortal": "我的门户",
+    "language": "语言",
+    "links": {
+      "search": "搜索",
+      "stayPlans": "住宿方案",
+      "aboutUs": "关于我们",
+      "forStudents": "留学生专区",
+      "forAgent": "中介专区"
+    }
   },
   "home": {
-    "hero_title": "在墨尔本寻找您完美的家",
-    "hero_subtitle": "为国际学生和数字游民提供安全、带家具的房间",
-    "search_button": "搜索"
+    "hero_tagline": "Million Homestay Australia",
+    "hero_title": "WELCOME",
+    "hero_subtitle": "您在墨尔本最值得信赖的温馨家园",
+    "search": {
+      "space_type": "房型",
+      "any_type": "所有类型",
+      "any_suburb": "所有区域",
+      "check_in": "入住日期",
+      "check_out": "退房日期",
+      "search": "搜索"
+    },
+    "why": {
+      "sub": "我们的优势",
+      "title": "为什么选择我们？",
+      "item1_title": "真实住客好评",
+      "item1_desc": "数千名留学生和数字游民通过我们经过认证的房源和可信赖的社区，在墨尔本找到了完美的家。",
+      "item2_title": "专为留学生设计",
+      "item2_desc": "我们深刻了解国际留学生的需求——从靠近大学的地理位置到与学期匹配的灵活租约。",
+      "item3_title": "全包式舒适生活",
+      "item3_desc": "水电费、Wi-Fi、清洁和家具一应俱全。只需提着行李入住——其他一切由我们来处理。"
+    },
+    "listing": {
+      "sub": "即刻可入住",
+      "title": "Million Homestay 房源",
+      "view_all": "查看全部房源",
+      "per_week": "/ 周",
+      "book_now": "立即预订"
+    },
+    "spotlight": {
+      "per_week": "/ 周",
+      "desc": "合租房中完全装修的私人房间。周租金全包——Wi-Fi、水电费和清洁费均已包含。",
+      "book_now": "立即预订"
+    },
+    "plans": {
+      "sub": "灵活选择",
+      "title": "选择您的住宿方案",
+      "note": "住得越久，优惠越多——选择最适合您的方案。",
+      "book_now": "立即预订",
+      "stay": "住宿",
+      "save5": "省5%",
+      "save10": "省10%",
+      "m1_period": "1个月",
+      "m1_label": "灵活合同",
+      "m1_desc": "适合短期出行或体验入住。提前2周通知即可退租，灵活无忧。",
+      "m1_f1": "提前2周通知退租",
+      "m1_f2": "按月自动续约",
+      "m1_f3": "包含所有水电费",
+      "m1_f4": "全装修房间",
+      "m1_f5": "共享公共区域",
+      "m1_f6": "随时入住",
+      "m3_period": "3个月",
+      "m3_label": "超值之选",
+      "m3_desc": "最受学期留学生欢迎的方案。比月租节省5%。",
+      "m3_f1": "周租5%折扣",
+      "m3_f2": "优先选房",
+      "m3_f3": "包含所有水电费",
+      "m3_f4": "全装修房间",
+      "m3_f5": "专属学习空间",
+      "m3_f6": "免费机场接送",
+      "m6_period": "6个月",
+      "m6_label": "最优惠",
+      "m6_desc": "长期居住者的最大省钱方案。节省10%并锁定心仪房间。",
+      "m6_f1": "周租10%折扣",
+      "m6_f2": "保证锁定房间",
+      "m6_f3": "包含所有水电费",
+      "m6_f4": "全装修房间",
+      "m6_f5": "免费机场接送",
+      "m6_f6": "免费清洁服务"
+    },
+    "cta": {
+      "tagline": "Million Homestay Australia...",
+      "title": "您的最佳选择"
+    },
+    "amenities": {
+      "sub": "全包服务",
+      "title": "住宿包含的一切",
+      "wifi": "高速 Wi-Fi",
+      "flexible": "灵活住宿方案",
+      "furnished": "全装修房间",
+      "safe": "安全可信的房源",
+      "pricing": "全包价格",
+      "pickup": "可选机场接送"
+    },
+    "features": {
+      "entire_unit": "整套公寓",
+      "private_entry": "独立入口",
+      "free_wifi": "免费 Wi-Fi",
+      "private_room": "独立房间",
+      "shared_bathroom": "共用卫生间",
+      "shared_room": "多人间",
+      "best_value": "超高性价比"
+    }
+  },
+  "footer": {
+    "desc": "为墨尔本的国际留学生和数字游民提供安全、实惠、全装修的住宿。",
+    "nav_heading": "导航",
+    "support_heading": "客服支持",
+    "copyright": "© {{year}} Million Homestay Australia. 保留所有权利。",
+    "serving": "自2015年起服务墨尔本国际社区",
+    "home": "首页",
+    "find_room": "找房间",
+    "booking": "预订",
+    "for_students": "留学生专区",
+    "faq": "常见问题",
+    "house_rules": "入住规则",
+    "privacy_policy": "隐私政策",
+    "contact": "联系我们"
   },
   "search": {
     "results_count": "个房间",
     "no_results": "未找到房间",
     "filter": {
-      "type": "空间类型",
+      "type": "房型",
       "policy": "性别政策",
-      "price": "每周价格"
+      "price": "周租金"
     }
   },
   "space": {
     "per_week": "/ 周",
-    "min_stay": "最少 {{weeks}} 周",
+    "min_stay": "最短 {{weeks}} 周",
     "book_now": "立即预订",
     "female_only": "仅限女性",
     "mixed": "男女混住",
-    "entire": "整租",
-    "room": "单间",
+    "entire": "整套公寓",
+    "room": "独立房间",
     "bed": "床位"
   },
   "booking": {
     "step1": "住宿详情",
-    "step2": "住客信息",
-    "step3": "文件",
-    "step4": "已确认",
+    "step2": "个人信息",
+    "step3": "提交文件",
+    "step4": "预订确认",
     "check_in": "入住",
     "check_out": "退房",
     "total_price": "总价",
