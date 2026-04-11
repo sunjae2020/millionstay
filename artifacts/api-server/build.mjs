@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build as esbuild } from "esbuild";
 import esbuildPluginPino from "esbuild-plugin-pino";
-import { rm, copyFile } from "node:fs/promises";
+import { rm, copyFile, cp } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 
 // Plugins (e.g. 'esbuild-plugin-pino') may use `require` to resolve dependencies
@@ -132,11 +132,62 @@ try {
   // Non-fatal: keep existing seed-migration.sql if export fails
 }
 
+// Resolve repo root (two levels up from this file: artifacts/api-server -> artifacts -> repo root)
+const repoRoot = path.resolve(artifactDir, "../..");
+
+async function buildSpas() {
+  const distDir = path.resolve(artifactDir, "dist");
+  const staticDir = path.resolve(distDir, "static");
+
+  // Vite configs require PORT + BASE_PATH even at build time
+  const sharedBuildEnv = {
+    ...process.env,
+    NODE_ENV: "production",
+  };
+
+  // Build admin SPA
+  console.log("Building property-admin SPA...");
+  execFileSync(
+    "pnpm",
+    ["--filter", "@workspace/property-admin", "run", "build"],
+    {
+      stdio: "inherit",
+      cwd: repoRoot,
+      env: { ...sharedBuildEnv, PORT: "23339", BASE_PATH: "/admin" },
+    }
+  );
+  await cp(
+    path.resolve(repoRoot, "artifacts/property-admin/dist/public"),
+    path.resolve(staticDir, "admin"),
+    { recursive: true }
+  );
+  console.log("Admin SPA copied to dist/static/admin");
+
+  // Build web portal SPA
+  console.log("Building million-stay-web SPA...");
+  execFileSync(
+    "pnpm",
+    ["--filter", "@workspace/million-stay-web", "run", "build"],
+    {
+      stdio: "inherit",
+      cwd: repoRoot,
+      env: { ...sharedBuildEnv, PORT: "20546", BASE_PATH: "/" },
+    }
+  );
+  await cp(
+    path.resolve(repoRoot, "artifacts/million-stay-web/dist/public"),
+    path.resolve(staticDir, "web"),
+    { recursive: true }
+  );
+  console.log("Web SPA copied to dist/static/web");
+}
+
 buildAll()
-  .then(() => {
+  .then(async () => {
     const src = path.resolve(artifactDir, "src/seed-migration.sql");
     const dest = path.resolve(artifactDir, "dist/seed-migration.sql");
-    return copyFile(src, dest).catch(() => {});
+    await copyFile(src, dest).catch(() => {});
+    await buildSpas();
   })
   .catch((err) => {
     console.error(err);

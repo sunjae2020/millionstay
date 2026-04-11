@@ -3,6 +3,8 @@ import cors from "cors";
 import helmet from "helmet";
 import pinoHttp from "pino-http";
 import session from "express-session";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import router from "./routes";
 import authRouter from "./routes/auth";
 import healthRouter from "./routes/health";
@@ -14,6 +16,8 @@ import guestCsRouter from "./routes/guest-cs";
 import devMigrationRouter from "./routes/dev-migration";
 import { logger } from "./lib/logger";
 import { requireAuth } from "./middlewares/requireAuth";
+
+const __thisDir = path.dirname(fileURLToPath(import.meta.url));
 
 const SESSION_SECRET = process.env["SESSION_SECRET"] ?? "millionstay-dev-session-secret";
 
@@ -87,5 +91,24 @@ app.use("/api/v1", requireAuth);
 
 app.use("/api", spaceImagesRouter);
 app.use("/api", router);
+
+// In production, serve the built SPAs so a single Cloud Run process handles everything
+if (process.env["NODE_ENV"] === "production") {
+  const staticBase = path.resolve(__thisDir, "static");
+
+  // Admin SPA — served at /admin
+  const adminDir = path.join(staticBase, "admin");
+  app.use("/admin", express.static(adminDir, { index: false }));
+  app.use("/admin", (_req, res) => {
+    res.sendFile(path.join(adminDir, "index.html"));
+  });
+
+  // Guest / public web portal — catch-all (must be last)
+  const webDir = path.join(staticBase, "web");
+  app.use(express.static(webDir, { index: false }));
+  app.use((_req, res) => {
+    res.sendFile(path.join(webDir, "index.html"));
+  });
+}
 
 export default app;
