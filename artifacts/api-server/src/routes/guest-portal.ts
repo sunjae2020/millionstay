@@ -254,23 +254,82 @@ router.get("/v1/guest/invoices", async (req, res): Promise<void> => {
       status: invoicesTable.status,
       due_date: invoicesTable.due_date,
       paid_at: invoicesTable.paid_at,
+      payment_method: invoicesTable.payment_method,
       description: invoicesTable.description,
+      notes: invoicesTable.notes,
       created_at: invoicesTable.created_at,
       booking_id: invoicesTable.booking_id,
       booking_ref: bookingsTable.booking_ref,
       space_name: spacesTable.name,
+      property_address: propertiesTable.address,
     })
     .from(invoicesTable)
     .leftJoin(bookingsTable, eq(invoicesTable.booking_id, bookingsTable.id))
     .leftJoin(spacesTable, eq(bookingsTable.space_id, spacesTable.id))
-    .where(
-      and(
-        eq(invoicesTable.account_id, guest.account_id),
-      ),
-    )
-    .orderBy(desc(invoicesTable.created_at));
+    .leftJoin(propertiesTable, eq(spacesTable.property_id, propertiesTable.id))
+    .where(eq(invoicesTable.account_id, guest.account_id))
+    .orderBy(asc(invoicesTable.due_date));
 
   res.json({ success: true, data: invoices, meta: { total: invoices.length } });
+});
+
+/* ───────────────────────────────────────────────────────
+   GET /api/v1/guest/invoices/:id — 단일 인보이스 (영수증)
+──────────────────────────────────────────────────────── */
+router.get("/v1/guest/invoices/:id", async (req, res): Promise<void> => {
+  const guest = (req as any).guest;
+  const invId = Number(req.params.id);
+
+  const [inv] = await db
+    .select({
+      id: invoicesTable.id,
+      invoice_ref: invoicesTable.invoice_ref,
+      amount: invoicesTable.amount,
+      currency: invoicesTable.currency,
+      status: invoicesTable.status,
+      due_date: invoicesTable.due_date,
+      paid_at: invoicesTable.paid_at,
+      payment_method: invoicesTable.payment_method,
+      description: invoicesTable.description,
+      notes: invoicesTable.notes,
+      created_at: invoicesTable.created_at,
+      booking_id: invoicesTable.booking_id,
+      contract_id: invoicesTable.contract_id,
+      booking_ref: bookingsTable.booking_ref,
+      check_in_date: bookingsTable.check_in_date,
+      check_out_date: bookingsTable.check_out_date,
+      space_name: spacesTable.name,
+      property_address: propertiesTable.address,
+      property_city: propertiesTable.city,
+      property_state: propertiesTable.state,
+    })
+    .from(invoicesTable)
+    .leftJoin(bookingsTable, eq(invoicesTable.booking_id, bookingsTable.id))
+    .leftJoin(spacesTable, eq(bookingsTable.space_id, spacesTable.id))
+    .leftJoin(propertiesTable, eq(spacesTable.property_id, propertiesTable.id))
+    .where(and(
+      eq(invoicesTable.id, invId),
+      eq(invoicesTable.account_id, guest.account_id),
+    ))
+    .limit(1);
+
+  if (!inv) {
+    res.status(404).json({ success: false, error: "Invoice not found" });
+    return;
+  }
+
+  const guestProfile = await db
+    .select({
+      first_name: guestUsersTable.first_name,
+      last_name: guestUsersTable.last_name,
+      email: guestUsersTable.email,
+    })
+    .from(guestUsersTable)
+    .where(eq(guestUsersTable.id, guest.id))
+    .limit(1)
+    .then(r => r[0] ?? null);
+
+  res.json({ success: true, data: { ...inv, guest: guestProfile } });
 });
 
 /* ───────────────────────────────────────────────────────

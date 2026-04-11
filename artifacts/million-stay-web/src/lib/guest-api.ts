@@ -17,7 +17,7 @@ function clearAuthAndRedirect() {
   window.location.href = "/login?reason=session_expired";
 }
 
-async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     headers: { "Content-Type": "application/json", ...authHeaders(), ...((options?.headers as Record<string, string>) ?? {}) },
     ...options,
@@ -271,11 +271,20 @@ export interface MyInvoice {
   status?: string | null;
   due_date?: string | null;
   paid_at?: string | null;
+  payment_method?: string | null;
   description?: string | null;
+  notes?: string | null;
   created_at?: string | null;
   booking_id?: number | null;
   booking_ref?: string | null;
   space_name?: string | null;
+  property_address?: string | null;
+  contract_id?: number | null;
+  check_in_date?: string | null;
+  check_out_date?: string | null;
+  property_city?: string | null;
+  property_state?: string | null;
+  guest?: { first_name: string | null; last_name: string | null; email: string } | null;
 }
 
 export function getListMyInvoicesQueryKey() {
