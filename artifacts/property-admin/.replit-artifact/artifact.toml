@@ -18,6 +18,7 @@ localPort = 23339
 run = "pnpm --filter @workspace/property-admin run dev"
 
 [services.production]
+build = [ "pnpm", "--filter", "@workspace/property-admin", "run", "build" ]
 publicDir = "artifacts/property-admin/dist/public"
 serve = "static"
 

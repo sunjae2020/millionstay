@@ -18,6 +18,7 @@ localPort = 20546
 run = "pnpm --filter @workspace/million-stay-web run dev"
 
 [services.production]
+build = [ "pnpm", "--filter", "@workspace/million-stay-web", "run", "build" ]
 publicDir = "artifacts/million-stay-web/dist/public"
 serve = "static"
 
