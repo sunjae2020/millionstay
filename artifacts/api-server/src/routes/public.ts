@@ -330,17 +330,63 @@ router.get("/v1/public/spaces/:id", async (req, res): Promise<void> => {
       parent_space_id: spacesTable.parent_space_id,
       property_name: propertiesTable.name,
       property_address: propertiesTable.address,
+      property_address2: propertiesTable.address2,
       property_city: propertiesTable.city,
       property_state: propertiesTable.state,
       property_postcode: propertiesTable.postcode,
       latitude: propertiesTable.lat,
       longitude: propertiesTable.lng,
+      privacy_hide_unit_no: spacesTable.privacy_hide_unit_no,
+      privacy_hide_street_no: spacesTable.privacy_hide_street_no,
+      privacy_map_blur: spacesTable.privacy_map_blur,
     })
     .from(spacesTable)
     .leftJoin(propertiesTable, eq(spacesTable.property_id, propertiesTable.id))
     .where(eq(spacesTable.id, spaceId));
 
   if (!space) { res.status(404).json({ error: "Space not found" }); return; }
+
+  // ── Apply privacy settings ────────────────────────────────────────────────
+  // Address masking: hide unit no. or street no. from public display
+  function applyAddressPrivacy(address: string | null, address2: string | null): string {
+    if (!address) return "";
+    let addr = address.trim();
+    // Detect unit format: "1/285 La Trobe St" or "Unit 1, 285 La Trobe St"
+    const slashMatch = addr.match(/^(\w+)\/(.+)$/);      // "1/285 Street"
+    const unitMatch  = addr.match(/^(?:Unit|unit)\s+\S+,?\s*(.+)$/);
+    const hasUnit    = !!(slashMatch || unitMatch || address2?.trim());
+
+    if (hasUnit && space.privacy_hide_unit_no) {
+      if (slashMatch) {
+        addr = slashMatch[2];            // strip "1/" → "285 La Trobe St"
+      } else if (unitMatch) {
+        addr = unitMatch[1];             // strip "Unit 1, " prefix
+      }
+      // address2 is already omitted from public response
+    } else if (!hasUnit && space.privacy_hide_street_no) {
+      // Remove leading street number ("285 La Trobe St" → "La Trobe St")
+      addr = addr.replace(/^\d+\w*\s+/, "");
+    }
+    return addr;
+  }
+
+  // Map blur: deterministic offset ~30–40 m using golden-angle rotation
+  function applyMapBlur(lat: number | null, lng: number | null, id: number): { lat: number; lng: number } | null {
+    if (lat == null || lng == null) return null;
+    const BLUR_M = 35;
+    const angle  = (id * 137.508) % 360;              // golden angle × id (degrees)
+    const rad    = (angle * Math.PI) / 180;
+    const dLat   = (BLUR_M * Math.cos(rad)) / 111_000;
+    const dLng   = (BLUR_M * Math.sin(rad)) / (111_000 * Math.cos((lat * Math.PI) / 180));
+    return { lat: lat + dLat, lng: lng + dLng };
+  }
+
+  const publicAddress = applyAddressPrivacy(space.property_address, space.property_address2 ?? null);
+  const blurredCoords = space.privacy_map_blur
+    ? applyMapBlur(space.latitude ? Number(space.latitude) : null, space.longitude ? Number(space.longitude) : null, spaceId)
+    : null;
+  const publicLat = space.privacy_map_blur ? blurredCoords?.lat ?? null : (space.latitude ? Number(space.latitude) : null);
+  const publicLng = space.privacy_map_blur ? blurredCoords?.lng ?? null : (space.longitude ? Number(space.longitude) : null);
 
   const [ownImages, optionMaps, pricingTiers] = await Promise.all([
     db.select().from(spaceImagesTable)
@@ -390,6 +436,11 @@ router.get("/v1/public/spaces/:id", async (req, res): Promise<void> => {
     success: true,
     data: {
       ...space,
+      property_address: publicAddress,
+      property_address2: undefined,           // never expose raw address2
+      latitude: publicLat,
+      longitude: publicLng,
+      privacy_map_blur: space.privacy_map_blur ?? false,
       images,
       images_from_parent: imagesFromParent,
       space_options: optionMaps.filter((o) => o.name),

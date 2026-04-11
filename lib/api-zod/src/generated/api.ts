@@ -511,6 +511,9 @@ export const CreateSpaceBody = zod.object({
   space_policy_id: zod.number().nullish(),
   landlord_account_id: zod.number().nullish(),
   space_option_ids: zod.array(zod.number()).optional(),
+  privacy_hide_unit_no: zod.boolean().optional(),
+  privacy_hide_street_no: zod.boolean().optional(),
+  privacy_map_blur: zod.boolean().optional(),
 });
 
 /**
@@ -544,6 +547,9 @@ export const GetSpaceResponse = zod.object({
   policy_name: zod.string().nullish(),
   landlord_account_id: zod.number().nullish(),
   space_option_ids: zod.array(zod.number()),
+  privacy_hide_unit_no: zod.boolean().optional(),
+  privacy_hide_street_no: zod.boolean().optional(),
+  privacy_map_blur: zod.boolean().optional(),
   created_at: zod.coerce.date(),
   updated_at: zod.coerce.date(),
 });
@@ -575,6 +581,9 @@ export const UpdateSpaceBody = zod.object({
   space_policy_id: zod.number().nullish(),
   landlord_account_id: zod.number().nullish(),
   space_option_ids: zod.array(zod.number()).optional(),
+  privacy_hide_unit_no: zod.boolean().optional(),
+  privacy_hide_street_no: zod.boolean().optional(),
+  privacy_map_blur: zod.boolean().optional(),
 });
 
 export const UpdateSpaceResponse = zod.object({
@@ -601,6 +610,9 @@ export const UpdateSpaceResponse = zod.object({
   policy_name: zod.string().nullish(),
   landlord_account_id: zod.number().nullish(),
   space_option_ids: zod.array(zod.number()),
+  privacy_hide_unit_no: zod.boolean().optional(),
+  privacy_hide_street_no: zod.boolean().optional(),
+  privacy_map_blur: zod.boolean().optional(),
   created_at: zod.coerce.date(),
   updated_at: zod.coerce.date(),
 });

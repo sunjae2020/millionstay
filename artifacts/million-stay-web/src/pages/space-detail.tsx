@@ -187,26 +187,49 @@ function PhotoGallery({
 }
 
 /* ─── Mini map ─── */
-function SpaceMiniMap({ lat, lng, name, address }: { lat: number; lng: number; name: string; address?: string }) {
+function SpaceMiniMap({
+  lat, lng, name, address, blurred = false,
+}: {
+  lat: number; lng: number; name: string; address?: string; blurred?: boolean;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!containerRef.current) return;
     let map: import("leaflet").Map | null = null;
     import("leaflet").then((L) => {
       if (!containerRef.current) return;
-      map = L.map(containerRef.current, { center: [lat, lng], zoom: 15, scrollWheelZoom: false, zoomControl: true });
+      map = L.map(containerRef.current, { center: [lat, lng], zoom: 14, scrollWheelZoom: false, zoomControl: true });
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap", maxZoom: 19 }).addTo(map);
-      const icon = L.divIcon({
-        className: "",
-        html: `<div style="background:#F97316;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,.3)"></div>`,
-        iconAnchor: [7, 7],
-      });
-      L.marker([lat, lng], { icon }).addTo(map)
-        .bindPopup(`<div style="font-family:Inter,sans-serif;font-size:12px"><strong>${name}</strong>${address ? `<br/><span style="color:#666">${address}</span>` : ""}</div>`)
-        .openPopup();
+      if (blurred) {
+        // Show approximate area circle instead of exact pin
+        L.circle([lat, lng], {
+          radius: 200,
+          color: "#F97316",
+          fillColor: "#F97316",
+          fillOpacity: 0.12,
+          weight: 2,
+          opacity: 0.6,
+        }).addTo(map);
+        const icon = L.divIcon({
+          className: "",
+          html: `<div style="background:#F97316;width:20px;height:20px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,.3);opacity:0.7"></div>`,
+          iconAnchor: [10, 10],
+        });
+        L.marker([lat, lng], { icon }).addTo(map)
+          .bindPopup(`<div style="font-family:Inter,sans-serif;font-size:12px"><strong>${name}</strong><br/><span style="color:#888;font-size:11px">Approximate location</span></div>`);
+      } else {
+        const icon = L.divIcon({
+          className: "",
+          html: `<div style="background:#F97316;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,.3)"></div>`,
+          iconAnchor: [7, 7],
+        });
+        L.marker([lat, lng], { icon }).addTo(map)
+          .bindPopup(`<div style="font-family:Inter,sans-serif;font-size:12px"><strong>${name}</strong>${address ? `<br/><span style="color:#666">${address}</span>` : ""}</div>`)
+          .openPopup();
+      }
     });
     return () => { map?.remove(); };
-  }, [lat, lng, name, address]);
+  }, [lat, lng, name, address, blurred]);
   return <div ref={containerRef} className="w-full h-full" />;
 }
 
@@ -356,6 +379,7 @@ export default function SpaceDetail() {
   const amenities = (space.options ?? []) as Array<{ id: number | string; name: string }>;
   const lat = Number((space as Record<string, unknown>).latitude);
   const lng = Number((space as Record<string, unknown>).longitude);
+  const isMapBlurred = (space as Record<string, unknown>).privacy_map_blur === true;
   const hasMap = !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
 
   return (
@@ -605,18 +629,25 @@ export default function SpaceDetail() {
                   {hasMap ? (
                     <div>
                       <div className="h-44 rounded-xl overflow-hidden border border-gray-200 mb-3">
-                        <SpaceMiniMap lat={lat} lng={lng} name={space.name} address={addressStr} />
+                        <SpaceMiniMap lat={lat} lng={lng} name={space.name} address={addressStr} blurred={isMapBlurred} />
                       </div>
-                      <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <Button variant="outline" className="w-full border-primary text-primary hover:bg-orange-50 gap-2 rounded-xl">
-                          <MapPinned className="h-4 w-4" />
-                          VIEW LOCATION
-                        </Button>
-                      </a>
+                      {isMapBlurred ? (
+                        <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          Approximate location shown for privacy
+                        </p>
+                      ) : (
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Button variant="outline" className="w-full border-primary text-primary hover:bg-orange-50 gap-2 rounded-xl">
+                            <MapPinned className="h-4 w-4" />
+                            VIEW LOCATION
+                          </Button>
+                        </a>
+                      )}
                     </div>
                   ) : (
                     <div>

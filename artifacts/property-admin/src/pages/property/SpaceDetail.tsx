@@ -79,6 +79,11 @@ export default function SpaceDetail() {
   const [optionNames, setOptionNames] = useState<string[]>([]);
   const [optionSearch, setOptionSearch] = useState("");
 
+  // Privacy state
+  const [privacyHideUnitNo, setPrivacyHideUnitNo] = useState(true);
+  const [privacyHideStreetNo, setPrivacyHideStreetNo] = useState(true);
+  const [privacyMapBlur, setPrivacyMapBlur] = useState(true);
+
   // Availability state
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
 
@@ -232,6 +237,9 @@ export default function SpaceDetail() {
         return opt?.name ?? `Option #${oid}`;
       });
       setOptionNames(names);
+      setPrivacyHideUnitNo(space.privacy_hide_unit_no ?? true);
+      setPrivacyHideStreetNo(space.privacy_hide_street_no ?? true);
+      setPrivacyMapBlur(space.privacy_map_blur ?? true);
     }
   }, [space, reset]);
 
@@ -285,6 +293,9 @@ export default function SpaceDetail() {
       space_policy_id: policyId,
       landlord_account_id: data.landlord_account_id ? parseInt(data.landlord_account_id, 10) : null,
       space_option_ids: optionIds,
+      privacy_hide_unit_no: privacyHideUnitNo,
+      privacy_hide_street_no: privacyHideStreetNo,
+      privacy_map_blur: privacyMapBlur,
     };
     if (isNew) {
       createMutation.mutate({ data: payload });
@@ -405,6 +416,33 @@ export default function SpaceDetail() {
                   onSearch={setPropertySearch}
                   searchPlaceholder="Search properties..."
                 />
+              </div>
+
+              {/* PRIVACY */}
+              <div className="bg-card rounded-lg border p-5 flex flex-col gap-4">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Privacy</h3>
+                <p className="text-xs text-muted-foreground -mt-2">Controls what address &amp; map information is shown to the public.</p>
+                <div className="flex items-center justify-between py-1">
+                  <div>
+                    <p className="text-sm font-medium">Hide Unit / Apartment Number</p>
+                    <p className="text-xs text-muted-foreground">Removes unit number from public address (e.g. "1/285 → 285 La Trobe St")</p>
+                  </div>
+                  <Switch checked={privacyHideUnitNo} onCheckedChange={setPrivacyHideUnitNo} />
+                </div>
+                <div className="flex items-center justify-between py-1">
+                  <div>
+                    <p className="text-sm font-medium">Hide Street Number</p>
+                    <p className="text-xs text-muted-foreground">Removes street number for house/townhouse listings (e.g. "285 La Trobe → La Trobe St")</p>
+                  </div>
+                  <Switch checked={privacyHideStreetNo} onCheckedChange={setPrivacyHideStreetNo} />
+                </div>
+                <div className="flex items-center justify-between py-1">
+                  <div>
+                    <p className="text-sm font-medium">Blur Map Pin Location</p>
+                    <p className="text-xs text-muted-foreground">Offsets the map pin by ~35 m and shows an approximate area circle instead of exact pin</p>
+                  </div>
+                  <Switch checked={privacyMapBlur} onCheckedChange={setPrivacyMapBlur} />
+                </div>
               </div>
 
               {/* PARENT SPACE */}

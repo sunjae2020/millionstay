@@ -22,6 +22,10 @@ export const spacesTable = pgTable("spaces", {
   parent_space_id: integer("parent_space_id"),
   space_policy_id: integer("space_policy_id"),
   landlord_account_id: integer("landlord_account_id"),
+  // Privacy settings
+  privacy_hide_unit_no: boolean("privacy_hide_unit_no").notNull().default(true),
+  privacy_hide_street_no: boolean("privacy_hide_street_no").notNull().default(true),
+  privacy_map_blur: boolean("privacy_map_blur").notNull().default(true),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
