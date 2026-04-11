@@ -10,9 +10,21 @@ import { motion } from "framer-motion";
 import {
   MapPin, Home, Calendar, Users, FileText, FileImage,
   CheckCircle2, Clock, AlertCircle, Download, ChevronLeft,
-  CreditCard,
+  CreditCard, Receipt,
 } from "lucide-react";
 import { format } from "date-fns";
+
+type BookingInvoice = {
+  id: number;
+  invoice_ref: string | null;
+  amount: number;
+  currency: string;
+  status: string;
+  due_date: string | null;
+  paid_at: string | null;
+  payment_method: string | null;
+  description: string | null;
+};
 
 function formatDate(d: string | null) {
   if (!d) return "—";
@@ -61,9 +73,12 @@ export default function PortalBookingDetail() {
 
   const b = bookingData;
 
+  const invoices = (b?.invoices ?? []) as BookingInvoice[];
+  const firstPaidInvoice = invoices.find((inv) => inv.status === "Paid");
+
   const TIMELINE_EVENTS = b ? [
     { label: "Booking created", date: b.created_at as string, done: true },
-    { label: "Payment received", date: (b.invoices as Array<{paid_date: string|null}>)?.[0]?.paid_date ?? null, done: !!(b.invoices as [])?.length },
+    { label: "Payment received", date: firstPaidInvoice?.paid_at ?? null, done: !!firstPaidInvoice },
     { label: "Booking confirmed", date: null, done: b.contract_status === "Confirmed" || b.contract_status === "Active" },
     { label: "Check-in", date: b.check_in_date as string, done: false },
     { label: "Check-out", date: b.check_out_date as string, done: false },
@@ -110,9 +125,25 @@ export default function PortalBookingDetail() {
                 <p className="text-sm text-gray-500">Ref: <span className="font-mono font-semibold text-gray-700">{b.booking_ref as string}</span></p>
               </div>
               <div className="flex gap-3">
-                <Button variant="outline" size="sm" className="gap-1.5">
-                  <Download className="h-4 w-4" /> Receipt
-                </Button>
+                {firstPaidInvoice ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 border-primary/30 text-primary hover:bg-orange-50"
+                    onClick={() => setLocation(`/portal/invoices/${firstPaidInvoice.id}/receipt`)}
+                  >
+                    <Receipt className="h-4 w-4" /> Receipt
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => setLocation("/portal/invoices")}
+                  >
+                    <FileText className="h-4 w-4" /> Invoices
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -135,7 +166,7 @@ export default function PortalBookingDetail() {
                       { icon: Calendar, label: "Check-in", value: formatDate(b.check_in_date as string) },
                       { icon: Calendar, label: "Check-out", value: formatDate(b.check_out_date as string) },
                       { icon: Users, label: "Guests", value: String(b.num_guests) },
-                      { icon: CreditCard, label: "Total Amount", value: b.total_amount ? `$${(b.total_amount as number).toLocaleString()} AUD` : "—" },
+                      { icon: CreditCard, label: "Total Amount", value: b.total_rent ? `$${Number(b.total_rent).toLocaleString()} AUD` : "—" },
                     ].map(({ icon: Icon, label, value }) => (
                       <div key={label} className="flex items-start gap-3">
                         <Icon className="h-4 w-4 text-primary mt-0.5 shrink-0" />
@@ -198,24 +229,45 @@ export default function PortalBookingDetail() {
               {/* INVOICES */}
               <TabsContent value="invoice">
                 <div className="space-y-3">
-                  {((b.invoices as Array<{id: number; invoice_number: string|null; amount: number; status: string; due_date: string|null; paid_date: string|null}>) ?? []).length === 0 ? (
+                  {invoices.length === 0 ? (
                     <div className="bg-white rounded-2xl border text-center py-12 text-gray-400">
                       <FileText className="h-8 w-8 mx-auto mb-2 opacity-30" />
                       <p className="text-sm">No invoices yet</p>
                     </div>
                   ) : (
-                    (b.invoices as Array<{id: number; invoice_number: string|null; amount: number; status: string; due_date: string|null; paid_date: string|null}>).map((inv) => (
-                      <div key={inv.id} className="bg-white rounded-xl border p-4 flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-semibold text-gray-800">{inv.invoice_number ?? `INV-${inv.id}`}</p>
-                          <p className="text-xs text-gray-500">Due {formatDate(inv.due_date)}</p>
+                    invoices.map((inv) => (
+                      <div key={inv.id} className="bg-white rounded-xl border p-4 flex items-center justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-gray-800">{inv.invoice_ref ?? `INV-${inv.id}`}</p>
+                          <p className="text-xs text-gray-500 truncate">{inv.description ?? `Due ${formatDate(inv.due_date)}`}</p>
+                          {inv.paid_at && <p className="text-xs text-green-600 mt-0.5">Paid {formatDate(inv.paid_at)}</p>}
                         </div>
-                        <div className="flex items-center gap-3">
-                          <span className={`text-xs font-semibold px-2 py-1 rounded-full ${inv.status === "Paid" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>{inv.status}</span>
-                          <p className="font-bold text-gray-900">${inv.amount.toLocaleString()}</p>
-                          <Button size="sm" variant="outline" className="h-7 text-xs gap-1">
-                            <Download className="h-3 w-3" /> PDF
-                          </Button>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                            inv.status === "Paid" ? "bg-green-100 text-green-700" :
+                            inv.status === "Overdue" ? "bg-red-100 text-red-700" :
+                            "bg-amber-100 text-amber-700"
+                          }`}>{inv.status}</span>
+                          <p className="font-bold text-gray-900 text-sm">${Number(inv.amount).toLocaleString()}</p>
+                          {inv.status === "Paid" ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs gap-1 border-primary/30 text-primary hover:bg-orange-50"
+                              onClick={() => setLocation(`/portal/invoices/${inv.id}/receipt`)}
+                            >
+                              <Receipt className="h-3 w-3" /> Receipt
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs gap-1"
+                              onClick={() => setLocation("/portal/invoices")}
+                            >
+                              <FileText className="h-3 w-3" /> View
+                            </Button>
+                          )}
                         </div>
                       </div>
                     ))
