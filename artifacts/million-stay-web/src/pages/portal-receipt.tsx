@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useLocation, useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "@/lib/store";
@@ -24,14 +24,13 @@ function fmt(d: string | null | undefined, pattern = "dd MMM yyyy") {
 
 function fmtAmt(n: number | null | undefined, currency = "AUD") {
   if (n == null) return "—";
-  return `$${n.toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
+  return `$${Number(n).toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
 }
 
 export default function PortalReceipt() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { token, guest } = useAuthStore();
-  const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!token) setLocation(`/login?redirect=/portal/invoices/${id}/receipt`);
@@ -44,8 +43,8 @@ export default function PortalReceipt() {
   });
 
   const inv = data?.data;
-
   const isPaid = inv?.status === "Paid";
+
   const tenantName = inv?.guest
     ? [inv.guest.first_name, inv.guest.last_name].filter(Boolean).join(" ") || guest?.email
     : [guest?.first_name, guest?.last_name].filter(Boolean).join(" ") || guest?.email;
@@ -70,7 +69,7 @@ export default function PortalReceipt() {
         </button>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handlePrint} className="gap-2">
-            <Printer className="h-4 w-4" /> Print PDF
+            <Printer className="h-4 w-4" /> Print
           </Button>
           <Button size="sm" onClick={handlePrint} className="gap-2" style={{ backgroundColor: BRAND, borderColor: BRAND }}>
             <Download className="h-4 w-4" /> Save as PDF
@@ -94,39 +93,34 @@ export default function PortalReceipt() {
 
       {/* ─── Receipt document ─── */}
       {inv && (
-        <div className="py-8 px-4 print:p-0 print:py-0">
+        <div className="py-6 px-4 print:p-0">
           <div
-            ref={printRef}
-            className="w-full max-w-2xl mx-auto bg-white shadow-xl print:shadow-none print:max-w-none"
+            id="receipt-doc"
+            className="w-full max-w-[680px] mx-auto bg-white shadow-xl print:shadow-none print:max-w-none"
             style={{ fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif" }}
           >
             {/* ── Header ── */}
-            <div className="px-10 pt-10 pb-6" style={{ backgroundColor: BRAND }}>
+            <div className="px-8 pt-7 pb-5" style={{ backgroundColor: BRAND }}>
               <div className="flex items-start justify-between">
                 <div>
                   <img
                     src="/logo-horizontal.png"
                     alt="MillionStay"
-                    className="h-10 w-auto brightness-0 invert"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
-                    }}
+                    className="h-8 w-auto brightness-0 invert"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                   />
-                  <p className="text-orange-100 text-xs mt-2 font-medium tracking-wide uppercase">
+                  <p className="text-orange-100 text-[10px] mt-1.5 font-medium tracking-wide uppercase">
                     Melbourne Student Accommodation
                   </p>
                 </div>
                 <div className="text-right">
                   <div
-                    className="inline-block px-4 py-1.5 rounded-full text-sm font-bold"
-                    style={{
-                      backgroundColor: isPaid ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.15)",
-                      color: "#fff",
-                    }}
+                    className="inline-block px-3 py-1 rounded-full text-xs font-bold"
+                    style={{ backgroundColor: "rgba(255,255,255,0.2)", color: "#fff" }}
                   >
                     {isPaid ? "RECEIPT" : "INVOICE"}
                   </div>
-                  <p className="text-white font-mono text-lg font-bold mt-2">
+                  <p className="text-white font-mono text-base font-bold mt-1.5">
                     {inv.invoice_ref ?? `INV-${inv.id}`}
                   </p>
                 </div>
@@ -136,61 +130,52 @@ export default function PortalReceipt() {
             {/* ── Status banner (Paid) ── */}
             {isPaid && (
               <div
-                className="mx-10 -mt-3 mb-0 flex items-center gap-2 rounded-lg px-4 py-2.5"
+                className="mx-8 -mt-2.5 mb-0 flex items-center gap-2 rounded-lg px-3 py-2"
                 style={{ backgroundColor: "#f0fdf4", border: "1px solid #bbf7d0" }}
               >
-                <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: "#16a34a" }}>
-                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <div className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "#16a34a" }}>
+                  <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <span className="text-sm font-semibold text-green-700">Payment Confirmed</span>
+                <span className="text-xs font-semibold text-green-700">Payment Confirmed</span>
                 {inv.paid_at && (
-                  <span className="text-xs text-green-600 ml-auto">Paid on {fmt(inv.paid_at, "dd MMM yyyy 'at' h:mm a")}</span>
+                  <span className="text-[11px] text-green-600 ml-auto">Paid on {fmt(inv.paid_at, "dd MMM yyyy 'at' h:mm a")}</span>
                 )}
               </div>
             )}
 
             {/* ── Meta grid ── */}
-            <div className="px-10 pt-8 pb-6 grid grid-cols-2 gap-6 border-b border-gray-100">
-              {/* Tenant */}
+            <div className="px-8 pt-5 pb-4 grid grid-cols-2 gap-x-6 gap-y-3 border-b border-gray-100">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Billed To</p>
-                <p className="font-semibold text-gray-900">{tenantName || "—"}</p>
-                {tenantEmail && <p className="text-sm text-gray-500">{tenantEmail}</p>}
-              </div>
-
-              {/* From */}
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Issued By</p>
-                <p className="font-semibold text-gray-900">MillionStay Pty Ltd</p>
-                <p className="text-sm text-gray-500">info@millionstay.com.au</p>
-                <p className="text-sm text-gray-500">Melbourne, VIC, Australia</p>
-              </div>
-
-              {/* Dates */}
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Issue Date</p>
-                <p className="text-sm font-medium text-gray-800">{fmt(inv.created_at)}</p>
+                <p className="text-[9px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Billed To</p>
+                <p className="text-sm font-semibold text-gray-900">{tenantName || "—"}</p>
+                {tenantEmail && <p className="text-xs text-gray-500">{tenantEmail}</p>}
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Due Date</p>
-                <p className="text-sm font-medium text-gray-800">{fmt(inv.due_date)}</p>
+                <p className="text-[9px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Issued By</p>
+                <p className="text-sm font-semibold text-gray-900">MillionStay Pty Ltd</p>
+                <p className="text-xs text-gray-500">info@millionstay.com.au</p>
+                <p className="text-xs text-gray-500">Melbourne, VIC, Australia</p>
               </div>
-
-              {/* Booking ref */}
+              <div>
+                <p className="text-[9px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Issue Date</p>
+                <p className="text-xs font-medium text-gray-800">{fmt(inv.created_at)}</p>
+              </div>
+              <div>
+                <p className="text-[9px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Due Date</p>
+                <p className="text-xs font-medium text-gray-800">{fmt(inv.due_date)}</p>
+              </div>
               {inv.booking_ref && (
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Booking Reference</p>
-                  <p className="text-sm font-mono font-medium text-gray-800">{inv.booking_ref}</p>
+                  <p className="text-[9px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Booking Reference</p>
+                  <p className="text-xs font-mono font-medium text-gray-800">{inv.booking_ref}</p>
                 </div>
               )}
-
-              {/* Rental period */}
               {inv.check_in_date && inv.check_out_date && (
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Rental Period</p>
-                  <p className="text-sm font-medium text-gray-800">
+                  <p className="text-[9px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Rental Period</p>
+                  <p className="text-xs font-medium text-gray-800">
                     {fmt(inv.check_in_date)} – {fmt(inv.check_out_date)}
                   </p>
                 </div>
@@ -199,35 +184,29 @@ export default function PortalReceipt() {
 
             {/* ── Property ── */}
             {propertyFull && (
-              <div className="px-10 py-5 border-b border-gray-100">
-                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Property</p>
-                <p className="text-sm font-medium text-gray-800">{propertyFull}</p>
+              <div className="px-8 py-3 border-b border-gray-100">
+                <p className="text-[9px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Property</p>
+                <p className="text-xs font-medium text-gray-800">{propertyFull}</p>
               </div>
             )}
 
             {/* ── Line items ── */}
-            <div className="px-10 py-6 border-b border-gray-100">
+            <div className="px-8 py-4 border-b border-gray-100">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
-                    <th className="text-left text-xs font-semibold uppercase tracking-wider text-gray-400 pb-3">Description</th>
-                    <th className="text-right text-xs font-semibold uppercase tracking-wider text-gray-400 pb-3">Amount</th>
+                    <th className="text-left text-[9px] font-semibold uppercase tracking-wider text-gray-400 pb-2">Description</th>
+                    <th className="text-right text-[9px] font-semibold uppercase tracking-wider text-gray-400 pb-2">Amount</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr className="py-4">
-                    <td className="pt-4 pb-2 pr-4">
-                      <p className="text-sm font-semibold text-gray-900">
-                        {inv.description ?? "Monthly Rent"}
-                      </p>
-                      {inv.notes && (
-                        <p className="text-xs text-gray-400 mt-0.5">{inv.notes}</p>
-                      )}
+                  <tr>
+                    <td className="pt-3 pb-2 pr-4">
+                      <p className="text-sm font-semibold text-gray-900">{inv.description ?? "Monthly Rent"}</p>
+                      {inv.notes && <p className="text-[11px] text-gray-400 mt-0.5">{inv.notes}</p>}
                     </td>
-                    <td className="pt-4 pb-2 text-right">
-                      <p className="text-sm font-semibold text-gray-900">
-                        {fmtAmt(inv.amount, inv.currency ?? "AUD")}
-                      </p>
+                    <td className="pt-3 pb-2 text-right">
+                      <p className="text-sm font-semibold text-gray-900">{fmtAmt(inv.amount, inv.currency ?? "AUD")}</p>
                     </td>
                   </tr>
                 </tbody>
@@ -235,20 +214,18 @@ export default function PortalReceipt() {
             </div>
 
             {/* ── Totals ── */}
-            <div className="px-10 py-5 border-b border-gray-100">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-500">Subtotal</span>
-                <span className="text-sm text-gray-700">{fmtAmt(inv.amount, inv.currency ?? "AUD")}</span>
+            <div className="px-8 py-3 border-b border-gray-100">
+              <div className="flex justify-between items-center mb-1.5">
+                <span className="text-xs text-gray-500">Subtotal</span>
+                <span className="text-xs text-gray-700">{fmtAmt(inv.amount, inv.currency ?? "AUD")}</span>
               </div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-500">GST (10%)</span>
-                <span className="text-sm text-gray-700">Included</span>
+              <div className="flex justify-between items-center mb-1.5">
+                <span className="text-xs text-gray-500">GST (10%)</span>
+                <span className="text-xs text-gray-700">Included</span>
               </div>
-              <div
-                className="flex justify-between items-center pt-3 mt-1 border-t border-gray-100"
-              >
-                <span className="font-bold text-gray-900">Total Amount</span>
-                <span className="font-bold text-xl" style={{ color: BRAND }}>
+              <div className="flex justify-between items-center pt-2 mt-1 border-t border-gray-100">
+                <span className="font-bold text-sm text-gray-900">Total Amount</span>
+                <span className="font-bold text-lg" style={{ color: BRAND }}>
                   {fmtAmt(inv.amount, inv.currency ?? "AUD")}
                 </span>
               </div>
@@ -256,50 +233,54 @@ export default function PortalReceipt() {
 
             {/* ── Payment details (for paid invoices) ── */}
             {isPaid && (
-              <div className="px-10 py-6 border-b border-gray-100">
-                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Payment Details</p>
-                <div className="rounded-xl border border-green-100 bg-green-50/50 px-5 py-4 grid grid-cols-2 gap-y-3 gap-x-8">
+              <div className="px-8 py-4 border-b border-gray-100">
+                <p className="text-[9px] font-semibold uppercase tracking-wider text-gray-400 mb-2">Payment Details</p>
+                <div className="rounded-xl border border-green-100 bg-green-50/50 px-4 py-3 grid grid-cols-2 gap-y-2 gap-x-6">
                   <div>
-                    <p className="text-xs text-gray-400">Status</p>
-                    <p className="text-sm font-semibold text-green-700">Paid in Full</p>
+                    <p className="text-[10px] text-gray-400">Status</p>
+                    <p className="text-xs font-semibold text-green-700">Paid in Full</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-400">Payment Method</p>
-                    <p className="text-sm font-semibold text-gray-800">
+                    <p className="text-[10px] text-gray-400">Payment Method</p>
+                    <p className="text-xs font-semibold text-gray-800">
                       {PAYMENT_METHOD_LABELS[inv.payment_method ?? ""] ?? inv.payment_method ?? "—"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-400">Date Received</p>
-                    <p className="text-sm font-semibold text-gray-800">{fmt(inv.paid_at)}</p>
+                    <p className="text-[10px] text-gray-400">Date Received</p>
+                    <p className="text-xs font-semibold text-gray-800">{fmt(inv.paid_at)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-400">Amount Received</p>
-                    <p className="text-sm font-semibold text-gray-800">{fmtAmt(inv.amount, inv.currency ?? "AUD")}</p>
+                    <p className="text-[10px] text-gray-400">Amount Received</p>
+                    <p className="text-xs font-semibold text-gray-800">{fmtAmt(inv.amount, inv.currency ?? "AUD")}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── Bank transfer notice (for unpaid) ── */}
+            {!isPaid && (
+              <div className="px-8 py-4 border-b border-gray-100">
+                <div className="flex items-start gap-3 p-3 rounded-xl" style={{ backgroundColor: "#fff7f3", border: `1px solid ${BRAND}20` }}>
+                  <div className="w-1 h-10 rounded-full shrink-0" style={{ backgroundColor: BRAND }} />
+                  <div>
+                    <p className="text-xs font-semibold text-gray-700 mb-0.5">Bank Transfer Details</p>
+                    <p className="text-[11px] text-gray-500">Bank: Commonwealth Bank &nbsp;|&nbsp; BSB: 063-000 &nbsp;|&nbsp; Acc: 1234 5678</p>
+                    <p className="text-[11px] text-gray-500">Account Name: MillionStay Pty Ltd &nbsp;|&nbsp; Ref: {inv.invoice_ref ?? `INV-${inv.id}`}</p>
                   </div>
                 </div>
               </div>
             )}
 
             {/* ── Footer ── */}
-            <div className="px-10 py-6">
-              <div className="flex items-start gap-3 p-4 rounded-xl" style={{ backgroundColor: "#fff7f3", border: `1px solid ${BRAND}20` }}>
-                <div className="w-1 h-12 rounded-full shrink-0" style={{ backgroundColor: BRAND }} />
-                <div>
-                  <p className="text-xs font-semibold text-gray-700 mb-0.5">Bank Transfer Details</p>
-                  <p className="text-xs text-gray-500">Bank: Commonwealth Bank &nbsp;|&nbsp; BSB: 063-000 &nbsp;|&nbsp; Acc: 1234 5678</p>
-                  <p className="text-xs text-gray-500">Account Name: MillionStay Pty Ltd &nbsp;|&nbsp; Reference: {inv.invoice_ref ?? `INV-${inv.id}`}</p>
-                </div>
+            <div className="px-8 py-4 flex items-center justify-between border-t border-gray-100">
+              <div>
+                <p className="text-xs font-bold text-gray-700">MillionStay Pty Ltd</p>
+                <p className="text-[10px] text-gray-400">ABN: 12 345 678 901 &nbsp;|&nbsp; info@millionstay.com.au</p>
               </div>
-              <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold text-gray-700">MillionStay Pty Ltd</p>
-                  <p className="text-xs text-gray-400">ABN: 12 345 678 901 &nbsp;|&nbsp; info@millionstay.com.au</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-gray-400">Thank you for choosing</p>
-                  <p className="text-xs font-semibold" style={{ color: BRAND }}>MillionStay</p>
-                </div>
+              <div className="text-right">
+                <p className="text-[10px] text-gray-400">Thank you for choosing</p>
+                <p className="text-xs font-semibold" style={{ color: BRAND }}>MillionStay</p>
               </div>
             </div>
           </div>
@@ -309,8 +290,27 @@ export default function PortalReceipt() {
       {/* ─── Print styles ─── */}
       <style>{`
         @media print {
-          @page { margin: 0; size: A4; }
-          body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+          @page {
+            margin: 8mm 8mm;
+            size: A4 portrait;
+          }
+          body {
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+            background: white !important;
+          }
+          .print\\:hidden { display: none !important; }
+          #receipt-doc {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+          }
+          /* Prevent page breaks inside sections */
+          #receipt-doc > * {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
         }
       `}</style>
     </div>

@@ -257,6 +257,12 @@ importers:
 
   artifacts/million-stay-web:
     dependencies:
+      '@stripe/react-stripe-js':
+        specifier: ^6.1.0
+        version: 6.1.0(@stripe/stripe-js@9.1.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@stripe/stripe-js':
+        specifier: ^9.1.0
+        version: 9.1.0
       '@types/leaflet':
         specifier: ^1.9.21
         version: 1.9.21
@@ -1831,6 +1837,17 @@ packages:
 
   '@stablelib/base64@1.0.1':
     resolution: {integrity: sha512-1bnPQqSxSuc3Ii6MhBysoWCg58j97aUjuCSZrGSmDxNqtytIi0k8utUenAwTZN4V5mXXYGsVUI9zeBqy+jBOSQ==}
+
+  '@stripe/react-stripe-js@6.1.0':
+    resolution: {integrity: sha512-LbKbRv4+wUSHLb5VNxqiYcKaqXPvTju0bJaF0RrzH0h4+aKWDXAk4RzUBcpNxxj8KtjuxICElANs1Li7aTv1IQ==}
+    peerDependencies:
+      '@stripe/stripe-js': '>=9.0.0 <10.0.0'
+      react: '>=16.8.0 <20.0.0'
+      react-dom: '>=16.8.0 <20.0.0'
+
+  '@stripe/stripe-js@9.1.0':
+    resolution: {integrity: sha512-v51LoEfZNiNS/5DcarWPCYgn24w4dqwwALR4GTbMW/N0DDzzj4DgYNoixX6PYvpt6uIJMucGUabn/BHhylggIQ==}
+    engines: {node: '>=12.16'}
 
   '@tabby_ai/hijri-converter@1.0.5':
     resolution: {integrity: sha512-r5bClKrcIusDoo049dSL8CawnHR6mRdDwhlQuIgZRNty68q0x8k3Lf1BtPAMxRf/GgnHBnIO4ujd3+GQdLWzxQ==}
@@ -4767,6 +4784,15 @@ snapshots:
   '@sindresorhus/merge-streams@4.0.0': {}
 
   '@stablelib/base64@1.0.1': {}
+
+  '@stripe/react-stripe-js@6.1.0(@stripe/stripe-js@9.1.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      '@stripe/stripe-js': 9.1.0
+      prop-types: 15.8.1
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+
+  '@stripe/stripe-js@9.1.0': {}
 
   '@tabby_ai/hijri-converter@1.0.5': {}
 

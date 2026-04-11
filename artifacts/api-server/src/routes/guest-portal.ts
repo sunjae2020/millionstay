@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and, desc, asc } from "drizzle-orm";
+import Stripe from "stripe";
 import {
   db,
   guestUsersTable,
@@ -12,6 +13,7 @@ import {
 } from "@workspace/db";
 import { requireGuestAuth } from "../middlewares/requireGuestAuth";
 import { sendBookingConfirmation } from "../lib/email";
+import { logAction } from "../utils/auditLog";
 import multer from "multer";
 import { isCloudinaryConfigured, uploadToCloudinary, deleteFromCloudinary } from "../utils/cloudinary";
 
@@ -755,6 +757,197 @@ router.post("/v1/guest/payment/confirm", async (req, res): Promise<void> => {
         message: payment_method === "bank_transfer"
           ? "Bank transfer initiated. Booking will be confirmed once payment is received."
           : "Payment recorded. Our team will review and confirm your booking shortly.",
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: "Payment confirmation failed" });
+  }
+});
+
+/* ───────────────────────────────────────────────────────
+   POST /api/v1/guest/payment/create-intent
+   Creates a Stripe PaymentIntent for an invoice
+──────────────────────────────────────────────────────── */
+router.post("/v1/guest/payment/create-intent", requireGuestAuth, async (req, res): Promise<void> => {
+  const guest = (req as any).guest as { id: number; email: string; account_id: number | null };
+  const { invoice_id } = req.body as { invoice_id: number };
+
+  const stripeKey = process.env["STRIPE_SECRET_KEY"];
+  if (!stripeKey) {
+    res.status(503).json({ success: false, error: "Stripe is not configured" });
+    return;
+  }
+
+  if (!invoice_id) {
+    res.status(400).json({ success: false, error: "invoice_id is required" });
+    return;
+  }
+
+  try {
+    const [invoice] = await db
+      .select()
+      .from(invoicesTable)
+      .where(eq(invoicesTable.id, invoice_id))
+      .limit(1);
+
+    if (!invoice) {
+      res.status(404).json({ success: false, error: "Invoice not found" });
+      return;
+    }
+
+    // Verify ownership
+    const guestAccountId = guest.account_id;
+    let hasAccess = false;
+    if (guestAccountId && invoice.account_id && guestAccountId === invoice.account_id) {
+      hasAccess = true;
+    } else if (invoice.booking_id) {
+      const [booking] = await db
+        .select({ account_id: bookingsTable.account_id })
+        .from(bookingsTable)
+        .where(eq(bookingsTable.id, invoice.booking_id))
+        .limit(1);
+      if (booking && booking.account_id === guestAccountId) hasAccess = true;
+    }
+    if (!hasAccess) {
+      res.status(403).json({ success: false, error: "Access denied" });
+      return;
+    }
+
+    if (invoice.status === "Paid") {
+      res.status(400).json({ success: false, error: "Invoice is already paid" });
+      return;
+    }
+
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-02-24.acacia" });
+    const amountCents = Math.round(Number(invoice.amount) * 100);
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amountCents,
+      currency: (invoice.currency ?? "AUD").toLowerCase(),
+      metadata: {
+        invoice_id: String(invoice.id),
+        invoice_ref: invoice.invoice_ref ?? "",
+        account_id: String(guest.account_id),
+      },
+      description: invoice.invoice_ref ?? `Invoice #${invoice.id}`,
+      receipt_email: guest.email,
+    });
+
+    res.json({
+      success: true,
+      data: {
+        client_secret: paymentIntent.client_secret,
+        amount: invoice.amount,
+        currency: invoice.currency ?? "AUD",
+        invoice_ref: invoice.invoice_ref,
+      },
+    });
+  } catch (err) {
+    console.error("[Stripe] create-intent error:", err);
+    res.status(500).json({ success: false, error: "Failed to create payment intent" });
+  }
+});
+
+/* ───────────────────────────────────────────────────────
+   POST /api/v1/guest/payment/invoice-confirm
+   Confirms bank transfer intent for a specific invoice
+──────────────────────────────────────────────────────── */
+router.post("/v1/guest/payment/invoice-confirm", requireGuestAuth, async (req, res): Promise<void> => {
+  const guest = (req as any).guest as { id: number; email: string; account_id: number | null };
+  const { invoice_id, payment_method = "bank_transfer" } = req.body as {
+    invoice_id: number;
+    payment_method?: string;
+  };
+
+  if (!invoice_id) {
+    res.status(400).json({ success: false, error: "invoice_id is required" });
+    return;
+  }
+
+  try {
+    // Fetch invoice and verify ownership via booking → account_id
+    const [invoice] = await db
+      .select({
+        id: invoicesTable.id,
+        invoice_ref: invoicesTable.invoice_ref,
+        amount: invoicesTable.amount,
+        currency: invoicesTable.currency,
+        status: invoicesTable.status,
+        paid_at: invoicesTable.paid_at,
+        booking_id: invoicesTable.booking_id,
+        account_id: invoicesTable.account_id,
+      })
+      .from(invoicesTable)
+      .where(eq(invoicesTable.id, invoice_id))
+      .limit(1);
+
+    if (!invoice) {
+      res.status(404).json({ success: false, error: "Invoice not found" });
+      return;
+    }
+
+    // Verify ownership: invoice.account_id must match guest's account_id, OR check via booking
+    const guestAccountId = guest.account_id;
+    const invoiceAccountId = invoice.account_id;
+    let hasAccess = false;
+
+    if (guestAccountId && invoiceAccountId && guestAccountId === invoiceAccountId) {
+      hasAccess = true;
+    } else if (invoice.booking_id) {
+      // Fallback: verify via booking table
+      const [booking] = await db
+        .select({ account_id: bookingsTable.account_id })
+        .from(bookingsTable)
+        .where(eq(bookingsTable.id, invoice.booking_id))
+        .limit(1);
+      if (booking && booking.account_id && booking.account_id === guestAccountId) {
+        hasAccess = true;
+      }
+    }
+
+    if (!hasAccess) {
+      res.status(403).json({ success: false, error: "Access denied" });
+      return;
+    }
+
+    if (invoice.status === "Paid") {
+      res.status(400).json({ success: false, error: "Invoice is already paid" });
+      return;
+    }
+
+    const isPaidMethod = payment_method !== "bank_transfer";
+    const [updated] = await db
+      .update(invoicesTable)
+      .set({
+        status: isPaidMethod ? "Paid" : "Sent",
+        paid_at: isPaidMethod ? new Date() : null,
+        payment_method,
+        updated_at: new Date(),
+      })
+      .where(eq(invoicesTable.id, invoice_id))
+      .returning();
+
+    await logAction({
+      entityType: "invoice",
+      entityId: invoice_id,
+      action: "PAYMENT",
+      newValue: { status: updated.status, payment_method, note: "Guest portal payment confirmation" },
+    });
+
+    res.json({
+      success: true,
+      data: {
+        invoice_ref: updated.invoice_ref,
+        invoice_id: updated.id,
+        amount: updated.amount,
+        currency: updated.currency ?? "AUD",
+        status: updated.status,
+        payment_method,
+        paid_at: updated.paid_at,
+        message: isPaidMethod
+          ? "Payment confirmed."
+          : "Bank transfer noted. We will confirm once payment is received.",
       },
     });
   } catch (err) {
