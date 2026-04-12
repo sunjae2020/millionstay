@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, FormEvent } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
@@ -207,9 +207,18 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-sm font-medium text-slate-700">
-                  {t("login.password")}
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-sm font-medium text-slate-700">
+                    {t("login.password")}
+                  </Label>
+                  <Link
+                    href="/forgot-password"
+                    className="text-xs font-medium hover:underline"
+                    style={{ color: BRAND }}
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
                 <div className="relative">
                   <Input
                     id="password"
@@ -294,9 +303,17 @@ export default function LoginPage() {
               )}
             </div>
 
-            <p className="text-center text-xs text-slate-400 mt-8">
-              Secure access · MillionStay Admin v2
-            </p>
+            <div className="mt-6 pt-5 border-t border-slate-200 text-center space-y-2">
+              <p className="text-xs text-slate-500">
+                Don't have an account?{" "}
+                <Link href="/register" className="font-semibold hover:underline" style={{ color: BRAND }}>
+                  Request Access
+                </Link>
+              </p>
+              <p className="text-center text-xs text-slate-400">
+                Secure access · MillionStay Admin v2
+              </p>
+            </div>
           </div>
         </div>
       </div>

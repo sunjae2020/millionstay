@@ -10,6 +10,86 @@ function getResend(): Resend | null {
 
 const FROM = process.env.EMAIL_FROM ?? "MillionStay <noreply@millionstay.com.au>";
 
+export async function sendPasswordResetEmail(to: string, name: string, resetUrl: string): Promise<boolean> {
+  const client = getResend();
+  if (!client) {
+    console.log(`[email] RESEND_API_KEY not set — password reset link: ${resetUrl}`);
+    return false;
+  }
+  const html = `
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+  body{font-family:-apple-system,sans-serif;margin:0;padding:0;background:#f9fafb;color:#111;}
+  .container{max-width:560px;margin:32px auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+  .header{background:linear-gradient(135deg,#E8621A,#c04c10);padding:28px 32px;color:white;}
+  .header h1{margin:0;font-size:20px;font-weight:800;}
+  .body{padding:32px;}
+  .btn{display:block;text-align:center;background:#E8621A;color:white;text-decoration:none;padding:14px 24px;border-radius:12px;font-weight:700;font-size:15px;margin:24px 0;}
+  .note{font-size:12px;color:#999;margin-top:16px;}
+  .footer{padding:20px 32px;border-top:1px solid #f0f0f0;font-size:12px;color:#999;text-align:center;}
+</style></head><body>
+<div class="container">
+  <div class="header"><h1>🏠 MillionStay Admin</h1></div>
+  <div class="body">
+    <p style="font-size:16px;">Hi <strong>${name}</strong>,</p>
+    <p style="color:#555;font-size:14px;">We received a request to reset the password for your MillionStay admin account. Click the button below to set a new password:</p>
+    <a href="${resetUrl}" class="btn">Reset My Password →</a>
+    <p class="note">⏱ This link expires in <strong>1 hour</strong>. If you didn't request this, you can safely ignore this email — your password won't change.</p>
+    <p style="font-size:13px;color:#999;">If the button doesn't work, copy and paste this URL into your browser:<br>
+      <span style="color:#E8621A;word-break:break-all;">${resetUrl}</span>
+    </p>
+  </div>
+  <div class="footer">© ${new Date().getFullYear()} MillionStay Pty Ltd · This email was sent to ${to}</div>
+</div></body></html>`;
+  try {
+    await client.emails.send({ from: FROM, to: [to], subject: "[MillionStay Admin] Password Reset Request", html });
+    console.log(`[email] Password reset sent to ${to}`);
+    return true;
+  } catch (err) {
+    console.error("[email] Failed to send password reset:", err);
+    return false;
+  }
+}
+
+export async function sendRegistrationRequestEmail(to: string, name: string, adminPanelUrl: string): Promise<boolean> {
+  const client = getResend();
+  if (!client) {
+    console.log(`[email] RESEND_API_KEY not set — skipping registration notification`);
+    return false;
+  }
+  const html = `
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+  body{font-family:-apple-system,sans-serif;margin:0;padding:0;background:#f9fafb;color:#111;}
+  .container{max-width:560px;margin:32px auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+  .header{background:linear-gradient(135deg,#E8621A,#c04c10);padding:28px 32px;color:white;}
+  .header h1{margin:0;font-size:20px;font-weight:800;}
+  .body{padding:32px;}
+  .info-box{background:#fff7f0;border:1px solid #fcd9b6;border-radius:10px;padding:16px;margin:16px 0;}
+  .btn{display:block;text-align:center;background:#E8621A;color:white;text-decoration:none;padding:14px 24px;border-radius:12px;font-weight:700;font-size:15px;margin:20px 0;}
+  .footer{padding:20px 32px;border-top:1px solid #f0f0f0;font-size:12px;color:#999;text-align:center;}
+</style></head><body>
+<div class="container">
+  <div class="header"><h1>🏠 MillionStay Admin — New Access Request</h1></div>
+  <div class="body">
+    <p style="font-size:15px;">A new admin account request has been submitted and is awaiting your approval.</p>
+    <div class="info-box">
+      <strong>${name}</strong><br>
+      <span style="color:#555;">${to}</span>
+    </div>
+    <p style="font-size:14px;color:#555;">Please log in to the admin panel and navigate to <strong>Settings → Users</strong> to review and approve or reject this request.</p>
+    <a href="${adminPanelUrl}/settings/users" class="btn">Review in Admin Panel →</a>
+  </div>
+  <div class="footer">© ${new Date().getFullYear()} MillionStay Pty Ltd</div>
+</div></body></html>`;
+  try {
+    await client.emails.send({ from: FROM, to: [to], subject: "[MillionStay Admin] New Account Request", html });
+    console.log(`[email] Registration notification sent to ${to}`);
+    return true;
+  } catch (err) {
+    console.error("[email] Failed to send registration notification:", err);
+    return false;
+  }
+}
+
 export interface BookingConfirmationData {
   to: string;
   guestName: string;

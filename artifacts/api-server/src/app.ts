@@ -16,6 +16,7 @@ import guestPortalRouter from "./routes/guest-portal";
 import guestCsRouter from "./routes/guest-cs";
 import devMigrationRouter from "./routes/dev-migration";
 import stripeRouter from "./routes/stripe";
+import adminUsersRouter from "./routes/admin-users";
 import { logger } from "./lib/logger";
 import { requireAuth } from "./middlewares/requireAuth";
 
@@ -92,6 +93,7 @@ app.use("/api", guestPortalRouter);
 app.use("/api", guestCsRouter);
 app.use("/api", stripeRouter);
 app.use("/api/v1/admin", devMigrationRouter);
+app.use("/api", adminUsersRouter);
 
 app.use("/api/v1", requireAuth);
 

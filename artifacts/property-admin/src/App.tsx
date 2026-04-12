@@ -7,6 +7,9 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import LoginPage from "@/pages/Login";
+import RegisterPage from "@/pages/Register";
+import ForgotPasswordPage from "@/pages/ForgotPassword";
+import ResetPasswordPage from "@/pages/ResetPassword";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import { ComingSoonPage } from "@/pages/ComingSoon";
@@ -107,7 +110,10 @@ function ProtectedRouter() {
     );
   }
 
-  if (!user && location !== "/login") {
+  const publicPaths = ["/login", "/register", "/forgot-password", "/reset-password"];
+  const isPublicPath = publicPaths.some(p => location === p || location.startsWith(p + "?"));
+
+  if (!user && !isPublicPath) {
     return <Redirect to="/login" />;
   }
 
@@ -121,8 +127,11 @@ function ProtectedRouter() {
 function Router() {
   return (
     <Switch>
-      {/* ── Auth ───────────────────────────────────────── */}
+      {/* ── Auth (public) ──────────────────────────────── */}
       <Route path="/login" component={LoginPage} />
+      <Route path="/register" component={RegisterPage} />
+      <Route path="/forgot-password" component={ForgotPasswordPage} />
+      <Route path="/reset-password" component={ResetPasswordPage} />
 
       {/* ── Dashboard ──────────────────────────────────── */}
       <Route path="/" component={Dashboard} />
