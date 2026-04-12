@@ -237,7 +237,7 @@ export default function BookingDetail() {
             <Link href={`/contracts/contracts/${linkedContract.id}`}>
               <Button variant="outline" size="sm" className="gap-1.5 border-blue-300 text-blue-700 hover:bg-blue-50">
                 <FileText className="h-3.5 w-3.5" />
-                계약서 보기 <span className="text-xs font-mono opacity-70">{linkedContract.contract_ref}</span>
+                View Contract <span className="text-xs font-mono opacity-70">{linkedContract.contract_ref}</span>
                 <ExternalLink className="h-3 w-3" />
               </Button>
             </Link>
@@ -424,7 +424,7 @@ export default function BookingDetail() {
             <div className="flex border-b gap-1">
               {[
                 { id: "documents", label: t("booking.tab_documents") },
-                { id: "services", label: `서비스${bookingServices.length ? ` (${bookingServices.length})` : ""}` },
+                { id: "services", label: `Services${bookingServices.length ? ` (${bookingServices.length})` : ""}` },
                 { id: "invoices", label: t("booking.tab_invoices") },
                 { id: "notes", label: t("booking.tab_notes") },
                 { id: "activities", label: t("booking.tab_activities") }
@@ -504,23 +504,23 @@ export default function BookingDetail() {
             {activeTab === "services" && (
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <h4 className="font-medium text-sm">서비스</h4>
+                  <h4 className="font-medium text-sm">Services</h4>
                   <Button size="sm" variant="outline" onClick={() => setAddServiceOpen(true)}>
-                    <Plus className="w-3.5 h-3.5 mr-1" /> 서비스 추가
+                    <Plus className="w-3.5 h-3.5 mr-1" /> Add Service
                   </Button>
                 </div>
                 <div className="rounded-lg border bg-white overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50 border-b">
                       <tr>
-                        {["서비스명", "유형", "수량", "단가", "합계", "청구 방식", "주기", ""].map((h) => (
+                        {["Service Name", "Type", "Qty", "Unit Price", "Total", "Billing", "Frequency", ""].map((h) => (
                           <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {!bookingServices.length ? (
-                        <tr><td colSpan={8} className="text-center py-8 text-muted-foreground">등록된 서비스가 없습니다</td></tr>
+                        <tr><td colSpan={8} className="text-center py-8 text-muted-foreground">No services added yet</td></tr>
                       ) : bookingServices.map((svc: any) => (
                         <tr key={svc.id} className="border-b hover:bg-gray-50">
                           <td className="px-4 py-3 font-medium">{svc.service_name}</td>
@@ -687,49 +687,49 @@ export default function BookingDetail() {
       {/* Add Service Dialog */}
       <Dialog open={addServiceOpen} onOpenChange={setAddServiceOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>서비스 추가</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Add Service</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label>서비스명 *</Label>
-              <Input value={svcName} onChange={(e) => setSvcName(e.target.value)} placeholder="청소, 주차, 인터넷..." className="mt-1" />
+              <Label>Service Name *</Label>
+              <Input value={svcName} onChange={(e) => setSvcName(e.target.value)} placeholder="Cleaning, Parking, Internet..." className="mt-1" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>유형</Label>
+                <Label>Type</Label>
                 <Select value={svcType} onValueChange={setSvcType}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="one_time">일회성</SelectItem>
-                    <SelectItem value="recurring">정기</SelectItem>
-                    <SelectItem value="scheduled">스케줄</SelectItem>
+                    <SelectItem value="one_time">One-time</SelectItem>
+                    <SelectItem value="recurring">Recurring</SelectItem>
+                    <SelectItem value="scheduled">Scheduled</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>수량</Label>
+                <Label>Quantity</Label>
                 <Input type="number" value={svcQty} onChange={(e) => setSvcQty(e.target.value)} min={1} className="mt-1" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>단가 (AUD)</Label>
+                <Label>Unit Price (AUD)</Label>
                 <Input type="number" value={svcPrice} onChange={(e) => setSvcPrice(e.target.value)} placeholder="0.00" className="mt-1" />
               </div>
               <div>
-                <Label>청구 방식</Label>
+                <Label>Billing Frequency</Label>
                 <Select value={svcFreq} onValueChange={setSvcFreq}>
-                  <SelectTrigger className="mt-1"><SelectValue placeholder="선택..." /></SelectTrigger>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder="Select..." /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="weekly">매주</SelectItem>
-                    <SelectItem value="biweekly">2주마다</SelectItem>
-                    <SelectItem value="monthly">매월</SelectItem>
-                    <SelectItem value="once">한 번</SelectItem>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="biweekly">Fortnightly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="once">Once</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div>
-              <Label>메모</Label>
+              <Label>Notes</Label>
               <Textarea rows={2} value={svcNotes} onChange={(e) => setSvcNotes(e.target.value)} className="mt-1" />
             </div>
           </div>
@@ -748,7 +748,7 @@ export default function BookingDetail() {
                 frequency: svcType === "recurring" ? (svcFreq || undefined) : undefined,
                 notes: svcNotes || undefined,
               });
-            }}>추가</Button>
+            }}>Add</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

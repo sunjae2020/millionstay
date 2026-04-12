@@ -377,8 +377,8 @@ export default function ContractDetail() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-8 space-y-4">
           <div className="flex border-b gap-1">
             {[
-              { id: "schedule", label: `결제 스케줄${schedules.length ? ` (${schedules.length})` : ""}`, icon: <CalendarDays className="w-3.5 h-3.5" /> },
-              { id: "services", label: `서비스${contractServices.length ? ` (${contractServices.length})` : ""}`, icon: <Wrench className="w-3.5 h-3.5" /> },
+              { id: "schedule", label: `Payment Schedule${schedules.length ? ` (${schedules.length})` : ""}`, icon: <CalendarDays className="w-3.5 h-3.5" /> },
+              { id: "services", label: `Services${contractServices.length ? ` (${contractServices.length})` : ""}`, icon: <Wrench className="w-3.5 h-3.5" /> },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -395,14 +395,14 @@ export default function ContractDetail() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 border-b">
                   <tr>
-                    {["유형", "금액", "통화", "시작일", "종료일", "다음납입일", "주기", "활성"].map((h) => (
+                    {["Type", "Amount", "Currency", "Start Date", "End Date", "Next Due Date", "Frequency", "Active"].map((h) => (
                       <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {!schedules.length ? (
-                    <tr><td colSpan={8} className="text-center py-10 text-muted-foreground">결제 스케줄이 없습니다</td></tr>
+                    <tr><td colSpan={8} className="text-center py-10 text-muted-foreground">No payment schedule found</td></tr>
                   ) : schedules.map((s: any) => (
                     <tr key={s.id} className="border-b hover:bg-gray-50">
                       <td className="px-4 py-3 font-medium">{s.schedule_type ?? "Rent"}</td>
@@ -414,7 +414,7 @@ export default function ContractDetail() {
                       <td className="px-4 py-3 text-muted-foreground">{s.frequency ?? "—"}</td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}`}>
-                          {s.is_active ? "활성" : "비활성"}
+                          {s.is_active ? "Active" : "Inactive"}
                         </span>
                       </td>
                     </tr>
@@ -429,14 +429,14 @@ export default function ContractDetail() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 border-b">
                   <tr>
-                    {["서비스명", "유형", "수량", "단가", "합계", "청구방식", "주기"].map((h) => (
+                    {["Service Name", "Type", "Qty", "Unit Price", "Total", "Billing", "Frequency"].map((h) => (
                       <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {!contractServices.length ? (
-                    <tr><td colSpan={7} className="text-center py-10 text-muted-foreground">연결된 서비스가 없습니다</td></tr>
+                    <tr><td colSpan={7} className="text-center py-10 text-muted-foreground">No services linked to this contract</td></tr>
                   ) : contractServices.map((svc: any) => (
                     <tr key={svc.id} className="border-b hover:bg-gray-50">
                       <td className="px-4 py-3 font-medium">{svc.service_name}</td>
