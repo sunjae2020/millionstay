@@ -1,18 +1,81 @@
-import { useState, FormEvent } from "react";
+import { useState, useRef, useEffect, FormEvent } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, ChevronDown, Eye, EyeOff } from "lucide-react";
+import { Loader2, ChevronDown, Eye, EyeOff, Globe } from "lucide-react";
+import { cn } from "@/lib/utils";
 import logoSrc from "/millionstay-logo.png";
 
 const BRAND = "#E8621A";
-const BRAND_DARK = "#C4511500";
 
 const DEMO_ACCOUNTS = [
   { label: "Super Admin", email: "admin@millionstay.com", password: "MillionStay@2026!" },
 ];
+
+const LANGUAGES = [
+  { code: "en", label: "English" },
+  { code: "ko", label: "한국어" },
+  { code: "zh", label: "中文" },
+  { code: "ja", label: "日本語" },
+  { code: "th", label: "ภาษาไทย" },
+];
+
+function LoginLanguageSwitcher() {
+  const { i18n } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  function changeLang(code: string) {
+    i18n.changeLanguage(code);
+    try { localStorage.setItem("ms_admin_language", code); } catch {}
+    setOpen(false);
+  }
+
+  const current = LANGUAGES.find((l) => l.code === i18n.language) ?? LANGUAGES[0];
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-600 transition-colors px-2 py-1.5 rounded-md hover:bg-slate-100"
+      >
+        <Globe className="h-3.5 w-3.5 flex-shrink-0" />
+        <span className="font-medium">{current.label}</span>
+        <ChevronDown className={cn("h-3 w-3 transition-transform", open && "rotate-180")} />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[130px]">
+          {LANGUAGES.map((l) => (
+            <button
+              key={l.code}
+              type="button"
+              onClick={() => changeLang(l.code)}
+              className={cn(
+                "w-full text-left px-4 py-2 text-xs hover:bg-orange-50 transition-colors",
+                l.code === i18n.language
+                  ? "font-semibold text-[#E8621A]"
+                  : "text-slate-700"
+              )}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -33,7 +96,7 @@ export default function LoginPage() {
       await login(email, password);
       navigate("/dashboard");
     } catch (err: any) {
-      setError(err.message ?? "Invalid email or password");
+      setError(err.message ?? t("login.invalid"));
     } finally {
       setLoading(false);
     }
@@ -101,132 +164,140 @@ export default function LoginPage() {
       </div>
 
       {/* ── Right login panel ── */}
-      <div className="flex-1 flex items-center justify-center bg-[#faf9f7] px-6 py-12">
-        <div className="w-full max-w-[400px]">
+      <div className="flex-1 flex flex-col bg-[#faf9f7]">
+        {/* Top bar with language switcher */}
+        <div className="flex justify-end items-center px-6 py-4">
+          <LoginLanguageSwitcher />
+        </div>
 
-          {/* Mobile logo */}
-          <div className="lg:hidden flex justify-center mb-10">
-            <img src={logoSrc} alt="MillionStay" className="h-8 w-auto" />
-          </div>
+        {/* Centered login content */}
+        <div className="flex-1 flex items-center justify-center px-6 pb-12">
+          <div className="w-full max-w-[400px]">
 
-          {/* Heading */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-bold text-slate-900">{t("login.sign_in")}</h1>
-            <p className="text-slate-500 text-sm mt-1">
-              {t("login.subtitle")}
+            {/* Mobile logo */}
+            <div className="lg:hidden flex justify-center mb-10">
+              <img src={logoSrc} alt="MillionStay" className="h-8 w-auto" />
+            </div>
+
+            {/* Heading */}
+            <div className="mb-8">
+              <h1 className="text-2xl font-bold text-slate-900">{t("login.sign_in")}</h1>
+              <p className="text-slate-500 text-sm mt-1">
+                {t("login.subtitle")}
+              </p>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-sm font-medium text-slate-700">
+                  {t("login.email")}
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  placeholder="admin@millionstay.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400"
+                  style={{ "--tw-ring-color": BRAND } as React.CSSProperties}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="password" className="text-sm font-medium text-slate-700">
+                  {t("login.password")}
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    required
+                    placeholder="••••••••••••"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    className="h-11 bg-white border-slate-200 text-slate-900 pr-10 placeholder:text-slate-400"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(v => !v)}
+                    tabIndex={-1}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {error && (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full h-11 rounded-lg text-sm font-semibold text-white transition-opacity disabled:opacity-60 flex items-center justify-center gap-2 shadow-md"
+                style={{ background: `linear-gradient(135deg, ${BRAND} 0%, #FF8C3A 100%)` }}
+              >
+                {loading
+                  ? <><Loader2 className="h-4 w-4 animate-spin" /> {t("login.signing_in")}</>
+                  : `${t("login.sign_in")} →`
+                }
+              </button>
+            </form>
+
+            {/* Demo accounts */}
+            <div className="mt-8 space-y-3">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-200" />
+                </div>
+                <div className="relative flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setDemoOpen(v => !v)}
+                    className="flex items-center gap-1.5 bg-[#faf9f7] px-3 text-xs text-slate-400 hover:text-slate-600 transition-colors select-none"
+                  >
+                    Demo accounts
+                    <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${demoOpen ? "rotate-180" : ""}`} />
+                  </button>
+                </div>
+              </div>
+
+              {demoOpen && (
+                <div className="rounded-xl border border-slate-200 bg-white overflow-hidden divide-y divide-slate-100 shadow-sm">
+                  {DEMO_ACCOUNTS.map(account => (
+                    <button
+                      key={account.email}
+                      type="button"
+                      onClick={() => fillDemo(account)}
+                      className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-orange-50 transition-colors group"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-slate-800 group-hover:text-[#E8621A] transition-colors">
+                          {account.label}
+                        </p>
+                        <p className="text-xs text-slate-400 mt-0.5">{account.email}</p>
+                      </div>
+                      <span className="text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{ color: BRAND }}>
+                        Fill ↵
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <p className="text-center text-xs text-slate-400 mt-8">
+              Secure access · MillionStay Admin v2
             </p>
           </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-sm font-medium text-slate-700">
-                {t("login.email")}
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                required
-                placeholder="admin@millionstay.com"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400"
-                style={{ "--tw-ring-color": BRAND } as React.CSSProperties}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-sm font-medium text-slate-700">
-                {t("login.password")}
-              </Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  required
-                  placeholder="••••••••••••"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className="h-11 bg-white border-slate-200 text-slate-900 pr-10 placeholder:text-slate-400"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(v => !v)}
-                  tabIndex={-1}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
-
-            {error && (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {error}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-11 rounded-lg text-sm font-semibold text-white transition-opacity disabled:opacity-60 flex items-center justify-center gap-2 shadow-md"
-              style={{ background: `linear-gradient(135deg, ${BRAND} 0%, #FF8C3A 100%)` }}
-            >
-              {loading
-                ? <><Loader2 className="h-4 w-4 animate-spin" /> {t("login.signing_in")}</>
-                : `${t("login.sign_in")} →`
-              }
-            </button>
-          </form>
-
-          {/* Demo accounts */}
-          <div className="mt-8 space-y-3">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200" />
-              </div>
-              <div className="relative flex justify-center">
-                <button
-                  type="button"
-                  onClick={() => setDemoOpen(v => !v)}
-                  className="flex items-center gap-1.5 bg-[#faf9f7] px-3 text-xs text-slate-400 hover:text-slate-600 transition-colors select-none"
-                >
-                  Demo accounts
-                  <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${demoOpen ? "rotate-180" : ""}`} />
-                </button>
-              </div>
-            </div>
-
-            {demoOpen && (
-              <div className="rounded-xl border border-slate-200 bg-white overflow-hidden divide-y divide-slate-100 shadow-sm">
-                {DEMO_ACCOUNTS.map(account => (
-                  <button
-                    key={account.email}
-                    type="button"
-                    onClick={() => fillDemo(account)}
-                    className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-orange-50 transition-colors group"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-slate-800 group-hover:text-[#E8621A] transition-colors">
-                        {account.label}
-                      </p>
-                      <p className="text-xs text-slate-400 mt-0.5">{account.email}</p>
-                    </div>
-                    <span className="text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity"
-                      style={{ color: BRAND }}>
-                      Fill ↵
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <p className="text-center text-xs text-slate-400 mt-8">
-            Secure access · MillionStay Admin v2
-          </p>
         </div>
       </div>
     </div>
