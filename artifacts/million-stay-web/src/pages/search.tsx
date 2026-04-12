@@ -19,23 +19,23 @@ import heroBg from "@assets/MS_Homepage_Photo_1920x1080_1775403929888.jpg";
 const PAGE_SIZE = 9;
 type SuburbDropdown = "suburb" | null;
 
-const SPACE_TYPES = [
-  { value: "all",         label: "Any Type",      icon: Home },
-  { value: "EntireSpace", label: "Entire Space",  icon: Building2 },
-  { value: "RoomSpace",   label: "Private Room",  icon: BedDouble },
-  { value: "BedSpace",    label: "Shared Room",   icon: BedDouble },
-];
-
-const GENDER_OPTIONS = [
-  { value: "all",        label: "Any" },
-  { value: "FemaleOnly", label: "👩 Female Only" },
-  { value: "Mixed",      label: "👥 Mixed" },
-];
-
 const today = new Date().toISOString().split("T")[0];
 
 export default function Search() {
   const { t } = useTranslation();
+
+  const SPACE_TYPES = [
+    { value: "all",         label: t("search.type_all"),    icon: Home },
+    { value: "EntireSpace", label: t("search.type_entire"), icon: Building2 },
+    { value: "RoomSpace",   label: t("search.type_room"),   icon: BedDouble },
+    { value: "BedSpace",    label: t("search.type_bed"),    icon: BedDouble },
+  ];
+
+  const GENDER_OPTIONS = [
+    { value: "all",        label: t("search.gender_any") },
+    { value: "FemaleOnly", label: t("search.gender_female") },
+    { value: "Mixed",      label: t("search.gender_mixed") },
+  ];
   const [_location] = useLocation();
 
   /* ── Read initial state from URL params ── */
@@ -181,16 +181,16 @@ export default function Search() {
         <img src={heroBg} alt="Search" className="absolute inset-0 w-full h-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/30 to-black/55" />
         <div className="absolute inset-0 flex flex-col items-start justify-end px-8 pb-8 max-w-7xl mx-auto w-full">
-          <p className="font-cursive text-white/80 text-lg italic mb-1">Find Your Perfect</p>
-          <h1 className="text-3xl md:text-4xl font-bold text-white italic">Place</h1>
+          <p className="font-cursive text-white/80 text-lg italic mb-1">{t("search.hero_tagline")}</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-white italic">{t("search.hero_title")}</h1>
         </div>
       </div>
 
       {/* ── Breadcrumb ── */}
       <div className="max-w-7xl mx-auto w-full px-6 py-3 flex items-center gap-1.5 text-xs text-gray-400 shrink-0">
-        <Link href="/" className="hover:text-primary transition-colors">Home</Link>
+        <Link href="/" className="hover:text-primary transition-colors">{t("search.breadcrumb_home")}</Link>
         <ChevronRight className="h-3 w-3" />
-        <span className="text-gray-600 font-medium">Search</span>
+        <span className="text-gray-600 font-medium">{t("search.breadcrumb")}</span>
       </div>
 
       {/* ══════════════════════════════════════════════════════════
@@ -212,7 +212,7 @@ export default function Search() {
                   }`}
                 >
                   <MapPin className="h-3.5 w-3.5" />
-                  {suburbName ?? "Any suburb"}
+                  {suburbName ?? t("search.any_suburb")}
                   <ChevronDown className="h-3.5 w-3.5 opacity-60" />
                 </button>
                 <AnimatePresence>
@@ -225,7 +225,7 @@ export default function Search() {
                         onClick={() => { setSuburbId(""); setSuburbOpen(null); }}
                         className={`w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50 flex items-center gap-2 ${!suburbId ? "text-primary font-semibold" : "text-gray-700"}`}
                       >
-                        <MapPin className="h-3.5 w-3.5 opacity-50" />All Suburbs
+                        <MapPin className="h-3.5 w-3.5 opacity-50" />{t("search.all_suburbs")}
                       </button>
                       {suburbs.map((s) => (
                         <button
@@ -250,7 +250,7 @@ export default function Search() {
               }`}>
                 <Calendar className={`h-3.5 w-3.5 shrink-0 ${checkIn ? "text-primary" : "text-gray-400"}`} />
                 <div className="flex flex-col leading-none min-w-[88px]">
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Check In</span>
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400">{t("search.check_in")}</span>
                   <DateInput
                     noIcon
                     value={checkIn}
@@ -280,7 +280,7 @@ export default function Search() {
               }`}>
                 <Calendar className={`h-3.5 w-3.5 shrink-0 ${checkOut ? "text-primary" : "text-gray-400"}`} />
                 <div className="flex flex-col leading-none min-w-[88px]">
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400">Check Out</span>
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400">{t("search.check_out")}</span>
                   <DateInput
                     noIcon
                     value={checkOut}
@@ -312,7 +312,7 @@ export default function Search() {
                 }`}
               >
                 <SlidersHorizontal className="h-3.5 w-3.5" />
-                Advanced
+                {t("search.advanced")}
                 {advancedCount > 0 && (
                   <span className="ml-0.5 inline-flex items-center justify-center h-4 w-4 rounded-full bg-primary text-white text-[9px] font-bold">
                     {advancedCount}
@@ -335,7 +335,7 @@ export default function Search() {
                 }`}
               >
                 <SearchIcon className="h-3.5 w-3.5" />
-                Search
+                {t("search.search_btn")}
                 {isDirty && (
                   <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-yellow-400 border-2 border-white" />
                 )}
@@ -351,14 +351,14 @@ export default function Search() {
                   className="flex items-center gap-1 px-3 py-2 rounded-full border border-red-200 bg-red-50 text-red-500 text-sm font-medium hover:bg-red-100 transition-colors shrink-0"
                 >
                   <X className="h-3.5 w-3.5" />
-                  Clear
+                  {t("search.clear")}
                 </button>
               )}
 
               {/* Result count */}
               <div className="ml-auto shrink-0 hidden md:flex items-center gap-1.5 text-sm text-gray-500">
                 <SearchIcon className="h-3.5 w-3.5 text-primary" />
-                {isLoading ? "Searching…" : `${total} rooms found`}
+                {isLoading ? t("search.searching") : t("search.rooms_found", { count: total })}
               </div>
             </div>
           </div>
@@ -380,7 +380,7 @@ export default function Search() {
 
                   {/* Room Type */}
                   <div className="shrink-0">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Room Type</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">{t("search.room_type")}</p>
                     <div className="flex gap-1.5 flex-wrap">
                       {SPACE_TYPES.map((opt) => {
                         const active = spaceType === opt.value;
@@ -408,9 +408,9 @@ export default function Search() {
                   {/* Budget */}
                   <div className="shrink-0 min-w-[220px]">
                     <div className="flex justify-between mb-2">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Weekly Budget</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{t("search.weekly_budget")}</p>
                       <p className="text-xs font-semibold text-primary">
-                        ${priceRange[0]} – ${priceRange[1]}<span className="font-normal text-gray-400">/wk</span>
+                        ${priceRange[0]} – ${priceRange[1]}<span className="font-normal text-gray-400">{t("search.per_week")}</span>
                       </p>
                     </div>
                     <Slider
@@ -426,7 +426,7 @@ export default function Search() {
 
                   {/* Gender Policy */}
                   <div className="shrink-0">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Gender Policy</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">{t("search.gender_policy")}</p>
                     <div className="flex gap-1.5 flex-wrap">
                       {GENDER_OPTIONS.map((opt) => {
                         const active = genderPolicy === opt.value;
@@ -454,7 +454,7 @@ export default function Search() {
                         onClick={clearAdvancedAll}
                         className="text-xs text-gray-400 hover:text-red-500 font-medium transition-colors flex items-center gap-1"
                       >
-                        <X className="h-3 w-3" /> Clear filters
+                        <X className="h-3 w-3" /> {t("search.clear_filters")}
                       </button>
                     </div>
                   )}
@@ -488,13 +488,13 @@ export default function Search() {
                   <div className="flex-1 text-sm text-gray-700">
                     {applied.check_in && applied.check_out ? (
                       <>
-                        Showing rooms available{" "}
+                        {t("search.showing_available")}{" "}
                         <span className="font-semibold text-primary">
                           {fmtDate(applied.check_in)} → {fmtDate(applied.check_out)}
                         </span>
                       </>
                     ) : applied.check_in ? (
-                      <>Check-in from <span className="font-semibold text-primary">{fmtDate(applied.check_in)}</span> — add a check-out date to filter availability</>
+                      <>{t("search.check_in_from")} <span className="font-semibold text-primary">{fmtDate(applied.check_in)}</span> — {t("search.add_checkout")}</>
                     ) : null}
                   </div>
                   <button
@@ -505,7 +505,7 @@ export default function Search() {
                     }}
                     className="text-xs text-gray-400 hover:text-primary font-medium transition-colors shrink-0"
                   >
-                    Clear dates
+                    {t("search.clear_dates")}
                   </button>
                 </motion.div>
               )}
@@ -515,25 +515,25 @@ export default function Search() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 {appliedSuburbName && (
-                  <p className="font-cursive text-primary text-lg italic mb-0.5">Rooms in {appliedSuburbName}</p>
+                  <p className="font-cursive text-primary text-lg italic mb-0.5">{t("search.rooms_in", { suburb: appliedSuburbName })}</p>
                 )}
                 <h2 className="text-lg font-bold text-gray-800">
-                  {isLoading ? "Searching…" : `${total} room${total !== 1 ? "s" : ""} in Melbourne`}
+                  {isLoading ? t("search.searching") : t("search.rooms_in_melbourne", { count: total })}
                 </h2>
                 {hasAnyFilters && (
                   <p className="text-xs text-gray-400 mt-0.5">
-                    Filtered results ·{" "}
-                    <button onClick={clearAll} className="text-primary hover:underline font-medium">clear all</button>
+                    {t("search.filtered")} ·{" "}
+                    <button onClick={clearAll} className="text-primary hover:underline font-medium">{t("search.clear_all")}</button>
                   </p>
                 )}
               </div>
               {/* Quick type tabs (desktop) — 즉시 Search 적용 */}
               <div className="hidden lg:flex gap-1">
                 {[
-                  { v: "all",         l: "All" },
-                  { v: "RoomSpace",   l: "Private" },
-                  { v: "EntireSpace", l: "Entire" },
-                  { v: "BedSpace",    l: "Shared" },
+                  { v: "all",         l: t("search.tab_all") },
+                  { v: "RoomSpace",   l: t("search.tab_private") },
+                  { v: "EntireSpace", l: t("search.tab_entire") },
+                  { v: "BedSpace",    l: t("search.tab_shared") },
                 ].map((opt) => (
                   <button
                     key={opt.v}
@@ -594,13 +594,13 @@ export default function Search() {
                 <div className="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4">
                   <MapPin className="h-8 w-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">No rooms found</h3>
-                <p className="text-gray-400 mb-5 text-sm">Try adjusting your filters to see more results</p>
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">{t("search.no_rooms_title")}</h3>
+                <p className="text-gray-400 mb-5 text-sm">{t("search.no_rooms_desc")}</p>
                 <button
                   onClick={clearAll}
                   className="px-8 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors"
                 >
-                  Clear filters
+                  {t("search.clear_filters")}
                 </button>
               </motion.div>
             ) : (
@@ -628,10 +628,9 @@ export default function Search() {
                 {totalPages > 1 && (
                   <div className="mt-10 flex flex-col items-center gap-4">
                     <p className="text-sm text-gray-400">
-                      Page <span className="font-semibold text-gray-600">{page}</span> of{" "}
-                      <span className="font-semibold text-gray-600">{totalPages}</span>
+                      {t("search.page_of", { page, total: totalPages })}
                       {" "}·{" "}
-                      <span className="font-semibold text-gray-600">{total}</span> rooms total
+                      {t("search.rooms_total", { count: total })}
                     </p>
                     <div className="flex items-center gap-1.5">
                       {/* Prev */}
