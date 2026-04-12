@@ -371,6 +371,57 @@ const LANGUAGES = [
   { code: "th", label: "ภาษาไทย" },
 ];
 
+function HeaderLanguageSwitcher() {
+  const { i18n } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  function changeLang(code: string) {
+    i18n.changeLanguage(code);
+    try { localStorage.setItem("ms_admin_language", code); } catch {}
+    setOpen(false);
+  }
+
+  const current = LANGUAGES.find((l) => l.code === i18n.language) ?? LANGUAGES[0];
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-border bg-background text-xs font-medium text-foreground hover:bg-muted transition-colors"
+      >
+        <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+        <span>{current.label}</span>
+        <ChevronDown className={cn("h-3 w-3 text-muted-foreground transition-transform", open && "rotate-180")} />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 z-50 bg-popover border border-border rounded-md shadow-md py-1 min-w-[130px]">
+          {LANGUAGES.map((l) => (
+            <button
+              key={l.code}
+              onClick={() => changeLang(l.code)}
+              className={cn(
+                "w-full text-left px-3 py-1.5 text-xs hover:bg-accent transition-colors",
+                l.code === i18n.language ? "font-semibold text-primary" : "text-foreground"
+              )}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function LanguageSwitcher({ collapsed }: { collapsed?: boolean }) {
   const { i18n } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -462,7 +513,6 @@ function SidebarFooter({ collapsed }: { collapsed?: boolean }) {
         <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center" title={user ? `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() || user.email : "Admin"}>
           <User className="h-3.5 w-3.5 text-primary" />
         </div>
-        <LanguageSwitcher collapsed />
         <button
           onClick={logout}
           className="flex-shrink-0 p-1.5 rounded hover:bg-sidebar-accent text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors"
@@ -494,7 +544,6 @@ function SidebarFooter({ collapsed }: { collapsed?: boolean }) {
           <LogOut className="h-3.5 w-3.5" />
         </button>
       </div>
-      <LanguageSwitcher />
     </div>
   );
 }
@@ -670,30 +719,38 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {/* ── Main content area ─────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        {/* Mobile top bar (hidden on md+) */}
-        <header className="h-14 flex items-center gap-3 px-4 border-b bg-card flex-shrink-0 md:hidden">
+        {/* Top bar */}
+        <header className="h-14 flex items-center gap-3 px-4 border-b bg-card flex-shrink-0">
+          {/* Mobile hamburger */}
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-2 rounded-md hover:bg-muted transition-colors text-foreground/70 hover:text-foreground"
+            className="p-2 rounded-md hover:bg-muted transition-colors text-foreground/70 hover:text-foreground md:hidden"
             aria-label="Open menu"
           >
             <Menu className="h-5 w-5" />
           </button>
 
+          {/* Mobile brand */}
           {logo ? (
             <img
               src={logo}
               alt={brandName}
-              className="max-h-7 max-w-[130px] object-contain"
+              className="max-h-7 max-w-[130px] object-contain md:hidden"
             />
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 md:hidden">
               <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
                 <Building2 className="h-4 w-4 text-white" />
               </div>
               <span className="font-semibold text-sm truncate">{brandName}</span>
             </div>
           )}
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Language switcher — always visible, top right */}
+          <HeaderLanguageSwitcher />
         </header>
 
         {/* Page content */}
