@@ -223,15 +223,15 @@ export default function AccountDetail() {
       <div className="lg:col-span-2 space-y-6">
         {/* Basic Info */}
         <div className="rounded-lg border p-4 space-y-4">
-          <h3 className="font-semibold text-sm">Basic Information</h3>
+          <h3 className="font-semibold text-sm">{t('account.section_general')}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="grid gap-1.5">
-              <Label>Account Name *</Label>
+              <Label>{t('account.label_name')} *</Label>
               <Input {...register("name", { required: true })} placeholder="e.g. Sunjae KIM" />
               {errors.name && <p className="text-xs text-destructive">Required</p>}
             </div>
             <div className="grid gap-1.5">
-              <Label>Account Type</Label>
+              <Label>{t('account.label_type')}</Label>
               <Controller name="account_type" control={control} render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
@@ -294,7 +294,7 @@ export default function AccountDetail() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="grid gap-1.5">
-              <Label>Account Email</Label>
+              <Label>{t('account.label_email')}</Label>
               <Input {...register("account_email")} type="email" />
             </div>
             <div className="grid gap-1.5">
@@ -304,11 +304,11 @@ export default function AccountDetail() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="grid gap-1.5">
-              <Label>Phone 1</Label>
+              <Label>{t('account.label_phone')} 1</Label>
               <Input {...register("phone1")} />
             </div>
             <div className="grid gap-1.5">
-              <Label>Phone 2</Label>
+              <Label>{t('account.label_phone')} 2</Label>
               <Input {...register("phone2")} />
             </div>
           </div>
@@ -316,25 +316,25 @@ export default function AccountDetail() {
 
         {/* Address */}
         <div className="rounded-lg border p-4 space-y-4">
-          <h3 className="font-semibold text-sm">Primary Address</h3>
-          <Input {...register("address_line1")} placeholder="Address Line 1" />
+          <h3 className="font-semibold text-sm">{t('account.section_address')}</h3>
+          <Input {...register("address_line1")} placeholder={t('account.label_address')} />
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="col-span-2"><Input {...register("address_suburb")} placeholder="Suburb" /></div>
-            <Input {...register("address_state")} placeholder="State" />
-            <Input {...register("address_postcode")} placeholder="Postcode" />
+            <div className="col-span-2"><Input {...register("address_suburb")} placeholder={t('account.label_city')} /></div>
+            <Input {...register("address_state")} placeholder={t('account.label_state')} />
+            <Input {...register("address_postcode")} placeholder={t('account.label_postcode')} />
           </div>
-          <Input {...register("address_country")} placeholder="Country" />
+          <Input {...register("address_country")} placeholder={t('account.label_country')} />
         </div>
 
         <div className="rounded-lg border p-4 space-y-4">
-          <h3 className="font-semibold text-sm">Secondary Address</h3>
-          <Input {...register("secondary_address_line1")} placeholder="Address Line 1" />
+          <h3 className="font-semibold text-sm">{t('account.section_address')} (Secondary)</h3>
+          <Input {...register("secondary_address_line1")} placeholder={t('account.label_address')} />
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="col-span-2"><Input {...register("secondary_address_suburb")} placeholder="Suburb" /></div>
-            <Input {...register("secondary_address_state")} placeholder="State" />
-            <Input {...register("secondary_address_postcode")} placeholder="Postcode" />
+            <div className="col-span-2"><Input {...register("secondary_address_suburb")} placeholder={t('account.label_city')} /></div>
+            <Input {...register("secondary_address_state")} placeholder={t('account.label_state')} />
+            <Input {...register("secondary_address_postcode")} placeholder={t('account.label_postcode')} />
           </div>
-          <Input {...register("secondary_address_country")} placeholder="Country" />
+          <Input {...register("secondary_address_country")} placeholder={t('account.label_country')} />
         </div>
 
         {/* Finance — only for non-Guest/Staff */}
@@ -400,9 +400,9 @@ export default function AccountDetail() {
         </div>
 
         <div className="rounded-lg border p-4 space-y-4">
-          <h3 className="font-semibold text-sm">Settings</h3>
+          <h3 className="font-semibold text-sm">{t('account.label_status')}</h3>
           <div className="grid gap-1.5">
-            <Label>Status</Label>
+            <Label>{t('account.label_status')}</Label>
             <Controller name="status" control={control} render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -422,7 +422,7 @@ export default function AccountDetail() {
         </div>
 
         <div className="rounded-lg border p-4 space-y-2">
-          <Label>Description</Label>
+          <Label>{t('account.label_notes')}</Label>
           <Input {...register("description")} placeholder="Internal notes" />
         </div>
       </div>
@@ -447,11 +447,11 @@ export default function AccountDetail() {
         actions={
           <div className="flex gap-2">
             <Link href="/crm/accounts">
-              <Button variant="outline" size="sm" className="gap-1.5"><ArrowLeft className="h-4 w-4" /> Back</Button>
+              <Button variant="outline" size="sm" className="gap-1.5"><ArrowLeft className="h-4 w-4" /> {t('common.back')}</Button>
             </Link>
             <Button size="sm" className="gap-1.5" onClick={handleSubmit(onSubmit)}
               disabled={createMutation.isPending || updateMutation.isPending}>
-              <Save className="h-4 w-4" /> Save
+              <Save className="h-4 w-4" /> {t('common.save')}
             </Button>
           </div>
         }
@@ -462,15 +462,15 @@ export default function AccountDetail() {
         ) : (
           <Tabs defaultValue="details">
             <TabsList className="mb-5">
-              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="details">{t('account.tab_overview')}</TabsTrigger>
               <TabsTrigger value="bookings">
-                Bookings{bookings?.length ? ` (${bookings.length})` : ""}
+                {t('account.tab_bookings')}{bookings?.length ? ` (${bookings.length})` : ""}
               </TabsTrigger>
               <TabsTrigger value="contracts">
-                Contracts{contracts?.length ? ` (${contracts.length})` : ""}
+                {t('account.tab_documents')}{contracts?.length ? ` (${contracts.length})` : ""}
               </TabsTrigger>
               <TabsTrigger value="invoices">
-                Invoices{invoices?.length ? ` (${invoices.length})` : ""}
+                {t('account.tab_invoices')}{invoices?.length ? ` (${invoices.length})` : ""}
               </TabsTrigger>
             </TabsList>
 
@@ -483,11 +483,11 @@ export default function AccountDetail() {
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50 border-b">
                     <tr>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Ref</th>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Space</th>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Check In</th>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Check Out</th>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_booking_ref')}</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_space')}</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_checkin')}</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_checkout')}</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_status')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -524,11 +524,11 @@ export default function AccountDetail() {
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50 border-b">
                     <tr>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Ref</th>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Space</th>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Start Date</th>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">End Date</th>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_invoice_ref')}</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_space')}</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_checkin')}</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_checkout')}</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_status')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -565,11 +565,11 @@ export default function AccountDetail() {
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50 border-b">
                     <tr>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Ref</th>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Amount</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_invoice_ref')}</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_amount')}</th>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Currency</th>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Due Date</th>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_due_date')}</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_status')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">

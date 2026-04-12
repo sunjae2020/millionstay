@@ -158,52 +158,52 @@ export default function BookingDetail() {
     return (
       <div className={`rounded-lg border-2 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ${status === "Draft" ? "border-gray-200 bg-gray-50" : status === "PendingPayment" ? "border-yellow-300 bg-yellow-50" : status === "PendingApproval" ? "border-amber-300 bg-amber-50" : status === "Confirmed" ? "border-blue-300 bg-blue-50" : status === "Active" ? "border-green-300 bg-green-50" : status === "CheckedOut" ? "border-indigo-200 bg-indigo-50" : "border-red-200 bg-red-50"}`}>
         <div className="flex items-center gap-3 flex-wrap">
-          <span className="text-sm font-medium text-muted-foreground">Status:</span>
+          <span className="text-sm font-medium text-muted-foreground">{t("booking.status_label")}</span>
           <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${BOOKING_STATUS_COLORS[status] ?? "bg-gray-100 text-gray-700"}`}>{status}</span>
           {status === "Cancelled" && booking?.cancellation_reason && (
-            <span className="text-sm text-red-600 ml-2">Reason: {booking.cancellation_reason}</span>
+            <span className="text-sm text-red-600 ml-2">{t("booking.reason_label")} {booking.cancellation_reason}</span>
           )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {status === "Draft" && (
             <Button className="bg-[#E8621A] hover:bg-[#d4561a] text-white" onClick={() => submitMutation.mutate({ id: Number(id) })}>
-              Submit Request →
+              {t("booking.btn_submit")}
             </Button>
           )}
           {status === "PendingPayment" && (
             <>
               <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => confirmMutation.mutate({ id: Number(id) })}>
-                Process Payment →
+                {t("booking.btn_process_payment")}
               </Button>
-              <Button variant="outline" className="text-red-600 border-red-300" onClick={() => setCancelDialogOpen(true)}>Cancel ✕</Button>
+              <Button variant="outline" className="text-red-600 border-red-300" onClick={() => setCancelDialogOpen(true)}>{t("booking.btn_cancel")}</Button>
             </>
           )}
           {status === "PendingApproval" && (
             <>
               <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => confirmMutation.mutate({ id: Number(id) })}>
-                ✓ Confirm
+                {t("booking.btn_confirm")}
               </Button>
-              <Button variant="outline" className="text-red-600 border-red-300" onClick={() => { setCancelDialogOpen(true); }}>✕ Reject</Button>
+              <Button variant="outline" className="text-red-600 border-red-300" onClick={() => { setCancelDialogOpen(true); }}>{t("booking.btn_reject")}</Button>
             </>
           )}
           {status === "Confirmed" && (
             <>
-              <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => checkInMutation.mutate({ id: Number(id) })}>✓ Check In</Button>
-              <Button variant="outline" onClick={() => setExtendDialogOpen(true)}>Extend Stay</Button>
-              <Button variant="outline" className="text-red-600 border-red-300" onClick={() => setCancelDialogOpen(true)}>Cancel ✕</Button>
+              <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => checkInMutation.mutate({ id: Number(id) })}>{t("booking.btn_checkin")}</Button>
+              <Button variant="outline" onClick={() => setExtendDialogOpen(true)}>{t("booking.btn_extend")}</Button>
+              <Button variant="outline" className="text-red-600 border-red-300" onClick={() => setCancelDialogOpen(true)}>{t("booking.btn_cancel")}</Button>
             </>
           )}
           {status === "Active" && (
             <>
-              <Button className="bg-indigo-600 hover:bg-indigo-700 text-white" onClick={() => checkOutMutation.mutate({ id: Number(id) })}>✓ Check Out</Button>
-              <Button variant="outline" onClick={() => setExtendDialogOpen(true)}>Extend Stay</Button>
+              <Button className="bg-indigo-600 hover:bg-indigo-700 text-white" onClick={() => checkOutMutation.mutate({ id: Number(id) })}>{t("booking.btn_checkout")}</Button>
+              <Button variant="outline" onClick={() => setExtendDialogOpen(true)}>{t("booking.btn_extend")}</Button>
             </>
           )}
           {status === "CheckedOut" && (
-            <span className="text-indigo-600 font-medium text-sm">✓ Completed</span>
+            <span className="text-indigo-600 font-medium text-sm">{t("booking.btn_completed")}</span>
           )}
           {status === "Cancelled" && (
-            <span className="text-red-600 font-medium text-sm">Cancelled</span>
+            <span className="text-red-600 font-medium text-sm">{t("common.cancelled")}</span>
           )}
         </div>
       </div>
@@ -217,9 +217,9 @@ export default function BookingDetail() {
         subtitle={booking ? booking.name ?? undefined : undefined}
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setLocation("/booking/bookings")}><ArrowLeft className="w-4 h-4 mr-1" /> Back</Button>
+            <Button variant="outline" onClick={() => setLocation("/booking/bookings")}><ArrowLeft className="w-4 h-4 mr-1" /> {t("common.back")}</Button>
             {!isReadOnly && (
-              <Button onClick={handleSubmit(onSubmit)} className="bg-[#E8621A] hover:bg-[#d4561a] text-white"><Save className="w-4 h-4 mr-1" /> Save</Button>
+              <Button onClick={handleSubmit(onSubmit)} className="bg-[#E8621A] hover:bg-[#d4561a] text-white"><Save className="w-4 h-4 mr-1" /> {t("common.save")}</Button>
             )}
           </div>
         }
@@ -228,15 +228,15 @@ export default function BookingDetail() {
         {!isNew && <FSMActionBar />}
 
         <div className="rounded-lg border bg-white p-4 sm:p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">GENERAL</h3>
+          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">{t("booking.section_general")}</h3>
           {!isNew && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label className="text-muted-foreground text-xs">Booking Ref</Label>
+                <Label className="text-muted-foreground text-xs">{t("booking.label_booking_ref")}</Label>
                 <p className="font-mono text-sm mt-1">{booking?.booking_ref}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground text-xs">Name</Label>
+                <Label className="text-muted-foreground text-xs">{t("booking.label_name")}</Label>
                 <p className="text-sm mt-1">{booking?.name ?? "—"}</p>
               </div>
             </div>
@@ -244,14 +244,14 @@ export default function BookingDetail() {
         </div>
 
         <div className="rounded-lg border bg-white p-4 sm:p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">MAIN</h3>
+          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">{t("booking.section_main")}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label>Account (Guest) *</Label>
+              <Label>{t("booking.label_account")} *</Label>
               <Controller name="account_id" control={control} render={({ field }) => (
                 <LookupSelect
                   lookupUrl={`${BASE}api/v1/lookup/accounts`}
-                  placeholder="Search guest accounts..."
+                  placeholder={t("booking.placeholder_account")}
                   value={field.value}
                   onChange={field.onChange}
                   displayText={booking?.account_name ?? undefined}
@@ -259,11 +259,11 @@ export default function BookingDetail() {
               )} />
             </div>
             <div>
-              <Label>Contact</Label>
+              <Label>{t("booking.label_contact")}</Label>
               <Controller name="contact_id" control={control} render={({ field }) => (
                 <LookupSelect
                   lookupUrl={`${BASE}api/v1/lookup/contacts`}
-                  placeholder="Search contacts..."
+                  placeholder={t("booking.placeholder_contact")}
                   value={field.value}
                   onChange={field.onChange}
                   displayText={booking?.contact_name ?? undefined}
@@ -273,10 +273,10 @@ export default function BookingDetail() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label>Booking Source</Label>
+              <Label>{t("booking.label_source")}</Label>
               <Controller name="booking_source" control={control} render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger className="mt-1"><SelectValue placeholder="Select source" /></SelectTrigger>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder={t("booking.placeholder_source")} /></SelectTrigger>
                   <SelectContent>
                     {["Direct", "Agent", "Website", "Referral", "Other"].map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                   </SelectContent>
@@ -285,19 +285,19 @@ export default function BookingDetail() {
             </div>
           </div>
           <div>
-            <Label>Customer Notes</Label>
-            <Textarea {...register("customer_notes")} rows={3} className="mt-1" placeholder="Notes from customer..." />
+            <Label>{t("booking.label_customer_notes")}</Label>
+            <Textarea {...register("customer_notes")} rows={3} className="mt-1" placeholder={t("booking.placeholder_notes")} />
           </div>
         </div>
 
         <div className="rounded-lg border bg-white p-4 sm:p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">SPACE & PRODUCT</h3>
+          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">{t("booking.section_space_product")}</h3>
           <div>
-            <Label>Space *</Label>
+            <Label>{t("booking.label_space")} *</Label>
             <Controller name="space_id" control={control} render={({ field }) => (
               <LookupSelect
                 lookupUrl={`${BASE}api/v1/lookup/spaces`}
-                placeholder="Search spaces..."
+                placeholder={t("booking.placeholder_space")}
                 value={field.value}
                 onChange={field.onChange}
                 displayText={booking?.space_name ?? undefined}
@@ -309,17 +309,17 @@ export default function BookingDetail() {
               <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">{booking.space_type}</span>
               {booking?.booking_mode && (
                 <span className={`text-xs px-2 py-1 rounded font-medium ${booking.booking_mode === "Instant" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
-                  {booking.booking_mode} Booking
+                  {booking.booking_mode === "Instant" ? t("booking.instant_booking") : t("booking.request_booking")}
                 </span>
               )}
             </div>
           )}
           <div>
-            <Label>Contract Product</Label>
+            <Label>{t("booking.label_contract_product")}</Label>
             <Controller name="contract_product_id" control={control} render={({ field }) => (
               <LookupSelect
                 lookupUrl={`${BASE}api/v1/lookup/contract-products`}
-                placeholder="Search contract products..."
+                placeholder={t("booking.placeholder_contract_product")}
                 value={field.value}
                 onChange={field.onChange}
                 displayText={(booking as any)?.contract_product_name ?? undefined}
@@ -329,16 +329,16 @@ export default function BookingDetail() {
         </div>
 
         <div className="rounded-lg border bg-white p-4 sm:p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">PERIOD</h3>
+          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">{t("booking.section_period")}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label>Check-In Date *</Label>
+              <Label>{t("booking.label_checkin_date")} *</Label>
               <Controller name="check_in_date" control={control} render={({ field }) => (
                 <DateInput value={field.value ?? ""} onChange={field.onChange} className="mt-1" />
               )} />
             </div>
             <div>
-              <Label>Check-Out Date *</Label>
+              <Label>{t("booking.label_checkout_date")} *</Label>
               <Controller name="check_out_date" control={control} render={({ field }) => (
                 <DateInput value={field.value ?? ""} onChange={field.onChange} className="mt-1" />
               )} />
@@ -346,20 +346,20 @@ export default function BookingDetail() {
           </div>
           {stay && (
             <div className="rounded-md bg-blue-50 border border-blue-200 p-3 text-sm text-blue-800">
-              {stay.weeks} weeks ({stay.nights} nights) × ${watchRate}/week = <strong>${stay.total.toFixed(2)} AUD</strong>
+              {t("booking.stay_summary", { weeks: stay.weeks, nights: stay.nights, rate: watchRate, total: stay.total.toFixed(2) })}
             </div>
           )}
         </div>
 
         <div className="rounded-lg border bg-white p-4 sm:p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">PRICING</h3>
+          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">{t("booking.section_rate")}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <Label>Agreed Weekly Rate *</Label>
+              <Label>{t("booking.label_weekly_rate")} *</Label>
               <Input {...register("agreed_weekly_rate")} className="mt-1" placeholder="0.00" />
             </div>
             <div>
-              <Label>Currency</Label>
+              <Label>{t("booking.label_currency")}</Label>
               <Controller name="currency" control={control} render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
@@ -370,7 +370,7 @@ export default function BookingDetail() {
               )} />
             </div>
             <div>
-              <Label>Num Guests</Label>
+              <Label>{t("booking.label_num_guests")}</Label>
               <Input type="number" min={1} {...register("num_guests", { valueAsNumber: true })} className="mt-1" />
             </div>
           </div>
@@ -379,13 +379,18 @@ export default function BookingDetail() {
         {!isNew && (
           <>
             <div className="flex border-b gap-1">
-              {["Documents", "Invoices", "Notes", "Activities"].map((tab) => (
+              {[
+                { id: "documents", label: t("booking.tab_documents") },
+                { id: "invoices", label: t("booking.tab_invoices") },
+                { id: "notes", label: t("booking.tab_notes") },
+                { id: "activities", label: t("booking.tab_activities") }
+              ].map((tab) => (
                 <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab.toLowerCase())}
-                  className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.toLowerCase() ? "border-[#E8621A] text-[#E8621A]" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id ? "border-[#E8621A] text-[#E8621A]" : "border-transparent text-muted-foreground hover:text-foreground"}`}
                 >
-                  {tab}{tab === "Invoices" && invoices?.length ? ` (${invoices.length})` : ""}
+                  {tab.label}{tab.id === "invoices" && invoices?.length ? ` (${invoices.length})` : ""}
                 </button>
               ))}
             </div>
@@ -395,21 +400,28 @@ export default function BookingDetail() {
                 <div className="flex justify-between items-center">
                   <h4 className="font-medium text-sm">KYC Documents</h4>
                   <Button size="sm" variant="outline" onClick={() => setUploadDocOpen(true)}>
-                    <Upload className="w-3.5 h-3.5 mr-1" /> Upload Document
+                    <Upload className="w-3.5 h-3.5 mr-1" /> {t("booking.btn_upload_doc")}
                   </Button>
                 </div>
                 <div className="rounded-lg border bg-white overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50 border-b">
                       <tr>
-                        {["Doc Type", "File Name", "Status", "Expiry", "Uploaded", "Actions"].map((h) => (
+                        {[
+                          t("booking.col_doc_type"),
+                          t("booking.col_file_name"),
+                          t("common.status"),
+                          t("booking.col_expiry"),
+                          t("booking.col_uploaded"),
+                          t("common.actions")
+                        ].map((h) => (
                           <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {!documents?.length ? (
-                        <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">No documents uploaded</td></tr>
+                        <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">{t("common.no_data")}</td></tr>
                       ) : documents.map((doc) => (
                         <tr key={doc.id} className="border-b hover:bg-gray-50">
                           <td className="px-4 py-3">{doc.doc_type ?? "—"}</td>
@@ -427,12 +439,12 @@ export default function BookingDetail() {
                             <div className="flex gap-1">
                               {doc.verified_status !== "Verified" && (
                                 <Button size="sm" variant="ghost" className="h-7 text-xs text-green-600" onClick={() => verifyDocMutation.mutate({ id: Number(id), docId: doc.id })}>
-                                  <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Verify
+                                  <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> {t("booking.btn_verify")}
                                 </Button>
                               )}
                               {doc.verified_status !== "Rejected" && (
                                 <Button size="sm" variant="ghost" className="h-7 text-xs text-red-600" onClick={() => setRejectDocId(doc.id)}>
-                                  <XCircle className="w-3.5 h-3.5 mr-1" /> Reject
+                                  <XCircle className="w-3.5 h-3.5 mr-1" /> {t("booking.btn_reject_doc")}
                                 </Button>
                               )}
                             </div>
@@ -448,23 +460,29 @@ export default function BookingDetail() {
             {activeTab === "invoices" && (
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <h4 className="font-medium text-sm">Invoices</h4>
+                  <h4 className="font-medium text-sm">{t("booking.tab_invoices")}</h4>
                   <Link href={`/finance/invoices/new`}>
-                    <button className="text-xs text-[#E8621A] hover:underline">+ New Invoice</button>
+                    <button className="text-xs text-[#E8621A] hover:underline">+ {t("invoice.new")}</button>
                   </Link>
                 </div>
                 <div className="rounded-lg border bg-white overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50 border-b">
                       <tr>
-                        {["Ref", "Amount", "Currency", "Due Date", "Status"].map((h) => (
+                        {[
+                          t("booking.col_ref"),
+                          t("common.amount"),
+                          t("booking.label_currency"),
+                          t("booking.col_due_date"),
+                          t("common.status")
+                        ].map((h) => (
                           <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {!invoices?.length ? (
-                        <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">No invoices for this booking</td></tr>
+                        <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">{t("common.no_data")}</td></tr>
                       ) : invoices.map((inv: any) => (
                         <tr key={inv.id} className="border-b hover:bg-gray-50">
                           <td className="px-4 py-3">
@@ -490,12 +508,12 @@ export default function BookingDetail() {
 
             {activeTab === "notes" && (
               <div className="rounded-lg border bg-white p-6 text-muted-foreground text-sm text-center py-12">
-                Notes feature coming soon.
+                {t("booking.tab_notes")} feature coming soon.
               </div>
             )}
             {activeTab === "activities" && (
               <div className="rounded-lg border bg-white p-6 text-muted-foreground text-sm text-center py-12">
-                Activity log coming soon.
+                {t("booking.tab_activities")} log coming soon.
               </div>
             )}
           </>
@@ -506,20 +524,20 @@ export default function BookingDetail() {
       <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{status === "PendingApproval" ? "Reject Booking" : "Cancel Booking"}</DialogTitle>
+            <DialogTitle>{status === "PendingApproval" ? t("booking.dlg_reject_title") : t("booking.dlg_cancel_title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <Label>Reason *</Label>
-            <Textarea rows={3} value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} placeholder="Enter reason..." />
+            <Label>{t("common.notes")} *</Label>
+            <Textarea rows={3} value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} placeholder={t("booking.dlg_reason_placeholder")} />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCancelDialogOpen(false)}>Back</Button>
+            <Button variant="outline" onClick={() => setCancelDialogOpen(false)}>{t("common.back")}</Button>
             <Button className="bg-red-600 hover:bg-red-700 text-white" onClick={() => {
               if (!cancelReason.trim()) return;
               if (status === "PendingApproval") rejectMutation.mutate({ id: Number(id), data: { reason: cancelReason } });
               else cancelMutation.mutate({ id: Number(id), data: { reason: cancelReason } });
             }}>
-              {status === "PendingApproval" ? "Reject" : "Cancel Booking"}
+              {status === "PendingApproval" ? t("booking.dlg_reject_confirm") : t("booking.dlg_cancel_confirm")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -528,17 +546,17 @@ export default function BookingDetail() {
       {/* Extend Dialog */}
       <Dialog open={extendDialogOpen} onOpenChange={setExtendDialogOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Extend Stay</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("booking.dlg_extend_title")}</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <Label>New Check-Out Date *</Label>
+            <Label>{t("booking.dlg_extend_new_checkout")} *</Label>
             <DateInput value={extendDate} onChange={setExtendDate} min={booking?.check_out_date ?? ""} />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setExtendDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setExtendDialogOpen(false)}>{t("common.cancel")}</Button>
             <Button className="bg-[#E8621A] hover:bg-[#d4561a] text-white" onClick={() => {
               if (!extendDate) return;
               extendMutation.mutate({ id: Number(id), data: { new_check_out_date: extendDate } });
-            }}>Extend</Button>
+            }}>{t("common.confirm")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -546,36 +564,36 @@ export default function BookingDetail() {
       {/* Upload Document Dialog */}
       <Dialog open={uploadDocOpen} onOpenChange={setUploadDocOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Upload Document</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("booking.dlg_upload_title")}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Document Type</Label>
+              <Label>{t("booking.dlg_doc_type")}</Label>
               <Select value={docType} onValueChange={setDocType}>
-                <SelectTrigger className="mt-1"><SelectValue placeholder="Select type" /></SelectTrigger>
+                <SelectTrigger className="mt-1"><SelectValue placeholder={t("booking.placeholder_source")} /></SelectTrigger>
                 <SelectContent>
-                  {["Passport", "Visa", "ID Card", "Driver License", "Proof of Income", "Other"].map((t) => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  {t("booking.doc_types").split(",").map((typeItem) => (
+                    <SelectItem key={typeItem} value={typeItem}>{typeItem}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>File URL</Label>
+              <Label>{t("booking.dlg_file_url")}</Label>
               <Input value={docUrl} onChange={(e) => setDocUrl(e.target.value)} placeholder="https://..." className="mt-1" />
             </div>
             <div>
-              <Label>Document Expiry</Label>
+              <Label>{t("booking.dlg_expiry_date")}</Label>
               <DateInput value={docExpiry} onChange={setDocExpiry} className="mt-1" />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setUploadDocOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setUploadDocOpen(false)}>{t("common.cancel")}</Button>
             <Button className="bg-[#E8621A] hover:bg-[#d4561a] text-white" onClick={() => {
               createDocMutation.mutate({
                 id: Number(id),
                 data: { doc_type: docType || undefined, file_url: docUrl || undefined, file_name: docUrl?.split("/").pop() || undefined, expiry_date: docExpiry || undefined },
               });
-            }}>Upload</Button>
+            }}>{t("common.upload")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -583,17 +601,17 @@ export default function BookingDetail() {
       {/* Reject Document Dialog */}
       <Dialog open={rejectDocId !== null} onOpenChange={() => setRejectDocId(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Reject Document</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("booking.btn_reject_doc")}</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <Label>Rejection Reason *</Label>
-            <Textarea rows={3} value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Enter reason..." />
+            <Label>{t("booking.reason_label")} *</Label>
+            <Textarea rows={3} value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder={t("booking.dlg_reason_placeholder")} />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRejectDocId(null)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setRejectDocId(null)}>{t("common.cancel")}</Button>
             <Button className="bg-red-600 hover:bg-red-700 text-white" onClick={() => {
               if (!rejectReason.trim() || !rejectDocId) return;
               rejectDocMutation.mutate({ id: Number(id), docId: rejectDocId, data: { rejection_reason: rejectReason } });
-            }}>Reject</Button>
+            }}>{t("common.reject")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

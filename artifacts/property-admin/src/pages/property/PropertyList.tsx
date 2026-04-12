@@ -57,11 +57,11 @@ export default function PropertyList() {
     <Layout>
       <PageHeader
         title={t("nav.property")}
-        subtitle={`${properties?.length ?? 0} total`}
+        subtitle={`${properties?.length ?? 0} ${t("common.total")}`}
         actions={
           <Link href="/property/properties/new">
             <Button size="sm" className="gap-1.5">
-              <Plus className="h-4 w-4" /> New Property
+              <Plus className="h-4 w-4" /> {t("property.new")}
             </Button>
           </Link>
         }
@@ -71,7 +71,7 @@ export default function PropertyList() {
           <div className="relative flex-1 max-w-xs">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
-              placeholder="Search properties..."
+              placeholder={t("property.search_placeholder")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-8 h-8 text-sm"
@@ -79,14 +79,14 @@ export default function PropertyList() {
           </div>
           <Select value={approvalStatus || "_all"} onValueChange={(v) => setApprovalStatus(v === "_all" ? "" : v)}>
             <SelectTrigger className="w-36 h-8 text-sm">
-              <SelectValue placeholder="Status" />
+              <SelectValue placeholder={t("common.status")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All Statuses</SelectItem>
-              <SelectItem value="Pending">Pending</SelectItem>
-              <SelectItem value="Active">Active</SelectItem>
-              <SelectItem value="Suspended">Suspended</SelectItem>
-              <SelectItem value="Rejected">Rejected</SelectItem>
+              <SelectItem value="_all">{t("property.all_statuses")}</SelectItem>
+              <SelectItem value="Pending">{t("common.pending") || "Pending"}</SelectItem>
+              <SelectItem value="Active">{t("common.active")}</SelectItem>
+              <SelectItem value="Suspended">{t("common.suspended") || "Suspended"}</SelectItem>
+              <SelectItem value="Rejected">{t("common.rejected") || "Rejected"}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -96,23 +96,23 @@ export default function PropertyList() {
           <table className="w-full min-w-max text-sm">
             <thead className="bg-muted/50 border-b">
               <tr>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Name</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Address</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Owner</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Suburb</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Created On</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("property.col_name")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("property.col_address")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("property.col_owner")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("property.col_suburb")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("property.col_status")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("property.col_created")}</th>
                 <th className="px-4 py-3 w-20"></th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground text-sm">Loading...</td>
+                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("common.loading")}</td>
                 </tr>
               ) : properties?.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground text-sm">No properties found</td>
+                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("property.no_properties")}</td>
                 </tr>
               ) : (
                 pagination.paginatedItems.map((prop) => (
@@ -157,18 +157,18 @@ export default function PropertyList() {
       <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Property</AlertDialogTitle>
+            <AlertDialogTitle>{t("property.delete_title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this property? This action cannot be undone.
+              {t("property.delete_desc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => deleteId && deleteMutation.mutate({ id: deleteId })}
             >
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

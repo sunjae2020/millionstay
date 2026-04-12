@@ -119,20 +119,20 @@ export default function TaskList() {
     <Layout>
       <PageHeader
         title={t("nav.task")}
-        subtitle={`${tasks?.length ?? 0} total`}
+        subtitle={`${tasks?.length ?? 0} ${t("common.total")}`}
         actions={
           <Link href="/sales/tasks/new">
-            <Button size="sm" className="gap-1.5"><Plus className="h-4 w-4" /> New Task</Button>
+            <Button size="sm" className="gap-1.5"><Plus className="h-4 w-4" /> {t("task.new")}</Button>
           </Link>
         }
       />
       <div className="p-6 space-y-5">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "To Do", value: totalTodo, color: "text-gray-600", bg: "bg-gray-50 border-gray-200" },
-            { label: "In Progress", value: totalInProgress, color: "text-blue-600", bg: "bg-blue-50 border-blue-200" },
-            { label: "Overdue", value: totalOverdue, color: "text-red-600", bg: "bg-red-50 border-red-200" },
-            { label: "Done This Month", value: totalDoneThisMonth, color: "text-green-600", bg: "bg-green-50 border-green-200" },
+            { label: t("task.status_todo"), value: totalTodo, color: "text-gray-600", bg: "bg-gray-50 border-gray-200" },
+            { label: t("task.status_in_progress"), value: totalInProgress, color: "text-blue-600", bg: "bg-blue-50 border-blue-200" },
+            { label: t("dashboard.overdue_tasks"), value: totalOverdue, color: "text-red-600", bg: "bg-red-50 border-red-200" },
+            { label: t("workorder.completed_work_orders"), value: totalDoneThisMonth, color: "text-green-600", bg: "bg-green-50 border-green-200" },
           ].map(card => (
             <div key={card.label} className={`rounded-lg border p-4 ${card.bg}`}>
               <p className="text-xs font-medium text-muted-foreground">{card.label}</p>
@@ -144,32 +144,32 @@ export default function TaskList() {
         <div className="flex items-center gap-3 flex-wrap">
           <div className="relative flex-1 min-w-[180px] max-w-xs">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input placeholder="Search tasks…" className="pl-8 h-8 text-sm" value={search}
+            <Input placeholder={t("task.search_placeholder")} className="pl-8 h-8 text-sm" value={search}
               onChange={(e) => setSearch(e.target.value)} />
           </div>
           <Select value={statusFilter || "__all"} onValueChange={(v) => setStatusFilter(v === "__all" ? "" : v)}>
-            <SelectTrigger className="h-8 w-36 text-sm"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectTrigger className="h-8 w-36 text-sm"><SelectValue placeholder={t("common.status")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="__all">All statuses</SelectItem>
-              <SelectItem value="Todo">Todo</SelectItem>
-              <SelectItem value="InProgress">In Progress</SelectItem>
-              <SelectItem value="Done">Done</SelectItem>
-              <SelectItem value="Cancelled">Cancelled</SelectItem>
+              <SelectItem value="__all">{t("task.all_statuses")}</SelectItem>
+              <SelectItem value="Todo">{t("task.status_todo")}</SelectItem>
+              <SelectItem value="InProgress">{t("task.status_in_progress")}</SelectItem>
+              <SelectItem value="Done">{t("task.status_done")}</SelectItem>
+              <SelectItem value="Cancelled">{t("task.status_cancelled")}</SelectItem>
             </SelectContent>
           </Select>
           <Select value={priorityFilter || "__all"} onValueChange={(v) => setPriorityFilter(v === "__all" ? "" : v)}>
-            <SelectTrigger className="h-8 w-32 text-sm"><SelectValue placeholder="Priority" /></SelectTrigger>
+            <SelectTrigger className="h-8 w-32 text-sm"><SelectValue placeholder={t("task.col_priority")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="__all">All priorities</SelectItem>
-              <SelectItem value="High">High</SelectItem>
-              <SelectItem value="Medium">Medium</SelectItem>
-              <SelectItem value="Low">Low</SelectItem>
+              <SelectItem value="__all">{t("task.all_priorities")}</SelectItem>
+              <SelectItem value="High">{t("task.priority_high")}</SelectItem>
+              <SelectItem value="Medium">{t("task.priority_medium")}</SelectItem>
+              <SelectItem value="Low">{t("task.priority_low")}</SelectItem>
             </SelectContent>
           </Select>
           <Select value={categoryFilter || "__all"} onValueChange={(v) => setCategoryFilter(v === "__all" ? "" : v)}>
-            <SelectTrigger className="h-8 w-36 text-sm"><SelectValue placeholder="Category" /></SelectTrigger>
+            <SelectTrigger className="h-8 w-36 text-sm"><SelectValue placeholder={t("task.col_category")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="__all">All categories</SelectItem>
+              <SelectItem value="__all">{t("task.all_categories")}</SelectItem>
               {["CS", "Maintenance", "Follow-up", "Admin", "Other"].map(c => (
                 <SelectItem key={c} value={c}>{c}</SelectItem>
               ))}
@@ -178,20 +178,20 @@ export default function TaskList() {
         </div>
 
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
         ) : (
           <div className="rounded-lg border overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full min-w-max text-sm">
                 <thead className="bg-muted/50">
                   <tr>
-                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Name</th>
-                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Subject</th>
-                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Status</th>
-                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Priority</th>
-                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Category</th>
-                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Contact</th>
-                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Due Date</th>
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("common.name")}</th>
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("csticket.col_subject")}</th>
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("task.col_status")}</th>
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("task.col_priority")}</th>
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("task.col_category")}</th>
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("task.col_related")}</th>
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("task.col_due_date")}</th>
                     <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Quick Action</th>
                     <th className="px-4 py-2.5"></th>
                   </tr>
@@ -223,7 +223,7 @@ export default function TaskList() {
                               className="text-[10px] px-2 py-1 rounded border bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 flex items-center gap-1 font-medium"
                               onClick={() => handleStatusChange(task.id, "InProgress")}
                             >
-                              <Play className="h-2.5 w-2.5" /> Start
+                              <Play className="h-2.5 w-2.5" /> {t("task.btn_start")}
                             </button>
                           )}
                           {task.task_status === "InProgress" && (
@@ -231,12 +231,12 @@ export default function TaskList() {
                               className="text-[10px] px-2 py-1 rounded border bg-green-50 text-green-700 border-green-200 hover:bg-green-100 flex items-center gap-1 font-medium"
                               onClick={() => handleStatusChange(task.id, "Done")}
                             >
-                              <CheckCircle2 className="h-2.5 w-2.5" /> Complete
+                              <CheckCircle2 className="h-2.5 w-2.5" /> {t("task.btn_complete")}
                             </button>
                           )}
                           {task.task_status === "Done" && (
                             <span className="text-[10px] text-green-600 flex items-center gap-1">
-                              <CheckCircle2 className="h-3 w-3" /> Done
+                              <CheckCircle2 className="h-3 w-3" /> {t("task.status_done")}
                             </span>
                           )}
                         </td>
@@ -255,7 +255,7 @@ export default function TaskList() {
                     );
                   })}
                   {(!tasks || tasks.length === 0) && (
-                    <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">No tasks found</td></tr>
+                    <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">{t("task.no_tasks")}</td></tr>
                   )}
                 </tbody>
               </table>
@@ -268,14 +268,14 @@ export default function TaskList() {
       <AlertDialog open={deleteId !== null} onOpenChange={(o) => !o && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Task?</AlertDialogTitle>
-            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+            <AlertDialogTitle>{t("task.delete_title")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("common.cannot_undo")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => deleteId && deleteMutation.mutate({ id: deleteId })}>
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

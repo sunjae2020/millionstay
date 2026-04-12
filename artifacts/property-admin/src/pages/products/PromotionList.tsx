@@ -97,41 +97,41 @@ export default function PromotionList() {
               <h1 className="text-2xl font-bold">{t("nav.promotion")}</h1>
             </div>
             <p className="text-sm text-muted-foreground">
-              {isLoading ? "Loading..." : `${filtered.length} promotion${filtered.length !== 1 ? "s" : ""}`}
+              {isLoading ? t("common.loading") : `${filtered.length} ${t("nav.promotion")}`}
             </p>
           </div>
           <Link href="/products/promotions/new">
-            <Button><Plus className="h-4 w-4 mr-2" />New Promotion</Button>
+            <Button><Plus className="h-4 w-4 mr-2" />{t("common.new")} {t("nav.promotion")}</Button>
           </Link>
         </div>
 
         <div className="flex gap-3 mb-4 flex-wrap">
           <div className="relative flex-1 min-w-48 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search promotions..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+            <Input placeholder={t("promotion.search_placeholder")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
           </div>
           <Select value={termType} onValueChange={setTermType}>
             <SelectTrigger className="w-44">
-              <SelectValue placeholder="All terms" />
+              <SelectValue placeholder={t("promotion.all_terms")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All term types</SelectItem>
-              <SelectItem value="ShortTerm">Short-term (under 4 weeks)</SelectItem>
-              <SelectItem value="MidTerm">Mid-term (4–25 weeks)</SelectItem>
-              <SelectItem value="LongTerm">Long-term (26+ weeks)</SelectItem>
+              <SelectItem value="_all">{t("promotion.all_terms")}</SelectItem>
+              <SelectItem value="ShortTerm">{t("promotion.term_short")}</SelectItem>
+              <SelectItem value="MidTerm">{t("promotion.term_mid")}</SelectItem>
+              <SelectItem value="LongTerm">{t("promotion.term_long")}</SelectItem>
             </SelectContent>
           </Select>
           <Select value={status} onValueChange={setStatus}>
             <SelectTrigger className="w-36">
-              <SelectValue placeholder="All statuses" />
+              <SelectValue placeholder={t("promotion.all_statuses")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All statuses</SelectItem>
-              <SelectItem value="Draft">Draft</SelectItem>
-              <SelectItem value="Scheduled">Scheduled</SelectItem>
-              <SelectItem value="Active">Active</SelectItem>
-              <SelectItem value="Expired">Expired</SelectItem>
-              <SelectItem value="Disabled">Disabled</SelectItem>
+              <SelectItem value="_all">{t("promotion.all_statuses")}</SelectItem>
+              <SelectItem value="Draft">{t("promotion.status_draft")}</SelectItem>
+              <SelectItem value="Scheduled">{t("promotion.status_scheduled")}</SelectItem>
+              <SelectItem value="Active">{t("common.active")}</SelectItem>
+              <SelectItem value="Expired">{t("promotion.status_expired")}</SelectItem>
+              <SelectItem value="Disabled">{t("promotion.status_disabled")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -141,21 +141,21 @@ export default function PromotionList() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Term</TableHead>
-                  <TableHead>Discount</TableHead>
-                  <TableHead>Stay (weeks)</TableHead>
-                  <TableHead>Billing</TableHead>
-                  <TableHead>Code</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>{t("promotion.col_name")}</TableHead>
+                  <TableHead>{t("promotion.col_term")}</TableHead>
+                  <TableHead>{t("promotion.col_discount")}</TableHead>
+                  <TableHead>{t("promotion.col_stay")}</TableHead>
+                  <TableHead>{t("promotion.col_billing")}</TableHead>
+                  <TableHead>{t("promotion.col_code")}</TableHead>
+                  <TableHead>{t("promotion.col_status")}</TableHead>
                   <TableHead className="w-24"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-12">Loading...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-12">{t("common.loading")}</TableCell></TableRow>
                 ) : pagination.paginatedItems.length === 0 ? (
-                  <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-12">No promotions found</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-12">{t("promotion.no_promotions")}</TableCell></TableRow>
                 ) : pagination.paginatedItems.map((p) => (
                   <TableRow key={p.id} className="hover:bg-muted/30">
                     <TableCell className="font-medium">

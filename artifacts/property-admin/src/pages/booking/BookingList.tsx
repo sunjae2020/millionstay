@@ -39,6 +39,7 @@ function BookingStatusBadge({ status }: { status: string }) {
 }
 
 function CalendarView({ bookings }: { bookings: any[] }) {
+  const { t } = useTranslation();
   const today = new Date();
   const dates: Date[] = Array.from({ length: 30 }, (_, i) => {
     const d = new Date(today);
@@ -62,7 +63,7 @@ function CalendarView({ bookings }: { bookings: any[] }) {
   if (spaces.length === 0) {
     return (
       <div className="rounded-lg border bg-white p-12 text-center text-muted-foreground">
-        No bookings with spaces assigned to show in calendar view.
+        {t('booking.no_spaces_calendar')}
       </div>
     );
   }
@@ -71,7 +72,7 @@ function CalendarView({ bookings }: { bookings: any[] }) {
     <div className="rounded-lg border bg-white overflow-auto">
       <div className="min-w-max">
         <div className="flex border-b sticky top-0 bg-white z-10">
-          <div className="w-40 shrink-0 px-3 py-2 text-xs font-semibold text-muted-foreground border-r">Space</div>
+          <div className="w-40 shrink-0 px-3 py-2 text-xs font-semibold text-muted-foreground border-r">{t('booking.col_space')}</div>
           {dates.map((d) => (
             <div key={d.toISOString()} className={`w-8 shrink-0 text-center py-2 border-r text-xs ${d.toDateString() === today.toDateString() ? "bg-orange-50 font-bold text-[#E8621A]" : "text-muted-foreground"}`}>
               <div>{d.getDate()}</div>
@@ -142,19 +143,19 @@ export default function BookingList() {
     <Layout>
       <PageHeader
         title={t("nav.booking")}
-        subtitle={`${bookings?.length ?? 0} total`}
+        subtitle={`${bookings?.length ?? 0} ${t("common.total")}`}
         actions={
           <div className="flex gap-2">
             <div className="flex rounded-md border overflow-hidden">
               <Button variant={view === "list" ? "default" : "ghost"} size="sm" className="rounded-none px-3" onClick={() => setView("list")}>
-                <List className="w-4 h-4 mr-1" /> List
+                <List className="w-4 h-4 mr-1" /> {t("booking.view_list")}
               </Button>
               <Button variant={view === "calendar" ? "default" : "ghost"} size="sm" className="rounded-none px-3 border-l" onClick={() => setView("calendar")}>
-                <Calendar className="w-4 h-4 mr-1" /> Calendar
+                <Calendar className="w-4 h-4 mr-1" /> {t("booking.view_calendar")}
               </Button>
             </div>
             <Link href="/booking/bookings/new">
-              <Button><Plus className="w-4 h-4 mr-1" /> New Booking</Button>
+              <Button><Plus className="w-4 h-4 mr-1" /> {t("booking.new")}</Button>
             </Link>
           </div>
         }
@@ -163,21 +164,21 @@ export default function BookingList() {
         <div className="flex gap-3 flex-wrap">
           <div className="relative flex-1 min-w-[200px] max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder="Search bookings..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Input className="pl-9" placeholder={t("booking.search_placeholder")} value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
           <Select value={statusFilter || "_all"} onValueChange={(v) => setStatusFilter(v === "_all" ? "" : v)}>
-            <SelectTrigger className="w-[160px]"><SelectValue placeholder="All statuses" /></SelectTrigger>
+            <SelectTrigger className="w-[160px]"><SelectValue placeholder={t("booking.all_statuses")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All statuses</SelectItem>
+              <SelectItem value="_all">{t("booking.all_statuses")}</SelectItem>
               {["Draft", "PendingPayment", "PendingApproval", "Confirmed", "Active", "CheckedOut", "Cancelled", "NoShow"].map((s) => (
                 <SelectItem key={s} value={s}>{s}</SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Select value={sourceFilter || "_all"} onValueChange={(v) => setSourceFilter(v === "_all" ? "" : v)}>
-            <SelectTrigger className="w-[140px]"><SelectValue placeholder="All sources" /></SelectTrigger>
+            <SelectTrigger className="w-[140px]"><SelectValue placeholder={t("booking.all_sources")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All sources</SelectItem>
+              <SelectItem value="_all">{t("booking.all_sources")}</SelectItem>
               {["Direct", "Agent", "Website", "Referral"].map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -191,16 +192,16 @@ export default function BookingList() {
             <table className="w-full min-w-max text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  {["Booking Ref", "Guest", "Space", "Check-In", "Check-Out", "Nights", "Rate", "Status", "Source", "Actions"].map((h) => (
+                  {[t("booking.col_ref"), t("booking.col_guest"), t("booking.col_space"), t("booking.col_checkin"), t("booking.col_checkout"), t("booking.col_nights"), t("booking.col_rate"), t("booking.col_status"), t("booking.col_source"), t("common.actions")].map((h) => (
                     <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
-                  <tr><td colSpan={10} className="text-center py-12 text-muted-foreground">Loading...</td></tr>
+                  <tr><td colSpan={10} className="text-center py-12 text-muted-foreground">{t("common.loading")}</td></tr>
                 ) : !bookings?.length ? (
-                  <tr><td colSpan={10} className="text-center py-12 text-muted-foreground">No bookings found</td></tr>
+                  <tr><td colSpan={10} className="text-center py-12 text-muted-foreground">{t("booking.no_bookings")}</td></tr>
                 ) : bookings.map((b) => (
                   <tr key={b.id} className="border-b hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3">
@@ -218,16 +219,16 @@ export default function BookingList() {
                       <div className="flex items-center gap-1">
                         {b.booking_status === "PendingApproval" && (
                           <Button size="sm" variant="outline" className="h-7 text-xs text-green-700 border-green-300" onClick={() => confirmMutation.mutate({ id: b.id })}>
-                            ✓ Confirm
+                            {t("booking.btn_confirm")}
                           </Button>
                         )}
                         {b.booking_status === "Confirmed" && (
                           <Button size="sm" variant="outline" className="h-7 text-xs text-[#E8621A] border-orange-300" onClick={() => checkInMutation.mutate({ id: b.id })}>
-                            ✓ Check In
+                            {t("booking.btn_checkin")}
                           </Button>
                         )}
                         <Link href={`/booking/bookings/${b.id}`}>
-                          <Button size="sm" variant="ghost" className="h-7 text-xs">Open</Button>
+                          <Button size="sm" variant="ghost" className="h-7 text-xs">{t("common.open")}</Button>
                         </Link>
                       </div>
                     </td>

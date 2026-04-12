@@ -98,10 +98,10 @@ export default function ProductList() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["accommodation-products"] });
-      toast({ title: "Product deleted" });
+      toast({ title: t("product.delete_title") });
       setDeleteId(null);
     },
-    onError: () => toast({ title: "Error", description: "Failed to delete product.", variant: "destructive" }),
+    onError: () => toast({ title: t("common.error"), description: t("product.delete_fail"), variant: "destructive" }),
   });
 
   const filtered = products.filter((p) => {
@@ -116,12 +116,12 @@ export default function ProductList() {
     <Layout>
       <PageHeader
         title={t("nav.accommodation")}
-        subtitle={`${filtered.length} of ${products.length} total`}
+        subtitle={`${filtered.length} of ${products.length} ${t("common.total")}`}
         actions={
           <Link href="/products/products/new">
             <Button>
               <Plus className="h-4 w-4 mr-2" />
-              New Product
+              {t("common.new")} {t("nav.products")}
             </Button>
           </Link>
         }
@@ -133,17 +133,17 @@ export default function ProductList() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               className="pl-9"
-              placeholder="Search products..."
+              placeholder={t("product.search_placeholder")}
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />
           </div>
           <Select value={promotionFilter} onValueChange={setPromotionFilter}>
             <SelectTrigger className="w-52">
-              <SelectValue placeholder="All Promotions" />
+              <SelectValue placeholder={t("product.all_promotions")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All Promotions</SelectItem>
+              <SelectItem value="_all">{t("product.all_promotions")}</SelectItem>
               {promotions.map((p) => (
                 <SelectItem key={p.id} value={String(p.id)}>{p.display}</SelectItem>
               ))}
@@ -151,13 +151,13 @@ export default function ProductList() {
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-36">
-              <SelectValue placeholder="All Statuses" />
+              <SelectValue placeholder={t("product.all_statuses")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All Statuses</SelectItem>
-              <SelectItem value="Active">Active</SelectItem>
-              <SelectItem value="Inactive">Inactive</SelectItem>
-              <SelectItem value="Archived">Archived</SelectItem>
+              <SelectItem value="_all">{t("product.all_statuses")}</SelectItem>
+              <SelectItem value="Active">{t("common.active")}</SelectItem>
+              <SelectItem value="Inactive">{t("common.inactive")}</SelectItem>
+              <SelectItem value="Archived">{t("product.status_archived")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -167,21 +167,21 @@ export default function ProductList() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Name</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Promotion</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Unit</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Price</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("product.col_name")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("product.col_promotion")}</th>
+                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("product.col_unit")}</th>
+                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("product.col_price")}</th>
                   <th className="px-4 py-3 w-20"></th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">Loading...</td>
+                    <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("common.loading")}</td>
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">No products found</td>
+                    <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("product.no_products")}</td>
                   </tr>
                 ) : (
                   pagination.paginatedItems.map((p) => (
@@ -243,18 +243,18 @@ export default function ProductList() {
       <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Product</AlertDialogTitle>
+            <AlertDialogTitle>{t("product.delete_title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete <strong>{deleteTarget?.name}</strong>? This cannot be undone.
+              {t("product.delete_desc_1")} <strong>{deleteTarget?.name}</strong>? {t("common.cannot_undo")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => deleteId !== null && deleteMutation.mutate(deleteId)}
             >
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

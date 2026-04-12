@@ -157,15 +157,15 @@ export default function BeneficiaryDetail() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Basic Info */}
           <Card>
-            <CardHeader><CardTitle className="text-sm font-semibold">Basic Information</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-sm font-semibold">{t('beneficiary.section_general')}</CardTitle></CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <Label>Name <span className="text-destructive">*</span></Label>
+                <Label>{t('beneficiary.label_name')} <span className="text-destructive">*</span></Label>
                 <Input {...register("name", { required: true })} placeholder="e.g. ABC Realty Commission" />
               </div>
 
               <div>
-                <Label>Account <span className="text-destructive">*</span></Label>
+                <Label>{t('beneficiary.label_account')} <span className="text-destructive">*</span></Label>
                 <Controller
                   name="account_id"
                   control={control}
@@ -174,11 +174,11 @@ export default function BeneficiaryDetail() {
                       value={field.value != null ? String(field.value) : NULL_VAL}
                       onValueChange={(v) => field.onChange(v === NULL_VAL ? null : Number(v))}
                     >
-                      <SelectTrigger><SelectValue placeholder="Select account..." /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder={t('common.select_account')} /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={NULL_VAL}>— Select account —</SelectItem>
+                        <SelectItem value={NULL_VAL}>— {t('common.select_account')} —</SelectItem>
                         {(accounts ?? []).map((a) => (
-                          <SelectItem key={a.id} value={String(a.id)}>{a.display ?? a.name}</SelectItem>
+                          <SelectItem key={a.id} value={String(a.id)}>{a.display}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -187,7 +187,7 @@ export default function BeneficiaryDetail() {
               </div>
 
               <div>
-                <Label>Contract Product <span className="text-muted-foreground text-xs">(optional — blank = all)</span></Label>
+                <Label>{t('beneficiary.label_contract_product')} <span className="text-muted-foreground text-xs">({t('common.optional_blank_all')})</span></Label>
                 <Controller
                   name="contract_product_id"
                   control={control}
@@ -196,11 +196,11 @@ export default function BeneficiaryDetail() {
                       value={field.value != null ? String(field.value) : NULL_VAL}
                       onValueChange={(v) => field.onChange(v === NULL_VAL ? null : Number(v))}
                     >
-                      <SelectTrigger><SelectValue placeholder="All contract products" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder={t('common.all_contract_products')} /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={NULL_VAL}>All contract products</SelectItem>
+                        <SelectItem value={NULL_VAL}>{t('common.all_contract_products')}</SelectItem>
                         {(contractProducts ?? []).map((cp) => (
-                          <SelectItem key={cp.id} value={String(cp.id)}>{cp.display ?? cp.name}</SelectItem>
+                          <SelectItem key={cp.id} value={String(cp.id)}>{cp.display}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -209,7 +209,7 @@ export default function BeneficiaryDetail() {
               </div>
 
               <div>
-                <Label>Priority</Label>
+                <Label>{t('beneficiary.label_priority')}</Label>
                 <Input
                   type="number"
                   min={1}
@@ -217,11 +217,11 @@ export default function BeneficiaryDetail() {
                   {...register("priority", { valueAsNumber: true })}
                   placeholder="1"
                 />
-                <p className="text-xs text-muted-foreground mt-1">Lower = processed first (e.g. fixed fees before % splits)</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('beneficiary.priority_desc')}</p>
               </div>
 
               <div>
-                <Label>Status</Label>
+                <Label>{t('beneficiary.label_status')}</Label>
                 <Controller
                   name="status"
                   control={control}
@@ -229,9 +229,9 @@ export default function BeneficiaryDetail() {
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Active">Active</SelectItem>
-                        <SelectItem value="Inactive">Inactive</SelectItem>
-                        <SelectItem value="Archived">Archived</SelectItem>
+                        <SelectItem value="Active">{t('common.active')}</SelectItem>
+                        <SelectItem value="Inactive">{t('common.inactive')}</SelectItem>
+                        <SelectItem value="Archived">{t('common.archived')}</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -242,10 +242,10 @@ export default function BeneficiaryDetail() {
 
           {/* Commission Structure */}
           <Card>
-            <CardHeader><CardTitle className="text-sm font-semibold">Commission Structure</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-sm font-semibold">{t('beneficiary.section_structure')}</CardTitle></CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label>Commission Template <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                <Label>{t('beneficiary.label_commission_template')} <span className="text-muted-foreground text-xs">({t('common.optional')})</span></Label>
                 <Controller
                   name="commission_id"
                   control={control}
@@ -254,11 +254,11 @@ export default function BeneficiaryDetail() {
                       value={field.value != null ? String(field.value) : NULL_VAL}
                       onValueChange={(v) => field.onChange(v === NULL_VAL ? null : Number(v))}
                     >
-                      <SelectTrigger><SelectValue placeholder="Custom (manual entry)" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder={t('beneficiary.custom_entry')} /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value={NULL_VAL}>Custom (manual entry)</SelectItem>
+                        <SelectItem value={NULL_VAL}>{t('beneficiary.custom_entry')}</SelectItem>
                         {(commissions ?? []).map((c) => (
-                          <SelectItem key={c.id} value={String(c.id)}>{c.display ?? c.name}</SelectItem>
+                          <SelectItem key={c.id} value={String(c.id)}>{c.display}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -267,7 +267,7 @@ export default function BeneficiaryDetail() {
               </div>
 
               <div>
-                <Label>Commission Type <span className="text-destructive">*</span></Label>
+                <Label>{t('beneficiary.label_commission_type')} <span className="text-destructive">*</span></Label>
                 <Controller
                   name="commission_type"
                   control={control}
@@ -279,8 +279,8 @@ export default function BeneficiaryDetail() {
                     }}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Percentage">Percentage (%)</SelectItem>
-                        <SelectItem value="Fixed">Fixed Amount ($)</SelectItem>
+                        <SelectItem value="Percentage">{t('beneficiary.type_percentage')}</SelectItem>
+                        <SelectItem value="Fixed">{t('beneficiary.type_fixed')}</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -289,7 +289,7 @@ export default function BeneficiaryDetail() {
 
               {commissionType === "Percentage" ? (
                 <div>
-                  <Label>Split Percentage (%)</Label>
+                  <Label>{t('beneficiary.label_split_percentage')}</Label>
                   <Input
                     type="number"
                     step="0.01"
@@ -298,11 +298,11 @@ export default function BeneficiaryDetail() {
                     {...register("split_percentage", { valueAsNumber: true })}
                     placeholder="e.g. 10"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">Percentage of booking revenue allocated to this beneficiary</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t('beneficiary.split_percentage_desc')}</p>
                 </div>
               ) : (
                 <div>
-                  <Label>Fixed Amount (AUD)</Label>
+                  <Label>{t('beneficiary.label_fixed_amount')}</Label>
                   <Input
                     type="number"
                     step="0.01"
@@ -310,24 +310,24 @@ export default function BeneficiaryDetail() {
                     {...register("fixed_amount", { valueAsNumber: true })}
                     placeholder="e.g. 80.00"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">Fixed amount charged per billing period (e.g. per week)</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t('beneficiary.fixed_amount_desc')}</p>
                 </div>
               )}
 
               <div className="md:col-span-2">
-                <Label>Notes</Label>
-                <Textarea {...register("notes")} placeholder="Additional notes..." rows={3} />
+                <Label>{t('beneficiary.label_notes')}</Label>
+                <Textarea {...register("notes")} placeholder={t('common.notes_placeholder')} rows={3} />
               </div>
             </CardContent>
           </Card>
 
           <div className="flex justify-end gap-3">
             <Link href="/products/beneficiaries">
-              <Button type="button" variant="outline">Cancel</Button>
+              <Button type="button" variant="outline">{t('common.cancel')}</Button>
             </Link>
             <Button type="submit" disabled={isSaving}>
               <Save className="h-4 w-4 mr-2" />
-              {isSaving ? "Saving..." : isNew ? "Create Beneficiary" : "Save Changes"}
+              {isSaving ? t('common.saving') : isNew ? t('beneficiary.btn_create') : t('common.save')}
             </Button>
           </div>
         </form>

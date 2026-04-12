@@ -114,25 +114,26 @@ export default function PaymentInfoDetail() {
         actions={
           <div className="flex gap-2">
             <Link href="/crm/payment-info">
-              <Button variant="outline" size="sm" className="gap-1.5"><ArrowLeft className="h-4 w-4" /> Back</Button>
+              <Button variant="outline" size="sm" className="gap-1.5"><ArrowLeft className="h-4 w-4" /> {t("common.back")}</Button>
             </Link>
             <Button size="sm" className="gap-1.5" onClick={handleSubmit(onSubmit)}
               disabled={createMutation.isPending || updateMutation.isPending}>
-              <Save className="h-4 w-4" /> Save
+              <Save className="h-4 w-4" /> {t("common.save")}
             </Button>
           </div>
         }
       />
       <div className="p-6 max-w-2xl">
         <div className="grid gap-5">
+          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">{t("payment_info.section_general")}</h3>
           <div className="grid gap-1.5">
-            <Label>Name *</Label>
+            <Label>{t("common.name")} *</Label>
             <Input {...register("name", { required: true })} placeholder="e.g. NAB Bank Transfer" />
             {errors.name && <p className="text-xs text-destructive">Name is required</p>}
           </div>
 
           <div className="grid gap-1.5">
-            <Label>Payment Type</Label>
+            <Label>{t("payment_info.label_method")}</Label>
             <Controller name="payment_type" control={control} render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -148,22 +149,23 @@ export default function PaymentInfoDetail() {
 
           {paymentType === "BankTransfer" && (
             <>
+              <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2 mt-4">{t("payment_info.section_bank")}</h3>
               <div className="grid gap-1.5">
-                <Label>Bank Name</Label>
+                <Label>{t("payment_info.label_bank_name")}</Label>
                 <Input {...register("bank_name")} placeholder="e.g. NAB" />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
-                  <Label>BSB Number</Label>
+                  <Label>{t("payment_info.label_bsb")}</Label>
                   <Input {...register("bsb_number")} placeholder="e.g. 083-004" />
                 </div>
                 <div className="grid gap-1.5">
-                  <Label>Account Number</Label>
+                  <Label>{t("payment_info.label_account_number")}</Label>
                   <Input {...register("account_number")} placeholder="e.g. 12345678" />
                 </div>
               </div>
               <div className="grid gap-1.5">
-                <Label>Account Name</Label>
+                <Label>{t("payment_info.label_account_name")}</Label>
                 <Input {...register("account_name")} placeholder="e.g. Million Stay Pty Ltd" />
               </div>
               <div className="grid gap-1.5">
@@ -174,19 +176,22 @@ export default function PaymentInfoDetail() {
           )}
 
           {paymentType === "Stripe" && (
-            <div className="grid gap-1.5">
-              <Label>Stripe Account ID</Label>
-              <Input {...register("stripe_account_id")} placeholder="acct_..." />
-            </div>
+            <>
+              <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2 mt-4">{t("payment_info.section_stripe")}</h3>
+              <div className="grid gap-1.5">
+                <Label>{t("payment_info.label_stripe_id")}</Label>
+                <Input {...register("stripe_account_id")} placeholder="acct_..." />
+              </div>
+            </>
           )}
 
           <div className="grid gap-1.5">
-            <Label>Description</Label>
+            <Label>{t("common.description")}</Label>
             <Input {...register("description")} placeholder="Optional notes" />
           </div>
 
           <div className="grid gap-1.5">
-            <Label>Status</Label>
+            <Label>{t("payment_info.label_status")}</Label>
             <Controller name="status" control={control} render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>

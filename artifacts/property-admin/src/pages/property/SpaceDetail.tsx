@@ -239,9 +239,9 @@ export default function SpaceDetail() {
         return opt?.name ?? `Option #${oid}`;
       });
       setOptionNames(names);
-      setPrivacyHideUnitNo(space.privacy_hide_unit_no ?? true);
-      setPrivacyHideStreetNo(space.privacy_hide_street_no ?? true);
-      setPrivacyMapBlur(space.privacy_map_blur ?? true);
+      setPrivacyHideUnitNo((space as any).privacy_hide_unit_no ?? true);
+      setPrivacyHideStreetNo((space as any).privacy_hide_street_no ?? true);
+      setPrivacyMapBlur((space as any).privacy_map_blur ?? true);
     }
   }, [space, reset]);
 
@@ -313,23 +313,23 @@ export default function SpaceDetail() {
   }
 
   if (!isNew && isLoading) {
-    return <Layout><PageHeader title={t("common.loading")} /><div className="p-6 text-sm text-muted-foreground">Loading...</div></Layout>;
+    return <Layout><PageHeader title={t("common.loading")} /><div className="p-6 text-sm text-muted-foreground">{t("common.loading")}</div></Layout>;
   }
 
   return (
     <Layout>
       <PageHeader
         title={isNew ? `${t("common.new")} ${t("nav.space")}` : (space?.name ?? t("nav.space"))}
-        subtitle={!isNew ? `ID: ${id}` : "Create a new rental space"}
+        subtitle={!isNew ? `ID: ${id}` : t("space.subtitle_new")}
         actions={
           <div className="flex items-center gap-2">
             <Link href="/property/spaces">
               <Button variant="outline" size="sm" className="gap-1.5">
-                <ArrowLeft className="h-4 w-4" /> Back
+                <ArrowLeft className="h-4 w-4" /> {t("common.back")}
               </Button>
             </Link>
             <Button size="sm" className="gap-1.5" onClick={handleSubmit(onSubmit)} disabled={createMutation.isPending || updateMutation.isPending}>
-              <Save className="h-4 w-4" /> Save
+              <Save className="h-4 w-4" /> {t("common.save")}
             </Button>
           </div>
         }
@@ -338,16 +338,16 @@ export default function SpaceDetail() {
       <div className="p-6">
         <Tabs defaultValue="details" onValueChange={(v) => { if (v === "services") loadSpaceServices(); }}>
           <TabsList className="mb-5 flex-wrap h-auto gap-1">
-            <TabsTrigger value="details">Details</TabsTrigger>
-            {!isNew && <TabsTrigger value="availability">Availability</TabsTrigger>}
+            <TabsTrigger value="details">{t("space.tab_details")}</TabsTrigger>
+            {!isNew && <TabsTrigger value="availability">{t("space.tab_availability")}</TabsTrigger>}
             {!isNew && (
               <TabsTrigger value="photos" className="gap-1.5">
-                <Images className="h-3.5 w-3.5" /> Photos
+                <Images className="h-3.5 w-3.5" /> {t("space.tab_photos")}
               </TabsTrigger>
             )}
             {!isNew && (
               <TabsTrigger value="services" className="gap-1.5">
-                <PackagePlus className="h-3.5 w-3.5" /> Services
+                <PackagePlus className="h-3.5 w-3.5" /> {t("space.tab_services")}
               </TabsTrigger>
             )}
           </TabsList>
@@ -357,20 +357,20 @@ export default function SpaceDetail() {
 
               {/* ① GENERAL — 기본 정보 */}
               <div className="col-span-2 bg-card rounded-lg border p-5 flex flex-col gap-4">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">General</h3>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">{t("space.section_general")}</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="col-span-2 flex flex-col gap-1.5">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Name <span className="text-destructive">*</span>
+                      {t("space.label_name")} <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       {...register("name", { required: true })}
-                      placeholder="Space name"
+                      placeholder={t("space.placeholder_name")}
                       className={errors.name ? "border-destructive" : ""}
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Status</Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_status")}</Label>
                     <Controller
                       name="status"
                       control={control}
@@ -400,24 +400,24 @@ export default function SpaceDetail() {
                         />
                       )}
                     />
-                    <Label htmlFor="manual_input" className="font-normal cursor-pointer text-sm">Manual Input</Label>
+                    <Label htmlFor="manual_input" className="font-normal cursor-pointer text-sm">{t("space.label_manual_input")}</Label>
                   </div>
                 </div>
               </div>
 
               {/* ② MAIN — 매물 유형 및 설정 */}
               <div className="col-span-2 bg-card rounded-lg border p-5 flex flex-col gap-4">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Space Settings</h3>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">{t("space.section_settings")}</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Space Type</Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_space_type")}</Label>
                     <Controller
                       name="space_type"
                       control={control}
                       render={({ field }) => (
                         <Select value={field.value || ""} onValueChange={field.onChange}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select type" />
+                            <SelectValue placeholder={t("space.placeholder_type")} />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="Private Room">Private Room</SelectItem>
@@ -431,19 +431,19 @@ export default function SpaceDetail() {
                   </div>
                   {watchedSpaceType === "Other" && (
                     <div className="flex flex-col gap-1.5">
-                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Custom Type Name</Label>
-                      <Input {...register("custom_type_name")} placeholder="Custom space type" />
+                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_custom_type")}</Label>
+                      <Input {...register("custom_type_name")} placeholder={t("space.placeholder_custom_type")} />
                     </div>
                   )}
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Booking Mode</Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_booking_mode")}</Label>
                     <Controller
                       name="booking_mode"
                       control={control}
                       render={({ field }) => (
                         <Select value={field.value || ""} onValueChange={field.onChange}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select mode" />
+                            <SelectValue placeholder={t("space.placeholder_booking_mode")} />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="Instant">Instant</SelectItem>
@@ -455,12 +455,12 @@ export default function SpaceDetail() {
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Max Occupancy</Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_max_occupancy")}</Label>
                     <Input {...register("max_occupancy")} type="number" min={1} placeholder="e.g. 2" />
                   </div>
                   <div className="col-span-2">
                     <MultiLookupField
-                      label="Space Options / Amenities"
+                      label={t("space.label_amenities")}
                       values={optionIds}
                       displayTexts={optionNames}
                       onSelect={(id, label) => {
@@ -474,98 +474,99 @@ export default function SpaceDetail() {
                       }}
                       options={optionLookupOptions}
                       onSearch={setOptionSearch}
-                      searchPlaceholder="Search space options..."
+                      searchPlaceholder={t("space.placeholder_amenities")}
                     />
                   </div>
                   <div className="col-span-2 flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Description</Label>
-                    <Textarea {...register("description")} rows={4} placeholder="Describe the space — layout, furnishings, highlights..." />
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_description")}</Label>
+                    <Textarea {...register("description")} rows={4} placeholder={t("space.placeholder_description")} />
                   </div>
                 </div>
               </div>
 
               {/* ③ PROPERTY & PARENT SPACE — 나란히 */}
               <div className="bg-card rounded-lg border p-5 flex flex-col gap-4">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Property</h3>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">{t("space.section_property")}</h3>
                 <LookupField
-                  label="Property"
+                  label={t("space.label_property")}
                   value={propertyId}
                   displayText={propertyName}
                   onSelect={(id, label) => { setPropertyId(id); setPropertyName(label); }}
                   onClear={() => { setPropertyId(null); setPropertyName(null); }}
                   options={propertyOptions}
                   onSearch={setPropertySearch}
-                  searchPlaceholder="Search properties..."
+                  searchPlaceholder={t("space.placeholder_property")}
                 />
               </div>
 
               <div className="bg-card rounded-lg border p-5 flex flex-col gap-4">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Parent Space</h3>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">{t("space.section_parent_space")}</h3>
                 <LookupField
-                  label="Parent Space"
+                  label={t("space.label_parent_space")}
                   value={parentSpaceId}
                   displayText={parentSpaceName}
                   onSelect={(id, label) => { setParentSpaceId(id); setParentSpaceName(label); }}
                   onClear={() => { setParentSpaceId(null); setParentSpaceName(null); }}
                   options={spaceOptions2}
                   onSearch={setParentSpaceSearch}
-                  searchPlaceholder="Search spaces..."
+                  searchPlaceholder={t("space.placeholder_parent_space")}
                 />
               </div>
 
+
               {/* ④ PRICING & POLICY — 나란히 */}
               <div className="bg-card rounded-lg border p-5 flex flex-col gap-4">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Pricing</h3>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">{t("space.section_pricing")}</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Weekly Price</Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_weekly_price")}</Label>
                     <Input {...register("base_weekly_price")} type="number" step="0.01" min={0} placeholder="0.00" />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Daily Price</Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_daily_price")}</Label>
                     <Input {...register("base_daily_price")} type="number" step="5" min={0} placeholder="0.00" />
-                    <p className="text-xs text-muted-foreground">Auto: Weekly ÷ 2, rounded to $5</p>
+                    <p className="text-xs text-muted-foreground">{t("space.desc_daily_price")}</p>
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Currency</Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_currency")}</Label>
                     <Input {...register("base_currency")} placeholder="AUD" maxLength={3} />
                   </div>
                 </div>
               </div>
 
               <div className="bg-card rounded-lg border p-5 flex flex-col gap-4">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Policy</h3>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">{t("space.section_policy")}</h3>
                 <LookupField
-                  label="Space Policy"
+                  label={t("space.label_policy")}
                   value={policyId}
                   displayText={policyName}
                   onSelect={(id, label) => { setPolicyId(id); setPolicyName(label); }}
                   onClear={() => { setPolicyId(null); setPolicyName(null); }}
                   options={policyOptions}
                   onSearch={setPolicySearch}
-                  searchPlaceholder="Search policies..."
+                  searchPlaceholder={t("space.placeholder_policy")}
                 />
               </div>
 
               {/* ⑤ PHYSICAL DETAILS & ACCOUNTS — 나란히 */}
               <div className="bg-card rounded-lg border p-5 flex flex-col gap-4">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Physical Details</h3>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">{t("space.section_location")}</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Floor Number</Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_floor_number")}</Label>
                     <Input {...register("floor_number")} type="number" placeholder="e.g. 3" />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Floor Area (sqm)</Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_floor_area")}</Label>
                     <Input {...register("floor_area_sqm")} type="number" step="0.1" placeholder="e.g. 25.5" />
                   </div>
                 </div>
               </div>
 
               <div className="bg-card rounded-lg border p-5 flex flex-col gap-4">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Accounts</h3>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">{t("space.section_accounts")}</h3>
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Landlord Account ID</Label>
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_landlord_account")}</Label>
                   <Input {...register("landlord_account_id")} type="number" placeholder="Account ID" />
                 </div>
               </div>
@@ -573,28 +574,28 @@ export default function SpaceDetail() {
               {/* ⑥ PRIVACY — 전체 너비 */}
               <div className="col-span-2 bg-card rounded-lg border p-5 flex flex-col gap-3">
                 <div className="border-b pb-2">
-                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Privacy</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Controls what address &amp; location information is shown to the public.</p>
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("space.section_privacy")}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">{t("space.desc_privacy")}</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
                   <div className="flex items-start justify-between gap-4 rounded-lg bg-muted/40 border px-4 py-3">
                     <div>
-                      <p className="text-sm font-medium leading-tight">Hide Unit / Apt No.</p>
-                      <p className="text-xs text-muted-foreground mt-1">"1/285 La Trobe" → "285 La Trobe St"</p>
+                      <p className="text-sm font-medium leading-tight">{t("space.label_hide_unit")}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{t("space.desc_hide_unit")}</p>
                     </div>
                     <Switch checked={privacyHideUnitNo} onCheckedChange={setPrivacyHideUnitNo} className="shrink-0 mt-0.5" />
                   </div>
                   <div className="flex items-start justify-between gap-4 rounded-lg bg-muted/40 border px-4 py-3">
                     <div>
-                      <p className="text-sm font-medium leading-tight">Hide Street Number</p>
-                      <p className="text-xs text-muted-foreground mt-1">"285 La Trobe" → "La Trobe St"</p>
+                      <p className="text-sm font-medium leading-tight">{t("space.label_hide_street")}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{t("space.desc_hide_street")}</p>
                     </div>
                     <Switch checked={privacyHideStreetNo} onCheckedChange={setPrivacyHideStreetNo} className="shrink-0 mt-0.5" />
                   </div>
                   <div className="flex items-start justify-between gap-4 rounded-lg bg-muted/40 border px-4 py-3">
                     <div>
-                      <p className="text-sm font-medium leading-tight">Blur Map Location</p>
-                      <p className="text-xs text-muted-foreground mt-1">Shows ~35 m offset with area circle</p>
+                      <p className="text-sm font-medium leading-tight">{t("space.label_map_blur")}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{t("space.desc_map_blur")}</p>
                     </div>
                     <Switch checked={privacyMapBlur} onCheckedChange={setPrivacyMapBlur} className="shrink-0 mt-0.5" />
                   </div>
@@ -603,9 +604,9 @@ export default function SpaceDetail() {
 
               {/* ⑦ OTA SYNC — 하단 고급 설정 */}
               <div className="col-span-2 bg-card rounded-lg border p-5 flex flex-col gap-4">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">OTA Sync</h3>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">{t("space.section_external")}</h3>
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">iCal Import URL</Label>
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_ical_url")}</Label>
                   <Input {...register("ical_import_url")} type="url" placeholder="https://..." />
                 </div>
               </div>
@@ -651,7 +652,7 @@ export default function SpaceDetail() {
                     <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-primary/20 border border-primary/50 inline-block"></span>Selected</span>
                   </div>
                   <div className="grid grid-cols-7 gap-1.5">
-                    {availability?.data?.calendar?.map((day) => {
+                    {Array.isArray(availability) ? availability.map((day: any) => {
                       const isSelected = selectedDates.includes(day.date);
                       const isBlocked = !day.is_available;
                       return (
@@ -672,10 +673,9 @@ export default function SpaceDetail() {
                           <span className="text-[10px] opacity-70">{format(parseISO(day.date), "MMM")}</span>
                         </button>
                       );
-                    })}
-                    {!availability?.data?.calendar?.length && (
+                    }) : (
                       <div className="col-span-7 py-8 text-center text-sm text-muted-foreground">
-                        Loading availability...
+                        {t("common.loading")}
                       </div>
                     )}
                   </div>

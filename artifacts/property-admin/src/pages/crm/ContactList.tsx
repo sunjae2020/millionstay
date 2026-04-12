@@ -43,10 +43,10 @@ export default function ContactList() {
     <Layout>
       <PageHeader
         title={t("nav.contact")}
-        subtitle={`${contacts?.length ?? 0} total`}
+        subtitle={`${contacts?.length ?? 0} ${t("common.total")}`}
         actions={
           <Link href="/crm/contacts/new">
-            <Button size="sm" className="gap-1.5"><Plus className="h-4 w-4" /> New Contact</Button>
+            <Button size="sm" className="gap-1.5"><Plus className="h-4 w-4" /> {t("contact.new")}</Button>
           </Link>
         }
       />
@@ -54,33 +54,33 @@ export default function ContactList() {
         <div className="flex items-center gap-3 mb-5">
           <div className="relative flex-1 max-w-xs">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input placeholder="Search contacts…" className="pl-8 h-8 text-sm" value={search}
+            <Input placeholder={t("contact.search_placeholder")} className="pl-8 h-8 text-sm" value={search}
               onChange={(e) => setSearch(e.target.value)} />
           </div>
           <Select value={statusFilter || "__all"} onValueChange={(v) => setStatusFilter(v === "__all" ? "" : v)}>
-            <SelectTrigger className="h-8 w-36 text-sm"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectTrigger className="h-8 w-36 text-sm"><SelectValue placeholder={t("common.status")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="__all">All statuses</SelectItem>
-              <SelectItem value="Active">Active</SelectItem>
-              <SelectItem value="Inactive">Inactive</SelectItem>
+              <SelectItem value="__all">{t("contact.all_statuses")}</SelectItem>
+              <SelectItem value="Active">{t("common.active")}</SelectItem>
+              <SelectItem value="Inactive">{t("common.inactive")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
         ) : (
           <div className="rounded-lg border overflow-hidden">
             <div className="overflow-x-auto">
             <table className="w-full min-w-max text-sm">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Name</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Email</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Mobile</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Nationality</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Portal</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Status</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("contact.col_name")}</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("contact.col_email")}</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("contact.col_mobile")}</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("contact.col_nationality")}</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("contact.col_portal")}</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("contact.col_status")}</th>
                   <th className="px-4 py-2.5"></th>
                 </tr>
               </thead>
@@ -98,8 +98,8 @@ export default function ContactList() {
                     <td className="px-4 py-2.5 text-muted-foreground">{c.nationality ?? "—"}</td>
                     <td className="px-4 py-2.5">
                       {c.portal_enabled
-                        ? <Badge variant="outline" className="gap-1 text-green-700 border-green-300"><Globe className="h-3 w-3" />On</Badge>
-                        : <span className="text-xs text-muted-foreground">Off</span>}
+                        ? <Badge variant="outline" className="gap-1 text-green-700 border-green-300"><Globe className="h-3 w-3" />{t("contact.portal_on")}</Badge>
+                        : <span className="text-xs text-muted-foreground">{t("contact.portal_off")}</span>}
                     </td>
                     <td className="px-4 py-2.5"><StatusBadge status={c.status} /></td>
                     <td className="px-4 py-2.5">
@@ -116,7 +116,7 @@ export default function ContactList() {
                   </tr>
                 ))}
                 {(!contacts || contacts.length === 0) && (
-                  <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No contacts found</td></tr>
+                  <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">{t("contact.no_contacts")}</td></tr>
                 )}
               </tbody>
             </table>
@@ -129,14 +129,14 @@ export default function ContactList() {
       <AlertDialog open={deleteId !== null} onOpenChange={(o) => !o && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Contact?</AlertDialogTitle>
-            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+            <AlertDialogTitle>{t("contact.delete_title")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("common.cannot_undo")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => deleteId && deleteMutation.mutate({ id: deleteId })}>
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

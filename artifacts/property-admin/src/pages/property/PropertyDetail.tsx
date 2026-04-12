@@ -58,11 +58,11 @@ export default function PropertyDetail() {
   );
   const { data: spaces } = useListSpaces(
     { property_id: id ?? undefined },
-    { query: { enabled: !isNew && !!id } }
+    { query: { enabled: !isNew && !!id, queryKey: ["list-spaces", id] } }
   );
   const { data: suburbs } = useListSuburbs(
     { search: suburbSearch || undefined },
-    { query: { enabled: true } }
+    { query: { enabled: true, queryKey: ["list-suburbs", suburbSearch] } }
   );
 
   const suburbOptions: LookupOption[] = (suburbs ?? []).map((s) => ({
@@ -185,7 +185,7 @@ export default function PropertyDetail() {
     return (
       <Layout>
         <PageHeader title={t("common.loading")} />
-        <div className="p-6 text-muted-foreground text-sm">Loading property...</div>
+        <div className="p-6 text-muted-foreground text-sm">{t("common.loading")}</div>
       </Layout>
     );
   }
@@ -201,7 +201,7 @@ export default function PropertyDetail() {
             ID: {id}
             {property && <StatusBadge status={property.approval_status} />}
           </span>
-        ) as unknown as string : "Create a new property listing"}
+        ) as unknown as string : t("property.subtitle_new")}
         actions={
           <div className="flex items-center gap-2">
             {!isNew && isPending && (
@@ -212,16 +212,16 @@ export default function PropertyDetail() {
                 onClick={() => id && statusMutation.mutate({ id, data: { approval_status: "Active" } })}
                 disabled={statusMutation.isPending}
               >
-                <CheckCircle className="h-4 w-4" /> Approve
+                <CheckCircle className="h-4 w-4" /> {t("common.approve")}
               </Button>
             )}
             <Link href="/property/properties">
               <Button variant="outline" size="sm" className="gap-1.5">
-                <ArrowLeft className="h-4 w-4" /> Back
+                <ArrowLeft className="h-4 w-4" /> {t("common.back")}
               </Button>
             </Link>
             <Button size="sm" className="gap-1.5" onClick={handleSubmit(onSubmit)} disabled={createMutation.isPending || updateMutation.isPending}>
-              <Save className="h-4 w-4" /> Save
+              <Save className="h-4 w-4" /> {t("common.save")}
             </Button>
           </div>
         }
@@ -230,8 +230,8 @@ export default function PropertyDetail() {
       <div className="p-6">
         <Tabs defaultValue="details">
           <TabsList className="mb-5">
-            <TabsTrigger value="details">Details</TabsTrigger>
-            {!isNew && <TabsTrigger value="spaces">Spaces ({spaces?.length ?? 0})</TabsTrigger>}
+            <TabsTrigger value="details">{t("property.tab_details")}</TabsTrigger>
+            {!isNew && <TabsTrigger value="spaces">{t("property.tab_spaces")} ({spaces?.length ?? 0})</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="details">
@@ -240,43 +240,43 @@ export default function PropertyDetail() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="col-span-2 flex flex-col gap-1.5">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Name <span className="text-destructive">*</span>
+                      {t("property.label_name")} <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       {...register("name", { required: true })}
-                      placeholder="Property name"
+                      placeholder={t("property.placeholder_name")}
                       className={errors.name ? "border-destructive" : ""}
                     />
                   </div>
                   <div className="col-span-2 flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Address Line 1</Label>
-                    <Input {...register("address")} placeholder="Street address" />
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("property.label_address")}</Label>
+                    <Input {...register("address")} placeholder={t("property.placeholder_address")} />
                   </div>
                   <div className="col-span-2 flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Address Line 2</Label>
-                    <Input {...register("address2")} placeholder="Unit, floor, suite..." />
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("property.label_address2")}</Label>
+                    <Input {...register("address2")} placeholder={t("property.placeholder_address2")} />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">City</Label>
-                    <Input {...register("city")} placeholder="City" />
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("property.label_city")}</Label>
+                    <Input {...register("city")} placeholder={t("property.label_city")} />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">State</Label>
-                    <Input {...register("state")} placeholder="State" />
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("property.label_state")}</Label>
+                    <Input {...register("state")} placeholder={t("property.label_state")} />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Postcode</Label>
-                    <Input {...register("postcode")} placeholder="Postcode" />
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("property.label_postcode")}</Label>
+                    <Input {...register("postcode")} placeholder={t("property.label_postcode")} />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Country Code</Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("property.label_country")}</Label>
                     <Controller
                       name="country_code"
                       control={control}
                       render={({ field }) => (
                         <Select value={field.value || ""} onValueChange={field.onChange}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select country" />
+                            <SelectValue placeholder={t("property.placeholder_country")} />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="AU">AU — Australia</SelectItem>
@@ -290,7 +290,7 @@ export default function PropertyDetail() {
                   </div>
                   <div className="col-span-2 flex flex-col gap-1.5">
                     <div className="flex items-center justify-between">
-                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Coordinates (Lat / Lng)</Label>
+                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("property.label_coords")}</Label>
                       <Button
                         type="button"
                         size="sm"
@@ -300,8 +300,8 @@ export default function PropertyDetail() {
                         disabled={detectingCoords}
                       >
                         {detectingCoords
-                          ? <><Loader2 className="h-3 w-3 animate-spin" />Detecting...</>
-                          : <><MapPin className="h-3 w-3" />Auto-detect</>
+                          ? <><Loader2 className="h-3 w-3 animate-spin" />{t("property.btn_detecting")}</>
+                          : <><MapPin className="h-3 w-3" />{t("property.btn_autodetect")}</>
                         }
                       </Button>
                     </div>
@@ -316,19 +316,19 @@ export default function PropertyDetail() {
 
                   <div className="col-span-2">
                     <LookupField
-                      label="Suburb"
+                      label={t("property.label_suburb")}
                       value={suburbId}
                       displayText={suburbName}
                       onSelect={(id, label) => { setSuburbId(id); setSuburbName(label); }}
                       onClear={() => { setSuburbId(null); setSuburbName(null); }}
                       options={suburbOptions}
                       onSearch={setSuburbSearch}
-                      searchPlaceholder="Search suburbs..."
+                      searchPlaceholder={t("property.placeholder_suburb")}
                     />
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Approval Status</Label>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("property.label_approval_status")}</Label>
                     <Controller
                       name="approval_status"
                       control={control}
@@ -349,8 +349,8 @@ export default function PropertyDetail() {
                   </div>
 
                   <div className="col-span-2 flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Description</Label>
-                    <Textarea {...register("description")} placeholder="Property description..." rows={4} />
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("property.label_description")}</Label>
+                    <Textarea {...register("description")} placeholder={t("property.placeholder_description")} rows={4} />
                   </div>
                 </div>
               </form>
@@ -363,16 +363,16 @@ export default function PropertyDetail() {
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50 border-b">
                     <tr>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Name</th>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Type</th>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Booking Mode</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("property.col_space_name")}</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("property.col_space_type")}</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("property.col_space_status")}</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("property.col_space_booking")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
                     {!spaces?.length ? (
                       <tr>
-                        <td colSpan={4} className="px-4 py-6 text-center text-muted-foreground text-sm">No spaces linked to this property</td>
+                        <td colSpan={4} className="px-4 py-6 text-center text-muted-foreground text-sm">{t("property.no_spaces")}</td>
                       </tr>
                     ) : (
                       spaces.map((space) => (

@@ -35,18 +35,18 @@ export default function InvoiceList() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">{t("nav.invoice")}</h1>
-            <p className="text-sm text-muted-foreground">{invoicesRaw.length} total</p>
+            <p className="text-sm text-muted-foreground">{invoicesRaw.length} {t("common.total")}</p>
           </div>
           <Button onClick={() => navigate("/finance/invoices/new")}>
             <Plus className="h-4 w-4 mr-1" />
-            New Invoice
+            {t("invoice.new")}
           </Button>
         </div>
 
         <div className="flex gap-3 mb-4">
           <div className="relative flex-1 max-w-sm">
             <Input
-              placeholder="Search invoice ref..."
+              placeholder={t("invoice.search_placeholder")}
               value={q}
               onChange={(e) => setQ(e.target.value)}
               className="pl-4"
@@ -57,11 +57,11 @@ export default function InvoiceList() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All statuses</SelectItem>
-              <SelectItem value="Draft">Draft</SelectItem>
-              <SelectItem value="Sent">Sent</SelectItem>
-              <SelectItem value="Paid">Paid</SelectItem>
-              <SelectItem value="Void">Void</SelectItem>
+              <SelectItem value="_all">{t("invoice.all_statuses")}</SelectItem>
+              <SelectItem value="Draft">{t("invoice.status_draft")}</SelectItem>
+              <SelectItem value="Sent">{t("invoice.status_sent")}</SelectItem>
+              <SelectItem value="Paid">{t("invoice.status_paid")}</SelectItem>
+              <SelectItem value="Void">{t("invoice.status_void")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -71,13 +71,13 @@ export default function InvoiceList() {
           <table className="w-full min-w-max text-sm">
             <thead className="border-b bg-muted/30">
               <tr>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Invoice Ref</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Booking</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Contract</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Account</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Amount</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Due Date</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("invoice.col_ref")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("invoice.col_booking")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("invoice.col_contract")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("invoice.col_account")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("invoice.col_amount")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("invoice.col_due_date")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("invoice.col_status")}</th>
               </tr>
             </thead>
             <tbody>
@@ -97,14 +97,14 @@ export default function InvoiceList() {
                   <td className="px-4 py-3 text-muted-foreground">{inv.due_date ?? "—"}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusColors[inv.status] ?? "bg-gray-100 text-gray-600"}`}>
-                      {inv.status}
+                      {t(`invoice.status_${inv.status.toLowerCase()}`)}
                     </span>
                   </td>
                 </tr>
               ))}
               {invoicesRaw.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No invoices found</td>
+                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">{t("invoice.no_invoices")}</td>
                 </tr>
               )}
             </tbody>

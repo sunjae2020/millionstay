@@ -88,11 +88,11 @@ export default function CsTicketList() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">{t("nav.cs_tickets")}</h1>
-            <p className="text-sm text-gray-500">Guest inquiries and support requests</p>
+            <p className="text-sm text-gray-500">{t("csticket.subtitle")}</p>
           </div>
         </div>
         <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2">
-          <RefreshCw className="h-4 w-4" /> Refresh
+          <RefreshCw className="h-4 w-4" /> {t("csticket.refresh")}
         </Button>
       </div>
 
@@ -107,7 +107,7 @@ export default function CsTicketList() {
               className={`bg-white rounded-xl border p-3 text-left transition-all ${status === s ? "border-primary shadow-sm" : "border-gray-100 hover:border-gray-200"}`}
             >
               <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium mb-1.5 ${cfg.color}`}>
-                {cfg.icon}{cfg.label}
+                {cfg.icon}{t(`csticket.summary_${s.toLowerCase() === "inprogress" ? "in_progress" : s.toLowerCase()}` as any)}
               </div>
               <p className="text-2xl font-bold text-gray-900">{statusCounts[s] ?? 0}</p>
             </button>
@@ -120,7 +120,7 @@ export default function CsTicketList() {
         <div className="relative flex-1 min-w-48">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="Search by ref or subject…"
+            placeholder={t("csticket.search_placeholder")}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="pl-9"
@@ -129,13 +129,13 @@ export default function CsTicketList() {
         <Select value={status} onValueChange={setStatus}>
           <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
           <SelectContent>
-            {STATUSES.map(s => <SelectItem key={s} value={s}>{s === "All" ? "All Statuses" : STATUS_CONFIG[s]?.label ?? s}</SelectItem>)}
+            {STATUSES.map(s => <SelectItem key={s} value={s}>{s === "All" ? t("csticket.all_statuses") : t(`csticket.status_${s.toLowerCase() === "inprogress" ? "in_progress" : s.toLowerCase()}` as any)}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={category} onValueChange={setCategory}>
           <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
           <SelectContent>
-            {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c === "All" ? "All Categories" : c}</SelectItem>)}
+            {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c === "All" ? t("csticket.all_categories") : c}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
@@ -149,20 +149,20 @@ export default function CsTicketList() {
         ) : tickets.length === 0 ? (
           <div className="p-12 text-center">
             <HeadphonesIcon className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 font-medium">No tickets found</p>
+            <p className="text-gray-500 font-medium">{t("csticket.no_tickets")}</p>
             <p className="text-gray-400 text-sm mt-1">Try adjusting filters</p>
           </div>
         ) : (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50/50">
-                <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Ref</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Subject</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden sm:table-cell">Guest</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden md:table-cell">Category</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Status</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden lg:table-cell">Priority</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden md:table-cell">Updated</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">{t("csticket.col_ref")}</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">{t("csticket.col_subject")}</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden sm:table-cell">{t("csticket.col_guest")}</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden md:table-cell">{t("csticket.col_category")}</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">{t("csticket.col_status")}</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden lg:table-cell">{t("csticket.col_priority")}</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden md:table-cell">{t("csticket.col_created")}</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -174,7 +174,7 @@ export default function CsTicketList() {
                     <td className="px-4 py-3 font-mono text-xs text-gray-400">{ticket.ticket_ref}</td>
                     <td className="px-4 py-3">
                       <p className="font-medium text-gray-900 max-w-xs truncate">{ticket.subject}</p>
-                      {ticket.booking_ref && <p className="text-xs text-gray-400 mt-0.5">Booking: {ticket.booking_ref}</p>}
+                      {ticket.booking_ref && <p className="text-xs text-gray-400 mt-0.5">{t("csticket.col_booking")}: {ticket.booking_ref}</p>}
                     </td>
                     <td className="px-4 py-3 hidden sm:table-cell">
                       <p className="text-gray-700 text-xs">{ticket.guest_name ?? "—"}</p>
@@ -187,12 +187,12 @@ export default function CsTicketList() {
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${st.color}`}>
-                        {st.icon}{st.label}
+                        {st.icon}{t(`csticket.status_${ticket.status.toLowerCase() === "inprogress" ? "in_progress" : ticket.status.toLowerCase()}` as any)}
                       </span>
                     </td>
                     <td className="px-4 py-3 hidden lg:table-cell">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${PRIORITY_COLORS[ticket.priority] ?? ""}`}>
-                        {ticket.priority}
+                        {t(`csticket.priority_${ticket.priority.toLowerCase()}` as any)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-xs text-gray-400 hidden md:table-cell">

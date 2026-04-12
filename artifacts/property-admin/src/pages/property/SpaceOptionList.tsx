@@ -51,11 +51,11 @@ export default function SpaceOptionList() {
     <Layout>
       <PageHeader
         title={t("nav.space_options")}
-        subtitle={`${options?.length ?? 0} total`}
+        subtitle={`${options?.length ?? 0} ${t("common.total")}`}
         actions={
           <Link href="/property/space-options/new">
             <Button size="sm" className="gap-1.5">
-              <Plus className="h-4 w-4" /> New Option
+              <Plus className="h-4 w-4" /> {t("space_option.new") || `${t("common.new")} ${t("nav.space_option")}`}
             </Button>
           </Link>
         }
@@ -65,7 +65,7 @@ export default function SpaceOptionList() {
           <div className="relative flex-1 max-w-xs">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
-              placeholder="Search options..."
+              placeholder={t("space_option.search_placeholder") || t("common.search")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-8 h-8 text-sm"
@@ -78,22 +78,22 @@ export default function SpaceOptionList() {
           <table className="w-full min-w-max text-sm">
             <thead className="bg-muted/50 border-b">
               <tr>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Name</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Display Name</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Category</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Created On</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_option.col_name")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_option.col_display_name")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_option.col_category")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_option.col_status")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_option.col_created")}</th>
                 <th className="px-4 py-3 w-20"></th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-sm">Loading...</td>
+                  <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("common.loading")}</td>
                 </tr>
               ) : options?.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-sm">No space options found</td>
+                  <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("space_option.no_records") || "No space options found"}</td>
                 </tr>
               ) : (
                 pagination.paginatedItems.map((opt) => (
@@ -135,18 +135,18 @@ export default function SpaceOptionList() {
       <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Space Option</AlertDialogTitle>
+            <AlertDialogTitle>{t("space_option.delete_title") || t("common.delete")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this space option?
+              {t("space_option.delete_desc") || t("common.cannot_undo")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => deleteId && deleteMutation.mutate({ id: deleteId })}
             >
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

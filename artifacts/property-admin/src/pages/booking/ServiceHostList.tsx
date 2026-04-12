@@ -39,10 +39,10 @@ export default function ServiceHostList() {
     <Layout>
       <PageHeader
         title={t("nav.service_host")}
-        subtitle={`${hosts?.length ?? 0} total`}
+        subtitle={`${hosts?.length ?? 0} ${t("common.total")}`}
         actions={
           <Link href="/booking/service-hosts/new">
-            <Button><Plus className="w-4 h-4 mr-1" /> New Service Host</Button>
+            <Button><Plus className="w-4 h-4 mr-1" /> {t("common.new")} {t("nav.service_host")}</Button>
           </Link>
         }
       />
@@ -50,7 +50,7 @@ export default function ServiceHostList() {
         <div className="flex gap-3">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder="Search service hosts..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Input className="pl-9" placeholder={t("service_host.search_placeholder")} value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
         </div>
         <div className="rounded-lg border bg-white overflow-hidden">
@@ -58,16 +58,16 @@ export default function ServiceHostList() {
           <table className="w-full min-w-max text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
-                {["Name", "Account", "Service Type", "Period", "Status", ""].map((h) => (
+                {[t("service_host.col_name"), t("service_host.col_account"), t("service_host.col_type"), t("service_host.col_period"), t("service_host.col_status"), ""].map((h) => (
                   <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
-                <tr><td colSpan={6} className="text-center py-12 text-muted-foreground">Loading...</td></tr>
+                <tr><td colSpan={6} className="text-center py-12 text-muted-foreground">{t("common.loading")}</td></tr>
               ) : !hosts?.length ? (
-                <tr><td colSpan={6} className="text-center py-12 text-muted-foreground">No service hosts found</td></tr>
+                <tr><td colSpan={6} className="text-center py-12 text-muted-foreground">{t("service_host.no_hosts")}</td></tr>
               ) : pagination.paginatedItems.map((host) => (
                 <tr key={host.id} className="border-b hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3 font-medium">
@@ -76,8 +76,8 @@ export default function ServiceHostList() {
                   <td className="px-4 py-3 text-muted-foreground">{(host as any).account_name ?? "—"}</td>
                   <td className="px-4 py-3 text-muted-foreground">
                     <span className="flex gap-1">
-                      {host.in_call && <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">In-Call</span>}
-                      {host.out_call && <span className="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded-full">Out-Call</span>}
+                      {host.in_call && <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">{t("service_host.in_call")}</span>}
+                      {host.out_call && <span className="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded-full">{t("service_host.out_call")}</span>}
                       {!host.in_call && !host.out_call && "—"}
                     </span>
                   </td>
@@ -86,7 +86,7 @@ export default function ServiceHostList() {
                   </td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${host.status === "Active" ? "bg-green-100 text-green-700 border-green-200" : "bg-gray-100 text-gray-600 border-gray-200"}`}>
-                      {host.status}
+                      {t(`common.${host.status.toLowerCase()}`)}
                     </span>
                   </td>
                   <td className="px-4 py-3">
@@ -110,12 +110,12 @@ export default function ServiceHostList() {
       <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Service Host?</AlertDialogTitle>
-            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+            <AlertDialogTitle>{t("service_host.delete_title")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("common.cannot_undo")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction className="bg-destructive text-white" onClick={() => deleteId && deleteMutation.mutate({ id: deleteId })}>Delete</AlertDialogAction>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-white" onClick={() => deleteId && deleteMutation.mutate({ id: deleteId })}>{t("common.delete")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -54,10 +54,10 @@ export default function AccountList() {
     <Layout>
       <PageHeader
         title={t("nav.account")}
-        subtitle={`${accounts?.length ?? 0} total`}
+        subtitle={`${accounts?.length ?? 0} ${t("common.total")}`}
         actions={
           <Link href="/crm/accounts/new">
-            <Button size="sm" className="gap-1.5"><Plus className="h-4 w-4" /> New Account</Button>
+            <Button size="sm" className="gap-1.5"><Plus className="h-4 w-4" /> {t("account.new")}</Button>
           </Link>
         }
       />
@@ -65,41 +65,41 @@ export default function AccountList() {
         <div className="flex items-center gap-3 mb-5">
           <div className="relative flex-1 max-w-xs">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input placeholder="Search accounts…" className="pl-8 h-8 text-sm" value={search}
+            <Input placeholder={t("account.search_placeholder")} className="pl-8 h-8 text-sm" value={search}
               onChange={(e) => setSearch(e.target.value)} />
           </div>
           <Select value={typeFilter || "__all"} onValueChange={(v) => setTypeFilter(v === "__all" ? "" : v)}>
-            <SelectTrigger className="h-8 w-40 text-sm"><SelectValue placeholder="Account type" /></SelectTrigger>
+            <SelectTrigger className="h-8 w-40 text-sm"><SelectValue placeholder={t("account.account_type")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="__all">All types</SelectItem>
-              {Object.keys(ACCOUNT_TYPE_COLORS).map((t) => (
-                <SelectItem key={t} value={t}>{t}</SelectItem>
+              <SelectItem value="__all">{t("account.all_types")}</SelectItem>
+              {Object.keys(ACCOUNT_TYPE_COLORS).map((item) => (
+                <SelectItem key={item} value={item}>{item}</SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Select value={statusFilter || "__all"} onValueChange={(v) => setStatusFilter(v === "__all" ? "" : v)}>
-            <SelectTrigger className="h-8 w-36 text-sm"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectTrigger className="h-8 w-36 text-sm"><SelectValue placeholder={t("common.status")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="__all">All statuses</SelectItem>
-              <SelectItem value="Active">Active</SelectItem>
-              <SelectItem value="Inactive">Inactive</SelectItem>
+              <SelectItem value="__all">{t("account.all_statuses")}</SelectItem>
+              <SelectItem value="Active">{t("common.active")}</SelectItem>
+              <SelectItem value="Inactive">{t("common.inactive")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
         ) : (
           <div className="rounded-lg border overflow-hidden">
             <div className="overflow-x-auto">
             <table className="w-full min-w-max text-sm">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Name</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Type</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Primary Contact</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Email</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Status</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("account.col_name")}</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("account.col_type")}</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("account.col_primary_contact")}</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("account.col_email")}</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("account.col_status")}</th>
                   <th className="px-4 py-2.5"></th>
                 </tr>
               </thead>
@@ -131,7 +131,7 @@ export default function AccountList() {
                   </tr>
                 ))}
                 {(!accounts || accounts.length === 0) && (
-                  <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No accounts found</td></tr>
+                  <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">{t("account.no_accounts")}</td></tr>
                 )}
               </tbody>
             </table>
@@ -144,14 +144,14 @@ export default function AccountList() {
       <AlertDialog open={deleteId !== null} onOpenChange={(o) => !o && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Account?</AlertDialogTitle>
-            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+            <AlertDialogTitle>{t("account.delete_title")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("common.cannot_undo")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => deleteId && deleteMutation.mutate({ id: deleteId })}>
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

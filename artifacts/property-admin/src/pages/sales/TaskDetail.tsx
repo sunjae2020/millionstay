@@ -136,18 +136,18 @@ export default function TaskDetail() {
         actions={
           <div className="flex gap-2">
             <Link href="/sales/tasks">
-              <Button variant="outline" size="sm" className="gap-1.5"><ArrowLeft className="h-4 w-4" /> Back</Button>
+              <Button variant="outline" size="sm" className="gap-1.5"><ArrowLeft className="h-4 w-4" /> {t("common.back")}</Button>
             </Link>
             {!isNew && task?.task_status !== "Done" && (
               <Button size="sm" variant="outline" className="gap-1.5 text-green-700 border-green-300 hover:bg-green-50"
                 onClick={() => completeMutation.mutate({ id: id! })}
                 disabled={completeMutation.isPending}>
-                <CheckCircle2 className="h-4 w-4" /> Mark Complete
+                <CheckCircle2 className="h-4 w-4" /> {t("task.btn_complete")}
               </Button>
             )}
             <Button size="sm" className="gap-1.5" onClick={handleSubmit(onSubmit)}
               disabled={createMutation.isPending || updateMutation.isPending}>
-              <Save className="h-4 w-4" /> Save
+              <Save className="h-4 w-4" /> {t("common.save")}
             </Button>
           </div>
         }
@@ -156,10 +156,10 @@ export default function TaskDetail() {
         <div className="grid gap-5">
           {/* General */}
           <div className="border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">General</div>
+            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t("task.section_general")}</div>
             <div className="p-4 grid gap-4">
               <div className="grid gap-1.5">
-                <Label>Name *</Label>
+                <Label>{t("task.label_title")} *</Label>
                 <Input {...register("name", { required: true })} placeholder="Task name" />
                 {errors.name && <p className="text-xs text-destructive">Name is required</p>}
               </div>
@@ -172,32 +172,32 @@ export default function TaskDetail() {
 
           {/* Main */}
           <div className="border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Details</div>
+            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t("task.section_details")}</div>
             <div className="p-4 grid gap-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
-                  <Label>Status</Label>
+                  <Label>{t("task.label_status")}</Label>
                   <Controller name="task_status" control={control} render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Todo">Todo</SelectItem>
-                        <SelectItem value="InProgress">In Progress</SelectItem>
-                        <SelectItem value="Done">Done</SelectItem>
-                        <SelectItem value="Cancelled">Cancelled</SelectItem>
+                        <SelectItem value="Todo">{t("task.status_todo")}</SelectItem>
+                        <SelectItem value="InProgress">{t("task.status_in_progress")}</SelectItem>
+                        <SelectItem value="Done">{t("task.status_done")}</SelectItem>
+                        <SelectItem value="Cancelled">{t("task.status_cancelled")}</SelectItem>
                       </SelectContent>
                     </Select>
                   )} />
                 </div>
                 <div className="grid gap-1.5">
-                  <Label>Priority</Label>
+                  <Label>{t("task.label_priority")}</Label>
                   <Controller name="priority" control={control} render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="High">High</SelectItem>
-                        <SelectItem value="Medium">Medium</SelectItem>
-                        <SelectItem value="Low">Low</SelectItem>
+                        <SelectItem value="High">{t("task.priority_high")}</SelectItem>
+                        <SelectItem value="Medium">{t("task.priority_medium")}</SelectItem>
+                        <SelectItem value="Low">{t("task.priority_low")}</SelectItem>
                       </SelectContent>
                     </Select>
                   )} />
@@ -205,7 +205,7 @@ export default function TaskDetail() {
               </div>
 
               <div className="grid gap-1.5">
-                <Label>Category</Label>
+                <Label>{t("task.label_category")}</Label>
                 <Controller name="task_category" control={control} render={({ field }) => (
                   <Select value={field.value || "__none"} onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}>
                     <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
@@ -230,7 +230,7 @@ export default function TaskDetail() {
                 </div>
                 <div className="grid gap-1.5">
                   <Label>
-                    Due Date
+                    {t("task.label_due_date")}
                     {isOverdue && <span className="ml-2 text-xs text-red-600 font-medium">⚠ Overdue</span>}
                   </Label>
                   <Controller name="due_date" control={control} render={({ field }) => (
@@ -247,7 +247,7 @@ export default function TaskDetail() {
             <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Links</div>
             <div className="p-4 grid gap-4">
               <div className="grid gap-1.5">
-                <Label>Primary Contact</Label>
+                <Label>{t("task.label_related_contact")}</Label>
                 <Controller name="primary_contact_id" control={control} render={({ field }) => (
                   <LookupSelect
                     value={field.value}
@@ -258,7 +258,7 @@ export default function TaskDetail() {
                 )} />
               </div>
               <div className="grid gap-1.5">
-                <Label>Secondary Contact</Label>
+                <Label>{t("task.label_related_contact")} (Secondary)</Label>
                 <Controller name="secondary_contact_id" control={control} render={({ field }) => (
                   <LookupSelect
                     value={field.value}
@@ -269,7 +269,7 @@ export default function TaskDetail() {
                 )} />
               </div>
               <div className="grid gap-1.5">
-                <Label>Account</Label>
+                <Label>{t("account.account_type")}</Label>
                 <Controller name="account_id" control={control} render={({ field }) => (
                   <LookupSelect
                     value={field.value}
@@ -284,7 +284,7 @@ export default function TaskDetail() {
 
           {/* Description */}
           <div className="border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Description</div>
+            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t("task.label_notes")}</div>
             <div className="p-4">
               <Textarea {...register("description")} placeholder="Task notes…" rows={4} />
             </div>

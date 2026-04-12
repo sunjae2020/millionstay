@@ -200,11 +200,15 @@ export default function LeadDetail() {
             {!isNew && lead && <LeadStatusBadge status={lead.lead_status} />}
           </span>
         }
-        subtitle={!isNew && lead ? lead.lead_ref : undefined}
+        subtitle={!isNew && lead ? (
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">{t("lead.label_ref")}:</span> {lead.lead_ref}
+          </div>
+        ) : undefined}
         actions={
           <div className="flex gap-2">
             <Link href="/sales/leads">
-              <Button variant="outline" size="sm" className="gap-1.5"><ArrowLeft className="h-4 w-4" /> Back</Button>
+              <Button variant="outline" size="sm" className="gap-1.5"><ArrowLeft className="h-4 w-4" /> {t("common.back")}</Button>
             </Link>
             {canMarkLost && (
               <Button size="sm" variant="outline" className="gap-1.5 text-red-600 border-red-300 hover:bg-red-50"
@@ -216,12 +220,12 @@ export default function LeadDetail() {
             {canConvert && (
               <Button size="sm" variant="outline" className="gap-1.5 text-green-700 border-green-300 hover:bg-green-50"
                 onClick={() => setConvertOpen(true)}>
-                <ArrowUpRight className="h-4 w-4" /> Convert to Booking
+                <ArrowUpRight className="h-4 w-4" /> {t("lead.btn_convert")}
               </Button>
             )}
             <Button size="sm" className="gap-1.5" onClick={handleSubmit(onSubmit)}
               disabled={createMutation.isPending || updateMutation.isPending}>
-              <Save className="h-4 w-4" /> Save
+              <Save className="h-4 w-4" /> {t("common.save")}
             </Button>
           </div>
         }
@@ -230,28 +234,28 @@ export default function LeadDetail() {
         <div className="grid gap-5">
           {/* General */}
           <div className="border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">General</div>
+            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t("lead.section_general")}</div>
             <div className="p-4 grid gap-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
-                  <Label>First Name *</Label>
+                  <Label>{t("lead.label_first_name")} *</Label>
                   <Input {...register("first_name", { required: true })} placeholder="First name" />
                   {errors.first_name && <p className="text-xs text-destructive">Required</p>}
                 </div>
                 <div className="grid gap-1.5">
-                  <Label>Last Name *</Label>
+                  <Label>{t("lead.label_last_name")} *</Label>
                   <Input {...register("last_name", { required: true })} placeholder="Last name" />
                   {errors.last_name && <p className="text-xs text-destructive">Required</p>}
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
-                  <Label>Email *</Label>
+                  <Label>{t("lead.label_email")} *</Label>
                   <Input {...register("email", { required: true })} type="email" placeholder="email@example.com" />
                   {errors.email && <p className="text-xs text-destructive">Required</p>}
                 </div>
                 <div className="grid gap-1.5">
-                  <Label>Phone</Label>
+                  <Label>{t("lead.label_phone")}</Label>
                   <Input {...register("phone")} placeholder="+61 4xx xxx xxx" />
                 </div>
               </div>
@@ -274,11 +278,11 @@ export default function LeadDetail() {
 
           {/* Inquiry */}
           <div className="border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Inquiry</div>
+            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t("lead.section_contact")}</div>
             <div className="p-4 grid gap-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
-                  <Label>Lead Source</Label>
+                  <Label>{t("lead.label_source")}</Label>
                   <Controller name="lead_source" control={control} render={({ field }) => (
                     <Select value={field.value || "__none"} onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}>
                       <SelectTrigger><SelectValue placeholder="Select source" /></SelectTrigger>
@@ -296,7 +300,7 @@ export default function LeadDetail() {
                   )} />
                 </div>
                 <div className="grid gap-1.5">
-                  <Label>Lead Status</Label>
+                  <Label>{t("lead.label_status")}</Label>
                   <Controller name="lead_status" control={control} render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
@@ -324,11 +328,11 @@ export default function LeadDetail() {
 
           {/* Preferences */}
           <div className="border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Preferences</div>
+            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t("lead.section_property")}</div>
             <div className="p-4 grid gap-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
-                  <Label>Preferred Space Type</Label>
+                  <Label>{t("lead.label_property")}</Label>
                   <Controller name="preferred_space_type" control={control} render={({ field }) => (
                     <Select value={field.value || "__none"} onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}>
                       <SelectTrigger><SelectValue placeholder="Any type" /></SelectTrigger>
@@ -342,7 +346,7 @@ export default function LeadDetail() {
                   )} />
                 </div>
                 <div className="grid gap-1.5">
-                  <Label>Preferred Check-In</Label>
+                  <Label>{t("lead.label_move_in")}</Label>
                   <Controller name="preferred_check_in_date" control={control} render={({ field }) => (
                     <DateInput value={field.value ?? ""} onChange={field.onChange} />
                   )} />
@@ -351,7 +355,7 @@ export default function LeadDetail() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
-                  <Label>Duration (weeks)</Label>
+                  <Label>{t("lead.label_duration")}</Label>
                   <Input {...register("preferred_duration_weeks")} type="number" min={1} placeholder="e.g. 12" />
                 </div>
                 <div className="grid gap-1.5">
@@ -368,7 +372,7 @@ export default function LeadDetail() {
               </div>
 
               <div className="grid gap-1.5">
-                <Label>Budget Range</Label>
+                <Label>{t("lead.label_budget")}</Label>
                 <div className="flex items-center gap-2">
                   <Controller name="budget_currency" control={control} render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
@@ -405,18 +409,20 @@ export default function LeadDetail() {
 
           {/* Assignment */}
           <div className="border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Assignment</div>
+            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t("lead.section_details")}</div>
             <div className="p-4">
-              <div className="grid gap-1.5">
-                <Label>Assigned To</Label>
-                <Input {...register("assigned_to")} placeholder="Staff member name or ID" />
+              <div className="grid gap-4">
+                <div className="grid gap-1.5">
+                  <Label>{t("lead.label_assigned")}</Label>
+                  <Input {...register("assigned_to")} placeholder="Staff member name or ID" />
+                </div>
               </div>
             </div>
           </div>
 
           {/* Description */}
           <div className="border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Description</div>
+            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t("lead.label_notes")}</div>
             <div className="p-4">
               <Textarea {...register("description")} placeholder="Internal notes…" rows={3} />
             </div>
@@ -453,9 +459,10 @@ export default function LeadDetail() {
       <Dialog open={convertOpen} onOpenChange={setConvertOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Convert to Booking</DialogTitle>
+            <DialogTitle>{t("lead.convert_title")}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-2">
+            <p className="text-sm text-muted-foreground">{t("lead.convert_desc")}</p>
             <div className="grid gap-1.5">
               <Label>Space *</Label>
               <LookupSelect

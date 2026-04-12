@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,6 +50,7 @@ interface FormData {
 }
 
 export default function ContractDetail() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const qc = useQueryClient();
@@ -141,19 +143,19 @@ export default function ContractDetail() {
         {status === "Draft" && (
           <Button type="button" size="sm" className="bg-[#E8621A] hover:bg-[#d4561a] text-white"
             onClick={() => sendMutation.mutate({ id: Number(id) })}>
-            Send to Tenant
+            {t('contract.btn_send')}
           </Button>
         )}
         {(status === "Draft" || status === "Sent") && (
           <Button type="button" size="sm" variant="outline" className="border-purple-400 text-purple-700"
             onClick={() => setSignOpen(true)}>
-            Mark Signed
+            {t('contract.btn_sign')}
           </Button>
         )}
         {status === "Signed" && (
           <Button type="button" size="sm" className="bg-green-600 hover:bg-green-700 text-white"
             onClick={() => activateMutation.mutate({ id: Number(id) })}>
-            Activate
+            {t('contract.btn_activate')}
           </Button>
         )}
         {status === "Active" && (
@@ -165,7 +167,7 @@ export default function ContractDetail() {
         {(status === "Draft" || status === "Sent" || status === "Signed" || status === "Active") && (
           <Button type="button" size="sm" variant="outline" className="text-red-600"
             onClick={() => setTerminateOpen(true)}>
-            Terminate
+            {t('contract.btn_terminate')}
           </Button>
         )}
       </div>
@@ -180,21 +182,21 @@ export default function ContractDetail() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
             <div>
               <h1 className="text-xl sm:text-2xl font-bold font-mono">
-                {isNew ? "New Contract" : contract?.contract_ref}
+                {isNew ? t('contract.new') : contract?.contract_ref}
               </h1>
               {!isNew && <p className="text-sm text-muted-foreground">Contract #{id}</p>}
             </div>
             <div className="flex gap-2 flex-wrap">
               <Button type="button" variant="outline" onClick={() => navigate("/contracts/contracts")}>
-                <ArrowLeft className="h-4 w-4 mr-2" />Back
+                <ArrowLeft className="h-4 w-4 mr-2" />{t('common.back')}
               </Button>
               {!isNew && (
                 <Button type="button" variant="outline" className="text-red-600"
                   onClick={() => { if (confirm("Delete this contract?")) deleteMutation.mutate({ id: Number(id) }); }}>
-                  <Trash2 className="h-4 w-4 mr-2" />Delete
+                  <Trash2 className="h-4 w-4 mr-2" />{t('common.delete')}
                 </Button>
               )}
-              <Button type="submit"><Save className="h-4 w-4 mr-2" />Save</Button>
+              <Button type="submit"><Save className="h-4 w-4 mr-2" />{t('common.save')}</Button>
             </div>
           </div>
 
@@ -214,10 +216,10 @@ export default function ContractDetail() {
           <div className="grid grid-cols-1 gap-6 max-w-4xl">
             {/* General */}
             <div className="border rounded-lg bg-white p-4 sm:p-6">
-              <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">General</h2>
+              <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">{t('contract.section_general')}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label>Linked Booking</Label>
+                  <Label>{t('invoice.label_booking')}</Label>
                   <Controller name="booking_id" control={control} render={({ field }) => (
                     <LookupSelect
                       lookupUrl="/api/v1/lookup/bookings"
@@ -229,7 +231,7 @@ export default function ContractDetail() {
                   )} />
                 </div>
                 <div>
-                  <Label>Contract Product</Label>
+                  <Label>{t('contract.label_product')}</Label>
                   <Controller name="contract_product_id" control={control} render={({ field }) => (
                     <LookupSelect
                       lookupUrl="/api/v1/lookup/contract-products"
@@ -241,7 +243,7 @@ export default function ContractDetail() {
                   )} />
                 </div>
                 <div>
-                  <Label>Space</Label>
+                  <Label>{t('contract.label_space')}</Label>
                   <Controller name="space_id" control={control} render={({ field }) => (
                     <LookupSelect
                       lookupUrl="/api/v1/lookup/spaces"
@@ -257,10 +259,10 @@ export default function ContractDetail() {
 
             {/* Parties */}
             <div className="border rounded-lg bg-white p-4 sm:p-6">
-              <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Parties</h2>
+              <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">{t('contract.section_parties')}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label>Tenant (Guest Account) *</Label>
+                  <Label>{t('contract.label_tenant')} *</Label>
                   <Controller name="tenant_account_id" control={control} render={({ field }) => (
                     <LookupSelect
                       lookupUrl="/api/v1/lookup/accounts"
@@ -288,22 +290,22 @@ export default function ContractDetail() {
 
             {/* Terms */}
             <div className="border rounded-lg bg-white p-4 sm:p-6">
-              <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Financial Terms</h2>
+              <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">{t('contract.section_financial')}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label>Start Date</Label>
+                  <Label>{t('contract.label_start')}</Label>
                   <Controller name="start_date" control={control} render={({ field }) => (
                     <DateInput value={field.value ?? ""} onChange={field.onChange} />
                   )} />
                 </div>
                 <div>
-                  <Label>End Date</Label>
+                  <Label>{t('contract.label_end')}</Label>
                   <Controller name="end_date" control={control} render={({ field }) => (
                     <DateInput value={field.value ?? ""} onChange={field.onChange} />
                   )} />
                 </div>
                 <div>
-                  <Label>Currency</Label>
+                  <Label>{t('contract.label_currency')}</Label>
                   <Controller name="currency" control={control} render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
@@ -314,11 +316,11 @@ export default function ContractDetail() {
                   )} />
                 </div>
                 <div>
-                  <Label>Weekly Rate</Label>
+                  <Label>{t('contract.label_weekly_rate')}</Label>
                   <Input {...register("weekly_rate")} type="number" step="0.01" min="0" />
                 </div>
                 <div>
-                  <Label>Total Rent</Label>
+                  <Label>{t('contract.label_total_rent')}</Label>
                   <Input {...register("total_rent")} type="number" step="0.01" min="0" />
                 </div>
                 <div>
@@ -345,7 +347,7 @@ export default function ContractDetail() {
                   <Textarea {...register("terms_text")} placeholder="Enter contract terms and conditions..." rows={6} />
                 </div>
                 <div>
-                  <Label>Notes</Label>
+                  <Label>{t('contract.label_notes')}</Label>
                   <Textarea {...register("notes")} placeholder="Internal notes..." rows={3} />
                 </div>
               </div>
@@ -358,7 +360,7 @@ export default function ContractDetail() {
       <Dialog open={terminateOpen} onOpenChange={setTerminateOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Terminate Contract</DialogTitle>
+            <DialogTitle>{t('contract.btn_terminate')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <Label>Termination Reason *</Label>
@@ -370,10 +372,10 @@ export default function ContractDetail() {
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setTerminateOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setTerminateOpen(false)}>{t('common.cancel')}</Button>
             <Button variant="destructive" disabled={!terminateReason}
               onClick={() => terminateMutation.mutate({ id: Number(id), data: { termination_reason: terminateReason } })}>
-              Terminate
+              {t('contract.btn_terminate')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -383,7 +385,7 @@ export default function ContractDetail() {
       <Dialog open={signOpen} onOpenChange={setSignOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Mark Contract as Signed</DialogTitle>
+            <DialogTitle>{t('contract.btn_sign')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <Label>Signed Document URL (Optional)</Label>
@@ -394,7 +396,7 @@ export default function ContractDetail() {
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSignOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setSignOpen(false)}>{t('common.cancel')}</Button>
             <Button className="bg-purple-600 hover:bg-purple-700 text-white"
               onClick={() => signMutation.mutate({ id: Number(id), data: { document_url: signDocUrl || null } })}>
               Confirm Signed

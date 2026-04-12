@@ -154,7 +154,7 @@ export default function ServiceDetail() {
         }
         actions={
           <Button onClick={handleSubmit((d) => save.mutate(d))} disabled={save.isPending}>
-            <Save className="h-4 w-4 mr-2" />{save.isPending ? "Saving…" : "Save Service"}
+            <Save className="h-4 w-4 mr-2" />{save.isPending ? t('common.saving') : t('common.save')}
           </Button>
         }
       />
@@ -164,19 +164,19 @@ export default function ServiceDetail() {
         {/* Basic Info */}
         <div className="border rounded-lg bg-white overflow-hidden">
           <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">
-            Basic Information
+            {t('service.section_general')}
           </div>
           <div className="p-5 space-y-4">
             <div>
-              <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Service Name *</Label>
+              <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('service.label_name')} *</Label>
               <Input {...register("name")} placeholder="e.g. Airport Pickup — Melbourne" />
             </div>
             <div>
-              <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Description</Label>
-              <Textarea {...register("description")} rows={3} placeholder="Describe what this service includes…" />
+              <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('service.label_description')}</Label>
+              <Textarea {...register("description")} rows={3} placeholder={t('service.description_placeholder')} />
             </div>
             <div>
-              <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Service Type *</Label>
+              <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('service.label_type')} *</Label>
               <Controller name="service_type" control={control} render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
@@ -205,22 +205,22 @@ export default function ServiceDetail() {
         {/* Pricing */}
         <div className="border rounded-lg bg-white overflow-hidden">
           <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">
-            Pricing
+            {t('service.section_pricing')}
           </div>
           <div className="p-5 grid grid-cols-2 gap-4">
             <div>
-              <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Base Price (AUD)</Label>
+              <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('service.label_price')}</Label>
               <Input {...register("base_price")} type="number" step="0.01" min="0" placeholder="0.00" />
             </div>
             <div>
-              <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Billing Trigger</Label>
+              <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('service.label_billing_trigger')}</Label>
               <Controller name="billing_trigger" control={control} render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="at_booking">At Booking</SelectItem>
-                    <SelectItem value="at_checkout">At Checkout</SelectItem>
-                    <SelectItem value="on_request">On Request</SelectItem>
+                    <SelectItem value="at_booking">{t('service.trigger_at_booking')}</SelectItem>
+                    <SelectItem value="at_checkout">{t('service.trigger_at_checkout')}</SelectItem>
+                    <SelectItem value="on_request">{t('service.trigger_on_request')}</SelectItem>
                   </SelectContent>
                 </Select>
               )} />
@@ -230,15 +230,15 @@ export default function ServiceDetail() {
                 <Switch checked={field.value} onCheckedChange={field.onChange} />
               )} />
               <div>
-                <Label className="cursor-pointer">Refundable</Label>
-                <p className="text-xs text-muted-foreground">e.g. Security deposit</p>
+                <Label className="cursor-pointer">{t('service.label_refundable')}</Label>
+                <p className="text-xs text-muted-foreground">{t('service.refundable_desc')}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <Controller name="gst_included" control={control} render={({ field }) => (
                 <Switch checked={field.value} onCheckedChange={field.onChange} />
               )} />
-              <Label className="cursor-pointer">GST Included</Label>
+              <Label className="cursor-pointer">{t('service.label_gst_included')}</Label>
             </div>
           </div>
         </div>
@@ -247,7 +247,7 @@ export default function ServiceDetail() {
         {watchedType === "scheduled" && (
           <div className="border rounded-lg bg-white overflow-hidden">
             <div className="bg-purple-50 border-b px-4 py-2 text-xs font-semibold text-purple-700 uppercase tracking-wider flex items-center gap-2">
-              <Calendar className="h-3.5 w-3.5" />Scheduling Details
+              <Calendar className="h-3.5 w-3.5" />{t('service.section_scheduling')}
             </div>
             <div className="p-5 space-y-4">
               <div className="flex items-center gap-3">
@@ -255,13 +255,13 @@ export default function ServiceDetail() {
                   <Switch checked={field.value} onCheckedChange={field.onChange} />
                 )} />
                 <div>
-                  <Label className="cursor-pointer">Requires Scheduling</Label>
-                  <p className="text-xs text-muted-foreground">Guest must provide date/time details</p>
+                  <Label className="cursor-pointer">{t('service.label_requires_scheduling')}</Label>
+                  <p className="text-xs text-muted-foreground">{t('service.scheduling_desc')}</p>
                 </div>
               </div>
               {watchedScheduling && (
                 <div>
-                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Scheduling Instructions</Label>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('service.label_scheduling_notes')}</Label>
                   <Textarea {...register("scheduling_notes")} rows={3}
                     placeholder="e.g. Please provide: arrival date, flight number, airline, number of passengers." />
                 </div>
@@ -274,7 +274,7 @@ export default function ServiceDetail() {
         {watchedType === "physical" && (
           <div className="border rounded-lg bg-white overflow-hidden">
             <div className="bg-amber-50 border-b px-4 py-2 text-xs font-semibold text-amber-700 uppercase tracking-wider flex items-center gap-2">
-              <Package className="h-3.5 w-3.5" />Physical Product Details
+              <Package className="h-3.5 w-3.5" />{t('service.section_physical')}
             </div>
             <div className="p-5 space-y-4">
               <div className="flex items-center gap-3">
@@ -282,13 +282,13 @@ export default function ServiceDetail() {
                   <Switch checked={field.value} onCheckedChange={field.onChange} />
                 )} />
                 <div>
-                  <Label className="cursor-pointer">Track Stock</Label>
-                  <p className="text-xs text-muted-foreground">Enable inventory management</p>
+                  <Label className="cursor-pointer">{t('service.label_stock_tracked')}</Label>
+                  <p className="text-xs text-muted-foreground">{t('service.stock_tracked_desc')}</p>
                 </div>
               </div>
               {watchedStockTracked && (
                 <div>
-                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Stock Quantity</Label>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('service.label_stock_qty')}</Label>
                   <Input {...register("stock_qty")} type="number" min="0" placeholder="0" className="w-32" />
                 </div>
               )}
@@ -298,15 +298,15 @@ export default function ServiceDetail() {
                   <Switch checked={field.value} onCheckedChange={field.onChange} />
                 )} />
                 <div>
-                  <Label className="cursor-pointer">Has Variants</Label>
-                  <p className="text-xs text-muted-foreground">e.g. sizes, colours, options</p>
+                  <Label className="cursor-pointer">{t('service.label_has_variants')}</Label>
+                  <p className="text-xs text-muted-foreground">{t('service.has_variants_desc')}</p>
                 </div>
               </div>
               {watchedHasVariants && (
                 <div>
-                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Variant Options</Label>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('service.label_variant_options')}</Label>
                   <Input {...register("variant_options")} placeholder="e.g. Small, Medium, Large" />
-                  <p className="text-xs text-muted-foreground mt-1">Comma-separated list of options</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t('service.variant_options_desc')}</p>
                 </div>
               )}
             </div>
@@ -316,24 +316,24 @@ export default function ServiceDetail() {
         {/* Display & Status */}
         <div className="border rounded-lg bg-white overflow-hidden">
           <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">
-            Display & Status
+            {t('service.section_display')}
           </div>
           <div className="p-5 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Sort Order</Label>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('service.label_sort_order')}</Label>
                 <Input {...register("sort_order")} type="number" min="0" placeholder="0" className="w-28" />
-                <p className="text-xs text-muted-foreground mt-1">Lower = appears first</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('service.sort_order_desc')}</p>
               </div>
               <div>
-                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Status</Label>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('service.label_status')}</Label>
                 <Controller name="status" control={control} render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="Inactive">Inactive</SelectItem>
-                      <SelectItem value="Archived">Archived</SelectItem>
+                      <SelectItem value="Active">{t('common.active')}</SelectItem>
+                      <SelectItem value="Inactive">{t('common.inactive')}</SelectItem>
+                      <SelectItem value="Archived">{t('common.archived')}</SelectItem>
                     </SelectContent>
                   </Select>
                 )} />
@@ -344,8 +344,8 @@ export default function ServiceDetail() {
                 <Switch checked={field.value} onCheckedChange={field.onChange} />
               )} />
               <div>
-                <Label className="cursor-pointer">Show on Booking Page</Label>
-                <p className="text-xs text-muted-foreground">Display to guests during booking</p>
+                <Label className="cursor-pointer">{t('service.label_display_on_booking')}</Label>
+                <p className="text-xs text-muted-foreground">{t('service.display_on_booking_desc')}</p>
               </div>
             </div>
           </div>

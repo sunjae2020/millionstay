@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { useForm, Controller } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   useGetWorkOrder,
   useCreateWorkOrder,
@@ -50,6 +51,7 @@ export default function WorkOrderDetail() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const qc = useQueryClient();
+  const { t } = useTranslation();
   const isNew = id === "new";
 
   const { data: wo, refetch } = useGetWorkOrder(Number(id), {
@@ -128,21 +130,21 @@ export default function WorkOrderDetail() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
-              {isNew ? "New Work Order" : wo?.order_ref ?? "Work Order"}
+              {isNew ? t('workorder.new') : wo?.order_ref ?? t('nav.work_order')}
             </h1>
             {!isNew && wo && <p className="text-sm text-muted-foreground">{wo.title}</p>}
           </div>
           <div className="flex gap-2 flex-wrap">
             <Button variant="outline" onClick={() => navigate("/maintenance/work-orders")}>
-              <ArrowLeft className="h-4 w-4 mr-1" /> Back
+              <ArrowLeft className="h-4 w-4 mr-1" /> {t('common.back')}
             </Button>
             {!isNew && (
               <Button variant="destructive" onClick={() => deleteMutation.mutate({ id: Number(id) })}>
-                <Trash2 className="h-4 w-4 mr-1" /> Delete
+                <Trash2 className="h-4 w-4 mr-1" /> {t('common.delete')}
               </Button>
             )}
             <Button onClick={handleSubmit(onSubmit)}>
-              <Save className="h-4 w-4 mr-1" /> Save
+              <Save className="h-4 w-4 mr-1" /> {t('common.save')}
             </Button>
           </div>
         </div>
@@ -151,7 +153,7 @@ export default function WorkOrderDetail() {
         {!isNew && (
           <div className="border rounded-lg bg-white p-4 mb-4 flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">Status:</span>
+              <span className="text-sm font-medium text-muted-foreground">{t('workorder.label_status')}:</span>
               <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusColors[status] ?? "bg-gray-100 text-gray-600"}`}>
                 {statusLabel(status)}
               </span>
@@ -159,22 +161,22 @@ export default function WorkOrderDetail() {
             <div className="flex gap-2 ml-auto">
               {status === "Open" && (
                 <Button variant="default" onClick={() => startMutation.mutate({ id: Number(id) })}>
-                  Start Work
+                  {t('workorder.btn_start')}
                 </Button>
               )}
               {status === "InProgress" && (
                 <Button variant="default" className="bg-purple-600 hover:bg-purple-700" onClick={() => reviewMutation.mutate({ id: Number(id) })}>
-                  Submit for Review
+                  {t('workorder.btn_review', 'Submit for Review')}
                 </Button>
               )}
               {status === "PendingReview" && (
                 <Button variant="default" className="bg-green-600 hover:bg-green-700" onClick={() => completeMutation.mutate({ id: Number(id), data: {} })}>
-                  Mark Complete
+                  {t('workorder.btn_complete')}
                 </Button>
               )}
               {(status === "Open" || status === "InProgress") && (
                 <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => cancelMutation.mutate({ id: Number(id), data: {} })}>
-                  Cancel
+                  {t('common.cancel')}
                 </Button>
               )}
             </div>
@@ -184,33 +186,33 @@ export default function WorkOrderDetail() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Details */}
           <div className="border rounded-lg bg-white p-4 sm:p-6">
-            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Work Order Details</h2>
+            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">{t('workorder.section_details')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="col-span-2">
-                <Label>Title *</Label>
+                <Label>{t('workorder.label_title')} *</Label>
                 <Input placeholder="Describe the work required..." {...register("title")} />
               </div>
               <div>
-                <Label>Priority</Label>
+                <Label>{t('workorder.label_priority')}</Label>
                 <Controller name="priority" control={control} render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Low">Low</SelectItem>
-                      <SelectItem value="Normal">Normal</SelectItem>
-                      <SelectItem value="High">High</SelectItem>
-                      <SelectItem value="Urgent">Urgent</SelectItem>
+                      <SelectItem value="Low">{t('workorder.priority_low')}</SelectItem>
+                      <SelectItem value="Normal">{t('workorder.priority_normal')}</SelectItem>
+                      <SelectItem value="High">{t('workorder.priority_high')}</SelectItem>
+                      <SelectItem value="Urgent">{t('workorder.priority_urgent')}</SelectItem>
                     </SelectContent>
                   </Select>
                 )} />
               </div>
               <div>
-                <Label>Category</Label>
+                <Label>{t('workorder.label_category')}</Label>
                 <Controller name="category" control={control} render={({ field }) => (
                   <Select value={field.value || "_none"} onValueChange={(v) => field.onChange(v === "_none" ? "" : v)}>
                     <SelectTrigger><SelectValue placeholder="Select category..." /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="_none">— No category —</SelectItem>
+                      <SelectItem value="_none">— {t('common.none')} —</SelectItem>
                       <SelectItem value="Plumbing">Plumbing</SelectItem>
                       <SelectItem value="Electrical">Electrical</SelectItem>
                       <SelectItem value="HVAC">HVAC</SelectItem>
@@ -226,7 +228,7 @@ export default function WorkOrderDetail() {
                 )} />
               </div>
               <div className="col-span-2">
-                <Label>Description</Label>
+                <Label>{t('workorder.label_description')}</Label>
                 <Textarea rows={3} placeholder="Detailed description of the issue..." {...register("description")} />
               </div>
             </div>
@@ -234,10 +236,10 @@ export default function WorkOrderDetail() {
 
           {/* Location */}
           <div className="border rounded-lg bg-white p-4 sm:p-6">
-            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Location</h2>
+            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">{t('workorder.section_location', 'Location')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label>Property</Label>
+                <Label>{t('workorder.label_property')}</Label>
                 <Controller name="property_id" control={control} render={({ field }) => (
                   <LookupSelect
                     lookupUrl="/api/v1/lookup/properties"
@@ -249,7 +251,7 @@ export default function WorkOrderDetail() {
                 )} />
               </div>
               <div>
-                <Label>Space</Label>
+                <Label>{t('workorder.label_space')}</Label>
                 <Controller name="space_id" control={control} render={({ field }) => (
                   <LookupSelect
                     lookupUrl="/api/v1/lookup/spaces"
@@ -265,22 +267,22 @@ export default function WorkOrderDetail() {
 
           {/* Schedule */}
           <div className="border rounded-lg bg-white p-4 sm:p-6">
-            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Schedule & Assignment</h2>
+            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">{t('workorder.section_schedule', 'Schedule & Assignment')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label>Reported Date</Label>
+                <Label>{t('workorder.label_reported_date', 'Reported Date')}</Label>
                 <Controller name="reported_at" control={control} render={({ field }) => (
                   <DateInput value={field.value ?? ""} onChange={field.onChange} />
                 )} />
               </div>
               <div>
-                <Label>Scheduled Date</Label>
+                <Label>{t('workorder.label_scheduled_date', 'Scheduled Date')}</Label>
                 <Controller name="scheduled_at" control={control} render={({ field }) => (
                   <DateInput value={field.value ?? ""} onChange={field.onChange} />
                 )} />
               </div>
               <div>
-                <Label>Assigned To</Label>
+                <Label>{t('workorder.label_assigned')}</Label>
                 <Controller name="assigned_contact_id" control={control} render={({ field }) => (
                   <LookupSelect
                     lookupUrl="/api/v1/lookup/contacts"
@@ -292,7 +294,7 @@ export default function WorkOrderDetail() {
                 )} />
               </div>
               <div>
-                <Label>Estimated Cost (AUD)</Label>
+                <Label>{t('workorder.label_cost', 'Estimated Cost (AUD)')}</Label>
                 <Input type="number" step="0.01" placeholder="0.00" {...register("cost")} />
               </div>
             </div>
@@ -301,17 +303,17 @@ export default function WorkOrderDetail() {
           {/* Completion info (read-only) */}
           {wo?.completed_at && (
             <div className="border rounded-lg bg-green-50 p-6">
-              <h2 className="text-sm font-semibold uppercase text-green-600 tracking-wide mb-2">Completed</h2>
+              <h2 className="text-sm font-semibold uppercase text-green-600 tracking-wide mb-2">{t('workorder.section_completed', 'Completed')}</h2>
               <p className="text-sm text-green-700">
-                Completed on {new Date(wo.completed_at).toLocaleDateString()}
-                {wo.cost != null && ` — Final cost: $${wo.cost.toFixed(2)} AUD`}
+                {t('workorder.completed_on', 'Completed on')} {new Date(wo.completed_at).toLocaleDateString()}
+                {wo.cost != null && ` — ${t('workorder.final_cost', 'Final cost')}: $${wo.cost.toFixed(2)} AUD`}
               </p>
             </div>
           )}
 
           {/* Notes */}
           <div className="border rounded-lg bg-white p-4 sm:p-6">
-            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Notes</h2>
+            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">{t('common.notes')}</h2>
             <Textarea rows={3} placeholder="Internal notes..." {...register("notes")} />
           </div>
         </form>

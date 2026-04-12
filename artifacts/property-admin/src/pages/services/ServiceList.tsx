@@ -75,10 +75,10 @@ export default function ServiceList() {
     <Layout>
       <PageHeader
         title={t("nav.service_product")}
-        subtitle={`${rows.length} services`}
+        subtitle={`${rows.length} ${t("nav.service")}`}
         actions={
           <Link href="/services/new">
-            <Button><Plus className="h-4 w-4 mr-2" />New Service</Button>
+            <Button><Plus className="h-4 w-4 mr-2" />{t("common.new")} {t("nav.service")}</Button>
           </Link>
         }
       />
@@ -88,24 +88,24 @@ export default function ServiceList() {
         <div className="flex gap-3 mb-4 flex-wrap">
           <div className="relative flex-1 min-w-[200px] max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder="Search services…" value={q} onChange={(e) => setQ(e.target.value)} />
+            <Input className="pl-9" placeholder={t("service.search_placeholder")} value={q} onChange={(e) => setQ(e.target.value)} />
           </div>
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-40"><SelectValue placeholder="All Types" /></SelectTrigger>
+            <SelectTrigger className="w-40"><SelectValue placeholder={t("service.all_types")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All Types</SelectItem>
-              <SelectItem value="one_time">One-time</SelectItem>
-              <SelectItem value="scheduled">Scheduled</SelectItem>
-              <SelectItem value="physical">Physical</SelectItem>
+              <SelectItem value="_all">{t("service.all_types")}</SelectItem>
+              <SelectItem value="one_time">{t("service.type_one_time")}</SelectItem>
+              <SelectItem value="scheduled">{t("service.type_scheduled")}</SelectItem>
+              <SelectItem value="physical">{t("service.type_physical")}</SelectItem>
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-36"><SelectValue placeholder="All Statuses" /></SelectTrigger>
+            <SelectTrigger className="w-36"><SelectValue placeholder={t("service.all_statuses")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All Statuses</SelectItem>
-              <SelectItem value="Active">Active</SelectItem>
-              <SelectItem value="Inactive">Inactive</SelectItem>
-              <SelectItem value="Archived">Archived</SelectItem>
+              <SelectItem value="_all">{t("service.all_statuses")}</SelectItem>
+              <SelectItem value="Active">{t("common.active")}</SelectItem>
+              <SelectItem value="Inactive">{t("common.inactive")}</SelectItem>
+              <SelectItem value="Archived">{t("service.status_archived")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -116,28 +116,28 @@ export default function ServiceList() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Service Name</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Type</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Price</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Billing Trigger</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Optional</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Refundable</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("service.col_name")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("service.col_type")}</th>
+                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("service.col_price")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("service.col_billing")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("service.col_optional")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("service.col_refundable")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("service.col_status")}</th>
                   <th className="px-4 py-3 w-20"></th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {isLoading ? (
-                  <tr><td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">Loading…</td></tr>
+                  <tr><td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">{t("common.loading")}</td></tr>
                 ) : rows.length === 0 ? (
-                  <tr><td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">No services found</td></tr>
+                  <tr><td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">{t("service.no_services")}</td></tr>
                 ) : pagination.paginatedItems.map((s: any) => {
                   const typeConf = TYPE_CONFIG[s.service_type] ?? { label: s.service_type, color: "bg-gray-100 text-gray-600", icon: Zap };
                   const Icon = typeConf.icon;
                   const TRIGGER_LABELS: Record<string, string> = {
-                    at_booking: "At Booking",
-                    at_checkout: "At Checkout",
-                    on_request: "On Request",
+                    at_booking: t("service.trigger_at_booking"),
+                    at_checkout: t("service.trigger_at_checkout"),
+                    on_request: t("service.trigger_on_request"),
                   };
                   return (
                     <tr key={s.id} className="hover:bg-muted/30 transition-colors">
@@ -149,7 +149,7 @@ export default function ServiceList() {
                       </td>
                       <td className="px-4 py-3">
                         <Badge className={`text-xs gap-1 ${typeConf.color}`}>
-                          <Icon className="h-3 w-3" />{typeConf.label}
+                          <Icon className="h-3 w-3" />{t(`service.type_${s.service_type}`)}
                         </Badge>
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums font-medium">
@@ -160,16 +160,16 @@ export default function ServiceList() {
                       </td>
                       <td className="px-4 py-3 text-xs">
                         <span className={s.is_optional ? "text-gray-400" : "text-[#E8621A] font-medium"}>
-                          {s.is_optional ? "Optional" : "Required"}
+                          {s.is_optional ? t("common.optional") : t("common.required")}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-xs">
                         <span className={s.is_refundable ? "text-green-600 font-medium" : "text-gray-400"}>
-                          {s.is_refundable ? "Yes" : "No"}
+                          {s.is_refundable ? t("common.yes") : t("common.no")}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <Badge className={`text-xs ${STATUS_COLORS[s.status] ?? ""}`}>{s.status}</Badge>
+                        <Badge className={`text-xs ${STATUS_COLORS[s.status] ?? ""}`}>{t(`common.${s.status.toLowerCase()}`)}</Badge>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1">
@@ -196,13 +196,13 @@ export default function ServiceList() {
       <AlertDialog open={archiveId !== null} onOpenChange={() => setArchiveId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Archive Service</AlertDialogTitle>
-            <AlertDialogDescription>This service will be archived and hidden from booking pages.</AlertDialogDescription>
+            <AlertDialogTitle>{t("service.archive_title")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("service.archive_desc")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => archiveId && archiveMutation.mutate(archiveId)}>
-              Archive
+              {t("service.btn_archive")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

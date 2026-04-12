@@ -45,18 +45,18 @@ export default function WorkOrderList() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">{t("nav.work_order")}</h1>
-            <p className="text-sm text-muted-foreground">{workOrders.length} total</p>
+            <p className="text-sm text-muted-foreground">{workOrdersRaw.length} {t("common.total")}</p>
           </div>
           <Button onClick={() => navigate("/maintenance/work-orders/new")}>
             <Plus className="h-4 w-4 mr-1" />
-            New Work Order
+            {t("workorder.new")}
           </Button>
         </div>
 
         <div className="flex gap-3 mb-4">
           <div className="relative flex-1 max-w-sm">
             <Input
-              placeholder="Search title..."
+              placeholder={t("workorder.search_placeholder")}
               value={q}
               onChange={(e) => setQ(e.target.value)}
               className="pl-4"
@@ -67,12 +67,12 @@ export default function WorkOrderList() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All statuses</SelectItem>
-              <SelectItem value="Open">Open</SelectItem>
-              <SelectItem value="InProgress">In Progress</SelectItem>
-              <SelectItem value="PendingReview">Pending Review</SelectItem>
-              <SelectItem value="Completed">Completed</SelectItem>
-              <SelectItem value="Cancelled">Cancelled</SelectItem>
+              <SelectItem value="_all">{t("workorder.all_statuses")}</SelectItem>
+              <SelectItem value="Open">{t("workorder.status_open")}</SelectItem>
+              <SelectItem value="InProgress">{t("workorder.status_in_progress")}</SelectItem>
+              <SelectItem value="PendingReview">{t("workorder.status_pending_review")}</SelectItem>
+              <SelectItem value="Completed">{t("workorder.status_completed")}</SelectItem>
+              <SelectItem value="Cancelled">{t("workorder.status_closed")}</SelectItem>
             </SelectContent>
           </Select>
           <Select value={priority} onValueChange={setPriority}>
@@ -80,11 +80,11 @@ export default function WorkOrderList() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All priorities</SelectItem>
-              <SelectItem value="Low">Low</SelectItem>
-              <SelectItem value="Normal">Normal</SelectItem>
-              <SelectItem value="High">High</SelectItem>
-              <SelectItem value="Urgent">Urgent</SelectItem>
+              <SelectItem value="_all">{t("workorder.all_priorities")}</SelectItem>
+              <SelectItem value="Low">{t("workorder.priority_low")}</SelectItem>
+              <SelectItem value="Normal">{t("workorder.priority_normal")}</SelectItem>
+              <SelectItem value="High">{t("workorder.priority_high")}</SelectItem>
+              <SelectItem value="Urgent">{t("workorder.priority_urgent")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -94,14 +94,14 @@ export default function WorkOrderList() {
           <table className="w-full min-w-max text-sm">
             <thead className="border-b bg-muted/30">
               <tr>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Ref</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Title</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Property</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Space</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Category</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Assigned To</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Priority</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("workorder.col_ref")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("workorder.col_title")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("workorder.col_property")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("workorder.col_space")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("workorder.col_category")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("workorder.col_assigned")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("workorder.col_priority")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("workorder.col_status")}</th>
               </tr>
             </thead>
             <tbody>
@@ -119,19 +119,19 @@ export default function WorkOrderList() {
                   <td className="px-4 py-3 text-muted-foreground">{(wo as any).assigned_contact_name ?? "—"}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${priorityColors[wo.priority] ?? "bg-gray-100 text-gray-600"}`}>
-                      {wo.priority}
+                      {t(`workorder.priority_${wo.priority.toLowerCase()}` as any)}
                     </span>
                   </td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusColors[wo.status] ?? "bg-gray-100 text-gray-600"}`}>
-                      {wo.status === "InProgress" ? "In Progress" : wo.status === "PendingReview" ? "Pending Review" : wo.status}
+                      {wo.status === "InProgress" ? t("workorder.status_in_progress") : wo.status === "PendingReview" ? t("workorder.status_pending_review") : t(`workorder.status_${wo.status.toLowerCase()}` as any)}
                     </span>
                   </td>
                 </tr>
               ))}
               {workOrdersRaw.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">No work orders found</td>
+                  <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">{t("workorder.no_workorders")}</td>
                 </tr>
               )}
             </tbody>

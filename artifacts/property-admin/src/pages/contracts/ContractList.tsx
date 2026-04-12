@@ -38,10 +38,10 @@ export default function ContractList() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold">{t("nav.contract")}</h1>
-            <p className="text-sm text-muted-foreground">{contracts?.length ?? 0} total</p>
+            <p className="text-sm text-muted-foreground">{contracts?.length ?? 0} {t("common.total")}</p>
           </div>
           <Link href="/contracts/contracts/new">
-            <Button><Plus className="h-4 w-4 mr-2" />New Contract</Button>
+            <Button><Plus className="h-4 w-4 mr-2" />{t("contract.new")}</Button>
           </Link>
         </div>
 
@@ -50,23 +50,23 @@ export default function ContractList() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               className="pl-9"
-              placeholder="Search contract ref..."
+              placeholder={t("contract.search_placeholder")}
               value={q}
               onChange={e => setQ(e.target.value)}
             />
           </div>
           <Select value={status} onValueChange={setStatus}>
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="All statuses" />
+              <SelectValue placeholder={t("contract.all_statuses")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All statuses</SelectItem>
-              <SelectItem value="Draft">Draft</SelectItem>
-              <SelectItem value="Sent">Sent</SelectItem>
-              <SelectItem value="Signed">Signed</SelectItem>
-              <SelectItem value="Active">Active</SelectItem>
-              <SelectItem value="Expired">Expired</SelectItem>
-              <SelectItem value="Terminated">Terminated</SelectItem>
+              <SelectItem value="_all">{t("contract.all_statuses")}</SelectItem>
+              <SelectItem value="Draft">{t("contract.status_draft")}</SelectItem>
+              <SelectItem value="Sent">{t("contract.status_sent")}</SelectItem>
+              <SelectItem value="Signed">{t("contract.status_signed")}</SelectItem>
+              <SelectItem value="Active">{t("contract.status_active")}</SelectItem>
+              <SelectItem value="Expired">{t("contract.status_expired")}</SelectItem>
+              <SelectItem value="Terminated">{t("contract.status_terminated")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -76,22 +76,22 @@ export default function ContractList() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Contract Ref</TableHead>
-                <TableHead>Tenant</TableHead>
-                <TableHead>Space</TableHead>
-                <TableHead>Product</TableHead>
-                <TableHead>Start Date</TableHead>
-                <TableHead>End Date</TableHead>
-                <TableHead>Weekly Rate</TableHead>
-                <TableHead>Total Rent</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>{t("contract.col_ref")}</TableHead>
+                <TableHead>{t("contract.col_tenant")}</TableHead>
+                <TableHead>{t("contract.col_space")}</TableHead>
+                <TableHead>{t("contract.col_product")}</TableHead>
+                <TableHead>{t("contract.col_start")}</TableHead>
+                <TableHead>{t("contract.col_end")}</TableHead>
+                <TableHead>{t("contract.col_weekly_rate")}</TableHead>
+                <TableHead>{t("contract.col_total_rent")}</TableHead>
+                <TableHead>{t("contract.col_status")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {!contracts || contracts.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={9} className="text-center text-muted-foreground py-12">
-                    No contracts found
+                    {t("contract.no_contracts")}
                   </TableCell>
                 </TableRow>
               ) : pagination.paginatedItems.map(c => (
@@ -114,7 +114,7 @@ export default function ContractList() {
                   </TableCell>
                   <TableCell>
                     <Badge className={statusColors[c.status] ?? "bg-gray-100 text-gray-700"}>
-                      {c.status}
+                      {t(`contract.status_${c.status.toLowerCase()}`)}
                     </Badge>
                   </TableCell>
                 </TableRow>

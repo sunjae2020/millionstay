@@ -26,10 +26,11 @@ import {
 } from "@/components/ui/alert-dialog";
 
 function BoolCell({ value }: { value: boolean }) {
+  const { t } = useTranslation();
   return value ? (
-    <span className="inline-flex items-center gap-0.5 text-green-600 text-xs font-medium"><Check className="h-3 w-3" /> Yes</span>
+    <span className="inline-flex items-center gap-0.5 text-green-600 text-xs font-medium"><Check className="h-3 w-3" /> {t("common.yes")}</span>
   ) : (
-    <span className="inline-flex items-center gap-0.5 text-muted-foreground text-xs"><X className="h-3 w-3" /> No</span>
+    <span className="inline-flex items-center gap-0.5 text-muted-foreground text-xs"><X className="h-3 w-3" /> {t("common.no")}</span>
   );
 }
 
@@ -59,11 +60,11 @@ export default function SpacePolicyList() {
     <Layout>
       <PageHeader
         title={t("nav.space_policy")}
-        subtitle={`${policies?.length ?? 0} total`}
+        subtitle={`${policies?.length ?? 0} ${t("common.total")}`}
         actions={
           <Link href="/property/space-policies/new">
             <Button size="sm" className="gap-1.5">
-              <Plus className="h-4 w-4" /> New Policy
+              <Plus className="h-4 w-4" /> {t("space_policy.new") || `${t("common.new")} ${t("nav.space_policy")}`}
             </Button>
           </Link>
         }
@@ -73,7 +74,7 @@ export default function SpacePolicyList() {
           <div className="relative flex-1 max-w-xs">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
-              placeholder="Search policies..."
+              placeholder={t("space_policy.search_placeholder") || t("common.search")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-8 h-8 text-sm"
@@ -86,21 +87,21 @@ export default function SpacePolicyList() {
           <table className="w-full min-w-max text-sm">
             <thead className="bg-muted/50 border-b">
               <tr>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Name</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Same Gender</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Lady Only</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">No Pet</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">No Smoking</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Min Age</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_policy.col_name")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_policy.col_same_gender")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_policy.col_lady_only")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_policy.col_no_pet")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_policy.col_no_smoking")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_policy.col_min_age")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_policy.col_status")}</th>
                 <th className="px-4 py-3 w-20"></th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {isLoading ? (
-                <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground text-sm">Loading...</td></tr>
+                <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("common.loading")}</td></tr>
               ) : policies?.length === 0 ? (
-                <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground text-sm">No policies found</td></tr>
+                <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("space_policy.no_records") || "No policies found"}</td></tr>
               ) : (
                 pagination.paginatedItems.map((policy) => (
                   <tr key={policy.id} className="hover:bg-muted/30 transition-colors">
@@ -138,15 +139,15 @@ export default function SpacePolicyList() {
       <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Space Policy</AlertDialogTitle>
-            <AlertDialogDescription>Are you sure you want to delete this policy?</AlertDialogDescription>
+            <AlertDialogTitle>{t("space_policy.delete_title") || t("common.delete")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("space_policy.delete_desc") || t("common.cannot_undo")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => deleteId && deleteMutation.mutate({ id: deleteId })}
-            >Delete</AlertDialogAction>
+            >{t("common.delete")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

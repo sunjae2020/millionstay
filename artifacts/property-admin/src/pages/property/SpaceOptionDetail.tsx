@@ -87,23 +87,23 @@ export default function SpaceOptionDetail() {
   }
 
   if (!isNew && isLoading) {
-    return <Layout><PageHeader title={t("common.loading")} /><div className="p-6 text-sm text-muted-foreground">Loading...</div></Layout>;
+    return <Layout><PageHeader title={t("common.loading")} /><div className="p-6 text-sm text-muted-foreground">{t("common.loading")}</div></Layout>;
   }
 
   return (
     <Layout>
       <PageHeader
         title={isNew ? `${t("common.new")} ${t("nav.space_option")}` : (option?.name ?? t("nav.space_option"))}
-        subtitle={isNew ? "Create a new amenity tag" : `ID: ${id}`}
+        subtitle={isNew ? t("space_option.subtitle_new") : `ID: ${id}`}
         actions={
           <div className="flex items-center gap-2">
             <Link href="/property/space-options">
               <Button variant="outline" size="sm" className="gap-1.5">
-                <ArrowLeft className="h-4 w-4" /> Back
+                <ArrowLeft className="h-4 w-4" /> {t("common.back")}
               </Button>
             </Link>
             <Button size="sm" className="gap-1.5" onClick={handleSubmit(onSubmit)} disabled={createMutation.isPending || updateMutation.isPending}>
-              <Save className="h-4 w-4" /> Save
+              <Save className="h-4 w-4" /> {t("common.save")}
             </Button>
           </div>
         }
@@ -113,24 +113,24 @@ export default function SpaceOptionDetail() {
           <form className="bg-card rounded-lg border p-6 flex flex-col gap-5">
             <div className="flex flex-col gap-1.5">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Name <span className="text-destructive">*</span>
+                {t("space_option.label_name")} <span className="text-destructive">*</span>
               </Label>
               <Input
                 {...register("name", { required: true })}
-                placeholder="Option name (internal)"
+                placeholder={t("space_option.placeholder_name")}
                 className={errors.name ? "border-destructive" : ""}
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Display Name</Label>
-              <Input {...register("display_name")} placeholder="Display name (user facing)" />
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space_option.label_display_name")}</Label>
+              <Input {...register("display_name")} placeholder={t("space_option.placeholder_display_name")} />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Category</Label>
-              <Input {...register("category")} placeholder="e.g. Amenities, Utilities" />
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space_option.label_category")}</Label>
+              <Input {...register("category")} placeholder={t("space_option.placeholder_category")} />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Status</Label>
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space_option.label_status")}</Label>
               <Controller
                 name="status"
                 control={control}

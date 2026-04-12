@@ -8,6 +8,7 @@ import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useForm, Controller } from "react-hook-form";
 import {
   useGetContact, useCreateContact, useUpdateContact,
@@ -187,235 +188,264 @@ export default function ContactDetail() {
         actions={
           <div className="flex gap-2">
             <Link href="/crm/contacts">
-              <Button variant="outline" size="sm" className="gap-1.5"><ArrowLeft className="h-4 w-4" /> Back</Button>
+              <Button variant="outline" size="sm" className="gap-1.5"><ArrowLeft className="h-4 w-4" /> {t('common.back')}</Button>
             </Link>
             <Button size="sm" className="gap-1.5" onClick={handleSubmit(onSubmit)}
               disabled={createMutation.isPending || updateMutation.isPending}>
-              <Save className="h-4 w-4" /> Save
+              <Save className="h-4 w-4" /> {t('common.save')}
             </Button>
           </div>
         }
       />
       <div className="p-4 sm:p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left column */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Basic Info */}
-            <div className="rounded-lg border p-4 space-y-4">
-              <h3 className="font-semibold text-sm">Basic Information</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="grid gap-1.5">
-                  <Label>Title</Label>
-                  <Controller name="title" control={control} render={({ field }) => (
-                    <Select value={field.value || "__none"} onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}>
-                      <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__none">—</SelectItem>
-                        <SelectItem value="Mr">Mr</SelectItem>
-                        <SelectItem value="Ms">Ms</SelectItem>
-                        <SelectItem value="Mrs">Mrs</SelectItem>
-                        <SelectItem value="Dr">Dr</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )} />
-                </div>
-                <div className="grid gap-1.5">
-                  <Label>First Name *</Label>
-                  <Input {...register("first_name", { required: true })} />
-                  {errors.first_name && <p className="text-xs text-destructive">Required</p>}
-                </div>
-                <div className="grid gap-1.5">
-                  <Label>Last Name *</Label>
-                  <Input {...register("last_name", { required: true })} />
-                  {errors.last_name && <p className="text-xs text-destructive">Required</p>}
-                </div>
-                <div className="grid gap-1.5">
-                  <Label>Other Name</Label>
-                  <Input {...register("other_name")} />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="grid gap-1.5">
-                  <Label>Email *</Label>
-                  <Input {...register("email", { required: true })} type="email" />
-                  {errors.email && <p className="text-xs text-destructive">Required</p>}
-                </div>
-                <div className="grid gap-1.5">
-                  <Label>Mobile</Label>
-                  <Input {...register("mobile_number")} />
-                </div>
-                <div className="grid gap-1.5">
-                  <Label>Office Phone</Label>
-                  <Input {...register("office_number")} />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="grid gap-1.5">
-                  <Label>Date of Birth</Label>
-                  <Controller name="date_of_birth" control={control} render={({ field }) => (
-                    <DateInput value={field.value ?? ""} onChange={field.onChange} />
-                  )} />
-                </div>
-                <div className="grid gap-1.5">
-                  <Label>Gender</Label>
-                  <Controller name="gender" control={control} render={({ field }) => (
-                    <Select value={field.value || "__none"} onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}>
-                      <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__none">—</SelectItem>
-                        <SelectItem value="Male">Male</SelectItem>
-                        <SelectItem value="Female">Female</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                        <SelectItem value="PreferNotToSay">Prefer not to say</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )} />
-                </div>
-                <div className="grid gap-1.5">
-                  <Label>Nationality</Label>
-                  <Controller name="nationality" control={control} render={({ field }) => (
-                    <Select value={field.value || "__none"} onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}>
-                      <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__none">—</SelectItem>
-                        {NATIONALITIES.map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  )} />
-                </div>
-              </div>
-              <div className="grid gap-1.5">
-                <Label>SNS ID</Label>
-                <Input {...register("sns_id")} placeholder="WeChat / KakaoTalk / LINE ID" />
-              </div>
-            </div>
+        <Tabs defaultValue="details">
+          <TabsList className="mb-5">
+            <TabsTrigger value="details">{t('contact.tab_overview')}</TabsTrigger>
+            <TabsTrigger value="bookings">{t('contact.tab_bookings')}</TabsTrigger>
+            <TabsTrigger value="accounts">{t('contact.tab_accounts')}</TabsTrigger>
+            <TabsTrigger value="documents">{t('contact.tab_documents')}</TabsTrigger>
+          </TabsList>
 
-            {/* KYC */}
-            <div className="rounded-lg border p-4 space-y-4">
-              <h3 className="font-semibold text-sm">KYC / Identity</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="grid gap-1.5">
-                  <Label>Passport Number</Label>
-                  <Input {...register("passport_number")} />
+          <TabsContent value="details">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left column */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Basic Info */}
+                <div className="rounded-lg border p-4 space-y-4">
+                  <h3 className="font-semibold text-sm">{t('contact.section_personal')}</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="grid gap-1.5">
+                      <Label>Title</Label>
+                      <Controller name="title" control={control} render={({ field }) => (
+                        <Select value={field.value || "__none"} onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}>
+                          <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none">—</SelectItem>
+                            <SelectItem value="Mr">Mr</SelectItem>
+                            <SelectItem value="Ms">Ms</SelectItem>
+                            <SelectItem value="Mrs">Mrs</SelectItem>
+                            <SelectItem value="Dr">Dr</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )} />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label>{t('contact.label_first_name')} *</Label>
+                      <Input {...register("first_name", { required: true })} />
+                      {errors.first_name && <p className="text-xs text-destructive">Required</p>}
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label>{t('contact.label_last_name')} *</Label>
+                      <Input {...register("last_name", { required: true })} />
+                      {errors.last_name && <p className="text-xs text-destructive">Required</p>}
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label>Other Name</Label>
+                      <Input {...register("other_name")} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid gap-1.5">
+                      <Label>{t('contact.label_email')} *</Label>
+                      <Input {...register("email", { required: true })} type="email" />
+                      {errors.email && <p className="text-xs text-destructive">Required</p>}
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label>{t('contact.label_mobile')}</Label>
+                      <Input {...register("mobile_number")} />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label>Office Phone</Label>
+                      <Input {...register("office_number")} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid gap-1.5">
+                      <Label>{t('contact.label_dob')}</Label>
+                      <Controller name="date_of_birth" control={control} render={({ field }) => (
+                        <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                      )} />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label>Gender</Label>
+                      <Controller name="gender" control={control} render={({ field }) => (
+                        <Select value={field.value || "__none"} onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}>
+                          <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none">—</SelectItem>
+                            <SelectItem value="Male">Male</SelectItem>
+                            <SelectItem value="Female">Female</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                            <SelectItem value="PreferNotToSay">Prefer not to say</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )} />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label>{t('contact.label_nationality')}</Label>
+                      <Controller name="nationality" control={control} render={({ field }) => (
+                        <Select value={field.value || "__none"} onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}>
+                          <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none">—</SelectItem>
+                            {NATIONALITIES.map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      )} />
+                    </div>
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label>SNS ID</Label>
+                    <Input {...register("sns_id")} placeholder="WeChat / KakaoTalk / LINE ID" />
+                  </div>
                 </div>
-                <div className="grid gap-1.5">
-                  <Label>Passport Expiry</Label>
-                  <Controller name="passport_expiry" control={control} render={({ field }) => (
-                    <DateInput value={field.value ?? ""} onChange={field.onChange} />
-                  )} />
-                  <ExpiryWarning label="Passport" dateStr={passportExpiry} />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="grid gap-1.5">
-                  <Label>Visa Type</Label>
-                  <Input {...register("visa_type")} placeholder="e.g. Student 500" />
-                </div>
-                <div className="grid gap-1.5">
-                  <Label>Visa Expiry</Label>
-                  <Controller name="visa_expiry" control={control} render={({ field }) => (
-                    <DateInput value={field.value ?? ""} onChange={field.onChange} />
-                  )} />
-                  <ExpiryWarning label="Visa" dateStr={visaExpiry} />
-                </div>
-              </div>
-            </div>
 
-            {/* Address */}
-            <div className="rounded-lg border p-4 space-y-4">
-              <h3 className="font-semibold text-sm">Address</h3>
-              <div className="grid gap-1.5">
-                <Label>Address Line 1</Label>
-                <Input {...register("address_line1")} />
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="grid gap-1.5 col-span-2">
-                  <Label>Suburb</Label>
-                  <Input {...register("suburb")} />
+                {/* KYC */}
+                <div className="rounded-lg border p-4 space-y-4">
+                  <h3 className="font-semibold text-sm">{t('contact.section_identity')}</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid gap-1.5">
+                      <Label>{t('contact.label_passport')}</Label>
+                      <Input {...register("passport_number")} />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label>{t('contact.label_passport_expiry')}</Label>
+                      <Controller name="passport_expiry" control={control} render={({ field }) => (
+                        <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                      )} />
+                      <ExpiryWarning label="Passport" dateStr={passportExpiry} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid gap-1.5">
+                      <Label>Visa Type</Label>
+                      <Input {...register("visa_type")} placeholder="e.g. Student 500" />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label>Visa Expiry</Label>
+                      <Controller name="visa_expiry" control={control} render={({ field }) => (
+                        <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                      )} />
+                      <ExpiryWarning label="Visa" dateStr={visaExpiry} />
+                    </div>
+                  </div>
                 </div>
-                <div className="grid gap-1.5">
-                  <Label>State</Label>
-                  <Input {...register("state")} />
+
+                {/* Address */}
+                <div className="rounded-lg border p-4 space-y-4">
+                  <h3 className="font-semibold text-sm">{t('contact.section_address')}</h3>
+                  <div className="grid gap-1.5">
+                    <Label>{t('contact.label_address')}</Label>
+                    <Input {...register("address_line1")} />
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="grid gap-1.5 col-span-2">
+                      <Label>{t('contact.label_city')}</Label>
+                      <Input {...register("suburb")} />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label>{t('contact.label_state')}</Label>
+                      <Input {...register("state")} />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label>{t('contact.label_postcode')}</Label>
+                      <Input {...register("postcode")} />
+                    </div>
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label>{t('contact.label_country')}</Label>
+                    <Controller name="country" control={control} render={({ field }) => (
+                      <Select value={field.value || "__none"} onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}>
+                        <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none">—</SelectItem>
+                          {COUNTRIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    )} />
+                  </div>
                 </div>
-                <div className="grid gap-1.5">
-                  <Label>Postcode</Label>
-                  <Input {...register("postcode")} />
+              </div>
+
+              {/* Right column */}
+              <div className="space-y-4">
+                {/* Photo */}
+                {profilePhoto && (
+                  <div className="rounded-lg border p-4">
+                    <Label className="mb-2 block">Photo Preview</Label>
+                    <img src={profilePhoto} alt="Profile" className="w-full max-h-40 object-contain rounded" />
+                  </div>
+                )}
+                <div className="rounded-lg border p-4 space-y-4">
+                  <h3 className="font-semibold text-sm">Profile Photo URL</h3>
+                  <Input {...register("profile_photo_url")} placeholder="https://..." />
+                </div>
+
+                {/* Portal */}
+                <div className="rounded-lg border p-4 space-y-4">
+                  <h3 className="font-semibold text-sm">{t('contact.section_portal')}</h3>
+                  <div className="flex items-center justify-between">
+                    <Label>{t('contact.label_portal_enabled')}</Label>
+                    <Controller name="portal_enabled" control={control} render={({ field }) => (
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    )} />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label>{t('contact.label_portal_email')}</Label>
+                    <Input {...register("portal_user_id")} placeholder="Linked user ID" />
+                  </div>
+                </div>
+
+                {/* Settings */}
+                <div className="rounded-lg border p-4 space-y-4">
+                  <h3 className="font-semibold text-sm">Settings</h3>
+                  <div className="grid gap-1.5">
+                    <Label>{t('contact.label_status')}</Label>
+                    <Controller name="status" control={control} render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Active">Active</SelectItem>
+                          <SelectItem value="Inactive">Inactive</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Manual Input</Label>
+                    <Controller name="manual_input" control={control} render={({ field }) => (
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    )} />
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <div className="rounded-lg border p-4 space-y-2">
+                  <Label>Description / Notes</Label>
+                  <Input {...register("description")} placeholder="Internal notes" />
                 </div>
               </div>
-              <div className="grid gap-1.5">
-                <Label>Country</Label>
-                <Controller name="country" control={control} render={({ field }) => (
-                  <Select value={field.value || "__none"} onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}>
-                    <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none">—</SelectItem>
-                      {COUNTRIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                )} />
-              </div>
             </div>
-          </div>
+          </TabsContent>
 
-          {/* Right column */}
-          <div className="space-y-4">
-            {/* Photo */}
-            {profilePhoto && (
-              <div className="rounded-lg border p-4">
-                <Label className="mb-2 block">Photo Preview</Label>
-                <img src={profilePhoto} alt="Profile" className="w-full max-h-40 object-contain rounded" />
-              </div>
-            )}
-            <div className="rounded-lg border p-4 space-y-4">
-              <h3 className="font-semibold text-sm">Profile Photo URL</h3>
-              <Input {...register("profile_photo_url")} placeholder="https://..." />
+          <TabsContent value="bookings">
+            <div className="p-8 text-center text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
+              Bookings view content...
             </div>
+          </TabsContent>
 
-            {/* Portal */}
-            <div className="rounded-lg border p-4 space-y-4">
-              <h3 className="font-semibold text-sm">Portal Access</h3>
-              <div className="flex items-center justify-between">
-                <Label>Portal Enabled</Label>
-                <Controller name="portal_enabled" control={control} render={({ field }) => (
-                  <Switch checked={field.value} onCheckedChange={field.onChange} />
-                )} />
-              </div>
-              <div className="grid gap-1.5">
-                <Label>Portal User ID</Label>
-                <Input {...register("portal_user_id")} placeholder="Linked user ID" />
-              </div>
+          <TabsContent value="accounts">
+            <div className="p-8 text-center text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
+              Accounts view content...
             </div>
+          </TabsContent>
 
-            {/* Settings */}
-            <div className="rounded-lg border p-4 space-y-4">
-              <h3 className="font-semibold text-sm">Settings</h3>
-              <div className="grid gap-1.5">
-                <Label>Status</Label>
-                <Controller name="status" control={control} render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="Inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )} />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label>Manual Input</Label>
-                <Controller name="manual_input" control={control} render={({ field }) => (
-                  <Switch checked={field.value} onCheckedChange={field.onChange} />
-                )} />
-              </div>
+          <TabsContent value="documents">
+            <div className="p-8 text-center text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
+              Documents view content...
             </div>
-
-            {/* Notes */}
-            <div className="rounded-lg border p-4 space-y-2">
-              <Label>Description / Notes</Label>
-              <Input {...register("description")} placeholder="Internal notes" />
-            </div>
-          </div>
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );

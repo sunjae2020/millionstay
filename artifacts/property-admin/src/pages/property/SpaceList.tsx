@@ -61,11 +61,11 @@ export default function SpaceList() {
     <Layout>
       <PageHeader
         title={t("nav.space")}
-        subtitle={`${spaces?.length ?? 0} total`}
+        subtitle={`${spaces?.length ?? 0} ${t("common.total")}`}
         actions={
           <Link href="/property/spaces/new">
             <Button size="sm" className="gap-1.5">
-              <Plus className="h-4 w-4" /> New Space
+              <Plus className="h-4 w-4" /> {t("space.new")}
             </Button>
           </Link>
         }
@@ -75,7 +75,7 @@ export default function SpaceList() {
           <div className="relative flex-1 min-w-[200px] max-w-xs">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
-              placeholder="Search spaces..."
+              placeholder={t("space.search_placeholder")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-8 h-8 text-sm"
@@ -83,37 +83,37 @@ export default function SpaceList() {
           </div>
           <Select value={spaceType || "_all"} onValueChange={(v) => setSpaceType(v === "_all" ? "" : v)}>
             <SelectTrigger className="w-40 h-8 text-sm">
-              <SelectValue placeholder="Space Type" />
+              <SelectValue placeholder={t("space.label_type")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All Types</SelectItem>
-              <SelectItem value="Private Room">Private Room</SelectItem>
-              <SelectItem value="Shared Room">Shared Room</SelectItem>
-              <SelectItem value="Whole Property">Whole Property</SelectItem>
-              <SelectItem value="Desk">Desk</SelectItem>
-              <SelectItem value="Other">Other</SelectItem>
+              <SelectItem value="_all">{t("space.all_types")}</SelectItem>
+              <SelectItem value="Private Room">{t("space.type_private") || "Private Room"}</SelectItem>
+              <SelectItem value="Shared Room">{t("space.type_shared") || "Shared Room"}</SelectItem>
+              <SelectItem value="Whole Property">{t("space.type_whole") || "Whole Property"}</SelectItem>
+              <SelectItem value="Desk">{t("space.type_desk") || "Desk"}</SelectItem>
+              <SelectItem value="Other">{t("space.type_other") || "Other"}</SelectItem>
             </SelectContent>
           </Select>
           <Select value={status || "_all"} onValueChange={(v) => setStatus(v === "_all" ? "" : v)}>
             <SelectTrigger className="w-32 h-8 text-sm">
-              <SelectValue placeholder="Status" />
+              <SelectValue placeholder={t("common.status")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All Statuses</SelectItem>
-              <SelectItem value="Active">Active</SelectItem>
-              <SelectItem value="Inactive">Inactive</SelectItem>
-              <SelectItem value="Suspended">Suspended</SelectItem>
+              <SelectItem value="_all">{t("space.all_statuses")}</SelectItem>
+              <SelectItem value="Active">{t("common.active")}</SelectItem>
+              <SelectItem value="Inactive">{t("common.inactive")}</SelectItem>
+              <SelectItem value="Suspended">{t("common.suspended") || "Suspended"}</SelectItem>
             </SelectContent>
           </Select>
           <Select value={bookingMode || "_all"} onValueChange={(v) => setBookingMode(v === "_all" ? "" : v)}>
             <SelectTrigger className="w-36 h-8 text-sm">
-              <SelectValue placeholder="Booking Mode" />
+              <SelectValue placeholder={t("space.label_mode")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All Modes</SelectItem>
-              <SelectItem value="Instant">Instant</SelectItem>
-              <SelectItem value="Request">Request</SelectItem>
-              <SelectItem value="Manual">Manual</SelectItem>
+              <SelectItem value="_all">{t("space.all_modes")}</SelectItem>
+              <SelectItem value="Instant">{t("space.mode_instant") || "Instant"}</SelectItem>
+              <SelectItem value="Request">{t("space.mode_request") || "Request"}</SelectItem>
+              <SelectItem value="Manual">{t("space.mode_manual") || "Manual"}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -123,21 +123,21 @@ export default function SpaceList() {
           <table className="w-full min-w-max text-sm">
             <thead className="bg-muted/50 border-b">
               <tr>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Name</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Property</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Type</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Policy</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Parent Space</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Created On</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space.col_name")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space.col_property")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space.col_type")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space.col_status")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space.col_policy")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space.col_parent")}</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space.col_created")}</th>
                 <th className="px-4 py-3 w-20"></th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {isLoading ? (
-                <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground text-sm">Loading...</td></tr>
+                <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("common.loading")}</td></tr>
               ) : spaces?.length === 0 ? (
-                <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground text-sm">No spaces found</td></tr>
+                <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("space.no_spaces")}</td></tr>
               ) : (
                 pagination.paginatedItems.map((space) => (
                   <tr key={space.id} className="hover:bg-muted/30 transition-colors">
@@ -177,15 +177,15 @@ export default function SpaceList() {
       <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Space</AlertDialogTitle>
-            <AlertDialogDescription>Are you sure you want to delete this space?</AlertDialogDescription>
+            <AlertDialogTitle>{t("space.delete_title")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("space.delete_desc")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => deleteId && deleteMutation.mutate({ id: deleteId })}
-            >Delete</AlertDialogAction>
+            >{t("common.delete")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

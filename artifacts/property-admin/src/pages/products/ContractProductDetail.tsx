@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,6 +69,7 @@ interface FormData {
 }
 
 export default function ContractProductDetail() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const qc = useQueryClient();
@@ -208,7 +210,7 @@ export default function ContractProductDetail() {
                 <Button type="button" variant="ghost" size="icon" className="h-8 w-8"><ArrowLeft className="h-4 w-4" /></Button>
               </Link>
               <div>
-                <h1 className="text-xl font-bold">{isNew ? "New Product" : product?.name}</h1>
+                <h1 className="text-xl font-bold">{isNew ? `${t('common.new')} ${t('nav.contract_product')}` : (product?.name ?? t('nav.contract_product'))}</h1>
                 {!isNew && product && watchedTermType && (
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded border inline-block mt-0.5 ${TERM_COLORS[watchedTermType] ?? "bg-gray-100 text-gray-600"}`}>
                     {TERM_LABELS[watchedTermType] ?? watchedTermType}
@@ -219,12 +221,12 @@ export default function ContractProductDetail() {
             <div className="flex gap-2">
               {!isNew && (
                 <Button type="button" variant="outline" size="sm" className="text-red-600 hover:text-red-700"
-                  onClick={() => { if (confirm("Delete this product?")) deleteMutation.mutate({ id: Number(id) }); }}>
-                  <Trash2 className="h-4 w-4 mr-1" />Delete
+                  onClick={() => { if (confirm(t('common.confirm_delete'))) deleteMutation.mutate({ id: Number(id) }); }}>
+                  <Trash2 className="h-4 w-4 mr-1" />{t('common.delete')}
                 </Button>
               )}
               <Button type="submit" className="bg-[#E8621A] hover:bg-[#d4561a] text-white">
-                <Save className="h-4 w-4 mr-1" />Save
+                <Save className="h-4 w-4 mr-1" />{t('common.save')}
               </Button>
             </div>
           </div>
@@ -233,7 +235,7 @@ export default function ContractProductDetail() {
           {!isNew && product && (
             <div className="border rounded-lg p-4 mb-5 flex items-center justify-between bg-orange-50/40">
               <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-muted-foreground">Status:</span>
+                <span className="text-sm font-medium text-muted-foreground">{t('common.status')}:</span>
                 <Badge className={statusColors[status] ?? ""}>{status}</Badge>
                 {product.promotion_name && (
                   <span className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -244,19 +246,19 @@ export default function ContractProductDetail() {
               <div className="flex gap-2">
                 {status === "Draft" && (
                   <Button type="button" size="sm" className="bg-green-600 hover:bg-green-700 text-white"
-                    onClick={() => activateMutation.mutate({ id: Number(id) })}>Activate</Button>
+                    onClick={() => activateMutation.mutate({ id: Number(id) })}>{t('common.activate')}</Button>
                 )}
                 {status === "Active" && (
                   <Button type="button" size="sm" variant="outline"
-                    onClick={() => deactivateMutation.mutate({ id: Number(id) })}>Deactivate</Button>
+                    onClick={() => deactivateMutation.mutate({ id: Number(id) })}>{t('common.deactivate')}</Button>
                 )}
                 {(status === "Draft" || status === "Inactive") && (
                   <Button type="button" size="sm" variant="outline" className="text-red-600"
-                    onClick={() => archiveMutation.mutate({ id: Number(id) })}>Archive</Button>
+                    onClick={() => archiveMutation.mutate({ id: Number(id) })}>{t('common.archive')}</Button>
                 )}
                 {status === "Archived" && (
                   <Button type="button" size="sm" variant="outline"
-                    onClick={() => activateMutation.mutate({ id: Number(id) })}>Restore</Button>
+                    onClick={() => activateMutation.mutate({ id: Number(id) })}>{t('common.restore')}</Button>
                 )}
               </div>
             </div>
@@ -265,18 +267,18 @@ export default function ContractProductDetail() {
           <div className="space-y-5">
             {/* Space × Promotion */}
             <div className="border rounded-lg bg-white overflow-hidden">
-              <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Space × Promotion = Product</div>
+              <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t('contract_product.section_space_promo')}</div>
               <div className="p-5 grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Space *</Label>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_space')} *</Label>
                   <Controller name="space_id" control={control} render={({ field }) => (
-                    <LookupSelect lookupUrl="/api/v1/lookup/spaces" value={field.value} onChange={field.onChange} placeholder="Search spaces..." />
+                    <LookupSelect lookupUrl="/api/v1/lookup/spaces" value={field.value} onChange={field.onChange} placeholder={t('common.search')} />
                   )} />
                 </div>
                 <div>
-                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Promotion (Term Type)</Label>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_promotion')}</Label>
                   <Controller name="promotion_id" control={control} render={({ field }) => (
-                    <LookupSelect lookupUrl="/api/v1/lookup/promotions" value={field.value} onChange={field.onChange} placeholder="Search promotions..." />
+                    <LookupSelect lookupUrl="/api/v1/lookup/promotions" value={field.value} onChange={field.onChange} placeholder={t('common.search')} />
                   )} />
                 </div>
                 {watchedTermType && (
@@ -294,25 +296,25 @@ export default function ContractProductDetail() {
 
             {/* General */}
             <div className="border rounded-lg bg-white overflow-hidden">
-              <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">General</div>
+              <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t('contract_product.section_general')}</div>
               <div className="p-5 grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Product Name *</Label>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_name')} *</Label>
                   <Input {...register("name", { required: true })} placeholder="e.g. Room 101 — Mid-term Package" />
                 </div>
                 <div>
-                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Product Type</Label>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_type')}</Label>
                   <Controller name="product_type" control={control} render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {PRODUCT_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                        {PRODUCT_TYPES.map(itemType => <SelectItem key={itemType} value={itemType}>{itemType}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   )} />
                 </div>
                 <div className="col-span-2">
-                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Description</Label>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_description')}</Label>
                   <Textarea {...register("description")} placeholder="Product description..." rows={3} />
                 </div>
               </div>
@@ -320,10 +322,10 @@ export default function ContractProductDetail() {
 
             {/* Pricing */}
             <div className="border rounded-lg bg-white overflow-hidden">
-              <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Pricing</div>
+              <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t('contract_product.section_pricing')}</div>
               <div className="p-5 grid grid-cols-3 gap-4">
                 <div>
-                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Currency</Label>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_currency')}</Label>
                   <Controller name="currency" control={control} render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
@@ -332,30 +334,30 @@ export default function ContractProductDetail() {
                   )} />
                 </div>
                 <div>
-                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Weekly Rate (base)</Label>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_weekly_rate')}</Label>
                   <Input {...register("weekly_rate")} type="number" step="0.01" min="0" placeholder="e.g. 430" />
                 </div>
                 <div>
                   <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                    Effective Weekly Rate
+                    {t('contract_product.label_effective_rate')}
                     {selectedPromotion?.discount_percentage ? ` (−${selectedPromotion.discount_percentage}%)` : ""}
                   </Label>
                   <Input {...register("effective_weekly_rate")} type="number" step="0.01" min="0"
                     className="bg-muted/50" placeholder="Auto-calculated" readOnly />
                 </div>
                 <div>
-                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Monthly Rate</Label>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_monthly_rate')}</Label>
                   <Input {...register("monthly_rate")} type="number" step="0.01" min="0" placeholder="e.g. 1720" />
                 </div>
                 <div>
-                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Billing Frequency</Label>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_billing_frequency')}</Label>
                   <Controller name="billing_frequency" control={control} render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Weekly">Weekly</SelectItem>
-                        <SelectItem value="Biweekly">Biweekly (every 2 weeks)</SelectItem>
-                        <SelectItem value="Monthly">Monthly</SelectItem>
+                        <SelectItem value="Weekly">{t('common.weekly')}</SelectItem>
+                        <SelectItem value="Biweekly">{t('common.biweekly')}</SelectItem>
+                        <SelectItem value="Monthly">{t('common.monthly')}</SelectItem>
                       </SelectContent>
                     </Select>
                   )} />
@@ -364,46 +366,50 @@ export default function ContractProductDetail() {
               <Separator className="my-0" />
               <div className="p-5 grid grid-cols-4 gap-4">
                 <div>
-                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Bond (weeks)</Label>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_bond')}</Label>
                   <Input {...register("bond_weeks")} type="number" step="0.5" min="0" placeholder="4" />
                 </div>
                 <div>
-                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Advance (weeks)</Label>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_advance')}</Label>
                   <Input {...register("advance_weeks")} type="number" step="0.5" min="0" placeholder="2" />
                 </div>
                 <div>
-                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Min Stay (weeks)</Label>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_min_stay')}</Label>
                   <Input {...register("min_stay_weeks")} type="number" min="1" placeholder="1" />
                 </div>
                 <div>
-                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Max Stay (weeks)</Label>
-                  <Input {...register("max_stay_weeks")} type="number" min="1" placeholder="Unlimited" />
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_max_stay')}</Label>
+                  <Input {...register("max_stay_weeks")} type="number" min="1" placeholder={t('common.unlimited')} />
                 </div>
               </div>
             </div>
 
             {/* Inclusions */}
             <div className="border rounded-lg bg-white overflow-hidden">
-              <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Inclusions</div>
+              <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t('contract_product.section_inclusions')}</div>
               <div className="p-5">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-                  {(["includes_wifi", "includes_parking", "includes_utilities", "includes_meals", "includes_laundry", "includes_cleaning"] as const).map(field => {
+                  {(["includes_wifi", "includes_parking", "includes_utilities", "includes_meals", "includes_laundry", "includes_cleaning"] as const).map(inclusionField => {
                     const labels: Record<string, string> = {
-                      includes_wifi: "WiFi", includes_parking: "Parking", includes_utilities: "Utilities",
-                      includes_meals: "Meals", includes_laundry: "Laundry", includes_cleaning: "Cleaning",
+                      includes_wifi: t('contract_product.label_wifi'),
+                      includes_parking: t('contract_product.label_parking'),
+                      includes_utilities: t('contract_product.label_utilities'),
+                      includes_meals: t('contract_product.label_meals'),
+                      includes_laundry: t('contract_product.label_laundry'),
+                      includes_cleaning: t('contract_product.label_cleaning'),
                     };
                     return (
-                      <Controller key={field} name={field} control={control} render={({ field: f }) => (
+                      <Controller key={inclusionField} name={inclusionField} control={control} render={({ field: f }) => (
                         <div className="flex items-center gap-2">
-                          <Checkbox id={field} checked={!!f.value} onCheckedChange={f.onChange} />
-                          <Label htmlFor={field} className="cursor-pointer">{labels[field]}</Label>
+                          <Checkbox id={inclusionField} checked={!!f.value} onCheckedChange={f.onChange} />
+                          <Label htmlFor={inclusionField} className="cursor-pointer">{labels[inclusionField]}</Label>
                         </div>
                       )} />
                     );
                   })}
                 </div>
                 <div>
-                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Extra Inclusions</Label>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_extra_inclusions')}</Label>
                   <Input {...register("extra_inclusions")} placeholder="e.g. Pool access, Gym, Concierge" />
                 </div>
               </div>
@@ -411,7 +417,7 @@ export default function ContractProductDetail() {
 
             {/* Notes */}
             <div className="border rounded-lg bg-white overflow-hidden">
-              <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Notes</div>
+              <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t('contract_product.section_notes')}</div>
               <div className="p-5">
                 <Textarea {...register("notes")} placeholder="Internal notes..." rows={4} />
               </div>

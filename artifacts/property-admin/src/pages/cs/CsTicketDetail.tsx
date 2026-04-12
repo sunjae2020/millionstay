@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, useLocation, Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { apiFetch } from "@/lib/apiFetch";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -81,6 +82,7 @@ export default function CsTicketDetail() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const qc = useQueryClient();
+  const { t } = useTranslation();
   const fileRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -197,7 +199,7 @@ export default function CsTicketDetail() {
   return (
     <div className="p-4 sm:p-6 max-w-5xl mx-auto">
       <button onClick={() => navigate("/cs/tickets")} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary mb-5 transition-colors">
-        <ArrowLeft className="h-4 w-4" /> Back to CS Tickets
+        <ArrowLeft className="h-4 w-4" /> {t('common.back')}
       </button>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -213,15 +215,15 @@ export default function CsTicketDetail() {
                     {ticket.category}
                   </span>
                   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${st.color}`}>
-                    {st.icon}{st.label}
+                    {st.icon}{t(`csticket.status_${ticket.status.toLowerCase()}`, st.label)}
                   </span>
                   <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${PRIORITY_COLORS[ticket.priority] ?? ""}`}>
-                    {ticket.priority}
+                    {t(`csticket.priority_${ticket.priority.toLowerCase()}`, ticket.priority)}
                   </span>
                 </div>
                 <h1 className="text-lg font-bold text-gray-900">{ticket.subject}</h1>
                 <p className="text-xs text-gray-400 mt-1">
-                  Submitted {format(new Date(ticket.created_at), "dd MMM yyyy, HH:mm")} · Updated {format(new Date(ticket.updated_at), "dd MMM yyyy, HH:mm")}
+                  {t('common.created_at')}: {format(new Date(ticket.created_at), "dd MMM yyyy, HH:mm")} · {t('common.updated_at')}: {format(new Date(ticket.updated_at), "dd MMM yyyy, HH:mm")}
                 </p>
               </div>
             </div>
@@ -243,8 +245,8 @@ export default function CsTicketDetail() {
                         </div>
                       )}
                       <span className="text-xs text-gray-400">
-                        {isAdmin ? "You (Admin)" : ticket.guest_name ?? "Guest"} · {format(new Date(msg.created_at), "dd/MM/yy HH:mm")}
-                        {isInternalMsg && <span className="ml-1.5 text-amber-500">(Internal Note)</span>}
+                        {isAdmin ? t('csticket.sender_admin', 'You (Admin)') : ticket.guest_name ?? t('csticket.sender_guest', 'Guest')} · {format(new Date(msg.created_at), "dd/MM/yy HH:mm")}
+                        {isInternalMsg && <span className="ml-1.5 text-amber-500">({t('csticket.internal_note', 'Internal Note')})</span>}
                       </span>
                     </div>
                     <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
@@ -280,21 +282,21 @@ export default function CsTicketDetail() {
                 onClick={() => setIsInternal(false)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${!isInternal ? "bg-primary text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
               >
-                <Eye className="h-3.5 w-3.5" /> Guest Reply
+                <Eye className="h-3.5 w-3.5" /> {t('csticket.tab_guest_reply', 'Guest Reply')}
               </button>
               <button
                 type="button"
                 onClick={() => setIsInternal(true)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isInternal ? "bg-amber-500 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
               >
-                <EyeOff className="h-3.5 w-3.5" /> Internal Note
+                <EyeOff className="h-3.5 w-3.5" /> {t('csticket.tab_internal_note', 'Internal Note')}
               </button>
               <span className="text-xs text-gray-400 ml-1">
-                {isInternal ? "Not visible to guest" : "Visible to guest"}
+                {isInternal ? t('csticket.internal_note_hint', 'Not visible to guest') : t('csticket.guest_reply_hint', 'Visible to guest')}
               </span>
             </div>
             <Textarea
-              placeholder={isInternal ? "Add an internal note (not visible to guest)…" : "Type your reply to the guest…"}
+              placeholder={isInternal ? t('csticket.placeholder_internal_note', 'Add an internal note (not visible to guest)…') : t('csticket.placeholder_reply')}
               value={reply}
               onChange={e => setReply(e.target.value)}
               rows={3}
@@ -324,7 +326,7 @@ export default function CsTicketDetail() {
                 className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-primary transition-colors px-2 py-1 rounded-lg hover:bg-gray-50"
               >
                 {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
-                Attach
+                {t('common.upload', 'Attach')}
               </button>
               <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
               <div className="flex-1" />
@@ -334,7 +336,7 @@ export default function CsTicketDetail() {
                 className={`gap-2 ${isInternal ? "bg-amber-500 hover:bg-amber-600 text-white" : "bg-primary hover:bg-primary/90 text-white"}`}
               >
                 {sendMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                {isInternal ? "Save Note" : "Send Reply"}
+                {isInternal ? t('common.save', 'Save Note') : t('csticket.btn_send_reply')}
               </Button>
             </div>
           </div>
@@ -345,7 +347,7 @@ export default function CsTicketDetail() {
           {/* Guest Info */}
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
             <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3 flex items-center gap-1.5">
-              <User className="h-3.5 w-3.5" /> Guest
+              <User className="h-3.5 w-3.5" /> {t('csticket.label_guest')}
             </h3>
             <p className="font-semibold text-gray-900 text-sm">{ticket.guest_name ?? "—"}</p>
             <p className="text-gray-500 text-xs mt-0.5">{ticket.guest_email ?? "—"}</p>
@@ -356,7 +358,7 @@ export default function CsTicketDetail() {
           {ticket.booking_ref && (
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
               <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3 flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5" /> Booking
+                <Calendar className="h-3.5 w-3.5" /> {t('csticket.label_booking')}
               </h3>
               <p className="font-semibold text-gray-900 text-sm">{ticket.booking_ref}</p>
               <p className="text-xs text-gray-500 mt-0.5">{ticket.booking_status}</p>
@@ -372,30 +374,30 @@ export default function CsTicketDetail() {
           {/* Status & Priority Controls */}
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
             <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3 flex items-center gap-1.5">
-              <Flag className="h-3.5 w-3.5" /> Management
+              <Flag className="h-3.5 w-3.5" /> {t('csticket.section_management', 'Management')}
             </h3>
             <div className="space-y-3">
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">Status</label>
+                <label className="text-xs text-gray-500 mb-1 block">{t('csticket.label_status')}</label>
                 <Select value={status} onValueChange={setStatus}>
                   <SelectTrigger className="h-8 text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {STATUSES.map(s => (
-                      <SelectItem key={s} value={s}>{STATUS_CONFIG[s]?.label ?? s}</SelectItem>
+                      <SelectItem key={s} value={s}>{t(`csticket.status_${s.toLowerCase()}`, STATUS_CONFIG[s]?.label ?? s)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">Priority</label>
+                <label className="text-xs text-gray-500 mb-1 block">{t('csticket.label_priority')}</label>
                 <Select value={priority} onValueChange={setPriority}>
                   <SelectTrigger className="h-8 text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {PRIORITIES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                    {PRIORITIES.map(p => <SelectItem key={p} value={p}>{t(`csticket.priority_${p.toLowerCase()}`, p)}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -405,7 +407,7 @@ export default function CsTicketDetail() {
                 onClick={() => updateMutation.mutate({ status, priority })}
               >
                 {updateMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
-                Save Changes
+                {t('common.save')}
               </Button>
             </div>
           </div>

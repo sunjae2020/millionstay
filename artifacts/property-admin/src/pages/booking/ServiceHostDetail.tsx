@@ -92,16 +92,16 @@ export default function ServiceHostDetail() {
         title={isNew ? `${t("common.new")} ${t("nav.service_host")}` : (host?.name ?? t("nav.service_host"))}
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setLocation("/booking/service-hosts")}><ArrowLeft className="w-4 h-4 mr-1" /> Back</Button>
-            <Button onClick={handleSubmit(onSubmit)} className="bg-[#E8621A] hover:bg-[#d4561a] text-white"><Save className="w-4 h-4 mr-1" /> Save</Button>
+            <Button variant="outline" onClick={() => setLocation("/booking/service-hosts")}><ArrowLeft className="w-4 h-4 mr-1" /> {t("common.back")}</Button>
+            <Button onClick={handleSubmit(onSubmit)} className="bg-[#E8621A] hover:bg-[#d4561a] text-white"><Save className="w-4 h-4 mr-1" /> {t("common.save")}</Button>
           </div>
         }
       />
       <div className="p-6 max-w-3xl space-y-6">
         <div className="rounded-lg border bg-white p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">GENERAL</h3>
+          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">{t("service_host.section_general")}</h3>
           <div>
-            <Label>Name *</Label>
+            <Label>{t("common.name")} *</Label>
             <Input {...register("name")} className="mt-1" />
           </div>
         </div>
@@ -109,7 +109,7 @@ export default function ServiceHostDetail() {
         <div className="rounded-lg border bg-white p-6 space-y-4">
           <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">MAIN</h3>
           <div>
-            <Label>Account</Label>
+            <Label>{t("service_host.label_account")}</Label>
             <Controller
               name="account_id"
               control={control}
@@ -125,7 +125,7 @@ export default function ServiceHostDetail() {
             />
           </div>
           <div>
-            <Label>Contract Product</Label>
+            <Label>{t("service_host.label_service")}</Label>
             <Controller
               name="contract_product_id"
               control={control}
@@ -143,16 +143,16 @@ export default function ServiceHostDetail() {
         </div>
 
         <div className="rounded-lg border bg-white p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">PERIOD</h3>
+          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">{t("service_host.section_schedule")}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label>From Date</Label>
+              <Label>{t("service_host.label_from_date")}</Label>
               <Controller name="from_date" control={control} render={({ field }) => (
                 <DateInput value={field.value ?? ""} onChange={field.onChange} className="mt-1" />
               )} />
             </div>
             <div>
-              <Label>To Date</Label>
+              <Label>{t("service_host.label_to_date")}</Label>
               <Controller name="to_date" control={control} render={({ field }) => (
                 <DateInput value={field.value ?? ""} onChange={field.onChange} className="mt-1" />
               )} />
@@ -164,23 +164,23 @@ export default function ServiceHostDetail() {
           <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">OPTIONS</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <Label>In Call</Label>
+              <Label>{t("service_host.label_in_call")}</Label>
               <div className="flex gap-4 mt-2">
                 {["Yes", "No"].map((opt) => (
                   <label key={opt} className="flex items-center gap-2 cursor-pointer">
                     <input type="radio" name="in_call" value={opt} checked={inCallVal === (opt === "Yes")} onChange={() => setValue("in_call", opt === "Yes")} />
-                    <span className="text-sm">{opt}</span>
+                    <span className="text-sm">{opt === "Yes" ? t("common.yes") : t("common.no")}</span>
                   </label>
                 ))}
               </div>
             </div>
             <div>
-              <Label>Out Call</Label>
+              <Label>{t("service_host.label_out_call")}</Label>
               <div className="flex gap-4 mt-2">
                 {["Yes", "No"].map((opt) => (
                   <label key={opt} className="flex items-center gap-2 cursor-pointer">
                     <input type="radio" name="out_call" value={opt} checked={outCallVal === (opt === "Yes")} onChange={() => setValue("out_call", opt === "Yes")} />
-                    <span className="text-sm">{opt}</span>
+                    <span className="text-sm">{opt === "Yes" ? t("common.yes") : t("common.no")}</span>
                   </label>
                 ))}
               </div>
@@ -199,7 +199,7 @@ export default function ServiceHostDetail() {
         </div>
 
         <div className="rounded-lg border bg-white p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">DESCRIPTION</h3>
+          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">{t("service_host.label_notes")}</h3>
           <Textarea {...register("description")} rows={4} placeholder="Enter description..." />
         </div>
 
@@ -207,7 +207,7 @@ export default function ServiceHostDetail() {
           <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">ADMIN</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label>Status</Label>
+              <Label>{t("service_host.label_status")}</Label>
               <Controller name="status" control={control} render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
@@ -219,7 +219,7 @@ export default function ServiceHostDetail() {
             </div>
             {!isNew && (
               <>
-                <div><Label className="text-muted-foreground text-xs">Created On</Label><p className="text-sm mt-1">{host?.created_at ? new Date(host.created_at).toLocaleString() : "—"}</p></div>
+                <div><Label className="text-muted-foreground text-xs">{t("common.created_at")}</Label><p className="text-sm mt-1">{host?.created_at ? new Date(host.created_at).toLocaleString() : "—"}</p></div>
               </>
             )}
           </div>

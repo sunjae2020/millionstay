@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useParams, Link as WouterLink } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,6 +68,7 @@ interface PromotionForm {
 }
 
 export default function PromotionDetail() {
+  const { t } = useTranslation();
   const params = useParams<{ id: string }>();
   const isNew = params.id === "new";
   const id = isNew ? null : parseInt(params.id ?? "0", 10);
@@ -230,7 +232,7 @@ export default function PromotionDetail() {
             </Link>
             <div className="flex items-center gap-2">
               <Tag className="h-5 w-5 text-primary" />
-              <h1 className="text-xl font-bold">{isNew ? "New Promotion" : (promotion?.name ?? "Promotion")}</h1>
+              <h1 className="text-xl font-bold">{isNew ? `${t('common.new')} ${t('nav.promotion')}` : (promotion?.name ?? t('nav.promotion'))}</h1>
             </div>
             {termMeta && (
               <span className={`text-xs font-semibold px-2 py-0.5 rounded border ${termMeta.color}`}>{termMeta.label}</span>
@@ -244,31 +246,31 @@ export default function PromotionDetail() {
                 onClick={handleClone}
               >
                 <Copy className={`h-3.5 w-3.5 mr-1 ${isCloning ? "animate-pulse" : ""}`} />
-                {isCloning ? "Cloning..." : "Clone"}
+                {isCloning ? t('common.cloning') : t('common.clone')}
               </Button>
             )}
             {!isNew && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="outline" size="sm" className="text-destructive border-destructive/30 hover:bg-destructive/10">
-                    <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
+                    <Trash2 className="h-3.5 w-3.5 mr-1" /> {t('common.delete')}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Promotion</AlertDialogTitle>
-                    <AlertDialogDescription>Are you sure you want to delete this promotion? This action cannot be undone.</AlertDialogDescription>
+                    <AlertDialogTitle>{t('promotion.delete_title')}</AlertDialogTitle>
+                    <AlertDialogDescription>{t('promotion.delete_desc')}</AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
                     <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      onClick={() => id && deleteMutation.mutate({ id })}>Delete</AlertDialogAction>
+                      onClick={() => id && deleteMutation.mutate({ id })}>{t('common.delete')}</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
             )}
             <Button onClick={handleSubmit(onSubmit)} disabled={isSaving} className="bg-[#E8621A] hover:bg-[#d4561a] text-white">
-              <Save className="h-4 w-4 mr-1" /> {isSaving ? "Saving..." : "Save"}
+              <Save className="h-4 w-4 mr-1" /> {isSaving ? t('common.saving') : t('common.save')}
             </Button>
           </div>
         </div>
@@ -276,73 +278,73 @@ export default function PromotionDetail() {
         <div className="space-y-5">
           {/* Term Type — most important, shown first */}
           <div className="bg-white border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Term Type &amp; Billing</div>
+            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t('promotion.section_term_type')}</div>
             <div className="p-5 grid grid-cols-3 gap-4">
               <div>
-                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Term Type *</Label>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_term_type')} *</Label>
                 <Controller name="term_type" control={control} render={({ field }) => (
                   <Select value={field.value} onValueChange={(v) => { field.onChange(v); handleTermTypeChange(v); }}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ShortTerm">Short-term (under 4 weeks)</SelectItem>
-                      <SelectItem value="MidTerm">Mid-term (4–25 weeks)</SelectItem>
-                      <SelectItem value="LongTerm">Long-term (26+ weeks)</SelectItem>
+                      <SelectItem value="ShortTerm">{t('promotion.term_short')}</SelectItem>
+                      <SelectItem value="MidTerm">{t('promotion.term_mid')}</SelectItem>
+                      <SelectItem value="LongTerm">{t('promotion.term_long')}</SelectItem>
                     </SelectContent>
                   </Select>
                 )} />
               </div>
               <div>
-                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Min Stay (weeks)</Label>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_min_stay')}</Label>
                 <Input {...register("min_stay_weeks")} type="number" min="1" />
               </div>
               <div>
-                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Max Stay (weeks){termType === "LongTerm" ? " — blank = unlimited" : ""}</Label>
-                <Input {...register("max_stay_weeks")} type="number" min="1" placeholder={termType === "LongTerm" ? "Unlimited" : ""} />
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_max_stay')}{termType === "LongTerm" ? ` — ${t('common.unlimited_hint')}` : ""}</Label>
+                <Input {...register("max_stay_weeks")} type="number" min="1" placeholder={termType === "LongTerm" ? t('common.unlimited') : ""} />
               </div>
               <div>
-                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Billing Frequency</Label>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_billing_frequency')}</Label>
                 <Controller name="billing_frequency" control={control} render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Upfront">Upfront (paid at signing)</SelectItem>
-                      <SelectItem value="Weekly">Weekly</SelectItem>
-                      <SelectItem value="Biweekly">Biweekly (every 2 weeks)</SelectItem>
-                      <SelectItem value="Monthly">Monthly</SelectItem>
+                      <SelectItem value="Upfront">{t('common.upfront')}</SelectItem>
+                      <SelectItem value="Weekly">{t('common.weekly')}</SelectItem>
+                      <SelectItem value="Biweekly">{t('common.biweekly')}</SelectItem>
+                      <SelectItem value="Monthly">{t('common.monthly')}</SelectItem>
                     </SelectContent>
                   </Select>
                 )} />
               </div>
               <div>
-                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Min Stay (nights) — per space</Label>
-                <Input {...register("min_stay_nights")} type="number" min="1" placeholder="Optional" />
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_min_nights')}</Label>
+                <Input {...register("min_stay_nights")} type="number" min="1" placeholder={t('common.optional')} />
               </div>
             </div>
           </div>
 
           {/* General */}
           <div className="bg-white border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">General</div>
+            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t('promotion.section_general')}</div>
             <div className="p-5 grid grid-cols-2 gap-4">
               <div className="col-span-2">
-                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Promotion Name *</Label>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_name')} *</Label>
                 <Input {...register("name", { required: true })} placeholder="e.g. Mid-term 5% Discount" className={errors.name ? "border-destructive" : ""} />
               </div>
               <div>
-                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Promo Code</Label>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_code')}</Label>
                 <Input {...register("code")} placeholder="e.g. MID5" className="font-mono uppercase" />
               </div>
               <div>
-                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Status</Label>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_status')}</Label>
                 <Controller name="status" control={control} render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Draft">Draft</SelectItem>
-                      <SelectItem value="Scheduled">Scheduled</SelectItem>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="Expired">Expired</SelectItem>
-                      <SelectItem value="Disabled">Disabled</SelectItem>
+                      <SelectItem value="Draft">{t('common.draft')}</SelectItem>
+                      <SelectItem value="Scheduled">{t('common.scheduled')}</SelectItem>
+                      <SelectItem value="Active">{t('common.active')}</SelectItem>
+                      <SelectItem value="Expired">{t('common.expired')}</SelectItem>
+                      <SelectItem value="Disabled">{t('common.disabled')}</SelectItem>
                     </SelectContent>
                   </Select>
                 )} />
@@ -352,37 +354,37 @@ export default function PromotionDetail() {
 
           {/* Discount */}
           <div className="bg-white border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Discount</div>
+            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t('promotion.section_discount')}</div>
             <div className="p-5 grid grid-cols-3 gap-4">
               <div>
-                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Promotion Type</Label>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_type')}</Label>
                 <Controller name="promotion_type" control={control} render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Percentage">Percentage (%)</SelectItem>
-                      <SelectItem value="Fixed">Fixed Amount ($)</SelectItem>
-                      <SelectItem value="FreeNights">Free Nights</SelectItem>
-                      <SelectItem value="None">No Discount</SelectItem>
+                      <SelectItem value="Percentage">{t('promotion.type_percentage')}</SelectItem>
+                      <SelectItem value="Fixed">{t('promotion.type_fixed')}</SelectItem>
+                      <SelectItem value="FreeNights">{t('promotion.type_free_nights')}</SelectItem>
+                      <SelectItem value="None">{t('common.none')}</SelectItem>
                     </SelectContent>
                   </Select>
                 )} />
               </div>
               {promotionType === "Percentage" && (
                 <div>
-                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Discount %</Label>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_value')}</Label>
                   <Input {...register("discount_percentage")} type="number" step="0.5" min="0" max="100" placeholder="e.g. 5" />
                 </div>
               )}
               {promotionType === "Fixed" && (
                 <div>
-                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Discount Amount ($)</Label>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_value')}</Label>
                   <Input {...register("discount_amount")} type="number" step="0.01" min="0" placeholder="e.g. 50" />
                 </div>
               )}
               {promotionType === "FreeNights" && (
                 <div>
-                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Free Nights</Label>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_value')}</Label>
                   <Input {...register("free_nights")} type="number" min="1" placeholder="e.g. 7" />
                 </div>
               )}
@@ -391,36 +393,36 @@ export default function PromotionDetail() {
 
           {/* Validity & Limits */}
           <div className="bg-white border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Validity &amp; Limits</div>
+            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t('promotion.section_validity')}</div>
             <div className="p-5 grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Valid From</Label>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_valid_from')}</Label>
                 <Controller name="valid_from" control={control} render={({ field }) => (
                   <DateInput value={field.value ?? ""} onChange={field.onChange} />
                 )} />
               </div>
               <div>
-                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Valid To</Label>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_valid_to')}</Label>
                 <Controller name="valid_to" control={control} render={({ field }) => (
                   <DateInput value={field.value ?? ""} onChange={field.onChange} />
                 )} />
               </div>
               <div>
-                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Max Uses (total)</Label>
-                <Input {...register("max_uses")} type="number" min="1" placeholder="Unlimited" />
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_max_uses')}</Label>
+                <Input {...register("max_uses")} type="number" min="1" placeholder={t('common.unlimited')} />
               </div>
               <div>
-                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Max Uses Per Account</Label>
-                <Input {...register("max_uses_per_account")} type="number" min="1" placeholder="Unlimited" />
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_max_uses_account')}</Label>
+                <Input {...register("max_uses_per_account")} type="number" min="1" placeholder={t('common.unlimited')} />
               </div>
               <div>
-                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Applicable To</Label>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_applicable_to')}</Label>
                 <Controller name="applicable_to" control={control} render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="AllSpaces">All Spaces</SelectItem>
-                      <SelectItem value="SelectedSpaces">Selected Spaces</SelectItem>
+                      <SelectItem value="AllSpaces">{t('promotion.app_all_spaces')}</SelectItem>
+                      <SelectItem value="SelectedSpaces">{t('promotion.app_selected_spaces')}</SelectItem>
                     </SelectContent>
                   </Select>
                 )} />
@@ -430,14 +432,14 @@ export default function PromotionDetail() {
 
           {/* Description & Terms */}
           <div className="bg-white border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Description &amp; Terms</div>
+            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t('promotion.section_description')}</div>
             <div className="p-5 space-y-4">
               <div>
-                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Description</Label>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_description')}</Label>
                 <Textarea {...register("description")} rows={3} placeholder="Brief description..." />
               </div>
               <div>
-                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Terms &amp; Conditions</Label>
+                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_terms')}</Label>
                 <Textarea {...register("terms")} rows={4} placeholder="Terms and conditions..." />
               </div>
             </div>

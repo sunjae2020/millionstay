@@ -2,6 +2,7 @@ import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +45,7 @@ type AccSvc = {
 type CatalogSvc = { id: number; name: string; service_type: string; base_price: number | null; currency: string; };
 
 export default function ProductDetail() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -185,7 +187,7 @@ export default function ProductDetail() {
           </Button>
           <div className="flex items-center gap-2">
             <Package className="h-5 w-5 text-primary" />
-            <h1 className="text-xl font-bold">{isNew ? "New Product" : (product?.name ?? "Product")}</h1>
+            <h1 className="text-xl font-bold">{isNew ? `${t('common.new')} ${t('nav.products')}` : (product?.name ?? t('nav.products'))}</h1>
           </div>
           {product?.status && (
             <Badge className={STATUS_COLORS[product.status] ?? "bg-gray-100 text-gray-700"}>{product.status}</Badge>
@@ -195,42 +197,42 @@ export default function ProductDetail() {
         <form onSubmit={handleSubmit(v => save.mutate(v))} className="space-y-6">
           {/* Basic Information */}
           <div className="bg-white border rounded-lg p-6 space-y-4">
-            <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Basic Information</h2>
+            <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">{t('product.section_general')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="col-span-2">
-                <Label>Product Name *</Label>
+                <Label>{t('product.label_name')} *</Label>
                 <Input {...register("name")} placeholder="e.g. Standard Room Package" className="mt-1" />
               </div>
               <div className="col-span-2">
-                <Label>Description</Label>
+                <Label>{t('product.label_description')}</Label>
                 <Textarea {...register("item_description")} placeholder="Brief description" className="mt-1" rows={2} />
               </div>
               <div>
-                <Label>Group</Label>
+                <Label>{t('product.label_group')}</Label>
                 <Select value={String(watch("product_group_id") || "_none")} onValueChange={v => setValue("product_group_id", v === "_none" ? "" : v)}>
-                  <SelectTrigger className="mt-1"><SelectValue placeholder="Select group" /></SelectTrigger>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder={t('common.select')} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="_none">None</SelectItem>
+                    <SelectItem value="_none">{t('common.none')}</SelectItem>
                     {(groups as any[]).map((g: any) => <SelectItem key={g.id} value={String(g.id)}>{g.display}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>Type</Label>
+                <Label>{t('product.label_type')}</Label>
                 <Select value={String(watch("product_type_id") || "_none")} onValueChange={v => setValue("product_type_id", v === "_none" ? "" : v)}>
-                  <SelectTrigger className="mt-1"><SelectValue placeholder="Select type" /></SelectTrigger>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder={t('common.select')} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="_none">None</SelectItem>
-                    {(types as any[]).map((t: any) => <SelectItem key={t.id} value={String(t.id)}>{t.display}</SelectItem>)}
+                    <SelectItem value="_none">{t('common.none')}</SelectItem>
+                    {(types as any[]).map((item: any) => <SelectItem key={item.id} value={String(item.id)}>{item.display}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div className="col-span-2">
-                <Label>Promotion</Label>
+                <Label>{t('product.label_promotion')}</Label>
                 <Select value={String(watch("promotion_id") || "_none")} onValueChange={v => setValue("promotion_id", v === "_none" ? "" : v)}>
-                  <SelectTrigger className="mt-1"><SelectValue placeholder="No promotion" /></SelectTrigger>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder={t('product.label_no_promotion')} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="_none">No Promotion</SelectItem>
+                    <SelectItem value="_none">{t('product.label_no_promotion')}</SelectItem>
                     {(promotions as any[]).map((p: any) => <SelectItem key={p.id} value={String(p.id)}>{p.display}</SelectItem>)}
                   </SelectContent>
                 </Select>
@@ -250,14 +252,14 @@ export default function ProductDetail() {
 
           {/* Pricing */}
           <div className="bg-white border rounded-lg p-6 space-y-4">
-            <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Pricing</h2>
+            <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">{t('product.section_pricing')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <Label>Price</Label>
+                <Label>{t('product.label_price')}</Label>
                 <Input {...register("price")} type="number" step="0.01" placeholder="0.00" className="mt-1" />
               </div>
               <div>
-                <Label>Currency</Label>
+                <Label>{t('product.label_currency')}</Label>
                 <Select value={watch("currency")} onValueChange={v => setValue("currency", v)}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -268,23 +270,23 @@ export default function ProductDetail() {
               </div>
               <div className="flex items-center gap-2 mt-6">
                 <Switch checked={watch("gst_included")} onCheckedChange={v => setValue("gst_included", v)} />
-                <Label>GST Included</Label>
+                <Label>{t('product.label_gst_included')}</Label>
               </div>
               <div>
-                <Label>Min Contract Period</Label>
+                <Label>{t('product.label_min_period')}</Label>
                 <Input {...register("min_contract_period")} type="number" placeholder="e.g. 4" className="mt-1" />
               </div>
               <div>
-                <Label>Unit</Label>
+                <Label>{t('product.label_period_unit')}</Label>
                 <Select value={watch("min_contract_period_unit")} onValueChange={v => setValue("min_contract_period_unit", v)}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Day">Day</SelectItem>
-                    <SelectItem value="days">Days</SelectItem>
-                    <SelectItem value="Week">Week</SelectItem>
-                    <SelectItem value="weeks">Weeks</SelectItem>
-                    <SelectItem value="Month">Month</SelectItem>
-                    <SelectItem value="months">Months</SelectItem>
+                    <SelectItem value="Day">{t('common.day')}</SelectItem>
+                    <SelectItem value="days">{t('common.days')}</SelectItem>
+                    <SelectItem value="Week">{t('common.week')}</SelectItem>
+                    <SelectItem value="weeks">{t('common.weeks')}</SelectItem>
+                    <SelectItem value="Month">{t('common.month')}</SelectItem>
+                    <SelectItem value="months">{t('common.months')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -293,25 +295,25 @@ export default function ProductDetail() {
 
           {/* Display Options */}
           <div className="bg-white border rounded-lg p-6 space-y-4">
-            <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Display Options</h2>
+            <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">{t('product.section_display')}</h2>
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Switch checked={watch("display_on_booking_page")} onCheckedChange={v => setValue("display_on_booking_page", v)} />
-                <Label>Display on Booking Page</Label>
+                <Label>{t('product.label_display_on_booking')}</Label>
               </div>
               <div className="flex items-center gap-2">
                 <Switch checked={watch("display_on_invoice")} onCheckedChange={v => setValue("display_on_invoice", v)} />
-                <Label>Display on Invoice</Label>
+                <Label>{t('product.label_display_on_invoice')}</Label>
               </div>
             </div>
             <div>
-              <Label>Status</Label>
+              <Label>{t('product.label_status')}</Label>
               <Select value={watch("status")} onValueChange={v => setValue("status", v)}>
                 <SelectTrigger className="mt-1 w-40"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
-                  <SelectItem value="Archived">Archived</SelectItem>
+                  <SelectItem value="Active">{t('common.active')}</SelectItem>
+                  <SelectItem value="Inactive">{t('common.inactive')}</SelectItem>
+                  <SelectItem value="Archived">{t('common.archived')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -320,7 +322,7 @@ export default function ProductDetail() {
           <div className="flex justify-end">
             <Button type="submit" disabled={save.isPending}>
               <Save className="h-4 w-4 mr-2" />
-              {save.isPending ? "Saving..." : "Save Product"}
+              {save.isPending ? t('common.saving') : t('common.save')}
             </Button>
           </div>
         </form>
@@ -330,21 +332,21 @@ export default function ProductDetail() {
           <div className="mt-6 space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Packed Services</h2>
-                <p className="text-xs text-muted-foreground mt-1">Services assigned here take priority over space-level services during booking.</p>
+                <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">{t('product.section_packed_services')}</h2>
+                <p className="text-xs text-muted-foreground mt-1">{t('product.packed_services_desc')}</p>
               </div>
               <Button size="sm" onClick={() => setAddOpen(true)}>
-                <Plus className="h-4 w-4 mr-1" /> Add Service
+                <Plus className="h-4 w-4 mr-1" /> {t('common.add_service')}
               </Button>
             </div>
 
             {svcLoading ? (
-              <div className="text-sm text-muted-foreground py-8 text-center">Loading services…</div>
+              <div className="text-sm text-muted-foreground py-8 text-center">{t('common.loading')}</div>
             ) : accSvcs.length === 0 ? (
               <div className="border-2 border-dashed rounded-lg p-8 text-center text-muted-foreground">
                 <PackagePlus className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                <p className="text-sm">No services assigned yet.</p>
-                <p className="text-xs mt-1">Click "Add Service" to attach services to this product.</p>
+                <p className="text-sm">{t('product.no_services_assigned')}</p>
+                <p className="text-xs mt-1">{t('product.click_add_service')}</p>
               </div>
             ) : (
               <div className="border rounded-lg divide-y bg-white">

@@ -104,15 +104,15 @@ export default function RecurringScheduleList() {
     <Layout>
       <PageHeader
         title={t("nav.recurring")}
-        subtitle={`${rows.length} schedule${rows.length !== 1 ? "s" : ""}`}
+        subtitle={`${rows.length} ${t("nav.recurring")}`}
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleGenerate} disabled={generating}>
               <RefreshCw className={`h-4 w-4 mr-2 ${generating ? "animate-spin" : ""}`} />
-              {generating ? "Generating…" : "Run Due Invoices"}
+              {generating ? t("common.loading") : t("recurring.generate_invoices") || "Run Due Invoices"}
             </Button>
             <Link href="/finance/invoices/new">
-              <Button><Plus className="h-4 w-4 mr-2" />New Invoice</Button>
+              <Button><Plus className="h-4 w-4 mr-2" />{t("invoice.new")}</Button>
             </Link>
           </div>
         }
@@ -122,14 +122,14 @@ export default function RecurringScheduleList() {
         <div className="flex gap-3 mb-4 flex-wrap">
           <div className="relative flex-1 min-w-[200px] max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder="Search by booking ref…" value={q} onChange={(e) => setQ(e.target.value)} />
+            <Input className="pl-9" placeholder={t("booking.search_placeholder")} value={q} onChange={(e) => setQ(e.target.value)} />
           </div>
           <Select value={activeFilter} onValueChange={setActiveFilter}>
             <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All</SelectItem>
-              <SelectItem value="true">Active</SelectItem>
-              <SelectItem value="false">Paused</SelectItem>
+              <SelectItem value="_all">{t("common.all")}</SelectItem>
+              <SelectItem value="true">{t("common.active")}</SelectItem>
+              <SelectItem value="false">{t("common.inactive")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -139,23 +139,23 @@ export default function RecurringScheduleList() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Booking</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Account</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Type</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Frequency</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Amount</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Start</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Next Due</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_booking")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_account")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_type")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_frequency")}</th>
+                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_amount")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_start_date")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_next_due_date")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_status")}</th>
                   <th className="px-4 py-3 w-16"></th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {isLoading ? (
-                  <tr><td colSpan={9} className="px-4 py-10 text-center text-muted-foreground">Loading…</td></tr>
+                  <tr><td colSpan={9} className="px-4 py-10 text-center text-muted-foreground">{t("common.loading")}</td></tr>
                 ) : rows.length === 0 ? (
                   <tr><td colSpan={9} className="px-4 py-10 text-center text-muted-foreground">
-                    No recurring schedules found. Create one from a Booking or Invoice.
+                    {t("recurring.no_schedules")}
                   </td></tr>
                 ) : pagination.paginatedItems.map((s: any) => {
                   const overdue = s.is_active && isOverdue(s.next_due_date);
@@ -169,11 +169,11 @@ export default function RecurringScheduleList() {
                       </td>
                       <td className="px-4 py-3 text-sm">{s.account_name ?? "—"}</td>
                       <td className="px-4 py-3 text-xs text-muted-foreground">
-                        {TYPE_LABELS[s.schedule_type] ?? s.schedule_type}
+                        {t(`recurring.type_${s.schedule_type.toLowerCase()}`) || s.schedule_type}
                       </td>
                       <td className="px-4 py-3">
                         <Badge className={`text-xs ${FREQ_COLORS[s.frequency] ?? "bg-gray-100 text-gray-600"}`}>
-                          {s.frequency}
+                          {t(`recurring.freq_${s.frequency.toLowerCase()}`) || s.frequency}
                         </Badge>
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums font-medium">
@@ -191,14 +191,14 @@ export default function RecurringScheduleList() {
                       </td>
                       <td className="px-4 py-3">
                         <Badge className={`text-xs ${s.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-                          {s.is_active ? "Active" : "Paused"}
+                          {s.is_active ? t("common.active") : t("common.inactive")}
                         </Badge>
                       </td>
                       <td className="px-4 py-3">
                         <button
                           onClick={() => setToggleTarget({ id: s.id, is_active: !s.is_active })}
                           className="p-1.5 rounded hover:bg-muted transition-colors"
-                          title={s.is_active ? "Pause schedule" : "Resume schedule"}
+                          title={s.is_active ? t("common.pause") || "Pause" : t("common.resume") || "Resume"}
                         >
                           {s.is_active
                             ? <ToggleRight className="h-4 w-4 text-green-600" />
@@ -219,20 +219,20 @@ export default function RecurringScheduleList() {
       <AlertDialog open={toggleTarget !== null} onOpenChange={() => setToggleTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{toggleTarget?.is_active ? "Resume Schedule" : "Pause Schedule"}</AlertDialogTitle>
+            <AlertDialogTitle>{toggleTarget?.is_active ? t("finance.resume_schedule") || "Resume Schedule" : t("finance.pause_schedule") || "Pause Schedule"}</AlertDialogTitle>
             <AlertDialogDescription>
               {toggleTarget?.is_active
-                ? "This schedule will resume and invoices will be generated on the next due date."
-                : "This schedule will be paused. No new invoices will be generated until resumed."}
+                ? t("finance.resume_schedule_desc") || "This schedule will resume and invoices will be generated on the next due date."
+                : t("finance.pause_schedule_desc") || "This schedule will be paused. No new invoices will be generated until resumed."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => toggleTarget && toggleMutation.mutate(toggleTarget)}
               className={toggleTarget?.is_active ? "bg-primary hover:bg-primary/90" : ""}
             >
-              {toggleTarget?.is_active ? "Resume" : "Pause"}
+              {toggleTarget?.is_active ? t("common.resume") || "Resume" : t("common.pause") || "Pause"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -43,6 +44,7 @@ interface FormData {
 }
 
 export default function InvoiceDetail() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const qc = useQueryClient();
@@ -113,21 +115,21 @@ export default function InvoiceDetail() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
-              {isNew ? "New Invoice" : invoice?.invoice_ref ?? "Invoice"}
+              {isNew ? t('invoice.new') : invoice?.invoice_ref ?? "Invoice"}
             </h1>
             {!isNew && <p className="text-sm text-muted-foreground">Invoice #{id}</p>}
           </div>
           <div className="flex gap-2 flex-wrap">
             <Button variant="outline" onClick={() => navigate("/finance/invoices")}>
-              <ArrowLeft className="h-4 w-4 mr-1" /> Back
+              <ArrowLeft className="h-4 w-4 mr-1" /> {t('common.back')}
             </Button>
             {!isNew && (
               <Button variant="destructive" onClick={() => deleteMutation.mutate({ id: Number(id) })}>
-                <Trash2 className="h-4 w-4 mr-1" /> Delete
+                <Trash2 className="h-4 w-4 mr-1" /> {t('common.delete')}
               </Button>
             )}
             <Button onClick={handleSubmit(onSubmit)}>
-              <Save className="h-4 w-4 mr-1" /> Save
+              <Save className="h-4 w-4 mr-1" /> {t('common.save')}
             </Button>
           </div>
         </div>
@@ -144,17 +146,17 @@ export default function InvoiceDetail() {
             <div className="flex gap-2 sm:ml-auto flex-wrap">
               {status === "Draft" && (
                 <Button variant="default" onClick={() => sendMutation.mutate({ id: Number(id) })}>
-                  Send to Client
+                  {t('invoice.btn_send')}
                 </Button>
               )}
               {status === "Sent" && (
                 <Button variant="default" className="bg-green-600 hover:bg-green-700" onClick={() => setPayOpen(true)}>
-                  Mark Paid
+                  {t('invoice.btn_mark_paid')}
                 </Button>
               )}
               {(status === "Draft" || status === "Sent") && (
                 <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => voidMutation.mutate({ id: Number(id) })}>
-                  Void
+                  {t('invoice.btn_void')}
                 </Button>
               )}
             </div>
@@ -167,7 +169,7 @@ export default function InvoiceDetail() {
             <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Links</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <Label>Linked Booking</Label>
+                <Label>{t('invoice.label_booking')}</Label>
                 <Controller name="booking_id" control={control} render={({ field }) => (
                   <LookupSelect
                     lookupUrl="/api/v1/lookup/bookings"
@@ -179,7 +181,7 @@ export default function InvoiceDetail() {
                 )} />
               </div>
               <div>
-                <Label>Linked Contract</Label>
+                <Label>{t('invoice.label_contract')}</Label>
                 <Controller name="contract_id" control={control} render={({ field }) => (
                   <LookupSelect
                     lookupUrl="/api/v1/lookup/contracts"
@@ -191,7 +193,7 @@ export default function InvoiceDetail() {
                 )} />
               </div>
               <div>
-                <Label>Account</Label>
+                <Label>{t('invoice.label_account')}</Label>
                 <Controller name="account_id" control={control} render={({ field }) => (
                   <LookupSelect
                     lookupUrl="/api/v1/lookup/accounts"
@@ -207,14 +209,14 @@ export default function InvoiceDetail() {
 
           {/* Financials */}
           <div className="border rounded-lg bg-white p-4 sm:p-6">
-            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Financial Details</h2>
+            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">{t('invoice.section_general')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <Label>Amount *</Label>
+                <Label>{t('common.amount')} *</Label>
                 <Input type="number" step="0.01" placeholder="0.00" {...register("amount")} />
               </div>
               <div>
-                <Label>Currency</Label>
+                <Label>{t('invoice.label_currency')}</Label>
                 <Controller name="currency" control={control} render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
@@ -228,7 +230,7 @@ export default function InvoiceDetail() {
                 )} />
               </div>
               <div>
-                <Label>Due Date</Label>
+                <Label>{t('invoice.label_due_date')}</Label>
                 <Controller name="due_date" control={control} render={({ field }) => (
                   <DateInput value={field.value ?? ""} onChange={field.onChange} />
                 )} />
@@ -239,14 +241,14 @@ export default function InvoiceDetail() {
           {/* Paid info (read-only) */}
           {invoice?.status === "Paid" && (
             <div className="border rounded-lg bg-green-50 p-6">
-              <h2 className="text-sm font-semibold uppercase text-green-600 tracking-wide mb-4">Payment Details</h2>
+              <h2 className="text-sm font-semibold uppercase text-green-600 tracking-wide mb-4">{t('invoice.section_payment')}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                 <div>
-                  <span className="text-muted-foreground">Payment Method:</span>
+                  <span className="text-muted-foreground">{t('invoice.col_payment_method')}:</span>
                   <p className="font-medium mt-1">{invoice.payment_method ?? "—"}</p>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Paid At:</span>
+                  <span className="text-muted-foreground">{t('invoice.col_payment_date')}:</span>
                   <p className="font-medium mt-1">{invoice.paid_at ? new Date(invoice.paid_at).toLocaleDateString() : "—"}</p>
                 </div>
               </div>
@@ -258,11 +260,11 @@ export default function InvoiceDetail() {
             <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Details</h2>
             <div className="space-y-4">
               <div>
-                <Label>Description</Label>
+                <Label>{t('invoice.label_item_desc')}</Label>
                 <Input placeholder="Invoice description..." {...register("description")} />
               </div>
               <div>
-                <Label>Notes</Label>
+                <Label>{t('invoice.label_notes')}</Label>
                 <Textarea rows={3} placeholder="Internal notes..." {...register("notes")} />
               </div>
             </div>
@@ -273,11 +275,11 @@ export default function InvoiceDetail() {
         <Dialog open={payOpen} onOpenChange={setPayOpen}>
           <DialogContent className="max-w-sm">
             <DialogHeader>
-              <DialogTitle>Mark as Paid</DialogTitle>
+              <DialogTitle>{t('invoice.add_payment_title')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-2">
               <div>
-                <Label>Payment Method</Label>
+                <Label>{t('invoice.label_payment_method')}</Label>
                 <Select value={payMethod} onValueChange={setPayMethod}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -291,7 +293,7 @@ export default function InvoiceDetail() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setPayOpen(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setPayOpen(false)}>{t('common.cancel')}</Button>
               <Button
                 className="bg-green-600 hover:bg-green-700"
                 onClick={() => payMutation.mutate({ id: Number(id), data: { payment_method: payMethod } })}

@@ -105,7 +105,7 @@ export default function SuburbDetail() {
     return (
       <Layout>
         <PageHeader title={t("common.loading")} />
-        <div className="p-6 text-muted-foreground text-sm">Loading suburb...</div>
+        <div className="p-6 text-muted-foreground text-sm">{t("common.loading")}</div>
       </Layout>
     );
   }
@@ -114,16 +114,16 @@ export default function SuburbDetail() {
     <Layout>
       <PageHeader
         title={isNew ? `${t("common.new")} ${t("nav.suburb")}` : (suburb?.name ?? t("nav.suburb"))}
-        subtitle={isNew ? "Create a new suburb" : `ID: ${id}`}
+        subtitle={isNew ? t("suburb.subtitle_new") : `ID: ${id}`}
         actions={
           <div className="flex items-center gap-2">
             <Link href="/property/suburbs">
               <Button variant="outline" size="sm" className="gap-1.5">
-                <ArrowLeft className="h-4 w-4" /> Back
+                <ArrowLeft className="h-4 w-4" /> {t("common.back")}
               </Button>
             </Link>
             <Button size="sm" className="gap-1.5" onClick={handleSubmit(onSubmit)} disabled={createMutation.isPending || updateMutation.isPending}>
-              <Save className="h-4 w-4" /> Save
+              <Save className="h-4 w-4" /> {t("common.save")}
             </Button>
           </div>
         }
@@ -134,28 +134,28 @@ export default function SuburbDetail() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
                 <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Name <span className="text-destructive">*</span>
+                  {t("suburb.label_name")} <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   {...register("name", { required: true })}
-                  placeholder="Suburb name"
+                  placeholder={t("suburb.placeholder_name")}
                   className={errors.name ? "border-destructive" : ""}
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Area Name</Label>
-                <Input {...register("area_name")} placeholder="Area or precinct name" />
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("suburb.label_area_name")}</Label>
+                <Input {...register("area_name")} placeholder={t("suburb.placeholder_area_name")} />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">State</Label>
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("suburb.label_state")}</Label>
                 <Input {...register("state")} placeholder="e.g. NSW, VIC" />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Postcode</Label>
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("suburb.label_postcode")}</Label>
                 <Input {...register("postcode")} placeholder="e.g. 2000" />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Country Code <span className="text-destructive">*</span></Label>
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("suburb.label_country")} <span className="text-destructive">*</span></Label>
                 <Controller
                   name="country_code"
                   control={control}
@@ -176,7 +176,7 @@ export default function SuburbDetail() {
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Status</Label>
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("suburb.label_status")}</Label>
                 <Controller
                   name="status"
                   control={control}
@@ -194,11 +194,11 @@ export default function SuburbDetail() {
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Latitude</Label>
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("suburb.label_lat")}</Label>
                 <Input {...register("lat")} type="number" step="any" placeholder="e.g. -33.8688" />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Longitude</Label>
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("suburb.label_lng")}</Label>
                 <Input {...register("lng")} type="number" step="any" placeholder="e.g. 151.2093" />
               </div>
             </div>

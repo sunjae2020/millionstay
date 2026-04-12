@@ -99,25 +99,26 @@ export default function CommissionDetail() {
         actions={
           <div className="flex gap-2">
             <Link href="/crm/commissions">
-              <Button variant="outline" size="sm" className="gap-1.5"><ArrowLeft className="h-4 w-4" /> Back</Button>
+              <Button variant="outline" size="sm" className="gap-1.5"><ArrowLeft className="h-4 w-4" /> {t("common.back")}</Button>
             </Link>
             <Button size="sm" className="gap-1.5" onClick={handleSubmit(onSubmit)}
               disabled={createMutation.isPending || updateMutation.isPending}>
-              <Save className="h-4 w-4" /> Save
+              <Save className="h-4 w-4" /> {t("common.save")}
             </Button>
           </div>
         }
       />
       <div className="p-6 max-w-2xl">
+        <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2 mb-4">{t("commission.section_general")}</h3>
         <div className="grid gap-5">
           <div className="grid gap-1.5">
-            <Label>Name *</Label>
+            <Label>{t("common.name")} *</Label>
             <Input {...register("name", { required: true })} placeholder="e.g. 10% Agent Commission" />
             {errors.name && <p className="text-xs text-destructive">Name is required</p>}
           </div>
 
           <div className="grid gap-1.5">
-            <Label>Commission Type</Label>
+            <Label>{t("common.type")}</Label>
             <Controller name="commission_type" control={control} render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -131,23 +132,23 @@ export default function CommissionDetail() {
 
           {commissionType === "Percentage" ? (
             <div className="grid gap-1.5">
-              <Label>Commission Rate (%)</Label>
+              <Label>{t("commission.label_rate")}</Label>
               <Input {...register("commission_rate")} type="number" step="0.01" placeholder="e.g. 10" />
             </div>
           ) : (
             <div className="grid gap-1.5">
-              <Label>Commission Amount ($)</Label>
+              <Label>{t("commission.label_amount")}</Label>
               <Input {...register("commission_amount")} type="number" step="0.01" placeholder="e.g. 500" />
             </div>
           )}
 
           <div className="grid gap-1.5">
-            <Label>Description</Label>
+            <Label>{t("commission.label_notes")}</Label>
             <Input {...register("description")} placeholder="Optional notes" />
           </div>
 
           <div className="grid gap-1.5">
-            <Label>Status</Label>
+            <Label>{t("commission.label_status")}</Label>
             <Controller name="status" control={control} render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>

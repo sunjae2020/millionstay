@@ -31,6 +31,7 @@ interface PolicyForm {
 }
 
 function BoolRadio({ label, name, control }: { label: string; name: keyof PolicyForm; control: any }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-2">
       <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</Label>
@@ -45,11 +46,11 @@ function BoolRadio({ label, name, control }: { label: string; name: keyof Policy
           >
             <div className="flex items-center gap-1.5">
               <RadioGroupItem value="yes" id={`${name}-yes`} />
-              <Label htmlFor={`${name}-yes`} className="font-normal cursor-pointer">Yes</Label>
+              <Label htmlFor={`${name}-yes`} className="font-normal cursor-pointer">{t("common.yes")}</Label>
             </div>
             <div className="flex items-center gap-1.5">
               <RadioGroupItem value="no" id={`${name}-no`} />
-              <Label htmlFor={`${name}-no`} className="font-normal cursor-pointer">No</Label>
+              <Label htmlFor={`${name}-no`} className="font-normal cursor-pointer">{t("common.no")}</Label>
             </div>
           </RadioGroup>
         )}
@@ -137,23 +138,23 @@ export default function SpacePolicyDetail() {
   }
 
   if (!isNew && isLoading) {
-    return <Layout><PageHeader title={t("common.loading")} /><div className="p-6 text-sm text-muted-foreground">Loading...</div></Layout>;
+    return <Layout><PageHeader title={t("common.loading")} /><div className="p-6 text-sm text-muted-foreground">{t("common.loading")}</div></Layout>;
   }
 
   return (
     <Layout>
       <PageHeader
         title={isNew ? `${t("common.new")} ${t("nav.space_policy")}` : (policy?.name ?? t("nav.space_policy"))}
-        subtitle={isNew ? "Create a new house rules template" : `ID: ${id}`}
+        subtitle={isNew ? t("space_policy.subtitle_new") : `ID: ${id}`}
         actions={
           <div className="flex items-center gap-2">
             <Link href="/property/space-policies">
               <Button variant="outline" size="sm" className="gap-1.5">
-                <ArrowLeft className="h-4 w-4" /> Back
+                <ArrowLeft className="h-4 w-4" /> {t("common.back")}
               </Button>
             </Link>
             <Button size="sm" className="gap-1.5" onClick={handleSubmit(onSubmit)} disabled={createMutation.isPending || updateMutation.isPending}>
-              <Save className="h-4 w-4" /> Save
+              <Save className="h-4 w-4" /> {t("common.save")}
             </Button>
           </div>
         }
@@ -163,25 +164,25 @@ export default function SpacePolicyDetail() {
           <form className="bg-card rounded-lg border p-6 flex flex-col gap-5">
             <div className="flex flex-col gap-1.5">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Policy Name <span className="text-destructive">*</span>
+                {t("space_policy.label_name")} <span className="text-destructive">*</span>
               </Label>
               <Input
                 {...register("name", { required: true })}
-                placeholder="e.g. Standard Residential Policy"
+                placeholder={t("space_policy.placeholder_name")}
                 className={errors.name ? "border-destructive" : ""}
               />
             </div>
 
             <div className="border-t pt-5">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">House Rules</p>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">{t("space_policy.section_rules")}</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <BoolRadio label="Same Gender" name="same_gender" control={control} />
-                <BoolRadio label="Lady Only" name="lady_only" control={control} />
-                <BoolRadio label="No Pets" name="no_pet" control={control} />
-                <BoolRadio label="No Smoking" name="no_smoking" control={control} />
-                <BoolRadio label="Meal Option" name="meal_option" control={control} />
+                <BoolRadio label={t("space_policy.label_same_gender")} name="same_gender" control={control} />
+                <BoolRadio label={t("space_policy.label_lady_only")} name="lady_only" control={control} />
+                <BoolRadio label={t("space_policy.label_no_pet")} name="no_pet" control={control} />
+                <BoolRadio label={t("space_policy.label_no_smoking")} name="no_smoking" control={control} />
+                <BoolRadio label={t("space_policy.label_meal_option")} name="meal_option" control={control} />
                 <div className="flex flex-col gap-2">
-                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Minimum Age</Label>
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space_policy.label_minimum_age")}</Label>
                   <Input
                     {...register("minimum_age")}
                     type="number"
@@ -196,7 +197,7 @@ export default function SpacePolicyDetail() {
 
             <div className="border-t pt-4">
               <div className="flex flex-col gap-1.5">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Status</Label>
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space_policy.label_status")}</Label>
                 <Controller
                   name="status"
                   control={control}

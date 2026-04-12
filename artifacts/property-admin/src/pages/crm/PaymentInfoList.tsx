@@ -42,10 +42,10 @@ export default function PaymentInfoList() {
     <Layout>
       <PageHeader
         title={t("nav.payment_info")}
-        subtitle={`${records?.length ?? 0} total`}
+        subtitle={`${records?.length ?? 0} ${t("common.total")}`}
         actions={
           <Link href="/crm/payment-info/new">
-            <Button size="sm" className="gap-1.5"><Plus className="h-4 w-4" /> New Payment Info</Button>
+            <Button size="sm" className="gap-1.5"><Plus className="h-4 w-4" /> {t("payment_info.new")}</Button>
           </Link>
         }
       />
@@ -53,13 +53,13 @@ export default function PaymentInfoList() {
         <div className="flex items-center gap-3 mb-5">
           <div className="relative flex-1 max-w-xs">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input placeholder="Search payment info…" className="pl-8 h-8 text-sm" value={search}
+            <Input placeholder={t("payment_info.search_placeholder")} className="pl-8 h-8 text-sm" value={search}
               onChange={(e) => setSearch(e.target.value)} />
           </div>
           <Select value={typeFilter || "__all"} onValueChange={(v) => setTypeFilter(v === "__all" ? "" : v)}>
-            <SelectTrigger className="h-8 w-44 text-sm"><SelectValue placeholder="Payment type" /></SelectTrigger>
+            <SelectTrigger className="h-8 w-44 text-sm"><SelectValue placeholder={t("payment_info.payment_type")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="__all">All types</SelectItem>
+              <SelectItem value="__all">{t("payment_info.all_types")}</SelectItem>
               <SelectItem value="BankTransfer">Bank Transfer</SelectItem>
               <SelectItem value="Stripe">Stripe</SelectItem>
               <SelectItem value="Cash">Cash</SelectItem>
@@ -69,17 +69,17 @@ export default function PaymentInfoList() {
         </div>
 
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
         ) : (
           <div className="rounded-lg border overflow-hidden">
             <div className="overflow-x-auto">
             <table className="w-full min-w-max text-sm">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Name</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Type</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Bank / Account</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Status</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("payment_info.col_name")}</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("payment_info.col_type")}</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("payment_info.col_bank_account")}</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("payment_info.col_status")}</th>
                   <th className="px-4 py-2.5"></th>
                 </tr>
               </thead>
@@ -112,7 +112,7 @@ export default function PaymentInfoList() {
                   </tr>
                 ))}
                 {(!records || records.length === 0) && (
-                  <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">No payment info found</td></tr>
+                  <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">{t("payment_info.no_records")}</td></tr>
                 )}
               </tbody>
             </table>
@@ -125,14 +125,14 @@ export default function PaymentInfoList() {
       <AlertDialog open={deleteId !== null} onOpenChange={(o) => !o && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Payment Info?</AlertDialogTitle>
-            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+            <AlertDialogTitle>{t("payment_info.delete_title")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("common.cannot_undo")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => deleteId && deleteMutation.mutate({ id: deleteId })}>
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

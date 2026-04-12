@@ -54,43 +54,43 @@ export default function ContractProductList() {
             <Package className="h-5 w-5 text-primary" />
             <div>
               <h1 className="text-2xl font-bold">{t("nav.contract_product")}</h1>
-              <p className="text-sm text-muted-foreground">{filtered.length} product{filtered.length !== 1 ? "s" : ""}</p>
+              <p className="text-sm text-muted-foreground">{filtered.length} {t("nav.products")}</p>
             </div>
           </div>
           <Link href="/products/contract-products/new">
-            <Button className="bg-[#E8621A] hover:bg-[#d4561a] text-white"><Plus className="h-4 w-4 mr-2" />New Product</Button>
+            <Button className="bg-[#E8621A] hover:bg-[#d4561a] text-white"><Plus className="h-4 w-4 mr-2" />{t("common.new")} {t("nav.products")}</Button>
           </Link>
         </div>
 
         <div className="flex gap-3 mb-4 flex-wrap">
           <div className="relative flex-1 min-w-48 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder="Search products..." value={q} onChange={e => setQ(e.target.value)} />
+            <Input className="pl-9" placeholder={t("contract_product.search_placeholder")} value={q} onChange={e => setQ(e.target.value)} />
           </div>
           <Select value={termType} onValueChange={setTermType}>
-            <SelectTrigger className="w-44"><SelectValue placeholder="All terms" /></SelectTrigger>
+            <SelectTrigger className="w-44"><SelectValue placeholder={t("contract_product.all_terms")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All term types</SelectItem>
-              <SelectItem value="ShortTerm">Short-term (under 4 weeks)</SelectItem>
-              <SelectItem value="MidTerm">Mid-term (4–25 weeks)</SelectItem>
-              <SelectItem value="LongTerm">Long-term (26+ weeks)</SelectItem>
+              <SelectItem value="_all">{t("contract_product.all_terms")}</SelectItem>
+              <SelectItem value="ShortTerm">{t("contract_product.term_short")}</SelectItem>
+              <SelectItem value="MidTerm">{t("contract_product.term_mid")}</SelectItem>
+              <SelectItem value="LongTerm">{t("contract_product.term_long")}</SelectItem>
             </SelectContent>
           </Select>
           <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="w-40"><SelectValue placeholder="All statuses" /></SelectTrigger>
+            <SelectTrigger className="w-40"><SelectValue placeholder={t("contract_product.all_statuses")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All statuses</SelectItem>
-              <SelectItem value="Draft">Draft</SelectItem>
-              <SelectItem value="Active">Active</SelectItem>
-              <SelectItem value="Inactive">Inactive</SelectItem>
-              <SelectItem value="Archived">Archived</SelectItem>
+              <SelectItem value="_all">{t("contract_product.all_statuses")}</SelectItem>
+              <SelectItem value="Draft">{t("contract_product.status_draft")}</SelectItem>
+              <SelectItem value="Active">{t("common.active")}</SelectItem>
+              <SelectItem value="Inactive">{t("common.inactive")}</SelectItem>
+              <SelectItem value="Archived">{t("contract_product.status_archived")}</SelectItem>
             </SelectContent>
           </Select>
           <Select value={productType} onValueChange={setProductType}>
-            <SelectTrigger className="w-40"><SelectValue placeholder="All types" /></SelectTrigger>
+            <SelectTrigger className="w-40"><SelectValue placeholder={t("contract_product.all_types")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All types</SelectItem>
-              {PRODUCT_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              <SelectItem value="_all">{t("contract_product.all_types")}</SelectItem>
+              {PRODUCT_TYPES.map(t_val => <SelectItem key={t_val} value={t_val}>{t_val}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -100,20 +100,20 @@ export default function ContractProductList() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Term</TableHead>
-                  <TableHead>Space</TableHead>
-                  <TableHead>Promotion</TableHead>
-                  <TableHead>Weekly Rate</TableHead>
-                  <TableHead>Eff. Rate</TableHead>
-                  <TableHead>Billing</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>{t("contract_product.col_name")}</TableHead>
+                  <TableHead>{t("contract_product.col_term")}</TableHead>
+                  <TableHead>{t("contract_product.col_space")}</TableHead>
+                  <TableHead>{t("contract_product.col_promotion")}</TableHead>
+                  <TableHead>{t("contract_product.col_weekly_rate")}</TableHead>
+                  <TableHead>{t("contract_product.col_eff_rate")}</TableHead>
+                  <TableHead>{t("contract_product.col_billing")}</TableHead>
+                  <TableHead>{t("contract_product.col_status")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground py-12">No contract products found</TableCell>
+                    <TableCell colSpan={8} className="text-center text-muted-foreground py-12">{t("contract_product.no_products")}</TableCell>
                   </TableRow>
                 ) : pagination.paginatedItems.map(p => (
                   <TableRow key={p.id} className="hover:bg-muted/30">

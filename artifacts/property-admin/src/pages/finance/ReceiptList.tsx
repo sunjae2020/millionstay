@@ -64,7 +64,7 @@ export default function ReceiptList() {
     <Layout>
       <PageHeader
         title={t("nav.receipt")}
-        subtitle={`${rows.length} receipt${rows.length !== 1 ? "s" : ""} · Total $${totalPaid.toLocaleString("en-AU", { minimumFractionDigits: 2 })}`}
+        subtitle={`${rows.length} ${t("nav.receipt")} · ${t("common.total")} $${totalPaid.toLocaleString("en-AU", { minimumFractionDigits: 2 })}`}
       />
 
       <div className="p-6">
@@ -73,19 +73,19 @@ export default function ReceiptList() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               className="pl-9"
-              placeholder="Search invoice ref…"
+              placeholder={t("invoice.search_placeholder")}
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />
           </div>
           <Select value={methodFilter} onValueChange={setMethodFilter}>
-            <SelectTrigger className="w-44"><SelectValue placeholder="All Methods" /></SelectTrigger>
+            <SelectTrigger className="w-44"><SelectValue placeholder={t("invoice.label_payment_method")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All Methods</SelectItem>
-              <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-              <SelectItem value="card">Credit Card</SelectItem>
-              <SelectItem value="cash">Cash</SelectItem>
-              <SelectItem value="stripe">Stripe</SelectItem>
+              <SelectItem value="_all">{t("common.all")}</SelectItem>
+              <SelectItem value="bank_transfer">{t("invoice.status_paid")}</SelectItem>
+              <SelectItem value="card">{t("invoice.status_paid")}</SelectItem>
+              <SelectItem value="cash">{t("invoice.status_paid")}</SelectItem>
+              <SelectItem value="stripe">{t("invoice.status_paid")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -95,27 +95,26 @@ export default function ReceiptList() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Receipt #</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Booking</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Account</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Description</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Amount</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Method</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Paid At</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("invoice.col_ref")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("invoice.col_booking")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("invoice.col_account")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.description")}</th>
+                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("invoice.col_amount")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("invoice.col_payment_method")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("invoice.col_payment_date")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("invoice.col_status")}</th>
                   <th className="px-4 py-3 w-12"></th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {isLoading ? (
-                  <tr><td colSpan={9} className="px-4 py-10 text-center text-muted-foreground">Loading…</td></tr>
+                  <tr><td colSpan={9} className="px-4 py-10 text-center text-muted-foreground">{t("common.loading")}</td></tr>
                 ) : rows.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="px-4 py-12 text-center">
                       <div className="flex flex-col items-center gap-2">
                         <CheckCircle2 className="h-8 w-8 text-muted-foreground/40" />
-                        <p className="text-muted-foreground">No paid invoices yet.</p>
-                        <p className="text-xs text-muted-foreground">Receipts appear here when invoices are marked as Paid.</p>
+                        <p className="text-muted-foreground">{t("finance.no_receipts") || "No receipts found"}</p>
                       </div>
                     </td>
                   </tr>

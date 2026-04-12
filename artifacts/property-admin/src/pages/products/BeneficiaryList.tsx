@@ -63,12 +63,12 @@ export default function BeneficiaryList() {
     <Layout>
       <PageHeader
         title={t("nav.beneficiary")}
-        subtitle={`${filtered.length} of ${beneficiaries?.length ?? 0} total`}
+        subtitle={`${filtered.length} of ${beneficiaries?.length ?? 0} ${t("common.total")}`}
         actions={
           <Link href="/products/beneficiaries/new">
             <Button>
               <Plus className="h-4 w-4 mr-2" />
-              New Beneficiary
+              {t("common.new")} {t("nav.beneficiary")}
             </Button>
           </Link>
         }
@@ -80,30 +80,30 @@ export default function BeneficiaryList() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               className="pl-9"
-              placeholder="Search beneficiaries..."
+              placeholder={t("beneficiary.search_placeholder")}
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />
           </div>
           <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger className="w-44">
-              <SelectValue placeholder="All Types" />
+              <SelectValue placeholder={t("beneficiary.all_types")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All Types</SelectItem>
-              <SelectItem value="Percentage">Percentage</SelectItem>
-              <SelectItem value="Fixed">Fixed Amount</SelectItem>
+              <SelectItem value="_all">{t("beneficiary.all_types")}</SelectItem>
+              <SelectItem value="Percentage">{t("beneficiary.type_percentage")}</SelectItem>
+              <SelectItem value="Fixed">{t("beneficiary.type_fixed")}</SelectItem>
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-36">
-              <SelectValue placeholder="All Statuses" />
+              <SelectValue placeholder={t("beneficiary.all_statuses")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All Statuses</SelectItem>
-              <SelectItem value="Active">Active</SelectItem>
-              <SelectItem value="Inactive">Inactive</SelectItem>
-              <SelectItem value="Archived">Archived</SelectItem>
+              <SelectItem value="_all">{t("beneficiary.all_statuses")}</SelectItem>
+              <SelectItem value="Active">{t("common.active")}</SelectItem>
+              <SelectItem value="Inactive">{t("common.inactive")}</SelectItem>
+              <SelectItem value="Archived">{t("beneficiary.status_archived")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -113,21 +113,21 @@ export default function BeneficiaryList() {
             <table className="w-full min-w-max text-sm">
               <thead className="bg-muted/50 border-b">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Name</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Account</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Contract Product</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Commission</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Type</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Rate / Amount</th>
-                  <th className="text-center px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide w-20">Priority</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("beneficiary.col_name")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("beneficiary.col_account")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("beneficiary.col_product")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("beneficiary.col_commission")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("beneficiary.col_type")}</th>
+                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("beneficiary.col_rate")}</th>
+                  <th className="text-center px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide w-20">{t("beneficiary.col_priority")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("beneficiary.col_status")}</th>
                   <th className="px-4 py-3 w-20"></th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground text-sm">Loading...</td>
+                    <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("common.loading")}</td>
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
@@ -136,10 +136,10 @@ export default function BeneficiaryList() {
                         <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
                           <Users className="h-6 w-6" />
                         </div>
-                        <p className="text-sm font-medium">No beneficiaries found</p>
-                        <p className="text-xs">Beneficiaries connect accounts to commissions and contract products</p>
+                        <p className="text-sm font-medium">{t("beneficiary.no_beneficiaries")}</p>
+                        <p className="text-xs">{t("beneficiary.no_beneficiaries_sub")}</p>
                         <Link href="/products/beneficiaries/new">
-                          <Button size="sm" variant="outline">Add First Beneficiary</Button>
+                          <Button size="sm" variant="outline">{t("beneficiary.add_first")}</Button>
                         </Link>
                       </div>
                     </td>
@@ -205,18 +205,18 @@ export default function BeneficiaryList() {
       <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Beneficiary</AlertDialogTitle>
+            <AlertDialogTitle>{t("beneficiary.delete_title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this beneficiary record. This action cannot be undone.
+              {t("beneficiary.delete_desc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive hover:bg-destructive/90"
               onClick={() => deleteId && deleteMutation.mutate({ id: deleteId })}
             >
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
