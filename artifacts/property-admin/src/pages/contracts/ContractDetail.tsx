@@ -395,7 +395,7 @@ export default function ContractDetail() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 border-b">
                   <tr>
-                    {["항목명", "금액", "통화", "예정일", "실제납입일", "상태", "주기", "메모"].map((h) => (
+                    {["유형", "금액", "통화", "시작일", "종료일", "다음납입일", "주기", "활성"].map((h) => (
                       <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>
                     ))}
                   </tr>
@@ -405,18 +405,18 @@ export default function ContractDetail() {
                     <tr><td colSpan={8} className="text-center py-10 text-muted-foreground">결제 스케줄이 없습니다</td></tr>
                   ) : schedules.map((s: any) => (
                     <tr key={s.id} className="border-b hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium">{s.label ?? s.item_name ?? "—"}</td>
+                      <td className="px-4 py-3 font-medium">{s.schedule_type ?? "Rent"}</td>
                       <td className="px-4 py-3 font-mono">{s.amount != null ? `$${Number(s.amount).toFixed(2)}` : "—"}</td>
                       <td className="px-4 py-3 text-muted-foreground">{s.currency ?? "AUD"}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{s.scheduled_date ?? s.due_date ?? "—"}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{s.paid_date ?? "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{s.start_date ?? "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{s.end_date ?? "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{s.next_due_date ?? "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{s.frequency ?? "—"}</td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s.status === "Paid" ? "bg-green-100 text-green-700" : s.status === "Overdue" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-700"}`}>
-                          {s.status ?? "Pending"}
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}`}>
+                          {s.is_active ? "활성" : "비활성"}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground">{s.frequency ?? "—"}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{s.notes ?? "—"}</td>
                     </tr>
                   ))}
                 </tbody>

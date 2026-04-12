@@ -164,7 +164,7 @@ export default function BookingDetail() {
   });
 
   const submitMutation = useSubmitBooking({ mutation: { onSuccess: () => refetch() } });
-  const confirmMutation = useConfirmBooking({ mutation: { onSuccess: () => refetch() } });
+  const confirmMutation = useConfirmBooking({ mutation: { onSuccess: () => { refetch(); refetchContract(); } } });
   const rejectMutation = useRejectBooking({ mutation: { onSuccess: () => { refetch(); setCancelDialogOpen(false); } } });
   const checkInMutation = useCheckInBooking({ mutation: { onSuccess: () => refetch() } });
   const checkOutMutation = useCheckOutBooking({ mutation: { onSuccess: () => refetch() } });

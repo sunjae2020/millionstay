@@ -10,6 +10,9 @@ import {
   propertiesTable,
   invoicesTable,
   accountsTable,
+  contractsTable,
+  recurringSchedulesTable,
+  bookingServicesTable,
 } from "@workspace/db";
 import { requireGuestAuth } from "../middlewares/requireGuestAuth";
 import { sendBookingConfirmation } from "../lib/email";
@@ -252,7 +255,64 @@ router.get("/v1/guest/bookings/:id", async (req, res): Promise<void> => {
     .where(eq(invoicesTable.booking_id, bookingId))
     .orderBy(asc(invoicesTable.id));
 
-  res.json({ success: true, data: { ...booking, invoices } });
+  // Include contract linked to this booking (read-only for guest)
+  const [contract] = await db
+    .select({
+      id: contractsTable.id,
+      contract_ref: contractsTable.contract_ref,
+      status: contractsTable.status,
+      start_date: contractsTable.start_date,
+      end_date: contractsTable.end_date,
+      weekly_rate: contractsTable.weekly_rate,
+      total_rent: contractsTable.total_rent,
+      bond_amount: contractsTable.bond_amount,
+      advance_amount: contractsTable.advance_amount,
+      currency: contractsTable.currency,
+      document_url: contractsTable.document_url,
+      terms_text: contractsTable.terms_text,
+      signed_at: contractsTable.signed_at,
+      effective_date: contractsTable.effective_date,
+    })
+    .from(contractsTable)
+    .where(eq(contractsTable.booking_id, bookingId))
+    .limit(1);
+
+  // Payment schedule (from recurring_schedule for this contract)
+  const paymentSchedule = contract
+    ? await db
+        .select({
+          id: recurringSchedulesTable.id,
+          schedule_type: recurringSchedulesTable.schedule_type,
+          amount: recurringSchedulesTable.amount,
+          currency: recurringSchedulesTable.currency,
+          next_due_date: recurringSchedulesTable.next_due_date,
+          start_date: recurringSchedulesTable.start_date,
+          end_date: recurringSchedulesTable.end_date,
+          frequency: recurringSchedulesTable.frequency,
+          is_active: recurringSchedulesTable.is_active,
+        })
+        .from(recurringSchedulesTable)
+        .where(eq(recurringSchedulesTable.contract_id, contract.id))
+        .orderBy(asc(recurringSchedulesTable.next_due_date))
+    : [];
+
+  // Booking services
+  const services = await db
+    .select({
+      id: bookingServicesTable.id,
+      service_name: bookingServicesTable.service_name,
+      service_type: bookingServicesTable.service_type,
+      quantity: bookingServicesTable.quantity,
+      unit_price: bookingServicesTable.unit_price,
+      total_price: bookingServicesTable.total_price,
+      billing_trigger: bookingServicesTable.billing_trigger,
+      frequency: bookingServicesTable.frequency,
+      notes: bookingServicesTable.notes,
+    })
+    .from(bookingServicesTable)
+    .where(and(eq(bookingServicesTable.booking_id, bookingId), eq(bookingServicesTable.status, "Active")));
+
+  res.json({ success: true, data: { ...booking, invoices, contract: contract ?? null, payment_schedule: paymentSchedule, services } });
 });
 
 /* ───────────────────────────────────────────────────────
