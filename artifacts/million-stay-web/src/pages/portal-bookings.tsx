@@ -58,6 +58,7 @@ interface Booking {
 }
 
 function BookingCard({ booking }: { booking: Booking }) {
+  const { t } = useTranslation();
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -88,12 +89,12 @@ function BookingCard({ booking }: { booking: Booking }) {
             </div>
           </div>
           <div className="flex items-center justify-between pt-1">
-            <p className="text-xs text-gray-400">Ref: <span className="font-mono font-medium text-gray-600">{booking.booking_ref}</span></p>
+            <p className="text-xs text-gray-400">{t("portal.bookings.ref")}: <span className="font-mono font-medium text-gray-600">{booking.booking_ref}</span></p>
             <div className="flex gap-2">
               <Link href={`/portal/bookings/${booking.id}`}>
                 <Button size="sm" variant="outline" className="h-7 text-xs gap-1">
                   <ExternalLink className="h-3 w-3" />
-                  View
+                  {t("portal.bookings.view")}
                 </Button>
               </Link>
             </div>
@@ -137,32 +138,38 @@ export default function PortalBookings() {
   return (
     <PortalLayout active="/portal/bookings">
       <div className="flex-1 max-w-5xl mx-auto w-full px-4 py-8">
-        <h1 className="text-xl font-bold text-gray-900 mb-6">My Bookings</h1>
+        <h1 className="text-xl font-bold text-gray-900 mb-6">{t("portal.bookings.title")}</h1>
         {/* Action Required Banner for PendingPayment bookings */}
         {bookings.filter((b) => b.booking_status === "PendingPayment" || b.booking_status === "Draft").map((b) => (
           <div key={b.id} className="mb-4 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <div className="flex items-center gap-2 shrink-0">
               <AlertTriangle className="h-5 w-5 text-amber-600" />
-              <span className="font-semibold text-amber-800 text-sm">Action Required</span>
+              <span className="font-semibold text-amber-800 text-sm">{t("portal.bookings.action_required")}</span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm text-amber-700">
-                <span className="font-semibold">{b.space_name ?? "Your booking"}</span> — payment and documents are pending.
+                <span className="font-semibold">{b.space_name ?? "Your booking"}</span> — {t("portal.bookings.payment_pending")}
               </p>
-              <p className="text-xs text-amber-600 mt-0.5">Ref: <span className="font-mono">{b.booking_ref}</span></p>
+              <p className="text-xs text-amber-600 mt-0.5">{t("portal.bookings.ref")}: <span className="font-mono">{b.booking_ref}</span></p>
             </div>
             <button onClick={() => setLocation(`/portal/payment?booking_id=${b.id}`)}
               className="shrink-0 flex items-center gap-1.5 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-xl px-4 py-2 transition-colors">
-              <CreditCard className="h-4 w-4" /> Pay & Upload Docs
+              <CreditCard className="h-4 w-4" /> {t("portal.bookings.pay_upload")}
             </button>
           </div>
         ))}
 
         <Tabs defaultValue="all">
           <TabsList className="mb-6 bg-white border">
-            {["all", "active", "upcoming", "past", "cancelled"].map((tab) => (
-              <TabsTrigger key={tab} value={tab} className="capitalize text-sm">
-                {tab === "all" ? "All" : tab === "active" ? "Active" : tab === "upcoming" ? "Upcoming" : tab === "past" ? "Past" : "Cancelled"}
+            {[
+              { value: "all", label: t("portal.bookings.tab_all") },
+              { value: "active", label: t("portal.bookings.tab_active") },
+              { value: "upcoming", label: t("portal.bookings.tab_upcoming") },
+              { value: "past", label: t("portal.bookings.tab_past") },
+              { value: "cancelled", label: t("portal.bookings.tab_cancelled") },
+            ].map((tab) => (
+              <TabsTrigger key={tab.value} value={tab.value} className="text-sm">
+                {tab.label}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -176,9 +183,9 @@ export default function PortalBookings() {
               ) : filterBookings(tab).length === 0 ? (
                 <div className="text-center py-16 text-gray-400">
                   <Home className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                  <p className="font-medium">No bookings yet</p>
+                  <p className="font-medium">{t("portal.bookings.empty_title")}</p>
                   <p className="text-sm mt-1">
-                    <Link href="/search" className="text-primary hover:underline">Browse available rooms</Link>
+                    <Link href="/search" className="text-primary hover:underline">{t("portal.bookings.empty_sub")}</Link>
                   </p>
                 </div>
               ) : (

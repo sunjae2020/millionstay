@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { useListMyDocuments, getListMyDocumentsQueryKey } from "@/lib/guest-api";
 import { useAuthStore } from "@/lib/store";
 import { PortalLayout } from "@/components/portal-layout";
@@ -25,6 +26,7 @@ interface Doc {
 
 
 export default function PortalDocuments() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { token } = useAuthStore();
   const { toast } = useToast();
@@ -71,7 +73,7 @@ export default function PortalDocuments() {
       <div className="flex-1 max-w-5xl mx-auto w-full px-4 py-8 space-y-6">
             {/* Upload new document */}
             <div className="bg-white rounded-2xl border p-6">
-              <h2 className="font-semibold text-gray-800 mb-4">Upload New Document</h2>
+              <h2 className="font-semibold text-gray-800 mb-4">{t("portal.documents.upload_title")}</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {["passport", "visa", "enrollment", "bank_statement", "other"].map((type) => (
                   <label key={type} className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-primary hover:bg-orange-50 transition-all text-center">
@@ -86,7 +88,7 @@ export default function PortalDocuments() {
                   </label>
                 ))}
               </div>
-              {uploading && <p className="text-xs text-primary mt-3 animate-pulse">Uploading…</p>}
+              {uploading && <p className="text-xs text-primary mt-3 animate-pulse">{t("portal.documents.uploading")}</p>}
             </div>
 
             {/* Document list */}
@@ -96,11 +98,12 @@ export default function PortalDocuments() {
               ) : docs.length === 0 ? (
                 <div className="bg-white rounded-2xl border text-center py-16 text-gray-400">
                   <FileImage className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                  <p className="font-medium">No documents uploaded yet</p>
-                  <p className="text-sm mt-1">Upload your passport to get started</p>
+                  <p className="font-medium">{t("portal.documents.empty_title")}</p>
+                  <p className="text-sm mt-1">{t("portal.documents.empty_sub")}</p>
                 </div>
               ) : (
                 docs.map((doc) => {
+                  const statusKey = doc.status === "Approved" ? "status_approved" : doc.status === "Rejected" ? "status_rejected" : "status_pending";
                   const statusInfo = DOC_STATUS[doc.status] ?? DOC_STATUS["Pending"]!;
                   const StatusIcon = statusInfo.icon;
                   return (
@@ -118,14 +121,14 @@ export default function PortalDocuments() {
                           <p className="text-sm font-semibold text-gray-800 capitalize">{doc.document_type.replace("_", " ")}</p>
                           {doc.uploaded_at && (
                             <p className="text-xs text-gray-500">
-                              Uploaded {format(new Date(doc.uploaded_at), "dd/MM/yyyy")}
+                              {t("portal.documents.uploaded")} {format(new Date(doc.uploaded_at), "dd/MM/yyyy")}
                             </p>
                           )}
                         </div>
                       </div>
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${statusInfo.color}`}>
                         <StatusIcon className="h-3 w-3" />
-                        {statusInfo.label}
+                        {t(`portal.documents.${statusKey}`)}
                       </span>
                     </motion.div>
                   );

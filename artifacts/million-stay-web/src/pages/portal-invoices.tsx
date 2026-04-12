@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { useListMyInvoices, getListMyInvoicesQueryKey, type MyInvoice } from "@/lib/guest-api";
 import { useAuthStore } from "@/lib/store";
 import { PortalLayout } from "@/components/portal-layout";
@@ -42,6 +43,7 @@ function fmtAmt(n: number | null | undefined, currency = "AUD") {
 }
 
 function InvoiceCard({ inv }: { inv: MyInvoice }) {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const cfg = STATUS_CONFIG[inv.status ?? ""] ?? STATUS_CONFIG.Draft;
   const StatusIcon = cfg.icon;
@@ -105,16 +107,16 @@ function InvoiceCard({ inv }: { inv: MyInvoice }) {
       <div className={`px-5 py-3 flex items-center justify-between border-t ${isPaid ? "bg-green-50/50 border-green-100" : isOverdue ? "bg-red-50/50 border-red-100" : "bg-gray-50/60 border-gray-100"}`}>
         <div className="flex items-center gap-4 text-xs text-gray-500 flex-wrap">
           {inv.booking_ref && (
-            <span>Booking: <span className="font-mono font-medium text-gray-700">{inv.booking_ref}</span></span>
+            <span>{t("portal.invoices.booking")}: <span className="font-mono font-medium text-gray-700">{inv.booking_ref}</span></span>
           )}
           {isPaid && inv.paid_at && (
             <span className="text-green-700 font-medium">
-              Paid {fmtDate(inv.paid_at)}
+              {fmtDate(inv.paid_at)}
               {inv.payment_method && ` · ${PAYMENT_METHOD_LABELS[inv.payment_method] ?? inv.payment_method}`}
             </span>
           )}
           {!isPaid && isOverdue && (
-            <span className="text-red-600 font-semibold">⚠ Payment overdue</span>
+            <span className="text-red-600 font-semibold">{t("portal.invoices.payment_overdue")}</span>
           )}
         </div>
 
@@ -127,7 +129,7 @@ function InvoiceCard({ inv }: { inv: MyInvoice }) {
               onClick={() => setLocation(`/portal/invoices/${inv.id}/receipt`)}
             >
               <Receipt className="h-3.5 w-3.5" />
-              View Receipt
+              {t("portal.invoices.view_receipt")}
               <ExternalLink className="h-3 w-3 opacity-60" />
             </Button>
           )}
@@ -138,7 +140,7 @@ function InvoiceCard({ inv }: { inv: MyInvoice }) {
               style={{ backgroundColor: BRAND, borderColor: BRAND }}
               onClick={() => setLocation(`/portal/payment?invoice_id=${inv.id}`)}
             >
-              Pay Now
+              {t("portal.invoices.pay_now")}
             </Button>
           )}
         </div>
@@ -148,11 +150,12 @@ function InvoiceCard({ inv }: { inv: MyInvoice }) {
 }
 
 function EmptyState({ tab }: { tab: string }) {
+  const { t } = useTranslation();
   const msgs: Record<string, { icon: React.ElementType; title: string; sub: string }> = {
-    all:     { icon: FileText,    title: "No invoices yet",          sub: "Your invoices will appear here after a booking is confirmed." },
-    unpaid:  { icon: Clock,       title: "No pending invoices",      sub: "All caught up! No unpaid invoices at the moment." },
-    paid:    { icon: CheckCircle2, title: "No paid invoices yet",    sub: "Invoices will appear here once payment is received." },
-    overdue: { icon: AlertCircle, title: "No overdue invoices",      sub: "Great news — no overdue payments." },
+    all:     { icon: FileText,     title: t("portal.invoices.empty_all_title"),     sub: t("portal.invoices.empty_all_sub") },
+    unpaid:  { icon: Clock,        title: t("portal.invoices.empty_unpaid_title"),  sub: t("portal.invoices.empty_unpaid_sub") },
+    paid:    { icon: CheckCircle2, title: t("portal.invoices.empty_paid_title"),    sub: t("portal.invoices.empty_paid_sub") },
+    overdue: { icon: AlertCircle,  title: t("portal.invoices.empty_overdue_title"), sub: t("portal.invoices.empty_overdue_sub") },
   };
   const m = msgs[tab] ?? msgs.all;
   const Icon = m.icon;
@@ -166,6 +169,7 @@ function EmptyState({ tab }: { tab: string }) {
 }
 
 export default function PortalInvoices() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { token } = useAuthStore();
 
@@ -201,18 +205,18 @@ export default function PortalInvoices() {
         <div className="mb-6">
           <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
             <FileText className="h-5 w-5" style={{ color: BRAND }} />
-            My Invoices
+            {t("portal.invoices.title")}
           </h1>
-          <p className="text-sm text-gray-500 mt-1">Monthly rent invoices and payment receipts</p>
+          <p className="text-sm text-gray-500 mt-1">{t("portal.invoices.subtitle")}</p>
         </div>
 
         {/* ── Summary strip ── */}
         {!isLoading && invoices.length > 0 && (
           <div className="grid grid-cols-3 gap-3 mb-6">
             {[
-              { label: "Unpaid", count: unpaidCount, color: "text-blue-600", bg: "bg-blue-50 border-blue-100" },
-              { label: "Paid",   count: paidCount,   color: "text-green-600", bg: "bg-green-50 border-green-100" },
-              { label: "Overdue",count: overdueCount, color: "text-red-600", bg: "bg-red-50 border-red-100" },
+              { label: t("portal.invoices.unpaid"), count: unpaidCount, color: "text-blue-600", bg: "bg-blue-50 border-blue-100" },
+              { label: t("portal.invoices.paid"),   count: paidCount,   color: "text-green-600", bg: "bg-green-50 border-green-100" },
+              { label: t("portal.invoices.overdue"),count: overdueCount, color: "text-red-600", bg: "bg-red-50 border-red-100" },
             ].map(({ label, count, color, bg }) => (
               <div key={label} className={`rounded-xl border px-4 py-3 ${bg}`}>
                 <p className={`text-2xl font-bold ${color}`}>{count}</p>
@@ -226,10 +230,10 @@ export default function PortalInvoices() {
         <Tabs defaultValue="all">
           <TabsList className="mb-5 bg-white border w-full sm:w-auto">
             {[
-              { value: "all",     label: `All (${invoices.length})` },
-              { value: "unpaid",  label: `Unpaid (${unpaidCount})` },
-              { value: "paid",    label: `Paid (${paidCount})` },
-              { value: "overdue", label: `Overdue (${overdueCount})` },
+              { value: "all",     label: `${t("portal.invoices.tab_all")} (${invoices.length})` },
+              { value: "unpaid",  label: `${t("portal.invoices.unpaid")} (${unpaidCount})` },
+              { value: "paid",    label: `${t("portal.invoices.paid")} (${paidCount})` },
+              { value: "overdue", label: `${t("portal.invoices.overdue")} (${overdueCount})` },
             ].map(({ value, label }) => (
               <TabsTrigger key={value} value={value} className="text-sm flex-1 sm:flex-none">{label}</TabsTrigger>
             ))}

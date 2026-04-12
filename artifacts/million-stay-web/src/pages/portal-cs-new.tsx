@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "@/lib/store";
@@ -30,6 +31,7 @@ const CATEGORIES = ["General", "Accommodation", "Billing", "Maintenance", "Other
 interface Booking { id: number; booking_ref: string; booking_status: string; }
 
 export default function PortalCsNew() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { token } = useAuthStore();
   const { toast } = useToast();
@@ -111,17 +113,17 @@ export default function PortalCsNew() {
     <PortalLayout active="/portal/cs">
       <div className="flex-1 max-w-2xl mx-auto w-full px-4 py-8">
         <button onClick={() => setLocation("/portal/cs")} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary mb-6 transition-colors">
-          <ArrowLeft className="h-4 w-4" /> Back to Inquiries
+          <ArrowLeft className="h-4 w-4" /> {t("portal.cs_new.back")}
         </button>
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h1 className="text-xl font-bold text-gray-900 mb-1">New Inquiry</h1>
-          <p className="text-sm text-gray-500 mb-6">Tell us what's on your mind and we'll respond as soon as possible.</p>
+          <h1 className="text-xl font-bold text-gray-900 mb-1">{t("portal.cs_new.title")}</h1>
+          <p className="text-sm text-gray-500 mb-6">{t("portal.cs_new.subtitle")}</p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label>Category <span className="text-red-500">*</span></Label>
+                <Label>{t("portal.cs_new.category")} <span className="text-red-500">*</span></Label>
                 <Select value={form.category} onValueChange={v => setForm(p => ({ ...p, category: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -130,11 +132,11 @@ export default function PortalCsNew() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label>Related Booking (optional)</Label>
+                <Label>{t("portal.cs_new.related_booking")}</Label>
                 <Select value={form.booking_id} onValueChange={v => setForm(p => ({ ...p, booking_id: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Select booking…" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("portal.cs_new.select_booking")} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="_none">— No specific booking —</SelectItem>
+                    <SelectItem value="_none">{t("portal.cs_new.no_booking")}</SelectItem>
                     {bookings.map(b => (
                       <SelectItem key={b.id} value={String(b.id)}>
                         {b.booking_ref} ({b.booking_status})
@@ -146,9 +148,9 @@ export default function PortalCsNew() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Subject <span className="text-red-500">*</span></Label>
+              <Label>{t("portal.cs_new.subject")} <span className="text-red-500">*</span></Label>
               <Input
-                placeholder="Brief description of your inquiry…"
+                placeholder={t("portal.cs_new.subject_placeholder")}
                 value={form.subject}
                 onChange={e => setForm(p => ({ ...p, subject: e.target.value }))}
                 maxLength={200}
@@ -156,9 +158,9 @@ export default function PortalCsNew() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Message <span className="text-red-500">*</span></Label>
+              <Label>{t("portal.cs_new.message")} <span className="text-red-500">*</span></Label>
               <Textarea
-                placeholder="Please describe your inquiry in detail…"
+                placeholder={t("portal.cs_new.message_placeholder")}
                 value={form.description}
                 onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
                 rows={6}
@@ -167,7 +169,7 @@ export default function PortalCsNew() {
             </div>
 
             <div className="space-y-2">
-              <Label>Attachments (optional, up to 5 images)</Label>
+              <Label>{t("portal.cs_new.attachments")}</Label>
               <div className="flex flex-wrap gap-2">
                 {images.map((img, i) => (
                   <div key={i} className="relative group w-20 h-20 rounded-lg overflow-hidden border border-gray-200">
@@ -188,19 +190,19 @@ export default function PortalCsNew() {
                     disabled={uploading}
                     className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-200 hover:border-primary/50 flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-primary transition-colors"
                   >
-                    {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <><ImageIcon className="h-5 w-5" /><span className="text-xs">Add</span></>}
+                    {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <><ImageIcon className="h-5 w-5" /><span className="text-xs">{t("portal.cs_new.add")}</span></>}
                   </button>
                 )}
               </div>
               <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
-              <p className="text-xs text-gray-400">JPG, PNG, GIF up to 10MB each</p>
+              <p className="text-xs text-gray-400">{t("portal.cs_new.file_hint")}</p>
             </div>
 
             <div className="flex gap-3 pt-2">
-              <Button type="button" variant="outline" onClick={() => setLocation("/portal/cs")} className="flex-1">Cancel</Button>
+              <Button type="button" variant="outline" onClick={() => setLocation("/portal/cs")} className="flex-1">{t("portal.cs_new.cancel")}</Button>
               <Button type="submit" disabled={submitting} className="flex-1 bg-primary hover:bg-primary/90 text-white gap-2">
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                Submit Inquiry
+                {t("portal.cs_new.submit")}
               </Button>
             </div>
           </form>

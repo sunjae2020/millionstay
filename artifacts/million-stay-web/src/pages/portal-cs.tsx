@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/lib/store";
 import { PortalLayout } from "@/components/portal-layout";
@@ -101,6 +102,7 @@ function StatusIcon({ status }: { status: string }) {
 
 /* ── Inquiry Card ── */
 function InquiryCard({ ticket }: { ticket: CsTicket }) {
+  const { t } = useTranslation();
   const stColor = STATUS_COLORS[ticket.status] ?? STATUS_COLORS.Open;
   const stLabel = STATUS_LABELS[ticket.status] ?? ticket.status;
   return (
@@ -125,9 +127,9 @@ function InquiryCard({ ticket }: { ticket: CsTicket }) {
             <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-400">
               <span className="flex items-center gap-1">
                 <MessageCircle className="h-3 w-3" />
-                {ticket.message_count} message{ticket.message_count !== 1 ? "s" : ""}
+                {ticket.message_count} {t("portal.cs.messages")}
               </span>
-              <span>Updated {format(new Date(ticket.updated_at), "dd MMM yyyy")}</span>
+              <span>{t("portal.cs.updated")} {format(new Date(ticket.updated_at), "dd MMM yyyy")}</span>
             </div>
           </div>
           <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-primary transition-colors shrink-0 mt-1" />
@@ -139,6 +141,7 @@ function InquiryCard({ ticket }: { ticket: CsTicket }) {
 
 /* ── Announcement Card ── */
 function AnnouncementCard({ ann }: { ann: Announcement }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const cfg = ANN_CATEGORY_CONFIG[ann.category] ?? ANN_CATEGORY_CONFIG.General;
   const Icon = cfg.icon;
@@ -183,7 +186,7 @@ function AnnouncementCard({ ann }: { ann: Announcement }) {
                 onClick={() => setExpanded(!expanded)}
                 className="text-xs text-primary font-medium mt-1.5 hover:underline"
               >
-                {expanded ? "Show less" : "Read more"}
+                {expanded ? t("portal.cs.show_less") : t("portal.cs.read_more")}
               </button>
             )}
           </div>
@@ -201,6 +204,7 @@ function DirectMessageCard({
   msg: DirectMessage;
   onRead: (id: number) => void;
 }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(!msg.is_read);
   const isUnread = msg.is_read === 0;
 
@@ -237,7 +241,7 @@ function DirectMessageCard({
                   </p>
                 </div>
                 <p className="text-xs text-gray-400">
-                  From <span className="font-medium text-gray-600">{msg.sender_name}</span>
+                  {t("portal.cs.from")} <span className="font-medium text-gray-600">{msg.sender_name}</span>
                   {" · "}
                   {format(new Date(msg.created_at), "dd MMM yyyy")}
                 </p>
@@ -263,7 +267,7 @@ function DirectMessageCard({
                 {msg.read_at && (
                   <p className="text-xs text-gray-400 mt-3 flex items-center gap-1">
                     <CheckCircle2 className="h-3 w-3 text-green-500" />
-                    Read on {format(new Date(msg.read_at), "dd MMM yyyy 'at' h:mm a")}
+                    {t("portal.cs.read_on")} {format(new Date(msg.read_at), "dd MMM yyyy 'at' h:mm a")}
                   </p>
                 )}
               </div>
@@ -296,6 +300,7 @@ function EmptyState({ icon: Icon, title, sub, action }: {
 
 /* ── Main Page ── */
 export default function PortalCs() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { token } = useAuthStore();
   const qc = useQueryClient();
@@ -350,14 +355,14 @@ export default function PortalCs() {
               <Headphones className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Communications</h1>
-              <p className="text-sm text-gray-500">Inquiries, announcements, and messages</p>
+              <h1 className="text-xl font-bold text-gray-900">{t("portal.cs.title")}</h1>
+              <p className="text-sm text-gray-500">{t("portal.cs.subtitle")}</p>
             </div>
           </div>
           <Link href="/portal/cs/new">
             <Button className="bg-primary hover:bg-primary/90 text-white gap-2 shadow-sm">
               <Plus className="h-4 w-4" />
-              New Inquiry
+              {t("portal.cs.new_inquiry")}
             </Button>
           </Link>
         </div>
@@ -366,9 +371,9 @@ export default function PortalCs() {
         {!loadingTickets && !loadingMsg && (
           <div className="grid grid-cols-3 gap-3 mb-6">
             {[
-              { label: "Open Inquiries",    count: openTickets,  color: "text-blue-600",  bg: "bg-blue-50 border-blue-100" },
-              { label: "Announcements",     count: announcements.length, color: "text-purple-600", bg: "bg-purple-50 border-purple-100" },
-              { label: "Unread Messages",   count: unreadCount,  color: "text-primary",   bg: "bg-orange-50 border-orange-100" },
+              { label: t("portal.cs.open_inquiries"),  count: openTickets,  color: "text-blue-600",  bg: "bg-blue-50 border-blue-100" },
+              { label: t("portal.cs.announcements"), count: announcements.length, color: "text-purple-600", bg: "bg-purple-50 border-purple-100" },
+              { label: t("portal.cs.unread_messages"), count: unreadCount,  color: "text-primary",   bg: "bg-orange-50 border-orange-100" },
             ].map(({ label, count, color, bg }) => (
               <div key={label} className={`rounded-xl border px-4 py-3 ${bg}`}>
                 <p className={`text-2xl font-bold ${color}`}>{count}</p>
@@ -383,7 +388,7 @@ export default function PortalCs() {
           <TabsList className="mb-5 bg-white border w-full">
             <TabsTrigger value="inquiries" className="flex-1 gap-2 text-sm">
               <Headphones className="h-3.5 w-3.5" />
-              Inquiries
+              {t("portal.cs.tab_inquiries")}
               {openTickets > 0 && (
                 <Badge variant="secondary" className="ml-1 bg-blue-100 text-blue-700 border-0 text-xs px-1.5 py-0.5">
                   {openTickets}
@@ -392,7 +397,7 @@ export default function PortalCs() {
             </TabsTrigger>
             <TabsTrigger value="announcements" className="flex-1 gap-2 text-sm">
               <Megaphone className="h-3.5 w-3.5" />
-              Announcements
+              {t("portal.cs.tab_announcements")}
               {announcements.length > 0 && (
                 <Badge variant="secondary" className="ml-1 bg-purple-100 text-purple-700 border-0 text-xs px-1.5 py-0.5">
                   {announcements.length}
@@ -401,7 +406,7 @@ export default function PortalCs() {
             </TabsTrigger>
             <TabsTrigger value="messages" className="flex-1 gap-2 text-sm">
               <Mail className="h-3.5 w-3.5" />
-              Messages
+              {t("portal.cs.tab_messages")}
               {unreadCount > 0 && (
                 <Badge variant="secondary" className="ml-1 bg-primary text-white border-0 text-xs px-1.5 py-0.5">
                   {unreadCount}
@@ -418,12 +423,12 @@ export default function PortalCs() {
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
                 <EmptyState
                   icon={Headphones}
-                  title="No inquiries yet"
-                  sub="Have a question or issue? We're here to help."
+                  title={t("portal.cs.empty_inquiry_title")}
+                  sub={t("portal.cs.empty_inquiry_sub")}
                   action={
                     <Link href="/portal/cs/new">
                       <Button className="bg-primary hover:bg-primary/90 text-white gap-2">
-                        <Plus className="h-4 w-4" /> Submit First Inquiry
+                        <Plus className="h-4 w-4" /> {t("portal.cs.submit_first")}
                       </Button>
                     </Link>
                   }
@@ -444,8 +449,8 @@ export default function PortalCs() {
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
                 <EmptyState
                   icon={Megaphone}
-                  title="No announcements"
-                  sub="Management notices and updates will appear here."
+                  title={t("portal.cs.empty_ann_title")}
+                  sub={t("portal.cs.empty_ann_sub")}
                 />
               </div>
             ) : (
@@ -463,8 +468,8 @@ export default function PortalCs() {
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
                 <EmptyState
                   icon={Mail}
-                  title="No messages"
-                  sub="Direct messages from the MillionStay team will appear here."
+                  title={t("portal.cs.empty_msg_title")}
+                  sub={t("portal.cs.empty_msg_sub")}
                 />
               </div>
             ) : (
@@ -481,7 +486,7 @@ export default function PortalCs() {
             {messages.length > 0 && unreadCount === 0 && (
               <p className="text-center text-xs text-gray-400 pt-2 flex items-center justify-center gap-1">
                 <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
-                All messages read
+                {t("portal.cs.all_read")}
               </p>
             )}
           </TabsContent>

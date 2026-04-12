@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { useAuthStore } from "@/lib/store";
 import { PortalLayout } from "@/components/portal-layout";
@@ -78,6 +79,7 @@ function SelectField({ label, value, onChange, options }: {
 }
 
 export default function PortalProfile() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { token, guest, setGuest, logout } = useAuthStore();
   const { toast } = useToast();
@@ -390,7 +392,7 @@ export default function PortalProfile() {
                   size="sm"
                 >
                   <Camera className="h-4 w-4" />
-                  {avatarUrl ? "Change Photo" : "Upload Photo"}
+                  {avatarUrl ? t("portal.profile.change_photo") : t("portal.profile.upload_photo")}
                 </Button>
                 {avatarUrl && (
                   <Button
@@ -419,7 +421,7 @@ export default function PortalProfile() {
         {/* ── 1. Personal Information ── */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}
           className="bg-white rounded-2xl border p-6">
-          <SectionHeader icon={User} title="Personal Information" />
+          <SectionHeader icon={User} title={t("portal.profile.personal_title")} />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -465,7 +467,7 @@ export default function PortalProfile() {
 
           <div className="mt-5 flex justify-end">
             <Button onClick={savePersonal} disabled={loadingPersonal} className="bg-primary hover:bg-primary/90 gap-2">
-              <Save className="h-4 w-4" />{loadingPersonal ? "Saving…" : "Save Changes"}
+              <Save className="h-4 w-4" />{loadingPersonal ? t("portal.profile.saving") : t("portal.profile.save")}
             </Button>
           </div>
         </motion.div>
@@ -473,7 +475,7 @@ export default function PortalProfile() {
         {/* ── 2. Study / Education Information ── */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
           className="bg-white rounded-2xl border p-6">
-          <SectionHeader icon={GraduationCap} title="Study Information" color="bg-blue-100" iconColor="text-blue-600" />
+          <SectionHeader icon={GraduationCap} title={t("portal.profile.study_title")} color="bg-blue-100" iconColor="text-blue-600" />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
@@ -501,7 +503,7 @@ export default function PortalProfile() {
 
           <div className="mt-5 flex justify-end">
             <Button onClick={saveStudy} disabled={loadingStudy} className="bg-blue-600 hover:bg-blue-700 gap-2">
-              <Save className="h-4 w-4" />{loadingStudy ? "Saving…" : "Save Changes"}
+              <Save className="h-4 w-4" />{loadingStudy ? t("portal.profile.saving") : t("portal.profile.save")}
             </Button>
           </div>
         </motion.div>
@@ -514,12 +516,12 @@ export default function PortalProfile() {
               <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
                 <ShieldAlert className="h-4 w-4 text-red-600" />
               </div>
-              <h2 className="font-semibold text-gray-800">Emergency Contacts</h2>
+              <h2 className="font-semibold text-gray-800">{t("portal.profile.emergency_title")}</h2>
             </div>
             {!showAddContact && editContactId === null && (
               <Button variant="outline" size="sm" onClick={() => { setShowAddContact(true); resetContactForm(); }}
                 className="gap-1 text-xs">
-                <Plus className="h-3.5 w-3.5" /> Add Contact
+                <Plus className="h-3.5 w-3.5" /> {t("portal.profile.add_contact")}
               </Button>
             )}
           </div>
@@ -600,7 +602,7 @@ export default function PortalProfile() {
         {/* ── 4. Bank / Payment Information ── */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
           className="bg-white rounded-2xl border p-6">
-          <SectionHeader icon={Banknote} title="Bank & Payment Information" color="bg-green-100" iconColor="text-green-700" />
+          <SectionHeader icon={Banknote} title={t("portal.profile.bank_title")} color="bg-green-100" iconColor="text-green-700" />
 
           <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-xs text-amber-800 mb-4">
             This information is used for refunds and rent payment processing only. It is kept confidential.
@@ -638,7 +640,7 @@ export default function PortalProfile() {
 
           <div className="mt-5 flex justify-end">
             <Button onClick={saveBank} disabled={loadingBank} className="bg-green-700 hover:bg-green-800 gap-2">
-              <Save className="h-4 w-4" />{loadingBank ? "Saving…" : "Save Changes"}
+              <Save className="h-4 w-4" />{loadingBank ? t("portal.profile.saving") : t("portal.profile.save")}
             </Button>
           </div>
         </motion.div>
@@ -646,7 +648,7 @@ export default function PortalProfile() {
         {/* ── 5. Change Password ── */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
           className="bg-white rounded-2xl border p-6">
-          <SectionHeader icon={Lock} title="Change Password" color="bg-gray-100" iconColor="text-gray-600" />
+          <SectionHeader icon={Lock} title={t("portal.profile.change_password")} color="bg-gray-100" iconColor="text-gray-600" />
 
           <div className="space-y-4 max-w-sm">
             <div>

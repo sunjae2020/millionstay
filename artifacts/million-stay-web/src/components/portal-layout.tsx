@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useAuthStore } from "@/lib/store";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   BookOpen,
   FileText,
@@ -12,17 +13,54 @@ import {
   X,
   ChevronRight,
   Home,
+  Globe,
 } from "lucide-react";
 import logoHorizontal from "@assets/06.OR_NB_horizontal_ver_1775381659303.png";
 import logoMark from "@assets/05.OR_NB_Mark_simple_ver_1775381659302.png";
 
-const NAV_ITEMS = [
-  { href: "/portal/bookings", label: "My Bookings", icon: BookOpen },
-  { href: "/portal/invoices", label: "My Invoices", icon: FileText },
-  { href: "/portal/documents", label: "Documents", icon: FileImage },
-  { href: "/portal/cs", label: "Communications", icon: Headphones },
-  { href: "/portal/profile", label: "My Profile", icon: User },
+const LANGUAGES = [
+  { code: "en", flag: "🇦🇺", label: "EN" },
+  { code: "ko", flag: "🇰🇷", label: "KO" },
+  { code: "zh", flag: "🇨🇳", label: "ZH" },
+  { code: "ja", flag: "🇯🇵", label: "JA" },
+  { code: "th", flag: "🇹🇭", label: "TH" },
 ];
+
+function LanguageSwitcher() {
+  const { i18n } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const current = LANGUAGES.find((l) => l.code === i18n.language) ?? LANGUAGES[0]!;
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors w-full"
+      >
+        <Globe className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+        <span className="text-sm">{current.flag}</span>
+        <span>{current.label}</span>
+        <ChevronRight className={`h-3 w-3 ml-auto transition-transform ${open ? "rotate-90" : ""}`} />
+      </button>
+      {open && (
+        <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-lg z-50 overflow-hidden">
+          {LANGUAGES.map((lang) => (
+            <button
+              key={lang.code}
+              onClick={() => { i18n.changeLanguage(lang.code); setOpen(false); }}
+              className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-orange-50 hover:text-primary transition-colors ${
+                lang.code === i18n.language ? "bg-orange-50 text-primary font-semibold" : "text-gray-600"
+              }`}
+            >
+              <span className="text-sm">{lang.flag}</span>
+              <span>{lang.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function getInitials(name: string): string {
   const parts = name.trim().split(" ");
@@ -36,9 +74,18 @@ interface PortalLayoutProps {
 }
 
 export function PortalLayout({ children, active }: PortalLayoutProps) {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { guest, logout } = useAuthStore();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const NAV_ITEMS = [
+    { href: "/portal/bookings", labelKey: "portal.nav.bookings", icon: BookOpen },
+    { href: "/portal/invoices", labelKey: "portal.nav.invoices", icon: FileText },
+    { href: "/portal/documents", labelKey: "portal.nav.documents", icon: FileImage },
+    { href: "/portal/cs", labelKey: "portal.nav.cs", icon: Headphones },
+    { href: "/portal/profile", labelKey: "portal.nav.profile", icon: User },
+  ];
 
   const displayName = [guest?.first_name, guest?.last_name].filter(Boolean).join(" ") || guest?.email || "Guest";
   const initials = displayName ? getInitials(displayName) : "G";
@@ -67,7 +114,9 @@ export function PortalLayout({ children, active }: PortalLayoutProps) {
 
         {/* Nav Items */}
         <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto">
-          <p className="px-2 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">My Portal</p>
+          <p className="px-2 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">
+            {t("portal.my_portal")}
+          </p>
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const active_ = isActive(item.href);
@@ -81,7 +130,7 @@ export function PortalLayout({ children, active }: PortalLayoutProps) {
                   }`}
                 >
                   <Icon className={`h-4 w-4 shrink-0 ${active_ ? "text-primary" : "text-gray-400"}`} />
-                  {item.label}
+                  {t(item.labelKey)}
                   {active_ && <ChevronRight className="h-3.5 w-3.5 ml-auto text-primary/60" />}
                 </a>
               </Link>
@@ -89,12 +138,17 @@ export function PortalLayout({ children, active }: PortalLayoutProps) {
           })}
         </nav>
 
-        {/* Return to site link */}
+        {/* Language Switcher */}
         <div className="px-3 pb-2 border-t border-gray-100 pt-3">
+          <LanguageSwitcher />
+        </div>
+
+        {/* Return to site link */}
+        <div className="px-3 pb-2">
           <Link href="/">
             <a className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors">
               <Home className="h-4 w-4 text-gray-400" />
-              Back to Site
+              {t("portal.back_to_site")}
             </a>
           </Link>
         </div>
@@ -119,7 +173,7 @@ export function PortalLayout({ children, active }: PortalLayoutProps) {
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 transition-colors"
           >
             <LogOut className="h-4 w-4" />
-            Log out
+            {t("portal.log_out")}
           </button>
         </div>
       </aside>
@@ -129,7 +183,7 @@ export function PortalLayout({ children, active }: PortalLayoutProps) {
         <Link href="/">
           <img src={logoMark} alt="MillionStay" className="h-8 w-auto" />
         </Link>
-        <span className="text-sm font-semibold text-gray-700">My Portal</span>
+        <span className="text-sm font-semibold text-gray-700">{t("portal.my_portal")}</span>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           className="p-2 rounded-lg text-gray-500 hover:text-primary hover:bg-orange-50 transition-colors"
@@ -150,7 +204,9 @@ export function PortalLayout({ children, active }: PortalLayoutProps) {
               </button>
             </div>
             <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto">
-              <p className="px-2 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">My Portal</p>
+              <p className="px-2 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">
+                {t("portal.my_portal")}
+              </p>
               {NAV_ITEMS.map((item) => {
                 const Icon = item.icon;
                 const active_ = isActive(item.href);
@@ -165,18 +221,21 @@ export function PortalLayout({ children, active }: PortalLayoutProps) {
                     }`}
                   >
                     <Icon className={`h-4 w-4 shrink-0 ${active_ ? "text-primary" : "text-gray-400"}`} />
-                    {item.label}
+                    {t(item.labelKey)}
                   </button>
                 );
               })}
             </nav>
             <div className="px-3 pb-2 border-t border-gray-100 pt-3">
+              <LanguageSwitcher />
+            </div>
+            <div className="px-3 pb-2">
               <button
                 onClick={() => { setLocation("/"); setMobileOpen(false); }}
                 className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-50 transition-colors"
               >
                 <Home className="h-4 w-4 text-gray-400" />
-                Back to Site
+                {t("portal.back_to_site")}
               </button>
             </div>
             <div className="border-t border-gray-100 px-3 py-3">
@@ -198,7 +257,7 @@ export function PortalLayout({ children, active }: PortalLayoutProps) {
                 className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 transition-colors"
               >
                 <LogOut className="h-4 w-4" />
-                Log out
+                {t("portal.log_out")}
               </button>
             </div>
           </aside>
