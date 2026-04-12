@@ -36,6 +36,7 @@ import ContactList from "@/pages/crm/ContactList";
 import ContactDetail from "@/pages/crm/ContactDetail";
 import AccountList from "@/pages/crm/AccountList";
 import AccountDetail from "@/pages/crm/AccountDetail";
+import TenantLifecycle from "@/pages/crm/TenantLifecycle";
 import TaskList from "@/pages/sales/TaskList";
 import TaskDetail from "@/pages/sales/TaskDetail";
 import LeadList from "@/pages/sales/LeadList";
@@ -151,6 +152,8 @@ function Router() {
       <Route path="/account/accounts" component={AccountList} />
       <Route path="/account/accounts/new" component={AccountDetail} />
       <Route path="/account/accounts/:id" component={AccountDetail} />
+
+      <Route path="/account/tenant-lifecycle" component={TenantLifecycle} />
 
       <Route path="/account/leads" component={LeadList} />
       <Route path="/account/leads/new" component={LeadDetail} />

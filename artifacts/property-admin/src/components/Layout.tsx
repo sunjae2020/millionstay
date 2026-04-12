@@ -46,6 +46,7 @@ import {
   HeadphonesIcon,
   Globe,
   Wrench,
+  Home,
   DollarSign,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
@@ -73,6 +74,7 @@ function getNav(t: (k: string) => string): NavSection[] {
       items: [
         { href: "/account/contacts", label: t("nav.contact"), icon: User },
         { href: "/account/accounts", label: t("nav.account"), icon: Briefcase },
+        { href: "/account/tenant-lifecycle", label: "Tenant Lifecycle", icon: Home },
         { href: "/account/leads", label: t("nav.lead"), icon: TrendingUp },
         { href: "/account/tasks", label: t("nav.task"), icon: CheckSquare },
       ],
