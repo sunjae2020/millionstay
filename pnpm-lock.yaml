@@ -656,6 +656,13 @@ importers:
         version: 3.25.76
 
   artifacts/property-admin:
+    dependencies:
+      i18next:
+        specifier: ^26.0.3
+        version: 26.0.3(typescript@5.9.3)
+      react-i18next:
+        specifier: ^17.0.2
+        version: 17.0.2(i18next@26.0.3(typescript@5.9.3))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.3)
     devDependencies:
       '@hookform/resolvers':
         specifier: ^3.10.0
@@ -5224,7 +5231,7 @@ snapshots:
 
   dom-helpers@5.2.1:
     dependencies:
-      '@babel/runtime': 7.28.6
+      '@babel/runtime': 7.29.2
       csstype: 3.2.3
 
   drizzle-kit@0.31.9:

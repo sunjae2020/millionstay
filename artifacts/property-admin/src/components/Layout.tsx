@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { useBrand } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -43,6 +44,7 @@ import {
   X,
   ConciergeBell,
   HeadphonesIcon,
+  Globe,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
@@ -60,102 +62,104 @@ type NavSection = {
   defaultOpen?: boolean;
 };
 
-const NAV: NavSection[] = [
-  {
-    label: "Account",
-    icon: Users,
-    defaultOpen: true,
-    items: [
-      { href: "/account/contacts", label: "Contact", icon: User },
-      { href: "/account/accounts", label: "Account", icon: Briefcase },
-      { href: "/account/leads", label: "Lead", icon: TrendingUp },
-      { href: "/account/tasks", label: "Task", icon: CheckSquare },
-    ],
-  },
-  {
-    label: "CS",
-    icon: HeadphonesIcon,
-    defaultOpen: false,
-    items: [
-      { href: "/cs/tickets", label: "CS Tickets", icon: HeadphonesIcon },
-    ],
-  },
-  {
-    label: "Property",
-    icon: Building2,
-    defaultOpen: true,
-    items: [
-      { href: "/property/properties", label: "Property", icon: Building2 },
-      { href: "/property/spaces", label: "Space", icon: Layers },
-      { href: "/property/space-options", label: "Space Options", icon: Tag },
-      { href: "/property/space-policies", label: "Space Policy", icon: FileText },
-      { href: "/property/bulk-photo-upload", label: "Bulk Photo Upload", icon: ImagePlus },
-    ],
-  },
-  {
-    label: "Booking",
-    icon: CalendarCheck,
-    defaultOpen: false,
-    items: [
-      { href: "/booking/bookings", label: "Booking", icon: CalendarDays },
-      { href: "/booking/contracts", label: "Contract", icon: FileText },
-      { href: "/booking/contract-products", label: "Contract Product", icon: Box },
-      { href: "/booking/service-hosts", label: "Service Host", icon: Users },
-    ],
-  },
-  {
-    label: "Products",
-    icon: Package,
-    defaultOpen: false,
-    items: [
-      { href: "/products/products", label: "Accommodation Products", icon: Package },
-      { href: "/services", label: "Service Product", icon: ConciergeBell },
-      { href: "/products/promotions", label: "Promotion", icon: Tag },
-      { href: "/products/beneficiaries", label: "Beneficiary", icon: Users },
-    ],
-  },
-  {
-    label: "Finance",
-    icon: CreditCard,
-    defaultOpen: false,
-    items: [
-      { href: "/finance/invoices", label: "Invoice", icon: Receipt },
-      { href: "/finance/transactions", label: "Transaction", icon: ArrowRightLeft },
-      { href: "/finance/receipts", label: "Receipt", icon: Receipt },
-      { href: "/finance/commissions", label: "Commission", icon: Percent },
-      { href: "/finance/recurring", label: "Recurring", icon: RefreshCw },
-    ],
-  },
-  {
-    label: "Settings",
-    icon: Settings,
-    defaultOpen: false,
-    items: [
-      { href: "/settings/organisation", label: "Organisation", icon: Building },
-      { href: "/settings/users", label: "Users", icon: UserCog },
-      { href: "/settings/contract-types", label: "Contract Types", icon: FileText },
-      { href: "/settings/product-groups", label: "Product Groups", icon: Layers },
-      { href: "/settings/product-types", label: "Product Types", icon: Tag },
-      { href: "/settings/payment-info", label: "Payment Info", icon: Landmark },
-      { href: "/settings/cost-center", label: "Cost Center", icon: Wallet },
-      { href: "/settings/suburbs", label: "Suburb", icon: MapPin },
-      { href: "/settings/email-templates", label: "Email Templates", icon: Mail },
-      { href: "/settings/integrations", label: "Integrations", icon: Plug },
-      { href: "/settings/system-log", label: "System Log", icon: ScrollText },
-      { href: "/settings/design", label: "Design & Branding", icon: Palette },
-      {
-        href: "/settings/reports",
-        label: "Reports",
-        icon: BarChart3,
-        children: [
-          { href: "/settings/reports/bookings", label: "Booking Report", icon: BarChart3 },
-          { href: "/settings/reports/revenue", label: "Revenue Report", icon: BarChart3 },
-          { href: "/settings/reports/occupancy", label: "Occupancy Report", icon: BarChart3 },
-        ],
-      },
-    ],
-  },
-];
+function getNav(t: (k: string) => string): NavSection[] {
+  return [
+    {
+      label: t("nav.account"),
+      icon: Users,
+      defaultOpen: true,
+      items: [
+        { href: "/account/contacts", label: t("nav.contact"), icon: User },
+        { href: "/account/accounts", label: t("nav.account"), icon: Briefcase },
+        { href: "/account/leads", label: t("nav.lead"), icon: TrendingUp },
+        { href: "/account/tasks", label: t("nav.task"), icon: CheckSquare },
+      ],
+    },
+    {
+      label: t("nav.cs"),
+      icon: HeadphonesIcon,
+      defaultOpen: false,
+      items: [
+        { href: "/cs/tickets", label: t("nav.cs_tickets"), icon: HeadphonesIcon },
+      ],
+    },
+    {
+      label: t("nav.property"),
+      icon: Building2,
+      defaultOpen: true,
+      items: [
+        { href: "/property/properties", label: t("nav.property"), icon: Building2 },
+        { href: "/property/spaces", label: t("nav.space"), icon: Layers },
+        { href: "/property/space-options", label: t("nav.space_options"), icon: Tag },
+        { href: "/property/space-policies", label: t("nav.space_policy"), icon: FileText },
+        { href: "/property/bulk-photo-upload", label: t("nav.bulk_photo"), icon: ImagePlus },
+      ],
+    },
+    {
+      label: t("nav.booking"),
+      icon: CalendarCheck,
+      defaultOpen: false,
+      items: [
+        { href: "/booking/bookings", label: t("nav.booking"), icon: CalendarDays },
+        { href: "/booking/contracts", label: t("nav.contract"), icon: FileText },
+        { href: "/booking/contract-products", label: t("nav.contract_product"), icon: Box },
+        { href: "/booking/service-hosts", label: t("nav.service_host"), icon: Users },
+      ],
+    },
+    {
+      label: t("nav.products"),
+      icon: Package,
+      defaultOpen: false,
+      items: [
+        { href: "/products/products", label: t("nav.accommodation"), icon: Package },
+        { href: "/services", label: t("nav.service_product"), icon: ConciergeBell },
+        { href: "/products/promotions", label: t("nav.promotion"), icon: Tag },
+        { href: "/products/beneficiaries", label: t("nav.beneficiary"), icon: Users },
+      ],
+    },
+    {
+      label: t("nav.finance"),
+      icon: CreditCard,
+      defaultOpen: false,
+      items: [
+        { href: "/finance/invoices", label: t("nav.invoice"), icon: Receipt },
+        { href: "/finance/transactions", label: t("nav.transaction"), icon: ArrowRightLeft },
+        { href: "/finance/receipts", label: t("nav.receipt"), icon: Receipt },
+        { href: "/finance/commissions", label: t("nav.commission"), icon: Percent },
+        { href: "/finance/recurring", label: t("nav.recurring"), icon: RefreshCw },
+      ],
+    },
+    {
+      label: t("nav.settings"),
+      icon: Settings,
+      defaultOpen: false,
+      items: [
+        { href: "/settings/organisation", label: t("nav.organisation"), icon: Building },
+        { href: "/settings/users", label: t("nav.users"), icon: UserCog },
+        { href: "/settings/contract-types", label: t("nav.contract_types"), icon: FileText },
+        { href: "/settings/product-groups", label: t("nav.product_groups"), icon: Layers },
+        { href: "/settings/product-types", label: t("nav.product_types"), icon: Tag },
+        { href: "/settings/payment-info", label: t("nav.payment_info"), icon: Landmark },
+        { href: "/settings/cost-center", label: t("nav.cost_center"), icon: Wallet },
+        { href: "/settings/suburbs", label: t("nav.suburb"), icon: MapPin },
+        { href: "/settings/email-templates", label: t("nav.email_templates"), icon: Mail },
+        { href: "/settings/integrations", label: t("nav.integrations"), icon: Plug },
+        { href: "/settings/system-log", label: t("nav.system_log"), icon: ScrollText },
+        { href: "/settings/design", label: t("nav.design"), icon: Palette },
+        {
+          href: "/settings/reports",
+          label: t("nav.reports"),
+          icon: BarChart3,
+          children: [
+            { href: "/settings/reports/bookings", label: t("nav.booking_report"), icon: BarChart3 },
+            { href: "/settings/reports/revenue", label: t("nav.revenue_report"), icon: BarChart3 },
+            { href: "/settings/reports/occupancy", label: t("nav.occupancy_report"), icon: BarChart3 },
+          ],
+        },
+      ],
+    },
+  ];
+}
 
 function NavLeaf({
   href,
@@ -359,8 +363,98 @@ function SectionToggle({
   );
 }
 
+const LANGUAGES = [
+  { code: "en", label: "English" },
+  { code: "ko", label: "한국어" },
+  { code: "zh", label: "中文" },
+  { code: "ja", label: "日本語" },
+  { code: "th", label: "ภาษาไทย" },
+];
+
+function LanguageSwitcher({ collapsed }: { collapsed?: boolean }) {
+  const { i18n } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  function changeLang(code: string) {
+    i18n.changeLanguage(code);
+    try { localStorage.setItem("ms_admin_language", code); } catch {}
+    setOpen(false);
+  }
+
+  const current = LANGUAGES.find((l) => l.code === i18n.language) ?? LANGUAGES[0];
+
+  if (collapsed) {
+    return (
+      <div className="relative" ref={ref}>
+        <button
+          onClick={() => setOpen((o) => !o)}
+          title={current.label}
+          className="p-1.5 rounded hover:bg-sidebar-accent text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors"
+        >
+          <Globe className="h-3.5 w-3.5" />
+        </button>
+        {open && (
+          <div className="absolute bottom-full left-0 mb-1 z-50 bg-popover border border-border rounded-md shadow-md py-1 min-w-[120px]">
+            {LANGUAGES.map((l) => (
+              <button
+                key={l.code}
+                onClick={() => changeLang(l.code)}
+                className={cn(
+                  "w-full text-left px-3 py-1.5 text-xs hover:bg-accent transition-colors",
+                  l.code === i18n.language ? "font-semibold text-primary" : "text-foreground"
+                )}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1.5 w-full px-1 py-1 rounded text-[10px] text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+      >
+        <Globe className="h-3 w-3 flex-shrink-0" />
+        <span>{current.label}</span>
+        <ChevronDown className={cn("h-2.5 w-2.5 ml-auto transition-transform", open && "rotate-180")} />
+      </button>
+      {open && (
+        <div className="absolute bottom-full left-0 mb-1 z-50 bg-popover border border-border rounded-md shadow-md py-1 w-full">
+          {LANGUAGES.map((l) => (
+            <button
+              key={l.code}
+              onClick={() => changeLang(l.code)}
+              className={cn(
+                "w-full text-left px-3 py-1.5 text-xs hover:bg-accent transition-colors",
+                l.code === i18n.language ? "font-semibold text-primary" : "text-foreground"
+              )}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SidebarFooter({ collapsed }: { collapsed?: boolean }) {
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
 
   if (collapsed) {
     return (
@@ -368,10 +462,11 @@ function SidebarFooter({ collapsed }: { collapsed?: boolean }) {
         <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center" title={user ? `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() || user.email : "Admin"}>
           <User className="h-3.5 w-3.5 text-primary" />
         </div>
+        <LanguageSwitcher collapsed />
         <button
           onClick={logout}
           className="flex-shrink-0 p-1.5 rounded hover:bg-sidebar-accent text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors"
-          title="Sign out"
+          title={t("nav.logout")}
         >
           <LogOut className="h-3.5 w-3.5" />
         </button>
@@ -380,8 +475,8 @@ function SidebarFooter({ collapsed }: { collapsed?: boolean }) {
   }
 
   return (
-    <div className="border-t border-sidebar-border px-3 py-2">
-      <div className="flex items-center gap-2 mb-1">
+    <div className="border-t border-sidebar-border px-3 py-2 space-y-1">
+      <div className="flex items-center gap-2">
         <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
           <User className="h-3.5 w-3.5 text-primary" />
         </div>
@@ -394,12 +489,12 @@ function SidebarFooter({ collapsed }: { collapsed?: boolean }) {
         <button
           onClick={logout}
           className="flex-shrink-0 p-1.5 rounded hover:bg-sidebar-accent text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors"
-          title="Sign out"
+          title={t("nav.logout")}
         >
           <LogOut className="h-3.5 w-3.5" />
         </button>
       </div>
-      <p className="text-[10px] text-sidebar-foreground/30 pl-9">MillionStay Admin v2</p>
+      <LanguageSwitcher />
     </div>
   );
 }
@@ -461,6 +556,8 @@ const COLLAPSED_KEY = "ms_sidebar_collapsed";
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { logo, brandName } = useBrand();
+  const { t } = useTranslation();
+  const NAV = getNav(t);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
     try {
@@ -545,7 +642,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className={cn("flex flex-col gap-0.5", collapsed && "w-full items-center")}>
             <Link
               href="/"
-              title={collapsed ? "Dashboard" : undefined}
+              title={collapsed ? t("nav.dashboard") : undefined}
               className={cn(
                 "flex items-center rounded-md text-xs font-medium transition-colors",
                 collapsed
@@ -557,7 +654,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               )}
             >
               <LayoutDashboard className={cn("flex-shrink-0", collapsed ? "h-4 w-4" : "h-3 w-3")} />
-              {!collapsed && "Dashboard"}
+              {!collapsed && t("nav.dashboard")}
             </Link>
           </div>
 

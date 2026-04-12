@@ -1,5 +1,6 @@
 import { useState, FormEvent } from "react";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ const DEMO_ACCOUNTS = [
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const { t } = useTranslation();
   const [, navigate] = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -109,9 +111,9 @@ export default function LoginPage() {
 
           {/* Heading */}
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-slate-900">Sign in</h1>
+            <h1 className="text-2xl font-bold text-slate-900">{t("login.sign_in")}</h1>
             <p className="text-slate-500 text-sm mt-1">
-              Enter your credentials to access the admin portal
+              {t("login.subtitle")}
             </p>
           </div>
 
@@ -119,7 +121,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-1.5">
               <Label htmlFor="email" className="text-sm font-medium text-slate-700">
-                Email address
+                {t("login.email")}
               </Label>
               <Input
                 id="email"
@@ -136,7 +138,7 @@ export default function LoginPage() {
 
             <div className="space-y-1.5">
               <Label htmlFor="password" className="text-sm font-medium text-slate-700">
-                Password
+                {t("login.password")}
               </Label>
               <div className="relative">
                 <Input
@@ -173,8 +175,8 @@ export default function LoginPage() {
               style={{ background: `linear-gradient(135deg, ${BRAND} 0%, #FF8C3A 100%)` }}
             >
               {loading
-                ? <><Loader2 className="h-4 w-4 animate-spin" /> Signing in…</>
-                : "Sign In →"
+                ? <><Loader2 className="h-4 w-4 animate-spin" /> {t("login.signing_in")}</>
+                : `${t("login.sign_in")} →`
               }
             </button>
           </form>

@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { apiFetch } from "@/lib/apiFetch";
 import {
@@ -66,8 +67,10 @@ function BookingMiniCalendar({ bookings }: { bookings: any[] }) {
   const spaceNames: Record<number, string> = {};
   bookings.forEach((b) => { if (b.space_id) spaceNames[b.space_id] = b.space_name ?? `Space #${b.space_id}`; });
 
+  const { t } = useTranslation();
+
   if (spaces.length === 0) {
-    return <p className="text-sm text-muted-foreground text-center py-6">No active bookings in the next 7 days.</p>;
+    return <p className="text-sm text-muted-foreground text-center py-6">{t("dashboard.no_bookings")}</p>;
   }
 
   function getBookingForSpaceDate(spaceId: number, date: Date) {
@@ -133,6 +136,7 @@ interface IntegrationStatus {
 
 function IntegrationStatusWidget() {
   const [status, setStatus] = useState<IntegrationStatus | null>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     apiFetch(`/api/v1/integrations/status?t=${Date.now()}`)
@@ -147,28 +151,28 @@ function IntegrationStatusWidget() {
           emoji: status.stripe.error ? "⚠️" : status.stripe.configured ? "✅" : "⚠️",
           label: "Stripe",
           note: status.stripe.error
-            ? "Error"
+            ? t("dashboard.error")
             : status.stripe.configured
             ? status.stripe.mode === "live"
-              ? "Live Mode"
-              : "Test Mode"
-            : "Not configured",
+              ? t("dashboard.live_mode")
+              : t("dashboard.test_mode")
+            : t("dashboard.not_configured"),
           warn: !status.stripe.configured || !!status.stripe.error,
         },
         {
           emoji: status.cloudinary.error ? "⚠️" : status.cloudinary.configured ? "✅" : "⚠️",
           label: "Cloudinary",
           note: status.cloudinary.error
-            ? "Error"
+            ? t("dashboard.error")
             : status.cloudinary.configured
             ? `${status.cloudinary.storage_mb ?? "?"}MB used`
-            : "Not configured",
+            : t("dashboard.not_configured"),
           warn: !status.cloudinary.configured || !!status.cloudinary.error,
         },
         {
           emoji: status.resend.error ? "⚠️" : status.resend.configured ? "✅" : "⚠️",
           label: "Resend",
-          note: status.resend.error ? "Error" : status.resend.configured ? "Connected" : "Not configured",
+          note: status.resend.error ? t("dashboard.error") : status.resend.configured ? t("dashboard.connected") : t("dashboard.not_configured"),
           warn: !status.resend.configured || !!status.resend.error,
         },
         {
@@ -185,13 +189,13 @@ function IntegrationStatusWidget() {
   return (
     <div className="bg-card rounded-lg border p-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold">Integrations</h3>
+        <h3 className="text-sm font-semibold">{t("dashboard.integrations")}</h3>
         <Link href="/settings/integrations" className="text-xs text-[#E8621A] hover:underline">
-          Manage →
+          {t("dashboard.manage")}
         </Link>
       </div>
       {!status ? (
-        <p className="text-xs text-muted-foreground">Loading...</p>
+        <p className="text-xs text-muted-foreground">{t("dashboard.loading")}</p>
       ) : (
         <div className="space-y-1.5">
           {items.map((item) => (
@@ -203,7 +207,7 @@ function IntegrationStatusWidget() {
           ))}
           {hasWarning && (
             <p className="text-xs text-amber-600 mt-2 pt-2 border-t">
-              ⚠️ Some integrations need configuration
+              ⚠️ {t("dashboard.integration_warning")}
             </p>
           )}
         </div>
@@ -213,6 +217,7 @@ function IntegrationStatusWidget() {
 }
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const { data: suburbs } = useListSuburbs();
   const { data: properties } = useListProperties();
   const { data: spaces } = useListSpaces();
@@ -263,57 +268,57 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <PageHeader title="Dashboard" subtitle="MillionStay admin overview" />
+      <PageHeader title={t("dashboard.title")} subtitle={t("dashboard.subtitle")} />
       <div className="p-6 space-y-8">
         {/* Property Section */}
         <div>
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Property</h2>
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("dashboard.property_section")}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <StatCard label="Suburbs" value={suburbs?.length} icon={MapPin} color="bg-blue-500" sublabel="Registered locations" />
-            <StatCard label="Properties" value={properties?.length} icon={Building2} color="bg-indigo-500" sublabel={`${pendingProperties ?? 0} pending approval`} />
-            <StatCard label="Active Properties" value={activeProperties} icon={TrendingUp} color="bg-green-500" sublabel="Approved listings" />
-            <StatCard label="Spaces" value={spaces?.length} icon={Layers} color="bg-purple-500" sublabel={`${activeSpaces ?? 0} active`} />
-            <StatCard label="Space Options" value={spaceOptions?.length} icon={Tag} color="bg-orange-500" sublabel="Amenity tags" />
-            <StatCard label="Space Policies" value={spacePolicies?.length} icon={Settings} color="bg-teal-500" sublabel="House rules templates" />
+            <StatCard label={t("dashboard.suburbs")} value={suburbs?.length} icon={MapPin} color="bg-blue-500" sublabel={t("dashboard.suburbs_sub")} />
+            <StatCard label={t("dashboard.properties")} value={properties?.length} icon={Building2} color="bg-indigo-500" sublabel={`${pendingProperties ?? 0} ${t("dashboard.properties_sub")}`} />
+            <StatCard label={t("dashboard.active_properties")} value={activeProperties} icon={TrendingUp} color="bg-green-500" sublabel={t("dashboard.active_properties_sub")} />
+            <StatCard label={t("dashboard.spaces")} value={spaces?.length} icon={Layers} color="bg-purple-500" sublabel={`${activeSpaces ?? 0} ${t("dashboard.spaces_sub")}`} />
+            <StatCard label={t("dashboard.space_options")} value={spaceOptions?.length} icon={Tag} color="bg-orange-500" sublabel={t("dashboard.space_options_sub")} />
+            <StatCard label={t("dashboard.space_policies")} value={spacePolicies?.length} icon={Settings} color="bg-teal-500" sublabel={t("dashboard.space_policies_sub")} />
           </div>
         </div>
 
         {/* CRM Section */}
         <div>
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">CRM</h2>
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("dashboard.crm_section")}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard label="Total Contacts" value={contacts?.length} icon={User} color="bg-sky-500" sublabel="All registered contacts" />
-            <StatCard label="Total Accounts" value={accounts?.length} icon={Users} color="bg-violet-500" sublabel="All account types" />
-            <StatCard label="Guests" value={guestAccounts} icon={User} color="bg-blue-400" sublabel="Guest accounts" />
-            <StatCard label="Space Owners" value={spaceOwnerAccounts} icon={Building2} color="bg-purple-400" sublabel="Landlord / SpaceOwner" />
+            <StatCard label={t("dashboard.total_contacts")} value={contacts?.length} icon={User} color="bg-sky-500" sublabel={t("dashboard.total_contacts_sub")} />
+            <StatCard label={t("dashboard.total_accounts")} value={accounts?.length} icon={Users} color="bg-violet-500" sublabel={t("dashboard.total_accounts_sub")} />
+            <StatCard label={t("dashboard.guests")} value={guestAccounts} icon={User} color="bg-blue-400" sublabel={t("dashboard.guests_sub")} />
+            <StatCard label={t("dashboard.space_owners")} value={spaceOwnerAccounts} icon={Building2} color="bg-purple-400" sublabel={t("dashboard.space_owners_sub")} />
           </div>
         </div>
 
         {/* Sales Section */}
         <div>
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Sales</h2>
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("dashboard.sales_section")}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <StatCard label="Active Tasks" value={activeTasks} icon={CheckSquare} color="bg-blue-500" sublabel="Todo + In Progress" />
-            <StatCard label="New Leads This Week" value={newLeadsThisWeek} icon={Megaphone} color="bg-emerald-500" sublabel="Created in last 7 days" />
-            <StatCard label="Overdue Tasks" value={overdueTasks} icon={AlertTriangle} color={overdueTasks ? "bg-red-500" : "bg-gray-400"} sublabel="Past due date, not done" />
+            <StatCard label={t("dashboard.active_tasks")} value={activeTasks} icon={CheckSquare} color="bg-blue-500" sublabel={t("dashboard.active_tasks_sub")} />
+            <StatCard label={t("dashboard.new_leads")} value={newLeadsThisWeek} icon={Megaphone} color="bg-emerald-500" sublabel={t("dashboard.new_leads_sub")} />
+            <StatCard label={t("dashboard.overdue_tasks")} value={overdueTasks} icon={AlertTriangle} color={overdueTasks ? "bg-red-500" : "bg-gray-400"} sublabel={t("dashboard.overdue_tasks_sub")} />
           </div>
         </div>
 
         {/* Booking Section */}
         <div>
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Booking</h2>
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("dashboard.booking_section")}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            <StatCard label="Today's Check-Ins" value={todayCheckIns} icon={LogIn} color="bg-green-500" sublabel="Confirmed, checking in today" />
-            <StatCard label="Today's Check-Outs" value={todayCheckOuts} icon={LogOut} color="bg-amber-500" sublabel="Active, checking out today" />
-            <StatCard label="Pending Approvals" value={pendingApprovals} icon={Clock} color={pendingApprovals ? "bg-amber-600" : "bg-gray-400"} sublabel="Bookings awaiting approval" />
-            <StatCard label="Active Bookings" value={activeBookings} icon={CalendarDays} color="bg-emerald-600" sublabel="Currently checked in" />
+            <StatCard label={t("dashboard.today_checkins")} value={todayCheckIns} icon={LogIn} color="bg-green-500" sublabel={t("dashboard.today_checkins_sub")} />
+            <StatCard label={t("dashboard.today_checkouts")} value={todayCheckOuts} icon={LogOut} color="bg-amber-500" sublabel={t("dashboard.today_checkouts_sub")} />
+            <StatCard label={t("dashboard.pending_approvals")} value={pendingApprovals} icon={Clock} color={pendingApprovals ? "bg-amber-600" : "bg-gray-400"} sublabel={t("dashboard.pending_approvals_sub")} />
+            <StatCard label={t("dashboard.active_bookings")} value={activeBookings} icon={CalendarDays} color="bg-emerald-600" sublabel={t("dashboard.active_bookings_sub")} />
           </div>
 
           {/* Booking Calendar Mini Widget */}
           <div className="bg-card rounded-lg border p-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold">Booking Calendar (Next 7 Days)</h3>
-              <Link href="/booking/bookings" className="text-xs text-[#E8621A] hover:underline">View all →</Link>
+              <h3 className="text-sm font-semibold">{t("dashboard.booking_calendar")}</h3>
+              <Link href="/booking/bookings" className="text-xs text-[#E8621A] hover:underline">{t("dashboard.view_all")}</Link>
             </div>
             <BookingMiniCalendar bookings={bookings ?? []} />
           </div>
@@ -321,29 +326,29 @@ export default function Dashboard() {
 
         {/* Finance Section */}
         <div>
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Finance</h2>
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("dashboard.finance_section")}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard label="Draft Invoices" value={draftInvoices} icon={FileText} color="bg-gray-400" sublabel="Not yet sent" />
-            <StatCard label="Sent Invoices" value={sentInvoices} icon={Receipt} color="bg-blue-500" sublabel="Awaiting payment" />
-            <StatCard label="Paid Invoices" value={paidInvoices} icon={CheckSquare} color="bg-green-500" sublabel="Payments received" />
+            <StatCard label={t("dashboard.draft_invoices")} value={draftInvoices} icon={FileText} color="bg-gray-400" sublabel={t("dashboard.draft_invoices_sub")} />
+            <StatCard label={t("dashboard.sent_invoices")} value={sentInvoices} icon={Receipt} color="bg-blue-500" sublabel={t("dashboard.sent_invoices_sub")} />
+            <StatCard label={t("dashboard.paid_invoices")} value={paidInvoices} icon={CheckSquare} color="bg-green-500" sublabel={t("dashboard.paid_invoices_sub")} />
             <StatCard
-              label="Revenue Collected"
+              label={t("dashboard.total_revenue")}
               value={totalRevenue !== undefined ? Math.round(totalRevenue) : undefined}
               icon={DollarSign}
               color="bg-emerald-600"
-              sublabel="AUD from paid invoices"
+              sublabel={t("dashboard.total_revenue_sub")}
             />
           </div>
         </div>
 
         {/* Maintenance Section */}
         <div>
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Maintenance</h2>
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("dashboard.maintenance_section")}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard label="Open Work Orders" value={openWorkOrders} icon={Wrench} color="bg-blue-500" sublabel="Not yet started" />
-            <StatCard label="In Progress" value={inProgressWorkOrders} icon={Settings} color="bg-yellow-500" sublabel="Currently being worked on" />
-            <StatCard label="Urgent" value={urgentWorkOrders} icon={AlertTriangle} color={urgentWorkOrders ? "bg-red-500" : "bg-gray-400"} sublabel="High priority open orders" />
-            <StatCard label="Completed This Month" value={completedThisMonth} icon={CheckSquare} color="bg-green-500" sublabel="Closed in current month" />
+            <StatCard label={t("dashboard.open_work_orders")} value={openWorkOrders} icon={Wrench} color="bg-blue-500" sublabel={t("dashboard.open_work_orders_sub")} />
+            <StatCard label={t("dashboard.in_progress_work_orders")} value={inProgressWorkOrders} icon={Settings} color="bg-yellow-500" sublabel={t("dashboard.in_progress_work_orders_sub")} />
+            <StatCard label={t("dashboard.urgent_work_orders")} value={urgentWorkOrders} icon={AlertTriangle} color={urgentWorkOrders ? "bg-red-500" : "bg-gray-400"} sublabel={t("dashboard.urgent_work_orders_sub")} />
+            <StatCard label={t("dashboard.completed_work_orders")} value={completedThisMonth} icon={CheckSquare} color="bg-green-500" sublabel={t("dashboard.completed_work_orders_sub")} />
           </div>
         </div>
 
