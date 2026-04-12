@@ -31,7 +31,7 @@
       "sub": "저희만의 장점",
       "title": "왜 MillionStay인가요?",
       "item1_title": "검증된 입주 후기",
-      "item1_desc": "수천 명의 유학생과 디지털 노마드가 MillionStay의 검증된 매물과 신뢰할 수 있는 커뮤니티를 통해 멜버른에서 완벽한 집을 찾았습니다.",
+      "item1_desc": "수천 명의 유학생과 디지털 노마드가 MillionStay의 검증된 숙소와 신뢰할 수 있는 커뮤니티를 통해 멜버른에서 완벽한 집을 찾았습니다.",
       "item2_title": "유학생 맞춤 서비스",
       "item2_desc": "대학교 근접성, 학기에 맞는 유연한 계약 등 유학생의 필요를 누구보다 잘 이해합니다.",
       "item3_title": "올인클루시브 편의시설",
@@ -39,8 +39,8 @@
     },
     "listing": {
       "sub": "지금 입주 가능",
-      "title": "Million Homestay 매물",
-      "view_all": "전체 매물 보기",
+      "title": "Million Homestay 숙소",
+      "view_all": "전체 숙소 보기",
       "per_week": "/ 주",
       "book_now": "지금 예약"
     },
@@ -95,7 +95,7 @@
       "wifi": "고속 Wi-Fi",
       "flexible": "유연한 숙박 옵션",
       "furnished": "가구 완비 방",
-      "safe": "안전하고 검증된 매물",
+      "safe": "안전하고 검증된 숙소",
       "pricing": "올인클루시브 요금",
       "pickup": "공항 픽업 서비스"
     },
