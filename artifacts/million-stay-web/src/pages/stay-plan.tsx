@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { motion, AnimatePresence } from "framer-motion";
@@ -7,42 +8,6 @@ import { Star, Check, ChevronRight, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListPublicSpaces } from "@/lib/guest-api";
 import heroBg from "@assets/MS_Homepage_Photo_1920x1080_1775403929888.jpg";
-
-const PLANS = [
-  {
-    id: "1month",
-    duration: "1-Month",
-    label: "Stay",
-    badge: "Flexible Contract",
-    badgeColor: "bg-blue-600",
-    price: "From $440/wk",
-    description: "Perfect for short-term stays, visa renewals, or trying out Melbourne before committing.",
-    perks: ["No long-term lock-in", "Weekly or monthly payment", "Flexible move-out dates", "All bills included"],
-    highlight: false,
-  },
-  {
-    id: "3month",
-    duration: "3-Month",
-    label: "Stay",
-    badge: "Better Value",
-    badgeColor: "bg-blue-600",
-    price: "From $440/wk",
-    description: "Ideal for students completing a semester or professionals on project assignments.",
-    perks: ["Priority room selection", "Weekly or monthly payment", "Discounted rate vs 1-month", "All bills included"],
-    highlight: true,
-  },
-  {
-    id: "6month",
-    duration: "6-Month",
-    label: "Stay",
-    badge: "Best Deal",
-    badgeColor: "bg-blue-600",
-    price: "From $350/wk",
-    description: "Our most popular option for full-year students seeking stability and the lowest weekly rate.",
-    perks: ["Lowest weekly rate", "Priority room selection", "Free airport pickup (first stay)", "All bills included"],
-    highlight: false,
-  },
-];
 
 function fade(delay = 0) {
   return { initial: { opacity: 0, y: 14 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.4, delay } };
@@ -59,6 +24,7 @@ interface Space {
 }
 
 function SpaceCard({ space }: { space: Space }) {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const img = (space as { primary_thumbnail?: string | null }).primary_thumbnail
     ?? `https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=600&q=75`;
@@ -83,10 +49,10 @@ function SpaceCard({ space }: { space: Space }) {
         <div className="flex items-center justify-between">
           <div>
             <span className="text-primary font-bold text-base">${space.price_per_week ?? 440}</span>
-            <span className="text-gray-400 text-xs">/wk</span>
+            <span className="text-gray-400 text-xs">{t("stay_plan.space_per_week")}</span>
           </div>
           <Button size="sm" variant="ghost" className="h-7 text-xs text-primary hover:bg-orange-50 px-2">
-            View →
+            {t("stay_plan.space_view")}
           </Button>
         </div>
       </div>
@@ -95,7 +61,44 @@ function SpaceCard({ space }: { space: Space }) {
 }
 
 export default function StayPlan() {
+  const { t } = useTranslation();
   const [activePlan, setActivePlan] = useState<string | null>(null);
+
+  const PLANS = [
+    {
+      id: "1month",
+      duration: t("stay_plan.p1_duration"),
+      label: t("stay_plan.stay"),
+      badge: t("stay_plan.p1_badge"),
+      badgeColor: "bg-blue-600",
+      price: t("stay_plan.p1_price"),
+      description: t("stay_plan.p1_desc"),
+      perks: [t("stay_plan.p1_perk1"), t("stay_plan.p1_perk2"), t("stay_plan.p1_perk3"), t("stay_plan.p1_perk4")],
+      highlight: false,
+    },
+    {
+      id: "3month",
+      duration: t("stay_plan.p2_duration"),
+      label: t("stay_plan.stay"),
+      badge: t("stay_plan.p2_badge"),
+      badgeColor: "bg-blue-600",
+      price: t("stay_plan.p2_price"),
+      description: t("stay_plan.p2_desc"),
+      perks: [t("stay_plan.p2_perk1"), t("stay_plan.p2_perk2"), t("stay_plan.p2_perk3"), t("stay_plan.p2_perk4")],
+      highlight: true,
+    },
+    {
+      id: "6month",
+      duration: t("stay_plan.p3_duration"),
+      label: t("stay_plan.stay"),
+      badge: t("stay_plan.p3_badge"),
+      badgeColor: "bg-blue-600",
+      price: t("stay_plan.p3_price"),
+      description: t("stay_plan.p3_desc"),
+      perks: [t("stay_plan.p3_perk1"), t("stay_plan.p3_perk2"), t("stay_plan.p3_perk3"), t("stay_plan.p3_perk4")],
+      highlight: false,
+    },
+  ];
 
   const { data } = useListPublicSpaces({
     query: { queryKey: ["stay-plan-spaces"] },
@@ -111,16 +114,16 @@ export default function StayPlan() {
         <img src={heroBg} alt="Stay Plans" className="absolute inset-0 w-full h-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/50" />
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
-          <p className="font-cursive text-white/80 text-lg italic mb-1">Find your perfect length of stay</p>
-          <h1 className="text-3xl md:text-4xl font-bold text-white italic">Choose Your Stay Plan</h1>
+          <p className="font-cursive text-white/80 text-lg italic mb-1">{t("stay_plan.hero_tagline")}</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-white italic">{t("stay_plan.hero_title")}</h1>
         </div>
       </div>
 
       {/* Breadcrumb */}
       <div className="max-w-7xl mx-auto w-full px-6 py-3 flex items-center gap-1.5 text-xs text-gray-400">
-        <Link href="/" className="hover:text-primary">Home</Link>
+        <Link href="/" className="hover:text-primary">{t("stay_plan.breadcrumb_home")}</Link>
         <ChevronRight className="h-3 w-3" />
-        <span className="text-gray-600">Stay Plans</span>
+        <span className="text-gray-600">{t("stay_plan.breadcrumb")}</span>
       </div>
 
       {/* Plan cards */}
@@ -140,7 +143,7 @@ export default function StayPlan() {
               {plan.highlight && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                   <span className="bg-primary text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
-                    <Zap className="h-3 w-3" /> Most Popular
+                    <Zap className="h-3 w-3" /> {t("stay_plan.most_popular")}
                   </span>
                 </div>
               )}
@@ -168,7 +171,7 @@ export default function StayPlan() {
                     : "bg-primary/10 text-primary hover:bg-primary hover:text-white"
                 }`}
               >
-                {activePlan === plan.id ? "Selected ✓" : "MORE"}
+                {activePlan === plan.id ? t("stay_plan.selected") : t("stay_plan.more")}
               </button>
             </motion.div>
           ))}
@@ -186,13 +189,13 @@ export default function StayPlan() {
                 exit={{ opacity: 0 }}
                 className="text-center text-xs text-gray-400 mb-8 uppercase tracking-widest"
               >
-                OPTIONS WILL SHOW ONCE A PLAN IS CLICKED
+                {t("stay_plan.options_hint")}
               </motion.p>
             )}
           </AnimatePresence>
 
           <div className="text-center mb-8">
-            <p className="font-cursive text-primary text-xl italic">Explore Your Options</p>
+            <p className="font-cursive text-primary text-xl italic">{t("stay_plan.explore")}</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -208,7 +211,7 @@ export default function StayPlan() {
           <div className="flex justify-center mt-8">
             <Link href="/search">
               <Button className="bg-primary text-white hover:bg-primary/90 px-8 rounded-full font-semibold">
-                SEE ALL →
+                {t("stay_plan.see_all")}
               </Button>
             </Link>
           </div>

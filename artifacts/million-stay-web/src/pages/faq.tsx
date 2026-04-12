@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { motion, AnimatePresence } from "framer-motion";
@@ -6,59 +7,13 @@ import { Link } from "wouter";
 import { Plus, Minus } from "lucide-react";
 import heroBg from "@assets/MS_Homepage_Photo_1920x1080_1775403929888.jpg";
 
-const CATEGORIES = [
-  { label: "FAQ", href: "/faq", active: true },
-  { label: "Rules", href: "/house-rules" },
-  { label: "Booking", href: "/portal" },
-  { label: "Stay Plans", href: "/stay-plan" },
-  { label: "For International Students", href: "/for-student" },
-  { label: "Contact & Support", href: "/contact" },
-];
+const FAQ_KEYS = ["q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10"];
 
-const FAQ_ITEMS = [
-  {
-    q: "How do I book a room at MillionStay?",
-    a: "You can browse available rooms on our Location page and submit an enquiry or application directly from each listing. Our team will get back to you within 24 hours to confirm availability and guide you through the next steps.",
-  },
-  {
-    q: "What is included in the rent?",
-    a: "All our rooms include Wi-Fi, utilities (electricity, water, gas), weekly cleaning of common areas, and access to shared kitchen and laundry facilities. Some properties also include breakfast or additional services — please check individual listings for details.",
-  },
-  {
-    q: "Can I view the room before booking?",
-    a: "Yes! We offer both in-person and virtual tours. Contact us to arrange a convenient time. For international students arriving from overseas, we can organise a detailed video walkthrough so you can feel confident before you arrive.",
-  },
-  {
-    q: "What is the minimum stay period?",
-    a: "Our minimum stay is typically 4 weeks (1 month). We offer flexible monthly rolling contracts with no long-term lease commitment, which is ideal for students on temporary or student visas.",
-  },
-  {
-    q: "Is there a bond or security deposit?",
-    a: "Yes, a bond equivalent to 4 weeks' rent is required upon signing. This is held in accordance with Victorian tenancy law and returned at the end of your stay, provided the room is left in good condition.",
-  },
-  {
-    q: "Do you cater to international students?",
-    a: "Absolutely — international students are our core community. We have multilingual staff (Korean, Japanese, Chinese, Thai), and our rooms are designed to make your transition to Melbourne as comfortable as possible.",
-  },
-  {
-    q: "What documents do I need to provide?",
-    a: "Typically you will need a copy of your passport, student ID or enrolment letter, and proof of funds or a guarantor letter. Our team will advise you on exactly what's needed during the application process.",
-  },
-  {
-    q: "Are bills included in the weekly price?",
-    a: "Yes, electricity, water, gas, and high-speed internet are all included in your weekly rent. There are no hidden costs. The price you see on the listing is what you pay.",
-  },
-  {
-    q: "Can I have guests stay overnight?",
-    a: "Overnight guests are allowed with advance notice to management, up to a maximum of 2 consecutive nights. Extended stays must be approved and may incur an additional charge. Please refer to our House Rules for full details.",
-  },
-  {
-    q: "How do I pay my rent?",
-    a: "Rent is payable weekly or fortnightly via bank transfer or credit card. You will receive an invoice through your online portal each billing cycle. Automatic payment reminders are sent 3 days before each due date.",
-  },
-];
+const CATEGORY_HREFS = ["/faq", "/house-rules", "/portal", "/stay-plan", "/for-student", "/contact"];
+const CATEGORY_KEYS = ["cat1", "cat2", "cat3", "cat4", "cat5", "cat6"];
 
 export default function FAQ() {
+  const { t } = useTranslation();
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
@@ -70,17 +25,17 @@ export default function FAQ() {
         <img src={heroBg} alt="FAQ" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/30 to-black/55" />
         <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
-          <p className="text-white/80 italic text-sm sm:text-base mb-1">Got questions?</p>
+          <p className="text-white/80 italic text-sm sm:text-base mb-1">{t("faq.hero_tagline")}</p>
           <h1 className="text-white font-bold italic text-3xl sm:text-4xl drop-shadow-lg">
-            Frequently Asked Questions
+            {t("faq.hero_title")}
           </h1>
         </div>
         {/* Breadcrumb */}
         <div className="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm py-2 px-4 sm:px-8">
           <div className="max-w-7xl mx-auto flex items-center gap-2 text-xs text-gray-500">
-            <Link href="/" className="hover:text-primary transition-colors">Home</Link>
+            <Link href="/" className="hover:text-primary transition-colors">{t("faq.breadcrumb_home")}</Link>
             <span>›</span>
-            <span className="text-gray-700 font-medium">FAQ</span>
+            <span className="text-gray-700 font-medium">{t("faq.breadcrumb")}</span>
           </div>
         </div>
       </section>
@@ -90,11 +45,11 @@ export default function FAQ() {
 
         {/* Accordion */}
         <div className="lg:col-span-2 space-y-3">
-          {FAQ_ITEMS.map((item, i) => {
+          {FAQ_KEYS.map((key, i) => {
             const isOpen = openIndex === i;
             return (
               <motion.div
-                key={i}
+                key={key}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
@@ -106,7 +61,7 @@ export default function FAQ() {
                     isOpen ? "bg-primary text-white" : "bg-orange-50 text-gray-800 hover:bg-orange-100"
                   }`}
                 >
-                  <span className="text-sm font-medium leading-snug">{item.q}</span>
+                  <span className="text-sm font-medium leading-snug">{t(`faq.${key}`)}</span>
                   <span className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center border transition-colors ${
                     isOpen ? "border-white/50 text-white" : "border-primary text-primary"
                   }`}>
@@ -124,7 +79,7 @@ export default function FAQ() {
                       className="overflow-hidden"
                     >
                       <div className="px-5 py-4 bg-white text-sm text-gray-600 leading-relaxed border-t border-orange-100">
-                        {item.a}
+                        {t(`faq.${key.replace("q", "a")}`)}
                       </div>
                     </motion.div>
                   )}
@@ -137,19 +92,19 @@ export default function FAQ() {
         {/* Sidebar */}
         <aside className="space-y-6">
           <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
-            <h3 className="text-sm font-bold uppercase tracking-wide text-gray-700 mb-4">Categories</h3>
+            <h3 className="text-sm font-bold uppercase tracking-wide text-gray-700 mb-4">{t("faq.categories_title")}</h3>
             <ul className="space-y-1">
-              {CATEGORIES.map((cat) => (
-                <li key={cat.label}>
+              {CATEGORY_KEYS.map((key, i) => (
+                <li key={key}>
                   <Link
-                    href={cat.href}
+                    href={CATEGORY_HREFS[i]}
                     className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
-                      cat.active
+                      i === 0
                         ? "bg-primary text-white font-semibold"
                         : "text-gray-600 hover:bg-orange-50 hover:text-primary"
                     }`}
                   >
-                    {cat.label}
+                    {t(`faq.${key}`)}
                   </Link>
                 </li>
               ))}
@@ -159,13 +114,11 @@ export default function FAQ() {
           {/* CTA box */}
           <div className="rounded-xl overflow-hidden">
             <div className="bg-primary px-6 py-5 text-white">
-              <h4 className="font-bold text-base mb-1">Still have questions?</h4>
-              <p className="text-sm text-white/80 mb-4">
-                Our team is here to help. Get in touch and we'll respond within 24 hours.
-              </p>
+              <h4 className="font-bold text-base mb-1">{t("faq.cta_title")}</h4>
+              <p className="text-sm text-white/80 mb-4">{t("faq.cta_desc")}</p>
               <Link href="/contact">
                 <button className="w-full bg-white text-primary font-bold text-sm py-2.5 rounded-lg hover:bg-orange-50 transition-colors">
-                  Contact Us
+                  {t("faq.cta_btn")}
                 </button>
               </Link>
             </div>
