@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import { apiFetch } from "@/lib/apiFetch";
 import { Layout } from "@/components/Layout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePagination, TablePagination } from "@/components/ui/TablePagination";
 import { format } from "date-fns";
-import { Search, HeadphonesIcon, ChevronRight, Clock, AlertCircle, CheckCircle2, XCircle, RefreshCw, ChevronLeft } from "lucide-react";
+import { Search, HeadphonesIcon, ChevronRight, Clock, AlertCircle, CheckCircle2, XCircle, RefreshCw } from "lucide-react";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   Open:       { label: "Open",        color: "bg-blue-100 text-blue-700",   icon: <Clock className="h-3 w-3" /> },
@@ -55,7 +56,6 @@ async function fetchTickets(params: Record<string, string>) {
 
 const STATUSES = ["All", "Open", "InProgress", "Resolved", "Closed"] as const;
 const CATEGORIES = ["All", "General", "Accommodation", "Billing", "Maintenance", "Other"] as const;
-const PAGE_SIZE = 20;
 
 export default function CsTicketList() {
   const { t } = useTranslation();
@@ -63,7 +63,6 @@ export default function CsTicketList() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
   const [category, setCategory] = useState("All");
-  const [page, setPage] = useState(1);
 
   const params: Record<string, string> = { limit: "500" };
   if (status !== "All") params.status = status;
@@ -76,9 +75,7 @@ export default function CsTicketList() {
   });
 
   const tickets: CsTicket[] = data?.data ?? [];
-  const totalPages = Math.max(1, Math.ceil(tickets.length / PAGE_SIZE));
-  const safePage = Math.min(page, totalPages);
-  const paged = tickets.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const pagination = usePagination(tickets, 25);
 
   const statusCounts = tickets.reduce((acc: Record<string, number>, ticket) => {
     acc[ticket.status] = (acc[ticket.status] ?? 0) + 1;
@@ -87,7 +84,7 @@ export default function CsTicketList() {
 
   function handleFilterChange(fn: () => void) {
     fn();
-    setPage(1);
+    pagination.setPage(1);
   }
 
   return (
@@ -164,7 +161,7 @@ export default function CsTicketList() {
               <div className="p-4 space-y-3">
                 {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-14 w-full" />)}
               </div>
-            ) : paged.length === 0 ? (
+            ) : pagination.paginatedItems.length === 0 ? (
               <div className="p-12 text-center">
                 <HeadphonesIcon className="h-10 w-10 text-gray-300 mx-auto mb-3" />
                 <p className="text-gray-500 font-medium">{t("csticket.no_tickets")}</p>
@@ -185,14 +182,14 @@ export default function CsTicketList() {
                   </tr>
                 </thead>
                 <tbody>
-                  {paged.map((ticket, i) => {
+                  {pagination.paginatedItems.map((ticket, i) => {
                     const st = STATUS_CONFIG[ticket.status] ?? STATUS_CONFIG.Open;
                     const sl = (ticket.status ?? "open").toLowerCase();
                     return (
                       <tr
                         key={ticket.id}
                         onClick={() => navigate(`/cs/tickets/${ticket.id}`)}
-                        className={`border-b border-gray-50 hover:bg-primary/5 cursor-pointer transition-colors ${i === paged.length - 1 ? "border-0" : ""}`}
+                        className={`border-b border-gray-50 hover:bg-primary/5 cursor-pointer transition-colors ${i === pagination.paginatedItems.length - 1 ? "border-0" : ""}`}
                       >
                         <td className="px-4 py-3 font-mono text-xs text-gray-400 whitespace-nowrap">{ticket.ticket_ref}</td>
                         <td className="px-4 py-3 max-w-[220px]">
@@ -235,55 +232,8 @@ export default function CsTicketList() {
             )}
           </div>
 
-          {/* Pagination footer */}
           {!isLoading && tickets.length > 0 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-white">
-              <p className="text-xs text-gray-500">
-                {((safePage - 1) * PAGE_SIZE) + 1}–{Math.min(safePage * PAGE_SIZE, tickets.length)} / {tickets.length}건
-              </p>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 w-7 p-0"
-                  disabled={safePage <= 1}
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 2)
-                  .reduce<(number | "...")[]>((acc, p, idx, arr) => {
-                    if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...");
-                    acc.push(p);
-                    return acc;
-                  }, [])
-                  .map((item, idx) =>
-                    item === "..." ? (
-                      <span key={`ellipsis-${idx}`} className="px-1 text-xs text-gray-400">…</span>
-                    ) : (
-                      <Button
-                        key={item}
-                        variant={item === safePage ? "default" : "outline"}
-                        size="sm"
-                        className="h-7 w-7 p-0 text-xs"
-                        onClick={() => setPage(item as number)}
-                      >
-                        {item}
-                      </Button>
-                    )
-                  )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 w-7 p-0"
-                  disabled={safePage >= totalPages}
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+            <TablePagination {...pagination} />
           )}
         </div>
       </div>
