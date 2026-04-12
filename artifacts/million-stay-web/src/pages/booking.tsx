@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/ui/date-input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -21,10 +20,10 @@ import { CheckCircle2, ChevronLeft, ChevronRight, Home, FileText, CreditCard, Sp
 import { Link } from "wouter";
 
 const steps = [
-  { key: "step1", icon: Home, label: "Stay Details" },
-  { key: "step2", icon: FileText, label: "Your Info" },
-  { key: "step3", icon: CreditCard, label: "Documents" },
-  { key: "step4", icon: Sparkles, label: "Confirmed" },
+  { key: "step1", icon: Home },
+  { key: "step2", icon: FileText },
+  { key: "step3", icon: CreditCard },
+  { key: "step4", icon: Sparkles },
 ];
 
 const guestInfoSchema = z.object({
@@ -71,7 +70,6 @@ export default function Booking() {
   const space = spaceData?.data;
   const createBooking = useCreateGuestBooking();
   const registerMutation = useGuestRegister();
-  const loginMutation = useGuestLogin();
 
   const stayForm = useForm<StayDetailsData>({
     resolver: zodResolver(stayDetailsSchema),
@@ -100,7 +98,6 @@ export default function Booking() {
 
   const onGuestInfoSubmit = async (data: GuestInfoData) => {
     if (!token && data.password) {
-      // Register new guest
       registerMutation.mutate(
         {
           data: {
@@ -118,8 +115,8 @@ export default function Booking() {
             setCurrentStep(2);
           },
           onError: (error: unknown) => {
-            const msg = (error as { data?: { error?: string } })?.data?.error ?? "Registration failed";
-            toast({ title: "Registration failed", description: msg, variant: "destructive" });
+            const msg = (error as { data?: { error?: string } })?.data?.error ?? t("booking.creating_account");
+            toast({ title: t("booking.creating_account"), description: msg, variant: "destructive" });
           },
         }
       );
@@ -149,8 +146,8 @@ export default function Booking() {
         },
         onError: () => {
           toast({
-            title: "Booking failed",
-            description: "Please try again or contact support",
+            title: t("booking.confirm_booking"),
+            description: t("booking.docs_note"),
             variant: "destructive",
           });
         },
@@ -174,8 +171,8 @@ export default function Booking() {
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <div className="container py-16 text-center">
-          <p className="text-muted-foreground">Space not found.</p>
-          <Button onClick={() => setLocation("/search")} className="mt-4">Browse spaces</Button>
+          <p className="text-muted-foreground">{t("booking.space_not_found")}</p>
+          <Button onClick={() => setLocation("/search")} className="mt-4">{t("booking.browse_spaces")}</Button>
         </div>
       </div>
     );
@@ -193,10 +190,10 @@ export default function Booking() {
       <div className="container py-8 max-w-3xl">
         <Link href={`/spaces/${space.id}`} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6 w-fit">
           <ChevronLeft className="h-4 w-4" />
-          Back to space
+          {t("booking.back")}
         </Link>
 
-        <h1 className="text-2xl font-bold text-foreground mb-8">Book Your Stay</h1>
+        <h1 className="text-2xl font-bold text-foreground mb-8">{t("booking.title")}</h1>
 
         {/* Step Indicator */}
         <div className="flex items-center mb-10">
@@ -285,7 +282,7 @@ export default function Booking() {
                         name="num_guests"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Number of Guests</FormLabel>
+                            <FormLabel>{t("booking.num_guests")}</FormLabel>
                             <FormControl>
                               <Select
                                 value={String(field.value)}
@@ -296,7 +293,9 @@ export default function Booking() {
                                 </SelectTrigger>
                                 <SelectContent>
                                   {[1, 2, 3, 4].map((n) => (
-                                    <SelectItem key={n} value={String(n)}>{n} guest{n > 1 ? "s" : ""}</SelectItem>
+                                    <SelectItem key={n} value={String(n)}>
+                                      {n} {n > 1 ? t("booking.guest_plural") : t("booking.guest_single")}
+                                    </SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
@@ -312,11 +311,11 @@ export default function Booking() {
                           name="product_id"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Stay Package</FormLabel>
+                              <FormLabel>{t("booking.stay_package")}</FormLabel>
                               <FormControl>
                                 <Select value={field.value ?? ""} onValueChange={field.onChange}>
                                   <SelectTrigger data-testid="select-product">
-                                    <SelectValue placeholder="Select a package" />
+                                    <SelectValue placeholder={t("booking.select_package")} />
                                   </SelectTrigger>
                                   <SelectContent>
                                     {space.products!.map((p) => (
@@ -337,7 +336,10 @@ export default function Booking() {
                         name="special_requests"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Special Requests <span className="text-muted-foreground">(optional)</span></FormLabel>
+                            <FormLabel>
+                              {t("booking.special_requests")}{" "}
+                              <span className="text-muted-foreground">({t("booking.optional")})</span>
+                            </FormLabel>
                             <FormControl>
                               <Input {...field} placeholder="Any special needs or questions..." data-testid="input-special-requests" />
                             </FormControl>
@@ -346,7 +348,7 @@ export default function Booking() {
                       />
 
                       <Button type="submit" className="w-full bg-primary text-primary-foreground py-5" data-testid="button-next-step1">
-                        Continue <ChevronRight className="h-4 w-4 ml-1" />
+                        {t("booking.continue")} <ChevronRight className="h-4 w-4 ml-1" />
                       </Button>
                     </form>
                   </Form>
@@ -367,11 +369,13 @@ export default function Booking() {
                   {token && authGuest ? (
                     <div className="space-y-4">
                       <div className="rounded-lg bg-primary/5 border border-primary/20 p-4">
-                        <p className="text-sm font-medium text-foreground">Booking as: <span className="text-primary">{authGuest.name}</span></p>
+                        <p className="text-sm font-medium text-foreground">
+                          {t("booking.booking_as")}: <span className="text-primary">{authGuest.name}</span>
+                        </p>
                         <p className="text-xs text-muted-foreground">{authGuest.email}</p>
                       </div>
                       <Button onClick={() => setCurrentStep(2)} className="w-full bg-primary text-primary-foreground py-5">
-                        Continue <ChevronRight className="h-4 w-4 ml-1" />
+                        {t("booking.continue")} <ChevronRight className="h-4 w-4 ml-1" />
                       </Button>
                     </div>
                   ) : (
@@ -380,14 +384,14 @@ export default function Booking() {
                         <div className="grid grid-cols-2 gap-4">
                           <FormField control={guestForm.control} name="first_name" render={({ field }) => (
                             <FormItem>
-                              <FormLabel>First Name</FormLabel>
+                              <FormLabel>{t("booking.first_name")}</FormLabel>
                               <FormControl><Input {...field} data-testid="input-first-name" /></FormControl>
                               <FormMessage />
                             </FormItem>
                           )} />
                           <FormField control={guestForm.control} name="last_name" render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Last Name</FormLabel>
+                              <FormLabel>{t("booking.last_name")}</FormLabel>
                               <FormControl><Input {...field} data-testid="input-last-name" /></FormControl>
                               <FormMessage />
                             </FormItem>
@@ -395,35 +399,44 @@ export default function Booking() {
                         </div>
                         <FormField control={guestForm.control} name="email" render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Email</FormLabel>
+                            <FormLabel>{t("booking.email")}</FormLabel>
                             <FormControl><Input {...field} type="email" data-testid="input-email" /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )} />
                         <FormField control={guestForm.control} name="password" render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Create Password</FormLabel>
-                            <FormControl><Input {...field} type="password" placeholder="Min 8 chars" data-testid="input-password" /></FormControl>
+                            <FormLabel>{t("booking.create_password")}</FormLabel>
+                            <FormControl>
+                              <Input {...field} type="password" placeholder={t("booking.min_chars")} data-testid="input-password" />
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )} />
                         <FormField control={guestForm.control} name="nationality" render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Nationality <span className="text-muted-foreground">(optional)</span></FormLabel>
+                            <FormLabel>
+                              {t("booking.nationality")}{" "}
+                              <span className="text-muted-foreground">({t("booking.optional")})</span>
+                            </FormLabel>
                             <FormControl><Input {...field} placeholder="e.g. Korean" /></FormControl>
                           </FormItem>
                         )} />
                         <FormField control={guestForm.control} name="phone" render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Phone <span className="text-muted-foreground">(optional)</span></FormLabel>
+                            <FormLabel>
+                              {t("booking.phone")}{" "}
+                              <span className="text-muted-foreground">({t("booking.optional")})</span>
+                            </FormLabel>
                             <FormControl><Input {...field} type="tel" /></FormControl>
                           </FormItem>
                         )} />
                         <Button type="submit" disabled={registerMutation.isPending} className="w-full bg-primary text-primary-foreground py-5" data-testid="button-next-step2">
-                          {registerMutation.isPending ? "Creating account..." : "Continue"} <ChevronRight className="h-4 w-4 ml-1" />
+                          {registerMutation.isPending ? t("booking.creating_account") : t("booking.continue")} <ChevronRight className="h-4 w-4 ml-1" />
                         </Button>
                         <p className="text-xs text-center text-muted-foreground">
-                          Already have an account? <Link href="/login" className="text-primary hover:underline">Login here</Link>
+                          {t("booking.already_account")}{" "}
+                          <Link href="/login" className="text-primary hover:underline">{t("booking.login_here")}</Link>
                         </p>
                       </form>
                     </Form>
@@ -442,18 +455,16 @@ export default function Booking() {
                 >
                   <h2 className="text-lg font-semibold">{t("booking.step3")}</h2>
                   <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 space-y-3">
-                    <p className="text-sm font-medium text-amber-900">Documents required after booking:</p>
+                    <p className="text-sm font-medium text-amber-900">{t("booking.docs_required")}</p>
                     <ul className="space-y-2 text-sm text-amber-800">
-                      {["Passport or National ID", "Student enrollment letter or work contract", "Emergency contact details", "Any visa documents (if applicable)"].map((doc) => (
-                        <li key={doc} className="flex items-center gap-2">
+                      {(["doc1", "doc2", "doc3", "doc4"] as const).map((key) => (
+                        <li key={key} className="flex items-center gap-2">
                           <FileText className="h-3.5 w-3.5 shrink-0" />
-                          {doc}
+                          {t(`booking.${key}`)}
                         </li>
                       ))}
                     </ul>
-                    <p className="text-xs text-amber-700">
-                      Documents can be uploaded from your guest portal after booking. Your room will be confirmed once documents are approved.
-                    </p>
+                    <p className="text-xs text-amber-700">{t("booking.docs_note")}</p>
                   </div>
                   <Button
                     onClick={onConfirmBooking}
@@ -461,10 +472,10 @@ export default function Booking() {
                     className="w-full bg-primary text-primary-foreground py-5"
                     data-testid="button-confirm-booking"
                   >
-                    {createBooking.isPending ? "Confirming..." : "Confirm Booking"} <ChevronRight className="h-4 w-4 ml-1" />
+                    {createBooking.isPending ? t("booking.confirming") : t("booking.confirm_booking")} <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>
                   <Button variant="ghost" onClick={() => setCurrentStep(1)} className="w-full">
-                    <ChevronLeft className="h-4 w-4 mr-1" /> Back
+                    <ChevronLeft className="h-4 w-4 mr-1" /> {t("booking.back_btn")}
                   </Button>
                 </motion.div>
               )}
@@ -482,17 +493,17 @@ export default function Booking() {
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-foreground">{t("booking.step4")}!</h2>
-                    <p className="text-muted-foreground mt-1">Your booking request has been submitted</p>
+                    <p className="text-muted-foreground mt-1">{t("booking.booking_submitted")}</p>
                   </div>
                   <div className="rounded-xl bg-primary/5 border border-primary/20 p-4">
-                    <p className="text-sm text-muted-foreground">Booking Reference</p>
+                    <p className="text-sm text-muted-foreground">{t("booking.booking_ref_label")}</p>
                     <p className="text-2xl font-bold text-primary tracking-wider" data-testid="text-booking-ref">{bookingRef}</p>
                   </div>
                   <div className="space-y-2 text-sm text-muted-foreground">
-                    <p>Your booking is pending document review. Please upload your documents from the guest portal.</p>
+                    <p>{t("booking.pending_docs")}</p>
                   </div>
                   <Button onClick={() => setLocation("/portal")} className="w-full bg-primary text-primary-foreground py-5">
-                    Go to My Portal
+                    {t("booking.go_to_portal")}
                   </Button>
                 </motion.div>
               )}
@@ -503,7 +514,7 @@ export default function Booking() {
           {currentStep < 3 && (
             <div className="lg:col-span-1">
               <div className="sticky top-24 rounded-2xl border bg-card p-5 space-y-4 shadow-sm">
-                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">Booking Summary</h3>
+                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">{t("booking.summary")}</h3>
 
                 {space.primary_image ? (
                   <img src={space.primary_image ?? undefined} alt={space.name} className="w-full aspect-[4/3] object-cover rounded-lg" />
@@ -520,18 +531,18 @@ export default function Booking() {
 
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Weekly rent</span>
+                    <span className="text-muted-foreground">{t("booking.weekly_rent")}</span>
                     <span className="font-medium">${weeklyPrice}</span>
                   </div>
                   {space.admin_fee != null && (
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Admin fee</span>
+                      <span className="text-muted-foreground">{t("booking.admin_fee")}</span>
                       <span>${space.admin_fee}</span>
                     </div>
                   )}
                   {space.bond_amount != null && (
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Bond</span>
+                      <span className="text-muted-foreground">{t("booking.bond")}</span>
                       <span>${space.bond_amount}</span>
                     </div>
                   )}
