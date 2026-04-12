@@ -92,7 +92,7 @@ export default function CsTicketList() {
 
   return (
     <Layout>
-      <div className="p-4 sm:p-6 flex flex-col h-full">
+      <div className="p-4 sm:p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -158,8 +158,8 @@ export default function CsTicketList() {
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex-1 flex flex-col min-h-0">
-          <div className="overflow-x-auto overflow-y-auto flex-1">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
             {isLoading ? (
               <div className="p-4 space-y-3">
                 {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-14 w-full" />)}
