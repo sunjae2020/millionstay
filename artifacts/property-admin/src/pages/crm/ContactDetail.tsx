@@ -196,14 +196,14 @@ export default function ContactDetail() {
           </div>
         }
       />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left column */}
           <div className="lg:col-span-2 space-y-6">
             {/* Basic Info */}
             <div className="rounded-lg border p-4 space-y-4">
               <h3 className="font-semibold text-sm">Basic Information</h3>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="grid gap-1.5">
                   <Label>Title</Label>
                   <Controller name="title" control={control} render={({ field }) => (
@@ -234,7 +234,7 @@ export default function ContactDetail() {
                   <Input {...register("other_name")} />
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="grid gap-1.5">
                   <Label>Email *</Label>
                   <Input {...register("email", { required: true })} type="email" />
@@ -249,7 +249,7 @@ export default function ContactDetail() {
                   <Input {...register("office_number")} />
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="grid gap-1.5">
                   <Label>Date of Birth</Label>
                   <Controller name="date_of_birth" control={control} render={({ field }) => (
@@ -293,7 +293,7 @@ export default function ContactDetail() {
             {/* KYC */}
             <div className="rounded-lg border p-4 space-y-4">
               <h3 className="font-semibold text-sm">KYC / Identity</h3>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="grid gap-1.5">
                   <Label>Passport Number</Label>
                   <Input {...register("passport_number")} />
@@ -306,7 +306,7 @@ export default function ContactDetail() {
                   <ExpiryWarning label="Passport" dateStr={passportExpiry} />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="grid gap-1.5">
                   <Label>Visa Type</Label>
                   <Input {...register("visa_type")} placeholder="e.g. Student 500" />
@@ -328,7 +328,7 @@ export default function ContactDetail() {
                 <Label>Address Line 1</Label>
                 <Input {...register("address_line1")} />
               </div>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="grid gap-1.5 col-span-2">
                   <Label>Suburb</Label>
                   <Input {...register("suburb")} />

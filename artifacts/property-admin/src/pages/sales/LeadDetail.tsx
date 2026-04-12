@@ -226,13 +226,13 @@ export default function LeadDetail() {
           </div>
         }
       />
-      <div className="p-6 max-w-2xl">
+      <div className="p-4 sm:p-6 max-w-2xl">
         <div className="grid gap-5">
           {/* General */}
           <div className="border rounded-lg overflow-hidden">
             <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">General</div>
             <div className="p-4 grid gap-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
                   <Label>First Name *</Label>
                   <Input {...register("first_name", { required: true })} placeholder="First name" />
@@ -244,7 +244,7 @@ export default function LeadDetail() {
                   {errors.last_name && <p className="text-xs text-destructive">Required</p>}
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
                   <Label>Email *</Label>
                   <Input {...register("email", { required: true })} type="email" placeholder="email@example.com" />
@@ -276,7 +276,7 @@ export default function LeadDetail() {
           <div className="border rounded-lg overflow-hidden">
             <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Inquiry</div>
             <div className="p-4 grid gap-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
                   <Label>Lead Source</Label>
                   <Controller name="lead_source" control={control} render={({ field }) => (
@@ -326,7 +326,7 @@ export default function LeadDetail() {
           <div className="border rounded-lg overflow-hidden">
             <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Preferences</div>
             <div className="p-4 grid gap-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
                   <Label>Preferred Space Type</Label>
                   <Controller name="preferred_space_type" control={control} render={({ field }) => (
@@ -349,7 +349,7 @@ export default function LeadDetail() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
                   <Label>Duration (weeks)</Label>
                   <Input {...register("preferred_duration_weeks")} type="number" min={1} placeholder="e.g. 12" />
@@ -465,7 +465,7 @@ export default function LeadDetail() {
                 placeholder="Search spaces…"
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="grid gap-1.5">
                 <Label>Check-In Date *</Label>
                 <DateInput value={convertForm.check_in_date}

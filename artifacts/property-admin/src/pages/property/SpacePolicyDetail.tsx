@@ -158,7 +158,7 @@ export default function SpacePolicyDetail() {
           </div>
         }
       />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="max-w-xl">
           <form className="bg-card rounded-lg border p-6 flex flex-col gap-5">
             <div className="flex flex-col gap-1.5">
@@ -174,7 +174,7 @@ export default function SpacePolicyDetail() {
 
             <div className="border-t pt-5">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">House Rules</p>
-              <div className="grid grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <BoolRadio label="Same Gender" name="same_gender" control={control} />
                 <BoolRadio label="Lady Only" name="lady_only" control={control} />
                 <BoolRadio label="No Pets" name="no_pet" control={control} />

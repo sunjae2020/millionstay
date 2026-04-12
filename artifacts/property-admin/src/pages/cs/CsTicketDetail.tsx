@@ -195,7 +195,7 @@ export default function CsTicketDetail() {
   const st = STATUS_CONFIG[ticket.status] ?? STATUS_CONFIG.Open;
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-5xl mx-auto">
       <button onClick={() => navigate("/cs/tickets")} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary mb-5 transition-colors">
         <ArrowLeft className="h-4 w-4" /> Back to CS Tickets
       </button>

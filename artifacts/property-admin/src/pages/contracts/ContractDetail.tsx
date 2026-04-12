@@ -175,16 +175,16 @@ export default function ContractDetail() {
   return (
     <Layout>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
             <div>
-              <h1 className="text-2xl font-bold font-mono">
+              <h1 className="text-xl sm:text-2xl font-bold font-mono">
                 {isNew ? "New Contract" : contract?.contract_ref}
               </h1>
               {!isNew && <p className="text-sm text-muted-foreground">Contract #{id}</p>}
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button type="button" variant="outline" onClick={() => navigate("/contracts/contracts")}>
                 <ArrowLeft className="h-4 w-4 mr-2" />Back
               </Button>
@@ -200,8 +200,8 @@ export default function ContractDetail() {
 
           {/* Status bar */}
           {!isNew && contract && (
-            <div className="border rounded-lg p-4 mb-6 flex items-center justify-between bg-blue-50/50">
-              <div className="flex items-center gap-3">
+            <div className="border rounded-lg p-4 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-blue-50/50">
+              <div className="flex items-center gap-3 flex-wrap">
                 <span className="text-sm font-medium text-muted-foreground">Status:</span>
                 <Badge className={statusColors[status] ?? ""}>{status}</Badge>
                 {contract.sent_at && <span className="text-xs text-muted-foreground">Sent: {new Date(contract.sent_at).toLocaleDateString()}</span>}
@@ -213,9 +213,9 @@ export default function ContractDetail() {
 
           <div className="grid grid-cols-1 gap-6 max-w-4xl">
             {/* General */}
-            <div className="border rounded-lg bg-white p-6">
+            <div className="border rounded-lg bg-white p-4 sm:p-6">
               <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">General</h2>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>Linked Booking</Label>
                   <Controller name="booking_id" control={control} render={({ field }) => (
@@ -256,9 +256,9 @@ export default function ContractDetail() {
             </div>
 
             {/* Parties */}
-            <div className="border rounded-lg bg-white p-6">
+            <div className="border rounded-lg bg-white p-4 sm:p-6">
               <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Parties</h2>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>Tenant (Guest Account) *</Label>
                   <Controller name="tenant_account_id" control={control} render={({ field }) => (
@@ -287,9 +287,9 @@ export default function ContractDetail() {
             </div>
 
             {/* Terms */}
-            <div className="border rounded-lg bg-white p-6">
+            <div className="border rounded-lg bg-white p-4 sm:p-6">
               <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Financial Terms</h2>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>Start Date</Label>
                   <Controller name="start_date" control={control} render={({ field }) => (
@@ -333,7 +333,7 @@ export default function ContractDetail() {
             </div>
 
             {/* Document */}
-            <div className="border rounded-lg bg-white p-6">
+            <div className="border rounded-lg bg-white p-4 sm:p-6">
               <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Document & Terms</h2>
               <div className="space-y-4">
                 <div>

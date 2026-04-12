@@ -358,7 +358,7 @@ export default function SpaceDetail() {
               {/* ① GENERAL — 기본 정보 */}
               <div className="col-span-2 bg-card rounded-lg border p-5 flex flex-col gap-4">
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">General</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="col-span-2 flex flex-col gap-1.5">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                       Name <span className="text-destructive">*</span>
@@ -408,7 +408,7 @@ export default function SpaceDetail() {
               {/* ② MAIN — 매물 유형 및 설정 */}
               <div className="col-span-2 bg-card rounded-lg border p-5 flex flex-col gap-4">
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Space Settings</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Space Type</Label>
                     <Controller
@@ -516,7 +516,7 @@ export default function SpaceDetail() {
               {/* ④ PRICING & POLICY — 나란히 */}
               <div className="bg-card rounded-lg border p-5 flex flex-col gap-4">
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Pricing</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Weekly Price</Label>
                     <Input {...register("base_weekly_price")} type="number" step="0.01" min={0} placeholder="0.00" />
@@ -550,7 +550,7 @@ export default function SpaceDetail() {
               {/* ⑤ PHYSICAL DETAILS & ACCOUNTS — 나란히 */}
               <div className="bg-card rounded-lg border p-5 flex flex-col gap-4">
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">Physical Details</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Floor Number</Label>
                     <Input {...register("floor_number")} type="number" placeholder="e.g. 3" />

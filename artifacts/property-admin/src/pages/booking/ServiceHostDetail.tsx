@@ -144,7 +144,7 @@ export default function ServiceHostDetail() {
 
         <div className="rounded-lg border bg-white p-6 space-y-4">
           <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">PERIOD</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>From Date</Label>
               <Controller name="from_date" control={control} render={({ field }) => (
@@ -162,7 +162,7 @@ export default function ServiceHostDetail() {
 
         <div className="rounded-lg border bg-white p-6 space-y-4">
           <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">OPTIONS</h3>
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <Label>In Call</Label>
               <div className="flex gap-4 mt-2">
@@ -186,7 +186,7 @@ export default function ServiceHostDetail() {
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>Business Start Hour (0-23)</Label>
               <Input type="number" min={0} max={23} {...register("business_start_hour", { valueAsNumber: true })} className="mt-1" />
@@ -205,7 +205,7 @@ export default function ServiceHostDetail() {
 
         <div className="rounded-lg border bg-white p-6 space-y-4">
           <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">ADMIN</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>Status</Label>
               <Controller name="status" control={control} render={({ field }) => (

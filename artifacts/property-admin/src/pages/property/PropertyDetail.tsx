@@ -237,7 +237,7 @@ export default function PropertyDetail() {
           <TabsContent value="details">
             <div className="max-w-2xl">
               <form className="bg-card rounded-lg border p-6 flex flex-col gap-5">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="col-span-2 flex flex-col gap-1.5">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                       Name <span className="text-destructive">*</span>
@@ -305,7 +305,7 @@ export default function PropertyDetail() {
                         }
                       </Button>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <Input {...register("lat")} type="number" step="any" placeholder="Lat e.g. -37.8102" />
                       <Input {...register("lng")} type="number" step="any" placeholder="Lng e.g. 144.9628" />
                     </div>
@@ -359,7 +359,7 @@ export default function PropertyDetail() {
 
           {!isNew && (
             <TabsContent value="spaces">
-              <div className="rounded-md border bg-card overflow-hidden max-w-3xl">
+              <div className="rounded-md border bg-card overflow-x-auto max-w-3xl">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50 border-b">
                     <tr>

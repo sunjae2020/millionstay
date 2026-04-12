@@ -108,7 +108,7 @@ export default function SpaceOptionDetail() {
           </div>
         }
       />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="max-w-xl">
           <form className="bg-card rounded-lg border p-6 flex flex-col gap-5">
             <div className="flex flex-col gap-1.5">

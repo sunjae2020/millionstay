@@ -109,15 +109,15 @@ export default function InvoiceDetail() {
 
   return (
     <Layout>
-      <div className="p-6 max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
+      <div className="p-4 sm:p-6 max-w-4xl mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
               {isNew ? "New Invoice" : invoice?.invoice_ref ?? "Invoice"}
             </h1>
             {!isNew && <p className="text-sm text-muted-foreground">Invoice #{id}</p>}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button variant="outline" onClick={() => navigate("/finance/invoices")}>
               <ArrowLeft className="h-4 w-4 mr-1" /> Back
             </Button>
@@ -134,14 +134,14 @@ export default function InvoiceDetail() {
 
         {/* FSM Actions */}
         {!isNew && (
-          <div className="border rounded-lg bg-white p-4 mb-4 flex items-center gap-4">
+          <div className="border rounded-lg bg-white p-4 mb-4 flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-muted-foreground">Status:</span>
               <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusColors[status] ?? "bg-gray-100 text-gray-600"}`}>
                 {status}
               </span>
             </div>
-            <div className="flex gap-2 ml-auto">
+            <div className="flex gap-2 sm:ml-auto flex-wrap">
               {status === "Draft" && (
                 <Button variant="default" onClick={() => sendMutation.mutate({ id: Number(id) })}>
                   Send to Client
@@ -163,9 +163,9 @@ export default function InvoiceDetail() {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Links */}
-          <div className="border rounded-lg bg-white p-6">
+          <div className="border rounded-lg bg-white p-4 sm:p-6">
             <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Links</h2>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <Label>Linked Booking</Label>
                 <Controller name="booking_id" control={control} render={({ field }) => (
@@ -206,9 +206,9 @@ export default function InvoiceDetail() {
           </div>
 
           {/* Financials */}
-          <div className="border rounded-lg bg-white p-6">
+          <div className="border rounded-lg bg-white p-4 sm:p-6">
             <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Financial Details</h2>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <Label>Amount *</Label>
                 <Input type="number" step="0.01" placeholder="0.00" {...register("amount")} />
@@ -240,7 +240,7 @@ export default function InvoiceDetail() {
           {invoice?.status === "Paid" && (
             <div className="border rounded-lg bg-green-50 p-6">
               <h2 className="text-sm font-semibold uppercase text-green-600 tracking-wide mb-4">Payment Details</h2>
-              <div className="grid grid-cols-3 gap-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground">Payment Method:</span>
                   <p className="font-medium mt-1">{invoice.payment_method ?? "—"}</p>
@@ -254,7 +254,7 @@ export default function InvoiceDetail() {
           )}
 
           {/* Description + Notes */}
-          <div className="border rounded-lg bg-white p-6">
+          <div className="border rounded-lg bg-white p-4 sm:p-6">
             <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Details</h2>
             <div className="space-y-4">
               <div>

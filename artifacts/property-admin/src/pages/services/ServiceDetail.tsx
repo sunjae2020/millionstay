@@ -319,7 +319,7 @@ export default function ServiceDetail() {
             Display & Status
           </div>
           <div className="p-5 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Sort Order</Label>
                 <Input {...register("sort_order")} type="number" min="0" placeholder="0" className="w-28" />

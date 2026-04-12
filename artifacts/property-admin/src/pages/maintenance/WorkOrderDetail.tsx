@@ -124,15 +124,15 @@ export default function WorkOrderDetail() {
 
   return (
     <Layout>
-      <div className="p-6 max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
+      <div className="p-4 sm:p-6 max-w-4xl mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
               {isNew ? "New Work Order" : wo?.order_ref ?? "Work Order"}
             </h1>
             {!isNew && wo && <p className="text-sm text-muted-foreground">{wo.title}</p>}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button variant="outline" onClick={() => navigate("/maintenance/work-orders")}>
               <ArrowLeft className="h-4 w-4 mr-1" /> Back
             </Button>
@@ -149,7 +149,7 @@ export default function WorkOrderDetail() {
 
         {/* FSM Actions */}
         {!isNew && (
-          <div className="border rounded-lg bg-white p-4 mb-4 flex items-center gap-4">
+          <div className="border rounded-lg bg-white p-4 mb-4 flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-muted-foreground">Status:</span>
               <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusColors[status] ?? "bg-gray-100 text-gray-600"}`}>
@@ -183,9 +183,9 @@ export default function WorkOrderDetail() {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Details */}
-          <div className="border rounded-lg bg-white p-6">
+          <div className="border rounded-lg bg-white p-4 sm:p-6">
             <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Work Order Details</h2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="col-span-2">
                 <Label>Title *</Label>
                 <Input placeholder="Describe the work required..." {...register("title")} />
@@ -233,9 +233,9 @@ export default function WorkOrderDetail() {
           </div>
 
           {/* Location */}
-          <div className="border rounded-lg bg-white p-6">
+          <div className="border rounded-lg bg-white p-4 sm:p-6">
             <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Location</h2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>Property</Label>
                 <Controller name="property_id" control={control} render={({ field }) => (
@@ -264,9 +264,9 @@ export default function WorkOrderDetail() {
           </div>
 
           {/* Schedule */}
-          <div className="border rounded-lg bg-white p-6">
+          <div className="border rounded-lg bg-white p-4 sm:p-6">
             <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Schedule & Assignment</h2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>Reported Date</Label>
                 <Controller name="reported_at" control={control} render={({ field }) => (
@@ -310,7 +310,7 @@ export default function WorkOrderDetail() {
           )}
 
           {/* Notes */}
-          <div className="border rounded-lg bg-white p-6">
+          <div className="border rounded-lg bg-white p-4 sm:p-6">
             <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Notes</h2>
             <Textarea rows={3} placeholder="Internal notes..." {...register("notes")} />
           </div>

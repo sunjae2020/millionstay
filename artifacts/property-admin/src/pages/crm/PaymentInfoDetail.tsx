@@ -152,7 +152,7 @@ export default function PaymentInfoDetail() {
                 <Label>Bank Name</Label>
                 <Input {...register("bank_name")} placeholder="e.g. NAB" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
                   <Label>BSB Number</Label>
                   <Input {...register("bsb_number")} placeholder="e.g. 083-004" />

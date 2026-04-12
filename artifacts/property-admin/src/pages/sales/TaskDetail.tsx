@@ -152,7 +152,7 @@ export default function TaskDetail() {
           </div>
         }
       />
-      <div className="p-6 max-w-2xl">
+      <div className="p-4 sm:p-6 max-w-2xl">
         <div className="grid gap-5">
           {/* General */}
           <div className="border rounded-lg overflow-hidden">
@@ -174,7 +174,7 @@ export default function TaskDetail() {
           <div className="border rounded-lg overflow-hidden">
             <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Details</div>
             <div className="p-4 grid gap-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
                   <Label>Status</Label>
                   <Controller name="task_status" control={control} render={({ field }) => (
@@ -221,7 +221,7 @@ export default function TaskDetail() {
                 )} />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
                   <Label>Start Date</Label>
                   <Controller name="start_date" control={control} render={({ field }) => (

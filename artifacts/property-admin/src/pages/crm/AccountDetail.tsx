@@ -224,7 +224,7 @@ export default function AccountDetail() {
         {/* Basic Info */}
         <div className="rounded-lg border p-4 space-y-4">
           <h3 className="font-semibold text-sm">Basic Information</h3>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="grid gap-1.5">
               <Label>Account Name *</Label>
               <Input {...register("name", { required: true })} placeholder="e.g. Sunjae KIM" />
@@ -248,7 +248,7 @@ export default function AccountDetail() {
               )} />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="grid gap-1.5">
               <div className="flex items-center justify-between">
                 <Label>Primary Contact</Label>
@@ -292,7 +292,7 @@ export default function AccountDetail() {
               )} />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="grid gap-1.5">
               <Label>Account Email</Label>
               <Input {...register("account_email")} type="email" />
@@ -302,7 +302,7 @@ export default function AccountDetail() {
               <Input {...register("website_url")} placeholder="https://" />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="grid gap-1.5">
               <Label>Phone 1</Label>
               <Input {...register("phone1")} />
@@ -318,7 +318,7 @@ export default function AccountDetail() {
         <div className="rounded-lg border p-4 space-y-4">
           <h3 className="font-semibold text-sm">Primary Address</h3>
           <Input {...register("address_line1")} placeholder="Address Line 1" />
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="col-span-2"><Input {...register("address_suburb")} placeholder="Suburb" /></div>
             <Input {...register("address_state")} placeholder="State" />
             <Input {...register("address_postcode")} placeholder="Postcode" />
@@ -329,7 +329,7 @@ export default function AccountDetail() {
         <div className="rounded-lg border p-4 space-y-4">
           <h3 className="font-semibold text-sm">Secondary Address</h3>
           <Input {...register("secondary_address_line1")} placeholder="Address Line 1" />
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="col-span-2"><Input {...register("secondary_address_suburb")} placeholder="Suburb" /></div>
             <Input {...register("secondary_address_state")} placeholder="State" />
             <Input {...register("secondary_address_postcode")} placeholder="Postcode" />
@@ -456,7 +456,7 @@ export default function AccountDetail() {
           </div>
         }
       />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {isNew ? (
           detailsContent
         ) : (
@@ -479,7 +479,7 @@ export default function AccountDetail() {
             </TabsContent>
 
             <TabsContent value="bookings">
-              <div className="rounded-md border bg-card overflow-hidden max-w-4xl">
+              <div className="rounded-md border bg-card overflow-x-auto max-w-4xl">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50 border-b">
                     <tr>
@@ -520,7 +520,7 @@ export default function AccountDetail() {
             </TabsContent>
 
             <TabsContent value="contracts">
-              <div className="rounded-md border bg-card overflow-hidden max-w-4xl">
+              <div className="rounded-md border bg-card overflow-x-auto max-w-4xl">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50 border-b">
                     <tr>
@@ -561,7 +561,7 @@ export default function AccountDetail() {
             </TabsContent>
 
             <TabsContent value="invoices">
-              <div className="rounded-md border bg-card overflow-hidden max-w-4xl">
+              <div className="rounded-md border bg-card overflow-x-auto max-w-4xl">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50 border-b">
                     <tr>

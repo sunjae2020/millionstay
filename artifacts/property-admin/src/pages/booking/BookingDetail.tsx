@@ -156,15 +156,15 @@ export default function BookingDetail() {
 
   function FSMActionBar() {
     return (
-      <div className={`rounded-lg border-2 p-4 flex items-center justify-between ${status === "Draft" ? "border-gray-200 bg-gray-50" : status === "PendingPayment" ? "border-yellow-300 bg-yellow-50" : status === "PendingApproval" ? "border-amber-300 bg-amber-50" : status === "Confirmed" ? "border-blue-300 bg-blue-50" : status === "Active" ? "border-green-300 bg-green-50" : status === "CheckedOut" ? "border-indigo-200 bg-indigo-50" : "border-red-200 bg-red-50"}`}>
-        <div className="flex items-center gap-3">
+      <div className={`rounded-lg border-2 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ${status === "Draft" ? "border-gray-200 bg-gray-50" : status === "PendingPayment" ? "border-yellow-300 bg-yellow-50" : status === "PendingApproval" ? "border-amber-300 bg-amber-50" : status === "Confirmed" ? "border-blue-300 bg-blue-50" : status === "Active" ? "border-green-300 bg-green-50" : status === "CheckedOut" ? "border-indigo-200 bg-indigo-50" : "border-red-200 bg-red-50"}`}>
+        <div className="flex items-center gap-3 flex-wrap">
           <span className="text-sm font-medium text-muted-foreground">Status:</span>
           <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${BOOKING_STATUS_COLORS[status] ?? "bg-gray-100 text-gray-700"}`}>{status}</span>
           {status === "Cancelled" && booking?.cancellation_reason && (
             <span className="text-sm text-red-600 ml-2">Reason: {booking.cancellation_reason}</span>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {status === "Draft" && (
             <Button className="bg-[#E8621A] hover:bg-[#d4561a] text-white" onClick={() => submitMutation.mutate({ id: Number(id) })}>
               Submit Request →
@@ -224,13 +224,13 @@ export default function BookingDetail() {
           </div>
         }
       />
-      <div className="p-6 max-w-4xl space-y-6">
+      <div className="p-4 sm:p-6 max-w-4xl space-y-6">
         {!isNew && <FSMActionBar />}
 
-        <div className="rounded-lg border bg-white p-6 space-y-4">
+        <div className="rounded-lg border bg-white p-4 sm:p-6 space-y-4">
           <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">GENERAL</h3>
           {!isNew && (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label className="text-muted-foreground text-xs">Booking Ref</Label>
                 <p className="font-mono text-sm mt-1">{booking?.booking_ref}</p>
@@ -243,9 +243,9 @@ export default function BookingDetail() {
           )}
         </div>
 
-        <div className="rounded-lg border bg-white p-6 space-y-4">
+        <div className="rounded-lg border bg-white p-4 sm:p-6 space-y-4">
           <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">MAIN</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>Account (Guest) *</Label>
               <Controller name="account_id" control={control} render={({ field }) => (
@@ -271,7 +271,7 @@ export default function BookingDetail() {
               )} />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>Booking Source</Label>
               <Controller name="booking_source" control={control} render={({ field }) => (
@@ -290,7 +290,7 @@ export default function BookingDetail() {
           </div>
         </div>
 
-        <div className="rounded-lg border bg-white p-6 space-y-4">
+        <div className="rounded-lg border bg-white p-4 sm:p-6 space-y-4">
           <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">SPACE & PRODUCT</h3>
           <div>
             <Label>Space *</Label>
@@ -328,9 +328,9 @@ export default function BookingDetail() {
           </div>
         </div>
 
-        <div className="rounded-lg border bg-white p-6 space-y-4">
+        <div className="rounded-lg border bg-white p-4 sm:p-6 space-y-4">
           <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">PERIOD</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>Check-In Date *</Label>
               <Controller name="check_in_date" control={control} render={({ field }) => (
@@ -351,9 +351,9 @@ export default function BookingDetail() {
           )}
         </div>
 
-        <div className="rounded-lg border bg-white p-6 space-y-4">
+        <div className="rounded-lg border bg-white p-4 sm:p-6 space-y-4">
           <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">PRICING</h3>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <Label>Agreed Weekly Rate *</Label>
               <Input {...register("agreed_weekly_rate")} className="mt-1" placeholder="0.00" />
@@ -398,7 +398,7 @@ export default function BookingDetail() {
                     <Upload className="w-3.5 h-3.5 mr-1" /> Upload Document
                   </Button>
                 </div>
-                <div className="rounded-lg border bg-white overflow-hidden">
+                <div className="rounded-lg border bg-white overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50 border-b">
                       <tr>
@@ -453,7 +453,7 @@ export default function BookingDetail() {
                     <button className="text-xs text-[#E8621A] hover:underline">+ New Invoice</button>
                   </Link>
                 </div>
-                <div className="rounded-lg border bg-white overflow-hidden">
+                <div className="rounded-lg border bg-white overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50 border-b">
                       <tr>

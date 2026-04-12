@@ -196,7 +196,7 @@ export default function ProductDetail() {
           {/* Basic Information */}
           <div className="bg-white border rounded-lg p-6 space-y-4">
             <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Basic Information</h2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="col-span-2">
                 <Label>Product Name *</Label>
                 <Input {...register("name")} placeholder="e.g. Standard Room Package" className="mt-1" />
@@ -251,7 +251,7 @@ export default function ProductDetail() {
           {/* Pricing */}
           <div className="bg-white border rounded-lg p-6 space-y-4">
             <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Pricing</h2>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <Label>Price</Label>
                 <Input {...register("price")} type="number" step="0.01" placeholder="0.00" className="mt-1" />

@@ -796,12 +796,12 @@ export function PageHeader({
   actions?: React.ReactNode;
 }) {
   return (
-    <div className="sticky top-0 z-20 flex items-center justify-between px-6 py-4 border-b bg-card">
-      <div>
-        <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">{title}</h1>
-        {subtitle && <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
+    <div className="sticky top-0 z-20 flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 sm:px-6 py-3 sm:py-4 gap-2 sm:gap-0 border-b bg-card">
+      <div className="min-w-0">
+        <h1 className="text-base sm:text-lg font-semibold text-foreground flex items-center gap-2 truncate">{title}</h1>
+        {subtitle && <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {actions && <div className="flex items-center gap-2 flex-wrap shrink-0">{actions}</div>}
     </div>
   );
 }
