@@ -45,6 +45,8 @@ import {
   ConciergeBell,
   HeadphonesIcon,
   Globe,
+  Wrench,
+  DollarSign,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
@@ -687,24 +689,46 @@ export function Layout({ children }: { children: React.ReactNode }) {
           "flex-1 overflow-y-auto py-3 flex flex-col gap-3",
           collapsed ? "px-1 items-center" : "px-2"
         )}>
-          {/* Dashboard */}
+          {/* Dashboards */}
           <div className={cn("flex flex-col gap-0.5", collapsed && "w-full items-center")}>
-            <Link
-              href="/"
-              title={collapsed ? t("nav.dashboard") : undefined}
-              className={cn(
-                "flex items-center rounded-md text-xs font-medium transition-colors",
-                collapsed
-                  ? "justify-center w-9 h-9 mx-auto"
-                  : "gap-2 py-1.5 pl-5 pr-3",
-                location === "/" || location === "/dashboard"
-                  ? "bg-sidebar-primary/10 text-sidebar-primary font-semibold"
-                  : "text-sidebar-foreground/40 hover:text-sidebar-foreground/70 hover:bg-sidebar-accent"
-              )}
-            >
-              <LayoutDashboard className={cn("flex-shrink-0", collapsed ? "h-4 w-4" : "h-3 w-3")} />
-              {!collapsed && t("nav.dashboard")}
-            </Link>
+            {collapsed ? (
+              <Link
+                href="/dashboard"
+                title={t("nav.dashboard")}
+                className={cn(
+                  "flex items-center rounded-md text-xs font-medium transition-colors justify-center w-9 h-9 mx-auto",
+                  ["/", "/dashboard", "/dashboard/reservations", "/dashboard/finance", "/dashboard/operations"].includes(location)
+                    ? "bg-sidebar-primary/10 text-sidebar-primary font-semibold"
+                    : "text-sidebar-foreground/40 hover:text-sidebar-foreground/70 hover:bg-sidebar-accent"
+                )}
+              >
+                <LayoutDashboard className="h-4 w-4 flex-shrink-0" />
+              </Link>
+            ) : (
+              <>
+                <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">Dashboards</p>
+                {[
+                  { href: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
+                  { href: "/dashboard/reservations", label: "Reservations", icon: CalendarDays },
+                  { href: "/dashboard/finance", label: "Finance", icon: DollarSign },
+                  { href: "/dashboard/operations", label: "Operations", icon: Wrench },
+                ].map(item => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-2 rounded-md text-xs font-medium transition-colors py-1.5 pl-5 pr-3",
+                      (location === item.href || (item.href === "/dashboard" && (location === "/" || location === "/dashboard")))
+                        ? "bg-sidebar-primary/10 text-sidebar-primary font-semibold"
+                        : "text-sidebar-foreground/40 hover:text-sidebar-foreground/70 hover:bg-sidebar-accent"
+                    )}
+                  >
+                    <item.icon className="h-3 w-3 flex-shrink-0" />
+                    {item.label}
+                  </Link>
+                ))}
+              </>
+            )}
           </div>
 
           {/* All sections */}

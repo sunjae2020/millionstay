@@ -12,6 +12,9 @@ import ForgotPasswordPage from "@/pages/ForgotPassword";
 import ResetPasswordPage from "@/pages/ResetPassword";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
+import DashboardReservations from "@/pages/DashboardReservations";
+import DashboardFinance from "@/pages/DashboardFinance";
+import DashboardOperations from "@/pages/DashboardOperations";
 import { ComingSoonPage } from "@/pages/ComingSoon";
 
 // Property
@@ -136,6 +139,9 @@ function Router() {
       {/* ── Dashboard ──────────────────────────────────── */}
       <Route path="/" component={Dashboard} />
       <Route path="/dashboard" component={Dashboard} />
+      <Route path="/dashboard/reservations" component={DashboardReservations} />
+      <Route path="/dashboard/finance" component={DashboardFinance} />
+      <Route path="/dashboard/operations" component={DashboardOperations} />
 
       {/* ── ACCOUNT ───────────────────────────────────── */}
       <Route path="/account/contacts" component={ContactList} />

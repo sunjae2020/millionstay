@@ -189,6 +189,90 @@ router.post("/v1/bookings", async (req, res): Promise<void> => {
   res.status(201).json(await buildBookingResponse(row));
 });
 
+router.get("/v1/bookings/calendar", async (req, res): Promise<void> => {
+  const { start, end } = req.query as Record<string, string>;
+  const startDate = start || new Date().toISOString().slice(0, 10);
+  const endDate = end || (() => { const d = new Date(); d.setDate(d.getDate() + 7); return d.toISOString().slice(0, 10); })();
+  try {
+    const bookings = await db
+      .select({
+        id: bookingsTable.id,
+        booking_ref: bookingsTable.booking_ref,
+        booking_status: bookingsTable.booking_status,
+        check_in_date: bookingsTable.check_in_date,
+        check_out_date: bookingsTable.check_out_date,
+        space_id: bookingsTable.space_id,
+        contact_id: bookingsTable.contact_id,
+      })
+      .from(bookingsTable)
+      .where(
+        and(
+          lte(bookingsTable.check_in_date, endDate),
+          gte(bookingsTable.check_out_date, startDate),
+        )
+      );
+
+    const spaceIds = [...new Set(bookings.map(b => b.space_id).filter(Boolean))] as number[];
+    const spaces = spaceIds.length
+      ? await db.select({ id: spacesTable.id, name: spacesTable.name, property_id: spacesTable.property_id }).from(spacesTable).where(or(...spaceIds.map(id => eq(spacesTable.id, id))))
+      : [];
+    const propertyIds = [...new Set(spaces.map(s => s.property_id).filter(Boolean))] as number[];
+    const props = propertyIds.length
+      ? await db.select({ id: propertiesTable.id, name: propertiesTable.name }).from(propertiesTable).where(or(...propertyIds.map(id => eq(propertiesTable.id, id))))
+      : [];
+    const propMap = Object.fromEntries(props.map(p => [p.id, p.name]));
+    const contactIds = [...new Set(bookings.map(b => b.contact_id).filter(Boolean))] as number[];
+    const contacts = contactIds.length
+      ? await db.select({ id: contactsTable.id, first_name: contactsTable.first_name, last_name: contactsTable.last_name }).from(contactsTable).where(or(...contactIds.map(id => eq(contactsTable.id, id))))
+      : [];
+    const contactMap = Object.fromEntries(contacts.map(c => [c.id, `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim()]));
+
+    const spaceRows = spaces.map(s => ({
+      id: s.id,
+      name: s.name,
+      property_name: propMap[s.property_id!] ?? null,
+      bookings: bookings
+        .filter(b => b.space_id === s.id && !["Cancelled"].includes(b.booking_status))
+        .map(b => ({
+          id: b.id,
+          booking_ref: b.booking_ref,
+          booking_status: b.booking_status,
+          check_in_date: b.check_in_date,
+          check_out_date: b.check_out_date,
+          guest_name: b.contact_id ? (contactMap[b.contact_id] ?? null) : null,
+        })),
+    })).filter(s => s.bookings.length > 0 || spaceIds.includes(s.id));
+
+    res.json({ start: startDate, end: endDate, spaces: spaceRows });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch calendar data" });
+  }
+});
+
+router.get("/v1/bookings/today/arrivals", async (req, res): Promise<void> => {
+  const today = new Date().toISOString().slice(0, 10);
+  try {
+    const bookings = await db.select().from(bookingsTable)
+      .where(and(eq(bookingsTable.check_in_date, today), eq(bookingsTable.booking_status, "Confirmed")));
+    const enriched = await Promise.all(bookings.map(b => buildBookingResponse(b)));
+    res.json(enriched);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch arrivals" });
+  }
+});
+
+router.get("/v1/bookings/today/departures", async (req, res): Promise<void> => {
+  const today = new Date().toISOString().slice(0, 10);
+  try {
+    const bookings = await db.select().from(bookingsTable)
+      .where(and(eq(bookingsTable.check_out_date, today), eq(bookingsTable.booking_status, "Active")));
+    const enriched = await Promise.all(bookings.map(b => buildBookingResponse(b)));
+    res.json(enriched);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch departures" });
+  }
+});
+
 router.get("/v1/bookings/:id", async (req, res): Promise<void> => {
   const parsed = GetBookingParams.safeParse({ id: Number(req.params.id) });
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }

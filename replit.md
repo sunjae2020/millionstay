@@ -35,6 +35,23 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 
 **Modules (10 complete):**
 
+**Dashboards (4 dedicated PMS dashboards):**
+- Overview Dashboard (`/dashboard`) — KPI stat cards, mini booking calendar, alerts, integrations status
+- Reservations Dashboard (`/dashboard/reservations`) — 7-day Gantt calendar (week nav, colour-coded bars), today's arrivals/departures with check-in/out actions, bookings table with filter/pagination
+- Finance Dashboard (`/dashboard/finance`) — revenue KPIs, 6-month bar chart (recharts), payment status donut, invoice list with status actions (send/pay/void), revenue by property, tax summary table
+- Operations Dashboard (`/dashboard/operations`) — work order KPIs, work orders list with priority dots + status transitions, priority distribution donut, housekeeping room grid, system activity log
+
+**New API endpoints (dashboard.ts):**
+- `GET /api/v1/dashboard/overview/kpis` → check-ins today, check-outs, occupancy, monthly revenue
+- `GET /api/v1/bookings/calendar?start=&end=` → Gantt data (spaces + booking bars) — added before `:id` route
+- `GET /api/v1/bookings/today/arrivals` / `/today/departures` → today's check-ins/check-outs
+- `GET /api/v1/finance/summary` → financial KPI totals
+- `GET /api/v1/finance/revenue/monthly?months=N` → N-month rolling revenue
+- `GET /api/v1/finance/revenue/by-property` → revenue breakdown per property
+- `GET /api/v1/finance/tax-summary` → 6-month tax summary (gross/tax/net)
+- `GET /api/v1/operations/summary/kpis` → open/in-progress/urgent/completed work order counts
+- `GET /api/v1/operations/activity-log?limit=N` → system audit log entries
+
 **Property:**
 - Dashboard — full KPI stats across all modules + booking calendar + alerts
 - Suburbs — CRUD with search, country/state filters

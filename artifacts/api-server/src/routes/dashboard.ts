@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { db, propertiesTable, spacesTable, contactsTable, accountsTable, bookingsTable, leadsTable, tasksTable, invoicesTable, contractsTable } from "@workspace/db";
-import { eq, count, and } from "drizzle-orm";
+import { db, propertiesTable, spacesTable, contactsTable, accountsTable, bookingsTable, leadsTable, tasksTable, invoicesTable, contractsTable, workOrdersTable, systemLogsTable } from "@workspace/db";
+import { eq, count, and, gte, lte, sql, desc } from "drizzle-orm";
 
 const router: IRouter = Router();
 
@@ -47,6 +47,197 @@ router.get("/v1/dashboard/stats", async (_req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch dashboard stats" });
+  }
+});
+
+router.get("/v1/dashboard/overview/kpis", async (_req, res) => {
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const monthStart = today.slice(0, 7) + "-01";
+    const nextMonth = (() => {
+      const d = new Date(monthStart);
+      d.setMonth(d.getMonth() + 1);
+      return d.toISOString().slice(0, 10);
+    })();
+
+    const [[checkins], [checkouts], [active], [totalSpaces], [occupiedSpaces], paidInvoices] = await Promise.all([
+      db.select({ count: count() }).from(bookingsTable).where(and(eq(bookingsTable.check_in_date, today), eq(bookingsTable.booking_status, "Confirmed"))),
+      db.select({ count: count() }).from(bookingsTable).where(and(eq(bookingsTable.check_out_date, today), eq(bookingsTable.booking_status, "Active"))),
+      db.select({ count: count() }).from(bookingsTable).where(eq(bookingsTable.booking_status, "Active")),
+      db.select({ count: count() }).from(spacesTable).where(eq(spacesTable.status, "Active")),
+      db.select({ count: count() }).from(bookingsTable).where(eq(bookingsTable.booking_status, "Active")),
+      db.select({ amount: invoicesTable.amount }).from(invoicesTable).where(and(eq(invoicesTable.status, "Paid"), gte(invoicesTable.created_at, new Date(monthStart)), lte(invoicesTable.created_at, new Date(nextMonth)))),
+    ]);
+
+    const monthlyRevenue = paidInvoices.reduce((sum, i) => sum + (i.amount ?? 0), 0);
+    const totalSpacesNum = Number(totalSpaces.count);
+    const occupiedNum = Number(occupiedSpaces.count);
+    const occupancyPct = totalSpacesNum > 0 ? Math.round((occupiedNum / totalSpacesNum) * 100) : 0;
+
+    res.json({
+      checkins_today: Number(checkins.count),
+      checkouts_today: Number(checkouts.count),
+      active_bookings: Number(active.count),
+      total_spaces: totalSpacesNum,
+      occupied_spaces: occupiedNum,
+      occupancy_pct: occupancyPct,
+      monthly_revenue: Math.round(monthlyRevenue * 100) / 100,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch KPIs" });
+  }
+});
+
+router.get("/v1/finance/summary", async (req, res) => {
+  try {
+    const { month } = req.query as Record<string, string>;
+    const monthStr = month || new Date().toISOString().slice(0, 7);
+    const monthStart = monthStr + "-01";
+    const nextMonth = (() => {
+      const d = new Date(monthStart);
+      d.setMonth(d.getMonth() + 1);
+      return d.toISOString().slice(0, 10);
+    })();
+
+    const allInvoices = await db.select({ status: invoicesTable.status, amount: invoicesTable.amount, due_date: invoicesTable.due_date, created_at: invoicesTable.created_at })
+      .from(invoicesTable);
+
+    const thisMonthInvoices = allInvoices.filter(i => {
+      const d = i.created_at?.toISOString().slice(0, 10) ?? "";
+      return d >= monthStart && d < nextMonth;
+    });
+
+    const totalRevenue = allInvoices.filter(i => i.status === "Paid").reduce((s, i) => s + (i.amount ?? 0), 0);
+    const monthRevenue = thisMonthInvoices.filter(i => i.status === "Paid").reduce((s, i) => s + (i.amount ?? 0), 0);
+    const sentCount = allInvoices.filter(i => i.status === "Sent").length;
+    const paidCount = thisMonthInvoices.filter(i => i.status === "Paid").length;
+    const draftCount = allInvoices.filter(i => i.status === "Draft").length;
+    const overdueCount = allInvoices.filter(i => {
+      if (i.status !== "Sent") return false;
+      const due = i.due_date;
+      return due ? due < new Date().toISOString().slice(0, 10) : false;
+    }).length;
+
+    res.json({
+      total_revenue: Math.round(totalRevenue * 100) / 100,
+      monthly_revenue: Math.round(monthRevenue * 100) / 100,
+      sent_count: sentCount,
+      paid_count: paidCount,
+      draft_count: draftCount,
+      overdue_count: overdueCount,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch finance summary" });
+  }
+});
+
+router.get("/v1/finance/revenue/monthly", async (req, res) => {
+  try {
+    const months = Number((req.query as any).months) || 6;
+    const result: { month: string; revenue: number; invoice_count: number }[] = [];
+    const now = new Date();
+    for (let i = months - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthStr = d.toISOString().slice(0, 7);
+      const start = monthStr + "-01";
+      const nextD = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+      const end = nextD.toISOString().slice(0, 10);
+      const rows = await db.select({ amount: invoicesTable.amount })
+        .from(invoicesTable)
+        .where(and(eq(invoicesTable.status, "Paid"), gte(invoicesTable.created_at, new Date(start)), lte(invoicesTable.created_at, new Date(end))));
+      result.push({ month: monthStr, revenue: Math.round(rows.reduce((s, r) => s + (r.amount ?? 0), 0) * 100) / 100, invoice_count: rows.length });
+    }
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch monthly revenue" });
+  }
+});
+
+router.get("/v1/finance/revenue/by-property", async (req, res) => {
+  try {
+    const invoices = await db.select({
+      amount: invoicesTable.amount,
+      booking_id: invoicesTable.booking_id,
+    }).from(invoicesTable).where(eq(invoicesTable.status, "Paid"));
+
+    const bookingIds = [...new Set(invoices.map(i => i.booking_id).filter(Boolean))] as number[];
+    const bookingMap: Record<number, number | null> = {};
+    for (const id of bookingIds) {
+      const [b] = await db.select({ space_id: bookingsTable.space_id }).from(bookingsTable).where(eq(bookingsTable.id, id));
+      if (b?.space_id) {
+        const [s] = await db.select({ property_id: spacesTable.property_id }).from(spacesTable).where(eq(spacesTable.id, b.space_id));
+        bookingMap[id] = s?.property_id ?? null;
+      }
+    }
+    const propRevenue: Record<number, number> = {};
+    for (const inv of invoices) {
+      const propId = inv.booking_id ? (bookingMap[inv.booking_id] ?? null) : null;
+      if (propId) propRevenue[propId] = (propRevenue[propId] ?? 0) + (inv.amount ?? 0);
+    }
+    const propIds = Object.keys(propRevenue).map(Number);
+    const props = propIds.length ? await db.select({ id: propertiesTable.id, name: propertiesTable.name }).from(propertiesTable) : [];
+    const result = props
+      .filter(p => propRevenue[p.id] !== undefined)
+      .map(p => ({ property_id: p.id, property_name: p.name, revenue: Math.round((propRevenue[p.id] ?? 0) * 100) / 100 }))
+      .sort((a, b) => b.revenue - a.revenue);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch revenue by property" });
+  }
+});
+
+router.get("/v1/finance/tax-summary", async (req, res) => {
+  try {
+    const months = 6;
+    const result: { month: string; gross_revenue: number; tax_rate: number; tax_amount: number; net_revenue: number }[] = [];
+    const now = new Date();
+    for (let i = months - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthStr = d.toISOString().slice(0, 7);
+      const start = monthStr + "-01";
+      const nextD = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+      const end = nextD.toISOString().slice(0, 10);
+      const rows = await db.select({ amount: invoicesTable.amount }).from(invoicesTable)
+        .where(and(eq(invoicesTable.status, "Paid"), gte(invoicesTable.created_at, new Date(start)), lte(invoicesTable.created_at, new Date(end))));
+      const gross = rows.reduce((s, r) => s + (r.amount ?? 0), 0);
+      const taxRate = 0.10;
+      const taxAmount = gross * taxRate / (1 + taxRate);
+      result.push({ month: monthStr, gross_revenue: Math.round(gross * 100) / 100, tax_rate: taxRate, tax_amount: Math.round(taxAmount * 100) / 100, net_revenue: Math.round((gross - taxAmount) * 100) / 100 });
+    }
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch tax summary" });
+  }
+});
+
+router.get("/v1/operations/summary/kpis", async (_req, res) => {
+  try {
+    const thisMonth = new Date().toISOString().slice(0, 7);
+    const [[open], [inProgress], [urgent], completedRows] = await Promise.all([
+      db.select({ count: count() }).from(workOrdersTable).where(eq(workOrdersTable.status, "Open")),
+      db.select({ count: count() }).from(workOrdersTable).where(eq(workOrdersTable.status, "InProgress")),
+      db.select({ count: count() }).from(workOrdersTable).where(and(eq(workOrdersTable.priority, "Urgent"), sql`${workOrdersTable.status} NOT IN ('Completed','Cancelled')`)),
+      db.select({ completed_at: workOrdersTable.completed_at }).from(workOrdersTable).where(eq(workOrdersTable.status, "Completed")),
+    ]);
+    const completedThisMonth = completedRows.filter(r => r.completed_at?.toISOString().slice(0, 7) === thisMonth).length;
+    res.json({
+      open_count: Number(open.count),
+      in_progress_count: Number(inProgress.count),
+      urgent_count: Number(urgent.count),
+      completed_this_month: completedThisMonth,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch operations KPIs" });
+  }
+});
+
+router.get("/v1/operations/activity-log", async (req, res) => {
+  try {
+    const limit = Number((req.query as any).limit) || 30;
+    const rows = await db.select().from(systemLogsTable).orderBy(desc(systemLogsTable.created_at)).limit(limit);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch activity log" });
   }
 });
 
