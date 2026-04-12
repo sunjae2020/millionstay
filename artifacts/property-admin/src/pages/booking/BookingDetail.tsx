@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, useParams } from "wouter";
+import { useLocation, useParams, Link } from "wouter";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
@@ -20,10 +20,10 @@ import {
   useListInvoices,
   getListBookingsQueryKey, getGetBookingQueryKey, getListBookingDocumentsQueryKey,
 } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Save, FileText, CheckCircle2, XCircle, Upload } from "lucide-react";
+import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
+import { ArrowLeft, Save, FileText, CheckCircle2, XCircle, Upload, ExternalLink, Plus, Trash2 } from "lucide-react";
 import { LookupSelect } from "@/components/LookupSelect";
-import { Link } from "wouter";
+import { apiFetch } from "@/lib/apiFetch";
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -86,6 +86,14 @@ export default function BookingDetail() {
   const [docUrl, setDocUrl] = useState("");
   const [docExpiry, setDocExpiry] = useState("");
   const [rejectReason, setRejectReason] = useState("");
+  const [addServiceOpen, setAddServiceOpen] = useState(false);
+  const [svcName, setSvcName] = useState("");
+  const [svcType, setSvcType] = useState("one_time");
+  const [svcQty, setSvcQty] = useState("1");
+  const [svcPrice, setSvcPrice] = useState("");
+  const [svcFreq, setSvcFreq] = useState("");
+  const [svcNotes, setSvcNotes] = useState("");
+  function resetServiceForm() { setSvcName(""); setSvcType("one_time"); setSvcQty("1"); setSvcPrice(""); setSvcFreq(""); setSvcNotes(""); }
 
   const { data: booking, refetch } = useGetBooking(Number(id), { query: { enabled: !isNew } });
   const { data: documents } = useListBookingDocuments(Number(id), {
@@ -93,6 +101,32 @@ export default function BookingDetail() {
   });
   const { data: invoices } = useListInvoices({ booking_id: isNew ? undefined : Number(id) }, {
     query: { enabled: !isNew },
+  });
+
+  const { data: linkedContract, refetch: refetchContract } = useQuery({
+    queryKey: ["booking-contract", id],
+    queryFn: async () => { const r = await apiFetch(`/api/v1/bookings/${id}/contract`); return r.json(); },
+    enabled: !isNew,
+  });
+  const { data: servicesData, refetch: refetchServices } = useQuery({
+    queryKey: ["booking-services", id],
+    queryFn: async () => { const r = await apiFetch(`/api/v1/bookings/${id}/services`); return r.json(); },
+    enabled: !isNew,
+  });
+  const bookingServices: any[] = servicesData?.data ?? [];
+
+  const addServiceMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const r = await apiFetch(`/api/v1/bookings/${id}/services`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      return r.json();
+    },
+    onSuccess: () => { refetchServices(); setAddServiceOpen(false); resetServiceForm(); },
+  });
+  const removeServiceMutation = useMutation({
+    mutationFn: async (svcId: number) => {
+      await apiFetch(`/api/v1/bookings/${id}/services/${svcId}`, { method: "DELETE" });
+    },
+    onSuccess: () => refetchServices(),
   });
 
   const { register, handleSubmit, reset, control, watch } = useForm<FormData>({
@@ -198,6 +232,15 @@ export default function BookingDetail() {
               <Button className="bg-indigo-600 hover:bg-indigo-700 text-white" onClick={() => checkOutMutation.mutate({ id: Number(id) })}>{t("booking.btn_checkout")}</Button>
               <Button variant="outline" onClick={() => setExtendDialogOpen(true)}>{t("booking.btn_extend")}</Button>
             </>
+          )}
+          {linkedContract && (
+            <Link href={`/contracts/contracts/${linkedContract.id}`}>
+              <Button variant="outline" size="sm" className="gap-1.5 border-blue-300 text-blue-700 hover:bg-blue-50">
+                <FileText className="h-3.5 w-3.5" />
+                계약서 보기 <span className="text-xs font-mono opacity-70">{linkedContract.contract_ref}</span>
+                <ExternalLink className="h-3 w-3" />
+              </Button>
+            </Link>
           )}
           {status === "CheckedOut" && (
             <span className="text-indigo-600 font-medium text-sm">{t("booking.btn_completed")}</span>
@@ -381,6 +424,7 @@ export default function BookingDetail() {
             <div className="flex border-b gap-1">
               {[
                 { id: "documents", label: t("booking.tab_documents") },
+                { id: "services", label: `서비스${bookingServices.length ? ` (${bookingServices.length})` : ""}` },
                 { id: "invoices", label: t("booking.tab_invoices") },
                 { id: "notes", label: t("booking.tab_notes") },
                 { id: "activities", label: t("booking.tab_activities") }
@@ -448,6 +492,48 @@ export default function BookingDetail() {
                                 </Button>
                               )}
                             </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "services" && (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-medium text-sm">서비스</h4>
+                  <Button size="sm" variant="outline" onClick={() => setAddServiceOpen(true)}>
+                    <Plus className="w-3.5 h-3.5 mr-1" /> 서비스 추가
+                  </Button>
+                </div>
+                <div className="rounded-lg border bg-white overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 border-b">
+                      <tr>
+                        {["서비스명", "유형", "수량", "단가", "합계", "청구 방식", "주기", ""].map((h) => (
+                          <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {!bookingServices.length ? (
+                        <tr><td colSpan={8} className="text-center py-8 text-muted-foreground">등록된 서비스가 없습니다</td></tr>
+                      ) : bookingServices.map((svc: any) => (
+                        <tr key={svc.id} className="border-b hover:bg-gray-50">
+                          <td className="px-4 py-3 font-medium">{svc.service_name}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{svc.service_type ?? "—"}</td>
+                          <td className="px-4 py-3">{svc.quantity ?? 1}</td>
+                          <td className="px-4 py-3">{svc.unit_price ? `$${Number(svc.unit_price).toFixed(2)}` : "—"}</td>
+                          <td className="px-4 py-3">{svc.total_price ? `$${Number(svc.total_price).toFixed(2)}` : "—"}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{svc.billing_trigger ?? "—"}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{svc.frequency ?? "—"}</td>
+                          <td className="px-4 py-3">
+                            <Button size="sm" variant="ghost" className="h-7 text-red-500 hover:text-red-700" onClick={() => removeServiceMutation.mutate(svc.id)}>
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
                           </td>
                         </tr>
                       ))}
@@ -594,6 +680,75 @@ export default function BookingDetail() {
                 data: { doc_type: docType || undefined, file_url: docUrl || undefined, file_name: docUrl?.split("/").pop() || undefined, expiry_date: docExpiry || undefined },
               });
             }}>{t("common.upload")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Service Dialog */}
+      <Dialog open={addServiceOpen} onOpenChange={setAddServiceOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>서비스 추가</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>서비스명 *</Label>
+              <Input value={svcName} onChange={(e) => setSvcName(e.target.value)} placeholder="청소, 주차, 인터넷..." className="mt-1" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>유형</Label>
+                <Select value={svcType} onValueChange={setSvcType}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="one_time">일회성</SelectItem>
+                    <SelectItem value="recurring">정기</SelectItem>
+                    <SelectItem value="scheduled">스케줄</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>수량</Label>
+                <Input type="number" value={svcQty} onChange={(e) => setSvcQty(e.target.value)} min={1} className="mt-1" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>단가 (AUD)</Label>
+                <Input type="number" value={svcPrice} onChange={(e) => setSvcPrice(e.target.value)} placeholder="0.00" className="mt-1" />
+              </div>
+              <div>
+                <Label>청구 방식</Label>
+                <Select value={svcFreq} onValueChange={setSvcFreq}>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder="선택..." /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="weekly">매주</SelectItem>
+                    <SelectItem value="biweekly">2주마다</SelectItem>
+                    <SelectItem value="monthly">매월</SelectItem>
+                    <SelectItem value="once">한 번</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label>메모</Label>
+              <Textarea rows={2} value={svcNotes} onChange={(e) => setSvcNotes(e.target.value)} className="mt-1" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setAddServiceOpen(false); resetServiceForm(); }}>{t("common.cancel")}</Button>
+            <Button className="bg-[#E8621A] hover:bg-[#d4561a] text-white" disabled={!svcName.trim()} onClick={() => {
+              const qty = Number(svcQty) || 1;
+              const price = Number(svcPrice) || 0;
+              addServiceMutation.mutate({
+                service_name: svcName.trim(),
+                service_type: svcType,
+                quantity: qty,
+                unit_price: price.toString(),
+                total_price: (qty * price).toString(),
+                billing_trigger: svcFreq || undefined,
+                frequency: svcType === "recurring" ? (svcFreq || undefined) : undefined,
+                notes: svcNotes || undefined,
+              });
+            }}>추가</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

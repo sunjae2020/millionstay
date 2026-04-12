@@ -42,6 +42,24 @@ export const bookingDocumentsTable = pgTable("booking_documents", {
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
 
+export const bookingServicesTable = pgTable("booking_services", {
+  id: serial("id").primaryKey(),
+  booking_id: integer("booking_id").notNull(),
+  service_id: integer("service_id"),
+  name: text("name").notNull(),
+  service_type: text("service_type").default("one_time"),
+  quantity: integer("quantity").notNull().default(1),
+  unit_price: numeric("unit_price", { precision: 10, scale: 2 }).notNull(),
+  total_price: numeric("total_price", { precision: 10, scale: 2 }).notNull(),
+  currency: text("currency").notNull().default("AUD"),
+  billing_trigger: text("billing_trigger").default("at_booking"),
+  frequency: text("frequency"),
+  notes: text("notes"),
+  status: text("status").notNull().default("Active"),
+  created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+});
+
 export const insertBookingSchema = createInsertSchema(bookingsTable).omit({
   id: true, created_at: true, updated_at: true,
 });
@@ -53,3 +71,9 @@ export const insertBookingDocumentSchema = createInsertSchema(bookingDocumentsTa
 });
 export type InsertBookingDocument = z.infer<typeof insertBookingDocumentSchema>;
 export type BookingDocument = typeof bookingDocumentsTable.$inferSelect;
+
+export const insertBookingServiceSchema = createInsertSchema(bookingServicesTable).omit({
+  id: true, created_at: true, updated_at: true,
+});
+export type InsertBookingService = z.infer<typeof insertBookingServiceSchema>;
+export type BookingService = typeof bookingServicesTable.$inferSelect;

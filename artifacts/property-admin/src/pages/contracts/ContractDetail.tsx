@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useForm, Controller } from "react-hook-form";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import {
   useGetContract, useCreateContract, useUpdateContract,
   useSendContract, useSignContract, useActivateContract,
@@ -19,7 +19,8 @@ import {
   getListContractsQueryKey, getGetContractQueryKey,
 } from "@workspace/api-client-react";
 import { LookupSelect } from "@/components/LookupSelect";
-import { ArrowLeft, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, Trash2, CalendarDays, Wrench } from "lucide-react";
+import { apiFetch } from "@/lib/apiFetch";
 
 const CURRENCIES = ["AUD", "USD", "SGD", "MYR", "GBP"];
 const statusColors: Record<string, string> = {
@@ -60,10 +61,25 @@ export default function ContractDetail() {
   const [terminateReason, setTerminateReason] = useState("");
   const [signDocUrl, setSignDocUrl] = useState("");
   const [signOpen, setSignOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("schedule");
 
   const { data: contract, refetch } = useGetContract(Number(id), {
     query: { enabled: !isNew },
   });
+
+  const { data: scheduleData } = useQuery({
+    queryKey: ["contract-schedule", id],
+    queryFn: async () => { const r = await apiFetch(`/api/v1/contracts/${id}/payment-schedule`); return r.json(); },
+    enabled: !isNew,
+  });
+  const schedules: any[] = scheduleData?.data ?? [];
+
+  const { data: contractServicesData } = useQuery({
+    queryKey: ["contract-services", id],
+    queryFn: async () => { const r = await apiFetch(`/api/v1/contracts/${id}/services`); return r.json(); },
+    enabled: !isNew,
+  });
+  const contractServices: any[] = contractServicesData?.data ?? [];
 
   const { register, handleSubmit, reset, control } = useForm<FormData>({
     defaultValues: {
@@ -355,6 +371,89 @@ export default function ContractDetail() {
           </div>
         </div>
       </form>
+
+      {/* Payment Schedule & Services Tabs */}
+      {!isNew && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-8 space-y-4">
+          <div className="flex border-b gap-1">
+            {[
+              { id: "schedule", label: `결제 스케줄${schedules.length ? ` (${schedules.length})` : ""}`, icon: <CalendarDays className="w-3.5 h-3.5" /> },
+              { id: "services", label: `서비스${contractServices.length ? ` (${contractServices.length})` : ""}`, icon: <Wrench className="w-3.5 h-3.5" /> },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id ? "border-[#E8621A] text-[#E8621A]" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+              >
+                {tab.icon}{tab.label}
+              </button>
+            ))}
+          </div>
+
+          {activeTab === "schedule" && (
+            <div className="rounded-lg border bg-white overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    {["항목명", "금액", "통화", "예정일", "실제납입일", "상태", "주기", "메모"].map((h) => (
+                      <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {!schedules.length ? (
+                    <tr><td colSpan={8} className="text-center py-10 text-muted-foreground">결제 스케줄이 없습니다</td></tr>
+                  ) : schedules.map((s: any) => (
+                    <tr key={s.id} className="border-b hover:bg-gray-50">
+                      <td className="px-4 py-3 font-medium">{s.label ?? s.item_name ?? "—"}</td>
+                      <td className="px-4 py-3 font-mono">{s.amount != null ? `$${Number(s.amount).toFixed(2)}` : "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{s.currency ?? "AUD"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{s.scheduled_date ?? s.due_date ?? "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{s.paid_date ?? "—"}</td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s.status === "Paid" ? "bg-green-100 text-green-700" : s.status === "Overdue" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-700"}`}>
+                          {s.status ?? "Pending"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{s.frequency ?? "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{s.notes ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {activeTab === "services" && (
+            <div className="rounded-lg border bg-white overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    {["서비스명", "유형", "수량", "단가", "합계", "청구방식", "주기"].map((h) => (
+                      <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {!contractServices.length ? (
+                    <tr><td colSpan={7} className="text-center py-10 text-muted-foreground">연결된 서비스가 없습니다</td></tr>
+                  ) : contractServices.map((svc: any) => (
+                    <tr key={svc.id} className="border-b hover:bg-gray-50">
+                      <td className="px-4 py-3 font-medium">{svc.service_name}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{svc.service_type ?? "—"}</td>
+                      <td className="px-4 py-3">{svc.quantity ?? 1}</td>
+                      <td className="px-4 py-3">{svc.unit_price ? `$${Number(svc.unit_price).toFixed(2)}` : "—"}</td>
+                      <td className="px-4 py-3">{svc.total_price ? `$${Number(svc.total_price).toFixed(2)}` : "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{svc.billing_trigger ?? "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{svc.frequency ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Terminate Dialog */}
       <Dialog open={terminateOpen} onOpenChange={setTerminateOpen}>

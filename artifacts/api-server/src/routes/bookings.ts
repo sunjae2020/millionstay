@@ -4,11 +4,14 @@ import {
   db,
   bookingsTable,
   bookingDocumentsTable,
+  bookingServicesTable,
   accountsTable,
   contactsTable,
   spacesTable,
   propertiesTable,
   spaceBlockedDatesTable,
+  contractsTable,
+  recurringSchedulesTable,
 } from "@workspace/db";
 import { logAction } from "../utils/auditLog";
 import {
@@ -351,7 +354,181 @@ router.patch("/v1/bookings/:id/confirm", async (req, res): Promise<void> => {
   }
   const [row] = await db.update(bookingsTable).set({ booking_status: "Confirmed" }).where(eq(bookingsTable.id, parsed.data.id)).returning();
   await logAction({ entityType: "booking", entityId: parsed.data.id, action: "STATUS_CHANGE", oldValue: { status: existing.booking_status }, newValue: { status: "Confirmed" } });
-  res.json(await buildBookingResponse(row));
+
+  // Auto-generate contract if not already exists
+  let contractId: number | null = null;
+  const existingContracts = await db.select({ id: contractsTable.id }).from(contractsTable).where(eq(contractsTable.booking_id, parsed.data.id));
+  if (existingContracts.length === 0 && existing.account_id) {
+    // Build terms text
+    const [space] = existing.space_id ? await db.select().from(spacesTable).where(eq(spacesTable.id, existing.space_id)) : [null];
+    const [property] = space?.property_id ? await db.select().from(propertiesTable).where(eq(propertiesTable.id, space.property_id)) : [null];
+    const [tenantAccount] = await db.select({ id: accountsTable.id, name: accountsTable.name }).from(accountsTable).where(eq(accountsTable.id, existing.account_id));
+    const services = await db.select().from(bookingServicesTable).where(eq(bookingServicesTable.booking_id, parsed.data.id));
+
+    const weeklyRate = parseFloat(existing.agreed_weekly_rate ?? "0");
+    const totalRent = parseFloat(existing.total_rent ?? "0");
+    const bondAmount = weeklyRate * 4;
+    const advanceAmount = weeklyRate * 2;
+
+    const serviceLines = services.length > 0
+      ? services.map(s => `  - ${s.name} (x${s.quantity}): ${existing.currency} ${s.total_price}`).join("\n")
+      : "  (No additional services)";
+
+    const termsText = [
+      "ACCOMMODATION TENANCY AGREEMENT",
+      "═══════════════════════════════════════════════════════",
+      "",
+      "PROPERTY DETAILS",
+      `  Property    : ${property?.name ?? "—"} — ${property?.address ?? "—"}, ${property?.suburb ?? ""} ${property?.state ?? ""}`.trim(),
+      `  Space/Room  : ${space?.name ?? "—"} (${space?.space_type ?? "—"})`,
+      "",
+      "PARTIES",
+      `  Tenant      : ${tenantAccount?.name ?? "—"}`,
+      `  Landlord    : MillionStay Pty Ltd`,
+      "",
+      "TENANCY PERIOD",
+      `  Start Date  : ${existing.check_in_date ?? "—"}`,
+      `  End Date    : ${existing.check_out_date ?? "—"}`,
+      `  Duration    : ${existing.stay_weeks ?? "—"} weeks (${existing.stay_nights ?? "—"} nights)`,
+      "",
+      "FINANCIAL TERMS",
+      `  Currency            : ${existing.currency ?? "AUD"}`,
+      `  Weekly Rent         : ${existing.currency} ${weeklyRate.toFixed(2)}`,
+      `  Total Rent          : ${existing.currency} ${totalRent.toFixed(2)}`,
+      `  Security Bond       : ${existing.currency} ${bondAmount.toFixed(2)} (4 weeks rent)`,
+      `  Advance Payment     : ${existing.currency} ${advanceAmount.toFixed(2)} (2 weeks rent)`,
+      "",
+      "ADDITIONAL SERVICES",
+      serviceLines,
+      "",
+      "PAYMENT SCHEDULE",
+      `  Rent is payable biweekly in advance.`,
+      `  First payment due on check-in date: ${existing.check_in_date ?? "—"}`,
+      `  Subsequent payments due every 2 weeks thereafter.`,
+      "",
+      "GENERAL CONDITIONS",
+      "  1. The tenant agrees to maintain the property in good condition.",
+      "  2. The bond will be returned within 14 days after vacating, subject to inspection.",
+      "  3. Any damage beyond normal wear and tear will be deducted from the bond.",
+      "  4. The tenant must give 2 weeks notice prior to vacating.",
+      "  5. Subletting is not permitted without prior written consent.",
+      "",
+      `Generated on: ${new Date().toISOString().slice(0, 10)}`,
+      `Booking Reference: ${existing.booking_ref}`,
+    ].join("\n");
+
+    const year = new Date().getFullYear();
+    const countRows = await db.select({ id: contractsTable.id }).from(contractsTable).where(ilike(contractsTable.contract_ref, `MS-C-${year}-%`));
+    const contractRef = `MS-C-${year}-${String(countRows.length + 1).padStart(5, "0")}`;
+
+    const [newContract] = await db.insert(contractsTable).values({
+      contract_ref: contractRef,
+      booking_id: parsed.data.id,
+      contract_product_id: existing.contract_product_id ?? null,
+      tenant_account_id: existing.account_id,
+      space_id: existing.space_id ?? null,
+      start_date: existing.check_in_date ?? null,
+      end_date: existing.check_out_date ?? null,
+      weekly_rate: weeklyRate,
+      total_rent: totalRent,
+      bond_amount: bondAmount,
+      advance_amount: advanceAmount,
+      currency: existing.currency ?? "AUD",
+      status: "Draft",
+      terms_text: termsText,
+    }).returning();
+
+    contractId = newContract.id;
+
+    // Auto-generate biweekly rent recurring schedule
+    if (existing.account_id && existing.check_in_date) {
+      await db.insert(recurringSchedulesTable).values({
+        booking_id: parsed.data.id,
+        contract_id: newContract.id,
+        account_id: existing.account_id,
+        schedule_type: "Rent",
+        frequency: "Biweekly",
+        amount: String(weeklyRate * 2),
+        currency: existing.currency ?? "AUD",
+        gst_included: false,
+        start_date: existing.check_in_date,
+        end_date: existing.check_out_date ?? null,
+        next_due_date: existing.check_in_date,
+        is_active: true,
+      });
+
+      // Auto-generate schedule entries for scheduled-type services
+      for (const svc of services.filter(s => s.service_type === "scheduled" && s.frequency)) {
+        await db.insert(recurringSchedulesTable).values({
+          booking_id: parsed.data.id,
+          contract_id: newContract.id,
+          account_id: existing.account_id,
+          schedule_type: svc.name,
+          frequency: svc.frequency!,
+          amount: String(svc.unit_price),
+          currency: svc.currency,
+          gst_included: false,
+          start_date: existing.check_in_date,
+          end_date: existing.check_out_date ?? null,
+          next_due_date: existing.check_in_date,
+          is_active: true,
+        });
+      }
+    }
+
+    await logAction({ entityType: "contract", entityId: newContract.id, action: "AUTO_CREATED", newValue: { contract_ref: contractRef, booking_ref: existing.booking_ref } });
+  } else if (existingContracts.length > 0) {
+    contractId = existingContracts[0].id;
+  }
+
+  const bookingResponse = await buildBookingResponse(row);
+  res.json({ ...bookingResponse, contract_id: contractId });
+});
+
+// GET /bookings/:id/contract — fetch the contract linked to this booking
+router.get("/v1/bookings/:id/contract", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const contracts = await db.select().from(contractsTable).where(eq(contractsTable.booking_id, id));
+  if (contracts.length === 0) { res.json(null); return; }
+  res.json(contracts[0]);
+});
+
+// GET /bookings/:id/services — list services for this booking
+router.get("/v1/bookings/:id/services", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const rows = await db.select().from(bookingServicesTable)
+    .where(and(eq(bookingServicesTable.booking_id, id), eq(bookingServicesTable.status, "Active")));
+  res.json({ data: rows, meta: { total: rows.length } });
+});
+
+// POST /bookings/:id/services — add a service to this booking
+router.post("/v1/bookings/:id/services", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const { name, service_id, service_type, quantity, unit_price, currency, billing_trigger, frequency, notes } = req.body;
+  if (!name || !unit_price) { res.status(400).json({ error: "name and unit_price are required" }); return; }
+  const qty = Number(quantity ?? 1);
+  const price = parseFloat(unit_price);
+  const [row] = await db.insert(bookingServicesTable).values({
+    booking_id: id,
+    service_id: service_id ?? null,
+    name,
+    service_type: service_type ?? "one_time",
+    quantity: qty,
+    unit_price: String(price.toFixed(2)),
+    total_price: String((price * qty).toFixed(2)),
+    currency: currency ?? "AUD",
+    billing_trigger: billing_trigger ?? "at_booking",
+    frequency: frequency ?? null,
+    notes: notes ?? null,
+  }).returning();
+  res.status(201).json(row);
+});
+
+// DELETE /bookings/:id/services/:svcId — remove a service
+router.delete("/v1/bookings/:id/services/:svcId", async (req, res): Promise<void> => {
+  const svcId = Number(req.params.svcId);
+  await db.update(bookingServicesTable).set({ status: "Deleted" }).where(eq(bookingServicesTable.id, svcId));
+  res.json({ ok: true });
 });
 
 router.patch("/v1/bookings/:id/reject", async (req, res): Promise<void> => {

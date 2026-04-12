@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, contractsTable, accountsTable, spacesTable, contractProductsTable, bookingsTable } from "@workspace/db";
+import { db, contractsTable, accountsTable, spacesTable, contractProductsTable, bookingsTable, recurringSchedulesTable, bookingServicesTable } from "@workspace/db";
 import { eq, ilike, and } from "drizzle-orm";
 import { logAction } from "../utils/auditLog";
 
@@ -186,6 +186,23 @@ router.post("/v1/contracts/:id/expire", async (req, res): Promise<void> => {
   await logAction({ entityType: "contract", entityId: id, action: "STATUS_CHANGE", newValue: { status: "Expired" } });
   const [result] = await enrichContracts([row]);
   res.json(result);
+});
+
+// GET /contracts/:id/payment-schedule — recurring schedules for this contract
+router.get("/v1/contracts/:id/payment-schedule", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const schedules = await db.select().from(recurringSchedulesTable).where(eq(recurringSchedulesTable.contract_id, id));
+  res.json({ data: schedules, meta: { total: schedules.length } });
+});
+
+// GET /contracts/:id/services — booking services linked via the booking
+router.get("/v1/contracts/:id/services", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const [contract] = await db.select({ booking_id: contractsTable.booking_id }).from(contractsTable).where(eq(contractsTable.id, id));
+  if (!contract?.booking_id) { res.json({ data: [], meta: { total: 0 } }); return; }
+  const rows = await db.select().from(bookingServicesTable)
+    .where(and(eq(bookingServicesTable.booking_id, contract.booking_id), eq(bookingServicesTable.status, "Active")));
+  res.json({ data: rows, meta: { total: rows.length } });
 });
 
 router.get("/v1/lookup/contracts", async (req, res): Promise<void> => {
