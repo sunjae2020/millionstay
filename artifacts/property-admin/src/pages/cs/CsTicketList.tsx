@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { apiFetch } from "@/lib/apiFetch";
+import { Layout } from "@/components/Layout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -80,6 +81,7 @@ export default function CsTicketList() {
   }, {});
 
   return (
+    <Layout>
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -216,5 +218,6 @@ export default function CsTicketList() {
         )}
       </div>
     </div>
+    </Layout>
   );
 }

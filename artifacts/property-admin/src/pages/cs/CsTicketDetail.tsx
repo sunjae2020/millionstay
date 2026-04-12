@@ -3,6 +3,7 @@ import { useParams, useLocation, Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { apiFetch } from "@/lib/apiFetch";
+import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -177,26 +178,31 @@ export default function CsTicketDetail() {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-4">
-        <Skeleton className="h-8 w-32" />
-        <Skeleton className="h-40 w-full rounded-xl" />
-        <Skeleton className="h-64 w-full rounded-xl" />
-      </div>
+      <Layout>
+        <div className="p-6 space-y-4">
+          <Skeleton className="h-8 w-32" />
+          <Skeleton className="h-40 w-full rounded-xl" />
+          <Skeleton className="h-64 w-full rounded-xl" />
+        </div>
+      </Layout>
     );
   }
 
   if (!ticket) {
     return (
-      <div className="p-6 text-center">
-        <p className="text-gray-500">Ticket not found.</p>
-        <Button onClick={() => navigate("/cs/tickets")} className="mt-4">Back to CS Tickets</Button>
-      </div>
+      <Layout>
+        <div className="p-6 text-center">
+          <p className="text-gray-500">Ticket not found.</p>
+          <Button onClick={() => navigate("/cs/tickets")} className="mt-4">Back to CS Tickets</Button>
+        </div>
+      </Layout>
     );
   }
 
   const st = STATUS_CONFIG[ticket.status] ?? STATUS_CONFIG.Open;
 
   return (
+    <Layout>
     <div className="p-4 sm:p-6 max-w-5xl mx-auto">
       <button onClick={() => navigate("/cs/tickets")} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary mb-5 transition-colors">
         <ArrowLeft className="h-4 w-4" /> {t('common.back')}
@@ -422,5 +428,6 @@ export default function CsTicketDetail() {
         </div>
       </div>
     </div>
+    </Layout>
   );
 }
