@@ -215,10 +215,13 @@ export default function CsTicketDetail() {
                     {ticket.category}
                   </span>
                   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${st.color}`}>
-                    {st.icon}{t(`csticket.status_${ticket.status.toLowerCase()}`, st.label)}
+                    {st.icon}{(() => {
+                      const sl = (ticket.status ?? "open").toLowerCase();
+                      return t(`csticket.status_${sl === "inprogress" ? "in_progress" : sl}` as any, st.label);
+                    })()}
                   </span>
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${PRIORITY_COLORS[ticket.priority] ?? ""}`}>
-                    {t(`csticket.priority_${ticket.priority.toLowerCase()}`, ticket.priority)}
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${PRIORITY_COLORS[ticket.priority ?? ""] ?? ""}`}>
+                    {t(`csticket.priority_${(ticket.priority ?? "normal").toLowerCase()}` as any, ticket.priority ?? "")}
                   </span>
                 </div>
                 <h1 className="text-lg font-bold text-gray-900">{ticket.subject}</h1>
@@ -384,9 +387,14 @@ export default function CsTicketDetail() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {STATUSES.map(s => (
-                      <SelectItem key={s} value={s}>{t(`csticket.status_${s.toLowerCase()}`, STATUS_CONFIG[s]?.label ?? s)}</SelectItem>
-                    ))}
+                    {STATUSES.map(s => {
+                      const sl = s.toLowerCase();
+                      return (
+                        <SelectItem key={s} value={s}>
+                          {t(`csticket.status_${sl === "inprogress" ? "in_progress" : sl}` as any, STATUS_CONFIG[s]?.label ?? s)}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>

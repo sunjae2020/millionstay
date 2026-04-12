@@ -74,8 +74,8 @@ export default function CsTicketList() {
 
   const tickets: CsTicket[] = data?.data ?? [];
 
-  const statusCounts = tickets.reduce((acc: Record<string, number>, t) => {
-    acc[t.status] = (acc[t.status] ?? 0) + 1;
+  const statusCounts = tickets.reduce((acc: Record<string, number>, ticket) => {
+    acc[ticket.status] = (acc[ticket.status] ?? 0) + 1;
     return acc;
   }, {});
 
@@ -187,12 +187,15 @@ export default function CsTicketList() {
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${st.color}`}>
-                        {st.icon}{t(`csticket.status_${ticket.status.toLowerCase() === "inprogress" ? "in_progress" : ticket.status.toLowerCase()}` as any)}
+                        {st.icon}{(() => {
+                          const sl = (ticket.status ?? "open").toLowerCase();
+                          return t(`csticket.status_${sl === "inprogress" ? "in_progress" : sl}` as any);
+                        })()}
                       </span>
                     </td>
                     <td className="px-4 py-3 hidden lg:table-cell">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${PRIORITY_COLORS[ticket.priority] ?? ""}`}>
-                        {t(`csticket.priority_${ticket.priority.toLowerCase()}` as any)}
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${PRIORITY_COLORS[ticket.priority ?? ""] ?? ""}`}>
+                        {t(`csticket.priority_${(ticket.priority ?? "normal").toLowerCase()}` as any)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-xs text-gray-400 hidden md:table-cell">
