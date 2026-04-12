@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +25,7 @@ async function fetchTypes() {
 const EMPTY = { name: "", description: "" };
 
 export default function ProductTypesPage() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const qc = useQueryClient();
   const [q, setQ] = useState("");
@@ -80,7 +82,7 @@ export default function ProductTypesPage() {
   return (
     <Layout>
       <PageHeader
-        title={<><Tag className="h-5 w-5" />Product Types</>}
+        title={<><Tag className="h-5 w-5" />{t("nav.product_types")}</>}
         subtitle="Manage product type definitions"
       />
 

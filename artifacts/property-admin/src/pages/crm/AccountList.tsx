@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -26,6 +27,7 @@ const ACCOUNT_TYPE_COLORS: Record<string, string> = {
 };
 
 export default function AccountList() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -51,7 +53,7 @@ export default function AccountList() {
   return (
     <Layout>
       <PageHeader
-        title="Accounts"
+        title={t("nav.account")}
         subtitle={`${accounts?.length ?? 0} total`}
         actions={
           <Link href="/crm/accounts/new">

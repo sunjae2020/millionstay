@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function ServiceHostList() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const qc = useQueryClient();
@@ -36,7 +38,7 @@ export default function ServiceHostList() {
   return (
     <Layout>
       <PageHeader
-        title="Service Hosts"
+        title={t("nav.service_host")}
         subtitle={`${hosts?.length ?? 0} total`}
         actions={
           <Link href="/booking/service-hosts/new">

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -22,6 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function SuburbList() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [countryCode, setCountryCode] = useState("");
   const [state, setState] = useState("");
@@ -47,7 +49,7 @@ export default function SuburbList() {
   return (
     <Layout>
       <PageHeader
-        title="Suburbs"
+        title={t("nav.suburb")}
         subtitle={`${suburbs?.length ?? 0} total`}
         actions={
           <Link href="/property/suburbs/new">

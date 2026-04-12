@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -33,6 +34,7 @@ function BoolCell({ value }: { value: boolean }) {
 }
 
 export default function SpacePolicyList() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const qc = useQueryClient();
@@ -56,7 +58,7 @@ export default function SpacePolicyList() {
   return (
     <Layout>
       <PageHeader
-        title="Space Policies"
+        title={t("nav.space_policy")}
         subtitle={`${policies?.length ?? 0} total`}
         actions={
           <Link href="/property/space-policies/new">

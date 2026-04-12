@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useLocation, useParams } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,7 @@ interface SuburbForm {
 }
 
 export default function SuburbDetail() {
+  const { t } = useTranslation();
   const params = useParams<{ id: string }>();
   const isNew = params.id === "new";
   const id = isNew ? null : parseInt(params.id ?? "0", 10);
@@ -102,7 +104,7 @@ export default function SuburbDetail() {
   if (!isNew && isLoading) {
     return (
       <Layout>
-        <PageHeader title="Loading..." />
+        <PageHeader title={t("common.loading")} />
         <div className="p-6 text-muted-foreground text-sm">Loading suburb...</div>
       </Layout>
     );
@@ -111,7 +113,7 @@ export default function SuburbDetail() {
   return (
     <Layout>
       <PageHeader
-        title={isNew ? "New Suburb" : (suburb?.name ?? "Edit Suburb")}
+        title={isNew ? `${t("common.new")} ${t("nav.suburb")}` : (suburb?.name ?? t("nav.suburb"))}
         subtitle={isNew ? "Create a new suburb" : `ID: ${id}`}
         actions={
           <div className="flex items-center gap-2">

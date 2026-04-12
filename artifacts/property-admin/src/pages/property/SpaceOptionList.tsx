@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -25,6 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function SpaceOptionList() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const qc = useQueryClient();
@@ -48,7 +50,7 @@ export default function SpaceOptionList() {
   return (
     <Layout>
       <PageHeader
-        title="Space Options"
+        title={t("nav.space_options")}
         subtitle={`${options?.length ?? 0} total`}
         actions={
           <Link href="/property/space-options/new">

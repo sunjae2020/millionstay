@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ function LeadStatusBadge({ status }: { status: string }) {
 }
 
 export default function LeadList() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [sourceFilter, setSourceFilter] = useState("");
@@ -57,7 +59,7 @@ export default function LeadList() {
   return (
     <Layout>
       <PageHeader
-        title="Leads"
+        title={t("nav.lead")}
         subtitle={`${leads?.length ?? 0} total`}
         actions={
           <Link href="/sales/leads/new">

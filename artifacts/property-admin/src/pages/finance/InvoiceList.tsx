@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { useListInvoices } from "@workspace/api-client-react";
 import { Layout } from "@/components/Layout";
@@ -16,6 +17,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function InvoiceList() {
+  const { t } = useTranslation();
   const [, navigate] = useLocation();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("_all");
@@ -32,7 +34,7 @@ export default function InvoiceList() {
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Invoices</h1>
+            <h1 className="text-2xl font-bold tracking-tight">{t("nav.invoice")}</h1>
             <p className="text-sm text-muted-foreground">{invoicesRaw.length} total</p>
           </div>
           <Button onClick={() => navigate("/finance/invoices/new")}>

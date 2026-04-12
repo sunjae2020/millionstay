@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -72,6 +73,7 @@ async function fetchPromotions(): Promise<Promotion[]> {
 }
 
 export default function ProductList() {
+  const { t } = useTranslation();
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("_all");
   const [promotionFilter, setPromotionFilter] = useState("_all");
@@ -113,7 +115,7 @@ export default function ProductList() {
   return (
     <Layout>
       <PageHeader
-        title="Accommodation Products"
+        title={t("nav.accommodation")}
         subtitle={`${filtered.length} of ${products.length} total`}
         actions={
           <Link href="/products/products/new">

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useLocation, useParams } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,6 +59,7 @@ function BoolRadio({ label, name, control }: { label: string; name: keyof Policy
 }
 
 export default function SpacePolicyDetail() {
+  const { t } = useTranslation();
   const params = useParams<{ id: string }>();
   const isNew = params.id === "new";
   const id = isNew ? null : parseInt(params.id ?? "0", 10);
@@ -135,13 +137,13 @@ export default function SpacePolicyDetail() {
   }
 
   if (!isNew && isLoading) {
-    return <Layout><PageHeader title="Loading..." /><div className="p-6 text-sm text-muted-foreground">Loading...</div></Layout>;
+    return <Layout><PageHeader title={t("common.loading")} /><div className="p-6 text-sm text-muted-foreground">Loading...</div></Layout>;
   }
 
   return (
     <Layout>
       <PageHeader
-        title={isNew ? "New Space Policy" : (policy?.name ?? "Edit Space Policy")}
+        title={isNew ? `${t("common.new")} ${t("nav.space_policy")}` : (policy?.name ?? t("nav.space_policy"))}
         subtitle={isNew ? "Create a new house rules template" : `ID: ${id}`}
         actions={
           <div className="flex items-center gap-2">

@@ -131,6 +131,17 @@ Tables (30 total): `suburbs`, `properties`, `space_options`, `space_policies`, `
 
 Generated from OpenAPI spec (`lib/api-spec/openapi.yaml`) via Orval. Hooks for all entities. Zod schemas in `lib/api-zod`. Always run codegen after updating openapi.yaml.
 
+## Internationalisation (i18n)
+
+Admin panel supports 5 languages: **EN** (default), **KO** (한국어), **ZH** (中文), **JA** (日本語), **TH** (ภาษาไทย).
+
+- Locale files: `artifacts/property-admin/src/locales/{en,ko,zh,ja,th}/translation.json`
+- Language preference persisted to `localStorage` key: `ms_admin_language`
+- All 52 pages use `useTranslation` from `react-i18next` — 100% coverage
+- Key namespaces: `nav.*` (page titles, sidebar), `dashboard.*` (KPI sections), `common.*` (UI actions), `login.*`, `lang.*`
+- `common.new` added to all locales for "New" prefix in detail page titles (e.g. "New Property" / "새 매물")
+- Nav keys used directly as page titles — zero duplicate keys
+
 ## Important Patterns
 
 - **Lookup endpoints**: return `{ id, display }` format

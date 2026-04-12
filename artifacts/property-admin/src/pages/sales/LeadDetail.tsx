@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useParams } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,6 +66,7 @@ interface ConvertForm {
 }
 
 export default function LeadDetail() {
+  const { t } = useTranslation();
   const params = useParams<{ id: string }>();
   const isNew = params.id === "new";
   const id = isNew ? null : parseInt(params.id ?? "0", 10);
@@ -194,7 +196,7 @@ export default function LeadDetail() {
       <PageHeader
         title={
           <span className="flex items-center gap-2">
-            {isNew ? "New Lead" : `${lead?.first_name ?? ""} ${lead?.last_name ?? ""}`}
+            {isNew ? `${t("common.new")} ${t("nav.lead")}` : `${lead?.first_name ?? ""} ${lead?.last_name ?? ""}`}
             {!isNew && lead && <LeadStatusBadge status={lead.lead_status} />}
           </span>
         }

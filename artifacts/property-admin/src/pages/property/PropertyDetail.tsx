@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useParams } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { StatusBadge } from "@/components/StatusBadge";
 import { LookupField, LookupOption } from "@/components/LookupField";
@@ -40,6 +41,7 @@ interface PropertyForm {
 }
 
 export default function PropertyDetail() {
+  const { t } = useTranslation();
   const params = useParams<{ id: string }>();
   const isNew = params.id === "new";
   const id = isNew ? null : parseInt(params.id ?? "0", 10);
@@ -182,7 +184,7 @@ export default function PropertyDetail() {
   if (!isNew && isLoading) {
     return (
       <Layout>
-        <PageHeader title="Loading..." />
+        <PageHeader title={t("common.loading")} />
         <div className="p-6 text-muted-foreground text-sm">Loading property...</div>
       </Layout>
     );
@@ -193,7 +195,7 @@ export default function PropertyDetail() {
   return (
     <Layout>
       <PageHeader
-        title={isNew ? "New Property" : (property?.name ?? "Edit Property")}
+        title={isNew ? `${t("common.new")} ${t("nav.property")}` : (property?.name ?? t("nav.property"))}
         subtitle={!isNew ? (
           <span className="flex items-center gap-2">
             ID: {id}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
@@ -62,6 +63,7 @@ function isOverdue(nextDue: string | null) {
 }
 
 export default function RecurringScheduleList() {
+  const { t } = useTranslation();
   const [q, setQ] = useState("");
   const [activeFilter, setActiveFilter] = useState("true");
   const [toggleTarget, setToggleTarget] = useState<{ id: number; is_active: boolean } | null>(null);
@@ -101,7 +103,7 @@ export default function RecurringScheduleList() {
   return (
     <Layout>
       <PageHeader
-        title="Recurring Schedules"
+        title={t("nav.recurring")}
         subtitle={`${rows.length} schedule${rows.length !== 1 ? "s" : ""}`}
         actions={
           <div className="flex gap-2">

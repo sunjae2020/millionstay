@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 export default function BeneficiaryList() {
+  const { t } = useTranslation();
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("_all");
   const [typeFilter, setTypeFilter] = useState("_all");
@@ -60,7 +62,7 @@ export default function BeneficiaryList() {
   return (
     <Layout>
       <PageHeader
-        title="Beneficiaries"
+        title={t("nav.beneficiary")}
         subtitle={`${filtered.length} of ${beneficiaries?.length ?? 0} total`}
         actions={
           <Link href="/products/beneficiaries/new">

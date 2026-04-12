@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,7 @@ export function saveSession(session: UploadSession) {
 }
 
 export default function BulkPhotoUploadList() {
+  const { t } = useTranslation();
   const [, navigate] = useLocation();
   const [sessions, setSessions] = useState<UploadSession[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -60,7 +62,7 @@ export default function BulkPhotoUploadList() {
   return (
     <Layout>
       <PageHeader
-        title="Bulk Photo Upload"
+        title={t("nav.bulk_photo")}
         subtitle={`${sessions.length} upload session${sessions.length !== 1 ? "s" : ""}`}
         actions={
           <Button onClick={() => navigate("/property/bulk-photo-upload/new")}>

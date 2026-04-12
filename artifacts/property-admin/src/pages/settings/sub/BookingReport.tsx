@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +46,7 @@ function exportCsv(data: any[]) {
 }
 
 export default function BookingReportPage() {
+  const { t } = useTranslation();
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [status, setStatus] = useState("_all");
@@ -60,7 +62,7 @@ export default function BookingReportPage() {
   return (
     <Layout>
       <PageHeader
-        title={<><BarChart2 className="h-5 w-5" />Booking Report</>}
+        title={<><BarChart2 className="h-5 w-5" />{t("nav.booking_report")}</>}
         subtitle="Occupancy and booking analytics"
       />
       <div className="px-8 py-6">

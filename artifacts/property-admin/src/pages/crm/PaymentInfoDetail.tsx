@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useLocation, useParams } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,7 @@ interface PaymentInfoForm {
 }
 
 export default function PaymentInfoDetail() {
+  const { t } = useTranslation();
   const params = useParams<{ id: string }>();
   const isNew = params.id === "new";
   const id = isNew ? null : parseInt(params.id ?? "0", 10);
@@ -108,7 +110,7 @@ export default function PaymentInfoDetail() {
   return (
     <Layout>
       <PageHeader
-        title={isNew ? "New Payment Info" : record?.name ?? "Payment Info"}
+        title={isNew ? `${t("common.new")} ${t("nav.payment_info")}` : (record?.name ?? t("nav.payment_info"))}
         actions={
           <div className="flex gap-2">
             <Link href="/crm/payment-info">

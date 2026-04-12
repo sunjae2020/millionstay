@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,7 @@ function stayRange(promo: { min_stay_weeks?: number | null; max_stay_weeks?: num
 }
 
 export default function PromotionList() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("_all");
   const [termType, setTermType] = useState("_all");
@@ -92,7 +94,7 @@ export default function PromotionList() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Tag className="h-5 w-5 text-primary" />
-              <h1 className="text-2xl font-bold">Promotions</h1>
+              <h1 className="text-2xl font-bold">{t("nav.promotion")}</h1>
             </div>
             <p className="text-sm text-muted-foreground">
               {isLoading ? "Loading..." : `${filtered.length} promotion${filtered.length !== 1 ? "s" : ""}`}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { apiFetch } from "@/lib/apiFetch";
@@ -56,6 +57,7 @@ const STATUSES = ["All", "Open", "InProgress", "Resolved", "Closed"] as const;
 const CATEGORIES = ["All", "General", "Accommodation", "Billing", "Maintenance", "Other"] as const;
 
 export default function CsTicketList() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
   const [category, setCategory] = useState("All");
@@ -85,7 +87,7 @@ export default function CsTicketList() {
             <HeadphonesIcon className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">CS Tickets</h1>
+            <h1 className="text-xl font-bold text-gray-900">{t("nav.cs_tickets")}</h1>
             <p className="text-sm text-gray-500">Guest inquiries and support requests</p>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -114,6 +115,7 @@ function CalendarView({ bookings }: { bookings: any[] }) {
 }
 
 export default function BookingList() {
+  const { t } = useTranslation();
   const [view, setView] = useState<"list" | "calendar">("list");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -139,7 +141,7 @@ export default function BookingList() {
   return (
     <Layout>
       <PageHeader
-        title="Bookings"
+        title={t("nav.booking")}
         subtitle={`${bookings?.length ?? 0} total`}
         actions={
           <div className="flex gap-2">

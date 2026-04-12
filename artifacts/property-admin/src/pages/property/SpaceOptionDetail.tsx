@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useLocation, useParams } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,7 @@ interface OptionForm {
 }
 
 export default function SpaceOptionDetail() {
+  const { t } = useTranslation();
   const params = useParams<{ id: string }>();
   const isNew = params.id === "new";
   const id = isNew ? null : parseInt(params.id ?? "0", 10);
@@ -85,13 +87,13 @@ export default function SpaceOptionDetail() {
   }
 
   if (!isNew && isLoading) {
-    return <Layout><PageHeader title="Loading..." /><div className="p-6 text-sm text-muted-foreground">Loading...</div></Layout>;
+    return <Layout><PageHeader title={t("common.loading")} /><div className="p-6 text-sm text-muted-foreground">Loading...</div></Layout>;
   }
 
   return (
     <Layout>
       <PageHeader
-        title={isNew ? "New Space Option" : (option?.name ?? "Edit Space Option")}
+        title={isNew ? `${t("common.new")} ${t("nav.space_option")}` : (option?.name ?? t("nav.space_option"))}
         subtitle={isNew ? "Create a new amenity tag" : `ID: ${id}`}
         actions={
           <div className="flex items-center gap-2">

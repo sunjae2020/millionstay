@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,7 @@ async function fetchContractTypes() {
 const SECURITY_OPTIONS = ["Public", "Private", "Confidential"];
 
 export default function ContractTypesPage() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const qc = useQueryClient();
   const [q, setQ] = useState("");
@@ -80,7 +82,7 @@ export default function ContractTypesPage() {
   return (
     <Layout>
       <PageHeader
-        title={<><FileText className="h-5 w-5" />Contract Types</>}
+        title={<><FileText className="h-5 w-5" />{t("nav.contract_types")}</>}
         subtitle="Define contract type categories and requirements"
       />
       <div className="px-8 py-6">

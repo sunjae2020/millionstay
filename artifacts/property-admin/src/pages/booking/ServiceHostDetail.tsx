@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useLocation, useParams } from "wouter";
 import { useForm, Controller } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +34,7 @@ interface FormData {
 }
 
 export default function ServiceHostDetail() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const isNew = id === "new";
   const [, setLocation] = useLocation();
@@ -87,7 +89,7 @@ export default function ServiceHostDetail() {
   return (
     <Layout>
       <PageHeader
-        title={isNew ? "New Service Host" : (host?.name ?? "Service Host")}
+        title={isNew ? `${t("common.new")} ${t("nav.service_host")}` : (host?.name ?? t("nav.service_host"))}
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setLocation("/booking/service-hosts")}><ArrowLeft className="w-4 h-4 mr-1" /> Back</Button>

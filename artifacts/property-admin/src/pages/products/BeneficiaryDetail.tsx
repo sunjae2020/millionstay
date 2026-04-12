@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useLocation, useParams } from "wouter";
 import { useForm, Controller } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +40,7 @@ type FormValues = {
 const NULL_VAL = "__none";
 
 export default function BeneficiaryDetail() {
+  const { t } = useTranslation();
   const params = useParams<{ id?: string }>();
   const isNew = !params.id || params.id === "new";
   const id = isNew ? null : Number(params.id);
@@ -138,7 +140,7 @@ export default function BeneficiaryDetail() {
             <Link href="/products/beneficiaries" className="text-muted-foreground hover:text-foreground transition-colors">
               <ArrowLeft className="h-4 w-4" />
             </Link>
-            {isNew ? "New Beneficiary" : (beneficiary?.name ?? "Beneficiary Detail")}
+            {isNew ? `${t("common.new")} ${t("nav.beneficiary")}` : (beneficiary?.name ?? t("nav.beneficiary"))}
           </span>
         }
         subtitle={!isNew ? `ID #${id}` : undefined}

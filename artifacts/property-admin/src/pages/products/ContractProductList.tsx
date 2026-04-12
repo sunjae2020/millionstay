@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ const TERM_LABELS: Record<string, string> = {
 const PRODUCT_TYPES = ["Room", "Suite", "Apartment", "House", "Studio", "Service"];
 
 export default function ContractProductList() {
+  const { t } = useTranslation();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("_all");
   const [productType, setProductType] = useState("_all");
@@ -51,7 +53,7 @@ export default function ContractProductList() {
           <div className="flex items-center gap-2">
             <Package className="h-5 w-5 text-primary" />
             <div>
-              <h1 className="text-2xl font-bold">Contract Products</h1>
+              <h1 className="text-2xl font-bold">{t("nav.contract_product")}</h1>
               <p className="text-sm text-muted-foreground">{filtered.length} product{filtered.length !== 1 ? "s" : ""}</p>
             </div>
           </div>

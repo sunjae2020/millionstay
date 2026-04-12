@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { useListWorkOrders } from "@workspace/api-client-react";
 import { Layout } from "@/components/Layout";
@@ -24,6 +25,7 @@ const priorityColors: Record<string, string> = {
 };
 
 export default function WorkOrderList() {
+  const { t } = useTranslation();
   const [, navigate] = useLocation();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("_all");
@@ -42,7 +44,7 @@ export default function WorkOrderList() {
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Work Orders</h1>
+            <h1 className="text-2xl font-bold tracking-tight">{t("nav.work_order")}</h1>
             <p className="text-sm text-muted-foreground">{workOrders.length} total</p>
           </div>
           <Button onClick={() => navigate("/maintenance/work-orders/new")}>

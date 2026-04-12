@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ async function fetchGroups() {
 const EMPTY = { name: "", display_order: 0 };
 
 export default function ProductGroupsPage() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const qc = useQueryClient();
   const [q, setQ] = useState("");
@@ -79,7 +81,7 @@ export default function ProductGroupsPage() {
   return (
     <Layout>
       <PageHeader
-        title={<><Layers className="h-5 w-5" />Product Groups</>}
+        title={<><Layers className="h-5 w-5" />{t("nav.product_groups")}</>}
         subtitle="Organise products into logical groups"
       />
 

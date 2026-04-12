@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useParams } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,6 +87,7 @@ interface AccountForm {
 }
 
 export default function AccountDetail() {
+  const { t } = useTranslation();
   const params = useParams<{ id: string }>();
   const isNew = params.id === "new";
   const id = isNew ? null : parseInt(params.id ?? "0", 10);
@@ -431,9 +433,9 @@ export default function AccountDetail() {
     <Layout>
       <PageHeader
         title={
-          isNew ? "New Account" : (
+          isNew ? `${t("common.new")} ${t("nav.account")}` : (
             <div className="flex items-center gap-2">
-              <span>{account?.name ?? "Account"}</span>
+              <span>{account?.name ?? t("nav.account")}</span>
               {account && (
                 <Badge variant="outline" className={`text-xs ${ACCOUNT_TYPE_COLORS[account.account_type] ?? ""}`}>
                   {account.account_type}

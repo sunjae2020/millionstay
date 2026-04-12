@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function SpaceList() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [spaceType, setSpaceType] = useState("");
   const [status, setStatus] = useState("");
@@ -58,7 +60,7 @@ export default function SpaceList() {
   return (
     <Layout>
       <PageHeader
-        title="Spaces"
+        title={t("nav.space")}
         subtitle={`${spaces?.length ?? 0} total`}
         actions={
           <Link href="/property/spaces/new">

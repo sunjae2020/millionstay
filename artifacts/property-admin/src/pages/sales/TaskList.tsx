@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -39,6 +40,7 @@ function TaskStatusBadge({ status }: { status: string }) {
 }
 
 export default function TaskList() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("");
@@ -72,7 +74,7 @@ export default function TaskList() {
   return (
     <Layout>
       <PageHeader
-        title="Tasks"
+        title={t("nav.task")}
         subtitle={`${tasks?.length ?? 0} total`}
         actions={
           <Link href="/sales/tasks/new">

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -30,6 +31,7 @@ export default function PropertyList() {
   const [approvalStatus, setApprovalStatus] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const qc = useQueryClient();
+  const { t } = useTranslation();
 
   const params = {
     search: search || undefined,
@@ -54,7 +56,7 @@ export default function PropertyList() {
   return (
     <Layout>
       <PageHeader
-        title="Properties"
+        title={t("nav.property")}
         subtitle={`${properties?.length ?? 0} total`}
         actions={
           <Link href="/property/properties/new">

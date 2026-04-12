@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
@@ -46,6 +47,7 @@ function fmtDateTime(d: string | Date | null) {
 }
 
 export default function ReceiptList() {
+  const { t } = useTranslation();
   const [q, setQ] = useState("");
   const [methodFilter, setMethodFilter] = useState("_all");
 
@@ -61,7 +63,7 @@ export default function ReceiptList() {
   return (
     <Layout>
       <PageHeader
-        title="Payment Receipts"
+        title={t("nav.receipt")}
         subtitle={`${rows.length} receipt${rows.length !== 1 ? "s" : ""} · Total $${totalPaid.toLocaleString("en-AU", { minimumFractionDigits: 2 })}`}
       />
 

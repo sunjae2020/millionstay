@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Layout, PageHeader } from "@/components/Layout";
@@ -43,6 +44,7 @@ async function archiveService(id: number) {
 }
 
 export default function ServiceList() {
+  const { t } = useTranslation();
   const [q, setQ] = useState("");
   const [typeFilter, setTypeFilter] = useState("_all");
   const [statusFilter, setStatusFilter] = useState("Active");
@@ -72,7 +74,7 @@ export default function ServiceList() {
   return (
     <Layout>
       <PageHeader
-        title="Service Products"
+        title={t("nav.service_product")}
         subtitle={`${rows.length} services`}
         actions={
           <Link href="/services/new">

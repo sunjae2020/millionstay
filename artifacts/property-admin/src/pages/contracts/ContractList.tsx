@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function ContractList() {
+  const { t } = useTranslation();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("_all");
 
@@ -35,7 +37,7 @@ export default function ContractList() {
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold">Contracts</h1>
+            <h1 className="text-2xl font-bold">{t("nav.contract")}</h1>
             <p className="text-sm text-muted-foreground">{contracts?.length ?? 0} total</p>
           </div>
           <Link href="/contracts/contracts/new">

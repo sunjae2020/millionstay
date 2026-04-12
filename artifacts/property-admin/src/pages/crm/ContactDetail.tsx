@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useLocation, useParams } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,6 +69,7 @@ function ExpiryWarning({ label, dateStr }: { label: string; dateStr?: string | n
 }
 
 export default function ContactDetail() {
+  const { t } = useTranslation();
   const params = useParams<{ id: string }>();
   const isNew = params.id === "new";
   const id = isNew ? null : parseInt(params.id ?? "0", 10);
@@ -181,7 +183,7 @@ export default function ContactDetail() {
   return (
     <Layout>
       <PageHeader
-        title={isNew ? "New Contact" : contact ? `${contact.first_name} ${contact.last_name}` : "Contact"}
+        title={isNew ? `${t("common.new")} ${t("nav.contact")}` : contact ? `${contact.first_name} ${contact.last_name}` : t("nav.contact")}
         actions={
           <div className="flex gap-2">
             <Link href="/crm/contacts">

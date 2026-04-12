@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -441,6 +442,7 @@ function IntegrationCard({
 }
 
 export default function IntegrationsPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const isSuperAdmin = user?.role === "Super Admin";
   const [status, setStatus] = useState<IntegrationStatus | null>(null);
@@ -462,7 +464,7 @@ export default function IntegrationsPage() {
   return (
     <Layout>
       <PageHeader
-        title="Integrations"
+        title={t("nav.integrations")}
         subtitle="Manage all external service connections"
         actions={
           <Link href="/settings">

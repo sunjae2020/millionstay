@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
 import {
@@ -144,13 +145,14 @@ function HubCard({ card }: { card: CardDef }) {
 }
 
 export default function Settings() {
+  const { t } = useTranslation();
   return (
     <Layout>
       <PageHeader
         title={
           <>
             <Settings2 className="h-5 w-5" />
-            Settings
+            {t("nav.settings")}
           </>
         }
         subtitle="Administration, reference data and reports"

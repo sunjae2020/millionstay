@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { useForm, Controller } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,6 +70,7 @@ function calcStay(checkIn: string, checkOut: string, rate: string) {
 }
 
 export default function BookingDetail() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const isNew = id === "new";
   const [, setLocation] = useLocation();
@@ -211,7 +213,7 @@ export default function BookingDetail() {
   return (
     <Layout>
       <PageHeader
-        title={isNew ? "New Booking" : (booking?.booking_ref ?? "Booking")}
+        title={isNew ? `${t("common.new")} ${t("nav.booking")}` : (booking?.booking_ref ?? t("nav.booking"))}
         subtitle={booking ? booking.name ?? undefined : undefined}
         actions={
           <div className="flex gap-2">

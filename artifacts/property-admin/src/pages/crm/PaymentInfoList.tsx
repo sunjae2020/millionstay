@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function PaymentInfoList() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -39,7 +41,7 @@ export default function PaymentInfoList() {
   return (
     <Layout>
       <PageHeader
-        title="Payment Info"
+        title={t("nav.payment_info")}
         subtitle={`${records?.length ?? 0} total`}
         actions={
           <Link href="/crm/payment-info/new">

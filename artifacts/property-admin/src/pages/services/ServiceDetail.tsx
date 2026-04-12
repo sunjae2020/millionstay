@@ -1,6 +1,7 @@
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,6 +64,7 @@ const DEFAULTS: FormData = {
 };
 
 export default function ServiceDetail() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -144,7 +146,7 @@ export default function ServiceDetail() {
             <button onClick={() => navigate("/services")} className="p-1.5 rounded hover:bg-muted transition-colors">
               <ArrowLeft className="h-4 w-4" />
             </button>
-            <span>{isNew ? "New Service" : service?.name ?? "Service Detail"}</span>
+            <span>{isNew ? `${t("common.new")} ${t("nav.service")}` : (service?.name ?? t("nav.service"))}</span>
             {service?.status && (
               <Badge className={`text-xs ${STATUS_COLORS[service.status] ?? ""}`}>{service.status}</Badge>
             )}
