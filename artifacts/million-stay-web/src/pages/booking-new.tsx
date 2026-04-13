@@ -354,12 +354,15 @@ export default function BookingNew() {
   /* Populate session from space data */
   useEffect(() => {
     if (space) {
-      const product   = productId ? space.products?.find((p) => p.id === productId) : null;
+      // Use specified product, or fallback to first product if none specified
+      const product   = productId
+        ? (space.products?.find((p) => p.id === productId) ?? space.products?.[0] ?? null)
+        : (space.products?.[0] ?? null);
       const weeklyRate = product?.price ?? space.base_weekly_price ?? 0;
       const updated = {
         ...session,
         space_id:          spaceId,
-        product_id:        productId,
+        product_id:        product?.id ?? productId,
         space_name:        space.name,
         property_address:  space.address ?? space.suburb_name ?? "Melbourne",
         agreed_weekly_rate: weeklyRate,

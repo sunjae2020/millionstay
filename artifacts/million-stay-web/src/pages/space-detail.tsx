@@ -287,6 +287,15 @@ export default function SpaceDetail() {
 
   const space = spaceData?.data;
 
+  // Auto-select the first product (or "best_value" tagged) when space data loads
+  useEffect(() => {
+    if (space?.products && space.products.length > 0 && selectedProduct === null) {
+      const bestValue = space.products.find((p: { product_tag?: string }) => p.product_tag === "best_value");
+      const autoSelect = bestValue ?? space.products[0];
+      setSelectedProduct(autoSelect.id);
+    }
+  }, [space?.products, selectedProduct]);
+
   const relatedSpaces = useMemo(() => {
     const list = (allSpaces?.data ?? []) as Record<string, unknown>[];
     return list.filter((s) => s.id !== spaceId).slice(0, 3);
@@ -316,10 +325,19 @@ export default function SpaceDetail() {
   const weeklyRate = selectedPriceProduct?.price ?? space?.base_weekly_price ?? 0;
   // Pro-rata: weekly_rate / 7 × days
   const rentTotal = stayDays && weeklyRate ? Math.round((weeklyRate / 7) * stayDays * 100) / 100 : null;
-  const deposit = space?.bond_amount ?? 1000;
-  const adminFee = space?.admin_fee ?? 200;
-  const cleaningFee = space?.cleaning_fee ?? 300;
-  const totalToday = deposit + adminFee + cleaningFee;
+
+  // Fees come from the selected product (null = not charged for this product)
+  const productBond = selectedPriceProduct?.bond_amount ?? null;
+  const productAdminFee = selectedPriceProduct?.admin_fee ?? null;
+  const productCleaningFee = selectedPriceProduct?.cleaning_fee ?? null;
+
+  // Bond: use product bond_amount if set, otherwise 4 weeks × weekly rate
+  const deposit = productBond != null ? productBond : weeklyRate * 4;
+  const adminFee = productAdminFee ?? 0;
+  const cleaningFee = productCleaningFee ?? 0;
+  // Initial payment includes 2 weeks advance rent (consistent with booking wizard)
+  const initialRent = weeklyRate * 2;
+  const totalToday = deposit + adminFee + cleaningFee + initialRent;
 
   const handleEnquire = () => {
     if (!space) return;
@@ -521,26 +539,28 @@ export default function SpaceDetail() {
               <div className="rounded-xl border bg-white p-4 space-y-2.5 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Weekly rent</span>
-                  <span className="font-semibold">${space.base_weekly_price}</span>
+                  <span className="font-semibold">${weeklyRate}</span>
                 </div>
-                {space.admin_fee != null && (
+                {productAdminFee != null && productAdminFee > 0 && (
                   <div className="flex justify-between">
                     <span className="text-gray-500">Admission Fee (one-time)</span>
-                    <span>${space.admin_fee}</span>
+                    <span>${productAdminFee}</span>
                   </div>
                 )}
-                {space.cleaning_fee != null && (
+                {productCleaningFee != null && productCleaningFee > 0 && (
                   <div className="flex justify-between">
                     <span className="text-gray-500">Cleaning Fee (one-time)</span>
-                    <span>${space.cleaning_fee}</span>
+                    <span>${productCleaningFee}</span>
                   </div>
                 )}
-                {space.bond_amount != null && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Bond / Deposit</span>
-                    <span>${space.bond_amount}</span>
-                  </div>
-                )}
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Security Bond</span>
+                  <span>{productBond != null ? `$${productBond.toLocaleString()}` : `$${(weeklyRate * 4).toLocaleString()} (4 wk)`}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Initial Rent (2 wk)</span>
+                  <span>${(weeklyRate * 2).toLocaleString()}</span>
+                </div>
               </div>
             </div>
 
@@ -591,26 +611,34 @@ export default function SpaceDetail() {
                   {stayDays && stayDays > 0 && (
                     <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
                       className="rounded-xl bg-orange-50 border border-orange-100 p-3 space-y-1.5 text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">${weeklyRate}/wk ÷ 7 × {stayDays} days</span>
-                        <span className="font-semibold">${rentTotal?.toLocaleString()}</span>
+                      <div className="flex justify-between text-gray-400">
+                        <span>${weeklyRate}/wk ÷ 7 × {stayDays} days</span>
+                        <span>${rentTotal?.toLocaleString()}</span>
                       </div>
                       <div className="border-t border-orange-200 pt-1.5 space-y-1">
                         <p className="text-gray-400 font-medium">Initial payment (once-off):</p>
                         <div className="flex justify-between text-gray-500">
-                          <span>Security Bond (refundable)</span>
+                          <span>Security Bond{productBond == null ? " (4 wk)" : " (refundable)"}</span>
                           <span>${deposit.toLocaleString()}</span>
                         </div>
+                        {adminFee > 0 && (
+                          <div className="flex justify-between text-gray-500">
+                            <span>Admin Fee</span>
+                            <span>${adminFee.toLocaleString()}</span>
+                          </div>
+                        )}
+                        {cleaningFee > 0 && (
+                          <div className="flex justify-between text-gray-500">
+                            <span>Cleaning Fee</span>
+                            <span>${cleaningFee.toLocaleString()}</span>
+                          </div>
+                        )}
                         <div className="flex justify-between text-gray-500">
-                          <span>Admin Fee</span>
-                          <span>${adminFee.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between text-gray-500">
-                          <span>Cleaning Fee</span>
-                          <span>${cleaningFee.toLocaleString()}</span>
+                          <span>Initial Rent (2 wk)</span>
+                          <span>${initialRent.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between font-bold text-gray-800 border-t border-orange-200 pt-1">
-                          <span>Due today</span>
+                          <span>Est. Due Today</span>
                           <span className="text-primary">${totalToday.toLocaleString()}</span>
                         </div>
                       </div>
