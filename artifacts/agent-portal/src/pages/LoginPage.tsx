@@ -25,10 +25,11 @@ export default function LoginPage() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary mb-4">
-            <span className="text-white font-bold text-xl">M</span>
-          </div>
-          <h1 className="text-2xl font-bold text-foreground">MillionStay</h1>
+          <img
+            src={`${import.meta.env.BASE_URL}logo-horizontal.png`}
+            alt="MillionStay"
+            className="h-10 mx-auto mb-3 object-contain"
+          />
           <p className="text-muted-foreground text-sm mt-1">Agent Portal</p>
         </div>
 
