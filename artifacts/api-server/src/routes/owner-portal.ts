@@ -233,18 +233,18 @@ router.get("/v1/owner/revenue", requireOwnerAuth, async (req, res): Promise<void
           booking_id: invoicesTable.booking_id,
           invoice_ref: invoicesTable.invoice_ref,
           due_date: invoicesTable.due_date,
-          amount_due: invoicesTable.amount_due,
-          amount_paid: invoicesTable.amount_paid,
+          amount: invoicesTable.amount,
           status: invoicesTable.status,
           currency: invoicesTable.currency,
+          description: invoicesTable.description,
         })
         .from(invoicesTable)
         .where(inArray(invoicesTable.booking_id, bookingIds))
         .orderBy(desc(invoicesTable.due_date))
     : [];
 
-  const totalRevenue = invoices.filter(i => i.status === "Paid").reduce((s, i) => s + parseFloat(i.amount_paid ?? "0"), 0);
-  const pendingRevenue = invoices.filter(i => i.status !== "Paid" && i.status !== "Void").reduce((s, i) => s + parseFloat(i.amount_due ?? "0"), 0);
+  const totalRevenue = invoices.filter(i => i.status === "Paid").reduce((s, i) => s + (i.amount ?? 0), 0);
+  const pendingRevenue = invoices.filter(i => i.status !== "Paid" && i.status !== "Void").reduce((s, i) => s + (i.amount ?? 0), 0);
 
   const spaceMap = Object.fromEntries(spaces.map(s => [s.id, s]));
   const propMap = Object.fromEntries(properties.map(p => [p.id, p]));
@@ -253,7 +253,13 @@ router.get("/v1/owner/revenue", requireOwnerAuth, async (req, res): Promise<void
     const booking = bookings.find(b => b.id === inv.booking_id);
     const space = booking?.space_id ? spaceMap[booking.space_id] : null;
     const property = space?.property_id ? propMap[space.property_id] : null;
-    return { ...inv, space_name: space?.name ?? "—", property_name: (property as any)?.name ?? "—" };
+    return {
+      ...inv,
+      amount_due: inv.amount,
+      amount_paid: inv.status === "Paid" ? inv.amount : null,
+      space_name: space?.name ?? "—",
+      property_name: (property as any)?.name ?? "—",
+    };
   });
 
   res.json({

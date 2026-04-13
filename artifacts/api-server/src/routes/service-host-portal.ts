@@ -178,7 +178,7 @@ router.get("/v1/service-host/jobs", requireServiceHostAuth, async (req, res): Pr
         check_in_date: bookingsTable.check_in_date,
         check_out_date: bookingsTable.check_out_date,
         space_id: bookingsTable.space_id,
-        guest_user_id: bookingsTable.guest_user_id,
+        account_id: bookingsTable.account_id,
       })
       .from(bookingsTable)
       .where(inArray(bookingsTable.id, bookingIds));
