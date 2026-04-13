@@ -21,6 +21,11 @@ export default function LoginPage() {
     }
   }
 
+  function fillDemo() {
+    setEmail("host@millionstay.com.au");
+    setPassword("Host@2026!");
+  }
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
@@ -34,7 +39,16 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-          <h2 className="text-base font-semibold text-foreground mb-5">Sign in to your account</h2>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-base font-semibold text-foreground">Sign in to your account</h2>
+            <button
+              type="button"
+              onClick={fillDemo}
+              className="text-xs text-primary border border-primary/30 bg-primary/5 hover:bg-primary/10 rounded-md px-2.5 py-1 transition-colors font-medium"
+            >
+              Demo Account
+            </button>
+          </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-foreground mb-1.5">Email address</label>
