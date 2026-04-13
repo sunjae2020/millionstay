@@ -30,6 +30,7 @@ export * from "./users";
 export * from "./promotions";
 export * from "./guest_users";
 export * from "./guest_emergency_contacts";
+export * from "./partner_users";
 export * from "./beneficiaries";
 export * from "./service_catalog";
 export * from "./space_service_catalog";

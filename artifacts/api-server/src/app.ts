@@ -17,6 +17,9 @@ import guestCsRouter from "./routes/guest-cs";
 import devMigrationRouter from "./routes/dev-migration";
 import stripeRouter from "./routes/stripe";
 import adminUsersRouter from "./routes/admin-users";
+import partnerAuthRouter from "./routes/partner-auth";
+import agentPortalRouter from "./routes/agent-portal";
+import ownerPortalRouter from "./routes/owner-portal";
 import { logger } from "./lib/logger";
 import { requireAuth } from "./middlewares/requireAuth";
 
@@ -93,8 +96,14 @@ app.use("/api", guestPortalRouter);
 app.use("/api", guestCsRouter);
 app.use("/api", stripeRouter);
 app.use("/api/v1/admin", devMigrationRouter);
-app.use("/api", adminUsersRouter);
 
+// Partner auth + portals — must be registered BEFORE adminUsersRouter which applies requireAuth
+// to every request passing through it via router.use(requireAuth)
+app.use("/api", partnerAuthRouter);
+app.use("/api", agentPortalRouter);
+app.use("/api", ownerPortalRouter);
+
+app.use("/api", adminUsersRouter);
 app.use("/api/v1", requireAuth);
 
 app.use("/api", spaceImagesRouter);

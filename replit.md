@@ -148,6 +148,48 @@ Tables (30 total): `suburbs`, `properties`, `space_options`, `space_policies`, `
 
 Generated from OpenAPI spec (`lib/api-spec/openapi.yaml`) via Orval. Hooks for all entities. Zod schemas in `lib/api-zod`. Always run codegen after updating openapi.yaml.
 
+## Partner Portals
+
+### Agent Portal (`artifacts/agent-portal`)
+- **Kind**: web (React + Vite)
+- **Port**: 24393
+- **URL**: `/agent-portal`
+- **Purpose**: Portal for property agents/brokers to view their bookings, managed properties, and commission
+- **Demo login**: `agent@millionstay.com.au` / `Agent@2026!`
+
+**Pages**: Login, Dashboard, Bookings, BookingDetail, Properties, Commission
+
+### Owner Portal (`artifacts/owner-portal`)
+- **Kind**: web (React + Vite)
+- **Port**: 19049
+- **URL**: `/owner-portal`
+- **Purpose**: Portal for property owners (SpaceOwner) to view their property occupancy and revenue
+- **Demo login**: `owner@millionstay.com.au` / `Owner@2026!`
+- **Privacy masking**: Tenant names shown as first 2 chars + `***` + gender only (privacy banner on occupancy page)
+
+**Pages**: Login, Dashboard, Properties, Occupancy, Revenue
+
+### Partner Auth Architecture
+- `partner_users` table in DB — separate from admin `users` table
+- JWT secret: `PARTNER_JWT_SECRET` env var (falls back to `SESSION_SECRET + "_partner"`)
+- Login endpoint: `POST /api/v1/auth/partner/login` — returns JWT + user info
+- Auth middleware: `requirePartnerAuth`, `requireAgentAuth`, `requireOwnerAuth`
+- **CRITICAL**: Partner routes in `app.ts` MUST be registered BEFORE `adminUsersRouter` (which applies `router.use(requireAuth)`) AND before `app.use("/api/v1", requireAuth)`. Express processes routes in registration order — `adminUsersRouter`'s `router.use(requireAuth)` intercepts ALL `/api` requests if registered first.
+- Route files: `routes/partner-auth.ts`, `routes/agent-portal.ts`, `routes/owner-portal.ts`
+
+### Agent Portal API Endpoints
+- `GET /api/v1/agent/dashboard` → `{account_name, commission, stats, recent_bookings}`
+- `GET /api/v1/agent/bookings` → `{data: [{booking_status, check_in_date, agreed_weekly_rate, tenant: {display_name, email}}]}`
+- `GET /api/v1/agent/bookings/:id` → booking detail with services/invoices
+- `GET /api/v1/agent/properties` → properties with active bookings
+- `GET /api/v1/agent/commission` → `{total_earned, breakdown[]}`
+
+### Owner Portal API Endpoints
+- `GET /api/v1/owner/dashboard` → `{account_name, stats, recent_bookings}`
+- `GET /api/v1/owner/bookings` → `{data: [{booking_status, tenant: {display_name (masked), gender}}]}`
+- `GET /api/v1/owner/properties` → properties owned by this account
+- `GET /api/v1/owner/revenue` → `{total_revenue, invoices[]}`
+
 ## Internationalisation (i18n)
 
 Admin panel supports 5 languages: **EN** (default), **KO** (한국어), **ZH** (中文), **JA** (日本語), **TH** (ภาษาไทย).

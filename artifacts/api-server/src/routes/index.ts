@@ -35,7 +35,6 @@ import promotionsRouter from "./promotions";
 import beneficiariesRouter from "./beneficiaries";
 import serviceCatalogRouter from "./service-catalog";
 import csTicketsRouter from "./cs-tickets";
-
 const router: IRouter = Router();
 
 router.use(healthRouter);
@@ -74,5 +73,7 @@ router.use(promotionsRouter);
 router.use(beneficiariesRouter);
 router.use(serviceCatalogRouter);
 router.use(csTicketsRouter);
+// Note: partnerAuthRouter, agentPortalRouter, ownerPortalRouter are registered in app.ts
+// BEFORE the requireAuth middleware to allow partner JWT auth to bypass the admin auth guard.
 
 export default router;

@@ -22,6 +22,7 @@ export const bookingsTable = pgTable("bookings", {
   num_guests: integer("num_guests").default(1),
   product_id: integer("product_id"),
   contract_product_id: integer("contract_product_id"),
+  agent_account_id: integer("agent_account_id"),
   cancellation_reason: text("cancellation_reason"),
   cancelled_at: timestamp("cancelled_at", { withTimezone: true }),
   status: text("status").notNull().default("Active"),
