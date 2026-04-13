@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, contractsTable, accountsTable, spacesTable, propertiesTable, contractProductsTable, bookingsTable, recurringSchedulesTable, bookingServicesTable, invoicesTable } from "@workspace/db";
+import { db, contractsTable, accountsTable, spacesTable, propertiesTable, contractProductsTable, bookingsTable, recurringSchedulesTable, bookingServicesTable, invoicesTable, contractLineItemsTable } from "@workspace/db";
 import { eq, ilike, and, like, desc } from "drizzle-orm";
 import { logAction } from "../utils/auditLog";
 
@@ -50,20 +50,19 @@ function formatPeriodLabel(freq: string, dateStr: string): string {
 }
 
 // ─── Core: generate invoices + payment schedules for a contract ───────────────
+// Uses contract_line_items as the source of truth.
+// Falls back to contract_products if no line items exist (backward compat).
 async function generateContractInvoicesAndSchedules(contractId: number): Promise<{ invoices: number; schedules: number }> {
   const [contract] = await db.select().from(contractsTable).where(eq(contractsTable.id, contractId));
   if (!contract || !contract.start_date || !contract.end_date) return { invoices: 0, schedules: 0 };
 
-  // Determine billing frequency from contract_product or default Monthly
-  let billingFreq = "Monthly";
+  const start = contract.start_date;
+  const end = contract.end_date;
+  const currency = contract.currency ?? "AUD";
+  const weeklyRate = parseFloat(contract.weekly_rate ?? "0");
+
+  // ── Build location label ────────────────────────────────────────────────────
   let locationLabel = "";
-
-  if (contract.contract_product_id) {
-    const [cp] = await db.select().from(contractProductsTable).where(eq(contractProductsTable.id, contract.contract_product_id));
-    if (cp?.billing_frequency) billingFreq = cp.billing_frequency;
-  }
-
-  // Build location label from space + property
   if (contract.space_id) {
     const [space] = await db.select().from(spacesTable).where(eq(spacesTable.id, contract.space_id));
     if (space) {
@@ -75,93 +74,159 @@ async function generateContractInvoicesAndSchedules(contractId: number): Promise
     }
   }
 
-  const weeklyRate = parseFloat(contract.weekly_rate ?? "0");
-  const currency = contract.currency ?? "AUD";
+  // ── Fetch active line items ────────────────────────────────────────────────
+  let lineItems = await db.select().from(contractLineItemsTable)
+    .where(and(eq(contractLineItemsTable.contract_id, contractId), eq(contractLineItemsTable.status, "Active")));
 
-  // Calculate per-period amount
-  let periodAmount: number;
-  if (billingFreq === "Weekly") periodAmount = weeklyRate;
-  else if (billingFreq === "Biweekly") periodAmount = weeklyRate * 2;
-  else periodAmount = parseFloat((weeklyRate * (52 / 12)).toFixed(2)); // Monthly
+  // ── Fallback: no line items → create virtual Rent line from contract_product ─
+  if (lineItems.length === 0) {
+    let billingFreq = "Monthly";
+    if (contract.contract_product_id) {
+      const [cp] = await db.select().from(contractProductsTable).where(eq(contractProductsTable.id, contract.contract_product_id));
+      if (cp?.billing_frequency) billingFreq = cp.billing_frequency;
+    }
+    const rentAmount = billingFreq === "Weekly" ? weeklyRate
+      : billingFreq === "Biweekly" ? weeklyRate * 2
+      : parseFloat((weeklyRate * (52 / 12)).toFixed(2));
 
-  // Delete existing non-paid schedules and non-paid invoices for this contract
+    const rentName = billingFreq === "Monthly" ? "Monthly Rent"
+      : billingFreq === "Biweekly" ? "Fortnightly Rent" : "Weekly Rent";
+
+    // Persist the fallback line so it shows in the UI
+    const [inserted] = await db.insert(contractLineItemsTable).values({
+      contract_id: contractId,
+      item_type: "Rent",
+      name: rentName,
+      billing_trigger: "recurring",
+      billing_frequency: billingFreq,
+      unit_price: String(rentAmount),
+      quantity: 1,
+      total_price: String(rentAmount),
+      currency,
+      gst_included: true,
+      status: "Active",
+    }).returning();
+    lineItems = [inserted];
+  }
+
+  // ── Wipe existing non-paid schedules and non-paid invoices ─────────────────
   await db.delete(recurringSchedulesTable).where(eq(recurringSchedulesTable.contract_id, contractId));
-  const existingInvoices = await db.select({ id: invoicesTable.id, status: invoicesTable.status })
+  const existingInvoices = await db.select({ id: invoicesTable.id, status: invoicesTable.status, due_date: invoicesTable.due_date, description: invoicesTable.description })
     .from(invoicesTable).where(eq(invoicesTable.contract_id, contractId));
-  // Delete unpaid invoices; keep paid ones (do not regenerate them)
   const unpaidIds = existingInvoices.filter(i => i.status !== "Paid").map(i => i.id);
   for (const iid of unpaidIds) {
     await db.delete(invoicesTable).where(eq(invoicesTable.id, iid));
   }
 
-  // Fetch remaining paid invoices' due_dates — we won't create new invoices for those dates
-  const paidInvoices = await db.select({ due_date: invoicesTable.due_date })
-    .from(invoicesTable)
-    .where(eq(invoicesTable.contract_id, contractId));
-  const paidDueDates = new Set(paidInvoices.map(i => i.due_date).filter(Boolean) as string[]);
+  // Build a set of (due_date+description) pairs for Paid invoices to avoid duplication
+  const paidKeys = new Set(
+    existingInvoices.filter(i => i.status === "Paid").map(i => `${i.due_date}__${i.description}`)
+  );
 
-  // Pre-initialise invoice ref factory AFTER deletions so the counter is accurate
+  // ── Invoice ref factory ────────────────────────────────────────────────────
   const nextInvoiceRef = await makeInvoiceRefFactory();
 
-  // Generate periods
-  const start = contract.start_date;
-  const end = contract.end_date;
   const invoicesCreated: number[] = [];
   const schedulesCreated: number[] = [];
 
-  let current = start;
-  let periodIndex = 0;
+  // ── Process each line item ─────────────────────────────────────────────────
+  for (const line of lineItems) {
+    const lineAmount = parseFloat(line.total_price ?? "0");
+    const lineCurrency = line.currency ?? currency;
+    const lineName = line.name;
 
-  while (current < end) {
-    // Determine next period start
-    let nextDate: string;
-    if (billingFreq === "Weekly") nextDate = addDays(current, 7);
-    else if (billingFreq === "Biweekly") nextDate = addDays(current, 14);
-    else nextDate = addMonths(current, 1);
+    if (line.billing_trigger === "recurring") {
+      // Generate periodic invoices + schedules across the contract period
+      const freq = line.billing_frequency ?? "Monthly";
+      let current = start;
+      let safety = 0;
 
-    const periodEnd = nextDate > end ? end : nextDate;
-    const label = formatPeriodLabel(billingFreq, current);
-    const freqLabel = billingFreq === "Monthly" ? "Monthly Rent" : billingFreq === "Biweekly" ? "Fortnightly Rent" : "Weekly Rent";
-    const description = `${freqLabel} — ${label}${locationLabel ? ` | ${locationLabel}` : ""}`;
+      while (current < end && safety < 500) {
+        safety++;
+        let nextDate: string;
+        if (freq === "Weekly") nextDate = addDays(current, 7);
+        else if (freq === "Biweekly") nextDate = addDays(current, 14);
+        else nextDate = addMonths(current, 1);
 
-    // Skip if already paid invoice for this due date
-    if (!paidDueDates.has(current)) {
-      const invoiceRef = nextInvoiceRef();
-      const [inv] = await db.insert(invoicesTable).values({
-        invoice_ref: invoiceRef,
-        booking_id: contract.booking_id ?? null,
+        const periodEnd = nextDate > end ? end : nextDate;
+        const label = formatPeriodLabel(freq, current);
+        const description = `${lineName} — ${label}${locationLabel ? ` | ${locationLabel}` : ""}`;
+        const paidKey = `${current}__${description}`;
+
+        if (!paidKeys.has(paidKey)) {
+          const invoiceRef = nextInvoiceRef();
+          const [inv] = await db.insert(invoicesTable).values({
+            invoice_ref: invoiceRef,
+            booking_id: contract.booking_id ?? null,
+            contract_id: contractId,
+            account_id: contract.tenant_account_id ?? null,
+            amount: lineAmount,
+            currency: lineCurrency,
+            status: "Sent",
+            due_date: current,
+            description,
+          }).returning({ id: invoicesTable.id });
+          invoicesCreated.push(inv.id);
+        }
+
+        const [sched] = await db.insert(recurringSchedulesTable).values({
+          booking_id: contract.booking_id ?? 0,
+          contract_id: contractId,
+          account_id: contract.tenant_account_id ?? 0,
+          schedule_type: line.item_type === "Rent" ? "Rent" : lineName,
+          frequency: freq,
+          amount: String(lineAmount),
+          currency: lineCurrency,
+          gst_included: line.gst_included ?? true,
+          start_date: current,
+          end_date: periodEnd,
+          next_due_date: current,
+          is_active: !paidKeys.has(`${current}__`),
+        }).returning({ id: recurringSchedulesTable.id });
+        schedulesCreated.push(sched.id);
+
+        current = nextDate;
+        if (nextDate >= end) break;
+      }
+
+    } else {
+      // One-time charge: generate a single invoice on the contract start date
+      const description = `${lineName}${line.quantity && line.quantity > 1 ? ` × ${line.quantity}` : ""}${locationLabel ? ` | ${locationLabel}` : ""}`;
+      const paidKey = `${start}__${description}`;
+
+      if (!paidKeys.has(paidKey)) {
+        const invoiceRef = nextInvoiceRef();
+        const [inv] = await db.insert(invoicesTable).values({
+          invoice_ref: invoiceRef,
+          booking_id: contract.booking_id ?? null,
+          contract_id: contractId,
+          account_id: contract.tenant_account_id ?? null,
+          amount: lineAmount,
+          currency: lineCurrency,
+          status: "Sent",
+          due_date: start,
+          description,
+        }).returning({ id: invoicesTable.id });
+        invoicesCreated.push(inv.id);
+      }
+
+      // Also create a single schedule entry for one-time charges
+      const [sched] = await db.insert(recurringSchedulesTable).values({
+        booking_id: contract.booking_id ?? 0,
         contract_id: contractId,
-        account_id: contract.tenant_account_id ?? null,
-        amount: periodAmount,
-        currency,
-        status: "Sent",
-        due_date: current,
-        description,
-      }).returning({ id: invoicesTable.id });
-      invoicesCreated.push(inv.id);
+        account_id: contract.tenant_account_id ?? 0,
+        schedule_type: lineName,
+        frequency: "OneTime",
+        amount: String(lineAmount),
+        currency: lineCurrency,
+        gst_included: line.gst_included ?? true,
+        start_date: start,
+        end_date: start,
+        next_due_date: start,
+        is_active: true,
+      }).returning({ id: recurringSchedulesTable.id });
+      schedulesCreated.push(sched.id);
     }
-
-    // Create payment schedule entry for every period
-    const [sched] = await db.insert(recurringSchedulesTable).values({
-      booking_id: contract.booking_id ?? 0,
-      contract_id: contractId,
-      account_id: contract.tenant_account_id ?? 0,
-      schedule_type: "Rent",
-      frequency: billingFreq,
-      amount: String(periodAmount),
-      currency,
-      gst_included: true,
-      start_date: current,
-      end_date: periodEnd,
-      next_due_date: current,
-      is_active: !paidDueDates.has(current),
-    }).returning({ id: recurringSchedulesTable.id });
-    schedulesCreated.push(sched.id);
-
-    current = nextDate;
-    if (nextDate >= end) break;
-    periodIndex++;
-    if (periodIndex > 500) break; // safety limit
   }
 
   return { invoices: invoicesCreated.length, schedules: schedulesCreated.length };
@@ -440,6 +505,68 @@ router.get("/v1/contracts/:id/services", async (req, res): Promise<void> => {
   const rows = await db.select().from(bookingServicesTable)
     .where(and(eq(bookingServicesTable.booking_id, contract.booking_id), eq(bookingServicesTable.status, "Active")));
   res.json({ data: rows, meta: { total: rows.length } });
+});
+
+// ─── Contract Line Items CRUD ─────────────────────────────────────────────────
+
+router.get("/v1/contracts/:id/line-items", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const rows = await db.select().from(contractLineItemsTable)
+    .where(and(eq(contractLineItemsTable.contract_id, id), eq(contractLineItemsTable.status, "Active")))
+    .orderBy(contractLineItemsTable.id);
+  res.json({ data: rows, meta: { total: rows.length } });
+});
+
+router.post("/v1/contracts/:id/line-items", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const { item_type, name, billing_trigger, billing_frequency, unit_price, quantity, currency, gst_included, service_id, notes } = req.body;
+  if (!name || !item_type) { res.status(400).json({ success: false, error: { message: "name and item_type are required" } }); return; }
+  const qty = Number(quantity ?? 1);
+  const price = parseFloat(unit_price ?? 0);
+  const total = parseFloat((price * qty).toFixed(2));
+  const [row] = await db.insert(contractLineItemsTable).values({
+    contract_id: id,
+    item_type: item_type ?? "Service",
+    name,
+    billing_trigger: billing_trigger ?? "at_activation",
+    billing_frequency: billing_frequency ?? null,
+    unit_price: String(price),
+    quantity: qty,
+    total_price: String(total),
+    currency: currency ?? "AUD",
+    gst_included: gst_included ?? true,
+    service_id: service_id ?? null,
+    notes: notes ?? null,
+    status: "Active",
+  }).returning();
+  res.json(row);
+});
+
+router.patch("/v1/contracts/:id/line-items/:lineId", async (req, res): Promise<void> => {
+  const lineId = Number(req.params.lineId);
+  const { item_type, name, billing_trigger, billing_frequency, unit_price, quantity, currency, gst_included, notes } = req.body;
+  const qty = Number(quantity ?? 1);
+  const price = parseFloat(unit_price ?? 0);
+  const total = parseFloat((price * qty).toFixed(2));
+  const [row] = await db.update(contractLineItemsTable).set({
+    ...(item_type !== undefined && { item_type }),
+    ...(name !== undefined && { name }),
+    ...(billing_trigger !== undefined && { billing_trigger }),
+    ...(billing_frequency !== undefined && { billing_frequency }),
+    ...(unit_price !== undefined && { unit_price: String(price), total_price: String(total), quantity: qty }),
+    ...(currency !== undefined && { currency }),
+    ...(gst_included !== undefined && { gst_included }),
+    ...(notes !== undefined && { notes }),
+    updated_at: new Date(),
+  }).where(eq(contractLineItemsTable.id, lineId)).returning();
+  if (!row) { res.status(404).json({ success: false, error: { message: "Line item not found" } }); return; }
+  res.json(row);
+});
+
+router.delete("/v1/contracts/:id/line-items/:lineId", async (req, res): Promise<void> => {
+  const lineId = Number(req.params.lineId);
+  await db.update(contractLineItemsTable).set({ status: "Deleted", updated_at: new Date() }).where(eq(contractLineItemsTable.id, lineId));
+  res.json({ success: true });
 });
 
 router.get("/v1/lookup/contracts", async (req, res): Promise<void> => {

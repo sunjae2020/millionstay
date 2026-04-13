@@ -19,7 +19,7 @@ import {
   getListContractsQueryKey, getGetContractQueryKey,
 } from "@workspace/api-client-react";
 import { LookupSelect } from "@/components/LookupSelect";
-import { ArrowLeft, Save, Trash2, CalendarDays, Wrench, Plus, Pencil } from "lucide-react";
+import { ArrowLeft, Save, Trash2, CalendarDays, Wrench, Plus, Pencil, List } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 
 const CURRENCIES = ["AUD", "USD", "SGD", "MYR", "GBP"];
@@ -61,7 +61,7 @@ export default function ContractDetail() {
   const [terminateReason, setTerminateReason] = useState("");
   const [signDocUrl, setSignDocUrl] = useState("");
   const [signOpen, setSignOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("schedule");
+  const [activeTab, setActiveTab] = useState("line-items");
 
   // Payment Schedule dialog state
   const [schedDialogOpen, setSchedDialogOpen] = useState(false);
@@ -81,6 +81,41 @@ export default function ContractDetail() {
     setSchedType("Rent"); setSchedFreq("Biweekly"); setSchedAmount("");
     setSchedCurrency("AUD"); setSchedStartDate(""); setSchedEndDate("");
     setSchedNextDue(""); setSchedActive(true); setSchedGst(true);
+  };
+
+  // Line Items dialog state
+  const [lineDialogOpen, setLineDialogOpen] = useState(false);
+  const [lineEditItem, setLineEditItem] = useState<any | null>(null);
+  const [lineItemType, setLineItemType] = useState("Service");
+  const [lineName, setLineName] = useState("");
+  const [lineTrigger, setLineTrigger] = useState("at_activation");
+  const [lineFreq, setLineFreq] = useState("");
+  const [lineUnitPrice, setLineUnitPrice] = useState("");
+  const [lineQty, setLineQty] = useState("1");
+  const [lineCurrency, setLineCurrency] = useState("AUD");
+  const [lineGst, setLineGst] = useState(true);
+  const [lineNotes, setLineNotes] = useState("");
+
+  const resetLineForm = () => {
+    setLineEditItem(null);
+    setLineItemType("Service"); setLineName(""); setLineTrigger("at_activation");
+    setLineFreq(""); setLineUnitPrice(""); setLineQty("1");
+    setLineCurrency("AUD"); setLineGst(true); setLineNotes("");
+  };
+
+  const openAddLine = () => { resetLineForm(); setLineDialogOpen(true); };
+  const openEditLine = (item: any) => {
+    setLineEditItem(item);
+    setLineItemType(item.item_type ?? "Service");
+    setLineName(item.name ?? "");
+    setLineTrigger(item.billing_trigger ?? "at_activation");
+    setLineFreq(item.billing_frequency ?? "");
+    setLineUnitPrice(item.unit_price != null ? String(item.unit_price) : "");
+    setLineQty(item.quantity != null ? String(item.quantity) : "1");
+    setLineCurrency(item.currency ?? "AUD");
+    setLineGst(item.gst_included !== false);
+    setLineNotes(item.notes ?? "");
+    setLineDialogOpen(true);
   };
 
   const openAddSched = () => { resetSchedForm(); setSchedDialogOpen(true); };
@@ -115,6 +150,13 @@ export default function ContractDetail() {
     enabled: !isNew,
   });
   const contractServices: any[] = contractServicesData?.data ?? [];
+
+  const { data: lineItemsData, refetch: refetchLineItems } = useQuery({
+    queryKey: ["contract-line-items", id],
+    queryFn: async () => { const r = await apiFetch(`/api/v1/contracts/${id}/line-items`); return r.json(); },
+    enabled: !isNew,
+  });
+  const lineItems: any[] = lineItemsData?.data ?? [];
 
   const { register, handleSubmit, reset, control } = useForm<FormData>({
     defaultValues: {
@@ -163,6 +205,44 @@ export default function ContractDetail() {
   const deleteMutation = useDeleteContract({ mutation: { onSuccess: () => { invalidate(); navigate("/contracts/contracts"); } } });
 
   const invalidateSchedule = () => qc.invalidateQueries({ queryKey: ["contract-schedule", id] });
+  const invalidateLineItems = () => qc.invalidateQueries({ queryKey: ["contract-line-items", id] });
+
+  const addLineMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const r = await apiFetch(`/api/v1/contracts/${id}/line-items`, { method: "POST", body: JSON.stringify(payload), headers: { "Content-Type": "application/json" } });
+      if (!r.ok) throw new Error("Failed to add line item");
+      return r.json();
+    },
+    onSuccess: () => { invalidateLineItems(); setLineDialogOpen(false); resetLineForm(); },
+  });
+
+  const updateLineMutation = useMutation({
+    mutationFn: async ({ lineId, payload }: { lineId: number; payload: any }) => {
+      const r = await apiFetch(`/api/v1/contracts/${id}/line-items/${lineId}`, { method: "PATCH", body: JSON.stringify(payload), headers: { "Content-Type": "application/json" } });
+      if (!r.ok) throw new Error("Failed to update line item");
+      return r.json();
+    },
+    onSuccess: () => { invalidateLineItems(); setLineDialogOpen(false); resetLineForm(); },
+  });
+
+  const deleteLineMutation = useMutation({
+    mutationFn: async (lineId: number) => {
+      const r = await apiFetch(`/api/v1/contracts/${id}/line-items/${lineId}`, { method: "DELETE" });
+      if (!r.ok && r.status !== 204) throw new Error("Failed to delete line item");
+    },
+    onSuccess: () => invalidateLineItems(),
+  });
+
+  const submitLineForm = () => {
+    const payload = {
+      item_type: lineItemType, name: lineName, billing_trigger: lineTrigger,
+      billing_frequency: lineTrigger === "recurring" ? (lineFreq || null) : null,
+      unit_price: lineUnitPrice, quantity: Number(lineQty),
+      currency: lineCurrency, gst_included: lineGst, notes: lineNotes || null,
+    };
+    if (lineEditItem) updateLineMutation.mutate({ lineId: lineEditItem.id, payload });
+    else addLineMutation.mutate(payload);
+  };
 
   const addSchedMutation = useMutation({
     mutationFn: async (payload: any) => {
@@ -451,8 +531,9 @@ export default function ContractDetail() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-8 space-y-4">
           <div className="flex border-b gap-1">
             {[
+              { id: "line-items", label: `Contract Lines${lineItems.length ? ` (${lineItems.length})` : ""}`, icon: <List className="w-3.5 h-3.5" /> },
               { id: "schedule", label: `Payment Schedule${schedules.length ? ` (${schedules.length})` : ""}`, icon: <CalendarDays className="w-3.5 h-3.5" /> },
-              { id: "services", label: `Services${contractServices.length ? ` (${contractServices.length})` : ""}`, icon: <Wrench className="w-3.5 h-3.5" /> },
+              { id: "services", label: `Booking Services${contractServices.length ? ` (${contractServices.length})` : ""}`, icon: <Wrench className="w-3.5 h-3.5" /> },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -463,6 +544,78 @@ export default function ContractDetail() {
               </button>
             ))}
           </div>
+
+          {activeTab === "line-items" && (
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h4 className="font-medium text-sm">Contract Line Items</h4>
+                  <p className="text-xs text-muted-foreground mt-0.5">All billing lines — rent and services. Used to generate invoices on activation.</p>
+                </div>
+                <Button size="sm" variant="outline" onClick={openAddLine}>
+                  <Plus className="w-3.5 h-3.5 mr-1" /> Add Line
+                </Button>
+              </div>
+              <div className="rounded-lg border bg-white overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 border-b">
+                    <tr>
+                      {["Type", "Name", "Billing", "Frequency", "Unit Price", "Qty", "Total", "GST", ""].map((h) => (
+                        <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {!lineItems.length ? (
+                      <tr><td colSpan={9} className="text-center py-10 text-muted-foreground">No line items yet. Activate contract to auto-generate from booking services.</td></tr>
+                    ) : lineItems.map((item: any) => (
+                      <tr key={item.id} className="border-b hover:bg-gray-50">
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${item.item_type === "Rent" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>
+                            {item.item_type}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 font-medium">{item.name}</td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {item.billing_trigger === "recurring" ? "Recurring" : item.billing_trigger === "at_activation" ? "One-time" : item.billing_trigger}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">{item.billing_frequency ?? "—"}</td>
+                        <td className="px-4 py-3 font-mono">{item.unit_price != null ? `$${Number(item.unit_price).toFixed(2)}` : "—"}</td>
+                        <td className="px-4 py-3 text-center">{item.quantity ?? 1}</td>
+                        <td className="px-4 py-3 font-mono font-medium">{item.total_price != null ? `$${Number(item.total_price).toFixed(2)}` : "—"}</td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${item.gst_included ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"}`}>
+                            {item.gst_included ? "GST incl." : "Ex GST"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-1">
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => openEditLine(item)}>
+                              <Pencil className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-red-500 hover:text-red-700" onClick={() => deleteLineMutation.mutate(item.id)}>
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  {lineItems.length > 0 && (
+                    <tfoot className="bg-gray-50 border-t">
+                      <tr>
+                        <td colSpan={6} className="px-4 py-3 text-right font-medium text-sm text-muted-foreground">Total Contract Value</td>
+                        <td className="px-4 py-3 font-mono font-bold text-sm">
+                          ${lineItems.reduce((sum: number, i: any) => sum + Number(i.total_price ?? 0), 0).toFixed(2)}
+                        </td>
+                        <td colSpan={2} />
+                      </tr>
+                    </tfoot>
+                  )}
+                </table>
+              </div>
+            </div>
+          )}
 
           {activeTab === "schedule" && (
             <div className="space-y-3">
@@ -596,6 +749,105 @@ export default function ContractDetail() {
             <Button className="bg-purple-600 hover:bg-purple-700 text-white"
               onClick={() => signMutation.mutate({ id: Number(id), data: { document_url: signDocUrl || null } })}>
               Confirm Signed
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add / Edit Line Item Dialog */}
+      <Dialog open={lineDialogOpen} onOpenChange={(open) => { if (!open) { setLineDialogOpen(false); resetLineForm(); } }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{lineEditItem ? "Edit Line Item" : "Add Line Item"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Type</Label>
+                <Select value={lineItemType} onValueChange={setLineItemType}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {["Rent", "Service", "Bond", "Admin Fee", "Other"].map(v => (
+                      <SelectItem key={v} value={v}>{v}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Billing</Label>
+                <Select value={lineTrigger} onValueChange={v => { setLineTrigger(v); if (v !== "recurring") setLineFreq(""); }}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="recurring">Recurring</SelectItem>
+                    <SelectItem value="at_activation">One-time (at activation)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label>Name *</Label>
+              <Input value={lineName} onChange={e => setLineName(e.target.value)} placeholder="e.g. Cleaning Fee, Airport Pickup..." className="mt-1" />
+            </div>
+            {lineTrigger === "recurring" && (
+              <div>
+                <Label>Frequency</Label>
+                <Select value={lineFreq} onValueChange={setLineFreq}>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder="Select frequency" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Weekly">Weekly</SelectItem>
+                    <SelectItem value="Biweekly">Fortnightly</SelectItem>
+                    <SelectItem value="Monthly">Monthly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="col-span-2">
+                <Label>Unit Price *</Label>
+                <Input type="number" step="0.01" min="0" value={lineUnitPrice} onChange={e => setLineUnitPrice(e.target.value)} placeholder="0.00" className="mt-1" />
+              </div>
+              <div>
+                <Label>Qty</Label>
+                <Input type="number" min="1" value={lineQty} onChange={e => setLineQty(e.target.value)} className="mt-1" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Currency</Label>
+                <Select value={lineCurrency} onValueChange={setLineCurrency}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-end pb-2">
+                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <input type="checkbox" checked={lineGst} onChange={e => setLineGst(e.target.checked)} className="rounded" />
+                  GST Included
+                </label>
+              </div>
+            </div>
+            <div>
+              <Label>Notes</Label>
+              <Input value={lineNotes} onChange={e => setLineNotes(e.target.value)} placeholder="Optional notes..." className="mt-1" />
+            </div>
+            {lineUnitPrice && lineQty && (
+              <div className="bg-gray-50 rounded p-3 text-sm">
+                <span className="text-muted-foreground">Total: </span>
+                <span className="font-mono font-bold">${(Number(lineUnitPrice) * Number(lineQty)).toFixed(2)} {lineCurrency}</span>
+                {lineTrigger === "recurring" && lineFreq && <span className="text-muted-foreground ml-2">per {lineFreq.toLowerCase()} period</span>}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setLineDialogOpen(false); resetLineForm(); }}>Cancel</Button>
+            <Button
+              className="bg-[#E8621A] hover:bg-[#d4561a] text-white"
+              disabled={!lineName || !lineUnitPrice || addLineMutation.isPending || updateLineMutation.isPending}
+              onClick={submitLineForm}
+            >
+              {lineEditItem ? "Save Changes" : "Add Line Item"}
             </Button>
           </DialogFooter>
         </DialogContent>

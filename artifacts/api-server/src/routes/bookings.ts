@@ -12,6 +12,8 @@ import {
   spaceBlockedDatesTable,
   contractsTable,
   recurringSchedulesTable,
+  contractProductsTable,
+  contractLineItemsTable,
 } from "@workspace/db";
 import { logAction } from "../utils/auditLog";
 import {
@@ -440,40 +442,54 @@ router.patch("/v1/bookings/:id/confirm", async (req, res): Promise<void> => {
 
     contractId = newContract.id;
 
-    // Auto-generate biweekly rent recurring schedule
-    if (existing.account_id && existing.check_in_date) {
-      await db.insert(recurringSchedulesTable).values({
-        booking_id: parsed.data.id,
-        contract_id: newContract.id,
-        account_id: existing.account_id,
-        schedule_type: "Rent",
-        frequency: "Biweekly",
-        amount: String(weeklyRate * 2),
-        currency: existing.currency ?? "AUD",
-        gst_included: false,
-        start_date: existing.check_in_date,
-        end_date: existing.check_out_date ?? null,
-        next_due_date: existing.check_in_date,
-        is_active: true,
-      });
+    // ── Auto-populate contract_line_items ──────────────────────────────────
+    // Determine billing_frequency from the linked contract_product
+    let rentBillingFreq = "Biweekly";
+    if (existing.contract_product_id) {
+      const [cp] = await db.select({ billing_frequency: contractProductsTable.billing_frequency })
+        .from(contractProductsTable).where(eq(contractProductsTable.id, existing.contract_product_id));
+      if (cp?.billing_frequency) rentBillingFreq = cp.billing_frequency;
+    }
 
-      // Auto-generate schedule entries for scheduled-type services
-      for (const svc of services.filter(s => s.service_type === "scheduled" && s.frequency)) {
-        await db.insert(recurringSchedulesTable).values({
-          booking_id: parsed.data.id,
-          contract_id: newContract.id,
-          account_id: existing.account_id,
-          schedule_type: svc.name,
-          frequency: svc.frequency!,
-          amount: String(svc.unit_price),
-          currency: svc.currency,
-          gst_included: false,
-          start_date: existing.check_in_date,
-          end_date: existing.check_out_date ?? null,
-          next_due_date: existing.check_in_date,
-          is_active: true,
-        });
-      }
+    const rentUnitPrice = (() => {
+      if (rentBillingFreq === "Weekly") return weeklyRate;
+      if (rentBillingFreq === "Biweekly") return weeklyRate * 2;
+      return parseFloat((weeklyRate * (52 / 12)).toFixed(2));
+    })();
+
+    // 1. Rent line item
+    await db.insert(contractLineItemsTable).values({
+      contract_id: newContract.id,
+      item_type: "Rent",
+      name: rentBillingFreq === "Monthly" ? "Monthly Rent" : rentBillingFreq === "Biweekly" ? "Fortnightly Rent" : "Weekly Rent",
+      billing_trigger: "recurring",
+      billing_frequency: rentBillingFreq,
+      unit_price: String(rentUnitPrice),
+      quantity: 1,
+      total_price: String(rentUnitPrice),
+      currency: existing.currency ?? "AUD",
+      gst_included: true,
+      status: "Active",
+    });
+
+    // 2. Service line items from booking_services
+    for (const svc of services) {
+      const trigger = svc.service_type === "scheduled" ? "recurring" : "at_activation";
+      await db.insert(contractLineItemsTable).values({
+        contract_id: newContract.id,
+        item_type: "Service",
+        name: svc.name,
+        billing_trigger: trigger,
+        billing_frequency: svc.service_type === "scheduled" ? (svc.frequency ?? null) : null,
+        unit_price: String(svc.unit_price),
+        quantity: svc.quantity ?? 1,
+        total_price: String(svc.total_price),
+        currency: svc.currency ?? existing.currency ?? "AUD",
+        gst_included: true,
+        service_id: svc.service_id ?? null,
+        notes: svc.notes ?? null,
+        status: "Active",
+      });
     }
 
     await logAction({ entityType: "contract", entityId: newContract.id, action: "AUTO_CREATED", newValue: { contract_ref: contractRef, booking_ref: existing.booking_ref } });

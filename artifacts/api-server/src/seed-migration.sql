@@ -570,7 +570,7 @@ INSERT INTO public.accounts (id, name, account_type, primary_contact_id, seconda
 	(17, 'Gildong HONG', 'Guest', NULL, NULL, 'teswt@timest.co.kr', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'AUD', NULL, NULL, false, 'Active', '2026-04-09 05:11:01.06402+00', '2026-04-09 05:11:01.06402+00'),
 	(15, 'Demo Guest', 'Guest', NULL, NULL, 'demo@millionstay.com.au', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'AUD', NULL, NULL, false, 'Active', '2026-04-07 05:35:30.26358+00', '2026-04-11 11:13:59.069+00');
 INSERT INTO public.admin_users (id, email, password_hash, role, first_name, last_name, is_active, force_password_change, last_login_at, created_at, updated_at, status, reset_token, reset_token_expires_at) VALUES
-	(1, 'admin@millionstay.com', '$2b$10$FX2diLhEDwiXWzaGJtZoXeOS1x/pizNnsMOqPkpnwaR3DxlC.OBU.', 'Super Admin', 'Million', 'Stay', true, false, '2026-04-13 01:05:12.54+00', '2026-04-05 08:29:14.152582+00', '2026-04-13 01:05:12.54+00', 'active', NULL, NULL);
+	(1, 'admin@millionstay.com', '$2b$10$FX2diLhEDwiXWzaGJtZoXeOS1x/pizNnsMOqPkpnwaR3DxlC.OBU.', 'Super Admin', 'Million', 'Stay', true, false, '2026-04-13 04:59:20.373+00', '2026-04-05 08:29:14.152582+00', '2026-04-13 04:59:20.373+00', 'active', NULL, NULL);
 INSERT INTO public.announcements (id, title, body, category, priority, is_published, published_at, expires_at, created_by, created_at, updated_at) VALUES
 	(1, 'Welcome to MillionStay Resident Portal', 'Dear residents, welcome to your new online portal! You can now manage your bookings, pay invoices, submit maintenance requests, and communicate with our team — all in one place. If you have any questions, please reach out via the Inquiries tab.', 'General', 'Normal', 1, '2026-04-04 16:41:47.886313+00', NULL, NULL, '2026-04-11 16:41:47.886313+00', '2026-04-11 16:41:47.886313+00'),
 	(2, 'Building Maintenance — Hot Water System', 'Planned maintenance on the hot water system will take place on Saturday 18 April 2026 between 9:00 AM and 1:00 PM. Hot water may be intermittent during this period. We apologise for any inconvenience and will notify you when the work is complete.', 'Maintenance', 'High', 1, '2026-04-09 16:41:47.886313+00', NULL, NULL, '2026-04-11 16:41:47.886313+00', '2026-04-11 16:41:47.886313+00'),
@@ -591,7 +591,7 @@ INSERT INTO public.bookings (id, booking_ref, name, account_id, contact_id, book
 	(5, 'GBK-MNR0U882-PZJ', NULL, 17, NULL, 'Pending', 'Guest Portal', NULL, 2, '2026-04-19', '2026-04-22', NULL, 1.00, NULL, NULL, 'AUD', 1, NULL, NULL, NULL, 'Active', '2026-04-09 05:13:20.9314+00', '2026-04-09 05:13:20.9314+00'),
 	(6, 'GBK-MNR9F8AC-BQ3', NULL, 17, NULL, 'Pending', 'Guest Portal', NULL, 9, '2026-04-12', '2026-04-22', NULL, 1.00, NULL, NULL, 'AUD', 1, NULL, NULL, NULL, 'Active', '2026-04-09 09:13:37.71774+00', '2026-04-09 09:13:37.71774+00'),
 	(7, 'MS-2026-00003', 'GuestBook_Guest_2026-04-11', 15, NULL, 'Confirmed', 'portal', NULL, 5, '2026-05-01', '2027-05-01', 365, 52.14, 530.00, 27634.20, 'AUD', 1, NULL, NULL, NULL, 'Active', '2026-04-11 11:43:26.079587+00', '2026-04-11 11:43:26.116+00'),
-	(2, 'MS-2026-00002', 'GuestBook_Emma_Johnson_2026-06-01', 7, NULL, 'Active', 'Agent', NULL, 2, '2026-06-01', '2026-06-28', 27, 3.86, 430.00, 1658.57, 'AUD', 1, NULL, NULL, NULL, 'Active', '2026-04-05 00:22:15.459884+00', '2026-04-13 01:05:24.333+00');
+	(2, 'MS-2026-00002', 'GuestBook_Emma_Johnson_2026-06-01', 7, NULL, 'Active', 'Agent', NULL, 2, '2026-06-01', '2026-06-28', 27, 3.86, 430.00, 1658.57, 'AUD', 1, NULL, NULL, NULL, 'Active', '2026-04-05 00:22:15.459884+00', '2026-04-13 04:59:20.483+00');
 INSERT INTO public.commissions (id, name, commission_type, commission_rate, commission_amount, description, status, created_at, updated_at) VALUES
 	(1, '10% Commission', 'Percentage', 10, NULL, 'Standard agent commission', 'Active', '2026-04-04 23:54:23.545884+00', '2026-04-04 23:54:23.545884+00'),
 	(2, '7% Agent Commission', 'Percentage', 7, NULL, 'Reduced agent commission', 'Active', '2026-04-04 23:54:23.628172+00', '2026-04-04 23:54:23.628172+00'),
@@ -608,6 +608,8 @@ INSERT INTO public.contacts (id, first_name, last_name, title, other_name, email
 	(7, 'HAN', 'Owner', NULL, NULL, 'han@millionstay.com.au', NULL, NULL, NULL, 'AU', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, false, 'Active', '2026-04-05 02:20:39.221628+00', '2026-04-05 02:20:39.221628+00'),
 	(8, 'Dynamic', 'Residential', NULL, NULL, 'contact@dynamicresidential.com.au', NULL, NULL, NULL, 'AU', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, false, 'Active', '2026-04-05 02:20:39.22519+00', '2026-04-05 02:20:39.22519+00'),
 	(9, 'Melcrop', 'RealEstate', NULL, NULL, 'contact@melcorp.com.au', NULL, NULL, NULL, 'AU', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, NULL, NULL, NULL, false, 'Active', '2026-04-05 02:20:39.228633+00', '2026-04-05 02:20:39.228633+00');
+INSERT INTO public.contract_line_items (id, contract_id, item_type, name, billing_trigger, billing_frequency, unit_price, quantity, total_price, currency, gst_included, service_id, notes, status, created_at, updated_at) VALUES
+	(1, 2, 'Rent', 'Fortnightly Rent', 'recurring', 'Biweekly', 2100.00, 1, 2100.00, 'AUD', true, NULL, NULL, 'Active', '2026-04-13 04:59:12.593213+00', '2026-04-13 04:59:12.593213+00');
 INSERT INTO public.contract_products (id, name, description, product_type, status, space_id, weekly_rate, monthly_rate, currency, bond_weeks, advance_weeks, min_stay_weeks, max_stay_weeks, includes_wifi, includes_parking, includes_utilities, includes_meals, includes_laundry, includes_cleaning, extra_inclusions, notes, created_at, updated_at, promotion_id, term_type, effective_weekly_rate, billing_frequency, bond_amount, admin_fee, cleaning_fee) VALUES
 	(1, 'Standard Room - Weekly', 'Private ensuite room with weekly billing', 'Room', 'Active', 1, 430, 1720, 'AUD', 4, 2, 1, 52, true, false, true, false, false, false, 'Laundry once/week', NULL, '2026-04-05 00:31:52.904348+00', '2026-04-05 00:31:52.904348+00', NULL, NULL, NULL, 'Biweekly', NULL, NULL, NULL),
 	(2, 'Standard Room - Monthly', 'Private ensuite room with monthly billing', 'Room', 'Active', 1, NULL, 1650, 'AUD', 4, 2, 4, NULL, true, false, true, false, false, false, NULL, NULL, '2026-04-05 00:31:52.904348+00', '2026-04-05 00:31:52.904348+00', NULL, NULL, NULL, 'Biweekly', NULL, NULL, NULL),
@@ -725,7 +727,7 @@ Landlord: MillionStay Property Management
 NOTE: This is a sample contract generated for testing purposes only.
 This document does not constitute a legally binding agreement.', '12-month fixed term — auto-generated demo contract', '2026-04-11 11:43:26.162141+00', '2026-04-11 11:43:26.187+00'),
 	(1, 'MS-C-2026-00001', 1, 1, NULL, NULL, NULL, '2026-04-01', '2026-04-07', 200, 1400, 400, NULL, 'AUD', 'Sent', '2026-04-13 00:28:38.191+00', NULL, NULL, NULL, NULL, NULL, NULL, 'Initial draft contract for short stay', '2026-04-05 00:39:51.167848+00', '2026-04-13 00:28:38.191+00'),
-	(2, 'MS-C-2026-00002', 2, 2, NULL, NULL, NULL, '2026-04-01', '2026-04-30', 1050, 4200, 2100, NULL, 'AUD', 'Active', NULL, NULL, '2026-04-13', NULL, NULL, NULL, NULL, 'Monthly contract sent to tenant', '2026-04-05 00:39:51.167848+00', '2026-04-13 01:05:24.282+00');
+	(2, 'MS-C-2026-00002', 2, 2, NULL, NULL, NULL, '2026-04-01', '2026-04-30', 1050, 4200, 2100, NULL, 'AUD', 'Active', NULL, NULL, '2026-04-13', NULL, NULL, NULL, NULL, 'Monthly contract sent to tenant', '2026-04-05 00:39:51.167848+00', '2026-04-13 04:59:20.441+00');
 INSERT INTO public.cs_messages (id, ticket_id, sender_type, sender_id, message, image_urls, is_internal, created_at) VALUES
 	(1, 1, 'guest', 2, 'This is a test inquiry.', NULL, 0, '2026-04-09 09:56:05.528916+00'),
 	(2, 2, 'guest', 2, 'I have a question about my invoice.', NULL, 0, '2026-04-09 09:56:33.552849+00'),
@@ -808,8 +810,6 @@ INSERT INTO public.invoices (id, invoice_ref, booking_id, contract_id, account_i
 	(5, 'MS-INV-2026-00005', NULL, NULL, 1, 50, 'AUD', 'Sent', '2026-05-01', NULL, NULL, NULL, NULL, 'Audit log test', NULL, '2026-04-05 01:52:17.759838+00', '2026-04-05 01:52:23.326+00'),
 	(6, 'MS-INV-2026-00006', 2, NULL, 12, 1000, 'AUD', 'Draft', '2026-06-01', NULL, NULL, NULL, NULL, NULL, NULL, '2026-04-05 07:57:31.118882+00', '2026-04-05 07:57:31.118882+00'),
 	(12, 'MS-INV-2026-00012', 7, 5, 15, 2296.67, 'AUD', 'Sent', '2026-10-01', NULL, 'bank_transfer', NULL, NULL, 'Monthly Rent — Oct 2026 | 285 La Trobe St, Room A', 'Payment 6/12 | MS-2026-00003 | MS-C-2026-00005', '2026-04-11 11:43:26.245527+00', '2026-04-11 16:38:38.06+00'),
-	(20, 'MS-INV-2026-00019', 2, 2, NULL, 2100, 'AUD', 'Sent', '2026-04-01', NULL, NULL, NULL, NULL, 'Fortnightly Rent — 01 Apr 2026', NULL, '2026-04-13 01:05:24.312546+00', '2026-04-13 01:05:24.312546+00'),
-	(21, 'MS-INV-2026-00020', 2, 2, NULL, 2100, 'AUD', 'Sent', '2026-04-15', NULL, NULL, NULL, NULL, 'Fortnightly Rent — 15 Apr 2026', NULL, '2026-04-13 01:05:24.320143+00', '2026-04-13 01:05:24.320143+00'),
 	(11, 'MS-INV-2026-00011', 7, 5, 15, 2296.67, 'AUD', 'Sent', '2026-09-01', NULL, NULL, NULL, NULL, 'Monthly Rent — Sep 2026 | 285 La Trobe St, Room A', 'Payment 5/12 | MS-2026-00003 | MS-C-2026-00005', '2026-04-11 11:43:26.239777+00', '2026-04-11 11:43:26.318+00'),
 	(13, 'MS-INV-2026-00013', 7, 5, 15, 2296.67, 'AUD', 'Sent', '2026-11-01', NULL, NULL, NULL, NULL, 'Monthly Rent — Nov 2026 | 285 La Trobe St, Room A', 'Payment 7/12 | MS-2026-00003 | MS-C-2026-00005', '2026-04-11 11:43:26.251954+00', '2026-04-11 11:43:26.333+00'),
 	(14, 'MS-INV-2026-00014', 7, 5, 15, 2296.67, 'AUD', 'Sent', '2026-12-01', NULL, NULL, NULL, NULL, 'Monthly Rent — Dec 2026 | 285 La Trobe St, Room A', 'Payment 8/12 | MS-2026-00003 | MS-C-2026-00005', '2026-04-11 11:43:26.257875+00', '2026-04-11 11:43:26.34+00'),
@@ -819,9 +819,11 @@ INSERT INTO public.invoices (id, invoice_ref, booking_id, contract_id, account_i
 	(18, 'MS-INV-2026-00018', 7, 5, 15, 2296.67, 'AUD', 'Sent', '2027-04-01', NULL, NULL, NULL, NULL, 'Monthly Rent — Apr 2027 | 285 La Trobe St, Room A', 'Payment 12/12 | MS-2026-00003 | MS-C-2026-00005', '2026-04-11 11:43:26.282349+00', '2026-04-11 11:43:26.447+00'),
 	(7, 'MS-INV-2026-00007', 7, 5, 15, 2296.67, 'AUD', 'Paid', '2026-05-01', '2026-04-27 23:00:00+00', 'bank_transfer', NULL, NULL, 'Monthly Rent — May 2026 | 285 La Trobe St, Room A', 'Payment 1/12 | MS-2026-00003 | MS-C-2026-00005', '2026-04-11 11:43:26.198633+00', '2026-04-11 11:43:26.455+00'),
 	(8, 'MS-INV-2026-00008', 7, 5, 15, 2296.67, 'AUD', 'Paid', '2026-06-01', '2026-05-31 23:00:00+00', 'bank_transfer', NULL, NULL, 'Monthly Rent — Jun 2026 | 285 La Trobe St, Room A', 'Payment 2/12 | MS-2026-00003 | MS-C-2026-00005', '2026-04-11 11:43:26.218675+00', '2026-04-11 11:43:26.463+00'),
-	(22, 'MS-INV-2026-00021', 2, 2, NULL, 2100, 'AUD', 'Sent', '2026-04-29', NULL, NULL, NULL, NULL, 'Fortnightly Rent — 29 Apr 2026', NULL, '2026-04-13 01:05:24.327107+00', '2026-04-13 01:05:24.327107+00'),
 	(9, 'MS-INV-2026-00009', 7, 5, 15, 2296.67, 'AUD', 'Sent', '2026-07-01', NULL, 'bank_transfer', NULL, NULL, 'Monthly Rent — Jul 2026 | 285 La Trobe St, Room A', 'Payment 3/12 | MS-2026-00003 | MS-C-2026-00005', '2026-04-11 11:43:26.225257+00', '2026-04-11 16:35:06.766+00'),
-	(10, 'MS-INV-2026-00010', 7, 5, 15, 2296.67, 'AUD', 'Sent', '2026-08-01', NULL, 'bank_transfer', NULL, NULL, 'Monthly Rent — Aug 2026 | 285 La Trobe St, Room A', 'Payment 4/12 | MS-2026-00003 | MS-C-2026-00005', '2026-04-11 11:43:26.232231+00', '2026-04-11 16:38:01.574+00');
+	(10, 'MS-INV-2026-00010', 7, 5, 15, 2296.67, 'AUD', 'Sent', '2026-08-01', NULL, 'bank_transfer', NULL, NULL, 'Monthly Rent — Aug 2026 | 285 La Trobe St, Room A', 'Payment 4/12 | MS-2026-00003 | MS-C-2026-00005', '2026-04-11 11:43:26.232231+00', '2026-04-11 16:38:01.574+00'),
+	(26, 'MS-INV-2026-00019', 2, 2, NULL, 2100, 'AUD', 'Sent', '2026-04-01', NULL, NULL, NULL, NULL, 'Fortnightly Fortnightly Rent — 01 Apr 2026', NULL, '2026-04-13 04:59:20.463625+00', '2026-04-13 04:59:20.463625+00'),
+	(27, 'MS-INV-2026-00020', 2, 2, NULL, 2100, 'AUD', 'Sent', '2026-04-15', NULL, NULL, NULL, NULL, 'Fortnightly Fortnightly Rent — 15 Apr 2026', NULL, '2026-04-13 04:59:20.470893+00', '2026-04-13 04:59:20.470893+00'),
+	(28, 'MS-INV-2026-00021', 2, 2, NULL, 2100, 'AUD', 'Sent', '2026-04-29', NULL, NULL, NULL, NULL, 'Fortnightly Fortnightly Rent — 29 Apr 2026', NULL, '2026-04-13 04:59:20.476741+00', '2026-04-13 04:59:20.476741+00');
 INSERT INTO public.leads (id, lead_ref, first_name, last_name, email, phone, nationality, lead_source, lead_status, inquiry_type, message, preferred_space_type, preferred_check_in_date, preferred_duration_weeks, preferred_suburb_id, budget_min, budget_max, budget_currency, converted_booking_id, converted_at, assigned_to, description, manual_input, status, created_at, updated_at) VALUES
 	(1, 'LEAD-2026-00001', 'Yuki', 'Tanaka', 'yuki.tanaka@gmail.com', '+61412345678', 'JP', 'Website', 'New', 'Room rental', 'Hi, I am looking for a room near the CBD for 3 months from February.', 'RoomSpace', '2026-02-01', 12, NULL, 400.00, 600.00, 'AUD', NULL, NULL, 'Sunjae Kim', NULL, false, 'Active', '2026-04-05 00:10:18.090992+00', '2026-04-05 00:10:18.090992+00'),
 	(2, 'LEAD-2026-00002', 'Wei', 'Chen', 'wei.chen@qq.com', '+61498765432', 'CN', 'Agent', 'Contacted', 'Entire apartment', 'We need an entire apartment for a family of 3, minimum 6 months.', 'EntireSpace', '2026-03-15', 24, NULL, 1000.00, 1500.00, 'AUD', NULL, NULL, 'Max Paik', NULL, false, 'Active', '2026-04-05 00:10:18.090992+00', '2026-04-05 00:10:18.090992+00'),
@@ -873,9 +875,9 @@ INSERT INTO public.recurring_schedule (id, booking_id, contract_id, account_id, 
 	(11, 7, 5, 15, 'Rent', 'Monthly', 2296.67, 'AUD', true, '2027-02-01', '2027-02-28', '2027-02-01', NULL, true, '2026-04-13 00:48:33.012873+00', '2026-04-13 00:48:33.012873+00'),
 	(12, 7, 5, 15, 'Rent', 'Monthly', 2296.67, 'AUD', true, '2027-03-01', '2027-03-31', '2027-03-01', NULL, true, '2026-04-13 00:48:33.012873+00', '2026-04-13 00:48:33.012873+00'),
 	(13, 7, 5, 15, 'Rent', 'Monthly', 2296.67, 'AUD', true, '2027-04-01', '2027-04-30', '2027-04-01', NULL, true, '2026-04-13 00:48:33.012873+00', '2026-04-13 00:48:33.012873+00'),
-	(14, 2, 2, 0, 'Rent', 'Biweekly', 2100.00, 'AUD', true, '2026-04-01', '2026-04-15', '2026-04-01', NULL, true, '2026-04-13 01:05:24.316374+00', '2026-04-13 01:05:24.316374+00'),
-	(15, 2, 2, 0, 'Rent', 'Biweekly', 2100.00, 'AUD', true, '2026-04-15', '2026-04-29', '2026-04-15', NULL, true, '2026-04-13 01:05:24.323719+00', '2026-04-13 01:05:24.323719+00'),
-	(16, 2, 2, 0, 'Rent', 'Biweekly', 2100.00, 'AUD', true, '2026-04-29', '2026-04-30', '2026-04-29', NULL, true, '2026-04-13 01:05:24.330387+00', '2026-04-13 01:05:24.330387+00');
+	(20, 2, 2, 0, 'Rent', 'Biweekly', 2100.00, 'AUD', true, '2026-04-01', '2026-04-15', '2026-04-01', NULL, true, '2026-04-13 04:59:20.467082+00', '2026-04-13 04:59:20.467082+00'),
+	(21, 2, 2, 0, 'Rent', 'Biweekly', 2100.00, 'AUD', true, '2026-04-15', '2026-04-29', '2026-04-15', NULL, true, '2026-04-13 04:59:20.473866+00', '2026-04-13 04:59:20.473866+00'),
+	(22, 2, 2, 0, 'Rent', 'Biweekly', 2100.00, 'AUD', true, '2026-04-29', '2026-04-30', '2026-04-29', NULL, true, '2026-04-13 04:59:20.479974+00', '2026-04-13 04:59:20.479974+00');
 INSERT INTO public.service_catalog (id, name, description, service_type, base_price, currency, is_optional, is_refundable, billing_trigger, gst_included, requires_scheduling, scheduling_notes, stock_tracked, stock_qty, has_variants, variant_options, display_on_booking_page, sort_order, status, created_at, updated_at, promotion_id) VALUES
 	(1, 'Room Deposit', 'Refundable security deposit collected at booking. Returned at end of tenancy subject to property condition.', 'one_time', 1000, 'AUD', false, true, 'at_booking', false, false, NULL, false, NULL, false, NULL, true, 1, 'Active', '2026-04-08 23:24:11.563232+00', '2026-04-08 23:24:11.563232+00', NULL),
 	(2, 'Admission Fee', 'One-time application and administration processing fee. Non-refundable.', 'one_time', 200, 'AUD', false, false, 'at_booking', false, false, NULL, false, NULL, false, NULL, true, 2, 'Active', '2026-04-08 23:24:11.563232+00', '2026-04-08 23:24:11.563232+00', NULL),
@@ -1665,7 +1667,9 @@ INSERT INTO public.system_log (id, entity_type, entity_id, action, actor_type, a
 	(21, 'invoice', 10, 'PAYMENT', 'System', NULL, NULL, NULL, '{"note": "Guest portal payment confirmation", "status": "Sent", "payment_method": "bank_transfer"}', NULL, NULL, NULL, '2026-04-11 16:38:01.589888+00'),
 	(22, 'invoice', 12, 'PAYMENT', 'System', NULL, NULL, NULL, '{"note": "Guest portal payment confirmation", "status": "Sent", "payment_method": "bank_transfer"}', NULL, NULL, NULL, '2026-04-11 16:38:38.065085+00'),
 	(23, 'contract', 1, 'STATUS_CHANGE', 'System', NULL, NULL, NULL, '{"status": "Sent"}', NULL, NULL, NULL, '2026-04-13 00:28:38.230874+00'),
-	(24, 'contract', 2, 'STATUS_CHANGE', 'System', NULL, NULL, NULL, '{"status": "Active", "invoices_generated": 3, "schedules_generated": 3}', NULL, NULL, NULL, '2026-04-13 01:05:24.337716+00');
+	(24, 'contract', 2, 'STATUS_CHANGE', 'System', NULL, NULL, NULL, '{"status": "Active", "invoices_generated": 3, "schedules_generated": 3}', NULL, NULL, NULL, '2026-04-13 01:05:24.337716+00'),
+	(25, 'contract', 2, 'STATUS_CHANGE', 'System', NULL, NULL, NULL, '{"status": "Active", "invoices_generated": 3, "schedules_generated": 3}', NULL, NULL, NULL, '2026-04-13 04:59:12.640049+00'),
+	(26, 'contract', 2, 'STATUS_CHANGE', 'System', NULL, NULL, NULL, '{"status": "Active", "invoices_generated": 3, "schedules_generated": 3}', NULL, NULL, NULL, '2026-04-13 04:59:20.486323+00');
 INSERT INTO public.tasks (id, name, subject, task_status, priority, task_category, primary_contact_id, secondary_contact_id, account_id, booking_id, start_date, due_date, completed_at, description, manual_input, status, created_at, updated_at) VALUES
 	(1, 'Follow up with Sunjae Kim', 'Discuss lease renewal options', 'InProgress', 'High', 'Follow-up', NULL, NULL, NULL, NULL, NULL, '2026-04-08', NULL, 'Contact guest about extending lease for Room A.', false, 'Active', '2026-04-05 00:10:18.090992+00', '2026-04-05 00:10:18.090992+00'),
 	(2, 'Maintenance - 336 Russell St', 'Fix leaking tap in bathroom', 'Todo', 'Medium', 'Maintenance', NULL, NULL, NULL, NULL, NULL, '2026-04-03', NULL, 'Tenant reported leaking tap in shared bathroom.', false, 'Active', '2026-04-05 00:10:18.090992+00', '2026-04-05 00:10:18.090992+00'),
@@ -1685,6 +1689,7 @@ SELECT pg_catalog.setval('public.booking_services_id_seq', 1, false);
 SELECT pg_catalog.setval('public.bookings_id_seq', 7, true);
 SELECT pg_catalog.setval('public.commissions_id_seq', 5, true);
 SELECT pg_catalog.setval('public.contacts_id_seq', 9, true);
+SELECT pg_catalog.setval('public.contract_line_items_id_seq', 1, true);
 SELECT pg_catalog.setval('public.contract_products_id_seq', 88, true);
 SELECT pg_catalog.setval('public.contract_types_id_seq', 8, true);
 SELECT pg_catalog.setval('public.contracts_id_seq', 5, true);
@@ -1695,7 +1700,7 @@ SELECT pg_catalog.setval('public.email_template_id_seq', 10, true);
 SELECT pg_catalog.setval('public.guest_direct_messages_id_seq', 2, true);
 SELECT pg_catalog.setval('public.guest_emergency_contacts_id_seq', 2, true);
 SELECT pg_catalog.setval('public.guest_users_id_seq', 4, true);
-SELECT pg_catalog.setval('public.invoices_id_seq', 22, true);
+SELECT pg_catalog.setval('public.invoices_id_seq', 28, true);
 SELECT pg_catalog.setval('public.leads_id_seq', 4, true);
 SELECT pg_catalog.setval('public.payment_info_id_seq', 1, true);
 SELECT pg_catalog.setval('public.product_catalog_id_seq', 88, true);
@@ -1703,7 +1708,7 @@ SELECT pg_catalog.setval('public.product_groups_id_seq', 3, true);
 SELECT pg_catalog.setval('public.product_types_id_seq', 11, true);
 SELECT pg_catalog.setval('public.promotions_id_seq', 5, true);
 SELECT pg_catalog.setval('public.properties_id_seq', 9, true);
-SELECT pg_catalog.setval('public.recurring_schedule_id_seq', 16, true);
+SELECT pg_catalog.setval('public.recurring_schedule_id_seq', 22, true);
 SELECT pg_catalog.setval('public.service_catalog_id_seq', 36, true);
 SELECT pg_catalog.setval('public.service_hosts_id_seq', 1, false);
 SELECT pg_catalog.setval('public.space_availability_id_seq', 1, false);
@@ -1715,6 +1720,6 @@ SELECT pg_catalog.setval('public.space_policies_id_seq', 5, true);
 SELECT pg_catalog.setval('public.space_service_catalog_id_seq', 1, false);
 SELECT pg_catalog.setval('public.spaces_id_seq', 28, true);
 SELECT pg_catalog.setval('public.suburbs_id_seq', 6, true);
-SELECT pg_catalog.setval('public.system_log_id_seq', 24, true);
+SELECT pg_catalog.setval('public.system_log_id_seq', 26, true);
 SELECT pg_catalog.setval('public.tasks_id_seq', 3, true);
 SELECT pg_catalog.setval('public.work_orders_id_seq', 4, true);
