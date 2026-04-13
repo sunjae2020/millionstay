@@ -49,8 +49,6 @@ import BookingList from "@/pages/booking/BookingList";
 import BookingDetail from "@/pages/booking/BookingDetail";
 import ContractList from "@/pages/contracts/ContractList";
 import ContractDetail from "@/pages/contracts/ContractDetail";
-import ContractProductList from "@/pages/products/ContractProductList";
-import ContractProductDetail from "@/pages/products/ContractProductDetail";
 import ProductList from "@/pages/products/ProductList";
 import ProductDetail from "@/pages/products/ProductDetail";
 import PromotionList from "@/pages/products/PromotionList";
@@ -192,10 +190,6 @@ function Router() {
       <Route path="/booking/contracts/new" component={ContractDetail} />
       <Route path="/booking/contracts/:id" component={ContractDetail} />
 
-      <Route path="/booking/contract-products" component={ContractProductList} />
-      <Route path="/booking/contract-products/new" component={ContractProductDetail} />
-      <Route path="/booking/contract-products/:id" component={ContractProductDetail} />
-
       <Route path="/booking/service-hosts" component={ServiceHostList} />
       <Route path="/booking/service-hosts/new" component={ServiceHostDetail} />
       <Route path="/booking/service-hosts/:id" component={ServiceHostDetail} />
@@ -319,12 +313,6 @@ function Router() {
       </Route>
       <Route path="/contracts/contracts/:id">
         {(params) => <Redirect to={`/booking/contracts/${params.id}`} />}
-      </Route>
-      <Route path="/products/contract-products">
-        {() => <Redirect to="/booking/contract-products" />}
-      </Route>
-      <Route path="/products/contract-products/:id">
-        {(params) => <Redirect to={`/booking/contract-products/${params.id}`} />}
       </Route>
       <Route path="/property/suburbs">
         {() => <Redirect to="/settings/suburbs" />}

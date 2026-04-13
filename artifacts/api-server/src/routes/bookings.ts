@@ -14,6 +14,7 @@ import {
   recurringSchedulesTable,
   contractProductsTable,
   contractLineItemsTable,
+  accommodationCatalogTable,
 } from "@workspace/db";
 import { logAction } from "../utils/auditLog";
 import {
@@ -426,6 +427,7 @@ router.patch("/v1/bookings/:id/confirm", async (req, res): Promise<void> => {
     const [newContract] = await db.insert(contractsTable).values({
       contract_ref: contractRef,
       booking_id: parsed.data.id,
+      product_id: existing.product_id ?? null,
       contract_product_id: existing.contract_product_id ?? null,
       tenant_account_id: existing.account_id,
       space_id: existing.space_id ?? null,
@@ -443,9 +445,13 @@ router.patch("/v1/bookings/:id/confirm", async (req, res): Promise<void> => {
     contractId = newContract.id;
 
     // ── Auto-populate contract_line_items ──────────────────────────────────
-    // Determine billing_frequency from the linked contract_product
+    // Determine billing_frequency: product_id (accommodation_catalog) → contract_product_id fallback
     let rentBillingFreq = "Biweekly";
-    if (existing.contract_product_id) {
+    if (existing.product_id) {
+      const [prod] = await db.select({ billing_frequency: accommodationCatalogTable.billing_frequency })
+        .from(accommodationCatalogTable).where(eq(accommodationCatalogTable.id, existing.product_id));
+      if (prod?.billing_frequency) rentBillingFreq = prod.billing_frequency;
+    } else if (existing.contract_product_id) {
       const [cp] = await db.select({ billing_frequency: contractProductsTable.billing_frequency })
         .from(contractProductsTable).where(eq(contractProductsTable.id, existing.contract_product_id));
       if (cp?.billing_frequency) rentBillingFreq = cp.billing_frequency;

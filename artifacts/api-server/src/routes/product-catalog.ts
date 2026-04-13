@@ -264,4 +264,39 @@ router.delete("/v1/accommodations/:id/services/:mapId", async (req, res): Promis
   }
 });
 
+/* ── Lookup endpoint (used by booking/contract selectors) ── */
+
+router.get("/v1/lookup/products", async (req, res): Promise<void> => {
+  try {
+    const { q, space_id } = req.query as Record<string, string>;
+    const conditions: SQL[] = [eq(accommodationCatalogTable.status, "Active")];
+    if (q) conditions.push(ilike(accommodationCatalogTable.name, `%${q}%`));
+    if (space_id) conditions.push(eq(accommodationCatalogTable.space_id, Number(space_id)));
+
+    const rows = await db
+      .select({
+        id: accommodationCatalogTable.id,
+        name: accommodationCatalogTable.name,
+        weekly_rate: accommodationCatalogTable.weekly_rate,
+        price: accommodationCatalogTable.price,
+        billing_frequency: accommodationCatalogTable.billing_frequency,
+        bond_weeks: accommodationCatalogTable.bond_weeks,
+        advance_weeks: accommodationCatalogTable.advance_weeks,
+        currency: accommodationCatalogTable.currency,
+        gst_included: accommodationCatalogTable.gst_included,
+        space_id: accommodationCatalogTable.space_id,
+        status: accommodationCatalogTable.status,
+      })
+      .from(accommodationCatalogTable)
+      .where(and(...conditions))
+      .orderBy(asc(accommodationCatalogTable.name))
+      .limit(100);
+
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to lookup products" });
+  }
+});
+
 export default router;

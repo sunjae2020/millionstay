@@ -34,7 +34,7 @@ const statusColors: Record<string, string> = {
 
 interface FormData {
   booking_id: number | null;
-  contract_product_id: number | null;
+  product_id: number | null;
   tenant_account_id: number | null;
   landlord_account_id: number | null;
   space_id: number | null;
@@ -153,7 +153,7 @@ export default function ContractDetail() {
 
   const { register, handleSubmit, reset, control } = useForm<FormData>({
     defaultValues: {
-      booking_id: null, contract_product_id: null, tenant_account_id: null,
+      booking_id: null, product_id: null, tenant_account_id: null,
       landlord_account_id: null, space_id: null,
       start_date: "", end_date: "", weekly_rate: "", total_rent: "",
       bond_amount: "", advance_amount: "", currency: "AUD",
@@ -165,7 +165,7 @@ export default function ContractDetail() {
     if (contract) {
       reset({
         booking_id: contract.booking_id ?? null,
-        contract_product_id: contract.contract_product_id ?? null,
+        product_id: (contract as any).product_id ?? null,
         tenant_account_id: contract.tenant_account_id ?? null,
         landlord_account_id: contract.landlord_account_id ?? null,
         space_id: contract.space_id ?? null,
@@ -276,7 +276,7 @@ export default function ContractDetail() {
 
   const buildPayload = (data: FormData) => ({
     booking_id: data.booking_id ?? null,
-    contract_product_id: data.contract_product_id ?? null,
+    product_id: data.product_id ?? null,
     tenant_account_id: data.tenant_account_id ?? null,
     landlord_account_id: data.landlord_account_id ?? null,
     space_id: data.space_id ?? null,
@@ -394,14 +394,14 @@ export default function ContractDetail() {
                   )} />
                 </div>
                 <div>
-                  <Label>{t('contract.label_product')}</Label>
-                  <Controller name="contract_product_id" control={control} render={({ field }) => (
+                  <Label>Product / Accommodation Package</Label>
+                  <Controller name="product_id" control={control} render={({ field }) => (
                     <LookupSelect
-                      lookupUrl="/api/v1/lookup/contract-products"
+                      lookupUrl="/api/v1/lookup/products"
                       value={field.value}
                       onChange={field.onChange}
                       placeholder="Search products..."
-                      displayValue={(contract as any)?.contract_product_name ?? null}
+                      displayValue={(contract as any)?.product_name ?? (contract as any)?.contract_product_name ?? null}
                     />
                   )} />
                 </div>

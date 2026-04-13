@@ -107,7 +107,6 @@ function getNav(t: (k: string) => string): NavSection[] {
       items: [
         { href: "/booking/bookings", label: t("nav.booking"), icon: CalendarDays },
         { href: "/booking/contracts", label: t("nav.contract"), icon: FileText },
-        { href: "/booking/contract-products", label: t("nav.contract_product"), icon: Box },
         { href: "/booking/service-hosts", label: t("nav.service_host"), icon: Users },
       ],
     },

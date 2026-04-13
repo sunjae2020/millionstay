@@ -55,7 +55,7 @@ interface FormData {
   agreed_weekly_rate: string;
   currency: string;
   num_guests: number;
-  contract_product_id: number | null;
+  product_id: number | null;
   status: string;
 }
 
@@ -133,7 +133,7 @@ export default function BookingDetail() {
     defaultValues: {
       account_id: null, contact_id: null, booking_source: "", customer_notes: "",
       space_id: null, check_in_date: "", check_out_date: "", agreed_weekly_rate: "",
-      currency: "AUD", num_guests: 1, contract_product_id: null, status: "Active",
+      currency: "AUD", num_guests: 1, product_id: null, status: "Active",
     },
   });
 
@@ -150,7 +150,7 @@ export default function BookingDetail() {
         agreed_weekly_rate: booking.agreed_weekly_rate ?? "",
         currency: booking.currency ?? "AUD",
         num_guests: booking.num_guests ?? 1,
-        contract_product_id: booking.contract_product_id ?? null,
+        product_id: (booking as any).product_id ?? null,
         status: booking.status ?? "Active",
       });
     }
@@ -358,14 +358,14 @@ export default function BookingDetail() {
             </div>
           )}
           <div>
-            <Label>{t("booking.label_contract_product")}</Label>
-            <Controller name="contract_product_id" control={control} render={({ field }) => (
+            <Label>Product / Accommodation Package</Label>
+            <Controller name="product_id" control={control} render={({ field }) => (
               <LookupSelect
-                lookupUrl={`${BASE}api/v1/lookup/contract-products`}
-                placeholder={t("booking.placeholder_contract_product")}
+                lookupUrl={`${BASE}api/v1/lookup/products`}
+                placeholder="Select accommodation product…"
                 value={field.value}
                 onChange={field.onChange}
-                displayText={(booking as any)?.contract_product_name ?? undefined}
+                displayText={(booking as any)?.product_name ?? (booking as any)?.contract_product_name ?? undefined}
               />
             )} />
           </div>

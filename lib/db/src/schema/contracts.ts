@@ -6,6 +6,7 @@ export const contractsTable = pgTable("contracts", {
   id: serial("id").primaryKey(),
   contract_ref: text("contract_ref").notNull().unique(),
   booking_id: integer("booking_id"),
+  product_id: integer("product_id"),
   contract_product_id: integer("contract_product_id"),
   tenant_account_id: integer("tenant_account_id"),
   landlord_account_id: integer("landlord_account_id"),

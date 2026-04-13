@@ -75,7 +75,7 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 - Service Hosts — host management
 
 **Products:**
-- Contract Products — Space × Promotion = Product; new fields: promotion_id (FK), term_type, effective_weekly_rate (auto-calc), billing_frequency; list shows Term/Promotion/Eff.Rate/Billing columns
+- Accommodation Products (formerly Contract Products) — `accommodation_catalog` is now the unified Product. Billing fields added: `weekly_rate`, `billing_frequency`, `bond_weeks`, `advance_weeks`, `max_stay_weeks`, `term_type`, `includes_wifi/parking/utilities/meals/laundry/cleaning`, `extra_inclusions`. Contract Products menu/routes REMOVED. New lookup endpoint: `GET /api/v1/lookup/products`.
 - Promotions — 3 term types: ShortTerm (<4w, Weekly, no discount), MidTerm (4–25w, Biweekly, 5%), LongTerm (≥26w, Monthly, 7.5%); fields: term_type, min/max_stay_weeks, billing_frequency, discount_percentage; 3 seed records created; lookup endpoint at /v1/lookup/promotions; CRUD in openapi.yaml + codegen done
 - Beneficiaries — full-stack CRUD; links Account + Commission + Contract Product; commission_type (Percentage/Fixed), split_percentage, fixed_amount, priority; DB schema + API route + BeneficiaryList + BeneficiaryDetail + App.tsx routing all done
 
@@ -140,7 +140,7 @@ Tables (30 total): `suburbs`, `properties`, `space_options`, `space_policies`, `
 
 **cs_messages** — Thread messages per ticket. Fields: `ticket_id`, `sender_type` (guest/admin), `sender_id`, `message`, `image_urls` (JSON array of Cloudinary URLs), `is_internal` (1 = internal admin note, not visible to guest).
 
-**accommodation_catalog** (formerly product_catalog) — Guest-facing accommodation pricing per space. Admin API: `/api/v1/accommodations`. Drizzle: `accommodationCatalogTable`. Fields include `bond_amount`, `admin_fee`, `cleaning_fee` per product.
+**accommodation_catalog** — Unified accommodation product (replaces Contract Products). Admin API: `/api/v1/accommodations`. Lookup: `GET /api/v1/lookup/products`. Drizzle: `accommodationCatalogTable`. Billing fields: `weekly_rate`, `billing_frequency` (default Biweekly), `bond_weeks` (default 4), `advance_weeks` (default 2), `max_stay_weeks`, `term_type`, `includes_wifi/parking/utilities/meals/laundry/cleaning`, `extra_inclusions`. Bookings and contracts use `product_id` (FK to accommodation_catalog) instead of legacy `contract_product_id`.
 
 **service_catalog** — Ancillary services. Types: `one_time`, `scheduled`, `physical`. Admin API: `/api/v1/services`. Public API: `GET /api/v1/public/services` (returns optional, active, display_on_booking_page=true services). Seeded with 6 services: Room Deposit, Admission Fee, Cleaning Fee (required), Airport Pickup, Vodafone SIM Card, Linen Pack (optional). Guest booking page fetches and displays optional services from this catalog.
 

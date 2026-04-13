@@ -126,7 +126,8 @@ export default function ProductDetail() {
     values: product ? {
       name: product.name ?? "",
       item_description: product.item_description ?? "",
-      price: product.price ?? "",
+      price: product.price != null ? String(product.price) : "",
+      weekly_rate: product.weekly_rate != null ? String(product.weekly_rate) : "",
       currency: product.currency ?? "AUD",
       product_group_id: product.product_group_id ?? "",
       product_type_id: product.product_type_id ?? "",
@@ -134,17 +135,34 @@ export default function ProductDetail() {
       gst_included: product.gst_included ?? false,
       min_contract_period: product.min_contract_period ?? "",
       min_contract_period_unit: product.min_contract_period_unit ?? "weeks",
+      max_stay_weeks: product.max_stay_weeks ?? "",
+      billing_frequency: product.billing_frequency ?? "Biweekly",
+      term_type: product.term_type ?? "",
       bond_amount: product.bond_amount != null ? String(product.bond_amount) : "",
+      bond_weeks: product.bond_weeks != null ? String(product.bond_weeks) : "4",
+      advance_weeks: product.advance_weeks != null ? String(product.advance_weeks) : "2",
       admin_fee: product.admin_fee != null ? String(product.admin_fee) : "",
       cleaning_fee: product.cleaning_fee != null ? String(product.cleaning_fee) : "",
+      includes_wifi: product.includes_wifi ?? false,
+      includes_parking: product.includes_parking ?? false,
+      includes_utilities: product.includes_utilities ?? false,
+      includes_meals: product.includes_meals ?? false,
+      includes_laundry: product.includes_laundry ?? false,
+      includes_cleaning: product.includes_cleaning ?? false,
+      extra_inclusions: product.extra_inclusions ?? "",
       status: product.status ?? "Active",
       display_on_booking_page: product.display_on_booking_page ?? true,
       display_on_invoice: product.display_on_invoice ?? true,
     } : {
-      name: "", item_description: "", price: "", currency: "AUD",
+      name: "", item_description: "", price: "", weekly_rate: "", currency: "AUD",
       product_group_id: "", product_type_id: "", promotion_id: "", gst_included: false,
       min_contract_period: "", min_contract_period_unit: "weeks",
-      bond_amount: "", admin_fee: "", cleaning_fee: "",
+      max_stay_weeks: "", billing_frequency: "Biweekly", term_type: "",
+      bond_amount: "", bond_weeks: "4", advance_weeks: "2",
+      admin_fee: "", cleaning_fee: "",
+      includes_wifi: false, includes_parking: false, includes_utilities: false,
+      includes_meals: false, includes_laundry: false, includes_cleaning: false,
+      extra_inclusions: "",
       status: "Active", display_on_booking_page: true, display_on_invoice: true,
     },
   });
@@ -153,14 +171,19 @@ export default function ProductDetail() {
     mutationFn: async (values: any) => {
       const body = {
         ...values,
-        price: values.price ? Number(values.price) : null,
+        price: values.price !== "" ? Number(values.price) : null,
+        weekly_rate: values.weekly_rate !== "" ? Number(values.weekly_rate) : null,
         product_group_id: values.product_group_id ? Number(values.product_group_id) : null,
         product_type_id: values.product_type_id ? Number(values.product_type_id) : null,
         promotion_id: values.promotion_id ? Number(values.promotion_id) : null,
-        min_contract_period: values.min_contract_period ? Number(values.min_contract_period) : null,
-        bond_amount:   values.bond_amount   !== "" ? Number(values.bond_amount)   : null,
-        admin_fee:     values.admin_fee     !== "" ? Number(values.admin_fee)     : null,
-        cleaning_fee:  values.cleaning_fee  !== "" ? Number(values.cleaning_fee)  : null,
+        min_contract_period: values.min_contract_period !== "" ? Number(values.min_contract_period) : null,
+        max_stay_weeks: values.max_stay_weeks !== "" ? Number(values.max_stay_weeks) : null,
+        bond_amount: values.bond_amount !== "" ? Number(values.bond_amount) : null,
+        bond_weeks: values.bond_weeks !== "" ? Number(values.bond_weeks) : null,
+        advance_weeks: values.advance_weeks !== "" ? Number(values.advance_weeks) : null,
+        admin_fee: values.admin_fee !== "" ? Number(values.admin_fee) : null,
+        cleaning_fee: values.cleaning_fee !== "" ? Number(values.cleaning_fee) : null,
+        term_type: values.term_type || null,
       };
       const url = isNew ? "/api/v1/accommodations" : `/api/v1/accommodations/${id}`;
       const method = isNew ? "POST" : "PUT";
@@ -255,7 +278,11 @@ export default function ProductDetail() {
             <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">{t('product.section_pricing')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <Label>{t('product.label_price')}</Label>
+                <Label>Weekly Rate (AUD)</Label>
+                <Input {...register("weekly_rate")} type="number" step="0.01" placeholder="0.00" className="mt-1" />
+              </div>
+              <div>
+                <Label>{t('product.label_price')} (List)</Label>
                 <Input {...register("price")} type="number" step="0.01" placeholder="0.00" className="mt-1" />
               </div>
               <div>
@@ -273,22 +300,88 @@ export default function ProductDetail() {
                 <Label>{t('product.label_gst_included')}</Label>
               </div>
               <div>
-                <Label>{t('product.label_min_period')}</Label>
-                <Input {...register("min_contract_period")} type="number" placeholder="e.g. 4" className="mt-1" />
+                <Label>Admin Fee (AUD)</Label>
+                <Input {...register("admin_fee")} type="number" step="0.01" placeholder="0.00" className="mt-1" />
               </div>
               <div>
-                <Label>{t('product.label_period_unit')}</Label>
-                <Select value={watch("min_contract_period_unit")} onValueChange={v => setValue("min_contract_period_unit", v)}>
+                <Label>Cleaning Fee (AUD)</Label>
+                <Input {...register("cleaning_fee")} type="number" step="0.01" placeholder="0.00" className="mt-1" />
+              </div>
+            </div>
+          </div>
+
+          {/* Billing & Contract Terms */}
+          <div className="bg-white border rounded-lg p-6 space-y-4">
+            <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Billing &amp; Contract Terms</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <Label>Billing Frequency</Label>
+                <Select value={watch("billing_frequency")} onValueChange={v => setValue("billing_frequency", v)}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Day">{t('common.day')}</SelectItem>
-                    <SelectItem value="days">{t('common.days')}</SelectItem>
-                    <SelectItem value="Week">{t('common.week')}</SelectItem>
-                    <SelectItem value="weeks">{t('common.weeks')}</SelectItem>
-                    <SelectItem value="Month">{t('common.month')}</SelectItem>
-                    <SelectItem value="months">{t('common.months')}</SelectItem>
+                    <SelectItem value="Weekly">Weekly</SelectItem>
+                    <SelectItem value="Biweekly">Fortnightly</SelectItem>
+                    <SelectItem value="Monthly">Monthly</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div>
+                <Label>Term Type</Label>
+                <Select value={watch("term_type") || "_none"} onValueChange={v => setValue("term_type", v === "_none" ? "" : v)}>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder="Select…" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">— None —</SelectItem>
+                    <SelectItem value="Fixed">Fixed Term</SelectItem>
+                    <SelectItem value="Periodic">Periodic</SelectItem>
+                    <SelectItem value="Open">Open Ended</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Min Contract Period</Label>
+                <div className="flex gap-2 mt-1">
+                  <Input {...register("min_contract_period")} type="number" placeholder="e.g. 4" className="w-24" />
+                  <Select value={watch("min_contract_period_unit")} onValueChange={v => setValue("min_contract_period_unit", v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="days">Days</SelectItem>
+                      <SelectItem value="weeks">Weeks</SelectItem>
+                      <SelectItem value="months">Months</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div>
+                <Label>Max Stay (weeks)</Label>
+                <Input {...register("max_stay_weeks")} type="number" placeholder="e.g. 52" className="mt-1" />
+              </div>
+              <div>
+                <Label>Bond (weeks)</Label>
+                <Input {...register("bond_weeks")} type="number" step="0.5" placeholder="4" className="mt-1" />
+              </div>
+              <div>
+                <Label>Advance Payment (weeks)</Label>
+                <Input {...register("advance_weeks")} type="number" step="0.5" placeholder="2" className="mt-1" />
+              </div>
+              <div>
+                <Label>Bond Amount (AUD override)</Label>
+                <Input {...register("bond_amount")} type="number" step="0.01" placeholder="Leave blank to use bond weeks" className="mt-1" />
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mt-2 mb-3">Inclusions</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {(["includes_wifi", "includes_parking", "includes_utilities", "includes_meals", "includes_laundry", "includes_cleaning"] as const).map(field => (
+                  <div key={field} className="flex items-center gap-2">
+                    <Switch checked={watch(field as any)} onCheckedChange={v => setValue(field as any, v)} />
+                    <Label className="text-sm capitalize">{field.replace("includes_", "").replace("_", " ")}</Label>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3">
+                <Label>Extra Inclusions (free text)</Label>
+                <Input {...register("extra_inclusions")} placeholder="e.g. Pool access, Gym" className="mt-1" />
               </div>
             </div>
           </div>

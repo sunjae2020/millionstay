@@ -20,6 +20,7 @@ export const bookingsTable = pgTable("bookings", {
   total_rent: numeric("total_rent", { precision: 12, scale: 2 }),
   currency: text("currency").default("AUD"),
   num_guests: integer("num_guests").default(1),
+  product_id: integer("product_id"),
   contract_product_id: integer("contract_product_id"),
   cancellation_reason: text("cancellation_reason"),
   cancelled_at: timestamp("cancelled_at", { withTimezone: true }),

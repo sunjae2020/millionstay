@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, contractsTable, accountsTable, spacesTable, propertiesTable, contractProductsTable, bookingsTable, recurringSchedulesTable, bookingServicesTable, invoicesTable, contractLineItemsTable } from "@workspace/db";
+import { db, contractsTable, accountsTable, spacesTable, propertiesTable, contractProductsTable, accommodationCatalogTable, bookingsTable, recurringSchedulesTable, bookingServicesTable, invoicesTable, contractLineItemsTable } from "@workspace/db";
 import { eq, ilike, and, like, desc } from "drizzle-orm";
 import { logAction } from "../utils/auditLog";
 
@@ -78,10 +78,14 @@ async function generateContractInvoicesAndSchedules(contractId: number): Promise
   let lineItems = await db.select().from(contractLineItemsTable)
     .where(and(eq(contractLineItemsTable.contract_id, contractId), eq(contractLineItemsTable.status, "Active")));
 
-  // ── Fallback: no line items → create virtual Rent line from contract_product ─
+  // ── Fallback: no line items → create virtual Rent line from product ──────────
   if (lineItems.length === 0) {
     let billingFreq = "Monthly";
-    if (contract.contract_product_id) {
+    // Prefer product_id (accommodation_catalog) over legacy contract_product_id
+    if (contract.product_id) {
+      const [prod] = await db.select().from(accommodationCatalogTable).where(eq(accommodationCatalogTable.id, contract.product_id));
+      if (prod?.billing_frequency) billingFreq = prod.billing_frequency;
+    } else if (contract.contract_product_id) {
       const [cp] = await db.select().from(contractProductsTable).where(eq(contractProductsTable.id, contract.contract_product_id));
       if (cp?.billing_frequency) billingFreq = cp.billing_frequency;
     }
@@ -247,12 +251,14 @@ async function enrichContracts(rows: (typeof contractsTable.$inferSelect)[]) {
   const tenantIds = [...new Set(rows.map(r => r.tenant_account_id).filter(Boolean))] as number[];
   const landlordIds = [...new Set(rows.map(r => r.landlord_account_id).filter(Boolean))] as number[];
   const spaceIds = [...new Set(rows.map(r => r.space_id).filter(Boolean))] as number[];
-  const productIds = [...new Set(rows.map(r => r.contract_product_id).filter(Boolean))] as number[];
+  const legacyProductIds = [...new Set(rows.map(r => r.contract_product_id).filter(Boolean))] as number[];
+  const productIds = [...new Set(rows.map(r => r.product_id).filter(Boolean))] as number[];
   const bookingIds = [...new Set(rows.map(r => r.booking_id).filter(Boolean))] as number[];
 
   const accountMap: Record<number, string> = {};
   const spaceMap: Record<number, string> = {};
   const productMap: Record<number, string> = {};
+  const accommodationMap: Record<number, string> = {};
   const bookingMap: Record<number, string> = {};
 
   for (const id of [...new Set([...tenantIds, ...landlordIds])]) {
@@ -263,9 +269,13 @@ async function enrichContracts(rows: (typeof contractsTable.$inferSelect)[]) {
     const [s] = await db.select({ id: spacesTable.id, name: spacesTable.name }).from(spacesTable).where(eq(spacesTable.id, id));
     if (s) spaceMap[s.id] = s.name;
   }
-  for (const id of productIds) {
+  for (const id of legacyProductIds) {
     const [p] = await db.select({ id: contractProductsTable.id, name: contractProductsTable.name }).from(contractProductsTable).where(eq(contractProductsTable.id, id));
     if (p) productMap[p.id] = p.name;
+  }
+  for (const id of productIds) {
+    const [p] = await db.select({ id: accommodationCatalogTable.id, name: accommodationCatalogTable.name }).from(accommodationCatalogTable).where(eq(accommodationCatalogTable.id, id));
+    if (p) accommodationMap[p.id] = p.name;
   }
   for (const id of bookingIds) {
     const [b] = await db.select({ id: bookingsTable.id, booking_ref: bookingsTable.booking_ref }).from(bookingsTable).where(eq(bookingsTable.id, id));
@@ -277,6 +287,8 @@ async function enrichContracts(rows: (typeof contractsTable.$inferSelect)[]) {
     tenant_name: r.tenant_account_id ? (accountMap[r.tenant_account_id] ?? null) : null,
     landlord_name: r.landlord_account_id ? (accountMap[r.landlord_account_id] ?? null) : null,
     space_name: r.space_id ? (spaceMap[r.space_id] ?? null) : null,
+    product_name: r.product_id ? (accommodationMap[r.product_id] ?? null)
+      : r.contract_product_id ? (productMap[r.contract_product_id] ?? null) : null,
     contract_product_name: r.contract_product_id ? (productMap[r.contract_product_id] ?? null) : null,
     booking_ref: r.booking_id ? (bookingMap[r.booking_id] ?? null) : null,
   }));
@@ -302,6 +314,7 @@ router.post("/v1/contracts", async (req, res): Promise<void> => {
   const [row] = await db.insert(contractsTable).values({
     contract_ref,
     booking_id: data.booking_id ?? null,
+    product_id: data.product_id ?? null,
     contract_product_id: data.contract_product_id ?? null,
     tenant_account_id: data.tenant_account_id ?? null,
     landlord_account_id: data.landlord_account_id ?? null,
@@ -335,6 +348,7 @@ router.put("/v1/contracts/:id", async (req, res): Promise<void> => {
   const data = req.body;
   const [row] = await db.update(contractsTable).set({
     booking_id: data.booking_id ?? null,
+    product_id: data.product_id ?? null,
     contract_product_id: data.contract_product_id ?? null,
     tenant_account_id: data.tenant_account_id ?? null,
     landlord_account_id: data.landlord_account_id ?? null,
