@@ -570,7 +570,7 @@ INSERT INTO public.accounts (id, name, account_type, primary_contact_id, seconda
 	(17, 'Gildong HONG', 'Guest', NULL, NULL, 'teswt@timest.co.kr', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'AUD', NULL, NULL, false, 'Active', '2026-04-09 05:11:01.06402+00', '2026-04-09 05:11:01.06402+00'),
 	(15, 'Demo Guest', 'Guest', NULL, NULL, 'demo@millionstay.com.au', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'AUD', NULL, NULL, false, 'Active', '2026-04-07 05:35:30.26358+00', '2026-04-11 11:13:59.069+00');
 INSERT INTO public.admin_users (id, email, password_hash, role, first_name, last_name, is_active, force_password_change, last_login_at, created_at, updated_at, status, reset_token, reset_token_expires_at) VALUES
-	(1, 'admin@millionstay.com', '$2b$10$FX2diLhEDwiXWzaGJtZoXeOS1x/pizNnsMOqPkpnwaR3DxlC.OBU.', 'Super Admin', 'Million', 'Stay', true, false, '2026-04-12 16:40:28.497+00', '2026-04-05 08:29:14.152582+00', '2026-04-12 16:40:28.497+00', 'active', NULL, NULL);
+	(1, 'admin@millionstay.com', '$2b$10$FX2diLhEDwiXWzaGJtZoXeOS1x/pizNnsMOqPkpnwaR3DxlC.OBU.', 'Super Admin', 'Million', 'Stay', true, false, '2026-04-13 01:02:40.815+00', '2026-04-05 08:29:14.152582+00', '2026-04-13 01:02:40.815+00', 'active', NULL, NULL);
 INSERT INTO public.announcements (id, title, body, category, priority, is_published, published_at, expires_at, created_by, created_at, updated_at) VALUES
 	(1, 'Welcome to MillionStay Resident Portal', 'Dear residents, welcome to your new online portal! You can now manage your bookings, pay invoices, submit maintenance requests, and communicate with our team — all in one place. If you have any questions, please reach out via the Inquiries tab.', 'General', 'Normal', 1, '2026-04-04 16:41:47.886313+00', NULL, NULL, '2026-04-11 16:41:47.886313+00', '2026-04-11 16:41:47.886313+00'),
 	(2, 'Building Maintenance — Hot Water System', 'Planned maintenance on the hot water system will take place on Saturday 18 April 2026 between 9:00 AM and 1:00 PM. Hot water may be intermittent during this period. We apologise for any inconvenience and will notify you when the work is complete.', 'Maintenance', 'High', 1, '2026-04-09 16:41:47.886313+00', NULL, NULL, '2026-04-11 16:41:47.886313+00', '2026-04-11 16:41:47.886313+00'),
@@ -707,7 +707,6 @@ INSERT INTO public.contract_types (id, name, description, contract_security, req
 	(7, 'Part-Time Employment', 'Staff hired with part-time work hours', 'Private', false, false, false, true, '2026-04-05 02:20:38.954223+00', '2026-04-05 02:20:38.954223+00'),
 	(8, 'Full-Time Employment', 'Permanent full-time staff', 'Private', false, false, false, true, '2026-04-05 02:20:38.957844+00', '2026-04-05 02:20:38.957844+00');
 INSERT INTO public.contracts (id, contract_ref, booking_id, contract_product_id, tenant_account_id, landlord_account_id, space_id, start_date, end_date, weekly_rate, total_rent, bond_amount, advance_amount, currency, status, sent_at, signed_at, effective_date, expiry_date, termination_reason, document_url, terms_text, notes, created_at, updated_at) VALUES
-	(2, 'MS-C-2026-00002', 2, 2, NULL, NULL, NULL, '2026-04-01', '2026-04-30', 1050, 4200, 2100, NULL, 'AUD', 'Sent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Monthly contract sent to tenant', '2026-04-05 00:39:51.167848+00', '2026-04-05 00:39:51.167848+00'),
 	(3, 'MS-C-2026-00003', NULL, 3, NULL, NULL, NULL, '2026-03-01', '2026-03-31', 1700, 6800, 3400, NULL, 'AUD', 'Active', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Premium suite - currently active', '2026-04-05 00:39:51.167848+00', '2026-04-05 00:39:51.167848+00'),
 	(4, 'MS-C-2026-00004', NULL, 4, NULL, NULL, NULL, '2026-01-01', '2026-02-28', 750, 6000, 1500, NULL, 'AUD', 'Terminated', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Terminated early by tenant', '2026-04-05 00:39:51.167848+00', '2026-04-05 00:39:51.167848+00'),
 	(5, 'MS-C-2026-00005', 7, NULL, 15, NULL, 5, '2026-05-01', '2027-05-01', 530, 27560.04, 2120, 2296.67, 'AUD', 'Active', '2026-04-11 11:43:26.169+00', '2026-04-11 11:43:26.178+00', '2026-04-11', NULL, NULL, 'https://www.africau.edu/images/default/sample.pdf', 'RESIDENTIAL ACCOMMODATION AGREEMENT — DEMO SAMPLE
@@ -725,7 +724,8 @@ Landlord: MillionStay Property Management
 
 NOTE: This is a sample contract generated for testing purposes only.
 This document does not constitute a legally binding agreement.', '12-month fixed term — auto-generated demo contract', '2026-04-11 11:43:26.162141+00', '2026-04-11 11:43:26.187+00'),
-	(1, 'MS-C-2026-00001', 1, 1, NULL, NULL, NULL, '2026-04-01', '2026-04-07', 200, 1400, 400, NULL, 'AUD', 'Sent', '2026-04-13 00:28:38.191+00', NULL, NULL, NULL, NULL, NULL, NULL, 'Initial draft contract for short stay', '2026-04-05 00:39:51.167848+00', '2026-04-13 00:28:38.191+00');
+	(1, 'MS-C-2026-00001', 1, 1, NULL, NULL, NULL, '2026-04-01', '2026-04-07', 200, 1400, 400, NULL, 'AUD', 'Sent', '2026-04-13 00:28:38.191+00', NULL, NULL, NULL, NULL, NULL, NULL, 'Initial draft contract for short stay', '2026-04-05 00:39:51.167848+00', '2026-04-13 00:28:38.191+00'),
+	(2, 'MS-C-2026-00002', 2, 2, NULL, NULL, NULL, '2026-04-01', '2026-04-30', 1050, 4200, 2100, NULL, 'AUD', 'Active', NULL, NULL, '2026-04-13', NULL, NULL, NULL, NULL, 'Monthly contract sent to tenant', '2026-04-05 00:39:51.167848+00', '2026-04-13 01:02:41.04+00');
 INSERT INTO public.cs_messages (id, ticket_id, sender_type, sender_id, message, image_urls, is_internal, created_at) VALUES
 	(1, 1, 'guest', 2, 'This is a test inquiry.', NULL, 0, '2026-04-09 09:56:05.528916+00'),
 	(2, 2, 'guest', 2, 'I have a question about my invoice.', NULL, 0, '2026-04-09 09:56:33.552849+00'),
@@ -803,7 +803,6 @@ INSERT INTO public.integration_settings (key, value, updated_at) VALUES
 	('EMAIL_FROM', 'noreply@contact.millionstay.com', '2026-04-08 01:05:18.657');
 INSERT INTO public.invoices (id, invoice_ref, booking_id, contract_id, account_id, amount, currency, status, due_date, paid_at, payment_method, stripe_payment_intent_id, stripe_checkout_url, description, notes, created_at, updated_at) VALUES
 	(1, 'MS-INV-2026-00001', 1, 1, NULL, 1400, 'AUD', 'Draft', '2026-04-15', NULL, NULL, NULL, NULL, 'Weekly stay - April 1-7', 'Standard room invoice', '2026-04-05 00:49:22.695134+00', '2026-04-05 00:49:22.695134+00'),
-	(2, 'MS-INV-2026-00002', 2, 2, NULL, 4200, 'AUD', 'Sent', '2026-04-30', NULL, NULL, NULL, NULL, 'Monthly stay - April 2026', 'Monthly contract invoice', '2026-04-05 00:49:22.695134+00', '2026-04-05 00:49:22.695134+00'),
 	(4, 'MS-INV-2026-00004', NULL, 4, NULL, 1500, 'AUD', 'Void', '2026-02-28', NULL, NULL, NULL, NULL, 'Bond refund', 'Voided - contract terminated', '2026-04-05 00:49:22.695134+00', '2026-04-05 00:49:22.695134+00'),
 	(3, 'MS-INV-2026-00003', NULL, 3, NULL, 6800, 'AUD', 'Paid', '2026-03-15', '2026-04-05 00:49:22.70018+00', 'BankTransfer', NULL, NULL, 'Suite Premium - March 2026', 'Paid via bank transfer', '2026-04-05 00:49:22.695134+00', '2026-04-05 00:49:22.695134+00'),
 	(5, 'MS-INV-2026-00005', NULL, NULL, 1, 50, 'AUD', 'Sent', '2026-05-01', NULL, NULL, NULL, NULL, 'Audit log test', NULL, '2026-04-05 01:52:17.759838+00', '2026-04-05 01:52:23.326+00'),
@@ -858,6 +857,19 @@ INSERT INTO public.properties (id, name, address, address2, city, state, postcod
 	(7, '336 Russell Street, Melbourne', '336 Russell Street', NULL, NULL, NULL, NULL, NULL, -37.8116, 144.9695, 'Active', 13, 4, '2BR 2BA, 2 Queen Beds', '2026-04-05 02:20:39.264989+00', '2026-04-05 02:20:39.264989+00'),
 	(8, '250 City Road, Southbank', '250 City Road', NULL, NULL, NULL, NULL, NULL, -37.8227, 144.959, 'Active', 10, 5, 'Investment-Type: Landlord 85% / Million Stay 15%', '2026-04-05 02:20:39.268794+00', '2026-04-05 02:20:39.268794+00'),
 	(9, '53 Batman Street, West Melbourne', '53 Batman Street', NULL, NULL, NULL, NULL, NULL, -37.8095, 144.9468, 'Active', 11, 6, 'Entire apartment only. Bunk Bed + Queen Bed', '2026-04-05 02:20:39.272387+00', '2026-04-05 02:20:39.272387+00');
+INSERT INTO public.recurring_schedule (id, booking_id, contract_id, account_id, schedule_type, frequency, amount, currency, gst_included, start_date, end_date, next_due_date, last_generated_at, is_active, created_at, updated_at) VALUES
+	(2, 7, 5, 15, 'Rent', 'Monthly', 2296.67, 'AUD', true, '2026-05-01', '2026-05-31', '2026-05-01', NULL, false, '2026-04-13 00:48:33.012873+00', '2026-04-13 00:48:33.012873+00'),
+	(3, 7, 5, 15, 'Rent', 'Monthly', 2296.67, 'AUD', true, '2026-06-01', '2026-06-30', '2026-06-01', NULL, false, '2026-04-13 00:48:33.012873+00', '2026-04-13 00:48:33.012873+00'),
+	(4, 7, 5, 15, 'Rent', 'Monthly', 2296.67, 'AUD', true, '2026-07-01', '2026-07-31', '2026-07-01', NULL, true, '2026-04-13 00:48:33.012873+00', '2026-04-13 00:48:33.012873+00'),
+	(5, 7, 5, 15, 'Rent', 'Monthly', 2296.67, 'AUD', true, '2026-08-01', '2026-08-31', '2026-08-01', NULL, true, '2026-04-13 00:48:33.012873+00', '2026-04-13 00:48:33.012873+00'),
+	(6, 7, 5, 15, 'Rent', 'Monthly', 2296.67, 'AUD', true, '2026-09-01', '2026-09-30', '2026-09-01', NULL, true, '2026-04-13 00:48:33.012873+00', '2026-04-13 00:48:33.012873+00'),
+	(7, 7, 5, 15, 'Rent', 'Monthly', 2296.67, 'AUD', true, '2026-10-01', '2026-10-31', '2026-10-01', NULL, true, '2026-04-13 00:48:33.012873+00', '2026-04-13 00:48:33.012873+00'),
+	(8, 7, 5, 15, 'Rent', 'Monthly', 2296.67, 'AUD', true, '2026-11-01', '2026-11-30', '2026-11-01', NULL, true, '2026-04-13 00:48:33.012873+00', '2026-04-13 00:48:33.012873+00'),
+	(9, 7, 5, 15, 'Rent', 'Monthly', 2296.67, 'AUD', true, '2026-12-01', '2026-12-31', '2026-12-01', NULL, true, '2026-04-13 00:48:33.012873+00', '2026-04-13 00:48:33.012873+00'),
+	(10, 7, 5, 15, 'Rent', 'Monthly', 2296.67, 'AUD', true, '2027-01-01', '2027-01-31', '2027-01-01', NULL, true, '2026-04-13 00:48:33.012873+00', '2026-04-13 00:48:33.012873+00'),
+	(11, 7, 5, 15, 'Rent', 'Monthly', 2296.67, 'AUD', true, '2027-02-01', '2027-02-28', '2027-02-01', NULL, true, '2026-04-13 00:48:33.012873+00', '2026-04-13 00:48:33.012873+00'),
+	(12, 7, 5, 15, 'Rent', 'Monthly', 2296.67, 'AUD', true, '2027-03-01', '2027-03-31', '2027-03-01', NULL, true, '2026-04-13 00:48:33.012873+00', '2026-04-13 00:48:33.012873+00'),
+	(13, 7, 5, 15, 'Rent', 'Monthly', 2296.67, 'AUD', true, '2027-04-01', '2027-04-30', '2027-04-01', NULL, true, '2026-04-13 00:48:33.012873+00', '2026-04-13 00:48:33.012873+00');
 INSERT INTO public.service_catalog (id, name, description, service_type, base_price, currency, is_optional, is_refundable, billing_trigger, gst_included, requires_scheduling, scheduling_notes, stock_tracked, stock_qty, has_variants, variant_options, display_on_booking_page, sort_order, status, created_at, updated_at, promotion_id) VALUES
 	(1, 'Room Deposit', 'Refundable security deposit collected at booking. Returned at end of tenancy subject to property condition.', 'one_time', 1000, 'AUD', false, true, 'at_booking', false, false, NULL, false, NULL, false, NULL, true, 1, 'Active', '2026-04-08 23:24:11.563232+00', '2026-04-08 23:24:11.563232+00', NULL),
 	(2, 'Admission Fee', 'One-time application and administration processing fee. Non-refundable.', 'one_time', 200, 'AUD', false, false, 'at_booking', false, false, NULL, false, NULL, false, NULL, true, 2, 'Active', '2026-04-08 23:24:11.563232+00', '2026-04-08 23:24:11.563232+00', NULL),
@@ -1676,7 +1688,7 @@ SELECT pg_catalog.setval('public.email_template_id_seq', 10, true);
 SELECT pg_catalog.setval('public.guest_direct_messages_id_seq', 2, true);
 SELECT pg_catalog.setval('public.guest_emergency_contacts_id_seq', 2, true);
 SELECT pg_catalog.setval('public.guest_users_id_seq', 4, true);
-SELECT pg_catalog.setval('public.invoices_id_seq', 18, true);
+SELECT pg_catalog.setval('public.invoices_id_seq', 19, true);
 SELECT pg_catalog.setval('public.leads_id_seq', 4, true);
 SELECT pg_catalog.setval('public.payment_info_id_seq', 1, true);
 SELECT pg_catalog.setval('public.product_catalog_id_seq', 88, true);
@@ -1684,7 +1696,7 @@ SELECT pg_catalog.setval('public.product_groups_id_seq', 3, true);
 SELECT pg_catalog.setval('public.product_types_id_seq', 11, true);
 SELECT pg_catalog.setval('public.promotions_id_seq', 5, true);
 SELECT pg_catalog.setval('public.properties_id_seq', 9, true);
-SELECT pg_catalog.setval('public.recurring_schedule_id_seq', 1, false);
+SELECT pg_catalog.setval('public.recurring_schedule_id_seq', 13, true);
 SELECT pg_catalog.setval('public.service_catalog_id_seq', 36, true);
 SELECT pg_catalog.setval('public.service_hosts_id_seq', 1, false);
 SELECT pg_catalog.setval('public.space_availability_id_seq', 1, false);

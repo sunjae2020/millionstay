@@ -1,7 +1,171 @@
 import { Router } from "express";
-import { db, contractsTable, accountsTable, spacesTable, contractProductsTable, bookingsTable, recurringSchedulesTable, bookingServicesTable } from "@workspace/db";
-import { eq, ilike, and } from "drizzle-orm";
+import { db, contractsTable, accountsTable, spacesTable, propertiesTable, contractProductsTable, bookingsTable, recurringSchedulesTable, bookingServicesTable, invoicesTable } from "@workspace/db";
+import { eq, ilike, and, like, desc } from "drizzle-orm";
 import { logAction } from "../utils/auditLog";
+
+// ─── Invoice ref generator (returns a factory that increments safely) ────────
+async function makeInvoiceRefFactory(): Promise<() => string> {
+  const year = new Date().getFullYear();
+  const rows = await db
+    .select({ ref: invoicesTable.invoice_ref })
+    .from(invoicesTable)
+    .where(like(invoicesTable.invoice_ref, `MS-INV-${year}-%`))
+    .orderBy(desc(invoicesTable.id))
+    .limit(1);
+  let counter = 0;
+  if (rows.length > 0) {
+    const last = rows[0].ref;
+    const num = parseInt(last.split("-").pop() ?? "0", 10);
+    counter = isNaN(num) ? 0 : num;
+  }
+  return () => {
+    counter++;
+    return `MS-INV-${year}-${String(counter).padStart(5, "0")}`;
+  };
+}
+
+// ─── Month name helper ────────────────────────────────────────────────────────
+const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+// ─── Add months to a date string (YYYY-MM-DD) ────────────────────────────────
+function addMonths(dateStr: string, n: number): string {
+  const d = new Date(dateStr + "T00:00:00Z");
+  d.setUTCMonth(d.getUTCMonth() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+function addDays(dateStr: string, n: number): string {
+  const d = new Date(dateStr + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+function formatPeriodLabel(freq: string, dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00Z");
+  const mon = MONTH_NAMES[d.getUTCMonth()];
+  const yr = d.getUTCFullYear();
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  if (freq === "Monthly") return `${mon} ${yr}`;
+  return `${day} ${mon} ${yr}`;
+}
+
+// ─── Core: generate invoices + payment schedules for a contract ───────────────
+async function generateContractInvoicesAndSchedules(contractId: number): Promise<{ invoices: number; schedules: number }> {
+  const [contract] = await db.select().from(contractsTable).where(eq(contractsTable.id, contractId));
+  if (!contract || !contract.start_date || !contract.end_date) return { invoices: 0, schedules: 0 };
+
+  // Determine billing frequency from contract_product or default Monthly
+  let billingFreq = "Monthly";
+  let locationLabel = "";
+
+  if (contract.contract_product_id) {
+    const [cp] = await db.select().from(contractProductsTable).where(eq(contractProductsTable.id, contract.contract_product_id));
+    if (cp?.billing_frequency) billingFreq = cp.billing_frequency;
+  }
+
+  // Build location label from space + property
+  if (contract.space_id) {
+    const [space] = await db.select().from(spacesTable).where(eq(spacesTable.id, contract.space_id));
+    if (space) {
+      locationLabel = space.name ?? "";
+      if (space.property_id) {
+        const [prop] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, space.property_id));
+        if (prop?.address) locationLabel = `${prop.address}${space.name ? `, ${space.name}` : ""}`;
+      }
+    }
+  }
+
+  const weeklyRate = parseFloat(contract.weekly_rate ?? "0");
+  const currency = contract.currency ?? "AUD";
+
+  // Calculate per-period amount
+  let periodAmount: number;
+  if (billingFreq === "Weekly") periodAmount = weeklyRate;
+  else if (billingFreq === "Biweekly") periodAmount = weeklyRate * 2;
+  else periodAmount = parseFloat((weeklyRate * (52 / 12)).toFixed(2)); // Monthly
+
+  // Delete existing non-paid schedules and non-paid invoices for this contract
+  await db.delete(recurringSchedulesTable).where(eq(recurringSchedulesTable.contract_id, contractId));
+  const existingInvoices = await db.select({ id: invoicesTable.id, status: invoicesTable.status })
+    .from(invoicesTable).where(eq(invoicesTable.contract_id, contractId));
+  // Delete unpaid invoices; keep paid ones (do not regenerate them)
+  const unpaidIds = existingInvoices.filter(i => i.status !== "Paid").map(i => i.id);
+  for (const iid of unpaidIds) {
+    await db.delete(invoicesTable).where(eq(invoicesTable.id, iid));
+  }
+
+  // Fetch remaining paid invoices' due_dates — we won't create new invoices for those dates
+  const paidInvoices = await db.select({ due_date: invoicesTable.due_date })
+    .from(invoicesTable)
+    .where(eq(invoicesTable.contract_id, contractId));
+  const paidDueDates = new Set(paidInvoices.map(i => i.due_date).filter(Boolean) as string[]);
+
+  // Pre-initialise invoice ref factory AFTER deletions so the counter is accurate
+  const nextInvoiceRef = await makeInvoiceRefFactory();
+
+  // Generate periods
+  const start = contract.start_date;
+  const end = contract.end_date;
+  const invoicesCreated: number[] = [];
+  const schedulesCreated: number[] = [];
+
+  let current = start;
+  let periodIndex = 0;
+
+  while (current < end) {
+    // Determine next period start
+    let nextDate: string;
+    if (billingFreq === "Weekly") nextDate = addDays(current, 7);
+    else if (billingFreq === "Biweekly") nextDate = addDays(current, 14);
+    else nextDate = addMonths(current, 1);
+
+    const periodEnd = nextDate > end ? end : nextDate;
+    const label = formatPeriodLabel(billingFreq, current);
+    const freqLabel = billingFreq === "Monthly" ? "Monthly Rent" : billingFreq === "Biweekly" ? "Fortnightly Rent" : "Weekly Rent";
+    const description = `${freqLabel} — ${label}${locationLabel ? ` | ${locationLabel}` : ""}`;
+
+    // Skip if already paid invoice for this due date
+    if (!paidDueDates.has(current)) {
+      const invoiceRef = nextInvoiceRef();
+      const [inv] = await db.insert(invoicesTable).values({
+        invoice_ref: invoiceRef,
+        booking_id: contract.booking_id ?? null,
+        contract_id: contractId,
+        account_id: contract.tenant_account_id ?? null,
+        amount: periodAmount,
+        currency,
+        status: "Sent",
+        due_date: current,
+        description,
+      }).returning({ id: invoicesTable.id });
+      invoicesCreated.push(inv.id);
+    }
+
+    // Create payment schedule entry for every period
+    const [sched] = await db.insert(recurringSchedulesTable).values({
+      booking_id: contract.booking_id ?? 0,
+      contract_id: contractId,
+      account_id: contract.tenant_account_id ?? 0,
+      schedule_type: "Rent",
+      frequency: billingFreq,
+      amount: String(periodAmount),
+      currency,
+      gst_included: true,
+      start_date: current,
+      end_date: periodEnd,
+      next_due_date: current,
+      is_active: !paidDueDates.has(current),
+    }).returning({ id: recurringSchedulesTable.id });
+    schedulesCreated.push(sched.id);
+
+    current = nextDate;
+    if (nextDate >= end) break;
+    periodIndex++;
+    if (periodIndex > 500) break; // safety limit
+  }
+
+  return { invoices: invoicesCreated.length, schedules: schedulesCreated.length };
+}
 
 const router = Router();
 
@@ -160,9 +324,23 @@ router.post("/v1/contracts/:id/activate", async (req, res): Promise<void> => {
     .set({ status: "Active", effective_date: new Date().toISOString().slice(0, 10) })
     .where(eq(contractsTable.id, id)).returning();
   if (!row) { res.status(404).json({ error: "NOT_FOUND" }); return; }
-  await logAction({ entityType: "contract", entityId: id, action: "STATUS_CHANGE", newValue: { status: "Active" } });
+
+  // Auto-generate invoices + payment schedules
+  const generated = await generateContractInvoicesAndSchedules(id);
+
+  // Also set linked booking to Active
+  if (row.booking_id) {
+    await db.update(bookingsTable)
+      .set({ booking_status: "Active" })
+      .where(eq(bookingsTable.id, row.booking_id));
+  }
+
+  await logAction({
+    entityType: "contract", entityId: id, action: "STATUS_CHANGE",
+    newValue: { status: "Active", invoices_generated: generated.invoices, schedules_generated: generated.schedules },
+  });
   const [result] = await enrichContracts([row]);
-  res.json(result);
+  res.json({ ...result, _generated: generated });
 });
 
 router.post("/v1/contracts/:id/terminate", async (req, res): Promise<void> => {
