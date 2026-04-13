@@ -2,225 +2,52 @@
 
 ## Overview
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+This pnpm workspace monorepo, built with TypeScript, provides a comprehensive property management SaaS solution called MillionStay. It includes an admin portal, a guest-facing booking portal, and dedicated portals for property agents and owners. The project aims to streamline property management operations, enhance guest experience, and provide specialized interfaces for various stakeholders.
 
-## Stack
+## User Preferences
 
-- **Monorepo tool**: pnpm workspaces
-- **Node.js version**: 24
-- **Package manager**: pnpm
-- **TypeScript version**: 5.9
-- **API framework**: Express 5
-- **Database**: PostgreSQL + Drizzle ORM
-- **Validation**: Zod (`zod/v4`), `drizzle-zod`
-- **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (CJS bundle)
+- I prefer clear and concise communication.
+- Focus on high-level architecture and key features.
+- Provide practical examples where appropriate.
+- When suggesting code changes, explain the reasoning and potential impact.
+- Prioritize well-structured and maintainable code.
+- Always ask for confirmation before implementing significant architectural changes or adding new external dependencies.
 
-## Key Commands
+## System Architecture
 
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- `pnpm --filter @workspace/api-server run dev` — run API server locally
+The project utilizes a pnpm workspace monorepo structure, with each package managing its own dependencies. Node.js 24 and TypeScript 5.9 are used across the board. The API is built with Express 5, backed by PostgreSQL and Drizzle ORM for database interactions. Zod is used for validation, and Orval generates API client code from an OpenAPI specification. Bundling is handled by esbuild.
 
-See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+**UI/UX Decisions:**
 
-## Artifacts
+- **Property Admin:** A multi-module property management SaaS admin tool built with React and Vite. It features various dashboards (Overview, Reservations, Finance, Operations) with KPI stat cards, charts (recharts), and tables. It includes comprehensive CRUD interfaces for property management, CRM, sales, booking, products, contracts, finance, and maintenance modules. Custom components like `StatusBadge`, `LookupField`, `LookupSelect`, and `MultiLookupField` are used for consistent UI elements. The admin panel supports internationalization for EN, KO, ZH, JA, and TH.
+- **MillionStay Guest Portal:** A guest-facing booking portal built with React and Vite, featuring a brand color of `#E8621A` (orange). It supports i18n (EN/JA/KO/ZH) and uses Zustand for state management. Pages include Home, Search (with Leaflet map), Space Detail, Booking flow, and user portals for bookings, invoices, and documents.
+- **Partner Portals (Agent, Owner & Service Host):** Separate React + Vite web applications providing tailored views for agents, property owners, and service providers. The Agent Portal allows agents to view bookings, managed properties, and commissions. The Owner Portal enables owners to monitor property occupancy and revenue, with privacy masking for tenant names. The Service Host Portal lets cleaners, pickup drivers and similar service providers view assigned jobs, their schedule, and earnings.
+- **Service Host Portal (port 21888, /service-host-portal):** Dashboard, My Jobs, Schedule, Earnings pages. Demo: `host@millionstay.com.au` / `Host@2026!`. `portal_type = service_host` in partner_users. Jobs sourced from `booking_services` where `service_id` matches `service_hosts.id` linked to the partner's `account_id`.
 
-### Property Admin (`artifacts/property-admin`)
-- **Kind**: web (React + Vite)
-- **Port**: 23339
-- **Purpose**: MillionStay — multi-module property management SaaS admin tool
+**Technical Implementations:**
 
-**Modules (10 complete):**
+- **API Server:** An Express-based API server handling all backend logic. Routes are versioned under `/api/v1/`. Lookup endpoints consistently return `{ id, display }` objects.
+- **Database Schema:** A PostgreSQL database managed by Drizzle ORM, with 30 tables covering all aspects of property, booking, finance, and user management. Key tables include `accommodation_catalog` (unified product management), `cs_tickets` and `cs_messages` for customer support, and `partner_users` for agent/owner authentication.
+- **Authentication:** JWT-based authentication for guests, admins, and partners. Partner authentication (`PARTNER_JWT_SECRET`) is handled separately and requires careful routing order in Express to prevent conflicts with admin authentication.
+- **API Client:** Generated from an OpenAPI specification using Orval, providing React hooks and Zod schemas for type-safe API interactions.
+- **Internationalization:** Implemented using `react-i18next` with locale files for multiple languages. Language preference is persisted in `localStorage`.
+- **Key Patterns:** Consistent lookup endpoint formats (`{ id, display, ...extra }`), `enrichXxx()` server-side functions for data enrichment, FSM transitions via dedicated POST endpoints, and standardized reference formats (e.g., `MS-WO-YYYY-NNNNN`). Zod schemas from `@workspace/api-zod` are preferred for validation.
 
-**Dashboards (4 dedicated PMS dashboards):**
-- Overview Dashboard (`/dashboard`) — KPI stat cards, mini booking calendar, alerts, integrations status
-- Reservations Dashboard (`/dashboard/reservations`) — 7-day Gantt calendar (week nav, colour-coded bars), today's arrivals/departures with check-in/out actions, bookings table with filter/pagination
-- Finance Dashboard (`/dashboard/finance`) — revenue KPIs, 6-month bar chart (recharts), payment status donut, invoice list with status actions (send/pay/void), revenue by property, tax summary table
-- Operations Dashboard (`/dashboard/operations`) — work order KPIs, work orders list with priority dots + status transitions, priority distribution donut, housekeeping room grid, system activity log
+## External Dependencies
 
-**New API endpoints (dashboard.ts):**
-- `GET /api/v1/dashboard/overview/kpis` → check-ins today, check-outs, occupancy, monthly revenue
-- `GET /api/v1/bookings/calendar?start=&end=` → Gantt data (spaces + booking bars) — added before `:id` route
-- `GET /api/v1/bookings/today/arrivals` / `/today/departures` → today's check-ins/check-outs
-- `GET /api/v1/finance/summary` → financial KPI totals
-- `GET /api/v1/finance/revenue/monthly?months=N` → N-month rolling revenue
-- `GET /api/v1/finance/revenue/by-property` → revenue breakdown per property
-- `GET /api/v1/finance/tax-summary` → 6-month tax summary (gross/tax/net)
-- `GET /api/v1/operations/summary/kpis` → open/in-progress/urgent/completed work order counts
-- `GET /api/v1/operations/activity-log?limit=N` → system audit log entries
-
-**Property:**
-- Dashboard — full KPI stats across all modules + booking calendar + alerts
-- Suburbs — CRUD with search, country/state filters
-- Properties — CRUD with approval status workflow (Pending → Active)
-- Space Options — amenity tag CRUD
-- Space Policies — house rules templates
-- Spaces — tabbed form with LookupField, 30-day availability calendar
-
-**CRM:**
-- Contacts — full detail (basic info, KYC/passport/visa with expiry warnings, address, portal toggle)
-- Accounts — account CRUD, LookupSelect for contacts/commission/payment
-- Commissions — percentage and fixed-amount templates
-- Payment Info — bank transfer (BSB/account), Stripe, Cash records
-
-**Sales:**
-- Tasks — CRUD with FSM (Todo→InProgress→Done)
-- Leads — CRUD with pipeline status, contact/account lookups
-
-**Booking:**
-- Bookings — full FSM (Draft→PendingApproval→Confirmed→Active→CheckedOut; Cancel/NoShow)
-- Service Hosts — host management
-
-**Products:**
-- Accommodation Products (formerly Contract Products) — `accommodation_catalog` is now the unified Product. Billing fields added: `weekly_rate`, `billing_frequency`, `bond_weeks`, `advance_weeks`, `max_stay_weeks`, `term_type`, `includes_wifi/parking/utilities/meals/laundry/cleaning`, `extra_inclusions`. Contract Products menu/routes REMOVED. New lookup endpoint: `GET /api/v1/lookup/products`.
-- Promotions — 3 term types: ShortTerm (<4w, Weekly, no discount), MidTerm (4–25w, Biweekly, 5%), LongTerm (≥26w, Monthly, 7.5%); fields: term_type, min/max_stay_weeks, billing_frequency, discount_percentage; 3 seed records created; lookup endpoint at /v1/lookup/promotions; CRUD in openapi.yaml + codegen done
-- Beneficiaries — full-stack CRUD; links Account + Commission + Contract Product; commission_type (Percentage/Fixed), split_percentage, fixed_amount, priority; DB schema + API route + BeneficiaryList + BeneficiaryDetail + App.tsx routing all done
-
-**Contracts:**
-- Contracts — CRUD + booking_ref enrichment, contract details
-
-**Finance:**
-- Invoices — FSM (Draft→Sent→Paid; Void from Draft/Sent); ref format MS-INV-YYYY-NNNNN
-
-**Maintenance:**
-- Work Orders — FSM (Open→InProgress→PendingReview→Completed; Cancel any); priority Low/Normal/High/Urgent; ref format MS-WO-YYYY-NNNNN
-
-**Components:**
-- `StatusBadge` — colored badge for Active/Pending/Suspended/Rejected
-- `LookupField` — single-select modal lookup (dialog-based)
-- `LookupSelect` — simplified lookup with internal fetch state
-- `MultiLookupField` — multi-select modal lookup with tag display
-- `Layout` + `PageHeader` — sidebar nav (MillionStay branding) + page header
-
-### MillionStay Guest Portal (`artifacts/million-stay-web`)
-- **Kind**: web (React + Vite)
-- **Port**: 20546
-- **Purpose**: Guest-facing booking portal for MillionStay
-- **Brand color**: `#E8621A` (orange)
-- **i18n**: EN/JA/KO/ZH via react-i18next
-- **State**: Zustand (persisted in `ms-auth-storage` localStorage)
-- **Auth**: JWT stored as `ms_auth_token` in localStorage; guest JWT via `GUEST_JWT_SECRET`
-- **Custom API hooks**: `artifacts/million-stay-web/src/lib/guest-api.ts` — wraps all guest-specific endpoints not in the OpenAPI spec
-
-**Pages**: Home, Search (with Leaflet map), Space Detail, Stay Plan, About, FAQ, Contact, For Students, For Agent, House Rules, Privacy Policy, Login, Register, Booking (inline auth), Portal Bookings, Portal Invoices, Portal Documents
-
-**Backend guest routes** (not in OpenAPI spec):
-- `GET/POST /api/v1/auth/guest/register` — register
-- `POST /api/v1/auth/guest/login` — login
-- `GET /api/v1/auth/guest/me` — current user
-- `GET /api/v1/public/spaces` — public listing with filters + availability check
-- `GET /api/v1/public/spaces/:id` — space detail with images/options/policies
-- `GET /api/v1/public/properties` — public property list
-- `GET /api/v1/guest/bookings` — guest's bookings
-- `POST /api/v1/guest/bookings` — create booking
-- `GET /api/v1/guest/bookings/:id` — booking detail
-- `GET /api/v1/guest/invoices` — guest's invoices
-- `GET /api/v1/guest/documents` — guest's documents (stub)
-- `GET /api/v1/guest/profile` — profile
-- `PUT /api/v1/guest/profile` — update profile
-- `GET /api/v1/guest/cs-tickets` — list guest's support tickets
-- `POST /api/v1/guest/cs-tickets` — create new support ticket (with optional booking_id + image_urls)
-- `GET /api/v1/guest/cs-tickets/:id` — ticket detail with messages (non-internal only) + booking info
-- `POST /api/v1/guest/cs-tickets/:id/messages` — send reply to ticket (reopens Resolved tickets)
-- `POST /api/v1/cs/upload-image` — upload image for CS ticket (Cloudinary, requires guest auth)
-
-### API Server (`artifacts/api-server`)
-- **Kind**: api
-- **Port**: 8080
-- **Routes**: All modules under `/api/v1/...`; lookup endpoints return `{ id, display }` format
-
-## Database Schema (`lib/db`)
-
-Tables (30 total): `suburbs`, `properties`, `space_options`, `space_policies`, `spaces`, `space_option_maps`, `space_blocked_dates`, `commissions`, `payment_info`, `contacts`, `accounts`, `tasks`, `leads`, `service_hosts`, `bookings`, `booking_documents`, `contract_products`, `contracts`, `invoices`, `work_orders`, `space_availability`, `recurring_schedule`, `system_log`, `email_template` (10 seeded templates), `email_log`, `promotions`, `beneficiaries`, `accommodation_catalog`, `service_catalog`, `cs_tickets`, `cs_messages`
-
-**cs_tickets** — Guest support tickets. Fields: `ticket_ref` (CS-YYYY-NNNN), `guest_user_id`, `booking_id` (optional link), `category` (General/Accommodation/Billing/Maintenance/Other), `subject`, `description`, `status` (Open/InProgress/Resolved/Closed), `priority` (Low/Normal/High/Urgent), `assigned_admin_id`, `closed_at`. Admin API: `/api/v1/cs-tickets`. Guest API: `/api/v1/guest/cs-tickets`.
-
-**cs_messages** — Thread messages per ticket. Fields: `ticket_id`, `sender_type` (guest/admin), `sender_id`, `message`, `image_urls` (JSON array of Cloudinary URLs), `is_internal` (1 = internal admin note, not visible to guest).
-
-**accommodation_catalog** — Unified accommodation product (replaces Contract Products). Admin API: `/api/v1/accommodations`. Lookup: `GET /api/v1/lookup/products`. Drizzle: `accommodationCatalogTable`. Billing fields: `weekly_rate`, `billing_frequency` (default Biweekly), `bond_weeks` (default 4), `advance_weeks` (default 2), `max_stay_weeks`, `term_type`, `includes_wifi/parking/utilities/meals/laundry/cleaning`, `extra_inclusions`. Bookings and contracts use `product_id` (FK to accommodation_catalog) instead of legacy `contract_product_id`.
-
-**service_catalog** — Ancillary services. Types: `one_time`, `scheduled`, `physical`. Admin API: `/api/v1/services`. Public API: `GET /api/v1/public/services` (returns optional, active, display_on_booking_page=true services). Seeded with 6 services: Room Deposit, Admission Fee, Cleaning Fee (required), Airport Pickup, Vodafone SIM Card, Linen Pack (optional). Guest booking page fetches and displays optional services from this catalog.
-
-## API Client (`lib/api-client-react`)
-
-Generated from OpenAPI spec (`lib/api-spec/openapi.yaml`) via Orval. Hooks for all entities. Zod schemas in `lib/api-zod`. Always run codegen after updating openapi.yaml.
-
-## Partner Portals
-
-### Agent Portal (`artifacts/agent-portal`)
-- **Kind**: web (React + Vite)
-- **Port**: 24393
-- **URL**: `/agent-portal`
-- **Purpose**: Portal for property agents/brokers to view their bookings, managed properties, and commission
-- **Demo login**: `agent@millionstay.com.au` / `Agent@2026!`
-
-**Pages**: Login, Dashboard, Bookings, BookingDetail, Properties, Commission
-
-### Owner Portal (`artifacts/owner-portal`)
-- **Kind**: web (React + Vite)
-- **Port**: 19049
-- **URL**: `/owner-portal`
-- **Purpose**: Portal for property owners (SpaceOwner) to view their property occupancy and revenue
-- **Demo login**: `owner@millionstay.com.au` / `Owner@2026!`
-- **Privacy masking**: Tenant names shown as first 2 chars + `***` + gender only (privacy banner on occupancy page)
-
-**Pages**: Login, Dashboard, Properties, Occupancy, Revenue
-
-### Partner Auth Architecture
-- `partner_users` table in DB — separate from admin `users` table
-- JWT secret: `PARTNER_JWT_SECRET` env var (falls back to `SESSION_SECRET + "_partner"`)
-- Login endpoint: `POST /api/v1/auth/partner/login` — returns JWT + user info
-- Auth middleware: `requirePartnerAuth`, `requireAgentAuth`, `requireOwnerAuth`
-- **CRITICAL**: Partner routes in `app.ts` MUST be registered BEFORE `adminUsersRouter` (which applies `router.use(requireAuth)`) AND before `app.use("/api/v1", requireAuth)`. Express processes routes in registration order — `adminUsersRouter`'s `router.use(requireAuth)` intercepts ALL `/api` requests if registered first.
-- Route files: `routes/partner-auth.ts`, `routes/agent-portal.ts`, `routes/owner-portal.ts`
-
-### Agent Portal API Endpoints
-- `GET /api/v1/agent/dashboard` → `{account_name, commission, stats, recent_bookings}`
-- `GET /api/v1/agent/bookings` → `{data: [{booking_status, check_in_date, agreed_weekly_rate, tenant: {display_name, email}}]}`
-- `GET /api/v1/agent/bookings/:id` → booking detail with services/invoices
-- `GET /api/v1/agent/properties` → properties with active bookings
-- `GET /api/v1/agent/commission` → `{total_earned, breakdown[]}`
-
-### Owner Portal API Endpoints
-- `GET /api/v1/owner/dashboard` → `{account_name, stats, recent_bookings}`
-- `GET /api/v1/owner/bookings` → `{data: [{booking_status, tenant: {display_name (masked), gender}}]}`
-- `GET /api/v1/owner/properties` → properties owned by this account
-- `GET /api/v1/owner/revenue` → `{total_revenue, invoices[]}`
-
-## Internationalisation (i18n)
-
-Admin panel supports 5 languages: **EN** (default), **KO** (한국어), **ZH** (中文), **JA** (日本語), **TH** (ภาษาไทย).
-
-- Locale files: `artifacts/property-admin/src/locales/{en,ko,zh,ja,th}/translation.json`
-- Language preference persisted to `localStorage` key: `ms_admin_language`
-- All 52 pages use `useTranslation` from `react-i18next` — 100% coverage
-- Key namespaces: `nav.*` (page titles, sidebar), `dashboard.*` (KPI sections), `common.*` (UI actions), `login.*`, `lang.*`
-- `common.new` added to all locales for "New" prefix in detail page titles (e.g. "New Property" / "새 매물")
-- Nav keys used directly as page titles — zero duplicate keys
-
-## Important Patterns
-
-- **Lookup endpoints**: return `{ id, display, ...extra }[]` array format (NOT `{success, data}`)
-- **enrichXxx()**: server-side function that joins related data and adds enriched fields (e.g., `property_name`, `booking_ref`)
-- **FSM transitions**: separate POST endpoints e.g. `/v1/work-orders/:id/start`
-- **Ref format**: MS-{TYPE}-YYYY-NNNNN (e.g., MS-WO-2026-00001)
-- **Zod imports**: use `@workspace/api-zod` (preferred in api-server routes); if types not yet generated (missing from openapi.yaml), use inline `zod/v4` schemas instead
-- **Account types**: Guest, SpaceOwner (absorbed Landlord), Broker (renamed Agent), Manager, RealEstateAgent, ServiceHost, Partner — Staff removed from accounts → admin_users
-- **DB imports**: use `@workspace/db` (not `@workspace/db/client`)
-- **URL routing (Replit)**: API server at `/api` path (port 8080), Admin at `/admin` (port 23339). API calls from admin must use `/api/v1/...` NOT `${BASE}api/v1/...` — BASE="/admin/" would route to wrong server
-- **LookupSelect**: uses `lookupUrl` prop expecting `/api/v1/lookup/...` format. Items must have `{id, display}` fields
-
-## Automation Chain (Booking → Invoice → Receipt)
-
-Complete verified flow:
-1. `POST /api/v1/bookings` with `product_id` → booking created (Draft)
-2. `PATCH /api/v1/bookings/:id/submit` → Draft → PendingPayment
-3. `PATCH /api/v1/bookings/:id/confirm` → Confirmed + auto-creates contract with product_id + auto-creates line items
-4. `POST /api/v1/contracts/:id/send` → Draft → Sent
-5. `POST /api/v1/contracts/:id/sign` → Sent → Signed
-6. `POST /api/v1/contracts/:id/activate` → Signed → Active + auto-generates invoices + payment schedules
-7. `POST /api/v1/invoices/:id/pay` + `{payment_method}` → Sent → Paid
-8. Receipt list = `GET /api/v1/invoices?status=Paid`
+- **pnpm:** Monorepo package manager.
+- **Node.js:** Runtime environment (version 24).
+- **TypeScript:** Programming language (version 5.9).
+- **Express:** Web application framework (version 5).
+- **PostgreSQL:** Relational database.
+- **Drizzle ORM:** TypeScript ORM for PostgreSQL.
+- **Zod:** Schema declaration and validation library (v4).
+- **Orval:** OpenAPI client code generator.
+- **esbuild:** JavaScript bundler.
+- **React:** JavaScript library for building user interfaces.
+- **Vite:** Next-generation frontend tooling.
+- **react-i18next:** Internationalization framework for React.
+- **Zustand:** Small, fast, and scalable bearbones state-management solution.
+- **Leaflet:** JavaScript library for interactive maps (used in Guest Portal search).
+- **Recharts:** Composable charting library built with React and D3 (used in Admin Finance Dashboard).
+- **Cloudinary:** Cloud-based image and video management service (for CS ticket image uploads).

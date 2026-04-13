@@ -1,0 +1,78 @@
+import { useState } from "react";
+import { useAuth } from "@/lib/auth";
+
+export default function LoginPage() {
+  const { login } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      await login(email, password);
+    } catch (err: any) {
+      setError(err.message ?? "Invalid credentials");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8">
+          <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mx-auto mb-4">
+            <span className="text-white font-bold text-lg">M</span>
+          </div>
+          <h1 className="text-2xl font-bold text-foreground">MillionStay</h1>
+          <p className="text-sm text-muted-foreground mt-1">Service Host Portal</p>
+        </div>
+
+        <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+          <h2 className="text-base font-semibold text-foreground mb-5">Sign in to your account</h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-foreground mb-1.5">Email address</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="host@example.com"
+                required
+                className="w-full px-3 py-2 text-sm bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-foreground mb-1.5">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                className="w-full px-3 py-2 text-sm bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+            {error && (
+              <p className="text-xs text-destructive">{error}</p>
+            )}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-2.5 px-4 text-sm font-medium text-primary-foreground bg-primary rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              {loading ? "Signing in..." : "Sign in"}
+            </button>
+          </form>
+          <p className="text-xs text-muted-foreground text-center mt-4">
+            For access, please contact your MillionStay administrator.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

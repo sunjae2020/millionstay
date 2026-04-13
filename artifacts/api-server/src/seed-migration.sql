@@ -568,7 +568,8 @@ INSERT INTO public.accounts (id, name, account_type, primary_contact_id, seconda
 	(14, 'Test Guest', 'Guest', NULL, NULL, 'testguest@millionstay.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'AUD', NULL, NULL, false, 'Active', '2026-04-06 09:46:17.901618+00', '2026-04-06 09:46:17.901618+00'),
 	(16, 'Test User', 'Guest', NULL, NULL, 'test_e2e_1775540496445@example.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'AUD', NULL, NULL, false, 'Active', '2026-04-07 05:41:50.283818+00', '2026-04-07 05:41:50.283818+00'),
 	(17, 'Gildong HONG', 'Guest', NULL, NULL, 'teswt@timest.co.kr', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'AUD', NULL, NULL, false, 'Active', '2026-04-09 05:11:01.06402+00', '2026-04-09 05:11:01.06402+00'),
-	(15, 'Demo Guest', 'Guest', NULL, NULL, 'demo@millionstay.com.au', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'AUD', NULL, NULL, false, 'Active', '2026-04-07 05:35:30.26358+00', '2026-04-11 11:13:59.069+00');
+	(15, 'Demo Guest', 'Guest', NULL, NULL, 'demo@millionstay.com.au', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'AUD', NULL, NULL, false, 'Active', '2026-04-07 05:35:30.26358+00', '2026-04-11 11:13:59.069+00'),
+	(18, 'CleanPro Services', 'ServiceHost', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'AUD', NULL, NULL, false, 'Active', '2026-04-13 11:33:02.225512+00', '2026-04-13 11:33:02.225512+00');
 INSERT INTO public.admin_users (id, email, password_hash, role, first_name, last_name, is_active, force_password_change, last_login_at, created_at, updated_at, status, reset_token, reset_token_expires_at) VALUES
 	(1, 'admin@millionstay.com', '$2b$10$FX2diLhEDwiXWzaGJtZoXeOS1x/pizNnsMOqPkpnwaR3DxlC.OBU.', 'Super Admin', 'Million', 'Stay', true, false, '2026-04-13 06:57:43.047+00', '2026-04-05 08:29:14.152582+00', '2026-04-13 06:57:43.047+00', 'active', NULL, NULL);
 INSERT INTO public.announcements (id, title, body, category, priority, is_published, published_at, expires_at, created_by, created_at, updated_at) VALUES
@@ -880,7 +881,8 @@ INSERT INTO public.leads (id, lead_ref, first_name, last_name, email, phone, nat
 	(4, 'LEAD-2026-00004', 'Deploy', 'Test', 'deploytest@millionstay.com.au', NULL, NULL, 'Direct', 'ConvertedToBooking', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'AUD', NULL, '2026-04-05 07:56:09.428+00', NULL, NULL, false, 'Active', '2026-04-05 07:53:39.118015+00', '2026-04-05 07:56:09.428+00');
 INSERT INTO public.partner_users (id, account_id, portal_type, email, password_hash, first_name, last_name, phone, avatar_url, is_active, last_login_at, created_at, updated_at) VALUES
 	(1, 6, 'agent', 'agent@millionstay.com.au', '$2b$10$k89VYHJgix5HoJvr5ICiquxw07cVHLCz0WxdEbX6WEHxe4iDaqoWq', 'Alex', 'Chen', NULL, NULL, true, '2026-04-13 10:00:38.321+00', '2026-04-13 09:52:12.120954+00', '2026-04-13 10:00:38.321+00'),
-	(2, 4, 'owner', 'owner@millionstay.com.au', '$2b$10$dBGGorJT.o0d14DDPuBRZu7Ar/z.yOhhRWh1MgtGWjLDwzZJLx3Za', 'Hong Ying', 'Zhu', NULL, NULL, true, '2026-04-13 10:02:33.399+00', '2026-04-13 09:52:16.38586+00', '2026-04-13 10:02:33.4+00');
+	(2, 4, 'owner', 'owner@millionstay.com.au', '$2b$10$dBGGorJT.o0d14DDPuBRZu7Ar/z.yOhhRWh1MgtGWjLDwzZJLx3Za', 'Hong Ying', 'Zhu', NULL, NULL, true, '2026-04-13 10:02:33.399+00', '2026-04-13 09:52:16.38586+00', '2026-04-13 10:02:33.4+00'),
+	(3, 18, 'service_host', 'host@millionstay.com.au', '$2b$12$fH4cA9ggmwPyGUjB/iFPHu4qw3L0.iJy16fOgWrTUpiAAH1QdlYuC', 'Sarah', 'Kim', '+61400000003', NULL, true, '2026-04-13 11:36:06.654+00', '2026-04-13 11:33:23.530919+00', '2026-04-13 11:36:06.655+00');
 INSERT INTO public.payment_info (id, name, payment_type, bank_name, swift_code, bsb_number, account_number, account_name, stripe_account_id, description, status, created_at, updated_at) VALUES
 	(1, 'NAB BankTransfer', 'BankTransfer', 'NAB', NULL, '083-004', '123456789', 'Million Stay Pty Ltd', NULL, NULL, 'Active', '2026-04-04 23:54:23.665514+00', '2026-04-04 23:54:23.665514+00');
 INSERT INTO public.product_groups (id, name, display_order, created_at, updated_at) VALUES
@@ -972,6 +974,8 @@ INSERT INTO public.service_catalog (id, name, description, service_type, base_pr
 	(34, 'Career – Professional Internship (Unpaid)', 'Unpaid professional internship placement in a relevant field. Includes job matching and placement coordination.', 'one_time', 800, 'AUD', true, false, 'at_booking', false, false, NULL, false, NULL, false, NULL, true, 91, 'Inactive', '2026-04-10 10:04:20.016691+00', '2026-04-10 10:04:20.016691+00', NULL),
 	(35, 'Career – Demi-pair Program', 'Demi-pair placement program. Live with an Australian family, assist with childcare in exchange for accommodation and a cultural experience.', 'one_time', 800, 'AUD', true, false, 'at_booking', false, false, NULL, false, NULL, false, NULL, true, 92, 'Inactive', '2026-04-10 10:04:20.016691+00', '2026-04-10 10:04:20.016691+00', NULL),
 	(36, 'Career – Au-pair Program', 'Au-pair placement program. Full-time childcare role with an Australian family, including accommodation and meals.', 'one_time', 800, 'AUD', true, false, 'at_booking', false, false, NULL, false, NULL, false, NULL, true, 93, 'Inactive', '2026-04-10 10:04:20.016691+00', '2026-04-10 10:04:20.016691+00', NULL);
+INSERT INTO public.service_hosts (id, name, account_id, contract_product_id, from_date, to_date, in_call, out_call, business_start_hour, business_end_hour, description, status, created_at, updated_at) VALUES
+	(1, 'CleanPro - Cleaning Service', 18, NULL, NULL, NULL, true, true, NULL, NULL, NULL, 'Active', '2026-04-13 11:33:19.743365+00', '2026-04-13 11:33:19.743365+00');
 INSERT INTO public.space_blocked_dates (id, space_id, date, created_at) VALUES
 	(1, 1, '2026-05-03', '2026-04-05 00:22:15.46634+00'),
 	(2, 1, '2026-05-04', '2026-04-05 00:22:15.46634+00'),
@@ -1804,7 +1808,7 @@ INSERT INTO public.work_orders (id, order_ref, property_id, space_id, title, des
 	(3, 'MS-WO-2026-00003', 1, NULL, 'Replace broken window latch', 'Window latch on level 2 is broken, security risk', 'PendingReview', 'Urgent', 'Carpentry', NULL, '2026-04-01', NULL, NULL, 85, 'AUD', 'Replacement part installed, awaiting sign-off', '2026-04-05 00:54:01.532182+00', '2026-04-05 00:54:01.532182+00'),
 	(4, 'MS-WO-2026-00004', 3, NULL, 'Repaint lobby walls', 'Lobby walls need repainting after water damage repair', 'Completed', 'Low', 'Painting', NULL, '2026-02-10', NULL, '2026-03-01 00:00:00+00', 3500, 'AUD', 'Completed with premium finish paint', '2026-04-05 00:54:01.532182+00', '2026-04-05 00:54:01.532182+00');
 SELECT pg_catalog.setval('public.accommodation_service_catalog_id_seq', 471, true);
-SELECT pg_catalog.setval('public.accounts_id_seq', 17, true);
+SELECT pg_catalog.setval('public.accounts_id_seq', 18, true);
 SELECT pg_catalog.setval('public.admin_users_id_seq', 1, true);
 SELECT pg_catalog.setval('public.announcements_id_seq', 4, true);
 SELECT pg_catalog.setval('public.beneficiaries_id_seq', 4, true);
@@ -1826,7 +1830,7 @@ SELECT pg_catalog.setval('public.guest_emergency_contacts_id_seq', 2, true);
 SELECT pg_catalog.setval('public.guest_users_id_seq', 4, true);
 SELECT pg_catalog.setval('public.invoices_id_seq', 33, true);
 SELECT pg_catalog.setval('public.leads_id_seq', 4, true);
-SELECT pg_catalog.setval('public.partner_users_id_seq', 2, true);
+SELECT pg_catalog.setval('public.partner_users_id_seq', 3, true);
 SELECT pg_catalog.setval('public.payment_info_id_seq', 1, true);
 SELECT pg_catalog.setval('public.product_catalog_id_seq', 88, true);
 SELECT pg_catalog.setval('public.product_groups_id_seq', 3, true);
@@ -1835,7 +1839,7 @@ SELECT pg_catalog.setval('public.promotions_id_seq', 5, true);
 SELECT pg_catalog.setval('public.properties_id_seq', 9, true);
 SELECT pg_catalog.setval('public.recurring_schedule_id_seq', 27, true);
 SELECT pg_catalog.setval('public.service_catalog_id_seq', 36, true);
-SELECT pg_catalog.setval('public.service_hosts_id_seq', 1, false);
+SELECT pg_catalog.setval('public.service_hosts_id_seq', 1, true);
 SELECT pg_catalog.setval('public.space_availability_id_seq', 1, false);
 SELECT pg_catalog.setval('public.space_blocked_dates_id_seq', 480, true);
 SELECT pg_catalog.setval('public.space_images_id_seq', 97, true);

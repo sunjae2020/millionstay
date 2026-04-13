@@ -20,6 +20,7 @@ import adminUsersRouter from "./routes/admin-users";
 import partnerAuthRouter from "./routes/partner-auth";
 import agentPortalRouter from "./routes/agent-portal";
 import ownerPortalRouter from "./routes/owner-portal";
+import serviceHostPortalRouter from "./routes/service-host-portal";
 import { logger } from "./lib/logger";
 import { requireAuth } from "./middlewares/requireAuth";
 
@@ -102,6 +103,7 @@ app.use("/api/v1/admin", devMigrationRouter);
 app.use("/api", partnerAuthRouter);
 app.use("/api", agentPortalRouter);
 app.use("/api", ownerPortalRouter);
+app.use("/api", serviceHostPortalRouter);
 
 app.use("/api", adminUsersRouter);
 app.use("/api/v1", requireAuth);
