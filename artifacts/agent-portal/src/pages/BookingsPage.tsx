@@ -88,7 +88,8 @@ export default function BookingsPage() {
       )}
 
       <div className="bg-card border border-card-border rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[640px]">
           <thead className="bg-muted/50 border-b border-border">
             <tr>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Ref</th>
@@ -138,6 +139,7 @@ export default function BookingsPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </Layout>
   );
