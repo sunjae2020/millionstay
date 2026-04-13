@@ -28,6 +28,8 @@ export interface CreateBookingBody {
   /** @nullable */
   num_guests?: number | null;
   /** @nullable */
+  product_id?: number | null;
+  /** @nullable */
   contract_product_id?: number | null;
   status?: string;
 }

@@ -293,7 +293,7 @@ export default function BookingDetail() {
               <Label>{t("booking.label_account")} *</Label>
               <Controller name="account_id" control={control} render={({ field }) => (
                 <LookupSelect
-                  lookupUrl={`${BASE}api/v1/lookup/accounts`}
+                  lookupUrl="/api/v1/lookup/accounts"
                   placeholder={t("booking.placeholder_account")}
                   value={field.value}
                   onChange={field.onChange}
@@ -305,7 +305,7 @@ export default function BookingDetail() {
               <Label>{t("booking.label_contact")}</Label>
               <Controller name="contact_id" control={control} render={({ field }) => (
                 <LookupSelect
-                  lookupUrl={`${BASE}api/v1/lookup/contacts`}
+                  lookupUrl="/api/v1/lookup/contacts"
                   placeholder={t("booking.placeholder_contact")}
                   value={field.value}
                   onChange={field.onChange}
@@ -339,7 +339,7 @@ export default function BookingDetail() {
             <Label>{t("booking.label_space")} *</Label>
             <Controller name="space_id" control={control} render={({ field }) => (
               <LookupSelect
-                lookupUrl={`${BASE}api/v1/lookup/spaces`}
+                lookupUrl="/api/v1/lookup/spaces"
                 placeholder={t("booking.placeholder_space")}
                 value={field.value}
                 onChange={field.onChange}
@@ -361,7 +361,7 @@ export default function BookingDetail() {
             <Label>Product / Accommodation Package</Label>
             <Controller name="product_id" control={control} render={({ field }) => (
               <LookupSelect
-                lookupUrl={`${BASE}api/v1/lookup/products`}
+                lookupUrl="/api/v1/lookup/products"
                 placeholder="Select accommodation product…"
                 value={field.value}
                 onChange={field.onChange}

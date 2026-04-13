@@ -4705,6 +4705,8 @@ components:
           type: ["string", "null"]
         num_guests:
           type: ["integer", "null"]
+        product_id:
+          type: ["integer", "null"]
         contract_product_id:
           type: ["integer", "null"]
         status:

@@ -295,12 +295,14 @@ async function enrichContracts(rows: (typeof contractsTable.$inferSelect)[]) {
 }
 
 router.get("/v1/contracts", async (req, res): Promise<void> => {
-  const { q, status, tenant_account_id, space_id } = req.query as Record<string, string>;
+  const { q, status, tenant_account_id, space_id, booking_id, account_id } = req.query as Record<string, string>;
   const conditions = [];
   if (q) conditions.push(ilike(contractsTable.contract_ref, `%${q}%`));
   if (status) conditions.push(eq(contractsTable.status, status));
   if (tenant_account_id) conditions.push(eq(contractsTable.tenant_account_id, Number(tenant_account_id)));
+  if (account_id) conditions.push(eq(contractsTable.tenant_account_id, Number(account_id)));
   if (space_id) conditions.push(eq(contractsTable.space_id, Number(space_id)));
+  if (booking_id) conditions.push(eq(contractsTable.booking_id, Number(booking_id)));
   const rows = await db.select().from(contractsTable)
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(contractsTable.id);

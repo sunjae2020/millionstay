@@ -292,7 +292,10 @@ router.get("/v1/lookup/products", async (req, res): Promise<void> => {
       .orderBy(asc(accommodationCatalogTable.name))
       .limit(100);
 
-    res.json({ success: true, data: rows });
+    res.json(rows.map(r => ({
+      ...r,
+      display: `${r.name}${r.billing_frequency ? ` (${r.billing_frequency})` : ""}`,
+    })));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to lookup products" });

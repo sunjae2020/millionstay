@@ -21,9 +21,9 @@ export interface Space {
   /** @nullable */
   base_weekly_price?: number | null;
   /** @nullable */
-  base_daily_price?: number | null;
-  /** @nullable */
   base_currency?: string | null;
+  /** @nullable */
+  min_stay_weeks?: number | null;
   /** @nullable */
   floor_number?: number | null;
   /** @nullable */

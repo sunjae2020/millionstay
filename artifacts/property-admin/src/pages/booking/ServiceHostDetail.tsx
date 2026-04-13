@@ -115,7 +115,7 @@ export default function ServiceHostDetail() {
               control={control}
               render={({ field }) => (
                 <LookupSelect
-                  lookupUrl={`${BASE}api/v1/lookup/accounts`}
+                  lookupUrl="/api/v1/lookup/accounts"
                   placeholder="Search accounts..."
                   value={field.value ?? null}
                   onChange={field.onChange}
@@ -131,7 +131,7 @@ export default function ServiceHostDetail() {
               control={control}
               render={({ field }) => (
                 <LookupSelect
-                  lookupUrl={`${BASE}api/v1/lookup/contract-products`}
+                  lookupUrl="/api/v1/lookup/products"
                   placeholder="Search contract products..."
                   value={field.value ?? null}
                   onChange={field.onChange}

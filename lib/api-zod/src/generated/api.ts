@@ -499,8 +499,8 @@ export const CreateSpaceBody = zod.object({
   max_occupancy: zod.number().nullish(),
   booking_mode: zod.string().nullish(),
   base_weekly_price: zod.number().nullish(),
-  base_daily_price: zod.number().nullish(),
   base_currency: zod.string().nullish(),
+  min_stay_weeks: zod.number().nullish(),
   floor_number: zod.number().nullish(),
   floor_area_sqm: zod.number().nullish(),
   description: zod.string().nullish(),
@@ -511,9 +511,6 @@ export const CreateSpaceBody = zod.object({
   space_policy_id: zod.number().nullish(),
   landlord_account_id: zod.number().nullish(),
   space_option_ids: zod.array(zod.number()).optional(),
-  privacy_hide_unit_no: zod.boolean().optional(),
-  privacy_hide_street_no: zod.boolean().optional(),
-  privacy_map_blur: zod.boolean().optional(),
 });
 
 /**
@@ -532,8 +529,8 @@ export const GetSpaceResponse = zod.object({
   max_occupancy: zod.number().nullish(),
   booking_mode: zod.string().nullish(),
   base_weekly_price: zod.number().nullish(),
-  base_daily_price: zod.number().nullish(),
   base_currency: zod.string().nullish(),
+  min_stay_weeks: zod.number().nullish(),
   floor_number: zod.number().nullish(),
   floor_area_sqm: zod.number().nullish(),
   description: zod.string().nullish(),
@@ -547,9 +544,6 @@ export const GetSpaceResponse = zod.object({
   policy_name: zod.string().nullish(),
   landlord_account_id: zod.number().nullish(),
   space_option_ids: zod.array(zod.number()),
-  privacy_hide_unit_no: zod.boolean().optional(),
-  privacy_hide_street_no: zod.boolean().optional(),
-  privacy_map_blur: zod.boolean().optional(),
   created_at: zod.coerce.date(),
   updated_at: zod.coerce.date(),
 });
@@ -581,9 +575,6 @@ export const UpdateSpaceBody = zod.object({
   space_policy_id: zod.number().nullish(),
   landlord_account_id: zod.number().nullish(),
   space_option_ids: zod.array(zod.number()).optional(),
-  privacy_hide_unit_no: zod.boolean().optional(),
-  privacy_hide_street_no: zod.boolean().optional(),
-  privacy_map_blur: zod.boolean().optional(),
 });
 
 export const UpdateSpaceResponse = zod.object({
@@ -595,8 +586,8 @@ export const UpdateSpaceResponse = zod.object({
   max_occupancy: zod.number().nullish(),
   booking_mode: zod.string().nullish(),
   base_weekly_price: zod.number().nullish(),
-  base_daily_price: zod.number().nullish(),
   base_currency: zod.string().nullish(),
+  min_stay_weeks: zod.number().nullish(),
   floor_number: zod.number().nullish(),
   floor_area_sqm: zod.number().nullish(),
   description: zod.string().nullish(),
@@ -610,9 +601,6 @@ export const UpdateSpaceResponse = zod.object({
   policy_name: zod.string().nullish(),
   landlord_account_id: zod.number().nullish(),
   space_option_ids: zod.array(zod.number()),
-  privacy_hide_unit_no: zod.boolean().optional(),
-  privacy_hide_street_no: zod.boolean().optional(),
-  privacy_map_blur: zod.boolean().optional(),
   created_at: zod.coerce.date(),
   updated_at: zod.coerce.date(),
 });
@@ -1922,6 +1910,7 @@ export const CreateBookingBody = zod.object({
   agreed_weekly_rate: zod.string().nullish(),
   currency: zod.string().nullish(),
   num_guests: zod.number().nullish(),
+  product_id: zod.number().nullish(),
   contract_product_id: zod.number().nullish(),
   status: zod.string().default(createBookingBodyStatusDefault),
 });
@@ -1985,6 +1974,7 @@ export const UpdateBookingBody = zod.object({
   agreed_weekly_rate: zod.string().nullish(),
   currency: zod.string().nullish(),
   num_guests: zod.number().nullish(),
+  product_id: zod.number().nullish(),
   contract_product_id: zod.number().nullish(),
   status: zod.string().default(updateBookingBodyStatusDefault),
 });

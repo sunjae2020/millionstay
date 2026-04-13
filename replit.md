@@ -161,10 +161,24 @@ Admin panel supports 5 languages: **EN** (default), **KO** (한국어), **ZH** (
 
 ## Important Patterns
 
-- **Lookup endpoints**: return `{ id, display }` format
+- **Lookup endpoints**: return `{ id, display, ...extra }[]` array format (NOT `{success, data}`)
 - **enrichXxx()**: server-side function that joins related data and adds enriched fields (e.g., `property_name`, `booking_ref`)
 - **FSM transitions**: separate POST endpoints e.g. `/v1/work-orders/:id/start`
 - **Ref format**: MS-{TYPE}-YYYY-NNNNN (e.g., MS-WO-2026-00001)
 - **Zod imports**: use `@workspace/api-zod` (preferred in api-server routes); if types not yet generated (missing from openapi.yaml), use inline `zod/v4` schemas instead
 - **Account types**: Guest, SpaceOwner (absorbed Landlord), Broker (renamed Agent), Manager, RealEstateAgent, ServiceHost, Partner — Staff removed from accounts → admin_users
 - **DB imports**: use `@workspace/db` (not `@workspace/db/client`)
+- **URL routing (Replit)**: API server at `/api` path (port 8080), Admin at `/admin` (port 23339). API calls from admin must use `/api/v1/...` NOT `${BASE}api/v1/...` — BASE="/admin/" would route to wrong server
+- **LookupSelect**: uses `lookupUrl` prop expecting `/api/v1/lookup/...` format. Items must have `{id, display}` fields
+
+## Automation Chain (Booking → Invoice → Receipt)
+
+Complete verified flow:
+1. `POST /api/v1/bookings` with `product_id` → booking created (Draft)
+2. `PATCH /api/v1/bookings/:id/submit` → Draft → PendingPayment
+3. `PATCH /api/v1/bookings/:id/confirm` → Confirmed + auto-creates contract with product_id + auto-creates line items
+4. `POST /api/v1/contracts/:id/send` → Draft → Sent
+5. `POST /api/v1/contracts/:id/sign` → Sent → Signed
+6. `POST /api/v1/contracts/:id/activate` → Signed → Active + auto-generates invoices + payment schedules
+7. `POST /api/v1/invoices/:id/pay` + `{payment_method}` → Sent → Paid
+8. Receipt list = `GET /api/v1/invoices?status=Paid`

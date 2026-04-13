@@ -278,9 +278,9 @@ export interface Space {
   /** @nullable */
   base_weekly_price?: number | null;
   /** @nullable */
-  base_daily_price?: number | null;
-  /** @nullable */
   base_currency?: string | null;
+  /** @nullable */
+  min_stay_weeks?: number | null;
   /** @nullable */
   floor_number?: number | null;
   /** @nullable */
@@ -323,9 +323,9 @@ export interface CreateSpaceBody {
   /** @nullable */
   base_weekly_price?: number | null;
   /** @nullable */
-  base_daily_price?: number | null;
-  /** @nullable */
   base_currency?: string | null;
+  /** @nullable */
+  min_stay_weeks?: number | null;
   /** @nullable */
   floor_number?: number | null;
   /** @nullable */
@@ -360,9 +360,9 @@ export interface UpdateSpaceBody {
   /** @nullable */
   base_weekly_price?: number | null;
   /** @nullable */
-  base_daily_price?: number | null;
-  /** @nullable */
   base_currency?: string | null;
+  /** @nullable */
+  min_stay_weeks?: number | null;
   /** @nullable */
   floor_number?: number | null;
   /** @nullable */
@@ -1257,6 +1257,8 @@ export interface CreateBookingBody {
   currency?: string | null;
   /** @nullable */
   num_guests?: number | null;
+  /** @nullable */
+  product_id?: number | null;
   /** @nullable */
   contract_product_id?: number | null;
   status?: string;
