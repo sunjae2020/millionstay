@@ -19,7 +19,7 @@ import {
   getListContractsQueryKey, getGetContractQueryKey,
 } from "@workspace/api-client-react";
 import { LookupSelect } from "@/components/LookupSelect";
-import { ArrowLeft, Save, Trash2, CalendarDays, Wrench, Plus, Pencil, List } from "lucide-react";
+import { ArrowLeft, Save, Trash2, CalendarDays, Plus, Pencil, List } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 
 const CURRENCIES = ["AUD", "USD", "SGD", "MYR", "GBP"];
@@ -144,14 +144,7 @@ export default function ContractDetail() {
   });
   const schedules: any[] = scheduleData?.data ?? [];
 
-  const { data: contractServicesData } = useQuery({
-    queryKey: ["contract-services", id],
-    queryFn: async () => { const r = await apiFetch(`/api/v1/contracts/${id}/services`); return r.json(); },
-    enabled: !isNew,
-  });
-  const contractServices: any[] = contractServicesData?.data ?? [];
-
-  const { data: lineItemsData, refetch: refetchLineItems } = useQuery({
+  const { data: lineItemsData } = useQuery({
     queryKey: ["contract-line-items", id],
     queryFn: async () => { const r = await apiFetch(`/api/v1/contracts/${id}/line-items`); return r.json(); },
     enabled: !isNew,
@@ -533,7 +526,6 @@ export default function ContractDetail() {
             {[
               { id: "line-items", label: `Contract Lines${lineItems.length ? ` (${lineItems.length})` : ""}`, icon: <List className="w-3.5 h-3.5" /> },
               { id: "schedule", label: `Payment Schedule${schedules.length ? ` (${schedules.length})` : ""}`, icon: <CalendarDays className="w-3.5 h-3.5" /> },
-              { id: "services", label: `Booking Services${contractServices.length ? ` (${contractServices.length})` : ""}`, icon: <Wrench className="w-3.5 h-3.5" /> },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -674,34 +666,6 @@ export default function ContractDetail() {
             </div>
           )}
 
-          {activeTab === "services" && (
-            <div className="rounded-lg border bg-white overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b">
-                  <tr>
-                    {["Service Name", "Type", "Qty", "Unit Price", "Total", "Billing", "Frequency"].map((h) => (
-                      <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {!contractServices.length ? (
-                    <tr><td colSpan={7} className="text-center py-10 text-muted-foreground">No services linked to this contract</td></tr>
-                  ) : contractServices.map((svc: any) => (
-                    <tr key={svc.id} className="border-b hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium">{svc.service_name}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{svc.service_type ?? "—"}</td>
-                      <td className="px-4 py-3">{svc.quantity ?? 1}</td>
-                      <td className="px-4 py-3">{svc.unit_price ? `$${Number(svc.unit_price).toFixed(2)}` : "—"}</td>
-                      <td className="px-4 py-3">{svc.total_price ? `$${Number(svc.total_price).toFixed(2)}` : "—"}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{svc.billing_trigger ?? "—"}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{svc.frequency ?? "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
         </div>
       )}
 
