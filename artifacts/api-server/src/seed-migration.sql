@@ -707,7 +707,6 @@ INSERT INTO public.contract_types (id, name, description, contract_security, req
 	(7, 'Part-Time Employment', 'Staff hired with part-time work hours', 'Private', false, false, false, true, '2026-04-05 02:20:38.954223+00', '2026-04-05 02:20:38.954223+00'),
 	(8, 'Full-Time Employment', 'Permanent full-time staff', 'Private', false, false, false, true, '2026-04-05 02:20:38.957844+00', '2026-04-05 02:20:38.957844+00');
 INSERT INTO public.contracts (id, contract_ref, booking_id, contract_product_id, tenant_account_id, landlord_account_id, space_id, start_date, end_date, weekly_rate, total_rent, bond_amount, advance_amount, currency, status, sent_at, signed_at, effective_date, expiry_date, termination_reason, document_url, terms_text, notes, created_at, updated_at) VALUES
-	(1, 'MS-C-2026-00001', 1, 1, NULL, NULL, NULL, '2026-04-01', '2026-04-07', 200, 1400, 400, NULL, 'AUD', 'Draft', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Initial draft contract for short stay', '2026-04-05 00:39:51.167848+00', '2026-04-05 00:39:51.167848+00'),
 	(2, 'MS-C-2026-00002', 2, 2, NULL, NULL, NULL, '2026-04-01', '2026-04-30', 1050, 4200, 2100, NULL, 'AUD', 'Sent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Monthly contract sent to tenant', '2026-04-05 00:39:51.167848+00', '2026-04-05 00:39:51.167848+00'),
 	(3, 'MS-C-2026-00003', NULL, 3, NULL, NULL, NULL, '2026-03-01', '2026-03-31', 1700, 6800, 3400, NULL, 'AUD', 'Active', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Premium suite - currently active', '2026-04-05 00:39:51.167848+00', '2026-04-05 00:39:51.167848+00'),
 	(4, 'MS-C-2026-00004', NULL, 4, NULL, NULL, NULL, '2026-01-01', '2026-02-28', 750, 6000, 1500, NULL, 'AUD', 'Terminated', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Terminated early by tenant', '2026-04-05 00:39:51.167848+00', '2026-04-05 00:39:51.167848+00'),
@@ -725,7 +724,8 @@ Payment     : Monthly on 1st of each month — Bank Transfer
 Landlord: MillionStay Property Management
 
 NOTE: This is a sample contract generated for testing purposes only.
-This document does not constitute a legally binding agreement.', '12-month fixed term — auto-generated demo contract', '2026-04-11 11:43:26.162141+00', '2026-04-11 11:43:26.187+00');
+This document does not constitute a legally binding agreement.', '12-month fixed term — auto-generated demo contract', '2026-04-11 11:43:26.162141+00', '2026-04-11 11:43:26.187+00'),
+	(1, 'MS-C-2026-00001', 1, 1, NULL, NULL, NULL, '2026-04-01', '2026-04-07', 200, 1400, 400, NULL, 'AUD', 'Sent', '2026-04-13 00:28:38.191+00', NULL, NULL, NULL, NULL, NULL, NULL, 'Initial draft contract for short stay', '2026-04-05 00:39:51.167848+00', '2026-04-13 00:28:38.191+00');
 INSERT INTO public.cs_messages (id, ticket_id, sender_type, sender_id, message, image_urls, is_internal, created_at) VALUES
 	(1, 1, 'guest', 2, 'This is a test inquiry.', NULL, 0, '2026-04-09 09:56:05.528916+00'),
 	(2, 2, 'guest', 2, 'I have a question about my invoice.', NULL, 0, '2026-04-09 09:56:33.552849+00'),
@@ -1645,7 +1645,8 @@ INSERT INTO public.system_log (id, entity_type, entity_id, action, actor_type, a
 	(19, 'invoice', 7, 'PAYMENT', 'System', NULL, NULL, '{"status": "Sent"}', '{"status": "Paid", "payment_method": "bank_transfer"}', NULL, NULL, NULL, '2026-04-11 11:43:26.458403+00'),
 	(20, 'invoice', 8, 'PAYMENT', 'System', NULL, NULL, '{"status": "Sent"}', '{"status": "Paid", "payment_method": "bank_transfer"}', NULL, NULL, NULL, '2026-04-11 11:43:26.46609+00'),
 	(21, 'invoice', 10, 'PAYMENT', 'System', NULL, NULL, NULL, '{"note": "Guest portal payment confirmation", "status": "Sent", "payment_method": "bank_transfer"}', NULL, NULL, NULL, '2026-04-11 16:38:01.589888+00'),
-	(22, 'invoice', 12, 'PAYMENT', 'System', NULL, NULL, NULL, '{"note": "Guest portal payment confirmation", "status": "Sent", "payment_method": "bank_transfer"}', NULL, NULL, NULL, '2026-04-11 16:38:38.065085+00');
+	(22, 'invoice', 12, 'PAYMENT', 'System', NULL, NULL, NULL, '{"note": "Guest portal payment confirmation", "status": "Sent", "payment_method": "bank_transfer"}', NULL, NULL, NULL, '2026-04-11 16:38:38.065085+00'),
+	(23, 'contract', 1, 'STATUS_CHANGE', 'System', NULL, NULL, NULL, '{"status": "Sent"}', NULL, NULL, NULL, '2026-04-13 00:28:38.230874+00');
 INSERT INTO public.tasks (id, name, subject, task_status, priority, task_category, primary_contact_id, secondary_contact_id, account_id, booking_id, start_date, due_date, completed_at, description, manual_input, status, created_at, updated_at) VALUES
 	(1, 'Follow up with Sunjae Kim', 'Discuss lease renewal options', 'InProgress', 'High', 'Follow-up', NULL, NULL, NULL, NULL, NULL, '2026-04-08', NULL, 'Contact guest about extending lease for Room A.', false, 'Active', '2026-04-05 00:10:18.090992+00', '2026-04-05 00:10:18.090992+00'),
 	(2, 'Maintenance - 336 Russell St', 'Fix leaking tap in bathroom', 'Todo', 'Medium', 'Maintenance', NULL, NULL, NULL, NULL, NULL, '2026-04-03', NULL, 'Tenant reported leaking tap in shared bathroom.', false, 'Active', '2026-04-05 00:10:18.090992+00', '2026-04-05 00:10:18.090992+00'),
@@ -1695,6 +1696,6 @@ SELECT pg_catalog.setval('public.space_policies_id_seq', 5, true);
 SELECT pg_catalog.setval('public.space_service_catalog_id_seq', 1, false);
 SELECT pg_catalog.setval('public.spaces_id_seq', 28, true);
 SELECT pg_catalog.setval('public.suburbs_id_seq', 6, true);
-SELECT pg_catalog.setval('public.system_log_id_seq', 22, true);
+SELECT pg_catalog.setval('public.system_log_id_seq', 23, true);
 SELECT pg_catalog.setval('public.tasks_id_seq', 3, true);
 SELECT pg_catalog.setval('public.work_orders_id_seq', 4, true);

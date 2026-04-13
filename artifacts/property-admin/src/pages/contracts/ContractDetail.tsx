@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useForm, Controller } from "react-hook-form";
-import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
 import {
   useGetContract, useCreateContract, useUpdateContract,
   useSendContract, useSignContract, useActivateContract,
@@ -19,7 +19,7 @@ import {
   getListContractsQueryKey, getGetContractQueryKey,
 } from "@workspace/api-client-react";
 import { LookupSelect } from "@/components/LookupSelect";
-import { ArrowLeft, Save, Trash2, CalendarDays, Wrench } from "lucide-react";
+import { ArrowLeft, Save, Trash2, CalendarDays, Wrench, Plus, Pencil } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 
 const CURRENCIES = ["AUD", "USD", "SGD", "MYR", "GBP"];
@@ -62,6 +62,41 @@ export default function ContractDetail() {
   const [signDocUrl, setSignDocUrl] = useState("");
   const [signOpen, setSignOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("schedule");
+
+  // Payment Schedule dialog state
+  const [schedDialogOpen, setSchedDialogOpen] = useState(false);
+  const [schedEditItem, setSchedEditItem] = useState<any | null>(null);
+  const [schedType, setSchedType] = useState("Rent");
+  const [schedFreq, setSchedFreq] = useState("Biweekly");
+  const [schedAmount, setSchedAmount] = useState("");
+  const [schedCurrency, setSchedCurrency] = useState("AUD");
+  const [schedStartDate, setSchedStartDate] = useState("");
+  const [schedEndDate, setSchedEndDate] = useState("");
+  const [schedNextDue, setSchedNextDue] = useState("");
+  const [schedActive, setSchedActive] = useState(true);
+  const [schedGst, setSchedGst] = useState(true);
+
+  const resetSchedForm = () => {
+    setSchedEditItem(null);
+    setSchedType("Rent"); setSchedFreq("Biweekly"); setSchedAmount("");
+    setSchedCurrency("AUD"); setSchedStartDate(""); setSchedEndDate("");
+    setSchedNextDue(""); setSchedActive(true); setSchedGst(true);
+  };
+
+  const openAddSched = () => { resetSchedForm(); setSchedDialogOpen(true); };
+  const openEditSched = (s: any) => {
+    setSchedEditItem(s);
+    setSchedType(s.schedule_type ?? "Rent");
+    setSchedFreq(s.frequency ?? "Biweekly");
+    setSchedAmount(s.amount != null ? String(s.amount) : "");
+    setSchedCurrency(s.currency ?? "AUD");
+    setSchedStartDate(s.start_date ?? "");
+    setSchedEndDate(s.end_date ?? "");
+    setSchedNextDue(s.next_due_date ?? "");
+    setSchedActive(s.is_active !== false);
+    setSchedGst(s.gst_included !== false);
+    setSchedDialogOpen(true);
+  };
 
   const { data: contract, refetch } = useGetContract(Number(id), {
     query: { enabled: !isNew },
@@ -126,6 +161,45 @@ export default function ContractDetail() {
   const terminateMutation = useTerminateContract({ mutation: { onSuccess: () => { invalidate(); refetch(); setTerminateOpen(false); } } });
   const expireMutation = useExpireContract({ mutation: { onSuccess: () => { invalidate(); refetch(); } } });
   const deleteMutation = useDeleteContract({ mutation: { onSuccess: () => { invalidate(); navigate("/contracts/contracts"); } } });
+
+  const invalidateSchedule = () => qc.invalidateQueries({ queryKey: ["contract-schedule", id] });
+
+  const addSchedMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const r = await apiFetch(`/api/v1/contracts/${id}/payment-schedule`, { method: "POST", body: JSON.stringify(payload), headers: { "Content-Type": "application/json" } });
+      if (!r.ok) throw new Error("Failed to add schedule");
+      return r.json();
+    },
+    onSuccess: () => { invalidateSchedule(); setSchedDialogOpen(false); resetSchedForm(); },
+  });
+
+  const updateSchedMutation = useMutation({
+    mutationFn: async ({ schedId, payload }: { schedId: number; payload: any }) => {
+      const r = await apiFetch(`/api/v1/contracts/${id}/payment-schedule/${schedId}`, { method: "PATCH", body: JSON.stringify(payload), headers: { "Content-Type": "application/json" } });
+      if (!r.ok) throw new Error("Failed to update schedule");
+      return r.json();
+    },
+    onSuccess: () => { invalidateSchedule(); setSchedDialogOpen(false); resetSchedForm(); },
+  });
+
+  const deleteSchedMutation = useMutation({
+    mutationFn: async (schedId: number) => {
+      const r = await apiFetch(`/api/v1/contracts/${id}/payment-schedule/${schedId}`, { method: "DELETE" });
+      if (!r.ok && r.status !== 204) throw new Error("Failed to delete schedule");
+    },
+    onSuccess: () => invalidateSchedule(),
+  });
+
+  const submitSchedForm = () => {
+    const payload = {
+      schedule_type: schedType, frequency: schedFreq, amount: schedAmount,
+      currency: schedCurrency, start_date: schedStartDate,
+      end_date: schedEndDate || null, next_due_date: schedNextDue || schedStartDate,
+      is_active: schedActive, gst_included: schedGst,
+    };
+    if (schedEditItem) updateSchedMutation.mutate({ schedId: schedEditItem.id, payload });
+    else addSchedMutation.mutate(payload);
+  };
 
   const buildPayload = (data: FormData) => ({
     booking_id: data.booking_id ?? null,
@@ -391,36 +465,59 @@ export default function ContractDetail() {
           </div>
 
           {activeTab === "schedule" && (
-            <div className="rounded-lg border bg-white overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b">
-                  <tr>
-                    {["Type", "Amount", "Currency", "Start Date", "End Date", "Next Due Date", "Frequency", "Active"].map((h) => (
-                      <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {!schedules.length ? (
-                    <tr><td colSpan={8} className="text-center py-10 text-muted-foreground">No payment schedule found</td></tr>
-                  ) : schedules.map((s: any) => (
-                    <tr key={s.id} className="border-b hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium">{s.schedule_type ?? "Rent"}</td>
-                      <td className="px-4 py-3 font-mono">{s.amount != null ? `$${Number(s.amount).toFixed(2)}` : "—"}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{s.currency ?? "AUD"}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{s.start_date ?? "—"}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{s.end_date ?? "—"}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{s.next_due_date ?? "—"}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{s.frequency ?? "—"}</td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}`}>
-                          {s.is_active ? "Active" : "Inactive"}
-                        </span>
-                      </td>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <h4 className="font-medium text-sm">Payment Schedule</h4>
+                <Button size="sm" variant="outline" onClick={openAddSched}>
+                  <Plus className="w-3.5 h-3.5 mr-1" /> Add Entry
+                </Button>
+              </div>
+              <div className="rounded-lg border bg-white overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 border-b">
+                    <tr>
+                      {["Type", "Amount", "Currency", "Start Date", "End Date", "Next Due Date", "Frequency", "GST", "Active", ""].map((h) => (
+                        <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {!schedules.length ? (
+                      <tr><td colSpan={10} className="text-center py-10 text-muted-foreground">No payment schedule entries yet</td></tr>
+                    ) : schedules.map((s: any) => (
+                      <tr key={s.id} className="border-b hover:bg-gray-50">
+                        <td className="px-4 py-3 font-medium">{s.schedule_type ?? "Rent"}</td>
+                        <td className="px-4 py-3 font-mono">{s.amount != null ? `$${Number(s.amount).toFixed(2)}` : "—"}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{s.currency ?? "AUD"}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{s.start_date ?? "—"}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{s.end_date ?? "—"}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{s.next_due_date ?? "—"}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{s.frequency ?? "—"}</td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s.gst_included ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"}`}>
+                            {s.gst_included ? "GST incl." : "Ex GST"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}`}>
+                            {s.is_active ? "Active" : "Inactive"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-1">
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => openEditSched(s)}>
+                              <Pencil className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-red-500 hover:text-red-700" onClick={() => deleteSchedMutation.mutate(s.id)}>
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
@@ -499,6 +596,92 @@ export default function ContractDetail() {
             <Button className="bg-purple-600 hover:bg-purple-700 text-white"
               onClick={() => signMutation.mutate({ id: Number(id), data: { document_url: signDocUrl || null } })}>
               Confirm Signed
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add / Edit Payment Schedule Dialog */}
+      <Dialog open={schedDialogOpen} onOpenChange={(open) => { if (!open) { setSchedDialogOpen(false); resetSchedForm(); } }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{schedEditItem ? "Edit Payment Schedule Entry" : "Add Payment Schedule Entry"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Type</Label>
+                <Select value={schedType} onValueChange={setSchedType}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {["Rent", "Bond", "Advance", "Water", "Electricity", "Gas", "Internet", "Parking", "Other"].map(v => (
+                      <SelectItem key={v} value={v}>{v}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Frequency</Label>
+                <Select value={schedFreq} onValueChange={setSchedFreq}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Weekly">Weekly</SelectItem>
+                    <SelectItem value="Biweekly">Fortnightly</SelectItem>
+                    <SelectItem value="Monthly">Monthly</SelectItem>
+                    <SelectItem value="Quarterly">Quarterly</SelectItem>
+                    <SelectItem value="Once">Once</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Amount *</Label>
+                <Input type="number" step="0.01" min="0" value={schedAmount} onChange={e => setSchedAmount(e.target.value)} placeholder="0.00" className="mt-1" />
+              </div>
+              <div>
+                <Label>Currency</Label>
+                <Select value={schedCurrency} onValueChange={setSchedCurrency}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Start Date *</Label>
+                <Input type="date" value={schedStartDate} onChange={e => setSchedStartDate(e.target.value)} className="mt-1" />
+              </div>
+              <div>
+                <Label>End Date</Label>
+                <Input type="date" value={schedEndDate} onChange={e => setSchedEndDate(e.target.value)} className="mt-1" />
+              </div>
+            </div>
+            <div>
+              <Label>Next Due Date *</Label>
+              <Input type="date" value={schedNextDue} onChange={e => setSchedNextDue(e.target.value)} className="mt-1" />
+            </div>
+            <div className="flex gap-6">
+              <label className="flex items-center gap-2 cursor-pointer text-sm">
+                <input type="checkbox" checked={schedGst} onChange={e => setSchedGst(e.target.checked)} className="rounded" />
+                GST Included
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer text-sm">
+                <input type="checkbox" checked={schedActive} onChange={e => setSchedActive(e.target.checked)} className="rounded" />
+                Active
+              </label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setSchedDialogOpen(false); resetSchedForm(); }}>Cancel</Button>
+            <Button
+              className="bg-[#E8621A] hover:bg-[#d4561a] text-white"
+              disabled={!schedAmount || !schedStartDate || addSchedMutation.isPending || updateSchedMutation.isPending}
+              onClick={submitSchedForm}
+            >
+              {schedEditItem ? "Save Changes" : "Add Entry"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -195,6 +195,65 @@ router.get("/v1/contracts/:id/payment-schedule", async (req, res): Promise<void>
   res.json({ data: schedules, meta: { total: schedules.length } });
 });
 
+// POST /contracts/:id/payment-schedule — add a new schedule entry
+router.post("/v1/contracts/:id/payment-schedule", async (req, res): Promise<void> => {
+  const contractId = Number(req.params.id);
+  const [contract] = await db.select().from(contractsTable).where(eq(contractsTable.id, contractId));
+  if (!contract) { res.status(404).json({ error: "NOT_FOUND" }); return; }
+  const { schedule_type, frequency, amount, currency, start_date, end_date, next_due_date, is_active, gst_included } = req.body;
+  const [row] = await db.insert(recurringSchedulesTable).values({
+    booking_id: contract.booking_id ?? 0,
+    contract_id: contractId,
+    account_id: contract.tenant_account_id ?? 0,
+    schedule_type: schedule_type ?? "Rent",
+    frequency: frequency ?? "Biweekly",
+    amount: String(amount ?? "0"),
+    currency: currency ?? "AUD",
+    start_date: start_date,
+    end_date: end_date ?? null,
+    next_due_date: next_due_date ?? start_date,
+    is_active: is_active !== false,
+    gst_included: gst_included !== false,
+  }).returning();
+  await logAction({ entityType: "contract", entityId: contractId, action: "SCHEDULE_ADD", newValue: row });
+  res.status(201).json(row);
+});
+
+// PATCH /contracts/:id/payment-schedule/:schedId — update a schedule entry
+router.patch("/v1/contracts/:id/payment-schedule/:schedId", async (req, res): Promise<void> => {
+  const contractId = Number(req.params.id);
+  const schedId = Number(req.params.schedId);
+  const { schedule_type, frequency, amount, currency, start_date, end_date, next_due_date, is_active, gst_included } = req.body;
+  const updates: Record<string, any> = { updated_at: new Date() };
+  if (schedule_type !== undefined) updates.schedule_type = schedule_type;
+  if (frequency !== undefined) updates.frequency = frequency;
+  if (amount !== undefined) updates.amount = String(amount);
+  if (currency !== undefined) updates.currency = currency;
+  if (start_date !== undefined) updates.start_date = start_date;
+  if (end_date !== undefined) updates.end_date = end_date;
+  if (next_due_date !== undefined) updates.next_due_date = next_due_date;
+  if (is_active !== undefined) updates.is_active = is_active;
+  if (gst_included !== undefined) updates.gst_included = gst_included;
+  const [row] = await db.update(recurringSchedulesTable).set(updates)
+    .where(and(eq(recurringSchedulesTable.id, schedId), eq(recurringSchedulesTable.contract_id, contractId)))
+    .returning();
+  if (!row) { res.status(404).json({ error: "NOT_FOUND" }); return; }
+  await logAction({ entityType: "contract", entityId: contractId, action: "SCHEDULE_UPDATE", newValue: row });
+  res.json(row);
+});
+
+// DELETE /contracts/:id/payment-schedule/:schedId — remove a schedule entry
+router.delete("/v1/contracts/:id/payment-schedule/:schedId", async (req, res): Promise<void> => {
+  const contractId = Number(req.params.id);
+  const schedId = Number(req.params.schedId);
+  const [row] = await db.delete(recurringSchedulesTable)
+    .where(and(eq(recurringSchedulesTable.id, schedId), eq(recurringSchedulesTable.contract_id, contractId)))
+    .returning();
+  if (!row) { res.status(404).json({ error: "NOT_FOUND" }); return; }
+  await logAction({ entityType: "contract", entityId: contractId, action: "SCHEDULE_DELETE", newValue: { id: schedId } });
+  res.status(204).end();
+});
+
 // GET /contracts/:id/services — booking services linked via the booking
 router.get("/v1/contracts/:id/services", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
