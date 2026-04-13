@@ -300,7 +300,7 @@ router.get("/v1/guest/bookings/:id", async (req, res): Promise<void> => {
   const services = await db
     .select({
       id: bookingServicesTable.id,
-      service_name: bookingServicesTable.service_name,
+      service_name: bookingServicesTable.name,
       service_type: bookingServicesTable.service_type,
       quantity: bookingServicesTable.quantity,
       unit_price: bookingServicesTable.unit_price,

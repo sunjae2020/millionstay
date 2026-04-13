@@ -570,7 +570,7 @@ INSERT INTO public.accounts (id, name, account_type, primary_contact_id, seconda
 	(17, 'Gildong HONG', 'Guest', NULL, NULL, 'teswt@timest.co.kr', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'AUD', NULL, NULL, false, 'Active', '2026-04-09 05:11:01.06402+00', '2026-04-09 05:11:01.06402+00'),
 	(15, 'Demo Guest', 'Guest', NULL, NULL, 'demo@millionstay.com.au', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'AUD', NULL, NULL, false, 'Active', '2026-04-07 05:35:30.26358+00', '2026-04-11 11:13:59.069+00');
 INSERT INTO public.admin_users (id, email, password_hash, role, first_name, last_name, is_active, force_password_change, last_login_at, created_at, updated_at, status, reset_token, reset_token_expires_at) VALUES
-	(1, 'admin@millionstay.com', '$2b$10$FX2diLhEDwiXWzaGJtZoXeOS1x/pizNnsMOqPkpnwaR3DxlC.OBU.', 'Super Admin', 'Million', 'Stay', true, false, '2026-04-13 06:51:06.041+00', '2026-04-05 08:29:14.152582+00', '2026-04-13 06:51:06.041+00', 'active', NULL, NULL);
+	(1, 'admin@millionstay.com', '$2b$10$FX2diLhEDwiXWzaGJtZoXeOS1x/pizNnsMOqPkpnwaR3DxlC.OBU.', 'Super Admin', 'Million', 'Stay', true, false, '2026-04-13 06:57:43.047+00', '2026-04-05 08:29:14.152582+00', '2026-04-13 06:57:43.047+00', 'active', NULL, NULL);
 INSERT INTO public.announcements (id, title, body, category, priority, is_published, published_at, expires_at, created_by, created_at, updated_at) VALUES
 	(1, 'Welcome to MillionStay Resident Portal', 'Dear residents, welcome to your new online portal! You can now manage your bookings, pay invoices, submit maintenance requests, and communicate with our team — all in one place. If you have any questions, please reach out via the Inquiries tab.', 'General', 'Normal', 1, '2026-04-04 16:41:47.886313+00', NULL, NULL, '2026-04-11 16:41:47.886313+00', '2026-04-11 16:41:47.886313+00'),
 	(2, 'Building Maintenance — Hot Water System', 'Planned maintenance on the hot water system will take place on Saturday 18 April 2026 between 9:00 AM and 1:00 PM. Hot water may be intermittent during this period. We apologise for any inconvenience and will notify you when the work is complete.', 'Maintenance', 'High', 1, '2026-04-09 16:41:47.886313+00', NULL, NULL, '2026-04-11 16:41:47.886313+00', '2026-04-11 16:41:47.886313+00'),
@@ -592,7 +592,9 @@ INSERT INTO public.bookings (id, booking_ref, name, account_id, contact_id, book
 	(6, 'GBK-MNR9F8AC-BQ3', NULL, 17, NULL, 'Pending', 'Guest Portal', NULL, 9, '2026-04-12', '2026-04-22', NULL, 1.00, NULL, NULL, 'AUD', 1, NULL, NULL, NULL, 'Active', '2026-04-09 09:13:37.71774+00', '2026-04-09 09:13:37.71774+00', NULL),
 	(7, 'MS-2026-00003', 'GuestBook_Guest_2026-04-11', 15, NULL, 'Confirmed', 'portal', NULL, 5, '2026-05-01', '2027-05-01', 365, 52.14, 530.00, 27634.20, 'AUD', 1, NULL, NULL, NULL, 'Active', '2026-04-11 11:43:26.079587+00', '2026-04-11 11:43:26.116+00', NULL),
 	(2, 'MS-2026-00002', 'GuestBook_Emma_Johnson_2026-06-01', 7, NULL, 'Active', 'Agent', NULL, 2, '2026-06-01', '2026-06-28', 27, 3.86, 430.00, 1658.57, 'AUD', 1, NULL, NULL, NULL, 'Active', '2026-04-05 00:22:15.459884+00', '2026-04-13 04:59:20.483+00', NULL),
-	(8, 'MS-2026-00004', 'GuestBook_Sunjae_Kim_2026-04-13', 1, 1, 'Active', 'Direct', NULL, 3, '2026-06-01', '2026-07-31', 60, 8.57, 350.00, 2999.50, 'AUD', 1, NULL, NULL, NULL, 'Active', '2026-04-13 06:45:59.091211+00', '2026-04-13 06:48:54.371+00', 17);
+	(8, 'MS-2026-00004', 'GuestBook_Sunjae_Kim_2026-04-13', 1, 1, 'Active', 'Direct', NULL, 3, '2026-06-01', '2026-07-31', 60, 8.57, 350.00, 2999.50, 'AUD', 1, NULL, NULL, NULL, 'Active', '2026-04-13 06:45:59.091211+00', '2026-04-13 06:48:54.371+00', 17),
+	(9, 'MS-2026-00005', 'GuestBook_Sunjae_Kim_2026-04-13', 1, 1, 'Draft', NULL, NULL, 6, '2026-08-01', '2026-09-30', 60, 8.57, 420.00, 3599.40, 'AUD', 1, NULL, NULL, NULL, 'Active', '2026-04-13 06:57:43.632249+00', '2026-04-13 06:57:43.632249+00', 25),
+	(10, 'GBK-MNWVNQMJ-YHJ', NULL, 15, NULL, 'Pending', 'Guest Portal', NULL, 11, '2026-04-19', '2026-12-08', NULL, 33.00, NULL, NULL, 'AUD', 1, NULL, NULL, NULL, 'Active', '2026-04-13 07:34:57.163894+00', '2026-04-13 07:34:57.163894+00', NULL);
 INSERT INTO public.commissions (id, name, commission_type, commission_rate, commission_amount, description, status, created_at, updated_at) VALUES
 	(1, '10% Commission', 'Percentage', 10, NULL, 'Standard agent commission', 'Active', '2026-04-04 23:54:23.545884+00', '2026-04-04 23:54:23.545884+00'),
 	(2, '7% Agent Commission', 'Percentage', 7, NULL, 'Reduced agent commission', 'Active', '2026-04-04 23:54:23.628172+00', '2026-04-04 23:54:23.628172+00'),
@@ -1805,7 +1807,7 @@ SELECT pg_catalog.setval('public.announcements_id_seq', 4, true);
 SELECT pg_catalog.setval('public.beneficiaries_id_seq', 4, true);
 SELECT pg_catalog.setval('public.booking_documents_id_seq', 3, true);
 SELECT pg_catalog.setval('public.booking_services_id_seq', 1, false);
-SELECT pg_catalog.setval('public.bookings_id_seq', 8, true);
+SELECT pg_catalog.setval('public.bookings_id_seq', 10, true);
 SELECT pg_catalog.setval('public.commissions_id_seq', 5, true);
 SELECT pg_catalog.setval('public.contacts_id_seq', 9, true);
 SELECT pg_catalog.setval('public.contract_line_items_id_seq', 2, true);
