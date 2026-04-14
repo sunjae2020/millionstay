@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import bcrypt from "bcryptjs";
 import { db, usersTable } from "@workspace/db";
-import { eq, ne } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import { requireAuth } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
@@ -20,10 +20,12 @@ router.get("/v1/admin/users", async (req, res): Promise<void> => {
         role: usersTable.role,
         is_active: usersTable.is_active,
         status: usersTable.status,
+        deleted_at: usersTable.deleted_at,
         last_login_at: usersTable.last_login_at,
         created_at: usersTable.created_at,
       })
       .from(usersTable)
+      .where(isNull(usersTable.deleted_at))
       .orderBy(usersTable.created_at);
 
     res.json({ success: true, users });
@@ -100,7 +102,20 @@ router.delete("/v1/admin/users/:id", async (req, res): Promise<void> => {
       return;
     }
 
-    await db.delete(usersTable).where(eq(usersTable.id, id));
+    const permanent = req.query.permanent === "true";
+
+    if (permanent) {
+      if (currentUser?.role !== "SuperAdmin") {
+        res.status(403).json({ success: false, error: "Only Super Admin can permanently delete users" });
+        return;
+      }
+      await db.delete(usersTable).where(eq(usersTable.id, id));
+    } else {
+      await db.update(usersTable)
+        .set({ deleted_at: new Date(), is_active: false, status: "archived" })
+        .where(eq(usersTable.id, id));
+    }
+
     res.json({ success: true });
   } catch (err) {
     console.error(err);

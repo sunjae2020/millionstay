@@ -1,11 +1,16 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { UserPlus, Trash2, Shield, User, Check, X, Clock, Loader2, RefreshCw } from "lucide-react";
+import { UserPlus, Trash2, Shield, User, Check, X, Clock, Loader2, RefreshCw, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  AlertDialog, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface AdminUser {
   id: number;
@@ -45,8 +50,12 @@ function roleBadge(role: string) {
 
 export function UserManagement() {
   const { toast } = useToast();
+  const { user: currentUser } = useAuth();
+  const isSuperAdmin = currentUser?.role === "SuperAdmin";
   const qc = useQueryClient();
   const [actionLoading, setActionLoading] = useState<Record<number, string>>({});
+  const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
+  const [isPermanentDeleting, setIsPermanentDeleting] = useState(false);
 
   const { data, isLoading, isError, refetch } = useQuery<{ success: boolean; users: AdminUser[] }>({
     queryKey: ["admin-users"],
@@ -76,31 +85,39 @@ export function UserManagement() {
     } catch (err: any) {
       toast({ title: "Error", description: err.message ?? "Action failed", variant: "destructive" });
     } finally {
-      setActionLoading(prev => {
-        const n = { ...prev };
-        delete n[id];
-        return n;
-      });
+      setActionLoading(prev => { const n = { ...prev }; delete n[id]; return n; });
     }
   }
 
-  async function deleteUser(id: number) {
-    if (!confirm("Remove this user? This cannot be undone.")) return;
+  async function archiveUser(id: number) {
     setActionLoading(prev => ({ ...prev, [id]: "delete" }));
+    setDeleteTarget(null);
     try {
       const res = await apiFetch(`/api/v1/admin/users/${id}`, { method: "DELETE" });
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
       qc.invalidateQueries({ queryKey: ["admin-users"] });
-      toast({ title: "User removed" });
+      toast({ title: "User archived", description: "User has been archived and deactivated." });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message ?? "Archive failed", variant: "destructive" });
+    } finally {
+      setActionLoading(prev => { const n = { ...prev }; delete n[id]; return n; });
+    }
+  }
+
+  async function permanentDeleteUser(id: number) {
+    setIsPermanentDeleting(true);
+    setDeleteTarget(null);
+    try {
+      const res = await apiFetch(`/api/v1/admin/users/${id}?permanent=true`, { method: "DELETE" });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+      toast({ title: "User permanently deleted", description: "User has been permanently removed from the system." });
     } catch (err: any) {
       toast({ title: "Error", description: err.message ?? "Delete failed", variant: "destructive" });
     } finally {
-      setActionLoading(prev => {
-        const n = { ...prev };
-        delete n[id];
-        return n;
-      });
+      setIsPermanentDeleting(false);
     }
   }
 
@@ -219,15 +236,15 @@ export function UserManagement() {
                 <div className="flex items-center gap-2">
                   {roleBadge(user.role)}
                   {statusBadge(user.status)}
-                  {user.role !== "SuperAdmin" && (
+                  {user.id !== currentUser?.id && user.role !== "SuperAdmin" && (
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-muted-foreground hover:text-destructive"
                       disabled={!!actionLoading[user.id]}
-                      onClick={() => deleteUser(user.id)}
+                      onClick={() => setDeleteTarget(user)}
                     >
-                      {actionLoading[user.id] === "delete"
+                      {actionLoading[user.id] === "delete" || (isPermanentDeleting && deleteTarget?.id === user.id)
                         ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                         : <Trash2 className="h-3.5 w-3.5" />
                       }
@@ -246,8 +263,8 @@ export function UserManagement() {
         <h3 className="text-base font-semibold">Role Descriptions</h3>
         <div className="mt-3 space-y-2 text-sm">
           {[
-            { role: "SuperAdmin", label: "Super Admin", desc: "Full access to all features including system settings and user management" },
-            { role: "Admin", label: "Admin", desc: "Read and write access to all data, limited settings access" },
+            { role: "SuperAdmin", label: "Super Admin", desc: "Full access including permanent deletion and system settings" },
+            { role: "Admin", label: "Admin", desc: "Read and write access to all data; deletions are archived (reversible)" },
             { role: "Viewer", label: "Viewer", desc: "Read-only access across all modules" },
           ].map(({ role, label, desc }) => (
             <div key={role} className="flex items-start gap-2">
@@ -257,6 +274,45 @@ export function UserManagement() {
           ))}
         </div>
       </div>
+
+      {/* ── Delete Dialog ─────────────────────────────────── */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              {isSuperAdmin ? "Remove User" : "Archive User"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget && (
+                <span>
+                  <strong>{deleteTarget.first_name} {deleteTarget.last_name}</strong> ({deleteTarget.email})
+                  {isSuperAdmin
+                    ? " — Choose how to remove this user. Archiving deactivates the account. Permanent deletion cannot be undone."
+                    : " — This user will be archived and deactivated. A Super Admin can restore the account if needed."}
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className={isSuperAdmin ? "flex-col sm:flex-row gap-2" : ""}>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button
+              variant="outline"
+              className="border-amber-300 text-amber-700 hover:bg-amber-50"
+              onClick={() => deleteTarget && archiveUser(deleteTarget.id)}>
+              Archive
+            </Button>
+            {isSuperAdmin && (
+              <Button
+                variant="destructive"
+                onClick={() => deleteTarget && permanentDeleteUser(deleteTarget.id)}
+                disabled={isPermanentDeleting}>
+                Delete Forever
+              </Button>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

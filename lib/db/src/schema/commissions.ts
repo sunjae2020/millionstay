@@ -10,6 +10,7 @@ export const commissionsTable = pgTable("commissions", {
   commission_amount: real("commission_amount"),
   description: text("description"),
   status: text("status").notNull().default("Active"),
+  deleted_at: timestamp("deleted_at", { withTimezone: true }),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

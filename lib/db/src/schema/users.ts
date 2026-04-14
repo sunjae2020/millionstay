@@ -13,6 +13,7 @@ export const usersTable = pgTable("admin_users", {
   reset_token: text("reset_token"),
   reset_token_expires_at: timestamp("reset_token_expires_at", { withTimezone: true }),
   last_login_at: timestamp("last_login_at", { withTimezone: true }),
+  deleted_at: timestamp("deleted_at", { withTimezone: true }),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

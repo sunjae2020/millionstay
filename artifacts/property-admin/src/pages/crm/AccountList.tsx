@@ -9,12 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useListAccounts, useDeleteAccount, getListAccountsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, AlertTriangle } from "lucide-react";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialog, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useAuth } from "@/contexts/AuthContext";
+import { apiFetch } from "@/lib/apiFetch";
 
 const ACCOUNT_TYPE_COLORS: Record<string, string> = {
   Guest: "bg-blue-100 text-blue-700 border-blue-200",
@@ -28,10 +30,13 @@ const ACCOUNT_TYPE_COLORS: Record<string, string> = {
 
 export default function AccountList() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === "SuperAdmin";
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [isPermanentDeleting, setIsPermanentDeleting] = useState(false);
   const qc = useQueryClient();
 
   const params = { search: search || undefined, account_type: typeFilter || undefined, status: statusFilter || undefined };
@@ -41,7 +46,7 @@ export default function AccountList() {
 
   const pagination = usePagination(accounts ?? []);
 
-  const deleteMutation = useDeleteAccount({
+  const archiveMutation = useDeleteAccount({
     mutation: {
       onSuccess: () => {
         qc.invalidateQueries({ queryKey: getListAccountsQueryKey() });
@@ -49,6 +54,18 @@ export default function AccountList() {
       },
     },
   });
+
+  const handlePermanentDelete = async () => {
+    if (!deleteId) return;
+    setIsPermanentDeleting(true);
+    try {
+      await apiFetch(`/api/v1/accounts/${deleteId}?permanent=true`, { method: "DELETE" });
+      qc.invalidateQueries({ queryKey: getListAccountsQueryKey() });
+      setDeleteId(null);
+    } finally {
+      setIsPermanentDeleting(false);
+    }
+  };
 
   return (
     <Layout>
@@ -144,15 +161,33 @@ export default function AccountList() {
       <AlertDialog open={deleteId !== null} onOpenChange={(o) => !o && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("account.delete_title")}</AlertDialogTitle>
-            <AlertDialogDescription>{t("common.cannot_undo")}</AlertDialogDescription>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              {isSuperAdmin ? "Delete Account" : "Archive Account"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {isSuperAdmin
+                ? "Choose how to remove this account. Archiving hides it from view but keeps the data. Permanent deletion cannot be undone."
+                : "This account will be archived and hidden from view. A Super Admin can restore it if needed."}
+            </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className={isSuperAdmin ? "flex-col sm:flex-row gap-2" : ""}>
             <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => deleteId && deleteMutation.mutate({ id: deleteId })}>
-              {t("common.delete")}
-            </AlertDialogAction>
+            <Button
+              variant="outline"
+              className="border-amber-300 text-amber-700 hover:bg-amber-50"
+              onClick={() => deleteId && archiveMutation.mutate({ id: deleteId })}
+              disabled={archiveMutation.isPending}>
+              Archive
+            </Button>
+            {isSuperAdmin && (
+              <Button
+                variant="destructive"
+                onClick={handlePermanentDelete}
+                disabled={isPermanentDeleting}>
+                Delete Forever
+              </Button>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

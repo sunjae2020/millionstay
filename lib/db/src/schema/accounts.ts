@@ -29,6 +29,7 @@ export const accountsTable = pgTable("accounts", {
   description: text("description"),
   manual_input: boolean("manual_input").notNull().default(false),
   status: text("status").notNull().default("Active"),
+  deleted_at: timestamp("deleted_at", { withTimezone: true }),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

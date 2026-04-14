@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, ilike, and, SQL } from "drizzle-orm";
+import { eq, ilike, and, isNull, SQL } from "drizzle-orm";
 import { db, commissionsTable } from "@workspace/db";
 import {
   ListCommissionsQueryParams,
@@ -16,11 +16,11 @@ router.get("/v1/commissions", async (req, res): Promise<void> => {
   const parsed = ListCommissionsQueryParams.safeParse(req.query);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const { search, status } = parsed.data;
-  const conditions: SQL[] = [];
+  const conditions: SQL[] = [isNull(commissionsTable.deleted_at)];
   if (status) conditions.push(eq(commissionsTable.status, status));
   if (search) conditions.push(ilike(commissionsTable.name, `%${search}%`));
   const rows = await db.select().from(commissionsTable)
-    .where(conditions.length ? and(...conditions) : undefined)
+    .where(and(...conditions))
     .orderBy(commissionsTable.name);
   res.json(rows);
 });
@@ -56,7 +56,16 @@ router.put("/v1/commissions/:id", async (req, res): Promise<void> => {
 router.delete("/v1/commissions/:id", async (req, res): Promise<void> => {
   const parsed = DeleteCommissionParams.safeParse(req.params);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
-  await db.delete(commissionsTable).where(eq(commissionsTable.id, parsed.data.id));
+  const currentUser = (req as any).user;
+  const permanent = req.query.permanent === "true";
+  if (permanent) {
+    if (currentUser?.role !== "SuperAdmin") {
+      res.status(403).json({ error: "Only Super Admin can permanently delete records" }); return;
+    }
+    await db.delete(commissionsTable).where(eq(commissionsTable.id, parsed.data.id));
+  } else {
+    await db.update(commissionsTable).set({ deleted_at: new Date(), status: "Archived" }).where(eq(commissionsTable.id, parsed.data.id));
+  }
   res.status(204).end();
 });
 

@@ -28,6 +28,11 @@ router.post("/v1/auth/login", async (req, res): Promise<void> => {
       return;
     }
 
+    if (user.deleted_at) {
+      res.status(401).json({ success: false, error: "Invalid credentials" });
+      return;
+    }
+
     if (user.status === "pending") {
       res.status(403).json({ success: false, error: "Your account is pending admin approval. You will be notified once it is activated." });
       return;

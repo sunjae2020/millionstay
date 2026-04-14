@@ -9,18 +9,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useListContacts, useDeleteContact, getListContactsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Pencil, Trash2, Globe } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Globe, AlertTriangle } from "lucide-react";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialog, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useAuth } from "@/contexts/AuthContext";
+import { apiFetch } from "@/lib/apiFetch";
 
 export default function ContactList() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === "SuperAdmin";
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [isPermanentDeleting, setIsPermanentDeleting] = useState(false);
   const qc = useQueryClient();
 
   const params = { search: search || undefined, status: statusFilter || undefined };
@@ -30,7 +35,7 @@ export default function ContactList() {
 
   const pagination = usePagination(contacts ?? []);
 
-  const deleteMutation = useDeleteContact({
+  const archiveMutation = useDeleteContact({
     mutation: {
       onSuccess: () => {
         qc.invalidateQueries({ queryKey: getListContactsQueryKey() });
@@ -38,6 +43,18 @@ export default function ContactList() {
       },
     },
   });
+
+  const handlePermanentDelete = async () => {
+    if (!deleteId) return;
+    setIsPermanentDeleting(true);
+    try {
+      await apiFetch(`/api/v1/contacts/${deleteId}?permanent=true`, { method: "DELETE" });
+      qc.invalidateQueries({ queryKey: getListContactsQueryKey() });
+      setDeleteId(null);
+    } finally {
+      setIsPermanentDeleting(false);
+    }
+  };
 
   return (
     <Layout>
@@ -129,15 +146,33 @@ export default function ContactList() {
       <AlertDialog open={deleteId !== null} onOpenChange={(o) => !o && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("contact.delete_title")}</AlertDialogTitle>
-            <AlertDialogDescription>{t("common.cannot_undo")}</AlertDialogDescription>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              {isSuperAdmin ? "Delete Contact" : "Archive Contact"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {isSuperAdmin
+                ? "Choose how to remove this contact. Archiving hides it from view but keeps the data. Permanent deletion cannot be undone."
+                : "This contact will be archived and hidden from view. A Super Admin can restore it if needed."}
+            </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className={isSuperAdmin ? "flex-col sm:flex-row gap-2" : ""}>
             <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => deleteId && deleteMutation.mutate({ id: deleteId })}>
-              {t("common.delete")}
-            </AlertDialogAction>
+            <Button
+              variant="outline"
+              className="border-amber-300 text-amber-700 hover:bg-amber-50"
+              onClick={() => deleteId && archiveMutation.mutate({ id: deleteId })}
+              disabled={archiveMutation.isPending}>
+              Archive
+            </Button>
+            {isSuperAdmin && (
+              <Button
+                variant="destructive"
+                onClick={handlePermanentDelete}
+                disabled={isPermanentDeleting}>
+                Delete Forever
+              </Button>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

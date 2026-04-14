@@ -14,6 +14,7 @@ export const paymentInfoTable = pgTable("payment_info", {
   stripe_account_id: text("stripe_account_id"),
   description: text("description"),
   status: text("status").notNull().default("Active"),
+  deleted_at: timestamp("deleted_at", { withTimezone: true }),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

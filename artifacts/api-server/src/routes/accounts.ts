@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, ilike, and, or, SQL } from "drizzle-orm";
+import { eq, ilike, and, or, isNull, SQL } from "drizzle-orm";
 import { db, accountsTable, contactsTable, commissionsTable, paymentInfoTable } from "@workspace/db";
 import {
   ListAccountsQueryParams,
@@ -48,7 +48,7 @@ router.get("/v1/accounts", async (req, res): Promise<void> => {
   const parsed = ListAccountsQueryParams.safeParse(req.query);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const { search, account_type, status } = parsed.data;
-  const conditions: SQL[] = [];
+  const conditions: SQL[] = [isNull(accountsTable.deleted_at)];
   if (account_type) conditions.push(eq(accountsTable.account_type, account_type));
   if (status) conditions.push(eq(accountsTable.status, status));
   if (search) {
@@ -58,7 +58,7 @@ router.get("/v1/accounts", async (req, res): Promise<void> => {
     )!);
   }
   const rows = await db.select().from(accountsTable)
-    .where(conditions.length ? and(...conditions) : undefined)
+    .where(and(...conditions))
     .orderBy(accountsTable.name);
   const enriched = await Promise.all(rows.map(enrichAccount));
   res.json(enriched);
@@ -95,7 +95,16 @@ router.put("/v1/accounts/:id", async (req, res): Promise<void> => {
 router.delete("/v1/accounts/:id", async (req, res): Promise<void> => {
   const parsed = DeleteAccountParams.safeParse(req.params);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
-  await db.delete(accountsTable).where(eq(accountsTable.id, parsed.data.id));
+  const currentUser = (req as any).user;
+  const permanent = req.query.permanent === "true";
+  if (permanent) {
+    if (currentUser?.role !== "SuperAdmin") {
+      res.status(403).json({ error: "Only Super Admin can permanently delete records" }); return;
+    }
+    await db.delete(accountsTable).where(eq(accountsTable.id, parsed.data.id));
+  } else {
+    await db.update(accountsTable).set({ deleted_at: new Date(), status: "Archived" }).where(eq(accountsTable.id, parsed.data.id));
+  }
   res.status(204).end();
 });
 
