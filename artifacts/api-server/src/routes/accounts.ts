@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, ilike, and, or, isNull, SQL } from "drizzle-orm";
+import { eq, ilike, and, or, isNull, inArray, SQL } from "drizzle-orm";
 import { db, accountsTable, contactsTable, commissionsTable, paymentInfoTable } from "@workspace/db";
 import {
   ListAccountsQueryParams,
@@ -90,6 +90,24 @@ router.put("/v1/accounts/:id", async (req, res): Promise<void> => {
     .returning();
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
   res.json(await enrichAccount(row));
+});
+
+router.post("/v1/accounts/bulk-delete", async (req, res): Promise<void> => {
+  const currentUser = (req as any).user;
+  if (currentUser?.role !== "SuperAdmin") {
+    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
+  }
+  const { ids, permanent } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    res.status(400).json({ error: "ids must be a non-empty array" }); return;
+  }
+  const numIds = ids.map(Number).filter(Boolean);
+  if (permanent) {
+    await db.delete(accountsTable).where(inArray(accountsTable.id, numIds));
+  } else {
+    await db.update(accountsTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(accountsTable.id, numIds));
+  }
+  res.json({ success: true, affected: numIds.length });
 });
 
 router.delete("/v1/accounts/:id", async (req, res): Promise<void> => {

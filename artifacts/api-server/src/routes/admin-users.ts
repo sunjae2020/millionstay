@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import bcrypt from "bcryptjs";
 import { db, usersTable } from "@workspace/db";
-import { eq, isNull } from "drizzle-orm";
+import { eq, isNull, inArray } from "drizzle-orm";
 import { requireAuth } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
@@ -84,6 +84,33 @@ router.patch("/v1/admin/users/:id", async (req, res): Promise<void> => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, error: "Failed to update user" });
+  }
+});
+
+/* ─── Bulk delete users (SuperAdmin only) ─────────────────── */
+router.post("/v1/admin/users/bulk-delete", async (req, res): Promise<void> => {
+  try {
+    const currentUser = (req as any).user;
+    if (currentUser?.role !== "SuperAdmin") {
+      res.status(403).json({ success: false, error: "Only SuperAdmin can perform bulk delete" }); return;
+    }
+    const { ids, permanent } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      res.status(400).json({ success: false, error: "ids must be a non-empty array" }); return;
+    }
+    const numIds = ids.map(Number).filter(id => !isNaN(id) && id !== currentUser.id);
+    if (numIds.length === 0) {
+      res.status(400).json({ success: false, error: "No valid IDs (cannot delete yourself)" }); return;
+    }
+    if (permanent) {
+      await db.delete(usersTable).where(inArray(usersTable.id, numIds));
+    } else {
+      await db.update(usersTable).set({ deleted_at: new Date(), is_active: false, status: "archived" }).where(inArray(usersTable.id, numIds));
+    }
+    res.json({ success: true, affected: numIds.length });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: "Failed to bulk delete users" });
   }
 });
 
