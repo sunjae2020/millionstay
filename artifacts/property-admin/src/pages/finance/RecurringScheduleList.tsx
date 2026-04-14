@@ -11,9 +11,12 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, RefreshCw, ToggleLeft, ToggleRight, Calendar, Plus } from "lucide-react";
+import { Search, RefreshCw, ToggleLeft, ToggleRight, Calendar, Plus, Archive, X, AlertTriangle, Loader2, Trash2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { apiFetch } from "@/lib/apiFetch";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
 const FREQ_COLORS: Record<string, string> = {
@@ -64,10 +67,16 @@ function isOverdue(nextDue: string | null) {
 
 export default function RecurringScheduleList() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === "SuperAdmin";
+  const { toast } = useToast();
   const [q, setQ] = useState("");
   const [activeFilter, setActiveFilter] = useState("true");
   const [toggleTarget, setToggleTarget] = useState<{ id: number; is_active: boolean } | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkAction, setBulkAction] = useState<"archive" | "permanent" | null>(null);
+  const [isBulkLoading, setIsBulkLoading] = useState(false);
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -99,6 +108,41 @@ export default function RecurringScheduleList() {
 
   const rows: any[] = Array.isArray(data) ? data : (data?.data ?? []);
   const pagination = usePagination(rows);
+
+  const pageIds = pagination.paginatedItems.map((s: any) => s.id);
+  const allPageSelected = pageIds.length > 0 && pageIds.every((id: number) => selectedIds.has(id));
+  const somePageSelected = pageIds.some((id: number) => selectedIds.has(id));
+  const toggleSelectAll = () => {
+    if (allPageSelected) {
+      setSelectedIds((prev) => { const n = new Set(prev); pageIds.forEach((id: number) => n.delete(id)); return n; });
+    } else {
+      setSelectedIds((prev) => { const n = new Set(prev); pageIds.forEach((id: number) => n.add(id)); return n; });
+    }
+  };
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  };
+  const clearSelection = () => setSelectedIds(new Set());
+  const handleBulkDelete = async (permanent: boolean) => {
+    setIsBulkLoading(true);
+    setBulkAction(null);
+    try {
+      const res = await apiFetch("/api/v1/recurring-schedules/bulk-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selectedIds), permanent }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error ?? "Bulk delete failed");
+      qc.invalidateQueries({ queryKey: ["recurring-schedules"] });
+      toast({ title: permanent ? `${d.affected} schedules permanently deleted` : `${d.affected} schedules archived` });
+      clearSelection();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setIsBulkLoading(false);
+    }
+  };
 
   return (
     <Layout>
@@ -134,11 +178,27 @@ export default function RecurringScheduleList() {
           </Select>
         </div>
 
+        {isSuperAdmin && selectedIds.size > 0 && (
+          <div className="flex items-center gap-3 mb-3 px-4 py-2.5 rounded-lg bg-orange-50 border border-orange-200">
+            <span className="text-sm font-medium text-orange-800">{selectedIds.size} item{selectedIds.size > 1 ? "s" : ""} selected</span>
+            <button onClick={clearSelection} className="text-orange-500 hover:text-orange-700"><X className="h-3.5 w-3.5" /></button>
+            <div className="ml-auto flex items-center gap-2">
+              {isBulkLoading && <Loader2 className="h-4 w-4 animate-spin text-orange-500" />}
+              <Button size="sm" variant="outline" className="h-7 border-amber-300 text-amber-700 hover:bg-amber-50 gap-1.5" onClick={() => setBulkAction("archive")} disabled={isBulkLoading}>
+                <Archive className="h-3.5 w-3.5" /> Archive Selected
+              </Button>
+              <Button size="sm" variant="destructive" className="h-7 gap-1.5" onClick={() => setBulkAction("permanent")} disabled={isBulkLoading}>
+                <Trash2 className="h-3.5 w-3.5" /> Delete Forever
+              </Button>
+            </div>
+          </div>
+        )}
         <div className="border rounded-lg overflow-hidden bg-card">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b">
                 <tr>
+                  {isSuperAdmin && <th className="px-3 py-3 w-8"><Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} /></th>}
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_booking")}</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_account")}</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_type")}</th>
@@ -152,15 +212,16 @@ export default function RecurringScheduleList() {
               </thead>
               <tbody className="divide-y">
                 {isLoading ? (
-                  <tr><td colSpan={9} className="px-4 py-10 text-center text-muted-foreground">{t("common.loading")}</td></tr>
+                  <tr><td colSpan={isSuperAdmin ? 10 : 9} className="px-4 py-10 text-center text-muted-foreground">{t("common.loading")}</td></tr>
                 ) : rows.length === 0 ? (
-                  <tr><td colSpan={9} className="px-4 py-10 text-center text-muted-foreground">
+                  <tr><td colSpan={isSuperAdmin ? 10 : 9} className="px-4 py-10 text-center text-muted-foreground">
                     {t("recurring.no_schedules")}
                   </td></tr>
                 ) : pagination.paginatedItems.map((s: any) => {
                   const overdue = s.is_active && isOverdue(s.next_due_date);
                   return (
-                    <tr key={s.id} className="hover:bg-muted/30 transition-colors">
+                    <tr key={s.id} className={`hover:bg-muted/30 transition-colors ${selectedIds.has(s.id) ? "bg-orange-50/50" : ""}`}>
+                      {isSuperAdmin && <td className="px-3 py-3"><Checkbox checked={selectedIds.has(s.id)} onCheckedChange={() => toggleSelect(s.id)} /></td>}
                       <td className="px-4 py-3">
                         <Link href={`/booking/bookings/${s.booking_id}`}
                           className="text-[#E8621A] hover:underline font-mono text-xs font-semibold">
@@ -215,6 +276,30 @@ export default function RecurringScheduleList() {
         </div>
         <TablePagination {...pagination} />
       </div>
+
+      <AlertDialog open={bulkAction !== null} onOpenChange={(o) => !o && setBulkAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              {bulkAction === "permanent" ? "Permanently Delete Schedules" : "Archive Schedules"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {bulkAction === "permanent"
+                ? `You are about to permanently delete ${selectedIds.size} schedule(s). This cannot be undone.`
+                : `You are about to archive ${selectedIds.size} schedule(s). They will be hidden from view.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button variant={bulkAction === "permanent" ? "destructive" : "outline"}
+              className={bulkAction !== "permanent" ? "border-amber-300 text-amber-700 hover:bg-amber-50" : ""}
+              onClick={() => handleBulkDelete(bulkAction === "permanent")}>
+              {bulkAction === "permanent" ? "Delete Forever" : "Archive All"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={toggleTarget !== null} onOpenChange={() => setToggleTarget(null)}>
         <AlertDialogContent>

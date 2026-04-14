@@ -17,6 +17,7 @@ export const propertiesTable = pgTable("properties", {
   owner_account_id: integer("owner_account_id"),
   suburb_id: integer("suburb_id"),
   description: text("description"),
+  deleted_at: timestamp("deleted_at"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

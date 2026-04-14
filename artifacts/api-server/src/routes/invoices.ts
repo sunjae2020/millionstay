@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, invoicesTable, bookingsTable, contractsTable, accountsTable } from "@workspace/db";
-import { eq, ilike, and } from "drizzle-orm";
+import { eq, ilike, and, isNull, inArray } from "drizzle-orm";
 import { logAction } from "../utils/auditLog";
 import {
   CreateInvoiceBody,
@@ -51,14 +51,14 @@ async function enrichInvoices(rows: (typeof invoicesTable.$inferSelect)[]) {
 
 router.get("/v1/invoices", async (req, res): Promise<void> => {
   const { q, status, booking_id, contract_id, account_id } = req.query as Record<string, string>;
-  const conditions = [];
+  const conditions: any[] = [isNull(invoicesTable.deleted_at)];
   if (q) conditions.push(ilike(invoicesTable.invoice_ref, `%${q}%`));
   if (status) conditions.push(eq(invoicesTable.status, status));
   if (booking_id) conditions.push(eq(invoicesTable.booking_id, Number(booking_id)));
   if (contract_id) conditions.push(eq(invoicesTable.contract_id, Number(contract_id)));
   if (account_id) conditions.push(eq(invoicesTable.account_id, Number(account_id)));
   const rows = await db.select().from(invoicesTable)
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .where(and(...conditions))
     .orderBy(invoicesTable.id);
   const result = await enrichInvoices(rows);
   res.json(result);
@@ -108,8 +108,36 @@ router.put("/v1/invoices/:id", async (req, res): Promise<void> => {
   res.json(result);
 });
 
+router.post("/v1/invoices/bulk-delete", async (req, res): Promise<void> => {
+  const currentUser = (req as any).user;
+  if (currentUser?.role !== "SuperAdmin") {
+    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
+  }
+  const { ids, permanent } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    res.status(400).json({ error: "ids must be a non-empty array" }); return;
+  }
+  const numIds = ids.map(Number).filter(Boolean);
+  if (permanent) {
+    await db.delete(invoicesTable).where(inArray(invoicesTable.id, numIds));
+  } else {
+    await db.update(invoicesTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(invoicesTable.id, numIds));
+  }
+  res.json({ success: true, affected: numIds.length });
+});
+
 router.delete("/v1/invoices/:id", async (req, res): Promise<void> => {
-  await db.delete(invoicesTable).where(eq(invoicesTable.id, Number(req.params.id)));
+  const id = Number(req.params.id);
+  const currentUser = (req as any).user;
+  const permanent = req.query.permanent === "true";
+  if (permanent) {
+    if (currentUser?.role !== "SuperAdmin") {
+      res.status(403).json({ error: "Only SuperAdmin can permanently delete records" }); return;
+    }
+    await db.delete(invoicesTable).where(eq(invoicesTable.id, id));
+  } else {
+    await db.update(invoicesTable).set({ deleted_at: new Date(), status: "Archived" }).where(eq(invoicesTable.id, id));
+  }
   res.status(204).send();
 });
 

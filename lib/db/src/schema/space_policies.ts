@@ -12,6 +12,7 @@ export const spacePoliciesTable = pgTable("space_policies", {
   meal_option: boolean("meal_option").notNull().default(false),
   minimum_age: integer("minimum_age"),
   status: text("status").notNull().default("Active"),
+  deleted_at: timestamp("deleted_at"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

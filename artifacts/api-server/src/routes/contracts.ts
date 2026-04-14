@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, contractsTable, accountsTable, spacesTable, propertiesTable, contractProductsTable, accommodationCatalogTable, bookingsTable, recurringSchedulesTable, bookingServicesTable, invoicesTable, contractLineItemsTable } from "@workspace/db";
-import { eq, ilike, and, like, desc } from "drizzle-orm";
+import { eq, ilike, and, like, desc, isNull, inArray } from "drizzle-orm";
 import { logAction } from "../utils/auditLog";
 
 // ─── Invoice ref generator (returns a factory that increments safely) ────────
@@ -296,7 +296,7 @@ async function enrichContracts(rows: (typeof contractsTable.$inferSelect)[]) {
 
 router.get("/v1/contracts", async (req, res): Promise<void> => {
   const { q, status, tenant_account_id, space_id, booking_id, account_id } = req.query as Record<string, string>;
-  const conditions = [];
+  const conditions: any[] = [isNull(contractsTable.deleted_at)];
   if (q) conditions.push(ilike(contractsTable.contract_ref, `%${q}%`));
   if (status) conditions.push(eq(contractsTable.status, status));
   if (tenant_account_id) conditions.push(eq(contractsTable.tenant_account_id, Number(tenant_account_id)));
@@ -304,7 +304,7 @@ router.get("/v1/contracts", async (req, res): Promise<void> => {
   if (space_id) conditions.push(eq(contractsTable.space_id, Number(space_id)));
   if (booking_id) conditions.push(eq(contractsTable.booking_id, Number(booking_id)));
   const rows = await db.select().from(contractsTable)
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .where(and(...conditions))
     .orderBy(contractsTable.id);
   const result = await enrichContracts(rows);
   res.json(result);
@@ -371,8 +371,36 @@ router.put("/v1/contracts/:id", async (req, res): Promise<void> => {
   res.json(result);
 });
 
+router.post("/v1/contracts/bulk-delete", async (req, res): Promise<void> => {
+  const currentUser = (req as any).user;
+  if (currentUser?.role !== "SuperAdmin") {
+    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
+  }
+  const { ids, permanent } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    res.status(400).json({ error: "ids must be a non-empty array" }); return;
+  }
+  const numIds = ids.map(Number).filter(Boolean);
+  if (permanent) {
+    await db.delete(contractsTable).where(inArray(contractsTable.id, numIds));
+  } else {
+    await db.update(contractsTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(contractsTable.id, numIds));
+  }
+  res.json({ success: true, affected: numIds.length });
+});
+
 router.delete("/v1/contracts/:id", async (req, res): Promise<void> => {
-  await db.delete(contractsTable).where(eq(contractsTable.id, Number(req.params.id)));
+  const id = Number(req.params.id);
+  const currentUser = (req as any).user;
+  const permanent = req.query.permanent === "true";
+  if (permanent) {
+    if (currentUser?.role !== "SuperAdmin") {
+      res.status(403).json({ error: "Only SuperAdmin can permanently delete records" }); return;
+    }
+    await db.delete(contractsTable).where(eq(contractsTable.id, id));
+  } else {
+    await db.update(contractsTable).set({ deleted_at: new Date(), status: "Archived" }).where(eq(contractsTable.id, id));
+  }
   res.status(204).send();
 });
 

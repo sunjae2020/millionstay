@@ -8,6 +8,7 @@ export const spaceOptionsTable = pgTable("space_options", {
   display_name: text("display_name"),
   category: text("category"),
   status: text("status").notNull().default("Active"),
+  deleted_at: timestamp("deleted_at"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

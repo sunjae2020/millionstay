@@ -10,6 +10,7 @@ export const emailTemplatesTable = pgTable("email_template", {
   body_text: text("body_text"),
   available_vars: jsonb("available_vars"),
   is_active: boolean("is_active").notNull().default(true),
+  deleted_at: timestamp("deleted_at"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

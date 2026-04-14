@@ -4,6 +4,7 @@ export const productGroupsTable = pgTable("product_groups", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
   display_order: integer("display_order").notNull().default(0),
+  deleted_at: timestamp("deleted_at"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

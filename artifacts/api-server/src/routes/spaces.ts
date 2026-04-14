@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, ilike, and, inArray, gte, lte, SQL } from "drizzle-orm";
+import { eq, ilike, and, inArray, gte, lte, isNull, SQL } from "drizzle-orm";
 import { db, spacesTable, propertiesTable, spacePoliciesTable, spaceOptionMapsTable, spaceBlockedDatesTable, spaceAvailabilityTable, spaceServiceCatalogTable, serviceCatalogTable } from "@workspace/db";
 import { logAction } from "../utils/auditLog";
 import {
@@ -61,7 +61,7 @@ router.get("/v1/spaces", async (req, res): Promise<void> => {
   }
   const { space_type, status, property_id, booking_mode, search } = parsed.data;
 
-  const conditions: SQL[] = [];
+  const conditions: SQL[] = [isNull(spacesTable.deleted_at)];
   if (space_type) conditions.push(eq(spacesTable.space_type, space_type));
   if (status) conditions.push(eq(spacesTable.status, status));
   if (property_id) conditions.push(eq(spacesTable.property_id, property_id));
@@ -86,7 +86,7 @@ router.get("/v1/spaces", async (req, res): Promise<void> => {
     .from(spacesTable)
     .leftJoin(propertiesTable, eq(spacesTable.property_id, propertiesTable.id))
     .leftJoin(spacePoliciesTable, eq(spacesTable.space_policy_id, spacePoliciesTable.id))
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .where(and(...conditions))
     .orderBy(spacesTable.created_at);
 
   const spaceIds = rows.map((r) => r.id);
@@ -184,26 +184,44 @@ router.put("/v1/spaces/:id", async (req, res): Promise<void> => {
   res.json(UpdateSpaceResponse.parse(full));
 });
 
+router.post("/v1/spaces/bulk-delete", async (req, res): Promise<void> => {
+  const currentUser = (req as any).user;
+  if (currentUser?.role !== "SuperAdmin") {
+    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
+  }
+  const { ids, permanent } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    res.status(400).json({ error: "ids must be a non-empty array" }); return;
+  }
+  const numIds = ids.map(Number).filter(Boolean);
+  if (permanent) {
+    await db.delete(spaceOptionMapsTable).where(inArray(spaceOptionMapsTable.space_id, numIds));
+    await db.delete(spaceBlockedDatesTable).where(inArray(spaceBlockedDatesTable.space_id, numIds));
+    await db.delete(spacesTable).where(inArray(spacesTable.id, numIds));
+  } else {
+    await db.update(spacesTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(spacesTable.id, numIds));
+  }
+  res.json({ success: true, affected: numIds.length });
+});
+
 router.delete("/v1/spaces/:id", async (req, res): Promise<void> => {
   const params = DeleteSpaceParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
   }
-
-  const [space] = await db
-    .delete(spacesTable)
-    .where(eq(spacesTable.id, params.data.id))
-    .returning();
-
-  if (!space) {
-    res.status(404).json({ error: "Space not found" });
-    return;
+  const currentUser = (req as any).user;
+  const permanent = req.query.permanent === "true";
+  if (permanent) {
+    if (currentUser?.role !== "SuperAdmin") {
+      res.status(403).json({ error: "Only SuperAdmin can permanently delete records" }); return;
+    }
+    await db.delete(spaceOptionMapsTable).where(eq(spaceOptionMapsTable.space_id, params.data.id));
+    await db.delete(spaceBlockedDatesTable).where(eq(spaceBlockedDatesTable.space_id, params.data.id));
+    await db.delete(spacesTable).where(eq(spacesTable.id, params.data.id));
+  } else {
+    await db.update(spacesTable).set({ deleted_at: new Date(), status: "Archived" }).where(eq(spacesTable.id, params.data.id));
   }
-
-  await db.delete(spaceOptionMapsTable).where(eq(spaceOptionMapsTable.space_id, space.id));
-  await db.delete(spaceBlockedDatesTable).where(eq(spaceBlockedDatesTable.space_id, space.id));
-
   res.sendStatus(204);
 });
 

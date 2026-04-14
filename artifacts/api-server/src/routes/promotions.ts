@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, ilike, and, SQL } from "drizzle-orm";
+import { eq, ilike, and, isNull, inArray, SQL } from "drizzle-orm";
 import { db, promotionsTable, accommodationCatalogTable, serviceCatalogTable } from "@workspace/db";
 import * as z from "zod/v4";
 
@@ -42,7 +42,7 @@ router.get("/v1/promotions", async (req, res): Promise<void> => {
   const parsed = ListPromotionsQueryParams.safeParse(req.query);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const { search, status, promotion_type } = parsed.data;
-  const conditions: SQL[] = [];
+  const conditions: SQL[] = [isNull(promotionsTable.deleted_at)];
   if (status) conditions.push(eq(promotionsTable.status, status));
   if (promotion_type) conditions.push(eq(promotionsTable.promotion_type, promotion_type));
   if (search) conditions.push(ilike(promotionsTable.name, `%${search}%`));
@@ -80,10 +80,37 @@ router.put("/v1/promotions/:id", async (req, res): Promise<void> => {
   res.json(row);
 });
 
+router.post("/v1/promotions/bulk-delete", async (req, res): Promise<void> => {
+  const currentUser = (req as any).user;
+  if (currentUser?.role !== "SuperAdmin") {
+    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
+  }
+  const { ids, permanent } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    res.status(400).json({ error: "ids must be a non-empty array" }); return;
+  }
+  const numIds = ids.map(Number).filter(Boolean);
+  if (permanent) {
+    await db.delete(promotionsTable).where(inArray(promotionsTable.id, numIds));
+  } else {
+    await db.update(promotionsTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(promotionsTable.id, numIds));
+  }
+  res.json({ success: true, affected: numIds.length });
+});
+
 router.delete("/v1/promotions/:id", async (req, res): Promise<void> => {
   const parsed = DeletePromotionParams.safeParse(req.params);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
-  await db.delete(promotionsTable).where(eq(promotionsTable.id, parsed.data.id));
+  const currentUser = (req as any).user;
+  const permanent = req.query.permanent === "true";
+  if (permanent) {
+    if (currentUser?.role !== "SuperAdmin") {
+      res.status(403).json({ error: "Only SuperAdmin can permanently delete records" }); return;
+    }
+    await db.delete(promotionsTable).where(eq(promotionsTable.id, parsed.data.id));
+  } else {
+    await db.update(promotionsTable).set({ deleted_at: new Date(), status: "Archived" }).where(eq(promotionsTable.id, parsed.data.id));
+  }
   res.status(204).end();
 });
 

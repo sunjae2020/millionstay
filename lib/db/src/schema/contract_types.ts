@@ -9,6 +9,7 @@ export const contractTypesTable = pgTable("contract_types", {
   require_visa: boolean("require_visa").notNull().default(false),
   require_enrollment: boolean("require_enrollment").notNull().default(false),
   is_active: boolean("is_active").notNull().default(true),
+  deleted_at: timestamp("deleted_at"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

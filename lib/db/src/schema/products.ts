@@ -31,6 +31,7 @@ export const contractProductsTable = pgTable("contract_products", {
   includes_cleaning: boolean("includes_cleaning").notNull().default(false),
   extra_inclusions: text("extra_inclusions"),
   notes: text("notes"),
+  deleted_at: timestamp("deleted_at"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

@@ -26,6 +26,7 @@ export const spacesTable = pgTable("spaces", {
   privacy_hide_unit_no: boolean("privacy_hide_unit_no").notNull().default(true),
   privacy_hide_street_no: boolean("privacy_hide_street_no").notNull().default(true),
   privacy_map_blur: boolean("privacy_map_blur").notNull().default(true),
+  deleted_at: timestamp("deleted_at"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

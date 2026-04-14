@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, ilike, and, or, SQL } from "drizzle-orm";
+import { eq, ilike, and, or, isNull, inArray, SQL } from "drizzle-orm";
 import { db, suburbsTable } from "@workspace/db";
 import {
   ListSuburbsQueryParams,
@@ -23,7 +23,7 @@ router.get("/v1/suburbs", async (req, res): Promise<void> => {
   }
   const { country_code, state, search } = parsed.data;
 
-  const conditions: SQL[] = [];
+  const conditions: SQL[] = [isNull(suburbsTable.deleted_at)];
   if (country_code) conditions.push(eq(suburbsTable.country_code, country_code));
   if (state) conditions.push(eq(suburbsTable.state, state));
   if (search) {
@@ -38,7 +38,7 @@ router.get("/v1/suburbs", async (req, res): Promise<void> => {
   const suburbs = await db
     .select()
     .from(suburbsTable)
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .where(and(...conditions))
     .orderBy(suburbsTable.created_at);
 
   res.json(ListSuburbsResponse.parse(suburbs));
@@ -102,6 +102,24 @@ router.put("/v1/suburbs/:id", async (req, res): Promise<void> => {
   res.json(UpdateSuburbResponse.parse(suburb));
 });
 
+router.post("/v1/suburbs/bulk-delete", async (req, res): Promise<void> => {
+  const currentUser = (req as any).user;
+  if (currentUser?.role !== "SuperAdmin") {
+    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
+  }
+  const { ids, permanent } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    res.status(400).json({ error: "ids must be a non-empty array" }); return;
+  }
+  const numIds = ids.map(Number).filter(Boolean);
+  if (permanent) {
+    await db.delete(suburbsTable).where(inArray(suburbsTable.id, numIds));
+  } else {
+    await db.update(suburbsTable).set({ deleted_at: new Date(), status: "Archived", updated_at: new Date() }).where(inArray(suburbsTable.id, numIds));
+  }
+  res.json({ success: true, affected: numIds.length });
+});
+
 router.delete("/v1/suburbs/:id", async (req, res): Promise<void> => {
   const params = DeleteSuburbParams.safeParse(req.params);
   if (!params.success) {
@@ -109,14 +127,21 @@ router.delete("/v1/suburbs/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const [suburb] = await db
-    .delete(suburbsTable)
-    .where(eq(suburbsTable.id, params.data.id))
-    .returning();
+  const currentUser = (req as any).user;
+  const permanent = req.query.permanent === "true";
 
-  if (!suburb) {
-    res.status(404).json({ error: "Suburb not found" });
-    return;
+  if (permanent) {
+    if (currentUser?.role !== "SuperAdmin") {
+      res.status(403).json({ error: "Only SuperAdmin can permanently delete records" }); return;
+    }
+    const [suburb] = await db.delete(suburbsTable).where(eq(suburbsTable.id, params.data.id)).returning();
+    if (!suburb) { res.status(404).json({ error: "Suburb not found" }); return; }
+  } else {
+    const [suburb] = await db.update(suburbsTable)
+      .set({ deleted_at: new Date(), status: "Archived", updated_at: new Date() })
+      .where(eq(suburbsTable.id, params.data.id))
+      .returning();
+    if (!suburb) { res.status(404).json({ error: "Suburb not found" }); return; }
   }
 
   res.sendStatus(204);

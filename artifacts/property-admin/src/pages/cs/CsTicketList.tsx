@@ -10,7 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
 import { format } from "date-fns";
-import { Search, HeadphonesIcon, ChevronRight, Clock, AlertCircle, CheckCircle2, XCircle, RefreshCw } from "lucide-react";
+import { Search, HeadphonesIcon, ChevronRight, Clock, AlertCircle, CheckCircle2, XCircle, RefreshCw, Archive, X, AlertTriangle, Loader2, Trash2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   Open:       { label: "Open",        color: "bg-blue-100 text-blue-700",   icon: <Clock className="h-3 w-3" /> },
@@ -59,10 +66,16 @@ const CATEGORIES = ["All", "General", "Accommodation", "Billing", "Maintenance",
 
 export default function CsTicketList() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === "SuperAdmin";
   const [, navigate] = useLocation();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
   const [category, setCategory] = useState("All");
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkAction, setBulkAction] = useState<"archive" | "permanent" | null>(null);
+  const [isBulkLoading, setIsBulkLoading] = useState(false);
+  const { toast } = useToast();
 
   const params: Record<string, string> = { limit: "500" };
   if (status !== "All") params.status = status;
@@ -76,6 +89,41 @@ export default function CsTicketList() {
 
   const tickets: CsTicket[] = data?.data ?? [];
   const pagination = usePagination(tickets, 25);
+
+  const pageIds = pagination.paginatedItems.map((t) => t.id);
+  const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
+  const somePageSelected = pageIds.some((id) => selectedIds.has(id));
+  const toggleSelectAll = () => {
+    if (allPageSelected) {
+      setSelectedIds((prev) => { const n = new Set(prev); pageIds.forEach((id) => n.delete(id)); return n; });
+    } else {
+      setSelectedIds((prev) => { const n = new Set(prev); pageIds.forEach((id) => n.add(id)); return n; });
+    }
+  };
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  };
+  const clearSelection = () => setSelectedIds(new Set());
+  const handleBulkDelete = async (permanent: boolean) => {
+    setIsBulkLoading(true);
+    setBulkAction(null);
+    try {
+      const res = await apiFetch("/api/v1/cs-tickets/bulk-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selectedIds), permanent }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Bulk delete failed");
+      refetch();
+      toast({ title: permanent ? `${data.affected} tickets permanently deleted` : `${data.affected} tickets archived` });
+      clearSelection();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setIsBulkLoading(false);
+    }
+  };
 
   const statusCounts = tickets.reduce((acc: Record<string, number>, ticket) => {
     acc[ticket.status] = (acc[ticket.status] ?? 0) + 1;
@@ -154,6 +202,21 @@ export default function CsTicketList() {
           </Select>
         </div>
 
+        {isSuperAdmin && selectedIds.size > 0 && (
+          <div className="flex items-center gap-3 mb-3 px-4 py-2.5 rounded-lg bg-orange-50 border border-orange-200">
+            <span className="text-sm font-medium text-orange-800">{selectedIds.size} item{selectedIds.size > 1 ? "s" : ""} selected</span>
+            <button onClick={clearSelection} className="text-orange-500 hover:text-orange-700"><X className="h-3.5 w-3.5" /></button>
+            <div className="ml-auto flex items-center gap-2">
+              {isBulkLoading && <Loader2 className="h-4 w-4 animate-spin text-orange-500" />}
+              <Button size="sm" variant="outline" className="h-7 border-amber-300 text-amber-700 hover:bg-amber-50 gap-1.5" onClick={() => setBulkAction("archive")} disabled={isBulkLoading}>
+                <Archive className="h-3.5 w-3.5" /> Archive Selected
+              </Button>
+              <Button size="sm" variant="destructive" className="h-7 gap-1.5" onClick={() => setBulkAction("permanent")} disabled={isBulkLoading}>
+                <Trash2 className="h-3.5 w-3.5" /> Delete Forever
+              </Button>
+            </div>
+          </div>
+        )}
         {/* Table */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
@@ -171,6 +234,7 @@ export default function CsTicketList() {
               <table className="w-full text-sm">
                 <thead className="sticky top-0 z-10">
                   <tr className="border-b border-gray-100 bg-gray-50">
+                    {isSuperAdmin && <th className="px-3 py-3 w-8"><Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} /></th>}
                     <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap">{t("csticket.col_ref")}</th>
                     <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">{t("csticket.col_subject")}</th>
                     <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden sm:table-cell whitespace-nowrap">{t("csticket.col_guest")}</th>
@@ -189,8 +253,9 @@ export default function CsTicketList() {
                       <tr
                         key={ticket.id}
                         onClick={() => navigate(`/cs/tickets/${ticket.id}`)}
-                        className={`border-b border-gray-50 hover:bg-primary/5 cursor-pointer transition-colors ${i === pagination.paginatedItems.length - 1 ? "border-0" : ""}`}
+                        className={`border-b border-gray-50 hover:bg-primary/5 cursor-pointer transition-colors ${i === pagination.paginatedItems.length - 1 ? "border-0" : ""} ${selectedIds.has(ticket.id) ? "bg-orange-50/50" : ""}`}
                       >
+                        {isSuperAdmin && <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}><Checkbox checked={selectedIds.has(ticket.id)} onCheckedChange={() => toggleSelect(ticket.id)} /></td>}
                         <td className="px-4 py-3 font-mono text-xs text-gray-400 whitespace-nowrap">{ticket.ticket_ref}</td>
                         <td className="px-4 py-3 max-w-[220px]">
                           <p className="font-medium text-gray-900 truncate">{ticket.subject}</p>
@@ -237,6 +302,30 @@ export default function CsTicketList() {
           )}
         </div>
       </div>
+
+      <AlertDialog open={bulkAction !== null} onOpenChange={(o) => !o && setBulkAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              {bulkAction === "permanent" ? "Permanently Delete Tickets" : "Archive Tickets"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {bulkAction === "permanent"
+                ? `You are about to permanently delete ${selectedIds.size} ticket(s). This cannot be undone.`
+                : `You are about to archive ${selectedIds.size} ticket(s). They will be hidden from view.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button variant={bulkAction === "permanent" ? "destructive" : "outline"}
+              className={bulkAction !== "permanent" ? "border-amber-300 text-amber-700 hover:bg-amber-50" : ""}
+              onClick={() => handleBulkDelete(bulkAction === "permanent")}>
+              {bulkAction === "permanent" ? "Delete Forever" : "Archive All"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Layout>
   );
 }

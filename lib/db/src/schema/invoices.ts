@@ -16,6 +16,7 @@ export const invoicesTable = pgTable("invoices", {
   stripe_checkout_url: text("stripe_checkout_url"),
   description: text("description"),
   notes: text("notes"),
+  deleted_at: timestamp("deleted_at"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

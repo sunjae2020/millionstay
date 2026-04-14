@@ -14,6 +14,7 @@ export const beneficiariesTable = pgTable("beneficiaries", {
   priority: integer("priority").default(1),
   notes: text("notes"),
   status: text("status").notNull().default("Active"),
+  deleted_at: timestamp("deleted_at"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

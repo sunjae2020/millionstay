@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, ilike, and, sql, SQL, asc } from "drizzle-orm";
+import { eq, ilike, and, sql, isNull, inArray, SQL, asc } from "drizzle-orm";
 import { db, serviceCatalogTable } from "@workspace/db";
 
 const router: IRouter = Router();
@@ -9,12 +9,12 @@ router.get("/v1/services", async (req, res): Promise<void> => {
   try {
     const { q, service_type, status, limit = "100", offset = "0" } = req.query as Record<string, string>;
 
-    const conditions: SQL[] = [];
+    const conditions: SQL[] = [isNull(serviceCatalogTable.deleted_at)];
     if (q) conditions.push(ilike(serviceCatalogTable.name, `%${q}%`));
     if (service_type) conditions.push(eq(serviceCatalogTable.service_type, service_type));
     if (status) conditions.push(eq(serviceCatalogTable.status, status));
 
-    const where = conditions.length > 0 ? and(...conditions) : undefined;
+    const where = and(...conditions);
 
     const [rows, [{ count }]] = await Promise.all([
       db.select().from(serviceCatalogTable).where(where)
@@ -69,14 +69,42 @@ router.put("/v1/services/:id", async (req, res): Promise<void> => {
   }
 });
 
+/* ── POST /v1/services/bulk-delete ─────────────────────── */
+router.post("/v1/services/bulk-delete", async (req, res): Promise<void> => {
+  const currentUser = (req as any).user;
+  if (currentUser?.role !== "SuperAdmin") {
+    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
+  }
+  const { ids, permanent } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    res.status(400).json({ error: "ids must be a non-empty array" }); return;
+  }
+  const numIds = ids.map(Number).filter(Boolean);
+  if (permanent) {
+    await db.delete(serviceCatalogTable).where(inArray(serviceCatalogTable.id, numIds));
+  } else {
+    await db.update(serviceCatalogTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(serviceCatalogTable.id, numIds));
+  }
+  res.json({ success: true, affected: numIds.length });
+});
+
 /* ── DELETE /v1/services/:id ───────────────────────────── */
 router.delete("/v1/services/:id", async (req, res): Promise<void> => {
   try {
     const id = Number(req.params.id);
-    await db.update(serviceCatalogTable).set({ status: "Archived" }).where(eq(serviceCatalogTable.id, id));
-    res.json({ success: true });
+    const currentUser = (req as any).user;
+    const permanent = req.query.permanent === "true";
+    if (permanent) {
+      if (currentUser?.role !== "SuperAdmin") {
+        res.status(403).json({ error: "Only SuperAdmin can permanently delete records" }); return;
+      }
+      await db.delete(serviceCatalogTable).where(eq(serviceCatalogTable.id, id));
+    } else {
+      await db.update(serviceCatalogTable).set({ deleted_at: new Date(), status: "Archived" }).where(eq(serviceCatalogTable.id, id));
+    }
+    res.status(204).end();
   } catch (err) {
-    res.status(500).json({ error: "Failed to archive service" });
+    res.status(500).json({ error: "Failed to delete service" });
   }
 });
 

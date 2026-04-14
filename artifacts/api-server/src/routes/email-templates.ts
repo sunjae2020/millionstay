@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, emailTemplatesTable, emailLogsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, isNull, inArray } from "drizzle-orm";
 import { z } from "zod";
 
 const router = Router();
@@ -17,7 +17,9 @@ const TestEmailBody = z.object({
 });
 
 router.get("/v1/email-templates", async (_req, res): Promise<void> => {
-  const rows = await db.select().from(emailTemplatesTable).orderBy(emailTemplatesTable.id);
+  const rows = await db.select().from(emailTemplatesTable)
+    .where(isNull(emailTemplatesTable.deleted_at))
+    .orderBy(emailTemplatesTable.id);
   res.json(rows);
 });
 
@@ -70,6 +72,39 @@ router.post("/v1/email-templates/:id/test", async (req, res): Promise<void> => {
   });
 
   res.json({ success: true, resend_message_id: mockMessageId, note: "Test email logged (no actual send — configure Resend API to enable delivery)" });
+});
+
+router.post("/v1/email-templates/bulk-delete", async (req, res): Promise<void> => {
+  const currentUser = (req as any).user;
+  if (currentUser?.role !== "SuperAdmin") {
+    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
+  }
+  const { ids, permanent } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    res.status(400).json({ error: "ids must be a non-empty array" }); return;
+  }
+  const numIds = ids.map(Number).filter(Boolean);
+  if (permanent) {
+    await db.delete(emailTemplatesTable).where(inArray(emailTemplatesTable.id, numIds));
+  } else {
+    await db.update(emailTemplatesTable).set({ deleted_at: new Date() }).where(inArray(emailTemplatesTable.id, numIds));
+  }
+  res.json({ success: true, affected: numIds.length });
+});
+
+router.delete("/v1/email-templates/:id", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const currentUser = (req as any).user;
+  const permanent = req.query.permanent === "true";
+  if (permanent) {
+    if (currentUser?.role !== "SuperAdmin") {
+      res.status(403).json({ error: "Only SuperAdmin can permanently delete records" }); return;
+    }
+    await db.delete(emailTemplatesTable).where(eq(emailTemplatesTable.id, id));
+  } else {
+    await db.update(emailTemplatesTable).set({ deleted_at: new Date() }).where(eq(emailTemplatesTable.id, id));
+  }
+  res.status(204).end();
 });
 
 export default router;

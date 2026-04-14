@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
-import { eq, desc, and, ilike, or, sql } from "drizzle-orm";
+import { eq, desc, and, ilike, or, sql, isNull, inArray } from "drizzle-orm";
 import { db, csTicketsTable, csMessagesTable, guestUsersTable, bookingsTable } from "@workspace/db";
 import { requireAuth } from "../middlewares/requireAuth";
 import { isCloudinaryConfigured, uploadToCloudinary } from "../utils/cloudinary";
@@ -32,7 +32,7 @@ router.get("/v1/cs-tickets", requireAuth, async (req, res): Promise<void> => {
   try {
     const { status, category, q, limit = "50", offset = "0" } = req.query as Record<string, string>;
 
-    const conditions: any[] = [];
+    const conditions: any[] = [isNull(csTicketsTable.deleted_at)];
     if (status) conditions.push(eq(csTicketsTable.status, status));
     if (category) conditions.push(eq(csTicketsTable.category, category));
     if (q) conditions.push(or(
@@ -50,13 +50,13 @@ router.get("/v1/cs-tickets", requireAuth, async (req, res): Promise<void> => {
       .from(csTicketsTable)
       .leftJoin(guestUsersTable, eq(csTicketsTable.guest_user_id, guestUsersTable.id))
       .leftJoin(bookingsTable, eq(csTicketsTable.booking_id, bookingsTable.id))
-      .where(conditions.length ? and(...conditions) : undefined)
+      .where(and(...conditions))
       .orderBy(desc(csTicketsTable.updated_at))
       .limit(Number(limit))
       .offset(Number(offset));
 
     const totalResult = await db.select({ total: sql<number>`COUNT(*)::int` }).from(csTicketsTable)
-      .where(conditions.length ? and(...conditions) : undefined);
+      .where(and(...conditions));
 
     res.json({
       success: true,
@@ -171,6 +171,39 @@ router.post("/v1/cs-tickets/:id/messages", requireAuth, async (req, res): Promis
   } catch {
     res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to send message" } });
   }
+});
+
+router.post("/v1/cs-tickets/bulk-delete", requireAuth, async (req, res): Promise<void> => {
+  const currentUser = (req as any).user;
+  if (currentUser?.role !== "SuperAdmin") {
+    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
+  }
+  const { ids, permanent } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    res.status(400).json({ error: "ids must be a non-empty array" }); return;
+  }
+  const numIds = ids.map(Number).filter(Boolean);
+  if (permanent) {
+    await db.delete(csTicketsTable).where(inArray(csTicketsTable.id, numIds));
+  } else {
+    await db.update(csTicketsTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(csTicketsTable.id, numIds));
+  }
+  res.json({ success: true, affected: numIds.length });
+});
+
+router.delete("/v1/cs-tickets/:id", requireAuth, async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const currentUser = (req as any).user;
+  const permanent = req.query.permanent === "true";
+  if (permanent) {
+    if (currentUser?.role !== "SuperAdmin") {
+      res.status(403).json({ error: "Only SuperAdmin can permanently delete records" }); return;
+    }
+    await db.delete(csTicketsTable).where(eq(csTicketsTable.id, id));
+  } else {
+    await db.update(csTicketsTable).set({ deleted_at: new Date(), status: "Archived" }).where(eq(csTicketsTable.id, id));
+  }
+  res.status(204).end();
 });
 
 export default router;

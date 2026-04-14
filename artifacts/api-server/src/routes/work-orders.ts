@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, workOrdersTable, propertiesTable, spacesTable, contactsTable } from "@workspace/db";
-import { eq, ilike, and } from "drizzle-orm";
+import { eq, ilike, and, isNull, inArray } from "drizzle-orm";
 import {
   CreateWorkOrderBody,
   UpdateWorkOrderBody,
@@ -51,13 +51,13 @@ async function enrichWorkOrders(rows: (typeof workOrdersTable.$inferSelect)[]) {
 
 router.get("/v1/work-orders", async (req, res): Promise<void> => {
   const { q, status, priority, property_id } = req.query as Record<string, string>;
-  const conditions = [];
+  const conditions: any[] = [isNull(workOrdersTable.deleted_at)];
   if (q) conditions.push(ilike(workOrdersTable.title, `%${q}%`));
   if (status) conditions.push(eq(workOrdersTable.status, status));
   if (priority) conditions.push(eq(workOrdersTable.priority, priority));
   if (property_id) conditions.push(eq(workOrdersTable.property_id, Number(property_id)));
   const rows = await db.select().from(workOrdersTable)
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .where(and(...conditions))
     .orderBy(workOrdersTable.id);
   const result = await enrichWorkOrders(rows);
   res.json(result);
@@ -113,8 +113,36 @@ router.put("/v1/work-orders/:id", async (req, res): Promise<void> => {
   res.json(result);
 });
 
+router.post("/v1/work-orders/bulk-delete", async (req, res): Promise<void> => {
+  const currentUser = (req as any).user;
+  if (currentUser?.role !== "SuperAdmin") {
+    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
+  }
+  const { ids, permanent } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    res.status(400).json({ error: "ids must be a non-empty array" }); return;
+  }
+  const numIds = ids.map(Number).filter(Boolean);
+  if (permanent) {
+    await db.delete(workOrdersTable).where(inArray(workOrdersTable.id, numIds));
+  } else {
+    await db.update(workOrdersTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(workOrdersTable.id, numIds));
+  }
+  res.json({ success: true, affected: numIds.length });
+});
+
 router.delete("/v1/work-orders/:id", async (req, res): Promise<void> => {
-  await db.delete(workOrdersTable).where(eq(workOrdersTable.id, Number(req.params.id)));
+  const id = Number(req.params.id);
+  const currentUser = (req as any).user;
+  const permanent = req.query.permanent === "true";
+  if (permanent) {
+    if (currentUser?.role !== "SuperAdmin") {
+      res.status(403).json({ error: "Only SuperAdmin can permanently delete records" }); return;
+    }
+    await db.delete(workOrdersTable).where(eq(workOrdersTable.id, id));
+  } else {
+    await db.update(workOrdersTable).set({ deleted_at: new Date(), status: "Archived" }).where(eq(workOrdersTable.id, id));
+  }
   res.status(204).send();
 });
 

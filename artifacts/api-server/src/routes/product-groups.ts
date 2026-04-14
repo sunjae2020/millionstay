@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, ilike, asc } from "drizzle-orm";
+import { eq, ilike, asc, isNull, inArray, and } from "drizzle-orm";
 import { db, productGroupsTable } from "@workspace/db";
 
 const router: IRouter = Router();
@@ -10,7 +10,7 @@ router.get("/v1/product-groups", async (req, res): Promise<void> => {
     const rows = await db
       .select()
       .from(productGroupsTable)
-      .where(q ? ilike(productGroupsTable.name, `%${q}%`) : undefined)
+      .where(and(isNull(productGroupsTable.deleted_at), q ? ilike(productGroupsTable.name, `%${q}%`) : undefined))
       .orderBy(asc(productGroupsTable.display_order), asc(productGroupsTable.name));
     res.json({ success: true, data: rows, meta: { total: rows.length } });
   } catch {
@@ -43,7 +43,7 @@ router.post("/v1/product-groups", async (req, res): Promise<void> => {
 router.put("/v1/product-groups/:id", async (req, res): Promise<void> => {
   try {
     const id = Number(req.params.id);
-    const { id: _id, created_at, ...updates } = req.body;
+    const { id: _id, created_at, deleted_at, ...updates } = req.body;
     const [row] = await db.update(productGroupsTable).set(updates).where(eq(productGroupsTable.id, id)).returning();
     if (!row) { res.status(404).json({ error: "Not found" }); return; }
     res.json(row);
@@ -53,11 +53,42 @@ router.put("/v1/product-groups/:id", async (req, res): Promise<void> => {
   }
 });
 
+router.post("/v1/product-groups/bulk-delete", async (req, res): Promise<void> => {
+  const currentUser = (req as any).user;
+  if (currentUser?.role !== "SuperAdmin") {
+    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
+  }
+  const { ids, permanent } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    res.status(400).json({ error: "ids must be a non-empty array" }); return;
+  }
+  const numIds = ids.map(Number).filter(Boolean);
+  if (permanent) {
+    await db.delete(productGroupsTable).where(inArray(productGroupsTable.id, numIds));
+  } else {
+    await db.update(productGroupsTable).set({ deleted_at: new Date() }).where(inArray(productGroupsTable.id, numIds));
+  }
+  res.json({ success: true, affected: numIds.length });
+});
+
 router.delete("/v1/product-groups/:id", async (req, res): Promise<void> => {
   try {
-    const [row] = await db.delete(productGroupsTable).where(eq(productGroupsTable.id, Number(req.params.id))).returning();
-    if (!row) { res.status(404).json({ error: "Not found" }); return; }
-    res.json({ success: true });
+    const id = Number(req.params.id);
+    const currentUser = (req as any).user;
+    const permanent = req.query.permanent === "true";
+    if (permanent) {
+      if (currentUser?.role !== "SuperAdmin") {
+        res.status(403).json({ error: "Only SuperAdmin can permanently delete records" }); return;
+      }
+      const [row] = await db.delete(productGroupsTable).where(eq(productGroupsTable.id, id)).returning();
+      if (!row) { res.status(404).json({ error: "Not found" }); return; }
+    } else {
+      const [row] = await db.update(productGroupsTable)
+        .set({ deleted_at: new Date() })
+        .where(eq(productGroupsTable.id, id)).returning();
+      if (!row) { res.status(404).json({ error: "Not found" }); return; }
+    }
+    res.status(204).end();
   } catch {
     res.status(500).json({ error: "Failed to delete product group" });
   }

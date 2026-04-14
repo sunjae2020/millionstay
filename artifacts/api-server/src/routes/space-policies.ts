@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, ilike, SQL } from "drizzle-orm";
+import { eq, ilike, and, isNull, inArray, SQL } from "drizzle-orm";
 import { db, spacePoliciesTable } from "@workspace/db";
 import {
   ListSpacePoliciesQueryParams,
@@ -23,14 +23,10 @@ router.get("/v1/space-policies", async (req, res): Promise<void> => {
   }
   const { search } = parsed.data;
 
-  const condition: SQL | undefined = search
-    ? ilike(spacePoliciesTable.name, `%${search}%`)
-    : undefined;
-
   const policies = await db
     .select()
     .from(spacePoliciesTable)
-    .where(condition)
+    .where(and(isNull(spacePoliciesTable.deleted_at), search ? ilike(spacePoliciesTable.name, `%${search}%`) : undefined))
     .orderBy(spacePoliciesTable.created_at);
 
   res.json(ListSpacePoliciesResponse.parse(policies));
@@ -101,17 +97,42 @@ router.delete("/v1/space-policies/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const [policy] = await db
-    .delete(spacePoliciesTable)
-    .where(eq(spacePoliciesTable.id, params.data.id))
-    .returning();
+  const currentUser = (req as any).user;
+  const permanent = req.query.permanent === "true";
 
-  if (!policy) {
-    res.status(404).json({ error: "Space policy not found" });
-    return;
+  if (permanent) {
+    if (currentUser?.role !== "SuperAdmin") {
+      res.status(403).json({ error: "Only SuperAdmin can permanently delete records" }); return;
+    }
+    const [policy] = await db.delete(spacePoliciesTable).where(eq(spacePoliciesTable.id, params.data.id)).returning();
+    if (!policy) { res.status(404).json({ error: "Space policy not found" }); return; }
+  } else {
+    const [policy] = await db.update(spacePoliciesTable)
+      .set({ deleted_at: new Date(), status: "Archived", updated_at: new Date() })
+      .where(eq(spacePoliciesTable.id, params.data.id))
+      .returning();
+    if (!policy) { res.status(404).json({ error: "Space policy not found" }); return; }
   }
 
   res.sendStatus(204);
+});
+
+router.post("/v1/space-policies/bulk-delete", async (req, res): Promise<void> => {
+  const currentUser = (req as any).user;
+  if (currentUser?.role !== "SuperAdmin") {
+    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
+  }
+  const { ids, permanent } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    res.status(400).json({ error: "ids must be a non-empty array" }); return;
+  }
+  const numIds = ids.map(Number).filter(Boolean);
+  if (permanent) {
+    await db.delete(spacePoliciesTable).where(inArray(spacePoliciesTable.id, numIds));
+  } else {
+    await db.update(spacePoliciesTable).set({ deleted_at: new Date(), status: "Archived", updated_at: new Date() }).where(inArray(spacePoliciesTable.id, numIds));
+  }
+  res.json({ success: true, affected: numIds.length });
 });
 
 export default router;

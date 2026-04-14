@@ -12,6 +12,7 @@ export const csTicketsTable = pgTable("cs_tickets", {
   priority: text("priority").notNull().default("Normal"),
   assigned_admin_id: integer("assigned_admin_id"),
   closed_at: timestamp("closed_at", { withTimezone: true }),
+  deleted_at: timestamp("deleted_at"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

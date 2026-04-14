@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, contractProductsTable, spacesTable, promotionsTable } from "@workspace/db";
-import { eq, ilike, and } from "drizzle-orm";
+import { eq, ilike, and, isNull, inArray } from "drizzle-orm";
 
 const router = Router();
 
@@ -38,7 +38,7 @@ async function enrich(products: (typeof contractProductsTable.$inferSelect)[]) {
 
 router.get("/v1/contract-products", async (req, res): Promise<void> => {
   const { q, status, product_type, space_id, promotion_id, term_type } = req.query as Record<string, string>;
-  const conditions = [];
+  const conditions: any[] = [isNull(contractProductsTable.deleted_at)];
   if (q) conditions.push(ilike(contractProductsTable.name, `%${q}%`));
   if (status) conditions.push(eq(contractProductsTable.status, status));
   if (product_type) conditions.push(eq(contractProductsTable.product_type, product_type));
@@ -46,7 +46,7 @@ router.get("/v1/contract-products", async (req, res): Promise<void> => {
   if (promotion_id) conditions.push(eq(contractProductsTable.promotion_id, Number(promotion_id)));
   if (term_type) conditions.push(eq(contractProductsTable.term_type, term_type));
   const rows = await db.select().from(contractProductsTable)
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .where(and(...conditions))
     .orderBy(contractProductsTable.name);
   const result = await enrich(rows);
   res.json(result);
@@ -127,8 +127,38 @@ router.put("/v1/contract-products/:id", async (req, res): Promise<void> => {
   res.json(result);
 });
 
+router.post("/v1/contract-products/bulk-delete", async (req, res): Promise<void> => {
+  const currentUser = (req as any).user;
+  if (currentUser?.role !== "SuperAdmin") {
+    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
+  }
+  const { ids, permanent } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    res.status(400).json({ error: "ids must be a non-empty array" }); return;
+  }
+  const numIds = ids.map(Number).filter(Boolean);
+  if (permanent) {
+    await db.delete(contractProductsTable).where(inArray(contractProductsTable.id, numIds));
+  } else {
+    await db.update(contractProductsTable).set({ deleted_at: new Date(), status: "Archived", updated_at: new Date() }).where(inArray(contractProductsTable.id, numIds));
+  }
+  res.json({ success: true, affected: numIds.length });
+});
+
 router.delete("/v1/contract-products/:id", async (req, res): Promise<void> => {
-  await db.delete(contractProductsTable).where(eq(contractProductsTable.id, Number(req.params.id)));
+  const id = Number(req.params.id);
+  const currentUser = (req as any).user;
+  const permanent = req.query.permanent === "true";
+  if (permanent) {
+    if (currentUser?.role !== "SuperAdmin") {
+      res.status(403).json({ error: "Only SuperAdmin can permanently delete records" }); return;
+    }
+    await db.delete(contractProductsTable).where(eq(contractProductsTable.id, id));
+  } else {
+    await db.update(contractProductsTable)
+      .set({ deleted_at: new Date(), status: "Archived", updated_at: new Date() })
+      .where(eq(contractProductsTable.id, id));
+  }
   res.status(204).send();
 });
 

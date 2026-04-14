@@ -26,6 +26,7 @@ export const serviceCatalogTable = pgTable("service_catalog", {
   display_on_booking_page: boolean("display_on_booking_page").notNull().default(true),
   sort_order: integer("sort_order").notNull().default(0),
   status: text("status").notNull().default("Active"),
+  deleted_at: timestamp("deleted_at"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

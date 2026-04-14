@@ -4,13 +4,15 @@ import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Layers, Plus, Search, Pencil, Trash2, GripVertical } from "lucide-react";
+import { Layers, Plus, Search, Pencil, Trash2, GripVertical, Archive, X, AlertTriangle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
+import { useAuth } from "@/contexts/AuthContext";
 
 const API = "/api/v1/product-groups";
 
@@ -27,15 +29,55 @@ export default function ProductGroupsPage() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const qc = useQueryClient();
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === "SuperAdmin";
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState(EMPTY);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkAction, setBulkAction] = useState<"archive" | "permanent" | null>(null);
+  const [isBulkLoading, setIsBulkLoading] = useState(false);
 
   const { data: groups = [], isLoading } = useQuery({ queryKey: ["product-groups"], queryFn: fetchGroups });
 
   const filtered = groups.filter((g) => !q || g.name.toLowerCase().includes(q.toLowerCase()));
+
+  const pageIds = filtered.map((g) => g.id);
+  const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
+  const somePageSelected = pageIds.some((id) => selectedIds.has(id));
+  const toggleSelectAll = () => {
+    if (allPageSelected) {
+      setSelectedIds((prev) => { const n = new Set(prev); pageIds.forEach((id) => n.delete(id)); return n; });
+    } else {
+      setSelectedIds((prev) => { const n = new Set(prev); pageIds.forEach((id) => n.add(id)); return n; });
+    }
+  };
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  };
+  const clearSelection = () => setSelectedIds(new Set());
+  const handleBulkDelete = async (permanent: boolean) => {
+    setIsBulkLoading(true);
+    setBulkAction(null);
+    try {
+      const res = await apiFetch("/api/v1/product-groups/bulk-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selectedIds), permanent }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Bulk delete failed");
+      qc.invalidateQueries({ queryKey: ["product-groups"] });
+      toast({ title: permanent ? `${data.affected} groups permanently deleted` : `${data.affected} groups archived` });
+      clearSelection();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setIsBulkLoading(false);
+    }
+  };
 
   const save = useMutation({
     mutationFn: async () => {
@@ -94,10 +136,27 @@ export default function ProductGroupsPage() {
           <Button onClick={openNew}><Plus className="h-4 w-4 mr-2" />New Group</Button>
         </div>
 
+        {isSuperAdmin && selectedIds.size > 0 && (
+          <div className="flex items-center gap-3 mb-3 px-4 py-2.5 rounded-lg bg-orange-50 border border-orange-200">
+            <span className="text-sm font-medium text-orange-800">{selectedIds.size} item{selectedIds.size > 1 ? "s" : ""} selected</span>
+            <button onClick={clearSelection} className="text-orange-500 hover:text-orange-700"><X className="h-3.5 w-3.5" /></button>
+            <div className="ml-auto flex items-center gap-2">
+              {isBulkLoading && <Loader2 className="h-4 w-4 animate-spin text-orange-500" />}
+              <Button size="sm" variant="outline" className="h-7 border-amber-300 text-amber-700 hover:bg-amber-50 gap-1.5" onClick={() => setBulkAction("archive")} disabled={isBulkLoading}>
+                <Archive className="h-3.5 w-3.5" /> Archive Selected
+              </Button>
+              <Button size="sm" variant="destructive" className="h-7 gap-1.5" onClick={() => setBulkAction("permanent")} disabled={isBulkLoading}>
+                <Trash2 className="h-3.5 w-3.5" /> Delete Forever
+              </Button>
+            </div>
+          </div>
+        )}
+
         <div className="border rounded-lg bg-white">
           <Table>
             <TableHeader>
               <TableRow>
+                {isSuperAdmin && <TableHead className="w-8"><Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} /></TableHead>}
                 <TableHead className="w-8"></TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead className="text-right">Display Order</TableHead>
@@ -106,11 +165,12 @@ export default function ProductGroupsPage() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={4} className="text-center py-10 text-muted-foreground">Loading…</TableCell></TableRow>
+                <TableRow><TableCell colSpan={isSuperAdmin ? 5 : 4} className="text-center py-10 text-muted-foreground">Loading…</TableCell></TableRow>
               ) : filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={4} className="text-center py-10 text-muted-foreground">No product groups found</TableCell></TableRow>
+                <TableRow><TableCell colSpan={isSuperAdmin ? 5 : 4} className="text-center py-10 text-muted-foreground">No product groups found</TableCell></TableRow>
               ) : filtered.map((g) => (
-                <TableRow key={g.id}>
+                <TableRow key={g.id} className={selectedIds.has(g.id) ? "bg-orange-50/50" : ""}>
+                  {isSuperAdmin && <TableCell><Checkbox checked={selectedIds.has(g.id)} onCheckedChange={() => toggleSelect(g.id)} /></TableCell>}
                   <TableCell>
                     <GripVertical className="h-4 w-4 text-muted-foreground/40" />
                   </TableCell>
@@ -137,7 +197,6 @@ export default function ProductGroupsPage() {
         <p className="text-xs text-muted-foreground mt-3">{filtered.length} group{filtered.length !== 1 ? "s" : ""}</p>
       </div>
 
-      {/* Create / Edit Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
@@ -175,7 +234,30 @@ export default function ProductGroupsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirm */}
+      <AlertDialog open={bulkAction !== null} onOpenChange={(o) => !o && setBulkAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              {bulkAction === "permanent" ? "Permanently Delete Groups" : "Archive Groups"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {bulkAction === "permanent"
+                ? `You are about to permanently delete ${selectedIds.size} group(s). This cannot be undone.`
+                : `You are about to archive ${selectedIds.size} group(s). They will be hidden from view.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button variant={bulkAction === "permanent" ? "destructive" : "outline"}
+              className={bulkAction !== "permanent" ? "border-amber-300 text-amber-700 hover:bg-amber-50" : ""}
+              onClick={() => handleBulkDelete(bulkAction === "permanent")}>
+              {bulkAction === "permanent" ? "Delete Forever" : "Archive All"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <AlertDialog open={deleteId !== null} onOpenChange={(o) => !o && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -186,12 +268,9 @@ export default function ProductGroupsPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => deleteId !== null && remove.mutate(deleteId)}
-            >
+            <Button variant="destructive" onClick={() => deleteId !== null && remove.mutate(deleteId)}>
               Delete
-            </AlertDialogAction>
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

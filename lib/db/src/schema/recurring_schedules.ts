@@ -17,6 +17,7 @@ export const recurringSchedulesTable = pgTable("recurring_schedule", {
   next_due_date: date("next_due_date").notNull(),
   last_generated_at: timestamp("last_generated_at", { withTimezone: true }),
   is_active: boolean("is_active").notNull().default(true),
+  deleted_at: timestamp("deleted_at"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [

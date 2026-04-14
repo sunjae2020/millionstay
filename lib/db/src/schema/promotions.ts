@@ -21,6 +21,7 @@ export const promotionsTable = pgTable("promotions", {
   description: text("description"),
   terms: text("terms"),
   status: text("status").notNull().default("Draft"),
+  deleted_at: timestamp("deleted_at"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

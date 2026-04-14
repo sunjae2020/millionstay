@@ -19,6 +19,7 @@ export const contractsTable = pgTable("contracts", {
   advance_amount: real("advance_amount"),
   currency: text("currency").notNull().default("AUD"),
   status: text("status").notNull().default("Draft"),
+  deleted_at: timestamp("deleted_at"),
   sent_at: timestamp("sent_at", { withTimezone: true }),
   signed_at: timestamp("signed_at", { withTimezone: true }),
   effective_date: text("effective_date"),
