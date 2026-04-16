@@ -37,6 +37,7 @@ const UpdateBlogPostBody = z.object({
   seo_title: z.string().optional().nullable(),
   seo_description: z.string().optional().nullable(),
   seo_keywords: z.string().optional().nullable(),
+  translations: z.record(z.string(), z.any()).optional().nullable(),
 });
 const IdParams = z.object({ id: z.coerce.number().int() });
 

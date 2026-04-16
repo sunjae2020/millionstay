@@ -21,6 +21,7 @@ import partnerAuthRouter from "./routes/partner-auth";
 import agentPortalRouter from "./routes/agent-portal";
 import ownerPortalRouter from "./routes/owner-portal";
 import serviceHostPortalRouter from "./routes/service-host-portal";
+import pageContentsRouter from "./routes/page-contents";
 import { logger } from "./lib/logger";
 import { requireAuth } from "./middlewares/requireAuth";
 
@@ -109,6 +110,7 @@ app.use("/api", adminUsersRouter);
 app.use("/api/v1", requireAuth);
 
 app.use("/api", spaceImagesRouter);
+app.use("/api", pageContentsRouter);
 app.use("/api", router);
 
 // In production, serve the built SPAs so a single Cloud Run process handles everything.

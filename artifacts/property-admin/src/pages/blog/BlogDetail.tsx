@@ -15,9 +15,32 @@ import {
   ArrowLeft, Save, Trash2, Globe, FileText, Search, Image, Eye, EyeOff,
   Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight,
   List, ListOrdered, Heading2, Heading3, Link as LinkIcon, Undo, Redo, Loader2,
+  Languages,
 } from "lucide-react";
+
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
+
+const LANGUAGES = [
+  { code: "ko", label: "Korean", flag: "🇰🇷" },
+  { code: "zh", label: "Chinese", flag: "🇨🇳" },
+  { code: "ja", label: "Japanese", flag: "🇯🇵" },
+  { code: "vi", label: "Vietnamese", flag: "🇻🇳" },
+];
+
+type LangData = {
+  title: string;
+  excerpt: string;
+  content: string;
+  seo_title: string;
+  seo_description: string;
+  seo_keywords: string;
+};
+
+const EMPTY_LANG_DATA: LangData = {
+  title: "", excerpt: "", content: "",
+  seo_title: "", seo_description: "", seo_keywords: "",
+};
 
 const STATUS_OPTIONS = ["Draft", "Published", "Archived"];
 const CATEGORY_OPTIONS = ["Tips & Guides", "Student Life", "Melbourne", "Housing", "News", "Lifestyle"];
@@ -161,6 +184,7 @@ export default function BlogDetail() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+  const [translations, setTranslations] = useState<Record<string, LangData>>({});
 
   const { data: post, isLoading } = useQuery({
     queryKey: ["blog-post", params.id],
@@ -189,6 +213,23 @@ export default function BlogDetail() {
         seo_keywords: post.seo_keywords ?? "",
       });
       setSlugManuallyEdited(true);
+      if (post.translations && typeof post.translations === "object") {
+        const parsed: Record<string, LangData> = {};
+        for (const [lang, val] of Object.entries(post.translations as any)) {
+          if (val && typeof val === "object") {
+            const v = val as any;
+            parsed[lang] = {
+              title: v.title ?? "",
+              excerpt: v.excerpt ?? "",
+              content: v.content ?? "",
+              seo_title: v.seo_title ?? "",
+              seo_description: v.seo_description ?? "",
+              seo_keywords: v.seo_keywords ?? "",
+            };
+          }
+        }
+        setTranslations(parsed);
+      }
     }
   }, [post]);
 
@@ -215,6 +256,7 @@ export default function BlogDetail() {
         seo_title: form.seo_title || null,
         seo_description: form.seo_description || null,
         seo_keywords: form.seo_keywords || null,
+        translations: Object.keys(translations).length > 0 ? translations : undefined,
       };
       const res = await apiFetch(isNew ? "/api/v1/blog-posts" : `/api/v1/blog-posts/${params.id}`, {
         method: isNew ? "POST" : "PUT",
@@ -297,6 +339,7 @@ export default function BlogDetail() {
             <TabsTrigger value="content" className="gap-1.5"><FileText className="h-3.5 w-3.5" />Content</TabsTrigger>
             <TabsTrigger value="settings" className="gap-1.5"><Globe className="h-3.5 w-3.5" />Settings</TabsTrigger>
             <TabsTrigger value="seo" className="gap-1.5"><Search className="h-3.5 w-3.5" />SEO</TabsTrigger>
+            <TabsTrigger value="translations" className="gap-1.5"><Languages className="h-3.5 w-3.5" />Translations</TabsTrigger>
           </TabsList>
 
           <TabsContent value="content" className="space-y-5">
@@ -460,6 +503,117 @@ export default function BlogDetail() {
               />
               <p className="text-xs text-muted-foreground mt-1">Comma-separated keywords relevant to this post.</p>
             </div>
+          </TabsContent>
+
+          <TabsContent value="translations">
+            <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800 mb-4">
+              <strong>Translations</strong> — Enter translated versions of your post for each supported language. These will be served to users based on their selected language. Save the main post (top-right Save button) to store all translations together.
+            </div>
+
+            <Tabs defaultValue="ko">
+              <TabsList className="flex flex-wrap gap-1 h-auto mb-4">
+                {LANGUAGES.map((lang) => {
+                  const hasData = !!(translations[lang.code]?.title || translations[lang.code]?.content);
+                  return (
+                    <TabsTrigger key={lang.code} value={lang.code} className="gap-1.5 relative">
+                      <span>{lang.flag}</span>
+                      <span>{lang.label}</span>
+                      {hasData && (
+                        <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-green-500" />
+                      )}
+                    </TabsTrigger>
+                  );
+                })}
+              </TabsList>
+
+              {LANGUAGES.map((lang) => {
+                const langData: LangData = translations[lang.code] ?? EMPTY_LANG_DATA;
+                const setLang = (field: keyof LangData, val: string) => {
+                  setTranslations((prev) => ({
+                    ...prev,
+                    [lang.code]: { ...(prev[lang.code] ?? EMPTY_LANG_DATA), [field]: val },
+                  }));
+                };
+                return (
+                  <TabsContent key={lang.code} value={lang.code} className="space-y-5">
+                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
+                      <span className="text-xl">{lang.flag}</span>
+                      {lang.label} — fill in translated content below
+                    </div>
+
+                    <div>
+                      <Label>Title ({lang.label})</Label>
+                      <Input
+                        className="mt-1"
+                        value={langData.title}
+                        onChange={(e) => setLang("title", e.target.value)}
+                        placeholder={`Translated title in ${lang.label}…`}
+                      />
+                    </div>
+
+                    <div>
+                      <Label>Excerpt ({lang.label})</Label>
+                      <Textarea
+                        className="mt-1 resize-none"
+                        rows={2}
+                        value={langData.excerpt}
+                        onChange={(e) => setLang("excerpt", e.target.value)}
+                        placeholder={`Brief summary in ${lang.label}…`}
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="mb-2 block">Content ({lang.label})</Label>
+                      <RichTextEditor
+                        key={`rte-${lang.code}`}
+                        value={langData.content}
+                        onChange={(html) => setLang("content", html)}
+                      />
+                    </div>
+
+                    <Separator />
+                    <p className="text-sm font-medium text-muted-foreground">SEO — {lang.label}</p>
+
+                    <SeoPreview
+                      title={langData.seo_title || langData.title || form.title}
+                      description={langData.seo_description || langData.excerpt || form.excerpt}
+                      slug={form.slug}
+                    />
+
+                    <div>
+                      <Label>SEO Title ({lang.label})</Label>
+                      <Input
+                        className="mt-1"
+                        value={langData.seo_title}
+                        onChange={(e) => setLang("seo_title", e.target.value)}
+                        placeholder="SEO title…"
+                        maxLength={70}
+                      />
+                    </div>
+                    <div>
+                      <Label>Meta Description ({lang.label})</Label>
+                      <Textarea
+                        className="mt-1 resize-none"
+                        rows={2}
+                        value={langData.seo_description}
+                        onChange={(e) => setLang("seo_description", e.target.value)}
+                        placeholder="Meta description…"
+                        maxLength={200}
+                      />
+                    </div>
+                    <div>
+                      <Label>Keywords ({lang.label})</Label>
+                      <Input
+                        className="mt-1"
+                        value={langData.seo_keywords}
+                        onChange={(e) => setLang("seo_keywords", e.target.value)}
+                        placeholder="Comma-separated keywords…"
+                      />
+                    </div>
+                  </TabsContent>
+                );
+              })}
+            </Tabs>
           </TabsContent>
         </Tabs>
       </div>

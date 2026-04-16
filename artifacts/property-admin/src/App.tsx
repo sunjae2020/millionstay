@@ -77,6 +77,8 @@ import CsTicketDetail from "@/pages/cs/CsTicketDetail";
 // Blog / Content
 import BlogList from "@/pages/blog/BlogList";
 import BlogDetail from "@/pages/blog/BlogDetail";
+import WebsiteContentList from "@/pages/content/WebsiteContentList";
+import WebsiteContentDetail from "@/pages/content/WebsiteContentDetail";
 
 // Settings
 import Settings from "@/pages/settings/Settings";
@@ -217,6 +219,8 @@ function Router() {
       <Route path="/content/blog" component={BlogList} />
       <Route path="/content/blog/new" component={BlogDetail} />
       <Route path="/content/blog/:id" component={BlogDetail} />
+      <Route path="/content/pages" component={WebsiteContentList} />
+      <Route path="/content/pages/:pageKey" component={WebsiteContentDetail} />
 
       {/* ── CS ────────────────────────────────────────── */}
       <Route path="/cs/tickets" component={CsTicketList} />

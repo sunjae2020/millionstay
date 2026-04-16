@@ -39,3 +39,4 @@ export * from "./cs_tickets";
 export * from "./announcements";
 export * from "./contract_line_items";
 export * from "./blog_posts";
+export * from "./page_contents";
