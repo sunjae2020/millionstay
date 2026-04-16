@@ -74,6 +74,10 @@ import WorkOrderDetail from "@/pages/maintenance/WorkOrderDetail";
 import CsTicketList from "@/pages/cs/CsTicketList";
 import CsTicketDetail from "@/pages/cs/CsTicketDetail";
 
+// Blog / Content
+import BlogList from "@/pages/blog/BlogList";
+import BlogDetail from "@/pages/blog/BlogDetail";
+
 // Settings
 import Settings from "@/pages/settings/Settings";
 import OrganisationPage from "@/pages/settings/sub/Organisation";
@@ -208,6 +212,11 @@ function Router() {
       <Route path="/services" component={ServiceList} />
       <Route path="/services/new" component={ServiceDetail} />
       <Route path="/services/:id" component={ServiceDetail} />
+
+      {/* ── CONTENT / BLOG ────────────────────────────── */}
+      <Route path="/content/blog" component={BlogList} />
+      <Route path="/content/blog/new" component={BlogDetail} />
+      <Route path="/content/blog/:id" component={BlogDetail} />
 
       {/* ── CS ────────────────────────────────────────── */}
       <Route path="/cs/tickets" component={CsTicketList} />

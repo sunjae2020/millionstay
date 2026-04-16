@@ -15,6 +15,7 @@ import {
   spaceServiceCatalogTable,
   spacePoliciesTable,
   contractsTable,
+  blogPostsTable,
 } from "@workspace/db";
 
 function daysBetween(a: string, b: string): number {
@@ -689,6 +690,39 @@ router.get("/v1/public/services", async (req, res): Promise<void> => {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch services" });
   }
+});
+
+router.get("/v1/public/blog", async (req, res): Promise<void> => {
+  const { limit, category } = req.query as Record<string, string>;
+  const conditions: SQL[] = [
+    isNull(blogPostsTable.deleted_at),
+    eq(blogPostsTable.status, "Published"),
+  ];
+  if (category) conditions.push(eq(blogPostsTable.category, category));
+  const rows = await db.select({
+    id: blogPostsTable.id,
+    title: blogPostsTable.title,
+    slug: blogPostsTable.slug,
+    excerpt: blogPostsTable.excerpt,
+    cover_image_url: blogPostsTable.cover_image_url,
+    category: blogPostsTable.category,
+    author: blogPostsTable.author,
+    published_at: blogPostsTable.published_at,
+    created_at: blogPostsTable.created_at,
+  })
+    .from(blogPostsTable)
+    .where(and(...conditions))
+    .orderBy(desc(blogPostsTable.published_at))
+    .limit(Number(limit) || 20);
+  res.json({ data: rows });
+});
+
+router.get("/v1/public/blog/:slug", async (req, res): Promise<void> => {
+  const { slug } = req.params;
+  const [row] = await db.select().from(blogPostsTable)
+    .where(and(eq(blogPostsTable.slug, slug), eq(blogPostsTable.status, "Published"), isNull(blogPostsTable.deleted_at)));
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  res.json(row);
 });
 
 export default router;

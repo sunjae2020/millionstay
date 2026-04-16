@@ -1872,6 +1872,7 @@ SELECT pg_catalog.setval('public.accounts_id_seq', 24, true);
 SELECT pg_catalog.setval('public.admin_users_id_seq', 1, true);
 SELECT pg_catalog.setval('public.announcements_id_seq', 4, true);
 SELECT pg_catalog.setval('public.beneficiaries_id_seq', 4, true);
+SELECT pg_catalog.setval('public.blog_posts_id_seq', 1, false);
 SELECT pg_catalog.setval('public.booking_documents_id_seq', 3, true);
 SELECT pg_catalog.setval('public.booking_services_id_seq', 12, true);
 SELECT pg_catalog.setval('public.bookings_id_seq', 16, true);

@@ -49,6 +49,7 @@ import {
   Wrench,
   Home,
   DollarSign,
+  Newspaper,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
@@ -131,6 +132,14 @@ function getNav(t: (k: string) => string): NavSection[] {
         { href: "/finance/receipts", label: t("nav.receipt"), icon: Receipt },
         { href: "/finance/commissions", label: t("nav.commission"), icon: Percent },
         { href: "/finance/recurring", label: t("nav.recurring"), icon: RefreshCw },
+      ],
+    },
+    {
+      label: "Content",
+      icon: Newspaper,
+      defaultOpen: false,
+      items: [
+        { href: "/content/blog", label: "Blog Posts", icon: Newspaper },
       ],
     },
     {

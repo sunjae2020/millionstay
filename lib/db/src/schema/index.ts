@@ -38,3 +38,4 @@ export * from "./accommodation_service_catalog";
 export * from "./cs_tickets";
 export * from "./announcements";
 export * from "./contract_line_items";
+export * from "./blog_posts";

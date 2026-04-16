@@ -3,8 +3,11 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import { Star, ChevronRight } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Star, ChevronRight, BookOpen, Calendar, Tag } from "lucide-react";
 import heroBg from "@assets/MS_Homepage_Photo_1920x1080_1775403929888.jpg";
+
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const TEAM_DATA = [
   { name: "Sarah Johnson", key: "team_ceo", initials: "SJ" },
@@ -18,27 +21,88 @@ const TESTIMONIALS_DATA = [
   { name: "Arisa Sombat", flag: "🇹🇭", textKey: "t3_text", rating: 4 },
 ];
 
-const BLOGS_DATA = [
+const FALLBACK_BLOGS = [
   {
-    tagKey: "b1_tag", titleKey: "b1_title", excerptKey: "b1_excerpt", dateKey: "b1_date",
-    imgUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80",
+    slug: null, category: "Tips & Guides", title: "5 Tips for Finding the Perfect Student Accommodation",
+    excerpt: "Navigate the Melbourne rental market with confidence — from inspection checklists to understanding lease terms.",
+    cover_image_url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80",
+    published_at: null,
   },
   {
-    tagKey: "b2_tag", titleKey: "b2_title", excerptKey: "b2_excerpt", dateKey: "b2_date",
-    imgUrl: "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&q=80",
+    slug: null, category: "Student Life", title: "How to Make the Most of Your First Month in Melbourne",
+    excerpt: "From setting up a bank account to finding the best local cafes — your essential first-month guide.",
+    cover_image_url: "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&q=80",
+    published_at: null,
   },
   {
-    tagKey: "b3_tag", titleKey: "b3_title", excerptKey: "b3_excerpt", dateKey: "b3_date",
-    imgUrl: "https://images.unsplash.com/photo-1514395462151-6b5e5abad7bc?w=600&q=80",
+    slug: null, category: "Housing", title: "Understanding Utilities & Bills in Shared Accommodation",
+    excerpt: "A simple guide to electricity, gas, internet and water billing for international students in Australia.",
+    cover_image_url: "https://images.unsplash.com/photo-1514395462151-6b5e5abad7bc?w=600&q=80",
+    published_at: null,
   },
 ];
+
+function formatDate(dateStr: string | null) {
+  if (!dateStr) return "";
+  return new Date(dateStr).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
+}
 
 function fade(delay = 0) {
   return { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.45, delay } };
 }
 
+function BlogCard({ post }: { post: any }) {
+  return (
+    <>
+      <div className="relative h-44 overflow-hidden">
+        {post.cover_image_url ? (
+          <img src={post.cover_image_url} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-[#E8621A]/10 to-orange-50 flex items-center justify-center">
+            <BookOpen className="h-10 w-10 text-[#E8621A]/30" />
+          </div>
+        )}
+        {post.category && (
+          <span className="absolute top-3 left-3 bg-primary text-white text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1">
+            <Tag className="h-3 w-3" />{post.category}
+          </span>
+        )}
+      </div>
+      <div className="p-5">
+        {post.published_at && (
+          <p className="text-xs text-gray-400 mb-2 flex items-center gap-1">
+            <Calendar className="h-3 w-3" />{formatDate(post.published_at)}
+          </p>
+        )}
+        <h3 className="font-semibold text-gray-800 text-sm mb-2 leading-snug line-clamp-2 group-hover:text-primary transition-colors">{post.title}</h3>
+        {post.excerpt && <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{post.excerpt}</p>}
+        <span className="mt-4 block text-primary text-xs font-semibold hover:underline flex items-center gap-1">
+          Read more <ChevronRight className="h-3 w-3" />
+        </span>
+      </div>
+    </>
+  );
+}
+
 export default function About() {
   const { t } = useTranslation();
+
+  const { data: apiBlogPosts = [] } = useQuery({
+    queryKey: ["about-blog-posts"],
+    queryFn: async () => {
+      try {
+        const res = await fetch(`${BASE}/api/v1/public/blog?limit=3`);
+        if (!res.ok) return [];
+        const json = await res.json();
+        return json.data ?? [];
+      } catch {
+        return [];
+      }
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const blogPosts = apiBlogPosts.length > 0 ? apiBlogPosts : FALLBACK_BLOGS;
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -147,23 +211,25 @@ export default function About() {
             {t("about.blog_sub")}
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {BLOGS_DATA.map((post, i) => (
-              <motion.div key={post.titleKey} {...fade(i * 0.08)}
-                className="bg-white rounded-2xl overflow-hidden border shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-                <div className="relative h-44 overflow-hidden">
-                  <img src={post.imgUrl} alt={t(`about.${post.titleKey}`)} className="w-full h-full object-cover" />
-                  <span className="absolute top-3 left-3 bg-primary text-white text-xs font-semibold px-2.5 py-1 rounded-full">
-                    {t(`about.${post.tagKey}`)}
-                  </span>
-                </div>
-                <div className="p-5">
-                  <p className="text-xs text-gray-400 mb-2">{t(`about.${post.dateKey}`)}</p>
-                  <h3 className="font-semibold text-gray-800 text-sm mb-2 leading-snug">{t(`about.${post.titleKey}`)}</h3>
-                  <p className="text-xs text-gray-500 leading-relaxed">{t(`about.${post.excerptKey}`)}</p>
-                  <button className="mt-4 text-primary text-xs font-semibold hover:underline">{t("about.read_more")}</button>
-                </div>
+            {blogPosts.slice(0, 3).map((post: any, i: number) => (
+              <motion.div key={post.slug ?? post.title} {...fade(i * 0.08)}
+                className="bg-white rounded-2xl overflow-hidden border shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
+                {post.slug ? (
+                  <Link href={`/blog/${post.slug}`} className="block">
+                    <BlogCard post={post} />
+                  </Link>
+                ) : (
+                  <BlogCard post={post} />
+                )}
               </motion.div>
             ))}
+          </div>
+          <div className="flex justify-center mt-10">
+            <Link href="/blog">
+              <button className="bg-primary text-white px-8 py-2.5 rounded-full text-sm font-semibold hover:bg-primary/90 transition-colors">
+                {t("about.read_more") || "View All Posts"}
+              </button>
+            </Link>
           </div>
         </div>
       </section>

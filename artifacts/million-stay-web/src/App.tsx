@@ -23,6 +23,8 @@ import PortalCs from "@/pages/portal-cs";
 import PortalCsNew from "@/pages/portal-cs-new";
 import PortalCsDetail from "@/pages/portal-cs-detail";
 import About from "@/pages/about";
+import Blog from "@/pages/blog";
+import BlogPost from "@/pages/blog-post";
 import Contact from "@/pages/contact";
 import StayPlan from "@/pages/stay-plan";
 import ForStudent from "@/pages/for-student";
@@ -68,6 +70,8 @@ function Router() {
       <Route path="/portal/cs/:id" component={PortalCsDetail} />
       <Route path="/portal/cs" component={PortalCs} />
       <Route path="/about" component={About} />
+      <Route path="/blog/:slug" component={BlogPost} />
+      <Route path="/blog" component={Blog} />
       <Route path="/contact" component={Contact} />
       <Route path="/stay-plan" component={StayPlan} />
       <Route path="/for-student" component={ForStudent} />
