@@ -24,7 +24,20 @@ const CreateBlogPostBody = z.object({
   seo_keywords: z.string().optional().nullable(),
 });
 
-const UpdateBlogPostBody = CreateBlogPostBody.partial();
+const UpdateBlogPostBody = z.object({
+  title: z.string().min(1).optional(),
+  slug: z.string().min(1).optional(),
+  excerpt: z.string().optional().nullable(),
+  content: z.string().optional().nullable(),
+  cover_image_url: z.string().optional().nullable(),
+  category: z.string().optional().nullable(),
+  author: z.string().optional().nullable(),
+  status: z.string().optional(),
+  published_at: z.string().optional().nullable(),
+  seo_title: z.string().optional().nullable(),
+  seo_description: z.string().optional().nullable(),
+  seo_keywords: z.string().optional().nullable(),
+});
 const IdParams = z.object({ id: z.coerce.number().int() });
 
 const router: IRouter = Router();

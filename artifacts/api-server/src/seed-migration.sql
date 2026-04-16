@@ -577,7 +577,7 @@ INSERT INTO public.accounts (id, name, account_type, primary_contact_id, seconda
 	(7, 'Emma Johnson_Customer', 'Guest', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'AUD', NULL, NULL, false, 'Archived', '2026-04-05 00:22:05.195933+00', '2026-04-14 11:41:25.357+00', '2026-04-14 11:41:25.356+00'),
 	(12, 'Dynamic Residential_Agent', 'Agent', 8, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'AUD', NULL, NULL, false, 'Archived', '2026-04-05 02:20:39.247526+00', '2026-04-14 11:41:25.357+00', '2026-04-14 11:41:25.356+00');
 INSERT INTO public.admin_users (id, email, password_hash, role, first_name, last_name, is_active, force_password_change, last_login_at, created_at, updated_at, status, reset_token, reset_token_expires_at, deleted_at) VALUES
-	(1, 'admin@millionstay.com', '$2b$10$FX2diLhEDwiXWzaGJtZoXeOS1x/pizNnsMOqPkpnwaR3DxlC.OBU.', 'SuperAdmin', 'Million', 'Stay', true, false, '2026-04-14 11:40:46.159+00', '2026-04-05 08:29:14.152582+00', '2026-04-14 11:40:46.16+00', 'active', NULL, NULL, NULL);
+	(1, 'admin@millionstay.com', '$2b$10$FX2diLhEDwiXWzaGJtZoXeOS1x/pizNnsMOqPkpnwaR3DxlC.OBU.', 'SuperAdmin', 'Million', 'Stay', true, false, '2026-04-16 02:27:24.052+00', '2026-04-05 08:29:14.152582+00', '2026-04-16 02:27:24.052+00', 'active', NULL, NULL, NULL);
 INSERT INTO public.announcements (id, title, body, category, priority, is_published, published_at, expires_at, created_by, created_at, updated_at) VALUES
 	(1, 'Welcome to MillionStay Resident Portal', 'Dear residents, welcome to your new online portal! You can now manage your bookings, pay invoices, submit maintenance requests, and communicate with our team — all in one place. If you have any questions, please reach out via the Inquiries tab.', 'General', 'Normal', 1, '2026-04-04 16:41:47.886313+00', NULL, NULL, '2026-04-11 16:41:47.886313+00', '2026-04-11 16:41:47.886313+00'),
 	(2, 'Building Maintenance — Hot Water System', 'Planned maintenance on the hot water system will take place on Saturday 18 April 2026 between 9:00 AM and 1:00 PM. Hot water may be intermittent during this period. We apologise for any inconvenience and will notify you when the work is complete.', 'Maintenance', 'High', 1, '2026-04-09 16:41:47.886313+00', NULL, NULL, '2026-04-11 16:41:47.886313+00', '2026-04-11 16:41:47.886313+00'),
@@ -587,6 +587,162 @@ INSERT INTO public.beneficiaries (id, name, contract_product_id, account_id, com
 	(2, 'Million Stay - Platform Fee', NULL, 5, NULL, 'Fixed', NULL, 80, 2, 'Platform management fixed fee per week', 'Active', '2026-04-06 05:39:43.002011+00', '2026-04-06 05:39:43.002011+00', NULL),
 	(3, 'Time Study Education - Agent Commission', 30, 6, 2, 'Percentage', 7, NULL, 1, 'Agent 7% for mid-term bookings', 'Active', '2026-04-06 05:39:43.1224+00', '2026-04-06 05:39:43.1224+00', NULL),
 	(1, 'HongYingZhu - Owner Commission', 31, 8, 1, 'Percentage', 12, NULL, 1, 'Updated: 12% for long-term owner', 'Active', '2026-04-06 05:39:42.881372+00', '2026-04-06 05:41:27.846+00', NULL);
+INSERT INTO public.blog_posts (id, title, slug, excerpt, content, cover_image_url, category, author, status, published_at, seo_title, seo_description, seo_keywords, deleted_at, created_at, updated_at) VALUES
+	(1, '5 Tips for Finding the Perfect Student Accommodation in Melbourne', '5-tips-finding-perfect-student-accommodation-melbourne', 'Navigate Melbourne''s rental market with confidence — from inspection checklists to understanding lease terms before you sign.', '<h2>Start Your Search Early</h2>
+  <p>Melbourne''s student accommodation market moves quickly, especially around university intake periods in February and July. Start your search at least 6–8 weeks before your move-in date. Early movers get more choices, better prices, and time to negotiate lease terms without pressure.</p>
+
+  <h2>Know Your Must-Haves vs Nice-to-Haves</h2>
+  <p>Before contacting any property, write down your non-negotiables: distance to campus, Wi-Fi inclusion, bills included, laundry facilities. Separating these from your wish-list (e.g. ensuite, balcony) keeps your search focused and prevents decision fatigue.</p>
+
+  <h2>Always Inspect Before You Sign</h2>
+  <p>Never commit to a property you haven''t seen — even virtually. Request a video walk-through if you''re overseas. Check for natural light, water pressure, mobile signal strength, and the condition of shared spaces like kitchens and bathrooms.</p>
+
+  <h2>Understand What''s Included in the Rent</h2>
+  <p>Some Melbourne rentals advertise low base rents but charge separately for electricity, gas, and internet. MillionStay properties are transparent about inclusions — always ask for a full breakdown before signing so there are no surprises on your first bill.</p>
+
+  <h2>Read the Lease Carefully</h2>
+  <p>Pay close attention to the notice period, break lease conditions, bond requirements, and house rules around guests or shared spaces. If anything is unclear, ask your property manager to explain it in writing before you sign.</p>
+
+  <p><strong>MillionStay properties are designed with international students in mind</strong> — flexible terms, clear inclusions, and multilingual support. <a href="/search">Browse available rooms today</a> to get started.</p>', 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&q=80', 'Tips & Guides', 'MillionStay Team', 'Published', '2026-04-10 09:00:00+00', '5 Tips for Finding Student Accommodation in Melbourne | MillionStay', 'Looking for student accommodation in Melbourne? These 5 expert tips will help you find the right room, avoid common pitfalls, and settle in fast.', 'student accommodation Melbourne, international student housing, Melbourne room search, MillionStay tips', NULL, '2026-04-16 02:23:22.339743+00', '2026-04-16 02:23:22.339743+00'),
+	(3, 'Melbourne''s Top 8 Student-Friendly Suburbs: Find Your Neighbourhood', 'top-student-friendly-suburbs-melbourne', 'Carlton, Parkville, Clayton, Brunswick and more — here''s our guide to the best Melbourne neighbourhoods for international students.', '<h2>Carlton — The Classic Student Suburb</h2>
+  <p>Home to the University of Melbourne''s main campus and within walking distance of RMIT, Carlton is the heartland of Melbourne student life. Lygon Street offers affordable Italian restaurants, and the suburb has an excellent mix of share houses, student apartments, and cafes. Tram access to the CBD is frequent and fast.</p>
+
+  <h2>Parkville — Quiet and Academic</h2>
+  <p>Adjacent to Carlton and home to several university faculties and the Royal Melbourne Hospital, Parkville is ideal for students who prefer a calmer, more residential feel. It borders Royal Park — perfect for morning runs or afternoon study sessions outdoors.</p>
+
+  <h2>Clayton — Monash''s Home Base</h2>
+  <p>If you''re studying at Monash University, Clayton is your suburb. It has a dense international student community, affordable grocery options, and good bus connections. The area has grown significantly in recent years with new student apartment complexes and co-living spaces.</p>
+
+  <h2>Brunswick — Creative and Diverse</h2>
+  <p>Brunswick attracts students who want character and culture alongside proximity to RMIT and Melbourne Uni. Sydney Road is packed with Middle Eastern bakeries, independent bookshops, and live music venues. Rent is reasonable and the tram ride to the city is under 20 minutes.</p>
+
+  <h2>Southbank & South Yarra — Urban Living</h2>
+  <p>For students who want to be right in the action, Southbank and South Yarra offer premium urban living with excellent public transport. Rent is higher here, but the lifestyle, proximity to cultural venues, and city convenience make it worthwhile for the right student.</p>
+
+  <h2>Footscray & Sunshine — Affordable and Up-and-Coming</h2>
+  <p>These western suburbs are rapidly improving and offer some of the best value accommodation in Melbourne. Victoria University students will find Footscray particularly convenient. The food scene is internationally diverse and the community is warm and welcoming.</p>', 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80', 'Melbourne', 'MillionStay Team', 'Published', '2026-04-05 09:00:00+00', 'Best Suburbs for International Students in Melbourne | MillionStay', 'Choosing where to live in Melbourne? Discover the top student-friendly suburbs with great transport, amenities, and community.', 'best suburbs Melbourne students, Carlton Melbourne, Parkville Melbourne, Clayton Monash, student housing suburbs', NULL, '2026-04-16 02:23:22.402391+00', '2026-04-16 02:23:22.402391+00'),
+	(4, 'Melbourne''s Hidden Gems: Cafes, Parks & Markets Near University Campuses', 'melbournes-hidden-gems-cafes-parks-markets-near-campus', 'Explore Melbourne like a local — from secret rooftop bars to the best weekend markets, here''s our curated guide for students.', '<h2>Cafes Worth Knowing</h2>
+  <p><strong>Seven Seeds (Carlton North)</strong> — A Melbourne institution. Speciality coffee roasters with a huge warehouse space perfect for long study sessions. Their batch brew is affordable and excellent.</p>
+  <p><strong>Patricia Coffee Brewers (CBD)</strong> — Standing-room only but worth every second. One of Melbourne''s most acclaimed espresso bars tucked down a city laneway.</p>
+  <p><strong>Wide Open Road (Brunswick)</strong> — A neighbourhood favourite with beautiful filtered light, great food, and fast Wi-Fi. Perfect for a weekend morning with your laptop.</p>
+
+  <h2>Parks & Green Spaces</h2>
+  <p><strong>Royal Park</strong> (Parkville) — A massive green lung adjacent to Melbourne Zoo. Great for picnics, morning runs, or simply sitting under a tree with a book between lectures.</p>
+  <p><strong>Fitzroy Gardens</strong> (East Melbourne) — Beautifully manicured Victorian gardens minutes from the CBD. Captain Cook''s Cottage is a fun historical detour.</p>
+  <p><strong>Princes Park</strong> (Carlton North) — Popular with university students for afternoon frisbee, dog watching, and informal study groups on the grass.</p>
+
+  <h2>Weekend Markets</h2>
+  <p><strong>Queen Victoria Market</strong> — Melbourne''s most iconic market. Go early on Saturday or Wednesday morning for the best fresh produce at the lowest prices. The international food stalls are brilliant for a budget lunch.</p>
+  <p><strong>Rose Street Artists'' Market</strong> (Fitzroy, weekends) — Independent designers, jewellers, and artists. Great for unique gifts or just absorbing Melbourne''s creative culture.</p>
+  <p><strong>Camberwell Sunday Market</strong> — Second-hand everything. Furniture, vintage clothing, books, and curiosities. Bring cash and arrive before 10am for the best finds.</p>', 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80', 'Lifestyle', 'MillionStay Team', 'Published', '2026-04-02 09:00:00+00', 'Melbourne Hidden Gems for Students: Cafes, Parks & Markets | MillionStay', 'Discover Melbourne''s best kept secrets — the cafes, parks, and weekend markets that locals love and students should know.', 'Melbourne cafes students, Melbourne markets, Melbourne parks, student lifestyle Melbourne, Queen Victoria Market', NULL, '2026-04-16 02:23:22.411343+00', '2026-04-16 02:23:22.411343+00'),
+	(5, 'How to Set Up Your Life in Australia: Bank, SIM, Transport & Medicare', 'how-to-set-up-life-australia-bank-sim-transport-medicare', 'A practical step-by-step checklist for international students arriving in Australia — sorted by priority so you know exactly what to do first.', '<h2>Priority 1: Tax File Number (TFN)</h2>
+  <p>Apply for a TFN through the Australian Tax Office (ATO) website as soon as you arrive. It''s free and takes about 28 days to arrive by post. You''ll need it to work legally and to avoid paying higher tax rates. Apply at ato.gov.au.</p>
+
+  <h2>Priority 2: Bank Account</h2>
+  <p>Open a local bank account within your first week. Most major banks (Commonwealth, ANZ, NAB, Westpac) offer international student accounts with no monthly fee. You can open many accounts online before you arrive. Bring your passport, student visa, and proof of address to the branch if completing in person.</p>
+
+  <h2>Priority 3: SIM Card</h2>
+  <p>Pick up a prepaid SIM from Optus, Telstra, or Vodafone on your first day — they''re available at airports, 7-Elevens, and convenience stores everywhere. Optus and Telstra offer the best coverage in Melbourne. Plans start from $10/month and include data, calls, and SMS.</p>
+
+  <h2>Priority 4: Myki Card (Public Transport)</h2>
+  <p>Melbourne''s public transport uses a smart card called Myki. Pick one up from 7-Eleven for $6, then load credit online or at any station or convenience store. Fares are automatically capped daily and weekly — meaning you''ll never overpay, even if you travel all day.</p>
+
+  <h2>Priority 5: Medicare (If Eligible)</h2>
+  <p>Students from countries with Reciprocal Health Care Agreements with Australia (including the UK, Ireland, New Zealand, Italy, Netherlands, Sweden, Belgium, Slovenia, Norway, and Malta) may be eligible for Medicare. Check your eligibility at humanservices.gov.au and register at a Medicare service centre with your passport and visa.</p>
+
+  <h2>Priority 6: Enrol in University Health Services</h2>
+  <p>Every major Melbourne university has an on-campus health service. Register early — it''s often free for enrolled students and provides GP consultations, mental health support, and referrals. This should be one of your first week tasks.</p>', 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80', 'Tips & Guides', 'MillionStay Team', 'Published', '2026-03-28 09:00:00+00', 'Australia Arrival Checklist for International Students | MillionStay', 'Step-by-step guide to setting up your life in Australia: bank account, SIM card, Myki transport card, tax file number, and more.', 'Australia arrival checklist students, bank account Australia international student, TFN Australia, Myki card, Medicare international student', NULL, '2026-04-16 02:23:22.418553+00', '2026-04-16 02:23:22.418553+00'),
+	(6, 'Cooking on a Budget: Healthy & Affordable Meals for Student Living', 'cooking-budget-healthy-affordable-meals-student-living', 'Eating well doesn''t have to be expensive. Here''s how Melbourne students can cook nutritious, delicious meals for under $60 a week.', '<h2>Shop Smart: Where to Buy Groceries</h2>
+  <p><strong>Aldi</strong> is consistently the cheapest supermarket in Melbourne for staples like pasta, rice, eggs, cheese, and frozen vegetables. <strong>IGA</strong> and smaller Asian and Indian grocery stores (particularly in Springvale, Footscray, and Flemington) offer excellent fresh produce and international ingredients at very low prices. <strong>Woolworths</strong> and <strong>Coles</strong> discount items heavily near closing time (6–8pm) — worth visiting for marked-down proteins and bread.</p>
+
+  <h2>Your Weekly Staple List (Under $40)</h2>
+  <ul>
+    <li>5kg rice bag ($8–10) — lasts 3–4 weeks</li>
+    <li>500g pasta ($1.50)</li>
+    <li>12 eggs ($4–5)</li>
+    <li>Tinned chickpeas, beans, lentils (3 cans × $1 = $3)</li>
+    <li>Seasonal vegetables from the market ($8–10)</li>
+    <li>Frozen spinach or mixed vegetables ($3)</li>
+    <li>Soy sauce, garlic, ginger (one-off spend, lasts months)</li>
+  </ul>
+
+  <h2>Simple Meals to Master</h2>
+  <p><strong>Fried rice</strong> — Use leftover rice, eggs, frozen vegetables, soy sauce, and garlic. Ready in 10 minutes. Nutritious and filling.</p>
+  <p><strong>Pasta e ceci</strong> — Pasta with tinned chickpeas, garlic, olive oil, and chilli. Italian peasant food that''s genuinely delicious and costs under $2 per serve.</p>
+  <p><strong>Vegetable stir-fry</strong> — Any vegetable combination with oyster sauce or soy and served over rice. Prepare once, eat three times.</p>
+  <p><strong>Red lentil dal</strong> — Lentils, tinned tomatoes, onion, cumin, turmeric. Serve with rice or flatbread. Packed with protein and iron.</p>
+
+  <h2>Meal Prep on Sundays</h2>
+  <p>Spend 1–2 hours on Sunday cooking a large batch of rice, a dal or soup, and roasting a tray of vegetables. You''ll have lunches and dinners covered for 3–4 days with almost no effort during the week.</p>', 'https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=800&q=80', 'Student Life', 'MillionStay Team', 'Published', '2026-03-20 09:00:00+00', 'Budget Cooking for Students in Melbourne | MillionStay', 'Eat well on a student budget in Melbourne. Simple recipes, grocery shopping tips, and meal prep strategies for international students.', 'student cooking Melbourne, budget meals Australia, cheap groceries Melbourne, meal prep students, international student food tips', NULL, '2026-04-16 02:23:22.425391+00', '2026-04-16 02:23:22.425391+00'),
+	(7, 'Understanding Your Rental Lease Agreement in Victoria', 'understanding-rental-lease-agreement-victoria', 'Rental agreements can be confusing. Here''s a plain-English breakdown of the key clauses international students should know before signing in Victoria.', '<h2>The Rental Bond</h2>
+  <p>In Victoria, landlords can charge a maximum bond of one month''s rent for leases under $900/week. Your bond must be lodged with the Residential Tenancies Bond Authority (RTBA) within 10 business days of payment — not held by the landlord. You''ll receive a RTBA receipt confirming this. The bond is returned at the end of your tenancy minus any valid deductions for damage or unpaid rent.</p>
+
+  <h2>Fixed-Term vs Month-to-Month</h2>
+  <p>A fixed-term lease (usually 6 or 12 months) gives you and the landlord certainty. You can''t be asked to leave without cause during the fixed term. After the term ends, it rolls into a month-to-month arrangement unless renewed. Breaking a fixed-term lease early may incur fees — always read this clause carefully.</p>
+
+  <h2>Notice Periods</h2>
+  <p>If you want to end your tenancy, you must give 28 days'' written notice on a month-to-month lease, or apply for a mutual agreement to break a fixed term early. Your landlord must give you 90 days'' notice to vacate without cause on a periodic lease. These are legal minimums — your lease cannot reduce them.</p>
+
+  <h2>Repairs and Maintenance</h2>
+  <p>Your landlord is responsible for maintaining the property in a reasonably good state of repair. Urgent repairs (broken heater in winter, burst pipe, no hot water) must be fixed within 24 hours. Non-urgent repairs must be completed within 14 days of written notification. Always put repair requests in writing.</p>
+
+  <h2>Your Rights as a Tenant</h2>
+  <p>Consumer Affairs Victoria provides free advice for renters. If you have a dispute with your landlord, you can apply to VCAT (Victorian Civil and Administrative Tribunal) for resolution. MillionStay properties comply fully with Victorian tenancy law, and our team is available to help navigate any issues that arise.</p>', 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&q=80', 'Housing', 'MillionStay Team', 'Published', '2025-12-15 09:00:00+00', 'Rental Lease Agreement Guide for Students in Victoria | MillionStay', 'Confused about your Victorian rental agreement? We break down bonds, notice periods, repairs, and your rights as a student tenant.', 'rental lease Victoria, student rental rights, bond Victoria, tenancy agreement Melbourne, VCAT tenant rights', NULL, '2026-04-16 02:23:22.432835+00', '2026-04-16 02:23:22.432835+00'),
+	(8, 'Electricity, Gas & Internet: Understanding Bills in Shared Accommodation', 'electricity-gas-internet-bills-shared-accommodation-australia', 'Don''t get caught out by unexpected utility bills. Here''s everything international students need to know about managing household bills in Australia.', '<h2>What Are "Bills Included" Properties?</h2>
+  <p>Many MillionStay properties offer bills-included arrangements where electricity, gas, water, and internet are bundled into your weekly rent. This is the simplest option for international students — one predictable payment, no account setup required, no surprise bills. Always clarify what''s included before signing.</p>
+
+  <h2>Electricity</h2>
+  <p>Victoria has a deregulated electricity market, which means you can compare and choose your provider. AGL, Origin, and EnergyAustralia are the biggest retailers. Usage-based billing means your bill varies by season — heating in winter is the biggest driver. A typical one-bedroom or shared room student usage is around $30–60/month.</p>
+  <p>Register with a provider within 5 business days of moving in if not included in your rent. Have your meter number (on the front of the meter or in the property documents) and your move-in date ready.</p>
+
+  <h2>Gas</h2>
+  <p>Not all Melbourne properties have gas — newer apartments often use electric appliances exclusively. If your property has gas heating or a gas cooktop, you''ll need to register with a gas retailer. Bills typically range $20–50/month depending on usage and season.</p>
+
+  <h2>Water</h2>
+  <p>In Victoria, water supply is charged to landlords by default — but the landlord can pass on usage charges to tenants if the property meets efficiency standards. Confirm this in your lease. Many student properties include water in the rent.</p>
+
+  <h2>Internet</h2>
+  <p>NBN (National Broadband Network) is the standard internet infrastructure in Australia. Typical student plans are $55–75/month for 50–100Mbps unlimited data. Popular providers include Aussie Broadband, Superloop, and TPG. Setup can take 1–10 business days, so plan ahead. Many student properties have internet pre-installed — again, check your lease.</p>', 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80', 'Housing', 'MillionStay Team', 'Published', '2025-11-20 09:00:00+00', 'Understanding Utility Bills in Australia for Students | MillionStay', 'A complete guide to electricity, gas, water, and internet bills for international students in Melbourne share houses.', 'electricity bills Australia, student utility bills Melbourne, internet plans students Australia, gas bill Australia, bills included accommodation', NULL, '2026-04-16 02:23:22.446009+00', '2026-04-16 02:23:22.446009+00'),
+	(9, 'MillionStay 2026: New Suburbs, New Features & What''s Coming Next', 'millionstay-2026-new-suburbs-features-whats-coming-next', 'We''re growing. Here''s an inside look at the new Melbourne suburbs we''ve expanded into, the product features we''ve launched, and what''s on the roadmap.', '<h2>New Suburbs We''ve Launched In</h2>
+  <p>We''re proud to announce that MillionStay has expanded its verified property network to include <strong>Footscray</strong>, <strong>Sunshine</strong>, <strong>Preston</strong>, and <strong>Glen Waverley</strong> — four suburbs that offer excellent value and strong transport connections but have historically been underserved by quality student accommodation platforms.</p>
+  <p>These additions bring our total coverage to 22 Melbourne suburbs, with more than 350 verified rooms across all price points.</p>
+
+  <h2>Product Updates in 2026</h2>
+  <p><strong>Multilingual Support</strong> — MillionStay now fully supports English, Korean, Japanese, Chinese (Simplified), and Thai across all pages, booking flows, and communications. More languages are planned for later this year.</p>
+  <p><strong>Document Uploads</strong> — Tenants can now upload and manage their tenancy documents, inspection reports, and lease agreements directly through the guest portal.</p>
+  <p><strong>Booking Calendar</strong> — Property owners now have access to a real-time booking calendar with occupancy analytics and revenue forecasting tools.</p>
+  <p><strong>Service Host Portal</strong> — We''ve launched a dedicated portal for cleaning and maintenance service providers, enabling seamless job scheduling and earnings tracking.</p>
+
+  <h2>Coming Later in 2026</h2>
+  <p>We''re working on a <strong>referral programme</strong> for existing tenants, an <strong>agent commission portal</strong> with real-time tracking, and integrations with major university housing offices. We''re also exploring partnerships with student health and wellbeing providers to offer value-add services to our residents.</p>
+  <p>Thank you for being part of the MillionStay community. If you have feedback or feature requests, we''d love to hear from you through our <a href="/contact">contact page</a>.</p>', 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80', 'News', 'MillionStay Team', 'Published', '2025-10-01 09:00:00+00', 'MillionStay 2026 Updates: New Properties & Features | MillionStay', 'MillionStay is expanding. Discover our new Melbourne suburbs, product updates, and what''s planned for the rest of 2026.', 'MillionStay updates, new student accommodation Melbourne 2026, MillionStay features, student housing platform Australia', NULL, '2026-04-16 02:23:22.466675+00', '2026-04-16 02:23:22.466675+00'),
+	(2, 'How to Make the Most of Your First Month in Melbourne', 'how-to-make-most-first-month-melbourne', 'From setting up a bank account to discovering the best local spots — your essential survival guide for the first 30 days in Melbourne.', '<h2>Week 1: Get the Essentials Sorted</h2>
+
+  <img src="https://images.unsplash.com/photo-1601597111158-2fceff292cdc?w=900&q=80" alt="Bank card and smartphone for setting up finances in Australia" />
+
+  <p>Your first priority is setting up a local bank account. ANZ, CommBank, and NAB all offer accounts for international students with no monthly fee for the first year. Bring your passport, student ID, and proof of address. Many banks allow you to open an account online before you arrive so your card is waiting for you.</p>
+  <p>Next, grab a local SIM card. Optus, Telstra, and Vodafone all have student prepaid plans from around $10–$30/month with good coverage across Melbourne''s university areas. You''ll find SIM cards at any convenience store, supermarket, or carrier store.</p>
+
+  <h2>Week 2: Learn to Get Around</h2>
+
+  <img src="https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?w=900&q=80" alt="Melbourne tram on a city street" />
+
+  <p>Get your Myki card — Melbourne''s public transport smart card — immediately. Load it at any 7-Eleven, train station, or online. Trams, trains, and buses all use Myki, and fares are capped daily and weekly so you''ll never overpay. The PTV (Public Transport Victoria) app is excellent for trip planning.</p>
+  <p>Melbourne''s tram network is one of the largest in the world and covers most of the inner suburbs for free in the CBD zone. Use it to explore the city without spending a cent on transport during your first days.</p>
+
+  <h2>Week 3: Find Your Go-To Spots</h2>
+
+  <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=900&q=80" alt="Melbourne café with coffee and laptop" />
+
+  <p>Every suburb has its own character. Carlton has the best Italian food. Fitzroy has vintage shops and rooftop bars. The CBD has everything from the Queen Victoria Market to the State Library. Spend a weekend exploring — you''ll find your favourites faster than you think.</p>
+  <p>Melbourne is also famous for its café culture. Grab a flat white at a local spot, set up your laptop, and you''ll feel at home surprisingly quickly. Many cafés have fast Wi-Fi and welcome students who stay for a few hours.</p>
+
+  <h2>Week 4: Build Connections</h2>
+
+  <img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=900&q=80" alt="Group of diverse students smiling together on campus" />
+
+  <p>Join university clubs, attend orientation events, and explore co-working cafes in your neighbourhood. Melbourne''s international student community is vibrant and welcoming. Many universities also run buddy programs pairing new arrivals with experienced students.</p>
+  <p>Don''t underestimate the value of the friendships you make in your first month — many become lifelong connections. Be proactive: attend events, say yes to invitations, and don''t be shy about introducing yourself. Melbourne''s culture is warm and open to newcomers.</p>', 'https://images.unsplash.com/photo-1514395462151-6b5e5abad7bc?w=800&q=80', 'Student Life', 'MillionStay Team', 'Draft', '2026-04-08 09:00:00+00', 'First Month in Melbourne: Student Survival Guide | MillionStay', 'Just arrived in Melbourne? Here''s everything you need to do in your first 30 days — banking, transport, essentials, and more.', 'first month Melbourne, new to Melbourne student, Melbourne arrival guide, student life Melbourne', NULL, '2026-04-16 02:23:22.384781+00', '2026-04-16 02:26:36.999+00');
 INSERT INTO public.booking_documents (id, booking_id, doc_type, file_name, file_url, verified_status, rejection_reason, expiry_date, status, created_at, updated_at) VALUES
 	(1, 7, 'passport', 'passport_demo.pdf', 'https://www.africau.edu/images/default/sample.pdf', 'Verified', NULL, NULL, 'Active', '2026-04-11 11:43:26.129487+00', '2026-04-11 11:43:26.134+00'),
 	(2, 7, 'student_visa', 'student_visa_demo.pdf', 'https://www.africau.edu/images/default/sample.pdf', 'Verified', NULL, NULL, 'Active', '2026-04-11 11:43:26.140828+00', '2026-04-11 11:43:26.144+00'),
@@ -1872,7 +2028,7 @@ SELECT pg_catalog.setval('public.accounts_id_seq', 24, true);
 SELECT pg_catalog.setval('public.admin_users_id_seq', 1, true);
 SELECT pg_catalog.setval('public.announcements_id_seq', 4, true);
 SELECT pg_catalog.setval('public.beneficiaries_id_seq', 4, true);
-SELECT pg_catalog.setval('public.blog_posts_id_seq', 1, false);
+SELECT pg_catalog.setval('public.blog_posts_id_seq', 9, true);
 SELECT pg_catalog.setval('public.booking_documents_id_seq', 3, true);
 SELECT pg_catalog.setval('public.booking_services_id_seq', 12, true);
 SELECT pg_catalog.setval('public.bookings_id_seq', 16, true);
