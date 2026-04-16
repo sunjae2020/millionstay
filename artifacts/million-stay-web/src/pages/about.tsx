@@ -40,6 +40,24 @@ const FALLBACK_BLOGS = [
     cover_image_url: "https://images.unsplash.com/photo-1514395462151-6b5e5abad7bc?w=600&q=80",
     published_at: null,
   },
+  {
+    slug: null, category: "Melbourne", title: "Best Neighbourhoods for International Students in Melbourne",
+    excerpt: "From the vibrant CBD to cosy Carlton — discover which suburbs offer the best value and community for students.",
+    cover_image_url: "https://images.unsplash.com/photo-1548859583-7a8b5e9b2b3e?w=600&q=80",
+    published_at: null,
+  },
+  {
+    slug: null, category: "Lifestyle", title: "Melbourne's Hidden Gems: Cafes, Parks & Markets Near Campus",
+    excerpt: "Explore the city like a local — our curated guide to affordable and unforgettable spots around Melbourne.",
+    cover_image_url: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80",
+    published_at: null,
+  },
+  {
+    slug: null, category: "News", title: "What's New at MillionStay: Spring 2026 Updates",
+    excerpt: "We've added new features, expanded our property listings, and launched our partner agent programme.",
+    cover_image_url: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80",
+    published_at: null,
+  },
 ];
 
 function formatDate(dateStr: string | null) {
@@ -51,7 +69,7 @@ function fade(delay = 0) {
   return { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.45, delay } };
 }
 
-function BlogCard({ post }: { post: any }) {
+function BlogCard({ post, index }: { post: any; index: number }) {
   return (
     <>
       <div className="relative h-44 overflow-hidden">
@@ -62,6 +80,9 @@ function BlogCard({ post }: { post: any }) {
             <BookOpen className="h-10 w-10 text-[#E8621A]/30" />
           </div>
         )}
+        <span className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/90 shadow text-xs font-bold text-[#E8621A] flex items-center justify-center">
+          {String(index + 1).padStart(2, "0")}
+        </span>
         {post.category && (
           <span className="absolute top-3 left-3 bg-primary text-white text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1">
             <Tag className="h-3 w-3" />{post.category}
@@ -91,7 +112,7 @@ export default function About() {
     queryKey: ["about-blog-posts"],
     queryFn: async () => {
       try {
-        const res = await fetch(`${BASE}/api/v1/public/blog?limit=3`);
+        const res = await fetch(`${BASE}/api/v1/public/blog?limit=6`);
         if (!res.ok) return [];
         const json = await res.json();
         return json.data ?? [];
@@ -211,15 +232,15 @@ export default function About() {
             {t("about.blog_sub")}
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {blogPosts.slice(0, 3).map((post: any, i: number) => (
+            {blogPosts.slice(0, 6).map((post: any, i: number) => (
               <motion.div key={post.slug ?? post.title} {...fade(i * 0.08)}
                 className="bg-white rounded-2xl overflow-hidden border shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
                 {post.slug ? (
                   <Link href={`/blog/${post.slug}`} className="block">
-                    <BlogCard post={post} />
+                    <BlogCard post={post} index={i} />
                   </Link>
                 ) : (
-                  <BlogCard post={post} />
+                  <BlogCard post={post} index={i} />
                 )}
               </motion.div>
             ))}
