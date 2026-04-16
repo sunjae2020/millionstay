@@ -2,11 +2,12 @@ import app from "./app";
 import { logger } from "./lib/logger";
 import { loadSettingsFromDb } from "./routes/integrations";
 import bcrypt from "bcryptjs";
-import { db, usersTable, suburbsTable } from "@workspace/db";
+import { db, usersTable } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import crypto from "crypto";
 
 const rawPort = process.env["PORT"];
 
@@ -57,21 +58,36 @@ async function autoMigrateIfEmpty() {
     // Only auto-migrate in production — dev DB is managed manually
     if (process.env.NODE_ENV !== "production") return;
 
-    // Count expected suburbs rows from seed file (count rows = lines starting with "(")
     const seedSql = fs.readFileSync(sqlFilePath, "utf-8");
-    const suburbInsert = seedSql.match(/INSERT INTO public\.suburbs [\s\S]+?;(?=\n|$)/);
-    const expectedSuburbs = suburbInsert
-      ? (suburbInsert[0].match(/^\s*\(/gm) || []).length
-      : 1;
 
-    const [row] = await db.select({ cnt: sql<number>`COUNT(*)::int` }).from(suburbsTable);
-    const count = Number(row?.cnt ?? 0);
-    // Skip only if data looks fully seeded (count >= expected)
-    if (count >= expectedSuburbs && count > 0) return;
+    // Compute SHA-256 hash of the seed file to detect changes
+    const seedHash = crypto.createHash("sha256").update(seedSql).digest("hex");
 
-    logger.info({ currentSuburbs: count, expectedSuburbs }, "Incomplete seed — running auto-migration...");
-    // Only extract INSERT INTO and setval statements — skip all SET/config commands
-    // which require superuser privilege and abort the transaction in hosted Postgres (Neon)
+    // Ensure the meta table exists to track applied seed hash
+    await db.execute(sql.raw(`
+      CREATE TABLE IF NOT EXISTS _seed_meta (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `));
+
+    const metaRows = await db.execute(sql.raw(
+      `SELECT value FROM _seed_meta WHERE key = 'seed_hash'`
+    ));
+    const appliedHash = (metaRows[0] as any)?.value ?? null;
+
+    if (appliedHash === seedHash) {
+      logger.info({ seedHash: seedHash.slice(0, 12) }, "Seed unchanged — skipping auto-migration");
+      return;
+    }
+
+    logger.info(
+      { appliedHash: appliedHash?.slice(0, 12) ?? "none", newHash: seedHash.slice(0, 12) },
+      "Seed changed — running full sync from dev DB..."
+    );
+
+    // Only extract INSERT INTO and setval statements
     const statements = seedSql
       .split(/;\s*\n/)
       .map((s) => s.trim())
@@ -83,10 +99,13 @@ async function autoMigrateIfEmpty() {
     let executed = 0;
     let errors = 0;
 
-    // Drizzle transaction with per-statement savepoints
     await db.transaction(async (tx) => {
-      // TRUNCATE all tables first — CASCADE handles FK order
+      // TRUNCATE all data tables (complete list) — CASCADE handles FK order
       await tx.execute(sql.raw(`TRUNCATE TABLE
+        page_contents, blog_posts, announcements,
+        guest_direct_messages, guest_emergency_contacts,
+        booking_services, contract_line_items,
+        partner_users,
         suburbs, product_groups, product_types, contract_types, payment_info,
         contacts, accounts, leads, tasks,
         admin_users, guest_users,
@@ -109,14 +128,20 @@ async function autoMigrateIfEmpty() {
           await tx.execute(sql.raw(stmt));
           executed++;
         } catch {
-          // Roll back to the savepoint so the transaction stays alive
           try { await tx.execute(sql.raw(`ROLLBACK TO SAVEPOINT ${sp}`)); } catch {}
           errors++;
         }
       }
     });
 
-    logger.info({ executed, errors }, "Auto-migration complete");
+    // Record the applied hash so we don't re-apply on next restart
+    await db.execute(sql.raw(`
+      INSERT INTO _seed_meta (key, value, updated_at)
+      VALUES ('seed_hash', '${seedHash}', NOW())
+      ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
+    `));
+
+    logger.info({ executed, errors }, "Auto-migration complete — production DB synced from dev");
   } catch (err) {
     logger.error({ err }, "Auto-migration failed");
   }
