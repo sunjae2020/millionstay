@@ -98,7 +98,7 @@ export default function ForStudent() {
           </motion.div>
           <motion.div {...fade(0.12)} className="flex-1 grid grid-cols-2 gap-3 max-w-md w-full">
             <div className="col-span-2 rounded-2xl overflow-hidden h-44 shadow-md">
-              <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&q=80"
+              <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=800&q=80"
                 alt="Students on campus" className="w-full h-full object-cover" />
             </div>
             <div className="rounded-2xl overflow-hidden h-32 shadow-md">
