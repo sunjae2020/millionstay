@@ -1,12 +1,8 @@
 import { useState, FormEvent } from "react";
 import { useAuth } from "@/lib/auth";
-import { Eye, EyeOff, ChevronDown, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 const BRAND = "#E8621A";
-
-const DEMO_ACCOUNTS = [
-  { label: "Demo Agent", email: "agent@millionstay.com.au", password: "Agent@2026!" },
-];
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -15,8 +11,6 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [demoOpen, setDemoOpen] = useState(false);
-
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
@@ -28,13 +22,6 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
-  }
-
-  function fillDemo(account: (typeof DEMO_ACCOUNTS)[number]) {
-    setEmail(account.email);
-    setPassword(account.password);
-    setDemoOpen(false);
-    setError("");
   }
 
   return (
@@ -166,49 +153,6 @@ export default function LoginPage() {
                 }
               </button>
             </form>
-
-            {/* Demo accounts */}
-            <div className="mt-8 space-y-3">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-200" />
-                </div>
-                <div className="relative flex justify-center">
-                  <button
-                    type="button"
-                    onClick={() => setDemoOpen(v => !v)}
-                    className="flex items-center gap-1.5 bg-[#faf9f7] px-3 text-xs text-slate-400 hover:text-slate-600 transition-colors select-none"
-                  >
-                    Demo accounts
-                    <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${demoOpen ? "rotate-180" : ""}`} />
-                  </button>
-                </div>
-              </div>
-
-              {demoOpen && (
-                <div className="rounded-xl border border-slate-200 bg-white overflow-hidden divide-y divide-slate-100 shadow-sm">
-                  {DEMO_ACCOUNTS.map(account => (
-                    <button
-                      key={account.email}
-                      type="button"
-                      onClick={() => fillDemo(account)}
-                      className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-orange-50 transition-colors group"
-                    >
-                      <div>
-                        <p className="text-sm font-medium text-slate-800 group-hover:text-[#E8621A] transition-colors">
-                          {account.label}
-                        </p>
-                        <p className="text-xs text-slate-400 mt-0.5">{account.email}</p>
-                      </div>
-                      <span className="text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity"
-                        style={{ color: BRAND }}>
-                        Fill ↵
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
 
             <div className="mt-6 pt-5 border-t border-slate-200 text-center">
               <p className="text-center text-xs text-slate-400">

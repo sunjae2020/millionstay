@@ -9,10 +9,9 @@ import { useAuthStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Lock, Mail, Zap } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import logoHorizontal from "@assets/06.OR_NB_horizontal_ver_1775381659303.png";
 
 const loginSchema = z.object({
@@ -21,34 +20,21 @@ const loginSchema = z.object({
 });
 type LoginFormData = z.infer<typeof loginSchema>;
 
-const DEMO_EMAIL = "demo@millionstay.com.au";
-const DEMO_PASSWORD = "Demo1234!";
-
 export default function Login() {
   const { t } = useTranslation();
   const [location, setLocation] = useLocation();
   const { setAuth } = useAuthStore();
-  const { toast } = useToast();
   const [showPw, setShowPw] = useState(false);
-  const [demoFilled, setDemoFilled] = useState(false);
 
   const params = new URLSearchParams(location.split("?")[1] ?? "");
   const redirectTo = params.get("redirect") ?? "/portal/bookings";
   const sessionExpired = params.get("reason") === "session_expired";
 
   const loginMutation = useGuestLogin();
-
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
   });
-
-  const fillDemo = () => {
-    form.setValue("email", DEMO_EMAIL, { shouldValidate: true });
-    form.setValue("password", DEMO_PASSWORD, { shouldValidate: true });
-    setDemoFilled(true);
-    toast({ title: "Demo credentials filled!", description: "Click Log in to explore the portal." });
-  };
 
   const onSubmit = (data: LoginFormData) => {
     loginMutation.mutate(
@@ -94,31 +80,6 @@ export default function Login() {
                 <span>Your session has expired. Please sign in again.</span>
               </div>
             )}
-
-            {/* Demo account banner */}
-            <motion.button
-              type="button"
-              onClick={fillDemo}
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.98 }}
-              className={`w-full rounded-xl border-2 border-dashed px-4 py-3 text-left transition-all group ${
-                demoFilled
-                  ? "border-green-400 bg-green-50"
-                  : "border-primary/40 bg-orange-50 hover:border-primary hover:bg-orange-100"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${demoFilled ? "bg-green-100" : "bg-primary/10"}`}>
-                  <Zap className={`h-4 w-4 ${demoFilled ? "text-green-600" : "text-primary"}`} />
-                </div>
-                <div className="min-w-0">
-                  <p className={`text-sm font-semibold ${demoFilled ? "text-green-700" : "text-primary"}`}>
-                    {demoFilled ? "✓ Demo credentials filled — click Log in" : "Try demo account — click to fill"}
-                  </p>
-                  <p className="text-xs text-gray-500 truncate">{DEMO_EMAIL}</p>
-                </div>
-              </div>
-            </motion.button>
 
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
