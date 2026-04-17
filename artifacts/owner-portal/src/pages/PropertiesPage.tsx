@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
+import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
-import { MapPin, Home } from "lucide-react";
+import { MapPin, Home, ChevronRight } from "lucide-react";
 
 interface Space {
   id: number;
@@ -69,25 +70,30 @@ export default function PropertiesPage() {
       <div className="space-y-6">
         {properties.map((property) => (
           <div key={property.id} className="bg-card border border-card-border rounded-xl overflow-hidden">
-            <div className="p-6 border-b border-border">
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mt-0.5">
-                    <Home className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground text-lg">{property.name}</h3>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground mt-0.5">
-                      <MapPin className="w-3 h-3" />
-                      {property.address}, {property.city}, {property.state} {property.postcode}
+            <Link href={`/properties/${property.id}`}>
+              <a className="block p-6 border-b border-border hover:bg-muted/30 transition-colors">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mt-0.5">
+                      <Home className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground text-lg">{property.name}</h3>
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground mt-0.5">
+                        <MapPin className="w-3 h-3" />
+                        {property.address}, {property.city}, {property.state} {property.postcode}
+                      </div>
                     </div>
                   </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className={`text-xs font-medium px-3 py-1 rounded-full ${property.approval_status === "Approved" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+                      {t(`status.${property.approval_status}`, property.approval_status)}
+                    </span>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  </div>
                 </div>
-                <span className={`text-xs font-medium px-3 py-1 rounded-full ${property.approval_status === "Approved" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
-                  {t(`status.${property.approval_status}`, property.approval_status)}
-                </span>
-              </div>
-            </div>
+              </a>
+            </Link>
 
             <div className="p-6">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">

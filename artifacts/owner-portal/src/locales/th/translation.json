@@ -30,10 +30,25 @@
   },
   "bookings": {
     "title": "การเข้าพัก", "subtitle": "ข้อมูลการเข้าพักปัจจุบันและที่ผ่านมา",
-    "masking_notice": "ข้อมูลผู้เช่าบางส่วนถูกซ่อนเพื่อปกป้องความเป็นส่วนตัว ข้อมูลทั้งหมดบริหารโดย MillionStay",
     "col_ref": "อ้างอิง", "col_tenant": "ผู้เช่า", "col_property_space": "ทรัพย์สิน / พื้นที่",
     "col_period": "ช่วงเวลา", "col_rate": "อัตรา", "col_status": "สถานะ",
-    "masked": "(ซ่อน)", "no_bookings": "ไม่พบการจอง"
+    "no_bookings": "ไม่พบการจอง"
+  },
+  "property_detail": {
+    "back": "กลับไปยังทรัพย์สิน",
+    "stat_spaces": "พื้นที่", "stat_active_contracts": "สัญญาที่ใช้งาน", "stat_total_contracts": "สัญญาทั้งหมด",
+    "spaces_title": "พื้นที่",
+    "contracts_title": "สัญญา MillionStay",
+    "no_contracts": "ยังไม่มีสัญญา",
+    "term": "ระยะเวลาสัญญา",
+    "weekly_rent": "ค่าเช่ารายสัปดาห์", "monthly_rent": "ค่าเช่ารายเดือน", "bond": "เงินมัดจำ",
+    "revenue_share": "ส่วนแบ่งรายได้", "gross_weekly": "รายได้รวมต่อสัปดาห์",
+    "owner_share_weekly": "ส่วนของเจ้าของต่อสัปดาห์", "owner_share_pct": "เปอร์เซ็นต์ของเจ้าของ",
+    "line_items": "รายการ",
+    "show_terms": "ดูเงื่อนไขสัญญา",
+    "view_document": "ดูเอกสาร",
+    "documents_title": "เอกสารที่เกี่ยวข้อง",
+    "no_documents": "ยังไม่ได้อัปโหลดเอกสาร"
   },
   "revenue": {
     "title": "รายได้", "subtitle": "รายได้จากค่าเช่าและประวัติใบแจ้งหนี้",

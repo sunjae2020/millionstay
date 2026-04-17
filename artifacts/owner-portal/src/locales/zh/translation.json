@@ -29,10 +29,25 @@
   },
   "bookings": {
     "title": "入住情况", "subtitle": "您物业的当前及历史入住情况",
-    "masking_notice": "为保护隐私,租户信息已部分隐藏。完整信息由 MillionStay 管理。",
     "col_ref": "编号", "col_tenant": "租户", "col_property_space": "物业 / 空间",
     "col_period": "期间", "col_rate": "费率", "col_status": "状态",
-    "masked": "(已隐藏)", "no_bookings": "未找到预订"
+    "no_bookings": "未找到预订"
+  },
+  "property_detail": {
+    "back": "返回物业列表",
+    "stat_spaces": "空间数", "stat_active_contracts": "活跃合同", "stat_total_contracts": "合同总数",
+    "spaces_title": "空间",
+    "contracts_title": "MillionStay 合同",
+    "no_contracts": "尚无合同记录。",
+    "term": "合同期",
+    "weekly_rent": "周租金", "monthly_rent": "月租金", "bond": "押金",
+    "revenue_share": "收益分成", "gross_weekly": "周毛收入",
+    "owner_share_weekly": "业主周收益", "owner_share_pct": "业主比例",
+    "line_items": "明细项",
+    "show_terms": "查看合同条款",
+    "view_document": "查看文档",
+    "documents_title": "相关文档",
+    "no_documents": "尚未上传文档。"
   },
   "revenue": {
     "title": "收入", "subtitle": "您物业的租金收入和发票记录",

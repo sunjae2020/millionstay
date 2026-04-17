@@ -42,10 +42,25 @@
   "bookings": {
     "title": "입주 현황",
     "subtitle": "자산 전반의 현재 및 과거 입주 정보",
-    "masking_notice": "개인정보 보호를 위해 임차인 정보는 일부 마스킹됩니다. 전체 정보는 MillionStay에서 관리합니다.",
     "col_ref": "참조", "col_tenant": "임차인", "col_property_space": "자산 / 공간",
     "col_period": "기간", "col_rate": "요금", "col_status": "상태",
-    "masked": "(마스킹됨)", "no_bookings": "예약을 찾을 수 없습니다"
+    "no_bookings": "예약을 찾을 수 없습니다"
+  },
+  "property_detail": {
+    "back": "자산 목록으로",
+    "stat_spaces": "공간 수", "stat_active_contracts": "활성 계약", "stat_total_contracts": "전체 계약",
+    "spaces_title": "공간",
+    "contracts_title": "MillionStay 계약",
+    "no_contracts": "등록된 계약이 없습니다.",
+    "term": "계약 기간",
+    "weekly_rent": "주 임대료", "monthly_rent": "월 임대료", "bond": "보증금",
+    "revenue_share": "수익 쉐어", "gross_weekly": "주간 총 수익",
+    "owner_share_weekly": "오너 주간 수익", "owner_share_pct": "오너 비율",
+    "line_items": "항목 내역",
+    "show_terms": "계약 조항 보기",
+    "view_document": "문서 보기",
+    "documents_title": "관련 서류",
+    "no_documents": "업로드된 문서가 없습니다."
   },
   "revenue": {
     "title": "수익",

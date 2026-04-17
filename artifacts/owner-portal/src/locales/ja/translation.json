@@ -30,10 +30,25 @@
   },
   "bookings": {
     "title": "入居状況", "subtitle": "物件全体の現在および過去の入居状況",
-    "masking_notice": "プライバシー保護のため、入居者情報は一部マスキングされています。完全な情報は MillionStay が管理します。",
     "col_ref": "番号", "col_tenant": "入居者", "col_property_space": "物件 / スペース",
     "col_period": "期間", "col_rate": "料金", "col_status": "ステータス",
-    "masked": "(マスキング)", "no_bookings": "予約が見つかりません"
+    "no_bookings": "予約が見つかりません"
+  },
+  "property_detail": {
+    "back": "物件一覧に戻る",
+    "stat_spaces": "スペース数", "stat_active_contracts": "有効な契約", "stat_total_contracts": "契約総数",
+    "spaces_title": "スペース",
+    "contracts_title": "MillionStay 契約",
+    "no_contracts": "登録された契約はありません。",
+    "term": "契約期間",
+    "weekly_rent": "週賃料", "monthly_rent": "月賃料", "bond": "敷金",
+    "revenue_share": "収益シェア", "gross_weekly": "週間総収入",
+    "owner_share_weekly": "オーナー週次取り分", "owner_share_pct": "オーナー比率",
+    "line_items": "明細項目",
+    "show_terms": "契約条項を表示",
+    "view_document": "書類を表示",
+    "documents_title": "関連書類",
+    "no_documents": "アップロードされた書類はありません。"
   },
   "revenue": {
     "title": "収益", "subtitle": "物件の賃料収入と請求履歴",

@@ -6,6 +6,7 @@ import {
   spacesTable,
   propertiesTable,
   contractsTable,
+  contractLineItemsTable,
   invoicesTable,
   accountsTable,
   contactsTable,
@@ -15,11 +16,14 @@ import { requireOwnerAuth, type PartnerAuthPayload } from "../middlewares/requir
 const router: IRouter = Router();
 
 /* ─── helpers ─── */
-function maskTenantForOwner(contact: { first_name: string | null; gender: string | null }) {
-  const rawFirst = contact.first_name ?? "";
-  const maskedFirst = rawFirst.length > 2 ? rawFirst.slice(0, 2) + "***" : rawFirst || "—";
+function formatTenantForOwner(contact: { first_name: string | null; last_name: string | null; gender: string | null }) {
+  const first = (contact.first_name ?? "").trim();
+  const last = (contact.last_name ?? "").trim().toUpperCase();
+  const display = [first, last].filter(Boolean).join(" ") || "—";
   return {
-    display_name: maskedFirst,
+    display_name: display,
+    first_name: first || "—",
+    last_name: last || "—",
     gender: contact.gender ?? "—",
   };
 }
@@ -131,6 +135,144 @@ router.get("/v1/owner/properties", requireOwnerAuth, async (req, res): Promise<v
   res.json({ success: true, data: result });
 });
 
+/* GET /api/v1/owner/properties/:id */
+router.get("/v1/owner/properties/:id", requireOwnerAuth, async (req, res): Promise<void> => {
+  const partner = (req as any).partner as PartnerAuthPayload;
+  const propertyId = parseInt(req.params.id, 10);
+  if (!Number.isFinite(propertyId)) {
+    res.status(400).json({ success: false, error: "Invalid property id" });
+    return;
+  }
+
+  const [property] = await db
+    .select()
+    .from(propertiesTable)
+    .where(and(eq(propertiesTable.id, propertyId), eq(propertiesTable.owner_account_id, partner.account_id)))
+    .limit(1);
+
+  if (!property) {
+    res.status(404).json({ success: false, error: "Property not found" });
+    return;
+  }
+
+  // spaces of this property
+  const spaces = await db
+    .select({
+      id: spacesTable.id,
+      name: spacesTable.name,
+      space_type: spacesTable.space_type,
+      status: spacesTable.status,
+      property_id: spacesTable.property_id,
+    })
+    .from(spacesTable)
+    .where(eq(spacesTable.property_id, propertyId));
+
+  const spaceIds = spaces.map(s => s.id);
+
+  // contracts on those spaces (or whose landlord is the owner)
+  const contractsBySpace = spaceIds.length
+    ? await db
+        .select()
+        .from(contractsTable)
+        .where(inArray(contractsTable.space_id, spaceIds))
+    : [];
+  const contractsByLandlord = await db
+    .select()
+    .from(contractsTable)
+    .where(eq(contractsTable.landlord_account_id, partner.account_id));
+
+  const seen = new Set<number>();
+  const allContracts = [...contractsBySpace, ...contractsByLandlord].filter(c => {
+    if (seen.has(c.id)) return false;
+    seen.add(c.id);
+    if (c.deleted_at) return false;
+    // Only include landlord-side contracts or contracts on owner's space
+    const onOwnerSpace = c.space_id != null && spaceIds.includes(c.space_id);
+    const ownerIsLandlord = c.landlord_account_id === partner.account_id;
+    return onOwnerSpace || ownerIsLandlord;
+  });
+
+  const contractIds = allContracts.map(c => c.id);
+  const tenantIds = [...new Set(allContracts.map(c => c.tenant_account_id).filter(Boolean))] as number[];
+
+  const lineItems = contractIds.length
+    ? await db
+        .select()
+        .from(contractLineItemsTable)
+        .where(inArray(contractLineItemsTable.contract_id, contractIds))
+    : [];
+
+  const tenantAccounts = tenantIds.length
+    ? await db
+        .select({ id: accountsTable.id, name: accountsTable.name })
+        .from(accountsTable)
+        .where(inArray(accountsTable.id, tenantIds))
+    : [];
+  const tenantMap = Object.fromEntries(tenantAccounts.map(a => [a.id, a.name]));
+  const spaceMap = Object.fromEntries(spaces.map(s => [s.id, s.name]));
+
+  const lineMap: Record<number, typeof lineItems> = {};
+  for (const li of lineItems) {
+    if (!lineMap[li.contract_id]) lineMap[li.contract_id] = [];
+    lineMap[li.contract_id].push(li);
+  }
+
+  // Compute revenue share = sum of recurring rent line items / contract weekly_rate (illustrative)
+  const enrichedContracts = allContracts
+    .sort((a, b) => (b.start_date ?? "").localeCompare(a.start_date ?? ""))
+    .map(c => {
+      const items = lineMap[c.id] ?? [];
+      const recurringWeekly = items
+        .filter(li => li.item_type === "Rent" && li.billing_trigger === "recurring")
+        .reduce((sum, li) => {
+          const total = parseFloat(li.total_price ?? "0");
+          // normalise to weekly
+          const f = (li.billing_frequency ?? "").toLowerCase();
+          if (f === "weekly") return sum + total;
+          if (f === "biweekly" || f === "fortnightly") return sum + total / 2;
+          if (f === "monthly") return sum + total * 12 / 52;
+          return sum + total;
+        }, 0);
+      const monthlyRent = (c.weekly_rate ?? 0) * 52 / 12;
+      return {
+        ...c,
+        space_name: c.space_id ? spaceMap[c.space_id] ?? null : null,
+        tenant_name: c.tenant_account_id ? tenantMap[c.tenant_account_id] ?? null : null,
+        monthly_rent: Math.round(monthlyRent * 100) / 100,
+        owner_share_weekly: Math.round(recurringWeekly * 100) / 100,
+        owner_share_pct: c.weekly_rate ? Math.round((recurringWeekly / c.weekly_rate) * 1000) / 10 : null,
+        line_items: items,
+      };
+    });
+
+  // Documents = contract document_urls (and any future doc table)
+  const documents = enrichedContracts
+    .filter(c => c.document_url)
+    .map(c => ({
+      kind: "contract",
+      contract_id: c.id,
+      contract_ref: c.contract_ref,
+      file_name: `${c.contract_ref}.pdf`,
+      file_url: c.document_url,
+      uploaded_at: c.signed_at ?? c.sent_at ?? c.created_at,
+    }));
+
+  res.json({
+    success: true,
+    data: {
+      property,
+      spaces,
+      contracts: enrichedContracts,
+      documents,
+      stats: {
+        total_spaces: spaces.length,
+        active_contracts: enrichedContracts.filter(c => c.status === "Active").length,
+        total_contracts: enrichedContracts.length,
+      },
+    },
+  });
+});
+
 /* GET /api/v1/owner/bookings */
 router.get("/v1/owner/bookings", requireOwnerAuth, async (req, res): Promise<void> => {
   const partner = (req as any).partner as PartnerAuthPayload;
@@ -171,7 +313,7 @@ router.get("/v1/owner/bookings", requireOwnerAuth, async (req, res): Promise<voi
   const contactIds = [...new Set(bookings.map(b => b.contact_id).filter(Boolean))] as number[];
   const contacts = contactIds.length
     ? await db
-        .select({ id: contactsTable.id, first_name: contactsTable.first_name, gender: contactsTable.gender })
+        .select({ id: contactsTable.id, first_name: contactsTable.first_name, last_name: contactsTable.last_name, gender: contactsTable.gender })
         .from(contactsTable)
         .where(inArray(contactsTable.id, contactIds))
     : [];
@@ -191,7 +333,7 @@ router.get("/v1/owner/bookings", requireOwnerAuth, async (req, res): Promise<voi
       ...b,
       space_name: space?.name ?? "—",
       property_name: (property as any)?.name ?? "—",
-      tenant: contact ? maskTenantForOwner(contact) : null,
+      tenant: contact ? formatTenantForOwner(contact) : null,
     };
   });
 

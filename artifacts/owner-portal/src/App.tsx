@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from "@/lib/auth";
 import LoginPage from "@/pages/LoginPage";
 import DashboardPage from "@/pages/DashboardPage";
 import PropertiesPage from "@/pages/PropertiesPage";
+import PropertyDetailPage from "@/pages/PropertyDetailPage";
 import BookingsPage from "@/pages/BookingsPage";
 import RevenuePage from "@/pages/RevenuePage";
 
@@ -25,6 +26,7 @@ function PortalRoutes() {
     <Switch>
       <Route path="/" component={DashboardPage} />
       <Route path="/properties" component={PropertiesPage} />
+      <Route path="/properties/:id" component={PropertyDetailPage} />
       <Route path="/bookings" component={BookingsPage} />
       <Route path="/revenue" component={RevenuePage} />
       <Route>

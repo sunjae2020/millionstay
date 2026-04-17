@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
-import { Calendar, AlertCircle } from "lucide-react";
+import { Calendar } from "lucide-react";
 
 interface Booking {
   id: number;
@@ -12,7 +12,7 @@ interface Booking {
   check_out_date: string;
   agreed_weekly_rate: string;
   total_rent: string;
-  tenant: { display_name: string; gender: string } | null;
+  tenant: { display_name: string; first_name: string; last_name: string; gender: string } | null;
   space_name: string;
   property_name: string;
 }
@@ -48,13 +48,6 @@ export default function BookingsPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">{t("bookings.title")}</h1>
         <p className="text-muted-foreground text-sm mt-1">{t("bookings.subtitle")}</p>
-      </div>
-
-      <div className="flex items-center gap-3 mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-        <AlertCircle className="w-4 h-4 text-yellow-600 flex-shrink-0" />
-        <p className="text-sm text-yellow-700">
-          {t("bookings.masking_notice")}
-        </p>
       </div>
 
       <div className="flex gap-3 mb-6">
@@ -99,11 +92,18 @@ export default function BookingsPage() {
               <tr key={b.id} className="hover:bg-muted/30 transition-colors">
                 <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{b.booking_ref ?? `#${b.id}`}</td>
                 <td className="px-4 py-3">
-                  <div className="font-medium text-foreground">{b.tenant?.display_name ?? "—"}</div>
-                  {b.tenant?.gender && (
+                  <div className="font-medium text-foreground">
+                    {b.tenant ? (
+                      <>
+                        {b.tenant.first_name} <span className="uppercase">{b.tenant.last_name}</span>
+                      </>
+                    ) : (
+                      "—"
+                    )}
+                  </div>
+                  {b.tenant?.gender && b.tenant.gender !== "—" && (
                     <div className="text-xs text-muted-foreground capitalize">{b.tenant.gender}</div>
                   )}
-                  <div className="text-xs text-muted-foreground italic">{t("bookings.masked")}</div>
                 </td>
                 <td className="px-4 py-3">
                   <div className="font-medium text-foreground">{b.property_name}</div>
