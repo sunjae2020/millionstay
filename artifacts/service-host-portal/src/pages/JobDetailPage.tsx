@@ -7,13 +7,23 @@ import {
   Briefcase,
   Calendar,
   Camera,
+  CheckCircle2,
   DollarSign,
   FileText,
   MapPin,
+  Save,
   Trash2,
   Upload,
   X,
 } from "lucide-react";
+
+const JOB_STATUSES = ["Active", "Processing", "Completed", "Cancelled"] as const;
+const STATUS_STYLES: Record<string, string> = {
+  Active: "bg-gray-100 text-gray-700 border-gray-300",
+  Processing: "bg-blue-100 text-blue-700 border-blue-300",
+  Completed: "bg-green-100 text-green-700 border-green-300",
+  Cancelled: "bg-red-100 text-red-700 border-red-300",
+};
 
 interface Photo {
   id: number;
@@ -74,12 +84,21 @@ export default function JobDetailPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
+  const [statusDraft, setStatusDraft] = useState<string>("Active");
+  const [notesDraft, setNotesDraft] = useState<string>("");
+  const [savingMeta, setSavingMeta] = useState(false);
+  const [savedMsg, setSavedMsg] = useState("");
+
   async function load() {
     if (!jobId) return;
     setLoading(true);
     try {
       const r = await apiGet<{ success: boolean; data: JobDetail }>(`/v1/service-host/jobs/${jobId}`);
-      if (r.success) setJob(r.data);
+      if (r.success) {
+        setJob(r.data);
+        setStatusDraft(r.data.status || "Active");
+        setNotesDraft(r.data.notes ?? "");
+      }
       else setError("Failed to load job");
     } catch {
       setError("Failed to load job");
@@ -122,6 +141,34 @@ export default function JobDetailPage() {
       if (fileRef.current) fileRef.current.value = "";
     }
   }
+
+  async function saveMeta() {
+    if (!jobId) return;
+    setSavingMeta(true);
+    setError("");
+    setSavedMsg("");
+    try {
+      const r = await apiFetch(`/v1/service-host/jobs/${jobId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: statusDraft, notes: notesDraft || null }),
+      });
+      const data = await r.json();
+      if (!r.ok || !data.success) {
+        setError(data?.error?.message ?? "Failed to save");
+      } else {
+        setJob((j) => (j ? { ...j, status: data.data.status, notes: data.data.notes } : j));
+        setSavedMsg("Saved");
+        setTimeout(() => setSavedMsg(""), 2000);
+      }
+    } catch {
+      setError("Failed to save");
+    } finally {
+      setSavingMeta(false);
+    }
+  }
+
+  const isDirty = !!job && (statusDraft !== (job.status || "Active") || (notesDraft || "") !== (job.notes ?? ""));
 
   async function handleDelete(photoId: number) {
     if (!confirm("Delete this photo?")) return;
@@ -168,7 +215,7 @@ export default function JobDetailPage() {
                       <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
                         {triggerLabel(job.billing_trigger)}
                       </span>
-                      <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full">
+                      <span className={`text-xs px-2 py-0.5 rounded-full border ${STATUS_STYLES[job.status] ?? STATUS_STYLES.Active}`}>
                         {job.status}
                       </span>
                     </div>
@@ -216,11 +263,61 @@ export default function JobDetailPage() {
                 )}
               </div>
 
-              {job.notes && (
-                <p className="mt-4 text-sm text-muted-foreground bg-muted/50 rounded-lg px-4 py-3 italic">
-                  {job.notes}
-                </p>
-              )}
+            </div>
+
+            {/* Status & Notes editor */}
+            <div className="bg-card border border-border rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" /> Status & Notes
+                </h2>
+                <div className="flex items-center gap-3">
+                  {savedMsg && <span className="text-xs text-green-600">{savedMsg}</span>}
+                  <button
+                    type="button"
+                    onClick={saveMeta}
+                    disabled={!isDirty || savingMeta}
+                    className="inline-flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Save className="w-4 h-4" />
+                    {savingMeta ? "Saving..." : "Save"}
+                  </button>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-1">
+                  <label className="block text-xs font-medium text-muted-foreground mb-1.5">Status</label>
+                  <div className="flex flex-wrap gap-2">
+                    {JOB_STATUSES.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setStatusDraft(s)}
+                        className={`text-xs px-3 py-1.5 rounded-full border transition ${
+                          statusDraft === s
+                            ? `${STATUS_STYLES[s]} font-semibold ring-2 ring-offset-1 ring-primary/40`
+                            : "bg-background text-muted-foreground border-border hover:bg-muted"
+                        }`}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                    Notes <span className="text-muted-foreground/60">(visible to admin)</span>
+                  </label>
+                  <textarea
+                    value={notesDraft}
+                    onChange={(e) => setNotesDraft(e.target.value)}
+                    rows={4}
+                    maxLength={5000}
+                    placeholder="Add any notes about this job..."
+                    className="w-full text-sm px-3 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Photos card */}

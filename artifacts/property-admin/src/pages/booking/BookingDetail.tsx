@@ -87,6 +87,9 @@ export default function BookingDetail() {
   const [docExpiry, setDocExpiry] = useState("");
   const [rejectReason, setRejectReason] = useState("");
   const [addServiceOpen, setAddServiceOpen] = useState(false);
+  const [editSvc, setEditSvc] = useState<any | null>(null);
+  const [editSvcStatus, setEditSvcStatus] = useState("Active");
+  const [editSvcNotes, setEditSvcNotes] = useState("");
   const [photosSvcId, setPhotosSvcId] = useState<number | null>(null);
   const [previewPhotoUrl, setPreviewPhotoUrl] = useState<string | null>(null);
   const { data: photosData } = useQuery({
@@ -139,6 +142,27 @@ export default function BookingDetail() {
     },
     onSuccess: () => refetchServices(),
   });
+  const updateServiceMutation = useMutation({
+    mutationFn: async ({ svcId, payload }: { svcId: number; payload: any }) => {
+      const r = await apiFetch(`/api/v1/bookings/${id}/services/${svcId}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || data?.success === false) {
+        throw new Error(data?.error ?? data?.error?.message ?? `Failed to update service (HTTP ${r.status})`);
+      }
+      return data;
+    },
+    onSuccess: () => { refetchServices(); setEditSvc(null); },
+    onError: (err: any) => { alert(err?.message ?? "Failed to update service"); },
+  });
+  const SVC_STATUSES = ["Active", "Processing", "Completed", "Cancelled"] as const;
+  const SVC_STATUS_COLORS: Record<string, string> = {
+    Active: "bg-gray-100 text-gray-700",
+    Processing: "bg-blue-100 text-blue-700",
+    Completed: "bg-green-100 text-green-700",
+    Cancelled: "bg-red-100 text-red-700",
+  };
 
   const { register, handleSubmit, reset, control, watch } = useForm<FormData>({
     defaultValues: {
@@ -524,17 +548,17 @@ export default function BookingDetail() {
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50 border-b">
                       <tr>
-                        {["Service Name", "Type", "Qty", "Unit Price", "Total", "Billing", "Frequency", ""].map((h) => (
+                        {["Service Name", "Type", "Qty", "Unit Price", "Total", "Billing", "Frequency", "Status", "Notes", ""].map((h) => (
                           <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {!bookingServices.length ? (
-                        <tr><td colSpan={8} className="text-center py-8 text-muted-foreground">No services added yet</td></tr>
+                        <tr><td colSpan={10} className="text-center py-8 text-muted-foreground">No services added yet</td></tr>
                       ) : bookingServices.map((svc: any) => (
                         <tr key={svc.id} className="border-b hover:bg-gray-50">
-                          <td className="px-4 py-3 font-medium">{svc.service_name}</td>
+                          <td className="px-4 py-3 font-medium">{svc.service_name ?? svc.name}</td>
                           <td className="px-4 py-3 text-muted-foreground">{svc.service_type ?? "—"}</td>
                           <td className="px-4 py-3">{svc.quantity ?? 1}</td>
                           <td className="px-4 py-3">{svc.unit_price ? `$${Number(svc.unit_price).toFixed(2)}` : "—"}</td>
@@ -542,7 +566,18 @@ export default function BookingDetail() {
                           <td className="px-4 py-3 text-muted-foreground">{svc.billing_trigger ?? "—"}</td>
                           <td className="px-4 py-3 text-muted-foreground">{svc.frequency ?? "—"}</td>
                           <td className="px-4 py-3">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${SVC_STATUS_COLORS[svc.status] ?? "bg-gray-100 text-gray-600"}`}>
+                              {svc.status ?? "Active"}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground max-w-[200px]">
+                            <span className="block truncate" title={svc.notes ?? ""}>{svc.notes || "—"}</span>
+                          </td>
+                          <td className="px-4 py-3">
                             <div className="flex items-center gap-1">
+                              <Button size="sm" variant="ghost" className="h-7" title="Edit status & notes" onClick={() => { setEditSvc(svc); setEditSvcStatus(svc.status ?? "Active"); setEditSvcNotes(svc.notes ?? ""); }}>
+                                <FileText className="w-3.5 h-3.5" />
+                              </Button>
                               <Button size="sm" variant="ghost" className="h-7" title="View job report photos" onClick={() => setPhotosSvcId(svc.id)}>
                                 <Camera className="w-3.5 h-3.5" />
                               </Button>
@@ -765,6 +800,38 @@ export default function BookingDetail() {
                 notes: svcNotes || undefined,
               });
             }}>Add</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Service Status/Notes Dialog */}
+      <Dialog open={editSvc !== null} onOpenChange={(open) => { if (!open) setEditSvc(null); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit Service: {editSvc?.service_name ?? editSvc?.name}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Status</Label>
+              <Select value={editSvcStatus} onValueChange={setEditSvcStatus}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {SVC_STATUSES.map((s) => (<SelectItem key={s} value={s}>{s}</SelectItem>))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Notes</Label>
+              <Textarea rows={4} value={editSvcNotes} onChange={(e) => setEditSvcNotes(e.target.value)} className="mt-1" maxLength={5000} placeholder="Notes shared with the service host..." />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditSvc(null)}>{t("common.cancel")}</Button>
+            <Button
+              className="bg-[#E8621A] hover:bg-[#d4561a] text-white"
+              disabled={updateServiceMutation.isPending}
+              onClick={() => editSvc && updateServiceMutation.mutate({ svcId: editSvc.id, payload: { status: editSvcStatus, notes: editSvcNotes || null } })}
+            >
+              {updateServiceMutation.isPending ? "Saving..." : "Save"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

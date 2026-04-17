@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
-import { eq, and, desc, asc, inArray, sql } from "drizzle-orm";
+import { eq, ne, and, desc, asc, inArray, sql } from "drizzle-orm";
 import {
   db,
   bookingsTable,
@@ -85,7 +85,7 @@ router.get("/v1/service-host/dashboard", requireServiceHostAuth, async (req, res
         .where(
           and(
             inArray(bookingServicesTable.service_id, hostIds),
-            eq(bookingServicesTable.status, "Active")
+            ne(bookingServicesTable.status, "Deleted")
           )
         )
         .orderBy(desc(bookingServicesTable.created_at))
@@ -172,7 +172,7 @@ router.get("/v1/service-host/jobs", requireServiceHostAuth, async (req, res): Pr
       .where(
         and(
           inArray(bookingServicesTable.service_id, hostIds),
-          eq(bookingServicesTable.status, "Active")
+          ne(bookingServicesTable.status, "Deleted")
         )
       )
       .orderBy(desc(bookingServicesTable.created_at));
@@ -247,7 +247,11 @@ async function verifyJobAccess(accountId: number, jobId: number) {
   const [job] = await db
     .select()
     .from(bookingServicesTable)
-    .where(and(eq(bookingServicesTable.id, jobId), inArray(bookingServicesTable.service_id, hostIds)))
+    .where(and(
+      eq(bookingServicesTable.id, jobId),
+      inArray(bookingServicesTable.service_id, hostIds),
+      ne(bookingServicesTable.status, "Deleted"),
+    ))
     .limit(1);
   return job ?? null;
 }
@@ -405,6 +409,54 @@ router.post(
   }
 );
 
+/* PATCH /api/v1/service-host/jobs/:id — update status / notes */
+const ALLOWED_JOB_STATUSES = new Set(["Active", "Processing", "Completed", "Cancelled"]);
+router.patch("/v1/service-host/jobs/:id", requireServiceHostAuth, async (req, res): Promise<void> => {
+  try {
+    const partner = (req as any).partner as PartnerAuthPayload;
+    const jobId = Number(req.params.id);
+    if (!jobId) { res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid job id" } }); return; }
+
+    const job = await verifyJobAccess(partner.account_id, jobId);
+    if (!job) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Job not found" } }); return; }
+
+    const body = (req.body ?? {}) as { status?: string; notes?: string | null };
+    const updates: { status?: string; notes?: string | null } = {};
+    if (typeof body.status === "string") {
+      if (!ALLOWED_JOB_STATUSES.has(body.status)) {
+        res.status(400).json({ success: false, error: { code: "INVALID_STATUS", message: `Status must be one of: ${[...ALLOWED_JOB_STATUSES].join(", ")}` } });
+        return;
+      }
+      updates.status = body.status;
+    }
+    if (body.notes !== undefined) {
+      updates.notes = body.notes === null || body.notes === "" ? null : String(body.notes).slice(0, 5000);
+    }
+    if (Object.keys(updates).length === 0) {
+      res.status(400).json({ success: false, error: { code: "NO_CHANGES", message: "No status or notes provided" } });
+      return;
+    }
+    const hostIds = await getHostServiceIds(partner.account_id);
+    const [updated] = await db
+      .update(bookingServicesTable)
+      .set(updates)
+      .where(and(
+        eq(bookingServicesTable.id, jobId),
+        inArray(bookingServicesTable.service_id, hostIds),
+        ne(bookingServicesTable.status, "Deleted"),
+      ))
+      .returning();
+    if (!updated) {
+      res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Job not found or no longer accessible" } });
+      return;
+    }
+    res.json({ success: true, data: updated });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to update job" } });
+  }
+});
+
 /* DELETE /api/v1/service-host/jobs/:id/photos/:photoId */
 router.delete("/v1/service-host/jobs/:id/photos/:photoId", requireServiceHostAuth, async (req, res): Promise<void> => {
   try {
@@ -459,7 +511,7 @@ router.get("/v1/service-host/schedule", requireServiceHostAuth, async (req, res)
       .where(
         and(
           inArray(bookingServicesTable.service_id, hostIds),
-          eq(bookingServicesTable.status, "Active")
+          ne(bookingServicesTable.status, "Deleted")
         )
       );
 
@@ -577,7 +629,7 @@ router.get("/v1/service-host/earnings", requireServiceHostAuth, async (req, res)
       .where(
         and(
           inArray(bookingServicesTable.service_id, hostIds),
-          eq(bookingServicesTable.status, "Active")
+          ne(bookingServicesTable.status, "Deleted")
         )
       )
       .orderBy(desc(bookingServicesTable.created_at));

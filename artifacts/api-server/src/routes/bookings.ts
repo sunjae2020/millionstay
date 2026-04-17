@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, ilike, and, between, gte, lte, SQL, or, isNull, inArray } from "drizzle-orm";
+import { eq, ne, ilike, and, between, gte, lte, SQL, or, isNull, inArray } from "drizzle-orm";
 import {
   db,
   bookingsTable,
@@ -541,7 +541,7 @@ router.get("/v1/bookings/:id/contract", async (req, res): Promise<void> => {
 router.get("/v1/bookings/:id/services", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
   const rows = await db.select().from(bookingServicesTable)
-    .where(and(eq(bookingServicesTable.booking_id, id), eq(bookingServicesTable.status, "Active")));
+    .where(and(eq(bookingServicesTable.booking_id, id), ne(bookingServicesTable.status, "Deleted")));
   res.json({ data: rows, meta: { total: rows.length } });
 });
 
@@ -573,6 +573,34 @@ router.delete("/v1/bookings/:id/services/:svcId", async (req, res): Promise<void
   const svcId = Number(req.params.svcId);
   await db.update(bookingServicesTable).set({ status: "Deleted" }).where(eq(bookingServicesTable.id, svcId));
   res.json({ ok: true });
+});
+
+// PATCH /bookings/:id/services/:svcId — admin update service status/notes
+const ADMIN_ALLOWED_SVC_STATUSES = new Set(["Active", "Processing", "Completed", "Cancelled"]);
+router.patch("/v1/bookings/:id/services/:svcId", async (req, res): Promise<void> => {
+  const bookingId = Number(req.params.id);
+  const svcId = Number(req.params.svcId);
+  if (!bookingId || !svcId) { res.status(400).json({ error: "Invalid id" }); return; }
+  const [svc] = await db
+    .select({ id: bookingServicesTable.id })
+    .from(bookingServicesTable)
+    .where(and(eq(bookingServicesTable.id, svcId), eq(bookingServicesTable.booking_id, bookingId)));
+  if (!svc) { res.status(404).json({ error: "Service not found for this booking" }); return; }
+  const body = (req.body ?? {}) as { status?: string; notes?: string | null };
+  const updates: { status?: string; notes?: string | null } = {};
+  if (typeof body.status === "string") {
+    if (!ADMIN_ALLOWED_SVC_STATUSES.has(body.status)) {
+      res.status(400).json({ error: `Status must be one of: ${[...ADMIN_ALLOWED_SVC_STATUSES].join(", ")}` });
+      return;
+    }
+    updates.status = body.status;
+  }
+  if (body.notes !== undefined) {
+    updates.notes = body.notes === null || body.notes === "" ? null : String(body.notes).slice(0, 5000);
+  }
+  if (Object.keys(updates).length === 0) { res.status(400).json({ error: "No changes provided" }); return; }
+  const [updated] = await db.update(bookingServicesTable).set(updates).where(eq(bookingServicesTable.id, svcId)).returning();
+  res.json({ success: true, data: updated });
 });
 
 // GET /bookings/:id/services/:svcId/photos — admin view of service host photos
