@@ -14,7 +14,32 @@
     "email": "ที่อยู่อีเมล", "email_placeholder": "owner@example.com",
     "password": "รหัสผ่าน", "password_placeholder": "••••••••••••",
     "signing_in": "กำลังเข้าสู่ระบบ...", "sign_in_arrow": "เข้าสู่ระบบ →",
-    "invalid": "ข้อมูลรับรองไม่ถูกต้อง", "secure": "การเข้าถึงที่ปลอดภัย · MillionStay พอร์ทัลเจ้าของ"
+    "invalid": "ข้อมูลรับรองไม่ถูกต้อง", "secure": "การเข้าถึงที่ปลอดภัย · MillionStay พอร์ทัลเจ้าของ",
+    "apply_prompt": "เจ้าของทรัพย์สินใหม่?", "apply_cta": "สมัครเป็นพาร์ทเนอร์กับเรา"
+  },
+  "apply": {
+    "back_to_login": "กลับไปยังหน้าเข้าสู่ระบบ",
+    "title": "ให้ MillionStay ดูแลทรัพย์สินของคุณ",
+    "subtitle": "บอกรายละเอียดทรัพย์สินของคุณ ทีมงานของเราจะติดต่อกลับภายใน 1–2 วันทำการ",
+    "section_property": "ข้อมูลทรัพย์สิน",
+    "first_name": "ชื่อ", "last_name": "นามสกุล", "email": "อีเมล", "phone": "โทรศัพท์ (ถ้ามี)",
+    "property_address": "ที่อยู่ทรัพย์สิน",
+    "property_address_placeholder": "เช่น 285 La Trobe St, Melbourne",
+    "property_city": "เมือง / เขต",
+    "property_type": "ประเภททรัพย์สิน",
+    "select": "เลือก...",
+    "type_apartment": "อพาร์ตเมนต์", "type_house": "บ้านเดี่ยว", "type_townhouse": "ทาวน์เฮาส์",
+    "type_studio": "สตูดิโอ", "type_other": "อื่น ๆ",
+    "bedrooms": "จำนวนห้องนอน",
+    "message": "ข้อความ (ถ้ามี)",
+    "message_placeholder": "เช่น สถานะการเช่าปัจจุบัน ค่าเช่าที่ต้องการ ช่วงเวลาที่สะดวก",
+    "submit": "ส่งใบสมัคร →",
+    "submitting": "กำลังส่ง...",
+    "submit_error": "ส่งใบสมัครไม่สำเร็จ โปรดลองอีกครั้ง",
+    "privacy_note": "ข้อมูลของคุณจะถูกเก็บเป็นความลับและใช้เพื่อตอบกลับใบสมัครเท่านั้น",
+    "success_title": "ได้รับใบสมัครแล้ว!",
+    "success_message": "ขอบคุณค่ะ ทีมดูแลเจ้าของของเราจะตรวจสอบและติดต่อกลับภายใน 1–2 วันทำการ",
+    "reference_label": "หมายเลขอ้างอิง:"
   },
   "dashboard": {
     "welcome": "ยินดีต้อนรับกลับ", "account_prefix": "บัญชี:", "subtitle_default": "ภาพรวมพอร์ตทรัพย์สินของคุณ",

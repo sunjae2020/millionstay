@@ -14,7 +14,32 @@
     "email": "メールアドレス", "email_placeholder": "owner@example.com",
     "password": "パスワード", "password_placeholder": "••••••••••••",
     "signing_in": "ログイン中...", "sign_in_arrow": "ログイン →",
-    "invalid": "資格情報が無効です", "secure": "セキュアアクセス · MillionStay オーナーポータル"
+    "invalid": "資格情報が無効です", "secure": "セキュアアクセス · MillionStay オーナーポータル",
+    "apply_prompt": "新規オーナーの方へ", "apply_cta": "パートナー登録を申請"
+  },
+  "apply": {
+    "back_to_login": "ログイン画面へ戻る",
+    "title": "MillionStay で物件を運用しませんか",
+    "subtitle": "物件の概要をお知らせください。担当者が 1〜2 営業日以内にご連絡いたします。",
+    "section_property": "物件情報",
+    "first_name": "名", "last_name": "姓", "email": "メールアドレス", "phone": "電話番号(任意)",
+    "property_address": "物件住所",
+    "property_address_placeholder": "例:285 La Trobe St, Melbourne",
+    "property_city": "市区町村",
+    "property_type": "物件タイプ",
+    "select": "選択してください...",
+    "type_apartment": "アパート", "type_house": "戸建て", "type_townhouse": "タウンハウス",
+    "type_studio": "スタジオ", "type_other": "その他",
+    "bedrooms": "寝室数",
+    "message": "メッセージ(任意)",
+    "message_placeholder": "現在の入居状況、希望賃料、開始時期などをご記入ください。",
+    "submit": "申請を送信 →",
+    "submitting": "送信中...",
+    "submit_error": "申請を送信できませんでした。もう一度お試しください。",
+    "privacy_note": "ご入力の情報は厳重に管理し、申請対応のためにのみ使用します。",
+    "success_title": "申請を受け付けました!",
+    "success_message": "ありがとうございます。オーナー担当チームが 1〜2 営業日以内にご連絡いたします。",
+    "reference_label": "申請番号:"
   },
   "dashboard": {
     "welcome": "おかえりなさい", "account_prefix": "アカウント:", "subtitle_default": "物件ポートフォリオの概要",

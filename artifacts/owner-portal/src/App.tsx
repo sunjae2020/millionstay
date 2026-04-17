@@ -1,6 +1,7 @@
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import LoginPage from "@/pages/LoginPage";
+import OwnerApplicationPage from "@/pages/OwnerApplicationPage";
 import DashboardPage from "@/pages/DashboardPage";
 import PropertiesPage from "@/pages/PropertiesPage";
 import PropertyDetailPage from "@/pages/PropertyDetailPage";
@@ -19,7 +20,12 @@ function PortalRoutes() {
   }
 
   if (!user || user.portal_type !== "owner") {
-    return <LoginPage />;
+    return (
+      <Switch>
+        <Route path="/apply" component={OwnerApplicationPage} />
+        <Route component={LoginPage} />
+      </Switch>
+    );
   }
 
   return (

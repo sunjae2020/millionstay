@@ -14,7 +14,32 @@
     "email": "邮箱地址", "email_placeholder": "owner@example.com",
     "password": "密码", "password_placeholder": "••••••••••••",
     "signing_in": "登录中...", "sign_in_arrow": "登录 →",
-    "invalid": "凭证无效", "secure": "安全访问 · MillionStay 业主门户"
+    "invalid": "凭证无效", "secure": "安全访问 · MillionStay 业主门户",
+    "apply_prompt": "新业主?", "apply_cta": "申请与我们合作"
+  },
+  "apply": {
+    "back_to_login": "返回登录",
+    "title": "与 MillionStay 合作运营您的物业",
+    "subtitle": "请告诉我们您的物业概况,我们的团队将在 1–2 个工作日内与您联系。",
+    "section_property": "物业信息",
+    "first_name": "名", "last_name": "姓", "email": "邮箱", "phone": "电话(可选)",
+    "property_address": "物业地址",
+    "property_address_placeholder": "例如:285 La Trobe St, Melbourne",
+    "property_city": "城市 / 区",
+    "property_type": "物业类型",
+    "select": "请选择...",
+    "type_apartment": "公寓", "type_house": "独立屋", "type_townhouse": "联排别墅",
+    "type_studio": "开间", "type_other": "其他",
+    "bedrooms": "卧室数",
+    "message": "留言(可选)",
+    "message_placeholder": "如目前是否在租、期望租金、可上架时间等。",
+    "submit": "提交申请 →",
+    "submitting": "提交中...",
+    "submit_error": "申请提交失败,请稍后再试。",
+    "privacy_note": "您的信息将严格保密,仅用于回复您的申请。",
+    "success_title": "申请已收到!",
+    "success_message": "感谢您的提交。我们的业主关系团队将在 1–2 个工作日内审核并与您联系。",
+    "reference_label": "申请编号:"
   },
   "dashboard": {
     "welcome": "欢迎回来", "account_prefix": "账户:", "subtitle_default": "您的物业组合概览",

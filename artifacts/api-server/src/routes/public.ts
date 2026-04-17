@@ -16,6 +16,7 @@ import {
   spacePoliciesTable,
   contractsTable,
   blogPostsTable,
+  leadsTable,
 } from "@workspace/db";
 
 function daysBetween(a: string, b: string): number {
@@ -723,6 +724,69 @@ router.get("/v1/public/blog/:slug", async (req, res): Promise<void> => {
     .where(and(eq(blogPostsTable.slug, slug), eq(blogPostsTable.status, "Published"), isNull(blogPostsTable.deleted_at)));
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
   res.json(row);
+});
+
+/* ───────────────────────────────────────────────────────
+   POST /api/v1/public/owner-applications
+   Public form for prospective property owners to apply
+   to list their property with MillionStay.
+──────────────────────────────────────────────────────── */
+router.post("/v1/public/owner-applications", async (req, res): Promise<void> => {
+  const b = req.body ?? {};
+  const first_name = String(b.first_name ?? "").trim();
+  const last_name = String(b.last_name ?? "").trim();
+  const email = String(b.email ?? "").trim();
+  const phone = b.phone ? String(b.phone).trim() : null;
+  const property_address = b.property_address ? String(b.property_address).trim() : "";
+  const property_city = b.property_city ? String(b.property_city).trim() : "";
+  const property_type = b.property_type ? String(b.property_type).trim() : "";
+  const bedrooms = b.bedrooms !== undefined && b.bedrooms !== null && b.bedrooms !== ""
+    ? Number(b.bedrooms) : null;
+  const message = b.message ? String(b.message).trim() : "";
+
+  if (!first_name || !last_name) {
+    res.status(400).json({ error: "first_name and last_name are required" }); return;
+  }
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+    res.status(400).json({ error: "valid email is required" }); return;
+  }
+  if (!property_address) {
+    res.status(400).json({ error: "property_address is required" }); return;
+  }
+
+  const year = new Date().getFullYear();
+  const rows = await db.select({ lead_ref: leadsTable.lead_ref }).from(leadsTable);
+  const maxNum = rows
+    .filter((r) => r.lead_ref.startsWith(`LEAD-${year}-`))
+    .reduce((max, r) => {
+      const n = parseInt(r.lead_ref.split("-")[2] ?? "0", 10);
+      return n > max ? n : max;
+    }, 0);
+  const lead_ref = `LEAD-${year}-${String(maxNum + 1).padStart(5, "0")}`;
+
+  const descLines = [
+    `Property address: ${property_address}`,
+    property_city ? `City / Suburb: ${property_city}` : null,
+    property_type ? `Property type: ${property_type}` : null,
+    bedrooms != null && !Number.isNaN(bedrooms) ? `Bedrooms: ${bedrooms}` : null,
+  ].filter(Boolean).join("\n");
+
+  const [row] = await db.insert(leadsTable).values({
+    lead_ref,
+    first_name,
+    last_name,
+    email,
+    phone,
+    lead_source: "OwnerPortal",
+    inquiry_type: "OwnerApplication",
+    lead_status: "New",
+    message: message || null,
+    description: descLines || null,
+    manual_input: false,
+    status: "Active",
+  }).returning({ id: leadsTable.id, lead_ref: leadsTable.lead_ref });
+
+  res.status(201).json({ success: true, lead_ref: row?.lead_ref ?? lead_ref, id: row?.id });
 });
 
 export default router;
