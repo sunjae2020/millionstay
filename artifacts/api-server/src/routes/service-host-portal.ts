@@ -1,9 +1,11 @@
 import { Router, type IRouter } from "express";
-import { eq, and, desc, inArray } from "drizzle-orm";
+import multer from "multer";
+import { eq, and, desc, asc, inArray, sql } from "drizzle-orm";
 import {
   db,
   bookingsTable,
   bookingServicesTable,
+  bookingServicePhotosTable,
   spacesTable,
   propertiesTable,
   serviceHostsTable,
@@ -12,8 +14,19 @@ import {
   contactsTable,
 } from "@workspace/db";
 import { requirePartnerAuth, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth";
+import { isCloudinaryConfigured, uploadToCloudinary, deleteFromCloudinary } from "../utils/cloudinary";
 
 const router: IRouter = Router();
+const ALLOWED_PHOTO_MIME = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"]);
+const MAX_JOB_PHOTOS = 10;
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024, files: MAX_JOB_PHOTOS },
+  fileFilter: (_req, file, cb) => {
+    if (ALLOWED_PHOTO_MIME.has(file.mimetype.toLowerCase())) cb(null, true);
+    else cb(new Error(`Unsupported file type: ${file.mimetype}. Only image files are allowed.`));
+  },
+});
 
 function requireServiceHostAuth(req: any, res: any, next: any) {
   requirePartnerAuth(req, res, () => {
@@ -224,6 +237,198 @@ router.get("/v1/service-host/jobs", requireServiceHostAuth, async (req, res): Pr
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
+/* Helper: verify a job (booking_service) belongs to the logged-in service host */
+async function verifyJobAccess(accountId: number, jobId: number) {
+  const hostIds = await getHostServiceIds(accountId);
+  if (hostIds.length === 0) return null;
+  const [job] = await db
+    .select()
+    .from(bookingServicesTable)
+    .where(and(eq(bookingServicesTable.id, jobId), inArray(bookingServicesTable.service_id, hostIds)))
+    .limit(1);
+  return job ?? null;
+}
+
+/* GET /api/v1/service-host/jobs/:id  — job detail with photos */
+router.get("/v1/service-host/jobs/:id", requireServiceHostAuth, async (req, res): Promise<void> => {
+  try {
+    const partner = (req as any).partner as PartnerAuthPayload;
+    const jobId = Number(req.params.id);
+    if (!jobId) { res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid job id" } }); return; }
+
+    const job = await verifyJobAccess(partner.account_id, jobId);
+    if (!job) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Job not found" } }); return; }
+
+    const [booking] = await db
+      .select({
+        id: bookingsTable.id,
+        booking_ref: bookingsTable.booking_ref,
+        booking_status: bookingsTable.booking_status,
+        check_in_date: bookingsTable.check_in_date,
+        check_out_date: bookingsTable.check_out_date,
+        space_id: bookingsTable.space_id,
+        customer_notes: bookingsTable.customer_notes,
+      })
+      .from(bookingsTable)
+      .where(eq(bookingsTable.id, job.booking_id));
+
+    let space: any = null;
+    let property: any = null;
+    if (booking?.space_id) {
+      const [s] = await db.select().from(spacesTable).where(eq(spacesTable.id, booking.space_id));
+      space = s ?? null;
+      if (space?.property_id) {
+        const [p] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, space.property_id));
+        property = p ?? null;
+      }
+    }
+
+    const photos = await db
+      .select()
+      .from(bookingServicePhotosTable)
+      .where(eq(bookingServicePhotosTable.booking_service_id, jobId))
+      .orderBy(asc(bookingServicePhotosTable.created_at));
+
+    res.json({
+      success: true,
+      data: {
+        ...job,
+        booking: booking ?? null,
+        space,
+        property,
+        photos,
+        max_photos: MAX_JOB_PHOTOS,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to load job" } });
+  }
+});
+
+/* POST /api/v1/service-host/jobs/:id/photos — upload up to MAX_JOB_PHOTOS total */
+router.post(
+  "/v1/service-host/jobs/:id/photos",
+  requireServiceHostAuth,
+  (req, res, next) => {
+    upload.any()(req, res, (err) => {
+      if (err) { res.status(400).json({ success: false, error: { code: "UPLOAD_ERROR", message: err.message } }); return; }
+      next();
+    });
+  },
+  async (req, res): Promise<void> => {
+    try {
+      const partner = (req as any).partner as PartnerAuthPayload;
+      const jobId = Number(req.params.id);
+      if (!jobId) { res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid job id" } }); return; }
+
+      const job = await verifyJobAccess(partner.account_id, jobId);
+      if (!job) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Job not found" } }); return; }
+
+      if (!isCloudinaryConfigured()) {
+        res.status(503).json({ success: false, error: { code: "NOT_CONFIGURED", message: "Image upload not configured" } });
+        return;
+      }
+
+      const files = (req.files as Express.Multer.File[]) ?? [];
+      if (files.length === 0) { res.status(400).json({ success: false, error: { code: "NO_FILE", message: "No files provided" } }); return; }
+      if (files.length > MAX_JOB_PHOTOS) {
+        res.status(400).json({ success: false, error: { code: "TOO_MANY", message: `Cannot upload more than ${MAX_JOB_PHOTOS} files at once` } });
+        return;
+      }
+
+      // Upload all files to Cloudinary first
+      const uploads: Array<{ secure_url: string; thumbnail_url: string | null; public_id: string }> = [];
+      try {
+        for (const file of files) {
+          const uploaded = await uploadToCloudinary(file.buffer, { folder: "millionstay/jobs" });
+          uploads.push(uploaded);
+        }
+      } catch (uploadErr: any) {
+        // Cleanup partial uploads
+        for (const u of uploads) { try { await deleteFromCloudinary(u.public_id); } catch {} }
+        res.status(500).json({ success: false, error: { code: "UPLOAD_FAILED", message: uploadErr?.message ?? "Cloudinary upload failed" } });
+        return;
+      }
+
+      // Atomically reserve & insert with row lock to prevent exceeding MAX_JOB_PHOTOS
+      let results: any[] = [];
+      let limitError: { code: string; message: string } | null = null;
+      try {
+        await db.transaction(async (tx) => {
+          // Lock the parent booking_service row to serialize concurrent uploads
+          await tx.execute(sql`SELECT id FROM booking_services WHERE id = ${jobId} FOR UPDATE`);
+          const existing = await tx
+            .select({ id: bookingServicePhotosTable.id })
+            .from(bookingServicePhotosTable)
+            .where(eq(bookingServicePhotosTable.booking_service_id, jobId));
+          const remaining = MAX_JOB_PHOTOS - existing.length;
+          if (remaining <= 0) {
+            limitError = { code: "MAX_REACHED", message: `Maximum of ${MAX_JOB_PHOTOS} photos already uploaded` };
+            throw new Error("LIMIT");
+          }
+          if (uploads.length > remaining) {
+            limitError = { code: "TOO_MANY", message: `Can only upload ${remaining} more photo(s); current total is ${existing.length}/${MAX_JOB_PHOTOS}` };
+            throw new Error("LIMIT");
+          }
+          for (const uploaded of uploads) {
+            const [inserted] = await tx.insert(bookingServicePhotosTable).values({
+              booking_service_id: jobId,
+              file_url: uploaded.secure_url,
+              thumbnail_url: uploaded.thumbnail_url,
+              cloudinary_id: uploaded.public_id,
+              caption: null,
+              uploaded_by_type: "partner",
+              uploaded_by_id: partner.id ?? null,
+            }).returning();
+            results.push(inserted);
+          }
+        });
+      } catch (txErr) {
+        // Cleanup Cloudinary uploads if DB tx aborted
+        for (const u of uploads) { try { await deleteFromCloudinary(u.public_id); } catch {} }
+        if (limitError) {
+          res.status(400).json({ success: false, error: limitError });
+          return;
+        }
+        throw txErr;
+      }
+
+      res.status(201).json({ success: true, data: results });
+    } catch (err: any) {
+      console.error(err);
+      res.status(500).json({ success: false, error: { code: "UPLOAD_FAILED", message: err?.message ?? "Upload failed" } });
+    }
+  }
+);
+
+/* DELETE /api/v1/service-host/jobs/:id/photos/:photoId */
+router.delete("/v1/service-host/jobs/:id/photos/:photoId", requireServiceHostAuth, async (req, res): Promise<void> => {
+  try {
+    const partner = (req as any).partner as PartnerAuthPayload;
+    const jobId = Number(req.params.id);
+    const photoId = Number(req.params.photoId);
+    if (!jobId || !photoId) { res.status(400).json({ success: false, error: { code: "INVALID_ID", message: "Invalid id" } }); return; }
+
+    const job = await verifyJobAccess(partner.account_id, jobId);
+    if (!job) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Job not found" } }); return; }
+
+    const [photo] = await db
+      .select()
+      .from(bookingServicePhotosTable)
+      .where(and(eq(bookingServicePhotosTable.id, photoId), eq(bookingServicePhotosTable.booking_service_id, jobId)));
+    if (!photo) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Photo not found" } }); return; }
+
+    if (photo.cloudinary_id) await deleteFromCloudinary(photo.cloudinary_id);
+    await db.delete(bookingServicePhotosTable).where(eq(bookingServicePhotosTable.id, photoId));
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to delete photo" } });
   }
 });
 

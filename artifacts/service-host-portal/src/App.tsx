@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from "@/lib/auth";
 import LoginPage from "@/pages/LoginPage";
 import DashboardPage from "@/pages/DashboardPage";
 import JobsPage from "@/pages/JobsPage";
+import JobDetailPage from "@/pages/JobDetailPage";
 import SchedulePage from "@/pages/SchedulePage";
 import EarningsPage from "@/pages/EarningsPage";
 
@@ -25,6 +26,7 @@ function PortalRoutes() {
     <Switch>
       <Route path="/" component={DashboardPage} />
       <Route path="/jobs" component={JobsPage} />
+      <Route path="/jobs/:id" component={JobDetailPage} />
       <Route path="/schedule" component={SchedulePage} />
       <Route path="/earnings" component={EarningsPage} />
       <Route>

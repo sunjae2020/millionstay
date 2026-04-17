@@ -39,6 +39,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
     localStorage.setItem("partner_token", d.token);
     setUser(d.user);
+    const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+    if (window.location.pathname !== `${base}/`) {
+      window.history.replaceState(null, "", `${base}/`);
+    }
   }
 
   function logout() {

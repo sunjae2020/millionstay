@@ -21,7 +21,7 @@ import {
   getListBookingsQueryKey, getGetBookingQueryKey, getListBookingDocumentsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
-import { ArrowLeft, Save, FileText, CheckCircle2, XCircle, Upload, ExternalLink, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, FileText, CheckCircle2, XCircle, Upload, ExternalLink, Plus, Trash2, Camera } from "lucide-react";
 import { LookupSelect } from "@/components/LookupSelect";
 import { apiFetch } from "@/lib/apiFetch";
 
@@ -87,6 +87,17 @@ export default function BookingDetail() {
   const [docExpiry, setDocExpiry] = useState("");
   const [rejectReason, setRejectReason] = useState("");
   const [addServiceOpen, setAddServiceOpen] = useState(false);
+  const [photosSvcId, setPhotosSvcId] = useState<number | null>(null);
+  const [previewPhotoUrl, setPreviewPhotoUrl] = useState<string | null>(null);
+  const { data: photosData } = useQuery({
+    queryKey: ["booking-service-photos", id, photosSvcId],
+    queryFn: async () => {
+      const r = await apiFetch(`/api/v1/bookings/${id}/services/${photosSvcId}/photos`);
+      return r.json();
+    },
+    enabled: !!photosSvcId && !isNew,
+  });
+  const photos: any[] = photosData?.data ?? [];
   const [svcName, setSvcName] = useState("");
   const [svcType, setSvcType] = useState("one_time");
   const [svcQty, setSvcQty] = useState("1");
@@ -531,9 +542,14 @@ export default function BookingDetail() {
                           <td className="px-4 py-3 text-muted-foreground">{svc.billing_trigger ?? "—"}</td>
                           <td className="px-4 py-3 text-muted-foreground">{svc.frequency ?? "—"}</td>
                           <td className="px-4 py-3">
-                            <Button size="sm" variant="ghost" className="h-7 text-red-500 hover:text-red-700" onClick={() => removeServiceMutation.mutate(svc.id)}>
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
+                            <div className="flex items-center gap-1">
+                              <Button size="sm" variant="ghost" className="h-7" title="View job report photos" onClick={() => setPhotosSvcId(svc.id)}>
+                                <Camera className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button size="sm" variant="ghost" className="h-7 text-red-500 hover:text-red-700" onClick={() => removeServiceMutation.mutate(svc.id)}>
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -754,6 +770,48 @@ export default function BookingDetail() {
       </Dialog>
 
       {/* Reject Document Dialog */}
+      <Dialog open={photosSvcId !== null} onOpenChange={(open) => { if (!open) setPhotosSvcId(null); }}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Camera className="w-4 h-4" /> Job Report Photos
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground -mt-2">
+            Photos uploaded by the service host for this job ({photos.length} photo{photos.length !== 1 ? "s" : ""})
+          </p>
+          {photos.length === 0 ? (
+            <div className="border-2 border-dashed border-border rounded-lg p-12 text-center mt-2">
+              <Camera className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">No photos uploaded yet</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-2 max-h-[60vh] overflow-y-auto">
+              {photos.map((p) => (
+                <div key={p.id} className="aspect-square rounded-lg overflow-hidden border bg-gray-50">
+                  <img
+                    src={p.thumbnail_url ?? p.file_url}
+                    alt={p.caption ?? "Job photo"}
+                    loading="lazy"
+                    className="w-full h-full object-cover cursor-pointer hover:opacity-90"
+                    onClick={() => setPreviewPhotoUrl(p.file_url)}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {previewPhotoUrl && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setPreviewPhotoUrl(null)}
+        >
+          <img src={previewPhotoUrl} alt="Preview" className="max-w-full max-h-full rounded-lg" />
+        </div>
+      )}
+
       <Dialog open={rejectDocId !== null} onOpenChange={() => setRejectDocId(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>{t("booking.btn_reject_doc")}</DialogTitle></DialogHeader>

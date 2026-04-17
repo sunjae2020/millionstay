@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import { Link } from "wouter";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
-import { Briefcase, MapPin, Calendar, DollarSign, FileText } from "lucide-react";
+import { Briefcase, MapPin, Calendar, DollarSign, FileText, ChevronRight } from "lucide-react";
 
 interface Job {
   id: number;
@@ -105,7 +106,7 @@ export default function JobsPage() {
         ) : (
           <div className="space-y-3">
             {filtered.map((job) => (
-              <div key={job.id} className="bg-card border border-border rounded-xl p-5 hover:shadow-sm transition-shadow">
+              <Link key={job.id} href={`/jobs/${job.id}`} className="block bg-card border border-border rounded-xl p-5 hover:shadow-md hover:border-primary/40 transition cursor-pointer">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -171,9 +172,10 @@ export default function JobsPage() {
                         {job.quantity} × ${parseFloat(job.unit_price).toFixed(2)}
                       </p>
                     )}
+                    <ChevronRight className="w-4 h-4 text-muted-foreground inline-block mt-2" />
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}

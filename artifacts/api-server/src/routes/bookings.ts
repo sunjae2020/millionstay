@@ -15,6 +15,7 @@ import {
   contractProductsTable,
   contractLineItemsTable,
   accommodationCatalogTable,
+  bookingServicePhotosTable,
 } from "@workspace/db";
 import { logAction } from "../utils/auditLog";
 import {
@@ -572,6 +573,24 @@ router.delete("/v1/bookings/:id/services/:svcId", async (req, res): Promise<void
   const svcId = Number(req.params.svcId);
   await db.update(bookingServicesTable).set({ status: "Deleted" }).where(eq(bookingServicesTable.id, svcId));
   res.json({ ok: true });
+});
+
+// GET /bookings/:id/services/:svcId/photos — admin view of service host photos
+router.get("/v1/bookings/:id/services/:svcId/photos", async (req, res): Promise<void> => {
+  const bookingId = Number(req.params.id);
+  const svcId = Number(req.params.svcId);
+  if (!bookingId || !svcId) { res.status(400).json({ error: "Invalid id" }); return; }
+  const [svc] = await db
+    .select({ id: bookingServicesTable.id })
+    .from(bookingServicesTable)
+    .where(and(eq(bookingServicesTable.id, svcId), eq(bookingServicesTable.booking_id, bookingId)));
+  if (!svc) { res.status(404).json({ error: "Service not found for this booking" }); return; }
+  const photos = await db
+    .select()
+    .from(bookingServicePhotosTable)
+    .where(eq(bookingServicePhotosTable.booking_service_id, svcId))
+    .orderBy(bookingServicePhotosTable.created_at);
+  res.json({ success: true, data: photos });
 });
 
 router.patch("/v1/bookings/:id/reject", async (req, res): Promise<void> => {
