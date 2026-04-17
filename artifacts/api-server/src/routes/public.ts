@@ -18,6 +18,7 @@ import {
   blogPostsTable,
   leadsTable,
 } from "@workspace/db";
+import { insertLeadWithGeneratedRef } from "../lib/leadRef.js";
 
 function daysBetween(a: string, b: string): number {
   return Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86_400_000);
@@ -754,16 +755,6 @@ router.post("/v1/public/owner-applications", async (req, res): Promise<void> => 
     res.status(400).json({ error: "property_address is required" }); return;
   }
 
-  const year = new Date().getFullYear();
-  const rows = await db.select({ lead_ref: leadsTable.lead_ref }).from(leadsTable);
-  const maxNum = rows
-    .filter((r) => r.lead_ref.startsWith(`LEAD-${year}-`))
-    .reduce((max, r) => {
-      const n = parseInt(r.lead_ref.split("-")[2] ?? "0", 10);
-      return n > max ? n : max;
-    }, 0);
-  const lead_ref = `LEAD-${year}-${String(maxNum + 1).padStart(5, "0")}`;
-
   const descLines = [
     `Property address: ${property_address}`,
     property_city ? `City / Suburb: ${property_city}` : null,
@@ -771,8 +762,7 @@ router.post("/v1/public/owner-applications", async (req, res): Promise<void> => 
     bedrooms != null && !Number.isNaN(bedrooms) ? `Bedrooms: ${bedrooms}` : null,
   ].filter(Boolean).join("\n");
 
-  const [row] = await db.insert(leadsTable).values({
-    lead_ref,
+  const row = await insertLeadWithGeneratedRef({
     first_name,
     last_name,
     email,
@@ -784,9 +774,108 @@ router.post("/v1/public/owner-applications", async (req, res): Promise<void> => 
     description: descLines || null,
     manual_input: false,
     status: "Active",
-  }).returning({ id: leadsTable.id, lead_ref: leadsTable.lead_ref });
+  });
 
-  res.status(201).json({ success: true, lead_ref: row?.lead_ref ?? lead_ref, id: row?.id });
+  res.status(201).json({ success: true, lead_ref: row.lead_ref, id: row.id });
+});
+
+/* ───────────────────────────────────────────────────────
+   POST /api/v1/public/agent-applications
+   Public form for prospective real-estate / leasing agents
+   to apply to partner with MillionStay.
+──────────────────────────────────────────────────────── */
+router.post("/v1/public/agent-applications", async (req, res): Promise<void> => {
+  const b = req.body ?? {};
+  const first_name = String(b.first_name ?? "").trim();
+  const last_name = String(b.last_name ?? "").trim();
+  const email = String(b.email ?? "").trim();
+  const phone = b.phone ? String(b.phone).trim() : null;
+  const agency_name = b.agency_name ? String(b.agency_name).trim() : "";
+  const license_number = b.license_number ? String(b.license_number).trim() : "";
+  const coverage_area = b.coverage_area ? String(b.coverage_area).trim() : "";
+  const years_experience = b.years_experience !== undefined && b.years_experience !== null && b.years_experience !== ""
+    ? Number(b.years_experience) : null;
+  const message = b.message ? String(b.message).trim() : "";
+
+  if (!first_name || !last_name) {
+    res.status(400).json({ error: "first_name and last_name are required" }); return;
+  }
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+    res.status(400).json({ error: "valid email is required" }); return;
+  }
+
+  const desc = [
+    agency_name ? `Agency: ${agency_name}` : null,
+    license_number ? `License #: ${license_number}` : null,
+    coverage_area ? `Coverage area: ${coverage_area}` : null,
+    years_experience != null && !Number.isNaN(years_experience) ? `Years experience: ${years_experience}` : null,
+  ].filter(Boolean).join("\n");
+
+  const row = await insertLeadWithGeneratedRef({
+    first_name, last_name, email, phone,
+    lead_source: "AgentPortal",
+    inquiry_type: "AgentApplication",
+    lead_status: "New",
+    message: message || null,
+    description: desc || null,
+    manual_input: false,
+    status: "Active",
+  });
+
+  res.status(201).json({ success: true, lead_ref: row.lead_ref, id: row.id });
+});
+
+/* ───────────────────────────────────────────────────────
+   POST /api/v1/public/service-host-applications
+   Public form for prospective service hosts (cleaners,
+   maintenance, linen) to apply to partner with MillionStay.
+──────────────────────────────────────────────────────── */
+router.post("/v1/public/service-host-applications", async (req, res): Promise<void> => {
+  const b = req.body ?? {};
+  const first_name = String(b.first_name ?? "").trim();
+  const last_name = String(b.last_name ?? "").trim();
+  const email = String(b.email ?? "").trim();
+  const phone = b.phone ? String(b.phone).trim() : null;
+  const business_name = b.business_name ? String(b.business_name).trim() : "";
+  const abn = b.abn ? String(b.abn).trim() : "";
+  const service_types: string[] = Array.isArray(b.service_types)
+    ? b.service_types.map((s: unknown) => String(s).trim()).filter(Boolean)
+    : (b.service_types ? [String(b.service_types).trim()] : []);
+  const service_area = b.service_area ? String(b.service_area).trim() : "";
+  const years_experience = b.years_experience !== undefined && b.years_experience !== null && b.years_experience !== ""
+    ? Number(b.years_experience) : null;
+  const message = b.message ? String(b.message).trim() : "";
+
+  if (!first_name || !last_name) {
+    res.status(400).json({ error: "first_name and last_name are required" }); return;
+  }
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+    res.status(400).json({ error: "valid email is required" }); return;
+  }
+  if (service_types.length === 0) {
+    res.status(400).json({ error: "at least one service_type is required" }); return;
+  }
+
+  const desc = [
+    `Services offered: ${service_types.join(", ")}`,
+    business_name ? `Business: ${business_name}` : null,
+    abn ? `ABN: ${abn}` : null,
+    service_area ? `Service area: ${service_area}` : null,
+    years_experience != null && !Number.isNaN(years_experience) ? `Years experience: ${years_experience}` : null,
+  ].filter(Boolean).join("\n");
+
+  const row = await insertLeadWithGeneratedRef({
+    first_name, last_name, email, phone,
+    lead_source: "ServiceHostPortal",
+    inquiry_type: "ServiceHostApplication",
+    lead_status: "New",
+    message: message || null,
+    description: desc || null,
+    manual_input: false,
+    status: "Active",
+  });
+
+  res.status(201).json({ success: true, lead_ref: row.lead_ref, id: row.id });
 });
 
 export default router;

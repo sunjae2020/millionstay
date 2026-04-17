@@ -10,21 +10,9 @@ import {
   DeleteLeadParams,
   ConvertLeadBody,
 } from "@workspace/api-zod";
+import { insertLeadWithGeneratedRef } from "../lib/leadRef.js";
 
 const router: IRouter = Router();
-
-async function generateLeadRef(): Promise<string> {
-  const year = new Date().getFullYear();
-  const rows = await db.select({ lead_ref: leadsTable.lead_ref })
-    .from(leadsTable)
-    .orderBy(leadsTable.id);
-  const thisYearRefs = rows.filter((r) => r.lead_ref.startsWith(`LEAD-${year}-`));
-  const maxNum = thisYearRefs.reduce((max, r) => {
-    const num = parseInt(r.lead_ref.split("-")[2] ?? "0", 10);
-    return num > max ? num : max;
-  }, 0);
-  return `LEAD-${year}-${String(maxNum + 1).padStart(5, "0")}`;
-}
 
 router.get("/v1/leads", async (req, res): Promise<void> => {
   const parsed = ListLeadsQueryParams.safeParse(req.query);
@@ -86,8 +74,12 @@ router.get("/v1/leads", async (req, res): Promise<void> => {
 router.post("/v1/leads", async (req, res): Promise<void> => {
   const parsed = CreateLeadBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
-  const lead_ref = await generateLeadRef();
-  const [row] = await db.insert(leadsTable).values({ ...parsed.data, lead_ref }).returning();
+  const inserted = await insertLeadWithGeneratedRef(parsed.data);
+  const [row] = await db
+    .select()
+    .from(leadsTable)
+    .where(eq(leadsTable.id, inserted.id))
+    .limit(1);
   res.status(201).json(row);
 });
 

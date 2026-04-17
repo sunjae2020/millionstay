@@ -43,7 +43,9 @@
     "signing_in": "Signing in...",
     "sign_in_arrow": "Sign in →",
     "invalid": "Invalid credentials",
-    "secure": "Secure access · MillionStay Service Host Portal"
+    "secure": "Secure access · MillionStay Service Host Portal",
+    "apply_prompt": "Want to offer your services?",
+    "apply_cta": "Apply to become a service host"
   },
   "trigger": {
     "at_checkin": "At Check-In",
@@ -159,5 +161,38 @@
     "Cancelled": "Cancelled",
     "Processing": "Processing",
     "Completed": "Completed"
+  },
+  "apply": {
+    "apply_prompt": "Want to offer your services?",
+    "apply_cta": "Apply to become a service host",
+    "title": "Apply to become a MillionStay service host",
+    "subtitle": "Tell us about the services you offer and we'll be in touch within 1-2 business days.",
+    "back_to_login": "Back to sign in",
+    "first_name": "First name",
+    "last_name": "Last name",
+    "email": "Email address",
+    "phone": "Phone",
+    "section_services": "Services & business",
+    "service_types": "Services you provide",
+    "service_types_required": "Please select at least one service",
+    "service_cleaning": "Cleaning",
+    "service_maintenance": "Maintenance",
+    "service_linen": "Linen",
+    "service_inspection": "Inspection",
+    "service_other": "Other",
+    "business_name": "Business name",
+    "abn": "ABN / Tax number",
+    "abn_placeholder": "11 222 333 444",
+    "service_area": "Service area",
+    "years_experience": "Years of experience",
+    "message": "Message",
+    "message_placeholder": "Tell us about your team, capacity, or anything else we should know.",
+    "submit": "Submit application →",
+    "submitting": "Submitting...",
+    "submit_error": "Could not submit your application. Please try again.",
+    "success_title": "Application received!",
+    "success_message": "Thanks for your interest in becoming a MillionStay service host. Our operations team will review your application and reach out within 1-2 business days.",
+    "reference_label": "Your reference:",
+    "privacy_note": "By submitting, you agree to be contacted by MillionStay regarding your application."
   }
 }

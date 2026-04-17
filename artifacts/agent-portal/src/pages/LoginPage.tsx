@@ -1,4 +1,5 @@
 import { useState, FormEvent } from "react";
+import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/auth";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -155,7 +156,15 @@ export default function LoginPage() {
               </button>
             </form>
 
-            <div className="mt-6 pt-5 border-t border-slate-200 text-center">
+            <div className="mt-6 pt-5 border-t border-slate-200 text-center space-y-3">
+              <p className="text-sm text-slate-600">
+                {t("login.apply_prompt")}{" "}
+                <Link href="/apply">
+                  <a className="font-semibold hover:underline" style={{ color: BRAND }}>
+                    {t("login.apply_cta")} →
+                  </a>
+                </Link>
+              </p>
               <p className="text-center text-xs text-slate-400">
                 {t("login.secure")}
               </p>
