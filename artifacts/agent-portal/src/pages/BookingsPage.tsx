@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
 import { Search, ChevronRight } from "lucide-react";
@@ -26,6 +27,7 @@ const STATUS_CLS: Record<string, string> = {
 };
 
 export default function BookingsPage() {
+  const { t } = useTranslation();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -55,8 +57,8 @@ export default function BookingsPage() {
   return (
     <Layout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">My Bookings</h1>
-        <p className="text-muted-foreground text-sm mt-1">Bookings you have been assigned as agent</p>
+        <h1 className="text-2xl font-bold text-foreground">{t("bookings.title")}</h1>
+        <p className="text-muted-foreground text-sm mt-1">{t("bookings.subtitle")}</p>
       </div>
 
       <div className="flex gap-3 mb-6">
@@ -65,7 +67,7 @@ export default function BookingsPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by tenant, property, or reference..."
+            placeholder={t("bookings.search_placeholder")}
             className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
           />
         </div>
@@ -74,9 +76,9 @@ export default function BookingsPage() {
           onChange={(e) => setStatusFilter(e.target.value)}
           className="px-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         >
-          <option value="">All statuses</option>
+          <option value="">{t("common.all_statuses")}</option>
           {["Draft", "Confirmed", "Active", "CheckedOut", "Cancelled"].map((s) => (
-            <option key={s} value={s}>{s}</option>
+            <option key={s} value={s}>{t(`status.${s}`, s)}</option>
           ))}
         </select>
       </div>
@@ -92,21 +94,21 @@ export default function BookingsPage() {
         <table className="w-full text-sm min-w-[640px]">
           <thead className="bg-muted/50 border-b border-border">
             <tr>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Ref</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Tenant</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Property / Space</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Check-in</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Rate</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("bookings.col_ref")}</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("bookings.col_tenant")}</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("bookings.col_property_space")}</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("bookings.col_checkin")}</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("bookings.col_rate")}</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("bookings.col_status")}</th>
               <th className="w-8"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {loading && (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Loading...</td></tr>
+              <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">{t("common.loading")}</td></tr>
             )}
             {!loading && filtered.length === 0 && (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No bookings found</td></tr>
+              <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">{t("bookings.no_bookings")}</td></tr>
             )}
             {filtered.map((b) => (
               <tr key={b.id} className="hover:bg-muted/30 transition-colors">
@@ -127,7 +129,7 @@ export default function BookingsPage() {
                 </td>
                 <td className="px-4 py-3">
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_CLS[b.booking_status] ?? "bg-gray-100 text-gray-600"}`}>
-                    {b.booking_status}
+                    {t(`status.${b.booking_status}`, b.booking_status)}
                   </span>
                 </td>
                 <td className="px-4 py-3">

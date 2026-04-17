@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
 import { DollarSign, TrendingUp, Clock } from "lucide-react";
@@ -48,6 +49,7 @@ const INV_STATUS_CLS: Record<string, string> = {
 };
 
 export default function RevenuePage() {
+  const { t } = useTranslation();
   const [data, setData] = useState<RevenueData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -62,8 +64,8 @@ export default function RevenuePage() {
   return (
     <Layout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Revenue</h1>
-        <p className="text-muted-foreground text-sm mt-1">Rental income and invoice history for your properties</p>
+        <h1 className="text-2xl font-bold text-foreground">{t("revenue.title")}</h1>
+        <p className="text-muted-foreground text-sm mt-1">{t("revenue.subtitle")}</p>
       </div>
 
       {error && (
@@ -75,32 +77,32 @@ export default function RevenuePage() {
       {data && (
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-8">
-            <StatCard label="Total Collected" value={`$${Number(data.total_revenue ?? 0).toLocaleString()}`} icon={DollarSign} iconCls="bg-primary/10 text-primary" />
-            <StatCard label="Pending" value={`$${Number(data.pending_revenue ?? 0).toLocaleString()}`} icon={Clock} iconCls="bg-yellow-50 text-yellow-600" />
-            <StatCard label="Total Invoices" value={String(data.invoices.length)} icon={TrendingUp} iconCls="bg-blue-50 text-blue-600" />
+            <StatCard label={t("revenue.total_collected")} value={`$${Number(data.total_revenue ?? 0).toLocaleString()}`} icon={DollarSign} iconCls="bg-primary/10 text-primary" />
+            <StatCard label={t("revenue.pending")} value={`$${Number(data.pending_revenue ?? 0).toLocaleString()}`} icon={Clock} iconCls="bg-yellow-50 text-yellow-600" />
+            <StatCard label={t("revenue.total_invoices")} value={String(data.invoices.length)} icon={TrendingUp} iconCls="bg-blue-50 text-blue-600" />
           </div>
 
           <div className="bg-card border border-card-border rounded-xl overflow-hidden">
             <div className="px-6 py-4 border-b border-border">
-              <h2 className="font-semibold text-foreground">Invoice History</h2>
+              <h2 className="font-semibold text-foreground">{t("revenue.invoice_history")}</h2>
             </div>
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b border-border">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Invoice</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Property / Space</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Due</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Amount Due</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Amount Paid</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("revenue.col_invoice")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("revenue.col_property_space")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("revenue.col_due")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("revenue.col_amount_due")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("revenue.col_amount_paid")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("revenue.col_status")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {loading && (
-                  <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Loading...</td></tr>
+                  <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">{t("common.loading")}</td></tr>
                 )}
                 {!loading && data.invoices.length === 0 && (
-                  <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No invoices yet</td></tr>
+                  <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">{t("revenue.no_invoices")}</td></tr>
                 )}
                 {data.invoices.map((inv) => (
                   <tr key={inv.id} className="hover:bg-muted/30 transition-colors">
@@ -120,7 +122,7 @@ export default function RevenuePage() {
                     </td>
                     <td className="px-4 py-3">
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${INV_STATUS_CLS[inv.status] ?? "bg-gray-100 text-gray-600"}`}>
-                        {inv.status}
+                        {t(`status.${inv.status}`, inv.status)}
                       </span>
                     </td>
                   </tr>

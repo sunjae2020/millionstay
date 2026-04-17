@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
 import { MapPin, Home } from "lucide-react";
@@ -23,6 +24,7 @@ interface Property {
 }
 
 export default function PropertiesPage() {
+  const { t } = useTranslation();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -46,8 +48,8 @@ export default function PropertiesPage() {
   return (
     <Layout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">My Properties</h1>
-        <p className="text-muted-foreground text-sm mt-1">Your property portfolio managed by MillionStay</p>
+        <h1 className="text-2xl font-bold text-foreground">{t("properties.title")}</h1>
+        <p className="text-muted-foreground text-sm mt-1">{t("properties.subtitle")}</p>
       </div>
 
       {error && (
@@ -82,17 +84,17 @@ export default function PropertiesPage() {
                   </div>
                 </div>
                 <span className={`text-xs font-medium px-3 py-1 rounded-full ${property.approval_status === "Approved" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
-                  {property.approval_status}
+                  {t(`status.${property.approval_status}`, property.approval_status)}
                 </span>
               </div>
             </div>
 
             <div className="p-6">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-4">
-                Spaces ({property.spaces.length})
+                {t("properties.spaces_count", { count: property.spaces.length })}
               </p>
               {property.spaces.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No spaces configured</p>
+                <p className="text-sm text-muted-foreground">{t("properties.no_spaces")}</p>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                   {property.spaces.map((space) => (
@@ -100,7 +102,7 @@ export default function PropertiesPage() {
                       <p className="font-medium text-foreground text-sm truncate">{space.name}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">{space.space_type}</p>
                       <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full mt-2 ${SPACE_STATUS_CLS[space.status] ?? "bg-gray-100 text-gray-600"}`}>
-                        {space.status}
+                        {t(`status.${space.status}`, space.status)}
                       </span>
                     </div>
                   ))}
@@ -112,7 +114,7 @@ export default function PropertiesPage() {
 
         {!loading && properties.length === 0 && (
           <div className="text-center text-muted-foreground py-12">
-            No properties found for your account.
+            {t("properties.no_properties_account")}
           </div>
         )}
       </div>

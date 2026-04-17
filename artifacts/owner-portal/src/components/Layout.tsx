@@ -1,24 +1,25 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/auth";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import {
   LayoutDashboard, Building2, BookOpen, TrendingUp,
   LogOut, User, ChevronRight, Menu, X,
 } from "lucide-react";
 
-const navItems = [
-  { href: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/properties", icon: Building2, label: "My Properties" },
-  { href: "/bookings", icon: BookOpen, label: "Occupancy" },
-  { href: "/revenue", icon: TrendingUp, label: "Revenue" },
-];
-
-const PORTAL_LABEL = "Owner Portal";
-
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const navItems = [
+    { href: "/", icon: LayoutDashboard, label: t("nav.dashboard") },
+    { href: "/properties", icon: Building2, label: t("nav.properties") },
+    { href: "/bookings", icon: BookOpen, label: t("nav.occupancy") },
+    { href: "/revenue", icon: TrendingUp, label: t("nav.revenue") },
+  ];
 
   useEffect(() => {
     setSidebarOpen(false);
@@ -67,7 +68,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         <div className="px-4 py-2 border-b border-sidebar-border">
           <p className="text-[10px] font-semibold tracking-widest uppercase text-sidebar-accent-foreground/60">
-            {PORTAL_LABEL}
+            {t("portal_label")}
           </p>
         </div>
 
@@ -92,8 +93,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="p-3 border-t border-sidebar-border">
-          <div className="flex items-center gap-3 px-3 py-2 rounded-lg mb-1">
+        <div className="p-3 border-t border-sidebar-border space-y-1">
+          <div className="flex items-center gap-3 px-3 py-2 rounded-lg">
             <div className="w-8 h-8 rounded-full bg-sidebar-accent flex items-center justify-center flex-shrink-0">
               <User className="w-4 h-4 text-sidebar-accent-foreground" />
             </div>
@@ -104,12 +105,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <div className="text-xs text-sidebar-accent-foreground truncate">{user?.email}</div>
             </div>
           </div>
+          <div className="px-1">
+            <LanguageSwitcher variant="sidebar" />
+          </div>
           <button
             onClick={logout}
             className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm text-sidebar-accent-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
           >
             <LogOut className="w-4 h-4" />
-            Sign out
+            {t("nav.sign_out")}
           </button>
         </div>
       </aside>
@@ -127,6 +131,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
             alt="MillionStay"
             className="h-6 w-auto object-contain"
           />
+          <div className="ml-auto">
+            <LanguageSwitcher />
+          </div>
         </header>
 
         <main className="flex-1 overflow-y-auto">

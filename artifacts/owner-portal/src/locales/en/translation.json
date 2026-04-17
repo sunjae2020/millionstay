@@ -1,0 +1,111 @@
+{
+  "portal_label": "Owner Portal",
+  "lang": {
+    "label": "Language",
+    "en": "English",
+    "ko": "한국어",
+    "zh": "中文",
+    "ja": "日本語",
+    "th": "ภาษาไทย"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "properties": "My Properties",
+    "occupancy": "Occupancy",
+    "revenue": "Revenue",
+    "sign_out": "Sign out"
+  },
+  "common": {
+    "loading": "Loading...",
+    "all_statuses": "All statuses",
+    "ongoing": "Ongoing",
+    "tbd": "TBD"
+  },
+  "login": {
+    "headline_1": "Your properties,",
+    "headline_2": "your",
+    "headline_emphasis": "insights.",
+    "tagline": "Monitor occupancy, track revenue, and stay informed on your property performance — all in one place.",
+    "stat_properties": "Properties",
+    "stat_bookings": "Bookings",
+    "stat_uptime": "Uptime",
+    "copyright": "© 2026 MillionStay · All rights reserved",
+    "sign_in": "Sign in",
+    "subtitle": "Sign in to view your properties",
+    "email": "Email address",
+    "email_placeholder": "owner@example.com",
+    "password": "Password",
+    "password_placeholder": "••••••••••••",
+    "signing_in": "Signing in...",
+    "sign_in_arrow": "Sign in →",
+    "invalid": "Invalid credentials",
+    "secure": "Secure access · MillionStay Owner Portal"
+  },
+  "dashboard": {
+    "welcome": "Welcome back",
+    "account_prefix": "Account:",
+    "subtitle_default": "Your property portfolio overview",
+    "stat_properties": "Properties",
+    "stat_spaces_sub": "{{count}} spaces",
+    "stat_active_bookings": "Active Bookings",
+    "stat_monthly_revenue": "Est. Monthly Revenue",
+    "stat_total_properties": "Total Properties",
+    "recent_bookings": "Recent Bookings",
+    "view_all": "View all",
+    "no_bookings": "No bookings yet.",
+    "my_properties": "My Properties",
+    "no_properties": "No properties found.",
+    "checkin_label": "Check-in"
+  },
+  "properties": {
+    "title": "My Properties",
+    "subtitle": "Your property portfolio managed by MillionStay",
+    "spaces_count": "Spaces ({{count}})",
+    "no_spaces": "No spaces configured",
+    "no_properties_account": "No properties found for your account."
+  },
+  "bookings": {
+    "title": "Occupancy",
+    "subtitle": "Current and past tenant occupancy across your properties",
+    "masking_notice": "Tenant details are partially masked to protect privacy. Full details are managed by MillionStay.",
+    "col_ref": "Ref",
+    "col_tenant": "Tenant",
+    "col_property_space": "Property / Space",
+    "col_period": "Period",
+    "col_rate": "Rate",
+    "col_status": "Status",
+    "masked": "(masked)",
+    "no_bookings": "No bookings found"
+  },
+  "revenue": {
+    "title": "Revenue",
+    "subtitle": "Rental income and invoice history for your properties",
+    "total_collected": "Total Collected",
+    "pending": "Pending",
+    "total_invoices": "Total Invoices",
+    "invoice_history": "Invoice History",
+    "col_invoice": "Invoice",
+    "col_property_space": "Property / Space",
+    "col_due": "Due",
+    "col_amount_due": "Amount Due",
+    "col_amount_paid": "Amount Paid",
+    "col_status": "Status",
+    "no_invoices": "No invoices yet"
+  },
+  "status": {
+    "Confirmed": "Confirmed",
+    "Active": "Active",
+    "Draft": "Draft",
+    "CheckedOut": "Checked Out",
+    "Cancelled": "Cancelled",
+    "Approved": "Approved",
+    "Pending": "Pending",
+    "Available": "Available",
+    "Occupied": "Occupied",
+    "Maintenance": "Maintenance",
+    "Inactive": "Inactive",
+    "Paid": "Paid",
+    "Overdue": "Overdue",
+    "Void": "Void"
+  }
+}

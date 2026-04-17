@@ -1,0 +1,62 @@
+{
+  "portal_label": "พอร์ทัลตัวแทน",
+  "lang": { "label": "ภาษา", "en": "English", "ko": "한국어", "zh": "中文", "ja": "日本語", "th": "ภาษาไทย" },
+  "nav": { "dashboard": "แดชบอร์ด", "my_bookings": "การจองของฉัน", "properties": "ทรัพย์สิน", "commission": "ค่าคอมมิชชัน", "sign_out": "ออกจากระบบ" },
+  "common": { "loading": "กำลังโหลด...", "all_statuses": "ทุกสถานะ", "ongoing": "กำลังดำเนินการ", "tbd": "รอกำหนด", "back": "กลับ" },
+  "login": {
+    "headline_1": "เติบโตธุรกิจของคุณ", "headline_2": "ด้วย", "headline_emphasis": "ความมั่นใจ.",
+    "tagline": "บริหารรายการ ติดตามค่าคอมมิชชัน และเชื่อมต่อกับลูกค้าทั้งหมดในที่เดียว",
+    "stat_properties": "ทรัพย์สิน", "stat_satisfaction": "ความพึงพอใจ", "stat_support": "การสนับสนุน",
+    "copyright": "© 2026 MillionStay · สงวนลิขสิทธิ์",
+    "sign_in": "เข้าสู่ระบบ", "subtitle": "เข้าสู่ระบบเพื่อจัดการรายการของคุณ",
+    "email": "ที่อยู่อีเมล", "email_placeholder": "agent@example.com",
+    "password": "รหัสผ่าน", "password_placeholder": "••••••••••••",
+    "signing_in": "กำลังเข้าสู่ระบบ...", "sign_in_arrow": "เข้าสู่ระบบ →",
+    "invalid": "ข้อมูลรับรองไม่ถูกต้อง", "secure": "การเข้าถึงที่ปลอดภัย · MillionStay พอร์ทัลตัวแทน"
+  },
+  "dashboard": {
+    "welcome": "ยินดีต้อนรับกลับ", "account_prefix": "บัญชี:", "subtitle_default": "สรุปผลงานของคุณ",
+    "stat_total_bookings": "การจองทั้งหมด", "stat_active_bookings": "การจองที่ใช้งาน",
+    "stat_rent_managed": "ค่าเช่าที่บริหาร", "stat_est_commission": "ค่าคอมมิชชันโดยประมาณ",
+    "rate_percent": "อัตรา {{rate}}%", "rate_flat": "${{amount}} ต่อการจอง",
+    "recent_bookings": "การจองล่าสุด", "no_bookings": "ยังไม่มีการจองที่ได้รับมอบหมาย",
+    "view_all": "ดูทั้งหมด", "booking_label": "การจอง", "checkin_label": "เช็คอิน"
+  },
+  "bookings": {
+    "title": "การจองของฉัน", "subtitle": "การจองที่คุณได้รับเป็นตัวแทน",
+    "search_placeholder": "ค้นหาตามผู้เช่า ทรัพย์สิน หรือเลขอ้างอิง...",
+    "col_ref": "อ้างอิง", "col_tenant": "ผู้เช่า", "col_property_space": "ทรัพย์สิน / พื้นที่",
+    "col_checkin": "เช็คอิน", "col_rate": "อัตรา", "col_status": "สถานะ",
+    "no_bookings": "ไม่พบการจอง"
+  },
+  "booking_detail": {
+    "back": "กลับไปยังการจอง", "booking_label": "การจอง", "tenant_info": "ข้อมูลผู้เช่า",
+    "property": "ทรัพย์สิน", "dates_financials": "วันที่และการเงิน",
+    "weekly_rate": "อัตรารายสัปดาห์", "total_rent": "ค่าเช่ารวม", "bond": "เงินประกัน",
+    "admin_fee": "ค่าธรรมเนียมจัดการ", "cleaning_fee": "ค่าทำความสะอาด", "contract": "สัญญา",
+    "status": "สถานะ", "start_date": "วันที่เริ่ม", "end_date": "วันที่สิ้นสุด",
+    "special_conditions": "เงื่อนไขพิเศษ", "not_found": "ไม่พบการจอง"
+  },
+  "properties": {
+    "title": "ทรัพย์สิน", "subtitle": "ทรัพย์สินที่คุณบริหารการจอง",
+    "search_placeholder": "ค้นหาตามชื่อทรัพย์สิน เมือง หรือรัฐ...",
+    "your_spaces": "พื้นที่ของคุณ ({{count}})", "unknown_property": "ทรัพย์สินไม่ทราบชื่อ",
+    "no_properties": "ไม่พบทรัพย์สินที่มีการจองที่ใช้งาน"
+  },
+  "commission": {
+    "title": "ค่าคอมมิชชัน", "subtitle": "รายละเอียดรายได้จากทุกการจองที่บริหาร",
+    "your_rate_prefix": "อัตราค่าคอมมิชชันของคุณ:", "rate_percent": "{{rate}}% ของค่าเช่ารวม",
+    "rate_flat": "${{amount}} ต่อการจอง",
+    "stat_total_earned": "รายได้รวม", "stat_all_bookings": "การจองทั้งหมด",
+    "stat_paid": "การจองที่จ่ายแล้ว", "stat_pending": "รอชำระ",
+    "breakdown": "รายละเอียดการจอง",
+    "col_ref": "เลขที่จอง", "col_checkin": "เช็คอิน", "col_checkout": "เช็คเอาต์",
+    "col_rent": "ค่าเช่า", "col_commission": "ค่าคอมมิชชัน", "col_status": "สถานะ",
+    "no_data": "ยังไม่มีข้อมูลค่าคอมมิชชัน"
+  },
+  "status": {
+    "Confirmed": "ยืนยันแล้ว", "Active": "ใช้งาน", "Draft": "ฉบับร่าง", "CheckedOut": "เช็คเอาต์แล้ว",
+    "Cancelled": "ยกเลิก", "Available": "ว่าง", "Occupied": "ใช้งานอยู่",
+    "Maintenance": "ซ่อมบำรุง", "Inactive": "ไม่ใช้งาน"
+  }
+}

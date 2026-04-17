@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useRoute } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiFetch, apiGet } from "@/lib/api";
 import {
@@ -66,14 +67,8 @@ function formatDate(d: string | null | undefined) {
   return new Date(d).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
 }
 
-function triggerLabel(t: string) {
-  if (t === "at_checkin") return "At Check-In";
-  if (t === "at_checkout") return "At Check-Out";
-  if (t === "at_booking") return "At Booking";
-  return t;
-}
-
 export default function JobDetailPage() {
+  const { t } = useTranslation();
   const [, params] = useRoute("/jobs/:id");
   const jobId = params?.id ? Number(params.id) : 0;
 
@@ -99,9 +94,9 @@ export default function JobDetailPage() {
         setStatusDraft(r.data.status || "Active");
         setNotesDraft(r.data.notes ?? "");
       }
-      else setError("Failed to load job");
+      else setError(t("job_detail.load_failed"));
     } catch {
-      setError("Failed to load job");
+      setError(t("job_detail.load_failed"));
     } finally {
       setLoading(false);
     }
@@ -113,7 +108,7 @@ export default function JobDetailPage() {
     if (!files || files.length === 0 || !job) return;
     const remaining = job.max_photos - job.photos.length;
     if (remaining <= 0) {
-      setError(`Maximum of ${job.max_photos} photos already uploaded`);
+      setError(t("job_detail.max_reached", { max: job.max_photos }));
       return;
     }
     const selected = Array.from(files).slice(0, remaining);
@@ -130,12 +125,12 @@ export default function JobDetailPage() {
       });
       const data = await r.json();
       if (!r.ok || !data.success) {
-        setError(data?.error?.message ?? "Upload failed");
+        setError(data?.error?.message ?? t("job_detail.upload_failed"));
       } else {
         await load();
       }
     } catch {
-      setError("Upload failed");
+      setError(t("job_detail.upload_failed"));
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -155,14 +150,14 @@ export default function JobDetailPage() {
       });
       const data = await r.json();
       if (!r.ok || !data.success) {
-        setError(data?.error?.message ?? "Failed to save");
+        setError(data?.error?.message ?? t("job_detail.save_failed"));
       } else {
         setJob((j) => (j ? { ...j, status: data.data.status, notes: data.data.notes } : j));
-        setSavedMsg("Saved");
+        setSavedMsg(t("common.saved"));
         setTimeout(() => setSavedMsg(""), 2000);
       }
     } catch {
-      setError("Failed to save");
+      setError(t("job_detail.save_failed"));
     } finally {
       setSavingMeta(false);
     }
@@ -171,13 +166,13 @@ export default function JobDetailPage() {
   const isDirty = !!job && (statusDraft !== (job.status || "Active") || (notesDraft || "") !== (job.notes ?? ""));
 
   async function handleDelete(photoId: number) {
-    if (!confirm("Delete this photo?")) return;
+    if (!confirm(t("job_detail.delete_confirm"))) return;
     try {
       const r = await apiFetch(`/v1/service-host/jobs/${jobId}/photos/${photoId}`, { method: "DELETE" });
       if (r.ok) await load();
-      else setError("Failed to delete photo");
+      else setError(t("job_detail.delete_failed"));
     } catch {
-      setError("Failed to delete photo");
+      setError(t("job_detail.delete_failed"));
     }
   }
 
@@ -185,7 +180,7 @@ export default function JobDetailPage() {
     <Layout>
       <div className="max-w-5xl mx-auto space-y-6">
         <Link href="/jobs" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="w-4 h-4" /> Back to My Jobs
+          <ArrowLeft className="w-4 h-4" /> {t("job_detail.back")}
         </Link>
 
         {loading ? (
@@ -195,11 +190,10 @@ export default function JobDetailPage() {
           </div>
         ) : !job ? (
           <div className="bg-card border border-border rounded-xl p-12 text-center">
-            <p className="text-sm text-muted-foreground">{error || "Job not found"}</p>
+            <p className="text-sm text-muted-foreground">{error || t("job_detail.not_found")}</p>
           </div>
         ) : (
           <>
-            {/* Header card */}
             <div className="bg-card border border-border rounded-xl p-6">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -210,13 +204,13 @@ export default function JobDetailPage() {
                     <h1 className="text-xl font-bold text-foreground">{job.name}</h1>
                     <div className="mt-2 flex flex-wrap gap-2">
                       <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
-                        {job.service_type === "one_time" ? "One-time" : "Recurring"}
+                        {job.service_type === "one_time" ? t("jobs.one_time") : t("jobs.recurring")}
                       </span>
                       <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
-                        {triggerLabel(job.billing_trigger)}
+                        {t(`trigger.${job.billing_trigger}`, job.billing_trigger)}
                       </span>
                       <span className={`text-xs px-2 py-0.5 rounded-full border ${STATUS_STYLES[job.status] ?? STATUS_STYLES.Active}`}>
-                        {job.status}
+                        {t(`status.${job.status}`, job.status)}
                       </span>
                     </div>
                   </div>
@@ -242,7 +236,7 @@ export default function JobDetailPage() {
                       <FileText className="w-4 h-4" />
                       <span className="font-medium text-foreground">{job.booking.booking_ref}</span>
                       <span className="text-xs px-2 py-0.5 rounded-full bg-muted">
-                        {job.booking.booking_status}
+                        {t(`status.${job.booking.booking_status}`, job.booking.booking_status)}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-muted-foreground">
@@ -257,7 +251,7 @@ export default function JobDetailPage() {
                     <span>
                       {job.property.name}
                       {job.property.address ? ` · ${job.property.address}` : ""}
-                      {job.space ? ` · Room: ${job.space.name}` : ""}
+                      {job.space ? ` · ${t("job_detail.room_prefix")}: ${job.space.name}` : ""}
                     </span>
                   </div>
                 )}
@@ -265,11 +259,10 @@ export default function JobDetailPage() {
 
             </div>
 
-            {/* Status & Notes editor */}
             <div className="bg-card border border-border rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4" /> Status & Notes
+                  <CheckCircle2 className="w-4 h-4" /> {t("job_detail.status_notes")}
                 </h2>
                 <div className="flex items-center gap-3">
                   {savedMsg && <span className="text-xs text-green-600">{savedMsg}</span>}
@@ -280,13 +273,13 @@ export default function JobDetailPage() {
                     className="inline-flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Save className="w-4 h-4" />
-                    {savingMeta ? "Saving..." : "Save"}
+                    {savingMeta ? t("common.saving") : t("common.save")}
                   </button>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="md:col-span-1">
-                  <label className="block text-xs font-medium text-muted-foreground mb-1.5">Status</label>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t("job_detail.status_label")}</label>
                   <div className="flex flex-wrap gap-2">
                     {JOB_STATUSES.map((s) => (
                       <button
@@ -299,36 +292,35 @@ export default function JobDetailPage() {
                             : "bg-background text-muted-foreground border-border hover:bg-muted"
                         }`}
                       >
-                        {s}
+                        {t(`status.${s}`, s)}
                       </button>
                     ))}
                   </div>
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                    Notes <span className="text-muted-foreground/60">(visible to admin)</span>
+                    {t("job_detail.notes_label")} <span className="text-muted-foreground/60">{t("job_detail.notes_visible")}</span>
                   </label>
                   <textarea
                     value={notesDraft}
                     onChange={(e) => setNotesDraft(e.target.value)}
                     rows={4}
                     maxLength={5000}
-                    placeholder="Add any notes about this job..."
+                    placeholder={t("job_detail.notes_placeholder")}
                     className="w-full text-sm px-3 py-2 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/40"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Photos card */}
             <div className="bg-card border border-border rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
-                    <Camera className="w-4 h-4" /> Job Report Photos
+                    <Camera className="w-4 h-4" /> {t("job_detail.photos_title")}
                   </h2>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {job.photos.length} / {job.max_photos} uploaded · also visible to admin
+                    {t("job_detail.photos_count", { used: job.photos.length, max: job.max_photos })}
                   </p>
                 </div>
                 <input
@@ -346,7 +338,7 @@ export default function JobDetailPage() {
                   className="inline-flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Upload className="w-4 h-4" />
-                  {uploading ? "Uploading..." : "Upload"}
+                  {uploading ? t("job_detail.uploading") : t("job_detail.upload")}
                 </button>
               </div>
 
@@ -355,8 +347,8 @@ export default function JobDetailPage() {
               {job.photos.length === 0 ? (
                 <div className="border-2 border-dashed border-border rounded-lg p-12 text-center">
                   <Camera className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">No photos yet</p>
-                  <p className="text-xs text-muted-foreground mt-1">Upload up to {job.max_photos} photos to document this job</p>
+                  <p className="text-sm text-muted-foreground">{t("job_detail.no_photos")}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t("job_detail.no_photos_help", { max: job.max_photos })}</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -364,7 +356,7 @@ export default function JobDetailPage() {
                     <div key={p.id} className="relative group aspect-square rounded-lg overflow-hidden border border-border bg-muted">
                       <img
                         src={p.thumbnail_url ?? p.file_url}
-                        alt={p.caption ?? "Job photo"}
+                        alt={p.caption ?? t("job_detail.photos_title")}
                         loading="lazy"
                         className="w-full h-full object-cover cursor-pointer"
                         onClick={() => setPreviewUrl(p.file_url)}
@@ -373,7 +365,7 @@ export default function JobDetailPage() {
                         type="button"
                         onClick={(e) => { e.stopPropagation(); handleDelete(p.id); }}
                         className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-red-600"
-                        title="Delete photo"
+                        title={t("job_detail.delete_photo")}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -385,7 +377,6 @@ export default function JobDetailPage() {
           </>
         )}
 
-        {/* Lightbox */}
         {previewUrl && (
           <div
             className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
@@ -398,7 +389,7 @@ export default function JobDetailPage() {
             >
               <X className="w-5 h-5" />
             </button>
-            <img src={previewUrl} alt="Preview" className="max-w-full max-h-full rounded-lg" />
+            <img src={previewUrl} alt={t("job_detail.preview_alt")} className="max-w-full max-h-full rounded-lg" />
           </div>
         )}
       </div>

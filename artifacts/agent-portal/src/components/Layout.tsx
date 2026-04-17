@@ -1,31 +1,28 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/auth";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import {
   LayoutDashboard, BookOpen, Building2, DollarSign,
   LogOut, User, ChevronRight, Menu, X,
 } from "lucide-react";
 
-const navItems = [
-  { href: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/bookings", icon: BookOpen, label: "My Bookings" },
-  { href: "/properties", icon: Building2, label: "Properties" },
-  { href: "/commission", icon: DollarSign, label: "Commission" },
-];
-
-const PORTAL_LABEL = "Agent Portal";
-
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Close sidebar on route change (mobile)
-  useEffect(() => {
-    setSidebarOpen(false);
-  }, [location]);
+  const navItems = [
+    { href: "/", icon: LayoutDashboard, label: t("nav.dashboard") },
+    { href: "/bookings", icon: BookOpen, label: t("nav.my_bookings") },
+    { href: "/properties", icon: Building2, label: t("nav.properties") },
+    { href: "/commission", icon: DollarSign, label: t("nav.commission") },
+  ];
 
-  // Close sidebar on Escape key
+  useEffect(() => { setSidebarOpen(false); }, [location]);
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setSidebarOpen(false);
@@ -36,15 +33,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
-      {/* Mobile overlay backdrop */}
       {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-20 bg-black/50 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="fixed inset-0 z-20 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`
           fixed inset-y-0 left-0 z-30 w-64 bg-sidebar text-sidebar-foreground flex flex-col
@@ -53,7 +45,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
           lg:relative lg:translate-x-0 lg:z-auto
         `}
       >
-        {/* Logo area */}
         <div className="p-5 border-b border-sidebar-border flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <img
@@ -72,11 +63,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         <div className="px-4 py-2 border-b border-sidebar-border">
           <p className="text-[10px] font-semibold tracking-widest uppercase text-sidebar-accent-foreground/60">
-            {PORTAL_LABEL}
+            {t("portal_label")}
           </p>
         </div>
 
-        {/* Nav */}
         <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
           {navItems.map(({ href, icon: Icon, label }) => {
             const active = href === "/" ? location === "/" : location.startsWith(href);
@@ -98,9 +88,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        {/* User info + logout */}
-        <div className="p-3 border-t border-sidebar-border">
-          <div className="flex items-center gap-3 px-3 py-2 rounded-lg mb-1">
+        <div className="p-3 border-t border-sidebar-border space-y-1">
+          <div className="flex items-center gap-3 px-3 py-2 rounded-lg">
             <div className="w-8 h-8 rounded-full bg-sidebar-accent flex items-center justify-center flex-shrink-0">
               <User className="w-4 h-4 text-sidebar-accent-foreground" />
             </div>
@@ -111,24 +100,22 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <div className="text-xs text-sidebar-accent-foreground truncate">{user?.email}</div>
             </div>
           </div>
+          <div className="px-1">
+            <LanguageSwitcher variant="sidebar" />
+          </div>
           <button
             onClick={logout}
             className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm text-sidebar-accent-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
           >
             <LogOut className="w-4 h-4" />
-            Sign out
+            {t("nav.sign_out")}
           </button>
         </div>
       </aside>
 
-      {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Mobile top bar */}
         <header className="lg:hidden flex items-center gap-3 px-4 h-14 border-b border-border bg-background flex-shrink-0">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="p-2 rounded-lg hover:bg-muted transition-colors"
-          >
+          <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-muted transition-colors">
             <Menu className="w-5 h-5 text-foreground" />
           </button>
           <img
@@ -136,12 +123,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
             alt="MillionStay"
             className="h-6 w-auto object-contain"
           />
+          <div className="ml-auto">
+            <LanguageSwitcher />
+          </div>
         </header>
 
         <main className="flex-1 overflow-y-auto">
-          <div className="p-4 sm:p-6 lg:p-8">
-            {children}
-          </div>
+          <div className="p-4 sm:p-6 lg:p-8">{children}</div>
         </main>
       </div>
     </div>

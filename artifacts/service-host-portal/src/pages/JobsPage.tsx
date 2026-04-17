@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
 import { Briefcase, MapPin, Calendar, DollarSign, FileText, ChevronRight } from "lucide-react";
@@ -33,13 +34,6 @@ function formatDate(d: string | null | undefined) {
   return new Date(d).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
 }
 
-function triggerLabel(trigger: string) {
-  if (trigger === "at_checkin") return "At Check-In";
-  if (trigger === "at_checkout") return "At Check-Out";
-  if (trigger === "at_booking") return "At Booking";
-  return trigger;
-}
-
 const STATUS_COLORS: Record<string, string> = {
   Active: "bg-green-100 text-green-700",
   Confirmed: "bg-blue-100 text-blue-700",
@@ -49,6 +43,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function JobsPage() {
+  const { t } = useTranslation();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -57,8 +52,9 @@ export default function JobsPage() {
   useEffect(() => {
     apiGet<{ success: boolean; data: Job[] }>("/v1/service-host/jobs")
       .then((r) => { if (r.success) setJobs(r.data); })
-      .catch(() => setError("Failed to load jobs"))
+      .catch(() => setError(t("jobs.load_failed")))
       .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filtered = jobs.filter((j) => {
@@ -75,15 +71,17 @@ export default function JobsPage() {
       <div className="max-w-5xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">My Jobs</h1>
-            <p className="text-sm text-muted-foreground mt-1">All services assigned to you</p>
+            <h1 className="text-2xl font-bold text-foreground">{t("jobs.title")}</h1>
+            <p className="text-sm text-muted-foreground mt-1">{t("jobs.subtitle")}</p>
           </div>
-          <div className="text-sm text-muted-foreground">{filtered.length} job{filtered.length !== 1 ? "s" : ""}</div>
+          <div className="text-sm text-muted-foreground">
+            {t("jobs.count", { count: filtered.length })}
+          </div>
         </div>
 
         <input
           type="search"
-          placeholder="Search by service name, booking ref, or property..."
+          placeholder={t("jobs.search_placeholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full px-4 py-2.5 text-sm bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
@@ -98,9 +96,9 @@ export default function JobsPage() {
         ) : filtered.length === 0 ? (
           <div className="bg-card border border-border rounded-xl p-12 text-center">
             <Briefcase className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-            <p className="text-sm font-medium text-foreground">No jobs found</p>
+            <p className="text-sm font-medium text-foreground">{t("jobs.no_jobs")}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              {search ? "Try a different search" : "No services have been assigned to you yet"}
+              {search ? t("jobs.no_jobs_search") : t("jobs.no_jobs_assigned")}
             </p>
           </div>
         ) : (
@@ -116,10 +114,10 @@ export default function JobsPage() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="text-sm font-semibold text-foreground">{job.name}</h3>
                         <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                          {job.service_type === "one_time" ? "One-time" : "Recurring"}
+                          {job.service_type === "one_time" ? t("jobs.one_time") : t("jobs.recurring")}
                         </span>
                         <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
-                          {triggerLabel(job.billing_trigger)}
+                          {t(`trigger.${job.billing_trigger}`, job.billing_trigger)}
                         </span>
                       </div>
 
@@ -130,7 +128,7 @@ export default function JobsPage() {
                               <FileText className="w-3 h-3" />
                               {job.booking.booking_ref}
                               <span className={`ml-1 px-1.5 py-0.5 rounded-full font-medium ${STATUS_COLORS[job.booking.booking_status] ?? "bg-gray-100 text-gray-600"}`}>
-                                {job.booking.booking_status}
+                                {t(`status.${job.booking.booking_status}`, job.booking.booking_status)}
                               </span>
                             </span>
                             <span className="flex items-center gap-1">
@@ -147,7 +145,7 @@ export default function JobsPage() {
                           </span>
                         )}
                         {job.booking?.space && (
-                          <span className="text-primary font-medium">Room: {job.booking.space.name}</span>
+                          <span className="text-primary font-medium">{t("jobs.room", { name: job.booking.space.name })}</span>
                         )}
                       </div>
 

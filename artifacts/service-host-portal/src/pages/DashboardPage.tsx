@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { useAuth } from "@/lib/auth";
 import { apiGet } from "@/lib/api";
@@ -30,18 +31,6 @@ interface DashboardData {
   }[];
 }
 
-function formatDate(d: string | null | undefined) {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
-}
-
-function triggerLabel(trigger: string) {
-  if (trigger === "at_checkin") return "At Check-In";
-  if (trigger === "at_checkout") return "At Check-Out";
-  if (trigger === "at_booking") return "At Booking";
-  return trigger;
-}
-
 const STATUS_COLORS: Record<string, string> = {
   Active: "bg-green-100 text-green-700",
   Confirmed: "bg-blue-100 text-blue-700",
@@ -52,6 +41,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [data, setData] = useState<DashboardData | null>(null);
   const [scheduleItems, setScheduleItems] = useState<CalendarItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,12 +51,13 @@ export default function DashboardPage() {
   useEffect(() => {
     apiGet<{ success: boolean; data: DashboardData }>("/v1/service-host/dashboard")
       .then((r) => { if (r.success) setData(r.data); })
-      .catch(() => setError("Failed to load dashboard"))
+      .catch(() => setError(t("dashboard.load_failed")))
       .finally(() => setLoading(false));
     apiGet<{ success: boolean; data: CalendarItem[] }>("/v1/service-host/schedule")
       .then((r) => { if (r.success) setScheduleItems(r.data); })
       .catch(() => {})
       .finally(() => setScheduleLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -74,7 +65,7 @@ export default function DashboardPage() {
       <div className="max-w-5xl mx-auto space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">
-            Welcome back, {user?.first_name ?? "—"}
+            {t("dashboard.welcome")}, {user?.first_name ?? "—"}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">{data?.account_name}</p>
         </div>
@@ -89,21 +80,21 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <StatCard icon={Briefcase} label="Total Jobs" value={String(data?.stats.total_jobs ?? 0)} color="text-primary" />
-            <StatCard icon={Clock} label="Pending" value={String(data?.stats.pending_jobs ?? 0)} color="text-yellow-600" />
-            <StatCard icon={CheckCircle2} label="Completed" value={String(data?.stats.completed_jobs ?? 0)} color="text-green-600" />
-            <StatCard icon={DollarSign} label="Total Earnings" value={`$${parseFloat(data?.stats.total_earnings ?? "0").toLocaleString("en-AU", { minimumFractionDigits: 2 })}`} color="text-primary" />
+            <StatCard icon={Briefcase} label={t("dashboard.stat_total_jobs")} value={String(data?.stats.total_jobs ?? 0)} color="text-primary" />
+            <StatCard icon={Clock} label={t("dashboard.stat_pending")} value={String(data?.stats.pending_jobs ?? 0)} color="text-yellow-600" />
+            <StatCard icon={CheckCircle2} label={t("dashboard.stat_completed")} value={String(data?.stats.completed_jobs ?? 0)} color="text-green-600" />
+            <StatCard icon={DollarSign} label={t("dashboard.stat_total_earnings")} value={`$${parseFloat(data?.stats.total_earnings ?? "0").toLocaleString("en-AU", { minimumFractionDigits: 2 })}`} color="text-primary" />
           </div>
         )}
 
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold text-foreground flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-primary" /> Schedule Overview
+              <Calendar className="w-4 h-4 text-primary" /> {t("dashboard.schedule_overview")}
             </h2>
             <Link href="/schedule">
               <span className="text-xs text-primary flex items-center gap-1 cursor-pointer hover:underline">
-                Full schedule <ArrowRight className="w-3 h-3" />
+                {t("dashboard.full_schedule")} <ArrowRight className="w-3 h-3" />
               </span>
             </Link>
           </div>
@@ -116,10 +107,10 @@ export default function DashboardPage() {
 
         <div className="bg-card border border-border rounded-xl">
           <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-            <h2 className="font-semibold text-foreground">Recent Jobs</h2>
+            <h2 className="font-semibold text-foreground">{t("dashboard.recent_jobs")}</h2>
             <Link href="/jobs">
               <span className="text-xs text-primary flex items-center gap-1 cursor-pointer hover:underline">
-                View all <ArrowRight className="w-3 h-3" />
+                {t("dashboard.view_all")} <ArrowRight className="w-3 h-3" />
               </span>
             </Link>
           </div>
@@ -128,7 +119,7 @@ export default function DashboardPage() {
               {[...Array(3)].map((_, i) => <div key={i} className="h-12 bg-muted rounded-lg animate-pulse" />)}
             </div>
           ) : data?.recent_jobs.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground text-sm">No jobs assigned yet</div>
+            <div className="p-8 text-center text-muted-foreground text-sm">{t("dashboard.no_jobs")}</div>
           ) : (
             <div className="divide-y divide-border">
               {data?.recent_jobs.map((job) => (
@@ -139,7 +130,7 @@ export default function DashboardPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{job.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {job.booking?.booking_ref ?? "—"} · {triggerLabel(job.billing_trigger)}
+                      {job.booking?.booking_ref ?? "—"} · {t(`trigger.${job.billing_trigger}`, job.billing_trigger)}
                     </p>
                   </div>
                   <div className="text-right flex-shrink-0">
@@ -148,7 +139,7 @@ export default function DashboardPage() {
                     </p>
                     {job.booking && (
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[job.booking.booking_status] ?? "bg-gray-100 text-gray-600"}`}>
-                        {job.booking.booking_status}
+                        {t(`status.${job.booking.booking_status}`, job.booking.booking_status)}
                       </span>
                     )}
                   </div>
@@ -160,25 +151,25 @@ export default function DashboardPage() {
 
         <div className="bg-card border border-border rounded-xl">
           <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-            <h2 className="font-semibold text-foreground">Quick Links</h2>
+            <h2 className="font-semibold text-foreground">{t("dashboard.quick_links")}</h2>
           </div>
           <div className="grid grid-cols-3 divide-x divide-border">
             <Link href="/jobs">
               <div className="p-5 text-center cursor-pointer hover:bg-muted/50 transition-colors">
                 <Briefcase className="w-5 h-5 text-primary mx-auto mb-2" />
-                <p className="text-xs font-medium text-foreground">My Jobs</p>
+                <p className="text-xs font-medium text-foreground">{t("dashboard.qlink_jobs")}</p>
               </div>
             </Link>
             <Link href="/schedule">
               <div className="p-5 text-center cursor-pointer hover:bg-muted/50 transition-colors">
                 <Calendar className="w-5 h-5 text-primary mx-auto mb-2" />
-                <p className="text-xs font-medium text-foreground">Schedule</p>
+                <p className="text-xs font-medium text-foreground">{t("dashboard.qlink_schedule")}</p>
               </div>
             </Link>
             <Link href="/earnings">
               <div className="p-5 text-center cursor-pointer hover:bg-muted/50 transition-colors">
                 <DollarSign className="w-5 h-5 text-primary mx-auto mb-2" />
-                <p className="text-xs font-medium text-foreground">Earnings</p>
+                <p className="text-xs font-medium text-foreground">{t("dashboard.qlink_earnings")}</p>
               </div>
             </Link>
           </div>

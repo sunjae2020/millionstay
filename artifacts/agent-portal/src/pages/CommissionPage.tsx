@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
 import { DollarSign, TrendingUp, Clock, CheckCircle } from "lucide-react";
@@ -41,6 +42,7 @@ function StatCard({ label, value, icon: Icon, iconCls }: { label: string; value:
 }
 
 export default function CommissionPage() {
+  const { t } = useTranslation();
   const [data, setData] = useState<CommissionApiData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -55,8 +57,8 @@ export default function CommissionPage() {
   return (
     <Layout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Commission</h1>
-        <p className="text-muted-foreground text-sm mt-1">Your earnings breakdown across all managed bookings</p>
+        <h1 className="text-2xl font-bold text-foreground">{t("commission.title")}</h1>
+        <p className="text-muted-foreground text-sm mt-1">{t("commission.subtitle")}</p>
       </div>
 
       {error && (
@@ -71,44 +73,44 @@ export default function CommissionPage() {
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-6 flex items-center gap-3">
               <TrendingUp className="w-5 h-5 text-primary" />
               <div>
-                <span className="text-sm font-medium text-foreground">Your commission rate: </span>
+                <span className="text-sm font-medium text-foreground">{t("commission.your_rate_prefix")} </span>
                 <span className="text-sm text-primary font-semibold">
                   {data.commission.commission_type === "Percentage"
-                    ? `${data.commission.commission_rate}% of total rent`
-                    : `$${data.commission.commission_amount} per booking`}
+                    ? t("commission.rate_percent", { rate: data.commission.commission_rate })
+                    : t("commission.rate_flat", { amount: data.commission.commission_amount })}
                 </span>
               </div>
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 mb-8">
-            <StatCard label="Total Earned" value={`$${Number(data.total_earned ?? 0).toLocaleString()}`} icon={DollarSign} iconCls="bg-primary/10 text-primary" />
-            <StatCard label="All Bookings" value={String(data.paid_count + data.pending_count)} icon={TrendingUp} iconCls="bg-blue-50 text-blue-600" />
-            <StatCard label="Paid Bookings" value={String(data.paid_count)} icon={CheckCircle} iconCls="bg-green-50 text-green-600" />
-            <StatCard label="Pending" value={String(data.pending_count)} icon={Clock} iconCls="bg-yellow-50 text-yellow-600" />
+            <StatCard label={t("commission.stat_total_earned")} value={`$${Number(data.total_earned ?? 0).toLocaleString()}`} icon={DollarSign} iconCls="bg-primary/10 text-primary" />
+            <StatCard label={t("commission.stat_all_bookings")} value={String(data.paid_count + data.pending_count)} icon={TrendingUp} iconCls="bg-blue-50 text-blue-600" />
+            <StatCard label={t("commission.stat_paid")} value={String(data.paid_count)} icon={CheckCircle} iconCls="bg-green-50 text-green-600" />
+            <StatCard label={t("commission.stat_pending")} value={String(data.pending_count)} icon={Clock} iconCls="bg-yellow-50 text-yellow-600" />
           </div>
 
           <div className="bg-card border border-card-border rounded-xl overflow-hidden">
             <div className="px-6 py-4 border-b border-border">
-              <h2 className="font-semibold text-foreground">Booking Breakdown</h2>
+              <h2 className="font-semibold text-foreground">{t("commission.breakdown")}</h2>
             </div>
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b border-border">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Booking Ref</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Check-in</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Check-out</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Rent</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Commission</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("commission.col_ref")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("commission.col_checkin")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("commission.col_checkout")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("commission.col_rent")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("commission.col_commission")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("commission.col_status")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {loading && (
-                  <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Loading...</td></tr>
+                  <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">{t("common.loading")}</td></tr>
                 )}
                 {!loading && data.breakdown.length === 0 && (
-                  <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No commission data yet</td></tr>
+                  <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">{t("commission.no_data")}</td></tr>
                 )}
                 {data.breakdown.map((row, i) => (
                   <tr key={i} className="hover:bg-muted/30 transition-colors">
@@ -117,13 +119,13 @@ export default function CommissionPage() {
                       {row.check_in_date ? new Date(row.check_in_date).toLocaleDateString() : "—"}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {row.check_out_date ? new Date(row.check_out_date).toLocaleDateString() : "Ongoing"}
+                      {row.check_out_date ? new Date(row.check_out_date).toLocaleDateString() : t("common.ongoing")}
                     </td>
                     <td className="px-4 py-3 text-foreground">${Number(row.rent_amount ?? 0).toLocaleString()}</td>
                     <td className="px-4 py-3 font-semibold text-foreground">${Number(row.commission_earned ?? 0).toLocaleString()}</td>
                     <td className="px-4 py-3">
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${["Active", "CheckedOut"].includes(row.booking_status) ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
-                        {row.booking_status}
+                        {t(`status.${row.booking_status}`, row.booking_status)}
                       </span>
                     </td>
                   </tr>

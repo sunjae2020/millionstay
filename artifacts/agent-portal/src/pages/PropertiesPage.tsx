@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
 import { MapPin, Home, Search } from "lucide-react";
@@ -19,6 +20,7 @@ interface Space {
 }
 
 export default function PropertiesPage() {
+  const { t } = useTranslation();
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -31,7 +33,6 @@ export default function PropertiesPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Group by property
   const propertyMap = new Map<number, { property: Space["property"]; spaces: Space[] }>();
   spaces.forEach((s) => {
     const pid = s.property_id;
@@ -63,8 +64,8 @@ export default function PropertiesPage() {
   return (
     <Layout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Properties</h1>
-        <p className="text-muted-foreground text-sm mt-1">Properties with spaces you manage bookings for</p>
+        <h1 className="text-2xl font-bold text-foreground">{t("properties.title")}</h1>
+        <p className="text-muted-foreground text-sm mt-1">{t("properties.subtitle")}</p>
       </div>
 
       <div className="relative mb-6">
@@ -72,7 +73,7 @@ export default function PropertiesPage() {
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by property name, city, or state..."
+          placeholder={t("properties.search_placeholder")}
           className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
         />
       </div>
@@ -99,7 +100,7 @@ export default function PropertiesPage() {
                 <Home className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-foreground">{property?.name ?? "Unknown Property"}</h3>
+                <h3 className="font-semibold text-foreground">{property?.name ?? t("properties.unknown_property")}</h3>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground mt-0.5">
                   <MapPin className="w-3 h-3" />
                   {property?.address}, {property?.city}, {property?.state}
@@ -109,7 +110,7 @@ export default function PropertiesPage() {
 
             <div className="border-t border-border pt-4">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                Your Spaces ({propSpaces.length})
+                {t("properties.your_spaces", { count: propSpaces.length })}
               </p>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {propSpaces.map((space) => (
@@ -119,7 +120,7 @@ export default function PropertiesPage() {
                     </div>
                     <p className="text-xs text-muted-foreground mb-1">{space.space_type}</p>
                     <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_CLS[space.status] ?? "bg-gray-100 text-gray-600"}`}>
-                      {space.status}
+                      {t(`status.${space.status}`, space.status)}
                     </span>
                   </div>
                 ))}
@@ -130,7 +131,7 @@ export default function PropertiesPage() {
 
         {!loading && groups.length === 0 && (
           <div className="text-center text-muted-foreground py-12">
-            No properties with active bookings found.
+            {t("properties.no_properties")}
           </div>
         )}
       </div>

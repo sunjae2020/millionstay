@@ -1,0 +1,77 @@
+{
+  "portal_label": "พอร์ทัลผู้ให้บริการ",
+  "lang": { "label": "ภาษา", "en": "English", "ko": "한국어", "zh": "中文", "ja": "日本語", "th": "ภาษาไทย" },
+  "nav": { "dashboard": "แดชบอร์ด", "my_jobs": "งานของฉัน", "schedule": "กำหนดการ", "earnings": "รายได้", "sign_out": "ออกจากระบบ" },
+  "common": { "loading": "กำลังโหลด...", "save": "บันทึก", "saving": "กำลังบันทึก...", "saved": "บันทึกแล้ว", "cancel": "ยกเลิก", "back": "กลับ", "tbd": "รอกำหนด", "ongoing": "กำลังดำเนินการ" },
+  "login": {
+    "headline_1": "ส่งมอบความเป็นเลิศ", "headline_2": "ในทุก", "headline_emphasis": "งาน.",
+    "tagline": "ดูงานที่ได้รับมอบหมาย จัดการกำหนดการ และติดตามรายได้ ทั้งหมดในที่เดียว",
+    "stat_jobs": "งานที่เสร็จ", "stat_ontime": "ตรงเวลา", "stat_rating": "คะแนน",
+    "copyright": "© 2026 MillionStay · สงวนลิขสิทธิ์",
+    "sign_in": "เข้าสู่ระบบ", "subtitle": "เข้าสู่ระบบเพื่อดูงานและกำหนดการ",
+    "email": "ที่อยู่อีเมล", "email_placeholder": "host@example.com",
+    "password": "รหัสผ่าน", "password_placeholder": "••••••••••••",
+    "signing_in": "กำลังเข้าสู่ระบบ...", "sign_in_arrow": "เข้าสู่ระบบ →",
+    "invalid": "ข้อมูลรับรองไม่ถูกต้อง", "secure": "การเข้าถึงที่ปลอดภัย · MillionStay พอร์ทัลผู้ให้บริการ"
+  },
+  "trigger": {
+    "at_checkin": "ที่เช็คอิน", "at_checkout": "ที่เช็คเอาต์", "at_booking": "ที่การจอง",
+    "checkin": "เช็คอิน", "checkout": "เช็คเอาต์", "booking": "การจอง",
+    "checkin_service": "บริการเช็คอิน", "checkout_service": "บริการเช็คเอาต์", "booking_service": "บริการการจอง"
+  },
+  "dashboard": {
+    "welcome": "ยินดีต้อนรับกลับ",
+    "stat_total_jobs": "งานทั้งหมด", "stat_pending": "รอดำเนินการ", "stat_completed": "เสร็จสิ้น", "stat_total_earnings": "รายได้รวม",
+    "schedule_overview": "ภาพรวมกำหนดการ", "full_schedule": "กำหนดการทั้งหมด",
+    "recent_jobs": "งานล่าสุด", "view_all": "ดูทั้งหมด", "no_jobs": "ยังไม่มีงานที่ได้รับมอบหมาย",
+    "quick_links": "ลิงก์ด่วน", "qlink_jobs": "งานของฉัน", "qlink_schedule": "กำหนดการ", "qlink_earnings": "รายได้",
+    "load_failed": "โหลดแดชบอร์ดไม่สำเร็จ"
+  },
+  "jobs": {
+    "title": "งานของฉัน", "subtitle": "บริการทั้งหมดที่มอบหมายให้คุณ",
+    "count_one": "{{count}} งาน", "count_other": "{{count}} งาน",
+    "search_placeholder": "ค้นหาตามชื่อบริการ เลขจอง หรือทรัพย์สิน...",
+    "no_jobs": "ไม่พบงาน", "no_jobs_search": "ลองค้นหาด้วยคำอื่น",
+    "no_jobs_assigned": "ยังไม่มีบริการที่มอบหมายให้คุณ",
+    "one_time": "ครั้งเดียว", "recurring": "ประจำ", "room": "ห้อง: {{name}}",
+    "load_failed": "โหลดงานไม่สำเร็จ"
+  },
+  "job_detail": {
+    "back": "กลับไปที่งานของฉัน", "not_found": "ไม่พบงาน", "load_failed": "โหลดงานไม่สำเร็จ",
+    "status_notes": "สถานะและบันทึก", "status_label": "สถานะ", "notes_label": "บันทึก",
+    "notes_visible": "(ผู้ดูแลระบบเห็น)", "notes_placeholder": "เพิ่มบันทึกเกี่ยวกับงานนี้...",
+    "photos_title": "ภาพรายงานงาน", "photos_count": "อัปโหลดแล้ว {{used}} / {{max}} · ผู้ดูแลระบบเห็นด้วย",
+    "upload": "อัปโหลด", "uploading": "กำลังอัปโหลด...",
+    "no_photos": "ยังไม่มีภาพ", "no_photos_help": "อัปโหลดได้สูงสุด {{max}} ภาพเพื่อบันทึกงานนี้",
+    "max_reached": "อัปโหลดครบ {{max}} ภาพแล้ว", "upload_failed": "อัปโหลดไม่สำเร็จ",
+    "delete_photo": "ลบภาพ", "delete_confirm": "ลบภาพนี้?", "delete_failed": "ลบภาพไม่สำเร็จ",
+    "save_failed": "บันทึกไม่สำเร็จ", "preview_alt": "ตัวอย่าง", "room_prefix": "ห้อง",
+    "stat_active": "ใช้งาน", "stat_processing": "กำลังดำเนินการ", "stat_completed": "เสร็จสิ้น", "stat_cancelled": "ยกเลิก"
+  },
+  "schedule": {
+    "title": "กำหนดการ", "subtitle": "งานบริการที่กำลังจะมาถึงตามวันที่",
+    "view_calendar": "ปฏิทิน", "view_list": "รายการ",
+    "no_jobs": "ไม่มีงานที่กำหนด", "no_jobs_help": "งานบริการของคุณจะปรากฏที่นี่เมื่อได้รับมอบหมาย",
+    "today": "วันนี้", "select_date": "เลือกวันที่", "no_jobs_day": "ไม่มีงานในวันนี้",
+    "month_jobs_one": "({{count}} งาน)", "month_jobs_other": "({{count}} งาน)",
+    "stay": "เข้าพัก: {{from}} → {{to}}",
+    "load_failed": "โหลดกำหนดการไม่สำเร็จ", "prev_month": "เดือนก่อน", "next_month": "เดือนถัดไป", "unscheduled": "ไม่ได้กำหนด"
+  },
+  "earnings": {
+    "title": "รายได้", "subtitle": "รายละเอียดรายได้จากบริการ",
+    "total_earned": "รายได้รวม",
+    "from_bookings_one": "จาก {{bookings}} การจอง · {{services}} งานบริการ",
+    "from_bookings_other": "จาก {{bookings}} การจอง · {{services}} งานบริการ",
+    "by_service": "ตามประเภทบริการ", "by_booking": "ตามการจอง",
+    "no_data": "ยังไม่มีข้อมูลรายได้", "no_booking_earnings": "ยังไม่มีรายได้จากการจอง",
+    "earnings_help": "รายได้ของคุณจะปรากฏที่นี่เมื่อบริการเสร็จสิ้น",
+    "checkin_label": "เช็คอิน", "services_label": "บริการ",
+    "more_count": "+{{count}} เพิ่มเติม",
+    "jobs_count_one": "{{count}} งาน", "jobs_count_other": "{{count}} งาน",
+    "load_failed": "โหลดรายได้ไม่สำเร็จ"
+  },
+  "status": {
+    "Active": "ใช้งาน", "Confirmed": "ยืนยันแล้ว", "CheckedOut": "เช็คเอาต์แล้ว",
+    "Draft": "ฉบับร่าง", "Cancelled": "ยกเลิก", "Processing": "กำลังดำเนินการ", "Completed": "เสร็จสิ้น"
+  }
+}

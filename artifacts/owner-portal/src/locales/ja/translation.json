@@ -1,0 +1,52 @@
+{
+  "portal_label": "オーナーポータル",
+  "lang": { "label": "言語", "en": "English", "ko": "한국어", "zh": "中文", "ja": "日本語", "th": "ภาษาไทย" },
+  "nav": { "dashboard": "ダッシュボード", "properties": "マイ物件", "occupancy": "入居状況", "revenue": "収益", "sign_out": "ログアウト" },
+  "common": { "loading": "読み込み中...", "all_statuses": "すべてのステータス", "ongoing": "進行中", "tbd": "未定" },
+  "login": {
+    "headline_1": "あなたの物件、",
+    "headline_2": "あなたの",
+    "headline_emphasis": "インサイト。",
+    "tagline": "入居率の監視、収益の追跡、物件パフォーマンスの確認を一か所で。",
+    "stat_properties": "物件", "stat_bookings": "予約", "stat_uptime": "稼働率",
+    "copyright": "© 2026 MillionStay · 無断複写・転載を禁じます",
+    "sign_in": "ログイン", "subtitle": "物件を確認するにはログインしてください",
+    "email": "メールアドレス", "email_placeholder": "owner@example.com",
+    "password": "パスワード", "password_placeholder": "••••••••••••",
+    "signing_in": "ログイン中...", "sign_in_arrow": "ログイン →",
+    "invalid": "資格情報が無効です", "secure": "セキュアアクセス · MillionStay オーナーポータル"
+  },
+  "dashboard": {
+    "welcome": "おかえりなさい", "account_prefix": "アカウント:", "subtitle_default": "物件ポートフォリオの概要",
+    "stat_properties": "物件", "stat_spaces_sub": "{{count}} 個のスペース",
+    "stat_active_bookings": "進行中の予約", "stat_monthly_revenue": "月次収益見込み", "stat_total_properties": "物件総数",
+    "recent_bookings": "最近の予約", "view_all": "すべて表示", "no_bookings": "予約はまだありません。",
+    "my_properties": "マイ物件", "no_properties": "物件が見つかりません。", "checkin_label": "チェックイン"
+  },
+  "properties": {
+    "title": "マイ物件", "subtitle": "MillionStay が管理する物件ポートフォリオ",
+    "spaces_count": "スペース ({{count}})", "no_spaces": "スペースが設定されていません",
+    "no_properties_account": "アカウントに紐づく物件はありません。"
+  },
+  "bookings": {
+    "title": "入居状況", "subtitle": "物件全体の現在および過去の入居状況",
+    "masking_notice": "プライバシー保護のため、入居者情報は一部マスキングされています。完全な情報は MillionStay が管理します。",
+    "col_ref": "番号", "col_tenant": "入居者", "col_property_space": "物件 / スペース",
+    "col_period": "期間", "col_rate": "料金", "col_status": "ステータス",
+    "masked": "(マスキング)", "no_bookings": "予約が見つかりません"
+  },
+  "revenue": {
+    "title": "収益", "subtitle": "物件の賃料収入と請求履歴",
+    "total_collected": "回収総額", "pending": "未収", "total_invoices": "請求書総数",
+    "invoice_history": "請求履歴",
+    "col_invoice": "請求書", "col_property_space": "物件 / スペース", "col_due": "期日",
+    "col_amount_due": "請求額", "col_amount_paid": "支払額", "col_status": "ステータス",
+    "no_invoices": "請求書はまだありません"
+  },
+  "status": {
+    "Confirmed": "確定", "Active": "進行中", "Draft": "下書き", "CheckedOut": "チェックアウト",
+    "Cancelled": "キャンセル", "Approved": "承認済み", "Pending": "保留中", "Available": "利用可能",
+    "Occupied": "使用中", "Maintenance": "メンテナンス中", "Inactive": "無効", "Paid": "支払済み",
+    "Overdue": "延滞", "Void": "無効"
+  }
+}

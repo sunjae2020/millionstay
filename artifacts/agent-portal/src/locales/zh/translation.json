@@ -1,0 +1,62 @@
+{
+  "portal_label": "代理门户",
+  "lang": { "label": "语言", "en": "English", "ko": "한국어", "zh": "中文", "ja": "日本語", "th": "ภาษาไทย" },
+  "nav": { "dashboard": "仪表板", "my_bookings": "我的预订", "properties": "物业", "commission": "佣金", "sign_out": "退出登录" },
+  "common": { "loading": "加载中...", "all_statuses": "所有状态", "ongoing": "进行中", "tbd": "待定", "back": "返回" },
+  "login": {
+    "headline_1": "自信地", "headline_2": "拓展您的", "headline_emphasis": "业务。",
+    "tagline": "管理房源、跟踪佣金、与客户保持联系,一站式完成。",
+    "stat_properties": "物业", "stat_satisfaction": "满意度", "stat_support": "支持",
+    "copyright": "© 2026 MillionStay · 版权所有",
+    "sign_in": "登录", "subtitle": "登录以管理您的房源",
+    "email": "邮箱地址", "email_placeholder": "agent@example.com",
+    "password": "密码", "password_placeholder": "••••••••••••",
+    "signing_in": "登录中...", "sign_in_arrow": "登录 →",
+    "invalid": "凭证无效", "secure": "安全访问 · MillionStay 代理门户"
+  },
+  "dashboard": {
+    "welcome": "欢迎回来", "account_prefix": "账户:", "subtitle_default": "您的业绩摘要",
+    "stat_total_bookings": "总预订", "stat_active_bookings": "活跃预订",
+    "stat_rent_managed": "管理租金", "stat_est_commission": "预估佣金",
+    "rate_percent": "{{rate}}% 比例", "rate_flat": "每单 ${{amount}}",
+    "recent_bookings": "最近预订", "no_bookings": "尚未分配预订。",
+    "view_all": "查看全部", "booking_label": "预订", "checkin_label": "入住"
+  },
+  "bookings": {
+    "title": "我的预订", "subtitle": "您作为代理获得的预订",
+    "search_placeholder": "按租户、物业或编号搜索...",
+    "col_ref": "编号", "col_tenant": "租户", "col_property_space": "物业 / 空间",
+    "col_checkin": "入住", "col_rate": "费率", "col_status": "状态",
+    "no_bookings": "未找到预订"
+  },
+  "booking_detail": {
+    "back": "返回预订列表", "booking_label": "预订", "tenant_info": "租户信息",
+    "property": "物业", "dates_financials": "日期和财务",
+    "weekly_rate": "周租", "total_rent": "总租金", "bond": "押金",
+    "admin_fee": "管理费", "cleaning_fee": "清洁费", "contract": "合同",
+    "status": "状态", "start_date": "开始日期", "end_date": "结束日期",
+    "special_conditions": "特殊条款", "not_found": "未找到预订"
+  },
+  "properties": {
+    "title": "物业", "subtitle": "您管理预订的物业",
+    "search_placeholder": "按物业名称、城市或州搜索...",
+    "your_spaces": "您的空间 ({{count}})", "unknown_property": "未知物业",
+    "no_properties": "未找到有活跃预订的物业。"
+  },
+  "commission": {
+    "title": "佣金", "subtitle": "管理预订的收入明细",
+    "your_rate_prefix": "您的佣金比例:", "rate_percent": "总租金的 {{rate}}%",
+    "rate_flat": "每单 ${{amount}}",
+    "stat_total_earned": "总收入", "stat_all_bookings": "所有预订",
+    "stat_paid": "已结算", "stat_pending": "待结算",
+    "breakdown": "预订明细",
+    "col_ref": "预订编号", "col_checkin": "入住", "col_checkout": "退房",
+    "col_rent": "租金", "col_commission": "佣金", "col_status": "状态",
+    "no_data": "暂无佣金数据"
+  },
+  "status": {
+    "Confirmed": "已确认", "Active": "活跃", "Draft": "草稿", "CheckedOut": "已退房",
+    "Cancelled": "已取消", "Available": "可用", "Occupied": "已占用",
+    "Maintenance": "维护中", "Inactive": "未启用"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "portal_label": "业主门户",
+  "lang": { "label": "语言", "en": "English", "ko": "한국어", "zh": "中文", "ja": "日本語", "th": "ภาษาไทย" },
+  "nav": { "dashboard": "仪表板", "properties": "我的物业", "occupancy": "入住情况", "revenue": "收入", "sign_out": "退出登录" },
+  "common": { "loading": "加载中...", "all_statuses": "所有状态", "ongoing": "进行中", "tbd": "待定" },
+  "login": {
+    "headline_1": "您的物业,",
+    "headline_2": "您的",
+    "headline_emphasis": "洞察。",
+    "tagline": "监控入住率、跟踪收入,一站式掌握物业表现。",
+    "stat_properties": "物业", "stat_bookings": "预订", "stat_uptime": "在线率",
+    "copyright": "© 2026 MillionStay · 版权所有",
+    "sign_in": "登录", "subtitle": "登录以查看您的物业",
+    "email": "邮箱地址", "email_placeholder": "owner@example.com",
+    "password": "密码", "password_placeholder": "••••••••••••",
+    "signing_in": "登录中...", "sign_in_arrow": "登录 →",
+    "invalid": "凭证无效", "secure": "安全访问 · MillionStay 业主门户"
+  },
+  "dashboard": {
+    "welcome": "欢迎回来", "account_prefix": "账户:", "subtitle_default": "您的物业组合概览",
+    "stat_properties": "物业", "stat_spaces_sub": "{{count}} 个空间",
+    "stat_active_bookings": "活跃预订", "stat_monthly_revenue": "预估月收入", "stat_total_properties": "物业总数",
+    "recent_bookings": "最近预订", "view_all": "查看全部", "no_bookings": "暂无预订。",
+    "my_properties": "我的物业", "no_properties": "未找到物业。", "checkin_label": "入住"
+  },
+  "properties": {
+    "title": "我的物业", "subtitle": "由 MillionStay 管理的物业组合",
+    "spaces_count": "空间 ({{count}})", "no_spaces": "尚未配置空间", "no_properties_account": "您的账户下未找到物业。"
+  },
+  "bookings": {
+    "title": "入住情况", "subtitle": "您物业的当前及历史入住情况",
+    "masking_notice": "为保护隐私,租户信息已部分隐藏。完整信息由 MillionStay 管理。",
+    "col_ref": "编号", "col_tenant": "租户", "col_property_space": "物业 / 空间",
+    "col_period": "期间", "col_rate": "费率", "col_status": "状态",
+    "masked": "(已隐藏)", "no_bookings": "未找到预订"
+  },
+  "revenue": {
+    "title": "收入", "subtitle": "您物业的租金收入和发票记录",
+    "total_collected": "已收总额", "pending": "待付", "total_invoices": "发票总数",
+    "invoice_history": "发票记录",
+    "col_invoice": "发票", "col_property_space": "物业 / 空间", "col_due": "到期",
+    "col_amount_due": "应付金额", "col_amount_paid": "已付金额", "col_status": "状态",
+    "no_invoices": "暂无发票"
+  },
+  "status": {
+    "Confirmed": "已确认", "Active": "活跃", "Draft": "草稿", "CheckedOut": "已退房",
+    "Cancelled": "已取消", "Approved": "已批准", "Pending": "待处理", "Available": "可用",
+    "Occupied": "已占用", "Maintenance": "维护中", "Inactive": "未启用", "Paid": "已付款",
+    "Overdue": "逾期", "Void": "作废"
+  }
+}

@@ -1,28 +1,27 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/auth";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import {
   LayoutDashboard, Briefcase, CalendarDays, DollarSign,
   LogOut, User, ChevronRight, Menu, X,
 } from "lucide-react";
 
-const navItems = [
-  { href: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/jobs", icon: Briefcase, label: "My Jobs" },
-  { href: "/schedule", icon: CalendarDays, label: "Schedule" },
-  { href: "/earnings", icon: DollarSign, label: "Earnings" },
-];
-
-const PORTAL_LABEL = "Service Host Portal";
-
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  useEffect(() => {
-    setSidebarOpen(false);
-  }, [location]);
+  const navItems = [
+    { href: "/", icon: LayoutDashboard, label: t("nav.dashboard") },
+    { href: "/jobs", icon: Briefcase, label: t("nav.my_jobs") },
+    { href: "/schedule", icon: CalendarDays, label: t("nav.schedule") },
+    { href: "/earnings", icon: DollarSign, label: t("nav.earnings") },
+  ];
+
+  useEffect(() => { setSidebarOpen(false); }, [location]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -35,10 +34,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-20 bg-black/50 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="fixed inset-0 z-20 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
       <aside
@@ -67,7 +63,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         <div className="px-4 py-2 border-b border-sidebar-border">
           <p className="text-[10px] font-semibold tracking-widest uppercase text-sidebar-accent-foreground/60">
-            {PORTAL_LABEL}
+            {t("portal_label")}
           </p>
         </div>
 
@@ -92,8 +88,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="p-3 border-t border-sidebar-border">
-          <div className="flex items-center gap-3 px-3 py-2 rounded-lg mb-1">
+        <div className="p-3 border-t border-sidebar-border space-y-1">
+          <div className="flex items-center gap-3 px-3 py-2 rounded-lg">
             <div className="w-8 h-8 rounded-full bg-sidebar-accent flex items-center justify-center flex-shrink-0">
               <User className="w-4 h-4 text-sidebar-accent-foreground" />
             </div>
@@ -104,22 +100,22 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <div className="text-xs text-sidebar-accent-foreground truncate">{user?.email}</div>
             </div>
           </div>
+          <div className="px-1">
+            <LanguageSwitcher variant="sidebar" />
+          </div>
           <button
             onClick={logout}
             className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm text-sidebar-accent-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
           >
             <LogOut className="w-4 h-4" />
-            Sign out
+            {t("nav.sign_out")}
           </button>
         </div>
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="lg:hidden flex items-center gap-3 px-4 h-14 border-b border-border bg-background flex-shrink-0">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="p-2 rounded-lg hover:bg-muted transition-colors"
-          >
+          <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-muted transition-colors">
             <Menu className="w-5 h-5 text-foreground" />
           </button>
           <img
@@ -127,12 +123,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
             alt="MillionStay"
             className="h-6 w-auto object-contain"
           />
+          <div className="ml-auto">
+            <LanguageSwitcher />
+          </div>
         </header>
 
         <main className="flex-1 overflow-y-auto">
-          <div className="p-4 sm:p-6 lg:p-8">
-            {children}
-          </div>
+          <div className="p-4 sm:p-6 lg:p-8">{children}</div>
         </main>
       </div>
     </div>

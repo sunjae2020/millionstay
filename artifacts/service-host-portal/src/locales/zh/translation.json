@@ -1,0 +1,77 @@
+{
+  "portal_label": "服务主管门户",
+  "lang": { "label": "语言", "en": "English", "ko": "한국어", "zh": "中文", "ja": "日本語", "th": "ภาษาไทย" },
+  "nav": { "dashboard": "仪表板", "my_jobs": "我的任务", "schedule": "日程", "earnings": "收入", "sign_out": "退出登录" },
+  "common": { "loading": "加载中...", "save": "保存", "saving": "保存中...", "saved": "已保存", "cancel": "取消", "back": "返回", "tbd": "待定", "ongoing": "进行中" },
+  "login": {
+    "headline_1": "每一次任务", "headline_2": "都", "headline_emphasis": "卓越交付。",
+    "tagline": "查看分配任务、管理日程、跟踪收入,一站式完成。",
+    "stat_jobs": "完成任务", "stat_ontime": "准时率", "stat_rating": "评分",
+    "copyright": "© 2026 MillionStay · 版权所有",
+    "sign_in": "登录", "subtitle": "登录以查看任务和日程",
+    "email": "邮箱地址", "email_placeholder": "host@example.com",
+    "password": "密码", "password_placeholder": "••••••••••••",
+    "signing_in": "登录中...", "sign_in_arrow": "登录 →",
+    "invalid": "凭证无效", "secure": "安全访问 · MillionStay 服务主管门户"
+  },
+  "trigger": {
+    "at_checkin": "入住时", "at_checkout": "退房时", "at_booking": "预订时",
+    "checkin": "入住", "checkout": "退房", "booking": "预订",
+    "checkin_service": "入住服务", "checkout_service": "退房服务", "booking_service": "预订服务"
+  },
+  "dashboard": {
+    "welcome": "欢迎回来",
+    "stat_total_jobs": "总任务", "stat_pending": "待处理", "stat_completed": "已完成", "stat_total_earnings": "总收入",
+    "schedule_overview": "日程概览", "full_schedule": "完整日程",
+    "recent_jobs": "最近任务", "view_all": "查看全部", "no_jobs": "尚未分配任务",
+    "quick_links": "快捷链接", "qlink_jobs": "我的任务", "qlink_schedule": "日程", "qlink_earnings": "收入",
+    "load_failed": "加载仪表板失败"
+  },
+  "jobs": {
+    "title": "我的任务", "subtitle": "分配给您的所有服务",
+    "count_one": "{{count}} 个任务", "count_other": "{{count}} 个任务",
+    "search_placeholder": "按服务名称、预订编号或物业搜索...",
+    "no_jobs": "未找到任务", "no_jobs_search": "请尝试其他搜索",
+    "no_jobs_assigned": "尚未分配任何服务",
+    "one_time": "一次性", "recurring": "周期性", "room": "房间: {{name}}",
+    "load_failed": "加载任务失败"
+  },
+  "job_detail": {
+    "back": "返回我的任务", "not_found": "未找到任务", "load_failed": "加载任务失败",
+    "status_notes": "状态和备注", "status_label": "状态", "notes_label": "备注",
+    "notes_visible": "(管理员可见)", "notes_placeholder": "添加关于此任务的备注...",
+    "photos_title": "任务报告照片", "photos_count": "已上传 {{used}} / {{max}} · 管理员也可见",
+    "upload": "上传", "uploading": "上传中...",
+    "no_photos": "暂无照片", "no_photos_help": "上传最多 {{max}} 张照片以记录此任务",
+    "max_reached": "已上传最多 {{max}} 张照片", "upload_failed": "上传失败",
+    "delete_photo": "删除照片", "delete_confirm": "删除这张照片?", "delete_failed": "删除照片失败",
+    "save_failed": "保存失败", "preview_alt": "预览", "room_prefix": "房间",
+    "stat_active": "活跃", "stat_processing": "处理中", "stat_completed": "已完成", "stat_cancelled": "已取消"
+  },
+  "schedule": {
+    "title": "日程", "subtitle": "按日期查看您即将到来的服务任务",
+    "view_calendar": "日历", "view_list": "列表",
+    "no_jobs": "无已安排任务", "no_jobs_help": "任务分配后将显示在此",
+    "today": "今天", "select_date": "选择日期", "no_jobs_day": "这一天没有安排任务",
+    "month_jobs_one": "({{count}} 个任务)", "month_jobs_other": "({{count}} 个任务)",
+    "stay": "入住期: {{from}} → {{to}}",
+    "load_failed": "加载日程失败", "prev_month": "上一月", "next_month": "下一月", "unscheduled": "未安排"
+  },
+  "earnings": {
+    "title": "收入", "subtitle": "服务收入明细",
+    "total_earned": "总收入",
+    "from_bookings_one": "来自 {{bookings}} 个预订 · {{services}} 个服务任务",
+    "from_bookings_other": "来自 {{bookings}} 个预订 · {{services}} 个服务任务",
+    "by_service": "按服务类型", "by_booking": "按预订",
+    "no_data": "暂无收入数据", "no_booking_earnings": "暂无预订收入",
+    "earnings_help": "服务完成后,您的收入将显示在此",
+    "checkin_label": "入住", "services_label": "服务",
+    "more_count": "+{{count}} 个",
+    "jobs_count_one": "{{count}} 个任务", "jobs_count_other": "{{count}} 个任务",
+    "load_failed": "加载收入失败"
+  },
+  "status": {
+    "Active": "活跃", "Confirmed": "已确认", "CheckedOut": "已退房",
+    "Draft": "草稿", "Cancelled": "已取消", "Processing": "处理中", "Completed": "已完成"
+  }
+}

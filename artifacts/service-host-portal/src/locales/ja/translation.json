@@ -1,0 +1,77 @@
+{
+  "portal_label": "サービスホストポータル",
+  "lang": { "label": "言語", "en": "English", "ko": "한국어", "zh": "中文", "ja": "日本語", "th": "ภาษาไทย" },
+  "nav": { "dashboard": "ダッシュボード", "my_jobs": "マイジョブ", "schedule": "スケジュール", "earnings": "収益", "sign_out": "ログアウト" },
+  "common": { "loading": "読み込み中...", "save": "保存", "saving": "保存中...", "saved": "保存しました", "cancel": "キャンセル", "back": "戻る", "tbd": "未定", "ongoing": "進行中" },
+  "login": {
+    "headline_1": "すべてのジョブで", "headline_2": "卓越した", "headline_emphasis": "サービスを。",
+    "tagline": "割り当てられたジョブの確認、スケジュール管理、収益追跡を一か所で。",
+    "stat_jobs": "完了ジョブ", "stat_ontime": "時間厳守", "stat_rating": "評価",
+    "copyright": "© 2026 MillionStay · 無断複写・転載を禁じます",
+    "sign_in": "ログイン", "subtitle": "ジョブとスケジュールを表示するにはログインしてください",
+    "email": "メールアドレス", "email_placeholder": "host@example.com",
+    "password": "パスワード", "password_placeholder": "••••••••••••",
+    "signing_in": "ログイン中...", "sign_in_arrow": "ログイン →",
+    "invalid": "資格情報が無効です", "secure": "セキュアアクセス · MillionStay サービスホストポータル"
+  },
+  "trigger": {
+    "at_checkin": "チェックイン時", "at_checkout": "チェックアウト時", "at_booking": "予約時",
+    "checkin": "チェックイン", "checkout": "チェックアウト", "booking": "予約",
+    "checkin_service": "チェックインサービス", "checkout_service": "チェックアウトサービス", "booking_service": "予約サービス"
+  },
+  "dashboard": {
+    "welcome": "おかえりなさい",
+    "stat_total_jobs": "総ジョブ数", "stat_pending": "保留中", "stat_completed": "完了", "stat_total_earnings": "総収益",
+    "schedule_overview": "スケジュール概要", "full_schedule": "全スケジュール",
+    "recent_jobs": "最近のジョブ", "view_all": "すべて表示", "no_jobs": "割り当てられたジョブはまだありません",
+    "quick_links": "クイックリンク", "qlink_jobs": "マイジョブ", "qlink_schedule": "スケジュール", "qlink_earnings": "収益",
+    "load_failed": "ダッシュボードの読み込みに失敗しました"
+  },
+  "jobs": {
+    "title": "マイジョブ", "subtitle": "あなたに割り当てられたすべてのサービス",
+    "count_one": "{{count}} 件", "count_other": "{{count}} 件",
+    "search_placeholder": "サービス名、予約番号、物件で検索...",
+    "no_jobs": "ジョブが見つかりません", "no_jobs_search": "別の検索を試してください",
+    "no_jobs_assigned": "まだサービスが割り当てられていません",
+    "one_time": "単発", "recurring": "定期", "room": "部屋: {{name}}",
+    "load_failed": "ジョブの読み込みに失敗しました"
+  },
+  "job_detail": {
+    "back": "マイジョブに戻る", "not_found": "ジョブが見つかりません", "load_failed": "ジョブの読み込みに失敗しました",
+    "status_notes": "ステータスとメモ", "status_label": "ステータス", "notes_label": "メモ",
+    "notes_visible": "(管理者に表示)", "notes_placeholder": "このジョブに関するメモを追加...",
+    "photos_title": "ジョブレポート写真", "photos_count": "{{used}} / {{max}} アップロード済み · 管理者にも表示",
+    "upload": "アップロード", "uploading": "アップロード中...",
+    "no_photos": "写真はまだありません", "no_photos_help": "このジョブを記録するため最大 {{max}} 枚の写真をアップロードしてください",
+    "max_reached": "最大 {{max}} 枚の写真がすでにアップロードされています", "upload_failed": "アップロード失敗",
+    "delete_photo": "写真を削除", "delete_confirm": "この写真を削除しますか?", "delete_failed": "写真の削除に失敗しました",
+    "save_failed": "保存失敗", "preview_alt": "プレビュー", "room_prefix": "部屋",
+    "stat_active": "アクティブ", "stat_processing": "処理中", "stat_completed": "完了", "stat_cancelled": "キャンセル"
+  },
+  "schedule": {
+    "title": "スケジュール", "subtitle": "日付別の今後のサービスジョブ",
+    "view_calendar": "カレンダー", "view_list": "リスト",
+    "no_jobs": "予定されたジョブはありません", "no_jobs_help": "ジョブが割り当てられるとここに表示されます",
+    "today": "今日", "select_date": "日付を選択", "no_jobs_day": "この日に予定されたジョブはありません",
+    "month_jobs_one": "({{count}} 件)", "month_jobs_other": "({{count}} 件)",
+    "stay": "滞在: {{from}} → {{to}}",
+    "load_failed": "スケジュールの読み込みに失敗しました", "prev_month": "前月", "next_month": "翌月", "unscheduled": "未予定"
+  },
+  "earnings": {
+    "title": "収益", "subtitle": "サービス収益の内訳",
+    "total_earned": "総収益",
+    "from_bookings_one": "{{bookings}} 件の予約 · {{services}} 件のサービスジョブから",
+    "from_bookings_other": "{{bookings}} 件の予約 · {{services}} 件のサービスジョブから",
+    "by_service": "サービス種別ごと", "by_booking": "予約ごと",
+    "no_data": "収益データはまだありません", "no_booking_earnings": "予約収益はまだありません",
+    "earnings_help": "サービスが完了すると、あなたの収益がここに表示されます",
+    "checkin_label": "チェックイン", "services_label": "サービス",
+    "more_count": "+{{count}} 件",
+    "jobs_count_one": "{{count}} 件", "jobs_count_other": "{{count}} 件",
+    "load_failed": "収益の読み込みに失敗しました"
+  },
+  "status": {
+    "Active": "アクティブ", "Confirmed": "確定", "CheckedOut": "チェックアウト",
+    "Draft": "下書き", "Cancelled": "キャンセル", "Processing": "処理中", "Completed": "完了"
+  }
+}

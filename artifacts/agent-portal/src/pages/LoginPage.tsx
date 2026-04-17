@@ -1,11 +1,14 @@
 import { useState, FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/auth";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 const BRAND = "#E8621A";
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -18,7 +21,7 @@ export default function LoginPage() {
     try {
       await login(email, password);
     } catch (err: any) {
-      setError(err.message ?? "Invalid credentials");
+      setError(err.message ?? t("login.invalid"));
     } finally {
       setLoading(false);
     }
@@ -26,7 +29,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left brand panel */}
       <div
         className="hidden lg:flex lg:w-[48%] flex-col justify-between p-12 relative overflow-hidden"
         style={{ background: "linear-gradient(150deg, #1c1008 0%, #2e1a06 55%, #1c1008 100%)" }}
@@ -39,26 +41,26 @@ export default function LoginPage() {
         <div className="relative z-10">
           <img src={`${import.meta.env.BASE_URL}logo-horizontal.png`} alt="MillionStay" className="h-9 w-auto brightness-110" />
           <p className="text-white/30 text-[10px] tracking-[0.2em] uppercase mt-2 ml-0.5">
-            Agent Portal
+            {t("portal_label")}
           </p>
         </div>
 
         <div className="relative z-10 space-y-7">
           <div>
             <h2 className="text-[2.4rem] font-bold text-white leading-[1.2]">
-              Grow your book<br />
-              with <span style={{ color: BRAND }}>confidence.</span>
+              {t("login.headline_1")}<br />
+              {t("login.headline_2")} <span style={{ color: BRAND }}>{t("login.headline_emphasis")}</span>
             </h2>
             <p className="text-white/45 text-sm mt-4 leading-relaxed max-w-[280px]">
-              Manage your listings, track commissions, and stay connected with your clients — all in one place.
+              {t("login.tagline")}
             </p>
           </div>
 
           <div className="flex gap-10">
             {[
-              { num: "500+", label: "Properties" },
-              { num: "98%", label: "Satisfaction" },
-              { num: "24/7", label: "Support" },
+              { num: "500+", label: t("login.stat_properties") },
+              { num: "98%", label: t("login.stat_satisfaction") },
+              { num: "24/7", label: t("login.stat_support") },
             ].map(({ num, label }) => (
               <div key={label}>
                 <p className="text-white text-2xl font-bold">{num}</p>
@@ -69,13 +71,14 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10">
-          <p className="text-white/20 text-xs">© 2026 MillionStay · All rights reserved</p>
+          <p className="text-white/20 text-xs">{t("login.copyright")}</p>
         </div>
       </div>
 
-      {/* Right login panel */}
       <div className="flex-1 flex flex-col bg-[#faf9f7]">
-        <div className="flex justify-end items-center px-6 py-4" />
+        <div className="flex justify-end items-center px-6 py-4">
+          <LanguageSwitcher />
+        </div>
 
         <div className="flex-1 flex items-center justify-center px-6 pb-12">
           <div className="w-full max-w-[400px]">
@@ -85,21 +88,21 @@ export default function LoginPage() {
             </div>
 
             <div className="mb-8">
-              <h1 className="text-2xl font-bold text-slate-900">Sign in</h1>
-              <p className="text-slate-500 text-sm mt-1">Sign in to manage your listings</p>
+              <h1 className="text-2xl font-bold text-slate-900">{t("login.sign_in")}</h1>
+              <p className="text-slate-500 text-sm mt-1">{t("login.subtitle")}</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-1.5">
                 <label htmlFor="email" className="block text-sm font-medium text-slate-700">
-                  Email address
+                  {t("login.email")}
                 </label>
                 <input
                   id="email"
                   type="email"
                   autoComplete="email"
                   required
-                  placeholder="agent@example.com"
+                  placeholder={t("login.email_placeholder")}
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="w-full h-11 px-3 rounded-lg border border-slate-200 bg-white text-slate-900 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:border-transparent"
@@ -108,18 +111,16 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label htmlFor="password" className="block text-sm font-medium text-slate-700">
-                    Password
-                  </label>
-                </div>
+                <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+                  {t("login.password")}
+                </label>
                 <div className="relative">
                   <input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     autoComplete="current-password"
                     required
-                    placeholder="••••••••••••"
+                    placeholder={t("login.password_placeholder")}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     className="w-full h-11 px-3 pr-10 rounded-lg border border-slate-200 bg-white text-slate-900 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:border-transparent"
@@ -148,15 +149,15 @@ export default function LoginPage() {
                 style={{ background: `linear-gradient(135deg, ${BRAND} 0%, #FF8C3A 100%)` }}
               >
                 {loading
-                  ? <><Loader2 className="h-4 w-4 animate-spin" /> Signing in...</>
-                  : "Sign in →"
+                  ? <><Loader2 className="h-4 w-4 animate-spin" /> {t("login.signing_in")}</>
+                  : t("login.sign_in_arrow")
                 }
               </button>
             </form>
 
             <div className="mt-6 pt-5 border-t border-slate-200 text-center">
               <p className="text-center text-xs text-slate-400">
-                Secure access · MillionStay Agent Portal
+                {t("login.secure")}
               </p>
             </div>
           </div>

@@ -1,0 +1,52 @@
+{
+  "portal_label": "พอร์ทัลเจ้าของ",
+  "lang": { "label": "ภาษา", "en": "English", "ko": "한국어", "zh": "中文", "ja": "日本語", "th": "ภาษาไทย" },
+  "nav": { "dashboard": "แดชบอร์ด", "properties": "ทรัพย์สินของฉัน", "occupancy": "การเข้าพัก", "revenue": "รายได้", "sign_out": "ออกจากระบบ" },
+  "common": { "loading": "กำลังโหลด...", "all_statuses": "ทุกสถานะ", "ongoing": "กำลังดำเนินการ", "tbd": "รอกำหนด" },
+  "login": {
+    "headline_1": "ทรัพย์สินของคุณ,",
+    "headline_2": "ข้อมูลเชิงลึก",
+    "headline_emphasis": "ของคุณ.",
+    "tagline": "ติดตามอัตราการเข้าพัก รายได้ และประสิทธิภาพของทรัพย์สินทั้งหมดในที่เดียว",
+    "stat_properties": "ทรัพย์สิน", "stat_bookings": "การจอง", "stat_uptime": "ความพร้อมใช้งาน",
+    "copyright": "© 2026 MillionStay · สงวนลิขสิทธิ์",
+    "sign_in": "เข้าสู่ระบบ", "subtitle": "เข้าสู่ระบบเพื่อดูทรัพย์สินของคุณ",
+    "email": "ที่อยู่อีเมล", "email_placeholder": "owner@example.com",
+    "password": "รหัสผ่าน", "password_placeholder": "••••••••••••",
+    "signing_in": "กำลังเข้าสู่ระบบ...", "sign_in_arrow": "เข้าสู่ระบบ →",
+    "invalid": "ข้อมูลรับรองไม่ถูกต้อง", "secure": "การเข้าถึงที่ปลอดภัย · MillionStay พอร์ทัลเจ้าของ"
+  },
+  "dashboard": {
+    "welcome": "ยินดีต้อนรับกลับ", "account_prefix": "บัญชี:", "subtitle_default": "ภาพรวมพอร์ตทรัพย์สินของคุณ",
+    "stat_properties": "ทรัพย์สิน", "stat_spaces_sub": "{{count}} พื้นที่",
+    "stat_active_bookings": "การจองที่ใช้งาน", "stat_monthly_revenue": "รายได้ต่อเดือนโดยประมาณ", "stat_total_properties": "ทรัพย์สินทั้งหมด",
+    "recent_bookings": "การจองล่าสุด", "view_all": "ดูทั้งหมด", "no_bookings": "ยังไม่มีการจอง",
+    "my_properties": "ทรัพย์สินของฉัน", "no_properties": "ไม่พบทรัพย์สิน", "checkin_label": "เช็คอิน"
+  },
+  "properties": {
+    "title": "ทรัพย์สินของฉัน", "subtitle": "พอร์ตทรัพย์สินของคุณบริหารโดย MillionStay",
+    "spaces_count": "พื้นที่ ({{count}})", "no_spaces": "ยังไม่มีการกำหนดพื้นที่",
+    "no_properties_account": "ไม่พบทรัพย์สินสำหรับบัญชีของคุณ"
+  },
+  "bookings": {
+    "title": "การเข้าพัก", "subtitle": "ข้อมูลการเข้าพักปัจจุบันและที่ผ่านมา",
+    "masking_notice": "ข้อมูลผู้เช่าบางส่วนถูกซ่อนเพื่อปกป้องความเป็นส่วนตัว ข้อมูลทั้งหมดบริหารโดย MillionStay",
+    "col_ref": "อ้างอิง", "col_tenant": "ผู้เช่า", "col_property_space": "ทรัพย์สิน / พื้นที่",
+    "col_period": "ช่วงเวลา", "col_rate": "อัตรา", "col_status": "สถานะ",
+    "masked": "(ซ่อน)", "no_bookings": "ไม่พบการจอง"
+  },
+  "revenue": {
+    "title": "รายได้", "subtitle": "รายได้จากค่าเช่าและประวัติใบแจ้งหนี้",
+    "total_collected": "ยอดรวมที่เรียกเก็บ", "pending": "รอชำระ", "total_invoices": "ใบแจ้งหนี้ทั้งหมด",
+    "invoice_history": "ประวัติใบแจ้งหนี้",
+    "col_invoice": "ใบแจ้งหนี้", "col_property_space": "ทรัพย์สิน / พื้นที่", "col_due": "ครบกำหนด",
+    "col_amount_due": "ยอดที่ต้องชำระ", "col_amount_paid": "ยอดที่ชำระแล้ว", "col_status": "สถานะ",
+    "no_invoices": "ยังไม่มีใบแจ้งหนี้"
+  },
+  "status": {
+    "Confirmed": "ยืนยันแล้ว", "Active": "ใช้งาน", "Draft": "ฉบับร่าง", "CheckedOut": "เช็คเอาต์แล้ว",
+    "Cancelled": "ยกเลิก", "Approved": "อนุมัติ", "Pending": "รอดำเนินการ", "Available": "ว่าง",
+    "Occupied": "ใช้งานอยู่", "Maintenance": "ซ่อมบำรุง", "Inactive": "ไม่ใช้งาน", "Paid": "ชำระแล้ว",
+    "Overdue": "เกินกำหนด", "Void": "เป็นโมฆะ"
+  }
+}

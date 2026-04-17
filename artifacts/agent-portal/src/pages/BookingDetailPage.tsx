@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRoute, Link } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
 import { ArrowLeft, User, Home, Calendar, DollarSign } from "lucide-react";
@@ -57,6 +58,7 @@ const STATUS_CLS: Record<string, string> = {
 };
 
 export default function BookingDetailPage() {
+  const { t } = useTranslation();
   const [, params] = useRoute("/bookings/:id");
   const id = params?.id;
   const [data, setData] = useState<BookingData | null>(null);
@@ -71,31 +73,31 @@ export default function BookingDetailPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  if (loading) return <Layout><div className="text-muted-foreground">Loading...</div></Layout>;
+  if (loading) return <Layout><div className="text-muted-foreground">{t("common.loading")}</div></Layout>;
   if (error) return <Layout><div className="text-destructive">{error}</div></Layout>;
-  if (!data) return <Layout><div className="text-muted-foreground">Booking not found</div></Layout>;
+  if (!data) return <Layout><div className="text-muted-foreground">{t("booking_detail.not_found")}</div></Layout>;
 
   return (
     <Layout>
       <div className="mb-6">
         <Link href="/bookings">
           <span className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground cursor-pointer transition-colors mb-3">
-            <ArrowLeft className="w-4 h-4" /> Back to bookings
+            <ArrowLeft className="w-4 h-4" /> {t("booking_detail.back")}
           </span>
         </Link>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">{data.booking_ref ?? `Booking #${data.id}`}</h1>
+            <h1 className="text-2xl font-bold text-foreground">{data.booking_ref ?? `${t("booking_detail.booking_label")} #${data.id}`}</h1>
             <p className="text-muted-foreground text-sm mt-0.5">{data.property_name} — {data.space_name}</p>
           </div>
           <span className={`text-sm font-medium px-3 py-1 rounded-full ${STATUS_CLS[data.booking_status] ?? "bg-gray-100 text-gray-600"}`}>
-            {data.booking_status}
+            {t(`status.${data.booking_status}`, data.booking_status)}
           </span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Section title="Tenant Information">
+        <Section title={t("booking_detail.tenant_info")}>
           <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
               <User className="w-5 h-5 text-primary" />
@@ -107,7 +109,7 @@ export default function BookingDetailPage() {
           </div>
         </Section>
 
-        <Section title="Property">
+        <Section title={t("booking_detail.property")}>
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
               <Home className="w-5 h-5 text-blue-600" />
@@ -120,41 +122,41 @@ export default function BookingDetailPage() {
           </div>
         </Section>
 
-        <Section title="Dates & Financials">
+        <Section title={t("booking_detail.dates_financials")}>
           <div className="flex items-center gap-2 mb-4">
             <Calendar className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">
-              {data.check_in_date ? new Date(data.check_in_date).toLocaleDateString() : "TBD"}
+              {data.check_in_date ? new Date(data.check_in_date).toLocaleDateString() : t("common.tbd")}
               {" → "}
-              {data.check_out_date ? new Date(data.check_out_date).toLocaleDateString() : "Ongoing"}
+              {data.check_out_date ? new Date(data.check_out_date).toLocaleDateString() : t("common.ongoing")}
             </span>
           </div>
-          <Row label="Weekly Rate" value={`$${Number(data.agreed_weekly_rate ?? 0).toLocaleString()}`} />
-          <Row label="Total Rent" value={`$${Number(data.total_rent ?? 0).toLocaleString()}`} />
-          <Row label="Bond" value={data.bond_amount ? `$${Number(data.bond_amount).toLocaleString()}` : "—"} />
-          <Row label="Admin Fee" value={data.admin_fee ? `$${Number(data.admin_fee).toLocaleString()}` : "—"} />
-          <Row label="Cleaning Fee" value={data.cleaning_fee ? `$${Number(data.cleaning_fee).toLocaleString()}` : "—"} />
+          <Row label={t("booking_detail.weekly_rate")} value={`$${Number(data.agreed_weekly_rate ?? 0).toLocaleString()}`} />
+          <Row label={t("booking_detail.total_rent")} value={`$${Number(data.total_rent ?? 0).toLocaleString()}`} />
+          <Row label={t("booking_detail.bond")} value={data.bond_amount ? `$${Number(data.bond_amount).toLocaleString()}` : "—"} />
+          <Row label={t("booking_detail.admin_fee")} value={data.admin_fee ? `$${Number(data.admin_fee).toLocaleString()}` : "—"} />
+          <Row label={t("booking_detail.cleaning_fee")} value={data.cleaning_fee ? `$${Number(data.cleaning_fee).toLocaleString()}` : "—"} />
         </Section>
 
         {data.contract && (
-          <Section title="Contract">
+          <Section title={t("booking_detail.contract")}>
             <div className="flex items-center gap-2 mb-4">
               <DollarSign className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">{data.contract.contract_ref}</span>
             </div>
-            <Row label="Status" value={
+            <Row label={t("booking_detail.status")} value={
               <span className={`text-xs px-2 py-0.5 rounded-full ${data.contract.status === "Active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
-                {data.contract.status}
+                {t(`status.${data.contract.status}`, data.contract.status)}
               </span>
             } />
-            <Row label="Start Date" value={data.contract.start_date ? new Date(data.contract.start_date).toLocaleDateString() : "—"} />
-            <Row label="End Date" value={data.contract.end_date ? new Date(data.contract.end_date).toLocaleDateString() : "—"} />
+            <Row label={t("booking_detail.start_date")} value={data.contract.start_date ? new Date(data.contract.start_date).toLocaleDateString() : "—"} />
+            <Row label={t("booking_detail.end_date")} value={data.contract.end_date ? new Date(data.contract.end_date).toLocaleDateString() : "—"} />
           </Section>
         )}
 
         {data.special_conditions && (
           <div className="lg:col-span-2">
-            <Section title="Special Conditions">
+            <Section title={t("booking_detail.special_conditions")}>
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">{data.special_conditions}</p>
             </Section>
           </div>
