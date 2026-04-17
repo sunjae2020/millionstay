@@ -4,6 +4,7 @@ import { Layout } from "@/components/Layout";
 import { useAuth } from "@/lib/auth";
 import { apiGet } from "@/lib/api";
 import { Briefcase, Clock, CheckCircle2, DollarSign, ArrowRight, Calendar } from "lucide-react";
+import { ScheduleCalendar, type CalendarItem } from "@/components/ScheduleCalendar";
 
 interface DashboardData {
   account_name: string;
@@ -52,7 +53,9 @@ const STATUS_COLORS: Record<string, string> = {
 export default function DashboardPage() {
   const { user } = useAuth();
   const [data, setData] = useState<DashboardData | null>(null);
+  const [scheduleItems, setScheduleItems] = useState<CalendarItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [scheduleLoading, setScheduleLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -60,6 +63,10 @@ export default function DashboardPage() {
       .then((r) => { if (r.success) setData(r.data); })
       .catch(() => setError("Failed to load dashboard"))
       .finally(() => setLoading(false));
+    apiGet<{ success: boolean; data: CalendarItem[] }>("/v1/service-host/schedule")
+      .then((r) => { if (r.success) setScheduleItems(r.data); })
+      .catch(() => {})
+      .finally(() => setScheduleLoading(false));
   }, []);
 
   return (
@@ -88,6 +95,24 @@ export default function DashboardPage() {
             <StatCard icon={DollarSign} label="Total Earnings" value={`$${parseFloat(data?.stats.total_earnings ?? "0").toLocaleString("en-AU", { minimumFractionDigits: 2 })}`} color="text-primary" />
           </div>
         )}
+
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-semibold text-foreground flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-primary" /> Schedule Overview
+            </h2>
+            <Link href="/schedule">
+              <span className="text-xs text-primary flex items-center gap-1 cursor-pointer hover:underline">
+                Full schedule <ArrowRight className="w-3 h-3" />
+              </span>
+            </Link>
+          </div>
+          {scheduleLoading ? (
+            <div className="h-[480px] bg-muted rounded-xl animate-pulse" />
+          ) : (
+            <ScheduleCalendar items={scheduleItems} compact />
+          )}
+        </div>
 
         <div className="bg-card border border-border rounded-xl">
           <div className="px-6 py-4 border-b border-border flex items-center justify-between">

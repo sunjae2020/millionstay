@@ -1132,7 +1132,7 @@ INSERT INTO public.page_contents (id, page_key, language, content, seo_title, se
 INSERT INTO public.partner_users (id, account_id, portal_type, email, password_hash, first_name, last_name, phone, avatar_url, is_active, last_login_at, created_at, updated_at) VALUES
 	(2, 4, 'owner', 'owner@millionstay.com.au', '$2b$10$dBGGorJT.o0d14DDPuBRZu7Ar/z.yOhhRWh1MgtGWjLDwzZJLx3Za', 'Hong Ying', 'Zhu', NULL, NULL, true, '2026-04-13 16:12:13.281+00', '2026-04-13 09:52:16.38586+00', '2026-04-13 16:12:13.281+00'),
 	(1, 6, 'agent', 'agent@millionstay.com.au', '$2b$10$k89VYHJgix5HoJvr5ICiquxw07cVHLCz0WxdEbX6WEHxe4iDaqoWq', 'Alex', 'Chen', NULL, NULL, true, '2026-04-13 16:14:35.477+00', '2026-04-13 09:52:12.120954+00', '2026-04-13 16:14:35.477+00'),
-	(3, 18, 'service_host', 'host@millionstay.com.au', '$2b$12$fH4cA9ggmwPyGUjB/iFPHu4qw3L0.iJy16fOgWrTUpiAAH1QdlYuC', 'Sarah', 'Kim', '+61400000003', NULL, true, '2026-04-17 00:40:14.69+00', '2026-04-13 11:33:23.530919+00', '2026-04-17 00:40:14.691+00');
+	(3, 18, 'service_host', 'host@millionstay.com.au', '$2b$12$fH4cA9ggmwPyGUjB/iFPHu4qw3L0.iJy16fOgWrTUpiAAH1QdlYuC', 'Sarah', 'Kim', '+61400000003', NULL, true, '2026-04-17 00:44:35.599+00', '2026-04-13 11:33:23.530919+00', '2026-04-17 00:44:35.599+00');
 INSERT INTO public.payment_info (id, name, payment_type, bank_name, swift_code, bsb_number, account_number, account_name, stripe_account_id, description, status, created_at, updated_at, deleted_at) VALUES
 	(1, 'NAB BankTransfer', 'BankTransfer', 'NAB', NULL, '083-004', '123456789', 'Million Stay Pty Ltd', NULL, NULL, 'Active', '2026-04-04 23:54:23.665514+00', '2026-04-04 23:54:23.665514+00', NULL);
 INSERT INTO public.product_groups (id, name, display_order, created_at, updated_at, deleted_at) VALUES
