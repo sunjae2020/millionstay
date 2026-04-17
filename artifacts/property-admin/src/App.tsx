@@ -91,6 +91,7 @@ import ProductGroupsPage from "@/pages/settings/sub/ProductGroups";
 import ProductTypesPage from "@/pages/settings/sub/ProductTypes";
 import BookingReportPage from "@/pages/settings/sub/BookingReport";
 import IntegrationsPage from "@/pages/settings/sub/Integrations";
+import DbSyncPage from "@/pages/settings/DbSync";
 import PaymentInfoList from "@/pages/crm/PaymentInfoList";
 import PaymentInfoDetail from "@/pages/crm/PaymentInfoDetail";
 
@@ -250,6 +251,7 @@ function Router() {
       <Route path="/settings/email-templates" component={EmailTemplatesPage} />
       <Route path="/settings/design" component={DesignPage} />
       <Route path="/settings/integrations" component={IntegrationsPage} />
+      <Route path="/settings/db-sync" component={DbSyncPage} />
 
       <Route path="/settings/contract-types" component={ContractTypesPage} />
       <Route path="/settings/product-groups" component={ProductGroupsPage} />

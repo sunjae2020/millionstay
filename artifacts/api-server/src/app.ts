@@ -15,6 +15,7 @@ import guestAuthRouter from "./routes/guest-auth";
 import guestPortalRouter from "./routes/guest-portal";
 import guestCsRouter from "./routes/guest-cs";
 import devMigrationRouter from "./routes/dev-migration";
+import dbSyncRouter from "./routes/db-sync";
 import stripeRouter from "./routes/stripe";
 import adminUsersRouter from "./routes/admin-users";
 import partnerAuthRouter from "./routes/partner-auth";
@@ -108,6 +109,10 @@ app.use("/api", serviceHostPortalRouter);
 
 app.use("/api", adminUsersRouter);
 app.use("/api/v1", requireAuth);
+
+// Super Admin only — DB snapshot & sync (auth enforced by requireAuth above,
+// role enforced by requireSuperAdmin inside the router)
+app.use("/api/v1/admin", dbSyncRouter);
 
 app.use("/api", spaceImagesRouter);
 app.use("/api", pageContentsRouter);

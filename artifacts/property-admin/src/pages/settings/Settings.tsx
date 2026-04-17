@@ -18,7 +18,9 @@ import {
   Settings2,
   Palette,
   Plug,
+  Database,
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 type CardDef = {
   title: string;
@@ -63,6 +65,15 @@ const ADMIN_CARDS: CardDef[] = [
     description: "Audit trail of system activity",
     icon: ScrollText,
     href: "/settings/system-log",
+  },
+];
+
+const SUPER_ADMIN_CARDS: CardDef[] = [
+  {
+    title: "DB Sync",
+    description: "Snapshot dev DB and apply to production",
+    icon: Database,
+    href: "/settings/db-sync",
   },
 ];
 
@@ -146,6 +157,9 @@ function HubCard({ card }: { card: CardDef }) {
 
 export default function Settings() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const isSuperAdmin =
+    !!user && ["Super Admin", "SuperAdmin", "superadmin", "super_admin"].includes(user.role);
   return (
     <Layout>
       <PageHeader
@@ -171,6 +185,8 @@ export default function Settings() {
             {ADMIN_CARDS.map((c) => (
               <HubCard key={c.href} card={c} />
             ))}
+            {isSuperAdmin &&
+              SUPER_ADMIN_CARDS.map((c) => <HubCard key={c.href} card={c} />)}
           </div>
         </section>
 

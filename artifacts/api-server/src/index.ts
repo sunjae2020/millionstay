@@ -5,9 +5,8 @@ import bcrypt from "bcryptjs";
 import { db, usersTable } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
 import crypto from "crypto";
+import { SEED_FILE_PATH, importSeed } from "./lib/seedSync";
 
 const rawPort = process.env["PORT"];
 
@@ -48,9 +47,7 @@ async function ensureAdminExists() {
 
 async function autoMigrateIfEmpty() {
   try {
-    const __dirname = path.dirname(fileURLToPath(import.meta.url));
-    const sqlFilePath = path.resolve(__dirname, "seed-migration.sql");
-    if (!fs.existsSync(sqlFilePath)) {
+    if (!fs.existsSync(SEED_FILE_PATH)) {
       logger.warn("seed-migration.sql not found — skipping auto-migration");
       return;
     }
@@ -58,7 +55,7 @@ async function autoMigrateIfEmpty() {
     // Only auto-migrate in production — dev DB is managed manually
     if (process.env.NODE_ENV !== "production") return;
 
-    const seedSql = fs.readFileSync(sqlFilePath, "utf-8");
+    const seedSql = fs.readFileSync(SEED_FILE_PATH, "utf-8");
 
     // Compute SHA-256 hash of the seed file to detect changes
     const seedHash = crypto.createHash("sha256").update(seedSql).digest("hex");
@@ -87,52 +84,10 @@ async function autoMigrateIfEmpty() {
       "Seed changed — running full sync from dev DB..."
     );
 
-    // Only extract INSERT INTO and setval statements
-    const statements = seedSql
-      .split(/;\s*\n/)
-      .map((s) => s.trim())
-      .filter((s) =>
-        s.length > 0 &&
-        (s.startsWith("INSERT INTO") || s.startsWith("SELECT pg_catalog.setval"))
-      );
-
-    let executed = 0;
-    let errors = 0;
-
-    await db.transaction(async (tx) => {
-      // TRUNCATE all data tables (complete list) — CASCADE handles FK order
-      await tx.execute(sql.raw(`TRUNCATE TABLE
-        page_contents, blog_posts, announcements,
-        guest_direct_messages, guest_emergency_contacts,
-        booking_services, contract_line_items,
-        partner_users,
-        suburbs, product_groups, product_types, contract_types, payment_info,
-        contacts, accounts, leads, tasks,
-        admin_users, guest_users,
-        properties, spaces, space_options, space_policies,
-        space_images, space_availability, space_blocked_dates, space_option_maps,
-        service_catalog, accommodation_catalog, accommodation_service_catalog,
-        space_service_catalog, promotions, beneficiaries, commissions,
-        contracts, bookings, booking_documents, contract_products,
-        invoices, recurring_schedule,
-        integration_settings, email_template, email_log,
-        service_hosts, system_log, work_orders,
-        cs_tickets, cs_messages
-        RESTART IDENTITY CASCADE`));
-
-      for (let i = 0; i < statements.length; i++) {
-        const stmt = statements[i];
-        const sp = `sp_${i}`;
-        try {
-          await tx.execute(sql.raw(`SAVEPOINT ${sp}`));
-          await tx.execute(sql.raw(stmt));
-          executed++;
-        } catch {
-          try { await tx.execute(sql.raw(`ROLLBACK TO SAVEPOINT ${sp}`)); } catch {}
-          errors++;
-        }
-      }
-    });
+    // Boot path tolerates partial failures: starting up with most data is
+    // better than starting up empty. The HTTP /db-sync/import path runs
+    // strict (allowPartial=false).
+    const result = await importSeed({ allowPartial: true });
 
     // Record the applied hash so we don't re-apply on next restart
     await db.execute(sql.raw(`
@@ -141,7 +96,10 @@ async function autoMigrateIfEmpty() {
       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
     `));
 
-    logger.info({ executed, errors }, "Auto-migration complete — production DB synced from dev");
+    logger.info(
+      { executed: result.executed, errors: result.errors, total: result.total },
+      "Auto-migration complete — production DB synced from dev",
+    );
   } catch (err) {
     logger.error({ err }, "Auto-migration failed");
   }
