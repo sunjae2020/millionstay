@@ -12,6 +12,8 @@ import {
   rotateRefreshToken,
   revokeAllForUser,
 } from "../lib/refreshTokens";
+import { validatePassword } from "../utils/passwordPolicy";
+import { checkLockout, recordAttempt } from "../lib/loginLockout";
 
 function clientMeta(req: any) {
   const ip =
@@ -33,6 +35,19 @@ router.post("/v1/auth/login", async (req, res): Promise<void> => {
       return;
     }
 
+    const meta0 = clientMeta(req);
+
+    // Sprint B-6: brute-force lockout (5 fails in 15min → 15min cooldown).
+    const lock = await checkLockout(email, "admin");
+    if (lock.locked) {
+      res.setHeader("Retry-After", String(lock.retryAfterSeconds ?? 900));
+      res.status(429).json({
+        success: false,
+        error: `Too many failed login attempts. Please try again in ${Math.ceil((lock.retryAfterSeconds ?? 0) / 60)} minute(s).`,
+      });
+      return;
+    }
+
     const [user] = await db
       .select()
       .from(usersTable)
@@ -40,11 +55,13 @@ router.post("/v1/auth/login", async (req, res): Promise<void> => {
       .limit(1);
 
     if (!user) {
+      await recordAttempt(email, "admin", false, meta0.ipAddress);
       res.status(401).json({ success: false, error: "Invalid credentials" });
       return;
     }
 
     if (user.deleted_at) {
+      await recordAttempt(email, "admin", false, meta0.ipAddress);
       res.status(401).json({ success: false, error: "Invalid credentials" });
       return;
     }
@@ -60,15 +77,19 @@ router.post("/v1/auth/login", async (req, res): Promise<void> => {
     }
 
     if (!user.is_active) {
+      await recordAttempt(email, "admin", false, meta0.ipAddress);
       res.status(401).json({ success: false, error: "Invalid credentials" });
       return;
     }
 
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) {
+      await recordAttempt(email, "admin", false, meta0.ipAddress);
       res.status(401).json({ success: false, error: "Invalid credentials" });
       return;
     }
+
+    await recordAttempt(email, "admin", true, meta0.ipAddress);
 
     await db
       .update(usersTable)
@@ -172,8 +193,9 @@ router.post("/v1/auth/register", async (req, res): Promise<void> => {
       res.status(400).json({ success: false, error: "All fields are required." });
       return;
     }
-    if (password.length < 8) {
-      res.status(400).json({ success: false, error: "Password must be at least 8 characters." });
+    const policy = validatePassword(password);
+    if (!policy.ok) {
+      res.status(400).json({ success: false, error: policy.error });
       return;
     }
 
@@ -270,8 +292,9 @@ router.post("/v1/auth/reset-password", async (req, res): Promise<void> => {
       res.status(400).json({ success: false, error: "Token and new password are required." });
       return;
     }
-    if (password.length < 8) {
-      res.status(400).json({ success: false, error: "Password must be at least 8 characters." });
+    const policy = validatePassword(password);
+    if (!policy.ok) {
+      res.status(400).json({ success: false, error: policy.error });
       return;
     }
 

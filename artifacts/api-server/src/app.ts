@@ -23,6 +23,7 @@ import agentPortalRouter from "./routes/agent-portal";
 import ownerPortalRouter from "./routes/owner-portal";
 import serviceHostPortalRouter from "./routes/service-host-portal";
 import pageContentsRouter from "./routes/page-contents";
+import privacyRouter from "./routes/privacy";
 import { logger } from "./lib/logger";
 import { requireAuth } from "./middlewares/requireAuth";
 
@@ -148,6 +149,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api", authRouter);
 app.use("/api", healthRouter);
 app.use("/api", publicRouter);
+app.use("/api", privacyRouter);
 app.use("/api", guestAuthRouter);
 app.use("/api", guestPortalRouter);
 app.use("/api", guestCsRouter);

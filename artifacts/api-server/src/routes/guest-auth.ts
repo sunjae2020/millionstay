@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { db, guestUsersTable, accountsTable } from "@workspace/db";
 import { signGuestJWT, requireGuestAuth } from "../middlewares/requireGuestAuth";
+import { validatePassword } from "../utils/passwordPolicy";
 
 const router: IRouter = Router();
 
@@ -24,8 +25,9 @@ router.post("/v1/auth/guest/register", async (req, res): Promise<void> => {
       return;
     }
 
-    if (password.length < 8) {
-      res.status(400).json({ success: false, error: "Password must be at least 8 characters" });
+    const policy = validatePassword(password);
+    if (!policy.ok) {
+      res.status(400).json({ success: false, error: policy.error });
       return;
     }
 

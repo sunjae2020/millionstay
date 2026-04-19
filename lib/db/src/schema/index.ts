@@ -42,3 +42,6 @@ export * from "./contract_line_items";
 export * from "./blog_posts";
 export * from "./page_contents";
 export * from "./refresh_tokens";
+export * from "./documents";
+export * from "./marketing_consents";
+export * from "./login_attempts";

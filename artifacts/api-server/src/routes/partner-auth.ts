@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { db, partnerUsersTable, accountsTable } from "@workspace/db";
 import { signPartnerJWT, requirePartnerAuth, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth";
+import { validatePassword } from "../utils/passwordPolicy";
 
 const router: IRouter = Router();
 
@@ -103,8 +104,9 @@ router.post("/v1/auth/partner/change-password", requirePartnerAuth, async (req, 
     res.status(400).json({ success: false, error: "Both current and new password required" });
     return;
   }
-  if (new_password.length < 8) {
-    res.status(400).json({ success: false, error: "New password must be at least 8 characters" });
+  const policy = validatePassword(new_password);
+  if (!policy.ok) {
+    res.status(400).json({ success: false, error: policy.error });
     return;
   }
   const [user] = await db.select().from(partnerUsersTable).where(eq(partnerUsersTable.id, partner.id)).limit(1);
