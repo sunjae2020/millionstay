@@ -460,8 +460,8 @@ export default function PortalMyData() {
               <h3 className="font-semibold text-gray-800 mb-2">Need to correct or delete your data?</h3>
               <p>
                 You may request a correction or full erasure at any time. Please email{" "}
-                <a href="mailto:privacy@millionstay.com.au" className="text-primary hover:underline">
-                  privacy@millionstay.com.au
+                <a href="mailto:millionstay.com@gmail.com" className="text-primary hover:underline">
+                  millionstay.com@gmail.com
                 </a>{" "}
                 from the address on file ({profile?.["email"] ?? "—"}). We respond within 30 days.
               </p>

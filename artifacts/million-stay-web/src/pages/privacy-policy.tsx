@@ -7,58 +7,93 @@ import heroBg from "@assets/MS_Homepage_Photo_1920x1080_1775403929888.jpg";
 const SECTIONS = [
   {
     number: "01",
-    title: "About This Policy",
-    body: `Million Homestay Australia Pty Ltd ("MillionStay", "we", "our", "us") is committed to protecting your privacy in accordance with the Privacy Act 1988 (Cth) and the Australian Privacy Principles (APPs). This Privacy Policy explains how we collect, use, hold, and disclose personal information about individuals who interact with our website, services, and accommodation properties. By using our website or services, you consent to the practices described in this policy.`,
+    title: "About This Policy (APP 1)",
+    body: `Million Homestay Australia Pty Ltd ("MillionStay", "we", "our", "us") is committed to protecting your privacy in accordance with the Privacy Act 1988 (Cth) and the 13 Australian Privacy Principles (APPs). This Privacy Policy explains the kinds of personal information we collect, how we hold it, the purposes for which we collect, hold, use and disclose it, how you may access or correct it, how to make a complaint, and whether we are likely to disclose information to overseas recipients. This policy is openly available on our website and we encourage you to read it before using our services.`,
   },
   {
     number: "02",
-    title: "Information We Collect",
-    body: `We collect personal information that is reasonably necessary for our business functions. This includes: identity information (full name, date of birth, nationality, passport or visa details); contact information (email address, phone number, residential address); booking and tenancy information (stay dates, room preferences, payment records, lease documents); financial information (bank account details for bond refunds, payment history); and website usage data (IP address, browser type, pages visited, cookies). We may also collect sensitive information such as your visa status or student enrolment details, where relevant to eligibility for our services.`,
+    title: "Anonymity & Pseudonymity (APP 2)",
+    body: `Wherever it is lawful and practicable to do so, you may interact with us anonymously or under a pseudonym — for example, when browsing the website, making a general enquiry by email, or asking a property question. However, where we are required by law to identify you (for example, to enter into a tenancy agreement, process a payment, refund a bond, comply with the Residential Tenancies Act 1997 (Vic), or verify visa or student-enrolment eligibility), or where it is impracticable to deal with you anonymously, we will need to collect your real identity.`,
   },
   {
     number: "03",
-    title: "How We Collect Information",
-    body: `We collect personal information directly from you when you: enquire about or book accommodation through our website or by phone; submit an application, registration, or enquiry form; communicate with us by email, phone, or in person; visit one of our properties; or sign a tenancy agreement. We may also collect information from third parties such as educational institutions (to verify student status), reference providers, or real estate agents, where you have authorised us to do so.`,
+    title: "Information We Collect (APP 3)",
+    body: `We only collect personal information that is reasonably necessary for our business functions. This includes: identity information (full name, date of birth, nationality, passport, visa or government-issued ID details); contact information (email address, phone number, residential address, emergency contact); booking and tenancy information (stay dates, room preferences, payment records, lease documents); financial information (bank account name, BSB and account number for bond refunds, payment history, invoices); education information for student housing eligibility (university, course, student ID, study year); and technical information (IP address, browser type, pages visited, device identifiers, cookies). We may also collect sensitive information such as your visa status or student enrolment details, only with your consent and where it is reasonably necessary for our services.`,
   },
   {
     number: "04",
-    title: "How We Use Your Information",
-    body: `We use your personal information to: process accommodation applications and bookings; manage your tenancy and communicate with you about your stay; verify your identity and eligibility; process payments and manage financial records including bonds; comply with our legal obligations under the Residential Tenancies Act 1997 (Vic) and other applicable laws; respond to your enquiries and provide customer support; improve our website and services; send you relevant updates or promotional materials (where you have consented). We will not use your information for any purpose that is incompatible with the reason it was collected without your consent.`,
+    title: "How We Collect Information (APP 3 & 5)",
+    body: `Wherever practicable, we collect personal information directly from you — when you enquire or book accommodation through our website or by phone, register for a guest account, submit an application or enquiry form, communicate with us by email or in person, visit one of our properties, or sign a tenancy agreement. We may also collect information from third parties such as educational institutions (to verify student status), reference providers, real estate agents, payment processors and identity-verification providers, where you have authorised us or where it is unreasonable or impracticable to collect it directly from you. At or before the time of collection we will take reasonable steps to make you aware of the matters set out in APP 5 (including the purpose, our identity, the consequences of not providing the information, and the existence of this policy).`,
   },
   {
     number: "05",
-    title: "Disclosure of Your Information",
-    body: `We may disclose your personal information to: our staff, contractors, and service providers who assist in delivering our services (including property managers, maintenance contractors, and IT providers); government bodies or regulators where required by law (such as the Residential Tenancies Bond Authority); financial institutions for payment processing; and professional advisers such as lawyers or accountants. We do not sell, rent, or trade your personal information to third parties for marketing purposes. If we are required to disclose information to overseas recipients, we will take reasonable steps to ensure they handle it in accordance with the APPs.`,
+    title: "Unsolicited Personal Information (APP 4)",
+    body: `If we receive personal information about you that we did not solicit, we will determine within a reasonable period whether we could have collected it under APP 3 had we asked for it. If not — and provided it is lawful and reasonable to do so — we will destroy or de-identify the information as soon as practicable.`,
   },
   {
     number: "06",
-    title: "Cookies & Website Data",
-    body: `Our website uses cookies and similar tracking technologies to improve your experience, analyse traffic, and personalise content. Cookies are small data files stored on your device. You may disable cookies through your browser settings; however, some features of our website may not function correctly without them. We use Google Analytics to understand how visitors use our site. Data collected by Google Analytics is anonymised and subject to Google's own privacy policy. We do not use cookies to collect personally identifiable information without your knowledge.`,
+    title: "How We Use & Disclose Your Information (APP 6)",
+    body: `We use your personal information for the primary purpose for which it was collected — to process accommodation applications and bookings; manage your tenancy and communicate with you about your stay; verify your identity and eligibility; process payments and manage financial records including bonds; comply with our legal obligations under the Residential Tenancies Act 1997 (Vic), the Australian Consumer Law, taxation laws and other applicable laws; respond to your enquiries and provide customer support; and improve our website and services. We will not use or disclose your personal information for a secondary purpose unless an exception under APP 6 applies (for example, you have consented, you would reasonably expect it, or it is required or authorised by law).`,
   },
   {
     number: "07",
-    title: "Storage & Security",
-    body: `We store personal information in secure systems, both on-premises and with reputable cloud service providers based in Australia. We take reasonable steps to protect your information from misuse, interference, loss, unauthorised access, modification, or disclosure. These measures include password protection, encryption, restricted staff access, and regular security reviews. While we take data security seriously, no method of transmission over the internet is completely secure, and we cannot guarantee absolute security.`,
+    title: "Direct Marketing & Spam Act 2003 (APP 7)",
+    body: `We send marketing communications (deals, updates, inspiration) only where you have given express consent — for example, by ticking the optional marketing checkbox during registration or booking. We never send marketing emails on the basis of pre-ticked boxes or implied consent. Every marketing email we send identifies us as the sender, includes valid contact details, and contains a working unsubscribe link as required by the Spam Act 2003 (Cth). You may withdraw your consent at any time by clicking "unsubscribe" in any marketing email or by emailing our Privacy Officer (see below). Withdrawal takes effect within 5 business days. Transactional messages relating to your booking, account, or legal obligations are not marketing and may continue to be sent.`,
   },
   {
     number: "08",
-    title: "Retention of Information",
-    body: `We retain personal information for as long as it is needed to fulfil the purposes for which it was collected, or as required by law. Tenancy records are generally kept for a minimum of 7 years in accordance with Australian taxation and tenancy laws. After this period, we securely destroy or de-identify the information in accordance with our internal data retention schedule.`,
+    title: "Disclosure to Third Parties (APP 6)",
+    body: `We may disclose your personal information to: our staff, contractors and service providers who assist in delivering our services (including property managers, maintenance contractors, IT providers, hosting providers, email-delivery providers, and image/document storage providers); government bodies or regulators where required or authorised by law (such as the Residential Tenancies Bond Authority, the Australian Taxation Office, or law-enforcement agencies pursuant to a lawful request); financial institutions and payment processors for payment, refund and bond processing; and professional advisers such as lawyers, accountants and auditors. We do not sell, rent or trade your personal information.`,
   },
   {
     number: "09",
-    title: "Your Rights & Access",
-    body: `Under the Privacy Act 1988 (Cth), you have the right to: access the personal information we hold about you; request correction of information that is inaccurate, out of date, or incomplete; make a complaint about how we have handled your information; and opt out of receiving direct marketing communications at any time. To exercise any of these rights, please contact us using the details below. We will respond to your request within 30 days. In some circumstances we may refuse access, and if so, we will provide written reasons.`,
+    title: "Overseas Disclosure of Information (APP 8)",
+    body: `Some of the cloud service providers we rely on store or process personal information outside Australia. In particular: our application is hosted on Replit's cloud infrastructure (United States); media files (e.g. ID document images, room photos) are stored on Cloudinary, which by default stores objects in Amazon Web Services US-East-1 (Northern Virginia, United States); transactional and marketing email is sent through Resend, whose email infrastructure operates in Amazon Web Services US-East-1 (United States); and where you make a card payment we use Stripe, which processes payment data in the United States and other countries where Stripe operates. Before disclosing information to any overseas recipient, we take reasonable steps to ensure that the recipient does not breach the APPs in relation to that information (for example, by relying on a written Data Processing Agreement, the recipient's SOC 2 compliance, and contractual confidentiality and security obligations).`,
   },
   {
     number: "10",
-    title: "Complaints",
-    body: `If you believe we have breached your privacy rights or the Australian Privacy Principles, you may lodge a complaint by contacting us directly at info@millionstay.com. We will acknowledge your complaint within 5 business days and respond with a resolution or outcome within 30 days. If you are not satisfied with our response, you may escalate your complaint to the Office of the Australian Information Commissioner (OAIC) at www.oaic.gov.au or by calling 1300 363 992.`,
+    title: "Government Identifiers (APP 9)",
+    body: `We do not adopt a government-issued identifier (such as a Tax File Number, Medicare number, or driver-licence number) as our own identifier for you. Where we collect a government identifier (most commonly a passport or visa number for tenancy or visa-eligibility verification), we use and disclose it only for the purpose for which it was collected or as required or authorised by law.`,
   },
   {
     number: "11",
+    title: "Data Quality (APP 10)",
+    body: `We take reasonable steps to ensure that the personal information we collect is accurate, up-to-date and complete, and that information we use or disclose is, having regard to the purpose, accurate, up-to-date, complete and relevant. You can help us keep your records accurate by updating your profile in the customer portal, or by emailing our Privacy Officer (see below) if anything changes.`,
+  },
+  {
+    number: "12",
+    title: "Cookies & Website Analytics",
+    body: `Our website uses cookies and similar tracking technologies to improve your experience, keep you signed in, analyse traffic and personalise content. Cookies are small data files stored on your device. You may disable cookies through your browser settings; however, some features (including signing in and bookings) may not function correctly without them. We use Google Analytics to understand how visitors use our site; data collected is pseudonymised and subject to Google's own privacy policy.`,
+  },
+  {
+    number: "13",
+    title: "Storage & Security (APP 11)",
+    body: `We take reasonable steps to protect personal information from misuse, interference, loss, unauthorised access, modification or disclosure. These measures include: encryption in transit (TLS 1.2+); hashed passwords using industry-standard algorithms; signed-URL access control for media and documents; role-based access control with least-privilege staff permissions; account lockout and rate limiting on login endpoints; audit logging; and regular security reviews. We are progressively rolling out two-factor authentication for administrative accounts. While we take data security seriously, no method of transmission over the internet is completely secure and we cannot guarantee absolute security.`,
+  },
+  {
+    number: "14",
+    title: "Retention & Destruction (APP 11.2)",
+    body: `We retain personal information for only as long as it is needed for the purposes for which it was collected or as required by law. Indicative retention periods are: tax invoices and receipts — 5 years (Income Tax Assessment Act); tenancy contracts and leases — 7 years (state tenancy laws); identity, passport and visa images — 30 days after the related verification or check-out, whichever is later; general booking metadata — for the duration of the customer relationship plus 2 years; marketing-consent audit records — until 2 years after consent is withdrawn; and website-analytics logs — up to 26 months. Once the retention period ends, we securely destroy or de-identify the information.`,
+  },
+  {
+    number: "15",
+    title: "Access & Correction — \"My Data\" (APP 12 & 13)",
+    body: `You may access the personal information we hold about you and request correction of information that is inaccurate, out-of-date, incomplete, irrelevant or misleading. Registered guest users can view and download a complete export of their personal information at any time from the "My Data" page in their account portal (Account → My Data). You may also request access or correction by emailing our Privacy Officer (see below). We will respond within 30 days. If we refuse access or correction we will give you written reasons and tell you how to complain. There is no fee for making a request, although a reasonable cost-recovery charge may apply for fulfilling unusually large or repeated access requests.`,
+  },
+  {
+    number: "16",
+    title: "Notifiable Data Breaches Scheme",
+    body: `If we become aware that personal information we hold has been involved in a data breach that is likely to result in serious harm to any affected individual, we will, in accordance with Part IIIC of the Privacy Act 1988 (Cth), assess the breach within 30 days, take reasonable steps to contain and remediate it, and notify both the affected individuals and the Office of the Australian Information Commissioner (OAIC) as soon as practicable. Our internal incident-response procedure is documented in our NDB Incident Response Runbook.`,
+  },
+  {
+    number: "17",
+    title: "Complaints (APP 1.4)",
+    body: `If you believe we have breached the Australian Privacy Principles or your privacy rights, please contact our Privacy Officer first. We will acknowledge your complaint within 5 business days and provide a substantive response within 30 days. If you are not satisfied with our response, you may escalate your complaint to the Office of the Australian Information Commissioner (OAIC) at www.oaic.gov.au, by phone on 1300 363 992, or by writing to GPO Box 5288, Sydney NSW 2001.`,
+  },
+  {
+    number: "18",
     title: "Changes to This Policy",
-    body: `We may update this Privacy Policy from time to time to reflect changes in our practices or legal requirements. The updated policy will be posted on our website with a revised effective date. We encourage you to review this policy periodically. Continued use of our services after any changes constitutes your acceptance of the updated policy.`,
+    body: `We may update this Privacy Policy from time to time to reflect changes in our practices, the services we offer, or legal requirements. The updated policy will be posted on this page with a revised effective date. Where the change is material we will take additional steps to notify you (for example, an in-app notice or email). Continued use of our services after the effective date constitutes your acceptance of the updated policy.`,
   },
 ];
 
@@ -96,8 +131,8 @@ export default function PrivacyPolicy() {
           <div className="lg:col-span-3 space-y-8">
             <motion.div {...fade(0)} className="bg-orange-50 border border-orange-100 rounded-xl px-6 py-4">
               <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">Effective Date</p>
-              <p className="text-sm text-gray-700 font-semibold">1 January 2025</p>
-              <p className="text-xs text-gray-500 mt-2">This policy applies to Million Homestay Australia Pty Ltd (ACN 000 000 000) and complies with the Privacy Act 1988 (Cth) and the Australian Privacy Principles.</p>
+              <p className="text-sm text-gray-700 font-semibold">19 April 2026</p>
+              <p className="text-xs text-gray-500 mt-2">This policy applies to Million Homestay Australia Pty Ltd and complies with the Privacy Act 1988 (Cth), the 13 Australian Privacy Principles, the Notifiable Data Breaches scheme and the Spam Act 2003 (Cth).</p>
             </motion.div>
 
             {SECTIONS.map((section, i) => (
@@ -124,13 +159,16 @@ export default function PrivacyPolicy() {
                 For any privacy-related enquiries, access requests, or complaints, please contact us at:
               </p>
               <div className="mt-3 space-y-1 text-sm">
-                <p className="text-gray-700"><span className="font-medium">Email:</span>{" "}
-                  <a href="mailto:info@millionstay.com" className="text-primary hover:underline">info@millionstay.com</a>
+                <p className="text-gray-700"><span className="font-medium">Privacy Officer:</span>{" "}
+                  <a href="mailto:millionstay.com@gmail.com" className="text-primary hover:underline">millionstay.com@gmail.com</a>
                 </p>
                 <p className="text-gray-700"><span className="font-medium">Website:</span>{" "}
                   <a href="https://www.millionstay.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">www.millionstay.com</a>
                 </p>
                 <p className="text-gray-700"><span className="font-medium">Address:</span> Melbourne, Victoria, Australia</p>
+                <p className="text-gray-700 pt-2"><span className="font-medium">Access your data:</span>{" "}
+                  <Link href="/portal/my-data" className="text-primary hover:underline">/portal/my-data</Link>
+                </p>
               </div>
             </motion.div>
           </div>
