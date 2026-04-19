@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "hFg0R85WbhBQkxNMW79Hb"
+uri = "file://exports/millionstay-reverse-docs.tar.gz"
+type = "unspecified"
+title = "MillionStay Reverse Documentation Pack (35 files)"
