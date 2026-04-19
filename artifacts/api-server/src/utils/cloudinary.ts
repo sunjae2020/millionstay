@@ -71,6 +71,60 @@ export async function uploadToCloudinary(
   };
 }
 
+/**
+ * Sprint A-6 — Generate a time-limited Signed URL for a Cloudinary asset.
+ *
+ * Use this for sensitive documents (passport scans, signed contracts, invoices)
+ * uploaded with `type: "authenticated"`. The returned URL contains a
+ * `?__cld_token__=` query parameter that expires after `expiresInSeconds`.
+ *
+ * NOTE: Public marketing assets (e.g. space images) are stored as `type: "upload"`
+ * and remain on permanent CDN URLs — switching them to signed URLs would break
+ * SEO and browser caching. Only use this helper for assets uploaded as
+ * `authenticated`.
+ */
+export function generateSignedUrl(publicId: string, expiresInSeconds = 900): string {
+  if (!publicId) throw new Error("generateSignedUrl: publicId is required");
+  return cloudinary.url(publicId, {
+    sign_url: true,
+    type: "authenticated",
+    secure: true,
+    expires_at: Math.floor(Date.now() / 1000) + expiresInSeconds,
+  });
+}
+
+/**
+ * Sprint A-6 — Upload a sensitive file (e.g. passport, contract PDF) using
+ * Cloudinary `authenticated` mode so it can ONLY be served via signed URLs.
+ *
+ * Pair with `generateSignedUrl(publicId)` when serving the file to clients.
+ */
+export async function uploadPrivateToCloudinary(
+  buffer: Buffer,
+  options: Record<string, unknown> = {},
+): Promise<{ public_id: string; bytes: number; format: string }> {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: "millionstay/private",
+        type: "authenticated",
+        access_mode: "authenticated",
+        ...options,
+      },
+      (error, res) => {
+        if (error || !res) reject(error ?? new Error("Cloudinary private upload failed"));
+        else
+          resolve({
+            public_id: (res as any).public_id,
+            bytes: (res as any).bytes,
+            format: (res as any).format,
+          });
+      },
+    );
+    stream.end(buffer);
+  });
+}
+
 export async function deleteFromCloudinary(publicId: string): Promise<void> {
   if (!publicId) return;
   try {

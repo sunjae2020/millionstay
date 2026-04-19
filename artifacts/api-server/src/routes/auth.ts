@@ -5,6 +5,22 @@ import { db, usersTable } from "@workspace/db";
 import { eq, and, gt } from "drizzle-orm";
 import { signJWT, requireAuth } from "../middlewares/requireAuth";
 import { sendPasswordResetEmail, sendRegistrationRequestEmail } from "../lib/email";
+import {
+  issueRefreshToken,
+  verifyRefreshToken,
+  revokeRefreshToken,
+  rotateRefreshToken,
+  revokeAllForUser,
+} from "../lib/refreshTokens";
+
+function clientMeta(req: any) {
+  const ip =
+    (req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim() ||
+    req.ip ||
+    null;
+  const ua = (req.headers["user-agent"] as string | undefined) ?? null;
+  return { ipAddress: ip, userAgent: ua };
+}
 
 const router: IRouter = Router();
 
@@ -66,9 +82,20 @@ router.post("/v1/auth/login", async (req, res): Promise<void> => {
       (req as any).session.token = token;
     }
 
+    // Sprint A-5: issue a refresh token alongside the access token.
+    // Clients may opt-in by calling /v1/auth/refresh before the access token expires.
+    const meta = clientMeta(req);
+    const refreshToken = await issueRefreshToken({
+      userId: user.id,
+      userType: "admin",
+      ipAddress: meta.ipAddress,
+      userAgent: meta.userAgent,
+    });
+
     res.json({
       success: true,
       token,
+      refresh_token: refreshToken,
       user: {
         id: user.id,
         email: user.email,
@@ -81,6 +108,56 @@ router.post("/v1/auth/login", async (req, res): Promise<void> => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, error: "Login failed" });
+  }
+});
+
+/* ─── Refresh access token (Sprint A-5) ───────────────────── */
+router.post("/v1/auth/refresh", async (req, res): Promise<void> => {
+  try {
+    const { refresh_token } = req.body as { refresh_token?: string };
+    if (!refresh_token) {
+      res.status(400).json({ success: false, error: "refresh_token is required" });
+      return;
+    }
+
+    const verified = await verifyRefreshToken(refresh_token, "admin");
+    if (!verified) {
+      res.status(401).json({ success: false, error: "Invalid or expired refresh token" });
+      return;
+    }
+
+    const [user] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.id, verified.user_id))
+      .limit(1);
+
+    if (!user || !user.is_active || user.deleted_at || user.status !== "active") {
+      // Revoke the token so it can't be reused if the account became inactive
+      await revokeRefreshToken(refresh_token);
+      res.status(401).json({ success: false, error: "Account is no longer active" });
+      return;
+    }
+
+    const meta = clientMeta(req);
+    const newRefresh = await rotateRefreshToken(refresh_token, {
+      userId: user.id,
+      userType: "admin",
+      ipAddress: meta.ipAddress,
+      userAgent: meta.userAgent,
+    });
+
+    const payload = { id: user.id, email: user.email, role: user.role };
+    const newAccess = signJWT(payload);
+
+    if ((req as any).session) {
+      (req as any).session.token = newAccess;
+    }
+
+    res.json({ success: true, token: newAccess, refresh_token: newRefresh });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: "Refresh failed" });
   }
 });
 
@@ -222,6 +299,13 @@ router.post("/v1/auth/reset-password", async (req, res): Promise<void> => {
       .set({ password_hash, reset_token: null, reset_token_expires_at: null, force_password_change: false })
       .where(eq(usersTable.id, user.id));
 
+    // Sprint A-5: invalidate every refresh token for this user after password reset.
+    try {
+      await revokeAllForUser(user.id, "admin");
+    } catch (err) {
+      console.error("Failed to revoke refresh tokens after password reset:", err);
+    }
+
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -230,7 +314,16 @@ router.post("/v1/auth/reset-password", async (req, res): Promise<void> => {
 });
 
 /* ─── Logout ─────────────────────────────────────────────── */
-router.post("/v1/auth/logout", (req, res): void => {
+router.post("/v1/auth/logout", async (req, res): Promise<void> => {
+  // Sprint A-5: revoke the supplied refresh token so it cannot be used again.
+  const { refresh_token } = (req.body ?? {}) as { refresh_token?: string };
+  if (refresh_token) {
+    try {
+      await revokeRefreshToken(refresh_token);
+    } catch (err) {
+      console.error("Failed to revoke refresh token on logout:", err);
+    }
+  }
   if ((req as any).session) {
     (req as any).session.destroy(() => {});
   }
