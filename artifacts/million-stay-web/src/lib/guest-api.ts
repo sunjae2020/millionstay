@@ -169,6 +169,7 @@ interface RegisterPayload {
   first_name?: string;
   last_name?: string;
   phone?: string;
+  marketing_consent?: boolean;
 }
 
 interface RegisterResponse {

@@ -1,7 +1,8 @@
 import { Router, type IRouter } from "express";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
-import { db, guestUsersTable, accountsTable } from "@workspace/db";
+import { db, guestUsersTable, accountsTable, marketingConsentsTable } from "@workspace/db";
+import { sql } from "drizzle-orm";
 import { signGuestJWT, requireGuestAuth } from "../middlewares/requireGuestAuth";
 import { validatePassword } from "../utils/passwordPolicy";
 
@@ -12,12 +13,13 @@ const router: IRouter = Router();
 ──────────────────────────────────────────────────────── */
 router.post("/v1/auth/guest/register", async (req, res): Promise<void> => {
   try {
-    const { email, password, first_name, last_name, phone } = req.body as {
+    const { email, password, first_name, last_name, phone, marketing_consent } = req.body as {
       email: string;
       password: string;
       first_name?: string;
       last_name?: string;
       phone?: string;
+      marketing_consent?: boolean;
     };
 
     if (!email || !password) {
@@ -79,6 +81,44 @@ router.post("/v1/auth/guest/register", async (req, res): Promise<void> => {
         last_name: guestUsersTable.last_name,
         account_id: guestUsersTable.account_id,
       });
+
+    // Sprint B-1: Record marketing consent (only if explicitly opted in).
+    // Per Spam Act 2003: pre-ticked checkboxes are NOT consent — must be explicit.
+    if (marketing_consent === true) {
+      const ip =
+        (req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim() ||
+        (req.socket?.remoteAddress ?? null);
+      const ua = (req.headers["user-agent"] as string | undefined) ?? null;
+      try {
+        await db
+          .insert(marketingConsentsTable)
+          .values({
+            user_id: newGuest.id,
+            email: normalizedEmail,
+            channel: "email",
+            opted_in_at: new Date(),
+            opted_out_at: null,
+            source: "registration",
+            ip_address: ip ?? null,
+            user_agent: ua,
+          })
+          .onConflictDoUpdate({
+            target: [marketingConsentsTable.email, marketingConsentsTable.channel],
+            set: {
+              user_id: newGuest.id,
+              opted_in_at: new Date(),
+              opted_out_at: null,
+              source: "registration",
+              ip_address: ip ?? null,
+              user_agent: ua,
+              updated_at: sql`now()`,
+            },
+          });
+      } catch (consentErr) {
+        // Don't fail registration if consent insert fails — log only.
+        console.error("[marketing_consent] insert failed:", consentErr);
+      }
+    }
 
     const token = signGuestJWT({
       id: newGuest.id,

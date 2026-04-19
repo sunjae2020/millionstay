@@ -8,6 +8,7 @@ import {
   FileImage,
   Headphones,
   User,
+  Shield,
   LogOut,
   Menu,
   X,
@@ -85,6 +86,7 @@ export function PortalLayout({ children, active }: PortalLayoutProps) {
     { href: "/portal/documents", labelKey: "portal.nav.documents", icon: FileImage },
     { href: "/portal/cs", labelKey: "portal.nav.cs", icon: Headphones },
     { href: "/portal/profile", labelKey: "portal.nav.profile", icon: User },
+    { href: "/portal/my-data", labelKey: "portal.nav.my_data", icon: Shield },
   ];
 
   const displayName = [guest?.first_name, guest?.last_name].filter(Boolean).join(" ") || guest?.email || "Guest";

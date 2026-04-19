@@ -288,6 +288,7 @@ export default function BookingNew() {
   const [registerName, setRegisterName]   = useState(guestName ?? "");
   const [loginMode, setLoginMode]         = useState<"login" | "register">("register");
   const [loggingIn, setLoggingIn]         = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(false);
 
   const { data: spaceData, isLoading } = useGetPublicSpace(spaceId, {
     query: { enabled: !!spaceId },
@@ -483,7 +484,7 @@ export default function BookingNew() {
       const regFirstName = nameParts[0] ?? "";
       const regLastName = nameParts.slice(1).join(" ") || (nameParts[0] ?? "");
       const body = loginMode === "register"
-        ? { first_name: regFirstName, last_name: regLastName, email: loginEmail, password: loginPassword }
+        ? { first_name: regFirstName, last_name: regLastName, email: loginEmail, password: loginPassword, marketing_consent: marketingConsent }
         : { email: loginEmail, password: loginPassword };
 
       const authRes = await fetch(`${import.meta.env.VITE_API_URL ?? ""}${apiPath}`, {
@@ -976,13 +977,29 @@ export default function BookingNew() {
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Password <span className="text-red-400">*</span></label>
                   <Input type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)}
-                    placeholder={loginMode === "register" ? "Create a password (min. 8 characters)" : "••••••••"} className="mt-1 h-11" autoComplete={loginMode === "register" ? "new-password" : "current-password"} />
+                    placeholder={loginMode === "register" ? "Create a password (12+ chars, mixed case, number, symbol)" : "••••••••"} className="mt-1 h-11" autoComplete={loginMode === "register" ? "new-password" : "current-password"} />
                 </div>
                 {loginMode === "register" && (
-                  <p className="text-xs text-gray-400 flex items-center gap-1.5">
-                    <Lock className="h-3 w-3 shrink-0" />
-                    Your details are encrypted and only used to manage your booking.
-                  </p>
+                  <>
+                    <p className="text-xs text-gray-400 flex items-center gap-1.5">
+                      <Lock className="h-3 w-3 shrink-0" />
+                      Your details are encrypted and only used to manage your booking.
+                    </p>
+                    {/* Sprint B-1: Marketing consent (Spam Act 2003) */}
+                    <label className="flex items-start gap-2.5 cursor-pointer pt-1">
+                      <input
+                        type="checkbox"
+                        checked={marketingConsent}
+                        onChange={(e) => setMarketingConsent(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 accent-primary cursor-pointer shrink-0"
+                        data-testid="checkbox-marketing-consent"
+                      />
+                      <span className="text-xs text-gray-600 leading-relaxed">
+                        <span className="font-medium">Optional:</span> Email me deals & updates from Million Stay.
+                        <span className="block text-[11px] text-gray-400 mt-0.5">Unsubscribe anytime. Booking emails are not affected.</span>
+                      </span>
+                    </label>
+                  </>
                 )}
               </div>
 

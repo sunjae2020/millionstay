@@ -230,7 +230,8 @@
       "invoices": "账单",
       "documents": "文件",
       "cs": "联系客服",
-      "profile": "我的资料"
+      "profile": "我的资料",
+      "my_data": "我的数据"
     },
     "bookings": {
       "title": "我的预订",

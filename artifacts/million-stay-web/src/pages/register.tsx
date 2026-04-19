@@ -26,10 +26,17 @@ const registerSchema = z.object({
   first_name: z.string().min(1, "First name required"),
   last_name: z.string().min(1, "Last name required"),
   email: z.string().email("Valid email required"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: z
+    .string()
+    .min(12, "Password must be at least 12 characters")
+    .regex(/[a-z]/, "Must contain a lowercase letter")
+    .regex(/[A-Z]/, "Must contain an uppercase letter")
+    .regex(/[0-9]/, "Must contain a digit")
+    .regex(/[^A-Za-z0-9]/, "Must contain a special character"),
   phone: z.string().optional(),
   nationality: z.string().optional(),
   terms: z.boolean().refine((v) => v === true, "You must accept the terms"),
+  marketing_consent: z.boolean().optional().default(false),
 });
 type RegisterFormData = z.infer<typeof registerSchema>;
 
@@ -53,6 +60,7 @@ export default function Register() {
     defaultValues: {
       first_name: "", last_name: "", email: "",
       password: "", phone: "", nationality: "", terms: false,
+      marketing_consent: false,
     },
   });
 
@@ -168,7 +176,7 @@ export default function Register() {
                           <Input
                             {...field}
                             type={showPw ? "text" : "password"}
-                            placeholder="Minimum 8 characters"
+                            placeholder="Minimum 12 characters with uppercase, number & symbol"
                             className="pl-9 pr-10 h-11"
                             data-testid="input-password"
                           />
@@ -276,12 +284,36 @@ export default function Register() {
                         />
                         <label htmlFor="terms" className="text-sm text-gray-600 leading-relaxed cursor-pointer">
                           I agree to the{" "}
-                          <a href="#" className="text-primary hover:underline">Terms of Service</a>
+                          <Link href="/house-rules" className="text-primary hover:underline">Terms of Service</Link>
                           {" "}and{" "}
-                          <a href="#" className="text-primary hover:underline">Privacy Policy</a>
+                          <Link href="/privacy-policy" className="text-primary hover:underline">Privacy Policy</Link>
                         </label>
                       </div>
                       <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Sprint B-1: Marketing consent — separate from terms acceptance (Spam Act 2003) */}
+                <FormField
+                  control={form.control}
+                  name="marketing_consent"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="checkbox"
+                          id="marketing_consent"
+                          checked={field.value}
+                          onChange={field.onChange}
+                          className="mt-0.5 h-4 w-4 accent-primary cursor-pointer"
+                          data-testid="checkbox-marketing-consent"
+                        />
+                        <label htmlFor="marketing_consent" className="text-sm text-gray-600 leading-relaxed cursor-pointer">
+                          <span className="font-medium">Optional:</span> Send me deals, updates and inspiration by email.
+                          <span className="block text-xs text-gray-400 mt-0.5">You can unsubscribe at any time. Booking confirmations and receipts are not affected.</span>
+                        </label>
+                      </div>
                     </FormItem>
                   )}
                 />

@@ -271,7 +271,8 @@
       "invoices": "My Invoices",
       "documents": "Documents",
       "cs": "Communications",
-      "profile": "My Profile"
+      "profile": "My Profile",
+      "my_data": "My Data"
     },
     "bookings": {
       "title": "My Bookings",

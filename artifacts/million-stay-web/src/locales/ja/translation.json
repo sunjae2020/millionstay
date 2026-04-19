@@ -226,8 +226,8 @@
   "booking": {
     "summary": "予約内容",
     "step1": "滞在情報",
-    "step2": "書類提出",
-    "step3": "お支払い",
+    "step2": "個人情報",
+    "step3": "必要書類",
     "step4": "予約完了",
     "step1_title": "滞在情報の入力",
     "step2_title": "書類のアップロード",
@@ -317,9 +317,7 @@
     "weekly_rent": "週間家賃",
     "bond": "敷金",
     "space_not_found": "物件が見つかりません。",
-    "browse_spaces": "物件を探す",
-    "step2": "個人情報",
-    "step3": "必要書類"
+    "browse_spaces": "物件を探す"
   },
   "house_rules": {
     "hero_tagline": "共に、心地よく暮らす",
@@ -357,7 +355,8 @@
       "invoices": "請求書",
       "documents": "書類",
       "cs": "お問い合わせ",
-      "profile": "プロフィール"
+      "profile": "プロフィール",
+      "my_data": "マイデータ"
     },
     "bookings": {
       "title": "予約一覧",

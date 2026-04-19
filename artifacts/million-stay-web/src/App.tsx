@@ -18,6 +18,7 @@ import PortalReceipt from "@/pages/portal-receipt";
 import PortalDocuments from "@/pages/portal-documents";
 import PortalBookingDetail from "@/pages/portal-booking-detail";
 import PortalProfile from "@/pages/portal-profile";
+import PortalMyData from "@/pages/portal-my-data";
 import PortalPayment from "@/pages/portal-payment";
 import PortalCs from "@/pages/portal-cs";
 import PortalCsNew from "@/pages/portal-cs-new";
@@ -65,6 +66,7 @@ function Router() {
       <Route path="/portal/invoices" component={PortalInvoices} />
       <Route path="/portal/documents" component={PortalDocuments} />
       <Route path="/portal/profile" component={PortalProfile} />
+      <Route path="/portal/my-data" component={PortalMyData} />
       <Route path="/portal/payment" component={PortalPayment} />
       <Route path="/portal/cs/new" component={PortalCsNew} />
       <Route path="/portal/cs/:id" component={PortalCsDetail} />

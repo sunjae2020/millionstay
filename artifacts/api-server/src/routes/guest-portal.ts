@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, desc, asc } from "drizzle-orm";
+import { eq, and, or, desc, asc, inArray } from "drizzle-orm";
 import Stripe from "stripe";
 import {
   db,
@@ -13,6 +13,8 @@ import {
   contractsTable,
   recurringSchedulesTable,
   bookingServicesTable,
+  marketingConsentsTable,
+  documentsTable,
 } from "@workspace/db";
 import { requireGuestAuth } from "../middlewares/requireGuestAuth";
 import { sendBookingConfirmation } from "../lib/email";
@@ -1020,6 +1022,208 @@ router.post("/v1/guest/payment/invoice-confirm", requireGuestAuth, async (req, r
    GET /api/v1/guest/documents
    Returns booking documents for this guest's bookings
 ──────────────────────────────────────────────────────── */
+/* ───────────────────────────────────────────────────────
+   GET /api/v1/guest/me/data — Sprint B-4
+   "내 데이터" — APP 12 (Right of access) full personal data dump.
+   Optional ?format=download adds Content-Disposition for browser save.
+──────────────────────────────────────────────────────── */
+router.get("/v1/guest/me/data", async (req, res): Promise<void> => {
+  const guest = (req as any).guest as { id: number; email: string; account_id: number | null };
+  try {
+    // 1. Profile (guest_users) — exclude password_hash
+    const [profile] = await db
+      .select({
+        id: guestUsersTable.id,
+        email: guestUsersTable.email,
+        first_name: guestUsersTable.first_name,
+        last_name: guestUsersTable.last_name,
+        phone: guestUsersTable.phone,
+        nationality: guestUsersTable.nationality,
+        date_of_birth: guestUsersTable.date_of_birth,
+        gender: guestUsersTable.gender,
+        university: guestUsersTable.university,
+        department: guestUsersTable.department,
+        student_id: guestUsersTable.student_id,
+        study_year: guestUsersTable.study_year,
+        bank_name: guestUsersTable.bank_name,
+        bank_account_name: guestUsersTable.bank_account_name,
+        bank_bsb: guestUsersTable.bank_bsb,
+        bank_account_number: guestUsersTable.bank_account_number,
+        is_active: guestUsersTable.is_active,
+        email_verified: guestUsersTable.email_verified,
+        created_at: guestUsersTable.created_at,
+        updated_at: guestUsersTable.updated_at,
+      })
+      .from(guestUsersTable)
+      .where(eq(guestUsersTable.id, guest.id))
+      .limit(1);
+
+    if (!profile) {
+      res.status(404).json({ success: false, error: "Profile not found" });
+      return;
+    }
+
+    // 2. Account
+    const account = guest.account_id
+      ? (await db
+          .select()
+          .from(accountsTable)
+          .where(eq(accountsTable.id, guest.account_id))
+          .limit(1))[0] ?? null
+      : null;
+
+    // 3. Emergency contacts
+    const emergencyContacts = await db
+      .select()
+      .from(guestEmergencyContactsTable)
+      .where(eq(guestEmergencyContactsTable.guest_user_id, guest.id))
+      .orderBy(desc(guestEmergencyContactsTable.is_primary));
+
+    // Sole-owner guard: only expose account-scoped records when this guest is
+    // the only guest_user on the account. Prevents leaking another guest's
+    // bookings/invoices when accounts are shared.
+    let accountSoleOwner = false;
+    if (guest.account_id) {
+      const sharers = await db
+        .select({ id: guestUsersTable.id })
+        .from(guestUsersTable)
+        .where(eq(guestUsersTable.account_id, guest.account_id));
+      accountSoleOwner = sharers.length === 1 && sharers[0]!.id === guest.id;
+    }
+
+    // 4. Bookings (with space name) — sole-owner only
+    const bookings = accountSoleOwner && guest.account_id
+      ? await db
+          .select({
+            id: bookingsTable.id,
+            booking_ref: bookingsTable.booking_ref,
+            booking_status: bookingsTable.booking_status,
+            check_in_date: bookingsTable.check_in_date,
+            check_out_date: bookingsTable.check_out_date,
+            num_guests: bookingsTable.num_guests,
+            total_rent: bookingsTable.total_rent,
+            currency: bookingsTable.currency,
+            customer_notes: bookingsTable.customer_notes,
+            space_id: bookingsTable.space_id,
+            space_name: spacesTable.name,
+            created_at: bookingsTable.created_at,
+          })
+          .from(bookingsTable)
+          .leftJoin(spacesTable, eq(spacesTable.id, bookingsTable.space_id))
+          .where(eq(bookingsTable.account_id, guest.account_id))
+          .orderBy(desc(bookingsTable.created_at))
+      : [];
+
+    // 5. Invoices — sole-owner only
+    const invoices = accountSoleOwner && guest.account_id
+      ? await db
+          .select({
+            id: invoicesTable.id,
+            invoice_ref: invoicesTable.invoice_ref,
+            booking_id: invoicesTable.booking_id,
+            amount: invoicesTable.amount,
+            currency: invoicesTable.currency,
+            status: invoicesTable.status,
+            due_date: invoicesTable.due_date,
+            paid_at: invoicesTable.paid_at,
+            payment_method: invoicesTable.payment_method,
+            description: invoicesTable.description,
+            created_at: invoicesTable.created_at,
+          })
+          .from(invoicesTable)
+          .where(eq(invoicesTable.account_id, guest.account_id))
+          .orderBy(desc(invoicesTable.created_at))
+      : [];
+
+    // 6. Documents (metadata only) — guest_user docs PLUS docs attached to
+    // any of this guest's bookings (APP 12 completeness).
+    const bookingIds = bookings.map((b) => b.id);
+    const docFilter = bookingIds.length > 0
+      ? or(
+          and(
+            eq(documentsTable.entity_type, "guest_user"),
+            eq(documentsTable.entity_id, guest.id),
+          ),
+          and(
+            eq(documentsTable.entity_type, "booking"),
+            inArray(documentsTable.entity_id, bookingIds),
+          ),
+        )
+      : and(
+          eq(documentsTable.entity_type, "guest_user"),
+          eq(documentsTable.entity_id, guest.id),
+        );
+    const docs = await db
+      .select({
+        id: documentsTable.id,
+        entity_type: documentsTable.entity_type,
+        entity_id: documentsTable.entity_id,
+        doc_type: documentsTable.doc_type,
+        file_name: documentsTable.file_name,
+        file_size: documentsTable.file_size,
+        mime_type: documentsTable.mime_type,
+        retention_until: documentsTable.retention_until,
+        created_at: documentsTable.created_at,
+      })
+      .from(documentsTable)
+      .where(docFilter)
+      .orderBy(desc(documentsTable.created_at));
+
+    // 7. Marketing consents
+    const consents = await db
+      .select({
+        id: marketingConsentsTable.id,
+        channel: marketingConsentsTable.channel,
+        opted_in_at: marketingConsentsTable.opted_in_at,
+        opted_out_at: marketingConsentsTable.opted_out_at,
+        source: marketingConsentsTable.source,
+        updated_at: marketingConsentsTable.updated_at,
+      })
+      .from(marketingConsentsTable)
+      .where(eq(marketingConsentsTable.email, profile.email));
+
+    const dump = {
+      generated_at: new Date().toISOString(),
+      generated_for: profile.email,
+      legal_basis:
+        "Australian Privacy Principle 12 (Right of access). This export contains all personal information held by Million Stay about you at the time of export.",
+      data: {
+        profile,
+        account,
+        emergency_contacts: emergencyContacts,
+        bookings,
+        invoices,
+        documents: docs,
+        marketing_consents: consents,
+      },
+      counts: {
+        bookings: bookings.length,
+        invoices: invoices.length,
+        documents: docs.length,
+        emergency_contacts: emergencyContacts.length,
+        marketing_consents: consents.length,
+      },
+    };
+
+    if ((req.query["format"] as string) === "download") {
+      const safeEmail = profile.email.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const stamp = new Date().toISOString().slice(0, 10);
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="millionstay-mydata-${safeEmail}-${stamp}.json"`,
+      );
+      res.send(JSON.stringify(dump, null, 2));
+      return;
+    }
+
+    res.json({ success: true, ...dump });
+  } catch (err) {
+    console.error("[my-data] failed:", err);
+    res.status(500).json({ success: false, error: "Failed to assemble personal data" });
+  }
+});
+
 router.get("/v1/guest/documents", requireGuestAuth, async (req, res): Promise<void> => {
   const guest = (req as any).guest as { id: number; email: string; account_id: number | null };
   try {
