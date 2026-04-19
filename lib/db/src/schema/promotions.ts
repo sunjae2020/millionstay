@@ -1,4 +1,4 @@
-import { pgTable, serial, text, real, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, real, integer, numeric, timestamp } from "drizzle-orm/pg-core";
 
 export const promotionsTable = pgTable("promotions", {
   id: serial("id").primaryKey(),
@@ -7,7 +7,7 @@ export const promotionsTable = pgTable("promotions", {
   term_type: text("term_type").notNull().default("ShortTerm"),
   promotion_type: text("promotion_type").notNull().default("Percentage"),
   discount_percentage: real("discount_percentage"),
-  discount_amount: real("discount_amount"),
+  discount_amount: numeric("discount_amount", { precision: 10, scale: 2 }),
   free_nights: integer("free_nights"),
   min_stay_weeks: integer("min_stay_weeks"),
   max_stay_weeks: integer("max_stay_weeks"),

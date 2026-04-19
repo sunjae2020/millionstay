@@ -69,7 +69,7 @@ router.get("/v1/dashboard/overview/kpis", async (_req, res) => {
       db.select({ amount: invoicesTable.amount }).from(invoicesTable).where(and(eq(invoicesTable.status, "Paid"), gte(invoicesTable.created_at, new Date(monthStart)), lte(invoicesTable.created_at, new Date(nextMonth)))),
     ]);
 
-    const monthlyRevenue = paidInvoices.reduce((sum, i) => sum + (i.amount ?? 0), 0);
+    const monthlyRevenue = paidInvoices.reduce((sum, i) => sum + Number(i.amount ?? 0), 0);
     const totalSpacesNum = Number(totalSpaces.count);
     const occupiedNum = Number(occupiedSpaces.count);
     const occupancyPct = totalSpacesNum > 0 ? Math.round((occupiedNum / totalSpacesNum) * 100) : 0;

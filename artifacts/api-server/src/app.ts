@@ -31,7 +31,49 @@ import { requireAuth } from "./middlewares/requireAuth";
 // points to the bundle file, so __thisDir = .../artifacts/api-server/dist/
 const __thisDir = path.dirname(fileURLToPath(import.meta.url));
 
-const SESSION_SECRET = process.env["SESSION_SECRET"] ?? "millionstay-dev-session-secret";
+// ─── Required environment variables (Sprint A-3) ───
+// Refuse to start if any critical secret is missing. No hardcoded fallbacks.
+const REQUIRED_ENV = ["DATABASE_URL", "SESSION_SECRET"] as const;
+for (const key of REQUIRED_ENV) {
+  if (!process.env[key]) {
+    // eslint-disable-next-line no-console
+    console.error(`[FATAL] Required environment variable "${key}" is not set. Server cannot start.`);
+    process.exit(1);
+  }
+}
+if (!process.env["JWT_SECRET"] && !process.env["SESSION_SECRET"]) {
+  // eslint-disable-next-line no-console
+  console.error('[FATAL] At least one of "JWT_SECRET" or "SESSION_SECRET" must be set.');
+  process.exit(1);
+}
+
+const SESSION_SECRET = process.env["SESSION_SECRET"]!;
+
+// ─── CORS allow-list (Sprint A-2) ───
+// Production: only origins listed in ALLOWED_ORIGINS (comma-separated) are allowed.
+// Development: also allow localhost and Replit preview domains so the workspace works.
+const isProduction = process.env["NODE_ENV"] === "production";
+const ALLOWED_ORIGINS = (process.env["ALLOWED_ORIGINS"] ?? "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+function isOriginAllowed(origin: string): boolean {
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  if (isProduction) return false;
+  // Dev-only allowances
+  try {
+    const { hostname, protocol } = new URL(origin);
+    if (protocol !== "http:" && protocol !== "https:") return false;
+    if (hostname === "localhost" || hostname === "127.0.0.1") return true;
+    if (hostname.endsWith(".replit.dev")) return true;
+    if (hostname.endsWith(".replit.app")) return true;
+    if (hostname.endsWith(".repl.co")) return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
 
 const app: Express = express();
 
@@ -66,7 +108,19 @@ app.use(
 );
 
 app.use(cors({
-  origin: true,
+  origin: (origin, cb) => {
+    // Allow same-origin / non-browser requests (no Origin header: curl, server-to-server)
+    if (!origin) {
+      cb(null, true);
+      return;
+    }
+    if (isOriginAllowed(origin)) {
+      cb(null, true);
+      return;
+    }
+    logger.warn({ origin }, "CORS blocked: origin not in allow-list");
+    cb(new Error(`CORS blocked: ${origin}`));
+  },
   credentials: true,
 }));
 

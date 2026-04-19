@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, text, real, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, numeric, timestamp } from "drizzle-orm/pg-core";
 
 export const invoicesTable = pgTable("invoices", {
   id: serial("id").primaryKey(),
@@ -6,7 +6,7 @@ export const invoicesTable = pgTable("invoices", {
   booking_id: integer("booking_id"),
   contract_id: integer("contract_id"),
   account_id: integer("account_id"),
-  amount: real("amount").notNull().default(0),
+  amount: numeric("amount", { precision: 10, scale: 2 }).notNull().default("0"),
   currency: text("currency").notNull().default("AUD"),
   status: text("status").notNull().default("Draft"),
   due_date: text("due_date"),

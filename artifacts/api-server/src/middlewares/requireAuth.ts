@@ -1,7 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env["JWT_SECRET"] ?? process.env["SESSION_SECRET"] ?? "millionstay-dev-secret-change-in-production";
+const JWT_SECRET = process.env["JWT_SECRET"] ?? process.env["SESSION_SECRET"];
+if (!JWT_SECRET) {
+  throw new Error(
+    "[FATAL] JWT_SECRET (or SESSION_SECRET) environment variable must be set. " +
+    "Refusing to start with a hardcoded development secret.",
+  );
+}
 
 export interface AuthPayload {
   id: number;
