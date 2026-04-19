@@ -1,0 +1,91 @@
+# Booking Test Cases (Recommended)
+
+> Use these as the acceptance suite for the current Node/Express implementation **and** the future C# port.
+
+## 1. Booking creation
+
+| # | Scenario | Expected |
+|---|---|---|
+| BC-01 | Valid guest application | 201, status `PendingApproval`, audit log row |
+| BC-02 | check_out before check_in | 400 `VALIDATION_ERROR` |
+| BC-03 | Past check_in date | 400 `INVALID_DATE` (after fix C-02) |
+| BC-04 | Stay below `min_stay_weeks` | 400 `STAY_TOO_SHORT` (after fix C-03) |
+| BC-05 | Stay above `max_stay_weeks` | 400 `STAY_TOO_LONG` (after fix C-03) |
+| BC-06 | Guest A submits for Guest B's account_id | 403 `FORBIDDEN` |
+| BC-07 | Unknown space_id | 404 |
+| BC-08 | Soft-deleted space | 404 |
+| BC-09 | Concurrent applications same space + dates | both 201 (status PendingApproval) — confirmation handles overbooking, not application |
+
+## 2. Status transitions
+
+| # | Scenario | Expected |
+|---|---|---|
+| BS-01 | Submit Draft → PendingPayment | 200 |
+| BS-02 | Submit non-Draft | 409 |
+| BS-03 | Confirm PendingApproval → Confirmed | 200 + dates blocked + contract row created |
+| BS-04 | Confirm Cancelled | 409 |
+| BS-05 | Reject PendingApproval → Cancelled | 200 |
+| BS-06 | Reject Confirmed | 409 |
+| BS-07 | Cancel Confirmed | 200 + dates unblocked |
+| BS-08 | Cancel CheckedOut | 409 |
+| BS-09 | Cancel already Cancelled | 409 |
+| BS-10 | Check-in Confirmed | 200 |
+| BS-11 | Check-in Active | 409 |
+| BS-12 | Check-out Active | 200 |
+| BS-13 | Check-out Confirmed | 409 |
+| BS-14 | After cancel, contract is terminated | (after fix BL-02) ✅ |
+
+## 3. Overbooking (the big one)
+
+| # | Scenario | Expected |
+|---|---|---|
+| BO-01 | Confirm two non-overlapping bookings same space | both 200 |
+| BO-02 | Confirm overlapping booking after another is Confirmed | 409 with conflict dates listed |
+| BO-03 | Cancel A then confirm B (overlapping) | 200 (dates freed) |
+| BO-04 | **Race** — submit two confirms for same space + dates concurrently (10 attempts) | exactly 1 succeeds, 9 return 409 — covers the race-condition fix |
+| BO-05 | Confirm in second space (different space_id) — non-conflicting | 200 |
+
+## 4. Side-effects of confirm
+
+| # | Scenario | Expected |
+|---|---|---|
+| BX-01 | Confirm creates `space_blocked_dates` rows for every night in range | row count = nights |
+| BX-02 | Confirm with no `account_id` | 400 (cannot create contract without tenant) |
+| BX-03 | Confirm creates contract with status `Draft` | yes |
+| BX-04 | Confirm computes `bond_amount = weekly_rate × 4` | yes |
+| BX-05 | Confirm computes `advance_amount = weekly_rate × 2` | yes |
+| BX-06 | Confirm writes 1 audit log entry | yes |
+
+## 5. Contract activation cascade
+
+| # | Scenario | Expected |
+|---|---|---|
+| CT-01 | Activate Signed contract | booking → Active, invoices generated, schedule rows created |
+| CT-02 | Activate Draft contract | 409 |
+| CT-03 | Activate generates 1 invoice per period (Weekly/Biweekly/Monthly) | row count matches |
+| CT-04 | Last partial period pro-rated | amount = `weekly_rate × periodDays / 7`, rounded |
+| CT-05 | Re-activate (idempotent) | unpaid invoices wiped + regenerated; paid invoices preserved |
+
+## 6. Audit log
+
+| # | Scenario | Expected |
+|---|---|---|
+| AL-01 | Every status change writes a `system_log` row | yes |
+| AL-02 | `actor_id` matches the authenticated admin | yes |
+| AL-03 | `old_value` and `new_value` are JSON blobs | yes |
+| AL-04 | `system_log` insert is in the same transaction as the state change | yes — rollback erases both |
+
+## 7. Authorization
+
+| # | Scenario | Expected |
+|---|---|---|
+| AZ-01 | Guest A `GET /v1/guest/bookings/<Guest B's id>` | 404 |
+| AZ-02 | Agent retrieves only their own `agent_account_id` bookings | yes |
+| AZ-03 | Owner sees bookings for spaces under their owned properties | yes |
+| AZ-04 | Admin sees all bookings regardless of source | yes |
+
+## 8. Edge cases worth fixing
+
+- BC-09: same dates concurrently → one application reaches confirm first; if both somehow get confirmed in parallel, BO-04 is the real safety net.
+- Same guest applies twice for same space + dates → currently allowed; consider de-dupe at submit.
+- 0-night stay (check_in == check_out) → currently allowed by validator; should be 400.
