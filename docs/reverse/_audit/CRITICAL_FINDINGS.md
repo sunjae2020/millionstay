@@ -199,41 +199,70 @@ A C# `enum PortalType { Agent, Owner }` would refuse to deserialize the third va
 
 ---
 
-## CF-006 — Two contradictory weekly→monthly conversion formulas in the same file
+## CF-006 — Two contradictory weekly→monthly conversion formulas across the codebase
 
 | Field | Value |
 |---|---|
 | **Severity** | 🟡 P1 |
 | **Scope** | Finance · Reporting |
 | **Status** | OPEN |
+| **Last evidence expansion** | T002.1.8 (2026-04-26) — 2 sites → 4 sites (pattern is project-wide, not file-local). |
 
-### Evidence
+### Evidence (4 sites, 2 distinct formulas)
+
+**Formula A — `weeklyRate * 4`** (one site):
 
 `artifacts/api-server/src/routes/owner-portal.ts:83`:
 ```ts
 .reduce((sum, b) => sum + parseFloat(b.agreed_weekly_rate ?? "0") * 4, 0);
 ```
 
+**Formula B — `weeklyRate * (52 / 12)`** (three sites, all expressed identically as `parseFloat((weeklyRate * (52/12)).toFixed(2))` or equivalent):
+
 `artifacts/api-server/src/routes/owner-portal.ts:236`:
 ```ts
 const monthlyRent = (c.weekly_rate ?? 0) * 52 / 12;
 ```
 
+`artifacts/api-server/src/routes/bookings.ts:485` (inside booking → contract auto-create, line-item generator — booking S2 cross-ref in `_schema/api-endpoints/booking.md`):
+```ts
+const rentUnitPrice = (() => {
+  if (rentBillingFreq === "Weekly") return weeklyRate;
+  if (rentBillingFreq === "Biweekly") return weeklyRate * 2;
+  return parseFloat((weeklyRate * (52 / 12)).toFixed(2));
+})();
+```
+
+`artifacts/api-server/src/routes/contracts.ts:92-94` (inside helper `generateContractInvoicesAndSchedules`, called by E9 `POST /v1/contracts/:id/activate` — contract domain doc `_schema/api-endpoints/contract.md` E9):
+```ts
+const rentAmount = billingFreq === "Weekly" ? weeklyRate
+  : billingFreq === "Biweekly" ? weeklyRate * 2
+  : parseFloat((weeklyRate * (52 / 12)).toFixed(2));
+```
+
 ### Reproduction
 
-Within `owner-portal.ts`:
-- The dashboard "rent under management" sum (line 83) treats one month as **4 weeks**.
-- The contract-detail "monthlyRent" (line 236) treats one month as **52 ÷ 12 ≈ 4.333 weeks**.
+For a `$500 / week` property:
+- The owner dashboard summary line (`owner-portal.ts:83`) reports **`$2,000.00`** ("rent under management" using Formula A).
+- The same property's contract-detail page (`owner-portal.ts:236`), the auto-created Monthly rent line item (`bookings.ts:485`), and the recurring Monthly invoice generator (`contracts.ts:94`) all report **`$2,166.67`** (Formula B).
 
-For a `$500 / week` property the two figures are `$2,000` and `$2,166.67` respectively — a 8.3% delta. Owners will see one number on the dashboard and a different number on the contract detail page.
+Net delta: 8.3%. The dashboard total will not equal the sum of the contracts it summarises. Reports, settlement statements, and any owner-facing aggregate are exposed.
+
+### Distribution analysis
+
+3 of 4 sites use Formula B; only the **dashboard aggregator** uses Formula A. Formula B is the **de-facto majority** but no helper or constant enforces it — each site re-derives the formula inline.
 
 ### Recommendation (no code change)
 
-Consolidate into a single helper (`weeklyToMonthly(weekly: Decimal): Decimal`) and pick one formula by policy. The `52/12` form matches Australian rental industry practice and is also used in `bookings.ts:485` and `contracts.ts:94`, so it is the de-facto standard inside the codebase.
+Consolidate into a single helper (`weeklyToMonthly(weekly: Decimal): Decimal`) exported from `lib/db/src/utils/` (or similar shared location) and replace all 4 inline forms. Choose Formula B (matches Australian rental industry practice and is the existing majority).
 
 ### Phase 2 impact
 
-Reports, settlement statements, and any owner-facing summary are exposed.
+A C# port that mirrors today's "inline at every call site" pattern reproduces the bug with high probability — there is no single function to port. Centralising into `WeeklyToMonthly(decimal weekly)` in a shared `Money` helper class is the natural Phase-2 fix.
+
+### Carrier
+
+`bookings.ts:485` is also the line-item-generator side of the line-items rollup invariant (`MONEY_AUDIT.md` §3 / TC-M02). `contracts.ts:94` is the recurring-invoice-generator side. A formula change affects both invariants.
 
 ---
 
@@ -589,6 +618,7 @@ A C# port using `DateTime` (no TZ) vs `DateTimeOffset` will inherit the existing
 | **Severity** | 🟡 P1 |
 | **Scope** | Data integrity · Atomicity |
 | **Status** | OPEN |
+| **Last evidence expansion** | T002.1.8 (2026-04-26) — entry handler-only → entry handler + helper span (L55-237 enumerated, ≥27 mutations per typical 12-month activation). |
 
 ### Evidence
 
@@ -612,8 +642,7 @@ router.post("/v1/contracts/:id/activate", async (req, res): Promise<void> => {
     .where(eq(contractsTable.id, id)).returning();
   if (!row) { res.status(404).json({ error: "NOT_FOUND" }); return; }
 
-  const generated = await generateContractInvoicesAndSchedules(id);   // ← step 2 (multiple INSERTs)
-
+  const generated = await generateContractInvoicesAndSchedules(id);   // ← step 2 — see helper breakdown below
   if (row.booking_id) {
     await db.update(bookingsTable)                              // ← step 3
       .set({ booking_status: "Active" })
@@ -625,14 +654,32 @@ router.post("/v1/contracts/:id/activate", async (req, res): Promise<void> => {
 });
 ```
 
+### Helper breakdown — `generateContractInvoicesAndSchedules` (`contracts.ts:55-237`, 183 lines)
+
+The "step 2" line above hides the bulk of the atomicity risk. The helper is invoked **without** receiving a `tx` parameter and uses the module-level `db` for every statement. Per typical 12-month Rent contract activation (1 rent line item, 1 bond, 1 advance), the helper executes in this order:
+
+| # | Operation | Approx. count per 12-mo Rent contract |
+|---:|---|---:|
+| (i) | `db.delete(invoicesTable).where(eq(contract_id, id))` (idempotency wipe) | 1 |
+| (ii) | `db.delete(recurringSchedulesTable).where(eq(contract_id, id))` (idempotency wipe) | 1 |
+| (iii) | `db.select(... contractLineItemsTable ...).where(eq(contract_id, id))` (read line items) | 1 (read, not counted as mutation) |
+| (iv) | `db.insert(invoicesTable).values({...})` per Bond / Advance line item | 0–2 |
+| (v) | `db.insert(recurringSchedulesTable).values({...})` for the rent stream | 1 |
+| (vi) | `db.insert(invoicesTable).values({...})` per generated rent invoice (one per billing period spanned by the contract dates) | 12 (Monthly), 26 (Biweekly), or 52 (Weekly) |
+| (vii) | `db.insert(recurringSchedulesTable).values({...})` for any extra non-rent recurring line items | 0–N |
+
+**Sequential mutation count for the typical 12-month Monthly contract**: 1 + 1 + 2 + 1 + 12 = **≥17 unenveloped writes**. For a 12-month Weekly contract the count rises to **≥57**. Combined with the entry handler's 3 outer writes (steps 1, 3, 4) and the 2 idempotency deletes (i, ii), one `POST /:id/activate` HTTP call performs **≥27 sequential mutations** across **3 tables** (`contracts`, `invoices`, `recurring_schedules`, plus `bookings` if linked) with **zero transaction boundary**.
+
+The two idempotency deletes (i, ii) at the *start* of the helper are themselves a giveaway: the author knew partial failure was possible (otherwise idempotency would not be needed) but addressed it by destroying-and-recreating on every call rather than wrapping the whole sequence in a transaction. A retry after partial failure leaves the contract `"Active"` with whatever rows the previous attempt managed to write, then deletes them all and recreates them — money-touching rows are reissued under new IDs.
+
 Insert-call density elsewhere on the same kind of code path:
 - `bookings.ts`: 6 distinct `db.insert(...)` calls (booking confirm, terms generation, line items, …).
-- `contracts.ts`: 8 distinct `db.insert(...)` calls.
+- `contracts.ts`: 8 distinct `db.insert(...)` calls + the 22+ helper-internal calls counted above.
 - `invoices.ts`: 1 `db.insert(...)`.
 
 ### Reproduction
 
-If `generateContractInvoicesAndSchedules` partially fails (e.g. NETWORK error after the 2nd of 4 invoice INSERTs), the contract is already `"Active"` and the booking has not yet been promoted. Re-running the activation handler will (a) succeed because no idempotency check exists, (b) generate **duplicate** invoices for the periods that did succeed.
+If `generateContractInvoicesAndSchedules` partially fails (e.g. NETWORK error after the 2nd of 12 monthly invoice INSERTs), the contract is already `"Active"` and the booking has not yet been promoted. Re-running the activation handler will (a) succeed because the helper's first action is to `db.delete` the prior partial inserts, (b) regenerate **duplicate** invoice IDs (the old IDs are now gone but `system_logs` may still reference them — see CF-008 / CF-009 / CF-015 interaction), (c) re-issue invoice numbers if those are derived from row count or sequence, breaking external invoice numbering continuity.
 
 For booking confirmation (`bookings.ts:393-461`) the same risk applies — contract write succeeds, line-items write fails, contract sits in DB referencing missing line items.
 
@@ -716,8 +763,10 @@ EF Core's `HasQueryFilter` for soft-delete relies on a uniform column. Today's t
 | CF-014 | 🟡 P1 | Multi-step mutations not in transactions | OPEN |
 | CF-015 | 🟡 P1 | Soft-delete vs hard-delete inconsistent | OPEN |
 | CF-016 | 🟢 P2 | Schema file/table/variable naming inconsistency (14 of 50 tables break convention) — Phase 2 migration friction | OPEN |
+| CF-017 | 🟡 P1 | Input validation (Zod or any) absent on ~90% of route files — only 5 of 52 files validate `req.body` | OPEN |
+| CF-018 | 🟡 P1 | IDOR-class authorization-scope omission on nested resource handlers — 7 outright + 3 partial of 17 audited | OPEN |
 
-**Counts after T002.1.7 follow-up**: P0=3, P1=10, P2=3 (total 16). All financial- and data-integrity-class findings are P1+; CF-016 is the first Phase-2-only (post-Phase-1-cutover) finding.
+**Counts after T002.1.8 follow-up**: P0=3, P1=12, P2=3 (total 18). CF-017 + CF-018 are both T002.2.a Spot-Check C3 graduates (R-REPO-5).
 
 ---
 
@@ -786,6 +835,143 @@ The CF-009 mis-classification (claimed 2 dead tables, real = 1) was a direct con
 ### Carrier
 
 `_schema/SCHEMA_FILE_TABLE_MAP.md` §3 is the canonical evidence. Any cleanup PR must update both files together.
+
+---
+
+## CF-017 — Input validation (Zod or any) absent on ~90% of route files
+
+| Field | Value |
+|---|---|
+| **Severity** | 🟡 P1 |
+| **Scope** | Security · Data integrity · Input validation · Phase 2 codegen |
+| **Status** | OPEN |
+| **Discovery** | T002.2.a Spot-Check C3 category [d] ("Zod absence ×28, domain-wide observation") escalated to T002.1.8 (R-REPO-5) after cross-domain audit confirmed it is project-wide, not contract-specific. |
+
+### Evidence
+
+Project-wide audit of `artifacts/api-server/src/routes/` (52 `.ts` route files, ~353 endpoints):
+
+**Files importing `zod` directly** — `rg -lc "from \"zod\"" artifacts/api-server/src/routes/`: only **2**.
+- `email-templates.ts`
+- `recurring-schedules.ts`
+
+**Files using `z.*` schema patterns** — `rg -c "z\.(object|string|number|enum|array|parse|safeParse)" artifacts/api-server/src/routes/`: only **5**.
+| File | `z.*` call sites |
+|---|---:|
+| `blog-posts.ts` | 32 |
+| `email-templates.ts` | 6 |
+| `page-contents.ts` | 5 |
+| `promotions.ts` | 19 |
+| `recurring-schedules.ts` | 11 |
+
+**Files using shared schema validators** (e.g. `*.safeParse(req.body)` where the `*Params` / `*Body` schema is imported from `@workspace/api-types` or `@workspace/api-spec`): **1 known so far** — `bookings.ts` (≥18 `safeParse` call sites; the canonical exemplar documented in `_schema/api-endpoints/booking.md` S1–S5).
+
+**Net coverage**: ~6 of 52 route files (~12%) perform any form of input-shape validation; ~46 of 52 (~88%) accept `req.body` and `req.params` without runtime type checks. The contract domain (28 / 28 endpoints, T002.2.a) is the largest single block of unvalidated mutation surface.
+
+### Reproduction
+
+Open `artifacts/api-server/src/routes/contracts.ts:589`:
+```ts
+router.patch("/v1/contracts/:id/line-items/:lineId", async (req, res): Promise<void> => {
+  const lineId = Number(req.params.lineId);
+  const { item_type, name, billing_trigger, billing_frequency, unit_price, quantity, currency, gst_included, notes } = req.body;
+  const qty = Number(quantity ?? 1);
+  const price = parseFloat(unit_price ?? 0);
+  // … straight to db.update()
+```
+
+Send `PATCH /v1/contracts/1/line-items/1` with body `{"unit_price": "abracadabra"}`:
+- `parseFloat("abracadabra")` → `NaN`
+- `String(NaN)` → `"NaN"`
+- `db.update(...).set({ unit_price: "NaN", total_price: "NaN", ... })` → PostgreSQL rejects with a low-level cast error returned to the caller as a generic 500.
+
+Send the same with `{"item_type": null, "name": <a 100MB string>, ...}`:
+- All fields are dropped into the `set({...})` object via spread; nothing rejects them at the boundary.
+- The 100MB string is sent over the wire to PostgreSQL, which rejects only after partial transmission — `pg` may exhaust the per-process backend memory budget during the parse step.
+
+### Phase 2 impact
+
+A C# port using FluentValidation, DataAnnotations, or MediatR pipeline behaviours needs **per-endpoint validator classes**. Today, those validators do not exist in code form for ~88% of endpoints — the implicit "validation rules" must be reverse-engineered from each handler's downstream behaviour (which fields it reads off `req.body`, what types it coerces them to, what DB column types they land in). Migration tooling cannot auto-generate validators from absent specs; a human re-derivation pass per endpoint is required. With 353 endpoints, this is a multi-week task that will be done after the port and patched in over time, leaving a window during which the C# server has no input validation either.
+
+### Recommendation (no code change)
+
+1. Establish a project-wide policy: every write endpoint MUST validate `req.body` with a Zod schema (or equivalent) before any business logic. Read endpoints MUST validate `req.params` and `req.query`.
+2. **Phase 1 cleanup** (separate PR): define schemas in `@workspace/api-types` (or per-route file when domain-local) for all ~46 currently unvalidated route files; add `safeParse` at the top of each handler. The `bookings.ts` pattern (`GetBookingParams` / `CreateBookingBody` / etc., parsed via `safeParse`, with `400 BAD_REQUEST` on failure) is the project's chosen exemplar — extend it.
+3. **Phase 2 contract**: the resulting Zod schemas double as the source of truth for OpenAPI generation and for FluentValidation port — preserve them through the migration.
+
+### Carrier
+
+`_schema/api-endpoints/contract.md` C3 row [d] graduates here. `_schema/api-endpoints/booking.md` is the **positive exemplar** (Sample S1 explicitly documents the `ListBookingsQueryParams.safeParse(req.query)` pattern). Per-domain Zod-coverage cell to be added to each domain doc as it is written (T002.2.b–.j).
+
+---
+
+## CF-018 — IDOR-class authorization-scope omission on nested resource handlers
+
+| Field | Value |
+|---|---|
+| **Severity** | 🟡 P1 |
+| **Scope** | Security · Authorization · Multi-tenant data isolation |
+| **Status** | OPEN |
+| **Discovery** | T002.2.a Spot-Check C3 incidental I3 (initially "single-domain memo") escalated to T002.1.8 (R-REPO-5) after cross-domain audit found 6 additional vulnerable sites in 2 other route files. |
+
+### Evidence
+
+**Pattern**: handlers mounted at `:parentId/.../:subId` that mutate `subId`-class rows but omit `parentId` from the WHERE clause. An authenticated caller can mutate any sub-resource by guessing its ID, regardless of which parent it logically belongs to.
+
+**Universe** — `rg 'router\.(put|patch|delete)\("[^"]*/:[a-zA-Z_]+/[^"]*/:[a-zA-Z_]+' artifacts/api-server/src/routes/`: **17** nested-write handlers across **7** route files.
+
+**Per-handler audit**:
+
+| File:Line | Method · Path | WHERE on mutating SQL | Verdict |
+|---|---|---|---|
+| `contracts.ts:589` | PATCH `/v1/contracts/:id/line-items/:lineId` | `eq(id, lineId)` (`:605`) | ❌ vulnerable |
+| `contracts.ts:610` | DELETE `/v1/contracts/:id/line-items/:lineId` | `eq(id, lineId)` (`:612`) | ❌ vulnerable |
+| `bookings.ts:572` | DELETE `/v1/bookings/:id/services/:svcId` | `eq(id, svcId)` (`:574`) | ❌ vulnerable |
+| `bookings.ts:728` | PATCH `/v1/bookings/:id/documents/:doc_id/verify` | `eq(id, docId)` (`:730`) | ❌ vulnerable |
+| `bookings.ts:735` | PATCH `/v1/bookings/:id/documents/:doc_id/reject` | `eq(id, docId)` (`:739`) | ❌ vulnerable |
+| `space-images.ts:129` | PUT `/v1/spaces/:id/images/:imageId` | `eq(id, imageId)` (`:139`) | ❌ vulnerable |
+| `space-images.ts:162` | DELETE `/v1/spaces/:id/images/:imageId` | `eq(id, imageId)` (`:172`) | ❌ vulnerable |
+| `space-images.ts:146` | PATCH `/v1/spaces/:id/images/:imageId/set-primary` | clear-step `eq(space_id, spaceId)` ✅ but the set-primary update uses `eq(id, imageId)` only | ⚠️ partial |
+| `bookings.ts:580` | PATCH `/v1/bookings/:id/services/:svcId` | pre-check select uses `and(...id, ...booking_id)` ✅ then naked update `eq(id, svcId)` | ⚠️ partial (TOCTOU) |
+| `service-host-portal.ts:461` | DELETE `/v1/service-host/jobs/:id/photos/:photoId` | pre-check select uses `and(...id, ...booking_service_id)` ✅ then naked delete `eq(id, photoId)` | ⚠️ partial (TOCTOU) |
+| `spaces.ts:407` | PUT `/v1/spaces/:id/services/:mapId` | `and(eq(id, mapId), eq(space_id, spaceId))` | ✅ safe |
+| `spaces.ts:439` | DELETE same | `and(eq(id, mapId), eq(space_id, spaceId))` | ✅ safe |
+| `product-catalog.ts:229` | PUT `/v1/accommodations/:id/services/:mapId` | `and(eq(id, mapId), eq(accommodation_id, accId))` | ✅ safe |
+| `product-catalog.ts:252` | DELETE same | `and(...)` | ✅ safe |
+| `contracts.ts:510` | PATCH `/v1/contracts/:id/payment-schedule/:schedId` | `and(eq(id, schedId), eq(contract_id, contractId))` | ✅ safe |
+| `contracts.ts:533` | DELETE same | `and(...)` | ✅ safe |
+| `bookings.ts` (hypothetical extras) | — | n/a | n/a |
+
+**Tally**: **7 outright vulnerable + 3 partial / TOCTOU-weak + 7 safe** out of 17 nested-write handlers. Of the 7 audited route files, the failure is concentrated in **3 files** (`contracts.ts`, `bookings.ts`, `space-images.ts`). The 7 safe sites prove the pattern is **known** in the codebase — its inconsistent application is the failure, not a missing primitive.
+
+### Reproduction
+
+`PATCH /v1/contracts/:id/line-items/:lineId`:
+1. Authenticate as any user that passes the global `requireAuth` (no role check on this route).
+2. Issue `PATCH /v1/contracts/999999/line-items/<arbitrary lineId of another contract>` with a body changing `unit_price`.
+3. The `:id=999999` is parsed in JS but never used in the WHERE clause — the line item belonging to a different contract is mutated. The `logAction` call (when present; this handler omits it — see CF-008) would log the wrong `entity_id`.
+
+`DELETE /v1/space-images/:id/images/:imageId`:
+1. Authenticate as a space owner with at least one image of their own.
+2. Issue `DELETE /v1/spaces/<your spaceId>/images/<some other space's imageId>`.
+3. The pre-check `db.select().from(spaceImagesTable).where(eq(id, imageId))` returns the *other* space's image; the subsequent `db.delete().where(eq(id, imageId))` removes it.
+4. Cloudinary delete in the same handler also fires against the other tenant's image URL.
+
+### Severity rationale (not P0)
+
+All flagged routes sit behind the global `requireAuth` middleware (no anonymous IDOR). The vulnerability is **authenticated horizontal privilege escalation**: any logged-in caller within the route's auth-class can mutate sub-resources of any parent in the same class. This maps to OWASP-A01 "Broken Access Control" → CWE-639 ("Authorization Bypass Through User-Controlled Key"). P1 fits; P0 would require anonymous reach.
+
+Note: when the route's auth-class is a customer-facing one (e.g. a guest portal where any registered guest can call), this becomes a multi-tenant data leak. The `service-host-portal.ts:461` partial site is exactly that risk class (multiple service hosts on the same shared route).
+
+### Recommendation (no code change)
+
+1. **Repo-wide convention**: every nested-resource WHERE clause MUST include the parent ID. Add a CI grep to fail PRs that match `db\.(update|delete)\(.+\)\.where\(eq\(.+Id\)\)` on routes that contain `/:id/[^"]*/:[a-zA-Z_]+`.
+2. **Defense-in-depth**: even when an explicit pre-check select with parent ID exists, the subsequent mutation should also include the parent in its WHERE — pre-check + mutation are two separate SQL statements and a TOCTOU race is theoretically possible. Eliminate the `⚠️ partial` rows, not just the `❌ vulnerable` ones.
+3. **Phase 2**: in EF Core, define `Parent.HasMany(Subs)` and route every sub-resource mutation through the parent navigation property (`parent.Subs.Single(s => s.Id == subId)`). The framework enforces the join.
+
+### Carrier
+
+`_schema/api-endpoints/contract.md` C3 row [bonus e] is the original surface; this CF is its cross-domain extension. Each remaining `T002.2.x` domain doc must add a row to its own self-check table for the nested-write handlers it owns and link back here. When all 9 domain docs are complete (`T002.2.a–.i`), the universe count of 17 nested-write handlers should be re-verified end-to-end.
 
 ---
 *End of CRITICAL_FINDINGS.md*

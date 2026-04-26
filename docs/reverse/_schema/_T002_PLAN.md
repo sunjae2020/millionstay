@@ -281,23 +281,27 @@ Errors found at any gate → fix immediately, re-verify, then `proceed` request.
 
 ## §8. Size budget & split-threshold rules
 
-| File | Predicted lines | Hard cap | Action if cap exceeded |
-|---|---:|---:|---|
-| `api-endpoints/INDEX.md` | ~120 | 250 | unlikely; if so, drop summary footer. |
-| `api-endpoints/booking.md` | ~350 | 1500 | OK |
-| `api-endpoints/contract.md` | ~370 | 1500 | OK |
-| `api-endpoints/finance.md` | ~560 | 1500 | OK |
-| `api-endpoints/ops*.md` (3 files) | 510–660 each | 1500 | preventive split per §2.4 |
-| `api-endpoints/portal-guest.md` | ~380 | 1500 | OK |
-| `api-endpoints/portal-partner.md` | ~290 | 1500 | OK |
-| `api-endpoints/public.md` | ~430 | 1500 | OK |
-| `api-endpoints/admin.md` | ~480 | 1500 | OK |
-| `db-schema-overview.md` | ~900–1000 | 1500 | OK; will TOC by cluster (§5). |
-| `erd-core.md` | ~500 | 1200 | 8 diagrams + commentary; cap is loose because diagrams render as Mermaid blocks. |
-| `state-machines.md` | ~500 | 1000 | one section per status enum. |
-| **Total pack (`_schema/`)** | **~6500–7000 lines** | — | across 12–14 files. |
+> **§8 REVISION 2026-04-26 (T002.1.8)** — `contract.md` actual = 893 lines vs predicted 370 (**+141%**). The drift is structural, not domain-specific: the full sample-format-on-every-endpoint pattern adopted in T002.2.a (vs the 5-sample-only pattern in `booking.md`) plus the new permanent sections (Anchor Block, full Self-Check table, Spot-Check Log, R-REPO-5 incidental block) account for the bulk of the increase. Predictions for `.b–.i` are revised upward by **~2.4×** in the table below; new totals project ~10,000 lines across `_schema/` (vs the original ~6700). Hard cap of 1500 lines per file remains in force; `finance.md`, `ops-property.md`, `ops-crm.md`, and `admin.md` are now expected to push against it and may require **preventive sub-splits announced before writing begins** (e.g. `T002.2.b1 invoices.md` + `T002.2.b2 payments.md`). Decision deferred to the start of each sub-task.
 
-**General rule**: any single file approaching 1500 lines is split along its natural sub-section seams. The split is announced as a separate sub-task in the session plan (e.g. `T002.4a / T002.4b`), never silently.
+| File | Original prediction | **Revised prediction (T002.1.8)** | Hard cap | Action if cap exceeded |
+|---|---:|---:|---:|---|
+| `api-endpoints/INDEX.md` | ~120 | ~146 (actual) | 250 | unlikely; if so, drop summary footer. |
+| `api-endpoints/booking.md` | ~350 | ~700 (5 samples + 22 close-out × 2.4 minus the already-emitted 306 ≈ 700–800 net) | 1500 | OK |
+| `api-endpoints/contract.md` | ~370 | **893 (actual)** | 1500 | OK |
+| `api-endpoints/finance.md` | ~560 | **~1340** | 1500 | borderline — pre-write split decision required at start of T002.2.b. |
+| `api-endpoints/ops-property.md` | ~570 | **~1370** | 1500 | borderline — same. |
+| `api-endpoints/ops-catalog.md` | ~510 | **~1225** | 1500 | OK |
+| `api-endpoints/ops-crm.md` | ~660 | **~1585 → exceeds cap** | 1500 | **pre-write split mandatory** at start of T002.2.e. |
+| `api-endpoints/portal-guest.md` | ~380 | **~915** | 1500 | OK |
+| `api-endpoints/portal-partner.md` | ~290 | **~700** | 1500 | OK |
+| `api-endpoints/public.md` | ~430 | **~1035** | 1500 | OK |
+| `api-endpoints/admin.md` | ~480 | **~1155** | 1500 | OK |
+| `db-schema-overview.md` | ~900–1000 | ~900–1000 (re-prediction not yet justified — different file class) | 1500 | TOC by cluster (§5). |
+| `erd-core.md` | ~500 | ~500 | 1200 | diagrams render as Mermaid blocks. |
+| `state-machines.md` | ~500 | ~500 | 1000 | one section per status enum. |
+| **Total pack (`_schema/`)** | ~6500–7000 | **~11,300–11,800** | — | revised across 12–14 files (15–16 if pre-write splits trigger). |
+
+**General rule**: any single file approaching 1500 lines is split along its natural sub-section seams. The split is announced as a separate sub-task in the session plan (e.g. `T002.4a / T002.4b`), never silently. **Revised rule (T002.1.8)**: when revised prediction ≥ 1300 (within 200 lines of cap), the split decision is taken **before writing begins**, not at the cap; this avoids wasted work if the file must be split mid-write.
 
 ---
 

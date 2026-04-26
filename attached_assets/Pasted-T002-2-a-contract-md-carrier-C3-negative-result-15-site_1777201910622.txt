@@ -1,0 +1,143 @@
+T002.2.a 승인. contract.md + carrier 갱신 모두 적절.
+
+C3 negative result 자제력 시험 통과 (15 sites / 5 categories, "NOT 
+none" 명시). 사전 식별 후보 외 "bonus" 카테고리 자가 발견. 
+Size budget honesty (893 vs 370 +141%) 즉시 보고 + 후속 추정 갱신 
+권장. R-REPO-5 incidental 3건 모두 escalation 평가 동반.
+
+다만 mini-task 시점 결정 + C3/I3 두 항목의 escalation 검토 필요.
+
+═══════════════════════════════════════════════════
+[Decision 1] T002.1.8 mini-task — Option (A) 즉시 실행
+═══════════════════════════════════════════════════
+
+T002.2.b 시작 전 즉시 실행. 이유:
+
+1. baseline 청결: T002.2.b~i 작성 중 stale CF-006/014 evidence 
+   참조 시 contract.ts 추가 site 를 "신규 발견" 으로 오인 위험
+2. CRITICAL_FINDINGS.md 가 single source of truth — evidence 분산 
+   금지
+3. 15분 비용 < close-out batch 비용 (컨텍스트 재구성 비용)
+
+[T002.1.8 수행]
+- CF-006 본문 evidence section 확장:
+  기존: owner-portal.ts:83 (*4) vs :236 (*52/12)
+  추가: contracts.ts:92-94 (*52/12) — 3rd file site
+  추가: bookings.ts (관련 site 있다면 명시)
+  결론: "동일 식 패턴이 3 파일에 분산, 일관성 부재"
+  
+- CF-014 본문 evidence section 확장:
+  기존: contracts.ts:429 entry handler
+  추가: helper generateContractInvoicesAndSchedules (:55-237) 
+        ≥27 mutations per 12-mo activation
+  추가: domain-wide multi-step mutation handler 사례 (있다면)
+  결론: entry handler + helper 양쪽 트랜잭션 부재
+
+- atomic commit: CRITICAL_FINDINGS.md + 영향 받는 cross-ref (있다면)
+
+═══════════════════════════════════════════════════
+[Decision 2] C3 (d) Zod absence "domain-wide" — CF-017 등재 검토
+═══════════════════════════════════════════════════
+
+contract.md C3 발견: "Zod absence ×28 (domain-wide)"
+
+이건 단일 inconsistency 가 아니라 systemic issue. 다음 평가 필요:
+
+[수행]
+1. 다른 도메인 (booking.md 5 sample 기준) 의 Zod 사용 패턴 확인
+   - booking.md sample 5개 중 Zod schema validation 사용 endpoint 수
+   - 사용/미사용 패턴 (예: write endpoint만 사용? read도?)
+
+2. contract 도메인의 Zod absence 가 domain-specific 인지, 
+   project-wide 인지 판정
+   - domain-specific (contract 만) → CF 등재 X, contract.md 내 메모로 충분
+   - project-wide (다수 도메인) → CF-017 신규 등재 (P1 검토)
+
+3. 판정 근거를 contract.md C3 섹션 또는 별도 보고에 명시
+
+[등재 시 CF-017 초안]
+- 제목: "Domain-wide Zod schema validation absence"
+- 심각도: 🟡 P1 (보안 + 데이터 무결성)
+- 영향: 잘못된 형식 입력의 직접 DB 저장 / runtime type 위반 / 
+  Phase 2 .NET 전환 시 FluentValidation 매핑 자동화 불가
+- 증거: contract.ts 28/28 + (다른 도메인 카운트)
+- 권장: write endpoint 우선 Zod 도입 / 도메인별 schema 정의
+
+═══════════════════════════════════════════════════
+[Decision 3] I3 IDOR 취약점 — CF-018 등재 검토
+═══════════════════════════════════════════════════
+
+"단순 메모" 분류 재평가:
+
+> E19 PATCH + E20 DELETE WHERE 절이 :id 부모 contract id 무시; 
+> 인증 사용자 누구나 lineId 추측으로 수정 가능
+
+이건 OWASP Top 10 의 IDOR (Insecure Direct Object Reference) 
+취약점. 운영 중이라면 즉시 수정 필요.
+
+[수행]
+1. contract.ts E19/E20 코드 재확인:
+   - 실제로 :id (parent contract) WHERE 필터 부재인가?
+   - 인증된 사용자의 권한 확인 로직 있는가?
+   - 다른 라우트에 동일 패턴 존재? (유사 PATCH/DELETE on nested 
+     resources)
+
+2. 영향 범위 평가:
+   - contract 도메인만? → CF-018 등재 (단일 도메인)
+   - 다수 도메인? → 더 큰 systemic issue (CF-018 P1+)
+
+3. 등재 시 CF-018 초안:
+   - 제목: "IDOR vulnerability in nested resource handlers"
+   - 심각도: 🟡 P1 또는 🔴 P0 (보안 영향 평가 후 결정)
+   - 영향: 권한 우회 / 데이터 무결성 / 규제 위반 (privacy)
+   - 증거: contract.ts E19, E20 + (다른 도메인 발견 시)
+   - 권장: 즉시 WHERE 절에 parent ID 추가 / authorization helper 
+     도입
+
+═══════════════════════════════════════════════════
+[T002.1.8 통합 수행 순서]
+═══════════════════════════════════════════════════
+
+(1) Decision 1: CF-006 + CF-014 evidence 확장 (15분)
+(2) Decision 2: Zod absence 도메인 횡단 평가 (10분)
+    - booking.md / 기타 sample 의 Zod 패턴 확인
+    - CF-017 등재 여부 결정
+(3) Decision 3: IDOR 도메인 횡단 평가 (10분)
+    - contract.ts E19/E20 코드 재확인
+    - 다른 도메인 동일 패턴 grep
+    - CF-018 등재 여부 결정 + severity (P0/P1)
+(4) R-REPO-1 atomic commit:
+    - CRITICAL_FINDINGS.md (CF-006/014 evidence + CF-017/018 등재 
+      여부에 따라)
+    - summary table count 갱신
+    - SCHEMA_FILE_TABLE_MAP.md (해당 시)
+    - _T002_PROGRESS.md (T002.1.8 entry)
+    - session_plan.md
+    - contract.md C3 섹션 (등재 시 CF-017/018 cross-ref 추가)
+(5) R-REPO-4 형식 보고
+
+═══════════════════════════════════════════════════
+[T002 size budget 갱신]
+═══════════════════════════════════════════════════
+
+contract.md 893 (vs 예상 370) 기반 .b~.i 갱신 권장 동의.
+
+[수행 — T002.1.8 의 일부]
+_T002_PLAN.md §7 갱신:
+- 각 도메인 예상치 ~2.4× 상향
+- 총 T002 추정: ~6,700 → ~10,000 lines
+- single-file cap 1500 재검토:
+  - 893 lines 가 베이스라인이면 일부 도메인은 1500 초과 가능성
+  - finance.md (다중 invoice/payment 패턴) 가 최대 가능
+  - cap 초과 예상 도메인은 사전 분할 계획
+
+═══════════════════════════════════════════════════
+[지금 할 일]
+═══════════════════════════════════════════════════
+
+(1) T002.1.8 4 단계 수행 (Decision 1+2+3 + size budget)
+(2) R-REPO-1 atomic commit
+(3) R-REPO-4 형식 보고
+(4) 보고 후 사용자 proceed → T002.2.b (finance.md) 시작
+
+T002.2.b 자동 시작 절대 금지.

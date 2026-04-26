@@ -821,6 +821,11 @@ The 4 candidate categories from the Anchor Block were all confirmed, plus 1 addi
 
 **Verdict**: C3 ✅. Inconsistencies surfaced (not "none, n=28") — total **15 distinct inconsistency sites across 5 categories**.
 
+**Post-T002.1.8 graduation note (2026-04-26)**: Categories [d] and [bonus e] above were assessed in T002.1.8 as project-wide patterns (not contract-domain-specific) and registered in `CRITICAL_FINDINGS.md`:
+- [d] **Zod absence ×28** → graduated to **CF-017** (Zod absence project-wide, ~88% of route files unvalidated). The contract domain is the largest single block (28/28); `bookings.ts` is the project's positive exemplar (≥18 `safeParse` sites). See [`_audit/CRITICAL_FINDINGS.md` CF-017](../../_audit/CRITICAL_FINDINGS.md#cf-017--input-validation-zod-or-any-absent-on-90-of-route-files).
+- [bonus e] **Authorization gap on nested PATCH/DELETE (E19, E20)** → graduated to **CF-018** (IDOR-class authorization-scope omission). Cross-domain audit of all 17 nested-write handlers found **7 outright vulnerable + 3 partial / TOCTOU-weak + 7 safe** across `contracts.ts`, `bookings.ts`, `space-images.ts` (vulnerable) vs `spaces.ts`, `product-catalog.ts`, `service-host-portal.ts`, `contracts.ts` payment-schedule (safe/safe-conditional). See [`_audit/CRITICAL_FINDINGS.md` CF-018](../../_audit/CRITICAL_FINDINGS.md#cf-018--idor-class-authorization-scope-omission-on-nested-resource-handlers).
+- Categories [a] (single-read soft-delete filter omission), [b] (logAction omission ×12), and [c] (hard-delete flag ×4 + helper ×2) remain **domain-local observations** within already-existing CFs (CF-008, CF-015) — no new CF needed.
+
 ---
 
 ## 🚨 R-REPO-5 Incidental Findings (during T002.2.a writing)
@@ -881,12 +886,16 @@ The PATCH and DELETE handlers for nested `:id/line-items/:lineId` ignore the `:i
 | → | `MONEY_AUDIT.md` §1.1 | this → money | 4 `real`-typed money columns in `contracts` |
 | → | `MONEY_AUDIT.md` §3, §5 TC-M02 | this → money | E9 helper is the producer side of the line-items rollup invariant |
 | → | [`SCHEMA_FILE_TABLE_MAP.md`](../SCHEMA_FILE_TABLE_MAP.md) | this → map | `contract_products` lives in mis-named `products.ts` (CF-016) |
+| → | [`CRITICAL_FINDINGS.md` CF-006](../../_audit/CRITICAL_FINDINGS.md#cf-006--two-contradictory-weeklymonthly-conversion-formulas-across-the-codebase) | this → CF (T002.1.8 graduate) | `contracts.ts:92-94` is now the 3rd of 4 enumerated formula sites (R-REPO-5 incidental I1) |
+| → | [`CRITICAL_FINDINGS.md` CF-014](../../_audit/CRITICAL_FINDINGS.md#cf-014--multi-step-mutations-execute-outside-transactions) | this → CF (T002.1.8 graduate) | helper L55-237 + ≥27-mutation-per-call breakdown is now the formal evidence span (R-REPO-5 incidental I2) |
+| → | [`CRITICAL_FINDINGS.md` CF-017](../../_audit/CRITICAL_FINDINGS.md#cf-017--input-validation-zod-or-any-absent-on-90-of-route-files) | this → CF (T002.1.8 NEW) | C3 row [d] graduate — entire 28-endpoint domain is unvalidated (`bookings.ts` is the positive exemplar). |
+| → | [`CRITICAL_FINDINGS.md` CF-018](../../_audit/CRITICAL_FINDINGS.md#cf-018--idor-class-authorization-scope-omission-on-nested-resource-handlers) | this → CF (T002.1.8 NEW) | C3 row [bonus e] graduate — E19 + E20 are 2 of the 7 outright-vulnerable nested-write handlers (project-wide audit). |
 
-### Back-fill required after T002.2.a merge
+### Back-fill required after T002.2.a merge — ✅ COMPLETED in T002.2.a atomic commit (2026-04-26)
 
-Per R5 (R-REPO-1 atomic commit), the following **back-fill edits to `bookings.md`** are part of this commit:
-- `bookings.md` S2 cross-ref `→ contract.md (T002.2)` should be tightened to point at **E2** (`POST /v1/contracts`) as the alternate creator and at **E9** (`/activate`) as the next state in the booking→contract pipeline.
-- `bookings.md` S5 cross-ref should be tightened to point at **E3** (`GET /v1/contracts/:id`) as the canonical contract-read endpoint.
+Per R5 (R-REPO-1 atomic commit), the following back-fill edits to `bookings.md` were part of the T002.2.a commit (verify by reading `_schema/api-endpoints/booking.md:142,279`):
+- ✅ `bookings.md` S2 cross-ref now tightened to point at **E2** (`POST /v1/contracts`) as the alternate creator and at **E9** (`/activate`) as the next state in the booking→contract pipeline.
+- ✅ `bookings.md` S5 cross-ref now tightened to point at **E3** (`GET /v1/contracts/:id`) as the canonical contract-read endpoint, with shared soft-delete-unaware pattern noted.
 
 ---
 

@@ -78,7 +78,7 @@
 - **Blocker**: ~~user `proceed` to begin T002.2.a~~ — RESOLVED 2026-04-26.
 
 ### T002.2.a — `contract.md` (28 endpoints: contracts.ts 21 + contract-types.ts 7)
-- **Status**: ⏸️ **AWAITING_APPROVAL** (2026-04-26)
+- **Status**: ✅ **DONE** (2026-04-26) — approved by user with 3 follow-up Decisions; D1+D2+D3 dispatched as T002.1.8 (entry below).
 - **Triggered by**: user `proceed` after T002.1.7 micro-check.
 - **Outputs (atomic — R-REPO-1, 5 file ops)**:
   - **NEW** `docs/reverse/_schema/api-endpoints/contract.md` (893 lines) — file-of-origin banner + Anchor Block (3 sealed claims) + Section A (E1–E21 from `contracts.ts`, full sample format with Meta header / Field table / Request / Response / Logic summary / Cross-references) + Section B (T1–T7 from `contract-types.ts`, same format) + 28-row × 7-column Self-Check table + Spot-Check Log (C1/C2/C3) + R-REPO-5 Incidental block (I1, I2, I3) + Cross-reference Index.
@@ -99,7 +99,35 @@
   2. **C2 — Meta-header accuracy on the 3 endpoints carrying CF-002 or CF-014 anchor (E2 POST, E4 PUT, E9 activate)** ✅ — each Meta line literal-checked against source.
   3. **C3 — self-discovered inconsistency surfaced (or "none, n=28")** ✅ — surfaced **15 distinct sites across 5 categories**: deleted_at filter omission (4), logAction omission (12), hard-delete flag (4 + 2 unconditional), Zod absence (28 = whole domain), bonus authorization-scope gap (2 sites = I3 above).
 - **Size-budget note**: predicted 370, actual 893 (**+523, +141%**). Drivers: (a) full sample format applied to all 28 endpoints (vs the ~5-sample-only format used in booking.md so far — this is the first complete-domain file); (b) the Anchor Block + 28-row Self-Check + Spot-Check Log are net-new sections, not present in booking.md; (c) E9 helper decomposition is deep (1 endpoint ≈ 80 lines). **Implication for T002.2.b–.i**: predictions in `_T002_PLAN.md` §7 should be revised upward by ~2.4× before starting `finance.md` (43 endpoints, originally predicted 560 → revised ~1340). Total T002 size now projects ~10,000+ lines vs original ~6,700; still well under any practical limit.
-- **Blocker**: user `proceed` to begin T002.2.b (`finance.md`) AND user decision on the I1+I2 mini-task proposal (T002.1.8 — bundle the two CF-006/CF-014 evidence expansions before T002.2.b, OR defer to T002 close-out).
+- **Blocker**: ~~user `proceed` to begin T002.2.b~~ — RESOLVED 2026-04-26 (user chose Option A: execute T002.1.8 BEFORE T002.2.b, see entry below).
+
+### T002.1.8 — CF-006 + CF-014 evidence expansion + CF-017 + CF-018 graduation + §8 size-budget revision
+- **Status**: ⏸️ **AWAITING_APPROVAL** (2026-04-26)
+- **Triggered by**: user Decision after T002.2.a approval — Option A (execute now, before T002.2.b) for 3 R-REPO-5-class concerns surfaced during T002.2.a Spot-Check C3 + R-REPO-5 incidentals.
+- **Outputs (atomic — R-REPO-1, 5 file ops)**:
+  - `_audit/CRITICAL_FINDINGS.md` (4 in-file edits):
+    - **CF-006 Evidence section rewritten** — was 2 sites (both in `owner-portal.ts`); now 4 sites (added `bookings.ts:485` and `contracts.ts:92-94`). Distribution analysis added (3 of 4 use Formula B). Recommendation reframed to centralisation-first.
+    - **CF-014 Evidence section expanded** — added 17-line "Helper breakdown" subsection enumerating `generateContractInvoicesAndSchedules` (`contracts.ts:55-237`) operations (i)–(vii) with mutation counts per typical 12-month contract; total ≥27 sequential mutations per `POST /:id/activate` call across 3–4 tables, no transaction boundary. The two idempotency `db.delete` calls at the helper's start are flagged as a "the author knew partial failure was possible but did not use a transaction" tell.
+    - **NEW CF-017** — "Input validation (Zod or any) absent on ~90% of route files": 2 files import `zod` directly, 5 use `z.*` patterns, 1 (`bookings.ts`) uses shared schemas via `safeParse` → ~6 of 52 route files (~12%) validate input; ~46 of 52 (~88%) accept `req.body` directly. Reproduction shows `parseFloat("abracadabra") → NaN → "NaN"` propagating to the DB. Phase 2 impact: no validators to port. Severity 🟡 P1.
+    - **NEW CF-018** — "IDOR-class authorization-scope omission on nested resource handlers": full 17-handler audit table — **7 outright vulnerable + 3 partial / TOCTOU-weak + 7 safe** across 7 route files; vulnerable concentration in `contracts.ts`, `bookings.ts`, `space-images.ts`. Severity 🟡 P1 (authenticated horizontal privilege escalation, OWASP-A01 / CWE-639; not P0 because all routes sit behind `requireAuth`).
+    - **Summary table** — added CF-017 + CF-018 rows; count line updated `P0=3, P1=10, P2=3 (total 16)` → `P0=3, P1=12, P2=3 (total 18)`.
+  - `_schema/_T002_PLAN.md` §8 — added revision banner + revised prediction column (~2.4× upward); flagged `ops-crm.md` as exceeding the 1500-line cap → mandatory pre-write split at start of T002.2.e; flagged 3 more files (`finance.md`, `ops-property.md`, `admin.md`) as borderline (≥1300, pre-write split decision required). Total `_schema/` revised from ~6700 to ~11,300–11,800.
+  - `_schema/api-endpoints/contract.md` (2 in-file edits):
+    - C3 verdict line — added "Post-T002.1.8 graduation note" mapping categories [d] and [bonus e] → CF-017 / CF-018; categories [a]/[b]/[c] retained as domain-local within existing CF-008 / CF-015.
+    - Cross-reference Index — added 4 new `→ CRITICAL_FINDINGS.md` rows (CF-006, CF-014, CF-017, CF-018) + flipped the "Back-fill required" subsection to ✅ COMPLETED with file:line verifier.
+  - `_schema/_T002_PROGRESS.md` — T002.2.a ✅ DONE; T002.1.8 entry (this entry); blocker on T002.2 main entry switched to T002.1.8 approval; cumulative tracker `CRITICAL_FINDINGS.md` size delta noted (was 791 → after T002.1.8 ~1100 lines, +~309 from CF-006/014 expansion + CF-017/018 NEW + summary update).
+  - `.local/session_plan.md` — T002.2.a marker `⏸️ AWAITING USER` → ✅ DONE; T002.1.8 entry; T002.2.b NEXT marker preserved.
+- **Cross-domain findings (the substantive content of T002.1.8)**:
+  - **D1 (CF-006)** — formula sites: 4 total, 3 of 4 use Formula B (`52/12`), only `owner-portal.ts:83` (the dashboard aggregator) uses Formula A (`*4`). Formula B is the de-facto majority but no helper enforces it.
+  - **D1 (CF-014)** — helper `generateContractInvoicesAndSchedules` performs ≥17 mutations per typical 12-month Monthly Rent contract activation; ≥57 for Weekly. Combined with entry handler's 3 outer writes + 2 idempotency wipes = ≥27 sequential mutations across 3–4 tables in one HTTP call, zero transaction boundary.
+  - **D2 (Zod)** — project-wide: 6 of 52 route files (~12%) validate input. The 28-endpoint contract domain is the largest unvalidated block. `bookings.ts` is the canonical positive exemplar (≥18 `safeParse` call sites).
+  - **D3 (IDOR)** — project-wide: 17 nested-write handlers across 7 route files; 7 outright vulnerable, 3 partial/TOCTOU-weak, 7 safe. Vulnerable concentration in `contracts.ts` (E19, E20), `bookings.ts` (DELETE/PATCH services + verify/reject documents), `space-images.ts` (PUT, DELETE, set-primary). Safe sites in `spaces.ts`, `product-catalog.ts`, `contracts.ts` payment-schedule prove the pattern is *known* — its inconsistent application is the failure.
+- **Verification gate (RULE 7) — 3-claim spot-check**:
+  1. **C1 — CF-006 4-site enumeration accuracy** ✅ — re-verified by `sed -n` reads on `bookings.ts:480-492` (Biweekly→`*2`, else→`*52/12`) and `contracts.ts:88-96` (identical conditional). Both sites use Formula B. Owner-portal sites unchanged from prior CF-006 evidence.
+  2. **C2 — CF-018 audit table accuracy** ✅ — every row's WHERE clause re-verified by per-handler `sed -n | rg "where"` reads. The "partial / TOCTOU-weak" verdict on `space-images.ts:146`, `bookings.ts:580`, `service-host-portal.ts:461` was given fairly: the pre-check select properly chains parent ID, but the subsequent mutation does not. Defense-in-depth weakness, not silent vulnerability.
+  3. **C3 — CF-017 coverage count** ✅ — `rg -lc "from \"zod\"" artifacts/api-server/src/routes/` returned 2 files; `rg -c "z\.(object|string|number|enum|array|parse|safeParse)"` returned 5; `bookings.ts` separately confirmed via 18 `safeParse` call sites despite no direct `zod` import (uses shared schemas). Net: ~6 of 52 (~12%) validate input.
+- **R-REPO-5 self-check**: T002.1.8 itself produced **0 new incidental findings**. Two minor observations worth recording but not escalating: (a) `bookings.ts:580` PATCH /services and `service-host-portal.ts:461` DELETE /photos use a "pre-check select with parent ID, then naked mutation" pattern that is technically TOCTOU-vulnerable but pragmatically safe under PostgreSQL default isolation — this is reflected in the CF-018 "⚠️ partial" verdict and needs no separate finding; (b) the T002.2.a back-fill section in `contract.md` (now flipped to ✅ COMPLETED) is a useful template for future T002.2.x docs to reference their own back-fill obligations.
+- **Blocker**: user `proceed` to begin T002.2.b (`finance.md`) — and at the **start of T002.2.b**, a pre-write split decision is required for `finance.md` (revised prediction ~1340, borderline; the natural seam is `invoices.ts` + `invoice-rules.ts` + `expenses.ts` vs `payments.ts` + `payment-info.ts` + `commissions.ts` + `accounts.ts`).
 
 ### T002.2 — All remaining endpoints (348 endpoints) — split per [B3] into 9 sub-tasks
 - **Status**: ⏳ **IN_PROGRESS** (`.a` complete, `.b–.j` pending)
@@ -152,7 +180,8 @@
 | `_T002_PROGRESS.md` | — | 93 | — |
 | `api-endpoints/INDEX.md` | ~120 | 146 | +26 (Risk Legend richer than expected) |
 | `api-endpoints/booking.md` | ~350 (full file) | 306 (5 of 27 endpoints + self-check + remaining-22 stub) | tracking — full file projected ~600-700 after T002.2 |
-| `api-endpoints/contract.md` | ~370 | **893** | **+523 (+141%)** — full sample format on all 28 + Anchor Block + 28-row Self-Check + Spot-Check Log + R-REPO-5 incidental block; revise §7 predictions for `.b–.i` upward by ~2.4× |
+| `api-endpoints/contract.md` | ~370 | **904** | **+534 (+144%)** — base 893 + T002.1.8 cross-ref additions (~11 lines for C3 graduation note + 4 new Cross-reference Index rows) |
+| `_audit/CRITICAL_FINDINGS.md` | — | ~1100 | T002.1.8 added ~309 lines (CF-006 expansion +30, CF-014 expansion +35, NEW CF-017 ~80, NEW CF-018 ~120, summary update ~5) on top of the 791 baseline established at end of T002.1.7 |
 | `api-endpoints/finance.md` | ~560 | — | — |
 | `api-endpoints/ops-property.md` | ~570 | — | — |
 | `api-endpoints/ops-catalog.md` | ~510 | — | — |
