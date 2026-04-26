@@ -1,0 +1,107 @@
+proceed.
+
+micro-check 결과 confirmed P0=3, P1=10, P2=3 (16) ✅. 
+사용자 의문에 굴복하지 않고 ground truth 재집계 → 정정 불필요 결론. 
+이게 검증 도구로서의 핵심 속성. 신뢰 ↑↑↑.
+
+[F] C3 ("없으면 그 사실 자체를 보고")는 negative result 인정 자세. 
+false positive 방지의 정점.
+
+T002.2.a 본격 시작.
+
+═══════════════════════════════════════════════════
+[T002.2.a — contract.md 작성, 28 endpoints]
+═══════════════════════════════════════════════════
+
+작성 프로토콜:
+
+[Step 1] 사전 분류 (≤5분)
+- rg 명령으로 28 endpoint method/path 추출
+- read/write/transition/nested 4 카테고리 분류 카운트
+- contract.md 상단 임시 anchor block에 분류 카운트 + 3 spot-check 
+  클레임 (C1/C2/C3) 기록
+- 보고 1: 분류 결과 + 3 클레임 명시 (≤30 lines)
+- 사용자 proceed 불필요. 즉시 Step 2 진행.
+
+[Step 2] 28 endpoint 작성
+- booking.md 포맷 준수 (메타 헤더 + 본문 + cross-ref)
+- 메타 헤더: `Auth: <guard> | $$: <Y/N> | logAction: <Y/N> | CF: <list>`
+- 본문: file:line / DB writes / Side effects / logAction Y/N / 
+  Money 영향 / Zod 누락 / 자가 발견 사항
+- cross-ref: booking.md S2/S5 양방향, finance.md (작성 후 추후 
+  back-fill), 다른 도메인 cross-ref 필요 시 명시
+
+[Step 3] 7-dim self-check 표 생성
+booking.md 처럼 28-row × 7-col self-check 표:
+- file:line req/res / DB writes / logAction / money / CF cross-ref / 
+  audit gap / Zod 누락
+- 누락 cell ❌ 즉시 수정
+
+[Step 4] 3 클레임 spot-check (C1/C2/C3)
+- C1: 가장 복잡한 endpoint file:line + 헬퍼 chain 재검증
+- C2: CF-002 + CF-014 동시 anchor endpoint Meta 4 필드 재검증
+- C3: 자가 발견 inconsistency 1건 + (없으면) "no inconsistency 
+  found, sample size 28" 명시
+
+[Step 5] R-REPO-1 atomic commit
+- contract.md (NEW)
+- _T002_PROGRESS.md (T002.2.a DONE)
+- session_plan.md (T002.2.a DONE)
+- booking.md S2/S5 cross-ref back-fill (contract.md 의 해당 endpoint 
+  와 양방향)
+- 영향 받는 다른 메타파일 (있다면)
+
+[Step 6] R-REPO-4 형식 보고
+
+═══════════════════════════════════════════════════
+[T002.2.a 절대 규칙]
+═══════════════════════════════════════════════════
+
+R1. Incidental finding 발견 시 R-REPO-5 프로토콜 준수
+- 본 task에 끼워넣기 금지
+- 보고에 명시 (impact 평가 포함)
+- mini-task 필요 여부 자가 판정
+- 사용자 proceed 후 후속 처리
+
+R2. CF anchor 정확성
+- CF-002 (real 정밀도): contracts.weekly_rate/total_rent/bond_amount/
+  advance_amount 다루는 endpoint 모두 anchor
+- CF-014 (no transactions): 다단계 mutation handler 모두 anchor
+- 누락 시 spot-check C2 에서 즉시 식별 가능
+
+R3. CF-006 패턴 발견 시
+weekly→monthly 식 (`*4` vs `*52/12`) 이 contract.ts에 출현 시 
+즉시 R-REPO-5 incidental:
+- "incidental: <description> | impact: CF-006 evidence expansion / 
+  단순 메모"
+- impact 가 "evidence expansion"이면 CRITICAL_FINDINGS.md CF-006 
+  본문 갱신 mini-task 필요
+
+R4. CF-016 적용
+contract.ts route 가 다루는 테이블의 schema 파일 위치 표기 시 
+SCHEMA_FILE_TABLE_MAP.md cross-ref 활용. 특히 변수명 ≠ 테이블명 
+패턴 발견 시 명시.
+
+R5. Booking.md S2 cross-ref back-fill
+contract.md 작성 완료 후 booking.md S2 / S5 의 cross-ref 섹션을 
+contract.md 의 정확한 endpoint anchor로 갱신. 이건 R-REPO-1 atomic 
+commit 의 일부.
+
+R6. 28 endpoint 일괄 작성, 점진적 작성 금지
+- contract.md 는 단일 sub-task (T002.2.a)
+- 14 endpoint 작성 후 보고 같은 분할 금지
+- 한 번에 28 작성 → self-check → spot-check → 보고
+
+R7. 패턴 의심 시 즉시 SCHEMA_FILE_TABLE_MAP.md 또는 RECON 재독
+- "이 endpoint 가 정말 contract 도메인?" 의심 시 즉시 확인
+- 메모리 의존 절대 금지
+
+═══════════════════════════════════════════════════
+[지금 시작]
+═══════════════════════════════════════════════════
+
+Step 1 (사전 분류) 즉시 시작.
+Step 1 보고 후 사용자 proceed 불필요, Step 2~6 자동 진행.
+Step 6 (R-REPO-4 형식 보고) 후 사용자 proceed 대기.
+
+다음 명시적 proceed 게이트는 T002.2.b (finance.md) 시작 전.

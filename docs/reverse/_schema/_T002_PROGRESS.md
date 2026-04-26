@@ -58,7 +58,7 @@
 - **Outcome**: approved by user with R-REPO-5 directive to escalate the incidental naming pattern to a new CF — see T002.1.7 below.
 
 ### T002.1.7 — CF-016 etablis + SCHEMA_FILE_TABLE_MAP promotion + T002_PLAN §6 sync
-- **Status**: ⏸️ **AWAITING_APPROVAL** (2026-04-26)
+- **Status**: ✅ **DONE** (2026-04-26) — approved by user; micro-check (CF severity ground-truth re-aggregation) confirmed `P0=3, P1=10, P2=3 (total 16)` with no body↔summary mismatch; CF-009 stayed 🟡 P1 (count-only revision in T002.1.6, severity unchanged).
 - **Triggered by**: user directive after T002.1.6 approval — escalate the systematic naming pattern (8 file/table + 6 var/table divergences) from "incidental memo" to a registered P2 CF, and harden `SCHEMA_FILE_TABLE_MAP.md` from a one-shot audit artefact into a permanent reference asset before T002.2.x starts citing it heavily.
 - **Outputs (atomic — R-REPO-1, 7 file ops)**:
   - **MOVE** `docs/reverse/_audit/SCHEMA_FILE_TABLE_MAP.md` → `docs/reverse/_schema/SCHEMA_FILE_TABLE_MAP.md` *(audit one-shot → schema permanent reference)*
@@ -75,13 +75,37 @@
   2. CF-016 entry present in CRITICAL_FINDINGS.md + summary table row added + count line reads `P0=3, P1=10, P2=3 (total 16)` ✅
   3. All cross-refs to `SCHEMA_FILE_TABLE_MAP.md` in `_audit/` files use relative `../_schema/` path; INDEX.md uses sibling-dir `../` path; no broken `./SCHEMA_FILE_TABLE_MAP.md` link remains ✅
 - **R-REPO-5 self-check**: T002.1.7 itself produced no new incidental findings (the work is purely the systematization of T002.1.6's naming-pattern incidental into CF-016).
-- **Blocker**: user `proceed` to begin T002.2.a (contract.md) with **CF-009 revised + CF-016 + permanent SCHEMA_FILE_TABLE_MAP** baseline.
+- **Blocker**: ~~user `proceed` to begin T002.2.a~~ — RESOLVED 2026-04-26.
+
+### T002.2.a — `contract.md` (28 endpoints: contracts.ts 21 + contract-types.ts 7)
+- **Status**: ⏸️ **AWAITING_APPROVAL** (2026-04-26)
+- **Triggered by**: user `proceed` after T002.1.7 micro-check.
+- **Outputs (atomic — R-REPO-1, 5 file ops)**:
+  - **NEW** `docs/reverse/_schema/api-endpoints/contract.md` (893 lines) — file-of-origin banner + Anchor Block (3 sealed claims) + Section A (E1–E21 from `contracts.ts`, full sample format with Meta header / Field table / Request / Response / Logic summary / Cross-references) + Section B (T1–T7 from `contract-types.ts`, same format) + 28-row × 7-column Self-Check table + Spot-Check Log (C1/C2/C3) + R-REPO-5 Incidental block (I1, I2, I3) + Cross-reference Index.
+  - `docs/reverse/_schema/api-endpoints/booking.md` — S2 cross-ref tightened to point at E2 (alternate creator) + E9 (next state); S5 cross-ref tightened to point at E3 (canonical single-row read) and notes the shared soft-delete-unaware pattern; close-out paragraph updated `awaiting T002.2.a` → `T002.2.a complete; awaiting T002.2.b (finance.md)`.
+  - `docs/reverse/_schema/_T002_PROGRESS.md` — T002.1.7 ✅ DONE; T002.2.a entry (this entry); T002.2 sub-task ledger row for `.a` checked off; cumulative tracker `contract.md` actual = 893 (vs predicted ~370, **Δ +523** — see size-budget note below).
+  - `.local/session_plan.md` — T002.1.7 marker `⏸️ AWAITING USER` → ✅ DONE; T002.2.a entry added; T002.2 sub-task list `.a` checked off.
+- **Findings (catalogue)**:
+  - 28 endpoints classified: **8 READ-only** / **14 WRITE/CRUD** / **6 STATE-TRANSITION** (cross-cut **9 NESTED** tags).
+  - Domain logAction coverage: **8 of 20 mutation handlers** call `logAction` (40%); 12 omit (CF-008 footprint, all enumerated in C3).
+  - $$ touching: **7 endpoints** write money columns (E2, E4 directly; E9 indirectly via helper; E13, E14, E18, E19 via nested resources).
+  - **CF anchor density** (this domain): CF-001 (3 ep), CF-002 (3 ep), CF-003 (1 ep, structural), CF-008 (12 ep), CF-014 (1 entry + 1 helper), CF-015 (4 hard-delete flags + 2 unconditional helper hard-deletes).
+- **R-REPO-5 incidental findings** (3, escalation summarised below):
+  - **I1 — CF-006 evidence expansion** (`contracts.ts:92-94` adds a 3rd file site to the `weeklyRate * (52/12)` formula). *Impact: CF-006 evidence-expansion mini-task.*
+  - **I2 — CF-014 evidence expansion** (helper `generateContractInvoicesAndSchedules`, `:55-237`, performs ≥27 mutations sequentially with no transaction; CF-014 currently cites only the entry handler `:429`). *Impact: CF-014 evidence-expansion mini-task — bundleable with I1.*
+  - **I3 — line-items authorization-scope gap** (E19 PATCH + E20 DELETE WHERE-clause omits the `:id` parent contract id; any authenticated user can edit any line item by guessing `lineId`). *Impact: simple memo for now; potential new CF-P1 contingent on a domain-wide authorization-scope audit (out of scope for T002.2.a).*
+- **Verification gate (RULE 7) — 3-claim spot-check** (sealed in Anchor Block at the top of `contract.md`, verified at the bottom):
+  1. **C1 — file:line + helper chain accuracy on E9 (`POST /v1/contracts/:id/activate`)** ✅ — entry at `contracts.ts:430`, 4 direct DB writes (`:432-434`, `:438`, `:442-444`, `:447`), helper span `:55-237`, mutation count for typical 12-mo Rent contract recomputed at 28+ (cited "27+" is conservative-correct).
+  2. **C2 — Meta-header accuracy on the 3 endpoints carrying CF-002 or CF-014 anchor (E2 POST, E4 PUT, E9 activate)** ✅ — each Meta line literal-checked against source.
+  3. **C3 — self-discovered inconsistency surfaced (or "none, n=28")** ✅ — surfaced **15 distinct sites across 5 categories**: deleted_at filter omission (4), logAction omission (12), hard-delete flag (4 + 2 unconditional), Zod absence (28 = whole domain), bonus authorization-scope gap (2 sites = I3 above).
+- **Size-budget note**: predicted 370, actual 893 (**+523, +141%**). Drivers: (a) full sample format applied to all 28 endpoints (vs the ~5-sample-only format used in booking.md so far — this is the first complete-domain file); (b) the Anchor Block + 28-row Self-Check + Spot-Check Log are net-new sections, not present in booking.md; (c) E9 helper decomposition is deep (1 endpoint ≈ 80 lines). **Implication for T002.2.b–.i**: predictions in `_T002_PLAN.md` §7 should be revised upward by ~2.4× before starting `finance.md` (43 endpoints, originally predicted 560 → revised ~1340). Total T002 size now projects ~10,000+ lines vs original ~6,700; still well under any practical limit.
+- **Blocker**: user `proceed` to begin T002.2.b (`finance.md`) AND user decision on the I1+I2 mini-task proposal (T002.1.8 — bundle the two CF-006/CF-014 evidence expansions before T002.2.b, OR defer to T002 close-out).
 
 ### T002.2 — All remaining endpoints (348 endpoints) — split per [B3] into 9 sub-tasks
-- **Status**: ⚪ **PENDING** (blocked by T002.1.7 approval)
+- **Status**: ⏳ **IN_PROGRESS** (`.a` complete, `.b–.j` pending)
 - **Sub-tasks** (each: write → 3-claim spot-check → ≤50-line report → user `proceed` → next):
-  - **T002.2.a — `contract.md`** (28 endpoints: contracts.ts 21 + contract-types.ts 7) — first because it's the receiver of S2's auto-create writes; cross-ref hooks already in booking.md S2/S5.
-  - **T002.2.b — `finance.md`** (43 endpoints across 7 files) — depends on contract for invoice cross-ref pattern.
+  - **T002.2.a — `contract.md`** ✅ DONE (2026-04-26, 893 lines) — see dedicated entry above.
+  - **T002.2.b — `finance.md`** (43 endpoints across 7 files) — depends on contract for invoice cross-ref pattern; back-fill required from contract.md E9 (helper invoice/schedule generation) when written.
   - **T002.2.c — `ops-property.md`** (44 endpoints across 6 files).
   - **T002.2.d — `ops-catalog.md`** (39 endpoints; `products.ts` 🪦 DEAD — first chance to validate dead-file documentation pattern).
   - **T002.2.e — `ops-crm.md`** (51 endpoints; largest single file, watch budget).
@@ -128,7 +152,7 @@
 | `_T002_PROGRESS.md` | — | 93 | — |
 | `api-endpoints/INDEX.md` | ~120 | 146 | +26 (Risk Legend richer than expected) |
 | `api-endpoints/booking.md` | ~350 (full file) | 306 (5 of 27 endpoints + self-check + remaining-22 stub) | tracking — full file projected ~600-700 after T002.2 |
-| `api-endpoints/contract.md` | ~370 | — | — |
+| `api-endpoints/contract.md` | ~370 | **893** | **+523 (+141%)** — full sample format on all 28 + Anchor Block + 28-row Self-Check + Spot-Check Log + R-REPO-5 incidental block; revise §7 predictions for `.b–.i` upward by ~2.4× |
 | `api-endpoints/finance.md` | ~560 | — | — |
 | `api-endpoints/ops-property.md` | ~570 | — | — |
 | `api-endpoints/ops-catalog.md` | ~510 | — | — |

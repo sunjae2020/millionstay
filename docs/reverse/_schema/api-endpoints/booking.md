@@ -139,7 +139,7 @@ The booking row enriched by `buildBookingResponse` (`bookings.ts:35-58`):
 - 🟡 [CF-014 — multi-step mutations not in transactions](../../_audit/CRITICAL_FINDINGS.md#cf-014) — the entire 163-line handler runs outside `db.transaction`.
 - 🟢 [CF-011 — contract ref by row-count race](../../_audit/CRITICAL_FINDINGS.md#cf-011) — `contractRef` generation on lines 446-447.
 - → `MONEY_AUDIT.md` §2.1 (numeric-vs-real coercion sites) and §3.2 (contract line-items rollup invariant tested by TC-M02).
-- → `contract.md` (T002.2) for the contract entity's own endpoints; this handler is the **primary creator** of contract rows.
+- → [`contract.md`](./contract.md) (T002.2.a, complete) — this handler is the **primary creator** of contract rows; the auto-created `contracts` row corresponds to **E2** (`POST /v1/contracts`) as the direct-API alternate, and the next status transition (`Draft → Active` via auto-invoice/schedule generation) is reached through **E9** (`POST /v1/contracts/:id/activate`).
 - → `state-machines.md` (T002.5) for the booking-status transition `{PendingApproval,PendingPayment} → Confirmed`.
 
 ---
@@ -276,7 +276,7 @@ The `contract` shape is the raw `contracts` row — see `contract.md` (T002.2) f
 4. **No filter for multiple contracts** either — if S2 (`PATCH /:id/confirm`) ever runs twice and bypasses its existing-contract guard, this endpoint silently returns only the first row.
 
 ### Cross-references
-- → `contract.md` (T002.2) — for the contract entity's full endpoint catalogue.
+- → [`contract.md`](./contract.md) (T002.2.a, complete) — for the contract entity's full 28-endpoint catalogue. The single-row read returned here is the same shape produced by **E3** (`GET /v1/contracts/:id`), which is itself **soft-delete-unaware** in the same way (cross-handler pattern documented under contract.md C3).
 - → S2 above — this is the read-side complement of the auto-create logic in `PATCH /:id/confirm`.
 - ⓘ The lack of Zod validation here is an inconsistency worth flagging; a Phase 2 port should standardise.
 
@@ -372,4 +372,4 @@ Ran `rg "CF-XXX" docs/reverse/_audit/CRITICAL_FINDINGS.md` for each ID cited acr
 
 ---
 
-*End of `booking.md` (partial — T002.1 sample, T002.1.5 verified). Awaiting user `proceed` for T002.2.a (contract.md, the next domain).*
+*End of `booking.md` (partial — T002.1 sample, T002.1.5 verified, S2/S5 cross-refs back-filled in T002.2.a). T002.2.a (contract.md, 28 endpoints) complete; awaiting user `proceed` for T002.2.b (finance.md, the next domain). The remaining 22 booking endpoints are deferred to T002.2.j (close-out) per the T002.2 ordering.*
