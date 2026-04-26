@@ -933,9 +933,11 @@ EF Core's `HasQueryFilter` for soft-delete relies on a uniform column. Today's t
 | CF-020 | 🟡 P1 | Soft-delete leak — query/mutation handlers omit `isNull(deleted_at)` filter; soft-deleted rows leak into list endpoints (.a, **26 anchors**) and can be revived by mutation (.b, **20 anchors**) — 4 domains; `service-hosts.ts` sentinel-via-status sub-variant (no `deleted_at` column) cross-cuts CF-015 | OPEN |
 | CF-021 | 🟡 P1 | N+1 enrichment anti-pattern — list endpoints issue per-row follow-up SELECTs in JS rather than SQL JOIN; worst case `buildSpaceResponse` degree 4 → 4× page-size additional round-trips per list call. **13 anchors across 4 domains**; ops-crm exposes 4-way author-pattern split (leftJoin / Promise.all per-row / sequential per-id / sequential per-detail) within single domain | OPEN |
 | CF-022 | 🟡 P1 | State-transition guard inconsistency — 9 transition handlers across 4 ops-crm files, 5 with precondition gate (`where(and(eq(id), eq(status, "Allowed")))`) + 4 without; same-file inconsistency in `work-orders.ts` (2 of 4 ungated) and `leads.ts` (1 of 2 ungated). Failure mode: invalid state transitions silently succeed (e.g. Cancelled→Completed, ConvertedToBooking→Lost), corrupting state-machine semantics; compounds with CF-008 (no audit trail to detect post-hoc) | OPEN |
-| CF-023 | 🟡 P1 | Lead-to-booking conversion creates orphan reference — `PATCH /v1/leads/:id/convert` (`leads.ts:175-204`) marks `lead_status='ConvertedToBooking'` but **never INSERTs into `bookings` table**, generates `booking_ref` from `Math.random()` (no FK, no DB lookup), and **omits `converted_booking_id` from the UPDATE set** (column exists at `lib/db/src/schema/leads.ts:24`, persists NULL forever). Single endpoint, production-critical: client receives fake booking_ref → believes booking created; bookings table holds no row → guest never confirmed; revenue reporting (converted vs actual) inaccurate; audit invisible (no `logAction` call, compounds CF-008). Compounds CF-022 (no precondition gate against ConvertedToBooking→ConvertedToBooking re-conversion). | OPEN |
+| CF-023 | 🟡 P1 | Ad-hoc `booking_ref` generation outside the canonical helper (`bookings.ts:60` `generateBookingRef()` → `MS-${year}-${seq:5}` via DB COUNT). **Two sub-patterns** (T002.2.f split): **.a Orphan reference** — `leads.ts:175-204` `PATCH /v1/leads/:id/convert` marks `lead_status='ConvertedToBooking'`, generates `BK-${year}-${rand5}` (`leads.ts:188-189`), but **never INSERTs into `bookings` table** + omits `converted_booking_id` from UPDATE set (column exists at `lib/db/src/schema/leads.ts:24`, persists NULL forever). Production-critical: client receives fake `booking_ref` → believes booking created; revenue reporting (converted vs actual) diverges; audit invisible (CF-008 compound). **.b Fake-ref + real INSERT** — `guest-portal.ts:138-141` `POST /v1/guest/bookings` generates `GBK-${ts36}-${rand36×3}` then performs **real `bookings` INSERT** (L149-171). No orphan, but produces **dual-source-of-truth on `bookings.booking_ref`** (`MS-…` canonical vs `GBK-…` from this entry-point) → downstream consumers (admin search/filter UIs assuming `MS-` prefix) silently miss `GBK-…` rows; collision space ~46 656 per ms; no DB UNIQUE constraint declared on `booking_ref`. Compounds CF-022 (.a only — no precondition gate against ConvertedToBooking re-conversion). | OPEN |
 
 **Counts after T002.1.9**: P0=3, P1=**15**, P2=3 (total **21**) — **2 NEW promotions** (CF-020 + CF-021, both T002.2.c R-REPO-5 graduates with sufficient anchor density to warrant promotion this commit). Both candidates were parked at T002.2.b half-2 (CF-020 9 anchors / CF-021 2 anchors); T002.2.c surfaced 7 additional CF-020 anchors + 6 additional CF-021 anchors, crossing the typical promotion threshold (≥10 anchors / ≥3 domains) without waiting for T002.2.d. CF-017 + CF-018 are T002.2.a Spot-Check C3 graduates (R-REPO-5); CF-019 is T002.2.b half-2 graduate. **0 deferred candidates** remaining; T002.2.d-.j may surface fresh ones.
+
+**Counts after T002.2.f**: P0=3, P1=**17**, P2=3 (total **23**) — **0 new CF promotions** (CF-023 split into .a / .b sub-patterns documented as expansion-not-promotion; sub-split is structural, not a count change). Anchor count updates this commit: **CF-008** portal-guest 1/29 = 3.4% — **NEW lowest** in any domain audited so far (overtakes ops-catalog 0/39 and ops-crm 0/51 by ratio of intent — portal-guest is auth-protected guest mutation surface, not internal admin); **CF-011** +1 carrier (`guest-portal.ts:762-764` invoice_ref `count+1` race); **CF-013** +1 evidence site (`guest-portal.ts:480` DOB raw text passthrough into PUT/profile); **CF-014** +5 carrier sites (E1 register accounts+guest_users, E10 profile+accounts.name, E17 invoice+booking_status, E24 ticket+message, E26 message+ticket-update — domain is now CF-014's largest carrier domain by site count); **CF-017** +5 carrier sites (E5 bookings POST, E10 profile/bank, E14 emergency-contact POST, E17 payment/confirm amount unbounded, E24 ticket booking_id unchecked); **CF-018** +1 partial site (E24 `guest-cs.ts:79` ticket booking_id unchecked); **CF-023.b** NEW sub-pattern formalized (split from CF-023.a). E17 `guest-portal.ts:802` dead-branch ternary `bank_transfer ? "PendingApproval" : "PendingApproval"` filed as memo for T002.5 (state-machines.md). Domain is **strongest IDOR-defense surface** of any audited so far (26/29 ✅ + 1 partial, 2 n/a) — sole-owner guard at E20 (`:1086-1092`) recommended as canonical exemplar for `_rules/security-rules.md` (T004).
 
 **Counts after T002.2.e.fix-1**: P0=3, P1=**17**, P2=3 (total **23**) — **1 NEW CF promotion in T002.2.e.fix-1**: CF-023 (lead-to-booking conversion creates orphan reference, P1) graduated from T002.2.e Step 6 R-REPO-5 incidental "L7 fake booking_ref". V2 verification confirmed production-critical defect: `PATCH /v1/leads/:id/convert` (`leads.ts:175-204`) marks lead status as converted but never INSERTs into `bookings` table — `booking_ref` is generated client-side via `Math.random()` (`leads.ts:188-189`), and `converted_booking_id` schema column (`lib/db/src/schema/leads.ts:24`) is omitted from the UPDATE set (`leads.ts:191-198`). R-REPO-7 P1 즉시 등재 원칙 적용. Single endpoint scope, but compounds CF-008 (no audit) + CF-022 (no precondition gate). T002.5 state-machine doc must encode dual-source-of-truth defect on bookings/leads diagram.
 
@@ -1535,6 +1537,66 @@ Carrier: [`api-endpoints/ops-catalog.md` §1.2 + §1.5 + §6 R-REPO-5 I3](../_sc
 - State machine doc (T002.5, pending): MUST encode dual-source-of-truth defect on bookings/leads diagram — `leads.lead_status='ConvertedToBooking'` is currently a write-only sentinel, not a true state in the bookings lifecycle
 - CF-008 anchors: `_schema/api-endpoints/ops-crm.md` §1.4 (0/51 logAction coverage)
 - CF-022 anchors: §6 above (leads.ts 1/2 ungated split)
+
+---
+
+## CF-023.b — Fake-ref generator with real INSERT (T002.2.f sub-split, P1)
+
+**Severity**: 🟡 P1 (data-quality + downstream-consumer drift; no orphan, no integrity violation)
+**Promoted**: T002.2.f (split from CF-023 root cause "ad-hoc `booking_ref` generation outside canonical helper")
+**Scope**: Single endpoint, single file (`guest-portal.ts:85-195`) — narrow but **second carrier** of the same root cause as CF-023.a
+
+### Evidence (file:line — R-REPO-6 verified)
+
+| # | Site | Code excerpt | Defect |
+|---|---|---|---|
+| 1 | `guest-portal.ts:138-141` | `const timestamp = Date.now().toString(36).toUpperCase();`<br>`const random = Math.random().toString(36).substring(2, 5).toUpperCase();`<br>`const booking_ref = \`GBK-${timestamp}-${random}\`;` | `booking_ref` generated client-side from `Date.now()` + `Math.random()` 3-char base36 — collision space ~46 656 per ms; no DB UNIQUE constraint asserted on `bookings.booking_ref` (cross-check schema in T002.3) |
+| 2 | `guest-portal.ts:149-171` | `const [newBooking] = await db.insert(bookingsTable).values({ booking_ref, account_id, space_id, ..., booking_status: "Pending", booking_source: "Guest Portal", status: "Active", }).returning(...)` | **Real `bookings` INSERT** — distinguishes this from CF-023.a (no orphan, ref points to a real row) |
+| 3 | `bookings.ts:60` (canonical helper, NOT used here) | `async function generateBookingRef(): Promise<string> { ... return \`MS-${year}-${seq.padStart(5,"0")}\`; }` | **Canonical generator exists** with proper sequential pattern (DB `COUNT(*) WHERE EXTRACT(YEAR)`) but is bypassed by this handler — guest-portal author wrote ad-hoc generator inline |
+| 4 | (consumer assumption) admin search/filter UIs | (not enumerated in this audit; T006 design pack) | Downstream UIs assuming `MS-…` prefix for filtering / display formatting silently miss `GBK-…` rows from guest portal |
+
+### Distinction from CF-023.a
+
+| Aspect | CF-023.a (`leads.ts:175-204`) | CF-023.b (`guest-portal.ts:85-195`) |
+|---|---|---|
+| Generation pattern | `BK-${year}-${Math.random()×5}` | `GBK-${Date.now()36}-${Math.random()36×3}` |
+| `bookings` INSERT? | ❌ NO — orphan | ✅ YES — real row created |
+| `converted_booking_id` populated? | ❌ schema column NULL forever | n/a (different relation) |
+| Client trust impact | 🔴 fake ref → check-in failure | 🟢 ref points to real row → no immediate failure |
+| Reporting impact | 🔴 conversions over-reported, bookings under-reported | 🟡 booking volume correct, but ref-prefix split confuses analytics |
+| Severity | P1 (production-critical integrity) | P1 (data-quality + drift) |
+| Recovery | Fix handler to actually INSERT + add FK | Fix handler to call `generateBookingRef()` helper |
+
+### Production failure scenarios (.b-specific)
+
+1. **Search UX drift**: admin types `MS-2026-` into booking search UI → 0 matches for guest-portal-originated bookings → ops thinks guest never booked → opens duplicate booking, double-charges
+2. **Reporting bucket mismatch**: BI splits bookings by ref-prefix as proxy for `booking_source` → `MS-…` (admin-created) vs `GBK-…` (guest portal) coexist → if `booking_source` column is later dropped or null-filled, prefix-grouping silently fails
+3. **Collision (lower probability than .a)**: `Math.random().substring(2,5)` yields ~46 656 distinct values per timestamp millisecond — under bursty load (many guests booking the same instant), collisions possible but rare; no DB UNIQUE protection means duplicate refs can persist
+4. **Confirmation-email leak**: `booking_ref` is included in `sendBookingConfirmation(...)` (`guest-portal.ts:177-188`) → guest receives `GBK-…` in email → guest later contacts support quoting `GBK-…` → support system search by `MS-` prefix returns nothing → escalation friction
+
+### Compound failures (cross-CF)
+
+- **CF-008** (audit gap): no `logAction` on this handler — booking creation event invisible
+- **CF-014** (no transaction): N/A — single DB write (`bookings` INSERT only); email is fire-and-forget outside tx-need
+- **CF-017** (input validation): `space_id`, `check_in_date`, `check_out_date`, `num_guests` all unvalidated — type/range/format check absent
+- **CF-019** (write-orphan family): not a write-orphan per se — `booking_ref` is read after write (returned to client) — different etiology from CF-019.a / .b
+
+### Recovery / fix recommendation (Phase 2 .NET port)
+
+1. **Replace L138-141** with single call to the canonical helper:
+   ```ts
+   const booking_ref = await generateBookingRef();
+   ```
+2. **Add DB UNIQUE constraint** on `bookings.booking_ref` (schema migration, T002.3 to flag)
+3. **Add `logAction`** call (CF-008 fix): `logAction("booking.created", { booking_id, booking_ref, source: "guest_portal" })`
+4. **Add Zod validation** on body (CF-017 fix): enforce `space_id: number`, `check_in_date: ISO-date`, `num_guests: 1..N`
+
+### Cross-references
+
+- Carrier endpoint doc: `_schema/api-endpoints/portal-guest.md` §3.1 (E5 POST `/v1/guest/bookings`)
+- CF-023.a (parent) anchors: §1490-1539 above
+- T002.5 (state-machines.md, pending): MUST document dual-source-of-truth on `bookings.booking_ref` — three spawn paths (`MS-…` canonical / `GBK-…` guest-portal / `BK-…` orphan from leads)
+- T002.3 (db-schema-overview.md, pending): MUST note absence of UNIQUE constraint on `bookings.booking_ref` despite multiple insertion paths
 
 ---
 *End of CRITICAL_FINDINGS.md*

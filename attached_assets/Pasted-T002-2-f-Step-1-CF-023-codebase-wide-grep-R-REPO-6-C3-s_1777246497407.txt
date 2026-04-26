@@ -1,0 +1,132 @@
+T002.2.f Step 1 승인.
+
+CF-023 codebase-wide grep 검증 (R-REPO-6 정점 적용) + C3 selection 
+이 CF-023 etiology 결정 핵심 + Tripwire 면제 정당한 예외 첫 적용 + 
+small denominator caveat 자가 적용 + DD 가이드로 portal-partner 
+사전 컨텍스트 식별 — 모두 정점.
+
+Step 2 진입 — proceed.
+
+═══════════════════════════════════════════════════
+[Step 2 작성 가이드 — read-heavy 도메인 첫 작성]
+═══════════════════════════════════════════════════
+
+[HH] C3 (POST /v1/guest/bookings) — CF-023 etiology 결정
+guest-portal.ts:85-199 의 booking_ref 생성 방식 정확 분석:
+
+수행:
+1. L85-199 본문 read
+2. booking_ref 생성 logic 식별:
+   - generateBookingRef() helper 호출? → 어디서 정의? helper 안전?
+   - Math.random 직접 사용? → fake-ref 변형
+   - DB sequence/UUID/timestamp 기반? → 정상 패턴
+   - 다른 패턴? → 분류
+
+3. INSERT-after-generation 흐름:
+   - booking_ref 생성 → bookings INSERT → 동일 ref 사용?
+   - 또는 Insert-then-update 패턴?
+   - transaction wrap?
+
+4. 결과 분류:
+   (가) generateBookingRef() helper 정상 사용 + INSERT 정상
+       → CF-023 leads.ts single-site 확정
+       → guest-portal 의 정상 패턴 = generateBookingRef() helper 
+         가 Phase 2 reference implementation
+   (나) Math.random booking_ref + INSERT 정상
+       → CF-023.b sub-pattern (fake ref but real INSERT)
+       → leads.ts vs guest-portal 의 차이 명시 (INSERT 여부)
+   (다) Math.random + INSERT 없음
+       → CF-023 systemic (P0 검토 가능)
+       → 다른 도메인 더 점검 필요
+   (라) 다른 패턴
+       → R-REPO-5 incidental 보고 + 분류
+
+5. CRITICAL_FINDINGS.md CF-023 본문 갱신 (atomic commit 의 일부):
+   - guest-portal.ts:85-199 분석 결과 명시
+   - cross-ref leads.ts:175-204 와 비교
+   - single-site / sub-pattern / systemic 결정 명문화
+
+[II] CF-008 산정 방식 명시
+보고에 두 가지 산정 모두 표기 (read-heavy 도메인 정량 의미):
+- File-level: X/3 files have logAction (캐비어트: small denom)
+- Endpoint-level: Y/Z mutators have logAction (실제 audit coverage)
+
+매트릭스 row 추가 시 둘 다 명시 또는 endpoint-level 우선 (다른 
+도메인 일관성).
+
+[JJ] CF-013 timezone read-side
+포털 게스트의 timezone 처리:
+- 게스트 시간대 정보 어디 저장? (guest_users 테이블)
+- read endpoint 에서 시간대 변환?
+- booking 날짜 표시 시 server time vs guest local time?
+- 변환 누락 시 게스트가 잘못된 시간 봄 = client-side bug
+
+발견 시 CF-013 evidence section 에 read-side 패턴 row 추가.
+
+[KK] CF-021 N+1 listing
+guest-portal.ts GET /v1/guest/bookings (45-84):
+- list endpoint = N items
+- 각 item 의 enrichment 패턴 (price, image, status...)
+- enrich() helper 사용? batch-fetch?
+- 또는 loop + select?
+
+발견 시 CF-021 evidence section 에 portal-guest row 추가.
+
+[LL] CF-018 IDOR guest-side
+requireGuestAuth 의 guest_id 처리:
+- JWT 의 guest_id vs URL :id mismatch 점검
+- 게스트가 다른 게스트 booking 조회 가능?
+- 권한 우회 시나리오
+
+발견 시 CF-018 nested-write audit 표 갱신.
+
+[MM] DD 가이드 — portal-partner 사전 식별
+guest-portal.ts 의 helper / pattern 중 portal-partner (agent/owner/
+service-host) 와 공통일 가능성 사전 식별:
+- requireGuestAuth vs requirePartnerAuth (4가지) 패턴
+- 응답 enrichment helper 공통 사용?
+- T002.2.g 진입 시 cross-ref 부담 사전 완화
+
+각 식별 항목을 portal-guest.md §7 cross-ref 섹션에 명시 (T002.2.g 
+시 back-ref 자연 통합).
+
+═══════════════════════════════════════════════════
+[Step 3~6 진행 — 표준 절차]
+═══════════════════════════════════════════════════
+
+(2) Step 2 본문 작성 (29 endpoint, portal-guest.md, single-shot)
+    - C3 (HH) CF-023 etiology 결정 의무
+    - 사이즈 280-380 lines 예측
+    - tripwire 면제 (mid-write check 없음)
+
+(3) Step 3 self-check 표 (29 × 7 = 203 cells)
+
+(4) Step 4 spot-check 검증 (C1/C2/C3)
+    - C3 결과 → CF-023 분류 결정
+
+(5) Step 5 R-REPO-1 v2 atomic stage:
+    - portal-guest.md (NEW)
+    - CRITICAL_FINDINGS.md:
+      - CF-023 본문 갱신 (HH 결과 반영)
+      - CF-008 ops-property/catalog/crm 외 첫 read-heavy row
+      - CF-013/018/021 evidence (해당 시)
+      - CF-019 promotion_id status 그대로 (CANDIDATE 유지)
+    - INDEX.md (필요 시 portal 그룹 시각화 강화)
+    - _T002_PROGRESS.md (T002.2.f DONE + ledger row 19 fill 
+      [cbc54b2] + row 20 추가)
+    - session_plan.md (T002.2.f DONE, T002.2.g NEXT)
+    - cross-ref back-fill (해당 시)
+
+(6) Step 6 R-REPO-4 형식 보고
+
+(7) [사용자] git push origin main
+
+(8) 사용자 proceed → T002.2.g (portal-partner.md) 시작
+T002.2.g 자동 시작 절대 금지.
+
+═══════════════════════════════════════════════════
+[지금 시작]
+═══════════════════════════════════════════════════
+
+Step 2 single-shot 본문 작성 진입. C3 CF-023 etiology 결정 의무.
+Tripwire 면제 — mid-write check 없음.

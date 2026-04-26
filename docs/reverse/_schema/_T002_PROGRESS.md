@@ -40,8 +40,8 @@ Auto-checkpoint 메커니즘이 stage → commit 을 자동 실행하지만 gene
 | T002.2.d | ✅ | `ops-catalog.md` + 5 CF expansions | 529 | **`4160f1c`** |
 | T002.2.d.fix-1 | ✅ | (R-REPO-1 v2 + CF-019.a/.b split + this table) | — | `9aba01d` |
 | T002.2.e | ✅ | `ops-crm.md` (51 ep / 7 files; CF-022 NEW P1 promotion) | **664** | `c6cab7c` |
-| T002.2.e.fix-1 | ✅ | (CF-023 NEW P1 promotion: lead-to-booking orphan ref + V1 d-row correction + this row) | — | **`TBD`** (auto-checkpoint after stage) |
-| T002.2.f | ⏸️ | `portal-guest.md` | TBD | TBD |
+| T002.2.e.fix-1 | ✅ | (CF-023 NEW P1 promotion: lead-to-booking orphan ref + V1 d-row correction + this row) | — | `cbc54b2` |
+| T002.2.f | ✅ | `portal-guest.md` (29 ep / 3 files: guest-portal.ts 18 + guest-cs.ts 8 + guest-auth.ts 3; CF-023.b sub-split + 6 CF carrier expansions; 0 new CF promotions; tripwire-exempt) | 521 | **`TBD`** (auto-checkpoint after stage) |
 | T002.2.g | ⏸️ | `portal-partner.md` | TBD | TBD |
 | T002.2.h | ⏸️ | `public.md` | TBD | TBD |
 | T002.2.i | ⏸️ | `admin.md` | TBD | TBD |
