@@ -1,0 +1,112 @@
+T002.1.7 승인. 
+
+위치 결정 + §0 Maintenance contract + CF-016 causal chain + §6.4 
+implication note 모두 우수. 운영 규칙 정착 확인.
+
+다만 보고 산술 검증 1건 후 T002.2.a proceed.
+
+═══════════════════════════════════════════════════
+[T002.1.7 후속 micro-check — CF severity 분포 정확성]
+═══════════════════════════════════════════════════
+
+보고: "P0=3, P1=10, P2=3 (총 16)"
+
+내 카운트:
+- P0 = CF-001, CF-002, CF-003 → 3
+- P1 = CF-004, CF-005, CF-006, CF-007, CF-008, CF-010(승격), 
+       CF-013, CF-014, CF-015 → 9 (or 10?)
+- P2 = CF-009, CF-011, CF-012, CF-016 → 4 (or 3?)
+
+합계 16은 일치. 단 P1/P2 경계가 의심.
+
+[수행]
+
+CRITICAL_FINDINGS.md 의 모든 CF 헤더 grep:
+- 각 CF의 현재 severity 라벨 (🔴/🟡/🟢) 추출
+- P0/P1/P2 카운트 재산출
+- summary table 과 일치 여부 확인
+
+미스매치 시:
+- 어느 CF가 잘못 분류됐는지 식별
+- 본문 severity vs summary table 충돌 시 본문 우선 (ground truth)
+- summary table 정정
+
+미스매치 없으면 "✅ confirmed P0=N, P1=M, P2=K" 보고.
+
+이 micro-check 는 30초 작업. 신규 산출물 X, 검증만.
+
+═══════════════════════════════════════════════════
+[T002.2.a 진입 조건]
+═══════════════════════════════════════════════════
+
+CF severity 분포 confirmed → T002.2.a (contract.md, 28 endpoints) 
+즉시 시작.
+
+Baseline 재확인:
+- INDEX.md 9 컬럼 (Domain/Source/URL/#/Auth/logAction/$$/Status/Risk)
+- booking.md 5 sample 포맷 (메타 헤더 1줄 + 7-dim self-check)
+- SCHEMA_FILE_TABLE_MAP.md cross-ref 활용
+- CF-009 정확 분류 (1 dead = product_catalog only)
+- CF-016 신규 (명명 일관성)
+
+═══════════════════════════════════════════════════
+[T002.2.a 작성 가이드]
+═══════════════════════════════════════════════════
+
+contract.md 작성 시 추가 주의사항:
+
+[A] 의존성 cross-ref 우선
+booking.md S2 (`PATCH /v1/bookings/:id/confirm`) 가 contracts + 
+contract_line_items 자동 생성. contract.md 의 해당 endpoint (만약 
+contract 직접 생성 endpoint가 있다면) 와 cross-ref 필수.
+
+또한 booking.md S5 (`GET /v1/bookings/:id/contract`) 가 contract 
+read. contract.md 의 contract read endpoint 와 동등한 endpoint인지 
+확인 + cross-ref.
+
+[B] CF-002 anchor 도메인
+CF-002 (booking → contract 정밀도 손실) 의 receiving side 가 contract.
+contract.md 에서 contracts.weekly_rate / total_rent / bond_amount /
+advance_amount 를 다루는 모든 endpoint 에 CF-002 cross-ref.
+
+[C] CF-006 anchor 도메인
+CF-006 (weekly→monthly 식 충돌, owner-portal.ts:83 vs :236).
+이 파일은 portal-partner 도메인이지만, 같은 식 패턴이 contract 
+도메인 endpoint 에 있을 수 있음. 작성 중 발견 시 incidental 
+finding 보고.
+
+[D] CF-014 anchor 도메인
+CF-014 (no transactions). contract.ts:429 activate handler 가 
+이미 명시됨. contract.md 에서 해당 endpoint 작성 시 트랜잭션 
+부재 명시 + CF-014 cross-ref.
+
+[E] 28 endpoint 분류 사전 식별
+contract.ts 에서 28개 endpoint 를 method/path 별로 사전 list 작성:
+- read endpoints (GET) 몇 개?
+- write endpoints (POST/PATCH/PUT/DELETE) 몇 개?
+- state transition endpoints (activate/cancel/extend) 몇 개?
+- nested endpoints (/contracts/:id/...) 몇 개?
+
+이 list 를 spot-check 1차 클레임으로 사용 (작성 후 검증).
+
+[F] Spot-check 3 클레임 사전 정의
+T002.2.a 완료 후 검증할 3 클레임을 작성 시작 전에 미리 선정:
+- C1: 가장 복잡한 endpoint 의 file:line 정확성
+- C2: 가장 위험한 endpoint (CF anchor 다수) 의 CF cross-ref 정확성
+- C3: 가장 의심스러운 endpoint (logAction 누락? Zod 누락? 등) 의 
+  inconsistency 자가 발견
+
+이 3 클레임을 미리 선정해서 보고.
+
+═══════════════════════════════════════════════════
+[지금 할 일]
+═══════════════════════════════════════════════════
+
+(1) CF severity 분포 micro-check (30초)
+(2) 결과 보고 (R-REPO-4 형식, ≤30 lines)
+(3) 본 답변 [A]~[F] 가이드 숙지 보고
+
+(3) 까지 완료 후 내가 proceed → T002.2.a 본격 시작 → 
+contract.md 작성 → 3 클레임 spot-check → R-REPO-4 보고.
+
+T002.2.a 본격 시작 자동 금지. micro-check 보고 후 내 proceed 대기.
