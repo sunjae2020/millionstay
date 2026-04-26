@@ -1,0 +1,132 @@
+T002.2.d.fix-1 산출물 승인. 
+
+R-REPO-1 v2 + CF-019 .a/.b taxonomy + commit hash ledger + R-REPO-6 
+service_catalog.promotion_id CANDIDATE 마킹 — 모두 적정. 
+"CANDIDATE" 라는 third state 도입은 conservative anchor 등재의 
+정교한 패턴.
+
+═══════════════════════════════════════════════════
+[Decision] 3 결정 일괄 응답
+═══════════════════════════════════════════════════
+
+(1) git push origin main — 사용자 즉시 실행 (Replit Shell)
+    26 commits 일괄 push. 완료 후 origin/main..HEAD empty 확인.
+
+(2) fix-1 commit hash 채우기:
+    채택: 에이전트가 다음 sub-task (T002.2.e) Step 1 사전 분류 시 
+    git log --oneline -2 자동 read → ledger row 17 fill.
+    
+    이유:
+    - 사용자 수동 입력 오타 위험
+    - 에이전트 자동 read = 정확
+    - R-REPO-3 컨텍스트 재독 의 일부로 자연 통합
+
+(3) T002.2.e 진입 — proceed
+    ops-crm.md 단일 파일 / 51 ep / 7 files / 예측 ~1095 / tripwire 
+    1200 / 70% mid-write 체크.
+
+═══════════════════════════════════════════════════
+[T002.2.e Step 1 사전 분류 — 진입 시 처리]
+═══════════════════════════════════════════════════
+
+T002.2.e Step 1 시작 시 다음 4 항목 자동 처리:
+
+(a) git log --oneline -2 read → fix-1 commit hash 확인
+    → _T002_PROGRESS.md ledger row 17 fill (T002.2.d.fix-1)
+    → atomic commit 의 일부 (T002.2.e Step 5 commit 시)
+
+(b) 7 라우트 파일 inventory ground truth 확인 (R-REPO-6)
+    INDEX + RECON + actual ls 3-way 검증
+    51 endpoint 합계 확인
+
+(c) 사이즈 예측 (보정 모델)
+    210 fixed + Σ(format-specific lines)
+    형식별 비율 사전 추정
+
+(d) 3 spot-check 클레임 사전 sealing
+    C1: 가장 복잡한 endpoint
+    C2: CF anchor 다수 endpoint
+    C3: 자가 발견 inconsistency
+
+═══════════════════════════════════════════════════
+[T002.2.e 작성 가이드]
+═══════════════════════════════════════════════════
+
+[R] CF-019 service_catalog.promotion_id CANDIDATE cross-check
+T002.2.d.fix-1 에서 candidate 마킹. ops-crm 의 promotions.ts 
+또는 관련 파일에서:
+
+- promotion_id 의 write site 발견 시 → CF-019.a 확정 (storage 
+  orphan with read)
+- promotion_id 의 다른 사용 패턴 발견 시 → 신규 sub-pattern 후보
+- write site 여전히 0 → T002.3 db-schema-overview 까지 보류
+
+발견 결과를 R-REPO-5 incidental 로 보고 (impact: CF-019 sub-pattern 
+정교화 또는 candidate 해제).
+
+[S] CF-001 anchor 점검 — CRM 도메인
+ops-crm 도메인은 commissions / accounts 등 money-touching:
+- T002.2.b 에서 commissions/beneficiaries real 발견
+- ops-crm 추가 anchor 가능성 (예: contact_credit_balance 등)
+- 발견 시 CF-001 evidence section 갱신
+
+[T] CF-008 ops-crm row — 도메인 severity matrix
+0% (ops-catalog) 가 NEW LOWEST 인 상태. ops-crm 결과:
+- 0% 또 → severity matrix bottom 확정
+- > 0% → ops-catalog 가 NEW LOWEST 유지
+- 어느 쪽이든 inverse correlation 패턴 데이터 추가
+
+[U] CF-018/020/021 anchor 적극 식별
+ops-crm 7 파일 mutator + GET endpoint 전수 audit:
+- CF-018 IDOR (nested resource handlers)
+- CF-020.a GET-leak (deleted_at 필터 omission)
+- CF-020.b zombie revival (UPDATE deleted_at 가드 omission)
+- CF-021 N+1 enrichment
+
+═══════════════════════════════════════════════════
+[Tripwire 모니터링 — 1200 threshold]
+═══════════════════════════════════════════════════
+
+ops-crm 예측 ~1095 (보정 모델). cap 1500, tripwire 1200.
+
+Tripwire 발동 조건:
+- 70% mid-write 체크 (35/51 endpoint 시점):
+  - lines / endpoint 진행률이 1200 / 70% = 1714 lines per 100% 
+    초과 시 발동
+  - 즉 35 endpoint 작성 시 840 lines 초과 = 발동
+- 1100 lines 도달 시점 endpoint 진행률 < 80% (즉 41/51 미만)
+- 신규 CF anchor 5개 이상 발견
+
+발동 시 즉시 보고 + 사용자 게이트 (분할 또는 다른 seam 검토).
+미발동 시 단일 파일 완성.
+
+═══════════════════════════════════════════════════
+[Step 2~6 진행]
+═══════════════════════════════════════════════════
+
+(1) Step 1 사전 분류 + ledger row 17 fill (≤30 lines 보고)
+(2) Step 1 보고 후 사용자 proceed → Step 2 본문 작성
+(3) Step 2 작성 (51 endpoint, ops-crm.md 단일)
+    - tripwire 모니터링 (70% 체크 의무)
+(4) Step 3 self-check 표 (51 × 7 = 357 cells)
+(5) Step 4 spot-check 검증 (C1/C2/C3)
+(6) Step 5 R-REPO-1 v2 atomic stage:
+    - ops-crm.md (NEW)
+    - CRITICAL_FINDINGS.md (CF expansion / candidate 결정)
+    - INDEX.md (필요 시)
+    - _T002_PROGRESS.md (T002.2.e DONE + ledger row 17 fill + 
+      row 18 추가)
+    - session_plan.md (T002.2.e DONE, T002.2.f NEXT)
+    - cross-ref back-fill (해당 시)
+(7) Step 6 R-REPO-4 형식 보고
+(8) 사용자 수동 git push origin main (R-REPO-1 v2 (c))
+
+(8) 후 사용자 proceed → T002.2.f (portal-guest.md) 시작.
+T002.2.f 자동 시작 절대 금지.
+
+═══════════════════════════════════════════════════
+[지금 시작]
+═══════════════════════════════════════════════════
+
+Step 1 사전 분류 진행. ledger row 17 fill 포함.
+사용자 git push 는 병렬 (Replit Shell 에서 직접 실행).
