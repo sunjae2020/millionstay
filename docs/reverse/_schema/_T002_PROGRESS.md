@@ -38,8 +38,8 @@ Auto-checkpoint 메커니즘이 stage → commit 을 자동 실행하지만 gene
 | T002.2.c | ✅ | `ops-property.md` (compression debut) | 429 | `2416898` / `6872303` |
 | T002.1.9 | ✅ | (size budget recalibration + CF-020/021 promotion) | — | `07f83b2` / `f0c131f` |
 | T002.2.d | ✅ | `ops-catalog.md` + 5 CF expansions | 529 | **`4160f1c`** |
-| **T002.2.d.fix-1** | 🔄 | (R-REPO-1 v2 + CF-019.a/.b split + this table) | — | **`TBD`** (auto-checkpoint after stage) |
-| T002.2.e | ⏸️ | `ops-crm.md` (single file, tripwire 1200) | TBD | TBD |
+| T002.2.d.fix-1 | ✅ | (R-REPO-1 v2 + CF-019.a/.b split + this table) | — | `9aba01d` |
+| T002.2.e | ✅ | `ops-crm.md` (51 ep / 7 files; CF-022 NEW P1 promotion) | **664** | **`TBD`** (auto-checkpoint after stage) |
 | T002.2.f | ⏸️ | `portal-guest.md` | TBD | TBD |
 | T002.2.g | ⏸️ | `portal-partner.md` | TBD | TBD |
 | T002.2.h | ⏸️ | `public.md` | TBD | TBD |
@@ -329,7 +329,8 @@ Auto-checkpoint 메커니즘이 stage → commit 을 자동 실행하지만 gene
 | `_audit/CRITICAL_FINDINGS.md` (post-T002.2.c) | — | **~1310** | +218 from T002.2.c atomic commit: 7 inline CF expansions (CF-001 source-side +24, CF-008 ops row + .a/.b +12, CF-013 enum +28, CF-014 anchor 3→11 +24, CF-015 .a/.b +24, CF-017 Validation Matrix +30, CF-018 .a/.b/.SAFE table +28); 0 NEW CF this commit |
 | `api-endpoints/ops-catalog.md` (T002.2.d) | ~770 (T002.1.9 two-component model: 39×12 Format-B base + 9 Format-A uplift + 12 Format-C compression + 210 fixed) | **529** | **−241 (−31%) compression** — within recalibrated ±30% confidence band; 4-of-5 lookup-CRUD shape drove Format C absorption (12 of 39 endpoints) |
 | `_audit/CRITICAL_FINDINGS.md` (post-T002.2.d) | — | **~1660** | +205 from T002.2.d atomic commit: header refresh + CF-008 matrix patches (×2) + CF-009 reconfirmation subsection (~14) + CF-019 second domain expansion (~38) + CF-020 ops-catalog expansion (~22) + CF-021 ops-catalog expansion (~18) + CF-001 ops-catalog carrier expansion (~22). **0 NEW CF**, **0 promotions** — counts unchanged at P0=3 / P1=15 / P2=3 = **21** |
-| `api-endpoints/ops-crm.md` | ~660 | — | — |
+| `api-endpoints/ops-crm.md` | ~660 (T002.2.e Step 1 prediction ~1095, post-spot-check compression model 950-1100) | **664** | **+0.6% vs initial / −39% vs Step-1 prediction** — sub-task achieved heavy Format-B compression: 51 endpoints in 6.5 line average; 4-of-7 lookup-CRUD reuse + per-handler Meta one-liner format absorbed verbosity that Step-1 model expected |
+| `_audit/CRITICAL_FINDINGS.md` (post-T002.2.e) | — | **1485** | +48 lines from T002.2.e atomic commit (predicted ~+183 over-estimated by ~135): NEW CF-022 P1 promotion (~28 lines compressed — §header + 10-row Anchor Table + 4-row Compound failure + 3-bullet Recovery + 3-bullet Cross-refs) + CF-019.a row 3 status note expansion (~1 line single-row replacement) + new "Counts after T002.2.e" line (~1 line) + header refresh + summary table CF-020/CF-021 row replacements + NEW CF-022 row in summary table (~3 lines net); **+1 NEW CF promoted (CF-022 P1)** — counts P0=3 / P1=**16** / P2=3 = **22**. Anchor count updates: CF-001 +2 carriers, CF-013 21→27, CF-020.a 18→26 / .b 5→20 split formalized, CF-021 10→13 + 4-way author-pattern split documented |
 | `api-endpoints/portal-guest.md` | ~380 | — | — |
 | `api-endpoints/portal-partner.md` | ~290 | — | — |
 | `api-endpoints/public.md` | ~430 | — | — |

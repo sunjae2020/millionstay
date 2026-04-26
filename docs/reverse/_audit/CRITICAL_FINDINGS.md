@@ -3,7 +3,7 @@
 > **Source**: T001 RECON (`docs/reverse/_audit/T001_RECON_REPORT.md`).
 > **Format**: One row per finding. Each finding has a stable ID (`CF-NNN`) and **status**. Severity follows `🔴 P0` (must fix before production), `🟡 P1` (must fix before scale), `🟢 P2` (technical debt). Evidence is direct code quotation (≤ 5 lines per finding) with `path:line`.
 > **Discipline**: This file records facts and recommendations. **No code changes are made by this document** — fixes are tracked through the `Status` field.
-> **Last updated**: 2026-04-26 (T002.2.d — ops-catalog anchors: CF-008 NEW domain-LOWEST 0/39 = 0%; CF-009 ghost table cross-ref to ops-catalog.md §1.5; CF-019 effective_weekly_rate write-orphan anchor at `products.ts:67/108`; CF-020.a +4 GET-leak anchors → 18; CF-021 +2 sub-pattern anchors → 10; CF-001 +5 carrier columns documented from ops-catalog. **0 NEW CF**, **0 promotions**: counts unchanged at P0=3 / P1=15 / P2=3 = 21).
+> **Last updated**: 2026-04-26 (T002.2.e — ops-crm anchors: **NEW CF-022 P1 promoted** — state-transition guard inconsistency, 9 transition handlers across 4 files = 5 gated + 4 ungated, same-file inconsistency in `work-orders.ts` 2-of-4 + `leads.ts` 1-of-2; CF-001 +2 carrier columns (`work_orders.cost`, `promotions.discount_percentage`); CF-008 ops-crm row 0/51 = 0% **TIED LOWEST** with ops-catalog; CF-013 +6 no-tz anchors → 27; CF-015 NEW sentinel-via-status sub-pattern at `service-hosts.ts`; CF-019.a CANDIDATE row 3 status note updated (`service_catalog.promotion_id` write-site cross-check from ops-crm domain = 0 hits; CANDIDATE retained pending T002.3); CF-020.a +8 GET-leak anchors → 26 / .b +15 zombie-revival anchors → 20 (split formalized); CF-021 +3 N+1 anchors → 13. **1 NEW CF promoted (CF-022 P1)**: counts P0=3 / P1=**16** / P2=3 = **22**).
 
 ---
 
@@ -862,6 +862,51 @@ EF Core's `HasQueryFilter` for soft-delete relies on a uniform column. Today's t
 
 ---
 
+## CF-022 — State-transition guard inconsistency on PATCH/POST `/:id/<verb>` handlers
+
+| Field | Value |
+|---|---|
+| **Severity** | 🟡 P1 |
+| **Scope** | State machine integrity · Business rules · Audit reliability |
+| **Discovery** | T002.2.e ops-crm sub-task (Step 4 spot-check C3). 4 ops-crm files (`work-orders.ts`, `leads.ts`, `tasks.ts`, `cs-tickets.ts`) define 9 explicit state-transition handlers (POST/PATCH `/:id/<verb>` or PUT with status change). 5 of 9 use precondition gates (`where(and(eq(id, ...), eq(status, "AllowedFromState")))`); 4 of 9 use only `where(eq(id, ...))`, accepting any source state. **Same-file inconsistency** in `work-orders.ts` (2 of 4 ungated) and `leads.ts` (1 of 2 ungated) demonstrates author oversight rather than intentional design — fix-able pattern. |
+
+### Anchor table (9 transitions across 4 files)
+
+| Handler | File:line | Precondition | Status | Failure mode if invalid transition is invoked |
+|---|---|---|---|---|
+| WO `/start` | `work-orders.ts:149-157` | `eq(status, "Open")` | ✅ gated | row count = 0 → 400 returned ✅ |
+| WO `/review` | `work-orders.ts:159-167` | `eq(status, "InProgress")` | ✅ gated | ✅ |
+| WO `/complete` | `work-orders.ts:169-185` | none | ❌ ungated | Cancelled/Archived work order accepts complete; `completed_at` + `cost` (real, CF-001) updated → matures into invoice line item with wrong status history |
+| WO `/cancel` | `work-orders.ts:187-201` | none | ❌ ungated | Already-Completed order can be reverted to Cancelled silently; `completed_at` not cleared → state vs timestamp divergence |
+| Lead `/convert` | `leads.ts:175-203` | explicit `if (lead.lead_status === "ConvertedToBooking") return 400` | ✅ gated (imperative-style) | ✅ — but **fake `booking_ref` generated without `db.insert(bookingsTable)`** (R-REPO-5 incidental from T002.2.e §5.C2) |
+| Lead `/mark-lost` | `leads.ts:205-214` | none | ❌ ungated | A `ConvertedToBooking` lead can be overwritten to `Lost`, severing the booking trace |
+| Task `/complete` | `tasks.ts:173-182` | none | ❌ ungated | Cancelled tasks accept `Done`; analytics for completed-task counts inflate |
+| CS-ticket PUT (status) | `cs-tickets.ts:121-136` | `CS_STATUSES.includes(status)` whitelist only | ❌ ungated transition graph | Closed→Open→Closed cycles permitted; `closed_at` overwritten on each Closed entry |
+| CS-ticket POST `/:id/messages` (auto-status) | `cs-tickets.ts:165-168` | `eq(status, "Open")` | ✅ gated (drive-by side effect) | ✅ — `is_internal=true` messages skip auto-transition (`L165`) |
+
+**5 ✅ gated · 4 ❌ ungated · 9 total transition handlers.**
+
+### Compound failure modes
+
+1. **Audit invisibility (CF-008 compound)** — All 4 files have `logAction` count = 0 (CF-008 LOWEST tier). Invalid transitions leave no audit trail; only DB inspection reveals the divergence. Reconciliation requires SQL on `updated_at` deltas with no actor attribution.
+2. **State vs timestamp divergence** — `completed_at` (set on /complete) and `closed_at` (set on PUT status="Closed") are written unconditionally; reverting status leaves the timestamp populated → row state and row history disagree silently.
+3. **Real-money carrier (CF-001 compound)** — `work-orders.ts` `/complete` writes `cost: real` (CF-001 P0 carrier); ungated transition means cost can be set/changed on Cancelled orders → potential mis-invoice when downstream billing reads work-order cost field.
+4. **Same-file inconsistency** — `work-orders.ts` author wrote correct gates for `/start` + `/review` but skipped them for `/complete` + `/cancel`; `leads.ts` author gated `/convert` but skipped `/mark-lost`. Pattern is *known* to authors but inconsistently applied — strong fix-ability signal.
+
+### Recovery (recommendation)
+
+- **Immediate (low risk)**: Add `eq(status, ...)` precondition to the 4 ungated handlers, returning 400 (or 409 Conflict) on row-count = 0. Mirror the WO `/start` + `/review` pattern.
+- **Phase 2 (.NET port)**: Encode state transitions as enum + transition table; reject invalid transitions in domain layer before SQL emission. Compounds well with CF-019.b solution (DB GENERATED columns) and CF-020 fix (centralized `isNull(deleted_at) AND status IN (...)` predicate).
+- **Audit (CF-008 dependency)**: Adding `logAction` to these 9 handlers is a prerequisite for retroactive audit; without it, fixing CF-022 still leaves Phase 1 invalid-state rows undetectable.
+
+### Cross-references
+
+- [`../_schema/api-endpoints/ops-crm.md` §2.9](../_schema/api-endpoints/ops-crm.md) — full 9-handler taxonomy + spot-check C3 verification log
+- T002.2.h-.j (booking, admin, public) — must scan for additional transition handlers; estimate ≥5 more (booking lifecycle, invoice state, contract activate/cancel) → CF-022 anchor count likely doubles by T002.2 close
+- CF-008 (audit gap) and CF-020 (soft-delete leak) are **prerequisite** repairs for CF-022 to be fully solvable
+
+---
+
 ## Summary
 
 | ID | Severity | Title | Status |
@@ -885,10 +930,13 @@ EF Core's `HasQueryFilter` for soft-delete relies on a uniform column. Today's t
 | CF-017 | 🟡 P1 | Input validation (Zod or any) absent on ~90% of route files — only 5 of 52 files validate `req.body` | OPEN |
 | CF-018 | 🟡 P1 | IDOR-class authorization-scope omission on nested resource handlers — 7 outright + 3 partial of 17 audited | OPEN |
 | CF-019 | 🟡 P1 | Write-orphan family — schema declares column, code does not honour it as single source of truth. Two sub-patterns: **.a Storage orphan** (column stored-then-NULL, never read; e.g. `invoices.stripe_payment_intent_id`); **.b Compute drift** (column written by raw INSERT/UPDATE but readers always recompute from upstream → DB-vs-response divergence; e.g. `contract_products.effective_weekly_rate`) | OPEN |
-| CF-020 | 🟡 P1 | Soft-delete leak — query/mutation handlers omit `isNull(deleted_at)` filter; soft-deleted rows leak into list endpoints (.a) and can be revived by mutation (.b) — 16 anchors across 3 domains | OPEN |
-| CF-021 | 🟡 P1 | N+1 enrichment anti-pattern — list endpoints issue per-row follow-up SELECTs in JS rather than SQL JOIN; worst case `buildSpaceResponse` degree 4 → 4× page-size additional round-trips per list call | OPEN |
+| CF-020 | 🟡 P1 | Soft-delete leak — query/mutation handlers omit `isNull(deleted_at)` filter; soft-deleted rows leak into list endpoints (.a, **26 anchors**) and can be revived by mutation (.b, **20 anchors**) — 4 domains; `service-hosts.ts` sentinel-via-status sub-variant (no `deleted_at` column) cross-cuts CF-015 | OPEN |
+| CF-021 | 🟡 P1 | N+1 enrichment anti-pattern — list endpoints issue per-row follow-up SELECTs in JS rather than SQL JOIN; worst case `buildSpaceResponse` degree 4 → 4× page-size additional round-trips per list call. **13 anchors across 4 domains**; ops-crm exposes 4-way author-pattern split (leftJoin / Promise.all per-row / sequential per-id / sequential per-detail) within single domain | OPEN |
+| CF-022 | 🟡 P1 | State-transition guard inconsistency — 9 transition handlers across 4 ops-crm files, 5 with precondition gate (`where(and(eq(id), eq(status, "Allowed")))`) + 4 without; same-file inconsistency in `work-orders.ts` (2 of 4 ungated) and `leads.ts` (1 of 2 ungated). Failure mode: invalid state transitions silently succeed (e.g. Cancelled→Completed, ConvertedToBooking→Lost), corrupting state-machine semantics; compounds with CF-008 (no audit trail to detect post-hoc) | OPEN |
 
 **Counts after T002.1.9**: P0=3, P1=**15**, P2=3 (total **21**) — **2 NEW promotions** (CF-020 + CF-021, both T002.2.c R-REPO-5 graduates with sufficient anchor density to warrant promotion this commit). Both candidates were parked at T002.2.b half-2 (CF-020 9 anchors / CF-021 2 anchors); T002.2.c surfaced 7 additional CF-020 anchors + 6 additional CF-021 anchors, crossing the typical promotion threshold (≥10 anchors / ≥3 domains) without waiting for T002.2.d. CF-017 + CF-018 are T002.2.a Spot-Check C3 graduates (R-REPO-5); CF-019 is T002.2.b half-2 graduate. **0 deferred candidates** remaining; T002.2.d-.j may surface fresh ones.
+
+**Counts after T002.2.e**: P0=3, P1=**16**, P2=3 (total **22**) — **1 NEW CF promotion in T002.2.e**: CF-022 (state-transition guard inconsistency, P1) graduated from T002.2.e Spot-Check C3 (R-REPO-5). 9 transition handlers across 4 ops-crm files; 5 gated + 4 ungated; same-file inconsistency in `work-orders.ts` (2/4) + `leads.ts` (1/2). CF-019.a candidate row 3 (`service_catalog.promotion_id`) status note updated with ops-crm cross-check result (0 write hits — CANDIDATE retained pending T002.3 full enumeration). Anchor count updates this commit: **CF-001** +2 carriers (`work_orders.cost`, `promotions.discount_percentage`); **CF-008** ops-crm row 0/51 = 0% TIED LOWEST with ops-catalog; **CF-013** +6 no-tz anchors (21 → 27); **CF-015** NEW sentinel-via-status sub-pattern at `service-hosts.ts` (single-site evidence, no separate sub-ID promoted); **CF-017** +5 evidence sites (3 strong end-to-end + 2 partial/spread-reuse); **CF-018** false-positive note (cs-tickets nested message handler is admin-scoped); **CF-020.a** +8 GET-by-id leak anchors (18 → **26**) + **.b** zombie-revival anchors split formalized (5 → **20**); **CF-021** +3 N+1 anchors (10 → **13**) with 4-way author-pattern split documented (leftJoin / Promise.all per-row / sequential per-id / sequential per-detail in single domain).
 
 **Counts after T002.2.c**: P0=3, P1=13, P2=3 (total 19) — **0 new CF promotions in T002.2.c** (commit consists of 7 CF expansions + 5 sub-pattern annotations: CF-001 source-side anchor, CF-008 ops-property row + CF-008.a + CF-008.b sub-patterns, CF-013 ops business-domain enumeration, CF-014 anchor 3 → 11, CF-015 hard-delete-by-design distinction, CF-017 Domain Validation Coverage Matrix, CF-018 partial-IDOR taxonomy + SAFE exemplar references). CF-017 + CF-018 are T002.2.a Spot-Check C3 graduates (R-REPO-5); CF-019 is the T002.2.b half-2 Spot-Check C3-8 graduate (R-REPO-5). Two CF candidates' anchor counts updated this commit: **CF-020 candidate** (system-wide soft-delete leak — 9 → **16 anchors**: 5 ops-property GET-leak SP3/PR3/SL3/SO3/SU3 + 2 ops-property mutation-zombie-revival PR4/PR7 + 9 prior across finance) and **CF-021 candidate** (N+1 enrichment anti-pattern — 2 → **8 anchors**: 6 ops-property: 3 spaces buildSpaceResponse degree-4 callers + 3 properties degree-1 + 2 prior). Both still parked for T002.2.d promotion decision per user.
 
@@ -1174,7 +1222,7 @@ The original CF-019 named one mechanism (Stripe columns declared but never writt
 |---|---|---|---|---|---|
 | 1 | .a | `invoices.ts:15` (`stripe_payment_intent_id`) | none (Stripe webhook writes only `status` + `paid_at`; PI id lands in `system_logs.new_value` JSON only) | none in routes | confirmed orphan |
 | 2 | .a | `invoices.ts:16` (`stripe_checkout_url`) | none (`guest-portal.ts:885` returns `session.url` in HTTP response, never persisted) | none in routes | confirmed orphan |
-| 3 | .a | `service_catalog.ts:24` (`promotion_id`) | unclear — `service-catalog.ts:48,60-66` use spread-from-body that could *implicitly* carry `promotion_id` if the client sends it, but no explicit enumeration; default case = NULL | `promotions.ts:146` (reverse-lookup join: list services attached to a promotion) | **CANDIDATE** — write surface needs T002.2.e ops-crm cross-check + T002.3 db-schema-overview write-surface enumeration; if confirmed write-less, promote to confirmed orphan |
+| 3 | .a | `service_catalog.ts:24` (`promotion_id`) | unclear — `service-catalog.ts:48,60-66` use spread-from-body that could *implicitly* carry `promotion_id` if the client sends it, but no explicit enumeration; default case = NULL. **T002.2.e ops-crm cross-check completed**: 7-file grep `promotion_id` across `{work-orders,leads,tasks,cs-tickets,contacts,service-hosts,promotions}.ts` = **0 write hits** (only read at `promotions.ts:135,146` reverse-lookup join). | `promotions.ts:146` (reverse-lookup join: list services attached to a promotion) | **CANDIDATE retained** — ops-crm domain confirmed write-less; final promotion decision pending T002.3 db-schema-overview full write-surface enumeration across remaining 43 route files (admin/portal/public clusters) |
 | 4 | .b | `products.ts:8` (`effective_weekly_rate` on `contract_products`) | `products.ts:67` POST + `products.ts:108` PUT (client-supplied, no validation) | `products.ts:7-37` `enrich()` helper (recomputes from `weekly_rate * (1 - disc/100)`) called by 6 of 10 endpoints | **confirmed compute-drift** — divergence demonstrated; promotion-expiry second-order drift documented |
 
 ### Evidence
