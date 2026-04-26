@@ -1,0 +1,122 @@
+proceed.
+
+T002.1.9 승인. 
+
+Two-component size model (210 fixed + format multiplier) 정확 + 
+4 actual 평균 편차 6.5% = 신뢰성 확립. ops-crm 분할 LIFTED = 
+이전 결정 자가 정정, sub-task 1-2 감소. CF-020.a/b sub-pattern 
+분류 + zombie revival 정의 + CF-008 compound risk 명시 = 
+systemic issue 화. CF-021 정량화 (201 RT/call → 20,100 RT/s) + 
+EF Core .Include() Phase 2 자연 해결 함의. 0 deferred candidates 
+remaining = candidate → CF cycle 완성.
+
+═══════════════════════════════════════════════════
+[Decision] T002.2.d 진입 승인
+═══════════════════════════════════════════════════
+
+ops-catalog.md 진입 (39 ep, 5 files, 예측 ~770 lines).
+
+═══════════════════════════════════════════════════
+[T002.2.d 진입 전 micro-check 1건]
+═══════════════════════════════════════════════════
+
+[1] CRITICAL_FINDINGS.md 압축 검증
+보고: "1310 → 1299 lines, +2 rows + CF-020 ~75 + CF-021 ~70; 
+후속 expansion 텍스트 일부 압축됨"
+
+산술: +145 추가 vs 실제 -11 = 약 156 lines 압축
+
+수행:
+- 압축된 영역 식별 (어느 CF 본문이 줄어들었는가)
+- 의미 손실 여부 spot-check 3 클레임:
+  - 압축 전 CF-001 evidence section 의 모든 anchor 명시 → 압축 후 
+    동일 anchor 유지?
+  - 압축 전 CF-008 domain matrix row 모든 데이터 → 압축 후 보존?
+  - 압축 전 CF-014 helper enumeration → 압축 후 보존?
+- 의미 손실 발견 시 즉시 복구 (mini-mini-task)
+- 의미 손실 없으면 "압축 acceptable, no information loss" 확인
+
+결과를 30초 보고로 명시 후 T002.2.d Step 1 진입.
+
+═══════════════════════════════════════════════════
+[T002.2.d 작성 가이드]
+═══════════════════════════════════════════════════
+
+[N] CF-001 anchor 추가 — service-catalog
+> "service-catalog.ts real 앵커 for CF-001"
+
+ops-catalog 가 CF-001 anchor 추가. spaces.ts (T002.2.c) 와 함께 
+non-finance 도메인 CF-001 anchor 누적:
+
+- spaces.ts: base_weekly_price, base_daily_price (real)
+- service-catalog.ts: base_price (real, T002.2.d 발견)
+- → CF-001 evidence section 에 ops 도메인 row 추가
+
+데이터 흐름 추적: service-catalog.base_price 가 어느 도메인에서 
+참조되는가?
+- contracts? bookings?
+- 발견 시 CF-001 데이터 흐름 다이어그램 확장
+
+[O] DEAD table 처리 — products.ts
+> "products.ts 🪦 DEAD compact-marked"
+
+products.ts 라우트 파일 자체가 DEAD (T002.1.6 재검증). 
+ops-catalog.md 작성 시:
+- DEAD 표시 명확 (🪦 marker)
+- compact format (3-7 lines/ep) 적용
+- "DEAD: routes exist but tables (products / product_catalog) 
+  unused" 주석
+- Phase 2 청소 대상 명시
+
+[P] CF-020/021 anchor 적극 식별
+T002.1.9 promotion 후 CF-020/021 가 정식 anchor:
+- CF-020.a (GET-leak): GET endpoint deleted_at 필터 점검
+- CF-020.b (zombie revival): UPDATE handler deleted_at 가드 점검
+- CF-021 (N+1): enrichment helper 함수의 follow-up query 카운트
+
+ops-catalog 5 파일 mutator + GET endpoint 전수 audit. 
+발견 anchor 는 Meta 헤더 CF 필드에 정확히 명시.
+
+[Q] CF-019 (write-orphan column) 도메인 횡단 점검
+T002.2.b 발견 (invoices.stripe_payment_intent_id orphan). 
+ops-catalog 의 schema 컬럼 vs route write 비교:
+- 컬럼 존재 but 어느 endpoint 도 안 씀? 
+- 발견 시 CF-019 evidence expansion (R-REPO-1 atomic 의 일부)
+
+═══════════════════════════════════════════════════
+[T002.2.d Step 1 사전 분류]
+═══════════════════════════════════════════════════
+
+R-REPO-6 (사용자 입력 ground truth 검증):
+- 5 라우트 파일 inventory ground truth (INDEX + RECON 3-way)
+- 39 endpoint 합계 검증
+- 각 파일 endpoint 분류 (read/write/transition/nested)
+
+Size 예측 (보정 모델 적용):
+- 210 fixed + Σ(format-specific lines)
+- 형식별 비율 사전 추정 (full vs compact)
+- products.ts compact-marked 적용
+
+3 spot-check 클레임 사전 sealing:
+- C1: 가장 복잡한 endpoint file:line + 헬퍼 chain (예: 
+  service-catalog 의 service activation 또는 pricing logic)
+- C2: CF-001 anchor 정확성 (service-catalog.base_price real)
+- C3: 자가 발견 inconsistency (booking/contract/finance/property 
+  C3 패턴 따라)
+
+CF anchor 사전 점검 (가이드 N/O/P/Q):
+- [N] CF-001 service-catalog.base_price + 데이터 흐름
+- [O] products.ts DEAD compact format
+- [P] CF-020/021 evidence 적극 수집
+- [Q] CF-019 write-orphan 점검
+
+═══════════════════════════════════════════════════
+[지금 시작]
+═══════════════════════════════════════════════════
+
+(1) Pre-flight: CRITICAL_FINDINGS.md 압축 검증 (30초)
+(2) T002.2.d Step 1 사전 분류 보고 (≤30 lines)
+(3) Step 1 보고 후 사용자 proceed → Step 2 본문 작성
+
+Step 2 자동 진행 절대 금지. 압축 검증 결과 + Step 1 사전 분류 
+보고 후 사용자 게이트.
