@@ -25,18 +25,37 @@
 - **Outcome**: 4 open questions answered by user; plan locked.
 
 ### T002.1 — INDEX.md + Sample 5 endpoints (booking.md partial)
-- **Status**: ⏸️ **AWAITING_APPROVAL** (2026-04-26)
+- **Status**: ✅ **DONE** (2026-04-26) — format approved by user with minor B1/B2/B3 reinforcements
 - **Outputs**:
-  - `docs/reverse/_schema/api-endpoints/INDEX.md` — full 51-file index with 9-column schema + Risk Legend footer
-  - `docs/reverse/_schema/api-endpoints/booking.md` — partial: 5 sample endpoints (S1–S5 per `_T002_PLAN.md` §9.Q4)
-- **Gate**: deferred — Sample Self-Check protocol (§9.Q4 directive [C]) executed inline; result table at top of `booking.md`.
-- **Outcome**: User must approve format on the sample before T002.2 expands to remaining 348 endpoints.
-- **Blocker**: user `proceed` required for T002.2.
+  - `docs/reverse/_schema/api-endpoints/INDEX.md` (146) — 51-file index, 9-column schema + Risk Legend footer
+  - `docs/reverse/_schema/api-endpoints/booking.md` (partial) — 5 sample endpoints (S1–S5 per `_T002_PLAN.md` §9.Q4)
+- **Gate**: Sample Self-Check protocol (§9.Q4 directive [C]) executed inline; 35-cell table at top of `booking.md`, all ✅.
+- **Outcome**: format `(a) lock` per user reply. Subsequent reinforcements applied in T002.1.5 below.
 
-### T002.2 — All remaining endpoints (348 endpoints across 9 files)
-- **Status**: ⚪ **PENDING**
-- **Files**: `booking.md` (remaining 22) · `contract.md` · `finance.md` · `ops-property.md` · `ops-catalog.md` · `ops-crm.md` · `portal-guest.md` · `portal-partner.md` · `public.md` · `admin.md`
-- **Blocked by**: T002.1 user approval
+### T002.1.5 — Format lock reinforcement (B1 + B2 + B3 setup)
+- **Status**: ⏸️ **AWAITING_APPROVAL** (2026-04-26)
+- **Triggered by**: user directives [B1] (1-line metadata header), [B2] (re-verify 5 samples), [B3] (progressive verification protocol set-up).
+- **Outputs**:
+  - `booking.md` updated: 5 × 1-line **Meta** header inserted directly under each `## SX — METHOD /url` (`Auth | $$ | logAction | CF`).
+  - `booking.md` appendix: **Sample Re-Verification Log** section recording 24/24 spot-checks (5 lines + 11 tables + 8 CFs) with `sed`/`rg` commands and exact outputs.
+  - Incidental finding: `contract_products` table lives in **schema** file `products.ts` despite the **route** file being DEAD — flagged for T002.3.
+- **Gate**: 24/24 ✅ — no corrections required to the 5 samples.
+- **Blocker**: user `proceed` to begin T002.2.a (contract.md).
+
+### T002.2 — All remaining endpoints (348 endpoints) — split per [B3] into 9 sub-tasks
+- **Status**: ⚪ **PENDING** (blocked by T002.1.5 approval)
+- **Sub-tasks** (each: write → 3-claim spot-check → ≤50-line report → user `proceed` → next):
+  - **T002.2.a — `contract.md`** (28 endpoints: contracts.ts 21 + contract-types.ts 7) — first because it's the receiver of S2's auto-create writes; cross-ref hooks already in booking.md S2/S5.
+  - **T002.2.b — `finance.md`** (43 endpoints across 7 files) — depends on contract for invoice cross-ref pattern.
+  - **T002.2.c — `ops-property.md`** (44 endpoints across 6 files).
+  - **T002.2.d — `ops-catalog.md`** (39 endpoints; `products.ts` 🪦 DEAD — first chance to validate dead-file documentation pattern).
+  - **T002.2.e — `ops-crm.md`** (51 endpoints; largest single file, watch budget).
+  - **T002.2.f — `portal-guest.md`** (29 endpoints; CF-010 Stripe boundary).
+  - **T002.2.g — `portal-partner.md`** (22 endpoints; CF-005 + CF-006 anchors).
+  - **T002.2.h — `public.md`** (33 endpoints).
+  - **T002.2.i — `admin.md`** (37 endpoints; CF-004 dev-migration anchor).
+  - **T002.2.j — `booking.md` close-out** (remaining 22 endpoints; deferred to last so booking-domain re-reads benefit from cross-domain context).
+- **Per-sub-task report fields** (per [B3]): endpoints written / cumulative endpoint count (vs 353 target) / domain logAction coverage / $$ touching count / new CF candidates discovered / 3-claim spot-check verdict.
 
 ### Gate 1 — 3-claim verification on T002.1 + T002.2
 - **Status**: ⚪ **PENDING**

@@ -33,6 +33,8 @@ The 5 endpoints below cover the full format dimensionality (read · complex-writ
 
 ## S1 — GET `/api/v1/bookings/:id`
 
+**Meta**: `Auth: requireAuth | $$: N | logAction: N (read) | CF: —`
+
 | Field | Value |
 |---|---|
 | **Source** | `artifacts/api-server/src/routes/bookings.ts:283-289` |
@@ -79,6 +81,8 @@ The booking row enriched by `buildBookingResponse` (`bookings.ts:35-58`):
 ---
 
 ## S2 — PATCH `/api/v1/bookings/:id/confirm`
+
+**Meta**: `Auth: requireAuth | $$: Y | logAction: Y (2) | CF: CF-002, CF-003, CF-006, CF-007, CF-011, CF-014`
 
 | Field | Value |
 |---|---|
@@ -142,6 +146,8 @@ The booking row enriched by `buildBookingResponse` (`bookings.ts:35-58`):
 
 ## S3 — POST `/api/v1/bookings`
 
+**Meta**: `Auth: requireAuth | $$: Y | logAction: N ⚠️ | CF: CF-008, CF-011`
+
 | Field | Value |
 |---|---|
 | **Source** | `artifacts/api-server/src/routes/bookings.ts:161-197` |
@@ -197,6 +203,8 @@ buildBookingResponse(row)   // newly created row + 4 enrichment fields, see S1 (
 
 ## S4 — PATCH `/api/v1/bookings/:id/submit`
 
+**Meta**: `Auth: requireAuth | $$: N | logAction: N ⚠️ | CF: CF-008`
+
 | Field | Value |
 |---|---|
 | **Source** | `artifacts/api-server/src/routes/bookings.ts:355-366` |
@@ -234,6 +242,8 @@ buildBookingResponse(row)   // booking with updated status (bookings.ts:365)
 ---
 
 ## S5 — GET `/api/v1/bookings/:id/contract`
+
+**Meta**: `Auth: requireAuth | $$: N | logAction: N (read) | CF: CF-003 (cross-domain join), CF-015 (no soft-delete filter)`
 
 | Field | Value |
 |---|---|
@@ -303,4 +313,63 @@ The 5 above lock the format. The other 22 endpoints in `bookings.ts` will be wri
 
 ---
 
-*End of `booking.md` (partial — T002.1 sample). Awaiting user format approval before T002.2 expands.*
+## Sample Re-Verification Log (T002.1.5 — 2026-04-26)
+
+> Triggered by user directive [B2]: re-verify the 5 samples once more before T002.2 locks the format. Three independent checks performed; all results recorded here for audit.
+
+### Check 1 — Cited `file:line` matches actual handler signature
+Re-ran `sed -n "${LINE}p" artifacts/api-server/src/routes/bookings.ts` for each sample's first cited line:
+
+| # | Sample | Cited line | Actual signature at that line | ✅/❌ |
+|---|---|---|---|:---:|
+| S1 | GET /v1/bookings/:id | 283 | `router.get("/v1/bookings/:id", async (req, res): Promise<void> => {` | ✅ |
+| S2 | PATCH /v1/bookings/:id/confirm | 368 | `router.patch("/v1/bookings/:id/confirm", async (req, res): Promise<void> => {` | ✅ |
+| S3 | POST /v1/bookings | 161 | `router.post("/v1/bookings", async (req, res): Promise<void> => {` | ✅ |
+| S4 | PATCH /v1/bookings/:id/submit | 355 | `router.patch("/v1/bookings/:id/submit", async (req, res): Promise<void> => {` | ✅ |
+| S5 | GET /v1/bookings/:id/contract | 533 | `router.get("/v1/bookings/:id/contract", async (req, res): Promise<void> => {` | ✅ |
+
+**Result**: 5/5 ✅ — all line numbers stable, no off-by-one drift.
+
+### Check 2 — Tables named in samples exist in schema
+Ran `rg -l "pgTable(\"<name>\"" packages/db/src/schema/` for each table referenced in the 5 samples:
+
+| Table cited | Defined in | ✅/❌ |
+|---|---|:---:|
+| `bookings` | `bookings.ts` | ✅ |
+| `contracts` | `contracts.ts` | ✅ |
+| `contract_line_items` | `contract_line_items.ts` | ✅ |
+| `space_blocked_dates` | `spaces.ts` | ✅ |
+| `accounts` | `accounts.ts` | ✅ |
+| `contacts` | `contacts.ts` | ✅ |
+| `spaces` | `spaces.ts` | ✅ |
+| `properties` | `properties.ts` | ✅ |
+| `accommodation_catalog` | `accommodation_catalog.ts` | ✅ |
+| `contract_products` | `products.ts` *(file is 🪦 DEAD per CF-009 but the `contract_products` table itself is live and queried at S2)* | ✅ |
+| `booking_services` | `bookings.ts` | ✅ |
+
+**Result**: 11/11 ✅. **Note**: `contract_products` lives in `products.ts` schema file even though `products.ts` *route* file is dead. Worth a callout in T002.3 (db-schema-overview) — schema-file deadness ≠ table deadness.
+
+### Check 3 — CF cross-references resolve to existing IDs in CRITICAL_FINDINGS.md
+Ran `rg "CF-XXX" docs/reverse/_audit/CRITICAL_FINDINGS.md` for each ID cited across the 5 samples (and the new Meta headers added in T002.1.5):
+
+| CF ID | Cited in | Found in CRITICAL_FINDINGS.md | ✅/❌ |
+|---|---|---|:---:|
+| CF-002 | S2 | ✅ "booking→contract precision loss" | ✅ |
+| CF-003 | S2, S5 | ✅ "zero `references()` FK" | ✅ |
+| CF-006 | S2 | ✅ "weekly→monthly formula mismatch" | ✅ |
+| CF-007 | S2 | ✅ "hard-coded 4-week bond / 2-week advance" | ✅ |
+| CF-008 | S3, S4 | ✅ "audit log called from only 6 of 50 route files" | ✅ |
+| CF-011 | S2, S3 | ✅ "contract ref by row-count race" — also applies to `generateBookingRef` in S3 (same pattern at `bookings.ts:60-69`) | ✅ |
+| CF-014 | S2 | ✅ "multi-step mutations not in transactions" | ✅ |
+| CF-015 | S5 | ✅ "soft/hard-delete inconsistency" — surfaced via S5's lack of `isNull(deleted_at)` filter on a contracts read | ✅ |
+
+**Result**: 8/8 ✅.
+
+### Verdict
+- 24 of 24 spot-checks passed (5 lines + 11 tables + 8 CFs).
+- **No corrections needed** to the 5 samples. Format is locked.
+- One incidental finding to carry forward to T002.3: schema-file `products.ts` hosts a still-live table `contract_products` despite the route file being DEAD — needs to be flagged in `db-schema-overview.md` so T002.4's Dead Tables appendix doesn't accidentally tombstone the wrong rows.
+
+---
+
+*End of `booking.md` (partial — T002.1 sample, T002.1.5 verified). Awaiting user `proceed` for T002.2.a (contract.md, the next domain).*
