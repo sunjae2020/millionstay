@@ -1,0 +1,140 @@
+T002.2.b half-1 (finance-invoicing) 승인. 
+
+검증 게이트 실시간 오류 발견 + 수정 (E5 Meta auth qualifier) — 
+2/3 ✅ + 1 caught and fixed = 진짜 검증. CF-001 finance 그룹 내부 
+boundary 발견 + CF-008 2배 격차 정량화 + CF-014 silent dual-billing 
+risk 시나리오 모두 결정적.
+
+Decisions:
+(i) Step 2 본문 진행 ✅ APPROVED
+(ii) T002.2.b.fix-1 mini-task: defer to post-T002.2.b ✅ DEFERRED
+(iii) Same format/depth × 26 ✅ CONFIRMED
+
+═══════════════════════════════════════════════════
+[Decision (ii) 지연 이유 — R-REPO-7 trade-off]
+═══════════════════════════════════════════════════
+
+채택: post-T002.2.b 지연 실행
+이유:
+1. CF-011 P2 evidence 확장이라 후속 도메인 작성에 baseline 영향 없음
+2. T002.2.b 통합 atomic commit boundary 명확화
+3. 후속 도메인에서 nextInvoiceRef-like 패턴 발견 시 R-REPO-5 
+   incidental로 mini-task evidence 합산 가능 (지연이 오히려 풍부)
+
+거부: 즉시 실행 (T002.1.8 패턴)
+이유:
+- T002.1.8 즉시 실행은 P1 evidence (CF-006/014) baseline 청결 
+  필요했음
+- 이번 P2 evidence 는 baseline 영향 없음 → 즉시 실행 비용 정당화 
+  부족
+
+미래 적용 원칙: mini-task severity 별 시점 결정
+- P0/P1 evidence expansion → 즉시 실행 (baseline 청결)
+- P2 evidence expansion → 도메인 완료 후 batch (evidence 누적)
+- 신규 CF (P0/P1) → 즉시 실행
+- 신규 CF (P2) → batch 가능
+
+═══════════════════════════════════════════════════
+[추가 가이드 — finance-payments 작성 시]
+═══════════════════════════════════════════════════
+
+[E] CF-001 finance 내부 boundary 명시
+commissions.commission_amount (real) → invoices.amount (numeric) 
+쓰기가 발생하는 endpoint 모두 명시:
+- commissions.ts CRUD endpoint 의 amount 컬럼 처리
+- 추후 CF-001 evidence section 확장 시 anchor
+
+CF-001 evidence section 확장은 T002.2.b 통합 commit 의 일부 (즉시).
+이건 mini-task 가 아니라 normal R-REPO-1 atomic 의 일부:
+- finance-payments.md C3 에서 발견 시 → 통합 commit 시 
+  CRITICAL_FINDINGS.md CF-001 evidence 도 갱신
+- 새 mini-task 불필요 (evidence가 finance-payments.md 작성 결과로 
+  자동 누적)
+
+[F] CF-008 도메인 severity matrix 작성
+finance-payments 작성 후 도메인별 정량화:
+- contract: 40% (14 mutators / 6 logAction)
+- finance: 20% (35 mutators / 7 logAction)
+- 다른 도메인은 후속 sub-task에서 채워짐 (TBD 표기)
+
+CF-008 본문에 "Domain severity matrix" 섹션 추가 (T002.2.b atomic 
+commit):
+| Domain | Mutators | logAction | Coverage % | Status |
+|--------|----------|-----------|-----------|--------|
+| contract | 14 | 6 | 40% | TBD verify |
+| finance | 35 | 7 | 20% | confirmed (T002.2.b) |
+| ... (other domains) | TBD | TBD | TBD | TBD |
+
+이 matrix가 T002 진행하면서 채워지는 living document. 
+ops-property/ops-catalog/ops-crm 작성 시 자연스럽게 row 추가.
+
+[G] CF-010 stripe.ts webhook 분해
+> "4 logAction calls inside webhook event handlers; will enumerate 
+> which Stripe events propagate vs which are dropped"
+
+이걸 finance-payments.md stripe.ts E26 (webhook) Meta 본문에 
+"Event coverage matrix" 로 표 작성:
+| Stripe Event | Handler | Invoice State Change | logAction |
+|--------------|---------|---------------------|-----------|
+| payment_intent.succeeded | ✅ | paid | ✅ |
+| payment_intent.payment_failed | ❌ | (none) | ❌ |
+| charge.refunded | ❌ | (none) | ❌ |
+| charge.dispute.created | ❌ | (none) | ❌ |
+| ... (8개 누락 transition) | ❌ | (none) | ❌ |
+
+이 표 자체가 CF-010 evidence + state-machines.md (T002.5) 의 
+invoice state machine 작성 시 cross-ref source.
+
+[H] 1⚠️-system inconsistency 카테고리 명시
+finance-invoicing.md C3 의 "1⚠️-system" 카테고리가 무엇인지 
+finance-payments 통합 보고에 명시 (생략됐던 detail). 
+system-wide 패턴이면 신규 CF 후보 가능성.
+
+═══════════════════════════════════════════════════
+[Step 2~6 진행]
+═══════════════════════════════════════════════════
+
+이미 정의된 절차:
+- Step 2 본문 작성 (26 endpoint, finance-payments.md)
+- Step 3 self-check 표 (26 × 7 = 182 cells)
+- Step 4 spot-check (C1/C2/C3 — 사전 sealing 필요)
+- Step 5 R-REPO-1 atomic commit (통합)
+- Step 6 R-REPO-4 통합 보고
+
+[Step 4 사전 sealing — 사용자 응답 후 즉시 작성]
+Step 2 본문 작성 시작 전, 3 spot-check 클레임 사전 선정:
+- C1: 가장 복잡한 endpoint (예: stripe.ts webhook 또는 commissions 
+  CRUD with cross-ref to invoices)
+- C2: CF anchor 다수 endpoint (CF-001 + CF-008 + CF-018 동시 가능성)
+- C3: 자가 발견 inconsistency (finance-invoicing C3 패턴 따라; 
+  negative result 인정 가능)
+
+═══════════════════════════════════════════════════
+[Atomic commit 범위 — T002.2.b 통합]
+═══════════════════════════════════════════════════
+
+T002.2.b 통합 atomic commit 시 다음 모두 포함:
+1. finance-payments.md (NEW)
+2. CRITICAL_FINDINGS.md:
+   - CF-001 evidence (finance 내부 boundary)
+   - CF-008 domain severity matrix (신규 섹션)
+   - CF-010 stripe event coverage matrix (evidence 강화)
+   - CF-011, CF-014 evidence (incidentals 정리)
+3. INDEX.md (해당 시)
+4. _T002_PROGRESS.md (T002.2.b 통합 DONE)
+5. session_plan.md (T002.2.b DONE, T002.2.c NEXT)
+6. cross-ref back-fill (booking/contract/finance-invoicing 영향 시)
+
+═══════════════════════════════════════════════════
+[지금 시작]
+═══════════════════════════════════════════════════
+
+(1) Step 4 3 클레임 사전 sealing (≤10 lines)
+(2) Step 2 본문 작성 시작
+(3) Step 3 self-check
+(4) Step 4 spot-check
+(5) Step 5 통합 atomic commit (위 6 항목)
+(6) Step 6 R-REPO-4 통합 보고
+
+(6) 후 사용자 proceed → T002.2.c (ops-property.md) 시작.
+T002.2.c 자동 시작 절대 금지.
