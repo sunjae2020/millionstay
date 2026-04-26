@@ -281,27 +281,53 @@ Errors found at any gate → fix immediately, re-verify, then `proceed` request.
 
 ## §8. Size budget & split-threshold rules
 
-> **§8 REVISION 2026-04-26 (T002.1.8)** — `contract.md` actual = 893 lines vs predicted 370 (**+141%**). The drift is structural, not domain-specific: the full sample-format-on-every-endpoint pattern adopted in T002.2.a (vs the 5-sample-only pattern in `booking.md`) plus the new permanent sections (Anchor Block, full Self-Check table, Spot-Check Log, R-REPO-5 incidental block) account for the bulk of the increase. Predictions for `.b–.i` are revised upward by **~2.4×** in the table below; new totals project ~10,000 lines across `_schema/` (vs the original ~6700). Hard cap of 1500 lines per file remains in force; `finance.md`, `ops-property.md`, `ops-crm.md`, and `admin.md` are now expected to push against it and may require **preventive sub-splits announced before writing begins** (e.g. `T002.2.b1 invoices.md` + `T002.2.b2 payments.md`). Decision deferred to the start of each sub-task.
+> **§8 RECALIBRATION 2026-04-26 (T002.1.9)** — supersedes the T002.1.8 ~2.4× upward revision. After 4 actual data points (`contract.md` 902 / `finance-invoicing.md` 681 / `finance-payments.md` 1108 / `ops-property.md` 429), the **single multiplier model is rejected** in favour of a **two-component model**: per-file lines = **fixed overhead (≈210 lines)** + Σ (per-endpoint cost × count, where per-endpoint cost depends on the format chosen for that endpoint). This explains the 67% compression observed in `ops-property.md` (predicted 1370 by the 2.4× model, actual 429): the 31 satellite endpoints used the compact-table format, dropping per-endpoint cost from ~30 to ~3 lines. Hard cap 1500/file still in force.
 
-| File | Original prediction | **Revised prediction (T002.1.8)** | Hard cap | Action if cap exceeded |
-|---|---:|---:|---:|---|
-| `api-endpoints/INDEX.md` | ~120 | ~146 (actual) | 250 | unlikely; if so, drop summary footer. |
-| `api-endpoints/booking.md` | ~350 | ~700 (5 samples + 22 close-out × 2.4 minus the already-emitted 306 ≈ 700–800 net) | 1500 | OK |
-| `api-endpoints/contract.md` | ~370 | **893 (actual)** | 1500 | OK |
-| `api-endpoints/finance.md` | ~560 | **~1340** | 1500 | borderline — pre-write split decision required at start of T002.2.b. |
-| `api-endpoints/ops-property.md` | ~570 | **~1370** | 1500 | borderline — same. |
-| `api-endpoints/ops-catalog.md` | ~510 | **~1225** | 1500 | OK |
-| `api-endpoints/ops-crm.md` | ~660 | **~1585 → exceeds cap** | 1500 | **pre-write split mandatory** at start of T002.2.e. |
-| `api-endpoints/portal-guest.md` | ~380 | **~915** | 1500 | OK |
-| `api-endpoints/portal-partner.md` | ~290 | **~700** | 1500 | OK |
-| `api-endpoints/public.md` | ~430 | **~1035** | 1500 | OK |
-| `api-endpoints/admin.md` | ~480 | **~1155** | 1500 | OK |
-| `db-schema-overview.md` | ~900–1000 | ~900–1000 (re-prediction not yet justified — different file class) | 1500 | TOC by cluster (§5). |
-| `erd-core.md` | ~500 | ~500 | 1200 | diagrams render as Mermaid blocks. |
-| `state-machines.md` | ~500 | ~500 | 1000 | one section per status enum. |
-| **Total pack (`_schema/`)** | ~6500–7000 | **~11,300–11,800** | — | revised across 12–14 files (15–16 if pre-write splits trigger). |
+### §8.1 Two-component cost model (calibrated against 4 actuals)
 
-**General rule**: any single file approaching 1500 lines is split along its natural sub-section seams. The split is announced as a separate sub-task in the session plan (e.g. `T002.4a / T002.4b`), never silently. **Revised rule (T002.1.8)**: when revised prediction ≥ 1300 (within 200 lines of cap), the split decision is taken **before writing begins**, not at the cap; this avoids wasted work if the file must be split mid-write.
+| Component | Cost | Calibration source |
+|---|---:|---|
+| Fixed overhead per file | **~210 lines** | §0 frontmatter + §1 domain overview + §3 self-check table shell + §5 spot-check + §6 R-REPO-5 incidentals + §7 cross-refs + §8 close-out — common to every domain doc |
+| **Format A — full sample** (Meta + Auth + Code block + downstream + Money + State + Validation) | **~30 lines/endpoint** | `contract.md` 28 ep × 30 + 210 + extras = ~902 ✅; `finance-invoicing.md` 17 ep × 28 + 210 = ~686 (actual 681) ✅; `finance-payments.md` 26 ep × 30 + ~120 supplemental + 210 = ~1110 (actual 1108) ✅ |
+| **Format B — moderate sample** (Meta + Auth + 1 code excerpt + 1-line analysis) | **~12-15 lines/endpoint** | `ops-property.md` `spaces.ts` 13 ep ≈ 12 lines/ep |
+| **Format C — compact-table row** (1 row × per-endpoint with code-anchor cells) | **~3-7 lines/endpoint** | `ops-property.md` 31 satellite ep ≈ 3 lines/ep average |
+
+### §8.2 Recalibrated predictions (5 remaining domains + booking close-out)
+
+Format mix decided by file character (heavy/medium/light-CRUD per §8.3):
+
+| File | # ep | Format mix | Predicted lines | Hard cap | Decision |
+|---|---:|---|---:|---:|---|
+| `api-endpoints/INDEX.md` | — | — | 158 (actual) | 250 | OK |
+| `api-endpoints/booking.md` (close-out 22 of 27) | 22 net new | A (full samples for state-transitions ~10) + B (12) | 210 + 10×30 + 12×12 + 306 (already-emitted) = ~960 | 1500 | OK |
+| `api-endpoints/contract.md` | 28 | 902 (actual) | 902 | 1500 | OK |
+| `api-endpoints/finance-invoicing.md` | 17 | 681 (actual) | 681 | 1500 | OK |
+| `api-endpoints/finance-payments.md` | 26 | 1108 (actual) | 1108 | 1500 | OK |
+| `api-endpoints/ops-property.md` | 44 | 429 (actual) | 429 | 1500 | OK |
+| `api-endpoints/ops-catalog.md` | 39 | A×11 (`product-catalog`) + A×6 (`service-catalog` for CF-001 anchor) + C×6 (`product-types`) + C×6 (`product-groups`) + C×10 (`products.ts` 🪦 DEAD compact-marked) | 210 + 11×30 + 6×30 + 6×5 + 6×5 + 10×5 = **~770** | 1500 | OK — **no split** |
+| `api-endpoints/ops-crm.md` | 51 | A×10 (`work-orders` `real`-money) + B×8 (`leads`) + B×7 (`tasks`) + B×7 (`cs-tickets`) + C×6 (`contacts`) + B×5 (`service-hosts`) + A×8 (`promotions` price-affecting) | 210 + 10×30 + 8×13 + 7×13 + 7×13 + 6×5 + 5×13 + 8×30 = **~1095** | 1500 | OK — **previously mandatory split now LIFTED**; tripwire 1200 lines |
+| `api-endpoints/portal-guest.md` | 29 | A×4 (booking-write + invoice-payment in `guest-portal.ts`) + B×14 (rest of `guest-portal.ts`) + C×8 (`guest-cs`) + C×3 (`guest-auth`) | 210 + 4×30 + 14×12 + 8×5 + 3×5 = **~553** | 1500 | OK |
+| `api-endpoints/portal-partner.md` | 22 | A×3 (CF-005 anchor in `service-host-portal`) + B×6 (rest of SHP) + C×5 (`owner-portal`) + C×5 (`agent-portal`) + C×3 (`partner-auth`) | 210 + 3×30 + 6×13 + 5×5 + 5×5 + 3×5 = **~448** | 1500 | OK |
+| `api-endpoints/public.md` | 33 | B×10 (`public.ts`) + C×10 (`lookup.ts` pure-read) + C×6 (`blog-posts`) + C×3 (`page-contents`) + C×2 (`privacy`) + C×2 (`health` trivial) | 210 + 10×13 + 10×3 + 6×5 + 3×5 + 2×3 + 2×3 = **~427** | 1500 | OK |
+| `api-endpoints/admin.md` | 37 | A×1 (`dev-migration` CF-004 anchor full-attention) + B×8 (`dashboard`) + B×7 (`auth`) + C×6 (`email-templates`) + B×5 (`integrations`) + C×4 (`admin-users`) + C×3 (`db-sync`) + C×1 (`system-logs`) + C×1 (`reports`) + C×1 (`email-logs`) | 210 + 30 + 8×13 + 7×13 + 6×5 + 5×13 + 4×5 + 3×5 + 3×5 = **~600** | 1500 | OK |
+| `db-schema-overview.md` | — | — | ~900–1000 (different file class) | 1500 | OK |
+| `erd-core.md` | — | — | ~500 | 1200 | OK |
+| `state-machines.md` | — | — | ~500 | 1000 | OK |
+| **Total pack (`_schema/`)** | — | — | **~9100** | — | **0 splits required** beyond the already-applied finance-invoicing/payments split |
+
+**Δ from T002.1.8 model**: prediction total ~11,300-11,800 → recalibrated ~9100 (−21%). 5 of the 6 borderline/exceeds-cap predictions move comfortably below cap. **ops-crm split lifted**: predicted 1095 < 1200 tripwire < 1500 cap.
+
+### §8.3 Domain shape classification (heavy / medium / light-CRUD)
+
+| Shape | Definition | Predicted format mix | Examples |
+|---|---|---|---|
+| **heavy** | money-touching + state-transition heavy | mostly Format A (~30 lines/ep) | `contract`, `finance-invoicing`, `finance-payments` |
+| **medium** | partial money / partial transition / mixed CRUD | A + B mix | `ops-crm`, `booking`, `admin` (split by file character) |
+| **light-CRUD** | mostly satellite CRUD or pure-read; few state transitions | mostly Format C (~3-7 lines/ep) with a few A for CF anchors | `ops-property`, `ops-catalog`, `portal-partner`, `public` |
+
+### §8.4 General rule (unchanged)
+
+Hard cap 1500/file. Tripwire 1200 (file pauses for size review at 1200 lines reached); split if natural seam exists, else continue with compression. Split announced as a separate sub-task (`T002.X.a / T002.X.b`), never silently. **Pre-write split decision** (T002.1.8 rule) now triggers when **recalibrated prediction ≥ 1300**: zero files in §8.2 hit this threshold.
 
 ---
 

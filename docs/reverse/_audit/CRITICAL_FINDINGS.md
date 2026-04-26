@@ -872,6 +872,10 @@ EF Core's `HasQueryFilter` for soft-delete relies on a uniform column. Today's t
 | CF-017 | 🟡 P1 | Input validation (Zod or any) absent on ~90% of route files — only 5 of 52 files validate `req.body` | OPEN |
 | CF-018 | 🟡 P1 | IDOR-class authorization-scope omission on nested resource handlers — 7 outright + 3 partial of 17 audited | OPEN |
 | CF-019 | 🟡 P1 | Write-orphan columns on `invoices` table — `stripe_payment_intent_id` + `stripe_checkout_url` declared in schema but never written by any route | OPEN |
+| CF-020 | 🟡 P1 | Soft-delete leak — query/mutation handlers omit `isNull(deleted_at)` filter; soft-deleted rows leak into list endpoints (.a) and can be revived by mutation (.b) — 16 anchors across 3 domains | OPEN |
+| CF-021 | 🟡 P1 | N+1 enrichment anti-pattern — list endpoints issue per-row follow-up SELECTs in JS rather than SQL JOIN; worst case `buildSpaceResponse` degree 4 → 4× page-size additional round-trips per list call | OPEN |
+
+**Counts after T002.1.9**: P0=3, P1=**15**, P2=3 (total **21**) — **2 NEW promotions** (CF-020 + CF-021, both T002.2.c R-REPO-5 graduates with sufficient anchor density to warrant promotion this commit). Both candidates were parked at T002.2.b half-2 (CF-020 9 anchors / CF-021 2 anchors); T002.2.c surfaced 7 additional CF-020 anchors + 6 additional CF-021 anchors, crossing the typical promotion threshold (≥10 anchors / ≥3 domains) without waiting for T002.2.d. CF-017 + CF-018 are T002.2.a Spot-Check C3 graduates (R-REPO-5); CF-019 is T002.2.b half-2 graduate. **0 deferred candidates** remaining; T002.2.d-.j may surface fresh ones.
 
 **Counts after T002.2.c**: P0=3, P1=13, P2=3 (total 19) — **0 new CF promotions in T002.2.c** (commit consists of 7 CF expansions + 5 sub-pattern annotations: CF-001 source-side anchor, CF-008 ops-property row + CF-008.a + CF-008.b sub-patterns, CF-013 ops business-domain enumeration, CF-014 anchor 3 → 11, CF-015 hard-delete-by-design distinction, CF-017 Domain Validation Coverage Matrix, CF-018 partial-IDOR taxonomy + SAFE exemplar references). CF-017 + CF-018 are T002.2.a Spot-Check C3 graduates (R-REPO-5); CF-019 is the T002.2.b half-2 Spot-Check C3-8 graduate (R-REPO-5). Two CF candidates' anchor counts updated this commit: **CF-020 candidate** (system-wide soft-delete leak — 9 → **16 anchors**: 5 ops-property GET-leak SP3/PR3/SL3/SO3/SU3 + 2 ops-property mutation-zombie-revival PR4/PR7 + 9 prior across finance) and **CF-021 candidate** (N+1 enrichment anti-pattern — 2 → **8 anchors**: 6 ops-property: 3 spaces buildSpaceResponse degree-4 callers + 3 properties degree-1 + 2 prior). Both still parked for T002.2.d promotion decision per user.
 
@@ -1196,6 +1200,100 @@ A C# port that respects the schema as a contract will allocate fields for both c
 ### Carrier
 
 `finance-payments.md` §3 row C3-8 (originating site) and §6 R-REPO-5 J2 (escalation rationale). `finance-invoicing.md` E8 (Stripe transition consumer side — the open question that this CF closes on the schema-drift axis). When the guest portal domain doc is written (`T002.2.f portal-guest.md`), the `:885` Checkout Session site must add a row to its self-check table re-verifying the write-orphan finding.
+
+---
+
+## CF-020 — Soft-delete leak: query/mutation handlers omit `isNull(deleted_at)` filter
+
+| Field | Value |
+|---|---|
+| **Severity** | 🟡 P1 |
+| **Status** | OPEN — promoted from candidate at T002.1.9 (16 anchors across 3 domains) |
+| **Origin** | T002.2.b half-2 (CF-020 candidate, 9 anchors) → T002.2.c (+7 anchors → 16) → T002.1.9 promotion |
+| **Affected** | List endpoints (data leak), mutation endpoints (state corruption + audit gap), Phase 2 RLS port |
+
+### Sub-pattern taxonomy
+
+CF-020 anchors split cleanly into two sub-patterns by mutation direction:
+
+| Sub-pattern | Definition | Failure mode | Anchor count |
+|---|---|---|---:|
+| **CF-020.a — GET-leak** | Query handler (typically `db.select().from(t).where(...)`) omits `isNull(t.deleted_at)` from the WHERE clause. Soft-deleted rows are returned to the caller alongside live rows. | **Data leak**: rows the operator believed deleted reappear in lists, dashboards, picker dropdowns, exports. May leak previously-redacted PII (deleted user accounts, terminated contracts). | **14** anchors (5 ops-property GET-list + 9 prior across finance) |
+| **CF-020.b — mutation-revival** (zombie revival) | Mutation handler (`db.update(t).set({...}).where(eq(t.id, X))` or `db.delete(t).where(eq(t.id, X))`) omits `isNull(t.deleted_at)` from the WHERE predicate. UPDATE writes fresh values into a soft-deleted row, effectively "reviving" it without admin intent (the row appears live again because `updated_at` is now newer than `deleted_at` in any read query that doesn't strictly check `isNull(deleted_at)`). | **State corruption + audit gap**: soft-deleted row resurfaces in production with operator unaware they are editing a tombstoned record; second-order effect — any downstream system that already learned of the deletion (cached list, Phase 2 BI extract, archived export) is now out of sync with primary DB; no `RESTORE` audit event is emitted. | **2** anchors (`properties.ts:139` PR4 PUT + `properties.ts:214` PR7 PATCH status) |
+
+### Anchor table (16 of 16)
+
+| # | Sub | File:line | Endpoint | Detection |
+|---|---|---|---|---|
+| 1 | .a | `properties.ts:69` | PR3 GET list | no `isNull(properties.deleted_at)` in WHERE |
+| 2 | .a | `spaces.ts:32-54` | SP3 GET list (helper `buildSpaceResponse`) | filter omitted in helper join |
+| 3 | .a | `space-policies.ts` | SL3 GET list | omitted |
+| 4 | .a | `space-options.ts` | SO3 GET list | omitted |
+| 5 | .a | `suburbs.ts` | SU3 GET list | omitted |
+| 6-14 | .a | (9 prior) | finance-payments accounts/commissions/beneficiaries list endpoints | per T002.2.b half-2 audit |
+| 15 | .b | `properties.ts:139` | PR4 PUT update | UPDATE WHERE = `eq(id, X)` only |
+| 16 | .b | `properties.ts:214` | PR7 PATCH status | same |
+
+### Why P1
+
+The .a leak alone might be P2 (operational nuisance), but .b crosses into "silent state corruption that defeats the entire soft-delete invariant" — a tombstoned record can come back to life without a `RESTORE` audit event, breaking the assumption every downstream consumer (BI extract, cached selectors, Phase 2 sync feed) makes about the meaning of `deleted_at IS NOT NULL`. Compounded with **CF-008** (audit log absent on the same mutators) the revival is invisible to operations.
+
+### Recommendation (no code change)
+
+1. **Repo-wide convention**: every query against a soft-deletable table MUST include `isNull(t.deleted_at)` in the WHERE clause unless explicitly listing tombstones. Mutations must also include this guard (or perform an explicit pre-check + emit `RESTORE` audit event when un-deleting).
+2. **CI grep**: add a lint rule that fails PRs which call `db.select().from(<soft-deletable table>)` without `isNull(...deleted_at)` adjacent in the WHERE clause. Same for `db.update`/`db.delete` mutators.
+3. **Phase 2**: in EF Core / .NET, register a global query filter (`modelBuilder.Entity<T>().HasQueryFilter(x => x.DeletedAt == null)`) on every soft-deletable entity. The framework enforces the filter on every query.
+
+### Carrier
+
+`ops-property.md` §3 row C3-PROPS-RES (originating mutation-revival anchor) + `_schema/api-endpoints/finance-payments.md` accounts/commissions/beneficiaries (originating GET-leak anchors). T002.2.d (`ops-catalog.md`) and T002.2.e (`ops-crm.md`) are likely to surface additional .a anchors (similar list-endpoint pattern). When all 9 domain docs are complete, anchor universe should be re-verified.
+
+---
+
+## CF-021 — N+1 enrichment anti-pattern: per-row follow-up SELECTs in JS rather than SQL JOIN
+
+| Field | Value |
+|---|---|
+| **Severity** | 🟡 P1 |
+| **Status** | OPEN — promoted from candidate at T002.1.9 (8 anchors across 3 domains) |
+| **Origin** | T002.2.b half-2 (CF-021 candidate, 2 anchors) → T002.2.c (+6 anchors → 8) → T002.1.9 promotion |
+| **Affected** | List endpoints under traffic load; guest portal browse path; admin dashboards; Phase 2 latency budgets |
+
+### Pattern definition
+
+A list-style endpoint returns N rows from a primary table, then in JavaScript iterates the N rows and issues one or more follow-up `db.select().from(<related table>)` per row (or per primary FK). This produces **N×K additional round-trips** where K is the enrichment degree (number of related tables fetched per primary row), instead of the single JOIN that SQL would have permitted.
+
+### Anchor table (8 of 8)
+
+| # | File:line | Endpoint | Degree (K) | Worst-case at default page size 50 |
+|---|---|---|---:|---:|
+| 1 | `spaces.ts:32-54` (helper `buildSpaceResponse`) called by SP2 (POST returning created space) | 1 row × 4 follow-ups | 4 | 4 round-trips (single-row case) |
+| 2 | same helper called by SP3 GET list | N rows × 4 follow-ups | 4 | **200** round-trips for 50-space list |
+| 3 | same helper called by SP4 PUT returning updated space | 1 row × 4 follow-ups | 4 | 4 |
+| 4 | `properties.ts:69-71` PR3 GET list — per-row suburb name SELECT | 1 | **50** for 50-property list |
+| 5 | `properties.ts:150-152` PR4 PUT — same suburb follow-up | 1 | 1 (single-row case) |
+| 6 | `properties.ts:225-227` PR7 PATCH status — same | 1 | 1 |
+| 7 | (prior, finance-payments) commission list enrichment | 1-2 | per T002.2.b half-2 |
+| 8 | (prior, finance-payments) beneficiaries list enrichment | 1-2 | per T002.2.b half-2 |
+
+### Quantification (justifies P1, not P2)
+
+`spaces.ts` SP3 (anchor #2) is the **guest portal browse path** — every visitor to MillionStay sees a list of spaces. At default page size 50:
+- 1 SELECT for the space list (the "1") → returns 50 rows
+- For each of 50 rows: 4 SELECTs (property + policy + parent space + option_maps) → 200 follow-ups
+- **Total: 201 round-trips per list call** instead of 1 with proper JOINs
+
+At 100 concurrent browsers each opening a fresh list page, that is 20,100 round-trips/sec against the connection pool. Postgres connection pool default in this project is **single digits**; the request will queue and time out under modest load. Phase 2 .NET port using EF Core `.Include()` would collapse this to the single-query JOIN by default; preserving the current pattern in C# would carry the latency forward unchanged.
+
+### Recommendation (no code change)
+
+1. Replace the helper-driven N+1 pattern with a single Drizzle `db.select(...).from(spaces).leftJoin(properties, ...).leftJoin(spacePolicies, ...).leftJoin(spaceOptionMaps, ...)` — or batch-fetch related rows once per list and lookup-map them in JS (acceptable when JOINs would explode columns).
+2. **Phase 2**: define EF Core navigation properties and use `.Include(s => s.Property).Include(s => s.Policy)...` in queries. The framework emits a single SQL statement.
+3. Add a load-test gate before production cut-over: GET `/api/v1/spaces?limit=50` × 100 concurrent users; assert P95 latency < 200 ms.
+
+### Carrier
+
+`ops-property.md` §3 row C3-NPLUS1 (originating site, helper enumeration) + `_schema/api-endpoints/finance-payments.md` (2 prior anchors). T002.2.d (`ops-catalog.md`) likely to surface `service-catalog` enrichment anchors; T002.2.e (`ops-crm.md`) likely to surface `work-orders` + `leads` enrichment anchors.
 
 ---
 *End of CRITICAL_FINDINGS.md*

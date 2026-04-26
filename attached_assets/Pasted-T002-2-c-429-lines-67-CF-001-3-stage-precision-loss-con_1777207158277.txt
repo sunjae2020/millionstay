@@ -1,0 +1,150 @@
+T002.2.c 승인. 
+
+429 lines (67% 압축) + CF-001 3-stage precision loss confirm + 
+CF-015/018 .a/.b/.SAFE 분류 정교화 + CF-017 Domain Validation 
+Coverage Matrix 신설 + CF-008 ops-property row 13.3% (inverse 
+correlation 가설 강화) — 모두 결정적.
+
+Tripwire 미발동 + early-finish honesty + size 모델 self-calibration 
+권고. 추정 오류를 학습으로 변환.
+
+═══════════════════════════════════════════════════
+[Decision] T002.1.8 §8 size budget 전면 재캘리브레이션
+═══════════════════════════════════════════════════
+
+ops-property 67% 압축 발견 → 후속 도메인 size 예측 재계산 필요. 
+T002.2.d 시작 전 mini-task 로 처리.
+
+[T002.1.9 mini-task — size budget recalibration]
+
+수행:
+1. 도메인 특성 분류
+   - heavy: state-transition 多 + money-touching → contract 패턴 
+     (32.2 lines/ep)
+   - medium: money-touching + 일부 transition → finance 패턴 
+     (40-43 lines/ep)
+   - light-CRUD: simple CRUD heavy → ops-property 패턴 (전체 9.7 
+     lines/ep, 단 spaces.ts 풀샘플 13 ep + satellite 31 compact 
+     적용 시 평균)
+   - 단, 풀샘플 vs compact 비율로 분리 산출:
+     - 풀샘플: ~30 lines/ep
+     - compact: ~7 lines/ep
+
+2. 후속 도메인 재예측 (4 도메인)
+   - ops-catalog: full vs compact ratio 사전 추정
+   - ops-crm: 분할 mandatory 결정 재검토 (보정 후 단일 가능 시 
+     해제)
+   - portal-guest/partner: read-heavy = compact heavy 가능
+   - public: 작음 (few endpoints)
+   - admin: CRUD heavy
+
+3. _T002_PLAN.md §8 갱신
+   - 기존 revision 표 → recalibrated 표
+   - 각 도메인 예측 lines + full/compact ratio + 분할 결정
+
+4. ops-crm 분할 결정 재검토
+   - 보정 후 size 가 cap 아래면 분할 해제
+   - 단일 + tripwire 패턴으로 전환 가능
+
+═══════════════════════════════════════════════════
+[Decision] CF-020/021 promotion 결정
+═══════════════════════════════════════════════════
+
+T002.2.d 시작 시점에 T002.1.9 와 함께 처리:
+
+CF-020 (soft-delete leak): 16 anchors 누적
+- 5 GET-leak (deleted_at 필터 omission)
+- 2 mutation-revival (??)
+- 9 기존
+- → P1 promotion 적정
+
+CF-021 (N+1 enrichment): 8 anchors 누적
+- 6 N+1 enrichment 신규
+- 2 기존
+- → P1 또는 P2 결정 필요 (성능 영향 정량화 후)
+
+[보고 명시 요청] mutation-revival 패턴 정의
+T002.2.c 보고에 "5 GET-leak + 2 mutation-revival" 등장. 
+mutation-revival 패턴 정의가 본문에 명시되지 않음. T002.1.9 시 
+명시 + CF-020 본문에 sub-pattern 분류 (.a / .b 같은 정교화):
+- .a GET-leak: deleted_at 필터 omission
+- .b mutation-revival: ?? (정의 명시)
+
+═══════════════════════════════════════════════════
+[T002.1.9 mini-task vs T002.2.d 진입 결정]
+═══════════════════════════════════════════════════
+
+R-REPO-7 trade-off:
+
+Option A: T002.1.9 즉시 실행 → T002.2.d 진입
+이유:
+- size budget 보정이 T002.2.d~i 5 도메인 예측에 직접 영향
+- ops-crm 분할 결정 재검토 필요 시점
+- CF-020/021 promotion 이 T002.2.d 작성 시 anchor 분류에 영향
+- baseline 청결 (R-REPO-7 P0/P1 즉시 실행 원칙)
+
+Option B: T002.2.d 진입 → 누적 후 batch
+이유:
+- CF-020/021 evidence 가 ops-catalog 에서도 누적 가능
+- 더 풍부한 evidence 후 등재
+- 단, size budget 보정은 즉시 가치 있음
+
+채택: Option A (즉시 실행)
+- size budget 보정의 즉시 가치 > evidence 누적 지연 가치
+- CF-020/021 promotion 이 T002.2.d anchor 결정에 영향 (지연 시 
+  T002.2.d 재작업 위험)
+
+═══════════════════════════════════════════════════
+[T002.1.9 수행 절차]
+═══════════════════════════════════════════════════
+
+(1) Step 1: size budget recalibration
+    - 도메인 특성 분류 (heavy/medium/light-CRUD)
+    - 후속 5 도메인 예측 lines 재계산
+    - full vs compact ratio 사전 추정
+    - _T002_PLAN.md §8 갱신
+
+(2) Step 2: ops-crm 분할 결정 재검토
+    - 보정 후 size < 1500 → 분할 해제
+    - 단일 + tripwire 전환
+    - _T002_PLAN.md §6 또는 분할 섹션 갱신
+
+(3) Step 3: CF-020 promotion (P1)
+    - mutation-revival 패턴 정의 명시
+    - sub-pattern 분류 (.a GET-leak / .b mutation-revival)
+    - CRITICAL_FINDINGS.md CF-020 본문 작성
+    - summary table 갱신 (P1=14)
+
+(4) Step 4: CF-021 promotion 결정
+    - 성능 영향 정량화 (N+1 query 횟수 / 도메인별)
+    - P1 (운영 영향) vs P2 (Phase 2 작업) 결정
+    - CRITICAL_FINDINGS.md CF-021 본문 작성
+    - summary table 갱신
+
+(5) R-REPO-1 atomic commit:
+    - _T002_PLAN.md (§8 + §6 또는 분할 섹션)
+    - CRITICAL_FINDINGS.md (CF-020 + CF-021 본문 + summary)
+    - _T002_PROGRESS.md (T002.1.9 entry)
+    - session_plan.md (T002.1.9 추가)
+
+(6) R-REPO-4 형식 보고
+
+═══════════════════════════════════════════════════
+[T002.2.d 진입 조건]
+═══════════════════════════════════════════════════
+
+T002.1.9 완료 후 T002.2.d (ops-catalog.md) 진입.
+
+ops-catalog 작성 가이드:
+- service_catalog.base_price = real 앵커 (CF-001 evidence 추가)
+- CF-020/021 promotion 후 anchor 정확성
+- size budget recalibrated 예측 적용
+- compact format 비율 적극 활용 (CRUD heavy 예상)
+
+═══════════════════════════════════════════════════
+[지금 시작]
+═══════════════════════════════════════════════════
+
+T002.1.9 mini-task Step 1~6 진행.
+T002.1.9 R-REPO-4 보고 후 사용자 proceed → T002.2.d 진입.
+T002.2.d 자동 시작 절대 금지.
