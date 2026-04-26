@@ -1,0 +1,143 @@
+🚨 사용자 오류 인정.
+
+"invoices+invoice-rules+expenses" 분할 제안은 사용자(나) 답변의 
+환각이었음. 이전 T002.2.a 보고에서 에이전트가 자연스러운 seam으로 
+언급한 문구를 검증 없이 옮겨씀. R-REPO-3 (컨텍스트 anchor 재독) 을 
+사용자 측에서 어긴 사례.
+
+에이전트의 corrected 분할 검증 정확:
+- INDEX.md L32-38 + T001 RECON + _T002_PLAN §6 3-way 검증
+- Step 2 본문 작성 전 발견 = 패닉 재배치 비용 0
+- 의미론적 분류 (source vs collection/disbursement) 정확
+
+이번 발견은 검증 도구가 사용자 입력 자체를 검증할 수 있다는 증거.
+지금까지의 모든 자가 검증보다 한 단계 위.
+
+═══════════════════════════════════════════════════
+[Decision] Option (α) 채택 — Corrected 분할 진행
+═══════════════════════════════════════════════════
+
+finance-invoicing.md (17 endpoints, 2 files):
+- invoices.ts (10)
+- recurring-schedules.ts (7)
+- 의미: billing/source side
+
+finance-payments.md (26 endpoints, 5 files):
+- payment-info.ts (6)
+- commissions.ts (6)
+- beneficiaries.ts (6)
+- accounts.ts (6)
+- stripe.ts (2)
+- 의미: collection/disbursement side
+
+(β) 분할 취소 거부 이유:
+- 의미적 분리 > size cap 효율성
+- CF-014 cross-file anchor 관리 명확성
+- INDEX.md finance 그룹 시각화 (ops 패턴 일관)
+- Phase 2 .NET 마이크로서비스 분할 사전 준비
+
+(γ) 다른 seam 거부 이유:
+- "CRUD vs state-transitions" 분류는 stripe/commissions 처리 모호
+- source vs collection 이 도메인 의미상 가장 자연스러운 seam
+
+═══════════════════════════════════════════════════
+[추가 운영 규칙 — 영구]
+═══════════════════════════════════════════════════
+
+[R-REPO-6] 사용자 입력의 ground truth 검증 의무
+사용자(나) 가 결정/지시/제안 시 다음 정보를 포함하면, 에이전트는 
+Step 2 시작 전 ground truth 검증 필수:
+
+(a) 파일명 / 디렉토리 경로
+(b) 함수명 / 클래스명 / 변수명
+(c) 라인 번호 / 라인 범위
+(d) 카운트 / 통계 (예: "X 파일", "Y endpoint")
+(e) 도메인 / 테이블 / 컬럼 명
+
+검증 방법:
+1. 관련 ground truth 파일 read (T001 RECON, INDEX.md, 
+   SCHEMA_FILE_TABLE_MAP.md, _T002_PLAN, etc.)
+2. 사용자 입력 vs ground truth 매칭
+3. 미스매치 발견 시:
+   - 즉시 보고 (현재 케이스처럼)
+   - 자체 corrected 안 제시
+   - 사용자 게이트 대기
+
+이 프로토콜로 사용자 환각 입력이 작업에 침투하지 않음.
+
+[R-REPO-7] 의사결정 trade-off 명시 의무
+사용자/에이전트 결정 시 다음 명시 필수:
+- 채택 옵션과 이유
+- 거부 옵션과 이유 (각각)
+- 미래에 동일 결정 만날 때 적용할 원칙
+
+이 프로토콜로 결정의 학습 가치 보존 (다음 sub-task 에서 동일 결정 
+유형 만날 때 일관 적용).
+
+session_plan.md OPERATING RULES 에 R-REPO-6, R-REPO-7 추가.
+
+═══════════════════════════════════════════════════
+[Step 2~6 진행 가이드]
+═══════════════════════════════════════════════════
+
+R8 + R10 + R11 적용 (T002.1.8 답변에서 정의):
+- R8: CF-014 cross-file anchor 관리 (두 파일 anchor block + 작성 후 
+  CRITICAL_FINDINGS 갱신)
+- R10: 두 파일 일관성 (작성 중 inconsistency 즉시 수정)
+- R11: invoicing 먼저, payments 나중
+
+추가 가이드 (이번 케이스 특화):
+
+[A] CF-008 audit gap 막대 — finance 도메인 핵심 발견
+> "invoices.ts 3 calls; 나머지 6 파일 ZERO"
+
+이건 finance 도메인이 audit log 부재로 회계 추적 불가능하다는 신호.
+recurring-schedules / payment-info / commissions / beneficiaries / 
+accounts / stripe = 6 파일 모두 logAction 0.
+
+이건 단순 CF-008 evidence expansion 이 아니라 **finance 도메인 
+specific severity** 일 수 있음. 작성 중 다음 평가:
+- 이 6 파일의 mutator endpoint 수 = ?
+- mutator 대비 logAction coverage % = ?
+- contract 도메인 (40%) 대비 finance 도메인 (~5% 추정) 차이가 큰가?
+
+발견 시 R-REPO-5 incidental 보고:
+- "incidental: finance 도메인 logAction coverage = X% (vs contract 40%) 
+  | impact: CF-008 evidence-expansion + 도메인 severity 비교 데이터"
+
+[B] CF-002 commissions 재확인
+> "commissions=real ⚠️ — Step 2에서 schema 재확인"
+
+commissions 가 real 이면 CF-002 의 새로운 receiving side. 
+Step 2 schema 재확인 후:
+- real 확정 → CF-002 evidence 에 commissions 컬럼 추가 mini-task
+- numeric 정정 → MONEY_AUDIT 갱신
+
+[C] stripe.ts CF-010 anchor
+> "stripe → invoice paid 처리 consumer (payments)"
+
+CF-010 (P1 승격됨, payment_failed/refunded/disputed 무처리) 의 
+직접 anchor. finance-payments.md 에서 stripe.ts 2 endpoint (webhook 
++ intent-create) 다룰 때:
+- webhook 의 payment_succeeded 외 처리 누락 명시
+- 8개 누락 transition 재인용 (CF-010 본문)
+- invoice state machine 과의 disconnect 명시 (state-machines.md 작성 
+  시 cross-ref)
+
+[D] beneficiaries / accounts 의 외부 참조
+beneficiaries (지급 수취인) + accounts (billable parties) 가 다른 
+도메인에서 참조되는 entity. cross-ref 점검:
+- contract.md 에서 accounts 참조? (account-as-counterparty)
+- ops-crm.md 에서 contacts ↔ accounts 관계?
+
+작성 중 발견되는 cross-ref 는 R-REPO-1 atomic commit 에 포함.
+
+═══════════════════════════════════════════════════
+[지금 시작]
+═══════════════════════════════════════════════════
+
+(1) Step 2 본문 작성 (finance-invoicing 먼저, R11)
+(2) Step 3 self-check 표 (17 × 7 = 119 cells)
+(3) Step 4 spot-check (C1/C2/C3)
+(4) finance-invoicing 완료 → 자동으로 finance-payments Step 1 
+    (사전 분류 ≤30 lin

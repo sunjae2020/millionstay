@@ -10,7 +10,7 @@
 
 | Column | Meaning |
 |---|---|
-| **Domain** | One of: booking · contract · finance · ops-property · ops-catalog · ops-crm · portal-guest · portal-partner · public · admin. The three `ops-*` domains are a single conceptual `ops` domain split across three files for size budget (see [Domain Groups](#domain-groups)). |
+| **Domain** | One of: booking · contract · finance-invoicing · finance-payments · ops-property · ops-catalog · ops-crm · portal-guest · portal-partner · public · admin. The two `finance-*` domains form a single conceptual `finance` group, and the three `ops-*` domains form a single conceptual `ops` group — both splits respect the per-file size budget (see [Domain Groups](#domain-groups)). |
 | **Source File** | Path relative to `artifacts/api-server/src/routes/`. |
 | **URL Prefix** | App-mount prefix from `app.ts:149-175`, plus the file's predominant in-route prefix. All endpoints in this file inherit at least this prefix. |
 | **# Endpoints** | Count of `router.<method>(...)` declarations at file root. |
@@ -29,13 +29,13 @@
 | booking | `bookings.ts` | `/api/v1/bookings` | 27 | `requireAuth` | ✅ (6) | ✅ | ACTIVE | 🔴 |
 | contract | `contracts.ts` | `/api/v1/contracts` | 21 | `requireAuth` | ✅ (8) | ✅ | ACTIVE | 🔴 |
 | contract | `contract-types.ts` | `/api/v1/contract-types` | 7 | `requireAuth` | ❌ | ❌ | ACTIVE | 🔴 |
-| finance | `invoices.ts` | `/api/v1/invoices` | 10 | `requireAuth` | ✅ (3) | ✅ | ACTIVE | 🔴 |
-| finance | `recurring-schedules.ts` | `/api/v1/recurring-schedules` | 7 | `requireAuth` | ❌ | ✅ | ACTIVE | 🔴 |
-| finance | `payment-info.ts` | `/api/v1/payment-info` | 6 | `requireAuth` | ❌ | ✅ | ACTIVE | 🔴 |
-| finance | `commissions.ts` | `/api/v1/commissions` | 6 | `requireAuth` | ❌ | ✅ | ACTIVE | 🔴 |
-| finance | `beneficiaries.ts` | `/api/v1/beneficiaries` | 6 | `requireAuth` | ❌ | ✅ | ACTIVE | 🔴 |
-| finance | `accounts.ts` | `/api/v1/accounts` | 6 | `requireAuth` | ❌ | ✅ | ACTIVE | 🔴 |
-| finance | `stripe.ts` | `/api/stripe` | 2 | `webhook` (signature) | ✅ (3) | ✅ | ACTIVE | 🔴 |
+| finance-invoicing | `invoices.ts` | `/api/v1/invoices` | 10 | `requireAuth` | ✅ (3) | ✅ | ACTIVE | 🔴 |
+| finance-invoicing | `recurring-schedules.ts` | `/api/v1/recurring-schedules` | 7 | `requireAuth` | ❌ | ✅ | ACTIVE | 🔴 |
+| finance-payments | `payment-info.ts` | `/api/v1/payment-info` | 6 | `requireAuth` | ❌ | ✅ | ACTIVE | 🔴 |
+| finance-payments | `commissions.ts` | `/api/v1/commissions` | 6 | `requireAuth` | ❌ | ✅ | ACTIVE | 🔴 |
+| finance-payments | `beneficiaries.ts` | `/api/v1/beneficiaries` | 6 | `requireAuth` | ❌ | ✅ | ACTIVE | 🔴 |
+| finance-payments | `accounts.ts` | `/api/v1/accounts` | 6 | `requireAuth` | ❌ | ✅ | ACTIVE | 🔴 |
+| finance-payments | `stripe.ts` | `/api/stripe` | 2 | `webhook` (signature) | ✅ (3) | ✅ | ACTIVE | 🔴 |
 | ops-property | `spaces.ts` | `/api/v1/spaces` | 13 | `requireAuth` | ✅ (4) | ✅ | ACTIVE | 🔴 |
 | ops-property | `properties.ts` | `/api/v1/properties` | 7 | `requireAuth` | ❌ | ❌ | ACTIVE | 🔴 |
 | ops-property | `space-policies.ts` | `/api/v1/space-policies` | 6 | `requireAuth` | ❌ | ❌ | ACTIVE | 🔴 |
@@ -83,14 +83,25 @@
 
 ## Domain Groups
 
-The conceptual `ops` domain is split into **three files** to respect the 1500-line per-file budget set in `_T002_PLAN.md` §8:
+Two conceptual domains are split across multiple files to respect the 1500-line per-file budget set in `_T002_PLAN.md` §8 (revised T002.1.8 §8):
+
+### `finance` group (2 files)
+
+Split along the **billing/source vs collection/disbursement** seam (T002.2.b Decision (α) per session_plan):
+
+- **[`finance-invoicing.md`](./finance-invoicing.md)** — billing/source side: `invoices.ts`, `recurring-schedules.ts`. 2 files, **17 endpoints**.
+- **[`finance-payments.md`](./finance-payments.md)** — collection/disbursement side: `payment-info.ts`, `commissions.ts`, `beneficiaries.ts`, `accounts.ts`, `stripe.ts`. 5 files, **26 endpoints**.
+
+CF-014 (multi-step mutation without `db.transaction`) and CF-008 (audit-log gap) are tracked as **cross-file anchors** between the two halves — see each file's §1 anchor block and `CRITICAL_FINDINGS.md#cf-014` / `#cf-008` for cross-references.
+
+### `ops` group (3 files)
 
 - **`ops-property.md`** — physical assets (spaces, properties, space-policies/options/images, suburbs). 6 files, **44 endpoints**.
 - **`ops-catalog.md`** — catalogue tables (product-catalog [table DEAD per CF-009 rev.], products [file misnamed; serves active `contract_products`], product-types, product-groups, service-catalog). 5 files, **39 endpoints**.
-- **`ops-crm.md`** — operational/CRM workflows (work-orders, leads, tasks, cs-tickets, contacts, service-hosts, promotions). 7 files, **51 endpoints**.
+- **`ops-crm.md`** — operational/CRM workflows (work-orders, leads, tasks, cs-tickets, contacts, service-hosts, promotions). 7 files, **51 endpoints** — pre-write split mandatory per `_T002_PLAN.md` §8.
 
 Cross-domain endpoints stay with their **file of origin**, not with the entity they touch. Examples cataloged in `_T002_PLAN.md` §2.3:
-- `POST /api/v1/contracts/:id/invoices` lives in `contract.md` (file = `contracts.ts`) and carries `→ finance.md#invoice-lifecycle` cross-ref.
+- `POST /api/v1/contracts/:id/invoices` lives in `contract.md` (file = `contracts.ts`) and carries `→ finance-invoicing.md#e2` cross-ref.
 - `PATCH /api/v1/bookings/:id/confirm` lives in `booking.md` (file = `bookings.ts`) even though it inserts a `contracts` row and N `contract_line_items` rows; cross-ref to `contract.md#auto-creation` is required on the row.
 
 ---
@@ -101,7 +112,8 @@ Cross-domain endpoints stay with their **file of origin**, not with the entity t
 |---|---:|---:|---:|---:|
 | booking | 1 | 27 | 1 | 1 |
 | contract | 2 | 28 | 1 | 1 |
-| finance | 7 | 43 | 2 | 7 |
+| finance-invoicing | 2 | 17 | 1 | 2 |
+| finance-payments | 5 | 26 | 1 | 5 |
 | ops-property | 6 | 44 | 1 | 1 |
 | ops-catalog | 5 | 39 | 0 | 2 |
 | ops-crm | 7 | 51 | 0 | 2 |

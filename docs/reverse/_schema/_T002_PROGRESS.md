@@ -170,6 +170,18 @@
 - **Status**: ⚪ **PENDING**
 - **Done condition**: all 12+ files saved, all 4 gates passed, session_plan T002 entry marked DONE, user `proceed` for T003.
 
+### T002.2.b status (in progress)
+
+- **Decision (α) accepted**: `finance.md` split into `finance-invoicing.md` (invoices + recurring-schedules; 17 endpoints) + `finance-payments.md` (payment-info + commissions + beneficiaries + accounts + stripe; 26 endpoints). Seam: billing-source vs collection/disbursement.
+- **Half-1 `finance-invoicing.md`**: ✅ Step 2-5 complete (680 lines, 17 endpoints full sample format, CF-014 R5 anchor + 11 C3 inconsistencies + 5 R-REPO-5 incidentals). C2 spot-check found E5 Meta auth qualifier error (`when permanent` → `always`) — fixed pre-commit.
+- **Half-1 atomic carrier (5 files)**: finance-invoicing.md (NEW), INDEX.md (Domain Groups + summary split), contract.md (4 cross-ref back-fills), this PROGRESS file, session_plan.md (R-REPO-6/7 added).
+- **Half-2 `finance-payments.md`**: PENDING — auto-segue Step 1 sub-classification report (≤30 lines) follows the half-1 R-REPO-4 report; Steps 2-6 await user `proceed`.
+
+### T002.2.b — R-REPO-5 incidentals queued for downstream tasks
+
+- **Mini-task proposal `T002.2.b.fix-1`** (CF-011 evidence-expansion): append `nextInvoiceRef` race + verbatim duplication to CF-011 evidence. Decision deferred to user.
+- **Simple memos** (3): I3 GST hard-code `1.1` → `_rules/no-magic-rules.md` (T004); I4 `nextInvoiceRef` ignores `deleted_at` → `db-schema-overview.md` (T002.3); I5 R1 date-range filter direction bug → already documented as C3-9 in finance-invoicing.md.
+
 ---
 
 ## Cumulative size tracker
@@ -180,9 +192,11 @@
 | `_T002_PROGRESS.md` | — | 93 | — |
 | `api-endpoints/INDEX.md` | ~120 | 146 | +26 (Risk Legend richer than expected) |
 | `api-endpoints/booking.md` | ~350 (full file) | 306 (5 of 27 endpoints + self-check + remaining-22 stub) | tracking — full file projected ~600-700 after T002.2 |
-| `api-endpoints/contract.md` | ~370 | **904** | **+534 (+144%)** — base 893 + T002.1.8 cross-ref additions (~11 lines for C3 graduation note + 4 new Cross-reference Index rows) |
+| `api-endpoints/contract.md` | ~370 | **902** | **+532 (+144%)** — base 893 + T002.1.8 cross-ref additions + T002.2.b cross-ref back-fills (4 sites: line 7 / L345 / L370 / L883) updated `finance.md` → `finance-invoicing.md` |
 | `_audit/CRITICAL_FINDINGS.md` | — | ~1100 | T002.1.8 added ~309 lines (CF-006 expansion +30, CF-014 expansion +35, NEW CF-017 ~80, NEW CF-018 ~120, summary update ~5) on top of the 791 baseline established at end of T002.1.7 |
-| `api-endpoints/finance.md` | ~560 | — | — |
+| `api-endpoints/INDEX.md` (post-T002.2.b) | — | **158** | +12 — Domain Groups now lists `finance` group (2 files) + `ops` group (3 files); finance row block re-tagged from single `finance` to `finance-invoicing` × 2 + `finance-payments` × 5; Domain summary table split |
+| `api-endpoints/finance-invoicing.md` (T002.2.b half-1) | ~533 (revised post-T002.1.8 §8 ~2.4× × 17/43 ratio) | **680** | **+147 (+28%)** — within revised cap; CF-014 R5 anchor block + 11 self-discovered inconsistencies + R-REPO-5 incidentals section drove length |
+| `api-endpoints/finance-payments.md` (T002.2.b half-2) | ~811 (revised, 26/43 ratio) | — | PENDING (sub-classification report next, Step 2 body after user `proceed`) |
 | `api-endpoints/ops-property.md` | ~570 | — | — |
 | `api-endpoints/ops-catalog.md` | ~510 | — | — |
 | `api-endpoints/ops-crm.md` | ~660 | — | — |

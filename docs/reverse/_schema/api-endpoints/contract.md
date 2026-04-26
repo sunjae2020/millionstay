@@ -4,7 +4,7 @@
 > **URL prefixes**: `/api/v1/contracts/...`, `/api/v1/contract-types/...`, `/api/v1/lookup/contracts`.
 > **Auth guard (all 28)**: `requireAuth` (admin/staff guard mounted at `app.ts:167`). Two endpoints additionally gate `permanent=true` HARD DELETE behind `req.user.role === "SuperAdmin"` (see C3 below).
 > **Risk**: 🔴 P0. Triggering findings: [CF-001](../../_audit/CRITICAL_FINDINGS.md#cf-001) (`contracts.weekly_rate / total_rent / bond_amount / advance_amount` are all `real`), [CF-002](../../_audit/CRITICAL_FINDINGS.md#cf-002) (this domain is the **receiving side** of the booking→contract precision-loss write), [CF-003](../../_audit/CRITICAL_FINDINGS.md#cf-003) (zero `references()` FK, every join is application-level), [CF-008](../../_audit/CRITICAL_FINDINGS.md#cf-008) (8 of 28 mutators emit no `logAction`), [CF-014](../../_audit/CRITICAL_FINDINGS.md#cf-014) (`activate` handler + its `generateContractInvoicesAndSchedules` helper run 5+ writes outside any `db.transaction`), [CF-015](../../_audit/CRITICAL_FINDINGS.md#cf-015) (4 endpoints hard-delete via `permanent=true` flag despite `deleted_at` columns), [CF-016](../../_audit/CRITICAL_FINDINGS.md#cf-016) (`contract_products` lives in mis-named `products.ts` schema file).
-> **Cross-domain effects**: this file is the **target** of `booking.md` S2 (`PATCH /v1/bookings/:id/confirm` auto-creates a `contracts` row + N `contract_line_items` rows, see S2 cross-ref). The `activate` handler in turn auto-generates `invoices` rows and `recurring_schedules` rows, so it is the primary upstream of the **finance domain** (T002.2.b — back-fill cross-ref required after `finance.md` is written).
+> **Cross-domain effects**: this file is the **target** of `booking.md` S2 (`PATCH /v1/bookings/:id/confirm` auto-creates a `contracts` row + N `contract_line_items` rows, see S2 cross-ref). The `activate` handler in turn auto-generates `invoices` rows and `recurring_schedules` rows, so it is the primary upstream of the **finance group** — see [`finance-invoicing.md`](./finance-invoicing.md) (R5 generate-due loop is the CF-014 sister site to this file's `generateContractInvoicesAndSchedules` helper at L55-237).
 > **Status**: ✅ **COMPLETE — 28 of 28 endpoints documented.**
 
 ---
@@ -342,7 +342,7 @@ Per loop iteration over `contractLineItemsTable` rows (active only):
 - 🟡 [CF-015](../../_audit/CRITICAL_FINDINGS.md#cf-015) — `:117` `db.delete(recurring_schedules)` and `:121-123` `db.delete(invoices)` are HARD deletes against tables that have `deleted_at` columns. Same anti-pattern as the bulk-delete flag.
 - → `MONEY_AUDIT.md` §3 (cross-table money flow), §5 TC-M02 (line-items rollup invariant — this helper is the producer side).
 - → `bookings.md` S2 — sets `booking_status="Confirmed"`; this handler later flips it to `"Active"`.
-- → (T002.2.b) `finance.md` — invoices/recurring_schedules are this domain's primary writers; back-fill cross-ref required.
+- → [`finance-invoicing.md`](./finance-invoicing.md) — invoices/recurring_schedules are this domain's primary writers; sister CF-014 anchor at R5 generate-due.
 
 ---
 
@@ -367,7 +367,7 @@ Per loop iteration over `contractLineItemsTable` rows (active only):
 - `404`.
 
 ### Cross-references
-- ⚠️ **Cross-handler inconsistency**: terminating a contract does NOT cancel/void downstream invoices nor deactivate `recurring_schedules`. The user must hit `finance.md` endpoints separately. To be cross-referenced from `state-machines.md` (T002.5) and `finance.md` (T002.2.b) once written.
+- ⚠️ **Cross-handler inconsistency**: terminating a contract does NOT cancel/void downstream invoices nor deactivate `recurring_schedules`. The user must hit [`finance-invoicing.md`](./finance-invoicing.md) endpoints separately (E9 void, R4 deactivate). To be cross-referenced from `state-machines.md` (T002.5) once written.
 
 ---
 
@@ -880,7 +880,7 @@ The PATCH and DELETE handlers for nested `:id/line-items/:lineId` ignore the `:i
 |---|---|---|---|
 | ↔ | `bookings.md` S2 | bidirectional | E2 (this file) ↔ S2 (booking) — both create `contracts` rows |
 | ↔ | `bookings.md` S5 | bidirectional | (no specific contract-domain handler — S5 reads contract-by-booking; pure consumer) |
-| → | `finance.md` (T002.2.b) | this → finance | E9 invokes invoice + recurring_schedule mass-creation (helper L55-237) |
+| → | [`finance-invoicing.md`](./finance-invoicing.md) | this → finance-invoicing | E9 (`POST /:id/activate`) invokes invoice + recurring_schedule mass-creation (helper L55-237); sister CF-014 anchor at R5 generate-due |
 | → | `db-schema-overview.md` (T002.3) | this → schema | column-level details for `contracts`, `contract_line_items`, `contract_types`, `contract_products` |
 | → | `state-machines.md` (T002.5) | this → state | contract status flow `Draft → Sent → Signed → Active → Terminated/Expired` (E7/E8/E9/E10/E11) + missing precondition guards |
 | → | `MONEY_AUDIT.md` §1.1 | this → money | 4 `real`-typed money columns in `contracts` |
