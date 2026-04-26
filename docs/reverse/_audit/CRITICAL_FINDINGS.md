@@ -345,28 +345,70 @@ A C# port that auto-generates entities from schema would create three duplicate 
 
 | Field | Value |
 |---|---|
-| **Severity** | 🟢 P2 |
-| **Scope** | Finance · Reconciliation |
+| **Severity** | 🟡 P1 *(promoted from P2 in T001.5 follow-up)* |
+| **Scope** | Finance · Reconciliation · Accounting accuracy |
 | **Status** | OPEN |
 
 ### Evidence
 
-`artifacts/api-server/src/routes/stripe.ts:51-100` (range scanned in T001 §d.3) handles three event types:
-- `payment_intent.succeeded` → updates `invoices.status = "Paid"`, sets `paid_at`.
-- `payment_intent.payment_failed` → writes audit log only. **Invoice state unchanged.**
-- `charge.refunded` → writes audit log only. **No invoice column for refund state.**
+`artifacts/api-server/src/routes/stripe.ts:51-96` (full webhook handler re-read in T001.5) handles three event types and ignores everything else:
+
+```ts
+case "payment_intent.succeeded": {
+  // … sets invoices.status = "Paid", paid_at = new Date(), updated_at = new Date()
+  // logAction(action: "PAYMENT", …)
+}
+case "payment_intent.payment_failed": {
+  // logAction(action: "STATUS_CHANGE", newValue: { stripe_status: "payment_failed", … })
+  // ← NO db.update on invoices
+}
+case "charge.refunded": {
+  // logAction(action: "STATUS_CHANGE", newValue: { stripe_status: "refunded", amount_refunded, … })
+  // ← NO db.update on invoices, no schema column for refund amount
+}
+default:
+  console.log(`[Stripe] Unhandled event type: ${event.type}`);
+```
+
+Other event types relevant to invoice integrity that are **not handled at all**: `payment_intent.canceled`, `charge.dispute.created`, `charge.dispute.closed`, `charge.failed`, `payment_intent.requires_action`.
 
 ### Reproduction
 
-A guest pays an invoice; payment fails; invoice still appears as `Sent` (or `Draft`). A refund fires; invoice still appears as `Paid`.
+1. Guest pays an invoice via Stripe → `succeeded` → `invoices.status = "Paid"`. ✅
+2. Stripe issues a partial or full refund → `charge.refunded` fires → `system_logs` records it, but `invoices.status` remains `"Paid"` and there is no `refunded_amount` column. From the API perspective the refunded invoice is indistinguishable from a clean payment.
+3. Card is declined on the second attempt of a re-authorisation → `payment_failed` fires → `system_logs` records it, but the invoice remains in whatever state it was (`"Sent"`/`"Draft"`). Owner / agent dashboards continue to show it as awaiting payment with no failure flag.
+
+### Why P1 (not P2)
+
+Earlier severity assessment treated this as "missing nice-to-have telemetry". Re-reading the handler in T001.5 confirmed two harder facts:
+1. The handler **is the only writer** of `invoices.paid_at` from a real-money source — the application has no reconciliation cron job that re-checks Stripe status against DB state.
+2. `charge.refunded` carries `amount_refunded` (cents) which is silently dropped. Once dropped it cannot be recovered without re-fetching from Stripe.
+
+The combined effect is that **any refund or failed re-attempt produces accounting drift** between `invoices` (the system of record per the route layer) and Stripe (the system of record per the money). Any owner statement, KPI dashboard (`dashboard.ts:72`: `paidInvoices.reduce((sum, i) => sum + Number(i.amount ?? 0), 0)`), or agent commission settlement that joins on `invoices.status = "Paid"` will overstate revenue.
+
+### Missed invoice state transitions (full list)
+
+| Stripe event | Current invoice column update | Should be |
+|---|---|---|
+| `payment_intent.succeeded` | `status="Paid"`, `paid_at`, `updated_at` | ✅ correct |
+| `payment_intent.payment_failed` | none | `status="Failed"` (new state) + `failure_reason` (new column) |
+| `payment_intent.canceled` | not handled | `status="Cancelled"` (new transition) |
+| `charge.refunded` (partial) | none | `status="PartiallyRefunded"` (new) + `refunded_amount` |
+| `charge.refunded` (full) | none | `status="Refunded"` (new) + `refunded_at` + `refunded_amount` |
+| `charge.dispute.created` | not handled | `status="Disputed"` (new) + `dispute_reason` |
+| `charge.dispute.closed` (won) | not handled | revert to `"Paid"` |
+| `charge.dispute.closed` (lost) | not handled | `status="ChargedBack"` (new) |
 
 ### Recommendation (no code change)
 
-Add invoice columns (`failure_reason`, `refunded_at`, `refunded_amount`) and route the failure / refund events into the invoice state machine.
+1. Add columns: `invoices.failure_reason text`, `invoices.refunded_at timestamp`, `invoices.refunded_amount numeric(10,2)`, `invoices.dispute_reason text`.
+2. Extend the invoice status enum with `Failed`, `Cancelled`, `PartiallyRefunded`, `Refunded`, `Disputed`, `ChargedBack` (today's status set must first be enumerated — see `_schema/state-machines.md` planned for T002).
+3. Wire each Stripe event into the appropriate `db.update(invoicesTable)` block; keep `logAction` for the audit trail.
+4. Optionally add a daily reconciliation cron that pages through Stripe charges and asserts invoice-side consistency.
 
 ### Phase 2 impact
 
-Reconciliation reports cannot distinguish "paid then refunded" from "paid clean" without joining `system_logs`.
+A C# port without these state transitions inherits the accounting drift as schema-level "permanent debt". Fixing it later requires a backfill from Stripe API, which is rate-limited and asymmetric (e.g. disputes have their own pagination).
 
 ---
 
@@ -429,6 +471,193 @@ Migration tooling will replicate both tables, leaving the next maintainer to mak
 
 ---
 
+## CF-013 — Date / time-zone storage is inconsistent and partly type-unsafe
+
+| Field | Value |
+|---|---|
+| **Severity** | 🟡 P1 |
+| **Scope** | Data integrity · Internationalisation · PMS booking accuracy |
+| **Status** | OPEN |
+
+### Evidence
+
+**Inconsistent `withTimezone` flag on `timestamp()`** — verified counts (T001.5 re-check):
+- 145 total `timestamp(...)` column declarations across `lib/db/src/schema/`.
+- **123 with `{ withTimezone: true }`** (the dominant pattern; covers `created_at`, `updated_at`, and most `deleted_at` columns on the newer schema files).
+- **21 without** `withTimezone` (the minority — predominantly `deleted_at` on the older schema files, plus one `updated_at` slip).
+
+The 21 without-tz lines (full enumeration):
+
+```
+lib/db/src/schema/bookings.ts:29           deleted_at: timestamp("deleted_at")
+lib/db/src/schema/contracts.ts:22          deleted_at: timestamp("deleted_at")
+lib/db/src/schema/invoices.ts:19           deleted_at: timestamp("deleted_at")
+lib/db/src/schema/properties.ts:20         deleted_at: timestamp("deleted_at")
+lib/db/src/schema/spaces.ts:29             deleted_at: timestamp("deleted_at")
+lib/db/src/schema/recurring_schedules.ts:20 deleted_at: timestamp("deleted_at")
+lib/db/src/schema/products.ts:34           deleted_at: timestamp("deleted_at")
+lib/db/src/schema/promotions.ts:24         deleted_at: timestamp("deleted_at")
+lib/db/src/schema/work_orders.ts:20        deleted_at: timestamp("deleted_at")
+lib/db/src/schema/cs_tickets.ts:15         deleted_at: timestamp("deleted_at")
+lib/db/src/schema/tasks.ts:22              deleted_at: timestamp("deleted_at")
+lib/db/src/schema/leads.ts:30              deleted_at: timestamp("deleted_at")
+lib/db/src/schema/beneficiaries.ts:17      deleted_at: timestamp("deleted_at")
+lib/db/src/schema/space_policies.ts:15     deleted_at: timestamp("deleted_at")
+lib/db/src/schema/space_options.ts:11      deleted_at: timestamp("deleted_at")
+lib/db/src/schema/suburbs.ts:15            deleted_at: timestamp("deleted_at")
+lib/db/src/schema/email_templates.ts:13    deleted_at: timestamp("deleted_at")
+lib/db/src/schema/contract_types.ts:12     deleted_at: timestamp("deleted_at")
+lib/db/src/schema/service_catalog.ts:29    deleted_at: timestamp("deleted_at")
+lib/db/src/schema/product_types.ts:7       deleted_at: timestamp("deleted_at")
+lib/db/src/schema/product_groups.ts:7      deleted_at: timestamp("deleted_at")
+lib/db/src/schema/integration_settings.ts:6 updated_at: timestamp("updated_at").defaultNow().notNull()  ← outlier (updated_at, not deleted_at)
+```
+
+The pattern split runs along the boundary between **business-domain tables** that omit `withTimezone` (bookings, contracts, invoices, properties, spaces, leads, tasks, products, promotions, work_orders, …) and **identity / financial / content** tables that include it (users, accounts, payment_info, commissions, contacts, documents, blog_posts). The `deleted_at` column on the first group is `timestamp without time zone`; on the second group it is `timestamptz`. **Joins or comparisons between the two groups (e.g. `bookings.deleted_at` vs `accounts.deleted_at`) implicitly cast the without-tz value at the session time-zone setting — non-deterministic across deployments.**
+
+**Free-text date columns** (no DB-level format validation):
+
+```ts
+lib/db/src/schema/spaces.ts:44            date: text("date").notNull()        // 3rd table in spaces.ts (likely space_blocked_dates)
+lib/db/src/schema/guest_users.ts:14       date_of_birth: text("date_of_birth")
+```
+
+**`date` columns** (PG `date`, no time-zone, no time-of-day):
+
+`bookings.check_in_date/check_out_date/expiry_date`, `tasks.start_date/due_date`, `recurring_schedules.start_date/end_date/next_due_date`, `leads.preferred_check_in_date`, `space_availability.date`, `service_hosts.from_date/to_date`. — Suitable for "calendar day" semantics, but only if the surrounding code agrees on a reference time-zone.
+
+### Reproduction
+
+1. **Booking off-by-one risk**: A guest in Tokyo (UTC+9) books an Australian property for `check_in_date = 2026-08-01`. The check-in is meant to be 2026-08-01 *Australian local* (UTC+10 / UTC+11 with DST). Because `bookings.check_in_date` is a bare `date` and there is no per-booking time-zone column, the back-end has no way to distinguish "2026-08-01 in AEST" from "2026-08-01 in JST" — the value relies on the convention that all dates are AEST/AEDT, which is enforced nowhere in the schema and only implicitly in the routes.
+2. **DOB free-text**: `guest_users.date_of_birth` is `text`. A row with the value `"01/02/1990"` is ambiguous (1 Feb vs 2 Jan depending on locale). No format check exists.
+3. **Audit timestamp comparability**: `system_logs.created_at` (timestamp w/ tz) cannot be compared to `bookings.deleted_at` (timestamp w/o tz) without an explicit `AT TIME ZONE` cast. PG implicitly assumes the session time zone for the `w/o tz` value, which depends on the connection settings.
+
+### Recommendation (no code change)
+
+1. Migrate every `timestamp("…")` column to `timestamp("…", { withTimezone: true })`. PG cast: `ALTER TABLE … ALTER COLUMN … TYPE timestamptz USING … AT TIME ZONE 'UTC'`. The choice of `'UTC'` here is a convention — if the values were originally written from server-local time (likely `Australia/Sydney`), use that instead.
+2. Coerce `spaces.date` and `guest_users.date_of_birth` to `date` (PG `date`); validate ISO-8601 at the application layer before insert.
+3. Introduce a `bookings.timezone text` (or `properties.timezone text` referenced by booking) so that `check_in_date` is unambiguous when paired with the property's local zone. (Phase 2 concern.)
+
+### Phase 2 impact
+
+A C# port using `DateTime` (no TZ) vs `DateTimeOffset` will inherit the existing inconsistency unless normalised at migration time. Tests for "did this booking start today?" cannot be written meaningfully today.
+
+---
+
+## CF-014 — Multi-step mutations execute outside transactions
+
+| Field | Value |
+|---|---|
+| **Severity** | 🟡 P1 |
+| **Scope** | Data integrity · Atomicity |
+| **Status** | OPEN |
+
+### Evidence
+
+`db.transaction(...)` is called from **3** sites in the entire API server (verified by `rg -n "db\.transaction\("`):
+
+```
+artifacts/api-server/src/lib/seedSync.ts:214
+artifacts/api-server/src/routes/dev-migration.ts:38
+artifacts/api-server/src/routes/service-host-portal.ts:365
+```
+
+Two are administrative/migration helpers; only one (`service-host-portal.ts:365`) sits on a production code path.
+
+The most exposed multi-step mutation, **contract activation**, performs three writes plus an invoice-and-schedule generator without an enclosing transaction. `artifacts/api-server/src/routes/contracts.ts:429-450`:
+
+```ts
+router.post("/v1/contracts/:id/activate", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const [row] = await db.update(contractsTable)                 // ← step 1
+    .set({ status: "Active", effective_date: new Date().toISOString().slice(0, 10) })
+    .where(eq(contractsTable.id, id)).returning();
+  if (!row) { res.status(404).json({ error: "NOT_FOUND" }); return; }
+
+  const generated = await generateContractInvoicesAndSchedules(id);   // ← step 2 (multiple INSERTs)
+
+  if (row.booking_id) {
+    await db.update(bookingsTable)                              // ← step 3
+      .set({ booking_status: "Active" })
+      .where(eq(bookingsTable.id, row.booking_id));
+  }
+
+  await logAction({ /* ... */ });                               // ← step 4 (writes system_logs)
+  // …
+});
+```
+
+Insert-call density elsewhere on the same kind of code path:
+- `bookings.ts`: 6 distinct `db.insert(...)` calls (booking confirm, terms generation, line items, …).
+- `contracts.ts`: 8 distinct `db.insert(...)` calls.
+- `invoices.ts`: 1 `db.insert(...)`.
+
+### Reproduction
+
+If `generateContractInvoicesAndSchedules` partially fails (e.g. NETWORK error after the 2nd of 4 invoice INSERTs), the contract is already `"Active"` and the booking has not yet been promoted. Re-running the activation handler will (a) succeed because no idempotency check exists, (b) generate **duplicate** invoices for the periods that did succeed.
+
+For booking confirmation (`bookings.ts:393-461`) the same risk applies — contract write succeeds, line-items write fails, contract sits in DB referencing missing line items.
+
+### Recommendation (no code change)
+
+Wrap every multi-write handler in `db.transaction(async (tx) => { … })` and pass `tx` to helpers like `generateContractInvoicesAndSchedules`. Compensating logic (idempotency keys, retry windows) is a Phase 2 enhancement; the immediate need is atomicity.
+
+### Phase 2 impact
+
+A C# port using EF Core `IDbContextTransaction` makes this trivial; a port that mirrors today's fire-and-forget pattern reproduces the bug.
+
+---
+
+## CF-015 — Soft-delete vs hard-delete is inconsistent across tables and routes
+
+| Field | Value |
+|---|---|
+| **Severity** | 🟡 P1 |
+| **Scope** | Data integrity · Compliance · Audit |
+| **Status** | OPEN |
+
+### Evidence
+
+**Schema posture**:
+- ~33 tables declare `deleted_at: timestamp("deleted_at", …)` (soft-delete intended).
+- 4 tables declare `is_active: boolean` only, no `deleted_at`: `guest_users.ts:30`, `partner_users.ts:15`, `email_templates.ts:12` (also has `deleted_at`), `recurring_schedules.ts:19` (also has `deleted_at`). The first two have **no soft-delete column at all**.
+- ~15 tables have neither: `accommodation_catalog`, `accommodation_service_catalog`, `announcements`, `booking_service_photos`, `contract_line_items`, `email_logs`, `guest_emergency_contacts`, `integration_settings`, `login_attempts`, `marketing_consents`, `page_contents`, `product_catalog`, `refresh_tokens`, `service_hosts`, `space_availability`, `space_images`, `space_service_catalog`, `system_logs`. Some of these are append-only by design (`system_logs`, `login_attempts`); others are not.
+
+**Route posture** — `db.delete(...)` (hard delete) used in 16+ routes. The egregious ones are tables that **do** have `deleted_at`:
+
+```
+artifacts/api-server/src/routes/accounts.ts:106, 122          db.delete(accountsTable)        ← accounts has deleted_at (timestamptz)
+artifacts/api-server/src/routes/commissions.ts:67, 83         db.delete(commissionsTable)     ← commissions has deleted_at
+artifacts/api-server/src/routes/payment-info.ts:67, 83        db.delete(paymentInfoTable)     ← payment_info has deleted_at
+artifacts/api-server/src/routes/contacts.ts:77, 93            db.delete(contactsTable)        ← contacts has deleted_at
+artifacts/api-server/src/routes/beneficiaries.ts:106, 122     db.delete(beneficiariesTable)   ← beneficiaries has deleted_at
+artifacts/api-server/src/routes/tasks.ts:148, 164             db.delete(tasksTable)           ← tasks has deleted_at
+artifacts/api-server/src/routes/space-policies.ts:107, 131    db.delete(spacePoliciesTable)   ← space_policies has deleted_at
+artifacts/api-server/src/routes/suburbs.ts:116, 137           db.delete(suburbsTable)         ← suburbs has deleted_at
+artifacts/api-server/src/routes/space-options.ts:108, 129     db.delete(spaceOptionsTable)    ← space_options has deleted_at
+artifacts/api-server/src/routes/admin-users.ts:106, 139       db.delete(usersTable)           ← users has deleted_at (timestamptz)
+artifacts/api-server/src/routes/product-catalog.ts:166, 257   db.delete(accommodationCatalogTable) / accommodationServiceCatalogTable
+                                                              ← accommodation_catalog has NO soft-delete column at all
+```
+
+### Reproduction
+
+1. Delete an `account` via `DELETE /v1/accounts/:id` → row physically removed. Future system-logs reference (`system_logs.entity_type='account', entity_id=123`) becomes unresolvable. Compliance evidence destroyed.
+2. Delete an `accommodation_catalog` row → no soft-delete column exists, so the row is gone immediately. Bookings that reference it (no FK — see CF-003) silently dangle. Reports that join through it lose data.
+3. List endpoints filter on `isNull(deleted_at)`, but the delete handlers physically remove rows — the filter never sees the soft-delete pattern in action for these tables.
+
+### Recommendation (no code change)
+
+1. Adopt a project-wide rule: tables that carry business-meaningful FKs (accounts, contacts, accommodation_catalog, …) **always** soft-delete; tables that are pure look-ups or append-only logs may hard-delete.
+2. Replace each flagged `db.delete(table)` call with `db.update(table).set({ deleted_at: new Date() })`. Where `deleted_at` is missing, add it first via migration.
+3. Standardise the soft-delete column name (`deleted_at`) and drop the parallel `is_active` boolean on `guest_users`/`partner_users` (or keep both but document that `is_active` means "currently usable" and `deleted_at` means "tombstoned").
+
+### Phase 2 impact
+
+EF Core's `HasQueryFilter` for soft-delete relies on a uniform column. Today's two-pattern world (`is_active` vs `deleted_at`) forces per-entity configuration and produces silent leaks when filters are forgotten.
+
+---
+
 ## Summary
 
 | ID | Severity | Title | Status |
@@ -442,11 +671,14 @@ Migration tooling will replicate both tables, leaving the next maintainer to mak
 | CF-007 | 🟡 P1 | Hard-coded 2-weeks advance / 4-weeks bond | OPEN |
 | CF-008 | 🟡 P1 | logAction called from only 6 of 50 route files | OPEN |
 | CF-009 | 🟡 P1 | products / product_catalog dead tables | OPEN |
-| CF-010 | 🟢 P2 | Stripe webhook ignores payment_failed / refunded | OPEN |
+| CF-010 | 🟡 P1 | Stripe webhook ignores payment_failed / refunded *(promoted from P2)* | OPEN |
 | CF-011 | 🟢 P2 | Contract ref by row-count (race) | OPEN |
 | CF-012 | 🟢 P2 | space_blocked_dates vs space_availability overlap | OPEN |
+| CF-013 | 🟡 P1 | Date / time-zone storage inconsistent + free-text dates | OPEN |
+| CF-014 | 🟡 P1 | Multi-step mutations not in transactions | OPEN |
+| CF-015 | 🟡 P1 | Soft-delete vs hard-delete inconsistent | OPEN |
 
-**P0 count**: 3 — all financial / data-integrity. Should be addressed before any production go-live or large-scale data migration.
+**Counts after T001.5 follow-up**: P0=3, P1=10, P2=2 (total 15). All financial- and data-integrity-class findings are now P1+.
 
 ---
 *End of CRITICAL_FINDINGS.md*

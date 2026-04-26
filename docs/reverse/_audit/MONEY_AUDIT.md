@@ -335,12 +335,168 @@ WHERE c.booking_id = b.id
 
 ---
 
-## §5. Open items for next tasks
+## §5. Reconciliation Test Scenarios
+
+> **Purpose**: Tests defined here verify financial integrity *before* and *after* a money-type migration (Option A or B from §4). They are also valuable as ongoing data-quality checks. Each TC includes (i) a plain-language assertion, (ii) the source of truth for each side of the comparison, (iii) a SQL query sketch that returns the *violation* rows (zero rows = pass), and (iv) the failure-mode each TC catches.
+> **Convention**: All queries are PostgreSQL. The sketches use the current schema; after Option A migration, replace `::numeric(12,2)` casts as appropriate.
+
+### TC-M01 — Booking ↔ Contract weekly_rate exact match
+
+**Assertion**: For every contract that has a `booking_id`, the contract's `weekly_rate` must equal the source booking's `agreed_weekly_rate` to the cent.
+**Why it matters**: CF-002 (`bookings.ts:393, 458`). Today's `numeric → real` write is precision-lossy.
+**SQL** (returns violation rows):
+```sql
+SELECT
+  c.id            AS contract_id,
+  c.contract_ref,
+  b.id            AS booking_id,
+  b.agreed_weekly_rate::numeric(12,2)  AS booking_rate,
+  c.weekly_rate::numeric(12,2)         AS contract_rate,
+  (b.agreed_weekly_rate::numeric(12,2)
+     - c.weekly_rate::numeric(12,2))   AS delta
+FROM contracts c
+JOIN bookings  b ON b.id = c.booking_id
+WHERE c.deleted_at IS NULL
+  AND b.deleted_at IS NULL
+  AND c.weekly_rate IS NOT NULL
+  AND b.agreed_weekly_rate IS NOT NULL
+  AND b.agreed_weekly_rate::numeric(12,2) <> c.weekly_rate::numeric(12,2);
+-- Expected: 0 rows. Each row is a precision-loss footprint.
+```
+**Failure mode caught**: Float drift, manual contract edits that diverge from the booking, missing booking propagation after rate change.
+
+### TC-M02 — Contract line items sum equals contract total_rent
+
+**Assertion**: For every active contract, `SUM(contract_line_items.total_price)` for the contract equals `contracts.total_rent`.
+**Why it matters**: §3.2 — line items are the durable representation; the contract-level rollup must agree.
+**SQL**:
+```sql
+WITH lines AS (
+  SELECT contract_id, SUM(total_price)::numeric(12,2) AS lines_total
+  FROM contract_line_items
+  GROUP BY contract_id
+)
+SELECT
+  c.id           AS contract_id,
+  c.contract_ref,
+  c.total_rent::numeric(12,2)   AS contract_total_rent,
+  l.lines_total                 AS line_items_sum,
+  (c.total_rent::numeric(12,2) - l.lines_total) AS delta
+FROM contracts c
+LEFT JOIN lines l ON l.contract_id = c.id
+WHERE c.status = 'Active'
+  AND c.deleted_at IS NULL
+  AND c.total_rent IS NOT NULL
+  AND COALESCE(l.lines_total, 0) <> c.total_rent::numeric(12,2);
+-- Expected: 0 rows.
+-- Caveat: contracts where line items represent extras (services), not the rent itself, must be excluded — see contract_line_items.line_type once enumerated in T002.
+```
+**Failure mode caught**: Hand-edited line items that don't update the contract header; bulk insert paths that skip the rollup.
+
+### TC-M03 — Paid invoices reconcile to contract cumulative settlement
+
+**Assertion**: For every contract, `SUM(invoices.amount WHERE status = 'Paid' AND contract_id = c.id)` equals the contract's expected settled amount up to the current date (computed from the schedule).
+**Why it matters**: Owner statements and agent commission settlements join `invoices.status = 'Paid'`. CF-010 (Stripe refund/failure → no invoice update) means the LHS may be over-counted.
+**SQL** (looser form: paid invoices vs schedule for due-by-today):
+```sql
+WITH paid AS (
+  SELECT contract_id, SUM(amount)::numeric(12,2) AS paid_total
+  FROM invoices
+  WHERE status = 'Paid' AND deleted_at IS NULL
+  GROUP BY contract_id
+),
+sched_due AS (
+  SELECT contract_id, SUM(amount)::numeric(12,2) AS scheduled_to_date
+  FROM recurring_schedules
+  WHERE next_due_date <= CURRENT_DATE
+    AND deleted_at IS NULL
+  GROUP BY contract_id
+)
+SELECT
+  c.id, c.contract_ref,
+  COALESCE(p.paid_total, 0)        AS paid_total,
+  COALESCE(s.scheduled_to_date, 0) AS scheduled_to_date,
+  (COALESCE(p.paid_total, 0) - COALESCE(s.scheduled_to_date, 0)) AS over_under
+FROM contracts c
+LEFT JOIN paid       p ON p.contract_id = c.id
+LEFT JOIN sched_due  s ON s.contract_id = c.id
+WHERE c.status IN ('Active','Completed')
+  AND c.deleted_at IS NULL
+  AND ABS(COALESCE(p.paid_total, 0) - COALESCE(s.scheduled_to_date, 0)) > 0.01;
+-- Expected: 0 rows for clean accounts; pre-pays and arrears are flagged.
+-- Note: post-CF-010 fix this query should also EXCLUDE refunded amounts via invoices.refunded_amount.
+```
+**Failure mode caught**: Refunded invoices still showing as Paid (CF-010); duplicate invoice generation from CF-014 retry-without-transaction.
+
+### TC-M04 — Bond invariant: `bond_amount = weekly_rate × 4`
+
+**Assertion**: For every active contract, the recorded `bond_amount` equals `weekly_rate × 4` to the cent (the rule hard-coded at `bookings.ts:395`).
+**Why it matters**: CF-007 — the rule is hard-coded but the column is mutable. A manual `UPDATE contracts SET bond_amount = …` would silently break the invariant.
+**SQL**:
+```sql
+SELECT
+  c.id, c.contract_ref,
+  c.weekly_rate::numeric(12,2)               AS weekly_rate,
+  c.bond_amount::numeric(12,2)               AS bond_amount,
+  (c.weekly_rate * 4)::numeric(12,2)         AS expected_bond,
+  (c.bond_amount - c.weekly_rate * 4)::numeric(12,2) AS delta
+FROM contracts c
+WHERE c.status = 'Active'
+  AND c.deleted_at IS NULL
+  AND c.weekly_rate IS NOT NULL
+  AND c.bond_amount IS NOT NULL
+  AND ABS(c.bond_amount - c.weekly_rate * 4) > 0.005;
+-- Expected: 0 rows under the current hard-coded rule.
+-- After CF-007 fix (configurable bond_weeks), the multiplier becomes a per-property/per-property override and this TC must read the override instead of "4".
+```
+**Failure mode caught**: Manual DB edits; CF-001/CF-002 float drift propagated into the bond field; future per-property bond_weeks overrides not respected by booking confirmation.
+
+### TC-M05 — Stripe charge cents matches invoice amount
+
+**Assertion**: For every paid invoice, the Stripe payment intent (or charge) `amount` field (cents) equals `ROUND(invoices.amount × 100)`.
+**Why it matters**: §3.5 boundary conversion at `guest-portal.ts:885`. A regression that drops the `Math.round` (or shifts to truncation) causes systematic 1-cent shortfalls.
+**Source of truth**: Stripe API (this is the only TC that requires an external fetch).
+**Pseudo-SQL + verification step**:
+```sql
+-- Step 1: from system_logs, recover the (invoice_id, stripe_payment_intent) pairs.
+SELECT
+  (sl.new_value ->> 'stripe_payment_intent') AS payment_intent_id,
+  sl.entity_id                               AS invoice_id,
+  i.amount::numeric(10,2)                    AS invoice_amount,
+  ROUND(i.amount::numeric * 100)             AS expected_cents
+FROM system_logs sl
+JOIN invoices i ON i.id = sl.entity_id
+WHERE sl.entity_type = 'invoice'
+  AND sl.action = 'PAYMENT'
+  AND sl.new_value ->> 'stripe_payment_intent' IS NOT NULL
+  AND i.deleted_at IS NULL;
+
+-- Step 2: for each row, fetch stripe.PaymentIntent(<id>).amount via Stripe API,
+-- assert == expected_cents. Mismatches are the failure set.
+```
+**Failure mode caught**: Floating-point drift in the JS `Number(invoice.amount) * 100` step; future code that omits `Math.round`; Stripe currency unit mismatches (e.g. JPY where cents conversion is identity, not ×100).
+
+### Summary
+
+| TC | Catches | Phase-2 readiness |
+|---|---|---|
+| TC-M01 | CF-001, CF-002 | ✅ pure SQL, runnable today |
+| TC-M02 | Schema/header drift | ✅ pure SQL |
+| TC-M03 | CF-010, CF-014 | ✅ pure SQL (assumes scheduled_to_date model) |
+| TC-M04 | CF-007 | ✅ pure SQL |
+| TC-M05 | guest-portal:885 boundary | ⚠️ needs Stripe API access |
+
+These five tests, run before any large data movement, catch every P0/P1 finance-class finding from CRITICAL_FINDINGS as a *measured* number rather than a hypothetical risk.
+
+---
+
+## §6. Open items for next tasks
 
 1. T002 (`_schema/erd-finance.md` revision) must call out the `real` vs `numeric` split per finance entity.
 2. T004 (`_rules/financial-rules.md` revision) must adopt the rules from §2.2 (no hard-coded weeks; one weekly→monthly formula) as enforced rules.
 3. T005 (workflow docs) must trace commission calc sites that are still unverified.
 4. Any future T-task that proposes a schema change must reference the migration sketches in §4 instead of inventing new ones.
+5. T007 (`_test/`) must adopt §5 TC-M01..05 as named reconciliation cases.
 
 ---
 *End of MONEY_AUDIT.md*

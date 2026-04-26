@@ -1,0 +1,149 @@
+T001.5 승인. CRITICAL_FINDINGS, MONEY_AUDIT, 마커 모두 잘 산출됨.
+V3 자가 발견 + 수정은 검증 게이트가 제대로 작동한다는 증거. 신뢰 ↑.
+
+═══════════════════════════════════════════════════
+[T001.5 후속 — T002 진입 전 마지막 보강]
+═══════════════════════════════════════════════════
+
+[1] CRITICAL_FINDINGS 후속 — 분류 재검토 1건
+CF-010 (Stripe payment_failed 무처리): P2 → P1 승격 검토.
+
+이유: 프로덕션 운영 중이라면, 결제 실패 시 invoice 상태가 paid로 
+잘못 표시될 가능성. 회계와 실제 현금흐름 불일치는 P1 이상.
+
+수행:
+- guest-portal.ts에서 Stripe webhook 핸들러 전수 확인
+- payment_succeeded만 처리하는지, payment_failed/disputed/refunded 
+  핸들러가 있는지 file:line으로 검증
+- 결과에 따라 P2 유지 또는 P1 승격
+- 어떤 invoice 상태 전이가 누락되는지 명시
+
+[2] CRITICAL_FINDINGS 추가 항목 검토
+다음 패턴이 코드에 있는지 grep만 해서 발견되면 CF로 추가:
+
+(a) Date 처리 — 시간대 정보 없이 string으로 저장하는 컬럼
+    - grep: `text("created_at"|timestamp without time zone`
+    - PMS는 호주(AEST/AEDT) + 게스트의 모국 시간대 혼재. 
+      체크인/아웃 날짜에 timezone 정보 없으면 1일 오차 발생 가능.
+
+(b) 동시성 — bookings/contracts 생성 시 트랜잭션 사용 여부
+    - grep: `db.transaction\(` 사용 횟수
+    - booking → contract → invoice 다단계 INSERT가 트랜잭션 밖에서 
+      이루어지면 부분 실패 시 데이터 부정합.
+
+(c) Soft delete vs Hard delete 일관성
+    - grep: `deletedAt|is_deleted|isActive` 컬럼 사용 패턴
+    - 일부 테이블은 soft, 일부는 hard면 cascade 동작 예측 불가.
+
+발견된 것만 CF-013, CF-014... 로 추가. 없으면 "검토 완료, 추가 없음" 보고.
+
+[3] MONEY_AUDIT 보강 — 보존 가치 큰 항목
+§5 신규 추가: "Reconciliation Test Scenarios"
+
+마이그레이션(Option A 또는 B) 후 재무 정합성 검증용 테스트 케이스.
+실제 코드 변경 X, 테스트 정의만:
+
+- TC-M01: 동일 booking으로 생성된 contract의 weekly_rate가 booking의 
+  weekly_rate와 정확히 일치하는가 (현재는 real 변환으로 손실 가능)
+- TC-M02: 모든 active contract의 line_items 합 = contract.total_rent
+- TC-M03: paid invoice의 amount 합 = contract의 누적 결제액
+- TC-M04: bond_amount = weekly_rate * 4 불변식이 모든 active contract 
+  에서 성립하는가
+- TC-M05: Stripe charged amount(cents) = invoice amount * 100 정확 일치
+
+각 TC에 SQL 쿼리 스케치 포함. Phase 2에서 그대로 단위 테스트로 변환 가능.
+
+═══════════════════════════════════════════════════
+[T002 진입 — 확정 사항]
+═══════════════════════════════════════════════════
+
+T001.5 보강 완료 후 T002 즉시 시작.
+
+T002 = `_schema/` 재작성 (REVISE 23개 중 _schema/ 도메인 해당분 + 신규)
+
+[T002 산출물 구조]
+_schema/
+├── api-endpoints/
+│   ├── INDEX.md           # prefix·auth·count 매트릭스
+│   ├── booking.md
+│   ├── contract.md
+│   ├── finance.md
+│   ├── ops.md
+│   ├── portal-guest.md
+│   ├── portal-partner.md
+│   ├── public.md
+│   └── admin.md
+├── erd-core.md            # 점선 implicit FK + 경고 박스 + 권장 FK 부록
+├── db-schema-overview.md  # 47 모듈 / 55+ 테이블 인벤토리
+└── state-machines.md      # bookings/contracts/invoices/work_orders/tickets
+
+[T002 절대 규칙]
+
+R1. INDEX.md는 라우팅 테이블이지 deep dive 아님
+    - 컬럼: Domain | File | Endpoint Count | Auth Type | Public Y/N
+    - 각 도메인 파일로 링크
+    - 50줄 이내 권장
+
+R2. 도메인별 파일 표준 포맷 (8개 파일 모두 동일)
+    각 엔드포인트:
+    | Method | Path | Handler | Auth | Request Schema | Response | Status Codes | Side Effects |
+    
+    Side Effects 컬럼이 핵심:
+    - DB writes (어떤 테이블)
+    - 다른 엔드포인트 호출
+    - 외부 API (Stripe 등)
+    - 이메일/알림
+    - logAction 호출 여부
+    
+    누락된 audit 호출은 ⚠️로 표시 (CF-008 추적 용이)
+
+R3. erd-core.md
+    - 상단 경고 박스: "🔴 NO DATABASE-LEVEL FK CONSTRAINTS — 
+      see CRITICAL_FINDINGS#CF-003"
+    - Mermaid: 점선 `-.->` implicit FK
+    - 도메인별 cluster 분리
+    - 말미 부록: "Phase 2 Recommended FK Additions"
+      | Source Column | Target Table | ON DELETE | ON UPDATE | 근거 |
+
+R4. db-schema-overview.md
+    - 47 모듈 → 도메인 그룹화
+    - 각 테이블: 컬럼/타입/nullable/default/인덱스
+    - dead tables (CF-009의 products, product_catalog) 명시 표시
+    - money 컬럼은 MONEY_AUDIT 참조 링크
+
+R5. state-machines.md
+    - 5개 엔티티 각각 Mermaid stateDiagram-v2
+    - 각 transition: trigger endpoint + preconditions + side effects
+    - dead states / orphan transitions 표시
+    - audit log 호출 여부 표시
+
+R6. REVISE 마커 처리
+    T002 작업 중 _schema/ 도메인의 REVISE 파일을 새 파일로 대체.
+    구 파일은 즉시 삭제하지 말고 `_archive/` 폴더로 이동.
+    이동 후 마커를 "🗄️ ARCHIVED replaced by <new path>" 로 변경.
+
+R7. 검증 게이트 (RULE 7) 강화
+    T002는 산출물이 많으므로:
+    - 도메인 파일 8개 작성 후 1차 검증 (3 클레임)
+    - erd-core 작성 후 2차 검증 (3 클레임)
+    - state-machines 작성 후 3차 검증 (3 클레임)
+    - 각 검증마다 별도 보고. 통합 보고 금지.
+
+R8. 컨텍스트 회복
+    매 산출물 작성 전:
+    - _audit/T001_RECON_REPORT.md 재독
+    - _audit/CRITICAL_FINDINGS.md 재독
+    - _audit/MONEY_AUDIT.md 재독 (특히 money 컬럼 다룰 때)
+    - "Re-read context: <files>" 출력 후 작업
+
+═══════════════════════════════════════════════════
+[지금 할 일]
+═══════════════════════════════════════════════════
+
+(1) [1] CF-010 P1 승격 검토 → 결과 보고
+(2) [2] Date/트랜잭션/soft-delete grep 수행 → 발견 시 CF 추가
+(3) [3] MONEY_AUDIT §5 Reconciliation Test Scenarios 추가
+(4) 위 3건 완료 후 통합 검증 게이트
+(5) "T001.5 보강 완료, T002 시작 대기" 보고
+
+(5) 까지 완료하면 내가 proceed 송신. T002 자동 시작 금지.
