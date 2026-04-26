@@ -1,0 +1,25 @@
+artifacts/api-server/src/routes/spaces.ts:301:  await logAction({ entityType: "space", entityId: spaceId, action: "BLOCK", newValue: { dates, reason } });
+artifacts/api-server/src/routes/spaces.ts:327:  await logAction({ entityType: "space", entityId: spaceId, action: "UNBLOCK", newValue: { dates } });
+artifacts/api-server/src/routes/spaces.ts:398:    await logAction({ entityType: "space", entityId: spaceId, action: "ADD_SERVICE", newValue: { service_id } });
+artifacts/api-server/src/routes/spaces.ts:451:    await logAction({ entityType: "space", entityId: spaceId, action: "REMOVE_SERVICE", newValue: { map_id: mapId } });
+artifacts/api-server/src/routes/invoices.ts:150:  await logAction({ entityType: "invoice", entityId: row.id, action: "STATUS_CHANGE", oldValue: { status: "Draft" }, newValue: { status: "Sent" } });
+artifacts/api-server/src/routes/invoices.ts:164:  await logAction({ entityType: "invoice", entityId: row.id, action: "PAYMENT", oldValue: { status: "Sent" }, newValue: { status: "Paid", payment_method: parsed.data.payment_method } });
+artifacts/api-server/src/routes/invoices.ts:176:  await logAction({ entityType: "invoice", entityId: row.id, action: "STATUS_CHANGE", oldValue: { status: existing?.status }, newValue: { status: "Void" } });
+artifacts/api-server/src/routes/contracts.ts:413:  await logAction({ entityType: "contract", entityId: id, action: "STATUS_CHANGE", newValue: { status: "Sent" } });
+artifacts/api-server/src/routes/contracts.ts:425:  await logAction({ entityType: "contract", entityId: id, action: "STATUS_CHANGE", newValue: { status: "Signed" } });
+artifacts/api-server/src/routes/contracts.ts:447:  await logAction({
+artifacts/api-server/src/routes/contracts.ts:462:  await logAction({ entityType: "contract", entityId: id, action: "STATUS_CHANGE", newValue: { status: "Terminated", termination_reason } });
+artifacts/api-server/src/routes/contracts.ts:473:  await logAction({ entityType: "contract", entityId: id, action: "STATUS_CHANGE", newValue: { status: "Expired" } });
+artifacts/api-server/src/routes/contracts.ts:505:  await logAction({ entityType: "contract", entityId: contractId, action: "SCHEDULE_ADD", newValue: row });
+artifacts/api-server/src/routes/contracts.ts:528:  await logAction({ entityType: "contract", entityId: contractId, action: "SCHEDULE_UPDATE", newValue: row });
+artifacts/api-server/src/routes/contracts.ts:540:  await logAction({ entityType: "contract", entityId: contractId, action: "SCHEDULE_DELETE", newValue: { id: schedId } });
+artifacts/api-server/src/routes/guest-portal.ts:993:    await logAction({
+artifacts/api-server/src/routes/bookings.ts:381:  await logAction({ entityType: "booking", entityId: parsed.data.id, action: "STATUS_CHANGE", oldValue: { status: existing.booking_status }, newValue: { status: "Confirmed" } });
+artifacts/api-server/src/routes/bookings.ts:523:    await logAction({ entityType: "contract", entityId: newContract.id, action: "AUTO_CREATED", newValue: { contract_ref: contractRef, booking_ref: existing.booking_ref } });
+artifacts/api-server/src/routes/bookings.ts:636:  await logAction({ entityType: "booking", entityId: parsed.data.id, action: "STATUS_CHANGE", oldValue: { status: "PendingApproval" }, newValue: { status: "Cancelled", reason: bodyParsed.data.reason } });
+artifacts/api-server/src/routes/bookings.ts:650:  await logAction({ entityType: "booking", entityId: parsed.data.id, action: "STATUS_CHANGE", oldValue: { status: "Confirmed" }, newValue: { status: "Active" } });
+artifacts/api-server/src/routes/bookings.ts:664:  await logAction({ entityType: "booking", entityId: parsed.data.id, action: "STATUS_CHANGE", oldValue: { status: "Active" }, newValue: { status: "CheckedOut" } });
+artifacts/api-server/src/routes/bookings.ts:684:  await logAction({ entityType: "booking", entityId: parsed.data.id, action: "STATUS_CHANGE", oldValue: { status: existing.booking_status }, newValue: { status: "Cancelled", reason: bodyParsed.data.reason } });
+artifacts/api-server/src/routes/stripe.ts:58:          await logAction({
+artifacts/api-server/src/routes/stripe.ts:73:          await logAction({
+artifacts/api-server/src/routes/stripe.ts:88:          await logAction({

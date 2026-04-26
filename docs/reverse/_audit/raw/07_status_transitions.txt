@@ -1,0 +1,117 @@
+artifacts/api-server/src/routes/service-catalog.ts:86:    await db.update(serviceCatalogTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(serviceCatalogTable.id, numIds));
+artifacts/api-server/src/routes/service-catalog.ts:103:      await db.update(serviceCatalogTable).set({ deleted_at: new Date(), status: "Archived" }).where(eq(serviceCatalogTable.id, id));
+artifacts/api-server/src/routes/tasks.ts:150:    await db.update(tasksTable).set({ deleted_at: new Date(), status: "Archived", updated_at: new Date() }).where(inArray(tasksTable.id, numIds));
+artifacts/api-server/src/routes/tasks.ts:167:      .set({ deleted_at: new Date(), status: "Archived", updated_at: new Date() })
+artifacts/api-server/src/routes/tasks.ts:177:    .set({ task_status: "Done", completed_at: new Date(), updated_at: new Date() })
+artifacts/api-server/src/routes/product-catalog.ts:154:    const [row] = await db.update(accommodationCatalogTable).set({ status: "Inactive" }).where(eq(accommodationCatalogTable.id, id)).returning();
+artifacts/api-server/src/routes/admin-users.ts:108:      await db.update(usersTable).set({ deleted_at: new Date(), is_active: false, status: "archived" }).where(inArray(usersTable.id, numIds));
+artifacts/api-server/src/routes/admin-users.ts:142:        .set({ deleted_at: new Date(), is_active: false, status: "archived" })
+artifacts/api-server/src/routes/beneficiaries.ts:108:    await db.update(beneficiariesTable).set({ deleted_at: new Date(), status: "Archived", updated_at: new Date() }).where(inArray(beneficiariesTable.id, numIds));
+artifacts/api-server/src/routes/beneficiaries.ts:125:      .set({ deleted_at: new Date(), status: "Archived", updated_at: new Date() })
+artifacts/api-server/src/routes/payment-info.ts:69:    await db.update(paymentInfoTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(paymentInfoTable.id, numIds));
+artifacts/api-server/src/routes/payment-info.ts:85:    await db.update(paymentInfoTable).set({ deleted_at: new Date(), status: "Archived" }).where(eq(paymentInfoTable.id, parsed.data.id));
+artifacts/api-server/src/routes/guest-cs.ts:83:      status: "Open",
+artifacts/api-server/src/routes/guest-cs.ts:170:      await db.update(csTicketsTable).set({ status: "Open", updated_at: new Date() }).where(eq(csTicketsTable.id, id));
+artifacts/api-server/src/routes/space-policies.ts:111:      .set({ deleted_at: new Date(), status: "Archived", updated_at: new Date() })
+artifacts/api-server/src/routes/space-policies.ts:133:    await db.update(spacePoliciesTable).set({ deleted_at: new Date(), status: "Archived", updated_at: new Date() }).where(inArray(spacePoliciesTable.id, numIds));
+artifacts/api-server/src/routes/commissions.ts:69:    await db.update(commissionsTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(commissionsTable.id, numIds));
+artifacts/api-server/src/routes/commissions.ts:85:    await db.update(commissionsTable).set({ deleted_at: new Date(), status: "Archived" }).where(eq(commissionsTable.id, parsed.data.id));
+artifacts/api-server/src/routes/space-options.ts:110:    await db.update(spaceOptionsTable).set({ deleted_at: new Date(), status: "Archived", updated_at: new Date() }).where(inArray(spaceOptionsTable.id, numIds));
+artifacts/api-server/src/routes/space-options.ts:133:      .set({ deleted_at: new Date(), status: "Archived", updated_at: new Date() })
+artifacts/api-server/src/routes/contacts.ts:79:    await db.update(contactsTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(contactsTable.id, numIds));
+artifacts/api-server/src/routes/contacts.ts:95:    await db.update(contactsTable).set({ deleted_at: new Date(), status: "Archived" }).where(eq(contactsTable.id, parsed.data.id));
+artifacts/api-server/src/routes/suburbs.ts:118:    await db.update(suburbsTable).set({ deleted_at: new Date(), status: "Archived", updated_at: new Date() }).where(inArray(suburbsTable.id, numIds));
+artifacts/api-server/src/routes/suburbs.ts:141:      .set({ deleted_at: new Date(), status: "Archived", updated_at: new Date() })
+artifacts/api-server/src/routes/guest-portal.ts:160:        booking_status: "Pending",
+artifacts/api-server/src/routes/guest-portal.ts:162:        status: "Active",
+artifacts/api-server/src/routes/guest-portal.ts:787:          .set({ status: "Paid", paid_at: new Date(), payment_method })
+artifacts/api-server/src/routes/accounts.ts:108:    await db.update(accountsTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(accountsTable.id, numIds));
+artifacts/api-server/src/routes/accounts.ts:124:    await db.update(accountsTable).set({ deleted_at: new Date(), status: "Archived" }).where(eq(accountsTable.id, parsed.data.id));
+artifacts/api-server/src/routes/spaces.ts:202:    await db.update(spacesTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(spacesTable.id, numIds));
+artifacts/api-server/src/routes/spaces.ts:223:    await db.update(spacesTable).set({ deleted_at: new Date(), status: "Archived" }).where(eq(spacesTable.id, params.data.id));
+artifacts/api-server/src/routes/health.ts:7:  const data = HealthCheckResponse.parse({ status: "ok" });
+artifacts/api-server/src/routes/health.ts:15:    status: "ok",
+artifacts/api-server/src/routes/work-orders.ts:129:    await db.update(workOrdersTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(workOrdersTable.id, numIds));
+artifacts/api-server/src/routes/work-orders.ts:144:    await db.update(workOrdersTable).set({ deleted_at: new Date(), status: "Archived" }).where(eq(workOrdersTable.id, id));
+artifacts/api-server/src/routes/work-orders.ts:151:    .set({ status: "InProgress", updated_at: new Date() })
+artifacts/api-server/src/routes/work-orders.ts:161:    .set({ status: "PendingReview", updated_at: new Date() })
+artifacts/api-server/src/routes/work-orders.ts:173:    status: "Completed",
+artifacts/api-server/src/routes/work-orders.ts:191:    status: "Cancelled",
+artifacts/api-server/src/routes/cs-tickets.ts:166:      await db.update(csTicketsTable).set({ status: "InProgress", updated_at: new Date() })
+artifacts/api-server/src/routes/cs-tickets.ts:189:    await db.update(csTicketsTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(csTicketsTable.id, numIds));
+artifacts/api-server/src/routes/cs-tickets.ts:204:    await db.update(csTicketsTable).set({ deleted_at: new Date(), status: "Archived" }).where(eq(csTicketsTable.id, id));
+artifacts/api-server/src/routes/invoices.ts:124:    await db.update(invoicesTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(invoicesTable.id, numIds));
+artifacts/api-server/src/routes/invoices.ts:139:    await db.update(invoicesTable).set({ deleted_at: new Date(), status: "Archived" }).where(eq(invoicesTable.id, id));
+artifacts/api-server/src/routes/invoices.ts:146:    .set({ status: "Sent", updated_at: new Date() })
+artifacts/api-server/src/routes/invoices.ts:150:  await logAction({ entityType: "invoice", entityId: row.id, action: "STATUS_CHANGE", oldValue: { status: "Draft" }, newValue: { status: "Sent" } });
+artifacts/api-server/src/routes/invoices.ts:160:    .set({ status: "Paid", payment_method: parsed.data.payment_method, paid_at: paidAt, updated_at: new Date() })
+artifacts/api-server/src/routes/invoices.ts:164:  await logAction({ entityType: "invoice", entityId: row.id, action: "PAYMENT", oldValue: { status: "Sent" }, newValue: { status: "Paid", payment_method: parsed.data.payment_method } });
+artifacts/api-server/src/routes/invoices.ts:172:    .set({ status: "Void", updated_at: new Date() })
+artifacts/api-server/src/routes/invoices.ts:176:  await logAction({ entityType: "invoice", entityId: row.id, action: "STATUS_CHANGE", oldValue: { status: existing?.status }, newValue: { status: "Void" } });
+artifacts/api-server/src/routes/stripe.ts:56:            .set({ status: "Paid", paid_at: new Date(), updated_at: new Date() })
+artifacts/api-server/src/routes/stripe.ts:62:            newValue: { status: "Paid", stripe_payment_intent: pi.id, amount: pi.amount },
+artifacts/api-server/src/routes/stripe.ts:77:            newValue: { stripe_status: "payment_failed", stripe_payment_intent: pi.id },
+artifacts/api-server/src/routes/stripe.ts:92:            newValue: { stripe_status: "refunded", charge_id: charge.id, amount_refunded: charge.amount_refunded },
+artifacts/api-server/src/routes/promotions.ts:96:    await db.update(promotionsTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(promotionsTable.id, numIds));
+artifacts/api-server/src/routes/promotions.ts:112:    await db.update(promotionsTable).set({ deleted_at: new Date(), status: "Archived" }).where(eq(promotionsTable.id, parsed.data.id));
+artifacts/api-server/src/routes/contracts.ts:111:      status: "Active",
+artifacts/api-server/src/routes/contracts.ts:169:            status: "Sent",
+artifacts/api-server/src/routes/contracts.ts:210:          status: "Sent",
+artifacts/api-server/src/routes/contracts.ts:331:    status: "Draft",
+artifacts/api-server/src/routes/contracts.ts:387:    await db.update(contractsTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(contractsTable.id, numIds));
+artifacts/api-server/src/routes/contracts.ts:402:    await db.update(contractsTable).set({ deleted_at: new Date(), status: "Archived" }).where(eq(contractsTable.id, id));
+artifacts/api-server/src/routes/contracts.ts:410:    .set({ status: "Sent", sent_at: new Date() })
+artifacts/api-server/src/routes/contracts.ts:413:  await logAction({ entityType: "contract", entityId: id, action: "STATUS_CHANGE", newValue: { status: "Sent" } });
+artifacts/api-server/src/routes/contracts.ts:422:    .set({ status: "Signed", signed_at: new Date(), document_url: document_url ?? null })
+artifacts/api-server/src/routes/contracts.ts:425:  await logAction({ entityType: "contract", entityId: id, action: "STATUS_CHANGE", newValue: { status: "Signed" } });
+artifacts/api-server/src/routes/contracts.ts:433:    .set({ status: "Active", effective_date: new Date().toISOString().slice(0, 10) })
+artifacts/api-server/src/routes/contracts.ts:443:      .set({ booking_status: "Active" })
+artifacts/api-server/src/routes/contracts.ts:449:    newValue: { status: "Active", invoices_generated: generated.invoices, schedules_generated: generated.schedules },
+artifacts/api-server/src/routes/contracts.ts:459:    .set({ status: "Terminated", termination_reason })
+artifacts/api-server/src/routes/contracts.ts:462:  await logAction({ entityType: "contract", entityId: id, action: "STATUS_CHANGE", newValue: { status: "Terminated", termination_reason } });
+artifacts/api-server/src/routes/contracts.ts:470:    .set({ status: "Expired", expiry_date: new Date().toISOString().slice(0, 10) })
+artifacts/api-server/src/routes/contracts.ts:473:  await logAction({ entityType: "contract", entityId: id, action: "STATUS_CHANGE", newValue: { status: "Expired" } });
+artifacts/api-server/src/routes/contracts.ts:584:    status: "Active",
+artifacts/api-server/src/routes/contracts.ts:612:  await db.update(contractLineItemsTable).set({ status: "Deleted", updated_at: new Date() }).where(eq(contractLineItemsTable.id, lineId));
+artifacts/api-server/src/routes/email-templates.ts:69:    status: "Sent",
+artifacts/api-server/src/routes/products.ts:143:    await db.update(contractProductsTable).set({ deleted_at: new Date(), status: "Archived", updated_at: new Date() }).where(inArray(contractProductsTable.id, numIds));
+artifacts/api-server/src/routes/products.ts:159:      .set({ deleted_at: new Date(), status: "Archived", updated_at: new Date() })
+artifacts/api-server/src/routes/products.ts:166:  const [row] = await db.update(contractProductsTable).set({ status: "Active", updated_at: new Date() })
+artifacts/api-server/src/routes/products.ts:174:  const [row] = await db.update(contractProductsTable).set({ status: "Inactive", updated_at: new Date() })
+artifacts/api-server/src/routes/products.ts:182:  const [row] = await db.update(contractProductsTable).set({ status: "Archived", updated_at: new Date() })
+artifacts/api-server/src/routes/recurring-schedules.ts:165:        status: "Sent",
+artifacts/api-server/src/routes/guest-auth.ts:61:        status: "Active",
+artifacts/api-server/src/routes/service-hosts.ts:84:  const [row] = await db.update(serviceHostsTable).set({ status: "Deleted" }).where(eq(serviceHostsTable.id, parsed.data.id)).returning();
+artifacts/api-server/src/routes/public.ts:772:    lead_status: "New",
+artifacts/api-server/src/routes/public.ts:776:    status: "Active",
+artifacts/api-server/src/routes/public.ts:818:    lead_status: "New",
+artifacts/api-server/src/routes/public.ts:822:    status: "Active",
+artifacts/api-server/src/routes/public.ts:871:    lead_status: "New",
+artifacts/api-server/src/routes/public.ts:875:    status: "Active",
+artifacts/api-server/src/routes/leads.ts:152:    await db.update(leadsTable).set({ deleted_at: new Date(), status: "Archived", updated_at: new Date() }).where(inArray(leadsTable.id, numIds));
+artifacts/api-server/src/routes/leads.ts:169:      .set({ deleted_at: new Date(), status: "Archived", updated_at: new Date() })
+artifacts/api-server/src/routes/leads.ts:192:      lead_status: "ConvertedToBooking",
+artifacts/api-server/src/routes/leads.ts:209:    .set({ lead_status: "Lost", updated_at: new Date() })
+artifacts/api-server/src/routes/bookings.ts:194:    .values({ ...data, ...stayDetails, booking_ref, name, booking_status: "Draft" })
+artifacts/api-server/src/routes/bookings.ts:334:    await db.update(bookingsTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(bookingsTable.id, numIds));
+artifacts/api-server/src/routes/bookings.ts:350:    await db.update(bookingsTable).set({ deleted_at: new Date(), status: "Archived" }).where(eq(bookingsTable.id, parsed.data.id));
+artifacts/api-server/src/routes/bookings.ts:364:  const [row] = await db.update(bookingsTable).set({ booking_status: "PendingPayment" }).where(eq(bookingsTable.id, parsed.data.id)).returning();
+artifacts/api-server/src/routes/bookings.ts:380:  const [row] = await db.update(bookingsTable).set({ booking_status: "Confirmed" }).where(eq(bookingsTable.id, parsed.data.id)).returning();
+artifacts/api-server/src/routes/bookings.ts:381:  await logAction({ entityType: "booking", entityId: parsed.data.id, action: "STATUS_CHANGE", oldValue: { status: existing.booking_status }, newValue: { status: "Confirmed" } });
+artifacts/api-server/src/routes/bookings.ts:463:      status: "Draft",
+artifacts/api-server/src/routes/bookings.ts:500:      status: "Active",
+artifacts/api-server/src/routes/bookings.ts:519:        status: "Active",
+artifacts/api-server/src/routes/bookings.ts:574:  await db.update(bookingServicesTable).set({ status: "Deleted" }).where(eq(bookingServicesTable.id, svcId));
+artifacts/api-server/src/routes/bookings.ts:635:  const [row] = await db.update(bookingsTable).set({ booking_status: "Cancelled", cancellation_reason: bodyParsed.data.reason, cancelled_at: new Date() }).where(eq(bookingsTable.id, parsed.data.id)).returning();
+artifacts/api-server/src/routes/bookings.ts:636:  await logAction({ entityType: "booking", entityId: parsed.data.id, action: "STATUS_CHANGE", oldValue: { status: "PendingApproval" }, newValue: { status: "Cancelled", reason: bodyParsed.data.reason } });
+artifacts/api-server/src/routes/bookings.ts:649:  const [row] = await db.update(bookingsTable).set({ booking_status: "Active" }).where(eq(bookingsTable.id, parsed.data.id)).returning();
+artifacts/api-server/src/routes/bookings.ts:650:  await logAction({ entityType: "booking", entityId: parsed.data.id, action: "STATUS_CHANGE", oldValue: { status: "Confirmed" }, newValue: { status: "Active" } });
+artifacts/api-server/src/routes/bookings.ts:663:  const [row] = await db.update(bookingsTable).set({ booking_status: "CheckedOut" }).where(eq(bookingsTable.id, parsed.data.id)).returning();
+artifacts/api-server/src/routes/bookings.ts:664:  await logAction({ entityType: "booking", entityId: parsed.data.id, action: "STATUS_CHANGE", oldValue: { status: "Active" }, newValue: { status: "CheckedOut" } });
+artifacts/api-server/src/routes/bookings.ts:683:  const [row] = await db.update(bookingsTable).set({ booking_status: "Cancelled", cancellation_reason: bodyParsed.data.reason, cancelled_at: new Date() }).where(eq(bookingsTable.id, parsed.data.id)).returning();
+artifacts/api-server/src/routes/bookings.ts:684:  await logAction({ entityType: "booking", entityId: parsed.data.id, action: "STATUS_CHANGE", oldValue: { status: existing.booking_status }, newValue: { status: "Cancelled", reason: bodyParsed.data.reason } });
+artifacts/api-server/src/routes/bookings.ts:730:  const [doc] = await db.update(bookingDocumentsTable).set({ verified_status: "Verified" }).where(eq(bookingDocumentsTable.id, docId)).returning();
+artifacts/api-server/src/routes/bookings.ts:739:  const [doc] = await db.update(bookingDocumentsTable).set({ verified_status: "Rejected", rejection_reason: parsed.data.rejection_reason }).where(eq(bookingDocumentsTable.id, docId)).returning();
+artifacts/api-server/src/routes/auth.ts:221:      status: "pending",
+artifacts/api-server/src/routes/blog-posts.ts:123:    await db.update(blogPostsTable).set({ deleted_at: new Date(), status: "Archived", updated_at: new Date() }).where(inArray(blogPostsTable.id, numIds));
+artifacts/api-server/src/routes/blog-posts.ts:139:    await db.update(blogPostsTable).set({ deleted_at: new Date(), status: "Archived", updated_at: new Date() }).where(eq(blogPostsTable.id, parsed.data.id));
