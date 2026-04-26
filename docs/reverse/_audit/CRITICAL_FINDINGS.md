@@ -933,8 +933,11 @@ EF Core's `HasQueryFilter` for soft-delete relies on a uniform column. Today's t
 | CF-020 | 🟡 P1 | Soft-delete leak — query/mutation handlers omit `isNull(deleted_at)` filter; soft-deleted rows leak into list endpoints (.a, **26 anchors**) and can be revived by mutation (.b, **20 anchors**) — 4 domains; `service-hosts.ts` sentinel-via-status sub-variant (no `deleted_at` column) cross-cuts CF-015 | OPEN |
 | CF-021 | 🟡 P1 | N+1 enrichment anti-pattern — list endpoints issue per-row follow-up SELECTs in JS rather than SQL JOIN; worst case `buildSpaceResponse` degree 4 → 4× page-size additional round-trips per list call. **13 anchors across 4 domains**; ops-crm exposes 4-way author-pattern split (leftJoin / Promise.all per-row / sequential per-id / sequential per-detail) within single domain | OPEN |
 | CF-022 | 🟡 P1 | State-transition guard inconsistency — 9 transition handlers across 4 ops-crm files, 5 with precondition gate (`where(and(eq(id), eq(status, "Allowed")))`) + 4 without; same-file inconsistency in `work-orders.ts` (2 of 4 ungated) and `leads.ts` (1 of 2 ungated). Failure mode: invalid state transitions silently succeed (e.g. Cancelled→Completed, ConvertedToBooking→Lost), corrupting state-machine semantics; compounds with CF-008 (no audit trail to detect post-hoc) | OPEN |
+| CF-023 | 🟡 P1 | Lead-to-booking conversion creates orphan reference — `PATCH /v1/leads/:id/convert` (`leads.ts:175-204`) marks `lead_status='ConvertedToBooking'` but **never INSERTs into `bookings` table**, generates `booking_ref` from `Math.random()` (no FK, no DB lookup), and **omits `converted_booking_id` from the UPDATE set** (column exists at `lib/db/src/schema/leads.ts:24`, persists NULL forever). Single endpoint, production-critical: client receives fake booking_ref → believes booking created; bookings table holds no row → guest never confirmed; revenue reporting (converted vs actual) inaccurate; audit invisible (no `logAction` call, compounds CF-008). Compounds CF-022 (no precondition gate against ConvertedToBooking→ConvertedToBooking re-conversion). | OPEN |
 
 **Counts after T002.1.9**: P0=3, P1=**15**, P2=3 (total **21**) — **2 NEW promotions** (CF-020 + CF-021, both T002.2.c R-REPO-5 graduates with sufficient anchor density to warrant promotion this commit). Both candidates were parked at T002.2.b half-2 (CF-020 9 anchors / CF-021 2 anchors); T002.2.c surfaced 7 additional CF-020 anchors + 6 additional CF-021 anchors, crossing the typical promotion threshold (≥10 anchors / ≥3 domains) without waiting for T002.2.d. CF-017 + CF-018 are T002.2.a Spot-Check C3 graduates (R-REPO-5); CF-019 is T002.2.b half-2 graduate. **0 deferred candidates** remaining; T002.2.d-.j may surface fresh ones.
+
+**Counts after T002.2.e.fix-1**: P0=3, P1=**17**, P2=3 (total **23**) — **1 NEW CF promotion in T002.2.e.fix-1**: CF-023 (lead-to-booking conversion creates orphan reference, P1) graduated from T002.2.e Step 6 R-REPO-5 incidental "L7 fake booking_ref". V2 verification confirmed production-critical defect: `PATCH /v1/leads/:id/convert` (`leads.ts:175-204`) marks lead status as converted but never INSERTs into `bookings` table — `booking_ref` is generated client-side via `Math.random()` (`leads.ts:188-189`), and `converted_booking_id` schema column (`lib/db/src/schema/leads.ts:24`) is omitted from the UPDATE set (`leads.ts:191-198`). R-REPO-7 P1 즉시 등재 원칙 적용. Single endpoint scope, but compounds CF-008 (no audit) + CF-022 (no precondition gate). T002.5 state-machine doc must encode dual-source-of-truth defect on bookings/leads diagram.
 
 **Counts after T002.2.e**: P0=3, P1=**16**, P2=3 (total **22**) — **1 NEW CF promotion in T002.2.e**: CF-022 (state-transition guard inconsistency, P1) graduated from T002.2.e Spot-Check C3 (R-REPO-5). 9 transition handlers across 4 ops-crm files; 5 gated + 4 ungated; same-file inconsistency in `work-orders.ts` (2/4) + `leads.ts` (1/2). CF-019.a candidate row 3 (`service_catalog.promotion_id`) status note updated with ops-crm cross-check result (0 write hits — CANDIDATE retained pending T002.3 full enumeration). Anchor count updates this commit: **CF-001** +2 carriers (`work_orders.cost`, `promotions.discount_percentage`); **CF-008** ops-crm row 0/51 = 0% TIED LOWEST with ops-catalog; **CF-013** +6 no-tz anchors (21 → 27); **CF-015** NEW sentinel-via-status sub-pattern at `service-hosts.ts` (single-site evidence, no separate sub-ID promoted); **CF-017** +5 evidence sites (3 strong end-to-end + 2 partial/spread-reuse); **CF-018** false-positive note (cs-tickets nested message handler is admin-scoped); **CF-020.a** +8 GET-by-id leak anchors (18 → **26**) + **.b** zombie-revival anchors split formalized (5 → **20**); **CF-021** +3 N+1 anchors (10 → **13**) with 4-way author-pattern split documented (leftJoin / Promise.all per-row / sequential per-id / sequential per-detail in single domain).
 
@@ -1480,6 +1483,58 @@ T002.2.d enumerates **5 ops-catalog `real` money columns** newly anchored (vs. t
 **Updated CF-001 carrier sub-list count**: prior 14 + 1 live (service_catalog.base_price reattributed to ops-catalog) + 4 ghost = **15 live + 4 ghost = 19 total `real` carrier columns** documented across finance + ops-property + ops-catalog. T002.2.e (ops-crm) will surface `work_orders.cost` evidence (already in CF-001 inventory list, now needing route-anchor).
 
 Carrier: [`api-endpoints/ops-catalog.md` §1.2 + §1.5 + §6 R-REPO-5 I3](../_schema/api-endpoints/ops-catalog.md).
+
+---
+
+## CF-023 — Lead-to-booking conversion creates orphan reference (T002.2.e.fix-1 promotion, P1)
+
+**Severity**: 🟡 P1 (production data integrity + client trust + audit invisibility)
+**Promoted**: T002.2.e.fix-1 (from Step 6 R-REPO-5 incidental "L7 fake booking_ref" + V2 verification)
+**Scope**: Single endpoint, single file (`leads.ts:175-204`) — narrow but production-critical
+
+### Evidence (file:line — R-REPO-6 verified)
+
+| # | Site | Code excerpt | Defect |
+|---|---|---|---|
+| 1 | `leads.ts:188-189` | `const year = new Date().getFullYear();`<br>`const bookingRef = "BK-${year}-${String(Math.floor(Math.random() * 90000) + 10000)}";` | `booking_ref` is **client-side `Math.random()` 5-digit string** with **no FK, no uniqueness check, no DB lookup, no `bookings` table coordination** — collisions ~1/90000 per year |
+| 2 | `leads.ts:191-198` | `db.update(leadsTable).set({ lead_status: "ConvertedToBooking", converted_at: new Date(), updated_at: new Date() })` | UPDATE set **omits `converted_booking_id`** despite schema column existing (cf. site 4); leads row marked converted but no link to a (non-existent) booking row |
+| 3 | (absent) `leads.ts:175-204` | (no `db.insert(bookingsTable)` anywhere in handler body) | **`bookings` table receives 0 INSERTs** — handler never creates a booking row that matches `bookingRef` |
+| 4 | `lib/db/src/schema/leads.ts:24` | `converted_booking_id: integer("converted_booking_id"),` | Schema column **exists** (nullable integer, no FK declaration per CF-003) — designed to hold the booking PK reference, but the handler never populates it |
+| 5 | `leads.ts:199-202` | `res.json({ booking_ref: bookingRef, lead_ref: updated!.lead_ref });` | Response returns **fabricated `booking_ref`** to client; client believes booking was created and may display it on confirmation UI |
+| 6 | (absent) `leads.ts:175-204` | (no `logAction(...)` call anywhere) | **No audit log** — compounds CF-008; no post-hoc reconstruction possible (which lead became which "booking") |
+
+### Production failure scenarios
+
+1. **Client trust**: CRM agent clicks "Convert to Booking" → UI shows success + `booking_ref` → guest is told "booking BK-2026-12345 confirmed" → guest arrives expecting reservation → **bookings table has no such row** → check-in failure, refund/dispute escalation
+2. **Revenue reporting**: BI queries `SELECT COUNT(*) FROM leads WHERE lead_status='ConvertedToBooking'` for "conversion rate" KPI **vs** `SELECT COUNT(*) FROM bookings WHERE source='lead_conversion'` for "actual bookings" KPI → **two numbers diverge by exactly the count of this endpoint's invocations**, silently under-reporting actual bookings (zero) and over-reporting conversions
+3. **Audit invisibility**: no `logAction` (CF-008 ops-crm 0/51) + no booking row + `converted_booking_id=NULL` → **forensic reconstruction impossible**; "which lead → which booking?" has no answer
+4. **Re-conversion**: status check at `leads.ts:184` blocks re-conversion of `ConvertedToBooking`-status leads, but lacks state-transition gate audit (CF-022 compound) → manual DB update flipping status back to "New" allows infinite re-issue of fake `booking_ref` strings
+5. **Collision risk**: `Math.random() * 90000` → ~1/90000 collision probability per year per generated ref; over 1000 conversions/year = ~5.5% chance of duplicate `booking_ref` in client logs / email confirmations
+
+### Compound failures (cross-CF)
+
+- **CF-008** (audit gap): handler is in ops-crm domain (TIED LOWEST 0/51 = 0% logAction coverage) → no audit trail, defect invisible until guest complains
+- **CF-022** (state-transition guard inconsistency): leads.ts:175 has `if (lead.lead_status === "ConvertedToBooking") { ...400 }` precondition (counted as gated in CF-022 leads.ts 1/2 split) but does NOT gate against re-arrival from "Lost" or other terminal states
+- **CF-014** (no-transactions): even if a future fix adds `bookings INSERT` + `leads UPDATE`, both must execute atomically inside `db.transaction(...)` — current zero-tx pattern would allow partial completion (booking row created, lead status not updated, or vice versa)
+- **CF-003** (no `references()` FK): even when populated, `converted_booking_id` cannot be RI-enforced at DB level — application code bears full responsibility
+
+### Recovery / fix recommendation (Phase 2 .NET port)
+
+1. **Replace handler body** with transactional INSERT-then-UPDATE:
+   - Wrap in `db.transaction(async (tx) => { ... })` (CF-014 fix)
+   - INSERT into `bookings` first, capture returned PK
+   - UPDATE leads: `set({ lead_status: "ConvertedToBooking", converted_booking_id: <new booking PK>, converted_at, updated_at })`
+   - Generate `booking_ref` from a **DB sequence** or from `bookings.id` post-INSERT, never client-side random
+2. **Add `logAction`** call (CF-008 fix): `logAction("lead.converted", { lead_id, booking_id, agent_id })`
+3. **Add `references()` FK** declaration (CF-003 fix): `converted_booking_id: integer("converted_booking_id").references(() => bookings.id)`
+4. **Add reverse-direction state-transition gate** (CF-022 fix): block conversion from terminal states (Lost, Cancelled) explicitly, not just from `ConvertedToBooking`
+
+### Cross-references
+
+- Carrier endpoint doc: `_schema/api-endpoints/ops-crm.md` §3.2.7 (L7 ConvertedToBooking transition)
+- State machine doc (T002.5, pending): MUST encode dual-source-of-truth defect on bookings/leads diagram — `leads.lead_status='ConvertedToBooking'` is currently a write-only sentinel, not a true state in the bookings lifecycle
+- CF-008 anchors: `_schema/api-endpoints/ops-crm.md` §1.4 (0/51 logAction coverage)
+- CF-022 anchors: §6 above (leads.ts 1/2 ungated split)
 
 ---
 *End of CRITICAL_FINDINGS.md*
