@@ -1,0 +1,122 @@
+T002.1.6 승인. CF-009 재검증이 환각 데이터 (존재하지 않는 products 
+테이블 6 컬럼)를 잡았다는 게 결정적. 30분 투자가 며칠 재작업 방지.
+
+세 번째 자가 검증 격상 (3 클레임 → 24 spot-check) 후 또 한 번 정확 
+한 발견. R-REPO-5 즉시 작동. 운영 규칙 정착 확인.
+
+다만 incidental finding을 P2 CF 등재 검토 + T002.2.a 진입 전 1건 
+추가 보강.
+
+═══════════════════════════════════════════════════
+[T002.1.7 — 명명 일관성 결함을 CF로 등재 검토]
+═══════════════════════════════════════════════════
+
+Incidental finding 두 건이 합쳐져 **체계적 패턴**:
+
+발견 1: 8 file-name ↔ table-name 발산
+- users.ts → admin_users
+- email_logs.ts → email_log (singular)
+- products.ts → contract_products
+- product-catalog.ts → accommodation_catalog
+- bookings.ts / spaces.ts / announcements.ts / cs_tickets.ts → 다중 테이블
+  
+발견 2: 6 var-name 컨벤션 발산
+- usersTable → admin_users
+- integrationSettings (Table suffix 자체 없음)
+
+[영향 분석]
+
+이건 단순 cleanup 이슈가 아님. Phase 2 .NET 전환 시:
+- EF Core convention-based mapping 자동화 불가
+- 모든 entity에 명시적 [Table("...")] attribute 필요
+- Code generation 도구 (예: dotnet ef dbcontext scaffold) 사용 후 
+  네이밍 정합성 수동 검증 필요
+- 신규 개발자 onboarding 마찰 (파일명 보고 추측 불가)
+
+[등재 결정]
+
+신규 CF-016: "Schema file/table/variable naming inconsistency"
+- 심각도: 🟢 P2 (Phase 2 전환 작업 부담)
+- 영향: Phase 2 마이그레이션 자동화 불가 / 신규 개발자 onboarding
+- 증거: SCHEMA_FILE_TABLE_MAP.md 섹션 (이미 작성됨)
+- 권장: Phase 2 시 entity 매핑에 명시적 [Table] attribute 사용 + 
+  코드 generation 후 일괄 검증 스크립트 작성
+
+[수행]
+1. CRITICAL_FINDINGS.md 에 CF-016 추가 (≤30 lines)
+2. CRITICAL_FINDINGS.md 요약 표 갱신 (P0=3, P1=10, P2=3)
+3. SCHEMA_FILE_TABLE_MAP.md 에 "→ CF-016 anchor" cross-ref
+4. session_plan.md 갱신
+
+═══════════════════════════════════════════════════
+[T002.1.7 — 추가: SCHEMA_FILE_TABLE_MAP을 영구 reference 자산화]
+═══════════════════════════════════════════════════
+
+현재 SCHEMA_FILE_TABLE_MAP.md (179 lines) 는 일회성 audit 산출물.
+
+T002.2~T002.5 진행 중 cross-ref 자주 받을 가능성:
+- contract.md 작성 시 contract_* 테이블 위치 lookup
+- finance.md 작성 시 invoice_* 테이블 lookup
+- erd-core.md 작성 시 모든 테이블 위치 lookup
+- state-machines.md 작성 시 status 컬럼 보유 테이블 lookup
+
+[수행]
+
+(a) SCHEMA_FILE_TABLE_MAP.md 위치 검토
+    - `_audit/` 는 일회성 audit 산출물 위치
+    - 영구 reference 라면 `_schema/` 가 적절
+    - 둘 중 결정 + 이유 명시
+    
+(b) 활용 가이드 섹션 추가
+    SCHEMA_FILE_TABLE_MAP.md 상단에:
+    "How to use this map" 섹션
+    - "테이블명으로 schema 파일 찾기"
+    - "schema 파일에서 정의된 테이블 전수 보기"
+    - "변수명으로 실제 테이블 추적하기"
+    
+    각 use case 에 1줄 grep 명령 예시.
+
+(c) 갱신 의무 명문화
+    "이 파일은 schema 추가/제거/이름변경 시 갱신 필수" 마커.
+    R-REPO-1 atomic 갱신 대상에 포함.
+
+═══════════════════════════════════════════════════
+[T002.1.7 — 추가: T002.0 §6 의심 목록 결과 반영]
+═══════════════════════════════════════════════════
+
+T002.0 §6 의 "의심 dead" 후보 (announcements, *_service_catalog, 
+product_types/groups) 가 모두 ACTIVE 확정.
+
+[수행]
+
+(a) _T002_PLAN.md §6 갱신
+    의심 목록 → "재검증 결과: 모두 ACTIVE (T002.1.6)" 마커.
+    erd-core.md 작성 시 🪦 표시 적용 X (의심 표기 ⚰️ 도 X).
+
+(b) erd-core.md 작성 시 dead table = 1개 (product_catalog) 만
+    상기 변경을 PROGRESS 에 메모.
+
+═══════════════════════════════════════════════════
+[T002.2.a 진입 조건]
+═══════════════════════════════════════════════════
+
+T002.1.7 완료 후 T002.2.a (contract.md, 28 endpoints) 시작.
+
+T002.2.a 작성 시 다음 baseline 반영:
+- CF-009 정확한 분류: 1 dead table only (product_catalog)
+- CF-016 신규: 명명 일관성 결함
+- SCHEMA_FILE_TABLE_MAP.md 활용 (테이블 위치 lookup)
+
+═══════════════════════════════════════════════════
+[지금 할 일]
+═══════════════════════════════════════════════════
+
+(1) CF-016 신규 등재 (CRITICAL_FINDINGS.md)
+(2) SCHEMA_FILE_TABLE_MAP.md 위치 결정 + 활용 가이드 + 갱신 의무
+(3) _T002_PLAN.md §6 갱신
+(4) R-REPO-1 atomic commit (4-5 files)
+(5) R-REPO-4 형식 보고
+
+(5) 까지 완료 후 내가 검토 → T002.2.a (contract.md) proceed.
+
+T002.2.a 자동 시작 절대 금지.

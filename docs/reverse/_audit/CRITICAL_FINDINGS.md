@@ -313,7 +313,7 @@ Make `logAction()` a side-effect of a shared `crud-service` template (see `docs/
 | **Severity** | 🟡 P1 |
 | **Scope** | Schema clarity · Migration |
 | **Status** | OPEN |
-| **Revision history** | 2026-04-26 (T002.1.6): originally claimed "two dead tables (products + product_catalog)"; re-verification at table-level (vs. file-level) found that **no `products` table exists** — the `products.ts` schema file defines the *active* `contract_products` table. Only `product_catalog` is dead. See [`SCHEMA_FILE_TABLE_MAP.md`](./SCHEMA_FILE_TABLE_MAP.md) for the full 50-table re-audit. |
+| **Revision history** | 2026-04-26 (T002.1.6): originally claimed "two dead tables (products + product_catalog)"; re-verification at table-level (vs. file-level) found that **no `products` table exists** — the `products.ts` schema file defines the *active* `contract_products` table. Only `product_catalog` is dead. See [`SCHEMA_FILE_TABLE_MAP.md`](../_schema/SCHEMA_FILE_TABLE_MAP.md) for the full 50-table re-audit. *(Map promoted from `_audit/` to `_schema/` on T002.1.7 as a permanent reference.)* |
 
 ### Evidence (corrected)
 
@@ -367,7 +367,7 @@ DROP TABLE IF EXISTS product_catalog;
 
 1. Drop the `product_catalog` table in a single migration; remove `lib/db/src/schema/product_catalog.ts` and its export from `schema/index.ts`.
 2. **Rename** the *file* `lib/db/src/schema/products.ts` to `contract_products.ts` to remove the file-name trap that caused this CF to be misclassified for the first round. (Schema-file rename only — table name stays `contract_products`.)
-3. Add a top-of-file comment to all eight files identified in `SCHEMA_FILE_TABLE_MAP.md` §3 that have file-name ↔ table-name divergence, so future readers do not repeat this mistake.
+3. Add a top-of-file comment to all eight files identified in [`SCHEMA_FILE_TABLE_MAP.md` §3](../_schema/SCHEMA_FILE_TABLE_MAP.md#3-file-name-vs-table-name-divergences-the-trap) that have file-name ↔ table-name divergence, so future readers do not repeat this mistake. *(Tracked separately as **CF-016** — naming inconsistency.)*
 
 ### Phase 2 impact
 
@@ -375,7 +375,7 @@ A C# port that auto-generates entities from schema would generate **two** duplic
 
 ### Carrier impact (atomic commit T002.1.6)
 
-This re-classification corrects the following downstream artifacts in the same commit (R-REPO-1): `INDEX.md` (DEAD count 1→1 but row L46 status flipped DEAD→ACTIVE; Risk Legend wording), `MONEY_AUDIT.md` (7 rows re-attributed `products` → `contract_products`; subtotal sentence; §2.3 closing note removed). Full carrier list: `SCHEMA_FILE_TABLE_MAP.md` §5.
+This re-classification corrects the following downstream artifacts in the same commit (R-REPO-1): `INDEX.md` (DEAD count 1→1 but row L46 status flipped DEAD→ACTIVE; Risk Legend wording), `MONEY_AUDIT.md` (7 rows re-attributed `products` → `contract_products`; subtotal sentence; §2.3 closing note removed). Full carrier list: [`_schema/SCHEMA_FILE_TABLE_MAP.md` §5](../_schema/SCHEMA_FILE_TABLE_MAP.md#5-cross-document-impact-log-atomic-commit-t0021).
 
 ---
 
@@ -715,8 +715,77 @@ EF Core's `HasQueryFilter` for soft-delete relies on a uniform column. Today's t
 | CF-013 | 🟡 P1 | Date / time-zone storage inconsistent + free-text dates | OPEN |
 | CF-014 | 🟡 P1 | Multi-step mutations not in transactions | OPEN |
 | CF-015 | 🟡 P1 | Soft-delete vs hard-delete inconsistent | OPEN |
+| CF-016 | 🟢 P2 | Schema file/table/variable naming inconsistency (14 of 50 tables break convention) — Phase 2 migration friction | OPEN |
 
-**Counts after T001.5 follow-up**: P0=3, P1=10, P2=2 (total 15). All financial- and data-integrity-class findings are now P1+.
+**Counts after T002.1.7 follow-up**: P0=3, P1=10, P2=3 (total 16). All financial- and data-integrity-class findings are P1+; CF-016 is the first Phase-2-only (post-Phase-1-cutover) finding.
+
+---
+
+## CF-016 — Schema file/table/variable naming inconsistency
+
+| Field | Value |
+|---|---|
+| **Severity** | 🟢 P2 |
+| **Scope** | Phase 2 migration · Onboarding friction · Tooling reliability |
+| **Status** | OPEN |
+| **Discovery** | T002.1.6 incidental escalated to T002.1.7 (R-REPO-5) — see [`_schema/SCHEMA_FILE_TABLE_MAP.md` §3](../_schema/SCHEMA_FILE_TABLE_MAP.md#3-file-name-vs-table-name-divergences-the-trap) for the canonical 14-row divergence inventory. |
+
+### Evidence
+
+**8 file-name ↔ table-name divergences** in `lib/db/src/schema/`:
+
+| File | Defines table | Divergence type |
+|---|---|---|
+| `users.ts` | `admin_users` | filename omits `admin_` prefix |
+| `email_logs.ts` | `email_log` | plural ↔ singular |
+| `email_templates.ts` | `email_template` | plural ↔ singular |
+| `recurring_schedules.ts` | `recurring_schedule` | plural ↔ singular |
+| `system_logs.ts` | `system_log` | plural ↔ singular |
+| `products.ts` | `contract_products` | filename is unrelated to actual table concept |
+| `bookings.ts`, `cs_tickets.ts` | 2 tables each | one file declares unrelated tables |
+| `spaces.ts`, `announcements.ts` | 3 tables / 2 tables | same |
+
+**6 var-name ↔ table-name convention breaks**:
+
+| Var | Real table | Issue |
+|---|---|---|
+| `usersTable` | `admin_users` | misleading — looks like a generic `users` table |
+| `integrationSettings` | `integration_settings` | no `Table` suffix at all (the only such case) |
+| `recurringSchedulesTable`, `emailLogsTable`, `emailTemplatesTable`, `systemLogsTable` | singular tables | plural-var maps to singular-table |
+
+### Reproduction
+
+```sh
+$ rg "(\w+Table?\w*)\s*=\s*pgTable\(\"([a-z_]+)\"" lib/db/src/schema/ \
+     -o -r '$1|$2' --no-filename | sort -u | wc -l
+50           # 50 var↔table pairs across 47 files
+```
+
+Of those 50, **14 break** either the `<filename>.ts → <filename>` rule, the `<TableName>Table` var rule, or both. See `_schema/SCHEMA_FILE_TABLE_MAP.md` §3.
+
+### How this CF was discovered
+
+Causal chain: T002.1 wrote 5 sample endpoint docs ✅ → T002.1.5 added re-verification log ✅ → re-verification surfaced one anomalous claim ("`products.ts` route file is DEAD but `contract_products` is active") → T002.1.6 ran a 50-table forensic re-audit → discovered the convention break is **systematic** (14 of 50 tables, not 1). The pattern is what makes this a CF rather than a memo.
+
+The CF-009 mis-classification (claimed 2 dead tables, real = 1) was a direct consequence of this divergence: the recon's grep for "dead schema files" assumed filename = table name, and there was no other map to check against. Until **CF-016** is fixed, every future schema audit risks the same class of error.
+
+### Phase 2 impact
+
+- **EF Core** convention-based mapping (filename → entity → table) will silently produce wrong table names for 14 of 50 entities.
+- `dotnet ef dbcontext scaffold` will generate plausible-looking entities that do not match the SQL schema; bugs surface only at first SQL query.
+- Naive grep recipes in any tooling (audit scripts, ripgrep heuristics, Cursor/Copilot prompts) will produce false 0-counts. **CF-009's first-round mis-classification is the canonical example.**
+- Onboarding: new engineers cannot guess table location from filename — they must consult `_schema/SCHEMA_FILE_TABLE_MAP.md` first.
+
+### Recommendation (no code change yet)
+
+1. **Phase 2 entity mapping**: declare every entity with explicit `[Table("...")]` attribute; do not rely on filename or class-name conventions. *(Equivalent in Drizzle would be enforcing `pgTable("<table>", { ... })` matches the file basename, but that is a Phase 1 cleanup item with non-zero risk; defer.)*
+2. Add a **post-codegen verification script** that reads `_schema/SCHEMA_FILE_TABLE_MAP.md` and asserts every generated entity name matches the recorded table name.
+3. **Long-term cleanup** (separate PR, after Phase 2 cutover): rename schema files to match table names — `products.ts` → `contract_products.ts`, `users.ts` → `admin_users.ts`, `email_logs.ts` → `email_log.ts`, etc. Schema-file rename only; SQL table names stay (zero migration cost).
+4. **Living-doc obligation**: any schema PR (table add/remove/rename) MUST update `_schema/SCHEMA_FILE_TABLE_MAP.md` in the same commit (R-REPO-1). Stale rows there will silently re-introduce CF-009-class bugs.
+
+### Carrier
+
+`_schema/SCHEMA_FILE_TABLE_MAP.md` §3 is the canonical evidence. Any cleanup PR must update both files together.
 
 ---
 *End of CRITICAL_FINDINGS.md*

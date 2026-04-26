@@ -43,7 +43,7 @@
 | ops-property | `space-images.ts` | `/api/v1/space-images` | 6 | `requireAuth` *(mounted at `/api`, see app.ts:173)* | ❌ | ❌ | ACTIVE | 🔴 |
 | ops-property | `suburbs.ts` | `/api/v1/suburbs` | 6 | `requireAuth` | ❌ | ❌ | ACTIVE | 🔴 |
 | ops-catalog | `product-catalog.ts` | `/api/v1/product-catalog` | 11 | `requireAuth` | ❌ | ✅ | ACTIVE | 🟡 |
-| ops-catalog | `products.ts` | `/api/v1/contract-products` | 10 | `requireAuth` | ❌ | ✅ | ✅ ACTIVE *(file misnamed — defines `contract_products`; see CF-009 revised + SCHEMA_FILE_TABLE_MAP §3)* | 🟡 |
+| ops-catalog | `products.ts` | `/api/v1/contract-products` | 10 | `requireAuth` | ❌ | ✅ | ✅ ACTIVE *(file misnamed — defines `contract_products`; see CF-009 rev. + CF-016 + [`../SCHEMA_FILE_TABLE_MAP.md` §3](../SCHEMA_FILE_TABLE_MAP.md#3-file-name-vs-table-name-divergences-the-trap))* | 🟡 |
 | ops-catalog | `product-types.ts` | `/api/v1/product-types` | 6 | `requireAuth` | ❌ | ❌ | ACTIVE | 🟡 |
 | ops-catalog | `product-groups.ts` | `/api/v1/product-groups` | 6 | `requireAuth` | ❌ | ❌ | ACTIVE | 🟡 |
 | ops-catalog | `service-catalog.ts` | `/api/v1/service-catalog` | 6 | `requireAuth` | ❌ | ✅ | ACTIVE | 🟡 |
@@ -124,7 +124,7 @@ Cross-domain endpoints stay with their **file of origin**, not with the entity t
 | 🔴 P0 | **finance** | [CF-001 money type schism](../../_audit/CRITICAL_FINDINGS.md#cf-001), [CF-002](../../_audit/CRITICAL_FINDINGS.md#cf-002), [CF-003](../../_audit/CRITICAL_FINDINGS.md#cf-003) |
 | 🔴 P0 | **ops-property** | [CF-001](../../_audit/CRITICAL_FINDINGS.md#cf-001) (`spaces.weekly_rate` is `real`), [CF-003](../../_audit/CRITICAL_FINDINGS.md#cf-003) |
 | 🔴 P0 | **ops-crm** | [CF-001](../../_audit/CRITICAL_FINDINGS.md#cf-001) (`work_orders.cost` is `real`), [CF-003](../../_audit/CRITICAL_FINDINGS.md#cf-003) |
-| 🟡 P1 | **ops-catalog** | [CF-009 dead `product_catalog` (revised — singular, not "products/product_catalog"; see SCHEMA_FILE_TABLE_MAP.md)](../../_audit/CRITICAL_FINDINGS.md#cf-009), [CF-008 audit gap](../../_audit/CRITICAL_FINDINGS.md#cf-008) |
+| 🟡 P1 | **ops-catalog** | [CF-009 dead `product_catalog`](../../_audit/CRITICAL_FINDINGS.md#cf-009) (revised — singular, not "products/product_catalog"; canonical map at [`../SCHEMA_FILE_TABLE_MAP.md`](../SCHEMA_FILE_TABLE_MAP.md)), [CF-008 audit gap](../../_audit/CRITICAL_FINDINGS.md#cf-008), [CF-016 naming inconsistency](../../_audit/CRITICAL_FINDINGS.md#cf-016) |
 | 🟡 P1 | **portal-guest** | [CF-010 Stripe webhook gap](../../_audit/CRITICAL_FINDINGS.md#cf-010) (Stripe payment intent created at `guest-portal.ts:885`) |
 | 🟡 P1 | **portal-partner** | [CF-005 service_host portal_type leak](../../_audit/CRITICAL_FINDINGS.md#cf-005), [CF-006 weekly→monthly formula mismatch](../../_audit/CRITICAL_FINDINGS.md#cf-006) (`owner-portal.ts:83` vs `:236`) |
 | 🟡 P1 | **admin** | [CF-004 dev-migration before requireAuth](../../_audit/CRITICAL_FINDINGS.md#cf-004), [CF-008 audit gap](../../_audit/CRITICAL_FINDINGS.md#cf-008) |

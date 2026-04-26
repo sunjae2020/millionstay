@@ -1,6 +1,50 @@
-# Schema-File ↔ Table-Name Map (T002.1.6 forensic re-verification)
+# Schema-File ↔ Table-Name Map (영구 reference)
 
 > **Trigger**: T002.1.5 incidental finding — `contract_products` table lives in the `products.ts` schema file, even though the `products.ts` *route* file was previously labeled DEAD per CF-009. This raised the suspicion that the heuristic used to detect "dead tables" had been **conflating schema-file-name with table-name**, which would corrupt CF-009, the INDEX DEAD count, the ERD tombstones, the MONEY_AUDIT dead-table column inventory, and any downstream T002.3+ tombstone work. This document is the **table-level** ground truth that supersedes any file-level claim made before 2026-04-26.
+
+---
+
+## §0. Status / Maintenance contract
+
+| Field | Value |
+|---|---|
+| **Location** | `docs/reverse/_schema/SCHEMA_FILE_TABLE_MAP.md` *(promoted from `_audit/` to `_schema/` on 2026-04-26 (T002.1.7) — this is a **permanent reference asset**, not a one-off audit artefact)* |
+| **Audience** | T002.2.x domain doc authors, T002.3 (`db-schema-overview`), T002.4 (`erd-core`), T002.5 (`state-machines`), T006 (`_design/`) — anyone who needs to resolve a table name ↔ file ↔ var. |
+| **Update obligation** | **MUST** update on any schema change: table add / table remove / file rename / var rename. **R-REPO-1 atomic-commit candidate** in every such PR. Stale rows here will silently re-introduce CF-009-class bugs. |
+| **Anchored CFs** | [CF-009 revised](../_audit/CRITICAL_FINDINGS.md#cf-009) (table-level dead inventory) · [CF-016](../_audit/CRITICAL_FINDINGS.md#cf-016) (naming inconsistency — this map *is* the canonical evidence) |
+| **Last full re-audit** | 2026-04-26 (T002.1.6) |
+
+### How to use this map
+
+Three lookup recipes, each with a one-line `rg` command. Use these instead of guessing from filename:
+
+**Use case A — "I have a SQL table name; where is it defined?"**
+
+```sh
+# Find the schema file that declares "<table_name>"
+rg -l "pgTable\(\"<table_name>\"" lib/db/src/schema/
+```
+
+Then look up that filename in §2 below to confirm the var name and active routes.
+
+**Use case B — "I have a schema file; what tables does it actually define?"**
+
+Open the file and look for `pgTable("...")` calls. Or:
+
+```sh
+rg "pgTable\(\"([a-z_]+)\"" lib/db/src/schema/<file>.ts -o -r '$1'
+```
+
+Beware: 4 files declare 2-3 tables each (see §3).
+
+**Use case C — "I have a TS variable name from a route; what SQL table does it hit?"**
+
+```sh
+rg "(\w+)\s*=\s*pgTable\(\"([a-z_]+)\"" lib/db/src/schema/ \
+   -o -r '$1 → $2' --no-filename | rg "^<varName>\b"
+```
+
+Use this **before** writing `rg "<varName>" routes/` for usage counts — naive `<TableName>Table` heuristics fail in 6 places (see §3 var-name section).
 
 ---
 
@@ -121,6 +165,8 @@ Eight cases in this codebase break the `<filename>.ts → <filename>` table-nami
 
 **Implication for downstream docs**: any per-file row in INDEX.md, ERD diagrams, or T002.3 (db-schema-overview) **must cite the table name**, not the file name, when discussing dead/active status, FKs, or money columns. The `🪦` tombstone marker should attach to *table* rows, never to *file* rows.
 
+> **Anchored CF**: this entire section is the canonical evidence for [CF-016 — Schema file/table/variable naming inconsistency](../_audit/CRITICAL_FINDINGS.md#cf-016) (P2, Phase 2 migration friction).
+
 A second-order rule for `var name`: three files break the `<TableName>Table` JS-variable convention:
 
 | Var | Where it diverges |
@@ -176,4 +222,3 @@ This map's findings invalidate or correct the following claims in other document
 
 ---
 
-*End of `SCHEMA_FILE_TABLE_MAP.md` (T002.1.6 — atomic commit anchor for CF-009 re-verification).*

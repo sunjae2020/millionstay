@@ -233,20 +233,25 @@ Each endpoint block is **≤ 35 lines**. Format locked:
 
 ## §6. Dead-tables policy
 
-### §6.1 Confirmed-dead inventory (from T001 + spot checks)
+> **REVISED 2026-04-26 (T002.1.6 + T002.1.7)**: forensic re-audit at the **table** level (vs. the original file-level guess) found that **only 1 table is actually dead**, not 2. The "`products` table" that the recon listed never existed — the file `products.ts` defines the *active* `contract_products` table. All §6.2 suspects were also cleared as ACTIVE. See [`SCHEMA_FILE_TABLE_MAP.md`](./SCHEMA_FILE_TABLE_MAP.md) (canonical map) and [CF-009 revised](../_audit/CRITICAL_FINDINGS.md#cf-009) + [CF-016](../_audit/CRITICAL_FINDINGS.md#cf-016).
+
+### §6.1 Confirmed-dead inventory (REVISED — 1 table only)
 
 | Table | Evidence | Recommendation |
 |---|---|---|
-| `products` | CF-009 — 0 routes touch it; superseded by `accommodation_catalog`. | Display in ERD with 🪦 suffix + footnote reference to CF-009. |
-| `product_catalog` | CF-009 — same. | Same as above. |
+| `product_catalog` | CF-009 revised — `productCatalogTable` imported by 0 route files (verified `rg "productCatalogTable" routes/` → 0). | Display in ERD with 🪦 suffix + footnote reference to CF-009 (revised). |
 
-### §6.2 Possibly-dead — confirm in T002.3
+### §6.2 Possibly-dead candidates — ALL CLEARED as ACTIVE (T002.1.6)
 
-| Table | Suspicion | T002.3 task |
-|---|---|---|
-| `announcements` | No route file named after it; need to grep for `announcementsTable`. | Verify in T002.3; mark accordingly. |
-| `space_service_catalog`, `accommodation_service_catalog` | Cross-tables — may be referenced only by joins. | Verify uses in T002.3. |
-| `product_types`, `product_groups` | Lookup tables; routes exist but may serve dead `products`. | Trace consumers in T002.3. |
+| Table | Original suspicion | Re-audit verdict | Evidence |
+|---|---|---|---|
+| `announcements` | No route file named after it. | ✅ ACTIVE | `guest-cs.ts:5` — 5 distinct uses |
+| `accommodation_service_catalog` | Cross-table — joins only? | ✅ ACTIVE | 2 route files, normal CRUD |
+| `space_service_catalog` | Cross-table — joins only? | ✅ ACTIVE | 2 route files, normal CRUD |
+| `product_types` | Lookup serving dead `products`? | ✅ ACTIVE | 3 route files, lookup + CRUD |
+| `product_groups` | Lookup serving dead `products`? | ✅ ACTIVE | 3 route files, lookup + CRUD |
+
+**Implication for T002.4 (erd-core)**: apply the 🪦 marker to **`product_catalog` only**. Do NOT mark §6.2 candidates with 🪦, ⚰️, or any "suspect" qualifier — they are confirmed active. Do not invent new visual qualifiers for "almost dead" — none of these qualify.
 
 ### §6.3 Display rule (option **c** — recommended)
 

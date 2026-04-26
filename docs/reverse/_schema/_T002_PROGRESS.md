@@ -37,10 +37,10 @@
 - See entry below.
 
 ### T002.1.6 — CF-009 re-verification (table-level vs file-level)
-- **Status**: ⏸️ **AWAITING_APPROVAL** (2026-04-26)
+- **Status**: ✅ **DONE** (2026-04-26) — approved; key win = caught hallucinated `products` table (6 columns) before T002.2 retrofit.
 - **Triggered by**: T002.1.5 incidental finding ("schema-file deadness ≠ table deadness") — user demanded re-audit before T002.2 starts to prevent retrofit costs in T002.3.
 - **Outputs (atomic — R-REPO-1)**:
-  - **NEW** `docs/reverse/_audit/SCHEMA_FILE_TABLE_MAP.md` (~190 lines) — full 50-table inventory: Schema File · Var Name · SQL Table · Route Files Using · Status; methodology; 8 file-name vs table-name divergences; T002.0 §6 candidates re-evaluation (all cleared); cross-doc impact log.
+  - **NEW** `docs/reverse/_audit/SCHEMA_FILE_TABLE_MAP.md` (~190 lines) — full 50-table inventory: Schema File · Var Name · SQL Table · Route Files Using · Status; methodology; 8 file-name vs table-name divergences; T002.0 §6 candidates re-evaluation (all cleared); cross-doc impact log. *(Promoted to `docs/reverse/_schema/SCHEMA_FILE_TABLE_MAP.md` in T002.1.7 — see entry below.)*
   - `docs/reverse/_audit/CRITICAL_FINDINGS.md` — CF-009 fully rewritten: title, evidence, count (2 dead → 1 dead), recommendation, summary table row.
   - `docs/reverse/_schema/api-endpoints/INDEX.md` — `products.ts` row L49 status DEAD → ACTIVE with file-misnaming note + path corrected `/v1/products` → `/v1/contract-products`; L93 domain-group blurb; L131 Risk Legend wording.
   - `docs/reverse/_audit/MONEY_AUDIT.md` — 7 column rows re-attributed `products` → `contract_products`; subtotal sentence rewritten (4 dead, not 6); §1.5 cross-pair rows; §2.2 `bond_weeks` row clarified; §2.3 closing note rewritten.
@@ -55,10 +55,30 @@
   1. `pgTable("products"` count → 0 (verified by `rg`) ✅
   2. `productCatalogTable` route imports → 0 ✅
   3. `contractProductsTable` route imports → 4 files (`beneficiaries.ts`, `bookings.ts`, `contracts.ts`, `products.ts`) ✅
-- **Blocker**: user `proceed` to begin T002.2.a (contract.md) with corrected CF-009 baseline.
+- **Outcome**: approved by user with R-REPO-5 directive to escalate the incidental naming pattern to a new CF — see T002.1.7 below.
+
+### T002.1.7 — CF-016 etablis + SCHEMA_FILE_TABLE_MAP promotion + T002_PLAN §6 sync
+- **Status**: ⏸️ **AWAITING_APPROVAL** (2026-04-26)
+- **Triggered by**: user directive after T002.1.6 approval — escalate the systematic naming pattern (8 file/table + 6 var/table divergences) from "incidental memo" to a registered P2 CF, and harden `SCHEMA_FILE_TABLE_MAP.md` from a one-shot audit artefact into a permanent reference asset before T002.2.x starts citing it heavily.
+- **Outputs (atomic — R-REPO-1, 7 file ops)**:
+  - **MOVE** `docs/reverse/_audit/SCHEMA_FILE_TABLE_MAP.md` → `docs/reverse/_schema/SCHEMA_FILE_TABLE_MAP.md` *(audit one-shot → schema permanent reference)*
+  - `_schema/SCHEMA_FILE_TABLE_MAP.md` — added §0 (Status / Maintenance contract: location, audience, update obligation, anchored CFs, last re-audit) + "How to use this map" with 3 lookup recipes (table→file, file→tables, var→table); added CF-016 anchor in §3; updated footer.
+  - `_audit/CRITICAL_FINDINGS.md` — **NEW CF-016** (~60 lines: severity P2, scope Phase 2 + onboarding, 8+6 evidence table, reproduction, "how this CF was discovered" causal chain, Phase 2 impact, recommendations, carrier note); summary table updated `P2: 2 → 3 (total 15 → 16)`; CF-009 revision-history link path corrected `_audit/` → `_schema/`; recommendation #3 cross-refs CF-016; carrier link path corrected.
+  - `_audit/MONEY_AUDIT.md` — 2 cross-ref paths corrected (`SCHEMA_FILE_TABLE_MAP.md` → `../_schema/SCHEMA_FILE_TABLE_MAP.md`); §1.2 subtotal mentions CF-016; §2.3 closing note links to §3 anchor + CF-016.
+  - `_schema/api-endpoints/INDEX.md` — L49 product.ts row + L131 Risk Legend ops-catalog row both updated to use new path `../SCHEMA_FILE_TABLE_MAP.md` and to cite CF-016.
+  - `_schema/_T002_PLAN.md` §6 — full rewrite per T002.1.6 results: §6.1 reduced from 2 dead tables to **1** (`product_catalog` only); §6.2 candidates table converted from "suspect, verify in T002.3" → "ALL CLEARED as ACTIVE (T002.1.6)" with route file evidence; new top-of-§6 revision banner directing to canonical map + CF-009 revised + CF-016; §6.3 display rule unchanged but now applies to 1 table.
+  - `_schema/_T002_PROGRESS.md` — T002.1.6 ✅ DONE; T002.1.7 entry (this entry); T002.2 blocker switched to T002.1.7.
+  - `.local/session_plan.md` — T002.1.6 ✅ DONE; T002.1.7 entry; T002.2 blocker switched.
+- **Findings (no new code-level surprises)**: nothing new about the codebase; T002.1.7 is purely organizational hardening of T002.1.6's findings.
+- **Verification gate (RULE 7) — 3-claim spot-check**:
+  1. New file location `docs/reverse/_schema/SCHEMA_FILE_TABLE_MAP.md` exists; old `_audit/` path absent (verified by `ls`) ✅
+  2. CF-016 entry present in CRITICAL_FINDINGS.md + summary table row added + count line reads `P0=3, P1=10, P2=3 (total 16)` ✅
+  3. All cross-refs to `SCHEMA_FILE_TABLE_MAP.md` in `_audit/` files use relative `../_schema/` path; INDEX.md uses sibling-dir `../` path; no broken `./SCHEMA_FILE_TABLE_MAP.md` link remains ✅
+- **R-REPO-5 self-check**: T002.1.7 itself produced no new incidental findings (the work is purely the systematization of T002.1.6's naming-pattern incidental into CF-016).
+- **Blocker**: user `proceed` to begin T002.2.a (contract.md) with **CF-009 revised + CF-016 + permanent SCHEMA_FILE_TABLE_MAP** baseline.
 
 ### T002.2 — All remaining endpoints (348 endpoints) — split per [B3] into 9 sub-tasks
-- **Status**: ⚪ **PENDING** (blocked by T002.1.6 approval)
+- **Status**: ⚪ **PENDING** (blocked by T002.1.7 approval)
 - **Sub-tasks** (each: write → 3-claim spot-check → ≤50-line report → user `proceed` → next):
   - **T002.2.a — `contract.md`** (28 endpoints: contracts.ts 21 + contract-types.ts 7) — first because it's the receiver of S2's auto-create writes; cross-ref hooks already in booking.md S2/S5.
   - **T002.2.b — `finance.md`** (43 endpoints across 7 files) — depends on contract for invoice cross-ref pattern.

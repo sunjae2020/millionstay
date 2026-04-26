@@ -62,7 +62,7 @@
 | `spaces` | `base_daily_price` | `real` | yes | — | `spaces.ts:14` | — |
 | `work_orders` | `cost` | `real` | yes | — | `work_orders.ts:17` | — |
 
-**Subtotal**: 30 columns. All inexact. **Four** of them are in the dead `product_catalog` table (CF-009 revised — `SCHEMA_FILE_TABLE_MAP.md`); the other **seven** previously attributed to a "`products`" table actually belong to the **active** `contract_products` table (file misnamed). Net: 4 dead-table money columns can be ignored for reconciliation; the other 26 are live precision risks.
+**Subtotal**: 30 columns. All inexact. **Four** of them are in the dead `product_catalog` table (CF-009 revised — see [`_schema/SCHEMA_FILE_TABLE_MAP.md`](../_schema/SCHEMA_FILE_TABLE_MAP.md)); the other **seven** previously attributed to a "`products`" table actually belong to the **active** `contract_products` table (file misnamed — see CF-016). Net: 4 dead-table money columns can be ignored for reconciliation; the other 26 are live precision risks.
 
 ### 1.3 Integer / cents columns
 
@@ -157,7 +157,7 @@ This is inside the `enrich()` helper that is invoked when listing `contract_prod
 
 Separately, the `POST /v1/contract-products` handler (`products.ts:67`) and `PUT /v1/contract-products/:id` (`products.ts:108`) accept `effective_weekly_rate` from the **request body** and store it as-is in `contract_products.effective_weekly_rate` (`real`). So the column is client-supplied, not server-derived. ⚠️ This is a quiet trust assumption — a misbehaving client could ship a `effective_weekly_rate` that contradicts `weekly_rate × (1 - discount)`.
 
-(Note: corrected 2026-04-26 per T002.1.6 — there is no separate `products` table. The schema file `products.ts` declares **only** `contract_products`, and that is where `effective_weekly_rate` lives. See `SCHEMA_FILE_TABLE_MAP.md` §3 for the full file-name vs table-name divergence list and CF-009 (revised) for why this matters.)
+(Note: corrected 2026-04-26 per T002.1.6 — there is no separate `products` table. The schema file `products.ts` declares **only** `contract_products`, and that is where `effective_weekly_rate` lives. See [`_schema/SCHEMA_FILE_TABLE_MAP.md` §3](../_schema/SCHEMA_FILE_TABLE_MAP.md#3-file-name-vs-table-name-divergences-the-trap) for the full file-name vs table-name divergence list, CF-009 (revised) for the dead-table re-classification, and CF-016 for why this divergence pattern is systematic.)
 
 ---
 
