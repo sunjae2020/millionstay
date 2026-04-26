@@ -884,7 +884,7 @@ EF Core's `HasQueryFilter` for soft-delete relies on a uniform column. Today's t
 | CF-016 | 🟢 P2 | Schema file/table/variable naming inconsistency (14 of 50 tables break convention) — Phase 2 migration friction | OPEN |
 | CF-017 | 🟡 P1 | Input validation (Zod or any) absent on ~90% of route files — only 5 of 52 files validate `req.body` | OPEN |
 | CF-018 | 🟡 P1 | IDOR-class authorization-scope omission on nested resource handlers — 7 outright + 3 partial of 17 audited | OPEN |
-| CF-019 | 🟡 P1 | Write-orphan columns on `invoices` table — `stripe_payment_intent_id` + `stripe_checkout_url` declared in schema but never written by any route | OPEN |
+| CF-019 | 🟡 P1 | Write-orphan family — schema declares column, code does not honour it as single source of truth. Two sub-patterns: **.a Storage orphan** (column stored-then-NULL, never read; e.g. `invoices.stripe_payment_intent_id`); **.b Compute drift** (column written by raw INSERT/UPDATE but readers always recompute from upstream → DB-vs-response divergence; e.g. `contract_products.effective_weekly_rate`) | OPEN |
 | CF-020 | 🟡 P1 | Soft-delete leak — query/mutation handlers omit `isNull(deleted_at)` filter; soft-deleted rows leak into list endpoints (.a) and can be revived by mutation (.b) — 16 anchors across 3 domains | OPEN |
 | CF-021 | 🟡 P1 | N+1 enrichment anti-pattern — list endpoints issue per-row follow-up SELECTs in JS rather than SQL JOIN; worst case `buildSpaceResponse` degree 4 → 4× page-size additional round-trips per list call | OPEN |
 
@@ -1150,14 +1150,32 @@ T002.2.c contributes **4 vulnerable + 2 SAFE** to the 17-handler universe. Unive
 
 ---
 
-## CF-019 — Write-orphan columns on `invoices`: `stripe_payment_intent_id` + `stripe_checkout_url`
+## CF-019 — Write-orphan family: schema-declared columns the code does not honour as single source of truth
 
 | Field | Value |
 |---|---|
 | **Severity** | 🟡 P1 |
-| **Scope** | Finance · Reconciliation · Schema-vs-code drift |
+| **Scope** | Finance · Reconciliation · Catalogue · Schema-vs-code drift |
 | **Status** | OPEN |
-| **Discovery** | T002.2.b half-2 Spot-Check C3-8 (R-REPO-5 incidental J2). CF-018 was already taken by IDOR (T002.1.8), so this NEW finding lands at the next free slot, **CF-019**. |
+| **Discovery** | T002.2.b half-2 Spot-Check C3-8 surfaced .a (R-REPO-5 incidental J2 → original CF-019). T002.2.d surfaced .b as a structurally-distinct second locus → T002.2.d.fix-1 split into family with two sub-patterns. |
+
+### Sub-pattern taxonomy (T002.2.d.fix-1)
+
+The original CF-019 named one mechanism (Stripe columns declared but never written → stored-as-NULL). T002.2.d's `effective_weekly_rate` finding is *structurally* different: the column **is** written, but every reader recomputes the value, so the stored bytes never appear in any HTTP response. Both share the schema-vs-code drift root, with opposite mechanisms — hence sub-pattern split:
+
+| Sub-pattern | Definition | Failure mode | Phase 2 risk |
+|---|---|---|---|
+| **CF-019.a — Storage orphan** | Schema declares column. No route writes it (or writes are dead — values land as NULL). Some readers may declare it in `select(...)` projections but always observe NULL. | Dead schema capacity; downstream consumers (BI tooling, .NET reader, finance reconciliation) **expect** the value because the schema implies presence. Joins on this column return empty. | C# port allocates property → integration tests fail when value comes back NULL on rows that "should" have it. Reconciliation jobs grep `system_logs` JSON to recover what should have been a typed column. |
+| **CF-019.b — Compute drift** | Schema declares column. Routes write it (raw `INSERT.values({col: data.col})` / `UPDATE.set({col: data.col})` — client-supplied, no validation, no recomputation). Readers always recompute from upstream (e.g. `weekly_rate * (1 - disc/100)`). DB-stored bytes and HTTP-response bytes diverge silently. | Two sources of truth disagreeing without alarm. Direct SQL queries (BI, `pg_dump`, .NET reader) see the stored value; HTTP callers see the recomputed value. **Promotion-expiry second-order drift**: when an upstream input (e.g. `promotions.discount_percentage`, or the promotion's `valid_to` boundary) changes, the recomputed value updates but the stored value remains frozen at write-time. | C# port that respects the column as authoritative will read the wrong value. Recovery requires a rewrite of the stored column **or** a removal of the write surface (deferring to the read-time formula or a Postgres GENERATED column). |
+
+### Anchor table
+
+| # | Sub | File:line (schema) | Write site(s) | Read site(s) | Status |
+|---|---|---|---|---|---|
+| 1 | .a | `invoices.ts:15` (`stripe_payment_intent_id`) | none (Stripe webhook writes only `status` + `paid_at`; PI id lands in `system_logs.new_value` JSON only) | none in routes | confirmed orphan |
+| 2 | .a | `invoices.ts:16` (`stripe_checkout_url`) | none (`guest-portal.ts:885` returns `session.url` in HTTP response, never persisted) | none in routes | confirmed orphan |
+| 3 | .a | `service_catalog.ts:24` (`promotion_id`) | unclear — `service-catalog.ts:48,60-66` use spread-from-body that could *implicitly* carry `promotion_id` if the client sends it, but no explicit enumeration; default case = NULL | `promotions.ts:146` (reverse-lookup join: list services attached to a promotion) | **CANDIDATE** — write surface needs T002.2.e ops-crm cross-check + T002.3 db-schema-overview write-surface enumeration; if confirmed write-less, promote to confirmed orphan |
+| 4 | .b | `products.ts:8` (`effective_weekly_rate` on `contract_products`) | `products.ts:67` POST + `products.ts:108` PUT (client-supplied, no validation) | `products.ts:7-37` `enrich()` helper (recomputes from `weekly_rate * (1 - disc/100)`) called by 6 of 10 endpoints | **confirmed compute-drift** — divergence demonstrated; promotion-expiry second-order drift documented |
 
 ### Evidence
 

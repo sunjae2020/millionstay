@@ -16,6 +16,45 @@
 
 ---
 
+## Sub-task ↔ Commit hash map (T002.2.d.fix-1 — R-REPO-1 v2 (e) 의무 컬럼)
+
+Auto-checkpoint 메커니즘이 stage → commit 을 자동 실행하지만 generic 메시지 ("Update documentation...") 만 기록 → sub-task ↔ commit hash 매핑이 git history 만으로는 추적 불가. 본 표가 **영구 archaeology reference** (Phase 2 .NET 포팅 시 reverse 문서 출처 추적용).
+
+| Sub-task | Status | Primary output | Lines | Commit hash(es) |
+|---|---|---|---:|---|
+| T001 | ✅ | `T001_RECON_REPORT.md` | 552 | `09c79da` |
+| T001.5 | ✅ | `CRITICAL_FINDINGS.md`, `MONEY_AUDIT.md` | 692 + 502 | `d66fc43` |
+| T001.5 보강 | ✅ | (CF-013/014/015 + MONEY_AUDIT §5) | — | `76d5cf4` |
+| T002.0 | ✅ | `_T002_PLAN.md` | 366 | `e96b650` |
+| T002.1 | ✅ | `INDEX.md` + `booking.md` (sample 5) | 146 + 306 | `b6e39ca` |
+| T002.1.5 | ✅ | (Meta header + Re-Verification Log) | — | `af905b8` |
+| T002.1.6 | ✅ | `SCHEMA_FILE_TABLE_MAP.md` (NEW) | 179 | `5ab9cdd` |
+| T002.1.7 | ✅ | (CF-016 promotion + MAP move to `_schema/`) | — | `f5e4d15` |
+| T002.2.a | ✅ | `contract.md` | 893 | `3628475` |
+| T002.1.8 | ✅ | (CF-006/014 expansion + CF-017/018 promotion) | — | `06ddb9c` |
+| T002.2.b half-1 | ✅ | `finance-invoicing.md` | 681 | `fac693b` |
+| T002.2.b half-2 | ✅ | `finance-payments.md` + INDEX split | 1108 | `2dd8d4a` |
+| T002.2.b atomic commit | ✅ | (CF-019 promotion + 4 CF expansions) | — | `0b0ffac` / `e58b9d7` / `9d9822e` |
+| T002.2.c | ✅ | `ops-property.md` (compression debut) | 429 | `2416898` / `6872303` |
+| T002.1.9 | ✅ | (size budget recalibration + CF-020/021 promotion) | — | `07f83b2` / `f0c131f` |
+| T002.2.d | ✅ | `ops-catalog.md` + 5 CF expansions | 529 | **`4160f1c`** |
+| **T002.2.d.fix-1** | 🔄 | (R-REPO-1 v2 + CF-019.a/.b split + this table) | — | **`TBD`** (auto-checkpoint after stage) |
+| T002.2.e | ⏸️ | `ops-crm.md` (single file, tripwire 1200) | TBD | TBD |
+| T002.2.f | ⏸️ | `portal-guest.md` | TBD | TBD |
+| T002.2.g | ⏸️ | `portal-partner.md` | TBD | TBD |
+| T002.2.h | ⏸️ | `public.md` | TBD | TBD |
+| T002.2.i | ⏸️ | `admin.md` | TBD | TBD |
+| T002.2.j | ⏸️ | `booking.md` close-out (remaining 22) | TBD | TBD |
+| T002.3 | ⏸️ | `db-schema-overview.md` | TBD | TBD |
+| T002.4 | ⏸️ | `erd-core.md` | TBD | TBD |
+| T002.5 | ⏸️ | `state-machines.md` | TBD | TBD |
+
+**검증**: 매 sub-task 시작 시 `git log --oneline | head -3` 로 직전 sub-task commit hash 가 본 표 마지막 row 와 일치하는지 확인. 불일치 시 즉시 보고 + 사용자 결정 대기 (R-REPO-1 v2 (d)).
+
+**Push 책임**: 본 표의 commit hash 들이 GitHub origin/main 에 반영됐는지는 사용자 책임 (R-REPO-1 v2 (c)). 에이전트는 `git log origin/main..HEAD` 로 unpushed 카운트만 보고.
+
+---
+
 ## Sub-task ledger
 
 ### T002.0 — Pre-flight plan

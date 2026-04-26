@@ -1,0 +1,178 @@
+(b) 일괄 처리 채택. 
+
+Git history audit 결과 모든 sub-task commit 존재 확인. Replit 
+auto-checkpoint 가 stage → commit 자동화 중 = 운영 인프라 안전. 
+다만 4 항목 일괄 처리 후 T002.2.e 진입.
+
+═══════════════════════════════════════════════════
+[Decision] 4 항목 일괄 처리
+═══════════════════════════════════════════════════
+
+T002.2.e 진입 전 다음 4 항목 일괄 mini-task (T002.2.d.fix-1):
+
+(a) 사용자 수동 git push origin main (P1 운영 위험 즉시 해소)
+(b) R-REPO-1 v2 정의 갱신 (실제 동작 반영)
+(c) CF-019 .a/.b sub-pattern 분류 (baseline 청결)
+(d) _T002_PROGRESS.md 에 commit hash 컬럼 추가 (archaeology 보존)
+
+═══════════════════════════════════════════════════
+[Step 1] 사용자 수동 git push 실행 (사용자 책임)
+═══════════════════════════════════════════════════
+
+사용자 (나) 가 Replit 콘솔에서 직접 실행:
+
+git push origin main
+
+확인:
+git log origin/main..HEAD
+(empty result = sync 완료)
+
+이게 안 되면 다음 단계 진행 안 함. push 성공 후 다음 단계.
+
+═══════════════════════════════════════════════════
+[Step 2] R-REPO-1 v2 정의 갱신 (에이전트 책임)
+═══════════════════════════════════════════════════
+
+.local/session_plan.md OPERATING RULES 섹션의 R-REPO-1 갱신:
+
+[R-REPO-1 v2] Atomic commit + Push 책임 분담
+
+Replit auto-checkpoint 메커니즘 인지 + 실제 동작 반영:
+
+(a) 에이전트 책임:
+    - 모든 영향받는 파일 edit 완료
+    - "Files staged for atomic commit" 명시 보고
+    - 표준 commit message 제시 (참고용, auto-checkpoint 가 generic 
+      메시지 생성하므로 hash 매핑 표 별도 유지)
+    - 작업 완료 후 5+ files atomic 묶음 강조
+
+(b) Replit auto-checkpoint 책임:
+    - Stage → commit 자동 실행
+    - Generic message 생성 ("Update documentation...")
+    - Commit hash 생성
+
+(c) 사용자 책임:
+    - 매 sub-task 완료 후 git push origin main 명시 실행
+    - GitHub remote sync 유지
+    - _T002_PROGRESS.md 의 commit hash 컬럼 검증
+
+(d) 검증 메커니즘:
+    - 각 sub-task 시작 시 git log --oneline | head -3 확인
+    - 직전 sub-task commit 존재 확인 후 진행
+    - origin/main 과 로컬 차이 발견 시 사용자에게 push 요청
+
+(e) Sub-task ↔ commit hash 매핑 보존:
+    - _T002_PROGRESS.md 에 commit hash 컬럼 의무화
+    - T002.2.d audit 표를 영구 매핑 reference 로 보존
+
+═══════════════════════════════════════════════════
+[Step 3] CF-019 sub-pattern 분류 (에이전트 책임)
+═══════════════════════════════════════════════════
+
+CRITICAL_FINDINGS.md CF-019 본문에 sub-pattern 추가:
+
+CF-019.a — Storage orphan
+- 정의: 컬럼에 write 됨, 어느 곳에서도 read 안 함
+- 영향: dead column, schema 정리 대상
+- 영향: Phase 2 entity property 만들고 안 쓰는 사태 위험
+- Anchors:
+  - invoices.stripe_payment_intent_id (T002.2.b 발견)
+  - invoices.stripe_checkout_url (T002.2.b 발견)
+  - service_catalog.promotion_id (T002.2.d 발견 후보)
+
+CF-019.b — Compute drift
+- 정의: 컬럼에 write 됨, 다른 곳에서 매번 recompute
+- 영향: stored value 와 computed value 불일치 시 silent corruption
+- 특히: promotion 만료 시 stored stale + computed fresh
+- Anchors:
+  - products.effective_weekly_rate (T002.2.d products.ts:67/108 
+    write vs :7-37 recompute)
+
+분류 후 summary table 갱신 (count 변동 없음, 구조만 정교화).
+
+═══════════════════════════════════════════════════
+[Step 4] _T002_PROGRESS.md commit hash 컬럼 추가 (에이전트 책임)
+═══════════════════════════════════════════════════
+
+_T002_PROGRESS.md 의 sub-task tracker 표에 컬럼 추가:
+
+| Sub-task | Status | Output | Lines | Commit Hash |
+|----------|--------|--------|-------|-------------|
+| T001 | ✅ | T001_RECON_REPORT.md | 613 | 09c79da |
+| T001.5 | ✅ | CRITICAL_FINDINGS.md, MONEY_AUDIT.md | 1115 | d66fc43 |
+| T001.5 보강 | ✅ | (mini-task) | - | 76d5cf4 |
+| T002.0 | ✅ | _T002_PLAN.md | 366 | e96b650 |
+| T002.1 | ✅ | INDEX.md, booking.md | 521 | b6e39ca |
+| T002.1.5 | ✅ | (mini-task) | - | af905b8 |
+| T002.1.6 | ✅ | SCHEMA_FILE_TABLE_MAP.md | 224 | 5ab9cdd |
+| T002.1.7 | ✅ | (CF-016 promotion) | - | f5e4d15 |
+| T002.1.8 | ✅ | (CF-017/018 promotion) | - | 06ddb9c |
+| T002.2.a | ✅ | contract.md | 902 | 3628475 |
+| T002.2.b | ✅ | finance-invoicing.md, finance-payments.md | 1789 | 0b0ffac/e58b9d7/9d9822e/fac693b/2dd8d4a |
+| T002.2.c | ✅ | ops-property.md | 429 | 6872303/2416898 |
+| T002.1.9 | ✅ | (size budget recalibration) | - | 07f83b2/f0c131f |
+| T002.2.d | ✅ | ops-catalog.md | 529 | 4160f1c |
+| T002.2.d.fix-1 | 🔄 | (4 항목 일괄 처리) | - | TBD |
+| T002.2.e | ⏸️ | ops-crm.md | TBD | TBD |
+| ... | | | | |
+
+═══════════════════════════════════════════════════
+[Step 5] T002.2.d.fix-1 atomic stage (에이전트 책임)
+═══════════════════════════════════════════════════
+
+다음 파일 stage:
+- .local/session_plan.md (R-REPO-1 v2 갱신)
+- _audit/CRITICAL_FINDINGS.md (CF-019 sub-pattern 분류)
+- _schema/_T002_PROGRESS.md (commit hash 컬럼 추가)
+
+Stage 완료 후 보고:
+"Files staged for atomic commit T002.2.d.fix-1"
+
+Replit auto-checkpoint 가 자동 commit. 사용자 수동 commit 불필요.
+
+═══════════════════════════════════════════════════
+[Step 6] 사용자 수동 git push (사용자 책임)
+═══════════════════════════════════════════════════
+
+T002.2.d.fix-1 commit 후 사용자가 수동 push:
+
+git push origin main
+
+push 성공 = T002.2.d.fix-1 완료.
+
+═══════════════════════════════════════════════════
+[Step 7] R-REPO-4 형식 보고 (에이전트 책임)
+═══════════════════════════════════════════════════
+
+T002.2.d.fix-1 완료 보고:
+- Files modified
+- Commit hash (auto-checkpoint 결과 확인)
+- R-REPO-1 v2 정의 갱신 확인
+- CF-019 sub-pattern 분류 확인
+- commit hash 컬럼 추가 확인
+
+═══════════════════════════════════════════════════
+[T002.2.e 진입 조건]
+═══════════════════════════════════════════════════
+
+T002.2.d.fix-1 완료 + 사용자 push 확인 후 T002.2.e (ops-crm.md) 
+시작.
+
+ops-crm 진입 시 baseline:
+- 51 endpoints / 7 files
+- 단일 파일 + tripwire (T002.1.9 분할 LIFTED)
+- 예측 ~1095 lines (보정 모델 적용)
+- T002.2.b/c/d 패턴 누적 — CF-001/008/013/014/015/017/018/020/021 
+  anchor 점검
+
+═══════════════════════════════════════════════════
+[지금 시작]
+═══════════════════════════════════════════════════
+
+(1) [에이전트] Step 2~5 진행 (R-REPO-1 v2 + CF-019 분류 + 
+    commit hash 컬럼 + atomic stage)
+(2) Stage 완료 보고 후 사용자 수동 push (Step 1 + Step 6 합산)
+(3) [에이전트] Step 7 R-REPO-4 형식 보고
+
+T002.2.e 자동 시작 절대 금지. T002.2.d.fix-1 완료 + push 후 
+사용자 proceed 명시.
