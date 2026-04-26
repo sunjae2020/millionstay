@@ -236,7 +236,39 @@
   - finance-payments 26×30 + 210 + 120 supplemental = 1110 vs actual 1108 (Δ 0% ✅)
   - ops-property (13×12 Format-B + 31×3 Format-C) + 210 = 459 vs actual 429 (Δ −7% ✅)
   - Average absolute drift: 6.5% — model adequate for ±10% prediction confidence.
-- **Blocker**: user `proceed` to begin T002.2.d (`ops-catalog.md`, predicted ~770 lines, 39 endpoints across 5 files including `products.ts` 🪦 DEAD compact-marked + `service-catalog.ts` for CF-001 anchor).
+- **Blocker**: ~~user `proceed` to begin T002.2.d~~ — RESOLVED 2026-04-26 (T002.2.d below).
+
+### T002.2.d — `ops-catalog.md` (39 endpoints across 5 files): COMPLETE — awaiting user `proceed` for T002.2.e
+- **Triggered by**: T002.1.9 ✅ resolved (size budget recalibrated, CF-020/021 promoted) → user `proceed` to T002.2.d.
+- **Sub-files written / endpoint format ratio**:
+  - `product-catalog.ts` (11 ep) — Format A on E1/E5 (composite WHERE picker + 4-SELECT property chain) and B on the rest
+  - `products.ts` (10 ep) — Format A on E1/E2/E3/E5 (helper `enrich()` + write-orphan effective_weekly_rate + state-transition activate/deactivate); B on remainder
+  - `product-types.ts` (6 ep) — Format C compact except E2 detail-leak (Format B for soft-delete sub-anchor)
+  - `product-groups.ts` (6 ep) — Format C compact, identical shape
+  - `service-catalog.ts` (6 ep) — Format A on E1 (CF-001 `base_price` carrier anchor) + E4 (CF-020.b? partial revival via spread); B on rest
+- **File written**: `docs/reverse/_schema/api-endpoints/ops-catalog.md` (**529 lines** vs predicted ~770 → **−31%, natural compression** within the calibrated two-component model. Drivers: 4 of 5 files share lookup-CRUD shape → Format C absorbs 12 of 39 endpoints; Format B absorbs 24 more; only 9 endpoints triggered Format A. The compression ratio (0.69×) is mid-way between ops-property's aggressive 0.40× (heavy compact-table) and contract's 1.44× (full-format every endpoint), confirming the recalibrated model's ±30% prediction confidence band.
+- **Anchor sites surfaced**:
+  - **CF-001 carrier expansion**: `service_catalog.base_price` (live, `service-catalog.ts:8` → :12,37,48,60-66) reattributed to ops-catalog ownership; 4 ghost `real` columns on `product_catalog` (price, bond_amount, admin_fee, cleaning_fee) enumerated for completeness — DEAD per CF-009. Total carrier-column count: 14 → 15 live + 4 ghost = **19 total**.
+  - **CF-008 NEW LOWEST**: 0 of 39 endpoints call `logAction()` → **0% audit coverage** (vs ops-property 13.3%, finance combined 20.0%). New domain low-water mark.
+  - **CF-009 reconfirmation**: route-import scan re-run; `product_catalog` table remains 0-reader; ghost lifecycle walked in §1.5 with 4-column 1:1 schema enumeration; (a) DROP / (b) deprecate / (c) status-quo trade-off documented.
+  - **CF-019 second locus**: `contract_products.effective_weekly_rate` write-orphan (writers at `products.ts:67` POST + `:108` PUT trust client-supplied values; readers at `:7-37` recompute from `weekly_rate * (1 - disc/100)`) — **second instance** of the write-orphan pattern, mechanism is "stored-but-overridden" rather than "stored-but-NULL". Promotion-expiry second-order drift documented.
+  - **CF-020 anchor expansion 16 → 18**: 4 new .a GET-leak anchors (products.ts:89, products.ts:194-202 lookup-leak, product-types.ts:23, product-groups.ts:23, service-catalog.ts:37); 1 partial .b candidate at service-catalog.ts:60-66 (spread does not strip `deleted_at`). Pattern crystallisation: 4 of 5 ops-catalog files exhibit the identical "list ✅ filters / detail ❌ forgets" author bug.
+  - **CF-021 anchor expansion 8 → 10**: products.ts:7-37 enrich helper as positive batch-fetch exemplar (1 list + 2 batch SELECTs = 3 round-trips for 50-row list); product-catalog.ts:100-125 4-SELECT chain as true sequential N+1.
+  - **CF-018 SAFE positive**: product-catalog.ts:242,258 composite WHERE pattern (`eq(parent_id) AND eq(id)`) — exemplar for the IDOR-safe shape.
+- **§4 self-check**: 39 rows × 7 cols = 273 cells, all populated; soft-delete column shows 5 leak / 1 revival; logAction column shows 0/39.
+- **§5 spot-check (3 claims)**: C1 ✅ (CF-001 service_catalog.base_price `real` declaration + 4 read/write call sites re-verified by `sed -n` reads); C2 ✅ (CF-019 effective_weekly_rate write-orphan re-verified — 6 `enrich()` callers vs 2 raw-write sites enumerated; recalculation formula matches stored-vs-recomputed divergence claim); C3 ✅ (CF-020 4-of-5-files pattern re-verified by per-file `rg "isNull.*deleted_at"` against GET /:id handler bodies — products.ts:89/194-202, product-types.ts:23, product-groups.ts:23, service-catalog.ts:37 all confirmed missing the filter; product-catalog.ts is the lone exception, using composite WHERE as IDOR-safe shape).
+- **§6 R-REPO-5 incidentals (4 total)**: I1 `service-catalog.ts:60-66` partial revival (already woven into CF-020 expansion above — simple memo, no separate mini-task); I2 `products.ts` file misnamed (already CF-016, simple memo cross-ref); I3 `product-catalog.ts` audit-zero (already CF-008 expansion, simple memo); I4 `product-types.ts` + `product-groups.ts` lack `updated_at` columns despite the application setting them via spread on the other 3 files — schema-vs-code drift, simple memo for T002.3 (`db-schema-overview.md`) to enumerate which lookup tables have the column and which do not. **All 4 = 단순 메모**, no new mini-task proposals; 0 new CF candidates surfaced.
+- **Atomic carrier updates (5 file ops)**:
+  1. `_audit/CRITICAL_FINDINGS.md` (~1455 → ~1660 lines): header date refresh; CF-008 domain matrix (collapse duplicate ops-property TBD row + add ops-catalog 0/39 = 0% NEW LOWEST) + CF-008 Validation matrix (replace TBD ops-catalog row); NEW CF-009 "Domain re-confirmation (T002.2.d)" subsection (~14 lines); NEW CF-019 "second domain — effective_weekly_rate" subsection (~38 lines); NEW CF-020 "ops-catalog expansion 16 → 18" subsection (~22 lines); NEW CF-021 "ops-catalog expansion 8 → 10" subsection (~18 lines); NEW CF-001 "ops-catalog carrier expansion +5 columns" subsection (~22 lines). **0 NEW CF**, **0 promotions** — counts unchanged at P0=3 / P1=15 / P2=3 = **21**.
+  2. `api-endpoints/INDEX.md` (158 → 159 lines): ops-catalog Risk Legend row split into 🔴 P0 (CF-001 + CF-019) + 🟡 P1 (CF-009 + CF-008 NEW LOWEST + CF-016 + CF-020.a + CF-021) — domain elevated from P1-only to P0+P1.
+  3. `_schema/_T002_PROGRESS.md` — this entry; size tracker `ops-catalog.md` row updated.
+  4. `.local/session_plan.md` — T002.2.d marker `⏸️ AWAITING USER` → ✅ DONE; T002.2.e NEXT marker preserved.
+  5. `api-endpoints/ops-catalog.md` — file itself (529 lines, NEW).
+- **Commit message**: `docs(reverse): T002.2.d ops-catalog domain (529 lines) + CF-001/008/009/019/020/021 expansions`
+- **Verification gate (RULE 7) — 3-claim spot-check**: see §5 above; all 3 ✅.
+- **R-REPO-5 self-check**: T002.2.d itself produced 4 incidentals, all 단순 메모 (no mini-task escalation needed); 0 new CF candidates surfaced beyond the 5 already-anchored expansions.
+- **R-REPO-8 self-check**: sub-task entry declared markdown-only at start; system reminders not surfaced in any commit boundary (confirmed by re-reading prior assistant messages — no "System reminders" boilerplate repeated, only the entry-time declaration).
+- **Blocker**: user `proceed` to begin T002.2.e (`ops-crm.md`, **single file** per T002.1.9 size-budget LIFT, predicted ~1095 lines, 51 endpoints across 7 files; tripwire 1200 lines — if forecast model under-predicts and a mid-write check at ~70% completion projects ≥1200, the file MUST be split mid-task per `_T002_PLAN.md` §8 tripwire protocol).
 
 ---
 
@@ -256,7 +288,8 @@
 | `_audit/CRITICAL_FINDINGS.md` (post-T002.2.b) | — | **1092** | +114 from half-2 atomic commit (CF-001 Carrier +6, CF-008 Domain Severity Matrix +22, CF-010 Evidence expansion +14, CF-014 Second locus +14, NEW CF-019 ~58, summary update +1, header +1) |
 | `api-endpoints/ops-property.md` (T002.2.c) | ~1100-1300 (revised T002.1.8 §8 ~2.4×) | **429** | **−67% to −60% (compression)** — 31 of 44 endpoints in compact-table format; new calibration point for satellite-CRUD-heavy domains (revised multiplier proposal: 0.5× when ≥5 of 6 sub-files share CRUD shape) |
 | `_audit/CRITICAL_FINDINGS.md` (post-T002.2.c) | — | **~1310** | +218 from T002.2.c atomic commit: 7 inline CF expansions (CF-001 source-side +24, CF-008 ops row + .a/.b +12, CF-013 enum +28, CF-014 anchor 3→11 +24, CF-015 .a/.b +24, CF-017 Validation Matrix +30, CF-018 .a/.b/.SAFE table +28); 0 NEW CF this commit |
-| `api-endpoints/ops-catalog.md` | ~510 | — | — |
+| `api-endpoints/ops-catalog.md` (T002.2.d) | ~770 (T002.1.9 two-component model: 39×12 Format-B base + 9 Format-A uplift + 12 Format-C compression + 210 fixed) | **529** | **−241 (−31%) compression** — within recalibrated ±30% confidence band; 4-of-5 lookup-CRUD shape drove Format C absorption (12 of 39 endpoints) |
+| `_audit/CRITICAL_FINDINGS.md` (post-T002.2.d) | — | **~1660** | +205 from T002.2.d atomic commit: header refresh + CF-008 matrix patches (×2) + CF-009 reconfirmation subsection (~14) + CF-019 second domain expansion (~38) + CF-020 ops-catalog expansion (~22) + CF-021 ops-catalog expansion (~18) + CF-001 ops-catalog carrier expansion (~22). **0 NEW CF**, **0 promotions** — counts unchanged at P0=3 / P1=15 / P2=3 = **21** |
 | `api-endpoints/ops-crm.md` | ~660 | — | — |
 | `api-endpoints/portal-guest.md` | ~380 | — | — |
 | `api-endpoints/portal-partner.md` | ~290 | — | — |

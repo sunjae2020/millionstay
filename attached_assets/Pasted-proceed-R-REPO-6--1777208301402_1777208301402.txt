@@ -1,0 +1,132 @@
+proceed.
+
+R-REPO-6 두 번째 가동 — 사용자 환각 차단 성공.
+
+═══════════════════════════════════════════════════
+[사용자 환각 인정]
+═══════════════════════════════════════════════════
+
+가이드 [O] "products.ts 🪦 DEAD compact-marked" 는 사용자 환각.
+
+ground truth (T002.1.6 + SCHEMA_FILE_TABLE_MAP 명시):
+- products.ts route file → contract_products 테이블 (4 routes) = ACTIVE
+- product-catalog.ts route file → accommodation_catalog 처리 = ACTIVE
+- product_catalog TABLE → 0 route imports = 🪦 DEAD (라우트 없음)
+- products TABLE → 존재 안 함 (T002.1.6 핵심 발견)
+
+T002.1.6 결론을 후속 답변에서 잊고 옛 가설 재진입한 사례.
+이게 R-REPO-6 두 번째 가동:
+- T002.2.b: invoice-rules/expenses/payments 환각
+- T002.2.d: products.ts DEAD 환각
+같은 패턴 — 한 번 정리된 사실을 사용자가 답변 작성 시 잊음.
+
+R-REPO-6 효과 명확. 운영 규칙의 영구 가치.
+
+═══════════════════════════════════════════════════
+[Decision] Corrected DEAD 처리안 채택
+═══════════════════════════════════════════════════
+
+ops-catalog.md §1.5 별도 subsection 형식 채택:
+"🪦 Schema-only ghost: product_catalog TABLE — defined in 
+lib/db/src/schema/product_catalog.ts:3 (4 real money columns: 
+price, bond_amount, admin_fee, cleaning_fee) but 0 route imports 
+→ unreachable from API. CF-009 carrier."
+
+products.ts / product-catalog.ts 라우트 파일 둘 다 ACTIVE = full 
+sample (Format A).
+
+이 처리가 정확한 이유:
+- "테이블 단위" 분류 (T002.1.6 원칙)
+- DEAD 와 ACTIVE 명확 분리
+- 4 real 컬럼 명시 (CF-001 carrier)
+- CF-009 cross-ref 명확
+
+═══════════════════════════════════════════════════
+[Decision] CF-008 ops-property 중복 행 — T002.2.d commit 시 정리
+═══════════════════════════════════════════════════
+
+C2 cosmetic finding (ops-property 2회 등장):
+- 구 "TBD pending T002.2.c" 행
+- 신 "30/4/13.3% NEW LOWEST" 행
+
+처리: T002.2.d atomic commit 의 일부로 1줄 정리.
+mini-mini-task 분리 불필요 (R-REPO-7 trade-off 적정).
+
+═══════════════════════════════════════════════════
+[Step 1 사전 분류 승인]
+═══════════════════════════════════════════════════
+
+39 endpoint ground truth (R-REPO-6 3-way) 정확.
+사이즈 재예측 ~870 lines (corrected after products.ts → A).
+3 spot-check 클레임 sealing 적정.
+
+CF anchor 사전 점검 [N][Q] 양호:
+- CF-001 service_catalog.base_price + product_catalog 4 real
+- CF-019 promotion_id write-orphan 후보 정량 audit 예정
+
+[추가 가이드 — corrected]
+
+[O-corrected] DEAD 처리:
+- products.ts route file → ACTIVE (Format A)
+- product-catalog.ts route file → ACTIVE (Format A)
+- product_catalog TABLE → 🪦 schema-only ghost (§1.5 subsection)
+- 라우트 파일은 compact 처리 X, 모두 full sample
+
+[가이드 [O] 영구 정정]
+이 답변에서 [O] 표기를 [O-corrected] 로 갱신. 후속 도메인 작성 
+시 동일 표기 사용 시 corrected 본문 참조.
+
+═══════════════════════════════════════════════════
+[Tripwire 모니터링 — 870 예측 vs 850 threshold]
+═══════════════════════════════════════════════════
+
+870 예측 vs tripwire 850 = 미세 초과 가능성.
+
+Tripwire 발동 조건 재명시:
+- 850 lines 도달 시점 endpoint 진행률 < 60% (즉 23/39 미만)
+- 1100 lines 도달 시점 endpoint 진행률 < 80% (즉 31/39 미만)
+- 신규 CF anchor 5개 이상 발견 (size 폭증 신호)
+
+870 예측이 위 조건 중 1번 (23/39 미만) 에 닿지 않으므로 단일 파일 
+유지 가능성 높음. 작성 중 모니터링.
+
+═══════════════════════════════════════════════════
+[Step 2~6 진행]
+═══════════════════════════════════════════════════
+
+(1) Step 2 본문 작성 (39 endpoint, ops-catalog.md 단일)
+    - tripwire 모니터링
+    - product_catalog ghost subsection §1.5 작성
+    - CF-019 promotion_id write-orphan 정량 audit
+    - [N][O-corrected][P][Q] 가이드 적용
+
+(2) Step 3 self-check 표 (39 × 7 = 273 cells)
+(3) Step 4 spot-check 검증 (C1/C2/C3)
+(4) Step 5 R-REPO-1 atomic commit:
+    - ops-catalog.md (NEW)
+    - CRITICAL_FINDINGS.md:
+      - CF-001 evidence (service_catalog.base_price + 
+        product_catalog ghost 4 real)
+      - CF-008 domain matrix:
+        - ops-property 중복 행 정리
+        - ops-catalog row 추가
+      - CF-009 evidence (product_catalog ghost cross-ref)
+      - CF-019 evidence (write-orphan 신규 발견 시)
+      - CF-020/021 evidence (anchor 발견 시)
+    - INDEX.md (필요 시)
+    - _T002_PROGRESS.md (T002.2.d DONE)
+    - session_plan.md (T002.2.d DONE, T002.2.e NEXT)
+    - cross-ref back-fill (해당 시)
+
+(5) Step 6 R-REPO-4 통합 보고
+
+(6) 후 사용자 proceed → T002.2.e (ops-crm.md, 단일 with tripwire) 
+시작.
+T002.2.e 자동 시작 절대 금지.
+
+═══════════════════════════════════════════════════
+[지금 시작]
+═══════════════════════════════════════════════════
+
+Step 2 본문 작성 진입. tripwire 활성. CF-008 ops-property 중복 
+행 정리 commit 에 포함.

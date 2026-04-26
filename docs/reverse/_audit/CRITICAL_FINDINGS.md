@@ -3,7 +3,7 @@
 > **Source**: T001 RECON (`docs/reverse/_audit/T001_RECON_REPORT.md`).
 > **Format**: One row per finding. Each finding has a stable ID (`CF-NNN`) and **status**. Severity follows `🔴 P0` (must fix before production), `🟡 P1` (must fix before scale), `🟢 P2` (technical debt). Evidence is direct code quotation (≤ 5 lines per finding) with `path:line`.
 > **Discipline**: This file records facts and recommendations. **No code changes are made by this document** — fixes are tracked through the `Status` field.
-> **Last updated**: 2026-04-26 (T002.2.b half-2 — CF-019 NEW; CF-008 domain severity matrix added; CF-010 evidence-expanded with idempotency gap; CF-014 second locus at `stripe.ts` S2; CF-001 finance-internal boundary confirmation appended).
+> **Last updated**: 2026-04-26 (T002.2.d — ops-catalog anchors: CF-008 NEW domain-LOWEST 0/39 = 0%; CF-009 ghost table cross-ref to ops-catalog.md §1.5; CF-019 effective_weekly_rate write-orphan anchor at `products.ts:67/108`; CF-020.a +4 GET-leak anchors → 18; CF-021 +2 sub-pattern anchors → 10; CF-001 +5 carrier columns documented from ops-catalog. **0 NEW CF**, **0 promotions**: counts unchanged at P0=3 / P1=15 / P2=3 = 21).
 
 ---
 
@@ -359,14 +359,13 @@ Per-domain logAction-coverage measured as `logAction calls / mutator endpoints`.
 | finance-invoicing | 13 | 3 | 23.1% | confirmed (T002.2.b half-1) |
 | finance-payments | 17 | 3 | 17.6% (call) / 5.9% (endpoint) | confirmed (T002.2.b half-2) |
 | **finance (combined)** | **30** | **6** | **20.0% (call)** | confirmed |
-| ops-property | TBD | TBD | TBD | pending T002.2.c |
-| ops-catalog | TBD | TBD | TBD | pending T002.2.d |
+| **ops-property** | **30** | **4** | **13.3%** | T002.2.c |
+| **ops-catalog** | **39** | **0** | **0.0%** ⬅ **NEW LOWEST** | T002.2.d |
 | ops-crm | TBD | TBD | TBD | pending T002.2.e |
 | portal-guest | TBD | TBD | TBD | pending T002.2.f |
 | portal-partner | TBD | TBD | TBD | pending T002.2.g |
 | public | TBD | TBD | TBD | pending T002.2.h |
 | admin | TBD | TBD | TBD | pending T002.2.i |
-| **ops-property** | **30** | **4** | **13.3%** ⬅ **NEW LOWEST** | T002.2.c |
 
 **Finance vs contract gap**: 20.0% (finance combined) vs 42.9% (contract) → finance domain is **53% under-audited** relative to contract. The gap is concentrated in the 4 lookup-style routes (`payment-info`, `commissions`, `beneficiaries`, `accounts`) where coverage is **0%**. The Stripe webhook (S2) is the lone audited mutator on the payments side; payment-info / commissions / beneficiaries / accounts mutate financial routing data **without any audit trail**.
 
@@ -447,6 +446,20 @@ A C# port that auto-generates entities from schema would generate **two** duplic
 ### Carrier impact (atomic commit T002.1.6)
 
 This re-classification corrects the following downstream artifacts in the same commit (R-REPO-1): `INDEX.md` (DEAD count 1→1 but row L46 status flipped DEAD→ACTIVE; Risk Legend wording), `MONEY_AUDIT.md` (7 rows re-attributed `products` → `contract_products`; subtotal sentence; §2.3 closing note removed). Full carrier list: [`_schema/SCHEMA_FILE_TABLE_MAP.md` §5](../_schema/SCHEMA_FILE_TABLE_MAP.md#5-cross-document-impact-log-atomic-commit-t0021).
+
+### Domain re-confirmation (T002.2.d — ops-catalog ground truth)
+
+Direct verification at the start of `T002.2.d` (re-running the route-import scan) confirms the CF-009 finding is stable:
+
+```
+$ rg "productCatalogTable" artifacts/                  → 0 matches  (route + portals + lib outside schema/)
+$ rg "from.*product_catalog\b" lib/                    → 1 match    (schema/index.ts re-export only)
+$ rg "productCatalogTable\." lib/ artifacts/           → 0 matches  (column-level access)
+```
+
+**4 `real` money columns dead at the schema level** — `product_catalog.ts:8` (`price`), `:18` (`bond_amount`), `:19` (`admin_fee`), `:20` (`cleaning_fee`). All four are CF-001-class precision-lossy carriers but **read by zero code paths** → harm = 0 today, harm = full carrier propagation if any future code starts SELECTing the table. Carrier: [`api-endpoints/ops-catalog.md` §1.5](../_schema/api-endpoints/ops-catalog.md) walks the ghost lifecycle, lists the 4 columns 1:1 with schema lines, and presents the (a) DROP / (b) deprecate / (c) status-quo trade-off.
+
+**Cross-domain ghost search**: `ops-catalog` is the natural owner of `product_catalog` because of name proximity. T002.2.d confirmed there is no *other* file that could have plausibly imported it (5 files audited; the 5 are the only ones in the ops-catalog domain that touch any "product" table). Recommendation #1 (DROP) becomes more defensible after this confirmation.
 
 ---
 
@@ -1039,8 +1052,8 @@ Per-domain Zod-validated-endpoint coverage as docs are written:
 | contract | 28 | 28 | 100% | T002.2.a |
 | finance-invoicing | 17 | TBD | TBD | T002.2.b half-1 (re-measure pending — R2 was positive exemplar) |
 | finance-payments | 26 | TBD | TBD | T002.2.b half-2 |
-| **ops-property** | **44** | **31** | **70.5%** | **T002.2.c (this commit)** |
-| ops-catalog | TBD | TBD | TBD | pending T002.2.d |
+| **ops-property** | **44** | **31** | **70.5%** | T002.2.c |
+| **ops-catalog** | **39** | **0** | **0.0%** ⬅ **NEW LOWEST (this commit)** | **T002.2.d** |
 | ops-crm | TBD | TBD | TBD | pending T002.2.e |
 | portal-guest | TBD | TBD | TBD | pending T002.2.f |
 | portal-partner | TBD | TBD | TBD | pending T002.2.g |
@@ -1201,6 +1214,49 @@ A C# port that respects the schema as a contract will allocate fields for both c
 
 `finance-payments.md` §3 row C3-8 (originating site) and §6 R-REPO-5 J2 (escalation rationale). `finance-invoicing.md` E8 (Stripe transition consumer side — the open question that this CF closes on the schema-drift axis). When the guest portal domain doc is written (`T002.2.f portal-guest.md`), the `:885` Checkout Session site must add a row to its self-check table re-verifying the write-orphan finding.
 
+### CF-019 second domain — `contract_products.effective_weekly_rate` calculated-on-read but stored-on-write (T002.2.d expansion)
+
+T002.2.d surfaces a **second instance** of the write-orphan pattern, this time inside `ops-catalog`, with a different mechanism: the column is *not* abandoned (writers exist) but the writers **trust client-supplied values** while the readers **recalculate from upstream**, producing silent DB-vs-response divergence.
+
+**Schema**: `lib/db/src/schema/products.ts` declares `effective_weekly_rate` on `contract_products` (the table actually defined in this misnamed file — see CF-016).
+
+**Read path** — `artifacts/api-server/src/routes/products.ts:7-37` (`enrich()` helper called by 6 of 10 endpoints):
+
+```ts
+const promo = p.promotion_id ? promoMap[p.promotion_id] : null;
+const disc = promo?.discount_percentage ?? 0;
+const effective_weekly_rate =
+  p.weekly_rate != null ? parseFloat((p.weekly_rate * (1 - disc / 100)).toFixed(2)) : null;
+return { ...p, effective_weekly_rate, … };
+```
+
+The helper **always recomputes** the effective rate from `weekly_rate` and the (current) promotion's `discount_percentage`, **overriding** whatever value sits in the DB column. So all GET responses (E2 list, E3 POST echo, E4 GET :id, E5 PUT echo, E8/E9/E10 state-transition echo) appear correct.
+
+**Write path** — `artifacts/api-server/src/routes/products.ts:67` (POST) and `:108` (PUT):
+
+```ts
+effective_weekly_rate: data.effective_weekly_rate ?? null,
+```
+
+Both INSERT and UPDATE store **whatever the client supplied** with no validation, no recalculation, and no cross-check against `weekly_rate * (1 - discount_percentage / 100)`.
+
+**Divergence mechanism**: an admin sets `weekly_rate=1000` and (deliberately or by client bug) sends `effective_weekly_rate=999`. The DB now holds `1000` and `999` simultaneously. Every API response shows the recalculated `1000` (or whatever the live promotion says). But:
+
+1. Any **direct SQL query** (BI tool, `pg_dump`, Phase 2 .NET reader) sees the stored `999`.
+2. Any **other route** that joins `contract_products` and reads the column directly (without going through `enrich()`) would surface the stale value. Today this set is empty (`rg "effective_weekly_rate" artifacts/api-server/src/routes/` returns hits only inside `products.ts`), but the discoverability is fragile — the next developer to write a JOIN will not know about the read-time recalculation.
+3. **Promotion lifecycle**: when a promotion expires (`promotions.valid_to < now()`), the recalculation begins to use `disc=0` (since `enrich` only joins live promo rows by id, no time gate visible at L18-23). The stored value, frozen at write time with the *old* disc, no longer matches. This is a second-order silent drift specific to promotion expiry — invisible until it bites.
+
+**Difference from the original CF-019 (Stripe write-orphan)**: that one's columns are NULL in production; this one's columns are populated but **wrong**. Both fall under "schema declares a column that the code does not honour as a single source of truth", but the recovery is harder here — there is no obvious null-marker to grep for.
+
+**Recommendation extension**: the original CF-019 recommendations apply, plus —
+
+4. **products.ts route**: drop `effective_weekly_rate` from the `INSERT.values({...})` and `UPDATE.set({...})` blocks (lines 67, 108). Either compute server-side at write time using the same formula as `enrich()`, or convert the column to a Postgres **generated column** (`GENERATED ALWAYS AS ((weekly_rate * (1 - COALESCE(p_discount, 0)/100)))` joined via view) and forbid manual writes.
+5. **Phase 2**: in EF Core, mark this property as `[NotMapped]` for writes and compute it in the entity getter, or use a SQL-side computed column.
+
+### Carrier (T002.2.d)
+
+`api-endpoints/ops-catalog.md` §3.2 E1 (helper `enrich()` walkthrough — N+1 + write-orphan combined anchor) and §3.2 E2/E4 (POST/PUT call sites). When `T002.2.f portal-guest.md` is written, the contract-products selector path (if any) must verify whether it surfaces stale stored values or routes through `enrich()`.
+
 ---
 
 ## CF-020 — Soft-delete leak: query/mutation handlers omit `isNull(deleted_at)` filter
@@ -1248,6 +1304,30 @@ The .a leak alone might be P2 (operational nuisance), but .b crosses into "silen
 
 `ops-property.md` §3 row C3-PROPS-RES (originating mutation-revival anchor) + `_schema/api-endpoints/finance-payments.md` accounts/commissions/beneficiaries (originating GET-leak anchors). T002.2.d (`ops-catalog.md`) and T002.2.e (`ops-crm.md`) are likely to surface additional .a anchors (similar list-endpoint pattern). When all 9 domain docs are complete, anchor universe should be re-verified.
 
+### CF-020 ops-catalog expansion (T002.2.d — anchor count 16 → 18)
+
+T002.2.d adds **2 net new anchors** (4 found, 2 already implicitly counted under "general GET /:id pattern"). The ops-catalog domain confirms .a leaks are **endemic** — every domain so far surfaces them at the GET /:id detail-view layer.
+
+**Sub-pattern .a (GET-leak)** — 4 new ops-catalog anchors:
+
+| # | Sub | File:line | Endpoint | Note |
+|---|---|---|---|---|
+| 17 | .a | `products.ts:89` | E4 GET /v1/contract-products/:id | List sibling (E2 L41) ✅ guards; detail does not — same intra-file inconsistency as ops-property |
+| 18 | .a | `products.ts:194-202` | E11 GET /v1/lookup/contract-products | Picker endpoint — soft-deleted product surfaces in booking/contract selectors → invoice/quote builds against tombstoned price card |
+| 19 | .a | `product-types.ts:23` | E2 GET /v1/product-types/:id | Lookup detail; list sibling L13 ✅ guards |
+| 20 | .a | `product-groups.ts:23` | E2 GET /v1/product-groups/:id | Same pattern, symmetric file |
+| 21 | .a | `service-catalog.ts:37` | E2 GET /v1/services/:id | Service catalog detail; list sibling L12 ✅ guards |
+
+**Pattern crystallisation**: across 4 of 5 ops-catalog files (products + product-types + product-groups + service-catalog) the **identical author bug** appears — `GET /list` correctly filters `isNull(deleted_at)`, **`GET /:id` forgets the same filter**. This is now a 4-domain consistent finding (finance + ops-property + ops-catalog all show it). The recommendation #2 (CI lint) is justified by this pattern density: a per-PR grep would have caught all 5 of these on first commit.
+
+**Sub-pattern .b** — 1 new candidate, partial:
+
+| # | Sub | File:line | Endpoint | Note |
+|---|---|---|---|---|
+| 22 | .b? | `service-catalog.ts:60-66` | E4 PUT /v1/services/:id | `{ id: _id, created_at, ...updates }` strips `id` and `created_at` but **does not strip `deleted_at`** → client `{ "deleted_at": null }` revives a tombstoned service. Same hazard as PR4/PR7 (.b carrier) but here gated behind explicit client cooperation, hence "partial" / weaker than the unconditional ops-property revival. **Recommend**: explicitly drop `deleted_at` from the spread before update. |
+
+**Updated anchor count**: 14 .a + 2 + .b 2 = **18 .a / 3 .b = 21 total**. (Pre-T002.2.d: 14 .a + 2 .b = 16; post: 18 .a + 3 .b = 21.) Carrier: [`api-endpoints/ops-catalog.md` §1.4 + §3.2/3.3/3.4/3.5](../_schema/api-endpoints/ops-catalog.md) + §4.1 column totals (5 leak / 1 revival of 39).
+
 ---
 
 ## CF-021 — N+1 enrichment anti-pattern: per-row follow-up SELECTs in JS rather than SQL JOIN
@@ -1294,6 +1374,46 @@ At 100 concurrent browsers each opening a fresh list page, that is 20,100 round-
 ### Carrier
 
 `ops-property.md` §3 row C3-NPLUS1 (originating site, helper enumeration) + `_schema/api-endpoints/finance-payments.md` (2 prior anchors). T002.2.d (`ops-catalog.md`) likely to surface `service-catalog` enrichment anchors; T002.2.e (`ops-crm.md`) likely to surface `work-orders` + `leads` enrichment anchors.
+
+### CF-021 ops-catalog expansion (T002.2.d — anchor count 8 → 10)
+
+T002.2.d adds **2 net new anchors** of the **same per-row enrichment shape**, both with sub-2 degrees per row:
+
+| # | File:line | Endpoint | Degree (K) | Worst-case |
+|---|---|---|---:|---:|
+| 9 | `products.ts:7-37` (helper `enrich()`) called by E2 GET list (L41) | N rows × 2 follow-ups (promotions map + product-types map) | 2 | **100** round-trips for 50-row product list |
+| 10 | `product-catalog.ts:100-125` E5 GET /v1/properties/:id/contract-products | 1 row × 4 sequential SELECT chain (property → space-list → contract-list → contract-product-list) | 4 | 4 round-trips per single-property fetch |
+
+**Variant note**: anchor #9 is **batch-enrichment** — `enrich()` does **2 SELECTs total** (`SELECT … WHERE id IN (...)`) regardless of row count, then maps in JS. This is the *correct* fix for the helper pattern. The "100 round-trips" overstates: actual cost is `1 (list) + 2 (batch enrich) = 3 round-trips for 50-row list`. **This anchor demonstrates the fix-shape**, not the bug — keep counted as part of pattern audit but note as a positive exemplar.
+
+Anchor #10 is the *true* N+1 family — 4 sequential single-row SELECTs in a chain (each waits for the prior `id` field). Single property today = 4 round-trips (acceptable); but if the endpoint is ever called list-style (admin "show all properties' contract-products at once") the 4 multiplies by N.
+
+**Updated anchor count**: **10 total** (3 spaces + 3 properties + 2 finance + 2 ops-catalog). Anchor #9 carries an asterisk in `ops-catalog.md` §3.2 calling out it is a *positive* exemplar of the recommended batch-fetch fix. Carrier: [`api-endpoints/ops-catalog.md` §3.2 + §3.5](../_schema/api-endpoints/ops-catalog.md).
+
+### CF-001 ops-catalog carrier expansion (T002.2.d — +5 carrier columns)
+
+T002.2.d enumerates **5 ops-catalog `real` money columns** newly anchored (vs. the prior CF-001 inventory of 14 columns across finance + ops-property). The owner of these is `ops-catalog`, not `ops-property` — the schema separation matters for Phase 2 module ownership.
+
+**Live carriers (1 column, 1 site)**:
+
+| Schema column | File:line | Read by | Written by | Status |
+|---|---|---|---|---|
+| `service_catalog.base_price` | `lib/db/src/schema/service_catalog.ts:8` | `service-catalog.ts:12,37` (E1 list, E2 detail) | `service-catalog.ts:48,60-66` (E3 POST, E4 PUT spread) | LIVE — propagates into `space_service_catalog.custom_price` (already counted) when copy-on-attach via PR21 (`spaces.ts:451`) |
+
+**Dead carriers (4 columns, schema-only — see CF-009 cross-ref above)**:
+
+| Schema column | File:line | Read sites | Status |
+|---|---|---:|---|
+| `product_catalog.price` | `lib/db/src/schema/product_catalog.ts:8` | 0 | 🪦 GHOST — only enumerated for completeness; no code reads or writes it. CF-009 recommends DROP. |
+| `product_catalog.bond_amount` | `:18` | 0 | same |
+| `product_catalog.admin_fee` | `:19` | 0 | same |
+| `product_catalog.cleaning_fee` | `:20` | 0 | same |
+
+**Cross-domain note**: ops-catalog owns the `service_catalog.base_price` upstream that `ops-property` already counted as a downstream carrier (see CF-001 carrier sub-list `service_catalog.base_price + space_service_catalog.custom_price`). T002.2.d formally claims `service_catalog.base_price` for ops-catalog; ops-property keeps `space_service_catalog.custom_price` (its own table). The 4 ghost columns are inert today but **must be deleted alongside the table** if CF-009 recommendation #1 lands, otherwise Phase 2 will inherit 4 dead `decimal` columns in C# entity definitions.
+
+**Updated CF-001 carrier sub-list count**: prior 14 + 1 live (service_catalog.base_price reattributed to ops-catalog) + 4 ghost = **15 live + 4 ghost = 19 total `real` carrier columns** documented across finance + ops-property + ops-catalog. T002.2.e (ops-crm) will surface `work_orders.cost` evidence (already in CF-001 inventory list, now needing route-anchor).
+
+Carrier: [`api-endpoints/ops-catalog.md` §1.2 + §1.5 + §6 R-REPO-5 I3](../_schema/api-endpoints/ops-catalog.md).
 
 ---
 *End of CRITICAL_FINDINGS.md*
