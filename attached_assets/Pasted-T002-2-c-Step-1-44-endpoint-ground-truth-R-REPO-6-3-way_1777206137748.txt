@@ -1,0 +1,137 @@
+T002.2.c Step 1 사전 분류 승인.
+
+44 endpoint ground truth (R-REPO-6 3-way) 정확. Size 예측 baseline 
+3 도메인 비교 + 도메인 특성 반영 (CRUD vs state-transition) 정밀화. 
+Tripwire 850 lines split-pivot 메커니즘 = 영리한 hedging.
+
+═══════════════════════════════════════════════════
+[Decision] Option (α) 단일 + tripwire 채택
+═══════════════════════════════════════════════════
+
+채택: ops-property.md 단일 + tripwire 850 lines split-pivot
+
+거부 (β) spaces+attrs vs properties+suburbs:
+- 13-endpoint 파일은 over-engineering
+- ops 그룹 5+ 파일 추세 부담 (이미 ops-crm 분할 mandatory)
+
+거부 (γ) core vs attrs:
+- suburbs ↔ attrs 의미적 mismatch (geographic master vs space sub-detail)
+- 균등 size < 의미적 분리 (R-REPO-7 원칙)
+
+미래 적용 원칙:
+- 1500 cap 아래 borderline-safe → 단일 + tripwire 우선
+- 분할 결정은 의미적 seam 우선, size 균등 차순위
+- 13-endpoint 미만 sub-file 은 over-engineering으로 간주
+
+═══════════════════════════════════════════════════
+[Tripwire 발동 조건 명시]
+═══════════════════════════════════════════════════
+
+본문 §2 endpoint walk-through 작성 중 다음 조건 시 split-pivot:
+
+조건 1: 850 lines 도달 시점에 endpoint 진행률 < 60% (즉 26/44 미만)
+조건 2: 1100 lines 도달 시점에 endpoint 진행률 < 80% (즉 35/44 미만)
+조건 3: 작성 중 새로운 CF anchor 5개 이상 발견 (size 폭증 신호)
+
+발동 시 즉시 보고 + 사용자 게이트 (β 분할 또는 다른 seam 검토):
+- "TRIPWIRE 발동: <조건 N> | 현재 lines / endpoint 진행률 | 
+   추정 최종 size | 분할 권장 안"
+
+발동 없으면 단일 파일 완성 후 Step 5 atomic commit.
+
+═══════════════════════════════════════════════════
+[3 spot-check 클레임 SEALED]
+═══════════════════════════════════════════════════
+
+C1: 44 endpoint 분포 (13/7/6/6/6/6) router method 카운트 재검증
+C2: CF-001 anchor in spaces.ts (base_weekly_price, base_daily_price 
+    real) — finance 외 첫 ⚠️ anchor
+C3: 도메인 logAction coverage ~13-15% 정량화 (vs finance 20%, 
+    contract 42.9%)
+
+═══════════════════════════════════════════════════
+[추가 가이드 — 가이드 J/K/L/M 강화]
+═══════════════════════════════════════════════════
+
+[J-1] CF-001 spaces 발견의 의미 — CF-002 source 추적
+spaces.base_weekly_price / base_daily_price = real 는 CF-002 의 
+**진짜 출발점** 일 가능성:
+
+데이터 흐름: spaces.base_weekly_price (real) 
+            → bookings.weekly_rate (numeric) 
+            → contracts.weekly_rate (real)
+
+각 boundary 에서 정밀도 손실 가능. 작성 시 다음 확인:
+- spaces 데이터가 bookings 으로 흘러가는 endpoint 식별
+- 실제 정밀도 손실 발생 지점 (real → numeric, numeric → real 
+  양방향)
+- CF-001 evidence section 에 spaces.ts 추가 + 데이터 흐름 
+  다이어그램
+
+이건 R-REPO-1 atomic commit 의 일부 (mini-task 아님).
+
+[K-1] CF-018 nested cascade audit
+properties → spaces → {options/policies/images/blocked_dates} 
+2-level cascade. 각 nested-write handler:
+
+- spaces.ts: blocked_dates handler (있다면) parent-id 점검
+- space-options.ts: 모든 mutator parent (space_id) WHERE 절 점검
+- space-policies.ts: 동일
+- space-images.ts: 이미 audit 됨 (T002.1.8 PUT/DELETE/set-primary 
+  vulnerable)
+- properties.ts: nested handler 있다면 점검
+
+발견 시 CF-018 audit 표 행 추가 (R-REPO-1 atomic).
+
+[L-1] CF-013 business-domain timezone enumeration
+spaces.ts 의 모든 timestamp 컬럼 (created_at / updated_at / 
+deleted_at / 기타) enumerate:
+
+| Column | withTimezone? | Source |
+|--------|---------------|--------|
+| created_at | TBD | spaces.ts:LL |
+| updated_at | TBD | spaces.ts:LL |
+| ... | TBD | ... |
+
+properties / suburbs / 다른 ops 파일 동일 enumerate. 
+CF-013 evidence 에 ops 도메인 timezone 패턴 row 추가.
+
+[M-1] CF-020/021 candidate evidence 적극 수집
+- CF-020 (soft-delete leak): 모든 GET endpoint 의 deleted_at 
+  필터 omission 점검 → 발견 시 카운트
+- CF-021 (N+1 enrichment): properties / spaces enrichment 패턴 
+  확인 → SELECT N+1 발견 시 evidence 누적
+
+T002.2.d 또는 T002.2.e 에서 등재 결정 시 evidence 풍부.
+
+═══════════════════════════════════════════════════
+[Step 2~6 진행]
+═══════════════════════════════════════════════════
+
+(1) Step 2 본문 작성 (44 endpoint, ops-property.md 단일)
+    - tripwire 모니터링 (850/1100 lines threshold)
+    - tripwire 발동 시 즉시 사용자 게이트
+(2) Step 3 self-check 표 (44 × 7 = 308 cells)
+(3) Step 4 spot-check 검증 (C1/C2/C3)
+(4) Step 5 R-REPO-1 atomic commit:
+    - ops-property.md (NEW)
+    - CRITICAL_FINDINGS.md:
+      - CF-001 evidence (spaces.ts source 추가 + 데이터 흐름)
+      - CF-008 domain severity matrix (ops-property row 추가)
+      - CF-013 evidence (ops business domain timezone enumeration)
+      - CF-018 audit 표 (cascade 결과)
+      - CF-020/021 candidate evidence (등재 X, parking)
+    - INDEX.md (ops 그룹 시각화 유지)
+    - _T002_PROGRESS.md (T002.2.c DONE)
+    - session_plan.md (T002.2.c DONE, T002.2.d NEXT)
+    - cross-ref back-fill (booking/contract/finance 영향 시)
+(5) Step 6 R-REPO-4 통합 보고
+
+(6) 후 사용자 proceed → T002.2.d (ops-catalog.md) 시작.
+T002.2.d 자동 시작 절대 금지.
+
+═══════════════════════════════════════════════════
+[지금 시작]
+═══════════════════════════════════════════════════
+
+Step 2 본문 작성 진입. tripwire 모니터링 활성.

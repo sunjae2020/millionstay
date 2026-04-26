@@ -197,6 +197,26 @@
 - **Size note**: half-2 actual 1108 vs predicted 811 (+37%). Drivers: S2 supplemental tables (3 sub-sections), §3 catalogue richer than anticipated (8 NEW C3 categories), §6 6 incidentals (vs 4-5 typical), §7 CF-008 domain severity matrix design embedded in cross-ref. **Within revised T002.1.8 §8 cap (1500/file)** — single file did not require split.
 - **Blocker**: user `proceed` to begin T002.2.c (`ops-property.md`, 44 endpoints across 6 files) — pre-write split decision required at start (per T002.1.8 §8 borderline flag).
 
+### T002.2.c — `ops-property.md` (44 endpoints across 6 files): COMPLETE — awaiting user `proceed` for T002.2.d
+
+- **Pre-write split decision (Step 1, R-REPO-7)**: 3 trade-off options (α single-file / β 2-way property+image split / γ 6-way file-per-route). Recommended (α) — chosen. Sealed in §0 of `ops-property.md`. Total endpoint count verified at 44 (13+7+6+6+6+6 = `grep -cE '^router\.(get|post|put|patch|delete)'`).
+- **Output**: `_schema/api-endpoints/ops-property.md` — **429 lines, 44 endpoints**. Predicted 1100-1300 → 67% compression vs predicted; tripwire 850 well under. Per-endpoint avg ≈ 9.7 lines (compact-table format for 31 satellite CRUD endpoints; full samples for 13 spaces.ts endpoints). The compression inverts the T002.1.8 §8 ~2.4× upward multiplier — a calibration data point for satellite-CRUD-heavy domains: revise multiplier to ~0.5× when ≥5 of 6 sub-files share an identical CRUD shape.
+- **Verification gate (RULE 7) — 3-claim spot-check (sealed in §5)**:
+  1. **C1 — endpoint distribution**: ✅ — `grep -cE '^router\.(get|post|put|patch|delete)'` returned 13/7/6/6/6/6 = 44 across the 6 files.
+  2. **C2 — CF-001 source-side anchor verification**: ✅ — `lib/db/src/schema/spaces.ts:13-17` confirmed `real("base_weekly_price")` (L13), `real("base_daily_price")` (L14), `real("floor_area_sqm")` (L17). The upstream-most rent carrier is `real`.
+  3. **C3 — CF-008 audit coverage**: ✅ — `grep -c 'logAction('` returned `spaces.ts:4`; `properties/policies/options/images/suburbs.ts: 0` each. 30 mutators total → 4/30 = **13.3%** (lowest domain-coverage measured to date).
+- **R-REPO-5 self-check**: 8 incidentals found, all dispatched (no silent absorption): I1 (CF-008.a destructive-action zero-audit sub-pattern → annotated in CF-008 expansion), I2 (CF-008.b IDOR + Cloudinary-delete compound → annotated), I3 (CF-015.a vs .b sub-classification → annotated in CF-015 expansion), I4 (CF-018 partial-IDOR taxonomy → CF-018 expansion), I5 (CF-018.SAFE canonical guard pattern → cited via SP12/SP13 spaces.ts:427/447), I6 (CF-013 deleted_at-only inconsistency observation → annotated in CF-013 expansion), I7 (CF-020 candidate anchor count 9 → 16 with 5 GET-leak + 2 mutation-zombie-revival → defer T002.2.d), I8 (CF-021 candidate anchor count 2 → 8 with 6 ops-property N+1 anchors → defer T002.2.d).
+- **Atomic commit (Step 5) — 7 file ops**: 
+  1. `ops-property.md` (NEW, 429 lines)
+  2. `CRITICAL_FINDINGS.md` (1092 → ~1310 lines): 7 inline expansions (CF-001 source-side anchor + 2-boundary diagram, CF-008 ops-property row + .a + .b sub-patterns, CF-013 ops business-domain enumeration with 5 deleted_at + 2 free-text date, CF-014 anchor 3 → 11 with 8 ops-property loci table, CF-015 hard-delete-by-design distinction with .a/.b sub-classification, CF-017 Domain Validation Coverage Matrix new subsection, CF-018 partial-IDOR taxonomy with .a/.b/.SAFE table); summary count line updated `P0=3, P1=13, P2=3 (19) → unchanged 19` (0 NEW promotions); CF-020/021 candidate anchor counts updated 9→16 / 2→8.
+  3. `INDEX.md`: no change required — ops-property entries already present (lines 39-44, 99, 117, 143).
+  4. `_T002_PROGRESS.md` (this update).
+  5. `.local/session_plan.md` (T002.2.c → DONE pending approval; .d marked NEXT).
+  6-7. Cross-ref back-fills: contract.md / finance-invoicing.md / finance-payments.md not required (no cross-domain interaction surfaced beyond CF expansions which carry their own back-link in CRITICAL_FINDINGS.md).
+- **Cumulative CF state after T002.2.c**: P0=3, P1=13, P2=3 (total 19) — unchanged from T002.2.b. **0 new CF promotions** (commit is a 7-CF expansion + 5-sub-pattern annotation, not a new-CF event). 2 deferred candidates' anchor counts increased: CF-020 = 9 → 16 anchors; CF-021 = 2 → 8 anchors. Both still pending T002.2.d promotion decision.
+- **Size note**: actual 429 vs predicted 1100-1300 (compression −67% to −60%). Drivers: 31 of 44 endpoints (the 5 satellite files) compressed into compact tables; only the 13 spaces.ts endpoints used full sample format. Calibration recommendation: when a domain has ≥5 of 6 sub-files sharing an identical CRUD shape, predict 0.5× the per-endpoint average rather than 2.4×.
+- **Blocker**: user `proceed` to begin T002.2.d (`ops-catalog.md`). T002.2.d will resolve: (a) CF-020 promotion decision (16 anchors now well past the 10-anchor threshold), (b) CF-021 promotion decision (8 anchors), (c) anchor `service_catalog.base_price` + `space_service_catalog.custom_price` as ops-catalog-owned `real` carriers (T002.2.c forward-referenced these as ops-catalog territory).
+
 ---
 
 ## Cumulative size tracker
@@ -213,7 +233,8 @@
 | `api-endpoints/finance-invoicing.md` (T002.2.b half-1) | ~533 (revised post-T002.1.8 §8 ~2.4× × 17/43 ratio) | **681** | **+148 (+28%)** — within revised cap; CF-014 R5 anchor block + 11 self-discovered inconsistencies + R-REPO-5 incidentals section drove length; +1 line from half-2 cross-ref back-fill |
 | `api-endpoints/finance-payments.md` (T002.2.b half-2) | ~811 (revised, 26/43 ratio) | **1108** | **+297 (+37%)** — within revised cap; S2 supplemental tables (Event Coverage Matrix + Accounting Drift Scenarios + Idempotency Analysis) + §3 11 NEW categories + CF-008 domain severity matrix design embedded in §7 drove length |
 | `_audit/CRITICAL_FINDINGS.md` (post-T002.2.b) | — | **1092** | +114 from half-2 atomic commit (CF-001 Carrier +6, CF-008 Domain Severity Matrix +22, CF-010 Evidence expansion +14, CF-014 Second locus +14, NEW CF-019 ~58, summary update +1, header +1) |
-| `api-endpoints/ops-property.md` | ~570 | — | — |
+| `api-endpoints/ops-property.md` (T002.2.c) | ~1100-1300 (revised T002.1.8 §8 ~2.4×) | **429** | **−67% to −60% (compression)** — 31 of 44 endpoints in compact-table format; new calibration point for satellite-CRUD-heavy domains (revised multiplier proposal: 0.5× when ≥5 of 6 sub-files share CRUD shape) |
+| `_audit/CRITICAL_FINDINGS.md` (post-T002.2.c) | — | **~1310** | +218 from T002.2.c atomic commit: 7 inline CF expansions (CF-001 source-side +24, CF-008 ops row + .a/.b +12, CF-013 enum +28, CF-014 anchor 3→11 +24, CF-015 .a/.b +24, CF-017 Validation Matrix +30, CF-018 .a/.b/.SAFE table +28); 0 NEW CF this commit |
 | `api-endpoints/ops-catalog.md` | ~510 | — | — |
 | `api-endpoints/ops-crm.md` | ~660 | — | — |
 | `api-endpoints/portal-guest.md` | ~380 | — | — |

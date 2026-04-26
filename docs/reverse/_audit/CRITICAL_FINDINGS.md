@@ -51,6 +51,18 @@ A C# / .NET port maps `numeric` cleanly to `System.Decimal`, but `real` maps to 
 
 The boundary runs **inside** the finance domain group, not between finance and another domain. `finance-payments.md` re-anchored 4 sites of the unsafe (`real`) side: `commissions.commission_rate/commission_amount` (C2/C4) and `beneficiaries.fixed_amount` (B2/B4). The safe (`numeric`) side is anchored by `finance-invoicing.md` (`invoices.amount`, `recurring_schedule.amount`). Phase 2 carrier should treat `commissions` + `beneficiaries` as the migration candidates; `invoices` + `recurring_schedules` are already aligned.
 
+### Source-side anchor (T002.2.c addition)
+
+`spaces.base_weekly_price` and `spaces.base_daily_price` (`lib/db/src/schema/spaces.ts:13-14`) are the **upstream origin** of the rent figure for the entire booking → contract → invoice pipeline. Both are `real`. This means the rent flow has **two precision-loss boundaries** (revising CF-002 from "1 boundary" to "2 boundaries"):
+
+```
+spaces.base_weekly_price (real ⚠️)  ──► bookings.weekly_rate (numeric ✅)  ──► contracts.weekly_rate (real ⚠️)
+        space → booking write                                    booking → contract write
+        = boundary #1 (CF-002 source side, NEW)                  = boundary #2 (CF-002 receiving side, original)
+```
+
+`ops-property.md` §1.4 carries the full data-flow diagram. Phase 2 migration carrier (CF-001 sub-list) is therefore extended: `spaces.base_weekly_price`, `spaces.base_daily_price`, `spaces.floor_area_sqm` join the `commissions` + `beneficiaries` migration candidates as **the upstream-most carriers** — they must migrate before any downstream carrier or both boundaries continue to leak precision. Cross-domain `service_catalog.base_price` + `space_service_catalog.custom_price` (read by `ops-property.md` SP10 / written by SP11) are also `real` carriers visible from this domain but live in `ops-catalog` schema (T002.2.d will own those anchors).
+
 ---
 
 ## CF-002 — Booking → Contract money write is precision-lossy by design
@@ -354,8 +366,14 @@ Per-domain logAction-coverage measured as `logAction calls / mutator endpoints`.
 | portal-partner | TBD | TBD | TBD | pending T002.2.g |
 | public | TBD | TBD | TBD | pending T002.2.h |
 | admin | TBD | TBD | TBD | pending T002.2.i |
+| **ops-property** | **30** | **4** | **13.3%** ⬅ **NEW LOWEST** | T002.2.c |
 
 **Finance vs contract gap**: 20.0% (finance combined) vs 42.9% (contract) → finance domain is **53% under-audited** relative to contract. The gap is concentrated in the 4 lookup-style routes (`payment-info`, `commissions`, `beneficiaries`, `accounts`) where coverage is **0%**. The Stripe webhook (S2) is the lone audited mutator on the payments side; payment-info / commissions / beneficiaries / accounts mutate financial routing data **without any audit trail**.
+
+**ops-property gap (T002.2.c addition)**: 13.3% — new domain low. The 4 audited mutators (`spaces.ts:301,327,398,451`) are all "side-effect on already-existing entity" (BLOCK / UNBLOCK availability + ADD_SERVICE / REMOVE_SERVICE). **None** of the CRUD-on-the-entity-itself (create/update/delete space, property, policy, option, image, suburb) is audited. Two compounding sub-patterns:
+
+- **CF-008.a — destructive-action zero-audit** (sub-pattern, T002.2.c origin): the 11 hard-delete branches (`permanent=true`) across `spaces` × 2, `properties` × 2, `space-policies` × 2, `space-options` × 2, `space-images`, `suburbs` × 2 emit no `logAction` despite being the most destructive operations available; only the SuperAdmin role gate stands between any one admin and irreversible bulk wipe of the entire physical-asset graph. **Defer-confirm at T002.2.j (admin.md)** — likely additional anchors there.
+- **CF-008.b — IDOR + Cloudinary-delete compound** (sub-pattern): `space-images.ts` SI5 DELETE (line 162) calls external `deleteFromCloudinary()` and is also IDOR-vulnerable (CF-018). Combined effect: any authenticated user can delete arbitrary Cloudinary assets across all spaces with **no audit trail**.
 
 ---
 
@@ -644,6 +662,27 @@ lib/db/src/schema/guest_users.ts:14       date_of_birth: text("date_of_birth")
 
 A C# port using `DateTime` (no TZ) vs `DateTimeOffset` will inherit the existing inconsistency unless normalised at migration time. Tests for "did this booking start today?" cannot be written meaningfully today.
 
+### ops-property business-domain enumeration (T002.2.c addition)
+
+Of the 21 no-tz `timestamp()` columns originally enumerated, the ops-property domain owns **5 of them** — all `deleted_at` columns:
+
+| Table | File:line | Column | Type |
+|---|---|---|---|
+| `spaces` | `lib/db/src/schema/spaces.ts:29` | `deleted_at` | `timestamp("deleted_at")` (no `withTimezone`) |
+| `properties` | `lib/db/src/schema/properties.ts:20` | `deleted_at` | same |
+| `space_policies` | `lib/db/src/schema/space_policies.ts:15` | `deleted_at` | same |
+| `space_options` | `lib/db/src/schema/space_options.ts:11` | `deleted_at` | same |
+| `suburbs` | `lib/db/src/schema/suburbs.ts:15` | `deleted_at` | same |
+
+In addition, ops-property surfaces **2 free-text date columns** (CF-013 secondary anchor — date stored as `text`, not `date`):
+
+| Table | File:line | Column | Notes |
+|---|---|---|---|
+| `space_blocked_dates` | `lib/db/src/schema/spaces.ts:44` | `date: text("date").notNull()` | Read by `spaces.ts:228-278` GET availability with `Date` constructor — DST-ambiguous |
+| `space_availability` | (cross-domain — owned by `bookings.ts` schema) | `date: text` | Written by `spaces.ts:280-330` block/unblock |
+
+**Consistency observation**: `created_at` + `updated_at` use `withTimezone: true` consistently in this domain (5 of 5 main tables); the inconsistency is **strictly on `deleted_at`** — suggesting Drizzle authors copy-pasted a deletion-column template that omitted the modifier. This is the cleanest pattern of the CF-013 anchor population so far and **strengthens the case** that a single editor sweep would close the bulk of the gap project-wide.
+
 ---
 
 ## CF-014 — Multi-step mutations execute outside transactions
@@ -739,6 +778,25 @@ A failure between (1) and (2) leaves the invoice marked Paid but with no audit t
 
 Carrier: see `finance-payments.md` §2 S2 (full sample) + §7 cross-references.
 
+### ops-property loci (T002.2.c addition) — **anchor count 3 → 11**
+
+8 additional multi-write handlers in this domain execute without `db.transaction`:
+
+| Locus | File:line | Steps without tx | Failure mode |
+|---|---|---|---|
+| SP2 `POST /spaces` | `spaces.ts:106-125` | (i) insert space, (ii) bulk-insert option_maps | mid-failure → space exists with no options; retry creates duplicate space |
+| SP4 `PUT /spaces/:id` | `spaces.ts:148-185` | (i) update space, (ii) delete all option_maps, (iii) bulk-insert option_maps | "delete-then-reinsert" without tx: crash mid-(iii) leaves space updated + options wiped (idempotency-by-destruction tell — author was aware of partial-failure risk) |
+| SP5 `POST /spaces/bulk-delete?permanent` | `spaces.ts:187-205` | 3 sequential `db.delete` across `space_option_maps` + `space_blocked_dates` + `spaces` | crash mid-sequence leaves orphan rows in surviving children |
+| SP6 `DELETE /spaces/:id?permanent` | `spaces.ts:207-226` | same 3-table sequence (single-row) | same orphan risk |
+| SP8 `POST /spaces/:id/availability/block` | `spaces.ts:280-304` | N sequential INSERT-onConflictDoUpdate (one per date) | for 30-day block: 30 sequential round-trips, no atomicity; partial block possible |
+| SP9 `POST /spaces/:id/availability/unblock` | `spaces.ts:306-330` | same loop pattern | mirror of SP8 |
+| SI2 `POST /spaces/:id/images` | `space-images.ts:65-127` | per file: optional Cloudinary HTTP + optional UPDATE all-primary→false + INSERT row | **worst case**: N files × 3 ops, no tx; mid-loop crash leaves Cloudinary objects + DB rows out of sync |
+| SI4 `PATCH /set-primary` | `space-images.ts:146-160` | (i) UPDATE all primary→false for spaceId, (ii) UPDATE imageId primary→true | crash between → no primary image |
+| SI5 `DELETE /spaces/:id/images/:imageId` | `space-images.ts:162-187` | 4 ops (fetch + Cloudinary delete + DB delete + maybe-promote next) | irreversible Cloudinary deletion + DB partial state |
+| SI6 `PATCH /reorder` | `space-images.ts:189-203` | N sequential UPDATE display_order | partial reorder on crash |
+
+Total: **11 production loci** across 3 files (bookings.ts, contracts.ts, stripe.ts, spaces.ts, space-images.ts). The 8 ops-property loci are concentrated in 2 files (spaces.ts × 6, space-images.ts × 4 — image total includes SI2's per-file inner loop counted once). Carrier: see `ops-property.md` §3 C3-TX.
+
 ---
 
 ## CF-015 — Soft-delete vs hard-delete is inconsistent across tables and routes
@@ -815,7 +873,22 @@ EF Core's `HasQueryFilter` for soft-delete relies on a uniform column. Today's t
 | CF-018 | 🟡 P1 | IDOR-class authorization-scope omission on nested resource handlers — 7 outright + 3 partial of 17 audited | OPEN |
 | CF-019 | 🟡 P1 | Write-orphan columns on `invoices` table — `stripe_payment_intent_id` + `stripe_checkout_url` declared in schema but never written by any route | OPEN |
 
-**Counts after T002.2.b half-2 follow-up**: P0=3, P1=13, P2=3 (total 19). CF-017 + CF-018 are T002.2.a Spot-Check C3 graduates (R-REPO-5); CF-019 is the T002.2.b half-2 Spot-Check C3-8 graduate (R-REPO-5). Two further candidates parked for T002.2.d confirmation: **CF-020 candidate** (system-wide soft-delete leak, 9 anchors so far) and **CF-021 candidate** (N+1 enrichment anti-pattern, 2 domains so far).
+**Counts after T002.2.c**: P0=3, P1=13, P2=3 (total 19) — **0 new CF promotions in T002.2.c** (commit consists of 7 CF expansions + 5 sub-pattern annotations: CF-001 source-side anchor, CF-008 ops-property row + CF-008.a + CF-008.b sub-patterns, CF-013 ops business-domain enumeration, CF-014 anchor 3 → 11, CF-015 hard-delete-by-design distinction, CF-017 Domain Validation Coverage Matrix, CF-018 partial-IDOR taxonomy + SAFE exemplar references). CF-017 + CF-018 are T002.2.a Spot-Check C3 graduates (R-REPO-5); CF-019 is the T002.2.b half-2 Spot-Check C3-8 graduate (R-REPO-5). Two CF candidates' anchor counts updated this commit: **CF-020 candidate** (system-wide soft-delete leak — 9 → **16 anchors**: 5 ops-property GET-leak SP3/PR3/SL3/SO3/SU3 + 2 ops-property mutation-zombie-revival PR4/PR7 + 9 prior across finance) and **CF-021 candidate** (N+1 enrichment anti-pattern — 2 → **8 anchors**: 6 ops-property: 3 spaces buildSpaceResponse degree-4 callers + 3 properties degree-1 + 2 prior). Both still parked for T002.2.d promotion decision per user.
+
+---
+
+### Hard-delete-by-design distinction (T002.2.c addition)
+
+CF-015 to date has anchored only "tables that **have** a `deleted_at` column but where some routes **skip** soft-delete in favour of `db.delete(...)`" — a behavioural omission. T002.2.c adds the **first design-omission anchor**: `space_images` (`lib/db/src/schema/space_images.ts:3-15`) declares **no `deleted_at` column at all**. Soft-delete is impossible by schema design; all 5 mutators (SI2 INSERT, SI3 PUT caption, SI4 set-primary, SI5 DELETE, SI6 reorder) operate in hard-delete-only mode by necessity.
+
+Sub-classification proposal for CF-015 going forward:
+
+| Sub-pattern | Definition | Anchor table examples |
+|---|---|---|
+| **CF-015.a — design omission** | Schema declares no `deleted_at` column → soft-delete is structurally impossible. | `space_images` (T002.2.c, this commit) |
+| **CF-015.b — behaviour omission** | Schema declares `deleted_at` but route file uses `db.delete(...)` instead of soft-flagging. | `accounts.ts` (T001.5 origin), `commissions`, `payment_info` (T002.2.b half-2) |
+
+Carrier: `ops-property.md` SI1-SI6 walks the design-omission anchor. Phase 2 mitigation also splits: 15.a requires schema change (add column + migration), 15.b requires route-file change only.
 
 ---
 
@@ -952,6 +1025,28 @@ A C# port using FluentValidation, DataAnnotations, or MediatR pipeline behaviour
 
 `_schema/api-endpoints/contract.md` C3 row [d] graduates here. `_schema/api-endpoints/booking.md` is the **positive exemplar** (Sample S1 explicitly documents the `ListBookingsQueryParams.safeParse(req.query)` pattern). Per-domain Zod-coverage cell to be added to each domain doc as it is written (T002.2.b–.j).
 
+### Domain Validation Coverage Matrix (T002.2.c addition — new subsection, parallel to CF-008's matrix)
+
+Per-domain Zod-validated-endpoint coverage as docs are written:
+
+| Domain | Endpoints | Zod-validated | % | Source |
+|---|---:|---:|---:|---|
+| booking (sample 5) | 5 | 5 | 100% | T002.1 |
+| contract | 28 | 28 | 100% | T002.2.a |
+| finance-invoicing | 17 | TBD | TBD | T002.2.b half-1 (re-measure pending — R2 was positive exemplar) |
+| finance-payments | 26 | TBD | TBD | T002.2.b half-2 |
+| **ops-property** | **44** | **31** | **70.5%** | **T002.2.c (this commit)** |
+| ops-catalog | TBD | TBD | TBD | pending T002.2.d |
+| ops-crm | TBD | TBD | TBD | pending T002.2.e |
+| portal-guest | TBD | TBD | TBD | pending T002.2.f |
+| portal-partner | TBD | TBD | TBD | pending T002.2.g |
+| public | TBD | TBD | TBD | pending T002.2.h |
+| admin | TBD | TBD | TBD | pending T002.2.i |
+
+**Project-wide re-baseline candidate**: CF-017's original "~10% project-wide" claim was based on the count of route files that import Zod / use `safeParse` (~5-6 of 52). The per-endpoint measure (per-handler `safeParse` call) tells a different story — ops-property hits 70.5% endpoint-level coverage. The two metrics are not interchangeable: a file-level "uses Zod" flag does not guarantee per-endpoint validation, and conversely a file with no Zod-import line can still validate via shared schemas (the `bookings.ts` exemplar). Once `T002.2.b–.j` are complete, the project-wide re-baseline should re-measure CF-017 as: **(endpoints with `safeParse(req.{body|query|params})` on the request side) / (total endpoints)** — replacing the file-level proxy with the endpoint-level ground truth.
+
+**ops-property internal pattern**: 4 of 6 satellite files (properties / policies / options / suburbs) hit 100% (25 of 25 endpoints). The 13/19 gap (31.8%) is concentrated in 2 files: `spaces.ts` operations endpoints (block/unblock/services — 7 unvalidated of 13) + `space-images.ts` (all 6 unvalidated). This suggests the original author wired Zod for "primary CRUD" path but skipped "operations" path — a recurring architectural inconsistency within a single file. **Defer-confirm** in T002.2.f (portal-guest may have similar primary-vs-operations split).
+
 ---
 
 ## CF-018 — IDOR-class authorization-scope omission on nested resource handlers
@@ -1021,6 +1116,20 @@ Note: when the route's auth-class is a customer-facing one (e.g. a guest portal 
 ### Carrier
 
 `_schema/api-endpoints/contract.md` C3 row [bonus e] is the original surface; this CF is its cross-domain extension. Each remaining `T002.2.x` domain doc must add a row to its own self-check table for the nested-write handlers it owns and link back here. When all 9 domain docs are complete (`T002.2.a–.i`), the universe count of 17 nested-write handlers should be re-verified end-to-end.
+
+### Partial-IDOR taxonomy + SAFE exemplar (T002.2.c addition)
+
+The 7 + 3 + 7 audit table established at T002.1.8 lumped "outright IDOR" and "partial / TOCTOU-weak" into separate buckets but did not distinguish their **failure modes**. T002.2.c surfaces a qualitative distinction worth annotating in the audit table:
+
+| Sub-class | Definition | Failure mode | T002.2.c anchor |
+|---|---|---|---|
+| **CF-018.a — outright IDOR** | Nested handler omits parent-id from WHERE entirely; e.g. `eq(id, childId)` only. | Unauthorized access (read or mutate) of any sibling record by guessing child id. | `space-images.ts:139,167,199` (SI3 PUT, SI5 DELETE, SI6 reorder) — **3 anchors here** |
+| **CF-018.b — partial / cross-resource corruption** | Nested handler uses parent-id correctly for one step but omits it for another step in the same handler. The handler does not just leak data — it can **corrupt** state on a second resource by side effect. | Mutation cascades across resource boundaries; state on resource A can leave state on resource B in an invalid configuration. | `space-images.ts:151-156` (SI4 set-primary): step 1 demotes spaceA's correct primary; step 2 sets `is_primary=true` on imageX which may belong to spaceB — net effect: spaceA loses primary, spaceB has 2 primaries. **1 anchor here** |
+| **CF-018.SAFE — canonical guard pattern** | Both child-id AND parent-id in WHERE, joined via `and(...)`. Recommended fix shape for vulnerable handlers. | N/A (safe). | `spaces.ts:427` (SP12 PUT services) and `spaces.ts:447` (SP13 DELETE services) — **2 SAFE exemplars here**; project-wide universe of 7 SAFE handlers identified at T002.1.8 |
+
+T002.2.c contributes **4 vulnerable + 2 SAFE** to the 17-handler universe. Universe ledger: 7 outright (CF-018.a; 3 here = `space-images.ts`, 4 from prior) + 1 partial (CF-018.b; 1 here = `space-images.ts:151-156` SI4; 2 prior partial cases re-classify as `bookings.ts` services + `contracts.ts` schedules) + 7 SAFE (2 here + 5 prior). The remaining 2 handlers from the original 17 audit are still pending review in T002.2.f-.j.
+
+**Phase 2 mitigation**: SP12 / SP13 are the **canonical SAFE fix shape** — `where(and(eq(<child_id>, mapId), eq(<parent_fk>, parentId)))`. Vulnerable handlers should adopt this guard before Phase 2 port; the C# port will inherit the IDOR if the original WHERE clause is translated literally.
 
 ---
 
