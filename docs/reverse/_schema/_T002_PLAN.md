@@ -296,13 +296,71 @@ Errors found at any gate → fix immediately, re-verify, then `proceed` request.
 
 ---
 
-## §9. Open questions — block T002.1 until answered
+## §9. RESOLVED questions (user-approved 2026-04-26)
 
-1. **§2.4 — split `ops.md` into 3 files (recommended) vs keep as 1?** My recommendation is split. Both are workable; user choice locks the file count at either 10 or 12 in `_schema/api-endpoints/`.
-2. **§3 — INDEX.md columns** as proposed (Domain / Source File / URL Prefix(es) / # Endpoints / Auth Guard / logAction / $$ / Status, with Public-Y/N and Side-effect-density dropped). Approve or modify.
-3. **§6.3 — Dead-table display** as option (c) (normal + 🪦 + footnote). Approve or pick another.
-4. **§4 — Per-endpoint sample format** — agree to lock format after the 5-endpoint sample in T002.1, or want a smaller dry-run on 1–2 first?
+> All four open questions answered. Plan is locked. T002.1 begins immediately after this update + `_T002_PROGRESS.md` creation.
+
+### §9.Q1 — `ops.md` split: ✅ APPROVED 3-way split + INDEX visual grouping
+- `ops` domain becomes **3 files**: `ops-property.md`, `ops-catalog.md`, `ops-crm.md`. Total `_schema/api-endpoints/` count = **10 files** (booking, contract, finance, ops-property, ops-catalog, ops-crm, portal-guest, portal-partner, public, admin).
+- INDEX.md must visually group the three `ops-*` rows. Implementation: use sortable domain prefix `ops-*` so the rows naturally cluster, plus a **"Domain Groups" footnote** at the table foot identifying the cluster and the historical reason for the split (1500-line size cap, see §2.4).
+
+### §9.Q2 — INDEX columns: ✅ APPROVED 8 columns + Risk = 9
+- Final column order: **Domain | Source File | URL Prefix | # Endpoints | Auth Guard | logAction | $$ | Status | Risk**.
+- **Risk** column scheme:
+  - 🔴 — domain has at least one **P0** finding in `CRITICAL_FINDINGS.md` (CF-001 / CF-002 / CF-003).
+  - 🟡 — domain has at least one **P1** finding (CF-004 … CF-015 minus the P2 set).
+  - 🟢 — only P2 or no finding.
+- INDEX **footer** includes a "Risk Legend" subsection mapping each domain → its triggering CF IDs with markdown anchors `(./../CRITICAL_FINDINGS.md#cf-XXX)` for one-click navigation.
+
+### §9.Q3 — Dead-table policy: ✅ APPROVED option (c) with stronger separation + appendix
+- Two distinct markers in ERD node labels:
+  - **🪦 (tombstone)** = **Confirmed dead** — 0 route references AND 0 schema FK references. Hard verdict.
+  - **⚰️ (coffin) or "🪦?"** = **Suspected dead** — ≤2 route references, or routes reference only internally (admin-only setup), or reference pattern ambiguous. Soft verdict, requires Phase 2 investigation.
+- `erd-core.md` **appendix** "Dead Tables 정리 후보" with mandatory columns:
+
+  | Table | Status | Last Reference | Suspected Reason | Phase 2 Action |
+  |---|---|---|---|---|
+  | `products` | 🪦 confirmed dead | (none in routes) | Superseded by `accommodation_catalog` | DROP after audit-log retention check |
+  | `product_catalog` | 🪦 confirmed dead | (none in routes) | Superseded by `accommodation_catalog` | DROP after audit-log retention check |
+  | `announcements` | ⚰️ suspected | (verify in T002.3) | (verify) | INVESTIGATE |
+  | … | … | … | … | … |
+
+  - Phase 2 Action vocabulary: **DROP / KEEP-FOR-AUDIT / RENAME / INVESTIGATE**.
+  - "Last Reference" cell is `file:line` (or `(none in routes)` literal). No prose.
+- The classification rule is itself documented at the top of the appendix: **"Confirmed = 0 route uses AND 0 FK references; Suspected = ≤2 route uses OR routes-only-internal OR ambiguous reference pattern."**
+
+### §9.Q4 — Sample selection criteria: ✅ APPROVED 5-category coverage (not first-5)
+- Sample 5 endpoints selected from `bookings.ts` to **exercise every format dimension** (read / complex-write-with-CFs / money / missing-audit / cross-ref). If any category is unmatched in `booking.md`, borrow from another domain (`contract.md`, etc.) — **pattern coverage > file purity**.
+- Final selection (verified against actual `bookings.ts` content):
+
+  | # | Category | Endpoint | File:line | Why |
+  |---|---|---|---|---|
+  | **S1** | Simple GET | `GET /v1/bookings/:id` | bookings.ts:283 | Minimal — single read + buildBookingResponse enrichment. |
+  | **S2** | Complex POST + multi-CF | `PATCH /v1/bookings/:id/confirm` | bookings.ts:368 | **Hits CF-002 (precision-loss `numeric→real` write to contract), CF-007 (`bondAmount = weeklyRate*4` hard-coded), CF-014 (multi-INSERT outside `db.transaction`), cross-domain (creates contract + line items)**. Worst-case stress test for the format. |
+  | **S3** | Money-touching create | `POST /v1/bookings` | bookings.ts:161 | Calls `calcStayDetails` which writes `total_rent` derived from `weekly_rate × weeks` (fp arithmetic). Also: **logAction missing** despite a state-creating write. |
+  | **S4** | Missing logAction (pure) | `PATCH /v1/bookings/:id/submit` | bookings.ts:355 | Status transition Draft→PendingPayment with **zero logAction**. Pure CF-008 anchor — no money, no cross-ref, just an audit-gap demonstration. |
+  | **S5** | Cross-domain read | `GET /v1/bookings/:id/contract` | bookings.ts:533 | Booking → contract domain crossing. Demonstrates the cross-ref convention (file-of-origin = booking; entity = contract). |
+
+  All 5 categories sourced from `booking.md` itself — no borrowing needed. ✅
+
+- After T002.1 sample written, agent runs **Sample Self-Check** (per directive [C]):
+  1. Each sample cites `file:line` for both request *and* response (not just one).
+  2. DB writes table-named (e.g. `bookings`, `contracts`, `contract_line_items`).
+  3. logAction call recorded (✅ / ❌).
+  4. Money-impact column populated (writes which money cols, or "read only", or "none").
+  5. Cross-references attached where applicable (CF-XXX, MONEY_AUDIT §X, other endpoint).
+  6. Audit-gap explicit when logAction missing (`⚠️ Missing logAction (CF-008)` line).
+  - Self-check result table prepended to the sample output. Any row missing ✅ → fix before submitting.
+
+### §9.Resolution stamp
+
+| ID | Decision | Section impacted |
+|---|---|---|
+| Q1 | 3-way ops split + INDEX visual grouping | §2.4, §3, §8 |
+| Q2 | 9 columns including Risk + Risk Legend footer | §3 |
+| Q3 | Confirmed/Suspected separation + appendix | §6 |
+| Q4 | 5-category sample + self-check protocol | §4, §7 |
 
 ---
 
-*End of `_T002_PLAN.md` — awaiting user review. Once approved, T002.1 begins immediately.*
+*End of `_T002_PLAN.md` — locked. T002.1 in progress (see `_T002_PROGRESS.md`).*

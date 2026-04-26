@@ -1,0 +1,147 @@
+T002.0 PLAN 검토 완료. 사이즈 경고 자발 발견 + 거부 옵션 이유 명시 + 
+file-of-origin rule 일관성 모두 우수. 신뢰도 ↑.
+
+Q1~Q4 답변 + 추가 지시:
+
+═══════════════════════════════════════════════════
+[Q1] ops.md 분할 — 승인
+═══════════════════════════════════════════════════
+
+3분할 (ops-property / ops-catalog / ops-crm) 진행. 10-file 도메인.
+
+추가: INDEX.md에서 ops 그룹은 시각적으로 묶어 표시.
+- 그룹 헤더 행 또는 visual separator 사용
+- "ops 영역 = 3 파일"로 reader가 인지 가능하게
+- 형식은 에이전트 재량, 단 INDEX 미리보기 후 확정
+
+═══════════════════════════════════════════════════
+[Q2] INDEX 컬럼 — 승인 + Risk 컬럼 1개 추가
+═══════════════════════════════════════════════════
+
+최종 9개 컬럼:
+Domain | Source File | URL Prefix | # Endpoints | Auth Guard | 
+logAction | $$ | Status | Risk
+
+Risk 컬럼 정의:
+- 🔴 = 해당 도메인에 P0 CF 존재 (CF-001/002/003)
+- 🟡 = P1 CF 존재 (CF-004~014 중 해당)
+- 🟢 = P2 또는 CF 없음
+
+근거: 도메인별 risk를 한눈에 보는 통합 신호. $$/logAction은 개별 
+신호, Risk는 CRITICAL_FINDINGS와 직접 연결.
+
+INDEX 말미에 "Risk Legend" 섹션 추가:
+- 각 도메인의 Risk 등급 → 해당 CF 번호 매핑
+- 클릭 가능한 cross-ref (CF-001 → CRITICAL_FINDINGS.md#cf-001)
+
+═══════════════════════════════════════════════════
+[Q3] Dead tables — 옵션 (c) 승인 + 강화
+═══════════════════════════════════════════════════
+
+🪦 suffix + 각주 채택. 추가 요구:
+
+(a) 분류 분리
+- 확정 dead (라우트 사용 0): 🪦 black
+- 의심 dead (참조 의심): ⚰️ 또는 "🪦?" 형식
+- 명확히 구분되는 표기 사용 (에이전트 재량)
+
+(b) erd-core.md 말미 "Dead Tables 정리 후보" 섹션 필수
+각 dead table:
+| Table | Status | Last Reference | Suspected Reason | Phase 2 Action |
+|-------|--------|----------------|------------------|----------------|
+| products | 확정 dead | (none in routes) | accommodation_catalog로 대체됨 | DROP after audit log retention check |
+| product_catalog | 확정 dead | ... | ... | ... |
+| announcements | 의심 | <file:line> | ... | INVESTIGATE |
+
+Phase 2 Action 옵션: DROP / KEEP-FOR-AUDIT / RENAME / INVESTIGATE
+
+(c) Dead 판정 기준 명문화
+- 확정: 라우트 사용 0회 + 다른 테이블 FK 참조 0회
+- 의심: 라우트 사용 ≤2 또는 routes-only-internal 또는 참조 패턴 모호
+
+═══════════════════════════════════════════════════
+[Q4] T002.1 sample 5개 — 승인 + Sample 선정 기준 강화
+═══════════════════════════════════════════════════
+
+booking.md 첫 5개 무작위 ❌ — 5개가 348개의 포맷을 결정하므로 
+모든 케이스 커버 필수.
+
+Sample 5 선정 기준 (booking.md 내에서 선정):
+
+S1. 단순 GET (read-only, auth만)
+    예: GET /api/v1/bookings, GET /api/v1/bookings/:id
+
+S2. 복잡한 POST (다중 DB write + side effect)
+    🎯 강력 추천: POST /api/v1/bookings/:id/confirm
+    이유: CF-002 (booking→contract 정밀도 손실) + CF-014 (트랜잭션 
+    부재) 두 P0/P1 finding이 모두 해당. 가장 위험한 endpoint를 
+    sample로 다루면 포맷이 worst case 검증됨.
+
+S3. Money-touching endpoint
+    예: POST /api/v1/bookings/quote 또는 가격 계산 호출
+    Money 컬럼 표기 + MONEY_AUDIT cross-ref 검증
+
+S4. Audit log 누락 endpoint
+    booking.md 내에서 logAction 호출이 없는 endpoint 1개 선정
+    "⚠️ Missing logAction" 표기 패턴 검증 (CF-008 추적)
+
+S5. 경계 케이스 (cross-ref 필요)
+    nested route 또는 다른 도메인 cross-ref가 필요한 endpoint
+    예: /api/v1/bookings/:id 가 contract를 트리거하는 케이스
+
+이 5개 sample로 포맷 lock 후 나머지 348개 진행.
+
+만약 booking.md에 5개 카테고리 모두 매칭되는 endpoint가 부족하면, 
+부족한 카테고리는 다른 도메인 (예: contract.md)에서 1개 추가 sample.
+중요한 건 **모든 패턴 커버**, booking.md 5개 고집 X.
+
+═══════════════════════════════════════════════════
+[추가 지시 — T002.1 시작 전 1회성]
+═══════════════════════════════════════════════════
+
+[A] _T002_PLAN.md 업데이트
+Q1~Q4 답변 반영하여 PLAN 갱신:
+- Q1 결정: ops 3분할 + INDEX 그룹화
+- Q2 결정: 9 컬럼 + Risk
+- Q3 결정: 옵션 (c) + 분리 표기 + Dead Tables 부록
+- Q4 결정: Sample 5 선정 기준 강화
+
+§9 미결 질문 → "RESOLVED" 섹션으로 이동, 답변 기록.
+
+[B] T002 진행 추적 파일
+산출물: `_schema/_T002_PROGRESS.md`
+
+각 sub-task 완료마다 갱신:
+- T002.0: ✅ DONE (날짜)
+- T002.1 INDEX: ⏳ IN_PROGRESS
+- T002.1 Sample 5: ⏸️ AWAITING APPROVAL
+- T002.2: PENDING
+- ...
+
+이 파일이 T002 컨텍스트 회복의 anchor.
+
+[C] Sample 검증 강화
+T002.1 sample 5개 작성 후, 각 sample이 다음을 포함하는지 자체 점검:
+- file:line 인용 (request/response 양쪽)
+- DB writes 명시 (테이블명)
+- logAction 호출 여부
+- Money 영향 표시
+- CF cross-reference (해당하는 경우)
+- Audit gap (logAction 누락 시 명시)
+
+자체 점검 결과를 sample과 함께 제출. 누락된 항목 있으면 사전 수정.
+
+═══════════════════════════════════════════════════
+[지금 시작]
+═══════════════════════════════════════════════════
+
+(1) _T002_PLAN.md 업데이트 (Q1~Q4 RESOLVED 반영)
+(2) _T002_PROGRESS.md 신규 생성
+(3) T002.1 INDEX.md + Sample 5 endpoints 작성
+(4) Sample 자체 점검 → 결과 보고
+(5) "T002.1 완료, sample 승인 대기" 보고
+
+(5) 까지 완료 후 내가 sample 검토 → 포맷 조정 또는 lock → 
+T002.2 (348 endpoint 일괄 작성) proceed.
+
+T002.2 자동 시작 절대 금지.
