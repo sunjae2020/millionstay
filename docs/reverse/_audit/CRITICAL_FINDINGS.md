@@ -306,38 +306,76 @@ Make `logAction()` a side-effect of a shared `crud-service` template (see `docs/
 
 ---
 
-## CF-009 — Three product-shaped tables; two are dead schema
+## CF-009 — `product_catalog` table is dead schema; the so-called "`products`" table never existed
 
 | Field | Value |
 |---|---|
 | **Severity** | 🟡 P1 |
 | **Scope** | Schema clarity · Migration |
 | **Status** | OPEN |
+| **Revision history** | 2026-04-26 (T002.1.6): originally claimed "two dead tables (products + product_catalog)"; re-verification at table-level (vs. file-level) found that **no `products` table exists** — the `products.ts` schema file defines the *active* `contract_products` table. Only `product_catalog` is dead. See [`SCHEMA_FILE_TABLE_MAP.md`](./SCHEMA_FILE_TABLE_MAP.md) for the full 50-table re-audit. |
 
-### Evidence
+### Evidence (corrected)
 
-`lib/db/src/schema/index.ts:14-15` exports `products` and `product_catalog`. `lib/db/src/schema/accommodation_catalog.ts` defines a third table.
+`lib/db/src/schema/products.ts:5` declares **one and only one** table:
+
+```ts
+export const contractProductsTable = pgTable("contract_products", { ... });
+```
+
+There is no `pgTable("products", ...)` anywhere in the repository (verified by `rg 'pgTable\("products"' lib/db/src/schema/` → 0 matches). The recon's earlier mention of a "`products` table" was a file-name-vs-table-name conflation: the schema file is named `products.ts` but it defines `contract_products`.
+
+The dead-table inventory, by `pgTable(<name>)` and route-import check (using **actual var names**, not naive `<table>Table` heuristics), is:
 
 ```
-$ rg "productsTable|productCatalogTable" artifacts/api-server/src/routes/  → 0 matches
-$ rg "accommodationCatalogTable"        artifacts/api-server/src/routes/  → 6 files
+$ rg "productCatalogTable" artifacts/api-server/src/routes/   → 0 matches  ← DEAD
+$ rg "contractProductsTable" artifacts/api-server/src/routes/ → 4 files    ← ACTIVE
+$ rg "accommodationCatalogTable" artifacts/api-server/src/routes/ → 6 files ← ACTIVE
 ```
 
-The route layer references `accommodationCatalogTable` from `lookup.ts`, `product-catalog.ts`, `public.ts`, `contracts.ts`, `bookings.ts`, `promotions.ts`. Neither `productsTable` nor `productCatalogTable` is imported by any route.
+`contractProductsTable` is used by `beneficiaries.ts`, `bookings.ts`, `contracts.ts`, and `products.ts` (the route, which exposes `/api/v1/contract-products` — not `/api/v1/products`).
 
-`contractProductsTable` (also exported by `products.ts`) **is** used — by `beneficiaries.ts`, `bookings.ts`, `contracts.ts`, `products.ts` (the route).
+### What CF-009 actually is
+
+**One** dead table:
+
+| Schema file | Var name | SQL table | Route uses | Status |
+|---|---|---|---:|---|
+| `lib/db/src/schema/product_catalog.ts:3` | `productCatalogTable` | `product_catalog` | 0 | 🪦 **DEAD** |
+
+Three sibling "product-shaped" tables remain alive:
+
+| File:line | Var | Table | Distinct semantic |
+|---|---|---|---|
+| `lib/db/src/schema/products.ts:5` | `contractProductsTable` | `contract_products` | A reusable *price card* for what a contract sells (weekly_rate, bond, fees, inclusions) |
+| `lib/db/src/schema/accommodation_catalog.ts:5` | `accommodationCatalogTable` | `accommodation_catalog` | A *room offering* attached to a Space (weekly_rate, capacity, bond_weeks) |
+| `lib/db/src/schema/product_types.ts` + `product_groups.ts` | `productTypesTable`, `productGroupsTable` | `product_types`, `product_groups` | Lookup taxonomy referenced by both of the above |
+
+The semantic overlap between `contract_products` and `accommodation_catalog` (both carry weekly_rate / bond / admin_fee / cleaning_fee, both inexact `real`) is a **separate** design concern — see CF-001 (money type schism) and the deferred T002.3 / T006 design question of whether to merge them.
 
 ### Reproduction
 
-Drop `products` and `product_catalog` tables from the database and observe that no route handler regresses.
+```sql
+-- Confirmed: drop only `product_catalog` and no route regresses.
+DROP TABLE IF EXISTS product_catalog;
+-- Conversely, dropping `contract_products` would break /api/v1/contract-products
+-- (10 endpoints in artifacts/api-server/src/routes/products.ts:39-189) and the
+-- contract auto-create flow at bookings.ts:368-530 (CF-002 / S2).
+```
 
 ### Recommendation (no code change)
 
-Plan a deprecation: announce, run a single migration to drop both tables, and remove the schema files. Until then, mark the schema files with a top-of-file comment so future readers understand they are inactive.
+1. Drop the `product_catalog` table in a single migration; remove `lib/db/src/schema/product_catalog.ts` and its export from `schema/index.ts`.
+2. **Rename** the *file* `lib/db/src/schema/products.ts` to `contract_products.ts` to remove the file-name trap that caused this CF to be misclassified for the first round. (Schema-file rename only — table name stays `contract_products`.)
+3. Add a top-of-file comment to all eight files identified in `SCHEMA_FILE_TABLE_MAP.md` §3 that have file-name ↔ table-name divergence, so future readers do not repeat this mistake.
 
 ### Phase 2 impact
 
-A C# port that auto-generates entities from schema would create three duplicate `Product`-like entities, polluting the model.
+A C# port that auto-generates entities from schema would generate **two** duplicate `Product`-like entities (`ContractProduct` from `products.ts`, and a stale `ProductCatalog` from `product_catalog.ts`), not three. After (1) above, only `ContractProduct` and `AccommodationCatalog` would remain, with the merge question deferred.
+
+### Carrier impact (atomic commit T002.1.6)
+
+This re-classification corrects the following downstream artifacts in the same commit (R-REPO-1): `INDEX.md` (DEAD count 1→1 but row L46 status flipped DEAD→ACTIVE; Risk Legend wording), `MONEY_AUDIT.md` (7 rows re-attributed `products` → `contract_products`; subtotal sentence; §2.3 closing note removed). Full carrier list: `SCHEMA_FILE_TABLE_MAP.md` §5.
 
 ---
 
@@ -670,7 +708,7 @@ EF Core's `HasQueryFilter` for soft-delete relies on a uniform column. Today's t
 | CF-006 | 🟡 P1 | Weekly→monthly formula mismatch in owner-portal | OPEN |
 | CF-007 | 🟡 P1 | Hard-coded 2-weeks advance / 4-weeks bond | OPEN |
 | CF-008 | 🟡 P1 | logAction called from only 6 of 50 route files | OPEN |
-| CF-009 | 🟡 P1 | products / product_catalog dead tables | OPEN |
+| CF-009 | 🟡 P1 | `product_catalog` dead table (1, not 2 — `products` table never existed; `products.ts` file defines active `contract_products`) | OPEN |
 | CF-010 | 🟡 P1 | Stripe webhook ignores payment_failed / refunded *(promoted from P2)* | OPEN |
 | CF-011 | 🟢 P2 | Contract ref by row-count (race) | OPEN |
 | CF-012 | 🟢 P2 | space_blocked_dates vs space_availability overlap | OPEN |

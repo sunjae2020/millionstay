@@ -45,24 +45,24 @@
 | `contracts` | `total_rent` | `real` | yes | — | `contracts.ts:17` | ↔ `bookings.total_rent` (numeric) 🔴 |
 | `contracts` | `bond_amount` | `real` | yes | — | `contracts.ts:18` | (computed `weeklyRate * 4`) |
 | `contracts` | `advance_amount` | `real` | yes | — | `contracts.ts:19` | (computed `weeklyRate * 2`) |
-| `product_catalog` | `price` | `real` | yes | — | `product_catalog.ts:10` | dead table — see CF-009 |
-| `product_catalog` | `bond_amount` | `real` | yes | — | `product_catalog.ts:19` | dead |
-| `product_catalog` | `admin_fee` | `real` | yes | — | `product_catalog.ts:20` | dead |
-| `product_catalog` | `cleaning_fee` | `real` | yes | — | `product_catalog.ts:21` | dead |
-| `products` | `weekly_rate` | `real` | yes | — | `products.ts:14` | dead |
-| `products` | `monthly_rate` | `real` | yes | — | `products.ts:15` | dead |
-| `products` | `effective_weekly_rate` | `real` | yes | — | `products.ts:16` | dead, but written by route — see §2.3 |
-| `products` | `bond_weeks` | `real` | yes | `4` | `products.ts:19` | (count) |
-| `products` | `bond_amount` | `real` | yes | — | `products.ts:20` | dead |
-| `products` | `admin_fee` | `real` | yes | — | `products.ts:21` | dead |
-| `products` | `cleaning_fee` | `real` | yes | — | `products.ts:22` | dead |
+| `product_catalog` | `price` | `real` | yes | — | `product_catalog.ts:10` | 🪦 dead table — see CF-009 (revised) |
+| `product_catalog` | `bond_amount` | `real` | yes | — | `product_catalog.ts:19` | 🪦 dead |
+| `product_catalog` | `admin_fee` | `real` | yes | — | `product_catalog.ts:20` | 🪦 dead |
+| `product_catalog` | `cleaning_fee` | `real` | yes | — | `product_catalog.ts:21` | 🪦 dead |
+| `contract_products` | `weekly_rate` | `real` | yes | — | `products.ts:14` | ⚠ active — file misnamed; see CF-009 rev. |
+| `contract_products` | `monthly_rate` | `real` | yes | — | `products.ts:15` | ⚠ active |
+| `contract_products` | `effective_weekly_rate` | `real` | yes | — | `products.ts:16` | ⚠ active, written by route — see §2.3 |
+| `contract_products` | `bond_weeks` | `real` | yes | `4` | `products.ts:19` | (count) — active |
+| `contract_products` | `bond_amount` | `real` | yes | — | `products.ts:20` | ⚠ active |
+| `contract_products` | `admin_fee` | `real` | yes | — | `products.ts:21` | ⚠ active |
+| `contract_products` | `cleaning_fee` | `real` | yes | — | `products.ts:22` | ⚠ active |
 | `service_catalog` | `base_price` | `real` | yes | — | `service_catalog.ts:9` | — |
 | `space_service_catalog` | `custom_price` | `real` | yes | — | `space_service_catalog.ts:8` | — |
 | `spaces` | `base_weekly_price` | `real` | yes | — | `spaces.ts:13` | — |
 | `spaces` | `base_daily_price` | `real` | yes | — | `spaces.ts:14` | — |
 | `work_orders` | `cost` | `real` | yes | — | `work_orders.ts:17` | — |
 
-**Subtotal**: 30 columns. All inexact. Six of them are in the dead `products` / `product_catalog` tables (CF-009).
+**Subtotal**: 30 columns. All inexact. **Four** of them are in the dead `product_catalog` table (CF-009 revised — `SCHEMA_FILE_TABLE_MAP.md`); the other **seven** previously attributed to a "`products`" table actually belong to the **active** `contract_products` table (file misnamed). Net: 4 dead-table money columns can be ignored for reconciliation; the other 26 are live precision risks.
 
 ### 1.3 Integer / cents columns
 
@@ -83,9 +83,9 @@ This is the Stripe payment-intent amount — Stripe's API uses integer cents. Th
 
 | Concept | numeric site | real site | Risk |
 |---|---|---|---|
-| Weekly rate | `bookings.agreed_weekly_rate` (`numeric(12,2)`) | `contracts.weekly_rate` (`real`), `accommodation_catalog.weekly_rate` (`real`), `products.weekly_rate` (`real` — dead), `spaces.base_weekly_price` (`real`) | Confirmed cross-table copy at `bookings.ts:458` 🔴 |
+| Weekly rate | `bookings.agreed_weekly_rate` (`numeric(12,2)`) | `contracts.weekly_rate` (`real`), `accommodation_catalog.weekly_rate` (`real`), `contract_products.weekly_rate` (`real` — active; file `products.ts`), `spaces.base_weekly_price` (`real`) | Confirmed cross-table copy at `bookings.ts:458` 🔴 |
 | Total rent | `bookings.total_rent` (`numeric(12,2)`) | `contracts.total_rent` (`real`) | Confirmed cross-table copy at `bookings.ts:459` 🔴 |
-| Bond amount | (none) | `contracts.bond_amount`, `accommodation_catalog.bond_amount`, `products.bond_amount` (dead) | Computed inline; written to real |
+| Bond amount | (none) | `contracts.bond_amount`, `accommodation_catalog.bond_amount`, `contract_products.bond_amount` (active; file `products.ts`) | Computed inline; written to real |
 | Service line price | `booking_services.{unit,total}_price` (`numeric(10,2)`), `contract_line_items.{unit,total}_price` (`numeric(10,2)`) | `accommodation_service_catalog.custom_price`, `space_service_catalog.custom_price`, `service_catalog.base_price` (all `real`) | Catalog price (`real`) is read into JS, then written to line item (`numeric`) — direction-dependent precision loss possible |
 | Discount amount | `promotions.discount_amount` (`numeric(10,2)`) | (none) | Consistent ✅ |
 | Cost | (none) | `work_orders.cost` (`real`) | Single-typed |
@@ -138,7 +138,7 @@ This is the Stripe payment-intent amount — Stripe's API uses integer cents. Th
 | `contracts.ts:94` | `(weeklyRate * (52 / 12)).toFixed(2)` | duplicate of the above |
 | `owner-portal.ts:83` | `parseFloat(... ) * 4` | monthly = weekly × **4** (inconsistent with above) — CF-006 |
 | `owner-portal.ts:236` | `(c.weekly_rate ?? 0) * 52 / 12` | monthly = weekly × **52/12** |
-| `accommodation_catalog.ts:25`, `products.ts:19` | `bond_weeks: real("bond_weeks").default(4)` | configurable but unused at calc sites |
+| `accommodation_catalog.ts:25`, `products.ts:19` *(file `products.ts` defines `contract_products`)* | `bond_weeks: real("bond_weeks").default(4)` | configurable but unused at calc sites |
 
 ### 2.3 `effective_weekly_rate` derivation (response-side only)
 
@@ -157,7 +157,7 @@ This is inside the `enrich()` helper that is invoked when listing `contract_prod
 
 Separately, the `POST /v1/contract-products` handler (`products.ts:67`) and `PUT /v1/contract-products/:id` (`products.ts:108`) accept `effective_weekly_rate` from the **request body** and store it as-is in `contract_products.effective_weekly_rate` (`real`). So the column is client-supplied, not server-derived. ⚠️ This is a quiet trust assumption — a misbehaving client could ship a `effective_weekly_rate` that contradicts `weekly_rate × (1 - discount)`.
 
-(Note: the `products` schema table itself also declares `effective_weekly_rate: real`, but that table is dead — see CF-009. The live persistence is on `contract_products`.)
+(Note: corrected 2026-04-26 per T002.1.6 — there is no separate `products` table. The schema file `products.ts` declares **only** `contract_products`, and that is where `effective_weekly_rate` lives. See `SCHEMA_FILE_TABLE_MAP.md` §3 for the full file-name vs table-name divergence list and CF-009 (revised) for why this matters.)
 
 ---
 

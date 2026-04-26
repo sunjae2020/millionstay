@@ -33,17 +33,32 @@
 - **Outcome**: format `(a) lock` per user reply. Subsequent reinforcements applied in T002.1.5 below.
 
 ### T002.1.5 — Format lock reinforcement (B1 + B2 + B3 setup)
+- **Status**: ✅ **DONE** (2026-04-26) — approved
+- See entry below.
+
+### T002.1.6 — CF-009 re-verification (table-level vs file-level)
 - **Status**: ⏸️ **AWAITING_APPROVAL** (2026-04-26)
-- **Triggered by**: user directives [B1] (1-line metadata header), [B2] (re-verify 5 samples), [B3] (progressive verification protocol set-up).
-- **Outputs**:
-  - `booking.md` updated: 5 × 1-line **Meta** header inserted directly under each `## SX — METHOD /url` (`Auth | $$ | logAction | CF`).
-  - `booking.md` appendix: **Sample Re-Verification Log** section recording 24/24 spot-checks (5 lines + 11 tables + 8 CFs) with `sed`/`rg` commands and exact outputs.
-  - Incidental finding: `contract_products` table lives in **schema** file `products.ts` despite the **route** file being DEAD — flagged for T002.3.
-- **Gate**: 24/24 ✅ — no corrections required to the 5 samples.
-- **Blocker**: user `proceed` to begin T002.2.a (contract.md).
+- **Triggered by**: T002.1.5 incidental finding ("schema-file deadness ≠ table deadness") — user demanded re-audit before T002.2 starts to prevent retrofit costs in T002.3.
+- **Outputs (atomic — R-REPO-1)**:
+  - **NEW** `docs/reverse/_audit/SCHEMA_FILE_TABLE_MAP.md` (~190 lines) — full 50-table inventory: Schema File · Var Name · SQL Table · Route Files Using · Status; methodology; 8 file-name vs table-name divergences; T002.0 §6 candidates re-evaluation (all cleared); cross-doc impact log.
+  - `docs/reverse/_audit/CRITICAL_FINDINGS.md` — CF-009 fully rewritten: title, evidence, count (2 dead → 1 dead), recommendation, summary table row.
+  - `docs/reverse/_schema/api-endpoints/INDEX.md` — `products.ts` row L49 status DEAD → ACTIVE with file-misnaming note + path corrected `/v1/products` → `/v1/contract-products`; L93 domain-group blurb; L131 Risk Legend wording.
+  - `docs/reverse/_audit/MONEY_AUDIT.md` — 7 column rows re-attributed `products` → `contract_products`; subtotal sentence rewritten (4 dead, not 6); §1.5 cross-pair rows; §2.2 `bond_weeks` row clarified; §2.3 closing note rewritten.
+- **Findings**:
+  1. **`products` table never existed** in this repo (`rg 'pgTable\("products"' lib/db/src/schema/` → 0 matches).
+  2. **Only 1 confirmed dead table**: `product_catalog` (0 route uses).
+  3. **8 file-name ↔ table-name divergences** trap naive grep; remedy = use actual var name (see SCHEMA_FILE_TABLE_MAP §1.3).
+  4. **All T002.0 §6 "suspected dead" candidates cleared** (announcements, *_service_catalog, product_types/groups all heavily used internally).
+  5. **Variable-name convention also drifts** in 6 places (e.g. `usersTable` → `admin_users`, `integrationSettings` no `Table` suffix).
+- **Incidental finding (R-REPO-5)**: route file `product-catalog.ts` actually queries `accommodation_catalog` (not `product_catalog`); cleaner than feared. *Impact: simple memo — no further CF.*
+- **Verification gate (RULE 7) — 3-claim spot-check**:
+  1. `pgTable("products"` count → 0 (verified by `rg`) ✅
+  2. `productCatalogTable` route imports → 0 ✅
+  3. `contractProductsTable` route imports → 4 files (`beneficiaries.ts`, `bookings.ts`, `contracts.ts`, `products.ts`) ✅
+- **Blocker**: user `proceed` to begin T002.2.a (contract.md) with corrected CF-009 baseline.
 
 ### T002.2 — All remaining endpoints (348 endpoints) — split per [B3] into 9 sub-tasks
-- **Status**: ⚪ **PENDING** (blocked by T002.1.5 approval)
+- **Status**: ⚪ **PENDING** (blocked by T002.1.6 approval)
 - **Sub-tasks** (each: write → 3-claim spot-check → ≤50-line report → user `proceed` → next):
   - **T002.2.a — `contract.md`** (28 endpoints: contracts.ts 21 + contract-types.ts 7) — first because it's the receiver of S2's auto-create writes; cross-ref hooks already in booking.md S2/S5.
   - **T002.2.b — `finance.md`** (43 endpoints across 7 files) — depends on contract for invoice cross-ref pattern.
