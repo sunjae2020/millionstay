@@ -1,5 +1,8 @@
 # Performance Benchmarks (Targets & Test Plan)
 
+> ✅ **T001-RECON-VERIFIED** 2026-04-26 — corroborated by `docs/reverse/_audit/T001_RECON_REPORT.md` §g.
+
+
 > No load testing has been run against the current Node/Express stack. The targets below are derived from typical SaaS expectations and should be measured before / after the C# port to verify parity.
 
 ## 1. Latency targets (p95)

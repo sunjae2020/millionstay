@@ -1,5 +1,8 @@
 # Core ERD — Property → Space → Product → Booking → Contract → Invoice
 
+> ⚠️ **NEEDS REVISION** — see `docs/reverse/_audit/T001_RECON_REPORT.md` §g for specific corrections required. Will be rewritten in T002–T007 when its domain folder is processed.
+
+
 > Schema source: `lib/db/src/schema/*.ts` (Drizzle ORM, PostgreSQL).
 > Generated migrations: `lib/db/drizzle/0000_violet_morgan_stark.sql` (baseline).
 > No `drizzle-orm/relations` blocks are defined — joins happen at the application layer via FK columns.

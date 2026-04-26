@@ -1,5 +1,8 @@
 # Business Constraints — What Is Enforced (and What Isn't)
 
+> ✅ **T001-RECON-VERIFIED** 2026-04-26 — corroborated by `docs/reverse/_audit/T001_RECON_REPORT.md` §g.
+
+
 ## 1. Booking constraints
 
 ### Overbooking prevention ✅ (race condition risk 🔴)

@@ -1,5 +1,8 @@
 # Feature Implementation Gap Analysis (STEP 0-B)
 
+> ⚠️ **NEEDS REVISION** — see `docs/reverse/_audit/T001_RECON_REPORT.md` §g for specific corrections required. Will be rewritten in T002–T007 when its domain folder is processed.
+
+
 Legend: ✅ Fully implemented · ⚠️ Partially · ❌ Not implemented · 🔲 Backend only (no UI)
 
 ## Admin features

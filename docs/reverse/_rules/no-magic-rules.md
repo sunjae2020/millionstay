@@ -1,5 +1,8 @@
 # C# Migration Compatibility Audit ("No-Magic" Rules)
 
+> ✅ **T001-RECON-VERIFIED** 2026-04-26 — corroborated by `docs/reverse/_audit/T001_RECON_REPORT.md` §g.
+
+
 > Goal: identify TypeScript/Node patterns that will not translate cleanly to C# .NET, with severity and a refactor approach for each 🔴 item.
 
 ## 1. Loose typing

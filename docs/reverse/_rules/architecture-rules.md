@@ -1,5 +1,8 @@
 # Architecture Rules — Layering, Naming, Conventions
 
+> ✅ **T001-RECON-VERIFIED** 2026-04-26 — corroborated by `docs/reverse/_audit/T001_RECON_REPORT.md` §g.
+
+
 ## 1. Clean-architecture compliance score (1–5)
 
 | Concern | Score | Notes |

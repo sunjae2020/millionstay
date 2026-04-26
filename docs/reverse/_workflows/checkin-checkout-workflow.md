@@ -1,5 +1,8 @@
 # Check-in / Check-out / Extension Workflow
 
+> ✅ **T001-RECON-VERIFIED** 2026-04-26 — corroborated by `docs/reverse/_audit/T001_RECON_REPORT.md` §g.
+
+
 ## 1. Check-in
 
 **Endpoint:** `PATCH /api/v1/bookings/:id/check-in`

@@ -1,5 +1,8 @@
 # Payment Workflow
 
+> ✅ **T001-RECON-VERIFIED** 2026-04-26 — corroborated by `docs/reverse/_audit/T001_RECON_REPORT.md` §g.
+
+
 ## 1. Payment schedule generation
 
 **Trigger:** `POST /api/v1/contracts/:id/activate` → calls `generateContractInvoicesAndSchedules(contractId)` in `routes/contracts.ts:55`.

@@ -1,5 +1,8 @@
 # Design Tokens
 
+> ⚠️ **NEEDS REVISION** — see `docs/reverse/_audit/T001_RECON_REPORT.md` §g for specific corrections required. Will be rewritten in T002–T007 when its domain folder is processed.
+
+
 Tailwind v4 inline-theme is used. Tokens live in each artifact's `src/index.css` under `@theme inline { ... }`. There is **no shared design package** — tokens are duplicated per artifact (a known maintenance gap).
 
 ## 1. Color tokens (HSL)

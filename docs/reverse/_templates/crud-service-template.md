@@ -1,5 +1,8 @@
 # CRUD Service Template
 
+> ✅ **T001-RECON-VERIFIED** 2026-04-26 — corroborated by `docs/reverse/_audit/T001_RECON_REPORT.md` §g.
+
+
 Use this template when adding a new domain endpoint. It enforces the future architecture target (route → service → repo) without breaking the current inline-route style for legacy code.
 
 ## 1. File layout (proposed)

@@ -1,5 +1,8 @@
 # Booking Test Cases (Recommended)
 
+> ✅ **T001-RECON-VERIFIED** 2026-04-26 — corroborated by `docs/reverse/_audit/T001_RECON_REPORT.md` §g.
+
+
 > Use these as the acceptance suite for the current Node/Express implementation **and** the future C# port.
 
 ## 1. Booking creation

@@ -1,5 +1,8 @@
 # User Personas, Roles & Permissions
 
+> ✅ **T001-RECON-VERIFIED** 2026-04-26 — corroborated by `docs/reverse/_audit/T001_RECON_REPORT.md` §g.
+
+
 ## 1. User roles in code
 
 | Role | Stored in | Field / values |

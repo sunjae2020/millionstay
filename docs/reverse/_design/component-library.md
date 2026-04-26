@@ -1,5 +1,8 @@
 # Component Library Inventory
 
+> ⚠️ **NEEDS REVISION** — see `docs/reverse/_audit/T001_RECON_REPORT.md` §g for specific corrections required. Will be rewritten in T002–T007 when its domain folder is processed.
+
+
 All five web artifacts share the same UI primitive structure: `src/components/ui/` (shadcn/ui = Radix + Tailwind + class-variance-authority + Lucide icons). App-specific components live in `src/components/`.
 
 ## 1. Shared primitives (per artifact `src/components/ui/`)

@@ -1,5 +1,8 @@
 # C# Migration Readiness Checklist
 
+> ✅ **T001-RECON-VERIFIED** 2026-04-26 — corroborated by `docs/reverse/_audit/T001_RECON_REPORT.md` §g.
+
+
 Ranked from highest impact / lowest cost.
 
 ## Phase 0 — DB hygiene

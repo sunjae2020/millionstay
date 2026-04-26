@@ -1,0 +1,96 @@
+RECON 리포트 승인. 검증 게이트 통과 확인.
+
+다만 T002로 바로 넘어가기 전에 추가 지시가 있습니다.
+═══════════════════════════════════════════════════
+[T001.5 — RECON 후속 정리, T002 이전 필수]
+═══════════════════════════════════════════════════
+
+[A] CRITICAL_FINDINGS 별도 산출
+RECON에서 발견한 🔴/🟡 이슈들은 문서화 부채가 아니라 실제 코드 결함입니다.
+이걸 일반 docs에 묻으면 잊혀집니다. 별도 추적 필요.
+
+산출물: `_audit/CRITICAL_FINDINGS.md`
+
+각 발견에 대해:
+- ID (CF-001, CF-002...)
+- 제목
+- 심각도 (🔴 P0 / 🟡 P1 / 🟢 P2)
+- 영향 범위 (재무 / 보안 / 데이터 무결성 / 마이그레이션)
+- 증거 (file:line + 코드 인용 5줄 이내)
+- 재현 시나리오 (있는 경우)
+- 권장 수정 방향 (코드 변경은 하지 말 것 — 기록만)
+- Phase 2 영향
+- 상태: OPEN
+
+최소한 다음은 반드시 포함:
+- CF: real vs numeric 머니 타입 분열
+- CF: contracts에 real로 복사되어 정밀도 손실
+- CF: FK references() 0개
+- CF: dev-migration auth 이전 마운트
+- CF: portal_type service_host 타입 누락
+- CF: 주당 환산식 *4 vs *52/12 중복
+- CF: 2주 advance / 4주 bond 하드코딩
+- CF: logAction 6개 라우트만 호출 (audit 불완전)
+- CF: products / product_catalog dead tables
+
+[B] MONEY_AUDIT 별도 심층 산출
+재무는 PMS의 핵심이고 real(float) 사용은 즉시 위험합니다.
+
+산출물: `_audit/MONEY_AUDIT.md`
+
+수행 작업:
+1. 모든 머니 컬럼 전수 조사
+   - 테이블.컬럼 / 타입 (numeric/real/integer) / 정밀도 / nullable
+   - 일관성 평가 (같은 의미인데 타입 다른 컬럼 짝지어서 표시)
+   
+2. 모든 머니 계산 코드 위치 매핑
+   - file:line / 함수명 / 입력 컬럼 / 출력 컬럼
+   - Type coercion 발생 지점 표시
+   
+3. Cross-table money flow
+   - bookings(numeric) → contracts(real) 복사 지점들
+   - contracts(real) → contract_line_items(numeric) 변환 지점들
+   - invoices(numeric) ← contracts(real) 참조 지점들
+   - 각 흐름에서 정밀도 손실 가능 지점 ⚠️ 표시
+   
+4. 권장 일관성 모델 (제안만, 변경 X)
+   - 모든 머니를 numeric(12,2)로 통일하는 마이그레이션 스케치
+   - integer cents 모델 제안 (Phase 2 .NET decimal 매핑 용이성)
+   - 둘의 trade-off
+
+[C] 35개 기존 docs 정리 — 단, 점진적으로
+- KEEP 12개: 그대로 유지. 단, 각 파일 상단에 
+  "✅ T001-RECON-VERIFIED YYYY-MM-DD" 마커 추가.
+- REVISE 23개: 지금 한꺼번에 고치지 말 것. 
+  T002~T008 진행하면서 해당 도메인 문서 다룰 때 함께 수정.
+  지금은 각 파일 상단에 "⚠️ NEEDS REVISION (see T001 report)" 마커만 추가.
+- DELETE 0개: 진행 안 함.
+
+[D] session_plan.md 업데이트
+- T001: DONE
+- T001.5: IN_PROGRESS (이번 작업)
+- T002~T008: PENDING
+
+T001.5 산출물 3가지: CRITICAL_FINDINGS.md, MONEY_AUDIT.md, 
+35개 파일에 마커 추가.
+
+═══════════════════════════════════════════════════
+[질문 — 답변 후 진행]
+═══════════════════════════════════════════════════
+
+T001.5 완료 후 T002로 넘어갈 때, _schema/ 재작성 방향에 대해:
+
+Q1. api-endpoints.md를 353개 전수로 만들면 너무 거대해집니다. 
+    다음 중 어떤 구조가 좋을까요?
+    
+    (a) 단일 파일, 도메인별 섹션 (booking/contract/finance/...)
+    (b) 도메인별 분할: api-endpoints/booking.md, contract.md, ...
+    (c) 인덱스 + 도메인 분할: api-endpoints/INDEX.md + per-domain
+    
+Q2. erd-core.md에 FK 부재를 어떻게 표현할까요?
+    
+    (a) Mermaid에 점선으로 implicit relationship 표시 + 경고 박스
+    (b) 두 다이어그램: "현재 상태" (FK 없음) + "권장 상태" (FK 추가)
+    (c) Phase 2 마이그레이션을 위한 전용 ERD 섹션 별도 추가
+
+본인의 추천도 함께 답하세요. 그 후 T001.5 시작.

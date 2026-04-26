@@ -1,5 +1,8 @@
 # MillionStay — Reverse Documentation Overview (STEP 0)
 
+> ⚠️ **NEEDS REVISION** — see `docs/reverse/_audit/T001_RECON_REPORT.md` §g for specific corrections required. Will be rewritten in T002–T007 when its domain folder is processed.
+
+
 > Generated: 2026-04-19. Snapshot of the actual codebase state.
 
 ## 1. Project structure

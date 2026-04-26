@@ -1,5 +1,8 @@
 # Finance Schema — Invoice / RecurringSchedule / PaymentMethod / Promotion
 
+> ⚠️ **NEEDS REVISION** — see `docs/reverse/_audit/T001_RECON_REPORT.md` §g for specific corrections required. Will be rewritten in T002–T007 when its domain folder is processed.
+
+
 > Source: `lib/db/src/schema/{invoices,recurring_schedules,promotions}.ts`
 
 ## invoices

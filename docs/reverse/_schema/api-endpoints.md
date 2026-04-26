@@ -1,5 +1,8 @@
 # API Endpoint Inventory — `artifacts/api-server`
 
+> ⚠️ **NEEDS REVISION** — see `docs/reverse/_audit/T001_RECON_REPORT.md` §g for specific corrections required. Will be rewritten in T002–T007 when its domain folder is processed.
+
+
 > Source: `artifacts/api-server/src/routes/*.ts` and `app.ts` mounting.
 > Mount prefix: most admin routes under `/api/v1/...`. Public anonymous routes under `/api/v1/public/...`. Portal routes under `/api/v1/{guest|agent|owner|service-host}/...`. Stripe webhook at `/api/stripe/webhook`.
 

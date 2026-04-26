@@ -1,5 +1,8 @@
 # API Test Checklist
 
+> ✅ **T001-RECON-VERIFIED** 2026-04-26 — corroborated by `docs/reverse/_audit/T001_RECON_REPORT.md` §g.
+
+
 A general checklist to apply to **every** endpoint before it is considered production-ready.
 
 ## 1. Generic checklist (per endpoint)
