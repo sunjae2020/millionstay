@@ -1,0 +1,199 @@
+proceed (i, ii=defer, iii=동일포맷 with stripe webhook 보강)
+
+═══════════════════════════════════════════════════
+[결정 근거 — R-REPO-7 trade-off 명시]
+═══════════════════════════════════════════════════
+
+(i) Step 2 본문 진행 ✅ APPROVED
+- 26 endpoints, ~813 lines 예상 (cap 아래)
+- finance-invoicing.md 포맷 검증됨 (680 lines, 17 ep)
+- 사전 분류 ground truth 확인 완료
+- CF anchor 사전 점검 완료
+
+(ii) T002.2.b.fix-1 mini-task ✅ DEFER
+채택: post-T002.2.b 지연 실행
+이유:
+- P2 evidence expansion → 후속 도메인 baseline 영향 없음
+- T002.2.b 통합 atomic commit boundary 명확화
+- 후속 도메인에서 nextInvoiceRef-like 패턴 발견 시 
+  R-REPO-5 incidental로 evidence 합산 가능 (지연이 오히려 풍부)
+
+거부: 즉시 실행
+이유:
+- T002.1.8 즉시 실행은 P1 (CF-006/014) baseline 청결 필요했음
+- 이번 P2 evidence 는 baseline 영향 없음 → 즉시 실행 비용 정당화 부족
+
+미래 적용 원칙:
+- P0/P1 evidence expansion → 즉시 실행 (baseline 청결)
+- P2 evidence expansion → 도메인 완료 후 batch (evidence 누적)
+- 신규 CF (P0/P1) → 즉시 실행
+- 신규 CF (P2) → batch 가능
+
+(iii) 포맷 ✅ 동일 + stripe webhook 보강 (option C)
+
+채택: full sample × 26 동일 포맷 + stripe webhook 에 추가 섹션 3개
+거부 옵션:
+- (a) 동일 full sample만: webhook 특수성 흡수 부족
+- (b) 별도 압축 포맷: 일관성 깨짐 + 후속 grep 부담
+
+채택 이유:
+1. 포맷 일관성 유지 (24 + 2 동일 포맷)
+2. webhook 특수성은 본문 내 표 형태로 흡수
+3. CF-010 evidence 가 표 형태로 시각화 (8 누락 transition 명시)
+4. state-machines.md (T002.5) 작성 시 cross-ref source
+
+═══════════════════════════════════════════════════
+[stripe webhook E26 추가 섹션 3개 — 작성 가이드]
+═══════════════════════════════════════════════════
+
+stripe.ts webhook (POST /api/v1/stripe/webhook) 표준 섹션 + 다음 3개 추가:
+
+▼ Event Coverage Matrix (표)
+| Stripe Event | Handler? | Invoice State Change | logAction | CF |
+|--------------|----------|---------------------|-----------|-----|
+| payment_intent.succeeded | ✅ | paid | ✅ | — |
+| payment_intent.payment_failed | ❌ | (none) | ❌ | CF-010 |
+| charge.refunded | ❌ | (none) | ❌ | CF-010 |
+| charge.dispute.created | ❌ | (none) | ❌ | CF-010 |
+| charge.dispute.closed (won) | ❌ | (none) | ❌ | CF-010 |
+| charge.dispute.closed (lost) | ❌ | (none) | ❌ | CF-010 |
+| invoice.payment_succeeded | TBD | TBD | TBD | TBD |
+| invoice.payment_failed | TBD | TBD | TBD | TBD |
+| customer.subscription.* | TBD | TBD | TBD | TBD |
+
+작성 시 실제 stripe.ts 코드 read 후 정확한 카운트 + 실제 처리되는 
+event 전수 확인 (사전 분류는 8개 누락 가설; 실제는 더 많거나 적을 수 
+있음).
+
+▼ Accounting Drift Scenarios
+CF-010 본문 "8개 누락 transition" 과 cross-ref. 각 누락 시나리오의 
+실제 회계 영향:
+- payment_failed 후 재시도 누락 → invoice 영원히 paid 표시
+- refund 처리 누락 → 환불 후에도 invoice paid
+- dispute 처리 누락 → chargeback 후 회계 부정합
+- ... (나머지 누락 시나리오 명시)
+
+▼ Idempotency Analysis
+Stripe webhook 은 동일 event 재전송 가능. 코드의 idempotency 
+처리 확인:
+- event.id 기반 중복 처리 방지 있는가?
+- 없으면 → 재전송 시 invoice paid 두 번 처리 위험
+- CF-014 (트랜잭션 부재) 와의 합산 위험 평가
+
+═══════════════════════════════════════════════════
+[Step 4 사전 sealing — 3 spot-check 클레임]
+═══════════════════════════════════════════════════
+
+finance-payments.md 작성 시작 전 임시 anchor block 에 sealing:
+
+C1 (가장 복잡한 endpoint file:line + 헬퍼 chain):
+- 권장: stripe.ts E26 webhook (CF-010 anchor + event coverage 
+  matrix 검증)
+- event type 분기 + invoice update + logAction chain 정확성
+
+C2 (CF anchor 다수 endpoint):
+- 권장: commissions.ts POST/PUT 또는 beneficiaries.ts POST/PUT
+- CF-001 (real money) + CF-008 (logAction absent) + CF-017 (Zod 
+  패턴) 동시 anchor
+- Meta 4 필드 + CF cross-ref 정확성
+
+C3 (자가 발견 inconsistency):
+- finance-invoicing C3 패턴 (3🔴 / 6🟡 / 1🟢 / 1⚠️-system) 따라
+- 발견 카테고리 카운트 + system-wide 패턴 추가 가능성 평가
+- negative result ("none, n=26") 가능 (단 finance 도메인 특성상 
+  가능성 낮음)
+
+═══════════════════════════════════════════════════
+[추가 가이드 — finance-payments 작성 시]
+═══════════════════════════════════════════════════
+
+[E] CF-001 finance 내부 boundary 명시
+commissions.commission_amount (real) → invoices.amount (numeric) 
+쓰기가 발생하는 endpoint 모두 명시:
+- commissions.ts CRUD endpoint 의 amount 컬럼 처리
+- beneficiaries.ts split_percentage / fixed_amount → invoice 분배 
+  계산 시 동일 패턴
+- 추후 CF-001 evidence section 확장 시 anchor
+
+CF-001 evidence section 확장은 T002.2.b 통합 commit 의 일부 (즉시).
+이건 mini-task 가 아니라 normal R-REPO-1 atomic 의 일부:
+- finance-payments.md C3 에서 발견 시 → 통합 commit 시 
+  CRITICAL_FINDINGS.md CF-001 evidence 도 갱신
+- 새 mini-task 불필요 (evidence가 finance-payments.md 작성 결과로 
+  자동 누적)
+
+[F] CF-008 도메인 severity matrix 작성 (신규 섹션)
+finance-payments 작성 후 CRITICAL_FINDINGS.md CF-008 본문에 
+"Domain severity matrix" 신규 섹션 추가:
+
+| Domain | Mutators | logAction | Coverage % | Status |
+|--------|----------|-----------|-----------|--------|
+| contract | 14 | 6 | 40% | confirmed (T002.2.a) |
+| finance-invoicing | 13 | 3 | 23% | confirmed (T002.2.b half-1) |
+| finance-payments | ~22 | ~4 | ~18% | confirmed (T002.2.b half-2) |
+| finance (combined) | ~35 | ~7 | ~20% | confirmed (T002.2.b) |
+| ops-property | TBD | TBD | TBD | pending T002.2.c |
+| ops-catalog | TBD | TBD | TBD | pending T002.2.d |
+| ops-crm | TBD | TBD | TBD | pending T002.2.e |
+| portal-guest | TBD | TBD | TBD | pending T002.2.f |
+| portal-partner | TBD | TBD | TBD | pending T002.2.g |
+| public | TBD | TBD | TBD | pending T002.2.h |
+| admin | TBD | TBD | TBD | pending T002.2.i |
+
+이 matrix 가 living document. T002 진행하면서 row 채워짐. 
+모든 도메인 완료 시 finance vs contract 격차 + 다른 도메인 비교 
+정량화 완료.
+
+[G] CF-010 stripe event coverage matrix 갱신
+stripe.ts webhook 코드 read 후 실제 처리 event 전수 확인. 
+finance-payments.md E26 본문 표 + CRITICAL_FINDINGS.md CF-010 
+evidence section 양쪽 갱신.
+
+[H] beneficiaries / accounts cross-domain refs (가이드 [D] 후속)
+- accounts.id → invoices.account_id (finance-invoicing E1/E2 
+  enrichment) — bidirectional cross-ref 추가
+- beneficiaries → 다른 도메인 참조 점검 (contract.md? ops-crm.md?)
+- 발견 시 R-REPO-1 atomic commit 의 일부로 cross-ref back-fill
+
+[I] half-1 의 "1⚠️-system" 카테고리 명시
+finance-invoicing.md C3 의 "1⚠️-system" 카테고리가 무엇인지 
+finance-payments 통합 보고에 명시 (생략됐던 detail). 
+system-wide 패턴이면 신규 CF 후보 가능성.
+
+═══════════════════════════════════════════════════
+[T002.2.b 통합 atomic commit 범위]
+═══════════════════════════════════════════════════
+
+T002.2.b half-2 완료 시 R-REPO-1 atomic commit:
+1. finance-payments.md (NEW)
+2. CRITICAL_FINDINGS.md:
+   - CF-001 evidence (finance 내부 boundary, commissions/beneficiaries 
+     → invoices)
+   - CF-008 domain severity matrix (신규 섹션)
+   - CF-010 stripe event coverage matrix 갱신
+   - CF-014 evidence 추가 (R5 generate-due silent dual-billing 시나리오)
+3. INDEX.md (필요 시)
+4. _T002_PROGRESS.md (T002.2.b 통합 DONE)
+5. session_plan.md (T002.2.b DONE, T002.2.c NEXT)
+6. cross-ref back-fill:
+   - finance-invoicing.md (commissions/accounts cross-ref)
+   - contract.md (account_id 참조 시)
+   - booking.md (해당 시)
+
+T002.2.b.fix-1 mini-task 는 별도 commit (post-T002.2.b).
+
+═══════════════════════════════════════════════════
+[지금 시작]
+═══════════════════════════════════════════════════
+
+(1) Step 4 3 클레임 사전 sealing (≤10 lines, finance-payments.md 
+    임시 anchor block)
+(2) Step 2 본문 작성 (26 endpoint, full sample + stripe webhook 
+    3 추가 섹션)
+(3) Step 3 self-check 표 (26 × 7 = 182 cells)
+(4) Step 4 spot-check 검증 (C1/C2/C3)
+(5) Step 5 R-REPO-1 atomic commit (위 6 항목)
+(6) Step 6 R-REPO-4 통합 보고
+
+(6) 후 사용자 proceed → T002.2.c (ops-property.md) 시작.
+T002.2.c 자동 시작 절대 금지. Step 6 통합 보고 후 게이트.

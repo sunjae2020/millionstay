@@ -3,7 +3,7 @@
 > **Source**: T001 RECON (`docs/reverse/_audit/T001_RECON_REPORT.md`).
 > **Format**: One row per finding. Each finding has a stable ID (`CF-NNN`) and **status**. Severity follows `🔴 P0` (must fix before production), `🟡 P1` (must fix before scale), `🟢 P2` (technical debt). Evidence is direct code quotation (≤ 5 lines per finding) with `path:line`.
 > **Discipline**: This file records facts and recommendations. **No code changes are made by this document** — fixes are tracked through the `Status` field.
-> **Last updated**: 2026-04-26 (T001.5).
+> **Last updated**: 2026-04-26 (T002.2.b half-2 — CF-019 NEW; CF-008 domain severity matrix added; CF-010 evidence-expanded with idempotency gap; CF-014 second locus at `stripe.ts` S2; CF-001 finance-internal boundary confirmation appended).
 
 ---
 
@@ -46,6 +46,10 @@ Migrate every money-bearing `real` column to `numeric(12,2)`. Single `ALTER TABL
 ### Phase 2 impact
 
 A C# / .NET port maps `numeric` cleanly to `System.Decimal`, but `real` maps to `Single`. Mixing both in the same domain forces conversion shims at every boundary and surfaces `decimal ↔ float` rounding asymmetries in tests.
+
+### Carrier (T002.2.b half-2 confirmation)
+
+The boundary runs **inside** the finance domain group, not between finance and another domain. `finance-payments.md` re-anchored 4 sites of the unsafe (`real`) side: `commissions.commission_rate/commission_amount` (C2/C4) and `beneficiaries.fixed_amount` (B2/B4). The safe (`numeric`) side is anchored by `finance-invoicing.md` (`invoices.amount`, `recurring_schedule.amount`). Phase 2 carrier should treat `commissions` + `beneficiaries` as the migration candidates; `invoices` + `recurring_schedules` are already aligned.
 
 ---
 
@@ -333,6 +337,26 @@ Make `logAction()` a side-effect of a shared `crud-service` template (see `docs/
 
 `system_logs` cannot be the source of truth for compliance reporting (e.g. who modified a tenant record). Backfilling history later is impossible.
 
+### Domain Severity Matrix (T002.2.b half-2 addition)
+
+Per-domain logAction-coverage measured as `logAction calls / mutator endpoints`. Cells filled progressively as each `T002.2.x` domain doc lands.
+
+| Domain | Mutator endpoints | logAction calls | Coverage % | Status |
+|---|---:|---:|---:|---|
+| contract | 14 | 6 | 42.9% | confirmed (T002.2.a) |
+| finance-invoicing | 13 | 3 | 23.1% | confirmed (T002.2.b half-1) |
+| finance-payments | 17 | 3 | 17.6% (call) / 5.9% (endpoint) | confirmed (T002.2.b half-2) |
+| **finance (combined)** | **30** | **6** | **20.0% (call)** | confirmed |
+| ops-property | TBD | TBD | TBD | pending T002.2.c |
+| ops-catalog | TBD | TBD | TBD | pending T002.2.d |
+| ops-crm | TBD | TBD | TBD | pending T002.2.e |
+| portal-guest | TBD | TBD | TBD | pending T002.2.f |
+| portal-partner | TBD | TBD | TBD | pending T002.2.g |
+| public | TBD | TBD | TBD | pending T002.2.h |
+| admin | TBD | TBD | TBD | pending T002.2.i |
+
+**Finance vs contract gap**: 20.0% (finance combined) vs 42.9% (contract) → finance domain is **53% under-audited** relative to contract. The gap is concentrated in the 4 lookup-style routes (`payment-info`, `commissions`, `beneficiaries`, `accounts`) where coverage is **0%**. The Stripe webhook (S2) is the lone audited mutator on the payments side; payment-info / commissions / beneficiaries / accounts mutate financial routing data **without any audit trail**.
+
 ---
 
 ## CF-009 — `product_catalog` table is dead schema; the so-called "`products`" table never existed
@@ -476,6 +500,17 @@ The combined effect is that **any refund or failed re-attempt produces accountin
 ### Phase 2 impact
 
 A C# port without these state transitions inherits the accounting drift as schema-level "permanent debt". Fixing it later requires a backfill from Stripe API, which is rate-limited and asymmetric (e.g. disputes have their own pagination).
+
+### Evidence expansion (T002.2.b half-2 — idempotency gap)
+
+A second class of risk surfaced during `finance-payments.md` §2 S2 walk-through (incidental J4): the webhook handler does **not** dedupe on `event.id`. Stripe documents that webhook retries (and at-least-once delivery) require the receiver to track processed event IDs; the only current store is `system_logs.new_value` JSON which is not queried before processing. Consequence:
+
+1. Stripe retries `payment_intent.succeeded` after a transient 5xx → handler re-runs the `db.update(invoicesTable).set({ status: "Paid", paid_at: new Date() })` block → `paid_at` is overwritten with the second-attempt timestamp (silent), and a second `logAction({ action: "PAYMENT" })` row is inserted (visible only in audit log scan).
+2. Same risk for `payment_failed` and `charge.refunded` `STATUS_CHANGE` rows — duplicate entries in `system_logs` with no dedup.
+
+**Recommended addition** to the recommendation block above: introduce a `stripe_processed_events` table keyed on `event.id`, write-through-then-process semantics, and reject (HTTP 200 + no-op) on duplicate. Until then, `paid_at` is "last-write-wins" rather than "first-success-wins".
+
+Carrier: see `finance-payments.md` §6 R-REPO-5 J4 for the full incidental and S2 §2 Event Coverage Matrix for the per-event dedup picture.
 
 ---
 
@@ -691,6 +726,19 @@ Wrap every multi-write handler in `db.transaction(async (tx) => { … })` and pa
 
 A C# port using EF Core `IDbContextTransaction` makes this trivial; a port that mirrors today's fire-and-forget pattern reproduces the bug.
 
+### Second locus — Stripe webhook (T002.2.b half-2)
+
+`artifacts/api-server/src/routes/stripe.ts:51-96` — the `payment_intent.succeeded` branch executes 2 sequential mutations across 2 tables with **no transaction**:
+
+1. `db.update(invoicesTable).set({ status: "Paid", paid_at: new Date(), updated_at: new Date() }).where(eq(id, invoiceId))` (`:55-60`).
+2. `await logAction({ action: "PAYMENT", … })` writes `system_logs` (`:61-72`).
+
+A failure between (1) and (2) leaves the invoice marked Paid but with no audit trail of who/when (CF-008 + CF-014 compounded). Worse, because the webhook does not dedupe on `event.id` (see CF-010 Evidence expansion above), a Stripe retry re-runs (1) and inserts a second `system_logs` row — both within the same un-transactioned envelope. The `payment_failed` and `charge.refunded` branches each fire 1 `logAction` only (no DB update — CF-010 carrier), so they are formally not multi-step, but they share the no-dedup property.
+
+**Anchor count update**: CF-014 now has 3 production code-path loci — `bookings.ts:393-461` (booking confirm), `contracts.ts:429-450` + helper `:55-237` (contract activate), and `stripe.ts:51-96` (Stripe webhook succeeded branch). The first two were enumerated in T002.1.8; the third lands here.
+
+Carrier: see `finance-payments.md` §2 S2 (full sample) + §7 cross-references.
+
 ---
 
 ## CF-015 — Soft-delete vs hard-delete is inconsistent across tables and routes
@@ -765,8 +813,9 @@ EF Core's `HasQueryFilter` for soft-delete relies on a uniform column. Today's t
 | CF-016 | 🟢 P2 | Schema file/table/variable naming inconsistency (14 of 50 tables break convention) — Phase 2 migration friction | OPEN |
 | CF-017 | 🟡 P1 | Input validation (Zod or any) absent on ~90% of route files — only 5 of 52 files validate `req.body` | OPEN |
 | CF-018 | 🟡 P1 | IDOR-class authorization-scope omission on nested resource handlers — 7 outright + 3 partial of 17 audited | OPEN |
+| CF-019 | 🟡 P1 | Write-orphan columns on `invoices` table — `stripe_payment_intent_id` + `stripe_checkout_url` declared in schema but never written by any route | OPEN |
 
-**Counts after T002.1.8 follow-up**: P0=3, P1=12, P2=3 (total 18). CF-017 + CF-018 are both T002.2.a Spot-Check C3 graduates (R-REPO-5).
+**Counts after T002.2.b half-2 follow-up**: P0=3, P1=13, P2=3 (total 19). CF-017 + CF-018 are T002.2.a Spot-Check C3 graduates (R-REPO-5); CF-019 is the T002.2.b half-2 Spot-Check C3-8 graduate (R-REPO-5). Two further candidates parked for T002.2.d confirmation: **CF-020 candidate** (system-wide soft-delete leak, 9 anchors so far) and **CF-021 candidate** (N+1 enrichment anti-pattern, 2 domains so far).
 
 ---
 
@@ -972,6 +1021,72 @@ Note: when the route's auth-class is a customer-facing one (e.g. a guest portal 
 ### Carrier
 
 `_schema/api-endpoints/contract.md` C3 row [bonus e] is the original surface; this CF is its cross-domain extension. Each remaining `T002.2.x` domain doc must add a row to its own self-check table for the nested-write handlers it owns and link back here. When all 9 domain docs are complete (`T002.2.a–.i`), the universe count of 17 nested-write handlers should be re-verified end-to-end.
+
+---
+
+## CF-019 — Write-orphan columns on `invoices`: `stripe_payment_intent_id` + `stripe_checkout_url`
+
+| Field | Value |
+|---|---|
+| **Severity** | 🟡 P1 |
+| **Scope** | Finance · Reconciliation · Schema-vs-code drift |
+| **Status** | OPEN |
+| **Discovery** | T002.2.b half-2 Spot-Check C3-8 (R-REPO-5 incidental J2). CF-018 was already taken by IDOR (T002.1.8), so this NEW finding lands at the next free slot, **CF-019**. |
+
+### Evidence
+
+`lib/db/src/schema/invoices.ts:15-16` declares two Stripe-linkage columns:
+
+```ts
+stripe_payment_intent_id: text("stripe_payment_intent_id"),
+stripe_checkout_url:      text("stripe_checkout_url"),
+```
+
+Repo-wide writer scan: `rg -n "stripe_payment_intent_id|stripe_checkout_url" artifacts/api-server/src/routes/` returns hits in **read positions only**. There are zero `db.insert(invoicesTable).values({ … stripe_payment_intent_id … })` and zero `db.update(invoicesTable).set({ … stripe_payment_intent_id … })` call sites.
+
+The Stripe payment-intent id **is** captured at webhook time, but only into `system_logs.new_value` JSON. `artifacts/api-server/src/routes/stripe.ts:55-72` (`payment_intent.succeeded` branch):
+
+```ts
+await db.update(invoicesTable)
+  .set({ status: "Paid", paid_at: new Date(), updated_at: new Date() })   // ← the Stripe PI id is NOT written here
+  .where(eq(invoicesTable.id, Number(invoiceId)));
+
+await logAction({
+  action: "PAYMENT",
+  newValue: { stripe_payment_intent_id: pi.id, … },                       // ← written into system_logs JSON only
+});
+```
+
+Symmetric finding for `stripe_checkout_url`: `guest-portal.ts` (the only file that creates a Stripe Checkout Session for invoice payment, around `:885`) does not write the resulting `session.url` back to `invoices.stripe_checkout_url` either. The session URL is returned in the HTTP response and lost as soon as the guest closes the page.
+
+### Reproduction
+
+1. Guest pays invoice #N via Stripe → `payment_intent.succeeded` → `invoices.status = "Paid"`, `paid_at` set.
+2. Query: `SELECT id, status, paid_at, stripe_payment_intent_id FROM invoices WHERE id = N`. Result: status=Paid, paid_at populated, **stripe_payment_intent_id = NULL**.
+3. To reconcile this invoice against Stripe (e.g. for a chargeback investigation, refund, or dispute response), the operator must full-text grep `system_logs.new_value::text` for the invoice id and parse out the PI id by hand. There is no SQL JOIN path from `invoices` to the originating Stripe charge.
+
+Same for `stripe_checkout_url`: there is no record of which Checkout Session the guest used, so a guest who closes the browser after payment cannot be re-sent the receipt URL.
+
+### Why P1 (not P2)
+
+This is a **schema-vs-code drift** with reconciliation impact:
+1. The columns exist — implying the original author intended to write them. Today they are dead capacity, but the *expectation* of their presence may already be baked into downstream consumers (Phase 2 .NET port, BI tooling, finance reconciliation queries).
+2. **Reconciliation gap**: the only authoritative join from invoice → Stripe charge is via `system_logs.new_value` JSON. This is unindexed, untyped, and conflates with every other "PAYMENT" log entry in the table.
+3. CF-010 (Stripe webhook coverage gaps) and CF-019 (write-orphan PI id) **compound**: even the events that *are* handled produce no permanent invoice-side linkage to Stripe.
+
+### Recommendation (no code change)
+
+1. **Stripe webhook handler** (`stripe.ts:55-60`): extend the `db.update(invoicesTable).set({...})` to include `stripe_payment_intent_id: pi.id` and `stripe_checkout_url: pi.latest_charge?.receipt_url ?? row.stripe_checkout_url`.
+2. **Guest portal Checkout Session creator** (`guest-portal.ts` ~`:885`): on `stripe.checkout.sessions.create()` success, immediately `db.update(invoicesTable).set({ stripe_checkout_url: session.url, … }).where(eq(id, invoiceId))`.
+3. Add a NOT NULL constraint to `stripe_payment_intent_id` for any row in `invoices.status = 'Paid'` going forward (SQL CHECK constraint or application-level invariant).
+
+### Phase 2 impact
+
+A C# port that respects the schema as a contract will allocate fields for both columns and likely fail integration tests when they come back NULL on Paid invoices. The current behaviour (drop the values, keep them in `system_logs` JSON) is non-obvious and will be lost in translation.
+
+### Carrier
+
+`finance-payments.md` §3 row C3-8 (originating site) and §6 R-REPO-5 J2 (escalation rationale). `finance-invoicing.md` E8 (Stripe transition consumer side — the open question that this CF closes on the schema-drift axis). When the guest portal domain doc is written (`T002.2.f portal-guest.md`), the `:885` Checkout Session site must add a row to its self-check table re-verifying the write-orphan finding.
 
 ---
 *End of CRITICAL_FINDINGS.md*

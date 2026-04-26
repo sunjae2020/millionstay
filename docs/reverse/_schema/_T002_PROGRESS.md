@@ -170,17 +170,32 @@
 - **Status**: ⚪ **PENDING**
 - **Done condition**: all 12+ files saved, all 4 gates passed, session_plan T002 entry marked DONE, user `proceed` for T003.
 
-### T002.2.b status (in progress)
-
+### T002.2.b — finance group (half-1 + half-2 unified)
+- **Status**: ⏸️ **AWAITING_APPROVAL** (2026-04-26) — Steps 1–5 complete; Step 6 R-REPO-4 report follows; user `proceed` gate before T002.2.c.
 - **Decision (α) accepted**: `finance.md` split into `finance-invoicing.md` (invoices + recurring-schedules; 17 endpoints) + `finance-payments.md` (payment-info + commissions + beneficiaries + accounts + stripe; 26 endpoints). Seam: billing-source vs collection/disbursement.
-- **Half-1 `finance-invoicing.md`**: ✅ Step 2-5 complete (680 lines, 17 endpoints full sample format, CF-014 R5 anchor + 11 C3 inconsistencies + 5 R-REPO-5 incidentals). C2 spot-check found E5 Meta auth qualifier error (`when permanent` → `always`) — fixed pre-commit.
-- **Half-1 atomic carrier (5 files)**: finance-invoicing.md (NEW), INDEX.md (Domain Groups + summary split), contract.md (4 cross-ref back-fills), this PROGRESS file, session_plan.md (R-REPO-6/7 added).
-- **Half-2 `finance-payments.md`**: PENDING — auto-segue Step 1 sub-classification report (≤30 lines) follows the half-1 R-REPO-4 report; Steps 2-6 await user `proceed`.
-
-### T002.2.b — R-REPO-5 incidentals queued for downstream tasks
-
-- **Mini-task proposal `T002.2.b.fix-1`** (CF-011 evidence-expansion): append `nextInvoiceRef` race + verbatim duplication to CF-011 evidence. Decision deferred to user.
-- **Simple memos** (3): I3 GST hard-code `1.1` → `_rules/no-magic-rules.md` (T004); I4 `nextInvoiceRef` ignores `deleted_at` → `db-schema-overview.md` (T002.3); I5 R1 date-range filter direction bug → already documented as C3-9 in finance-invoicing.md.
+- **Outputs (atomic — R-REPO-1, 6 file ops total across both halves; this entry covers half-2 commit only — half-1 commit recorded in prior turn)**:
+  - **NEW** `_schema/api-endpoints/finance-payments.md` (1108 lines) — 26 endpoints (P1-P6 / C1-C6 / B1-B6 / A1-A6 / S1-S2) full sample format + S2 supplemental (Event Coverage Matrix, Accounting Drift Scenarios, Idempotency Analysis); §1.5 anchor block (3 sealed claims) + §3 11 self-discovered inconsistencies (1🔴 / 7🟡 / 1🟢 / 2⚠️-system) + §4 182-cell self-check + §5 spot-check (C1✅ C2✅ C3⚠️ over-discovery acceptable) + §6 R-REPO-5 6 incidentals + §7 cross-references + CF-008 domain severity matrix design + §8 summary.
+  - `_audit/CRITICAL_FINDINGS.md` — 7 in-file edits: top-of-file "Last updated" line; **CF-001 Carrier (T002.2.b half-2 confirmation)** subsection appended (4 anchor sites: C2/C4 commissions + B2/B4 beneficiaries; finance-internal boundary); **CF-008 Domain Severity Matrix** NEW subsection (per-domain coverage table; finance combined 20.0% vs contract 42.9% = 53% under-audited); **CF-010 Evidence expansion (idempotency gap)** NEW subsection (3 events handled, no `event.id` dedup, retry → silent `paid_at` overwrite + duplicate `system_logs` rows); **CF-014 Second locus (Stripe webhook)** NEW subsection (3 production loci now: bookings.ts:393-461 + contracts.ts:429-450 + stripe.ts:51-96); **NEW CF-019** (~110 lines: write-orphan `invoices.stripe_payment_intent_id` + `stripe_checkout_url`; reproduction; severity rationale; recommendation; carrier); summary table CF-019 row + count line `P0=3, P1=12, P2=3 (18) → P0=3, P1=13, P2=3 (19)`; CF-020 + CF-021 candidates parked.
+  - `_schema/api-endpoints/INDEX.md` — 2 in-file edits: NEW **Severity legend** subsection defining ⚠️-system marker (with both confirmed patterns enumerated: soft-delete leak → CF-020 candidate, schema-drift → CF-019 promoted); footer "Last updated" line.
+  - `_schema/api-endpoints/finance-invoicing.md` — 1 in-file edit: §7 cross-ref `→ finance-payments.md (PENDING)` flipped to ✅ with full S2 closure note + new bullet for `accounts.id ↔ invoices.account_id` back-reference.
+  - `_schema/api-endpoints/contract.md` — 1 in-file edit: §7 cross-ref index gained a row for `beneficiaries.contract_product_id → contract_products.id` (consumer link to finance-payments B-series).
+  - `_schema/_T002_PROGRESS.md` — this entry (half-1 + half-2 unified ledger) replaces the prior "in progress" stub; size tracker row for `finance-payments.md` filled.
+  - `.local/session_plan.md` — T002.2.b status updated to half-2 ⏸️ AWAITING_APPROVAL; T002.2.c marked NEXT (after user `proceed`).
+- **Catalogue (half-1 + half-2 combined)**:
+  - **43 endpoints** across **7 route files** documented at full sample format (17 + 26).
+  - logAction coverage: 6 of 30 mutators = 20.0% combined; 13 mutators / 3 calls = 23.1% (invoicing); 17 mutators / 3 calls = 17.6% / 5.9% endpoint (payments).
+  - $$ touching: every file in the group writes or reads money columns.
+  - **CF density**: 1 NEW (CF-019) + 4 expansions (CF-001 carrier, CF-008 matrix, CF-010 idempotency, CF-014 Stripe locus) + 2 candidates parked (CF-020 soft-delete leak, CF-021 N+1 enrichment).
+- **R-REPO-5 incidentals (11 across both halves)**:
+  - half-1 (5): I1+I2 paired (CF-011 expansion mini-task proposal `T002.2.b.fix-1`, **DEFERRED** by user); I3 (GST hard-code 1.1 → T004 memo); I4 (nextInvoiceRef ignores `deleted_at` → T002.3 memo); I5 (R1 date-range direction bug → already C3-9).
+  - half-2 (6): J1 (N+1 enrichment → CF-021 candidate, defer T002.2.d); **J2 (write-orphan stripe columns → promoted to CF-019 in this commit)**; J3 (`numIds.filter(Boolean)` drops PK 0 → simple memo); **J4 (Stripe idempotency → CF-010 evidence expansion in this commit)**; J5 (beneficiaries→contract_products cross-pass → cross-ref back-filled in this commit); J6 (system-wide soft-delete leak → CF-020 candidate, defer T002.2.d).
+- **Verification gate (RULE 7) — 3-claim spot-check (sealed in §1.5 of finance-payments.md)**:
+  1. **C1 — S2 webhook event-coverage truth**: ✅ — re-read of `stripe.ts:51-96` confirmed exactly 3 cases handled (`payment_intent.succeeded` full, `payment_intent.payment_failed` logAction-only, `charge.refunded` logAction-only) + `default: console.log`. No invoice-state mutation outside the succeeded branch.
+  2. **C2 — finance-internal CF-001 boundary**: ✅ — 4 anchor sites verified (`commissions.commission_rate`, `commissions.commission_amount` are `real`; `beneficiaries.fixed_amount` is `real`); `invoices.amount` and `recurring_schedule.amount` are `numeric(10,2)` confirming the safe side. Boundary is **inside** the finance group, not between finance and another domain.
+  3. **C3 — severity tally**: ⚠️ over-discovery (acceptable) — predicted ≤8 inconsistency categories; surfaced 11 (1🔴 / 7🟡 / 1🟢 / 2⚠️-system). Calibration note added to §5.
+- **R-REPO-5 self-check**: 6 incidentals found in half-2; all 6 dispatched (1 promotion to CF-019, 1 evidence-expansion to CF-010, 2 deferred CF candidates [CF-020, CF-021], 2 simple-memos, 1 cross-pass deferral resolved by atomic-commit cross-ref back-fill).
+- **Size note**: half-2 actual 1108 vs predicted 811 (+37%). Drivers: S2 supplemental tables (3 sub-sections), §3 catalogue richer than anticipated (8 NEW C3 categories), §6 6 incidentals (vs 4-5 typical), §7 CF-008 domain severity matrix design embedded in cross-ref. **Within revised T002.1.8 §8 cap (1500/file)** — single file did not require split.
+- **Blocker**: user `proceed` to begin T002.2.c (`ops-property.md`, 44 endpoints across 6 files) — pre-write split decision required at start (per T002.1.8 §8 borderline flag).
 
 ---
 
@@ -195,8 +210,9 @@
 | `api-endpoints/contract.md` | ~370 | **902** | **+532 (+144%)** — base 893 + T002.1.8 cross-ref additions + T002.2.b cross-ref back-fills (4 sites: line 7 / L345 / L370 / L883) updated `finance.md` → `finance-invoicing.md` |
 | `_audit/CRITICAL_FINDINGS.md` | — | ~1100 | T002.1.8 added ~309 lines (CF-006 expansion +30, CF-014 expansion +35, NEW CF-017 ~80, NEW CF-018 ~120, summary update ~5) on top of the 791 baseline established at end of T002.1.7 |
 | `api-endpoints/INDEX.md` (post-T002.2.b) | — | **158** | +12 — Domain Groups now lists `finance` group (2 files) + `ops` group (3 files); finance row block re-tagged from single `finance` to `finance-invoicing` × 2 + `finance-payments` × 5; Domain summary table split |
-| `api-endpoints/finance-invoicing.md` (T002.2.b half-1) | ~533 (revised post-T002.1.8 §8 ~2.4× × 17/43 ratio) | **680** | **+147 (+28%)** — within revised cap; CF-014 R5 anchor block + 11 self-discovered inconsistencies + R-REPO-5 incidentals section drove length |
-| `api-endpoints/finance-payments.md` (T002.2.b half-2) | ~811 (revised, 26/43 ratio) | — | PENDING (sub-classification report next, Step 2 body after user `proceed`) |
+| `api-endpoints/finance-invoicing.md` (T002.2.b half-1) | ~533 (revised post-T002.1.8 §8 ~2.4× × 17/43 ratio) | **681** | **+148 (+28%)** — within revised cap; CF-014 R5 anchor block + 11 self-discovered inconsistencies + R-REPO-5 incidentals section drove length; +1 line from half-2 cross-ref back-fill |
+| `api-endpoints/finance-payments.md` (T002.2.b half-2) | ~811 (revised, 26/43 ratio) | **1108** | **+297 (+37%)** — within revised cap; S2 supplemental tables (Event Coverage Matrix + Accounting Drift Scenarios + Idempotency Analysis) + §3 11 NEW categories + CF-008 domain severity matrix design embedded in §7 drove length |
+| `_audit/CRITICAL_FINDINGS.md` (post-T002.2.b) | — | **1092** | +114 from half-2 atomic commit (CF-001 Carrier +6, CF-008 Domain Severity Matrix +22, CF-010 Evidence expansion +14, CF-014 Second locus +14, NEW CF-019 ~58, summary update +1, header +1) |
 | `api-endpoints/ops-property.md` | ~570 | — | — |
 | `api-endpoints/ops-catalog.md` | ~510 | — | — |
 | `api-endpoints/ops-crm.md` | ~660 | — | — |

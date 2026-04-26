@@ -127,6 +127,12 @@ Cross-domain endpoints stay with their **file of origin**, not with the entity t
 
 ---
 
+## Severity legend
+
+In addition to the standard `🔴 P0 / 🟡 P1 / 🟢 P2 / ⚠️` markers used across this pack, per-domain self-check tables (§3 of each `T002.2.x` doc) may use the auxiliary marker:
+
+- **⚠️-system** — a recurring pattern that is not local to one file but spans the codebase and is **not** sized by per-site 🔴/🟡/🟢 severity. Sized instead by **breadth** (anchor count). Once breadth is established (≥ 2 domains), the pattern is promoted to a CF candidate and tracked in `CRITICAL_FINDINGS.md` under its own ID. Currently confirmed ⚠️-system patterns: (1) soft-delete leak via missing `isNull(deleted_at)` filter on GET-by-id endpoints — 9 anchors so far across `finance-invoicing.md` (E3, E10) + `finance-payments.md` (P3, C3, B3, A3 + 3 prior); promoted as CF-020 candidate, defer-confirm at T002.2.d. (2) Schema-vs-code drift on Stripe-linkage columns — promoted to CF-019 in T002.2.b half-2.
+
 ## Risk Legend
 
 | Risk | Domain(s) | Triggering CF |
@@ -155,4 +161,4 @@ For a Phase 2 (.NET) port team:
 
 ---
 
-*End of `INDEX.md` — last updated 2026-04-26 (T002.1).*
+*End of `INDEX.md` — last updated 2026-04-26 (T002.2.b half-2 — added Severity legend ⚠️-system definition; finance group both halves now ✅).*
