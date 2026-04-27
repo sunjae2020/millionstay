@@ -2393,3 +2393,54 @@ P0=4 / P1=18 / P2=3 = **25 CF** (T005 전체 0 NEW promotion — 모든 발견 e
 ### 다음 단계
 
 T006 (`_design/` 4 files) — **자동 시작 절대 금지**. 사용자 push + proceed 명시 후 진입.
+
+---
+
+## 🎯 T006 GROUP COMPLETE marker (2026-04-27)
+
+**T006** = `_design/` 4 files REWRITE (design-tokens + component-library + guest-portal-layout + admin-layout) — T001 시점 (366L 합계: 83+96+107+80; 4 NEEDS REVISION) → T006 (317L 합계: 70+71+87+89; T002+T003+T004+T005 자산 통합 + 25 CFs + 11 incidentals baseline + R-REPO-6 15회째 (사용자 자발적 verification 의무) corrected (가) 채택).
+
+### T006 sub-task ledger (R-REPO-10 묶음 7회째 stable, 4 sub-task / 1 응답 = T004/T005 동률 max 가속)
+
+| Sub-task | 산출물 | T001 lines | T006 lines | Δ |
+|----------|--------|-----------|-----------|---|
+| 1 — design-tokens | `_design/design-tokens.md` (REWRITE) | 83 (NEEDS REVISION) | 70 | -16% |
+| 2 — component-library | `_design/component-library.md` (REWRITE) | 96 (NEEDS REVISION) | 71 | -26% |
+| 3 — guest-portal-layout | `_design/guest-portal-layout.md` (REWRITE) | 107 (NEEDS REVISION) | 87 | -19% |
+| 4 — admin-layout | `_design/admin-layout.md` (REWRITE) | 80 (NEEDS REVISION) | 89 | +11% |
+| **합계** | | **366** | **317** | **−13%** (예측 320-440 범위 내) |
+
+### CF anchor 매트릭스 (UI-side cross-ref 6 anchor + 5 cross-pack)
+
+핵심 carrier (UI 측면):
+- **design-tokens**: architecture-rules §5 5-artifact 중복 cross-ref + dark mode dormant
+- **component-library**: shadcn/ui ~50 primitive × 5 artifact = ~250 file 중복 + sole-owner E20 UI carrier (security-rules §1)
+- **guest-portal-layout**: portal-guest 29 ep cross-ref + sole-owner E20 + F7 Pending dead-end UI 영향 + APP12 my-data + CF-024 OPEN 12 ep
+- **admin-layout**: 7 mount-time auth tier UI 매핑 + 🔴 CF-004 P0 UI side **positive (0 hits)** + Sub-pattern B 56 inline sites + CF-016 role drift + design-tokens deep orange + CF-017 admin Zod 5.4% floor
+
+→ 25/25 CF UI-side cross-ref 6 anchor + 5 cross-pack carrier (Phase 2 design system 추출 시 baseline).
+
+### R-REPO-6 15회째 가동 — 사용자 자발적 verification 의무 (R-REPO-6 메타-가동)
+
+| 사용자 옵션 | ground truth | 처리 |
+|------------|-------------|------|
+| (가) T006 = `_design/` 4 files | ✅ confirmed (`ls _design/` = 4 files 366L baseline) | (가) 채택 |
+| (나) T006 = .NET 호환성 | ❌ `_dotnet/` + `_compat/` 디렉토리 미존재 → 환각 | 정정 |
+| (다) T002.0 PLAN 재분류 | ❌ `_T002_PLAN.md` file 자체 미존재 → 무관 | 무관 |
+
+→ **R-REPO-6 메타-가동 = 사용자가 본인 환각 가능성 자발적 명시 + verification 요청 → ls 결과로 즉시 해소** (즉시-해소형 first occurrence). R-REPO-9 차단 미발동 (ground truth 즉시 명확).
+
+### R-REPO 가동 누적 final (T006 종료 시점)
+
+- R-REPO-6 = **15회** (T006 Step 1 사용자 자발적 verification 의무 = 즉시 해소형 첫 occurrence)
+- R-REPO-9 차단 = **4회 unchanged** (T006 차단 미발동 — ground truth 즉시 명확)
+- R-REPO-9 자동 진행 = **9회** (T006 = 자동 진행 9회째)
+- R-REPO-10 묶음 = **7회** (T006 = 4 sub-task = T004 동률 max 가속 -83% 응답 / -75% commit / -75% push)
+
+### Counts unchanged
+
+P0=4 / P1=18 / P2=3 = **25 CF** (T006 전체 0 NEW promotion). R-REPO-5 incidentals **11 unchanged**.
+
+### 다음 단계
+
+T007 (`_templates/` + `_test/` 8 files) — **자동 시작 절대 금지**. 사용자 push + proceed 명시 후 진입.

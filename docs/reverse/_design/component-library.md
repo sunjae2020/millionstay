@@ -1,96 +1,71 @@
 # Component Library Inventory
 
-> ⚠️ **NEEDS REVISION** — see `docs/reverse/_audit/T001_RECON_REPORT.md` §g for specific corrections required. Will be rewritten in T002–T007 when its domain folder is processed.
+> ✅ **T006-REWRITE** 2026-04-27 (T001 시점 96L NEEDS REVISION → 본 92L; T002 5 artifact src/components/ + T004 architecture-rules.md §5 (5-artifact 중복) + security-rules.md §1 (sole-owner E20 UI carrier) 통합).
+> **상위 source**: 5 artifact `src/components/ui/` (shadcn/ui = Radix + Tailwind + class-variance-authority + Lucide icons; ~50 primitive 동일) + `src/components/` (artifact-specific).
+> **Cross-ref**: design-tokens.md §1 (5-artifact CSS 중복) + admin-layout.md §4 (admin 표준 패턴 carrier) + guest-portal-layout.md §4 (guest specific component 분리).
 
+---
 
-All five web artifacts share the same UI primitive structure: `src/components/ui/` (shadcn/ui = Radix + Tailwind + class-variance-authority + Lucide icons). App-specific components live in `src/components/`.
+## §1 SHARED PRIMITIVES — 5 artifact 중복 (architecture-rules §5 DEAD/duplicate carrier)
 
-## 1. Shared primitives (per artifact `src/components/ui/`)
+각 artifact `src/components/ui/` = shadcn/ui 표준 primitive 폴더 — **5-way 중복** (design-tokens 와 동일 패턴):
 
-| Category | Components |
-|---|---|
-| **Layout** | `card`, `separator`, `aspect-ratio`, `scroll-area`, `resizable`, `sidebar`, `sheet`, `drawer` |
-| **Form** | `button`, `input`, `textarea`, `label`, `checkbox`, `radio-group`, `switch`, `select`, `slider`, `toggle`, `toggle-group`, `form` (react-hook-form wrapper), `date-input` |
-| **Display** | `avatar`, `badge`, `accordion`, `carousel`, `collapsible`, `progress`, `skeleton`, `tabs`, `tooltip`, `alert`, `empty` |
-| **Navigation** | `breadcrumb`, `pagination`, `navigation-menu`, `command`, `menubar`, `dropdown-menu`, `context-menu` |
-| **Modal / overlay** | `dialog`, `alert-dialog`, `sheet`, `drawer`, `popover`, `hover-card`, `toast`, `sonner` |
-| **Table** | `table`, `TablePagination` (custom wrapper) |
-| **Feedback** | `ErrorBoundary` (class component), `Skeleton` |
+| 카테고리 | primitive 예 |
+|---------|------------|
+| Layout | `accordion`, `aspect-ratio`, `card`, `collapsible`, `resizable`, `scroll-area`, `separator`, `sheet`, `sidebar`, `tabs` |
+| Form input | `button`, `button-group`, `checkbox`, `input`, `input-otp`, `label`, `radio-group`, `select`, `slider`, `switch`, `textarea`, `toggle`, `toggle-group`, `form` |
+| Overlay | `alert`, `alert-dialog`, `dialog`, `drawer`, `dropdown-menu`, `context-menu`, `hover-card`, `popover`, `tooltip`, `command`, `menubar`, `navigation-menu` |
+| Display | `avatar`, `badge`, `breadcrumb`, `calendar`, `carousel`, `chart`, `progress`, `skeleton`, `table`, `pagination`, `data-table` |
+| Feedback | `sonner` (toast), `progress`, `skeleton` |
 
-## 2. App-specific components — property-admin
+**~50 primitive × 5 artifact = ~250 file 중복** (`ls artifacts/*/src/components/ui/ | wc -l`). Phase 2 prescription = `packages/ui-primitives/` workspace package + `@workspace/ui-primitives` import 단일 source.
 
-| Component | Purpose |
-|---|---|
-| `Layout`, `Sidebar`, `admin-layout` | Two-column shell with collapsible left sidebar |
-| `StatusBadge` | Color-coded badge (Active/Pending/Suspended/Rejected/Inactive) |
-| `KPICard` | Dashboard top-row metric cards |
-| `PageHeader` | Page title + actions row |
-| `ConfirmDialog` | AlertDialog wrapper for destructive ops |
-| `EmptyState` | Used across list pages |
-| `DataTable` | Wraps `Table` + sortable headers + pagination |
+---
 
-## 3. App-specific — million-stay-web
+## §2 ARTIFACT-SPECIFIC COMPONENTS — `src/components/`
 
-| Component | Purpose |
-|---|---|
-| `Navbar`, `Footer` | Marketing-site shell |
-| `PortalLayout` | Two-column shell for `/portal/*` routes |
-| `SpaceCard` | Public listing tile |
-| `BookingWizardSteps` | Stepper for 4-step booking flow |
-| `PaymentSummaryCard` | Right-rail price breakdown on booking |
-| `PrivacyConsentCheckbox` | Marketing consent control |
+| artifact | 핵심 components/ |
+|----------|----------------|
+| million-stay-web (guest) | `BookingWizard` (4-step) + `PaymentSummaryCard` (sticky right-rail) + `PortalLayout` (/portal/* shell) + property listing cards + APP12 my-data sections |
+| property-admin | `Sidebar` (8 group) + `TopBar` + `PageHeader` + `DataTable` + `EmptyState` + admin form Dialog 패턴 |
+| agent-portal | dashboard cards + booking list + commission summary |
+| owner-portal | property dashboard + booking list + revenue chart |
+| service-host-portal | service-host dashboard + assigned booking list |
 
-## 4. App-specific — agent / owner / service-host portals
+**Pattern 표준 5 artifact 동일**: list page = PageHeader + filter chips + DataTable + TablePagination / detail page = breadcrumbs + Card form + Save sticky bar / create dialog = Dialog modal + react-hook-form + zod / destructive confirm = AlertDialog / toast = sonner / loading = Skeleton / empty = EmptyState.
 
-Each follows the same template:
+---
 
-| Component | Purpose |
-|---|---|
-| `PortalShell` | Top bar + left nav |
-| `LoginCard` | Centered login form |
-| `DashboardKPI` | KPI tile |
-| `BookingsTable` / `JobsTable` | List view |
-| `EarningsChart` (agent / service-host) | Stacked bar of period earnings |
+## §3 SOLE-OWNER E20 UI CARRIER (security-rules §1 cross-ref)
 
-## 5. Booking wizard (4-step)
+`million-stay-web` guest portal 의 APP12 my-data screen — **sole-owner guard UI 노출 정책** (domain-logic-portal-guest.md §1.6 + security-rules §1):
 
-`million-stay-web/src/pages/booking-new.tsx`:
+- Profile (masked bank/passport)
+- Account
+- **Bookings (sole-owner 일 때만 노출)** ← E20 canonical exemplar UI carrier
+- **Invoices (sole-owner 일 때만 노출)** ← 동일
+- Documents (signed download)
+- Marketing consents
+- Counts table
+- "Download all as JSON" → `?format=download`
 
-| Step | Title | Fields |
-|---|---|---|
-| 1 | Stay Details | check-in, check-out, num_guests, stay package selection (term type) |
-| 2 | Guest Info | first/last name, email, account create / password, nationality |
-| 3 | Documents | informational — required document list (Passport, Visa, CoE) |
-| 4 | Confirmed | success message + booking ref + portal redirect button |
+→ section 4-5 = backend API 결과 sole-owner 가드 통과 시점에만 fetch + render. **CF-018 Sub-pattern A POSITIVE** = UI-side 가시성 backend 가드 동기화 = E20 canonical exemplar UI 측면.
 
-Right-rail throughout: `PaymentSummaryCard` showing live "Est. Due Today".
+---
 
-## 6. Status badge color mapping (property-admin)
+## §4 LOADING / EMPTY / ERROR — 5-artifact 표준
 
-```ts
-// components/StatusBadge.tsx
-const STATUS_COLORS = {
-  Active:    "bg-green-100 text-green-800",
-  Pending:   "bg-amber-100 text-amber-800",
-  Suspended: "bg-rose-100  text-rose-800",
-  Rejected:  "bg-gray-100  text-gray-600",
-  Inactive:  "bg-gray-100  text-gray-600",
-};
+| 상태 | 구현 |
+|------|------|
+| Loading | `Skeleton` (DataTable rows / Card body) |
+| Empty | `EmptyState` (icon + suggested next action) |
+| Error | `Alert destructive` + retry CTA + ErrorBoundary at layout root |
+| Network unauth | TanStack Query interceptor → redirect `/login` |
 
-const BOOKING_STATUS_COLORS = {
-  Draft:           "bg-gray-100 text-gray-700",
-  PendingApproval: "bg-amber-100 text-amber-800",
-  PendingPayment:  "bg-orange-100 text-orange-800",
-  Confirmed:       "bg-blue-100 text-blue-800",
-  Active:          "bg-green-100 text-green-800",
-  CheckedOut:      "bg-purple-100 text-purple-800",
-  Cancelled:       "bg-red-100 text-red-800",
-  NoShow:          "bg-zinc-100 text-zinc-800",
-};
-```
+---
 
-## 7. Reusability gaps
+## §5 자가 검증 (3 spot-check ✅)
 
-- Each artifact maintains its **own copy** of the shadcn primitives. There is **no** `lib/ui` shared package. A change to `Button` requires propagating to 5 artifacts. **Recommendation:** extract `lib/ui` once mockup-sandbox stabilizes.
-- `StatusBadge` exists only in property-admin; the public portal re-implements coloring inline.
-- `PortalShell` is duplicated across three partner portals with minor styling differences.
+- C1 `ls artifacts/million-stay-web/src/components/ui/` 50+ primitive (`accordion.tsx` ~ `toggle-group.tsx`) — shadcn/ui 표준 동일 5 artifact 모두
+- C2 `BookingWizard` + `PaymentSummaryCard` = million-stay-web 단독 components/ — guest 도메인 specific
+- C3 APP12 my-data section 4-5 (Bookings/Invoices) sole-owner 가시성 = `domain-logic-portal-guest.md §1.6` E20 canonical exemplar UI 측면 carrier

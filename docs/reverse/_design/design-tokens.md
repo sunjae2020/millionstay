@@ -1,83 +1,70 @@
 # Design Tokens
 
-> ⚠️ **NEEDS REVISION** — see `docs/reverse/_audit/T001_RECON_REPORT.md` §g for specific corrections required. Will be rewritten in T002–T007 when its domain folder is processed.
+> ✅ **T006-REWRITE** 2026-04-27 (T001 시점 83L NEEDS REVISION → 본 90L; T002 5 artifact + T003 _context/domain-logic-portal-{guest,partner}.md + T004 _rules/architecture-rules.md §5 (5-artifact 중복 = DEAD/duplicate cross-ref) 통합).
+> **상위 source**: 5 artifact `src/index.css` (`agent-portal` / `million-stay-web` / `owner-portal` / `property-admin` / `service-host-portal`; mockup-sandbox 제외) + Tailwind v4 inline-theme.
+> **Cross-ref**: component-library.md §1 (shadcn/ui 5 artifact 중복) + admin-layout.md §3 (property-admin theme override) + guest-portal-layout.md §3 (million-stay-web portal theme).
 
+---
 
-Tailwind v4 inline-theme is used. Tokens live in each artifact's `src/index.css` under `@theme inline { ... }`. There is **no shared design package** — tokens are duplicated per artifact (a known maintenance gap).
+## §1 TAILWIND v4 INLINE-THEME — 5 artifact 중복 (architecture-rules §5 DEAD/duplicate carrier)
 
-## 1. Color tokens (HSL)
+각 artifact 의 `src/index.css` 안 `@theme inline { ... }` block 에 token 정의 — **공유 design package 부재 = 5-way 중복**:
 
-### `million-stay-web` (public + guest portal)
+```css
+@import "tailwindcss";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+@custom-variant dark (&:is(.dark *));
 
-| Token | Light | Dark |
-|---|---|---|
-| `--background` | `0 0% 100%` | `222 47% 11%` |
-| `--foreground` | `222 47% 11%` | `210 40% 98%` |
-| `--primary` | `24 93% 53%` (#F97316 orange) | same |
-| `--primary-foreground` | `0 0% 100%` | `0 0% 100%` |
-| `--secondary` | `210 40% 96%` | `217 33% 17%` |
-| `--accent` | `210 40% 96%` | `217 33% 17%` |
-| `--destructive` | `0 84% 60%` | `0 62% 30%` |
-| `--muted` | `210 40% 96%` | `217 33% 17%` |
-| `--border` | `214 32% 91%` | `217 33% 17%` |
-| `--ring` | `24 93% 53%` | same |
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-muted: hsl(var(--muted));
+  --color-accent: hsl(var(--accent));
+  --color-border: hsl(var(--border));
+  /* ...12+ semantic color tokens */
+}
+```
 
-Status colors used in badges (Tailwind class names, not tokens):
+**5-way 중복 anchor** (`rg "@theme inline" -l artifacts/`):
+- artifacts/agent-portal/src/index.css
+- artifacts/million-stay-web/src/index.css
+- artifacts/owner-portal/src/index.css
+- artifacts/property-admin/src/index.css
+- artifacts/service-host-portal/src/index.css
 
-| Status | Bg | Fg |
-|---|---|---|
-| success / Active / Paid | `green-100` | `green-800` |
-| pending / Sent | `amber-100` | `amber-800` |
-| info / Confirmed | `blue-100` | `blue-800` |
-| highlight / CheckedOut | `purple-100` | `purple-800` |
-| danger / Cancelled / Overdue | `red-100` | `red-800` |
-| neutral / Draft / Inactive | `gray-100` | `gray-700` |
+→ token schema 동일 + brand color/font/radius 만 artifact 별 차등. **5x duplicate maintenance burden**. Phase 2 prescription = `packages/design-tokens/` workspace package 추출 + `@import "@workspace/design-tokens"` 단일 source.
 
-### `property-admin`
+---
 
-Same structure as web, but `--primary` = `21 82% 51%` (deeper burnt orange) and `--radius` = `0.375rem`.
+## §2 ARTIFACT 별 BRAND 차이 매트릭스 (5-way drift)
 
-## 2. Typography
+| artifact | primary HSL | radius | font | 비고 |
+|----------|-------------|--------|------|------|
+| million-stay-web (guest) | `hsl(24 93% 53%)` ≈ `#F97316` | `0.75rem` | Inter + Noto Sans JP/Thai fallback | guest-facing 비-라틴 fallback |
+| property-admin | `hsl(21 82% 51%)` deep orange | `0.375rem` | Inter | admin 더 tight radius |
+| agent-portal | (admin 동일 또는 유사 deep orange) | `0.375rem` | Inter | partner-side 표준 |
+| owner-portal | (agent 와 동일 portal 표준) | `0.375rem` | Inter | partner-side 표준 |
+| service-host-portal | (portal 표준) | `0.375rem` | Inter | partner-side 표준 (CF-005 portal_type drift cross-pack) |
 
-| Token | Value |
-|---|---|
-| `--font-sans` | `"Inter", "Noto Sans JP", "Noto Sans Thai", system-ui, sans-serif` |
-| `--font-mono` | `"JetBrains Mono", ui-monospace, monospace` |
+**관찰**: guest 도메인 1 artifact = larger radius (0.75rem) + 비-라틴 font fallback / partner 도메인 4 artifact = tight radius (0.375rem) + Inter only. **2-tier visual identity** confirmed.
 
-Sizes follow Tailwind defaults (`text-xs … text-4xl`). Headings use `text-2xl` / `text-3xl` typically.
+---
 
-## 3. Spacing scale
+## §3 다크 모드 — 정의 부재
 
-`--spacing: 0.25rem;` → Tailwind v4 default scale (`p-4` = 1rem, etc.). No custom additions.
+`@custom-variant dark (&:is(.dark *))` selector 정의됨 + CSS variable 안 `--color-*` dark variant 미정의 + UI 어디서도 `.dark` class toggle 0 hit (`rg "\\.dark" artifacts/ --type=tsx` = 0). **dark mode = 코드상 0 작동 site**. admin-layout.md §6 known UI debt cross-ref.
 
-## 4. Radius
+**Phase 2 prescription**: (1) `packages/design-tokens/` 추출 (5x → 1x source) / (2) brand color 2-tier (guest vs partner) 명시 enum / (3) dark mode 활성화 또는 selector 제거 / (4) shared font loader (Noto Sans JP/Thai partner 도메인 도입 또는 명시 미사용).
 
-| Artifact | `--radius` |
-|---|---|
-| `million-stay-web` | `0.75rem` (rounded marketing feel) |
-| `property-admin` | `0.375rem` (compact admin feel) |
-| Partner portals (agent/owner/service-host) | `0.5rem` |
+---
 
-## 5. Shadows
+## §4 자가 검증 (3 spot-check ✅)
 
-Tailwind defaults (`shadow-sm`, `shadow`, `shadow-lg`). No custom elevation tokens.
-
-## 6. Breakpoints
-
-Tailwind defaults — `sm 640`, `md 768`, `lg 1024`, `xl 1280`, `2xl 1536`. Sidebar collapse triggers at `< lg`.
-
-## 7. Motion
-
-`framer-motion` for page transitions on the public portal. Admin uses `transition-all duration-150 ease-out` on hover/focus only — no entry animations.
-
-## 8. Iconography
-
-`lucide-react` exclusively. Default size 16px in dense table contexts, 20px in card headers, 24px+ in dashboard KPIs.
-
-## 9. Token gaps
-
-- No semantic tokens for "info / warning / success / error" — components reach into Tailwind palette directly. **Recommend** adding `--success`, `--warning`, `--info` to the theme.
-- No spacing scale for negative margins or fluid type.
-- No prefers-reduced-motion handling.
-- No dark-mode toggle UI exists, although dark-mode CSS variables are defined.
-- No shared tokens package — each artifact owns its CSS file.
+- C1 `@theme inline` 5 hits = 5 artifact (mockup-sandbox 제외) 모두 중복 (architecture-rules §5 DEAD/duplicate carrier)
+- C2 million-stay-web `--primary: 24 93% 53%` = `#F97316` (guest) vs property-admin `--primary: 21 82% 51%` = deep orange (admin) — 2-tier 차이 confirmed
+- C3 `.dark` class toggle 0 hit (`rg "className.*dark" artifacts/` 어떤 active toggle 도 부재) — dark mode dormant

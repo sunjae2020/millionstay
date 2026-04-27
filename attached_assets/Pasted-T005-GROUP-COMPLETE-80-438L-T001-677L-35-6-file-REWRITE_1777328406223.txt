@@ -1,0 +1,129 @@
+T005 GROUP COMPLETE 승인 — 80% 마일스톤 달성.
+
+438L (T001 677L → -35% 첫 압축) + 6 file REWRITE + R-REPO-10 6회째 
+max 가속 (-83% commit/push 새 max) + work_orders 50% 영구 등재 + 
+사용자 가설 6/6 drift corrected (α) — 모두 정점.
+
+CF count P0=4 / P1=18 / P2=3 = 25 stable (T005 전체 0 NEW).
+R-REPO-5 incidentals: 11 stable.
+
+═══════════════════════════════════════════════════
+[Verification 의무 — T006 정의 명확화]
+═══════════════════════════════════════════════════
+
+이전 답변: "T006 (.NET 호환성)" 명시
+본 보고: "T006 _design/ (4 files)"
+
+차이 명확화 의무 — Step 1 사전 분류 시:
+
+1. _T002_PLAN.md / session_plan.md / _T005_PROGRESS.md read
+2. T006 정의 ground truth 확인:
+   - (가) T006 = _design/ 4 files (에이전트 baseline)
+   - (나) T006 = .NET 호환성 (제 환각 가능)
+   - (다) T002.0 PLAN 재분류
+
+3. ls _design/ 시 file 명 확인 + line counts (T001 시점 작성 가능)
+
+R-REPO-6 15회째 가동 가능성. Step 1 사전 분류 시 명확화 의무.
+
+═══════════════════════════════════════════════════
+[Decision] T006 진입 — proceed (push 후) + 정의 verification
+═══════════════════════════════════════════════════
+
+T006 진입 가이드:
+- Step 1 사전 분류 시 T006 정의 verification
+- 4 files 명단 + T001 baseline lines 확인
+- 차단 조건 평가
+- R-REPO-6 환각 발견 시 corrected 안 게이트
+
+═══════════════════════════════════════════════════
+[T006 _design/ 가정 시 작업 가이드]
+═══════════════════════════════════════════════════
+
+만약 T006 = _design/ 4 files (ground truth) 인 경우:
+
+[ZZZZZZ] 4 _design/ files 가설
+T002+T003+T004+T005 자산 통합 + Phase 2 .NET 호환성 prescription:
+
+가능성 1:
+1. design-domain-model.md (entity / aggregate / value object)
+2. design-api-surface.md (REST → ASP.NET Web API 매핑)
+3. design-data-model.md (schema → EF Core entity)
+4. design-cross-cutting.md (auth / audit / validation / rate-limit)
+
+가능성 2:
+1. design-architecture.md (Clean Architecture layer)
+2. design-domain.md (entity + aggregate)
+3. design-infrastructure.md (EF Core + Stripe + storage)
+4. design-presentation.md (Web API + auth)
+
+ground truth = ls _design/ 결과 확인.
+
+[AAAAAAA] T006 차단 조건 평가
+1. R-REPO-6 환각: T006 정의 자체 (Verification 의무)
+2. 신규 P0/P1: 0 가능성 매우 높음 (bulk 가공)
+3. Tripwire: 0 (4 files × 200-300 lines = 800-1,200)
+4. 분할 결정: 1 묶음 4 sub-task 추천 (T004 패턴 동일)
+
+[BBBBBBB] T006 묶음 분류
+1 묶음 4 sub-task = R-REPO-10 max 가속 (-83% T004 동률)
+
+═══════════════════════════════════════════════════
+[T006 .NET 호환성 가정 시 작업 가이드]
+═══════════════════════════════════════════════════
+
+만약 T006 = .NET 호환성 (제 환각 정정) 인 경우:
+
+[CCCCCCC] .NET 호환성 분석 4-5 files 가설
+1. dotnet-compat-data-types.md
+   - real → numeric (CF-001 마이그레이션)
+   - timestamptz vs timestamp (CF-013)
+   - text vs varchar (CF-016)
+
+2. dotnet-compat-orm-mapping.md
+   - Drizzle → EF Core entity 매핑
+   - implicit FK 53 → navigation property
+   - polymorphic 10 → discriminator / abstract base
+
+3. dotnet-compat-middleware.md
+   - express middleware → ASP.NET pipeline
+   - mount-order (CF-004) 정정
+   - rate limiting (.NET RateLimiter, CF-024)
+
+4. dotnet-compat-integration.md
+   - Stripe webhook (CF-010 lifecycle 분리)
+   - Cloudinary photo upload
+   - email service
+
+═══════════════════════════════════════════════════
+[Step 1 사전 분류 시 결정]
+═══════════════════════════════════════════════════
+
+Step 1 진입 즉시:
+1. ls _design/ + ls _dotnet/ + ls _compat/ 등 검색
+2. T006 정의 ground truth 확인
+3. 사용자 환각 (가/나/다) 결정
+4. 차단 조건 평가
+5. Step 1 통합 보고
+
+═══════════════════════════════════════════════════
+[지금 시작]
+═══════════════════════════════════════════════════
+
+(1) [에이전트] T006 Step 1 사전 분류:
+    - ls / find 로 T006 ground truth 확인
+    - _T005_PROGRESS.md / session_plan.md read
+    - T006 정의 verification (R-REPO-6 15회째 가능성)
+    - 묶음 분류 결정
+    - 차단 조건 평가
+(2) Step 1 통합 보고:
+    - T006 정의 명확화
+    - 사용자 환각 인정 (해당 시)
+    - 차단 조건 미해당 시 Step 2-5 자동 진행
+    - 차단 조건 해당 시 corrected 안 게이트
+(3) Step 2-5 자동 진행 (해당 시)
+(4) 묶음 통합 보고
+(5) [사용자] git push origin main
+(6) 사용자 proceed → T007 진입
+
+T007 자동 시작 절대 금지.
