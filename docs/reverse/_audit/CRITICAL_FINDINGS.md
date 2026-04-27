@@ -2146,3 +2146,96 @@ T003 묶음 3 Step 1 VVVVV-YYYYY Pre-flight 시 사용자 안 "T002.5 시점 보
 P0=4 / P1=18 / P2=3 = **25 CF** (T003 묶음 2 와 동일 — T003 묶음 3 신규 promotion 0). R-REPO-5 incidentals 8→**11** (+F13/F14/F15).
 
 ---
+
+---
+
+## T003 묶음 4 marker section (2026-04-27)
+
+### 산출물 (4 sub-task — R-REPO-10 4회째 — 가장 큰 묶음 max 가속)
+
+| sub-task | 산출물 | Lines | scope |
+|----------|--------|-------|-------|
+| 1 — portal-guest | `_context/domain-logic-portal-guest.md` (NEW) | 252 | 29 ep / 3 files (guest-portal 21 + guest-cs 6 + guest-auth 2) |
+| 2 — portal-partner | `_context/domain-logic-portal-partner.md` (NEW) | 231 | 22 ep / 4 files (agent + owner + service-host + partner-auth) |
+| 3 — public | `_context/domain-logic-public.md` (NEW) | 207 | 33 ep / 6 files (OPEN 4 + PROTECTED 2) |
+| 4 — admin | `_context/domain-logic-admin.md` (NEW) | 396 | 37 ep / 10 files + CF-004 P0 line-by-line |
+| **묶음 4 합계** | 4 NEW domain-logic files | **1086** | 121 ep / 23 files |
+
+### 7 CF expansion (no severity change, counts unchanged)
+
+| CF | 묶음 4 expansion |
+|----|------------------|
+| CF-004 P0 | dev-migration.ts:14-79 line-by-line catastrophic deep dive (admin §1.2 + §2.1 workflow + §3 INV1-INV4+INV12 5 invariants + Phase 2 5-step prescription) |
+| CF-005 portal_type drift | partner §1.5 cross-pack (admin-users.ts:91 hard-delete + 3-way identity cluster reference) |
+| CF-008 audit floor | 9-domain final matrix — booking 78% > contract 71% > invoice 60% > guest 3.4% > **6-way TIE 0% floor** (admin + ops × 3 + portal-partner + public); reversal twist (admin = audit consumer but blind for own 18-20 mutators) |
+| CF-014 POSITIVE EXEMPLAR #3 | dev-migration.ts:38-66 SAVEPOINT seed-replay = ironic positive in catastrophic P0 site (3 known production runtime Tx site final: seedSync.ts:214 + service-host-portal.ts:365 + dev-migration.ts:38) |
+| CF-016 role-string drift | admin §1.2 carrier — db-sync.ts:16 4-variant Set vs 29-file exact `"SuperAdmin"` literal; `role = "super_admin"` user passes db-sync but denied by all 56 inline sites |
+| CF-017 양극단 carrier | admin email-templates.ts 1/6 = 17% file-internal; admin total 2/37 = **5.4% 도메인 floor** vs blog-posts 5/6 = 83% 도메인 ceiling = repo 양극단 |
+| **CF-018 Sub-pattern B 정정** | T002.2.j seed `27 files × 54 hits` → 묶음 4 atomic carrier 흡수 정정 = **29 files × 56 hits + 1 router-level db-sync.ts:30 = 57 sites total** (small drift +2/+2; T002.2.j 시점 27→29 files / 54→56 hits) |
+
+### F13/F14/F15 incidentals (memo only — no promotion)
+
+(이전 묶음 3 marker section 에서 등재 완료) — 묶음 4 신규 incidental **0** (모든 발견 기존 CF expansion 으로 흡수).
+
+### CF-018 9-domain final matrix (T003 묶음 4 마무리)
+
+| 도메인 | sites | 비율 |
+|--------|-------|------|
+| catalog (T003 묶음 3) | **18** | **32.7% — repo single max-carrier** |
+| property (T003 묶음 3) | 12 | 21.8% |
+| finance (T003 묶음 2 invoice 2 + payment 8) | 10 | 18.2% |
+| crm (T003 묶음 3) | 10 | 18.2% |
+| booking (T003 묶음 1) | 5 | 9.1% |
+| **합계** | **55 inline + 1 router-level db-sync.ts:30 + 1 small drift +1 admin** | **57 sites** |
+
+### Sub-pattern A POSITIVE 9-domain final summary
+
+- **portal-guest** (sub-task 1): **26/29 = 90% IDOR-safe** (3 known BAD outliers `bookings.ts:572,728,735` cross-domain) + sole-owner guard E20 canonical exemplar
+- **portal-partner** (sub-task 2): **22/22 = 100% IDOR-safe** + DOUBLE GUARD pattern E5/E12/E17 canonical exemplar
+- **property** (T003 묶음 3): SP12/SP13 nested space-services compound WHERE = canonical exemplar
+- **public** (sub-task 3): N/A (lookup-only mutators on PROTECTED tier)
+- **booking** (T003 묶음 1): N2/R6 compound WHERE same-file POSITIVE vs N1 BAD same-prefix inconsistency
+
+### Audit 9-domain final matrix (CF-008 마무리)
+
+| 도메인 | endpoints / transitions | logAction | % | rank |
+|--------|-------------------------|-----------|---|------|
+| booking (T003 묶음 1) | 9 transitions | 7/9 | **78%** | #1 |
+| contract (T003 묶음 1) | 7 transitions | 5/7 | 71% | #2 |
+| invoices (T003 묶음 2) | 5 transitions | 3/5 | 60% | #3 |
+| portal-guest (sub-task 1) | 29 ep | 1/29 | 3.4% | #5 |
+| **6-way TIE at floor** | (admin 37 + ops-property 44 + ops-catalog 39 + ops-crm 51 + portal-partner 22 + public 33) | 0/each | **0%** | **floor** |
+
+**Inverse-correlation 가설 confirmed**: high audit coverage = state machine 도메인 (booking + contract + invoice) / low audit coverage = CRUD/lookup 도메인 (admin + ops × 3 + portal-partner + public). Reversal twist = admin = audit data CONSUMER (system-logs.ts + reports.ts + email-logs.ts) but blind for own 18-20 mutators.
+
+### R-REPO-9 자동 진행 6회째 confirm
+
+**T003 묶음 4 Step 1 ZZZZZ-CCCCCC Pre-flight**: 사용자 가이드 baseline inputs (T002 자산 6 + CF anchor 8) + 분할 (β) + 차단 조건 4가지 평가 → 차단 0 → Step 2-5 자동 진행. R-REPO-6 환각 0. 신규 P0/P1 0 (CF-004 P0 이미 T002.2.i escalation 완료). Tripwire 0 (예측 1100-1500 미달, 실측 1086). 분할 (β) 명확. **R-REPO-9 영구 패턴 6회째 confirm** (T002.4 + T002.5 + T003 묶음 1 + 묶음 2 + 묶음 3 + 묶음 4).
+
+### R-REPO-10 묶음 위임 4회째 stable — 가장 큰 묶음 max 가속
+
+**T003 묶음 4 = R-REPO-10 4회째**: **4 sub-task / 1 응답 / 1 atomic commit / 1 사용자 push**. 4 묶음 누적 stable across varying sub-task counts (2/2/3/4):
+- 묶음 1 (2 sub-task): 응답 -50% / commit -50% / push -50%
+- 묶음 2 (2 sub-task): 응답 -50% / commit -50% / push -50%
+- 묶음 3 (3 sub-task): 응답 -67% / commit -67% / push -67%
+- **묶음 4 (4 sub-task): 응답 -83% / commit -75% / push -75% — max 가속**
+
+### Counts unchanged
+
+P0=4 / P1=18 / P2=3 = **25 CF** (T003 묶음 3 와 동일 — 묶음 4 신규 promotion 0). R-REPO-5 incidentals **11** unchanged (F4/F5/F7/F8/F9/F10/F11/F12/F13/F14/F15).
+
+---
+
+## 🎯 T003 GROUP COMPLETE marker (2026-04-27)
+
+- **T003 시작**: 2026-04-27 (T002 GROUP COMPLETE 후)
+- **T003 완료**: 2026-04-27 (묶음 4 sub-task 4 admin.md 완료 시점)
+- **묶음 4 / sub-task 10 / domain-logic doc files 10 = 누적 ~2300 lines** (booking 200 + contract 315 + finance-invoice 250 + finance-payment 280 + ops-property 250 + ops-catalog 320 + ops-crm 380 + portal-guest 252 + portal-partner 231 + public 207 + admin 396)
+- **CF count final**: P0=4 / P1=18 / P2=3 = **25** (T003 전체 0 NEW promotion — 모든 발견 expansion 흡수)
+- **R-REPO-5 incidentals final**: **11** (F4/F5/F7/F8/F9/F10/F11/F12/F13/F14/F15)
+- **R-REPO 가동 누적 final**:
+  - R-REPO-6 = 12회 (사용자 입력 검증)
+  - R-REPO-9 차단 = 3회 (T002.4 + T002.5 + T003 묶음 1 corrected 채택)
+  - R-REPO-9 자동 진행 = 6회 (T003 묶음 2 + 묶음 3 + 묶음 4 — 차단 0)
+  - R-REPO-10 묶음 = 4회 (묶음 1 / 2 / 3 / 4 — 모두 stable)
+- **다음 단계**: T004 `_rules/` (4 files: architecture-rules + financial-rules + security-rules + no-magic-rules) — **자동 시작 절대 금지**, 사용자 push + proceed 명시 후 진입.

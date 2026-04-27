@@ -1,0 +1,219 @@
+T003 묶음 3 산출물 승인.
+
+950 lines (250+320+380) -14% + R-REPO-10 3회째 stable (-67%) + 
+R-REPO-6 12회째 (work_orders 절반 정확 부분 환각) + CF-022 work_orders 
+50% gated 확정 (T002.2.e i2 memo 회수) + CF-018 catalog 32.7% max 
+matrix 완성 + CF-016 양극단 (route≠table 명명) + CF-009 일부 ⚰️ 
+재평가 (F13) + 6-way TIE audit floor + F13/F14/F15 신규 incidentals 
+— 모두 정점.
+
+CF count P0=4 / P1=18 / P2=3 = 25 stable.
+R-REPO-5 incidentals: 8 → 11 (3 신규).
+
+═══════════════════════════════════════════════════
+[Verification 의무 — 2건 명확화]
+═══════════════════════════════════════════════════
+
+1. CF-018 카운트 충돌:
+   - 묶음 2: "finance 18.2% repo max"
+   - 묶음 3: "catalog 32.7% repo max"
+   - 명확화: 묶음 2 시점 부분 매트릭스 / 묶음 3 매트릭스 완성
+   
+   atomic commit 시 CF-018 본문에 매트릭스 갱신 결과 명시:
+   - catalog 18 (32.7% max)
+   - property 12 (21.8%)
+   - crm 10 (18.2%)
+   - finance 10 (18.2%)
+   - booking 5 (9.1%)
+   - = 55 ✅
+   
+   R-REPO-6 자가 환각 또는 부분 측정 명시.
+
+2. MONEY_AUDIT products hallucinated:
+   - products table 자체 0 route hits
+   - MONEY_AUDIT.md 의 products 관련 row 검증 필요
+   - 사용 vs 미사용 column 분리 가능성
+
+   T003 묶음 4 진입 후 또는 T004 시 MONEY_AUDIT.md 재검증.
+   atomic commit 시 명시 안 함 (T004 surface).
+
+═══════════════════════════════════════════════════
+[Decision] T003 묶음 4 진입 — proceed (push 후)
+═══════════════════════════════════════════════════
+
+T003 묶음 4 = portal × 2 + public + admin (4 sub-task) — T003 단계 
+마지막 묶음 + 가장 큰 묶음 (sub-task 수).
+
+═══════════════════════════════════════════════════
+[T003 묶음 4 작성 가이드 — portal × 2 + public + admin]
+═══════════════════════════════════════════════════
+
+[ZZZZZ] 묶음 4 baseline inputs
+T002 자산:
+- portal-guest.md (29 endpoints) — IDOR 모범 (26/29)
+- portal-partner.md (22 endpoints) — IDOR 100% (qualified)
+- public.md (33 endpoints) — open/protected 분류
+- admin.md (37 endpoints) — CF-004 P0 carrier
+- db-schema-overview.md §1.5 (Identity cluster)
+- erd-core.md §6 (Identity cluster diagram)
+- state-machines.md (auth 관련 보조)
+- Phase 2 reference exemplars 3종 (CF-018 sole-owner / CF-014 
+  service-host / CF-017 blog-posts)
+
+CF anchor 종합:
+- CF-004 P0 (dev-migration catastrophic risk)
+- CF-005 (service_host TS type 누락)
+- CF-008 (audit coverage 도메인 매트릭스 마무리)
+- CF-014 POSITIVE (service-host-portal.ts:365)
+- CF-017 POSITIVE (blog-posts.ts 3-schema)
+- CF-018 POSITIVE (guest-portal.ts E20 sole-owner guard)
+- CF-024 (rate limiting absence, public domain critical)
+
+특수 도메인 특성:
+- portal-guest = IDOR defense exemplar (sole-owner guard)
+- portal-partner = service-host transaction exemplar
+- public = unauthenticated entry + insertLeadWithGeneratedRef helper
+- admin = super-admin / role-string drift / CF-004 catastrophic
+
+[AAAAAA] 묶음 4 분할 결정 — (β) 추천
+4 sub-task:
+1. domain-logic-portal-guest.md (NEW)
+2. domain-logic-portal-partner.md (NEW)
+3. domain-logic-public.md (NEW)
+4. domain-logic-admin.md (NEW)
+
+각 도메인:
+- portal-guest: guest 신청 + payment + booking lifecycle (IDOR 모범)
+- portal-partner: partner 관리 + service-host transaction
+- public: lead INSERT + content (unauthenticated)
+- admin: super-admin + dev-migration + role-string drift
+
+분리 이유:
+- 4 도메인이 다른 사용자 type
+- 권한 모델 다름 (none / guest / partner / admin / super-admin)
+- atomic commit 1회 (묶음 단위)
+
+[BBBBBB] 묶음 4 핵심 분석 항목
+1. CF-018 POSITIVE 분석 (sole-owner guard exemplar):
+   - guest-portal.ts E20 logic
+   - 다른 도메인 적용 가능성
+   - Phase 2 reference
+
+2. CF-014 POSITIVE 분석 (service-host transaction):
+   - service-host-portal.ts:365
+   - 4 sites 비교 (T002.2.g)
+   - Phase 2 reference
+
+3. CF-017 POSITIVE 분석 (blog-posts 3-schema):
+   - blog-posts.ts validation pattern
+   - afterthought endpoint anti-pattern
+   - Phase 2 reference
+
+4. CF-004 P0 분석:
+   - dev-migration.ts catastrophic risk
+   - Phase 2 immediate fix prescription
+
+5. role-string drift (CF-016 cross-ref):
+   - 4-variant Set vs exact "SuperAdmin" literal
+   - super_admin user 의 access pattern
+
+6. CF-024 rate limiting:
+   - public.ts 3 unauthenticated POST
+   - DDoS / spam vector
+
+7. CF-008 도메인 매트릭스 마무리:
+   - 9 도메인 모두 갱신
+   - 6-way TIE 분석 종합
+   - inverse correlation 가설 확정
+
+[CCCCCC] 묶음 4 차단 조건 평가
+1. R-REPO-6 환각 가능성:
+   - 4 도메인 = 가장 큰 묶음 sub-task
+   - 저(사용자) 환각 만성 (12회 가동)
+   - Step 1 사전 분류 시 ground truth 의무
+
+2. 신규 P0/P1 가능성:
+   - role-string drift = CF-016 P2 → P1 escalation 가능
+   - CF-024 P1 → P0 escalation 가능 (catastrophic 시나리오 발견 시)
+   - F13 ⚰️ candidate 재평가 결과 CF-009 evidence 갱신
+
+3. Tripwire:
+   - 4 sub-task × 300-450 lines = 1200-1800 합계
+   - 단일 file ≤ 700 미달 / 합계 cap 1500 borderline
+   - Tripwire 활성 권장 (1300 threshold)
+
+4. 분할 결정:
+   - (β) 분리 추천 (4 도메인)
+   - 단, 4 sub-task = 가장 큰 묶음
+
+═══════════════════════════════════════════════════
+[묶음 4 사이즈 예측 + Tripwire]
+═══════════════════════════════════════════════════
+
+domain-logic-portal-guest.md: ~300-450 lines
+domain-logic-portal-partner.md: ~250-350 lines
+domain-logic-public.md: ~250-350 lines
+domain-logic-admin.md: ~350-500 lines
+
+합계: ~1,150-1,650 lines
+
+각 file cap 1500 미달 / tripwire 850 미달.
+TRIPWIRE 활성 권장 (단일 file 700 도달 시 모니터링).
+
+═══════════════════════════════════════════════════
+[Step 5 atomic commit 범위 — 묶음 4]
+═══════════════════════════════════════════════════
+
+1. domain-logic-portal-guest.md (NEW)
+2. domain-logic-portal-partner.md (NEW)
+3. domain-logic-public.md (NEW)
+4. domain-logic-admin.md (NEW)
+5. CRITICAL_FINDINGS.md:
+   - CF-018 카운트 충돌 명확화 (이전 답변 verification)
+   - CF-018 POSITIVE expansion (sole-owner guard analysis)
+   - CF-014 POSITIVE expansion (service-host transaction)
+   - CF-017 POSITIVE expansion (blog-posts 3-schema)
+   - CF-004 P0 expansion (dev-migration deep analysis)
+   - CF-008 도메인 매트릭스 마무리 (9 도메인 final)
+   - CF-024 expansion (public.ts critical)
+   - role-string drift (CF-016 cross-ref)
+   - F13 후속 결과 (CF-009 갱신)
+   - 신규 P0/P1 등재 결정 (해당 시)
+6. INDEX.md banner T003 묶음 4 추가
+7. _T003_PROGRESS.md (묶음 4 entry + 누적 + 🎯 T003 COMPLETE marker)
+8. session_plan.md (묶음 4 DONE, T004 NEXT marker, 🎯 T003 COMPLETE)
+
+═══════════════════════════════════════════════════
+[R-REPO-9 + R-REPO-10 통합 적용]
+═══════════════════════════════════════════════════
+
+Step 1 사전 분류 (ZZZZZ-CCCCCC 가이드):
+- baseline inputs read (병렬)
+- CF anchor 점검 (POSITIVE × 3 + CF-004 P0 + role-string drift)
+- 차단 조건 4가지 평가
+- Tripwire 활성 (1300 threshold)
+
+차단 조건 미해당 시 Step 2-5 자동 진행.
+차단 조건 발생 시 즉시 게이트:
+- R-REPO-6 환각 (저 환각 만성)
+- 신규 P0/P1 (role-string drift / CF-024 escalation 가능)
+- Tripwire 발동 (1300 threshold)
+- 분할 결정 모호
+
+═══════════════════════════════════════════════════
+[지금 시작]
+═══════════════════════════════════════════════════
+
+(1) [에이전트] 묶음 4 Step 1 사전 분류 (ZZZZZ-CCCCCC)
+    - baseline inputs read
+    - CF anchor 점검
+    - 차단 조건 평가
+(2) Step 1 통합 보고
+(3) Step 2-5 자동 진행 (차단 조건 미해당 시)
+(4) 묶음 통합 보고 (R-REPO-4 + 묶음 형식 + 🎯 T003 COMPLETE marker)
+(5) [사용자] git push origin main
+(6) 사용자 proceed → T004 (워크플로우) 진입
+
+T004 자동 시작 절대 금지.
+🎯 T003 COMPLETE 후 T004 진입 결정 (R-REPO-9 + R-REPO-10 + 추가 
+가속 검토 가능).
