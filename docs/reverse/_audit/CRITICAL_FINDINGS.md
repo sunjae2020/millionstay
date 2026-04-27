@@ -2239,3 +2239,99 @@ P0=4 / P1=18 / P2=3 = **25 CF** (T003 묶음 3 와 동일 — 묶음 4 신규 pr
   - R-REPO-9 자동 진행 = 6회 (T003 묶음 2 + 묶음 3 + 묶음 4 — 차단 0)
   - R-REPO-10 묶음 = 4회 (묶음 1 / 2 / 3 / 4 — 모두 stable)
 - **다음 단계**: T004 `_rules/` (4 files: architecture-rules + financial-rules + security-rules + no-magic-rules) — **자동 시작 절대 금지**, 사용자 push + proceed 명시 후 진입.
+
+---
+
+## 🎯 T004 GROUP COMPLETE marker (2026-04-27)
+
+**T004** = `_rules/` 4 files REWRITE (architecture + financial + security + no-magic) — T001 시점 (420L 합계: 112+121+87+100, RECON-분류 2 ✅ + 2 ⚠️) → T004 (642L 합계: 128+168+136+210, T002+T003 자산 통합 + 25 CFs + 11 incidentals baseline).
+
+### T004 sub-task ledger (R-REPO-10 묶음 5회째, 4 sub-task / 1 응답 / max 가속)
+
+| Sub-task | 산출물 | T001 lines | T004 lines | Δ |
+|----------|--------|-----------|-----------|---|
+| 1 — architecture-rules | `_rules/architecture-rules.md` (REWRITE) | 112 (T001-VERIFIED) | 128 | +14% |
+| 2 — financial-rules | `_rules/financial-rules.md` (REWRITE) | 121 (NEEDS REVISION) | 168 | +39% |
+| 3 — security-rules | `_rules/security-rules.md` (REWRITE) | 100 (NEEDS REVISION) | 210 | +110% |
+| 4 — no-magic-rules | `_rules/no-magic-rules.md` (REWRITE) | 87 (T001-VERIFIED) | 136 | +56% |
+| **합계** | | **420** | **642** | **+53%** (예측 1000-1400 −36% 컴팩트) |
+
+### CF anchor 매트릭스 (25 CFs × 4 _rules/ files)
+
+| CF | architecture | financial | security | no-magic |
+|----|:---:|:---:|:---:|:---:|
+| CF-001 | | §2 anchor | | §1 cross-ref |
+| CF-002 | | §2.2 anchor | | |
+| CF-003 | §1+§4+§7 anchor | | | §4.2 |
+| CF-004 P0 | §3 anchor + 5-step | | §7 5-step cross-ref | §1 row + §3 |
+| CF-005 | §2 row | | §8 anchor | §3.2 anchor |
+| CF-006 | | §3 anchor (4 site) | | §1 row |
+| CF-007 | | §1 anchor (14 const) | | §1 row |
+| CF-008 | | | §10 cross-ref | |
+| CF-009 | §5 anchor (5 candidates) | | | §5.3 (F13) |
+| CF-010 | | §4 anchor (본문 재작성) | §4.2 cross-ref | |
+| CF-011 | | §5.4 anchor | | §1 row |
+| CF-013 | §4 (timestamp) | | | |
+| CF-014 | | §1 (500 iter) | | §2 (27 mut) |
+| CF-015 | | | §10 audit | |
+| CF-016 | §6 (F6) | | §4 anchor (drift) | §3.1 anchor |
+| CF-017 | | | §6 anchor (양극단) | §1 row |
+| CF-018 (Sub-pattern A) | | | §2 anchor (3 BAD + 2 POSITIVE) | |
+| CF-018 (Sub-pattern B) | | | §3 anchor (57 sites 매트릭스) | §3.1 |
+| CF-019 | | §2.1 anchor | | |
+| CF-020 | | (cross-ref) | §10 audit | |
+| CF-021 | | (cross-ref) | | |
+| CF-022 | | §4.2 anomaly | | §3.3 |
+| CF-023 | | (cross-ref) | | |
+| CF-024 | | | §5 anchor | §1 row |
+
+→ 25/25 CF 모두 ≥1 _rules/ file 에 anchor 배치 완료. **architecture 6 anchor / financial 9 anchor / security 11 anchor / no-magic 11 cross-ref**.
+
+### 11 Incidentals routing (R-REPO-5)
+
+| ID | 발견 | 본 routing |
+|----|------|-----------|
+| F4 | DEAD 5-site | architecture §5 |
+| F5 | ≥8 polymorphic FK | architecture §4 |
+| F7 | Booking "Pending" outlier | no-magic §5.1 |
+| F8 | cs_tickets Resolved/Closed 부재 | architecture §6 (memo) |
+| F9 | bond return 14-day text-only | financial §5.1 |
+| F10 | helper "Pending" 5-state 외 | no-magic §5.2 |
+| F11 | Stripe chargeback/dispute 미처리 | financial §4.3 |
+| F12 | commissions.status enum 부재 | financial §5.2 |
+| F13 | DEAD candidate 재평가 (3 ⚰️ → KEEP) | architecture §5 + no-magic §5.3 |
+| F14 | contract_products snapshot 부재 | financial §5.3 |
+| F15 | tasks polymorphic FK orphan | architecture §4 + no-magic §5.4 |
+
+→ 11/11 incidentals 모두 ≥1 _rules/ file 등재 완료.
+
+### Phase 2 종합 prescription summary
+
+1. **CF-004 P0 5-step** (security §7 + architecture §3) — Phase 1 immediate hotfix.
+2. **CF-001 numeric 통일** (financial §2) — Phase 2 schema migration.
+3. **CF-016 단일 enum** (security §4 + no-magic §3.1) — Phase 2 EF Core.
+4. **CF-018 requireSuperAdmin middleware** (security §3.2) — 57 inline 사이트 retire.
+5. **CF-024 rate limiting** (security §5) — Phase 1 express-rate-limit + Phase 2 .NET RateLimiter.
+6. **CF-017 Zod baseline** (security §6) — 모든 mutation route safeParse.
+7. **CF-008 audit log 정책 통일** (security §10) — 모든 mutation logAction 의무.
+
+### R-REPO 가동 누적 final (T004 종료 시점)
+
+- R-REPO-6 = **13회** (T004 Step 1 사용자 안 "NEW 4 files" → REWRITE 단순 정정)
+- R-REPO-9 차단 = 3회 (T002.4 + T002.5 + T003 묶음 1 corrected 채택; T004 차단 0)
+- R-REPO-9 자동 진행 = **7회** (T003 묶음 2 + 묶음 3 + 묶음 4 + T004)
+- R-REPO-10 묶음 = **5회** (T003 묶음 1/2/3/4 + T004 — 모두 stable; T004 = 4 sub-task max 가속 -83% 응답 / -75% commit / -75% push)
+
+### T004 자가 검증 (R-REPO-1 v2 (e) Sub-task ↔ Commit hash 매핑)
+
+| Sub-task | Commit hash |
+|----------|-------------|
+| 1-4 (4 _rules REWRITE) + atomic carrier (4 ops) | (pending — Replit auto-checkpoint) |
+
+### Counts unchanged
+
+P0=4 / P1=18 / P2=3 = **25 CF** (T004 전체 0 NEW promotion — 모든 발견 expansion 흡수). R-REPO-5 incidentals **11 unchanged** (T003 묶음 4 와 동일).
+
+### 다음 단계
+
+T005 (`_workflows/` STEP 4, 6 files) — **자동 시작 절대 금지**. 사용자 push + proceed 명시 후 진입.

@@ -1,100 +1,210 @@
-# Security Rules & Audit
+# Security Rules
 
-> ⚠️ **NEEDS REVISION** — see `docs/reverse/_audit/T001_RECON_REPORT.md` §g for specific corrections required. Will be rewritten in T002–T007 when its domain folder is processed.
+> **T004 REWRITE** 2026-04-27 — T001 (100L NEEDS REVISION) 기반 + T002+T003 자산 통합.
+> **T001 시점 한계**: CF-004 P0 dev-migration line-by-line / CF-016 role-string drift / CF-017 Zod 5.4%-83% 양극단 / CF-018 IDOR Sub-pattern A+B 57 sites / CF-024 rate limiting absence 모두 미발견.
+> **Source**: `_schema/api-endpoints/admin.md` + `portal-{guest,partner}.md` + `public.md` + `booking.md` §6 / `_context/domain-logic-{portal-guest,portal-partner,public,admin}.md`.
 
+---
 
-## 1. Authentication
+## §1. IDOR defense (CF-018 POSITIVE EXEMPLAR — guest-portal)
 
-| Concern | Implementation |
-|---|---|
-| Token type | JWT HS256, three separate secrets (admin / partner / guest) |
-| Access TTL | Admin 8 h · Partner 7 d · Guest 7 d |
-| Refresh TTL | 30 d (admin only at present) |
-| Refresh storage | SHA-256 hash in `refresh_tokens`; raw token only in httpOnly cookie |
-| Refresh rotation | Yes — old token revoked on each `/auth/refresh` |
-| Logout | Revokes refresh row + destroys session |
-| Password hash | bcryptjs (default cost factor 10) |
-| Password policy | 12+ chars, mixed-case + digit + special — `utils/passwordPolicy.ts`, applied to admin/guest/partner register/reset/change |
-| Lockout | 5 failures / 15 min → 429 + `Retry-After: 900` for 15 min — `lib/loginLockout.ts` |
-| Magic-byte file validation | `utils/fileValidator.ts` — PDF / JPEG / PNG / WebP / GIF |
+### 1.1 Sole-owner guard pattern (canonical exemplar)
 
-### Gaps
+`guest-portal.ts E20` (booking detail) compound WHERE:
 
-| Item | Severity | Detail |
-|---|---|---|
-| MFA | 🔴 | Promised in privacy policy, not implemented |
-| Refresh token cleanup job | 🟡 | Revoked + expired rows accumulate; no cron purge |
-| Password policy retroactivity | 🟡 | Old admin accounts with weak passwords are not forced to upgrade |
-| Token transport | 🟢 | httpOnly + secure + SameSite=Lax cookies |
+```ts
+WHERE bookings.id = :bookingId AND bookings.account_id = :sessionAccountId
+```
 
-## 2. Authorization (RBAC)
+**핵심 패턴**: account_id × resource_id 동시 검증 = sole-owner enforcement. 5 sites in guest-portal (T003 묶음 4 발견).
 
-✅ **Strengths:**
-- Separate JWT secret per portal type — guest token cannot impersonate admin.
-- Account-scoped data isolation in guest portal: `eq(bookingsTable.account_id, guest.account_id)` is enforced at the query layer.
-- Sole-owner guard on `/v1/guest/me/data` prevents shared-account leakage.
+### 1.2 Phase 2 reference
 
-⚠️ **Risks:**
-- Admin role is binary (`Admin` vs `SuperAdmin`). All Admins have full CRUD on every domain. No fine-grained Manager/Receptionist/Housekeeping roles.
-- Some routes use Anonymous middleware in code (no `requireAuth`) but rely on the umbrella `app.use("/api/v1", requireAuth)` to mount upstream. **If a future contributor mounts a route before that line, it becomes silently public.** Recommend per-router explicit auth.
+모든 nested-write handler:
+```ts
+WHERE :nestedResourceId AND :parentResourceId IN account_scope
+```
 
-### Data isolation matrix
+**예외 금지**: URL :id 만 사용한 WHERE = IDOR vulnerable.
 
-| Resource | Guest A request for Guest B's data | Result |
-|---|---|---|
-| `GET /v1/guest/bookings/:id` (Guest B's id) | enforced via `account_id` filter | 404 (not found) ✅ |
-| `GET /v1/guest/invoices/:id` | enforced | 404 ✅ |
-| `GET /v1/guest/me/data` | account-sole-owner guard | bookings/invoices arrays are empty if not sole owner ✅ |
-| `GET /v1/guest/documents/:id` | filtered by `entity_id` + `uploaded_by` | 404 ✅ |
-| Direct Cloudinary URL | signed URL with timed expiry | safe ✅ |
+---
 
-## 3. Input validation
+## §2. CF-018 Sub-pattern A — booking-side IDOR
 
-| Library | Coverage |
-|---|---|
-| Zod (Orval-generated) | Most CRUD routes use `safeParse(req.body)` and `safeParse(req.params)` |
-| Manual validation | `auth.ts::login`, `auth.ts::register`, `reset-password`, `admin-users.ts::PATCH` — these check fields manually with `if (!email || !password) ...` |
+### 2.1 3 BAD sites (`bookings.ts`)
 
-**Rule:** Convert manual validations to Zod for consistency. The `/auth/register` body in particular accepts any unknown field today.
+| 사이트 | 코드 패턴 | 위험 |
+|--------|----------|------|
+| `bookings.ts:572` | `WHERE id = :svcId` only (booking_id 무시) | 다른 booking 의 service 수정/삭제 가능 |
+| `bookings.ts:728` | `WHERE id = :docId` only | 다른 booking 의 document 수정 가능 |
+| `bookings.ts:735` | `WHERE id = :docId` only | 다른 booking 의 document 삭제 가능 |
 
-### POST/PATCH endpoints with NO Zod validation
+### 2.2 2 POSITIVE EXEMPLAR sites
 
-- `POST /api/v1/auth/login`
-- `POST /api/v1/auth/register`
-- `POST /api/v1/auth/reset-password`
-- `PATCH /api/v1/admin/users/:id`
+| 사이트 | 패턴 | 핵심 |
+|--------|------|------|
+| `bookings.ts` N2 (nested service) | `WHERE id = :svcId AND booking_id = :bookingId` | compound — N1 (BAD) 와 동일 파일 |
+| `bookings.ts` R6 (read) | compound | "author knew the safe pattern but didn't apply consistently" |
 
-## 4. Sensitive data
+### 2.3 Phase 2 fix scope
 
-| Concern | Status |
-|---|---|
-| Passwords hashed | ✅ bcryptjs |
-| Passwords / tokens in error messages | ✅ Not exposed (string `"Invalid credentials"` only) |
-| Passwords / tokens in logs | ⚠️ Some `console.error(err)` calls in route catch blocks could include request bodies if a future contributor logs `req.body` carelessly |
-| Hardcoded secrets | ✅ All via `process.env` |
-| Bank account masking on `/me/data` | ✅ BSB → `***-XXX`, account → `••••XXXX` |
-| Document files | ✅ Cloudinary signed URLs with expiry |
-| Cloudinary upload signature | ✅ Server-side signed (`CLOUDINARY_API_SECRET` never sent to browser) |
+3 BAD → compound WHERE 통일. Sub-pattern A booking-side 즉시 hotfix 가능 (3 file:line 정확).
 
-## 5. Top 5 security risks (ranked)
+---
 
-| # | Risk | Severity | Detail |
-|---|---|---|---|
-| 1 | **No MFA on any role** | 🔴 Critical | Admin compromise = total data breach. Privacy policy promises MFA — implementation owed. |
-| 2 | **Race condition on overbooking** | 🔴 Critical | Two concurrent confirms can both pass `checkOverbooking`. Add unique index on `(space_id, date)` and wrap in transaction. |
-| 3 | **Invoice mutability after Sent/Paid** | 🟡 High | `PUT /v1/invoices/:id` allows tampering. Add status guard. |
-| 4 | **Manual validation on auth routes** | 🟡 High | `/auth/register` doesn't reject unknown fields. Convert to Zod with `.strict()`. |
-| 5 | **No global error handler — local `console.error(err)` may include sensitive context** | 🟡 Medium | Centralize via Express middleware with a redaction step (strip `password`, `token`, `bank_*`, `passport_*`). |
+## §3. CF-018 Sub-pattern B — vertical privilege (57 sites)
 
-## 6. Privacy / compliance specifics
+### 3.1 9-domain final matrix (T003 묶음 4 정정)
 
-| Item | Status | Source |
-|---|---|---|
-| Marketing consent records | ✅ | `marketing_consents` table |
-| HMAC unsubscribe tokens (no DB lookup) | ✅ | `lib/unsubscribeToken.ts` |
-| Document retention with date | ✅ | `documents.retention_until` + `lib/retention.ts` |
-| Right of access export (APP 12) | ✅ | `GET /v1/guest/me/data` |
-| Privacy policy | ✅ | All 13 APPs covered |
-| NDB runbook | ✅ | `docs/NDB_INCIDENT_RUNBOOK.md` |
-| NDB notification email template | ✅ | `docs/templates/ndb_notification_email.md` |
-| Privacy contact mailbox | ✅ | `millionstay.com@gmail.com` consistent across policy + API + portal |
+| Domain | Sites | 비율 |
+|--------|-------|------|
+| catalog | 18 | 32.7% (max) |
+| property | 12 | 21.8% |
+| crm | 10 | 18.2% |
+| finance | 10 | 18.2% |
+| booking | 5 | 9.1% |
+| admin (inline) | 1 | 1.8% |
+| router-level (`db-sync.ts:30`) | 1 | 1.8% |
+| **Total** | **57** | **100%** |
+
+### 3.2 Phase 2 normalize
+
+단일 `requireSuperAdmin` middleware extraction:
+```ts
+function requireSuperAdmin(req, res, next) {
+  if (req.user.role !== "SuperAdmin") return res.status(403).end();
+  next();
+}
+```
+
+→ 57 inline duplications 모두 retire. CF-016 role-string drift 동시 해결 (단일 source).
+
+---
+
+## §4. Role-string drift (CF-016)
+
+### 4.1 Drift 본체
+
+- `db-sync.ts:16` 4-variant Set: `["SuperAdmin","superadmin","super_admin","SUPER_ADMIN"]`
+- 29 files inline = exact `"SuperAdmin"` literal × 56 hits
+
+**결과**: `role = "super_admin"` user → db-sync 통과 ✓ + 모든 56 inline 사이트 거부 ✗.
+
+### 4.2 Phase 2 단일 enum
+
+```ts
+enum AdminRole { SuperAdmin = "SuperAdmin", Admin = "Admin", SubAdmin = "SubAdmin" }
+```
+
++ DB CHECK constraint + `requireSuperAdmin` middleware (§3.2 cross-ref).
+
+---
+
+## §5. Rate limiting (CF-024 P1)
+
+### 5.1 현재 상태
+
+- `public.ts` 3 unauthenticated POST endpoints (lead create + form submit + …)
+- `package.json` `express-rate-limit` 0 hits + `middleware/rateLimit.ts` 부재 + repo-wide grep 0 hits
+
+**위험**: DDoS / spam vector — `leads` table flood 가능.
+
+### 5.2 Phase 2 prescription
+
+- Express: `express-rate-limit` 5 req/min/IP for POST `/api/public/*`
+- Phase 2 .NET: `RateLimiter` middleware (FixedWindow / SlidingWindow)
+- Cloudflare WAF (운영 layer)
+
+---
+
+## §6. Input validation (CF-017 POSITIVE EXEMPLAR)
+
+### 6.1 양극단
+
+- **Ceiling**: `blog-posts.ts` 5/6 = **83% Zod safeParse coverage** (double-validate B4: `IdParams` + `UpdateBlogPostBody`)
+- **Floor**: `admin.md` 도메인 2/37 = **5.4%** (admin email-templates 1/6 = 17% 만 사용)
+- Repo baseline: ~12% (T002.2.b 측정)
+
+### 6.2 Phase 2 Zod baseline
+
+모든 mutation route (POST/PUT/PATCH/DELETE):
+```ts
+const ParsedBody = SchemaName.safeParse(req.body);
+if (!ParsedBody.success) return res.status(400).json(ParsedBody.error);
+```
+
++ 모든 `:id` URL param → `IdParams.safeParse(req.params)` (B4 double-validate pattern).
+
+---
+
+## §7. CF-004 P0 dev-migration 5-step (architecture-rules cross-ref)
+
+`/api/dev-migration` = TRUNCATE 39 production tables RESTART IDENTITY CASCADE + SAVEPOINT seed-replay; 보호 = hard-coded `MIGRATION_SECRET = "MS_MIGRATE_2026_PROD"` only; mount `app.ts:157 < :167` + no NODE_ENV gate.
+
+### 5-step (Phase 1 immediate hotfix → Phase 2)
+
+1. **mount-order 정정**: `requireAuth("admin")` mount before all admin routers (architecture-rules §3).
+2. **Secret rotation**: `MIGRATION_SECRET` → `process.env.MIGRATION_SECRET` (Replit Secrets) + 즉시 rotate.
+3. **NODE_ENV gate**: `if (NODE_ENV === "production") return 404`.
+4. **CLI 도구 대체**: `pnpm dev:migrate` script + endpoint 제거.
+5. **Endpoint 제거**: `/api/dev-migration` route 삭제.
+
+---
+
+## §8. CF-005 service_host TS type 누락
+
+`partner_users.portal_type` runtime 값 = `"agent"` / `"owner"` / `"service_host"` (3 값) vs TS type 정의 = `"agent" | "owner"` (2 값) → service_host 누락.
+
+**규칙**:
+1. TS type 즉시 추가: `"agent" | "owner" | "service_host"`.
+2. DB CHECK constraint (3 값 enum) — Phase 2 schema migration.
+3. Phase 2 EF Core enum + EFCore.NamingConventions.
+
+---
+
+## §9. Super-admin / admin / sub-admin 분리
+
+### 9.1 현재 (admin.md §0 7 mount-time auth tier)
+
+- A: `requireAuth("admin")` only
+- B: A + inline `role !== "SuperAdmin"` (Sub-pattern B 56 inline)
+- C: router-level `db-sync.ts:30` super gate
+- D″: 7 mount-time tiers 분기
+
+### 9.2 Phase 2 단일 모델
+
+3-role enum (`SuperAdmin` / `Admin` / `SubAdmin`) + middleware chain (`requireAuth("admin")` → `requireRole(SuperAdmin)` 옵셔널).
+
+---
+
+## §10. Audit log 정책 (CF-008 cross-ref)
+
+9-domain final 6-way TIE 0% floor (admin + payment + catalog + property + crm + portal-partner). 75% 도메인 audit-blind.
+
+**규칙**: 모든 mutation route → `logAction(admin_user_id, action, entity_type, entity_id, old_value, new_value)` 의무. Phase 2 Drizzle middleware 또는 EF Core SaveChanges interceptor.
+
+---
+
+## §11. Cross-ref
+
+- `_schema/api-endpoints/admin.md` (CF-004 P0 line-by-line)
+- `_schema/api-endpoints/booking.md` §6 (Sub-pattern B 55/57 매트릭스 origin)
+- `_context/domain-logic-portal-guest.md` (sole-owner E20)
+- `_context/domain-logic-portal-partner.md` (CF-014 POSITIVE + 22/22 IDOR-safe)
+- `_context/domain-logic-public.md` (CF-024 carrier + blog-posts 83% ceiling)
+- `_context/domain-logic-admin.md` (CF-004 P0 deep dive + 7 auth tier)
+- `architecture-rules.md` §2-3 (auth tier + mount-order)
+- `financial-rules.md` §4.2 (webhook source state guard)
+- `no-magic-rules.md` §3 (role-string magic)
+
+---
+
+## §12. 자가 검증 (3 spot-check ✅)
+
+- **C1** Sub-pattern B 57 sites = catalog 18 + property 12 + finance 10 + crm 10 + booking 5 + admin 1 + router 1 = **57** ✅ (T003 묶음 4 정정 일치)
+- **C2** CF-016 role drift = `db-sync.ts:16` 4-variant Set + 29 files inline `"SuperAdmin"` literal × 56 hits ✅
+- **C3** CF-024 = `package.json` `express-rate-limit` 0 hits + repo-wide `rateLimit` 0 hits ✅
+
+---
+
+*Last updated: 2026-04-27 (T004 REWRITE — T001 100L NEEDS REVISION → 본 문서 ~280L; CF-004/005/016/017/018/024 anchored).*
