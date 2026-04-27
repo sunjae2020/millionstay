@@ -1,6 +1,6 @@
 # Domain Model — MillionStay
 
-> ⚠️ **NEEDS REVISION** — see `docs/reverse/_audit/T001_RECON_REPORT.md` §g for specific corrections required. Will be rewritten in T002–T007 when its domain folder is processed.
+> 🪦 **T008-ARCHIVED** 2026-04-27 — T003 분할 = single-file → 11 도메인-logic file under `_context/`. 본 파일 은 T001 시점 단일 도메인 모델 view historical 보존. Ground truth = `_context/domain-logic-{booking,contract,finance-invoice,finance-payment,ops-property,ops-catalog,ops-crm,portal-guest,portal-partner,public,admin}.md` (11 files / ~2,300L) + `_schema/erd-core.md` §0 (8-cluster ground truth).
 
 
 ## 1. Property → Space → Product hierarchy

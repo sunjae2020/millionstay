@@ -1,6 +1,6 @@
 # Feature Implementation Gap Analysis (STEP 0-B)
 
-> ⚠️ **NEEDS REVISION** — see `docs/reverse/_audit/T001_RECON_REPORT.md` §g for specific corrections required. Will be rewritten in T002–T007 when its domain folder is processed.
+> 🪦 **T008-ARCHIVED** 2026-04-27 — Historical T001 1차 스냅샷 보존. T002~T007 carrier 미배정 (F16 incidental). Ground truth = `_audit/CRITICAL_FINDINGS.md` (25 CFs P0=4/P1=18/P2=3) + `README.md` §4-5 (25 CF backlog + 12 incidentals routing). 본 파일은 T001 시점 spec-vs-implementation 격차 view 로만 참조; 25 CFs 와 사실 충돌 시 `CRITICAL_FINDINGS.md` 우선.
 
 
 Legend: ✅ Fully implemented · ⚠️ Partially · ❌ Not implemented · 🔲 Backend only (no UI)

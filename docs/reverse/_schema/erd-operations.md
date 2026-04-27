@@ -1,6 +1,6 @@
 # Operations & Logging Schema — WorkOrder / CSTicket / SystemLog
 
-> ⚠️ **NEEDS REVISION** — see `docs/reverse/_audit/T001_RECON_REPORT.md` §g for specific corrections required. Will be rewritten in T002–T007 when its domain folder is processed.
+> 🪦 **T008-ARCHIVED** 2026-04-27 — T002.4 통합 결정 = 도메인별 ERD file → 단일 `_schema/erd-core.md` 8-cluster Mermaid 통합. 본 파일 은 T001 시점 도메인별 분할 historical 보존. Ground truth = `_schema/erd-core.md` §5 (Ops cluster Mermaid) + §11 (Ops cluster 권장 FK rows) + `_context/domain-logic-ops-{property,catalog,crm}.md` (3 도메인 비즈니스 규칙 + work_orders/cs_tickets state machines).
 
 
 > Source: `lib/db/src/schema/{work_orders,cs_tickets,service_catalog,system_logs,email_logs}.ts`

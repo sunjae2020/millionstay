@@ -1,6 +1,6 @@
 # Finance Schema — Invoice / RecurringSchedule / PaymentMethod / Promotion
 
-> ⚠️ **NEEDS REVISION** — see `docs/reverse/_audit/T001_RECON_REPORT.md` §g for specific corrections required. Will be rewritten in T002–T007 when its domain folder is processed.
+> 🪦 **T008-ARCHIVED** 2026-04-27 — T002.4 통합 결정 = 도메인별 ERD file → 단일 `_schema/erd-core.md` 8-cluster Mermaid 통합. 본 파일 은 T001 시점 도메인별 분할 historical 보존. Ground truth = `_schema/erd-core.md` §4 (Finance cluster Mermaid) + §11 (Finance cluster 권장 FK rows) + `_audit/MONEY_AUDIT.md` (41 money columns audit + TC-M01-05) + `_rules/financial-rules.md` (14 hard-coded constants + Stripe webhook split).
 
 
 > Source: `lib/db/src/schema/{invoices,recurring_schedules,promotions}.ts`

@@ -1,6 +1,6 @@
 # Tech Stack & Project Audit
 
-> ⚠️ **NEEDS REVISION** — see `docs/reverse/_audit/T001_RECON_REPORT.md` §g for specific corrections required. Will be rewritten in T002–T007 when its domain folder is processed.
+> 🪦 **T008-ARCHIVED** 2026-04-27 — T002~T007 carrier 미배정 (F16 incidental). 본 파일 은 T001 시점 tech stack inventory historical 보존. Ground truth = `_audit/T001_RECON_REPORT.md` §a (Codebase Inventory + package.json deps + DB schema) + `_design/design-tokens.md` §1 (Tailwind v4 5-artifact 중복) + `_design/component-library.md` §1 (shadcn/ui ~50 primitive × 5 artifact).
 
 
 ## 1. Dependencies (grouped)

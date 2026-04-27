@@ -1,6 +1,6 @@
 # API Endpoint Inventory — `artifacts/api-server`
 
-> ⚠️ **NEEDS REVISION** — see `docs/reverse/_audit/T001_RECON_REPORT.md` §g for specific corrections required. Will be rewritten in T002–T007 when its domain folder is processed.
+> 🪦 **T008-ARCHIVED** 2026-04-27 — T002.0 PLAN Q1 결정 = 도메인 분할 (single-file → 11 도메인 file under `_schema/api-endpoints/`). 본 파일 은 T001 시점 single-file 형식 historical 보존. Ground truth = `_schema/api-endpoints/INDEX.md` + 11 domain files (booking + contract + finance-invoicing + finance-payments + ops-{property,catalog,crm} + portal-{guest,partner} + public + admin).
 
 
 > Source: `artifacts/api-server/src/routes/*.ts` and `app.ts` mounting.

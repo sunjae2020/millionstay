@@ -1,6 +1,6 @@
 # MillionStay — Reverse Documentation Overview (STEP 0)
 
-> ⚠️ **NEEDS REVISION** — see `docs/reverse/_audit/T001_RECON_REPORT.md` §g for specific corrections required. Will be rewritten in T002–T007 when its domain folder is processed.
+> 🪦 **T008-ARCHIVED** 2026-04-27 — Historical T001 1차 overview 보존. T002~T007 carrier 미배정 (F16 incidental). Ground truth = `README.md` §1-2 (Project Overview + Sub-task Ledger) + `_audit/T001_RECON_REPORT.md` (recon 본문). 본 파일 은 T001 시점 entry-point view 로만 참조.
 
 
 > Generated: 2026-04-19. Snapshot of the actual codebase state.

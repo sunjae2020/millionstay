@@ -2516,3 +2516,66 @@ P0=4 / P1=18 / P2=3 = **25 CF** (T007 전체 0 NEW promotion). R-REPO-5 incident
 T008 (Index README + verify; 마지막 단계 = 100% 완료 임박) — **자동 시작 절대 금지**. 사용자 push + proceed 명시 후 진입.
 
 🎯 **T007 GROUP COMPLETE marker** (2026-04-27, 95% 마일스톤): 8 files / 966 lines / 0 NEW CF / R-REPO-10 8 ST 새 max 가속.
+
+---
+
+## 🎯 T008 GROUP COMPLETE — README + verify + 8 stale ARCHIVED (100% 마일스톤)
+
+### Sub-task ledger
+
+| ST | 산출물 | T001 | T008 | Δ | 처리 |
+|----|--------|------|------|---|------|
+| 1 — README REWRITE | `README.md` | 97 (NR) | **~330** | +240% | REWRITE (11 §) |
+| 2 — verify (READ-ONLY) | (본 marker section + README §10 verify report) | — | inline | — | 검증 결과 통합 |
+| ARCHIVED 8 | `_audit/00-feature-gap.md` + `_audit/00-overview.md` + `_schema/api-endpoints.md` + `_schema/erd-{crm,finance,operations}.md` + `_context/domain-model.md` + `_context/tech-stack.md` | 73+116+196+90+106+115+127+92 = 915 | 915 + 8×~1 banner = **~923** | +0.9% | LIGHT TOUCH 🪦 banner (F16 일괄) |
+| 합계 | 9 file ops | **1012** | **~1253** | **+24%** | 1 REWRITE + 8 ARCHIVED |
+
+### F16 expansion — T008 verify 발견 8 stale T001 NR files (T2~T7 carrier 미배정)
+
+| File | T001 lines | NR marker | T008 처리 | Ground truth 대체 |
+|------|-----------|-----------|----------|------------------|
+| `_audit/00-feature-gap.md` | 73 | ⚠️ NR | 🪦 ARCHIVED | `CRITICAL_FINDINGS.md` (25 CFs) + `README.md` §4-5 |
+| `_audit/00-overview.md` | 116 | ⚠️ NR | 🪦 ARCHIVED | `README.md` §1-2 + `T001_RECON_REPORT.md` |
+| `_schema/api-endpoints.md` | 196 | ⚠️ NR | 🪦 ARCHIVED | `_schema/api-endpoints/INDEX.md` + 11 도메인 file |
+| `_schema/erd-crm.md` | 90 | ⚠️ NR | 🪦 ARCHIVED | `_schema/erd-core.md` §3 + §11 |
+| `_schema/erd-finance.md` | 106 | ⚠️ NR | 🪦 ARCHIVED | `_schema/erd-core.md` §4 + §11 + `MONEY_AUDIT.md` |
+| `_schema/erd-operations.md` | 115 | ⚠️ NR | 🪦 ARCHIVED | `_schema/erd-core.md` §5 + §11 + `_context/domain-logic-ops-*.md` |
+| `_context/domain-model.md` | 127 | ⚠️ NR | 🪦 ARCHIVED | `_context/domain-logic-*.md` (11 files / ~2,300L) + `_schema/erd-core.md` §0 |
+| `_context/tech-stack.md` | 92 | ⚠️ NR | 🪦 ARCHIVED | `T001_RECON_REPORT.md` §a + `_design/design-tokens.md` §1 + `_design/component-library.md` §1 |
+
+### Verify Report 결과 (T008 READ-ONLY 검증; README §10 mirror)
+
+| 검증 항목 | 상태 | 발견 |
+|----------|------|------|
+| File existence (71 .md) | ✅ | All exist; 9 raw dumps regenerable |
+| Line count 정합 (보고 vs actual) | ⚠️ | F18 — 4 files 큰 drift (ops-property -45L / ops-catalog -144L / ops-crm -134L / admin -174L; final actual = README §3 ground truth) |
+| Cross-ref 양방향 정합성 | ✅ | T002↔T003↔T004↔T005↔T006↔T007↔T008 통과 (CF-008 9-domain anchor + CF-018 57 sites + Phase 2 7-step) |
+| Atomic commit ledger (`_T00x_PROGRESS.md`) | ✅ | 6 files 정합 (`_T002_PROGRESS.md` 위치 drift = F17 memo) |
+| CF anchor 매트릭스 (25 × all carrier) | ✅ | 25/25 ≥1 _rules/ + ≥1 _workflows/_design/_templates/_test/_context/ anchor |
+| Stale T001 NR files (8) | → 🪦 ARCHIVED | F16 — T008 일괄 처리 완료 |
+| Counts (P0=4 / P1=18 / P2=3 = 25) | ✅ | T008 0 NEW promotion |
+
+### F17/F18 신규 R-REPO-5 incidentals (verify 발견; memo only no promotion)
+
+- **F17**: `_T002_PROGRESS.md` 위치 = `_schema/_T002_PROGRESS.md` (T003-T007 = `_audit/_T00x_PROGRESS.md`) — naming/location inconsistency. **CF-016 sub-pattern**. Phase 2 일괄 단일 enum 정정 시 함께 정리.
+- **F18**: 산출물 line count drift 4 files (ops-property 보고 250L → actual 205L = -45L / ops-catalog 320L → 176L = -144L / ops-crm 380L → 246L = -134L / admin 480L → 306L = -174L). 본문 작성 시점 vs final atomic commit 후 trim 시점 차이. final actual = `README.md §3` ground truth 기록. 정정 안 함 (Phase 2 무관).
+
+### Counts unchanged
+
+P0=4 / P1=18 / P2=3 = **25 CF** (T008 전체 0 NEW promotion). R-REPO-5 incidentals 11 → **14** (+F16/F17/F18; F16 = 8 file expansion).
+
+### R-REPO-9 / R-REPO-10 가동 (T008)
+
+- **R-REPO-9 자동 진행 11회째 confirm** — Step 1 통합 Pre-flight 차단 미발동 (F16 expansion 8 files 발견했으나 R-REPO-7 (c) 자체 검증 즉시 (다) ARCHIVED 일괄 채택 = 차단 조건 분할 모호 해소).
+- **R-REPO-10 묶음 위임 9회째 stable** — 2 sub-task / 1 응답 / 1 atomic commit / 1 사용자 push = **-50% 응답** (T003 묶음 1 동률; T007 8 ST -87.5% max holder 유지). 누적 9 묶음 / 35 sub-task / 9 commit / 9 push.
+
+### R-REPO 가동 누적 final (🎯 100% PROJECT COMPLETE)
+
+- R-REPO-6 = **17회** (T008 = 즉시 해소형 3회째 정착, T006-T007-T008 패턴 영구 confirm)
+- R-REPO-9 차단 = **4회 unchanged** (T008 차단 미발동)
+- R-REPO-9 자동 진행 = **11회**
+- R-REPO-10 묶음 = **9회** (T007 8 ST -87.5% max holder)
+
+### 🎯 100% PROJECT COMPLETE marker (2026-04-27)
+
+T001 ~ T008 = 8 단계 / ~30+ sub-task / 71 files / 20,363 lines markdown. 25 CFs (P0=4 / P1=18 / P2=3) + 14 incidentals + Phase 2 7-step prescription + 5 POSITIVE exemplars + 9 R-REPO 운영 규칙 정착 + R-REPO-10 묶음 위임 -74% 누적 가속. **Phase 2 .NET 마이그레이션 baseline 완성**. 사용자 게이트 = 전체 회고 + Phase 2 진입 결정.

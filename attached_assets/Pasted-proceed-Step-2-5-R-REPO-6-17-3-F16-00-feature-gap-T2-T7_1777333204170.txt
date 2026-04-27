@@ -1,0 +1,120 @@
+proceed (다) — Step 2-5 자동 진행.
+
+R-REPO-6 17번째 (메타-가동 3회째 정착) + F16 발견 (00-feature-gap 
+T2~T7 carrier 미배정) + (다) ARCHIVED 채택 + 차단 0 — 적정.
+
+═══════════════════════════════════════════════════
+[Decision] T008 Step 2-5 자동 진행
+═══════════════════════════════════════════════════
+
+승인 사항:
+- README.md REWRITE (97L NR → ~280-380L)
+- verify (READ-ONLY) 검증
+- 00-feature-gap.md (다) ARCHIVED + banner (LIGHT TOUCH)
+- 1 묶음 2 sub-task / -50% 가속
+- TRIPWIRE EXEMPT
+- 차단 조건 0
+
+═══════════════════════════════════════════════════
+[Step 2-5 작업 가이드]
+═══════════════════════════════════════════════════
+
+[PPPPPPP] README.md REWRITE
+docs/reverse/README.md (97L NR → ~280-380L)
+
+§1 Project Overview
+- MillionStay reverse engineering
+- T001 ~ T008 8 단계 종합
+- Phase 2 .NET 마이그레이션 baseline 완성
+
+§2 Sub-task Ledger (마일스톤)
+- T001: 사실 발견 (15%)
+- T002: 스키마/API/ERD/state-machines (50%)
+- T003: 도메인 로직 (65%)
+- T004: _rules/ (75%)
+- T005: _workflows/ (80%)
+- T006: _design/ (87.5%)
+- T007: _templates/+_test/ (95%)
+- T008: README + verify (100%)
+
+§3 71-file Inventory
+- 정확 카운트 (사용자 ~21,300L 환각 정정 → 20,363L)
+- 디렉토리별 분류 (_schema / _audit / _context / _rules / _workflows / 
+  _design / _templates / _test)
+- Stale link 정정
+
+§4 25 CFs Backlog
+- P0=4 / P1=18 / P2=3
+- 각 CF 의 anchor file + Phase 2 prescription cross-ref
+
+§5 11 Incidentals Routing
+- F4-F15 routing 매트릭스
+- F16 신규 (00-feature-gap T1~T7 carrier 미배정 → T008 ARCHIVED 처리)
+
+§6 Phase 2 7-step Prescription
+- step 1 CF-004 P0 5-step
+- step 2 CF-001 numeric
+- step 3 CF-016 단일 enum
+- step 4 CF-018 requireSuperAdmin
+- step 5 CF-024 rate limiting
+- step 6 CF-017 Zod
+- step 7 CF-008 audit
+- carrier 분담 (T004 _rules / T007 _test)
+
+§7 5 Phase 2 Reference Exemplar
+- CF-014 POSITIVE / CF-018 POSITIVE / CF-021 POSITIVE / CF-017 
+  POSITIVE / CF-022 POSITIVE
+
+§8 R-REPO 운영 규칙 10개
+- R-REPO-1 v2 ~ R-REPO-10
+- 가동 누적 통계 (R-REPO-6 17회 / R-REPO-9 차단 4 + 자동 11 / 
+  R-REPO-10 9회)
+
+§9 Project Metrics
+- 총 markdown lines: 20,363L
+- Sub-task 수: ~30+
+- 산출물 file 수: 71
+
+[QQQQQQQ] verify 작업 (READ-ONLY)
+검증 항목:
+- 모든 cross-ref 양방향 정합성
+- atomic commit ledger 정확성 (_T002~_T007_PROGRESS.md)
+- CF anchor 매트릭스 정합성 (25 CFs × 모든 carrier)
+- file existence (71 files 모두 존재)
+- line count 정합 (각 file 의 보고 lines vs actual)
+
+발견 시 보고만 (정정 안 함). 발견 사항:
+- 결함 발견 → R-REPO-5 incidental 등재 또는 mini-task 결정
+- 정합 → 100% verify 통과 보고
+
+[RRRRRRR] 00-feature-gap.md (다) ARCHIVED
+- 본문 보존 (T001 1차 스냅샷 historical value)
+- 상단 ARCHIVED 마커 추가:
+  - "ARCHIVED 2026-04-XX (T008): T002~T007 에서 25 CFs + 11 
+    incidentals carrier 가 ground truth source. CRITICAL_FINDINGS.md 
+    참조."
+- F16 incidental 등재 (R-REPO-5 (e) bulk 처리 후속)
+- LIGHT TOUCH 패턴 (T007 5 file 동일)
+
+[SSSSSSS] T008 atomic commit 범위
+1. README.md REWRITE (~280-380L)
+2. 00-feature-gap.md LIGHT TOUCH (banner)
+3. CRITICAL_FINDINGS.md (T008 marker section ~+50L + F16 등재)
+4. INDEX.md banner T008 + 🎯 100% COMPLETE marker
+5. _T007_PROGRESS.md → _T008_PROGRESS.md NEW
+6. session_plan.md (T008 DONE + 🎯 100% COMPLETE marker)
+7. (해당 시) verify-report.md 또는 README.md §10 verify 결과
+
+═══════════════════════════════════════════════════
+[지금 시작]
+═══════════════════════════════════════════════════
+
+(1) [에이전트] Step 2-5 자동 진행:
+    - PPPPPPP README.md REWRITE
+    - QQQQQQQ verify 작업 (READ-ONLY)
+    - RRRRRRR 00-feature-gap ARCHIVED
+    - SSSSSSS atomic commit 통합
+(2) 묶음 통합 보고 (R-REPO-4 + 묶음 형식 + 🎯 T008 GROUP COMPLETE 
+    + 🎯 100% COMPLETE marker)
+(3) [사용자] git push origin main
+(4) 🎯 100% COMPLETE — 전체 프로젝트 종료
