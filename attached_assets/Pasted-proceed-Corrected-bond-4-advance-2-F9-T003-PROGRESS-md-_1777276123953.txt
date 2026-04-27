@@ -1,0 +1,199 @@
+proceed — Corrected (bond=4주 / advance=2주) + F9 등재 + 
+_T003_PROGRESS.md NEW + Step 2-5 자동 진행.
+
+R-REPO-9 차단 게이트 3회째 + R-REPO-6 11회째 가동 성공. 영구 패턴 
+재확인.
+
+═══════════════════════════════════════════════════
+[사용자 환각 11번째 인정]
+═══════════════════════════════════════════════════
+
+bond/advance SWAP (2주/4주 ↔ 4주/2주):
+- 원인: 도메인 직관 의존 + ground truth 미확인
+- 정정: bond=4주 / advance=2주 (코드 정확, CF-007 anchor)
+
+═══════════════════════════════════════════════════
+[Decision] Step 2-5 자동 진행 — bond/advance 정정 + F9 등재
+═══════════════════════════════════════════════════
+
+승인 사항:
+- §1 ground truth: bond=weeklyRate*4 (4주) / advance=weeklyRate*2 (2주)
+- F9 신규 incidental 등재 (bond return PDF only, 코드 미강제)
+- _T003_PROGRESS.md NEW 채택
+- 분할 (β) 채택 (booking + contract 분리)
+- TRIPWIRE EXEMPT (~600 lines 예측)
+- 차단 조건 미해당 (자동 진행 가능)
+
+═══════════════════════════════════════════════════
+[T003 묶음 1 Step 2-5 자동 진행 가이드]
+═══════════════════════════════════════════════════
+
+[KKKKK] booking 본문 작성 (Step 2 — 묶음 1 sub-task 1)
+domain-logic-booking.md NEW
+
+§0 PURPOSE & SCOPE
+- T002 inventory vs T003 도메인 로직 차이
+- booking domain 의 비즈니스 규칙 + 워크플로우 + invariants
+
+§1 비즈니스 규칙 (≥8 hard-coded constants)
+- bond = weeklyRate * 4 (CF-007 anchor)
+- advance = weeklyRate * 2 (CF-007 anchor)
+- Monthly billing = weeklyRate * (52/12) (CF-006 Formula B)
+- Biweekly billing = weeklyRate * 2
+- nights = (cout - cin) / 86_400_000
+- bond return = within 14 days (PDF only, F9 incidental)
+- GST default = true
+- cancellation_reason = required
+- extension precondition = ["Confirmed", "Active"]
+
+§2 워크플로우 (booking lifecycle)
+- 신청 → 승인 → 결제 → confirmed → active → check-out → archived
+- state-machines.md §1 cross-ref
+- payment compound (S2 confirm trigger)
+
+§3 invariants (state guards + cancellation_reason + extension)
+- state transition guards (CF-022 9/9 모범)
+- cancellation_reason required at 2 sites
+- extension allowed only at Confirmed/Active
+- CF-018 booking domain (3 BAD + 2 POSITIVE) cross-ref
+
+§4 cross-ref
+- state-machines.md §1 (Bookings)
+- db-schema-overview.md §1.3 (Booking cluster)
+- erd-core.md §4 (Booking cluster diagram)
+- api-endpoints/booking.md (27 endpoints)
+- api-endpoints/contract.md (auto-creation cross-ref)
+- api-endpoints/finance-* (invoice/payment auto-creation)
+
+§5 self-check + spot-check
+
+[LLLLL] booking self-check (Step 3 — 묶음 1 sub-task 1 완료)
+- 3 spot-check claims
+- R-REPO-7 trade-off
+- R-REPO-5 incidental disposition
+
+[MMMMM] contract pre-flight (Step 1 — 묶음 1 sub-task 2)
+domain-logic-contract.md baseline inputs:
+- booking 결과 cross-ref (auto-creation 시퀀스)
+- contracts.ts:55-237 generateContractInvoicesAndSchedules helper
+- state-machines.md §2 (Contracts 7-state)
+- erd-core.md §5 (Contract cluster)
+
+차단 조건 발생 시 즉시 게이트:
+- 신규 R-REPO-6 환각 → 게이트
+- 신규 P0/P1 → 게이트
+- Tripwire → 게이트
+
+[NNNNN] contract 본문 작성 (Step 2 — 묶음 1 sub-task 2)
+domain-logic-contract.md NEW
+
+§1 비즈니스 규칙
+- contract activate handler (CF-014 multi-step ≥27 mutations)
+- generateContractInvoicesAndSchedules logic
+- contract_line_items state (Deleted)
+- PDF 생성 시점 (auto / manual)
+- 7-state lifecycle
+
+§2 워크플로우 (contract lifecycle)
+- Draft → Sent → Signed → Active → Terminated/Expired → Archived
+- booking confirm → contract auto-creation
+- contract activate → invoice + schedules 자동 생성
+
+§3 invariants
+- state transition guards
+- activate precondition (contract.status="Signed"?)
+- CF-014 silent dual-billing 시나리오
+- 7 state transition 가드 패턴
+
+§4 cross-ref + §5 self-check
+
+[OOOOO] 통합 spot-check (Step 4 — 묶음 1 통합)
+booking ↔ contract 양방향:
+- booking S2 (PATCH /:id/confirm) → contract auto-creation
+- contract activate → invoice + schedules 자동 생성
+- 두 도메인의 cross-ref 정합성
+
+3 통합 spot-check 클레임:
+- C1: bond/advance/billing constants 정확성
+- C2: booking → contract auto-creation 시퀀스
+- C3: CF-014 multi-step transition + silent dual-billing
+
+[PPPPP] atomic carrier 통합 (Step 5 — 묶음 1)
+
+1. domain-logic-booking.md (NEW, ~400-600 lines)
+2. domain-logic-contract.md (NEW, ~400-600 lines)
+3. CRITICAL_FINDINGS.md:
+   - CF-006/007/014/018/022 booking+contract domain-logic anchor 
+     expansion
+   - F9 신규 incidental (bond return PDF only)
+   - R-REPO-6 11회째 + R-REPO-9 3회째 mirror
+4. _schema/api-endpoints/INDEX.md (T003 묶음 1 banner)
+5. _T003_PROGRESS.md NEW:
+   - T003 ledger 시작
+   - 묶음 1 entry (booking + contract)
+   - 4 묶음 plan 명시
+6. session_plan.md:
+   - R-REPO-10 신규 등재
+   - T003 묶음 1 entry
+   - 묶음 2 NEXT marker
+
+[QQQQQ] 묶음 통합 보고 (Step 6)
+R-REPO-4 + 묶음 형식:
+- 묶음 1 통합 보고
+- booking + contract sub-task 별 산출물
+- cross-ref 명시
+- 묶음 단위 self-check
+- 차단 조건 미발동 결과
+
+═══════════════════════════════════════════════════
+[T003 묶음 1 사이즈 예측]
+═══════════════════════════════════════════════════
+
+booking: ~400-600 lines
+contract: ~400-600 lines
+합계: ~800-1,200 lines
+
+CF-014 silent dual-billing + state transition guards 등 detail 포함.
+
+각 file cap 1500 미달 / tripwire 850 미달. TRIPWIRE EXEMPT.
+
+═══════════════════════════════════════════════════
+[차단 조건 발생 시 즉시 게이트]
+═══════════════════════════════════════════════════
+
+Step 2-5 자동 진행 중 다음 발생 시 즉시 보고 + 사용자 게이트:
+
+1. 신규 R-REPO-6 환각:
+   - booking 작업 중 추가 환각 (예: extension 조건 misread)
+   - contract 작업 중 환각 (예: activate handler logic 환각)
+   - → corrected 안 게이트
+
+2. 신규 P0/P1 CF:
+   - CF-014 silent dual-billing 시나리오 분석 시 신규 가설
+   - CF-018 booking 3 BAD endpoint 의 P0 escalation 가능성
+   - → 등재 결정 게이트
+
+3. Tripwire 발동:
+   - booking 작성 중 lines 850 도달
+   - contract 작성 중 lines 850 도달
+   - → 분할 또는 압축 결정 게이트
+
+4. 묶음 분할 결정 모호:
+   - booking + contract cross-ref 가 분리 어려움
+   - → 통합 (α) 재고 게이트
+
+═══════════════════════════════════════════════════
+[지금 시작]
+═══════════════════════════════════════════════════
+
+(1) [에이전트] booking 본문 작성 시작 (KKKKK)
+(2) booking self-check (LLLLL)
+(3) contract pre-flight (MMMMM, 차단 조건 평가)
+(4) contract 본문 작성 (NNNNN)
+(5) 통합 spot-check (OOOOO)
+(6) atomic carrier 통합 (PPPPP)
+(7) 묶음 통합 보고 (QQQQQ)
+(8) [사용자] git push origin main
+(9) 사용자 proceed → 묶음 2 (finance × 2) 시작
+
+묶음 2 자동 시작 절대 금지.

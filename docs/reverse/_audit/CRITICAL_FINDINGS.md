@@ -1997,3 +1997,43 @@ T002 group 16 doc files in `_schema/` 모두 완료:
 **Next**: T003 (도메인 로직) — **자동 시작 절대 금지**. 사용자 `proceed` + R-REPO-9 + 묶음 위임 검토 후 진입.
 
 ---
+
+## T003 묶음 1 (booking + contract domain logic) — marker section
+
+> Sub-task: T003 묶음 1 = `domain-logic-booking.md` (200 lines, NEW) + `domain-logic-contract.md` (315 lines, NEW). R-REPO-10 묶음 위임 첫 가동. Atomic commit = 단일 commit 1회 push.
+
+### CF expansion (booking + contract domain anchor)
+
+| CF | 확장 항목 | booking-side anchor | contract-side anchor |
+|----|----------|---------------------|---------------------|
+| CF-002 | money path source-receiver 양방향 | source: `bookings.ts:393-394` parseFloat (BR1-BR2) | receiver: `contracts.ts:458-461` real-typed 4 cols + `:569,593` line_items parseFloat |
+| CF-006 | Formula B 4 site cross-ref 완성 | `bookings.ts:485` (S2 confirm) | `contracts.ts:93-94` (helper fallback) — 2 sites of 4 |
+| CF-007 | bond=4주 / advance=2주 hard-code 도메인 의미 | `bookings.ts:395-396` BR1+BR2 anchor | (booking 측만 — contract 는 receiver 4 col) |
+| CF-008 | 5-entity audit-coverage matrix 검증 | booking 7/9 transition = 78% (cross-pack #1) | contract 5/7 transition = 71% (cross-pack #2) |
+| CF-014 | repo 최대 mutation no-tx locus 확정 | S2 ≥6+N+M, T5 ≥3 | helper §2.2 7-step ≥27 mutation no-tx (repo 최대 carrier) |
+| CF-018 | Sub-pattern A booking-side 3 BAD anchor | `bookings.ts:572,728,735` (N1+T6+T7) + `:587,614` POSITIVE | (contract 측 — scoped CRUD 안전) |
+| CF-022 | state-guard discipline 양극단 anchor | bookings 9/9 = 100% (cross-pack leader) | contracts 0/7 = 0% (cross-pack floor 동률) |
+
+**Cross-pack 양극단 도메인 의미**: booking 과 contract 가 **같은 cluster 안에 정반대 패턴** 으로 공존 — `domain-logic-contract.md §6.2` cross-pack ranking 상세. 한 cluster 안 일관성 부재 = CF-024 sister 후보 (T004 architecture-rules 일괄).
+
+### F9 신규 R-REPO-5 incidental (memo only, no promotion)
+
+**F9 — `bookings.ts:436` PDF 본문 bond return 14-day text-only**: contract PDF 텍스트 `"The bond will be returned within 14 days after vacating, subject to inspection."` 는 코드 어디에도 14-day timer / refund handler / escrow 로직 없음. T3 check-out 시 bond return scheduling/escrow 메커니즘 부재. 운영 분쟁 시 SLA 보장 불가능. **Phase 2 = `bond_return` 별도 entity + scheduled job 필요**. T003 묶음 2 `domain-logic-payment.md` 에서 finance-side cross-ref + T004 `_rules/financial-rules.md` 일괄 처리 후보. 사용자 ack 받음.
+
+### R-REPO-6 11회째 가동 mirror
+
+**T003 묶음 1 Step 1 KKKKK Pre-flight**: 사용자 안 "bond 2주 / advance 4주" → 코드 ground truth 검증 결과 **SWAP 정정** = bond=4주 (`bookings.ts:395` `weeklyRate * 4`) / advance=2주 (`bookings.ts:396` `weeklyRate * 2`). swap 자체가 산출물 영향 없음 (실 코드 인용); 사용자 ack + Corrected (BR1=4주/BR2=2주) 채택. R-REPO-6 11회째 가동.
+
+### R-REPO-9 차단 게이트 3회째 가동 mirror
+
+**T003 묶음 1 Step 1 KKKKK Pre-flight**: 사용자 안 vs 코드 ground truth 비교 시 R-REPO-6 SWAP 정정 발생 → R-REPO-9 (b) 차단 조건 1 (R-REPO-6 환각 감지) 발동 → 게이트 후 사용자 proceed + Corrected + F9 등재 채택 후 Step 2-5 자동 진행. **R-REPO-9 영구 패턴 작동 confirm 3회째** (T002.4 + T002.5 + T003 묶음 1).
+
+### R-REPO-10 묶음 위임 첫 가동 mirror
+
+**T003 묶음 1 = R-REPO-10 첫 가동**: 2 sub-task (booking + contract) / 1 응답 / 1 atomic commit / 1 사용자 push. `domain-logic-contract.md §6.4` 측정 = 응답 -50% / commit -67% / push -67% 가속 효과 confirm. 묶음 2-4 영구 발효.
+
+### Counts unchanged
+
+P0=4 / P1=18 / P2=3 = **25 CF** (T002.5 와 동일 — T003 묶음 1 신규 promotion 0).
+
+---

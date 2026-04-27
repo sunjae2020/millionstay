@@ -168,4 +168,4 @@ For a Phase 2 (.NET) port team:
 
 ---
 
-*End of `INDEX.md` — last updated 2026-04-27 (T002.2.g — `portal-partner` group now ✅: 4 mount-prefix factual corrections [`/api/v1/service-host-portal` → `/service-host` etc.] + 2 auth dispatcher corrections [OP/AP from generic `requirePartnerAuth` to specific `requireOwnerAuth`/`requireAgentAuth`] + CF chip row expansion with CF-014 POSITIVE EXEMPLAR + CF-008 3-way 0% tie + 22/22 = 100% IDOR-safe finding).*
+*End of `INDEX.md` — last updated 2026-04-27 (T003 묶음 1 — domain-logic-{booking,contract}.md NEW in `_context/`: 200+315=515 lines / R-REPO-10 묶음 위임 첫 가동 / R-REPO-9 차단 게이트 3회째 / R-REPO-6 11회째 (bond-advance SWAP 정정) / F9 신규 incidental (PDF bond return text-only) / 7 CF expansion (002/006/007/008/014/018/022) / counts unchanged P0=4 P1=18 P2=3 = 25).*
