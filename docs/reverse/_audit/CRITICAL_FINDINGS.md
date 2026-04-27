@@ -719,6 +719,40 @@ artifacts/api-server/src/routes/service-host-portal.ts:365
 
 Two are administrative/migration helpers; only one (`service-host-portal.ts:365`) sits on a production code path.
 
+### POSITIVE EXEMPLAR — `service-host-portal.ts:365-393` (T002.2.g promotion)
+
+The 3rd of the 3 tx-using sites is the **only production runtime mutation handler** that uses `db.transaction(...)` correctly. T002.2.g (`portal-partner.md` E4 `POST /v1/service-host/jobs/:id/photos`) promotes this site from a raw count entry to a documented Phase 2 reference template:
+
+| Pattern element | Code locus | Why exemplary |
+|---|---|---|
+| (i) **`SELECT ... FOR UPDATE` row lock** | `:367` | Serialises concurrent uploads on the same job row → enforces `MAX_JOB_PHOTOS` ceiling under concurrency |
+| (ii) **Read-after-lock count check** | `:368-374` | Reads `existing.length` under lock so business-rule check is consistent with subsequent INSERTs |
+| (iii) **Sentinel + throw for business-rule violation** | `:375-380` | Sets outer-scope `limitError` then `throw new Error("LIMIT")` → guarantees rollback + carries structured error to outer catch |
+| (iv) **Atomic INSERT loop** | `:382-392` | All N photos either persist or none do |
+| (v) **Cross-system compensating action** | `:394-402` outer catch | Cloudinary blobs uploaded outside tx (network call should not extend lock duration); rollback path knows to delete the orphan blobs via `deleteFromCloudinary(public_id)` |
+
+**Why uploads are intentionally OUTSIDE the tx**: holding a row lock during a network upload would create a wide concurrency window. The author deliberately separated (a) idempotent-ish external system operation (Cloudinary) from (b) atomic DB writes (within tx) and accepted the cost of compensating cleanup on rollback.
+
+**Anti-comparison** with the 8 untransacted multi-write handlers in finance (CF-014 §half-2) and the 11 in ops-property (`ops-property` loci section above) and the 3 in contract (T002.1.8 helper breakdown): every one of those would benefit from this exact pattern. The reusable shape is helper-extractable as approximately:
+
+```ts
+async function withRowLockAndLimit<R>(opts: {
+  rowId: number, table: PgTable, currentColumn: string,
+  cap: number, addCount: number, action: (tx: any, remaining: number) => Promise<R>
+}): Promise<R> {
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT id FROM ${opts.table} WHERE id = ${opts.rowId} FOR UPDATE`);
+    const remaining = opts.cap - (await currentCount(tx, opts));
+    if (remaining < opts.addCount) throw new LimitError(opts.cap, opts.addCount, remaining);
+    return opts.action(tx, remaining);
+  });
+}
+```
+
+**Limitation**: even this exemplar lacks `logAction` (CF-008 carrier — uploads are invisible to audit). Phase 2 should add `logAction("job_photo.uploaded", { job_id, count, partner_id })` after successful tx commit.
+
+Carrier: see `portal-partner.md` E4 (full sample format) + §6 CF anchor matrix.
+
 The most exposed multi-step mutation, **contract activation**, performs three writes plus an invoice-and-schedule generator without an enclosing transaction. `artifacts/api-server/src/routes/contracts.ts:429-450`:
 
 ```ts
@@ -936,6 +970,8 @@ EF Core's `HasQueryFilter` for soft-delete relies on a uniform column. Today's t
 | CF-023 | 🟡 P1 | Ad-hoc `booking_ref` generation outside the canonical helper (`bookings.ts:60` `generateBookingRef()` → `MS-${year}-${seq:5}` via DB COUNT). **Two sub-patterns** (T002.2.f split): **.a Orphan reference** — `leads.ts:175-204` `PATCH /v1/leads/:id/convert` marks `lead_status='ConvertedToBooking'`, generates `BK-${year}-${rand5}` (`leads.ts:188-189`), but **never INSERTs into `bookings` table** + omits `converted_booking_id` from UPDATE set (column exists at `lib/db/src/schema/leads.ts:24`, persists NULL forever). Production-critical: client receives fake `booking_ref` → believes booking created; revenue reporting (converted vs actual) diverges; audit invisible (CF-008 compound). **.b Fake-ref + real INSERT** — `guest-portal.ts:138-141` `POST /v1/guest/bookings` generates `GBK-${ts36}-${rand36×3}` then performs **real `bookings` INSERT** (L149-171). No orphan, but produces **dual-source-of-truth on `bookings.booking_ref`** (`MS-…` canonical vs `GBK-…` from this entry-point) → downstream consumers (admin search/filter UIs assuming `MS-` prefix) silently miss `GBK-…` rows; collision space ~46 656 per ms; no DB UNIQUE constraint declared on `booking_ref`. Compounds CF-022 (.a only — no precondition gate against ConvertedToBooking re-conversion). | OPEN |
 
 **Counts after T002.1.9**: P0=3, P1=**15**, P2=3 (total **21**) — **2 NEW promotions** (CF-020 + CF-021, both T002.2.c R-REPO-5 graduates with sufficient anchor density to warrant promotion this commit). Both candidates were parked at T002.2.b half-2 (CF-020 9 anchors / CF-021 2 anchors); T002.2.c surfaced 7 additional CF-020 anchors + 6 additional CF-021 anchors, crossing the typical promotion threshold (≥10 anchors / ≥3 domains) without waiting for T002.2.d. CF-017 + CF-018 are T002.2.a Spot-Check C3 graduates (R-REPO-5); CF-019 is T002.2.b half-2 graduate. **0 deferred candidates** remaining; T002.2.d-.j may surface fresh ones.
+
+**Counts after T002.2.g**: P0=3, P1=**17**, P2=3 (total **23**) — **0 new CF promotions**. T002.2.g (`portal-partner.md`, 4 files / 22 endpoints: service-host-portal.ts 9 + owner-portal.ts 5 + agent-portal.ts 5 + partner-auth.ts 3) anchor count updates: **CF-014 POSITIVE EXEMPLAR PROMOTION** — service-host-portal.ts:365-393 (E4 `POST /v1/service-host/jobs/:id/photos`) is the **sole production runtime mutation handler** that uses `db.transaction(...)` correctly project-wide; pattern catalogued above (POSITIVE EXEMPLAR sub-section, ~30 lines: row-lock + count check + sentinel-throw + atomic INSERT loop + cross-system compensating action). Promotion is qualitative (raw count → exemplar status) — site count unchanged at 3. **CF-008** portal-partner 22/22 = 0% — TIES with ops-catalog 0/39 + ops-crm 0/51 for absolute lowest (3-way tie at exact 0%, distinct from portal-guest 1/29 = 3.4%). **CF-005** evidence reinforced: signing site `partner-auth.ts:43` `as "agent" | "owner"` cast lies to TS while runtime accepts `"service_host"` (single JWT signing locus → 9 RSHA consumer endpoints). **CF-001** +6 carriers (1 `contracts.weekly_rate` read at owner-portal.ts:236 / 5 `commissions.commission_rate`+`amount` reads at agent-portal.ts:71/72/252-254). **CF-006** owner-portal.ts:83 (Formula A) + owner-portal.ts:236 (Formula B) already in 4-site list at T002.1.8 — T002.2.g formalises **same-file inconsistency** (one author / one file / two different formulas) as a documented sub-pattern; site count unchanged at 4. **CF-018** **strongest IDOR-defense surface yet** — 22/22 = 100% safe (overtakes portal-guest 26/29 by raw ratio); qualified by structural difference (partner has flat ownership graph vs portal-guest's account_sharers). DOUBLE GUARD pattern (E5 PATCH job + E12 GET property/:id + E17 GET agent booking/:id) recommended as canonical exemplar for `_rules/security-rules.md` (T004) alongside portal-guest E20 sole-owner guard. **CF-023.b consumer-drift hypothesis REJECTED for partner domain** — partner is read-only consumer (12 SELECT projection sites, 0 INSERT into bookings); systemically prefix-blind (no `LIKE 'MS-%'` filter; fallback `\`#${booking_id}\`` at SHP:573/673 confirms blindness). Drift is admin-domain risk only (T002.2.i). **0 R-REPO-5 mini-task escalations** (4 incidentals: 1 INDEX.md mount-prefix factual correction landed in this commit, 3 deferred memos to T002.5/CF-015/T004).
 
 **Counts after T002.2.f**: P0=3, P1=**17**, P2=3 (total **23**) — **0 new CF promotions** (CF-023 split into .a / .b sub-patterns documented as expansion-not-promotion; sub-split is structural, not a count change). Anchor count updates this commit: **CF-008** portal-guest 1/29 = 3.4% — **NEW lowest** in any domain audited so far (overtakes ops-catalog 0/39 and ops-crm 0/51 by ratio of intent — portal-guest is auth-protected guest mutation surface, not internal admin); **CF-011** +1 carrier (`guest-portal.ts:762-764` invoice_ref `count+1` race); **CF-013** +1 evidence site (`guest-portal.ts:480` DOB raw text passthrough into PUT/profile); **CF-014** +5 carrier sites (E1 register accounts+guest_users, E10 profile+accounts.name, E17 invoice+booking_status, E24 ticket+message, E26 message+ticket-update — domain is now CF-014's largest carrier domain by site count); **CF-017** +5 carrier sites (E5 bookings POST, E10 profile/bank, E14 emergency-contact POST, E17 payment/confirm amount unbounded, E24 ticket booking_id unchecked); **CF-018** +1 partial site (E24 `guest-cs.ts:79` ticket booking_id unchecked); **CF-023.b** NEW sub-pattern formalized (split from CF-023.a). E17 `guest-portal.ts:802` dead-branch ternary `bank_transfer ? "PendingApproval" : "PendingApproval"` filed as memo for T002.5 (state-machines.md). Domain is **strongest IDOR-defense surface** of any audited so far (26/29 ✅ + 1 partial, 2 n/a) — sole-owner guard at E20 (`:1086-1092`) recommended as canonical exemplar for `_rules/security-rules.md` (T004).
 

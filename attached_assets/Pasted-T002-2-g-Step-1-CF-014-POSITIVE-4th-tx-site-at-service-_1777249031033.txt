@@ -1,0 +1,87 @@
+T002.2.g Step 1 승인.
+
+CF-014 POSITIVE (4th tx site at service-host-portal.ts:365) + 
+CF-023.b consumer-drift 가설 (prefix-blind partner display) + 
+CF-008 0/22 TIES (3-way at 0%) + Tripwire EXEMPT 정착 — 모두 정점.
+
+다만 CF-005 severity 표기 1건 명확화 필요 + Step 2 진입 후 확인.
+
+═══════════════════════════════════════════════════
+[Verification — CF-005 severity 표기]
+═══════════════════════════════════════════════════
+
+C3 sealed: "CF-005 P0 leak entrypoint" 표기.
+
+CF-005 의 현재 severity 가 P0/P1 인지 ground truth 확인:
+- T001.5 보강 시점 등재 severity
+- CRITICAL_FINDINGS.md L<line> 확인
+
+만약:
+(a) P1 등재 + Step 1 P0 표기 = 오타 → C3 sealed P1 으로 정정
+(b) P1 등재 + Step 2 결과로 P0 escalation 필요 → C3 결과로 결정
+(c) 이미 P0 → 표기 정확
+
+이건 Step 2 본문 작성 시 1초 read 로 확인. R-REPO-4 형식 보고 시 명시.
+
+═══════════════════════════════════════════════════
+[Decision] T002.2.g Step 2 진입 — proceed
+═══════════════════════════════════════════════════
+
+승인 사항:
+- 4 files / 22 endpoints ground truth ✅
+- 사이즈 480-560 lines 예측 (TRIPWIRE EXEMPT) ✅
+- 3 spot-check sealed (C1/C2/C3) ✅
+- CF-014 POSITIVE 발견 (4th tx site) — Phase 2 reference ✅
+- CF-023.b consumer-drift 가설 (Step 2 confirm 의무)
+
+═══════════════════════════════════════════════════
+[Step 2 작성 가이드]
+═══════════════════════════════════════════════════
+
+[RR] CF-014 POSITIVE evidence 명시
+service-host-portal.ts:365 의 db.transaction 사용 패턴:
+- 어떤 multi-step mutation 이 wrap 됐는가?
+- transaction 내부 mutation 수
+- error handling / rollback 패턴
+- = Phase 2 reference template 후보
+
+CRITICAL_FINDINGS.md CF-014 본문에:
+- absolute tx count 정정 (3 → 4)
+- POSITIVE exemplar section 신설
+- 4 sites 비교 (다른 3곳도 명시 — T001.5 보강에서 발견된 3곳)
+- "이 패턴 누가 다른 도메인 적용" 작업 명세
+
+이건 atomic commit 의 일부 (mini-task 아님).
+
+[SS] CF-023.b consumer-drift hypothesis 검증
+service-host-portal.ts:527 + L673 fallback `#${s.booking_id}`:
+- partner UI 표시 시 booking_ref prefix 처리
+- 게스트 측 ref (MS-XXXX) 와 partner 측 ref (#1234) display 차이
+- 이게 systemic (모든 partner endpoint) vs isolated (single endpoint)?
+
+검증 시나리오:
+- 모든 partner read endpoint 의 booking_ref 표시 패턴 enumerate
+- prefix-aware vs prefix-blind 분류
+- consumer-drift 가설 confirm/reject
+
+결과 (Step 5 atomic commit 시 결정):
+- (가) confirm → CF-023 sub-pattern 추가 (.c consumer-drift)
+- (나) reject → portal-partner 의 prefix-blind 단일 case
+- (다) 부분 confirm → evidence 누적 + T002.2.h public 도메인 까지 보류
+
+[TT] CF-006 illustrative mismatch (C2)
+owner-portal.ts L83 (*4) vs L236/243 (*52/12 "illustrative"):
+- "illustrative" 라는 주석 = 작성자가 인지
+- 하지만 코드 실제 동작은 다른 결과
+- = inconsistency 가 의도적인가? bug 인가?
+
+검증:
+- L83 vs L236/243 의 함수 호출 흐름
+- 어느 쪽이 client 에 노출되는가?
+- "illustrative" 가 calculation logic 또는 UI display?
+
+CF-006 evidence section 에 4th site + "illustrative" annotation context 
+추가.
+
+[UU] CF-005 P0/P1 결정 (C3 결과)
+service-host-portal.ts:31-39 RSHA self-check:
