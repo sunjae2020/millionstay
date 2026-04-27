@@ -168,4 +168,4 @@ For a Phase 2 (.NET) port team:
 
 ---
 
-*End of `INDEX.md` — last updated 2026-04-27 (T003 묶음 1 — domain-logic-{booking,contract}.md NEW in `_context/`: 200+315=515 lines / R-REPO-10 묶음 위임 첫 가동 / R-REPO-9 차단 게이트 3회째 / R-REPO-6 11회째 (bond-advance SWAP 정정) / F9 신규 incidental (PDF bond return text-only) / 7 CF expansion (002/006/007/008/014/018/022) / counts unchanged P0=4 P1=18 P2=3 = 25).*
+*End of `INDEX.md` — last updated 2026-04-27 (T003 묶음 2 — domain-logic-finance-{invoice,payment}.md NEW in `_context/`: 250+280=530 lines / R-REPO-10 묶음 위임 2회째 stable / **0 차단** (R-REPO-9 자동 진행 4회째) / 6 CF expansion (CF-001 finance-internal 양극단 / CF-008 booking 26%/78% 두 단위 명확화 + finance polarisation 60%-0% 60% gap / CF-010 webhook bypass + chargeback/dispute carrier / CF-018 finance 도메인 carrier 10/55 = 18.2% max-cluster / CF-019.a/.b 두 stripe orphan column carrier / CF-022 invoice manual 67% vs webhook 0% bypass split) / **F10/F11/F12 3 신규 incidental** (helper "Pending" 5-state 외 / chargeback/dispute 미처리 / commissions.status enum 부재) / counts unchanged P0=4 P1=18 P2=3 = 25).*

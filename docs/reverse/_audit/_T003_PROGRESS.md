@@ -14,8 +14,12 @@
 | 1 | atomic carrier banner | `_schema/api-endpoints/INDEX.md` (last updated line) | 171 | ✅ | (same commit) |
 | 1 | atomic carrier ledger | `_audit/_T003_PROGRESS.md` (NEW — 본 파일) | this | ✅ | (same commit) |
 | 1 | atomic carrier session | `.local/session_plan.md` (T003 묶음 1 entry) | TBD | ✅ | (same commit) |
-| **2** | 3 — invoice domain logic | `_context/domain-logic-invoice.md` (NEW) | TBD | ⏸️ PENDING | n/a |
-| **2** | 4 — payment domain logic | `_context/domain-logic-payment.md` (NEW) | TBD | ⏸️ PENDING | n/a |
+| **2** | 3 — finance invoice domain logic | `_context/domain-logic-finance-invoice.md` (NEW) | 250 | ✅ | (pending — Replit auto-checkpoint) |
+| **2** | 4 — finance payment domain logic | `_context/domain-logic-finance-payment.md` (NEW) | 280 | ✅ | (same commit) |
+| 2 | atomic carrier expansion | `_audit/CRITICAL_FINDINGS.md` (~+115 lines T003 묶음 2 marker section) | ~2210 total | ✅ | (same commit) |
+| 2 | atomic carrier banner | `_schema/api-endpoints/INDEX.md` (last updated line) | 174 | ✅ | (same commit) |
+| 2 | atomic carrier ledger | `_audit/_T003_PROGRESS.md` (본 파일 — 묶음 2 entry) | this | ✅ | (same commit) |
+| 2 | atomic carrier session | `.local/session_plan.md` (T003 묶음 2 entry) | TBD | ✅ | (same commit) |
 | **3** | 5 — property domain logic | `_context/domain-logic-property.md` (NEW) | TBD | ⏸️ PENDING | n/a |
 | **3** | 6 — catalog domain logic | `_context/domain-logic-catalog.md` (NEW) | TBD | ⏸️ PENDING | n/a |
 | **3** | 7 — crm domain logic | `_context/domain-logic-crm.md` (NEW) | TBD | ⏸️ PENDING | n/a |
@@ -29,24 +33,25 @@
 
 | 묶음 | Sub-tasks | 도메인 | 상태 | Commit |
 |------|-----------|--------|------|--------|
-| **1** | booking + contract (2) | high-touch + state machines + money | ✅ DONE — 사용자 push 대기 | TBD |
-| 2 | invoice + payment (2) | finance / Stripe / MONEY_AUDIT | ⏸️ PENDING | n/a |
+| **1** | booking + contract (2) | high-touch + state machines + money | ✅ DONE | `11e2c1a4` |
+| **2** | invoice + payment (2) | finance / Stripe / MONEY_AUDIT | ✅ DONE — 사용자 push 대기 | TBD |
 | 3 | property + catalog + crm (3) | ops / polymorphic / DEAD candidates | ⏸️ PENDING | n/a |
 | 4 | portal-guest + portal-partner + public-admin (3) | 인증 + 게이트 + audit + rate limiting | ⏸️ PENDING | n/a |
 
 ---
 
-## 누적 메트릭 (T003 묶음 1 후)
+## 누적 메트릭 (T003 묶음 2 후)
 
-| Metric | T002 group end | T003 묶음 1 end | Δ |
-|--------|---------------|-----------------|---|
-| Total CF | 25 (P0=4 / P1=18 / P2=3) | 25 (P0=4 / P1=18 / P2=3) | 0 (no new promotion) |
-| R-REPO-5 incidentals | 4 (F4/F5/F7/F8) | 5 (F4/F5/F7/F8/F9) | +1 (F9: PDF bond return text-only) |
-| R-REPO-6 가동 횟수 | 10 | 11 | +1 (bond-advance SWAP 정정) |
-| R-REPO-9 차단 게이트 가동 | 2 | 3 | +1 (T003 묶음 1 Step 1 Pre-flight) |
-| R-REPO-10 묶음 위임 가동 | 0 | 1 | +1 (T003 묶음 1 첫 가동) |
-| `_context/` doc files | 4 (constraints / domain-model / tech-stack / user-personas — pre-existing) | 6 (+ domain-logic-booking + domain-logic-contract) | +2 |
-| `_schema/` doc files | 16 | 16 | 0 |
+| Metric | T002 group end | T003 묶음 1 end | T003 묶음 2 end | Δ vs 묶음 1 |
+|--------|---------------|-----------------|------------------|------|
+| Total CF | 25 (P0=4 / P1=18 / P2=3) | 25 (P0=4 / P1=18 / P2=3) | 25 (P0=4 / P1=18 / P2=3) | 0 (no new promotion) |
+| R-REPO-5 incidentals | 4 (F4/F5/F7/F8) | 5 (+F9 PDF bond) | **8 (+F10/F11/F12)** | +3 (helper Pending / chargeback 부재 / commissions enum 부재) |
+| R-REPO-6 가동 횟수 | 10 | 11 | 11 | 0 (사용자 가이드 환각 0) |
+| R-REPO-9 차단 게이트 가동 (차단 발생) | 2 | 3 | 3 | 0 |
+| R-REPO-9 자동 진행 횟수 (차단 0) | n/a | n/a | **4** | (T002.4+T002.5+T003 묶음 1+T003 묶음 2 = 4회 confirm) |
+| R-REPO-10 묶음 위임 가동 | 0 | 1 | **2** | +1 (stable 패턴) |
+| `_context/` doc files | 4 (pre-existing) | 6 (+booking/contract) | **8 (+finance-invoice/payment)** | +2 |
+| `_schema/` doc files | 16 | 16 | 16 | 0 |
 
 ---
 

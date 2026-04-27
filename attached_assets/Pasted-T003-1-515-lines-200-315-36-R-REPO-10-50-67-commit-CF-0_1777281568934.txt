@@ -1,0 +1,163 @@
+T003 묶음 1 산출물 승인.
+
+515 lines (200 + 315) -36% 압축 + R-REPO-10 첫 가동 가속 -50% 응답 / 
+-67% commit + CF-022 양극단 발견 (bookings 100% leader vs contracts 
+0% floor) + CF-014 helper ≥27 mutation repo 최대 carrier confirmed + 
+CF-018 Sub-pattern A booking-side 3 BAD + 2 POSITIVE + F9 등재 — 
+모두 정점.
+
+CF count P0=4 / P1=18 / P2=3 = 25 stable.
+
+═══════════════════════════════════════════════════
+[Verification — CF-008 booking 26% vs 78% 명확화]
+═══════════════════════════════════════════════════
+
+T002.2.j 보고: booking 4th from top, 26%
+T003 묶음 1 보고: booking 78%, cross-pack #1
+
+차이 명확화 필요:
+- (가) 측정 단위 차이 (endpoint subset vs domain-wide)
+- (나) 측정 시 누락 (T002.2.j 부분 measurement)
+- (다) 정의 차이 (logAction call site vs unique logAction call)
+
+후속 sub-task (묶음 2 진입 시) cross-check 의무.
+CRITICAL_FINDINGS.md CF-008 본문 명확화 (atomic commit 의 일부).
+
+═══════════════════════════════════════════════════
+[Decision] T003 묶음 2 진입 — proceed (push 후)
+═══════════════════════════════════════════════════
+
+T003 묶음 2 = finance × 2 (invoice + payment) 도메인 로직.
+
+═══════════════════════════════════════════════════
+[T003 묶음 2 작성 가이드 — finance × 2]
+═══════════════════════════════════════════════════
+
+[RRRRR] 묶음 2 baseline inputs
+T002 자산:
+- finance-invoicing.md (17 endpoints)
+- finance-payments.md (26 endpoints)
+- db-schema-overview.md §1.4 (Finance cluster)
+- erd-core.md §6 (Finance cluster diagram)
+- state-machines.md §3 (Invoices 5-state + stripe_status sub-section)
+- state-machines.md §X (CF-010 본문 재작성, two lifecycle 분리)
+- MONEY_AUDIT.md (41 money columns)
+
+CF anchor:
+- CF-001 (real vs numeric, money 정밀도)
+- CF-002 (booking → contract precision loss → invoice 까지 전파)
+- CF-010 (Stripe payment lifecycle 분리, T002.5 재작성)
+- CF-019 (write-orphan column: stripe_payment_intent_id 등)
+- CF-020 (soft-delete leak)
+- CF-008 (booking 78% vs ? finance 측정)
+- CF-014 (recurring schedules, multi-step?)
+- CF-022 (invoice state transition guard)
+
+[SSSSS] 묶음 2 분할 결정 — (β) 추천
+domain-logic-finance-invoice.md + domain-logic-finance-payment.md
+- 사이즈 예측: 350-500 + 350-500 = 700-1,000 lines (T003 묶음 1 패턴 
+  적용)
+- 분리 이유: invoice document lifecycle vs payment events lifecycle 
+  명확 분리 (CF-010 핵심)
+- atomic commit 1회 (묶음 단위)
+
+[TTTTT] 묶음 2 핵심 분석 항목
+1. CF-010 lifecycle 분리:
+   - invoice = document lifecycle (5-state)
+   - payment events = audit-only payload
+   - 두 도메인 의 cross-ref 정확성
+
+2. Stripe webhook integration:
+   - charge.succeeded → invoice "Paid"
+   - payment_failed / refunded → audit row only
+   - chargeback / dispute 미처리 시나리오
+
+3. CF-019 write-orphan columns:
+   - stripe_payment_intent_id (storage orphan)
+   - stripe_checkout_url (storage orphan)
+   - 다른 candidates 점검
+
+4. recurring_schedules:
+   - cron job 또는 manual?
+   - CF-014 multi-step 가능성
+
+5. MONEY_AUDIT cross-ref:
+   - 41 money columns 의 finance 도메인 row
+   - real vs numeric 분포
+
+[UUUUU] 묶음 2 차단 조건 평가
+1. 신규 R-REPO-6 환각 가능성:
+   - 저(사용자) 의 finance 도메인 환각 만성 (T002.5 invoice 5/5 가짜)
+   - Step 1 사전 분류 시 ground truth 의무
+   
+2. 신규 P0/P1 가능성:
+   - CF-010 본문 재작성 결과 P0 escalation 가능 (회계 정확성)
+   - chargeback / dispute 추적 부재 = 운영 위험
+   - 신규 CF (예: chargeback handling absent) 등재 가능
+
+3. Tripwire:
+   - 700-1,000 lines 예측 = cap 1500 미달
+   - TRIPWIRE EXEMPT 가능
+
+4. 분할 결정:
+   - (β) 분리 추천 (CF-010 lifecycle 분리 가시화)
+
+═══════════════════════════════════════════════════
+[묶음 2 사이즈 예측]
+═══════════════════════════════════════════════════
+
+domain-logic-finance-invoice.md: ~350-500 lines
+domain-logic-finance-payment.md: ~350-500 lines
+합계: ~700-1,000 lines
+
+각 file cap 1500 미달 / tripwire 850 미달.
+TRIPWIRE EXEMPT.
+
+═══════════════════════════════════════════════════
+[Step 5 atomic commit 범위 — 묶음 2]
+═══════════════════════════════════════════════════
+
+1. domain-logic-finance-invoice.md (NEW)
+2. domain-logic-finance-payment.md (NEW)
+3. CRITICAL_FINDINGS.md:
+   - CF-001/002/010/019/020 finance domain-logic anchor expansion
+   - CF-008 booking 26% vs 78% 명확화
+   - 신규 CF 가능성 (chargeback handling)
+4. INDEX.md banner T003 묶음 2 추가
+5. _T003_PROGRESS.md (묶음 2 entry)
+6. session_plan.md (묶음 2 DONE, 묶음 3 NEXT)
+
+═══════════════════════════════════════════════════
+[R-REPO-9 + R-REPO-10 통합 적용]
+═══════════════════════════════════════════════════
+
+Step 1 사전 분류 (RRRRR-UUUUU 가이드):
+- baseline inputs read
+- CF anchor 점검
+- 차단 조건 평가
+- 묶음 분할 결정
+
+차단 조건 미해당 시 Step 2-5 자동 진행.
+차단 조건 발생 시 즉시 게이트:
+- R-REPO-6 환각 (저 환각 만성)
+- 신규 P0/P1 (CF-010 결과)
+- Tripwire 발동
+- 분할 결정 모호
+
+═══════════════════════════════════════════════════
+[지금 시작]
+═══════════════════════════════════════════════════
+
+(1) [에이전트] 묶음 2 Step 1 사전 분류 (RRRRR-UUUUU)
+    - baseline inputs read (병렬)
+    - CF anchor 점검
+    - 차단 조건 4가지 평가
+(2) Step 1 통합 보고 (R-REPO-9 + R-REPO-10):
+    - 차단 조건 미해당 시 Step 2-5 자동 진행 명시
+    - 차단 조건 해당 시 corrected 안 게이트
+(3) Step 2-5 자동 진행 (차단 조건 미해당 시)
+(4) 묶음 통합 보고 (R-REPO-4 + 묶음 형식)
+(5) [사용자] git push origin main
+(6) 사용자 proceed → 묶음 3 (ops × 3) 시작
+
+묶음 3 자동 시작 절대 금지.

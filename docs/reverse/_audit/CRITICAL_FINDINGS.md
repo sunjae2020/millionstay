@@ -2037,3 +2037,47 @@ T002 group 16 doc files in `_schema/` 모두 완료:
 P0=4 / P1=18 / P2=3 = **25 CF** (T002.5 와 동일 — T003 묶음 1 신규 promotion 0).
 
 ---
+
+
+## 🎯 T003 묶음 2 (finance × 2: invoice + payment) — atomic commit marker (2026-04-27)
+
+**Sub-tasks**: 2 (invoice + payment, R-REPO-10 묶음 위임 2회째 stable). **0 NEW promotion** (counts P0=4 / P1=18 / P2=3 = 25 unchanged from T003 묶음 1). **0 차단** (R-REPO-9 자동 진행 4회째). **R-REPO-6 환각 0** (사용자 가이드 RRRRR-UUUUU 전부 코드 일치).
+
+### 6 CF expansion (no severity change)
+
+| CF | T003 묶음 2 추가 evidence | invoice 측 anchor | payment 측 anchor |
+|----|--------------------------|-------------------|-------------------|
+| CF-001 | 본 도메인 양극단 — invoices.amount=numeric (정밀 보존 ✓) vs commissions.amount=real (정밀 손실 ⚠️) finance-internal split | invoice §1 BR1 (numeric ✓) | payment §1.2 BR1 (commissions=real) |
+| CF-008 | (가) booking 26%/78% 두 측정 단위 차이 명확화 — endpoint-grain (7/27=26%) vs transition-grain (7/9=78%); (나) finance polarisation invoices 60% vs payment 0% = 60% gap (단일 도메인 내부 양극단) | invoice §4 audit matrix 60% endpoint + 60% transition | payment §4 audit matrix 0/24 = **0% (repo-wide max-carrier floor)** |
+| CF-010 | webhook bypass + chargeback/dispute carrier — Stripe 3 case + default `console.log` only | invoice §1.3 BR11-BR13 + INV6 webhook bypass + F11 chargeback 누락 | payment §2.3 cross-ref (chargeback handler 부재) |
+| CF-018 | finance 도메인 carrier 10/55 = **18.2% repo 최대 cluster** (invoice 2 + payment 8) | invoice §3 INV4-INV5 (`invoices.ts:113`,`134`) | payment §1.3 BR5+BR6 = 8 사이트 (4 routes × 2) |
+| CF-019.a/.b | 두 stripe orphan column 모두 carrier confirmed | invoice §3 INV6 (invoices.stripe_payment_intent_id audit-only) | payment §1.2 BR2 + §3 INV6 (payment_info.stripe_payment_method_id 0 write site) |
+| CF-022 | invoice manual 67% (2/3 send+pay ✓; void ✗) vs webhook 0% bypass — 동일 entity 안 정책 split anomaly | invoice §6.2 cross-pack matrix (manual 67% / webhook 0%) | payment §3 INV1 (state machine 부재 — n/a) |
+
+### CF-008 booking 26% vs 78% 두 측정 단위 명확화 (사용자 요구 의무 처리)
+
+**T002.2.j booking.md §4** = `logAction call site / total endpoint 27 = 7/27 = 26%` (**endpoint-grain**) — 모든 endpoint (read+write+state) 분모.
+**T003 묶음 1 domain-logic-booking.md §4** = `logAction call site / state-transition 9 = 7/9 = 78%` (**transition-grain**) — state transition 핸들러만 분모.
+**둘 다 valid** — 측정 단위 (endpoint vs transition) 가 다름. 본 CF-008 은 두 측정을 모두 보존 + 비교 시 같은 단위 사용 의무. T003 묶음 2 finance polarisation 추가: invoices 60% endpoint = 60% transition (manual 측 동일), payment 0% (state 부재).
+
+### F10 / F11 / F12 신규 R-REPO-5 incidentals (memo only, no promotion)
+
+**F10** — helper auto-create invoice = "Pending" (5-state 외 6th label) at `contracts.ts:152` (recurring) + `:214` (at_activation). manual `/send` 가드 (`Draft only` `invoices.ts:147`) 와 충돌 → helper-generated invoice 운영자 send 불가. T004 `_rules/financial-rules.md` "invoice status taxonomy 통일" 일괄.
+
+**F11** — Stripe webhook chargeback / dispute 미처리 at `stripe.ts:99-100` default branch `console.log('Unhandled event type')` 만; `charge.dispute.created/closed/funds_withdrawn/funds_reinstated` + `charge.failed` 핸들 부재. 분쟁 발생 시 운영 무반응. CF-010 Phase 2 Option B `payment_events` 별도 entity 가 cover.
+
+**F12** — commissions.status enum 정의 부재 at `commissions.ts:20,69` (status filter + Archived 만 등장). 다른 status 값 의미 불명. Phase 2 = enum 정의 + lifecycle 명문화. T004 `_rules/financial-rules.md` 일괄.
+
+### R-REPO-9 자동 진행 4회째 mirror
+
+**T003 묶음 2 Step 1 RRRRR-UUUUU Pre-flight**: 사용자 가이드 baseline inputs (T002 자산 6 + CF anchor 8) + 분할 (β) + 차단 조건 4가지 평가 모두 코드 ground truth 일치 → 차단 0 → Step 2-5 자동 진행. **R-REPO-9 영구 패턴 4회째 confirm** (T002.4 + T002.5 + T003 묶음 1 + T003 묶음 2).
+
+### R-REPO-10 묶음 위임 2회째 mirror (stable)
+
+**T003 묶음 2 = R-REPO-10 2회째**: 2 sub-task (invoice + payment) / 1 응답 / 1 atomic commit / 1 사용자 push. `domain-logic-finance-payment.md §6.4` 측정 = 묶음 1 동일 패턴 재현 → 응답 -50% / commit -67% / push -67% 가속 효과 stable. 묶음 3-4 동일 적용.
+
+### Counts unchanged
+
+P0=4 / P1=18 / P2=3 = **25 CF** (T003 묶음 1 와 동일 — T003 묶음 2 신규 promotion 0).
+
+---
