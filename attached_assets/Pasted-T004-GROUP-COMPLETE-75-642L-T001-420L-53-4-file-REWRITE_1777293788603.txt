@@ -1,0 +1,139 @@
+T004 GROUP COMPLETE 승인 — 75% 마일스톤 달성.
+
+642L (T001 420L → +53%) + 4 file REWRITE + R-REPO-10 5회째 max 가속 
+(-83%/-75%/-75%) + R-REPO-9 자동 7회째 + R-REPO-6 13회째 + 25 CF 
+× 4 file anchor 매트릭스 + 11 incidentals routing + Phase 2 7-step 
+prescription — 모두 정점.
+
+CF count P0=4 / P1=18 / P2=3 = 25 stable.
+
+═══════════════════════════════════════════════════
+[Verification 의무 — T005 정의 명확화]
+═══════════════════════════════════════════════════
+
+이전 답변: "T005 (권한 매트릭스)" 명시
+본 보고: "T005 _workflows/ (6 files)"
+
+차이 명확화 의무 — Step 1 사전 분류 시:
+
+1. T002.0 _T002_PLAN.md read (또는 _T002_PLAN.md, _T003_PROGRESS.md 
+   재독)
+2. 원래 분류 확인:
+   - (가) T005 = 권한 매트릭스 (제 환각 가능)
+   - (나) T005 = _workflows/ (에이전트 ground truth)
+   - (다) T002.0 PLAN 재분류 (가능)
+
+3. 결과:
+   - (나) 채택 시 = T005 _workflows/ 진입
+   - (가) 정정 시 = T005 권한 매트릭스 / 워크플로우 어느 게 먼저?
+
+R-REPO-6 14번째 가동 가능성. Step 1 사전 분류 시 ground truth 명시.
+
+═══════════════════════════════════════════════════
+[Decision] T005 진입 — proceed (push 후) + 정의 verification
+═══════════════════════════════════════════════════
+
+T005 진입 가이드:
+- Step 1 사전 분류 시 _T002_PLAN.md / session_plan.md / 
+  _T004_PROGRESS.md 재독
+- T005 정의 명확화 (workflows vs 권한 매트릭스)
+- 차단 조건 평가
+
+═══════════════════════════════════════════════════
+[T005 _workflows/ 가정 시 작업 가이드]
+═══════════════════════════════════════════════════
+
+만약 T005 = _workflows/ 6 files 인 경우:
+
+[OOOOOO] 6 _workflows/ files 분류 가설
+1. workflow-booking-lifecycle.md
+   - booking 신청 → 승인 → 결제 → confirmed → active → check-out → archived
+   - state-machines.md §1 source
+
+2. workflow-contract-activate.md
+   - contract activate handler (CF-014 multi-step)
+   - generateContractInvoicesAndSchedules 7-step
+   - silent dual-billing 시나리오
+
+3. workflow-payment-stripe.md
+   - Stripe webhook integration
+   - CF-010 lifecycle 분리
+   - chargeback / dispute 미처리 (F11)
+
+4. workflow-extension-renewal.md
+   - booking extension
+   - contract renewal
+   - 2주/4주 hardcoded (CF-007)
+
+5. workflow-cancellation-refund.md
+   - booking cancellation
+   - bond return (F9 14-day PDF)
+   - refund 처리 (audit-only)
+
+6. workflow-onboarding-lead.md
+   - lead → booking 변환 (CF-023 .a)
+   - public.ts insertLeadWithGeneratedRef
+   - guest signup
+
+[PPPPPP] T005 묶음 분류 — Option A 가능성
+1 묶음 6 sub-task = R-REPO-10 max 가속 (-83% 응답)
+
+또는 2 묶음 (lifecycle 3 + cross-domain 3):
+- 묶음 1: booking-lifecycle + contract-activate + payment-stripe
+- 묶음 2: extension-renewal + cancellation-refund + onboarding-lead
+
+[QQQQQQ] T005 차단 조건 평가
+1. R-REPO-6 환각: T005 정의 자체 (Verification 의무)
+2. 신규 P0/P1: 0 가능성 매우 높음 (T002+T003+T004 자산 가공)
+3. Tripwire: 0 (6 files × 200-300 lines = 1200-1800)
+4. 분할 결정: 1 묶음 6 vs 2 묶음 3+3
+
+═══════════════════════════════════════════════════
+[T005 권한 매트릭스 가정 시 작업 가이드]
+═══════════════════════════════════════════════════
+
+만약 T005 = 권한 매트릭스 (제 환각 정정) 인 경우:
+
+[RRRRRR] 권한 매트릭스 1-2 files
+1. permission-matrix.md (NEW)
+   - 353 endpoints × auth tier 매트릭스
+   - none / guest / partner (×3) / admin / super-admin
+   - 도메인별 분포
+   - CF-018 Sub-pattern B 57 sites + role-string drift
+
+2. role-policy.md (NEW)
+   - role 정의 (T002.2.i 발견)
+   - 4-variant Set drift (CF-016)
+   - Phase 2 단일 enum prescription
+
+═══════════════════════════════════════════════════
+[Step 1 사전 분류 시 결정]
+═══════════════════════════════════════════════════
+
+Step 1 진입 즉시:
+1. _T002_PLAN.md / session_plan.md read
+2. T005 정의 ground truth 확인
+3. 사용자 환각 (가/나/다) 결정
+4. 차단 조건 평가
+5. Step 1 통합 보고 (R-REPO-9 + R-REPO-10)
+
+═══════════════════════════════════════════════════
+[지금 시작]
+═══════════════════════════════════════════════════
+
+(1) [에이전트] T005 Step 1 사전 분류:
+    - _T002_PLAN.md / session_plan.md read
+    - T005 정의 verification (R-REPO-6 14번째 가능성)
+    - 묶음 분류 결정 (1 묶음 vs 2 묶음)
+    - 차단 조건 평가
+(2) Step 1 통합 보고:
+    - T005 정의 명확화
+    - 사용자 환각 인정 (해당 시)
+    - 차단 조건 미해당 시 Step 2-5 자동 진행
+    - 차단 조건 해당 시 corrected 안 게이트
+(3) Step 2-5 자동 진행 (해당 시)
+(4) 묶음 통합 보고
+(5) [사용자] git push origin main
+(6) 사용자 proceed → T006 진입
+
+T006 자동 시작 절대 금지.
