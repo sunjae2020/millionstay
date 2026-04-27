@@ -1767,4 +1767,38 @@ After T002.2.h, all 9 audit domains have been scanned for `bookings.booking_ref`
 
 ---
 
+## T002.3 — Schema-side anchor confirmation (no severity change)
+
+(Marker section — does not change CF severity, count, or content. Records that 6 existing CF have schema-side evidence permanently anchored in `_schema/db-schema-overview.md` §6.)
+
+**Counts after T002.3**: P0=4, P1=18, P2=3 (total **25**) — **0 NEW promotions / 0 changes**. T002.3 is a schema-overview sub-task; CF surface unchanged.
+
+| CF | Schema anchor in `db-schema-overview.md` | Quantitative anchor |
+|---|---|---|
+| **CF-001** (real ↔ numeric money inconsistency) | §2.3 + §6.1 | 39 `real` cols vs 12 `numeric(p,s)` cols (3.25:1 ratio); decisive lossy site = `bookings.total_rent numeric(12,2)` → `contracts.total_rent real` (executed by `contracts.ts:55-237` activate helper per CF-014) |
+| **CF-003** (`references()` = 0 — no DB-level RI) | §3.1 + §4 | `rg 'references\(' lib/db/src/schema/` = **0 hits**; §4 enumerates **53 implicit FK + ≥8 polymorphic** that the missing `references()` would have declared |
+| **CF-009** (DEAD `product_catalog` schema) | §5.2 + Appendix A | 5 zero-route-hit tables surfaced: `product_catalog` (T002.1.6 confirmed) + `space_option_maps` / `space_blocked_dates` (high confidence) + `cs_messages` / `guest_direct_messages` (medium confidence — raw-SQL false-positive risk). 4 schema-only finds parked as F4 memo for T004 `_rules` bulk processing — **CF-009 expansion deferred** to T004 |
+| **CF-013** (date / timezone) | §2.4 + §6.4 | 145 no-tz vs 123 with-tz timestamps (54% no-tz); **11 text-date sites** newly enumerated (`contracts` 4 + `space_blocked_dates` 1 + `contacts` 4 incl. DOB/passport_expiry/visa_expiry + `promotions` 2) — text-date is type drift sub-issue, anchored as schema-side evidence |
+| **CF-016** (file/table/variable naming inconsistency) | §1.2 + §6.5 | 8 file ≠ table + 6 var ≠ table + **5 type drift sub-instances** (`is_published integer` / `is_internal integer` boolean drift; `csMessagesTable` vs hypothesised `csTicketMessagesTable`; `guestDirectMessagesTable` cross-domain placement; `default(sql\`now()\`)` vs `defaultNow()`) |
+| **CF-019** (write-orphan stripe columns) | §6.6 + Appendix D | 2 schema-side anchor cols: `invoices.stripe_payment_intent_id text` + `payment_info.stripe_account_id text` — both are NULLABLE text without integrity constraint and Pathway 2.b half-2 confirmed only stripe webhook handler writes them (no sync trigger) |
+
+### Schema-only findings F1-F6 (all single-memo dispositions)
+
+T002.3 surfaced 6 schema-level patterns that do NOT meet promotion threshold (insufficient anchor density / cosmetic) but warrant T004 `_rules` bulk processing:
+
+| # | Finding | Severity (informal) | Disposition |
+|---|---|---|---|
+| F1 | `space_availability.ts:16` INDEX duplicates Pg-auto-generated UNIQUE-constraint index | P3 / cosmetic | T004 `_rules/architecture-rules.md` "duplicate index" |
+| F2 | `bookings.product_id` + `bookings.contract_product_id` both reference `contract_products` — semantic redundancy / one likely dead | P2 / data-clarity | T002.4 `erd-core.md` dotted-line both + T004 prescription |
+| F3 | `space_blocked_dates.date = text` vs `space_availability.date = date` — type + responsibility overlap | P2 / type-drift | T002.5 `state-machines.md` availability diagram + T004 |
+| F4 | DEAD 5 sites = CF-009 expansion candidate (4 of 5 schema-only) | P2 | T004 `_rules` bulk processing |
+| F5 | ≥8 polymorphic FK with discriminator pattern (`refresh_tokens`, `marketing_consents`, `cs_messages`, `system_log`, `email_log`, `documents`, `contacts.portal_user_id`, `booking_service_photos`) — schema-level integrity unverifiable | P1-equivalent / sibling-of-CF-018 | T002.4 `erd-core.md` separate "polymorphic relationships" + T002.5 actor branching |
+| F6 | `is_published integer` / `is_internal integer` boolean drift | P3 / cosmetic | CF-016 sub-pattern, already cross-ref'd at T002 endpoint stage |
+
+### Quantitative ground-truth corrections (R-REPO-6 (a))
+
+- **UNIQUE count**: T002.3 Step 1 사전 분류 보고 **14** sites (single-column only); 본문 작성 중 실측 **16** sites (단일 14 + compound 2: `space_availability(space_id,date)` at `space_availability.ts:15` + `page_contents(page_key,language)` at `page_contents.ts:13`). Compound `unique()` 가 Step 1 카운트에서 누락 → 본문 §3.2 가 정정-진실. T002.3 Step 4 spot-check C2 (UNIQUE-gap × 23505 catch 매핑) 는 16 기준으로 재실행 (6 catch / 16 UNIQUE = 37.5% coverage 확정).
+
+---
+
 *End of CRITICAL_FINDINGS.md*

@@ -339,7 +339,8 @@ Auto-checkpoint 메커니즘이 stage → commit 을 자동 실행하지만 gene
 | `api-endpoints/portal-partner.md` | ~290 | — | — |
 | `api-endpoints/public.md` | ~430 | — | — |
 | `api-endpoints/admin.md` | ~480 | — | — |
-| `db-schema-overview.md` | ~950 | — | — |
+| `db-schema-overview.md` (T002.3) | ~950 | **749** | **−201 (−21%)** within model band — single-file (α) form factor; 54 pgTable × 9 도메인 inventory + UNIQUE 16 (Step 1 사전 14 → R-REPO-6 (a) 정정 +2 compound) + INDEX 13 + 53 implicit FK + ≥8 polymorphic + 5 DEAD candidates + 6 CF schema-anchor + F1-F6 schema-only memos + §8 378-cell self-check + 3 spot-check; tripwire 1300 not approached |
+| `_audit/CRITICAL_FINDINGS.md` (post-T002.3) | — | **~1830** | +60 from T002.3 atomic commit: NEW T002.3 marker section (6-CF schema-anchor table + F1-F6 disposition table + UNIQUE 14→16 정정 R-REPO-6 record + Counts after T002.3 line). **0 NEW CF**, **0 promotions** — counts unchanged at P0=4 / P1=18 / P2=3 = **25** |
 | `erd-core.md` | ~500 | — | — |
 | `state-machines.md` | ~500 | — | — |
 | **TOTAL** | **~6700** | — | — |
