@@ -1,0 +1,119 @@
+T007 GROUP COMPLETE 승인 — 95% 마일스톤 달성.
+
+966L (T001 908L → +6.4%) + 3 REWRITE + 5 LIGHT TOUCH + R-REPO-10 
+8회째 새 max -87.5% + Phase 2 7-step carrier 분담 + 25×11 = 275-cell 
+gap matrix — 모두 정점.
+
+CF count P0=4 / P1=18 / P2=3 = 25 stable.
+누적 자산 ~21,300L markdown / 운영 규칙 10개 정착.
+
+═══════════════════════════════════════════════════
+[자가 메타 가동 — T008 정의 verification 의무]
+═══════════════════════════════════════════════════
+
+R-REPO-6 17회째 가능성 사전 인지 — 자가 의심 + 분기 옵션 사전 제시:
+
+이전 답변 (T002.0 PLAN 추정): "T008 = 격차 분석"
+본 보고: "T008 (Index README + verify; 100% 완료)"
+
+저(사용자) 자가 의심:
+- "격차 분석" = T002.0 PLAN 의 추정
+- "Index README + verify" = ground truth 가능
+- 또는 두 작업 통합
+
+→ Step 1 사전 분류 시 ls + session_plan.md read 로 즉시 해소.
+이건 R-REPO-6 메타-가동 3회째 가능 = T006 + T007 패턴 영구 정착.
+
+═══════════════════════════════════════════════════
+[Decision] T008 진입 — proceed (push 후) + 자가 메타 verification
+═══════════════════════════════════════════════════
+
+T008 진입 가이드:
+- Step 1 사전 분류 시 ls + session_plan.md read 즉시
+- T008 정의 ground truth 확인:
+  - Index README (docs/reverse/README.md NEW?)
+  - verify (모든 cross-ref 정합성)
+  - 또는 격차 분석 (제 환각 정정)
+- 차단 조건 평가
+
+═══════════════════════════════════════════════════
+[T008 = Index README + verify 가정 시 작업 가이드]
+═══════════════════════════════════════════════════
+
+만약 T008 = Index README + verify (ground truth) 인 경우:
+
+[LLLLLLL] T008 작업 가설
+1. docs/reverse/README.md (NEW) — entry point
+   - 사용자 nav (T001 ~ T007)
+   - 7 단계 요약 + 마일스톤 (50% / 65% / 75% / 80% / 87.5% / 95% / 100%)
+   - 25 CFs P0/P1/P2 backlog
+   - 11 incidentals routing
+   - Phase 2 7-step prescription
+   - R-REPO 운영 규칙 10개
+   - Phase 2 reference exemplar 5종
+
+2. verify 작업 (READ-ONLY 검증):
+   - 모든 cross-ref 양방향 정합성
+   - atomic commit ledger 정확성
+   - CF anchor 매트릭스 정합성
+   - file existence + line counts
+   - = 산출물 검증 (정정 안 함, 발견 시 보고)
+
+3. 또는 verify-report.md (NEW) — 검증 결과 보고서
+
+[MMMMMMM] T008 차단 조건 평가
+1. R-REPO-6 17회째 = 메타-가동 가능 (즉시 해소형)
+2. 신규 P0/P1 = 0 (verify 단계, 새 작업 X)
+3. Tripwire = 0 (README ~200-300L)
+4. 분할 = 1 묶음 (README + verify)
+
+[NNNNNNN] T008 사이즈 예측
+- README.md: ~200-400L (전체 prefix entry point)
+- verify-report.md (해당 시): ~100-200L
+- 합계: ~300-600L
+
+═══════════════════════════════════════════════════
+[T008 = 격차 분석 가정 시 작업 가이드]
+═══════════════════════════════════════════════════
+
+만약 T008 = 격차 분석 (제 환각 정정) 인 경우:
+
+[OOOOOOO] 격차 분석 1-2 files
+1. gap-analysis.md (NEW)
+   - 사용자 spec (현 MillionStay 시스템 안내) vs T002~T007 발견 사실
+   - 격차 정량화 (25 CFs + 11 incidentals)
+   - Phase 2 마이그레이션 우선순위
+   - 작업 명세 + 일정 정량화
+
+═══════════════════════════════════════════════════
+[Step 1 사전 분류 시 결정]
+═══════════════════════════════════════════════════
+
+Step 1 진입 즉시:
+1. ls 검색 (README 존재 / verify file 존재 / gap-analysis 존재)
+2. T008 정의 ground truth 확인
+3. 묶음 분류 결정 (1 묶음 또는 다른)
+4. 차단 조건 평가
+5. Step 1 통합 보고
+
+═══════════════════════════════════════════════════
+[지금 시작]
+═══════════════════════════════════════════════════
+
+(1) [에이전트] T008 Step 1 사전 분류:
+    - ls 검색 (즉시 해소)
+    - T008 정의 ground truth 확인
+    - 묶음 분류 결정
+    - 차단 조건 평가
+(2) Step 1 통합 보고:
+    - T008 정의 명확화
+    - 자가 메타 verification 결과
+    - 차단 조건 미해당 시 Step 2-5 자동 진행
+    - 차단 조건 해당 시 corrected 안 게이트
+(3) Step 2-5 자동 진행 (해당 시)
+(4) 묶음 통합 보고
+(5) [사용자] git push origin main
+(6) 🎯 100% COMPLETE — 전체 프로젝트 종료
+
+T008 = 마지막 단계. 100% 완료 후 사용자 게이트 (전체 프로젝트 회고 +
+Phase 2 진입 결정 가능).
