@@ -466,13 +466,60 @@ $ rg "productCatalogTable\." lib/ artifacts/           → 0 matches  (column-le
 
 ---
 
-## CF-010 — Stripe webhook ignores `payment_failed` and `charge.refunded` for invoice state
+## CF-010 — Stripe payment lifecycle 와 invoice document lifecycle 분리 (🔄 T002.5 본문 재작성)
+
+> **🔄 T002.5 재작성 (2026-04)**: T001.5 본문 "8 누락 transition" 가설은 Stripe webhook 이 `invoices.status` 를 직접 update 한다는 가정에 의존했으나, T002.5 ground truth 검증 (state-machines.md §4.4) 결과 stripe.ts:77/92 의 `stripe_status` 는 **별도 audit-only payload** 이며 (별도 컬럼이 존재하지 않고 `system_logs.new_value` JSON 안에만 기록) `invoices.status` 컬럼과 분리된 두 lifecycle. 본문 재작성. 이전 본문은 § Archive 보존.
 
 | Field | Value |
 |---|---|
-| **Severity** | 🟡 P1 *(promoted from P2 in T001.5 follow-up)* |
-| **Scope** | Finance · Reconciliation · Accounting accuracy |
+| **Severity** | 🟡 P1 *(promoted from P2 in T001.5; 재작성 T002.5)* |
+| **Scope** | Finance · Reconciliation · Accounting accuracy · State machine boundary |
 | **Status** | OPEN |
+
+### 재작성 evidence (T002.5 ground truth — state-machines.md §4)
+
+invoices 테이블에는 두 분리된 status lifecycle 이 존재:
+
+| Lifecycle | 컬럼 | Values | Write path |
+|---|---|---|---|
+| **Document** (invoice 발행/수금/보관) | `invoices.status` | Draft / Sent / Paid / Archived / Void (5) | `invoices.ts:146/160/172/124/139` admin + `stripe.ts:56` webhook (1 transition only: → Paid) |
+| **Stripe payment** (audit-only) | (no column — JSON in `system_logs.new_value`) | succeeded / payment_failed / refunded / dispute.* / canceled | `stripe.ts:62/77/92` audit-row only — **invoices 테이블 update 없음** for failed/refunded |
+
+**3 Stripe handled events** (stripe.ts:51-96):
+- `payment_intent.succeeded` (`:56`) — **invoices.status="Paid"** ✅ + audit (유일하게 invoices update 하는 transition)
+- `payment_intent.payment_failed` (`:77`) — **invoices.status 변경 없음** + audit only with `stripe_status="payment_failed"`
+- `charge.refunded` (`:92`) — **invoices.status 변경 없음** + audit only with `stripe_status="refunded"` + `amount_refunded` silently dropped
+
+**Silent-ignore events** (default branch): `payment_intent.canceled`, `charge.dispute.created`, `charge.dispute.closed`, `charge.failed`, `payment_intent.requires_action`.
+
+**CF-019.a cross-anchor**: `invoices.stripe_payment_intent_id text` (`schema/invoices.ts:15`) 컬럼 정의 존재 + `rg "stripe_payment_intent_id" artifacts/api-server/` 결과 **write site 0** (audit log payload 의 `stripe_payment_intent` 다른 키명 만 등장) → storage orphan column. W1 handler 가 set 해야 하는 위치이나 누락.
+
+### 영향
+
+1. **회계 정확성**: `invoices.status="Paid"` 가 실제 받은 돈 의미하지 않음 (refund/dispute 후에도 Paid 유지). `dashboard.ts:72` `paidInvoices.reduce(sum + amount)` / agent commission settlement / owner statement (any join on `status="Paid"`) **revenue 과대계상**. `stripe_status` 를 `system_logs` JSON 에서 join 하지 않으면 net revenue 계산 불가.
+2. **운영 추적 불가**: chargeback / dispute 발생 시 Stripe Dashboard 수동 조회 의존 — application 측 view 부재.
+3. **State machine boundary 모호**: 5-state document lifecycle 과 Stripe payment lifecycle 의 분리 의도가 의도적 (audit-only) 인지 미완성 (handler 누락) 인지 코드만으로 판단 불가.
+4. **Idempotency gap** (T002.2.b half-2 evidence): webhook handler `event.id` dedupe 부재 — Stripe at-least-once delivery 시 같은 succeeded 두 번 처리 → invoices 두 번 update + 두 번 audit row.
+
+### Phase 2 권장 (R-REPO-7 옵션 영구 보존)
+
+- **Option A**: invoices.status enum 확장 (Refunded / Disputed / PartiallyRefunded / Cancelled / ChargedBack) + W2/W3 handler `db.update(invoicesTable)` 추가 + 새 컬럼 (`refunded_amount numeric`, `failure_reason text`, `dispute_reason text`, `refunded_at timestamp`) → 단일 lifecycle 통합.
+- **Option B (추천)**: 별도 entity `payment_events` 분리 (Stripe webhook 전용 테이블) — invoices 1:N payment_events. 의도적 분리 가시화 + at-least-once dedupe 테이블 가능 + W4/W5 handler 추가 시 schema 깔끔.
+- **Option C (보조)**: invoice.status 변경 trigger (refund → Refunded auto) + chargeback handler 신설 + daily reconciliation cron (Stripe API page-through + DB assert).
+
+### Phase 2 impact
+
+C# 포팅 시 본 boundary 미명시 그대로면 EF Core 에 `PaymentEvent` entity 자동생성 부재 → reconciliation cron 도 함께 missing. Option B 채택 시 `PaymentEvent` 별도 DbSet + `Invoice.PaymentEvents` navigation property 신설.
+
+### Archive — T001.5 원본 본문 (T002.5 재작성으로 superseded)
+
+> 이하 T001.5 원본. "missed invoice state transitions" 표 (8 transition) 는 Phase 2 Option A desired-state 가설로 read; 현재 코드 ground truth 는 위 § 재작성 evidence.
+
+| Field | Value |
+|---|---|
+| **Severity (archive)** | 🟡 P1 *(T001.5 promotion 그대로 유지)* |
+| **Scope (archive)** | Finance · Reconciliation · Accounting accuracy |
+| **Status (archive)** | superseded by T002.5 재작성 본문 위 |
 
 ### Evidence
 
@@ -1880,5 +1927,73 @@ R-REPO-6 9회째 가동 + R-REPO-9 차단 게이트 첫 적용 = corrected 8-clu
 | Polymorphic 표시 | (i) 분기 화살표 + (iii) §10 enumeration table 조합 | (ii) annotation only (검색 어려움) |
 | Cluster 8 분리 | Ops/Comm + Content 통합 14 (Content 2 단독 cluster 너무 작음) | 9 cluster (Content 분리 — diagram 1 추가 비용) |
 | DEAD marker | 🪦 high (3) + ⚰️ medium (2) 2-tier (T002.0 §6 합의) | 단일 marker (confidence 표현 손실) |
+
+---
+
+## T002.5 — State machines 5 entity (no severity change; CF-010 본문 재작성 + 6 evidence expansion + F7 incidental)
+
+(Marker section. T002.5 = T002 group 결산 sub-task. 동적 측면 — 5 entity status 컬럼 전이 — 코드 ground truth enumerate. **0 NEW CF promotion**. CF-010 본문 재작성 (위 § CF-010 참조) + CF-008 / CF-014 / CF-019.a / CF-022 / CF-023 evidence expansion + F7 신규 R-REPO-5 incidental memo.)
+
+**Counts after T002.5**: P0=4, P1=18, P2=3 (total **25**) — **0 changes**. T002.4 와 동일.
+
+### 6 CF evidence expansion (T002.5 state-machine context)
+
+| CF | T002.5 expansion | Anchor in `state-machines.md` |
+|---|---|---|
+| **CF-008** | 5-entity audit-coverage matrix: invoices 80% > contracts 71% > bookings 67% > work_orders 0% = cs_tickets 0% (audit-blind floor). Producer-consumer split: admin (T002.2.i, audit data CONSUMER) vs work_orders+cs_tickets (producer-side blind). | §1 Entity Index + §7.1 |
+| **CF-010** | **본문 재작성** (위 § CF-010 — 8 누락 transition 가설 → Stripe payment vs document lifecycle 분리). | §4.4 + §4.5 + §4.6 |
+| **CF-014** | 3 known production runtime Tx sites (seedSync.ts:214 + dev-migration.ts:38 + service-host-portal.ts:365) vs 2 multi-step no-tx locus (bookings.S2 + contracts.TR3 activate). State-machine context = silent partial failure 위험. contracts.TR3 fallback `db.delete(WHERE contract_id=?)` 의 idempotency 시도가 status 검사 없어 이미 Paid invoice 삭제 위험 (Phase 2 footgun). | §3.3 + §7.3 |
+| **CF-019.a** | invoices.stripe_payment_intent_id 0 write site 검증 강화 (`rg "stripe_payment_intent_id" artifacts/api-server/` zero hits 외 schema/audit-payload 만). W1 handler prescription 명시. | §4.5 + §7.4 |
+| **CF-022** | 5-entity gated-discipline 종합 표 (cross-pack ranking): bookings 77.8% leader / cs_tickets 50% / work_orders 40% / invoices 0% = contracts 0% floor (extreme spread). booking.md §4 "9/9" claim 의 transition-grain vs 본 entity-grain 7/9 정밀 재계산 — 두 metric cross-anchored valid. | §1 + §7.2 |
+| **CF-023** | 3 booking_ref generators state-entry context 매핑: bookings.ts:60 canonical (Draft entry) + guest-portal.ts:141 ad-hoc CF-023.b (Pending outlier entry — F7) + lib/leadRef.ts canonical helper. | §7.5 |
+
+### F7 신규 R-REPO-5 incidental — Booking "Pending" outlier (memo only, no promotion)
+
+**Evidence**: `guest-portal.ts:160` `booking_status: "Pending"` — bookings.booking_status 의 8 main state (`Draft / PendingPayment / PendingApproval / Confirmed / Active / CheckedOut / Cancelled / Archived`) 중 어느 것도 아님. + `:162` `status: "Active"` (bookings 테이블 미존재 컬럼).
+
+**분석** (state-machines.md §8): "Pending" 진입 후 모든 admin 측 transition (S2 confirm precondition `["PendingApproval","PendingPayment"]` / S4 submit precondition `=== "Draft"` / PUT update guard `["Draft","Confirmed"]`) **모두 거부** → guest-portal C0' booking 은 dead-end state 진입 → admin promotion 경로 부재.
+
+**Severity 보류 사유**: P1 candidate (guest booking flow 전체 마비 가능) 이지만 runtime 데이터 부재 (실제 production 영향 미확인). **본 sub-task promotion 보류** + T003 (도메인 로직) `_rules/business-rules.md` 또는 T004 `_rules/architecture-rules.md` "state literal normalisation" 일괄 처리 baseline.
+
+**Phase 2 prescription**:
+- Option A (추천): guest-portal.ts:160 `"Pending"` → `"PendingApproval"` 정정 (1 line fix; S2 precondition 와 정합).
+- Option B: bookings.booking_status enum 에 `"Pending"` 추가 + 새 transition handler 신설.
+
+### F8 추가 incidental memo (T002.5 검증 부산물; cs_tickets Resolved 부재)
+
+cs_tickets 의 `Resolved` / `Closed` state 부재 — InProgress 진입 후 영구 → Archived (soft-delete) 만이 종료. 운영 분석 시 "해결된 티켓 수" 쿼리 불가. T004 일괄 처리.
+
+### R-REPO-6 10번째 가동 + R-REPO-9 차단 게이트 2회째 가동 영구 기록
+
+T002.5 KKKK Pre-flight 시 사용자 5-entity 안 검증:
+- Bookings 9-state cross-pack leader (정합 — 8 main + 1 Pending outlier 정체 ground truth 검증)
+- Contracts 4-state → **7-state** (Sent / Signed / Archived 3 누락; +contract_line_items.Deleted 별도 테이블)
+- Invoices 5-state "Pending/Failed/Refunded/Disputed" → **5/5 가짜** (Paid 1만 우연 일치; 실제 ground truth: Draft / Sent / Paid / Archived / Void; Stripe webhook 의 stripe_status 별도 audit-only payload 와 혼동 결과)
+- Work_orders "free-transition" → **half-true** (실제 6 values + 2/4 transition gated = 40%)
+- Cs_tickets 3-state OK ✅
+
+**R-REPO-6 작동 사례 가장 강력**: 사용자 invoice 5-state 안 5/5 가짜 (Paid 1만 우연 일치) — Stripe payment lifecycle 와 invoice document lifecycle 혼동 evidence. **R-REPO-9 차단 게이트 2회째 가동 = 영구 패턴 작동 확인** (corrected 5-entity enumeration 사용자 채택 후 Step 2~6 자동 진행).
+
+### R-REPO-7 trade-off 영구 기록 (state-machines.md §9 mirror)
+
+| 결정 | 채택 | 미채택 |
+|---|---|---|
+| Status taxonomy 표기 | (가) ⓑ ground truth + 사용자 안 가짜 비교 column | ⓐ entity 단일 enum / ⓒ ground truth + footnote |
+| Stripe webhook 표기 | (나) ⓑ invoice 본체 + stripe_status sub-section 분리 | ⓐ single diagram / ⓒ separate entity #6 |
+| Booking 9th "Pending" | (다) ⓑ §8 §X.fix sub-section + F7 incidental 등록 | ⓐ mainline 통합 / ⓒ defer to T004 |
+| CF-010 본문 처리 | (라) 재작성 (제목 + evidence + 영향 + Phase 2 옵션 A/B/C) | (이전 본문 유지 + addendum) |
+| Mermaid 형식 | (마) `stateDiagram-v2` (transition label + [*] terminal native) | `flowchart` (T002.4 cluster 와 의도적 차별화) / `erDiagram` |
+
+---
+
+## 🎯 T002 GROUP COMPLETE (T002.0 ~ T002.5)
+
+T002 group 16 doc files in `_schema/` 모두 완료:
+- 11 endpoint domain files (T002.2.a-j + booking.md baseline) + INDEX.md + SCHEMA_FILE_TABLE_MAP.md = 13 in `_schema/api-endpoints/` + `_schema/`
+- db-schema-overview.md (T002.3) + erd-core.md (T002.4) + state-machines.md (T002.5) = 3 in `_schema/`
+
+**Final counts**: P0=4 / P1=18 / P2=3 = **25 CF**. 4 R-REPO-5 incidentals 누적 (F7+F8 신규 from T002.5; F4+F5 기존). **R-REPO-9 차단 게이트 2회 가동** (T002.4 KKKK 8-cluster + T002.5 KKKK 5-entity) = 영구 패턴 작동 confirm. **R-REPO-6 10회 가동** 누적.
+
+**Next**: T003 (도메인 로직) — **자동 시작 절대 금지**. 사용자 `proceed` + R-REPO-9 + 묶음 위임 검토 후 진입.
 
 ---
