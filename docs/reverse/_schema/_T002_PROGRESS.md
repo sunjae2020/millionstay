@@ -42,7 +42,7 @@ Auto-checkpoint 메커니즘이 stage → commit 을 자동 실행하지만 gene
 | T002.2.e | ✅ | `ops-crm.md` (51 ep / 7 files; CF-022 NEW P1 promotion) | **664** | `c6cab7c` |
 | T002.2.e.fix-1 | ✅ | (CF-023 NEW P1 promotion: lead-to-booking orphan ref + V1 d-row correction + this row) | — | `cbc54b2` |
 | T002.2.f | ✅ | `portal-guest.md` (29 ep / 3 files: guest-portal.ts 18 + guest-cs.ts 8 + guest-auth.ts 3; CF-023.b sub-split + 6 CF carrier expansions; 0 new CF promotions; tripwire-exempt) | 521 | `78bf0f7` |
-| T002.2.g | ✅ | `portal-partner.md` (22 ep / 4 files: service-host-portal.ts 9 + owner-portal.ts 5 + agent-portal.ts 5 + partner-auth.ts 3; **CF-014 POSITIVE EXEMPLAR promotion** at SHP:365-393 — sole production tx-using handler; CF-008 22/22 = 0% TIES with ops-catalog/ops-crm 3-way; CF-005 evidence reinforced at signing site `partner-auth.ts:43`; **22/22 = 100% IDOR-safe** = strongest defense surface yet; INDEX.md 4 mount-prefix factual corrections + 2 auth dispatcher corrections; 0 new CF promotions; tripwire-exempt) | TBD | TBD |
+| T002.2.g | ✅ | `portal-partner.md` (22 ep / 4 files: service-host-portal.ts 9 + owner-portal.ts 5 + agent-portal.ts 5 + partner-auth.ts 3; **CF-014 POSITIVE EXEMPLAR promotion** at SHP:365-393 — sole production tx-using handler; CF-008 22/22 = 0% TIES with ops-catalog/ops-crm 3-way; CF-005 evidence reinforced at signing site `partner-auth.ts:43`; **22/22 = 100% IDOR-safe** = strongest defense surface yet; INDEX.md 4 mount-prefix factual corrections + 2 auth dispatcher corrections; 0 new CF promotions; tripwire-exempt) | 581 | `f7b7cdc` |
 | T002.2.h | ⏸️ | `public.md` | TBD | TBD |
 | T002.2.i | ⏸️ | `admin.md` | TBD | TBD |
 | T002.2.j | ⏸️ | `booking.md` close-out (remaining 22) | TBD | TBD |
