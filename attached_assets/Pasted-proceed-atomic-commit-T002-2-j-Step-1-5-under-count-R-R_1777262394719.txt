@@ -1,0 +1,184 @@
+proceed (가) — atomic commit 흡수.
+
+T002.2.j Step 1 의 5× under-count 자가 발견 + R-REPO-7 (c) 정점 
+적용 (자가 정정의 자가 정정) 승인.
+
+55 sites in 28 files = T002.2.b~i 모든 sub-task 의 audit blind 
+spot. atomic commit 흡수가 admin.md i6 패턴 일관성 유지.
+
+═══════════════════════════════════════════════════
+[Critical — 두 번째 정정의 검증 의무]
+═══════════════════════════════════════════════════
+
+T002.2.i 첫 정정: 11 sites (부분적)
+T002.2.j Step 1 두 번째 정정: 55 sites
+
+두 번째 정정도 부분적일 가능성 — 검증 필수.
+
+[Verification 의무]
+
+Step 2 본문 작성 시작 전 (또는 시작 직후):
+
+1. SuperAdmin enumeration 의 정확성 재검증:
+   - rg 명령의 정확한 패턴 enumerate
+   - `requireSuperAdmin` 외 다른 표현 점검:
+     - `isSuperAdmin`
+     - `super_admin` (snake_case)
+     - 직접 role check (예: `if (user.role === "super_admin")`)
+     - middleware-level vs handler-level
+   - helper 함수 내부 호출 점검
+
+2. 검증 grep 명령 명시:
+   - `rg "(requireSuperAdmin|isSuperAdmin|super.?admin|role.*super)"`
+   - 또는 더 엄격한 pattern (false positive 회피)
+   - 결과 vs 55 sites 비교
+
+3. 결과:
+   - (가) 55 sites 정확 → T002.2.i 정정 흡수 그대로 진행
+   - (나) 55 sites 부정확 (더 많음) → 두 번째 정정도 자가 정정
+   - (다) 55 sites 부정확 (더 적음 / 중복 카운트) → 정정
+
+검증 결과를 R-REPO-4 보고에 명시. 만약 (나)/(다) 시 atomic commit 
+에 추가 정정 흡수.
+
+═══════════════════════════════════════════════════
+[Decision] T002.2.j Step 2 진입 — proceed
+═══════════════════════════════════════════════════
+
+승인 사항:
+- 22 stub mapping 정확 (8 read + 5 write + 7 transition + 2 nested) ✅
+- 사이즈 980-1280 lines (tripwire 활성 권장) ✅
+- 3 spot-check sealed (C1/C2/C3) ✅
+- (가) CF-018 Sub-pattern B 정정 atomic 흡수 ✅
+- Verification 의무 추가 (두 번째 정정 검증)
+
+═══════════════════════════════════════════════════
+[Tripwire 활성 — booking.md 최대 크기]
+═══════════════════════════════════════════════════
+
+booking.md 최종 980-1280 lines 예상. cap 1500 아래지만 borderline.
+
+Tripwire 활성:
+- 1100 lines 도달 시 endpoint 진행률 < 80% (즉 22/27 미만) → 발동
+- 1300 lines 도달 시 보고 + 게이트
+- CF-018 정정 표 (~200-400) 가 가장 큰 component → mid-write check 
+  가능
+
+발동 시 보고:
+- "TRIPWIRE 발동: lines / endpoint progress / CF-018 정정 표 sub-size 
+   | 분할 또는 압축 권장"
+
+═══════════════════════════════════════════════════
+[Step 2 작성 가이드 — close-out + 정정]
+═══════════════════════════════════════════════════
+
+[QQQ] 5 sample format consistency
+T002.1 sample 5 (S1-S5) 와 22 stub format 일관성:
+- Meta 헤더 4 필드
+- 본문 file:line / DB writes / Side effects / logAction / Money
+- self-check 7 dim
+
+22 stub 일부는 simple endpoint = compact format 적용 가능.
+state-transition 7 endpoint 는 full sample (CF-022 anchor 다수).
+
+[RRR] booking.md grouped sections
+27 endpoint 분류:
+- read (8 stub + 0 sample) = 8 ep
+- write (5 stub + S3 = POST /v1/bookings) = 6 ep
+- state-transition (7 stub + S2 = PATCH /:id/confirm) = 8 ep
+- nested (2 stub + S5 = GET /:id/contract) = 3 ep
+- single (S1 GET /:id, S4 PATCH /:id/submit) = 2 ep
+
+booking.md 본문 grouped sections 일관 정리.
+
+[SSS] 종합 self-check 표 갱신
+27 endpoint × 7 dim = 189 cells. 표 갱신 시:
+- file:line req/res 양쪽 (54 cells)
+- DB writes (27)
+- logAction Y/N (27)
+- money 영향 (27)
+- CF cross-ref (27)
+- audit gap (27)
+
+[TTT] CF-004 cross-ref 추가
+booking.md 에 CF-004 cross-ref:
+- bookings 테이블이 dev-migration TRUNCATE 39 tables 대상
+- data integrity 위험 명시
+- Phase 2 dev-migration patch 의 일부
+
+[UUU] CF-018 Sub-pattern B 종합 정정 — atomic 흡수
+55 sites in 28 files (또는 verification 결과 정정 후 정확한 수):
+- T002.2.i admin.md i6 의 11 → 55 정정 명시
+- CRITICAL_FINDINGS.md CF-018 본문에 종합 evidence 표
+- 28 files 전수 enumeration (sub-pattern B anchor)
+- T002.2.b~i 의 audit blind spot 명시 + retroactive correction
+
+[VVV] cross-domain back-fill 마지막
+모든 endpoint 도메인 cross-ref 양방향 정합성:
+- contract.md ↔ booking.md (S2/S5)
+- finance-* ↔ booking.md (invoice/payment)
+- ops-* ↔ booking.md (space)
+- portal-* ↔ booking.md (guest 신청, partner 관리)
+- admin.md ↔ booking.md (admin 관리)
+- public.md ↔ booking.md (lead → booking flow)
+
+T002.2.j 가 cross-ref 매트릭스 완성 책임.
+
+═══════════════════════════════════════════════════
+[Step 5 atomic commit 범위]
+═══════════════════════════════════════════════════
+
+T002.2.j 통합 atomic commit:
+
+1. booking.md (UPDATED):
+   - 22 stub 추가 (close-out)
+   - 종합 self-check 표 갱신 (27×7 = 189 cells)
+   - CF-018 Sub-pattern B 종합 정정 표 (UUU)
+   - cross-domain back-fill (VVV)
+   - CF-004 cross-ref 추가 (TTT)
+
+2. CRITICAL_FINDINGS.md:
+   - CF-018 evidence body retroactive correction (11→55 또는 
+     verification 결과)
+   - admin.md i6 cross-ref 갱신
+   - T002.2.b~i audit blind spot 명시
+   - 기타 CF expansion (booking.md 22 stub 발견)
+   - Counts 갱신 (변동 시)
+
+3. INDEX.md:
+   - banner 갱신
+   - CF-018 카운트 정정
+
+4. _T002_PROGRESS.md:
+   - row 49 (T002.2.h) commit hash fill
+   - row 50 (T002.2.i) commit hash fill
+   - row 51 추가 (T002.2.j)
+
+5. session_plan.md:
+   - T002.2.j ✅
+   - T002.3 NEXT marker
+
+6. cross-ref back-fill (모든 endpoint 도메인):
+   - contract.md / finance-* / ops-* / portal-* / admin.md / 
+     public.md 의 booking 관련 endpoint cross-ref
+
+═══════════════════════════════════════════════════
+[지금 시작]
+═══════════════════════════════════════════════════
+
+(1) Verification: 두 번째 정정 (55 sites) 정확성 재검증
+    - rg 명령 다양한 pattern 시도
+    - 55 sites confirm 또는 정정
+    - 결과 R-REPO-4 보고에 명시
+(2) Step 2 본문 작성 (22 stub close-out + UUU 정정)
+    - tripwire 활성 (1100 / 1300 lines threshold)
+    - state-transition 7 endpoint full sample
+    - read 8 endpoint compact format
+(3) Step 3 self-check 갱신 (189 cells)
+(4) Step 4 spot-check 검증 (C1/C2/C3 + verification 결과)
+(5) Step 5 R-REPO-1 v2 atomic stage (위 6 항목)
+(6) Step 6 R-REPO-4 형식 보고
+(7) [사용자] git push origin main
+(8) 사용자 proceed → T002.3 (db-schema-overview.md) 시작
+
+T002.3 자동 시작 절대 금지.
