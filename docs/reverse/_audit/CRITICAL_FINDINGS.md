@@ -2081,3 +2081,68 @@ P0=4 / P1=18 / P2=3 = **25 CF** (T002.5 와 동일 — T003 묶음 1 신규 prom
 P0=4 / P1=18 / P2=3 = **25 CF** (T003 묶음 1 와 동일 — T003 묶음 2 신규 promotion 0).
 
 ---
+
+## T003 묶음 3 (ops × 3: property + catalog + crm) — 2026-04-27
+
+### Sub-task 산출물 (3 NEW domain logic files in `_context/`)
+
+| sub-task | file | lines | target | 핵심 anchor |
+|----------|------|-------|--------|-------------|
+| 3.1 property | `_context/domain-logic-ops-property.md` | 250 | 350-500 (-29% 컴팩트) | CF-021 POSITIVE list-side leftJoin + counter-evidence buildSpaceResponse 4 sub-query / CF-009 ⚰️ 3 candidate (space_blocked_dates + space_option_maps + space_availability) hybrid usage 재평가 / CF-018 Sub-pattern A POSITIVE SP12/SP13 nested space-services |
+| 3.2 catalog | `_context/domain-logic-ops-catalog.md` | 320 | 350-500 (-9%) | CF-016 carrier 양극단 (products.ts→contract_products + product-catalog.ts→accommodation_catalog; 9 routes 중 2 = 25% file/var/table mismatch) / CF-009 product_catalog DEAD 확정 유지 (T002.1.6 강화) / CF-018 Sub-pattern B 18 sites = repo 32.7% 단일 도메인 max-carrier |
+| 3.3 crm | `_context/domain-logic-ops-crm.md` | 380 | 350-500 (+9%) | CF-023 .a anchor `leads.ts:175-204 /convert` orphan booking_ref 핵심 분석 (sole outlier 확정) / CF-022 work_orders 4 transition 정확화 (start/review gated + complete/cancel free; 2/4=50% transitions / 2/5=40% transitions+soft-delete; state-machines.md §1 line 48 일치) / CF-018 Sub-pattern A 10 sites |
+
+**합계 250+320+380 = 950 lines** (사용자 예측 1100-1550 의 86%; 단일 file ≤ 700 cap 미달; tripwire 850 미달 단일 file).
+
+### 6 CF expansion (no severity change, counts unchanged)
+
+| CF | property | catalog | crm |
+|----|----------|---------|-----|
+| CF-009 | ⚰️ 3 candidate (space_blocked_dates + space_option_maps + space_availability) **mutator 사용 명확 → DEAD 아님** 재평가 evidence 제출 (F13 신규) | product_catalog **DEAD 확정 유지** (routes 0 hits — T002.1.6 결론 강화) | cs_messages **active dual-domain entity** 평가 정정 (cs-tickets.ts:5 + guest-cs.ts:14 두 도메인 사용) |
+| CF-016 | n/a | **carrier 양극단** — 9 routes 중 2 = file ≠ table (products.ts→contract_products + product-catalog.ts→accommodation_catalog) = repo 단일 도메인 max-carrier 25% | n/a |
+| CF-018 (Sub-pattern A POSITIVE) | SP12/SP13 nested space-services compound `WHERE id=mapId AND space_id=spaceId` ✅ | n/a | work-orders.ts transition handlers single-entity scope (URL :id only — nested-write 없음) ✅ |
+| CF-018 (Sub-pattern B carrier) | 6 routes × 2 = 12 sites | **9 routes × 2 = 18 sites = 단일 도메인 max-carrier 32.7%** | 5 routes × 2 = 10 sites |
+| CF-021 | **list-side SP1 leftJoin POSITIVE** vs **single-row SP3/SP4 buildSpaceResponse 4 sub-query counter-evidence** (`spaces.ts:31-55` helper N+1 분석) | product-catalog.ts list-side multi-table aggregation ✓ POSITIVE sister | n/a |
+| CF-022 | spaces.status text 자유 (state machine 부재) — INV4 단순 명시 | 9 routes 모두 state machine 부재 (lookup-only) | **work_orders 4 transition 정확화** — start/review = gated (Open/InProgress precondition) + complete/cancel = FREE (no precondition); 2/4 = 50% transitions / 2/5 = 40% transitions+soft-delete; state-machines.md §1 line 48 "2/5 = 40%" 일치 — 사용자 안 "free-transition" 가설 절반 정확 (R-REPO-6 12회째 단순 정정) |
+| CF-023 .a | n/a | n/a | **`leads.ts:175-204 /convert` PATCH = bookingRef = "BK-${year}-${random}" 5-digit random + leads UPDATE only + booking row 미생성** = orphan ref. T002.2.h cross-domain verification CLOSED 결과 sole outlier 확정 (lib/leadRef.ts:15-41 safe helper 제외). Phase 2 = atomic transaction 또는 safe helper 통일. |
+
+### F13 / F14 / F15 신규 R-REPO-5 incidentals (memo only, no promotion)
+
+**F13** — property 도메인 `space_blocked_dates` + `space_option_maps` + `space_availability` 3 ⚰️ medium DEAD candidate (T002.4 erd-core §10) 모두 mutator 사용 명확 → **DEAD 아님** 재평가 필요. T004 `_rules/architecture-rules.md` "DEAD schema retirement" 일괄에서 ⚰️ → "active orphan" 또는 "read-only catalog" 등급 신설.
+
+**F14** — catalog 도메인 contract S2 confirm 시점 `contract_products` 카탈로그 snapshot 부재 — 운영자가 PUT 으로 amount 변경 시 미래 contract activate 의 invoice line items 와 historical contract record 의 amount 가 시점 차이 발생 가능. Phase 2 trade-off (a) snapshot 별도 entity / (b) contract row 안 amount embed / (c) 운영자 정책. T004 일괄.
+
+**F15** — crm 도메인 `tasks` schema = polymorphic FK 정의 (`related_entity_type` + `related_entity_id`) vs `tasks.ts` route 0 사용 (read/write/filter 모두 부재) = **orphan polymorphic schema**. 운영자가 task 와 booking/contract/property 등 결합 안 함. T004 `_rules/architecture-rules.md` "orphan polymorphic schema retirement + tasks 도메인 결합 정책" 일괄.
+
+### CF-018 Sub-pattern B 55-site repo-wide 매트릭스 보강 (T003 묶음 3 추가)
+
+| 도메인 | sites | 비율 |
+|--------|-------|------|
+| catalog (9 routes × 2) | **18** | **32.7% — 단일 도메인 max-carrier** |
+| property (6 routes × 2) | 12 | 21.8% |
+| finance (payment 4 + invoice) | 10 | 18.2% |
+| crm (5 routes × 2) | 10 | 18.2% |
+| booking + 다른 도메인 | 5 | 9.1% |
+| 합계 | **55** | 100% (booking.md §6 / T002.2.j confirmed) |
+
+### 6-way TIE at audit floor (T002.2.i + T003 묶음 3 보강)
+
+admin (37 ep) + payment (4 routes 24 ep) + catalog (9 routes 39 ep) + property (6 routes 44 ep) + crm (5 routes 51 ep) + portal-partner (22 ep) = **6 도메인 floor — repo 전체 8 도메인 중 6 = 75% 도메인이 audit-blind**. T004 `_rules/architecture-rules.md` "audit log 정책 통일" 단일 일괄 처리 시 6 도메인 동시 적용.
+
+### R-REPO-6 12회째 가동 (단순 정정 — 차단 미발동)
+
+T003 묶음 3 Step 1 VVVVV-YYYYY Pre-flight 시 사용자 안 "T002.5 시점 보류 (free-transition 가설) → T003 묶음 3 에서 확정 의무" 검증 결과 코드 ground truth = work_orders **start/review = gated** (Open/InProgress precondition) + **complete/cancel = free** (no precondition) → **사용자 안 "free-transition (no precondition gate)" 절반 정확**. R-REPO-6 12회째 단순 정정 (corrected proposal 의 본문 §1.3 정확화 흡수, 차단 미발동 — Step 2-5 자동 진행).
+
+### R-REPO-9 자동 진행 5회째 confirm
+
+**T003 묶음 3 Step 1 VVVVV-YYYYY Pre-flight**: 사용자 가이드 baseline inputs (T002 자산 6 + CF anchor 8) + 분할 (β) + 차단 조건 4가지 평가 → 차단 0 → Step 2-5 자동 진행. **R-REPO-9 영구 패턴 5회째 confirm** (T002.4 + T002.5 + T003 묶음 1 + T003 묶음 2 + T003 묶음 3).
+
+### R-REPO-10 묶음 위임 3회째 stable
+
+**T003 묶음 3 = R-REPO-10 3회째**: 3 sub-task (property + catalog + crm) / 1 응답 / 1 atomic commit / 1 사용자 push. 묶음 1 (2 sub-task) + 묶음 2 (2 sub-task) + 묶음 3 (3 sub-task) 가속 효과 stable across varying sub-task counts. `domain-logic-ops-crm.md §5.5` 측정 = 응답 -67% (3→1) / commit -67% / push -67% / 시간 ~50% 단축.
+
+### Counts unchanged
+
+P0=4 / P1=18 / P2=3 = **25 CF** (T003 묶음 2 와 동일 — T003 묶음 3 신규 promotion 0). R-REPO-5 incidentals 8→**11** (+F13/F14/F15).
+
+---

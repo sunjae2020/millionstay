@@ -40,18 +40,18 @@
 
 ---
 
-## 누적 메트릭 (T003 묶음 2 후)
+## 누적 메트릭 (T003 묶음 3 후)
 
-| Metric | T002 group end | T003 묶음 1 end | T003 묶음 2 end | Δ vs 묶음 1 |
-|--------|---------------|-----------------|------------------|------|
-| Total CF | 25 (P0=4 / P1=18 / P2=3) | 25 (P0=4 / P1=18 / P2=3) | 25 (P0=4 / P1=18 / P2=3) | 0 (no new promotion) |
-| R-REPO-5 incidentals | 4 (F4/F5/F7/F8) | 5 (+F9 PDF bond) | **8 (+F10/F11/F12)** | +3 (helper Pending / chargeback 부재 / commissions enum 부재) |
-| R-REPO-6 가동 횟수 | 10 | 11 | 11 | 0 (사용자 가이드 환각 0) |
-| R-REPO-9 차단 게이트 가동 (차단 발생) | 2 | 3 | 3 | 0 |
-| R-REPO-9 자동 진행 횟수 (차단 0) | n/a | n/a | **4** | (T002.4+T002.5+T003 묶음 1+T003 묶음 2 = 4회 confirm) |
-| R-REPO-10 묶음 위임 가동 | 0 | 1 | **2** | +1 (stable 패턴) |
-| `_context/` doc files | 4 (pre-existing) | 6 (+booking/contract) | **8 (+finance-invoice/payment)** | +2 |
-| `_schema/` doc files | 16 | 16 | 16 | 0 |
+| Metric | T002 group end | T003 묶음 1 end | T003 묶음 2 end | T003 묶음 3 end | Δ vs 묶음 2 |
+|--------|---------------|-----------------|------------------|------------------|------|
+| Total CF | 25 (P0=4 / P1=18 / P2=3) | 25 (P0=4 / P1=18 / P2=3) | 25 (P0=4 / P1=18 / P2=3) | 25 (P0=4 / P1=18 / P2=3) | 0 (no new promotion) |
+| R-REPO-5 incidentals | 4 (F4/F5/F7/F8) | 5 (+F9 PDF bond) | 8 (+F10/F11/F12) | **11 (+F13/F14/F15)** | +3 (⚰️ DEAD 재평가 + contract_products snapshot 부재 + tasks polymorphic orphan) |
+| R-REPO-6 가동 횟수 | 10 | 11 | 11 | **12** | +1 (work_orders "free-transition" 가설 절반 정확 단순 정정) |
+| R-REPO-9 차단 게이트 가동 (차단 발생) | 2 | 3 | 3 | 3 | 0 |
+| R-REPO-9 자동 진행 횟수 (차단 0) | n/a | n/a | 4 | **5** | +1 (T002.4+T002.5+묶음 1+묶음 2+묶음 3 = 5회 confirm) |
+| R-REPO-10 묶음 위임 가동 | 0 | 1 | 2 | **3** | +1 (stable 3 sub-task / 1 응답 패턴) |
+| `_context/` doc files | 4 (pre-existing) | 6 (+booking/contract) | 8 (+finance-invoice/payment) | **11 (+ops-property/catalog/crm)** | +3 |
+| `_schema/` doc files | 16 | 16 | 16 | 16 | 0 |
 
 ---
 
