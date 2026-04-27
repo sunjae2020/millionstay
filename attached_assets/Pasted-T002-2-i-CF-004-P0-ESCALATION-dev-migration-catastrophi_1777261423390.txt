@@ -1,0 +1,182 @@
+T002.2.i 산출물 승인.
+
+CF-004 P0 ESCALATION (dev-migration catastrophic risk) + CF-018 
+Sub-pattern B 11-site expansion (R-REPO-7 (c) 자가 정정) + CF-008 
+6-way TIE + reversal twist (admin = audit consumer + self-blind) + 
+CF-014 POSITIVE EXEMPLAR co-promotion #2 (caveat: anti-pattern host) 
+— 모두 endpoint 도메인 최종 결산.
+
+CF count P0=3→4 / P1=18 / P2=3 = 25.
+
+특히 CF-004 P0 escalation 은 endpoint 도메인의 **가장 충격적 발견**:
+- 단일 HTTP request 가 39 production tables TRUNCATE
+- mount-order pre-guard + hard-coded secret + no NODE_ENV gate
+- Replit/GitHub 노출 시 즉시 운영 위험
+- Phase 2 시작 전 즉시 처리 backlog 1순위
+
+═══════════════════════════════════════════════════
+[Critical Note — CF-004 운영 위험 인지]
+═══════════════════════════════════════════════════
+
+CF-004 가 P0 escalated 됐다는 건 **현재 시점 운영 위험**이라는 뜻:
+- 만약 production 배포된 instance 가 있다면 즉시 patch 필요
+- Replit/GitHub repo 가 public 이면 secret 즉시 rotate
+- mount-order 즉시 정정
+
+이건 markdown documentation sub-task 의 발견이지만, 실제 코드 patch 
+는 별도 작업 영역. T002 마이그레이션 baseline 의 일부로 명시:
+- Phase 2 .NET 전환 시 dev-migration endpoint 자체 제거
+- CLI 도구로 대체 (admin shell 인증 후 실행)
+- production runtime 에서 dev-migration endpoint 노출 안 함
+
+═══════════════════════════════════════════════════
+[Decision] T002.2.j 진입 — proceed (push 후)
+═══════════════════════════════════════════════════
+
+T002.2.j booking.md close-out (22 stub) 진입. 
+endpoint 도메인 마지막 sub-task = booking.md 마무리.
+
+═══════════════════════════════════════════════════
+[T002.2.j Step 1 가이드]
+═══════════════════════════════════════════════════
+
+[a] Ledger 갱신
+    - row 23 fill (T002.2.i commit hash)
+
+[b] booking.md 현재 상태 확인
+    - 5 sample 작성 완료 (T002.1)
+    - 22 stub 미완 = 27 total endpoint
+    - Step 1 사전 분류 시 22 stub 의 정확한 endpoint 매핑
+
+[c] 사이즈 예측
+    - 5 sample = ~135 lines (booking.md 375 → sample 영역)
+    - 22 stub = ~22 × ~10-15 lines/ep (compact format) = 220-330 lines
+    - close-out 후 booking.md 총 595-705 lines 예상
+
+[d] 3 spot-check 클레임 사전 sealing
+
+[e] CF anchor 점검 — booking.md 종합
+    booking.md 가 CF-001/002/006/007/011/014 anchor 다수.
+    22 stub 작성 시 cross-ref:
+    - CF-001/002 (rent flow boundary): 모든 mutator 의 weekly_rate 
+      처리
+    - CF-006 (Formula A vs B): booking calc 의 식 일관성
+    - CF-007 (2주/4주 hardcoded): bond/advance 계산
+    - CF-011 (concurrency / nextInvoiceRef): booking 생성 시 race
+    - CF-014 (no transactions): booking 다단계 mutation
+    - CF-018 (IDOR): booking nested resources
+    - CF-022 (state-transition guard): booking status 전이
+    - CF-023 (orphan/fake ref): 이미 closed (cross-domain 검증 종료)
+
+[f] cross-ref 종합 — 모든 도메인 final integration
+    booking.md 가 가장 많은 도메인 cross-ref:
+    - contract.md (S2 confirm trigger)
+    - finance-* (invoice/payment 자동 생성)
+    - ops-property (space 참조)
+    - portal-guest (guest 신청)
+    - portal-partner (partner 관리)
+    - admin (admin 관리)
+    
+    T002.2.j atomic commit 시 모든 cross-ref 양방향 정합성 마지막 확인.
+
+[g] CF-004 P0 영향 cross-ref
+    CF-004 가 dev-migration TRUNCATE 39 tables → bookings 테이블 
+    포함. booking.md 에 CF-004 cross-ref 추가:
+    - bookings 테이블이 dev-migration TRUNCATE 대상
+    - data integrity 위험 명시
+
+[h] CF-018 Sub-pattern B 11 sites cross-ref
+    T002.2.i 자가 정정으로 5 도메인 admin.md 외 정정 완료. 
+    booking.md 에 SuperAdmin 사용 endpoint 있다면 cross-ref:
+    - bookings.ts SuperAdmin gate 사용?
+    - 발견 시 CF-018.B anchor 추가 (해당 시)
+
+[i] Tripwire 설정
+    - 22 stub × compact format = 작은 사이즈
+    - 면제 가능
+
+═══════════════════════════════════════════════════
+[T002.2.j 작성 가이드 — close-out 특화]
+═══════════════════════════════════════════════════
+
+[QQQ] 5 sample format consistency
+T002.1 시점 5 sample (S1-S5) 의 format 과 22 stub format 일관성:
+- Meta 헤더 4 필드
+- 본문 file:line / DB writes / Side effects / logAction / Money / 
+  Audit gap
+- self-check 7 dim 표
+
+22 stub 도 동일 format. 단, 일부 stub 은 simple endpoint = compact 
+format 적용 가능.
+
+[RRR] booking.md 6 grouped sections 정합성
+T002.1 시점 booking.md 가 6 grouped sections (E1-E6 같은 분류).
+22 stub 가 어느 section 에 속하는지 사전 분류:
+- read endpoints (GET) 그룹
+- write endpoints (POST/PATCH/PUT/DELETE) 그룹
+- state-transition endpoints 그룹
+- nested endpoints 그룹
+
+5 sample + 22 stub = 27 endpoint 의 grouped sections 정리.
+
+[SSS] booking.md 종합 self-check 표 갱신
+T002.1 시점 5 sample × 7 = 35 cells.
+T002.2.j 후 27 endpoint × 7 = 189 cells.
+표 갱신 시 누락 없도록.
+
+[TTT] CF-004 cross-ref 추가
+booking.md 에 CF-004 cross-ref:
+- bookings 테이블 = dev-migration TRUNCATE 대상
+- data integrity 위험 명시
+- Phase 2 dev-migration patch 의 일부로 booking 데이터 보호
+
+[UUU] cross-domain back-fill 마지막 정리
+booking.md close-out 시 모든 cross-ref 양방향 정합성:
+- contract.md ↔ booking.md
+- finance-* ↔ booking.md
+- ops-* ↔ booking.md
+- portal-* ↔ booking.md
+- admin.md ↔ booking.md
+- public.md (lead → booking flow) ↔ booking.md
+
+T002.2.j 가 endpoint 도메인 마지막 = cross-ref 매트릭스 완성.
+
+═══════════════════════════════════════════════════
+[Step 2~6 진행]
+═══════════════════════════════════════════════════
+
+(2) Step 2 본문 작성 (22 stub, booking.md close-out, single-shot)
+    - QQQ: 5 sample format 일관성
+    - RRR: grouped sections 정합성
+    - SSS: 27 endpoint × 7 self-check
+    - TTT: CF-004 cross-ref
+    - UUU: cross-domain back-fill 마지막
+
+(3) Step 3 self-check 표 (27 × 7 = 189 cells)
+
+(4) Step 4 spot-check 검증 (C1/C2/C3)
+
+(5) Step 5 R-REPO-1 v2 atomic stage:
+    - booking.md (UPDATED, 22 stub 완성)
+    - CRITICAL_FINDINGS.md (CF expansion + cross-ref)
+    - INDEX.md (필요 시)
+    - _T002_PROGRESS.md (T002.2.j DONE + ledger row 24 추가)
+    - session_plan.md (T002.2.j DONE, T002.3 NEXT)
+    - cross-ref back-fill (모든 endpoint 도메인)
+
+(6) Step 6 R-REPO-4 형식 보고
+
+(7) [사용자] git push origin main
+
+(8) 사용자 proceed → T002.3 (db-schema-overview.md) 시작
+
+═══════════════════════════════════════════════════
+[지금 시작]
+═══════════════════════════════════════════════════
+
+(1) [사용자] git push origin main (T002.2.i commit)
+(2) [에이전트] T002.2.j Step 1 자동 진행 (push 확인 후)
+(3) Step 1 보고 (≤30 lines)
+(4) Step 1 보고 후 사용자 proceed → Step 2 본문 작성
+
+T002.2.j Step 2 자동 시작 절대 금지.
