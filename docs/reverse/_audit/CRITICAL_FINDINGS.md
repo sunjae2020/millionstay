@@ -1802,3 +1802,83 @@ T002.3 surfaced 6 schema-level patterns that do NOT meet promotion threshold (in
 ---
 
 *End of CRITICAL_FINDINGS.md*
+
+## T002.4 — ERD Core 시각화 + Phase 2 RI baseline (no severity change)
+
+(Marker section — does not change CF severity, count, or content. Records that 6 schema-anchored CF + 2 schema-only findings F4/F5 have ERD-side visualisation permanently anchored in `_schema/erd-core.md`, and that **CF-003 + CF-009** receive quantitative evidence expansion.)
+
+**Counts after T002.4**: P0=4, P1=18, P2=3 (total **25**) — **0 NEW promotions / 0 changes**. T002.4 is an ERD visualisation sub-task; CF surface unchanged. CF-003 / CF-009 evidence rows expanded only.
+
+### CF-003 evidence expansion — 53 implicit FK + 10 polymorphic = **83 RI rows** for EF Core scaffolding
+
+T002.3 §4 enumerated 53 implicit FK at column-grain. T002.4 §11 권장 FK 부록 re-decomposes per-policy (`ON DELETE` / `ON UPDATE` per row) yielding **73 policy rows** + §10 polymorphic enumeration **10 sites** = **83 RI rows** Phase 2 EF Core baseline.
+
+| Source | Count | Form factor |
+|---|---:|---|
+| §11.1 Property cluster | 14 | 정책-단위 row (CASCADE/RESTRICT/SET NULL/NO ACTION 결정) |
+| §11.2 Catalog cluster | 14 | 동일 |
+| §11.3 Booking + Contract + Finance | 28 | 동일 (F2 두 컬럼 분해 포함) |
+| §11.4 Identity + CRM + Ops | 17 | 동일 (자기참조 + leaf 보충 포함) |
+| **Implicit FK 정책 row** | **73** | T002.3 53-col-grain → +20 정책 분해 보충 |
+| §10 Polymorphic enumeration | 10 | discriminator-based (P1-P10) |
+| **TOTAL RI baseline** | **83** | Phase 2 `OnModelCreating` source |
+
+**T002.3 53 vs T002.4 73 차이 +20 해석** (R-REPO-6 자가 검증, erd-core.md §13.2): T002.3 § 4 = pgTable column 기준 컴팩트 카운트. T002.4 §11 = Phase 2 정책-단위 row 분해 (자기참조 + leaf 보충 + 일부 누락 cluster 보충). 두 카운트 모두 ground truth 의 다른 cut, 양립.
+
+**위험 등급 — 10 polymorphic FK** (erd-core.md §10):
+- **HIGH** (P5/P7/P8 — open-ended `entity_type`): `system_logs.entity_id` / `email_logs.entity_id` / `documents.entity_id` 가 임의 entity table 가리킴; cascade-delete 시 일관성 검증 매뉴얼 SQL 필수. F5 schema-only finding (T002.3 §6.7) sibling-of-CF-018.
+- **MEDIUM** (P1/P6/P9 — 3-way limited): `refresh_tokens.user_id` / `system_logs.actor_id` / `documents.uploaded_by` discriminator enum 강제 부재 → typo 가능 (CF-018 Sub-pattern B sibling).
+- **LOW** (P2/P3/P4 — 2-way 또는 잠정 1-way): `marketing_consents` / `booking_service_photos` / `cs_messages` 현재 1-2 user_type 만 활성.
+
+**Phase 2 prescription** (T004 `_rules` 권장 inputs):
+- P5/P7/P8 = polymorphic association junction table 분리 (`<source>_<target>_links`)
+- P1/P2/P6/P9 = `enum` constraint + 분기 partial index
+- P10 (`contacts.portal_user_id text`) = type drift 정정 필수 (text → integer FK)
+
+### CF-009 evidence expansion — DEAD 1 → 5 candidates (3 high + 2 medium)
+
+T002.3 §5.2 cross-ref matrix 가 endpoint-side 0-route-hit 5 sites 발굴. T002.4 erd-core.md §12 DEAD tables 부록 = 2-tier confidence marker + Phase 2 액션 매핑.
+
+| ID | Table | File:Line | Confidence | Phase 2 Action | T002.4 ERD marker |
+|---|---|---|---|---|---|
+| A1 | `product_catalog` | `product_catalog.ts:3` | high (T002.1.6 confirmed; 0 endpoint hit; 책임 = `contract_products`) | **DROP** + EF Core 미생성 | 🪦 |
+| A2 | `space_option_maps` | `spaces.ts:34` (M:N junction with space_options) | high (0 hit; junction 의미 사라짐) | **DROP** | 🪦 |
+| A3 | `space_blocked_dates` | `spaces.ts:41` | high (0 hit; 책임 = `space_availability`; F3 type drift `text` vs `date`) | **DROP** + `space_availability` 로 일원화 | 🪦 |
+| A4 | `cs_messages` | `cs_tickets.ts:23` | medium (변수 import 0 hit, raw SQL false-positive 가능) | **INVESTIGATE** raw SQL audit 후 결정 | ⚰️ |
+| A5 | `guest_direct_messages` | `announcements.ts:20` | medium (변수 import 0 hit, file 위치 mismatch) | **INVESTIGATE** + RENAME (announcements ↔ guest_direct 분리) | ⚰️ |
+
+**Cleanup 권장 순서**: A1 → A2 → A3 (3 high-confidence DROP) → A4/A5 (raw SQL audit 후 결정).
+
+**Phase 2 .NET 영향**: DEAD 5 sites EF Core 미생성 시 -5 entity / -1 DbContext leaf / -1 navigation property cluster (`product_catalog` ↔ `accommodation_catalog` 의미 충돌 제거).
+
+**CF-009 promotion 보류 사유**: 4 추가 site (A2-A5) 는 schema-only 추적이라 endpoint 차원의 라이프사이클 확인 미수행. T002.3 F4 disposition 그대로 = T004 `_rules/architecture-rules.md` "DEAD schema retirement policy" 항목으로 일괄 처리. 본 marker = evidence 기록만, severity 변동 없음.
+
+### F4 + F5 disposition 변동 (T002.3 → T002.4)
+
+| # | Finding | T002.3 disposition | T002.4 disposition |
+|---|---|---|---|
+| F4 | DEAD 5 sites (CF-009 expansion) | T004 `_rules` 일괄 처리 | **erd-core.md §12 부록에서 시각화 + 액션 매핑** + T004 `_rules` 일괄 처리 (정책 결정만 위임) |
+| F5 | 6+ polymorphic FK + discriminator 패턴 | T002.4 separate "polymorphic relationships" 섹션 + T002.5 actor 분기 | **erd-core.md §10 enumeration 10 sites + 위험 등급 + Phase 2 prescription 완료** + T002.5 state-machines.md 에서 actor 분기 사용 |
+
+F4/F5 = T002.4 에서 시각화 + 액션 단계까지 완료. 나머지 정책 결정 (CASCADE 정확성 등) 은 T004 / T002.5 inputs.
+
+### R-REPO-6 (a) ground-truth correction 9회째 — Step 1 KKKK Pre-flight
+
+T002.4 KKKK Pre-flight 시 사용자 cluster 8안 검증:
+- 4 가상 table (`extensions` / `expenses` / `privacy` / `health`) — schema 0 file → corrected 8-cluster proposal 제시
+- 1 누락 (`users.ts` → `admin_users` table) — corrected 매핑 추가
+- 1 카운트 정정 (`bookings 3 tables` → 4 = bookings + booking_documents + booking_services + booking_service_photos)
+
+R-REPO-6 9회째 가동 + R-REPO-9 차단 게이트 첫 적용 = corrected 8-cluster 안 사용자 채택 (option (가)) 후 Step 2 본문 작성 진입. **R-REPO-9 차단 게이트 가동 성공 사례** 영구 기록.
+
+### R-REPO-7 trade-off 영구 기록 (erd-core.md §14 mirror)
+
+| 결정 | 채택 | 미채택 |
+|---|---|---|
+| ERD 형식 | Mermaid `flowchart` + `-.->` (CF-003 시각화 가능) | `erDiagram` (dashed edge 미지원) |
+| Cluster FK 표시 | (나) cluster 내부 모든 FK + cross-cluster overview 별도 | (가) overview 한 장에 53 FK 모두 / (다) major FK 만 (정보 손실) |
+| Polymorphic 표시 | (i) 분기 화살표 + (iii) §10 enumeration table 조합 | (ii) annotation only (검색 어려움) |
+| Cluster 8 분리 | Ops/Comm + Content 통합 14 (Content 2 단독 cluster 너무 작음) | 9 cluster (Content 분리 — diagram 1 추가 비용) |
+| DEAD marker | 🪦 high (3) + ⚰️ medium (2) 2-tier (T002.0 §6 합의) | 단일 marker (confidence 표현 손실) |
+
+---
