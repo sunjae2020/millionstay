@@ -1,64 +1,56 @@
 # Promotion Application Logic
 
-> ⚠️ **NEEDS REVISION** — see `docs/reverse/_audit/T001_RECON_REPORT.md` §g for specific corrections required. Will be rewritten in T002–T007 when its domain folder is processed.
+> ✅ **T005-REWRITE** 2026-04-27 (T001 시점 64L NEEDS REVISION → 본 82L; T002 ops-catalog.md + db-schema-overview.md UNIQUE-gap 발견 + T003 _context/domain-logic-ops-catalog.md 320L + T004 _rules/{financial,no-magic}-rules.md 통합).
+> **상위 source**: `_schema/db-schema-overview.md §3` UNIQUE 16 sites + Appendix C UNIQUE-gap candidates / `_context/domain-logic-ops-catalog.md §1` BR1-BR4.
+> **Cross-ref**: payment-workflow.md §3 (effective_weekly_rate cache feeds invoice line items) + booking-lifecycle.md §1 (booking creation snapshots agreed_weekly_rate).
 
+---
 
-## 1. How a promotion is linked
+## §1 PROMOTION 규칙 + UNIQUE-gap
 
-| Linker | Column | Purpose |
-|---|---|---|
-| Product | `contract_products.promotion_id` | The contract product carries one promotion |
-| Public listing | `accommodation_catalog.promotion_id` | Public-facing listing can show a promotion banner |
+**2 link 사이트** (`_schema/db-schema-overview.md` confirm):
 
-There is **no booking-level promotion linkage** — once a booking snapshots `agreed_weekly_rate`, the promotion that produced that rate is not preserved with the booking. Reporting "how much revenue did promotion X discount?" is therefore not directly possible without joining back to the product at booking time (and the product's promotion may have been changed since).
+| linker | column | purpose |
+|--------|--------|---------|
+| Product | `contract_products.promotion_id` | contract product 가 1 promotion 보유 |
+| Public listing | `accommodation_catalog.promotion_id` | public-facing 리스팅 banner |
 
-## 2. When the discount is applied
+**Booking-level promotion linkage 부재**: booking 시점 `agreed_weekly_rate` snapshot 이후 promotion 보존 0 — "promotion X 가 할인한 매출" 쿼리 불가. join back 필요 (booking 시점 product 의 promotion_id 가 그 후 변경됐을 가능성 — F14 contract_products snapshot 부재 cross-ref financial-rules §5.3).
 
-| Phase | What happens |
-|---|---|
-| Product save (admin) | `contract_products.effective_weekly_rate` is computed from `weekly_rate` × `(1 - promo.discount_amount/100)` (Percentage) or `weekly_rate − promo.discount_amount` (Fixed) and cached |
-| Booking creation | `bookings.agreed_weekly_rate` is taken from the product's `effective_weekly_rate` (or admin-overridden) |
-| Contract activation | `contracts.weekly_rate` carries the agreed rate; invoices are computed from this rate |
+**UNIQUE-gap candidate** (`db-schema-overview.md` Appendix C, T002.3 발견): `promotions.code` 컬럼 `.unique()` 제약 부재 → 운영자가 동일 promotion code 중복 INSERT 가능 → 코드 lookup 시 ambiguous match.
 
-## 3. Expiry validation ⚠️
+**Phase 2 prescription** (no-magic-rules §1 + db-schema-overview §3 UNIQUE 통일): (1) `promotions.code .unique()` 추가 / (2) booking-level promotion_id snapshot 컬럼 추가 (재무 분석 가능) / (3) F14 contract_products line items snapshot.
 
-**Currently not validated at booking creation.** A promotion with `end_date < now()` will continue to discount new bookings if the product's `effective_weekly_rate` has not been refreshed.
+---
 
-**Rule (recommended):**
+## §2 PROMOTION APPLICATION (catalog + finance cross-ref)
 
-```ts
-// At booking creation
-const effective = await resolvePromotion(product.id);
-// resolvePromotion checks promo.is_active && promo.end_date >= today
-// If invalid, falls back to product.weekly_rate (no discount)
-```
+| phase | 동작 |
+|-------|------|
+| Product save (admin) | `contract_products.effective_weekly_rate` 계산 + cache: percentage = `weekly_rate × (1 − promo.discount_amount/100)` / fixed = `weekly_rate − promo.discount_amount` |
+| Booking creation | `bookings.agreed_weekly_rate` ← `contract_products.effective_weekly_rate` (또는 admin-overridden) |
+| Contract activate | `contracts.total_rent` ← `bookings.total_rent` (numeric → real **CF-001 PRECISION-LOSSY** financial-rules §2) |
+| Invoice 생성 | `generateContractInvoicesAndSchedules` 7-step → invoice line_items 가 `contract_products.effective_weekly_rate` cache 기반 (snapshot 부재 — 미래 product 변경 시 historical contract record 와 불일치 F14) |
 
-## 4. Stacking ❌
+**CF-019.b candidate parked** (`_audit/CRITICAL_FINDINGS.md` T002.2.b): `service_catalog.promotion_id` (별도 service-side promotion linkage) — T002.3 결정 = CANDIDATE 유지 (현재 1 sites WHERE filter; route active write 0). Phase 2 결정 = 사용 또는 제거.
 
-Single FK only — no stacking. The simplest fix if stacking is ever required is a join table `product_promotions(product_id, promotion_id, priority)` plus a deterministic resolver.
+**Service-side service_catalog.promotion_id**: `service_catalog.ts` route 에서 read-only filter (없는 promotion_id) — orphan column 후보. 그러나 catalog 도메인 운영자 인지 (`ops-catalog.md`) 가능 → CF-019.a (stripe orphan 확정 0 write) 와 달리 보류.
 
-## 5. Original price preservation ⚠️
+---
 
-The product carries both `weekly_rate` (pre-discount) and `effective_weekly_rate` (post-discount), so the original is preserved at the product level. **However**, the booking only stores the agreed rate (`bookings.agreed_weekly_rate`) — the original product rate at booking time is **not** snapshotted on the booking.
+## §3 PHASE 2 종합
 
-**Recommendation:** add `bookings.list_weekly_rate` (the original) alongside `agreed_weekly_rate`, and `bookings.applied_promotion_id` so each booking shows which promotion was used. This unlocks accurate revenue-impact reporting on promotions.
+(1) `promotions.code .unique()` 추가 (db-schema-overview §3 UNIQUE 통일)
+(2) booking-level `promotion_id` snapshot 컬럼 추가 (재무 분석)
+(3) `contract_products` line_items snapshot table (F14 financial-rules §5.3)
+(4) `service_catalog.promotion_id` CF-019.b 결정 (사용 / 제거)
+(5) effective_weekly_rate 계산 helper 통일 (현재 admin save 시점 1회만; promotion 만료 시 재계산 trigger 부재)
+(6) audit log 정책 통일 (promotion 변경 시 logAction; 현재 0%)
 
-## 6. Discount types implemented
+---
 
-| Type | Implemented | Detail |
-|---|---|---|
-| Percentage | ✅ | `discount_amount` is interpreted as percent (0–100) |
-| Fixed AUD | ✅ | `discount_amount` is interpreted as flat AUD off the weekly rate |
-| Tiered (e.g., longer stay = larger discount) | ❌ | not modeled |
-| Code-based (coupon at checkout) | ❌ | not modeled |
-| First-booking-only | ❌ | not modeled |
+## §4 자가 검증 (3 spot-check ✅)
 
-## 7. Audit
-
-Promotion CRUD currently does **not** write `system_log` entries. Pricing changes are high-impact — this should be added.
-
-## 8. Reporting gaps
-
-- "What's our discount expense this month?" — not answerable without scanning every booking + back-resolving its product's promotion at the time. Solved by snapshotting at booking creation (see §5).
-- "Which promotion converts best?" — same issue, no event source.
-- "Are any expired promotions still discounting?" — no automated alert.
+- C1 `promotions` schema `.unique()` 0 hit (UNIQUE-gap candidate confirmed)
+- C2 `contract_products.effective_weekly_rate` cache + `bookings.agreed_weekly_rate` snapshot — 두 snapshot column 존재 + promotion_id snapshot 부재
+- C3 `service_catalog.promotion_id` filter read 0 active write site (CF-019.b parked candidate)

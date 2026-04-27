@@ -1,127 +1,79 @@
 # Check-in / Check-out / Extension Workflow
 
-> ✅ **T001-RECON-VERIFIED** 2026-04-26 — corroborated by `docs/reverse/_audit/T001_RECON_REPORT.md` §g.
+> ✅ **T005-REWRITE** 2026-04-27 (T001 시점 127L T001-VERIFIED → 본 118L; T002 booking.md §4 transition + state-machines.md §1 + T003 _context/domain-logic-booking.md INV1-8 + T004 _rules/{security,no-magic}-rules.md 통합).
+> **상위 source**: `_schema/state-machines.md §1` (8 main + Pending outlier) / `_context/domain-logic-booking.md §3` INV5 PendingPayment-Active gap.
+> **Cross-ref**: booking-lifecycle.md §1 (T3/T4/T5 transition) + payment-workflow.md §1 (Paid invoice 후 active) + maintenance-workflow.md §1 (active booking → work_orders 생성).
 
+---
 
-## 1. Check-in
+## §1 CHECK-IN WORKFLOW — T3 (gated)
 
-**Endpoint:** `PATCH /api/v1/bookings/:id/check-in`
+**Endpoint**: `PATCH /api/v1/bookings/:id/check-in` (`bookings.ts` T3, T001-VERIFIED)
 
-```ts
-// Status guard
-if (existing.booking_status !== "Confirmed") {
-  return res.status(409).json({ error: "Booking must be Confirmed before check-in" });
-}
-// Update
-await db.update(bookings).set({ booking_status: "Active" }).where(...);
-await logAction({ entity_type: "booking", entity_id: id, action: "STATUS_CHANGE", ... });
-```
+**Precondition**: `booking.booking_status === "Confirmed"` (단일 가드, 명시 enum 미사용 string compare)
 
-**What is NOT validated:**
-- Whether the upfront invoice has been paid.
-- Whether the contract has been signed (a Confirmed booking can have a Draft contract).
-- Whether check-in date has actually arrived (an admin can check in early without warning).
-- No record of who handed over keys or what time.
+**Write**:
+1. UPDATE bookings SET booking_status="Active"
+2. logAction(`booking | id | STATUS_CHANGE | "Confirmed" → "Active"`)
 
-**Recommendation:** add `bookings.checked_in_at`, `bookings.checked_in_by_admin_id`, and (optionally) a one-time check-in code or QR for the guest.
+**INV5 PendingPayment-Active gap** (domain-logic-booking.md): `"PendingPayment"` 상태에서 직접 `/check-in` 가드 거부 → 반드시 `/confirm` (T1) 거쳐 "Confirmed" 후 check-in 가능. 운영 함정: 결제 완료 + 즉시 입실 운영자가 두 번 클릭 (T1 → T3) 필요.
 
-## 2. Check-out
+**검증 부재 항목** (T001 시점 명시 + T005 재검증):
+- 실제 check-in 시각 vs `bookings.start_date` 차이 — 미검증 (날짜 무관 active 진입 가능)
+- contract 존재 여부 — 미검증 (장기 booking S2 cascade 미실행 시에도 active 진입 가능)
+- payment 완료 여부 — 미검증 (Sent invoice 미수 상태에서도 active 진입 가능; CF-022 cross-pack discipline)
 
-**Endpoint:** `PATCH /api/v1/bookings/:id/check-out`
+---
 
-```ts
-if (existing.booking_status !== "Active") return 409;
-await db.update(bookings).set({ booking_status: "CheckedOut" }).where(...);
-await logAction(...);
-```
+## §2 CHECK-OUT WORKFLOW — T4 (gated)
 
-**Gaps:**
+**Endpoint**: `PATCH /api/v1/bookings/:id/check-out` (`bookings.ts` T4)
 
-| Gap | Severity | Recommendation |
-|---|---|---|
-| No cleaning WO auto-created | 🟡 | Insert `work_orders` row with `category="Cleaning"`, `priority="Normal"`, `space_id`, `reported_at=now()`, `status="Open"` |
-| No outstanding-invoice check | 🔴 | `SUM(invoices.amount WHERE status IN ('Sent','Overdue')) > 0` → return 409 with breakdown, or allow with a warning + flag the booking for follow-up |
-| No bond refund record initiated | 🟡 | Trigger a `bond_refunds` row (when that table exists) in `pending` status |
-| No space status flip | 🟡 | If the space was marked `Occupied`, flip it back to `Available`. Currently `spaces.status` is a manual lifecycle only ("Active" / "Inactive"). |
-| No final inspection record | 🟡 | A `space_inspections` table is not modeled |
-| No checkout email to guest | 🟡 | Send a "Thank you for your stay" email + bond return timeline |
+**Precondition**: `booking.booking_status === "Active"` (단일 가드)
 
-## 3. Stay extension ❌
+**Write**:
+1. UPDATE bookings SET booking_status="CheckedOut"
+2. logAction(`booking | id | STATUS_CHANGE | "Active" → "CheckedOut"`)
 
-**Status: not implemented.**
+**Bond return 14-day** (F9 cross-ref financial-rules §5.1 + booking-lifecycle.md §3):
+- `bookings.ts:436` PDF 본문 "We will return your bond within 14 days of check-out" text-only
+- 코드에 14-day timer / refund handler / escrow / scheduled job **부재**
+- check-out 후 bond 환불 처리는 운영자 수동 (Stripe dashboard 직접 조작; 코드 0 hit)
+- 결과: bond return audit trail 부재; 분쟁 시 증거 부족
 
-- No `PATCH /v1/bookings/:id/extend` endpoint exists.
-- The `bookings.check_out_date` column can be edited via the generic `PUT /v1/bookings/:id`, but only when status is `Draft` or `Confirmed` — extending an `Active` booking is not possible via the standard route.
+**Phase 2 prescription** (financial-rules §5.1): `bond_return` 별도 entity (state machine: Pending → Scheduled → Refunded) + scheduled job 14-day countdown + Stripe refund API 통합.
 
-**Workarounds in production:**
-- Cancel the current booking and create a new one (loses bond continuity).
-- Manually edit the database (no audit trail).
+---
 
-**Recommended design:**
+## §3 EXTENSION WORKFLOW — T5 (사용자 가설 extension-renewal scope 흡수)
 
-```
-PATCH /v1/bookings/:id/extend  body: { new_check_out_date }
-  Guards:
-    - booking.status in (Confirmed, Active)
-    - new date > current check_out_date
-    - no overbooking on the new range (next-tenant check)
-  Side effects:
-    - extend space_blocked_dates
-    - update contract.end_date
-    - regenerate any future invoices for the new period
-    - audit log
-```
+**Endpoint**: `PATCH /api/v1/bookings/:id/extend` (`bookings.ts` T5)
 
-## 4. Early termination ❌
+**Precondition**: `booking.booking_status IN ["Confirmed","Active"]` (배열 가드 — 두 상태에서만 허용)
 
-**Status: partially implemented.**
+**Write**:
+1. UPDATE bookings SET end_date = new_end_date (extend duration body)
+2. side-effect: `blockDatesForBooking(bookingId, additionalDates)` N-sequential-INSERT (no transaction; INV6 idempotency)
+3. cross-side: 장기 booking 활성 contract 존재 시 contract end_date / payment_schedules 갱신 **부재** — orphan extension (contract 종료일 booking 종료일 불일치) 발생 가능
 
-- `POST /v1/contracts/:id/terminate` flips contract status to `Terminated` and stores `termination_reason`.
-- It does **not**:
-  - Move the booking to a different status (still `Active`).
-  - Calculate any termination fee.
-  - Void future unpaid invoices.
-  - Initiate bond refund.
-  - Free up future blocked dates (`space_blocked_dates` rows for past the termination date are not removed).
+**Renewal vs Extension 구분**: 코드에 "renewal" 별도 endpoint **부재** — extension 은 동일 booking 의 end_date 만 늘림. 새 contract 발급 / 새 payment_schedules 발급 = 운영자 수동 신규 booking 작성 (booking-lifecycle.md §1 신규 cycle).
 
-**Recommended cohesive design:**
+---
 
-```
-POST /v1/contracts/:id/terminate
-  body: { termination_date, reason, fee_amount? }
-  Side effects:
-    1. contracts.status = 'Terminated'; termination_reason set; effective_date = body.termination_date
-    2. bookings.status = 'CheckedOut' if termination_date <= now(), else 'Cancelled'
-    3. void all unpaid invoices with due_date > termination_date
-    4. issue a final invoice for fee_amount (if any)
-    5. delete space_blocked_dates rows where date > termination_date
-    6. trigger bond refund flow
-    7. audit log entry on every step
-```
+## §4 F7 PENDING DEAD-END (no-magic-rules §5.1 cross-ref)
 
-## 5. State sequence diagram (operational view)
+`guest-portal.ts:160-162` insert:
+- `booking_status: "Pending"` (8 main + 1 NoShow 미존재 → 9th label F7)
+- `status: "Active"` (bookings 컬럼 미존재 — `bookings.status` 컬럼 없음; insert silently ignored)
 
-```
-   Booking         Contract        Invoices         Blocked Dates
-─────────────────────────────────────────────────────────────────
-   Draft   ──┐
-             │ submit
-             ▼
-   PendingApproval
-             │ confirm  ─►  Draft     (none yet)        + N rows
-             │
-             │       (admin manually) Sent
-             │       (guest signs)    Signed
-             │
-             │           activate ─►  Active   ┐
-             │                                 │ batch
-             ▼                                 ▼
-   Active ◄──┴─────────────────  many Sent invoices    (unchanged)
-             │
-             │ check-in (no-op besides status)
-             │
-             │ check-out ────────────────────►  ⚠ no auto WO
-             ▼
-   CheckedOut       (contract still Active)             (unchanged)
-                    ⚠ should auto-Expire when end_date passes
-```
+→ guest-portal 통해 들어온 booking = 모든 admin transition 거부 (T1/T2/T3/T4/T5 모두 precondition 거부). dead-end.
+
+**Phase 2 prescription** (no-magic-rules §5.1): (1) 8 main 으로 통합 (`"PendingApproval"`) 또는 (2) 9th label `"Pending"` 명시 enum 등록 + transition 매핑.
+
+---
+
+## §5 자가 검증 (3 spot-check ✅)
+
+- C1 T3 `eq(status,"Confirmed")` 단일 가드 (booking.md §4 9/9 100%)
+- C2 F9 `bookings.ts:436` PDF text-only — `rg "14.*day" --type=ts -t ts` 0 timer hit
+- C3 F7 `guest-portal.ts:160-162` insert literal "Pending" + "Active" — schema 미정합

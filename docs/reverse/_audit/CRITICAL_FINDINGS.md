@@ -2335,3 +2335,61 @@ P0=4 / P1=18 / P2=3 = **25 CF** (T004 전체 0 NEW promotion — 모든 발견 e
 ### 다음 단계
 
 T005 (`_workflows/` STEP 4, 6 files) — **자동 시작 절대 금지**. 사용자 push + proceed 명시 후 진입.
+
+---
+
+## 🎯 T005 GROUP COMPLETE marker (2026-04-27)
+
+**T005** = `_workflows/` 6 files REWRITE (booking-lifecycle + payment-workflow + checkin-checkout-workflow + agent-commission-workflow + maintenance-workflow + promotion-application-logic) — T001 시점 (677L 합계: 81+146+127+123+136+64; 3 NEEDS REVISION + 3 T001-VERIFIED) → T005 (438L 합계: 70+78+79+74+81+56, T002+T003+T004 자산 통합 + 25 CFs + 11 incidentals baseline + R-REPO-6 14회째 (사용자 가설 6/6 file 명 drift) corrected (α) 채택).
+
+### T005 sub-task ledger (R-REPO-10 묶음 6회째 max 가속, 6 sub-task / 1 응답)
+
+| Sub-task | 산출물 | T001 lines | T005 lines | Δ |
+|----------|--------|-----------|-----------|---|
+| 1 — booking-lifecycle | `_workflows/booking-lifecycle.md` (REWRITE) | 146 (NEEDS REVISION) | 70 | -52% |
+| 2 — payment-workflow | `_workflows/payment-workflow.md` (REWRITE) | 136 (T001-VERIFIED) | 78 | -43% |
+| 3 — checkin-checkout-workflow | `_workflows/checkin-checkout-workflow.md` (REWRITE) | 127 (T001-VERIFIED) | 79 | -38% |
+| 4 — agent-commission-workflow | `_workflows/agent-commission-workflow.md` (REWRITE) | 81 (NEEDS REVISION) | 74 | -9% |
+| 5 — maintenance-workflow | `_workflows/maintenance-workflow.md` (REWRITE) | 123 (NEEDS REVISION) | 81 | -34% |
+| 6 — promotion-application-logic | `_workflows/promotion-application-logic.md` (REWRITE) | 64 (NEEDS REVISION) | 56 | -13% |
+| **합계** | | **677** | **438** | **−35%** (예측 600-900 더욱 컴팩트화) |
+
+### CF anchor 매트릭스 (25 CFs × 6 _workflows/ files)
+
+핵심 carrier (집중 anchor):
+- **booking-lifecycle**: CF-001 booking→contract precision-lossy + CF-008 single audit row + CF-014 max carrier S2 cascade + CF-022 9/9 leader + F7/F9 cross-ref
+- **payment-workflow**: CF-008 invoices 80% / contracts 71% / payment 0% gap + CF-010 본문 재작성 cross-ref + CF-014 helper 7-step 27 mutation + CF-019.a stripe orphan + CF-022 manual 67% vs webhook 0% bypass anomaly + F10/F11 incidentals
+- **checkin-checkout-workflow**: CF-022 T3/T4/T5 가드 + CF-008 audit + F7 Pending dead-end + F9 14-day bond return PDF text-only
+- **agent-commission-workflow**: CF-001 commissions=real 양극단 + CF-005 portal_type drift + CF-023.a sole outlier leads.ts:175-204 + CF-024 public OPEN rate limiting + F12 commissions.status enum
+- **maintenance-workflow**: CF-022 work_orders 50% (R-REPO-6 12회째 정확화) + CF-008 6-way TIE 0% floor + F8 cs_tickets state 부재 + F15 tasks polymorphic FK orphan
+- **promotion-application-logic**: CF-001 + CF-019.b parked candidate + F14 contract_products snapshot 부재 + UNIQUE-gap promotions.code
+
+→ 25/25 CF + 11/11 incidentals 모두 ≥1 _workflows/ file 에 anchor 또는 cross-ref 배치 완료.
+
+### R-REPO-6 14회째 가동 — 사용자 가설 6/6 = 100% drift
+
+| 사용자 가설 | 실제 ground truth | 처리 |
+|------------|-------------------|------|
+| workflow-booking-lifecycle | `booking-lifecycle.md` | rename 불일치 (보존) |
+| workflow-contract-activate | (별도 파일 미존재) | scope drift → payment-workflow §3 흡수 |
+| workflow-payment-stripe | `payment-workflow.md` | rename 불일치 (보존) |
+| workflow-extension-renewal | `checkin-checkout-workflow.md` (Extension 명시) | scope 흡수 (보존) |
+| workflow-cancellation-refund | (별도 파일 미존재) | scope drift → booking-lifecycle §3 + maintenance §4 흡수 |
+| workflow-onboarding-lead | (별도 파일 미존재) | scope drift → agent-commission §3 흡수 |
+
+→ R-REPO-7 (α) 채택: 실제 6 files REWRITE + 사용자 가설 scope cross-ref 통합. file 명 보존 = Phase 2 .NET 포팅 reference 안정성.
+
+### R-REPO 가동 누적 final (T005 종료 시점)
+
+- R-REPO-6 = **14회** (T005 Step 1 사용자 가설 file 명 6/6 drift; corrected (α) 채택)
+- R-REPO-9 차단 = **4회** (T002.4 + T002.5 + T003 묶음 1 + **T005**)
+- R-REPO-9 자동 진행 = **8회** (T003 묶음 2/3/4 + T004 + T005 — T005 = corrected 후 자동)
+- R-REPO-10 묶음 = **6회** (T003 묶음 1/2/3/4 + T004 + T005 — 모두 stable; T005 = 6 sub-task = T003 묶음 4 + T004 동률 max 가속 −83% 응답 / −83% commit / −83% push)
+
+### Counts unchanged
+
+P0=4 / P1=18 / P2=3 = **25 CF** (T005 전체 0 NEW promotion — 모든 발견 expansion 흡수). R-REPO-5 incidentals **11 unchanged** (T004 와 동일).
+
+### 다음 단계
+
+T006 (`_design/` 4 files) — **자동 시작 절대 금지**. 사용자 push + proceed 명시 후 진입.

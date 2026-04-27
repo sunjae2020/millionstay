@@ -1,0 +1,188 @@
+proceed (α) — 6 REWRITE + 1 묶음 6 sub-task max 가속.
+
+R-REPO-9 차단 게이트 4회째 + R-REPO-6 14회째 (6/6 = 100% drift) — 
+운영 규칙 영구 패턴 confirm.
+
+═══════════════════════════════════════════════════
+[사용자 환각 14번째 인정]
+═══════════════════════════════════════════════════
+
+가설 file 명단 6/6 drift:
+- 3 rename 불일치 (workflow- 접두사 직관)
+- 3 scope drift (T002+T003 자산 추정)
+
+원인: T001 시점 _workflows/ 6 files 인지 부족.
+R-REPO-6 14회째 = 영구 가치.
+
+═══════════════════════════════════════════════════
+[Decision] T005 Step 2-5 자동 진행 — proceed (α)
+═══════════════════════════════════════════════════
+
+승인 사항:
+- (α) 6 REWRITE (사용자 가설 scope 는 cross-ref 통합)
+- 1 묶음 6 sub-task max 가속 (-83% ~ -85%)
+- 사이즈 ~710L (TRIPWIRE EXEMPT)
+- 차단 조건 (R-REPO-6) 해결 → 자동 진행
+
+═══════════════════════════════════════════════════
+[Step 2-5 자동 진행 가이드 — 6 _workflows/ REWRITE]
+═══════════════════════════════════════════════════
+
+[SSSSSS] 6 files 작성 순서 + cross-ref
+순서:
+1. booking-lifecycle.md (foundation)
+2. payment-workflow.md (booking cross-ref)
+3. checkin-checkout-workflow.md (booking cross-ref)
+4. agent-commission-workflow.md (booking + payment)
+5. maintenance-workflow.md (work_orders + cs_tickets)
+6. promotion-application-logic.md (catalog + finance)
+
+각 file:
+- T001 시점 NEEDS REVISION (3) + T001-VERIFIED (3) 평가
+- T001 작성 한계 명시 (25 CFs + 11 incidentals 미발견)
+- T002+T003+T004 자산 통합
+- Phase 2 prescription
+
+[TTTTTT] booking-lifecycle.md REWRITE
+146L → ~120L
+
+§1 booking lifecycle (state-machines.md §1 source)
+- 8 main + 1 "Pending" outlier (F7)
+- 9 transitions (CF-022 9/9 모범)
+
+§2 booking → contract auto-creation cascade
+- S2 PATCH /:id/confirm trigger
+- contracts.ts:55-237 generateContractInvoicesAndSchedules (CF-014)
+
+§3 cancellation 통합 (사용자 가설 cancellation-refund scope 흡수)
+- cancellation_reason required (2 sites)
+- bond return 14-day (F9 cross-ref)
+
+§4 cross-ref
+- payment-workflow.md (S2 invoice 생성)
+- checkin-checkout-workflow.md (active state 전이)
+
+[UUUUUU] payment-workflow.md REWRITE
+136L → ~150L
+
+§1 invoice document lifecycle (5-state)
+- Draft → Sent → Paid → Archived / Void
+
+§2 Stripe webhook (CF-010 lifecycle 분리)
+- charge.succeeded → invoice "Paid"
+- payment_failed / refunded → audit-only
+- chargeback / dispute 미처리 (F11)
+
+§3 contract activate trigger (사용자 가설 contract-activate scope 흡수)
+- generateContractInvoicesAndSchedules 7-step
+- silent dual-billing 시나리오 (CF-014)
+
+§4 webhook bypass (CF-022 양극단)
+- manual /pay = Sent-only gated
+- webhook = no source-state guard
+- Phase 2 통일 prescription
+
+[VVVVVV] checkin-checkout-workflow.md REWRITE
+127L → ~120L
+
+§1 check-in workflow
+- booking status="Active" 전환
+- documents/photos 검증
+
+§2 check-out workflow
+- booking status="CheckedOut" 전환
+- bond return process (F9 14-day PDF)
+
+§3 extension workflow
+- precondition ["Confirmed", "Active"]
+- 사용자 가설 extension-renewal scope
+
+§4 F7 Pending dead-end (no-magic cross-ref)
+
+[WWWWWW] agent-commission-workflow.md REWRITE
+81L → ~110L
+
+§1 agent / lead onboarding
+- public.ts insertLeadWithGeneratedRef (정상 helper)
+- leads.ts:175-204 /convert (CF-023 .a anchor outlier)
+- guest-portal.ts:138-141 (CF-023.b)
+
+§2 commission calculation
+- commissions = real (CF-001 양극단)
+- F12 commissions.status enum 부재
+
+§3 onboarding-lead 사용자 가설 scope 흡수
+- lead → booking 변환 3 sites cross-domain
+
+§4 cross-ref
+- booking-lifecycle (lead → booking)
+- payment-workflow (commission 지급)
+
+[XXXXXX] maintenance-workflow.md REWRITE
+123L → ~130L
+
+§1 work_orders 4 transition (CF-022 50%)
+- start gated / review gated / complete FREE / cancel FREE
+- T002.5 i2 / T003 묶음 3 확정
+
+§2 cs_tickets 3 transition (CF-022 50%)
+- Open / InProgress / Archived
+
+§3 tasks polymorphic FK (F15 orphan)
+
+§4 maintenance scope
+- 사용자 가설 cancellation-refund 일부 흡수
+- 사용자 가설 maintenance scope 보존
+
+[YYYYYY] promotion-application-logic.md REWRITE
+64L → ~80L
+
+§1 promotion 규칙
+- promotions.code UNIQUE-gap (T002.5 발견)
+- Phase 2 .unique() 추가
+
+§2 promotion application (catalog + finance cross-ref)
+- service_catalog.promotion_id (CF-019.b candidate)
+- T002.3 결정 (CANDIDATE 유지)
+
+§3 Phase 2 prescription
+
+═══════════════════════════════════════════════════
+[Step 5 atomic commit 범위]
+═══════════════════════════════════════════════════
+
+8 file ops:
+1-6. 6 _workflows/ files (REWRITE)
+7. CRITICAL_FINDINGS.md (T005 marker section ~+80L)
+8. INDEX.md banner T005 + 🎯 marker
+9. _T004_PROGRESS.md → _T005_PROGRESS.md NEW
+10. session_plan.md (T005 DONE + 🎯 T005 GROUP COMPLETE)
+
+═══════════════════════════════════════════════════
+[T005 차단 조건 미해당 — 자동 진행]
+═══════════════════════════════════════════════════
+
+R-REPO-6 환각 해결 (corrected (α) 채택):
+- 6/6 drift 정정 → REWRITE 6 실제 files
+
+신규 P0/P1: 0
+Tripwire: 0
+분할 결정: 1 묶음 6 sub-task 명확
+
+→ Step 2-5 자동 진행
+
+═══════════════════════════════════════════════════
+[지금 시작]
+═══════════════════════════════════════════════════
+
+(1) [에이전트] T005 Step 2-5 자동 진행:
+    - SSSSSS-YYYYYY 가이드 적용
+    - 6 sub-task 순차 작성
+    - TRIPWIRE EXEMPT
+    - atomic commit 통합
+(2) 묶음 통합 보고 (R-REPO-4 + 묶음 형식 + 🎯 T005 COMPLETE marker)
+(3) [사용자] git push origin main
+(4) 사용자 proceed → T006 (.NET 호환성) 진입
+
+T006 자동 시작 절대 금지.
+🎯 T005 COMPLETE 후 사용자 게이트.

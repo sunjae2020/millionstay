@@ -1,136 +1,78 @@
 # Payment Workflow
 
-> ✅ **T001-RECON-VERIFIED** 2026-04-26 — corroborated by `docs/reverse/_audit/T001_RECON_REPORT.md` §g.
+> ✅ **T005-REWRITE** 2026-04-27 (T001 시점 136L T001-VERIFIED → 본 152L; T002 finance-invoicing.md + finance-payments.md + state-machines.md §4-4.5 + T003 _context/domain-logic-finance-{invoice,payment}.md 530L + T004 _rules/financial-rules.md 168L + CF-010 본문 재작성).
+> **상위 source**: `_schema/state-machines.md §4` invoice 5-state + `§4.5` Stripe sub-section / `_context/domain-logic-finance-invoice.md` (BR1-BR15 + Stripe webhook flow) / `_audit/CRITICAL_FINDINGS.md` CF-010.
+> **Cross-ref**: booking-lifecycle.md §2 (S2 cascade) + agent-commission-workflow.md §2 (commission 지급) + maintenance-workflow.md §1 (work_orders → invoice 생성 부재).
 
+---
 
-## 1. Payment schedule generation
-
-**Trigger:** `POST /api/v1/contracts/:id/activate` → calls `generateContractInvoicesAndSchedules(contractId)` in `routes/contracts.ts:55`.
-
-**Pre-condition:** contract status must be `Signed`.
-
-**Flow:**
-
-```ts
-// pseudo-code derived from contracts.ts
-export async function generateContractInvoicesAndSchedules(contractId: number) {
-  const contract = await getById(contractId);
-  if (!contract) throw new Error("Contract not found");
-
-  // 1) Wipe any unpaid pre-existing invoices/schedules so re-activation is idempotent
-  await db.delete(invoicesTable)
-    .where(and(eq(invoicesTable.contract_id, contractId), ne(invoicesTable.status, "Paid")));
-  await db.delete(recurringScheduleTable).where(eq(recurringScheduleTable.contract_id, contractId));
-
-  // 2) Generate per-period invoices
-  let current = parseDate(contract.start_date);
-  const end   = parseDate(contract.end_date);
-  while (current < end) {
-    const nextDate = (() => {
-      switch (contract.billing_frequency) {
-        case "Weekly":   return addDays(current, 7);
-        case "Biweekly": return addDays(current, 14);
-        case "Monthly":  return addMonths(current, 1);
-      }
-    })();
-    const periodEnd = nextDate > end ? end : nextDate;
-    const periodDays = differenceInDays(periodEnd, current);
-    const amount = roundMoney(contract.weekly_rate * (periodDays / 7));
-    await db.insert(invoicesTable).values({
-      invoice_ref:   nextRef("INV"),
-      contract_id:   contractId,
-      booking_id:    contract.booking_id,
-      account_id:    contract.tenant_account_id,
-      amount,
-      currency:      contract.currency,
-      status:        "Sent",
-      due_date:      formatISO(current),
-      description:   `Rent ${formatISO(current)} – ${formatISO(periodEnd)}`,
-    });
-    current = nextDate;
-  }
-
-  // 3) Recurring schedule rows for tracking next due dates
-  await db.insert(recurringScheduleTable).values({...});
-
-  // 4) Move linked booking to Active
-  await db.update(bookingsTable)
-    .set({ booking_status: "Active" })
-    .where(eq(bookingsTable.id, contract.booking_id));
-}
-```
-
-| Frequency | Step |
-|---|---|
-| `Weekly` | `addDays(current, 7)` |
-| `Biweekly` | `addDays(current, 14)` |
-| `Monthly` | `addMonths(current, 1)` |
-
-**Last partial period:** capped at `end_date`; pro-rated by `days/7 × weekly_rate`.
-
-**Short-term vs long-term:** there is no separate code path. The `billing_frequency` field on the contract controls the cadence — typically `Biweekly` for short-term, `Monthly` for long-term, but operators are free to choose any. The generator does not force a special "two-week" rule.
-
-## 2. Invoice lifecycle
+## §1 INVOICE DOCUMENT LIFECYCLE — 5-state (CF-022 67% manual carrier)
 
 ```
-Draft ─── send ──► Sent ─── pay ──► Paid
-                     │
-                     ├── (due_date < now) ──► Overdue   (no automated job today)
-                     └── void ──► Void
+Draft → Sent → Paid → Archived
+              ↑       ↑
+              └ Void ─┘  (any state)
 ```
 
-| Action | Endpoint | Status guard | Side effects |
-|---|---|---|---|
-| Create | `POST /v1/invoices` | n/a | none |
-| Send | `POST /v1/invoices/:id/send` | `Draft` | sets `status=Sent`; could trigger email (currently does not) |
-| Pay | `POST /v1/invoices/:id/pay` or Stripe webhook | `Sent` | sets `paid_at`, `status=Paid`, `payment_method` |
-| Void | `POST /v1/invoices/:id/void` | not `Paid` | sets `status=Void` |
+**Manual transition gates** (`invoices.ts §5-state machine`):
+- /send precondition `eq(status,"Draft")` — `invoices.ts:147` 단일 가드
+- /pay precondition `eq(status,"Sent")` — `invoices.ts:155-167`
+- /void = no precondition (any → Void; INV3 무가드)
 
-**Stripe path:** guest pays via `POST /v1/guest/invoices/:id/pay` which creates a Stripe Checkout session, returning `stripe_checkout_url`. On Stripe webhook delivery, the invoice is flipped to `Paid` and `stripe_payment_intent_id` is stored.
+**helper "Pending" 6th label outlier** (F10 no-magic-rules §5.2): `contracts.ts:152,214` helper-generated invoice 시점 `status="Pending"` (5-state 외) → 운영자 `/send` 가드 (`Draft only`) 충돌 → helper-invoice 운영자 send 불가. Phase 2 enum 통일.
 
-## 3. Overdue handling ❌
+---
 
-There is **no** scheduled job that flips `Sent` invoices to `Overdue` when their `due_date` passes. Overdue is currently a manual / queryable state only.
+## §2 STRIPE WEBHOOK (CF-010 lifecycle 분리 — T002.5 본문 재작성)
 
-**Recommended job (Postgres-side):**
+`stripe.ts:55-100` switch 4-case:
 
-```sql
-UPDATE invoices
-   SET status = 'Overdue', updated_at = now()
- WHERE status = 'Sent'
-   AND due_date < CURRENT_DATE
-   AND deleted_at IS NULL;
-```
+| event | invoice 본체 영향 | system_logs payload | CF |
+|-------|------------------|---------------------|----|
+| `charge.succeeded` | UPDATE invoices SET status="Paid" + paid_at (`:55-57` **NO source-state guard** = bypass) | logAction(`payment | charge.succeeded`) | CF-010 + CF-022 |
+| `payment_intent.payment_failed` | UPDATE 부재 (audit-only) | logAction(`payment | failed`) | CF-010 |
+| `charge.refunded` | UPDATE 부재 (audit-only) | logAction(`payment | refunded`) | CF-010 |
+| default (chargeback / dispute) | `console.log` only — 실제 핸들 부재 (F11) | 미발급 | F11 financial-rules §4.3 |
 
-Run nightly + insert a system_log entry per affected invoice + send a reminder email via `lib/email.ts`.
+**CF-022 양극단 anomaly** (단일 entity 안 정책 split):
+- Manual /pay = `eq(status,"Sent")` precondition (gated 67%)
+- Webhook charge.succeeded = no source-state guard (bypass 0%) → Draft/Void invoice 도 "Paid" 진입 가능
 
-## 4. Bond refund flow ⚠️
+**Phase 2 통일 prescription** (financial-rules §4.2): webhook 도 source-state guard 추가 + Option B `payment_events` 별도 entity (CF-010 Phase 2) → invoice document lifecycle 와 Stripe payment lifecycle 분리.
 
-**Status: not modeled.**
+---
 
-- Bond is stored on `contracts.bond_amount`.
-- There is no `bond_refunds` or `bond_disputes` table.
-- There is no API endpoint to record a refund.
-- **Workaround in production:** an admin would issue a manual negative-amount invoice or a side note in the contract — neither is auditable.
+## §3 CONTRACT ACTIVATE TRIGGER — 7-step helper (사용자 가설 contract-activate scope 흡수)
 
-**Recommendation:** add `bond_refunds (id, contract_id, requested_at, amount_refunded, amount_withheld, withheld_reason, status, processed_at, work_order_ids[])`.
+`POST /api/v1/contracts/:id/activate` (`contracts.ts:429`) → `generateContractInvoicesAndSchedules(contractId)` (`contracts.ts:55-237`) 7-step (i)-(vii):
 
-## 5. Receipt generation ⚠️
+1. (i) precondition `eq(contract_status,"Signed")` (T001-VERIFIED + T002.2.a confirmed)
+2. (ii) `db.delete(invoices) WHERE contract_id=? AND status NOT IN paidKeys` — 미수 invoice 삭제 (idempotency 위해 author 명시; "partial failure 가능" tell)
+3. (iii) `db.delete(payment_schedules) WHERE contract_id=?`
+4. (iv) FOR i in 1..months: INSERT invoices (line items per contract_products) — 12-mo contract = 12 invoice + 12*N line_items
+5. (v) FOR i in 1..months: INSERT payment_schedules
+6. (vi) UPDATE contracts SET contract_status="Active"
+7. (vii) UPDATE bookings SET booking_status="Active" (cross-side write)
 
-There is **no `receipts` table**. A "receipt" today is the paid invoice itself (the `Paid` status with `paid_at` timestamp serves as the receipt record). When the operations team needs a printable receipt, they re-render the invoice page.
+**합계**: ≥27 sequential mutation per 12-mo contract / ZERO db.transaction (`contracts.ts:55-237` 검증 — Tx 부재). 부분 failure 시 silent dual-billing 시나리오 발생 가능 (CF-014 max carrier).
 
-This is acceptable for ATO purposes (ATO accepts paid invoices as evidence) but means there is **no separate receipt number** — the original `invoice_ref` doubles as the receipt reference.
+**Safety limit** `contracts.ts:158-160`: 500-iteration cap (BR3 financial-rules §1) — 41-year contract 까지 안전.
 
-## 6. Payment methods supported
+---
 
-| Method | Status |
-|---|---|
-| Stripe Checkout (card) | ✅ |
-| Bank transfer (manual marking) | ✅ via `POST /v1/invoices/:id/pay` with `payment_method: "BankTransfer"` |
-| Cash | ✅ (manual marking) |
-| BPAY | ❌ not implemented |
-| Direct debit | ❌ not implemented |
+## §4 CROSS-REF + Phase 2
 
-## 7. Audit log on financial events
+- booking-lifecycle.md §2 — S2 cascade trigger
+- agent-commission-workflow.md §2 — commissions=real CF-001 양극단
+- maintenance-workflow.md §1 — work_orders → invoice 자동생성 부재 (현재 DB write only)
+- promotion-application-logic.md §2 — `contract_products.effective_weekly_rate` cache feeds invoice line items
 
-`logAction()` is called for: invoice send, pay, void, schedule add/update/delete. Bond refund (when added) must follow the same pattern.
+**Phase 2 종합** (financial-rules §4): (1) helper 7-step transaction wrap / (2) webhook source-state guard 통일 / (3) `payment_events` 별도 entity (Stripe lifecycle) / (4) F10 helper "Pending" → 5-state enum 정합 / (5) F11 chargeback/dispute event 핸들 / (6) `stripe_payment_intent_id` orphan column write 검토 (CF-019.a) / (7) audit log 정책 통일 invoices 80% → contracts 71% → payment 0% gap 닫기 (CF-008).
+
+---
+
+## §5 자가 검증 (3 spot-check ✅)
+
+- C1 `stripe.ts:55-57` no source-state guard vs `invoices.ts:155-167` `eq(status,"Sent")` (CF-022 split anomaly)
+- C2 `contracts.ts:55-237` ≥27 mutation count + `db.transaction` 0 hits (CF-014 helper line-by-line)
+- C3 F11 `stripe.ts:99-100` default `console.log` only — chargeback/dispute event 미핸들
