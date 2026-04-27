@@ -3,6 +3,7 @@
 > **Scope**: All 353 endpoints across 51 route files in `artifacts/api-server/src/routes/`.
 > **Convention**: rows follow the **file-of-origin rule** (see `_T002_PLAN.md` §2.1). An endpoint defined in `bookings.ts` belongs to the `booking` domain even if its URL is `/admin/bookings/*` and even if it ends up writing the `contracts` table — cross-cutting effects are surfaced via per-endpoint cross-references in the domain file, not by re-classifying the row.
 > **Numbers** below are verified by `rg -c "^router\.(get|post|put|patch|delete)\("` (T001.5 follow-up scan, 2026-04-26).
+> **Last updated**: 2026-04-27 (T002.2.h — `public.md` published, 6 files / 33 endpoints; **NEW CF-024 P1 promoted** — project-wide rate limiting absence; `public` group row CF chip set to 🟡 (CF-008/014/017/023a/024); CF-023 cross-domain verification CLOSED at this sub-task).
 
 ---
 

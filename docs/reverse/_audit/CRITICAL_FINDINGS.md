@@ -3,7 +3,8 @@
 > **Source**: T001 RECON (`docs/reverse/_audit/T001_RECON_REPORT.md`).
 > **Format**: One row per finding. Each finding has a stable ID (`CF-NNN`) and **status**. Severity follows `🔴 P0` (must fix before production), `🟡 P1` (must fix before scale), `🟢 P2` (technical debt). Evidence is direct code quotation (≤ 5 lines per finding) with `path:line`.
 > **Discipline**: This file records facts and recommendations. **No code changes are made by this document** — fixes are tracked through the `Status` field.
-> **Last updated**: 2026-04-26 (T002.2.e — ops-crm anchors: **NEW CF-022 P1 promoted** — state-transition guard inconsistency, 9 transition handlers across 4 files = 5 gated + 4 ungated, same-file inconsistency in `work-orders.ts` 2-of-4 + `leads.ts` 1-of-2; CF-001 +2 carrier columns (`work_orders.cost`, `promotions.discount_percentage`); CF-008 ops-crm row 0/51 = 0% **TIED LOWEST** with ops-catalog; CF-013 +6 no-tz anchors → 27; CF-015 NEW sentinel-via-status sub-pattern at `service-hosts.ts`; CF-019.a CANDIDATE row 3 status note updated (`service_catalog.promotion_id` write-site cross-check from ops-crm domain = 0 hits; CANDIDATE retained pending T002.3); CF-020.a +8 GET-leak anchors → 26 / .b +15 zombie-revival anchors → 20 (split formalized); CF-021 +3 N+1 anchors → 13. **1 NEW CF promoted (CF-022 P1)**: counts P0=3 / P1=**16** / P2=3 = **22**).
+> **Last updated**: 2026-04-27 (T002.2.h — `public.md` 6 files / 33 ep [public 10 + privacy 2 + health 2 OPEN; lookup 10 + blog-posts 6 + page-contents 3 PROTECTED]: **NEW CF-024 P1 promoted** — Project-wide rate limiting absence (0 hits across `artifacts/api-server/src/` + `lib/`; 9 unauthenticated mutation entry points DDoS-amplifiable, including 3 lead-INSERT applications POSTs); **CF-023 cross-domain verification CLOSED** at this sub-task (9 domains audited; helper `insertLeadWithGeneratedRef` confirmed safe → leads.ts:175-204 sole outlier per option (가)); **CF-017 POSITIVE EXEMPLAR co-promotion** — `blog-posts.ts` 5/6 = 83% safeParse coverage with double-validate B4 (IdParams + UpdateBlogPostBody), B5 bulk-delete the sole gap; **CF-008 new lowest absolute floor** = 0/33 = 0% (3 unauthenticated POSTs create leads with zero audit trail — operationally invisible inbound funnel); CF-001 +5 read-side carriers (services base_price + 4 lookup `real` columns); CF-013 +3 (insertLead writes via `new Date()`); CF-014 +5 (3 applications + bulk-delete + page-contents upsert); CF-015 +1 POSITIVE (SuperAdmin role gate on permanent delete); CF-021 +1 helper-internal carrier (generateLeadRef full-table SELECT). Inconsistencies memo: healthRouter double-mount (app.ts:150 + routes/index.ts:41 dead). **1 NEW CF promoted (CF-024 P1)**: counts P0=3 / P1=**18** / P2=3 = **24**. Earlier history follows:
+> 2026-04-26 (T002.2.e — ops-crm anchors: **NEW CF-022 P1 promoted** — state-transition guard inconsistency, 9 transition handlers across 4 files = 5 gated + 4 ungated, same-file inconsistency in `work-orders.ts` 2-of-4 + `leads.ts` 1-of-2; CF-001 +2 carrier columns (`work_orders.cost`, `promotions.discount_percentage`); CF-008 ops-crm row 0/51 = 0% **TIED LOWEST** with ops-catalog; CF-013 +6 no-tz anchors → 27; CF-015 NEW sentinel-via-status sub-pattern at `service-hosts.ts`; CF-019.a CANDIDATE row 3 status note updated (`service_catalog.promotion_id` write-site cross-check from ops-crm domain = 0 hits; CANDIDATE retained pending T002.3); CF-020.a +8 GET-leak anchors → 26 / .b +15 zombie-revival anchors → 20 (split formalized); CF-021 +3 N+1 anchors → 13. **1 NEW CF promoted (CF-022 P1)**: counts P0=3 / P1=**16** / P2=3 = **22**).
 
 ---
 
@@ -971,6 +972,8 @@ EF Core's `HasQueryFilter` for soft-delete relies on a uniform column. Today's t
 
 **Counts after T002.1.9**: P0=3, P1=**15**, P2=3 (total **21**) — **2 NEW promotions** (CF-020 + CF-021, both T002.2.c R-REPO-5 graduates with sufficient anchor density to warrant promotion this commit). Both candidates were parked at T002.2.b half-2 (CF-020 9 anchors / CF-021 2 anchors); T002.2.c surfaced 7 additional CF-020 anchors + 6 additional CF-021 anchors, crossing the typical promotion threshold (≥10 anchors / ≥3 domains) without waiting for T002.2.d. CF-017 + CF-018 are T002.2.a Spot-Check C3 graduates (R-REPO-5); CF-019 is T002.2.b half-2 graduate. **0 deferred candidates** remaining; T002.2.d-.j may surface fresh ones.
 
+**Counts after T002.2.h**: P0=3, P1=**18**, P2=3 (total **24**) — **1 NEW CF promotion in T002.2.h**: CF-024 (project-wide rate limiting absence, P1) graduated from Step-1 sealed `0 hits` finding (`rg "rate.?limit|express-rate-limit|rateLimit"` across `artifacts/api-server/src/` + `lib/` = 0 hits; package.json carries no throttling library). Worst-exposed surface: 9 unauthenticated mutation entry points (3 `*-applications` lead-INSERT POSTs in public.ts:735/787/833 + 4 auth login/register endpoints + 2 reset/auth endpoints across guest-auth/partner-auth). Authenticated surface (~339 ep) also uncapped — session-level abuse uncapped. R-REPO-7 P1 즉시 등재 원칙 적용. **CF-023 cross-domain verification CLOSED at this sub-task** — all 9 audit domains (leads/finance×2/ops×3/portal×2/public) scanned for `bookings.booking_ref` minting paths and lead/booking write-orphan patterns; no remaining unaudited regions for cross-domain hunt (within-domain expansions only, e.g. T002.2.i admin.md). Helper analysis (`leadRef.ts:15-41` `insertLeadWithGeneratedRef`) confirmed safe (23505 retry, race-safe, single-row INSERT) → `leads.ts:175-204` is the sole outlier (option (가) per Step-1 ZZ matrix); CF-023.a P1 status maintained, Phase 2 fix prescription refined. **CF-017 POSITIVE EXEMPLAR co-promotion** — `blog-posts.ts` 5/6 = 83% safeParse coverage (4 module-level schemas: ListBlogPostsQuery + CreateBlogPostBody + UpdateBlogPostBody + IdParams; double-validate B4 PUT uses both IdParams + UpdateBlogPostBody); B5 bulk-delete is the sole gap (`Array.isArray + .length` manual guard) — POSITIVE EXEMPLAR sub-section appended. Anchor count updates: **CF-001** +5 read-side carriers (services base_price + commission_rate/amount + base_weekly_price + accommodation_catalog.price); **CF-008** new lowest absolute floor (33/33 = 0% audit coverage; particularly egregious: 3 unauthenticated POST applications create `leads` rows with zero audit trail — operationally invisible inbound funnel); **CF-013** +3 carriers (insertLeadWithGeneratedRef writes via server `new Date()` into `leads.created_at` no-tz column); **CF-014** +5 carriers (3 applications POSTs single-row + 1 bulk-delete multi-row + 1 page-contents check-then-act upsert); **CF-015** +1 POSITIVE evidence (blog-posts.ts:118/130-133 SuperAdmin role gate on permanent delete = safe pattern); **CF-021** +1 helper-internal carrier (`leadRef.ts:5-12` `generateLeadRef` full-table SELECT on every helper invocation → O(N) on each lead INSERT, 4 callers). Inconsistencies memo: `healthRouter` double-mounted at `app.ts:150` + `routes/index.ts:41` (via `app.ts:174`); first match wins, second mount dead — Phase 2 cleanup memo, no CF.
+
 **Counts after T002.2.g**: P0=3, P1=**17**, P2=3 (total **23**) — **0 new CF promotions**. T002.2.g (`portal-partner.md`, 4 files / 22 endpoints: service-host-portal.ts 9 + owner-portal.ts 5 + agent-portal.ts 5 + partner-auth.ts 3) anchor count updates: **CF-014 POSITIVE EXEMPLAR PROMOTION** — service-host-portal.ts:365-393 (E4 `POST /v1/service-host/jobs/:id/photos`) is the **sole production runtime mutation handler** that uses `db.transaction(...)` correctly project-wide; pattern catalogued above (POSITIVE EXEMPLAR sub-section, ~30 lines: row-lock + count check + sentinel-throw + atomic INSERT loop + cross-system compensating action). Promotion is qualitative (raw count → exemplar status) — site count unchanged at 3. **CF-008** portal-partner 22/22 = 0% — TIES with ops-catalog 0/39 + ops-crm 0/51 for absolute lowest (3-way tie at exact 0%, distinct from portal-guest 1/29 = 3.4%). **CF-005** evidence reinforced: signing site `partner-auth.ts:43` `as "agent" | "owner"` cast lies to TS while runtime accepts `"service_host"` (single JWT signing locus → 9 RSHA consumer endpoints). **CF-001** +6 carriers (1 `contracts.weekly_rate` read at owner-portal.ts:236 / 5 `commissions.commission_rate`+`amount` reads at agent-portal.ts:71/72/252-254). **CF-006** owner-portal.ts:83 (Formula A) + owner-portal.ts:236 (Formula B) already in 4-site list at T002.1.8 — T002.2.g formalises **same-file inconsistency** (one author / one file / two different formulas) as a documented sub-pattern; site count unchanged at 4. **CF-018** **strongest IDOR-defense surface yet** — 22/22 = 100% safe (overtakes portal-guest 26/29 by raw ratio); qualified by structural difference (partner has flat ownership graph vs portal-guest's account_sharers). DOUBLE GUARD pattern (E5 PATCH job + E12 GET property/:id + E17 GET agent booking/:id) recommended as canonical exemplar for `_rules/security-rules.md` (T004) alongside portal-guest E20 sole-owner guard. **CF-023.b consumer-drift hypothesis REJECTED for partner domain** — partner is read-only consumer (12 SELECT projection sites, 0 INSERT into bookings); systemically prefix-blind (no `LIKE 'MS-%'` filter; fallback `\`#${booking_id}\`` at SHP:573/673 confirms blindness). Drift is admin-domain risk only (T002.2.i). **0 R-REPO-5 mini-task escalations** (4 incidentals: 1 INDEX.md mount-prefix factual correction landed in this commit, 3 deferred memos to T002.5/CF-015/T004).
 
 **Counts after T002.2.f**: P0=3, P1=**17**, P2=3 (total **23**) — **0 new CF promotions** (CF-023 split into .a / .b sub-patterns documented as expansion-not-promotion; sub-split is structural, not a count change). Anchor count updates this commit: **CF-008** portal-guest 1/29 = 3.4% — **NEW lowest** in any domain audited so far (overtakes ops-catalog 0/39 and ops-crm 0/51 by ratio of intent — portal-guest is auth-protected guest mutation surface, not internal admin); **CF-011** +1 carrier (`guest-portal.ts:762-764` invoice_ref `count+1` race); **CF-013** +1 evidence site (`guest-portal.ts:480` DOB raw text passthrough into PUT/profile); **CF-014** +5 carrier sites (E1 register accounts+guest_users, E10 profile+accounts.name, E17 invoice+booking_status, E24 ticket+message, E26 message+ticket-update — domain is now CF-014's largest carrier domain by site count); **CF-017** +5 carrier sites (E5 bookings POST, E10 profile/bank, E14 emergency-contact POST, E17 payment/confirm amount unbounded, E24 ticket booking_id unchecked); **CF-018** +1 partial site (E24 `guest-cs.ts:79` ticket booking_id unchecked); **CF-023.b** NEW sub-pattern formalized (split from CF-023.a). E17 `guest-portal.ts:802` dead-branch ternary `bank_transfer ? "PendingApproval" : "PendingApproval"` filed as memo for T002.5 (state-machines.md). Domain is **strongest IDOR-defense surface** of any audited so far (26/29 ✅ + 1 partial, 2 n/a) — sole-owner guard at E20 (`:1086-1092`) recommended as canonical exemplar for `_rules/security-rules.md` (T004).
@@ -1152,6 +1155,21 @@ Per-domain Zod-validated-endpoint coverage as docs are written:
 **Project-wide re-baseline candidate**: CF-017's original "~10% project-wide" claim was based on the count of route files that import Zod / use `safeParse` (~5-6 of 52). The per-endpoint measure (per-handler `safeParse` call) tells a different story — ops-property hits 70.5% endpoint-level coverage. The two metrics are not interchangeable: a file-level "uses Zod" flag does not guarantee per-endpoint validation, and conversely a file with no Zod-import line can still validate via shared schemas (the `bookings.ts` exemplar). Once `T002.2.b–.j` are complete, the project-wide re-baseline should re-measure CF-017 as: **(endpoints with `safeParse(req.{body|query|params})` on the request side) / (total endpoints)** — replacing the file-level proxy with the endpoint-level ground truth.
 
 **ops-property internal pattern**: 4 of 6 satellite files (properties / policies / options / suburbs) hit 100% (25 of 25 endpoints). The 13/19 gap (31.8%) is concentrated in 2 files: `spaces.ts` operations endpoints (block/unblock/services — 7 unvalidated of 13) + `space-images.ts` (all 6 unvalidated). This suggests the original author wired Zod for "primary CRUD" path but skipped "operations" path — a recurring architectural inconsistency within a single file. **Defer-confirm** in T002.2.f (portal-guest may have similar primary-vs-operations split).
+
+### CF-017 POSITIVE EXEMPLARS — repository-wide ranking (T002.2.h promotion)
+
+Files that approach or achieve full per-handler `safeParse` coverage on the **request side** (body / query / params), promoted progressively through T002.x sub-tasks:
+
+| Rank | File | safeParse / endpoints | Coverage | Schemas declared | Notable pattern | Sub-task source |
+|------|------|----------------------|---------|------------------|----------------|-----------------|
+| 1 | `bookings.ts` | (highest project-wide; T002.1) | (highest) | shared schemas via cross-file import | shared-schema reuse via `lib/db` exports | T002.2.a peer reference |
+| 2 | `blog-posts.ts` | **5 / 6 = 83 %** | 83 % | 4 module-level (`ListBlogPostsQuery`, `CreateBlogPostBody`, `UpdateBlogPostBody`, `IdParams`) | **double-validate B4 PUT** uses *both* `IdParams.safeParse(req.params)` *and* `UpdateBlogPostBody.safeParse(req.body)` (L88-108) — best-in-class per-endpoint defense | **T002.2.h (this commit)** |
+| 3 | ops-property satellites (4 files: properties, policies, options, suburbs) | 25 / 25 = 100 % | 100 % | per-file local | "primary CRUD" path discipline | T002.2.c |
+| Gap-pattern | `blog-posts.ts:110-124` (B5 `bulk-delete`) | 0 of 1 ep on this handler | 0 % | none on body | manual `Array.isArray(ids) && ids.length > 0` guard + SuperAdmin role gate; **canonical "afterthought endpoint" anti-pattern** — defensive retrofit but inconsistent with the surrounding 5 schema-validated endpoints in the same file | **T002.2.h (this commit)** |
+
+**Lesson**: the 1-endpoint gap in `blog-posts.ts` (B5) is itself instructive. When a file is otherwise 100% Zod-covered, the bulk-delete handler is the most likely "added later" endpoint that was never retrofitted. Phase 2 .NET port should generate model-bound DTOs for **every** action method including bulk operations — `[FromBody] BulkDeleteRequest` validated by FluentValidation closes this class of regression by construction.
+
+**Co-listed with `service-host-portal.ts:365-393` (CF-014 POSITIVE EXEMPLAR, T002.2.g)** as the canonical "best of class" pattern set across the 3 dimensions Zod / Tx / Authorization.
 
 ---
 
@@ -1635,4 +1653,85 @@ Carrier: [`api-endpoints/ops-catalog.md` §1.2 + §1.5 + §6 R-REPO-5 I3](../_sc
 - T002.3 (db-schema-overview.md, pending): MUST note absence of UNIQUE constraint on `bookings.booking_ref` despite multiple insertion paths
 
 ---
+
+## CF-024 — Project-wide rate limiting absence (T002.2.h promotion, P1)
+
+**Severity**: 🟡 **P1** (operational + security; not data-loss but enables DDoS / brute-force / spam at scale)
+**Promoted at**: T002.2.h (`public.md`) — graduated from Step-1 [WW] sealed finding.
+
+### Evidence
+
+- **Codebase grep** (`rg "rate.?limit|express-rate-limit|rateLimit"` across `artifacts/api-server/src/` + `lib/`): **0 hits**.
+- **Package dependency check** (`artifacts/api-server/package.json`): no dependency on `express-rate-limit`, `rate-limiter-flexible`, `express-slow-down`, or any equivalent throttling library.
+- **No middleware applies request-rate caps** anywhere in `app.ts` (verified by reading `app.ts:84-180` registration block).
+
+### Worst-exposed surface (unauthenticated mutation entry points)
+
+| Endpoint | File:Line | Mutation effect | Risk |
+|----------|-----------|-----------------|------|
+| `POST /v1/public/owner-applications` | `public.ts:735-785` | INSERT into `leads` (`lead_source="OwnerPortal"`) via `insertLeadWithGeneratedRef` | Spam-flood `leads` table; DDoS-amplifies `generateLeadRef` (full SELECT per call — see CF-021 helper-internal carrier) |
+| `POST /v1/public/agent-applications` | `public.ts:787-831` | Same | Same |
+| `POST /v1/public/service-host-applications` | `public.ts:833-884` | Same | Same |
+| `POST /v1/auth/login` | `auth.ts` | Session establish | Brute-force window |
+| `POST /v1/auth/register` | `auth.ts` | Account create | Account-spawn flood |
+| `POST /v1/partner-auth/login` | `partner-auth.ts:43` (T002.2.g anchor) | Partner JWT mint | Brute-force partner accounts |
+| `POST /v1/partner-auth/reset-password` | `partner-auth.ts` | Password-reset email enumerate | Account-existence enumeration via timing/response |
+| `POST /v1/guest-auth/login` | `guest-auth.ts` (T002.2.f) | Guest session establish | Brute-force guest accounts |
+| `POST /v1/guest-auth/register` | `guest-auth.ts` | Guest account create | Account-spawn flood |
+
+### Authenticated surface (also uncapped)
+
+All ~339 admin-protected endpoints across `routes/index.ts` aggregator (lookup, blog-posts, page-contents, contracts, bookings, invoices, payments, work-orders, etc.) lack throttling. **Session-level abuse is uncapped** — a compromised session token yields unlimited request rate.
+
+### Why NOT promoted earlier
+
+Earlier sub-tasks (T002.2.a–.g) operated on **authenticated-only** domains, where the missing throttling is one defensive layer of many. T002.2.h surfaces three **unauthenticated** lead-INSERT entries simultaneously, making the absence operationally critical (lead-list pollution + helper N+1 amplification → DB load).
+
+### Recovery / fix recommendation (Phase 2 .NET port)
+
+1. **Adopt `Microsoft.AspNetCore.RateLimiting`** (built into ASP.NET Core 7+) as the primary middleware.
+2. **Three-tier limit policy** (initial proposal — finalize at T004 `_rules/security-rules.md`):
+   - **public-unauthenticated**: 10 req/min per source IP for `*-applications` POST + `auth/*` `register` & `login` (sliding window)
+   - **public-read**: 100 req/min per source IP for `/v1/public/*` GET + `/v1/health*` + `/v1/privacy/*`
+   - **authenticated**: 1000 req/min per session/account-id for all `/v1/...` after `requireAuth`
+3. **Response contract**: 429 `Too Many Requests` with `Retry-After` header (seconds).
+4. **Logging hook**: emit a structured audit event (`logAction("rate_limit.exceeded", { route, identity, count })`) — also closes a CF-008 evidence carrier here.
+
+### Cross-references
+
+- Carrier endpoint doc: `_schema/api-endpoints/public.md` §3.2 (this sub-task)
+- CF-021 helper-internal carrier: `lib/leadRef.ts:5-12` `generateLeadRef` full-table SELECT (DDoS amplifier under unthrottled application POSTs)
+- CF-008: rate-limit violation logging proposed as new audit event (closes one entry of the audit gap)
+- T002.2.f / .g cross-link: guest-auth + partner-auth login endpoints (also uncapped — same fix policy)
+- T004 (`_rules/security-rules.md`, pending): MUST encode the three-tier policy as an architecture rule
+- T002.5 (`state-machines.md`, pending): no direct overlap (rate-limit is gateway-layer, not state-machine)
+
+### Counts impact
+
+P0=3 / P1=17→**18** / P2=3 → total **24** (single new P1 promotion).
+
+---
+
+## CF-023 — Cross-domain verification CLOSED at T002.2.h
+
+(Marker section — does not change CF-023 / .b severity or content.)
+
+After T002.2.h, all 9 audit domains have been scanned for `bookings.booking_ref` minting paths and lead/booking write-orphan patterns. Coverage map:
+
+| Domain | Status | Audited at | Outcome |
+|--------|--------|-----------|---------|
+| `leads.ts` | **.a anchor** | T002.1.7 + reaffirmed T002.2.h §3.1 | Orphan `BK-` ref via `Math.random()`, no booking INSERT |
+| `finance-invoicing` | clean | T002.2.b half-1 | No anchor sites |
+| `finance-payments` | clean | T002.2.b half-2 | No anchor sites |
+| `ops-property` | clean | T002.2.c | No anchor sites |
+| `ops-catalog` | clean | T002.2.d | No anchor sites |
+| `ops-crm` | clean | T002.2.e | No anchor sites |
+| `portal-guest` | **.b sub-pattern** | T002.2.f | Consumer-side fake-ref + INSERT in 1 isolated site |
+| `portal-partner` | **REJECT** | T002.2.g | Consumer-drift hypothesis falsified (read-only consumer; flat ownership) |
+| `public.ts` | helper analyzed | T002.2.h §3.1 | Helper safe; option (가) — leads.ts:175-204 confirmed sole outlier |
+
+**Search status**: cross-domain scan **CLOSED**. T002.3 / T002.5 future evidence additions are evidence-row expansions to existing sub-IDs only; no further cross-domain hunt required. T002.2.i (admin.md) may surface additional admin-side carriers but those are within-domain expansions, not new cross-domain regions.
+
+---
+
 *End of CRITICAL_FINDINGS.md*
