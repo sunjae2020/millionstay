@@ -1,0 +1,139 @@
+T002.2.f 산출물 승인.
+
+CF-023.b sub-pattern 발견 (HH 가이드 (나) 분류) + portal-guest IDOR 
+모범 도메인 26/29 식별 (Phase 2 reference exemplar) + CF-008 NEW 
+LOWEST 3.4% + CF-014 read-heavy carrier (의외 발견) + 5 R-REPO-5 
+incidentals 모두 미래 sub-task routing — 모두 정점.
+
+521 lines (+37% vs prediction 280-380) acceptable: CF-023.b sub-split 
++ 29×7 self-check + 6 grouped sections 자연 확장.
+
+═══════════════════════════════════════════════════
+[Decision] T002.2.g 진입 — proceed (push 후)
+═══════════════════════════════════════════════════
+
+T002.2.g portal-partner.md 진입. portal 시리즈 두 번째.
+
+═══════════════════════════════════════════════════
+[T002.2.g Step 1 가이드 — 진입 시 통합 처리]
+═══════════════════════════════════════════════════
+
+Step 1 사전 분류 시 다음 9 항목:
+
+(a) Ledger 갱신
+    - row 19 fill (T002.2.e.fix-1 = cbc54b2) ← 이미 처리
+    - row 20 fill (T002.2.f = TBD, push 후 git log read)
+
+(b) portal-partner 라우트 inventory ground truth (R-REPO-6 3-way)
+    - 4 files / 22 endpoints 추정 검증
+    - 2 files TBD 정확 식별 (T002.2.f Step 6 보고에 명시 안 됨)
+    - INDEX.md vs T001 RECON vs actual ls
+
+(c) 사이즈 예측
+    - read-heavy 가능성 (partner 도 portal)
+    - 단, write 비율 portal-guest 보다 높을 수 있음 (partner 가 
+      booking 관리)
+    - 보정 모델 적용 + format mix
+
+(d) 3 spot-check 클레임 사전 sealing
+    - C1: 가장 복잡한 endpoint
+    - C2: CF anchor 다수 endpoint
+    - C3: 자가 발견 inconsistency
+
+(e) CF anchor 사전 점검
+    - CF-001 (money columns)
+    - CF-008 (audit, 도메인 매트릭스 row)
+    - CF-013/017/018/020/021 표준
+    - CF-023.b (booking_ref 생성 패턴 cross-check)
+    - CF-019 promotion_id (CANDIDATE 유지)
+
+(f) CF-023 cross-domain 검증 — partner-side
+    portal-partner 가 booking 다루는 endpoint:
+    - service-host 가 booking 확인?
+    - owner 가 booking 관리?
+    - booking_ref 생성 또는 사용 패턴 점검
+    - leads.ts (.a) 또는 guest-portal.ts (.b) 동일 패턴?
+    - 또는 정상 helper 사용 (positive exemplar)?
+
+(g) IDOR cross-domain 검증 — partner-side
+    portal-guest 가 26/29 모범 → portal-partner 는?
+    - 같은 sole-owner guard 패턴?
+    - 또는 weaker auth (예: partner 가 자기 booking 만)?
+    - guard 패턴 비교 = T004 security-rules.md baseline
+
+(h) DD 가이드 — portal-guest cross-ref back-fill
+    portal-guest.md §7 cross-ref 섹션 (T002.2.f 에서 식별) 의 
+    portal-partner 측 endpoint 확인:
+    - 공통 helper / pattern
+    - cross-ref 양방향 (guest ↔ partner)
+    - back-fill 작업 atomic commit 의 일부
+
+(i) Tripwire 설정
+    - 22 endpoint × 보정 모델 = ?
+    - read-heavy 가정 → 면제 가능성
+    - mid-write check 의무 여부 결정
+
+═══════════════════════════════════════════════════
+[T002.2.g 작성 가이드]
+═══════════════════════════════════════════════════
+
+[NN] CF-023 partner-side 검증 (HH 패턴 적용)
+guest-portal 처럼 4-way 분류:
+- (가) 정상 helper (generateBookingRef? 또는 다른) → CF-023 영향 없음
+- (나) fake-ref + INSERT → CF-023.b evidence expansion
+- (다) fake-ref + INSERT 없음 → CF-023.a evidence expansion (P0 검토)
+- (라) 다른 패턴 → 분류
+
+[OO] IDOR 도메인 비교 baseline
+portal-partner 의 IDOR defense rate:
+- portal-guest = 26/29 (89.7%) ← exemplar
+- contract.ts = 7/17 vulnerable ← problem
+- portal-partner = ?
+
+비교 결과로:
+- exemplar 라면 portal 시리즈 모범 도메인 group
+- vulnerable 이라면 partner-side IDOR 가 새 위험 영역
+- 어느 쪽이든 T004 security-rules.md 의 baseline
+
+[PP] partner 도메인 특수성
+- service-host: 청소/유지보수 작업자 = booking 정보 일부 access
+- owner: property 소유자 = 자기 property booking 전체 access
+- agent: lead 변환 = 자기 lead 만 access
+- 각 partner type 의 권한 범위 ≠ 균등
+- IDOR audit 시 권한 type 별 점검 (단순 partner_id mismatch 외)
+
+[QQ] CF-014 read-heavy carrier 패턴 일관성
+portal-guest 가 CF-014 largest carrier (5 anchors). portal-partner 
+도 mutator 적지만 multi-step 위험 가능:
+- service-host 의 work-order 처리 (multi-step?)
+- owner 의 listing 관리 (image upload 등)
+- agent 의 commission 처리
+
+발견 시 CF-014 evidence section partner row 추가.
+
+═══════════════════════════════════════════════════
+[Step 1 보고 형식]
+═══════════════════════════════════════════════════
+
+≤30 lines 보고:
+- Ledger row 19 + 20 fill 확인
+- 4 라우트 파일 inventory (3-way) — 2 files TBD 정확 식별
+- 22 endpoint 합계 검증
+- 사이즈 예측 + format mix
+- 3 spot-check 사전 sealing (C1/C2/C3)
+- CF anchor 점검 (NN/OO/PP/QQ + 표준)
+- CF-023 partner-side 가설
+- IDOR baseline 비교 가설
+- portal-guest cross-ref back-fill 식별
+- Tripwire 설정
+
+═══════════════════════════════════════════════════
+[지금 시작]
+═══════════════════════════════════════════════════
+
+(1) [사용자] git push origin main (T002.2.f commit)
+(2) [에이전트] T002.2.g Step 1 자동 진행 (push 확인 후, 9 항목 통합)
+(3) Step 1 보고 (≤30 lines)
+(4) Step 1 보고 후 사용자 proceed → Step 2 본문 작성
+
+T002.2.g Step 2 자동 시작 절대 금지.
