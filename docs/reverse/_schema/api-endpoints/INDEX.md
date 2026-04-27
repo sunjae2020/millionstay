@@ -4,6 +4,7 @@
 > **Convention**: rows follow the **file-of-origin rule** (see `_T002_PLAN.md` §2.1). An endpoint defined in `bookings.ts` belongs to the `booking` domain even if its URL is `/admin/bookings/*` and even if it ends up writing the `contracts` table — cross-cutting effects are surfaced via per-endpoint cross-references in the domain file, not by re-classifying the row.
 > **Numbers** below are verified by `rg -c "^router\.(get|post|put|patch|delete)\("` (T001.5 follow-up scan, 2026-04-26).
 > **Last updated**: 2026-04-27 (T002.2.h — `public.md` published, 6 files / 33 endpoints; **NEW CF-024 P1 promoted** — project-wide rate limiting absence; `public` group row CF chip set to 🟡 (CF-008/014/017/023a/024); CF-023 cross-domain verification CLOSED at this sub-task).
+> **Last updated**: 2026-04-27 (T002.2.i — `admin.md` published, 10 files / 37 endpoints; **🔴 CF-004 ESCALATED P1 → P0** at `dev-migration.ts:14-79` body-confirmed (TRUNCATE 39 production tables + hard-coded shared secret + mount-order before global guard, no NODE_ENV gate); `admin` group row CF chip should be updated from `[CF-004 + CF-008]` to **`[🔴 CF-004 (P0) + CF-008 + CF-013 + CF-014 (positive site #3) + CF-015 + CF-017 + CF-018 sub-pattern B + CF-022 + CF-024]`**; CF-008 6-way TIE at floor (admin = 0/37 = 0%); CF-018 vertical-privilege-escalation Sub-pattern B newly enumerated (10 inline `requireSuperAdmin` sites in 6 files, 8 cross-domain). Counts: P0=**4** / P1=18 / P2=3 = **25**.
 
 ---
 
