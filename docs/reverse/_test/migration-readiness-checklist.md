@@ -1,6 +1,25 @@
 # C# Migration Readiness Checklist
 
 > ✅ **T001-RECON-VERIFIED** 2026-04-26 — corroborated by `docs/reverse/_audit/T001_RECON_REPORT.md` §g.
+> ✅ **T007-LIGHT-TOUCH** 2026-04-27 — 본문 보존, T002~T006 자산 cross-ref. **25 CFs P0/P1/P2 priority 매핑** + Phase 2 종합 7-step prescription cross-ref:
+>
+> **Phase 2 종합 prescription 7-step 우선순위** (`_rules/architecture-rules.md` §6 + `_rules/security-rules.md` §11):
+> 1. **🔴 CF-004 P0** — dev-migration.ts:14-79 catastrophic = mount-order + secret + NODE_ENV gate (Phase 4 Security 최우선; 본 체크리스트 Phase 0 진입 전 hotfix 필수)
+> 2. **CF-001** numeric 통일 (Phase 0 DB hygiene 첫 행 `real → numeric(10,2)` 8 컬럼 그룹 — 본 체크리스트 Phase 0 직접 매핑)
+> 3. **CF-016** role-string 단일 enum (Phase 4 Security; db-sync.ts:16 4-variant Set vs 29-file `"SuperAdmin"` literal)
+> 4. **CF-018** requireSuperAdmin middleware (Phase 4 Security; 57 sites = 1 router + 56 inline 28 files; Sub-pattern A 5 booking-side; Phase 2 단일 middleware 추출 + sole-owner E20 canonical)
+> 5. **CF-024** rate limiting (Phase 4 Security; 11/11 도메인 absence; auth lockout 만 8.3% positive)
+> 6. **CF-017** Zod baseline (Phase 1 API standardization "Convert manual auth-route validation to Zod with `.strict()`" 행 = 본 체크리스트 직접 매핑; 5.4% → ~83% target)
+> 7. **CF-008** audit log 정책 통일 (Phase 4 Security "Audit log backfill" 행 = 본 체크리스트 직접 매핑; 6-way TIE 0% floor 6 도메인 mass backfill)
+>
+> **추가 CF 우선순위 매핑** (Phase 별):
+> - Phase 0: CF-001 (real→numeric 컬럼 그룹) + CF-013 (timestamp→timestamptz + text→varchar) + CF-002 (booking→contract 변환 경로 검증)
+> - Phase 1: CF-017 Zod (현재 5.4% admin → 83% blog 양극단; baseline 통일) + CF-019 stripe orphan columns 정리
+> - Phase 2: CF-014 db.transaction wrap (max carrier `contracts.ts:55-237` 우선; 모든 ≥2 mutation site)
+> - Phase 3: CF-006 Formula B 단일 helper + CF-007 BondWeeks=4/AdvanceWeeks=2 IBusinessRules + CF-022 state guard 양극단 통일 + F9 bond return scheduled job + F12 commissions.status enum + F14 contract_products snapshot
+> - Phase 4: CF-004/CF-016/CF-018/CF-024/CF-008 (위 7-step) + CF-015 hard-delete 16+ sites soft-delete 전환
+> - Phase 5: 25 CFs × 11 도메인 = ~150 unique fail-mode test (CRITICAL 4: CF-004/CF-014/CF-018/CF-022)
+> - Phase 6: CF-003 (.references() 0 → EF Core scaffold 시 73 권장 FK + 10 polymorphic = 83 RI rows; `_schema/erd-core.md` §11 baseline)
 
 
 Ranked from highest impact / lowest cost.

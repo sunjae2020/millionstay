@@ -1,6 +1,16 @@
 # Performance Benchmarks (Targets & Test Plan)
 
 > ✅ **T001-RECON-VERIFIED** 2026-04-26 — corroborated by `docs/reverse/_audit/T001_RECON_REPORT.md` §g.
+> ✅ **T007-LIGHT-TOUCH** 2026-04-27 — 본문 보존, T002~T006 자산 cross-ref. CF anchor 추가:
+> - **§1 Booking confirm 800ms** = CF-014 (≥6+N+M mutations 0 tx) + CF-011 (booking_ref race) + `unblockDatesForBooking` N-sequential-DELETE pattern (booking-lifecycle.md §1 cross-ref)
+> - **§1 Contract activate 1500ms (24-period)** = **CF-014 max carrier** `contracts.ts:55-237` helper ≥27 mutation 0 tx (`payment-workflow.md` §3 cross-ref)
+> - **§1 Stripe webhook 200ms** = CF-010 idempotency + signature (현재 default branch `console.log` only F11 chargeback 미처리)
+> - **§3 Booking confirm "separate inserts per blocked date"** = CF-014 N-DELETE/N-INSERT anti-pattern + Phase 2 `insert ... values batch` prescription
+> - **§3 Contract activate "per-period insert"** = CF-014 max carrier batch-able prescription
+> - **§3 Guest /me/data ~10 queries** = **CF-021 N+1 enrichment** carrier (property `buildSpaceResponse` 4 sub-query counter-evidence vs `enrich()` POSITIVE list-side leftJoin SP1 — `domain-logic-ops-property.md` §1 cross-ref)
+> - **§6 Indexes worth verifying** = `space_blocked_dates (space_id, date) UNIQUE` 추가 = CF-011 race + CF-014 batch insert 양립 baseline
+> - **§6 `bookings (account_id) WHERE deleted_at IS NULL`** = CF-020 soft-delete leak 회피 partial index pattern
+> - **§7 Public space search cache** = CF-024 rate limiting 부재 보완 (caching = first-line defense; CF-024 + cache 양립 prescription)
 
 
 > No load testing has been run against the current Node/Express stack. The targets below are derived from typical SaaS expectations and should be measured before / after the C# port to verify parity.

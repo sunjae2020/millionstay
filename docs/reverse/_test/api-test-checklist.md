@@ -1,6 +1,18 @@
 # API Test Checklist
 
 > ✅ **T001-RECON-VERIFIED** 2026-04-26 — corroborated by `docs/reverse/_audit/T001_RECON_REPORT.md` §g.
+> ✅ **T007-LIGHT-TOUCH** 2026-04-27 — 본문 보존, T002~T006 자산 cross-ref. CF anchor 추가:
+> - **§1 #5 Zod validation** = CF-017 (5.4% admin floor → 83% blog ceiling 양극단; Phase 2 baseline)
+> - **§1 #7 Rate-limited 429** = CF-024 (auth route lockout 만 존재; 11/11 도메인 rate limiting 부재 — 본 체크 = positive assertion)
+> - **§1 #10 Side effects in transaction** = CF-014 max carrier `contracts.ts:55-237` ≥27 mutation 0 tx; CF-008 audit log Tx 안 → ghost log 회피
+> - **§1 #11 Soft-deleted excluded** = CF-020 leak (현재 9/11 도메인 affected)
+> - **§1 #12 Sensitive fields stripped** = CF-013 PII text 형식 (DOB / passport / visa)
+> - **§2 A-3 5 wrong attempts → 429** = `auth.ts` 유일 positive site (CF-024 11/11 도메인 중 1 = 8.3% positive)
+> - **§3 C-4 Foreign row 404** = CF-018 Sub-pattern A canonical (sole-owner E20 booking-side 3 BAD + 2 POSITIVE; Sub-pattern B 56 SuperAdmin 57 sites 매트릭스)
+> - **§4 P-1/P-2 sole-owner data export** = CF-018 Sub-pattern A POSITIVE (`security-rules.md` §1 canonical)
+> - **§5 F-2/F-3 Stripe webhook** = CF-010 (signature + idempotency + chargeback default `console.log` only F11)
+> - **§5 F-4 Invoice mutability** = CF-022 manual 67% vs webhook 0% split anomaly
+> - **§5 F-5 Commission snapshot** = CF-001 (commissions=real) + F12 (status enum 부재)
 
 
 A general checklist to apply to **every** endpoint before it is considered production-ready.

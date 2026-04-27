@@ -1,6 +1,20 @@
 # Booking Test Cases (Recommended)
 
 > ✅ **T001-RECON-VERIFIED** 2026-04-26 — corroborated by `docs/reverse/_audit/T001_RECON_REPORT.md` §g.
+> ✅ **T007-LIGHT-TOUCH** 2026-04-27 — 본문 보존, T002~T006 자산 cross-ref. CF anchor 추가:
+> - **§1 BC-04/BC-05 stay validation** = CF-017 absent (booking 12/27 = 44% Zod coverage = repo 평균 ~12% 이상 but stay validation 자체는 미존재)
+> - **§1 BC-06 Guest A submits for Guest B** = CF-018 Sub-pattern A POSITIVE (sole-owner E20 + bookings.ts:728/735/572 3 BAD)
+> - **§2 BS-01-14 status transitions** = **CF-022 booking 9/9 cross-pack leader** (`state-machines.md` §1; `_workflows/booking-lifecycle.md` §1; `domain-logic-booking.md` §1)
+> - **§3 BO-04 Race overbooking** = **CF-011 booking_ref race** (`generateBookingRef` row-count race; `_rules/security-rules.md` §11)
+> - **§4 BX-04 bond_amount = weekly × 4** = **CF-007** (`bookings.ts:395` `*4`; R-REPO-6 11회째 SWAP 정정)
+> - **§4 BX-05 advance_amount = weekly × 2** = **CF-007** (`bookings.ts:396` `*2`)
+> - **§4 BX-06 1 audit log entry** = CF-008 booking 78% transition-grain leader / CF-014 audit insert in same tx as state change
+> - **§5 CT-01 Activate cascade** = **CF-014 max carrier** (`contracts.ts:55-237` helper ≥27 mutation 0 db.transaction; **CRITICAL** rollback test required)
+> - **§5 CT-04 pro-rated last period** = CF-006 Formula B 4-site (`bookings.ts:485` + `contracts.ts:92,94` + `dashboard.ts` outlier)
+> - **§5 CT-05 Re-activate idempotent** = CF-014 paidKeys 보존 patten (idempotency `db.delete` 후 재생성)
+> - **§6 AL-04 audit insert in tx** = CF-014 (현재 0 tx — Phase 2 prescription)
+> - **§7 AZ-01 Guest A get Guest B's** = CF-018 Sub-pattern A canonical (`security-rules.md` §1 sole-owner E20)
+> - **§8 Edge "F7 Pending dead-end"** = guest-portal.ts:160-162 literal `"Pending"` 8 main state 외 + admin 9/9 transition reject = "submitted but stuck" UX gap (`_design/guest-portal-layout.md` §2 cross-ref)
 
 
 > Use these as the acceptance suite for the current Node/Express implementation **and** the future C# port.

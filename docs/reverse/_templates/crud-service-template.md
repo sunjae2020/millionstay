@@ -1,6 +1,14 @@
 # CRUD Service Template
 
 > ✅ **T001-RECON-VERIFIED** 2026-04-26 — corroborated by `docs/reverse/_audit/T001_RECON_REPORT.md` §g.
+> ✅ **T007-LIGHT-TOUCH** 2026-04-27 — 본문 보존, T002~T006 자산 cross-ref. CF anchor 추가:
+> - **CF-008** audit log = §3 service layer `logAction(tx, ...)` 항상 transaction 안 → CF-014 ghost log 회피 (6-way TIE at 0% floor 6 도메인 backfill 시 본 템플릿 baseline)
+> - **CF-014** db.transaction = §3 모든 mutation `db.transaction(async (tx) => {...})` wrap → 현재 max carrier `contracts.ts:55-237` helper Phase 2 prescription
+> - **CF-017** Zod = §6 checklist `Zod schema in lib/api-zod` → 현재 5.4% admin floor → Phase 2 baseline (blog-posts.ts 83% ceiling 패턴 채택)
+> - **CF-018** IDOR = §3 `widgetService.update(id, body, req.user!)` actor 전달 → service 안 sole-owner / SuperAdmin 가드 = E20 canonical exemplar 매핑
+> - **CF-020** soft-delete = §4 repo `isNull(widgets.deleted_at)` 모든 list/get → CF-020 leak 회피
+> - **AppError + global error middleware §5** = `_rules/architecture-rules.md` §2 4+1 auth tier + §6 표준 envelope
+> - **Phase 2 prescription**: 7-step (CF-004 P0 / CF-001 numeric / CF-016 enum / CF-018 middleware / CF-024 rate limiting / CF-017 Zod baseline / CF-008 audit) — 본 template = service/repo 분리 + transaction wrap + audit + Zod 일괄 적용 baseline.
 
 
 Use this template when adding a new domain endpoint. It enforces the future architecture target (route → service → repo) without breaking the current inline-route style for legacy code.

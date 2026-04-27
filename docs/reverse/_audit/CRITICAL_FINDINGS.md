@@ -2444,3 +2444,75 @@ P0=4 / P1=18 / P2=3 = **25 CF** (T006 전체 0 NEW promotion). R-REPO-5 incident
 ### 다음 단계
 
 T007 (`_templates/` + `_test/` 8 files) — **자동 시작 절대 금지**. 사용자 push + proceed 명시 후 진입.
+
+---
+
+## T007 GROUP COMPLETE — `_templates/` + `_test/` 8 files (REWRITE 3 + LIGHT TOUCH 5; 95% 마일스톤)
+
+### Sub-task ledger
+
+| ST | 산출물 | T001 | T007 | Δ | 처리 |
+|----|--------|------|------|---|------|
+| 1 — audit-log-template | `_templates/audit-log-template.md` | 92 (NR) | **99** | +8% | REWRITE (CF-008 9-domain matrix) |
+| 2 — financial-calculation-template | `_templates/financial-calculation-template.md` | 166 (NR) | **129** | −22% | REWRITE (14 const + MONEY_AUDIT TC-M01-05) |
+| 3 — existing-test-coverage | `_test/existing-test-coverage.md` | 97 (NR) | **122** | +26% | REWRITE (25 CFs × 11 도메인 매트릭스) |
+| 4 — crud-service-template | `_templates/crud-service-template.md` | 174 (V) | **182** | +5% | LIGHT TOUCH (T001-VERIFIED 보존 + T007 banner) |
+| 5 — api-test-checklist | `_test/api-test-checklist.md` | 89 (V) | **101** | +13% | LIGHT TOUCH banner |
+| 6 — booking-test-cases | `_test/booking-test-cases.md` | 94 (V) | **108** | +15% | LIGHT TOUCH banner |
+| 7 — migration-readiness | `_test/migration-readiness-checklist.md` | 90 (V) | **109** | +21% | LIGHT TOUCH banner |
+| 8 — performance-benchmarks | `_test/performance-benchmarks.md` | 106 (V) | **116** | +9% | LIGHT TOUCH banner |
+| 합계 | 8 files | **908** | **966** | **+6.4%** | 3 REWRITE + 5 LIGHT TOUCH |
+
+### CF anchor 매트릭스 (8 files × 25 CFs)
+
+- **audit-log**: CF-008 9-domain producer-consumer matrix (booking 78% / contract 71% / invoice 80% — top 3 carriers + 6-way TIE 0% floor admin/payment/catalog/property/crm/portal-partner) + Phase 2 audit log 정책 통일 prescription.
+- **financial-calculation**: CF-001 (numeric vs real 14 const) + CF-002 (lossy bookings → contracts) + CF-006 (Formula B 4 sites) + CF-007 (bond=4주 advance=2주) + CF-010 (Stripe webhook bypass) + CF-019.a/.b (orphan stripe columns) + MONEY_AUDIT TC-M01-05 cross-ref.
+- **existing-test-coverage**: 25 CFs × 11 도메인 (api-endpoints) = 275-cell coverage gap matrix (현재 0% e2e + ~5% unit; 모든 CF Phase 2 .NET 포팅 시 신규 test required).
+- **5 LIGHT TOUCH**: T001-VERIFIED 마커 보존 + 10-15L T007 cross-ref banner 추가 (CRITICAL_FINDINGS / MONEY_AUDIT / state-machines / _rules/ cross-ref).
+
+### Phase 2 7-step prescription cross-ref (T004 financial-rules §8 ↔ T007)
+
+| Phase 2 step | T007 carrier file |
+|-------------|------------------|
+| (1) CF-004 P0 5-step | (없음 — _rules/security §7 + _design/admin-layout §3 only) |
+| (2) CF-001 numeric 통일 | financial-calculation-template §1 |
+| (3) CF-016 단일 enum | (없음 — _rules/security §4 only) |
+| (4) CF-018 requireSuperAdmin middleware | (없음 — _rules/security §3 only) |
+| (5) CF-024 rate limiting | (없음 — _rules/security §5 only) |
+| (6) CF-017 Zod baseline | api-test-checklist (LIGHT TOUCH banner) |
+| (7) CF-008 audit log 정책 통일 | **audit-log-template §1-3** (T007 핵심 carrier) |
+
+### 11 Incidentals routing (T007)
+
+- **F8** (cs_tickets Resolved/Closed 부재) → existing-test-coverage §3 (test 가능 state ⊆ {New,InProgress,Archived}만 = state coverage gap).
+- **F9** (bond return 14-day) → financial-calculation-template §5 (계산 부재 carrier — Phase 2 entity prescription).
+- **F10** (helper "Pending" 6th label) → audit-log-template §3 (5-state 외 audit data 형식 gap).
+- **F11** (chargeback/dispute) → financial-calculation-template §4.3 (Stripe webhook gap).
+- **F12** (commissions.status enum 부재) → financial-calculation-template §5.
+- **F13** (3 ⚰️ candidate KEEP) → existing-test-coverage §2 (read-only catalog test).
+- **F14** (contract_products snapshot 부재) → financial-calculation-template §5.
+- **F15** (tasks polymorphic FK orphan) → existing-test-coverage §2 (test scope 제외).
+- **F4/F5/F7** → backend/UI carrier only (T007 무관).
+
+### R-REPO-9 / R-REPO-6 / R-REPO-10 가동 (T007)
+
+- **R-REPO-6 16회째 메타-가동 (즉시 해소형 2회째)** — Step 1 통합 Pre-flight 시 사용자 가설 4 _templates/ + 4 _test/ 8 files 명단 모두 환각 → ground truth ls = 3 _templates/ + 5 _test/ 정정 (_templates: audit-log + crud-service + financial-calculation; _test: api-test-checklist + booking-test-cases + existing-test-coverage + migration-readiness + performance-benchmarks). 차단 미발동 (단순 file 명단 정정) → Step 2-5 자동 진행 통보 → 사용자 proceed 명시 후 본문 작성 진입.
+- **R-REPO-9 자동 진행 10회째 confirm** — 차단 미발동 (단순 정정) + 신규 P0/P1 0 + Tripwire 0 (966L 합계 +6.4% T001 baseline 유지) + 분할 (3 REWRITE + 5 LIGHT TOUCH) 명확.
+- **R-REPO-10 묶음 위임 8회째 max 가속** — **8 sub-task / 1 응답 / 1 atomic commit / 1 사용자 push = -87.5% 응답 / -87.5% commit / -87.5% push** (T005 6 ST -83% 종전 max 갱신; T007 8 ST 새 max). 누적 8 묶음 / 33 sub-task / 8 commit / 8 push (R-REPO-9 단독 = 33/33/33 필요).
+
+### R-REPO 가동 누적 final (T007 종료 시점)
+
+- R-REPO-6 = **16회** (T007 = 즉시 해소형 2회째)
+- R-REPO-9 차단 = **4회 unchanged** (T007 차단 미발동)
+- R-REPO-9 자동 진행 = **10회** (T007 = 10회째)
+- R-REPO-10 묶음 = **8회** (T007 8 ST 새 max -87.5%)
+
+### Counts unchanged
+
+P0=4 / P1=18 / P2=3 = **25 CF** (T007 전체 0 NEW promotion). R-REPO-5 incidentals **11 unchanged**.
+
+### 다음 단계
+
+T008 (Index README + verify; 마지막 단계 = 100% 완료 임박) — **자동 시작 절대 금지**. 사용자 push + proceed 명시 후 진입.
+
+🎯 **T007 GROUP COMPLETE marker** (2026-04-27, 95% 마일스톤): 8 files / 966 lines / 0 NEW CF / R-REPO-10 8 ST 새 max 가속.
