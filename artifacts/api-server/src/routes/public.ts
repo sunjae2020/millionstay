@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, asc, desc, inArray, gte, lte, or, isNull, SQL } from "drizzle-orm";
+import { eq, and, asc, desc, inArray, gte, lte, or, isNull, ilike, SQL } from "drizzle-orm";
 import {
   db,
   spacesTable,
@@ -17,6 +17,7 @@ import {
   contractsTable,
   blogPostsTable,
   leadsTable,
+  suburbsTable,
 } from "@workspace/db";
 import { insertLeadWithGeneratedRef } from "../lib/leadRef.js";
 
@@ -692,6 +693,27 @@ router.get("/v1/public/services", async (req, res): Promise<void> => {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch services" });
   }
+});
+
+/* ───────────────────────────────────────────────────────
+   GET /api/v1/suburbs
+   Public listing of suburbs for guest-side search filters.
+   Mounted before requireAuth so the homepage/search page
+   can populate suburb dropdowns without authentication.
+──────────────────────────────────────────────────────── */
+router.get("/v1/suburbs", async (req, res): Promise<void> => {
+  const { country_code, state, search } = req.query as Record<string, string>;
+  const conditions: SQL[] = [isNull(suburbsTable.deleted_at), eq(suburbsTable.status, "Active")];
+  if (country_code) conditions.push(eq(suburbsTable.country_code, country_code));
+  if (state) conditions.push(eq(suburbsTable.state, state));
+  if (search) {
+    conditions.push(or(
+      ilike(suburbsTable.name, `%${search}%`),
+      ilike(suburbsTable.area_name, `%${search}%`),
+    ) as SQL);
+  }
+  const rows = await db.select().from(suburbsTable).where(and(...conditions)).orderBy(asc(suburbsTable.name));
+  res.json({ data: rows });
 });
 
 router.get("/v1/public/blog", async (req, res): Promise<void> => {
