@@ -361,4 +361,8 @@ export function useUpdateMyProfile() {
         method: "PUT",
         body: JSON.stringify(payload.data),
       }),
-    onSuccess: () =
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["guest", "profile"] });
+    },
+  });
+}
