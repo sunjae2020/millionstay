@@ -37,7 +37,10 @@ async function buildAll() {
     sourcemap: "linked",
     plugins: [
       esbuildPluginPino({ transports: ["pino-pretty"] })
-    ]
+    ],
+    banner: {
+      js: "import { createRequire as topLevelCreateRequire } from 'node:module';\nimport { fileURLToPath as topLevelFileURLToPath } from 'node:url';\nimport { dirname as topLevelDirname } from 'node:path';\nconst require = topLevelCreateRequire(import.meta.url);\nconst __filename = topLevelFileURLToPath(import.meta.url);\nconst __dirname = topLevelDirname(__filename);"
+    }
   });
 }
 
