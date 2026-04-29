@@ -49,4 +49,5 @@ Thumbs.db
 .local/
 .env
 .env.local
-.env.*.claude/
+.env.*
+.claude/
