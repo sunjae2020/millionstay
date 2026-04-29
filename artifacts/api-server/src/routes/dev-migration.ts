@@ -7,9 +7,25 @@ import { fileURLToPath } from "url";
 
 const router = Router();
 
-const MIGRATION_SECRET = "MS_MIGRATE_2026_PROD";
+// CF-004: production hard block. The migration secret is committed to the repo,
+// so even with NODE_ENV checks this route is dangerous. Require an explicit
+// opt-in via DEV_MIGRATION_ENABLED=true (set out-of-band, never in repo).
+const DEV_MIGRATION_ENABLED = process.env["DEV_MIGRATION_ENABLED"] === "true";
+const MIGRATION_SECRET = process.env["DEV_MIGRATION_SECRET"];
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+router.use((_req, res, next) => {
+  if (!DEV_MIGRATION_ENABLED) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  if (!MIGRATION_SECRET) {
+    res.status(503).json({ error: "Migration secret not configured" });
+    return;
+  }
+  next();
+});
 
 router.post("/run-migration", async (req, res) => {
   const secret = req.headers["x-migration-secret"];
