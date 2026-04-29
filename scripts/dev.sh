@@ -34,14 +34,14 @@ PIDS=()
 trap 'echo; echo "Stopping..."; for pid in "${PIDS[@]:-}"; do kill "$pid" 2>/dev/null || true; done; exit 0' INT TERM
 
 run_api() {
-  echo "→ api-server  http://localhost:${PORT:-8080}"
-  pnpm --filter @workspace/api-server dev &
+  echo "→ api-server  http://localhost:8080"
+  PORT=8080 pnpm --filter @workspace/api-server dev &
   PIDS+=($!)
 }
 
 run_web() {
   echo "→ guest-web   http://localhost:5173"
-  pnpm --filter @workspace/million-stay-web dev &
+  PORT=5173 pnpm --filter @workspace/million-stay-web dev &
   PIDS+=($!)
 }
 
