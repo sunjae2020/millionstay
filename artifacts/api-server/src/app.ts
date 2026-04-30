@@ -26,6 +26,7 @@ import pageContentsRouter from "./routes/page-contents";
 import privacyRouter from "./routes/privacy";
 import { logger } from "./lib/logger";
 import { requireAuth } from "./middlewares/requireAuth";
+import { loginLimiter, applicationLimiter, generalLimiter } from "./middlewares/rateLimit";
 
 // Resolve the directory of this file — works both in source and in the esbuild bundle.
 // In the bundle (artifacts/api-server/dist/index.mjs), import.meta.url correctly
@@ -85,6 +86,11 @@ app.use(
   helmet({
     contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false,
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true,
+    },
   }),
 );
 
@@ -145,6 +151,15 @@ app.use(
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// CF-024 — Rate limits for high-risk endpoints (effective in production only).
+app.use(["/api/v1/auth/login", "/api/v1/partner/login", "/api/v1/guest/login"], loginLimiter);
+app.use([
+  "/api/v1/public/owner-applications",
+  "/api/v1/public/agent-applications",
+  "/api/v1/public/service-host-applications",
+], applicationLimiter);
+app.use("/api/", generalLimiter);
 
 app.use("/api", authRouter);
 app.use("/api", healthRouter);
