@@ -18,6 +18,7 @@ import {
   blogPostsTable,
   leadsTable,
   suburbsTable,
+  exchangeRatesTable,
 } from "@workspace/db";
 import { insertLeadWithGeneratedRef } from "../lib/leadRef.js";
 
@@ -898,6 +899,66 @@ router.post("/v1/public/service-host-applications", async (req, res): Promise<vo
   });
 
   res.status(201).json({ success: true, lead_ref: row.lead_ref, id: row.id });
+});
+
+/* ───────────────────────────────────────────────────────
+   GET /api/v1/public/exchange-rates
+   No auth. Returns latest rate per currency, normalised to
+   { rate: 1 X = N AUD, inverse: 1 AUD = N X }.
+──────────────────────────────────────────────────────── */
+router.get("/v1/public/exchange-rates", async (_req, res): Promise<void> => {
+  const rows = await db
+    .select()
+    .from(exchangeRatesTable)
+    .orderBy(desc(exchangeRatesTable.effective_date), desc(exchangeRatesTable.id));
+
+  // Take the latest row per (from, to) pair
+  const latest = new Map<string, typeof rows[number]>();
+  for (const r of rows) {
+    const key = `${r.from_currency}->${r.to_currency}`;
+    if (!latest.has(key)) latest.set(key, r);
+  }
+
+  const out: Record<string, { rate: number; inverse: number; source: string; effective_date: string }> = {};
+  let updatedAt: string | null = null;
+
+  for (const r of latest.values()) {
+    const rate = Number(r.rate);
+    if (!Number.isFinite(rate) || rate <= 0) continue;
+
+    if (r.to_currency === "AUD" && r.from_currency !== "AUD") {
+      // 1 from = rate AUD
+      out[r.from_currency] = {
+        rate,
+        inverse: 1 / rate,
+        source: r.source,
+        effective_date: String(r.effective_date),
+      };
+    } else if (r.from_currency === "AUD" && r.to_currency !== "AUD") {
+      // 1 AUD = rate X  →  1 X = 1/rate AUD
+      out[r.to_currency] = {
+        rate: 1 / rate,
+        inverse: rate,
+        source: r.source,
+        effective_date: String(r.effective_date),
+      };
+    }
+
+    const ts = r.updated_at ? new Date(r.updated_at as any).toISOString() : null;
+    if (ts && (!updatedAt || ts > updatedAt)) updatedAt = ts;
+  }
+
+  // AUD always present at 1:1
+  out["AUD"] = { rate: 1, inverse: 1, source: "system", effective_date: new Date().toISOString().slice(0, 10) };
+
+  res.json({
+    success: true,
+    data: {
+      baseCurrency: "AUD",
+      updatedAt,
+      rates: out,
+    },
+  });
 });
 
 export default router;

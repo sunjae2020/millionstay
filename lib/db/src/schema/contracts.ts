@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, real, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, real, numeric, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -18,6 +18,7 @@ export const contractsTable = pgTable("contracts", {
   bond_amount: real("bond_amount"),
   advance_amount: real("advance_amount"),
   currency: text("currency").notNull().default("AUD"),
+  exchange_rate_to_aud: numeric("exchange_rate_to_aud", { precision: 18, scale: 8 }),
   status: text("status").notNull().default("Draft"),
   deleted_at: timestamp("deleted_at"),
   sent_at: timestamp("sent_at", { withTimezone: true }),

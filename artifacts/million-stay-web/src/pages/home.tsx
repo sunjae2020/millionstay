@@ -10,6 +10,7 @@ import { useListSuburbs } from "@workspace/api-client-react";
 import { useListFeaturedSpaces, useListPublicSpaces } from "@/lib/guest-api";
 import { motion } from "framer-motion";
 import { Wifi, ShoppingBag, Shield, DollarSign, Plane, Bed, PlayCircle, MapPin, ChevronRight } from "lucide-react";
+import { useDisplayCurrency, formatCurrencyAmount } from "@/contexts/DisplayCurrencyContext";
 
 function SectionTitle({ italic, normal, sub }: { italic: string; normal?: string; sub?: string }) {
   return (
@@ -34,6 +35,10 @@ function buildSpaceUrl(id: number | string, checkIn: string, checkOut: string) {
 function ListingCard({ space, index = 0, checkIn = "", checkOut = "" }: { space: any; index?: number; checkIn?: string; checkOut?: string }) {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
+  const { formatReference } = useDisplayCurrency();
+  const priceCcy = ((space.base_currency || space.currency || "AUD") as string).toUpperCase();
+  const priceAmount = Number(space.base_weekly_price ?? 0);
+  const priceRef = priceAmount > 0 ? formatReference(priceAmount, priceCcy) : null;
 
   const SPACE_FEATURES: Record<string, { icon: string; label: string }[]> = {
     EntireSpace: [
@@ -90,8 +95,9 @@ function ListingCard({ space, index = 0, checkIn = "", checkOut = "" }: { space:
         </div>
         <div className="flex items-center justify-between">
           <div>
-            <span className="text-lg font-bold text-primary">${space.base_weekly_price}</span>
+            <span className="text-lg font-bold text-primary">{formatCurrencyAmount(priceAmount, priceCcy)}</span>
             <span className="text-xs text-gray-400 ml-1">{t("home.listing.per_week")}</span>
+            {priceRef && <div className="text-[11px] text-muted-foreground">{priceRef}</div>}
           </div>
           <button
             onClick={(e) => { e.stopPropagation(); setLocation(buildSpaceUrl(space.id, checkIn, checkOut)); }}
@@ -327,7 +333,7 @@ export default function Home() {
             <div className="rounded-xl overflow-hidden bg-white shadow-lg grid grid-cols-1 md:grid-cols-2">
               <div className="p-8 md:p-10 flex flex-col justify-center">
                 <div className="inline-block bg-primary text-white text-2xl font-bold px-4 py-2 rounded mb-4 w-fit">
-                  ${spotlightSpace.base_weekly_price}
+                  {formatCurrencyAmount(Number(spotlightSpace.base_weekly_price ?? 0), ((spotlightSpace as any).base_currency || "AUD").toUpperCase())}
                   <span className="text-xs font-normal ml-1">{t("home.spotlight.per_week")}</span>
                 </div>
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">{spotlightSpace.name}</h2>

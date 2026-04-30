@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Footer } from "@/components/footer";
+import { useDisplayCurrency, formatCurrencyAmount } from "@/contexts/DisplayCurrencyContext";
 import { addWeeks, format, parseISO } from "date-fns";
 import "leaflet/dist/leaflet.css";
 
@@ -323,6 +324,9 @@ export default function SpaceDetail() {
 
   const selectedPriceProduct = space?.products?.find((p) => p.id === selectedProduct);
   const weeklyRate = selectedPriceProduct?.price ?? space?.base_weekly_price ?? 0;
+  const priceCurrency: string = ((space as any)?.base_currency || (selectedPriceProduct as any)?.currency || "AUD").toString().toUpperCase();
+  const { formatReference } = useDisplayCurrency();
+  const weeklyRateRef = Number(weeklyRate) > 0 ? formatReference(Number(weeklyRate), priceCurrency) : null;
   // Pro-rata: weekly_rate / 7 × days
   const rentTotal = stayDays && weeklyRate ? Math.round((weeklyRate / 7) * stayDays * 100) / 100 : null;
 
@@ -432,8 +436,11 @@ export default function SpaceDetail() {
             {/* Price + distance */}
             <div className="flex flex-wrap items-center gap-4">
               <div>
-                <span className="text-3xl font-bold text-primary">${weeklyRate}</span>
+                <span className="text-3xl font-bold text-primary">{formatCurrencyAmount(Number(weeklyRate), priceCurrency)}</span>
                 <span className="text-sm text-gray-500 ml-1">/Per Week</span>
+                {weeklyRateRef && (
+                  <div className="text-xs text-muted-foreground mt-0.5">{weeklyRateRef}</div>
+                )}
               </div>
               {addressParts.length > 0 && (
                 <p className="text-sm text-gray-500 flex items-center gap-1">

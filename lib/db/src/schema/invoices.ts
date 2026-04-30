@@ -8,6 +8,7 @@ export const invoicesTable = pgTable("invoices", {
   account_id: integer("account_id"),
   amount: numeric("amount", { precision: 10, scale: 2 }).notNull().default("0"),
   currency: text("currency").notNull().default("AUD"),
+  exchange_rate_to_aud: numeric("exchange_rate_to_aud", { precision: 18, scale: 8 }),
   status: text("status").notNull().default("Draft"),
   due_date: text("due_date"),
   paid_at: timestamp("paid_at", { withTimezone: true }),

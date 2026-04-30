@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, contractsTable, accountsTable, spacesTable, propertiesTable, contractProductsTable, accommodationCatalogTable, bookingsTable, recurringSchedulesTable, bookingServicesTable, invoicesTable, contractLineItemsTable } from "@workspace/db";
 import { eq, ilike, and, like, desc, isNull, inArray } from "drizzle-orm";
 import { logAction } from "../utils/auditLog";
+import { getRateToAud } from "../lib/rateSnapshot";
 
 // ─── Invoice ref generator (returns a factory that increments safely) ────────
 async function makeInvoiceRefFactory(): Promise<() => string> {
@@ -166,6 +167,7 @@ async function generateContractInvoicesAndSchedules(contractId: number): Promise
             account_id: contract.tenant_account_id ?? null,
             amount: lineAmount,
             currency: lineCurrency,
+            exchange_rate_to_aud: await getRateToAud(lineCurrency),
             status: "Sent",
             due_date: current,
             description,
@@ -207,6 +209,7 @@ async function generateContractInvoicesAndSchedules(contractId: number): Promise
           account_id: contract.tenant_account_id ?? null,
           amount: lineAmount,
           currency: lineCurrency,
+          exchange_rate_to_aud: await getRateToAud(lineCurrency),
           status: "Sent",
           due_date: start,
           description,
@@ -328,6 +331,7 @@ router.post("/v1/contracts", async (req, res): Promise<void> => {
     bond_amount: data.bond_amount ?? null,
     advance_amount: data.advance_amount ?? null,
     currency: data.currency ?? "AUD",
+    exchange_rate_to_aud: await getRateToAud(data.currency ?? "AUD"),
     status: "Draft",
     document_url: data.document_url ?? null,
     terms_text: data.terms_text ?? null,

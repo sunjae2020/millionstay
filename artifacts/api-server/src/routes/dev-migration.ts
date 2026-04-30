@@ -69,6 +69,8 @@ router.post("/run-migration", async (req, res) => {
 
       for (let i = 0; i < statements.length; i++) {
         const stmt = statements[i];
+        // privacy-skip: SAVEPOINT name is sp_mig_<int> (loop counter), not
+        // user input. Postgres SAVEPOINTs cannot be parameterised.
         const sp = `sp_mig_${i}`;
         try {
           await tx.execute(sql.raw(`SAVEPOINT ${sp}`));

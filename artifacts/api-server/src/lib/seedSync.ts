@@ -215,6 +215,8 @@ export async function importSeed(opts: ImportOptions = {}): Promise<ImportResult
     await tx.execute(sql.raw(TRUNCATE_SQL));
     for (let i = 0; i < statements.length; i++) {
       const stmt = statements[i];
+      // privacy-skip: SAVEPOINT name is built from a loop counter (sp_imp_<int>),
+      // not user input. Postgres SAVEPOINTs cannot be parameterised.
       const sp = `sp_imp_${i}`;
       try {
         await tx.execute(sql.raw(`SAVEPOINT ${sp}`));

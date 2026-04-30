@@ -10,6 +10,7 @@ import {
 } from "./ui/dropdown-menu";
 import { Menu, X, LayoutDashboard, LogOut, ChevronDown } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
+import { CurrencySelector } from "./currency-selector";
 import logoHorizontal from "@assets/06.OR_NB_horizontal_ver_1775381659303.png";
 import logoMark from "@assets/05.OR_NB_Mark_simple_ver_1775381659302.png";
 
@@ -108,6 +109,8 @@ export function Navbar() {
 
           {/* Right Controls */}
           <div className="flex items-center gap-2">
+            {/* Currency Switcher */}
+            <CurrencySelector />
             {/* Language Switcher */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -215,6 +218,9 @@ export function Navbar() {
                 {t(`nav.${link.key}`)}
               </Link>
             ))}
+
+            {/* Mobile currency switcher */}
+            <CurrencySelector variant="mobile" />
 
             {/* Mobile language switcher */}
             <div className="border-t border-gray-100 mt-2 pt-2">

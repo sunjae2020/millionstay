@@ -1,0 +1,19 @@
+name: Privacy & Security Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  privacy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Static checks (check-privacy.sh)
+        run: ./scripts/check-privacy.sh
+
+      - name: Coverage tests (test-privacy-coverage.sh)
+        run: ./scripts/test-privacy-coverage.sh

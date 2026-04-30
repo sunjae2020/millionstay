@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, invoicesTable, bookingsTable, contractsTable, accountsTable } from "@workspace/db";
 import { eq, ilike, and, isNull, inArray } from "drizzle-orm";
 import { logAction } from "../utils/auditLog";
+import { getRateToAud } from "../lib/rateSnapshot";
 import {
   CreateInvoiceBody,
   UpdateInvoiceBody,
@@ -68,13 +69,15 @@ router.post("/v1/invoices", async (req, res): Promise<void> => {
   const parsed = CreateInvoiceBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const invoice_ref = await nextInvoiceRef();
+  const ccy = parsed.data.currency ?? "AUD";
   const [row] = await db.insert(invoicesTable).values({
     invoice_ref,
     booking_id: parsed.data.booking_id ?? null,
     contract_id: parsed.data.contract_id ?? null,
     account_id: parsed.data.account_id ?? null,
     amount: parsed.data.amount ?? 0,
-    currency: parsed.data.currency ?? "AUD",
+    currency: ccy,
+    exchange_rate_to_aud: await getRateToAud(ccy),
     due_date: parsed.data.due_date ?? null,
     description: parsed.data.description ?? null,
     notes: parsed.data.notes ?? null,

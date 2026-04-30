@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Pre-commit hook — runs privacy/security checks on staged files.
+# Installed via `git config core.hooksPath .githooks` (or `pnpm prepare`).
+#
+# Bypass (rare): git commit --no-verify
+
+set -e
+
+REPO=$(git rev-parse --show-toplevel)
+"$REPO/scripts/check-privacy.sh" --staged

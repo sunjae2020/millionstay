@@ -132,6 +132,7 @@ function getNav(t: (k: string) => string): NavSection[] {
         { href: "/finance/receipts", label: t("nav.receipt"), icon: Receipt },
         { href: "/finance/commissions", label: t("nav.commission"), icon: Percent },
         { href: "/finance/recurring", label: t("nav.recurring"), icon: RefreshCw },
+        { href: "/finance/exchange-rates", label: "Exchange Rates", icon: DollarSign },
       ],
     },
     {

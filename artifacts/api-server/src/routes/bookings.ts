@@ -18,6 +18,7 @@ import {
   bookingServicePhotosTable,
 } from "@workspace/db";
 import { logAction } from "../utils/auditLog";
+import { getRateToAud } from "../lib/rateSnapshot";
 import {
   ListBookingsQueryParams,
   CreateBookingBody,
@@ -189,9 +190,10 @@ router.post("/v1/bookings", async (req, res): Promise<void> => {
   const contactName = contact ? `${contact.first_name}_${contact.last_name}`.replace(/\s+/g, "_") : "Guest";
   const name = `GuestBook_${contactName}_${new Date().toISOString().slice(0, 10)}`;
 
+  const exchange_rate_to_aud = await getRateToAud((data as any).currency ?? "AUD");
   const [row] = await db
     .insert(bookingsTable)
-    .values({ ...data, ...stayDetails, booking_ref, name, booking_status: "Draft" })
+    .values({ ...data, ...stayDetails, booking_ref, name, booking_status: "Draft", exchange_rate_to_aud })
     .returning();
   res.status(201).json(await buildBookingResponse(row));
 });
@@ -460,6 +462,7 @@ router.patch("/v1/bookings/:id/confirm", async (req, res): Promise<void> => {
       bond_amount: bondAmount,
       advance_amount: advanceAmount,
       currency: existing.currency ?? "AUD",
+      exchange_rate_to_aud: await getRateToAud(existing.currency ?? "AUD"),
       status: "Draft",
       terms_text: termsText,
     }).returning();

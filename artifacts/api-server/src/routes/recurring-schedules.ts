@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, recurringSchedulesTable, invoicesTable, bookingsTable, accountsTable } from "@workspace/db";
 import { eq, and, lte, ilike, isNull, inArray } from "drizzle-orm";
 import { z } from "zod";
+import { getRateToAud } from "../lib/rateSnapshot";
 
 const router = Router();
 
@@ -162,6 +163,7 @@ router.post("/v1/recurring-schedules/generate-due", async (req, res): Promise<vo
         contract_id: schedule.contract_id ?? null,
         amount: totalAmount,
         currency: schedule.currency,
+        exchange_rate_to_aud: await getRateToAud(schedule.currency),
         status: "Sent",
         due_date: dueDate,
         description: `${schedule.schedule_type} — ${schedule.frequency} payment (subtotal: $${subtotal}, GST: $${gstAmount})`,

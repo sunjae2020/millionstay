@@ -19,6 +19,7 @@ import {
 import { requireGuestAuth } from "../middlewares/requireGuestAuth";
 import { sendBookingConfirmation } from "../lib/email";
 import { logAction } from "../utils/auditLog";
+import { getRateToAud } from "../lib/rateSnapshot";
 import multer from "multer";
 import { isCloudinaryConfigured, uploadToCloudinary, deleteFromCloudinary } from "../utils/cloudinary";
 
@@ -160,6 +161,8 @@ router.post("/v1/guest/bookings", async (req, res): Promise<void> => {
         booking_status: "Pending",
         booking_source: "Guest Portal",
         status: "Active",
+        currency: (spaceRow as any).base_currency ?? "AUD",
+        exchange_rate_to_aud: await getRateToAud((spaceRow as any).base_currency ?? "AUD"),
       })
       .returning({
         id: bookingsTable.id,
@@ -772,6 +775,7 @@ router.post("/v1/guest/payment/confirm", async (req, res): Promise<void> => {
           account_id: booking.account_id ?? undefined,
           amount: invoiceAmount,
           currency: "AUD",
+          exchange_rate_to_aud: "1",
           status: payment_method === "bank_transfer" ? "Sent" : "Paid",
           paid_at: payment_method === "bank_transfer" ? null : new Date(),
           payment_method,

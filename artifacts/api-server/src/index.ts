@@ -6,7 +6,9 @@ import { db, usersTable } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import fs from "fs";
 import crypto from "crypto";
+import cron from "node-cron";
 import { SEED_FILE_PATH, importSeed } from "./lib/seedSync";
+import { syncExchangeRates } from "./lib/exchangeRateSync";
 
 const rawPort = process.env["PORT"];
 
@@ -109,6 +111,22 @@ async function autoMigrateIfEmpty() {
 loadSettingsFromDb().catch(() => {});
 ensureAdminExists().catch(() => {});
 autoMigrateIfEmpty().catch(() => {});
+
+// Exchange rate sync — daily at midnight Sydney time, plus a boot-time refresh.
+// Only runs when at least one currency pair is registered (sync service skips otherwise).
+syncExchangeRates()
+  .then((r) => logger.info({ ok: r.ok, updated: r.updated.length, skipped: r.skipped.length }, "Boot-time exchange rate sync"))
+  .catch((err) => logger.error({ err }, "Boot-time exchange rate sync failed"));
+
+cron.schedule(
+  "0 0 * * *",
+  () => {
+    syncExchangeRates()
+      .then((r) => logger.info({ ok: r.ok, updated: r.updated.length, skipped: r.skipped.length }, "Cron exchange rate sync"))
+      .catch((err) => logger.error({ err }, "Cron exchange rate sync failed"));
+  },
+  { timezone: "Australia/Sydney" },
+);
 
 const server = app.listen(port, (err) => {
   if (err) {

@@ -45,3 +45,4 @@ export * from "./refresh_tokens";
 export * from "./documents";
 export * from "./marketing_consents";
 export * from "./login_attempts";
+export * from "./exchange_rates";

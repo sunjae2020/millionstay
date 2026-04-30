@@ -6,6 +6,7 @@ import { Badge } from "./ui/badge";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import type { SpaceSummary } from "@/lib/guest-api";
+import { useDisplayCurrency, formatCurrencyAmount } from "@/contexts/DisplayCurrencyContext";
 
 interface SpaceCardProps {
   space: SpaceSummary;
@@ -18,8 +19,14 @@ interface SpaceCardProps {
 export function SpaceCard({ space, index = 0, highlighted = false, checkIn = "", checkOut = "" }: SpaceCardProps) {
   const { t } = useTranslation();
   const [imgError, setImgError] = useState(false);
+  const { formatReference } = useDisplayCurrency();
 
   const s = space as any;
+  const priceCurrency: string = (s.base_currency || s.currency || "AUD").toUpperCase();
+  const priceAmount = Number(s.base_weekly_price ?? 0);
+  const priceRef = Number.isFinite(priceAmount) && priceAmount > 0
+    ? formatReference(priceAmount, priceCurrency)
+    : null;
 
   const getSpaceTypeLabel = (type: string) => {
     switch (type) {
@@ -142,9 +149,12 @@ export function SpaceCard({ space, index = 0, highlighted = false, checkIn = "",
               </div>
             ) : null}
             <div className="font-bold text-lg">
-              ${s.base_weekly_price}{" "}
+              {formatCurrencyAmount(priceAmount, priceCurrency)}{" "}
               <span className="text-sm font-normal text-muted-foreground">{t('space.per_week')}</span>
             </div>
+            {priceRef && (
+              <div className="text-xs text-muted-foreground mt-0.5">{priceRef}</div>
+            )}
           </div>
         </div>
       </div>

@@ -1,3 +1,6 @@
+// privacy-skip: one-time local admin bootstrap. The hardcoded credential
+// below is the initial seed only; it MUST be rotated immediately after
+// first login. Do not run this in production.
 import bcrypt from "bcryptjs";
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
