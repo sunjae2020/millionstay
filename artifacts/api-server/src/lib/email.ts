@@ -8,7 +8,10 @@ function getResend(): Resend | null {
   return resend;
 }
 
-const FROM = process.env.EMAIL_FROM ?? "MillionStay <noreply@millionstay.com.au>";
+const FROM = process.env.EMAIL_FROM ?? "MillionStay <noreply@contact.millionstay.com>";
+const LOGO_URL = process.env.EMAIL_LOGO_URL ?? "https://www.millionstay.com/millionstay-logo.png";
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL ?? "info@millionstay.com";
+const PORTAL_URL = process.env.PUBLIC_WEB_URL ?? "https://www.millionstay.com";
 
 export async function sendPasswordResetEmail(to: string, name: string, resetUrl: string): Promise<boolean> {
   const client = getResend();
@@ -20,15 +23,15 @@ export async function sendPasswordResetEmail(to: string, name: string, resetUrl:
 <!DOCTYPE html><html><head><meta charset="utf-8"><style>
   body{font-family:-apple-system,sans-serif;margin:0;padding:0;background:#f9fafb;color:#111;}
   .container{max-width:560px;margin:32px auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
-  .header{background:linear-gradient(135deg,#E8621A,#c04c10);padding:28px 32px;color:white;}
-  .header h1{margin:0;font-size:20px;font-weight:800;}
+  .header{background:#fff;padding:28px 32px;border-bottom:1px solid #f0f0f0;text-align:left;}
+  .header img{height:36px;width:auto;display:block;}
   .body{padding:32px;}
   .btn{display:block;text-align:center;background:#E8621A;color:white;text-decoration:none;padding:14px 24px;border-radius:12px;font-weight:700;font-size:15px;margin:24px 0;}
   .note{font-size:12px;color:#999;margin-top:16px;}
   .footer{padding:20px 32px;border-top:1px solid #f0f0f0;font-size:12px;color:#999;text-align:center;}
 </style></head><body>
 <div class="container">
-  <div class="header"><h1>🏠 MillionStay Admin</h1></div>
+  <div class="header"><img src="${LOGO_URL}" alt="MillionStay" /></div>
   <div class="body">
     <p style="font-size:16px;">Hi <strong>${name}</strong>,</p>
     <p style="color:#555;font-size:14px;">We received a request to reset the password for your MillionStay admin account. Click the button below to set a new password:</p>
@@ -60,15 +63,16 @@ export async function sendRegistrationRequestEmail(to: string, name: string, adm
 <!DOCTYPE html><html><head><meta charset="utf-8"><style>
   body{font-family:-apple-system,sans-serif;margin:0;padding:0;background:#f9fafb;color:#111;}
   .container{max-width:560px;margin:32px auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
-  .header{background:linear-gradient(135deg,#E8621A,#c04c10);padding:28px 32px;color:white;}
-  .header h1{margin:0;font-size:20px;font-weight:800;}
+  .header{background:#fff;padding:28px 32px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;}
+  .header img{height:36px;width:auto;}
+  .header .tag{font-size:13px;font-weight:600;color:#E8621A;}
   .body{padding:32px;}
   .info-box{background:#fff7f0;border:1px solid #fcd9b6;border-radius:10px;padding:16px;margin:16px 0;}
   .btn{display:block;text-align:center;background:#E8621A;color:white;text-decoration:none;padding:14px 24px;border-radius:12px;font-weight:700;font-size:15px;margin:20px 0;}
   .footer{padding:20px 32px;border-top:1px solid #f0f0f0;font-size:12px;color:#999;text-align:center;}
 </style></head><body>
 <div class="container">
-  <div class="header"><h1>🏠 MillionStay Admin — New Access Request</h1></div>
+  <div class="header"><img src="${LOGO_URL}" alt="MillionStay" /><span class="tag">New Access Request</span></div>
   <div class="body">
     <p style="font-size:15px;">A new admin account request has been submitted and is awaiting your approval.</p>
     <div class="info-box">
@@ -119,9 +123,9 @@ export async function sendBookingConfirmation(data: BookingConfirmationData): Pr
 <head><meta charset="utf-8"><style>
   body { font-family: -apple-system, sans-serif; margin: 0; padding: 0; background: #f9fafb; color: #111; }
   .container { max-width: 600px; margin: 32px auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-  .header { background: linear-gradient(135deg, #E8621A, #c04c10); padding: 32px; color: white; }
-  .header h1 { margin: 0 0 4px; font-size: 24px; font-weight: 800; }
-  .header p { margin: 0; opacity: 0.85; font-size: 14px; }
+  .header { background: #fff; padding: 28px 32px; border-bottom: 1px solid #f0f0f0; }
+  .header img { height: 40px; width: auto; display: block; margin-bottom: 8px; }
+  .header p { margin: 0; color: #E8621A; font-weight: 600; font-size: 14px; }
   .body { padding: 32px; }
   .ref-box { background: #fff7f0; border: 2px solid #E8621A; border-radius: 12px; padding: 16px 20px; text-align: center; margin-bottom: 24px; }
   .ref-box .label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #666; }
@@ -143,7 +147,7 @@ export async function sendBookingConfirmation(data: BookingConfirmationData): Pr
 <body>
 <div class="container">
   <div class="header">
-    <h1>🏠 MillionStay</h1>
+    <img src="${LOGO_URL}" alt="MillionStay" />
     <p>${isLongTerm ? "Long-term Stay Application Received" : "Booking Application Submitted"}</p>
   </div>
   <div class="body">
@@ -188,12 +192,12 @@ export async function sendBookingConfirmation(data: BookingConfirmationData): Pr
     </div>
     ` : ""}
 
-    <a href="https://millionstay.com.au/portal/bookings" class="portal-btn">
+    <a href="${PORTAL_URL}/portal/bookings" class="portal-btn">
       Access Your Guest Portal →
     </a>
 
     <p style="font-size:13px;color:#999;">
-      Questions? Contact us at <a href="mailto:info@millionstay.com.au" style="color:#E8621A;">info@millionstay.com.au</a>
+      Questions? Contact us at <a href="mailto:${SUPPORT_EMAIL}" style="color:#E8621A;">${SUPPORT_EMAIL}</a>
     </p>
   </div>
   <div class="footer">
