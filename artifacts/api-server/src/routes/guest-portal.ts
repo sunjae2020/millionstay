@@ -1240,4 +1240,115 @@ router.get("/v1/guest/documents", requireGuestAuth, async (req, res): Promise<vo
   }
 });
 
+/* ───────────────────────────────────────────────────────
+   APP 12 — Right of access
+   GET /api/v1/guest/me/export
+   Returns all personal data we hold about the authenticated guest as JSON.
+──────────────────────────────────────────────────────── */
+router.get("/v1/guest/me/export", requireGuestAuth, async (req, res): Promise<void> => {
+  const guest = (req as any).guest;
+  if (!guest?.id) { res.status(401).json({ error: "Unauthorized" }); return; }
+
+  try {
+    const [profile] = await db.select().from(guestUsersTable).where(eq(guestUsersTable.id, guest.id));
+    const emergencyContacts = await db.select().from(guestEmergencyContactsTable)
+      .where(eq(guestEmergencyContactsTable.guest_id, guest.id));
+    const bookings = await db.select().from(bookingsTable)
+      .where(eq(bookingsTable.contact_id, guest.id));
+    const invoices = await db.select().from(invoicesTable)
+      .where(eq(invoicesTable.contact_id, guest.id));
+    const consents = await db.select().from(marketingConsentsTable)
+      .where(eq(marketingConsentsTable.email, profile?.email ?? ""));
+
+    // Strip internal-only fields before disclosure.
+    const sanitized = profile ? {
+      ...profile,
+      password_hash: undefined,
+      reset_token: undefined,
+      reset_token_expires: undefined,
+    } : null;
+
+    await logAction({
+      entityType: "guest_users",
+      entityId: guest.id,
+      action: "VERIFY",
+      actorId: guest.id,
+      actorEmail: profile?.email ?? null,
+      newValue: { event: "DSAR_EXPORT" },
+      ipAddress: req.ip ?? null,
+    });
+
+    res.setHeader("Content-Disposition", `attachment; filename="millionstay-data-${guest.id}.json"`);
+    res.json({
+      exported_at: new Date().toISOString(),
+      privacy_act_reference: "Privacy Act 1988 (Cth) — Australian Privacy Principle 12",
+      data: {
+        profile: sanitized,
+        emergency_contacts: emergencyContacts,
+        bookings,
+        invoices,
+        marketing_consents: consents,
+      },
+    });
+  } catch (err) {
+    console.error("[DSAR export]", err);
+    res.status(500).json({ error: "Export failed. Contact privacy@millionstay.com." });
+  }
+});
+
+/* ───────────────────────────────────────────────────────
+   APP 13 — Correction & deletion
+   POST /api/v1/guest/me/deletion-request
+   Initiates account deletion. Soft-delete + retention obligations
+   (tax/contract records) honoured per retention.ts policy.
+──────────────────────────────────────────────────────── */
+router.post("/v1/guest/me/deletion-request", requireGuestAuth, async (req, res): Promise<void> => {
+  const guest = (req as any).guest;
+  if (!guest?.id) { res.status(401).json({ error: "Unauthorized" }); return; }
+
+  const reason = typeof req.body?.reason === "string" ? req.body.reason.slice(0, 500) : null;
+
+  try {
+    const [profile] = await db.select().from(guestUsersTable).where(eq(guestUsersTable.id, guest.id));
+    if (!profile) { res.status(404).json({ error: "Account not found" }); return; }
+
+    // Soft-delete: mark account, preserve booking/invoice records under
+    // legal retention obligations (ATO 5y for invoices, tenancy 7y for contracts).
+    await db.update(guestUsersTable)
+      .set({
+        status: "PendingDeletion",
+        deleted_at: new Date(),
+        // Pseudonymise PII in the profile record while retaining FK integrity.
+        first_name: "Deleted",
+        last_name: "User",
+        phone: null,
+        avatar_url: null,
+      })
+      .where(eq(guestUsersTable.id, guest.id));
+
+    // Hard-delete emergency contacts (no retention obligation).
+    await db.delete(guestEmergencyContactsTable)
+      .where(eq(guestEmergencyContactsTable.guest_id, guest.id));
+
+    await logAction({
+      entityType: "guest_users",
+      entityId: guest.id,
+      action: "DELETE",
+      actorId: guest.id,
+      actorEmail: profile.email,
+      newValue: { event: "DSAR_DELETION", reason },
+      ipAddress: req.ip ?? null,
+    });
+
+    res.json({
+      success: true,
+      message: "Deletion request received. Account is now pseudonymised. Records subject to legal retention (tax invoices, contracts) will be removed when the retention period expires.",
+      privacy_contact: "privacy@millionstay.com",
+    });
+  } catch (err) {
+    console.error("[DSAR deletion]", err);
+    res.status(500).json({ error: "Deletion request failed. Contact privacy@millionstay.com." });
+  }
+});
+
 export default router;

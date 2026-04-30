@@ -136,13 +136,31 @@ app.use(
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    rolling: true, // refresh maxAge on every authenticated request
     cookie: {
       secure: process.env["NODE_ENV"] === "production",
       httpOnly: true,
-      maxAge: 8 * 60 * 60 * 1000,
+      sameSite: "lax", // cross-site form submissions ok, third-party fetch blocked
+      maxAge: 4 * 60 * 60 * 1000, // 4h idle (was 8h absolute) — APP 11 (security)
     },
   }),
 );
+
+// APP 11 — additional privacy/security headers beyond helmet defaults.
+app.use((_req, res, next) => {
+  // Permissions-Policy: deny features unless explicitly needed
+  res.setHeader(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=(self), payment=(self), interest-cohort=()",
+  );
+  // Referrer-Policy: don't leak full URLs to external sites
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  // X-Robots-Tag for API: not indexable
+  if (!res.getHeader("X-Robots-Tag")) {
+    res.setHeader("X-Robots-Tag", "noindex, nofollow");
+  }
+  next();
+});
 
 app.use(
   "/api/v1/stripe/webhook",
