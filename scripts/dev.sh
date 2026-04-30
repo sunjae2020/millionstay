@@ -51,10 +51,28 @@ run_admin() {
   PIDS+=($!)
 }
 
+run_agent() {
+  echo "→ agent-portal     http://localhost:5175"
+  PORT=5175 pnpm --filter @workspace/agent-portal dev &
+  PIDS+=($!)
+}
+
+run_owner() {
+  echo "→ owner-portal     http://localhost:5176"
+  PORT=5176 pnpm --filter @workspace/owner-portal dev &
+  PIDS+=($!)
+}
+
+run_host() {
+  echo "→ service-host     http://localhost:5177"
+  PORT=5177 pnpm --filter @workspace/service-host-portal dev &
+  PIDS+=($!)
+}
+
 # Default: all
 TARGETS=("$@")
 if [ ${#TARGETS[@]} -eq 0 ]; then
-  TARGETS=(api web admin)
+  TARGETS=(api web admin agent owner host)
 fi
 
 for t in "${TARGETS[@]}"; do
@@ -62,7 +80,10 @@ for t in "${TARGETS[@]}"; do
     api)   run_api ;;
     web)   run_web ;;
     admin) run_admin ;;
-    *) echo "Unknown target: $t (use api|web|admin)" >&2; exit 1 ;;
+    agent) run_agent ;;
+    owner) run_owner ;;
+    host)  run_host ;;
+    *) echo "Unknown target: $t (use api|web|admin|agent|owner|host)" >&2; exit 1 ;;
   esac
 done
 

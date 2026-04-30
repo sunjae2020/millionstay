@@ -1,4 +1,4 @@
-const BASE = "/api";
+const BASE = `${import.meta.env.VITE_API_URL ?? ""}/api`;
 
 export async function apiFetch(path: string, options?: RequestInit): Promise<Response> {
   const token = localStorage.getItem("partner_token");

@@ -118,7 +118,7 @@ export default function JobDetailPage() {
       const fd = new FormData();
       selected.forEach((f) => fd.append("photos", f));
       const token = localStorage.getItem("partner_token");
-      const r = await fetch(`/api/v1/service-host/jobs/${jobId}/photos`, {
+      const r = await fetch(`${import.meta.env.VITE_API_URL ?? ""}/api/v1/service-host/jobs/${jobId}/photos`, {
         method: "POST",
         body: fd,
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,

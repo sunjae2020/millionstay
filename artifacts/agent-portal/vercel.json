@@ -1,0 +1,6 @@
+{
+  "framework": "vite",
+  "buildCommand": "cd ../.. && pnpm install --filter @workspace/agent-portal... --frozen-lockfile && pnpm --filter @workspace/agent-portal build",
+  "installCommand": "echo 'Skipping default install (handled in buildCommand)'",
+  "outputDirectory": "dist/public"
+}
