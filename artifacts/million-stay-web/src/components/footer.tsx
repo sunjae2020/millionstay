@@ -73,15 +73,25 @@ export function Footer() {
             </ul>
             {/* Social */}
             <div className="flex items-center gap-3">
-              {[Facebook, Twitter, Instagram, Youtube].map((Icon, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all"
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                </a>
-              ))}
+              {[
+                { Icon: Facebook, label: "Facebook", url: "https://www.facebook.com/millionstay" },
+                { Icon: Twitter, label: "Twitter", url: "https://twitter.com/millionstay" },
+                { Icon: Instagram, label: "Instagram", url: "https://www.instagram.com/millionstay" },
+                { Icon: Youtube, label: "YouTube", url: "https://www.youtube.com/@millionstay" },
+              ].map(({ Icon, label, url }) =>
+                url ? (
+                  <a
+                    key={label}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all"
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                  </a>
+                ) : null
+              )}
             </div>
           </div>
         </div>

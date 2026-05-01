@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
@@ -22,24 +22,6 @@ const COUNTRIES = [
   "France","Germany","Italy","Spain","Mexico","Argentina","Other",
 ];
 
-const registerSchema = z.object({
-  first_name: z.string().min(1, "First name required"),
-  last_name: z.string().min(1, "Last name required"),
-  email: z.string().email("Valid email required"),
-  password: z
-    .string()
-    .min(12, "Password must be at least 12 characters")
-    .regex(/[a-z]/, "Must contain a lowercase letter")
-    .regex(/[A-Z]/, "Must contain an uppercase letter")
-    .regex(/[0-9]/, "Must contain a digit")
-    .regex(/[^A-Za-z0-9]/, "Must contain a special character"),
-  phone: z.string().optional(),
-  nationality: z.string().optional(),
-  terms: z.boolean().refine((v) => v === true, "You must accept the terms"),
-  marketing_consent: z.boolean().optional().default(false),
-});
-type RegisterFormData = z.infer<typeof registerSchema>;
-
 export default function Register() {
   const { t } = useTranslation();
   const [location, setLocation] = useLocation();
@@ -54,6 +36,28 @@ export default function Register() {
   const redirectTo = params.get("redirect") ?? "/portal/bookings";
 
   const registerMutation = useGuestRegister();
+
+  const registerSchema = useMemo(
+    () =>
+      z.object({
+        first_name: z.string().min(1, t("auth.v_first_name")),
+        last_name: z.string().min(1, t("auth.v_last_name")),
+        email: z.string().email(t("auth.v_email")),
+        password: z
+          .string()
+          .min(12, t("auth.v_pw_min"))
+          .regex(/[a-z]/, t("auth.v_pw_lower"))
+          .regex(/[A-Z]/, t("auth.v_pw_upper"))
+          .regex(/[0-9]/, t("auth.v_pw_digit"))
+          .regex(/[^A-Za-z0-9]/, t("auth.v_pw_special")),
+        phone: z.string().optional(),
+        nationality: z.string().optional(),
+        terms: z.boolean().refine((v) => v === true, t("auth.v_terms")),
+        marketing_consent: z.boolean().optional().default(false),
+      }),
+    [t]
+  );
+  type RegisterFormData = z.infer<typeof registerSchema>;
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -76,16 +80,13 @@ export default function Register() {
         onSuccess: (res) => {
           setAuth(res.token, res.user);
           const displayName = [res.user.first_name, res.user.last_name].filter(Boolean).join(" ") || res.user.email;
-          toast({ title: "Welcome to Million Stay!", description: `Account created for ${displayName}` });
+          toast({ title: t("auth.welcome_toast"), description: t("auth.welcome_desc", { name: displayName }) });
           setLocation(redirectTo);
         },
         onError: (error: unknown) => {
-          const msg = (error as { data?: { error?: string } })?.data?.error ?? "Registration failed";
-          if (msg.includes("already registered")) {
-            form.setError("email", { message: "Email already registered — try logging in" });
-          } else {
-            toast({ title: "Registration failed", description: msg, variant: "destructive" });
-          }
+          const e = error as { message?: string; data?: { error?: string } };
+          const msg = e?.message ?? e?.data?.error ?? t("auth.register_failed");
+          toast({ title: t("auth.register_failed"), description: msg, variant: "destructive" });
         },
       }
     );
@@ -112,8 +113,8 @@ export default function Register() {
         >
           <div className="rounded-2xl border bg-white shadow-lg p-8 space-y-5">
             <div className="text-center space-y-1">
-              <h1 className="text-2xl font-bold text-gray-900">Create your account</h1>
-              <p className="text-sm text-gray-500">Book your room in Melbourne</p>
+              <h1 className="text-2xl font-bold text-gray-900">{t("auth.create_account_title")}</h1>
+              <p className="text-sm text-gray-500">{t("auth.register_subtitle")}</p>
             </div>
 
             <Form {...form}>
@@ -124,9 +125,9 @@ export default function Register() {
                     name="first_name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium">First name *</FormLabel>
+                        <FormLabel className="text-sm font-medium">{t("auth.first_name")} *</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="John" className="h-11" data-testid="input-first-name" />
+                          <Input {...field} placeholder={t("auth.first_name_placeholder")} className="h-11" data-testid="input-first-name" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -137,9 +138,9 @@ export default function Register() {
                     name="last_name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium">Last name *</FormLabel>
+                        <FormLabel className="text-sm font-medium">{t("auth.last_name")} *</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Kim" className="h-11" data-testid="input-last-name" />
+                          <Input {...field} placeholder={t("auth.last_name_placeholder")} className="h-11" data-testid="input-last-name" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -152,11 +153,11 @@ export default function Register() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium">Email address *</FormLabel>
+                      <FormLabel className="text-sm font-medium">{t("auth.email_label")} *</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                          <Input {...field} type="email" placeholder="your@email.com" className="pl-9 h-11" data-testid="input-email" />
+                          <Input {...field} type="email" placeholder={t("auth.email_placeholder")} className="pl-9 h-11" data-testid="input-email" />
                         </div>
                       </FormControl>
                       <FormMessage />
@@ -169,14 +170,14 @@ export default function Register() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium">Password *</FormLabel>
+                      <FormLabel className="text-sm font-medium">{t("auth.password_label")} *</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                           <Input
                             {...field}
                             type={showPw ? "text" : "password"}
-                            placeholder="Minimum 12 characters with uppercase, number & symbol"
+                            placeholder={t("auth.password_placeholder_register")}
                             className="pl-9 pr-10 h-11"
                             data-testid="input-password"
                           />
@@ -200,7 +201,7 @@ export default function Register() {
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium">Phone number</FormLabel>
+                      <FormLabel className="text-sm font-medium">{t("auth.phone_label")}</FormLabel>
                       <FormControl>
                         <div className="flex gap-2">
                           <div className="flex items-center px-3 h-11 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-600 shrink-0 font-medium">
@@ -219,7 +220,7 @@ export default function Register() {
                   name="nationality"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium">Nationality</FormLabel>
+                      <FormLabel className="text-sm font-medium">{t("auth.nationality_label")}</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <div
@@ -228,7 +229,7 @@ export default function Register() {
                             data-testid="select-nationality"
                           >
                             <span className={field.value ? "text-gray-900 text-sm" : "text-gray-400 text-sm"}>
-                              {field.value || "Select country"}
+                              {field.value || t("auth.select_country")}
                             </span>
                             <span className="text-gray-400 text-xs">▾</span>
                           </div>
@@ -237,7 +238,7 @@ export default function Register() {
                               <div className="p-2 border-b border-gray-100">
                                 <input
                                   className="w-full text-sm px-2 py-1 outline-none"
-                                  placeholder="Search country..."
+                                  placeholder={t("auth.search_country")}
                                   value={countrySearch}
                                   onChange={(e) => setCountrySearch(e.target.value)}
                                   autoFocus
@@ -283,10 +284,10 @@ export default function Register() {
                           data-testid="checkbox-terms"
                         />
                         <label htmlFor="terms" className="text-sm text-gray-600 leading-relaxed cursor-pointer">
-                          I agree to the{" "}
-                          <Link href="/house-rules" className="text-primary hover:underline">Terms of Service</Link>
-                          {" "}and{" "}
-                          <Link href="/privacy-policy" className="text-primary hover:underline">Privacy Policy</Link>
+                          {t("auth.terms_intro")}{" "}
+                          <Link href="/house-rules" className="text-primary hover:underline">{t("auth.terms_link")}</Link>
+                          {" "}{t("auth.terms_and")}{" "}
+                          <Link href="/privacy-policy" className="text-primary hover:underline">{t("auth.privacy_link")}</Link>
                         </label>
                       </div>
                       <FormMessage />
@@ -294,7 +295,6 @@ export default function Register() {
                   )}
                 />
 
-                {/* Sprint B-1: Marketing consent — separate from terms acceptance (Spam Act 2003) */}
                 <FormField
                   control={form.control}
                   name="marketing_consent"
@@ -310,8 +310,8 @@ export default function Register() {
                           data-testid="checkbox-marketing-consent"
                         />
                         <label htmlFor="marketing_consent" className="text-sm text-gray-600 leading-relaxed cursor-pointer">
-                          <span className="font-medium">Optional:</span> Send me deals, updates and inspiration by email.
-                          <span className="block text-xs text-gray-400 mt-0.5">You can unsubscribe at any time. Booking confirmations and receipts are not affected.</span>
+                          <span className="font-medium">{t("auth.marketing_optional")}</span> {t("auth.marketing_text")}
+                          <span className="block text-xs text-gray-400 mt-0.5">{t("auth.marketing_help")}</span>
                         </label>
                       </div>
                     </FormItem>
@@ -324,7 +324,7 @@ export default function Register() {
                   disabled={registerMutation.isPending}
                   data-testid="button-create-account"
                 >
-                  {registerMutation.isPending ? "Creating account..." : "Create Account"}
+                  {registerMutation.isPending ? t("auth.creating_account") : t("auth.create_account_btn")}
                 </Button>
               </form>
             </Form>
@@ -334,13 +334,13 @@ export default function Register() {
                 <div className="w-full border-t border-gray-200" />
               </div>
               <div className="relative flex justify-center text-xs text-gray-400">
-                <span className="bg-white px-3">Already have an account?</span>
+                <span className="bg-white px-3">{t("auth.have_account")}</span>
               </div>
             </div>
 
             <Link href="/login">
               <Button variant="outline" className="w-full h-11 font-semibold rounded-xl">
-                Log in
+                {t("auth.log_in")}
               </Button>
             </Link>
           </div>

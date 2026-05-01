@@ -1,14 +1,20 @@
 import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Calendar, User, Tag, ArrowLeft, Share2, BookOpen } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-function formatDate(dateStr: string | null) {
+const LOCALE_MAP: Record<string, string> = {
+  en: "en-AU", ko: "ko-KR", ja: "ja-JP", zh: "zh-CN", th: "th-TH",
+};
+
+function formatDate(dateStr: string | null, lang: string) {
   if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" });
+  const locale = LOCALE_MAP[lang] ?? "en-AU";
+  return new Date(dateStr).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
 }
 
 async function fetchPost(slug: string) {
@@ -19,6 +25,7 @@ async function fetchPost(slug: string) {
 
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
+  const { t, i18n } = useTranslation();
 
   const { data: post, isLoading, isError } = useQuery({
     queryKey: ["public-blog-post", slug],
@@ -58,13 +65,13 @@ export default function BlogPost() {
         <Navbar />
         <main className="flex-1 flex flex-col items-center justify-center text-center px-6 py-20">
           <BookOpen className="h-16 w-16 text-gray-200 mb-6" />
-          <h1 className="text-2xl font-bold text-gray-800 mb-3">Article Not Found</h1>
+          <h1 className="text-2xl font-bold text-gray-800 mb-3">{t("blog_post.not_found_title")}</h1>
           <p className="text-gray-500 mb-8 max-w-sm">
-            This article may have been removed or the link may be incorrect.
+            {t("blog_post.not_found_text")}
           </p>
           <Link href="/blog">
             <span className="inline-flex items-center gap-2 text-[#E8621A] font-semibold hover:gap-3 transition-all">
-              <ArrowLeft className="h-4 w-4" /> Back to Blog
+              <ArrowLeft className="h-4 w-4" /> {t("blog_post.back")}
             </span>
           </Link>
         </main>
@@ -82,7 +89,7 @@ export default function BlogPost() {
           <Link href="/blog">
             <span className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#E8621A] transition-colors mb-8 group cursor-pointer">
               <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
-              Back to Blog
+              {t("blog_post.back")}
             </span>
           </Link>
 
@@ -109,15 +116,15 @@ export default function BlogPost() {
               {post.published_at && (
                 <span className="flex items-center gap-1.5">
                   <Calendar className="h-4 w-4" />
-                  {formatDate(post.published_at)}
+                  {formatDate(post.published_at, i18n.language)}
                 </span>
               )}
               <button
                 onClick={handleShare}
                 className="ml-auto flex items-center gap-1.5 text-gray-400 hover:text-[#E8621A] transition-colors"
-                title="Share this article"
+                title={t("blog_post.share_title")}
               >
-                <Share2 className="h-4 w-4" /> Share
+                <Share2 className="h-4 w-4" /> {t("blog_post.share")}
               </button>
             </div>
 
@@ -143,13 +150,13 @@ export default function BlogPost() {
                 dangerouslySetInnerHTML={{ __html: post.content }}
               />
             ) : (
-              <p className="text-gray-400 italic">No content available.</p>
+              <p className="text-gray-400 italic">{t("blog_post.no_content")}</p>
             )}
 
             <div className="mt-12 pt-8 border-t border-gray-100">
               <Link href="/blog">
                 <span className="inline-flex items-center gap-2 text-[#E8621A] font-semibold hover:gap-3 transition-all cursor-pointer">
-                  <ArrowLeft className="h-4 w-4" /> More Articles
+                  <ArrowLeft className="h-4 w-4" /> {t("blog_post.more_articles")}
                 </span>
               </Link>
             </div>

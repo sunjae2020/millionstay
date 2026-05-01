@@ -23,37 +23,43 @@ const TESTIMONIALS_DATA = [
 
 const FALLBACK_BLOGS = [
   {
-    slug: null, category: "Tips & Guides", title: "5 Tips for Finding the Perfect Student Accommodation",
+    slug: "5-tips-finding-perfect-student-accommodation-melbourne",
+    category: "Tips & Guides", title: "5 Tips for Finding the Perfect Student Accommodation",
     excerpt: "Navigate the Melbourne rental market with confidence — from inspection checklists to understanding lease terms.",
     cover_image_url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80",
     published_at: null,
   },
   {
-    slug: null, category: "Student Life", title: "How to Make the Most of Your First Month in Melbourne",
+    slug: "how-to-make-most-first-month-melbourne",
+    category: "Student Life", title: "How to Make the Most of Your First Month in Melbourne",
     excerpt: "From setting up a bank account to finding the best local cafes — your essential first-month guide.",
     cover_image_url: "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&q=80",
     published_at: null,
   },
   {
-    slug: null, category: "Housing", title: "Understanding Utilities & Bills in Shared Accommodation",
+    slug: "electricity-gas-internet-bills-shared-accommodation-australia",
+    category: "Housing", title: "Understanding Utilities & Bills in Shared Accommodation",
     excerpt: "A simple guide to electricity, gas, internet and water billing for international students in Australia.",
     cover_image_url: "https://images.unsplash.com/photo-1514395462151-6b5e5abad7bc?w=600&q=80",
     published_at: null,
   },
   {
-    slug: null, category: "Melbourne", title: "Best Neighbourhoods for International Students in Melbourne",
+    slug: "top-student-friendly-suburbs-melbourne",
+    category: "Melbourne", title: "Best Neighbourhoods for International Students in Melbourne",
     excerpt: "From the vibrant CBD to cosy Carlton — discover which suburbs offer the best value and community for students.",
     cover_image_url: "https://images.unsplash.com/photo-1548859583-7a8b5e9b2b3e?w=600&q=80",
     published_at: null,
   },
   {
-    slug: null, category: "Lifestyle", title: "Melbourne's Hidden Gems: Cafes, Parks & Markets Near Campus",
+    slug: "melbournes-hidden-gems-cafes-parks-markets-near-campus",
+    category: "Lifestyle", title: "Melbourne's Hidden Gems: Cafes, Parks & Markets Near Campus",
     excerpt: "Explore the city like a local — our curated guide to affordable and unforgettable spots around Melbourne.",
     cover_image_url: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80",
     published_at: null,
   },
   {
-    slug: null, category: "News", title: "What's New at MillionStay: Spring 2026 Updates",
+    slug: "millionstay-2026-new-suburbs-features-whats-coming-next",
+    category: "News", title: "What's New at MillionStay: 2026 Updates",
     excerpt: "We've added new features, expanded our property listings, and launched our partner agent programme.",
     cover_image_url: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80",
     published_at: null,
@@ -69,7 +75,7 @@ function fade(delay = 0) {
   return { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.45, delay } };
 }
 
-function BlogCard({ post, index }: { post: any; index: number }) {
+function BlogCard({ post, index, clickable = true }: { post: any; index: number; clickable?: boolean }) {
   return (
     <>
       <div className="relative h-44 overflow-hidden">
@@ -97,9 +103,11 @@ function BlogCard({ post, index }: { post: any; index: number }) {
         )}
         <h3 className="font-semibold text-gray-800 text-sm mb-2 leading-snug line-clamp-2 group-hover:text-primary transition-colors">{post.title}</h3>
         {post.excerpt && <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{post.excerpt}</p>}
-        <span className="mt-4 block text-primary text-xs font-semibold hover:underline flex items-center gap-1">
-          Read more <ChevronRight className="h-3 w-3" />
-        </span>
+        {clickable && (
+          <span className="mt-4 block text-primary text-xs font-semibold hover:underline flex items-center gap-1">
+            Read more <ChevronRight className="h-3 w-3" />
+          </span>
+        )}
       </div>
     </>
   );
@@ -234,13 +242,13 @@ export default function About() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {blogPosts.slice(0, 6).map((post: any, i: number) => (
               <motion.div key={post.slug ?? post.title} {...fade(i * 0.08)}
-                className="bg-white rounded-2xl overflow-hidden border shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
+                className={`bg-white rounded-2xl overflow-hidden border shadow-sm hover:shadow-md transition-shadow group ${post.slug ? "cursor-pointer" : ""}`}>
                 {post.slug ? (
                   <Link href={`/blog/${post.slug}`} className="block">
                     <BlogCard post={post} index={i} />
                   </Link>
                 ) : (
-                  <BlogCard post={post} index={i} />
+                  <BlogCard post={post} index={i} clickable={false} />
                 )}
               </motion.div>
             ))}

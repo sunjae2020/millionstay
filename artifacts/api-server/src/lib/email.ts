@@ -2,6 +2,22 @@ import { Resend } from "resend";
 
 let resend: Resend | null = null;
 
+/** HTML-escape user-supplied text before interpolating into templates. */
+export function escapeHtml(input: string | null | undefined): string {
+  if (input == null) return "";
+  return String(input)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/** Escape and clip a name for safe rendering. */
+function safeName(name: string | null | undefined, max = 80): string {
+  return escapeHtml((name ?? "").slice(0, max));
+}
+
 function getResend(): Resend | null {
   if (!process.env.RESEND_API_KEY) return null;
   if (!resend) resend = new Resend(process.env.RESEND_API_KEY);
@@ -13,12 +29,37 @@ const LOGO_URL = process.env.EMAIL_LOGO_URL ?? "https://www.millionstay.com/mill
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL ?? "info@millionstay.com";
 const PORTAL_URL = process.env.PUBLIC_WEB_URL ?? "https://www.millionstay.com";
 
-export async function sendPasswordResetEmail(to: string, name: string, resetUrl: string): Promise<boolean> {
+export interface PasswordResetEmailOptions {
+  to: string;
+  name: string;
+  resetUrl: string;
+  product?: "Admin" | "Guest" | "Partner";
+}
+
+export async function sendPasswordResetEmail(opts: PasswordResetEmailOptions): Promise<boolean>;
+export async function sendPasswordResetEmail(to: string, name: string, resetUrl: string): Promise<boolean>;
+export async function sendPasswordResetEmail(
+  a: PasswordResetEmailOptions | string,
+  b?: string,
+  c?: string,
+): Promise<boolean> {
+  const opts: PasswordResetEmailOptions =
+    typeof a === "string"
+      ? { to: a, name: b!, resetUrl: c!, product: "Admin" }
+      : { product: "Admin", ...a };
+
   const client = getResend();
   if (!client) {
-    console.log(`[email] RESEND_API_KEY not set — password reset link: ${resetUrl}`);
+    console.log(`[email] RESEND_API_KEY not set — password reset link: ${opts.resetUrl}`);
     return false;
   }
+
+  // SECURITY: name + email are user-controlled; escape before interpolation.
+  const safeNameVal = safeName(opts.name);
+  const safeTo = escapeHtml(opts.to);
+  const safeUrl = escapeHtml(opts.resetUrl);
+  const productLabel = opts.product ?? "Admin";
+
   const html = `
 <!DOCTYPE html><html><head><meta charset="utf-8"><style>
   body{font-family:-apple-system,sans-serif;margin:0;padding:0;background:#f9fafb;color:#111;}
@@ -33,19 +74,24 @@ export async function sendPasswordResetEmail(to: string, name: string, resetUrl:
 <div class="container">
   <div class="header"><img src="${LOGO_URL}" alt="MillionStay" /></div>
   <div class="body">
-    <p style="font-size:16px;">Hi <strong>${name}</strong>,</p>
-    <p style="color:#555;font-size:14px;">We received a request to reset the password for your MillionStay admin account. Click the button below to set a new password:</p>
-    <a href="${resetUrl}" class="btn">Reset My Password →</a>
+    <p style="font-size:16px;">Hi <strong>${safeNameVal}</strong>,</p>
+    <p style="color:#555;font-size:14px;">We received a request to reset the password for your MillionStay ${escapeHtml(productLabel)} account. Click the button below to set a new password:</p>
+    <a href="${safeUrl}" class="btn">Reset My Password →</a>
     <p class="note">⏱ This link expires in <strong>1 hour</strong>. If you didn't request this, you can safely ignore this email — your password won't change.</p>
     <p style="font-size:13px;color:#999;">If the button doesn't work, copy and paste this URL into your browser:<br>
-      <span style="color:#E8621A;word-break:break-all;">${resetUrl}</span>
+      <span style="color:#E8621A;word-break:break-all;">${safeUrl}</span>
     </p>
   </div>
-  <div class="footer">© ${new Date().getFullYear()} MillionStay Pty Ltd · This email was sent to ${to}</div>
+  <div class="footer">© ${new Date().getFullYear()} MillionStay Pty Ltd · This email was sent to ${safeTo}</div>
 </div></body></html>`;
   try {
-    await client.emails.send({ from: FROM, to: [to], subject: "[MillionStay Admin] Password Reset Request", html });
-    console.log(`[email] Password reset sent to ${to}`);
+    await client.emails.send({
+      from: FROM,
+      to: [opts.to],
+      subject: `[MillionStay ${productLabel}] Password Reset Request`,
+      html,
+    });
+    console.log(`[email] Password reset sent to ${opts.to}`);
     return true;
   } catch (err) {
     console.error("[email] Failed to send password reset:", err);
@@ -76,11 +122,11 @@ export async function sendRegistrationRequestEmail(to: string, name: string, adm
   <div class="body">
     <p style="font-size:15px;">A new admin account request has been submitted and is awaiting your approval.</p>
     <div class="info-box">
-      <strong>${name}</strong><br>
-      <span style="color:#555;">${to}</span>
+      <strong>${safeName(name)}</strong><br>
+      <span style="color:#555;">${escapeHtml(to)}</span>
     </div>
     <p style="font-size:14px;color:#555;">Please log in to the admin panel and navigate to <strong>Settings → Users</strong> to review and approve or reject this request.</p>
-    <a href="${adminPanelUrl}/settings/users" class="btn">Review in Admin Panel →</a>
+    <a href="${escapeHtml(adminPanelUrl)}/settings/users" class="btn">Review in Admin Panel →</a>
   </div>
   <div class="footer">© ${new Date().getFullYear()} MillionStay Pty Ltd</div>
 </div></body></html>`;
@@ -151,7 +197,7 @@ export async function sendBookingConfirmation(data: BookingConfirmationData): Pr
     <p>${isLongTerm ? "Long-term Stay Application Received" : "Booking Application Submitted"}</p>
   </div>
   <div class="body">
-    <p style="font-size:16px;">Hi <strong>${guestName}</strong>,</p>
+    <p style="font-size:16px;">Hi <strong>${safeName(guestName)}</strong>,</p>
     <p style="color:#555;font-size:14px;">
       ${isLongTerm
         ? "Your long-term stay application has been received. Our team will review and contact you within 24–48 hours."
@@ -161,15 +207,15 @@ export async function sendBookingConfirmation(data: BookingConfirmationData): Pr
 
     <div class="ref-box">
       <div class="label">Booking Reference</div>
-      <div class="ref">${bookingRef}</div>
+      <div class="ref">${escapeHtml(bookingRef)}</div>
     </div>
 
     <div class="section">
       <h3>Your Stay</h3>
-      <div class="row"><span class="label">Property</span><span class="value">${spaceName}</span></div>
-      <div class="row"><span class="label">Address</span><span class="value">${propertyAddress}</span></div>
-      <div class="row"><span class="label">Check In</span><span class="value">${checkIn}</span></div>
-      <div class="row"><span class="label">Check Out</span><span class="value">${checkOut}</span></div>
+      <div class="row"><span class="label">Property</span><span class="value">${escapeHtml(spaceName)}</span></div>
+      <div class="row"><span class="label">Address</span><span class="value">${escapeHtml(propertyAddress)}</span></div>
+      <div class="row"><span class="label">Check In</span><span class="value">${escapeHtml(checkIn)}</span></div>
+      <div class="row"><span class="label">Check Out</span><span class="value">${escapeHtml(checkOut)}</span></div>
       ${weeklyRate ? `<div class="row"><span class="label">Weekly Rate</span><span class="value">$${weeklyRate.toLocaleString()} ${currency}/week</span></div>` : ""}
     </div>
 
@@ -187,7 +233,7 @@ export async function sendBookingConfirmation(data: BookingConfirmationData): Pr
       <div class="row"><span class="label">Account Name</span><span class="value">MillionStay Pty Ltd</span></div>
       <div class="row"><span class="label">BSB</span><span class="value">063-000</span></div>
       <div class="row"><span class="label">Account No.</span><span class="value">1234 5678</span></div>
-      <div class="row"><span class="label">Reference</span><span class="value">${bookingRef}</span></div>
+      <div class="row"><span class="label">Reference</span><span class="value">${escapeHtml(bookingRef)}</span></div>
       <p style="font-size:12px;color:#555;margin-top:10px;">⏱ Please complete the transfer within <strong>48 hours</strong>.</p>
     </div>
     ` : ""}
@@ -219,6 +265,86 @@ export async function sendBookingConfirmation(data: BookingConfirmationData): Pr
     return true;
   } catch (err) {
     console.error("[email] Failed to send confirmation:", err);
+    return false;
+  }
+}
+
+export interface LeadNotificationData {
+  leadRef: string;
+  inquiryType: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string | null;
+  message?: string | null;
+  description?: string | null;
+}
+
+/**
+ * Notify the operations team that a new public-form lead has come in.
+ * Best-effort — always returns boolean, never throws.
+ */
+export async function sendLeadNotificationEmail(data: LeadNotificationData): Promise<boolean> {
+  const to = process.env.LEADS_NOTIFY_EMAIL ?? SUPPORT_EMAIL;
+  const client = getResend();
+  if (!client) {
+    console.log(`[email] RESEND_API_KEY not set — new lead ${data.leadRef} (${data.inquiryType}) from ${data.email}`);
+    return false;
+  }
+
+  const fullName = escapeHtml(`${data.firstName} ${data.lastName}`.trim());
+  const safeEmail = escapeHtml(data.email);
+  const safePhone = escapeHtml(data.phone ?? "");
+  const safeMessage = escapeHtml(data.message ?? "");
+  const safeDesc = escapeHtml(data.description ?? "");
+  const safeRef = escapeHtml(data.leadRef);
+  const safeType = escapeHtml(data.inquiryType);
+
+  const html = `
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+  body{font-family:-apple-system,sans-serif;margin:0;padding:0;background:#f9fafb;color:#111;}
+  .container{max-width:560px;margin:32px auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+  .header{background:#fff;padding:28px 32px;border-bottom:1px solid #f0f0f0;}
+  .header img{height:36px;width:auto;display:block;}
+  .body{padding:24px 32px;}
+  .ref{display:inline-block;background:#FFF3EC;color:#E8621A;font-weight:700;padding:4px 10px;border-radius:6px;font-size:13px;}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;}
+  td{padding:8px 0;border-bottom:1px solid #f3f4f6;vertical-align:top;}
+  td.k{color:#6b7280;width:120px;}
+  .msg{background:#f9fafb;border-radius:10px;padding:14px 16px;font-size:14px;color:#374151;white-space:pre-wrap;margin-top:6px;}
+  .footer{padding:18px 32px;border-top:1px solid #f0f0f0;font-size:12px;color:#999;text-align:center;}
+</style></head><body>
+<div class="container">
+  <div class="header"><img src="${LOGO_URL}" alt="MillionStay" /></div>
+  <div class="body">
+    <p style="font-size:14px;color:#6b7280;margin:0 0 6px;">New ${safeType} inquiry</p>
+    <h2 style="margin:0 0 12px;font-size:20px;">${fullName || "(no name)"} &nbsp; <span class="ref">${safeRef}</span></h2>
+    <table>
+      <tr><td class="k">Email</td><td><a href="mailto:${safeEmail}" style="color:#E8621A;">${safeEmail}</a></td></tr>
+      ${safePhone ? `<tr><td class="k">Phone</td><td>${safePhone}</td></tr>` : ""}
+      ${safeDesc ? `<tr><td class="k">Details</td><td style="white-space:pre-wrap;">${safeDesc}</td></tr>` : ""}
+    </table>
+    ${safeMessage ? `<p style="font-size:13px;color:#6b7280;margin:16px 0 4px;">Message:</p><div class="msg">${safeMessage}</div>` : ""}
+    <p style="font-size:13px;color:#9ca3af;margin-top:24px;">View this lead in the admin panel.</p>
+  </div>
+  <div class="footer">
+    © ${new Date().getFullYear()} MillionStay · Internal notification
+  </div>
+</div>
+</body></html>`;
+
+  try {
+    await client.emails.send({
+      from: FROM,
+      to: [to],
+      replyTo: data.email,
+      subject: `[MillionStay Lead] ${data.inquiryType} — ${fullName || data.email} (${data.leadRef})`,
+      html,
+    });
+    console.log(`[email] Lead notification sent for ${data.leadRef} → ${to}`);
+    return true;
+  } catch (err) {
+    console.error("[email] Failed to send lead notification:", err);
     return false;
   }
 }

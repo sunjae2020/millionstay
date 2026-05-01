@@ -36,8 +36,74 @@ export default function ForAgent() {
   const [enquiry, setEnquiry] = useState({ name: "", email: "", message: "" });
   const [enquirySubmitted, setEnquirySubmitted] = useState(false);
 
-  const handleRegister = (e: React.FormEvent) => { e.preventDefault(); setSubmitted(true); };
-  const handleEnquiry = (e: React.FormEvent) => { e.preventDefault(); setEnquirySubmitted(true); };
+  const [registering, setRegistering] = useState(false);
+  const [registerError, setRegisterError] = useState<string | null>(null);
+  const [enquiring, setEnquiring] = useState(false);
+  const [enquiryError, setEnquiryError] = useState<string | null>(null);
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRegisterError(null);
+    setRegistering(true);
+    try {
+      const base = import.meta.env.VITE_API_URL ?? "";
+      const nameParts = form.contactName.trim().split(/\s+/);
+      const payload = {
+        first_name: nameParts[0] ?? "",
+        last_name: nameParts.slice(1).join(" ") || "—",
+        email: form.email,
+        phone: form.phone,
+        agency_name: form.companyName,
+        license_number: form.licenseNumber,
+        coverage_area: form.clientTypes,
+        message: form.message,
+      };
+      const res = await fetch(`${base}/api/v1/public/agent-applications`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? "Failed to submit");
+      }
+      setSubmitted(true);
+    } catch (err) {
+      setRegisterError(err instanceof Error ? err.message : "Failed to submit. Please try again.");
+    } finally {
+      setRegistering(false);
+    }
+  };
+
+  const handleEnquiry = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEnquiryError(null);
+    setEnquiring(true);
+    try {
+      const base = import.meta.env.VITE_API_URL ?? "";
+      const nameParts = enquiry.name.trim().split(/\s+/);
+      const payload = {
+        first_name: nameParts[0] ?? "",
+        last_name: nameParts.slice(1).join(" ") || "—",
+        email: enquiry.email,
+        message: enquiry.message,
+      };
+      const res = await fetch(`${base}/api/v1/public/agent-applications`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? "Failed to send");
+      }
+      setEnquirySubmitted(true);
+    } catch (err) {
+      setEnquiryError(err instanceof Error ? err.message : "Failed to send. Please try again.");
+    } finally {
+      setEnquiring(false);
+    }
+  };
 
   const STATS = [
     { num: "30+", labelKey: "stat1_label" },
@@ -277,10 +343,13 @@ export default function ForAgent() {
                   placeholder={t("agent.message_placeholder")}
                   className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" />
               </div>
-              <button type="submit"
-                className="w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
+              {registerError && (
+                <p className="text-sm text-red-600 text-center">{registerError}</p>
+              )}
+              <button type="submit" disabled={registering}
+                className="w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
                 <Handshake className="h-4 w-4" />
-                {t("agent.reg_submit")}
+                {registering ? t("agent.reg_submitting", "Submitting…") : t("agent.reg_submit")}
               </button>
               <p className="text-xs text-gray-400 text-center">{t("agent.reg_privacy")}</p>
             </form>
@@ -330,10 +399,13 @@ export default function ForAgent() {
                   placeholder={t("agent.enq_message_placeholder")}
                   className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" />
               </div>
-              <button type="submit"
-                className="w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
+              {enquiryError && (
+                <p className="text-sm text-red-600 text-center">{enquiryError}</p>
+              )}
+              <button type="submit" disabled={enquiring}
+                className="w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
                 <Send className="h-4 w-4" />
-                {t("agent.enquiry_submit")}
+                {enquiring ? t("agent.enquiry_sending", "Sending…") : t("agent.enquiry_submit")}
               </button>
             </form>
           )}

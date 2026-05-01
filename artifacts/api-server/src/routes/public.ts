@@ -21,6 +21,21 @@ import {
   exchangeRatesTable,
 } from "@workspace/db";
 import { insertLeadWithGeneratedRef } from "../lib/leadRef.js";
+import { sendLeadNotificationEmail } from "../lib/email.js";
+
+function notifyLead(row: { lead_ref: string | null; first_name?: string | null; last_name?: string | null; email?: string | null; phone?: string | null; message?: string | null; description?: string | null }, inquiryType: string) {
+  // Fire-and-forget — never block the response or surface errors to the public.
+  void sendLeadNotificationEmail({
+    leadRef: row.lead_ref ?? "—",
+    inquiryType,
+    firstName: row.first_name ?? "",
+    lastName: row.last_name ?? "",
+    email: row.email ?? "",
+    phone: row.phone ?? null,
+    message: row.message ?? null,
+    description: row.description ?? null,
+  }).catch((err) => console.error("[notifyLead] failed:", err));
+}
 
 function daysBetween(a: string, b: string): number {
   return Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86_400_000);
@@ -799,6 +814,7 @@ router.post("/v1/public/owner-applications", async (req, res): Promise<void> => 
     status: "Active",
   });
 
+  notifyLead(row, "Owner Application");
   res.status(201).json({ success: true, lead_ref: row.lead_ref, id: row.id });
 });
 
@@ -845,6 +861,7 @@ router.post("/v1/public/agent-applications", async (req, res): Promise<void> => 
     status: "Active",
   });
 
+  notifyLead(row, "Agent Application");
   res.status(201).json({ success: true, lead_ref: row.lead_ref, id: row.id });
 });
 
@@ -898,6 +915,98 @@ router.post("/v1/public/service-host-applications", async (req, res): Promise<vo
     status: "Active",
   });
 
+  notifyLead(row, "Service Host Application");
+  res.status(201).json({ success: true, lead_ref: row.lead_ref, id: row.id });
+});
+
+/* ───────────────────────────────────────────────────────
+   POST /api/v1/public/contact-inquiries
+   General Contact Us form on the marketing website.
+──────────────────────────────────────────────────────── */
+router.post("/v1/public/contact-inquiries", async (req, res): Promise<void> => {
+  const b = req.body ?? {};
+  const first_name = String(b.first_name ?? "").trim();
+  const last_name = String(b.last_name ?? "").trim();
+  const email = String(b.email ?? "").trim();
+  const phone = b.phone ? String(b.phone).trim() : null;
+  const subject = b.subject ? String(b.subject).trim() : "";
+  const message = b.message ? String(b.message).trim() : "";
+
+  if (!first_name) {
+    res.status(400).json({ error: "first_name is required" }); return;
+  }
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+    res.status(400).json({ error: "valid email is required" }); return;
+  }
+  if (!message) {
+    res.status(400).json({ error: "message is required" }); return;
+  }
+
+  const desc = subject ? `Subject: ${subject}` : null;
+
+  const row = await insertLeadWithGeneratedRef({
+    first_name,
+    last_name: last_name || "—",
+    email,
+    phone,
+    lead_source: "Website",
+    inquiry_type: "ContactUs",
+    lead_status: "New",
+    message: message || null,
+    description: desc,
+    manual_input: false,
+    status: "Active",
+  });
+
+  notifyLead(row, "Contact Us");
+  res.status(201).json({ success: true, lead_ref: row.lead_ref, id: row.id });
+});
+
+/* ───────────────────────────────────────────────────────
+   POST /api/v1/public/student-inquiries
+   For Students enquiry form on the marketing website.
+──────────────────────────────────────────────────────── */
+router.post("/v1/public/student-inquiries", async (req, res): Promise<void> => {
+  const b = req.body ?? {};
+  const name = String(b.name ?? "").trim();
+  const email = String(b.email ?? "").trim();
+  const phone = b.phone ? String(b.phone).trim() : null;
+  const university = b.university ? String(b.university).trim() : "";
+  const visa = b.visa ? String(b.visa).trim() : "";
+  const message = b.message ? String(b.message).trim() : "";
+
+  if (!name) {
+    res.status(400).json({ error: "name is required" }); return;
+  }
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+    res.status(400).json({ error: "valid email is required" }); return;
+  }
+
+  // Split single name field into first/last on the first space.
+  const nameParts = name.split(/\s+/);
+  const first_name = nameParts[0];
+  const last_name = nameParts.slice(1).join(" ") || "—";
+
+  const desc = [
+    university ? `University: ${university}` : null,
+    visa ? `Visa: ${visa}` : null,
+  ].filter(Boolean).join("\n") || null;
+
+  const row = await insertLeadWithGeneratedRef({
+    first_name,
+    last_name,
+    email,
+    phone,
+    lead_source: "Website",
+    inquiry_type: "StudentEnquiry",
+    lead_status: "New",
+    message: message || null,
+    description: desc,
+    manual_input: false,
+    status: "Active",
+  });
+
+  notifyLead(row, "Student Enquiry");
   res.status(201).json({ success: true, lead_ref: row.lead_ref, id: row.id });
 });
 

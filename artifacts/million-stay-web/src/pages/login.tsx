@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
@@ -14,12 +14,6 @@ import { motion } from "framer-motion";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import logoHorizontal from "@assets/06.OR_NB_horizontal_ver_1775381659303.png";
 
-const loginSchema = z.object({
-  email: z.string().email("Valid email required"),
-  password: z.string().min(1, "Password required"),
-});
-type LoginFormData = z.infer<typeof loginSchema>;
-
 export default function Login() {
   const { t } = useTranslation();
   const [location, setLocation] = useLocation();
@@ -31,6 +25,15 @@ export default function Login() {
   const sessionExpired = params.get("reason") === "session_expired";
 
   const loginMutation = useGuestLogin();
+  const loginSchema = useMemo(
+    () =>
+      z.object({
+        email: z.string().email(t("auth.v_email")),
+        password: z.string().min(1, t("auth.v_password")),
+      }),
+    [t]
+  );
+  type LoginFormData = z.infer<typeof loginSchema>;
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
@@ -45,7 +48,8 @@ export default function Login() {
           setLocation(redirectTo);
         },
         onError: (error: unknown) => {
-          const msg = (error as { data?: { error?: string } })?.data?.error ?? "Invalid credentials";
+          const e = error as { message?: string; data?: { error?: string } };
+          const msg = e?.message ?? e?.data?.error ?? t("auth.invalid_credentials");
           form.setError("password", { message: msg });
         },
       }
@@ -69,15 +73,14 @@ export default function Login() {
         >
           <div className="rounded-2xl border bg-white shadow-lg p-8 space-y-6">
             <div className="text-center space-y-1">
-              <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
-              <p className="text-sm text-gray-500">Sign in to manage your Melbourne room</p>
+              <h1 className="text-2xl font-bold text-gray-900">{t("auth.welcome_back")}</h1>
+              <p className="text-sm text-gray-500">{t("auth.login_subtitle")}</p>
             </div>
 
-            {/* Session expired notice */}
             {sessionExpired && (
               <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800 flex items-center gap-2">
                 <span className="text-base">⚠️</span>
-                <span>Your session has expired. Please sign in again.</span>
+                <span>{t("auth.session_expired")}</span>
               </div>
             )}
 
@@ -88,14 +91,14 @@ export default function Login() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Email address</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700">{t("auth.email_label")}</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                           <Input
                             {...field}
                             type="email"
-                            placeholder="your@email.com"
+                            placeholder={t("auth.email_placeholder")}
                             className="pl-9 h-11"
                             data-testid="input-email"
                           />
@@ -112,14 +115,13 @@ export default function Login() {
                   render={({ field }) => (
                     <FormItem>
                       <div className="flex items-center justify-between mb-1">
-                        <FormLabel className="text-sm font-medium text-gray-700">Password</FormLabel>
-                        <button
-                          type="button"
+                        <FormLabel className="text-sm font-medium text-gray-700">{t("auth.password_label")}</FormLabel>
+                        <Link
+                          href="/forgot-password"
                           className="text-xs text-primary hover:underline"
-                          tabIndex={-1}
                         >
-                          Forgot password?
-                        </button>
+                          {t("auth.forgot_password")}
+                        </Link>
                       </div>
                       <FormControl>
                         <div className="relative">
@@ -127,7 +129,7 @@ export default function Login() {
                           <Input
                             {...field}
                             type={showPw ? "text" : "password"}
-                            placeholder="Enter your password"
+                            placeholder={t("auth.password_placeholder_login")}
                             className="pl-9 pr-10 h-11"
                             data-testid="input-password"
                           />
@@ -152,7 +154,7 @@ export default function Login() {
                   disabled={loginMutation.isPending}
                   data-testid="button-submit-login"
                 >
-                  {loginMutation.isPending ? "Signing in..." : "Log in"}
+                  {loginMutation.isPending ? t("auth.signing_in") : t("auth.log_in")}
                 </Button>
               </form>
             </Form>
@@ -162,13 +164,13 @@ export default function Login() {
                 <div className="w-full border-t border-gray-200" />
               </div>
               <div className="relative flex justify-center text-xs text-gray-400">
-                <span className="bg-white px-3">Don't have an account?</span>
+                <span className="bg-white px-3">{t("auth.no_account")}</span>
               </div>
             </div>
 
             <Link href="/register">
               <Button variant="outline" className="w-full h-11 font-semibold rounded-xl">
-                Create account
+                {t("auth.create_account")}
               </Button>
             </Link>
           </div>

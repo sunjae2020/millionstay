@@ -37,15 +37,35 @@ export default function ForStudent() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [form, setForm] = useState({ name: "", email: "", phone: "", university: "", visa: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const { data: spacesData, isLoading } = useListPublicSpaces({ limit: 6 }, {
     query: { queryKey: getListPublicSpacesQueryKey({ limit: 6 }) },
   });
   const spaces = (spacesData?.data ?? []) as Parameters<typeof SpaceCard>[0]["space"][];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setError(null);
+    setSending(true);
+    try {
+      const base = import.meta.env.VITE_API_URL ?? "";
+      const res = await fetch(`${base}/api/v1/public/student-inquiries`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? "Failed to send");
+      }
+      setSubmitted(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to send. Please try again.");
+    } finally {
+      setSending(false);
+    }
   };
 
   const STATS = [
@@ -319,10 +339,13 @@ export default function ForStudent() {
                   placeholder={t("student.message_placeholder")}
                   className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" />
               </div>
-              <button type="submit"
-                className="w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
+              {error && (
+                <p className="text-sm text-red-600 text-center">{error}</p>
+              )}
+              <button type="submit" disabled={sending}
+                className="w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
                 <Send className="h-4 w-4" />
-                {t("student.form_submit")}
+                {sending ? t("student.form_sending", "Sending…") : t("student.form_submit")}
               </button>
               <p className="text-xs text-gray-400 text-center">{t("student.form_privacy")}</p>
             </form>
