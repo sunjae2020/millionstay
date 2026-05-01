@@ -5,7 +5,7 @@ import { Calendar, User, Tag, ArrowLeft, Share2, BookOpen } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+const BASE = import.meta.env.VITE_API_URL ?? "";
 
 const LOCALE_MAP: Record<string, string> = {
   en: "en-AU", ko: "ko-KR", ja: "ja-JP", zh: "zh-CN", th: "th-TH",

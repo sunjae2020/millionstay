@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Star, ChevronRight, BookOpen, Calendar, Tag } from "lucide-react";
 import heroBg from "@assets/MS_Homepage_Photo_1920x1080_1775403929888.jpg";
 
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+const BASE = import.meta.env.VITE_API_URL ?? "";
 
 const TEAM_DATA = [
   { name: "Sarah Johnson", key: "team_ceo", initials: "SJ" },

@@ -100,10 +100,8 @@ export default function StayPlan() {
     },
   ];
 
-  const { data } = useListPublicSpaces({
-    query: { queryKey: ["stay-plan-spaces"] },
-  });
-  const spaces: Space[] = ((data?.data ?? []) as Space[]).slice(0, 6);
+  const { data, isLoading } = useListPublicSpaces({ limit: 6 });
+  const spaces: Space[] = ((data?.data ?? []) as unknown as Space[]).slice(0, 6);
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -198,15 +196,26 @@ export default function StayPlan() {
             <p className="font-cursive text-primary text-xl italic">{t("stay_plan.explore")}</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {spaces.length > 0 ? (
-              spaces.map((space) => <SpaceCard key={space.id} space={space} />)
-            ) : (
-              Array.from({ length: 6 }).map((_, i) => (
+          {spaces.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {spaces.map((space) => <SpaceCard key={space.id} space={space} />)}
+            </div>
+          ) : isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="bg-white rounded-2xl border h-64 animate-pulse" />
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16 px-6">
+              <p className="text-gray-400 text-sm mb-4">{t("stay_plan.no_rooms", "No rooms available right now.")}</p>
+              <Link href="/search">
+                <Button variant="outline" className="rounded-full">
+                  {t("stay_plan.browse_all", "Browse all rooms")}
+                </Button>
+              </Link>
+            </div>
+          )}
 
           <div className="flex justify-center mt-8">
             <Link href="/search">
