@@ -24,65 +24,67 @@ function SectionTitle({ italic, normal, sub }: { italic: string; normal?: string
   );
 }
 
+// Real, currently-published spaces from the DB. Used as a fallback so the
+// homepage never appears empty if the API is briefly unreachable; clicking
+// any of these still resolves to a real /spaces/:id detail page.
 const FALLBACK_LISTINGS = [
   {
-    id: "sample-1",
-    name: "Modern Studio in Southbank",
+    id: 9,
+    name: "118 Kavanagh St, Southbank — Entire Apartment",
     space_type: "EntireSpace",
     suburb_name: "Southbank",
-    base_weekly_price: 595,
+    base_weekly_price: 850,
     base_currency: "AUD",
-    primary_image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=900&q=80",
+    primary_image: "https://res.cloudinary.com/dthc3gmdr/image/upload/v1775402723/millionstay/spaces/uvmozsogq",
   },
   {
-    id: "sample-2",
-    name: "Bright Private Room near RMIT",
-    space_type: "RoomSpace",
-    suburb_name: "Melbourne CBD",
-    base_weekly_price: 380,
-    base_currency: "AUD",
-    primary_image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=900&q=80",
-  },
-  {
-    id: "sample-3",
-    name: "Cosy Shared Room in Carlton",
-    space_type: "BedSpace",
-    suburb_name: "Carlton",
-    base_weekly_price: 245,
-    base_currency: "AUD",
-    primary_image: "https://images.unsplash.com/photo-1540518614846-7eded433c457?w=900&q=80",
-  },
-  {
-    id: "sample-4",
-    name: "Stylish Apartment in Docklands",
+    id: 23,
+    name: "250 City Rd, Southbank — Entire Apartment",
     space_type: "EntireSpace",
-    suburb_name: "Docklands",
-    base_weekly_price: 720,
+    suburb_name: "Southbank",
+    base_weekly_price: 1020,
     base_currency: "AUD",
-    primary_image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=900&q=80",
+    primary_image: "https://res.cloudinary.com/dthc3gmdr/image/upload/v1775403198/millionstay/spaces/oeyqoey8g",
   },
   {
-    id: "sample-5",
-    name: "Quiet Ensuite Room in Parkville",
-    space_type: "RoomSpace",
-    suburb_name: "Parkville",
-    base_weekly_price: 420,
+    id: 4,
+    name: "285 La Trobe St, Melbourne — Entire Apartment",
+    space_type: "EntireSpace",
+    suburb_name: "Melbourne CBD",
+    base_weekly_price: 1100,
     base_currency: "AUD",
-    primary_image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=900&q=80",
+    primary_image: "https://res.cloudinary.com/dthc3gmdr/image/upload/v1775878116/millionstay/spaces/4/bc3o5lp",
   },
   {
-    id: "sample-6",
-    name: "Affordable Bed Space in Brunswick",
-    space_type: "BedSpace",
-    suburb_name: "Brunswick",
-    base_weekly_price: 220,
+    id: 17,
+    name: "336 Russell St, Melbourne — Entire Apartment",
+    space_type: "EntireSpace",
+    suburb_name: "Melbourne CBD",
+    base_weekly_price: 1040,
     base_currency: "AUD",
-    primary_image: "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=900&q=80",
+    primary_image: "https://res.cloudinary.com/dthc3gmdr/image/upload/v1775460087/millionstay/spaces/hwse0na7b",
+  },
+  {
+    id: 12,
+    name: "139 Bourke St, Melbourne — Entire Apartment",
+    space_type: "EntireSpace",
+    suburb_name: "Melbourne CBD",
+    base_weekly_price: 980,
+    base_currency: "AUD",
+    primary_image: "https://res.cloudinary.com/dthc3gmdr/image/upload/v1775867111/millionstay/spaces/aqzwfvixu",
+  },
+  {
+    id: 28,
+    name: "53 Batman St, West Melbourne — Entire Apartment",
+    space_type: "EntireSpace",
+    suburb_name: "West Melbourne",
+    base_weekly_price: 790,
+    base_currency: "AUD",
+    primary_image: "https://res.cloudinary.com/dthc3gmdr/image/upload/v1775835112/millionstay/spaces/bx6m4sw50",
   },
 ];
 
 function buildSpaceUrl(id: number | string, checkIn: string, checkOut: string) {
-  if (typeof id === "string" && id.startsWith("sample-")) return "/search";
   const p = new URLSearchParams();
   if (checkIn) p.set("check_in", checkIn);
   if (checkOut) p.set("check_out", checkOut);

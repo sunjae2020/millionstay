@@ -23,13 +23,15 @@ interface Space {
   primary_thumbnail?: string | null;
 }
 
+// Real, currently-published spaces from the DB. Clicking any card resolves
+// to a real /spaces/:id detail page even when the API is unreachable.
 const FALLBACK_SPACES: Space[] = [
-  { id: "sample-1", name: "Modern Studio in Southbank", suburb: "Southbank", price_per_week: 595, room_type: "Entire Apartment", rating: 5, primary_thumbnail: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=900&q=80" },
-  { id: "sample-2", name: "Bright Private Room near RMIT", suburb: "Melbourne CBD", price_per_week: 380, room_type: "Private Room", rating: 5, primary_thumbnail: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=900&q=80" },
-  { id: "sample-3", name: "Cosy Shared Room in Carlton", suburb: "Carlton", price_per_week: 245, room_type: "Shared Room", rating: 4, primary_thumbnail: "https://images.unsplash.com/photo-1540518614846-7eded433c457?w=900&q=80" },
-  { id: "sample-4", name: "Stylish Apartment in Docklands", suburb: "Docklands", price_per_week: 720, room_type: "Entire Apartment", rating: 5, primary_thumbnail: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=900&q=80" },
-  { id: "sample-5", name: "Quiet Ensuite Room in Parkville", suburb: "Parkville", price_per_week: 420, room_type: "Private Room", rating: 5, primary_thumbnail: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=900&q=80" },
-  { id: "sample-6", name: "Affordable Bed Space in Brunswick", suburb: "Brunswick", price_per_week: 220, room_type: "Shared Room", rating: 4, primary_thumbnail: "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=900&q=80" },
+  { id: 9, name: "118 Kavanagh St, Southbank — Entire Apartment", suburb: "Southbank", price_per_week: 850, room_type: "Entire Apartment", rating: 5, primary_thumbnail: "https://res.cloudinary.com/dthc3gmdr/image/upload/v1775402723/millionstay/spaces/uvmozsogq" },
+  { id: 23, name: "250 City Rd, Southbank — Entire Apartment", suburb: "Southbank", price_per_week: 1020, room_type: "Entire Apartment", rating: 5, primary_thumbnail: "https://res.cloudinary.com/dthc3gmdr/image/upload/v1775403198/millionstay/spaces/oeyqoey8g" },
+  { id: 4, name: "285 La Trobe St, Melbourne — Entire Apartment", suburb: "Melbourne CBD", price_per_week: 1100, room_type: "Entire Apartment", rating: 5, primary_thumbnail: "https://res.cloudinary.com/dthc3gmdr/image/upload/v1775878116/millionstay/spaces/4/bc3o5lp" },
+  { id: 17, name: "336 Russell St, Melbourne — Entire Apartment", suburb: "Melbourne CBD", price_per_week: 1040, room_type: "Entire Apartment", rating: 5, primary_thumbnail: "https://res.cloudinary.com/dthc3gmdr/image/upload/v1775460087/millionstay/spaces/hwse0na7b" },
+  { id: 12, name: "139 Bourke St, Melbourne — Entire Apartment", suburb: "Melbourne CBD", price_per_week: 980, room_type: "Entire Apartment", rating: 5, primary_thumbnail: "https://res.cloudinary.com/dthc3gmdr/image/upload/v1775867111/millionstay/spaces/aqzwfvixu" },
+  { id: 28, name: "53 Batman St, West Melbourne — Entire Apartment", suburb: "West Melbourne", price_per_week: 790, room_type: "Entire Apartment", rating: 5, primary_thumbnail: "https://res.cloudinary.com/dthc3gmdr/image/upload/v1775835112/millionstay/spaces/bx6m4sw50" },
 ];
 
 function SpaceCard({ space }: { space: Space }) {
@@ -39,7 +41,7 @@ function SpaceCard({ space }: { space: Space }) {
     ?? `https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=600&q=75`;
 
   return (
-    <motion.div {...fade()} onClick={() => setLocation(typeof space.id === "string" && space.id.startsWith("sample-") ? "/search" : `/spaces/${space.id}`)}
+    <motion.div {...fade()} onClick={() => setLocation(`/spaces/${space.id}`)}
       className="bg-white rounded-2xl border overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer group">
       <div className="relative h-44 overflow-hidden">
         <img src={img} alt={space.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
