@@ -14,7 +14,7 @@ function fade(delay = 0) {
 }
 
 interface Space {
-  id: number;
+  id: number | string;
   name: string;
   suburb: string | null;
   price_per_week: number | null;
@@ -23,6 +23,15 @@ interface Space {
   primary_thumbnail?: string | null;
 }
 
+const FALLBACK_SPACES: Space[] = [
+  { id: "sample-1", name: "Modern Studio in Southbank", suburb: "Southbank", price_per_week: 595, room_type: "Entire Apartment", rating: 5, primary_thumbnail: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=900&q=80" },
+  { id: "sample-2", name: "Bright Private Room near RMIT", suburb: "Melbourne CBD", price_per_week: 380, room_type: "Private Room", rating: 5, primary_thumbnail: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=900&q=80" },
+  { id: "sample-3", name: "Cosy Shared Room in Carlton", suburb: "Carlton", price_per_week: 245, room_type: "Shared Room", rating: 4, primary_thumbnail: "https://images.unsplash.com/photo-1540518614846-7eded433c457?w=900&q=80" },
+  { id: "sample-4", name: "Stylish Apartment in Docklands", suburb: "Docklands", price_per_week: 720, room_type: "Entire Apartment", rating: 5, primary_thumbnail: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=900&q=80" },
+  { id: "sample-5", name: "Quiet Ensuite Room in Parkville", suburb: "Parkville", price_per_week: 420, room_type: "Private Room", rating: 5, primary_thumbnail: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=900&q=80" },
+  { id: "sample-6", name: "Affordable Bed Space in Brunswick", suburb: "Brunswick", price_per_week: 220, room_type: "Shared Room", rating: 4, primary_thumbnail: "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=900&q=80" },
+];
+
 function SpaceCard({ space }: { space: Space }) {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
@@ -30,7 +39,7 @@ function SpaceCard({ space }: { space: Space }) {
     ?? `https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=600&q=75`;
 
   return (
-    <motion.div {...fade()} onClick={() => setLocation(`/spaces/${space.id}`)}
+    <motion.div {...fade()} onClick={() => setLocation(typeof space.id === "string" && space.id.startsWith("sample-") ? "/search" : `/spaces/${space.id}`)}
       className="bg-white rounded-2xl border overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer group">
       <div className="relative h-44 overflow-hidden">
         <img src={img} alt={space.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -196,24 +205,17 @@ export default function StayPlan() {
             <p className="font-cursive text-primary text-xl italic">{t("stay_plan.explore")}</p>
           </div>
 
-          {spaces.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {spaces.map((space) => <SpaceCard key={space.id} space={space} />)}
-            </div>
-          ) : isLoading ? (
+          {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="bg-white rounded-2xl border h-64 animate-pulse" />
               ))}
             </div>
           ) : (
-            <div className="text-center py-16 px-6">
-              <p className="text-gray-400 text-sm mb-4">{t("stay_plan.no_rooms", "No rooms available right now.")}</p>
-              <Link href="/search">
-                <Button variant="outline" className="rounded-full">
-                  {t("stay_plan.browse_all", "Browse all rooms")}
-                </Button>
-              </Link>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {(spaces.length > 0 ? spaces : FALLBACK_SPACES).map((space) => (
+                <SpaceCard key={space.id} space={space} />
+              ))}
             </div>
           )}
 
