@@ -8,6 +8,7 @@ import { useLocation } from "wouter";
 import { useState } from "react";
 import { useListSuburbs } from "@workspace/api-client-react";
 import { useListFeaturedSpaces, useListPublicSpaces } from "@/lib/guest-api";
+import { FALLBACK_SPACES } from "@/lib/fallback-spaces";
 import { motion } from "framer-motion";
 import { Wifi, ShoppingBag, Shield, DollarSign, Plane, Bed, PlayCircle, MapPin, ChevronRight } from "lucide-react";
 import { useDisplayCurrency, formatCurrencyAmount } from "@/contexts/DisplayCurrencyContext";
@@ -24,65 +25,7 @@ function SectionTitle({ italic, normal, sub }: { italic: string; normal?: string
   );
 }
 
-// Real, currently-published spaces from the DB. Used as a fallback so the
-// homepage never appears empty if the API is briefly unreachable; clicking
-// any of these still resolves to a real /spaces/:id detail page.
-const FALLBACK_LISTINGS = [
-  {
-    id: 9,
-    name: "118 Kavanagh St, Southbank — Entire Apartment",
-    space_type: "EntireSpace",
-    suburb_name: "Southbank",
-    base_weekly_price: 850,
-    base_currency: "AUD",
-    primary_image: "https://res.cloudinary.com/dthc3gmdr/image/upload/v1775402723/millionstay/spaces/uvmozsogq",
-  },
-  {
-    id: 23,
-    name: "250 City Rd, Southbank — Entire Apartment",
-    space_type: "EntireSpace",
-    suburb_name: "Southbank",
-    base_weekly_price: 1020,
-    base_currency: "AUD",
-    primary_image: "https://res.cloudinary.com/dthc3gmdr/image/upload/v1775403198/millionstay/spaces/oeyqoey8g",
-  },
-  {
-    id: 4,
-    name: "285 La Trobe St, Melbourne — Entire Apartment",
-    space_type: "EntireSpace",
-    suburb_name: "Melbourne CBD",
-    base_weekly_price: 1100,
-    base_currency: "AUD",
-    primary_image: "https://res.cloudinary.com/dthc3gmdr/image/upload/v1775878116/millionstay/spaces/4/bc3o5lp",
-  },
-  {
-    id: 17,
-    name: "336 Russell St, Melbourne — Entire Apartment",
-    space_type: "EntireSpace",
-    suburb_name: "Melbourne CBD",
-    base_weekly_price: 1040,
-    base_currency: "AUD",
-    primary_image: "https://res.cloudinary.com/dthc3gmdr/image/upload/v1775460087/millionstay/spaces/hwse0na7b",
-  },
-  {
-    id: 12,
-    name: "139 Bourke St, Melbourne — Entire Apartment",
-    space_type: "EntireSpace",
-    suburb_name: "Melbourne CBD",
-    base_weekly_price: 980,
-    base_currency: "AUD",
-    primary_image: "https://res.cloudinary.com/dthc3gmdr/image/upload/v1775867111/millionstay/spaces/aqzwfvixu",
-  },
-  {
-    id: 28,
-    name: "53 Batman St, West Melbourne — Entire Apartment",
-    space_type: "EntireSpace",
-    suburb_name: "West Melbourne",
-    base_weekly_price: 790,
-    base_currency: "AUD",
-    primary_image: "https://res.cloudinary.com/dthc3gmdr/image/upload/v1775835112/millionstay/spaces/bx6m4sw50",
-  },
-];
+const FALLBACK_LISTINGS = FALLBACK_SPACES.slice(0, 6);
 
 function buildSpaceUrl(id: number | string, checkIn: string, checkOut: string) {
   const p = new URLSearchParams();

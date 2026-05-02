@@ -3,6 +3,7 @@ import { useLocation, Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useListSuburbs } from "@workspace/api-client-react";
 import { useListPublicSpaces, getListPublicSpacesQueryKey } from "@/lib/guest-api";
+import { FALLBACK_SPACES } from "@/lib/fallback-spaces";
 import { Navbar } from "@/components/navbar";
 import { SpaceCard } from "@/components/space-card";
 import { Footer } from "@/components/footer";
@@ -127,8 +128,17 @@ export default function Search() {
     query: { queryKey: getListPublicSpacesQueryKey(queryParams) },
   });
 
-  const total = (spacesData?.meta as Record<string, unknown>)?.total as number ?? 0;
-  const allSpaces = (spacesData?.data ?? []) as Record<string, unknown>[];
+  const apiTotal = (spacesData?.meta as Record<string, unknown>)?.total as number ?? 0;
+  const apiSpaces = (spacesData?.data ?? []) as Record<string, unknown>[];
+  // If the API returns nothing AND no filters are active, show the curated
+  // fallback list of real DB spaces so the page is never empty.
+  const noFiltersActive =
+    !applied.suburb_id && !applied.check_in && !applied.check_out &&
+    applied.space_type === "all" && applied.gender_policy === "all" &&
+    applied.min_price <= 100 && applied.max_price >= 1200;
+  const useFallback = !isLoading && apiSpaces.length === 0 && noFiltersActive;
+  const allSpaces = useFallback ? (FALLBACK_SPACES as unknown as Record<string, unknown>[]) : apiSpaces;
+  const total = useFallback ? FALLBACK_SPACES.length : apiTotal;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   /* 페이지 변경 시 결과 영역으로 스크롤 */

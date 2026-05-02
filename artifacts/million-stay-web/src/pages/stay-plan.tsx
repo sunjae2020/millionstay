@@ -7,6 +7,7 @@ import { Link, useLocation } from "wouter";
 import { Star, Check, ChevronRight, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListPublicSpaces } from "@/lib/guest-api";
+import { FALLBACK_SPACES as REAL_FALLBACK } from "@/lib/fallback-spaces";
 import heroBg from "@assets/MS_Homepage_Photo_1920x1080_1775403929888.jpg";
 
 function fade(delay = 0) {
@@ -23,16 +24,15 @@ interface Space {
   primary_thumbnail?: string | null;
 }
 
-// Real, currently-published spaces from the DB. Clicking any card resolves
-// to a real /spaces/:id detail page even when the API is unreachable.
-const FALLBACK_SPACES: Space[] = [
-  { id: 9, name: "118 Kavanagh St, Southbank — Entire Apartment", suburb: "Southbank", price_per_week: 850, room_type: "Entire Apartment", rating: 5, primary_thumbnail: "https://res.cloudinary.com/dthc3gmdr/image/upload/v1775402723/millionstay/spaces/uvmozsogq" },
-  { id: 23, name: "250 City Rd, Southbank — Entire Apartment", suburb: "Southbank", price_per_week: 1020, room_type: "Entire Apartment", rating: 5, primary_thumbnail: "https://res.cloudinary.com/dthc3gmdr/image/upload/v1775403198/millionstay/spaces/oeyqoey8g" },
-  { id: 4, name: "285 La Trobe St, Melbourne — Entire Apartment", suburb: "Melbourne CBD", price_per_week: 1100, room_type: "Entire Apartment", rating: 5, primary_thumbnail: "https://res.cloudinary.com/dthc3gmdr/image/upload/v1775878116/millionstay/spaces/4/bc3o5lp" },
-  { id: 17, name: "336 Russell St, Melbourne — Entire Apartment", suburb: "Melbourne CBD", price_per_week: 1040, room_type: "Entire Apartment", rating: 5, primary_thumbnail: "https://res.cloudinary.com/dthc3gmdr/image/upload/v1775460087/millionstay/spaces/hwse0na7b" },
-  { id: 12, name: "139 Bourke St, Melbourne — Entire Apartment", suburb: "Melbourne CBD", price_per_week: 980, room_type: "Entire Apartment", rating: 5, primary_thumbnail: "https://res.cloudinary.com/dthc3gmdr/image/upload/v1775867111/millionstay/spaces/aqzwfvixu" },
-  { id: 28, name: "53 Batman St, West Melbourne — Entire Apartment", suburb: "West Melbourne", price_per_week: 790, room_type: "Entire Apartment", rating: 5, primary_thumbnail: "https://res.cloudinary.com/dthc3gmdr/image/upload/v1775835112/millionstay/spaces/bx6m4sw50" },
-];
+const FALLBACK_LIST: Space[] = REAL_FALLBACK.slice(0, 6).map((s) => ({
+  id: s.id,
+  name: s.name,
+  suburb: s.suburb_name,
+  price_per_week: Number(s.base_weekly_price),
+  room_type: "Entire Apartment",
+  rating: 5,
+  primary_thumbnail: s.primary_thumbnail,
+}));
 
 function SpaceCard({ space }: { space: Space }) {
   const { t } = useTranslation();
@@ -215,7 +215,7 @@ export default function StayPlan() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {(spaces.length > 0 ? spaces : FALLBACK_SPACES).map((space) => (
+              {(spaces.length > 0 ? spaces : FALLBACK_LIST).map((space) => (
                 <SpaceCard key={space.id} space={space} />
               ))}
             </div>
