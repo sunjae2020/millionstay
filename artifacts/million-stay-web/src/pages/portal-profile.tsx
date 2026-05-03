@@ -11,8 +11,9 @@ import {
   Banknote, Eye, EyeOff, Save, Plus, Pencil, Trash2,
   CreditCard, ChevronDown, X, Check, Mail, Camera, Loader2,
 } from "lucide-react";
+import { getApiBase } from "@/lib/api-base";
 
-const API_BASE = import.meta.env.VITE_API_URL ?? "";
+const API_BASE = getApiBase();
 
 type ProfileForm = {
   first_name: string; last_name: string; phone: string; nationality: string;

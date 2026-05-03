@@ -13,6 +13,7 @@ import {
   CreditCard, Receipt, ScrollText, Wrench, CalendarDays,
 } from "lucide-react";
 import { format } from "date-fns";
+import { getApiBase } from "@/lib/api-base";
 
 type BookingInvoice = {
   id: number;
@@ -111,7 +112,7 @@ export default function PortalBookingDetail() {
 
   React.useEffect(() => {
     if (!token || !id) return;
-    fetch(`${import.meta.env.VITE_API_URL ?? ""}/api/v1/guest/bookings/${id}`, {
+    fetch(`${getApiBase()}/api/v1/guest/bookings/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())

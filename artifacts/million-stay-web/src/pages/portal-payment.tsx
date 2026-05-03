@@ -10,6 +10,7 @@ import {
   ChevronLeft, Sparkles, LayoutDashboard, AlertCircle,
   Copy, Check, Building2,
 } from "lucide-react";
+import { getApiBase } from "@/lib/api-base";
 import { format } from "date-fns";
 import { loadStripe } from "@stripe/stripe-js";
 import {
@@ -21,7 +22,7 @@ import {
 import { apiFetch, type MyInvoice } from "@/lib/guest-api";
 
 const BRAND = "#E8621A";
-const API = import.meta.env.VITE_API_URL ?? "";
+const API = getApiBase();
 
 /* ─── helpers ─── */
 function fmtDate(d: string | null | undefined) {

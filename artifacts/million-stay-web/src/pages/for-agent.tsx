@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { getApiBase } from "@/lib/api-base";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { motion } from "framer-motion";
@@ -46,7 +47,7 @@ export default function ForAgent() {
     setRegisterError(null);
     setRegistering(true);
     try {
-      const base = import.meta.env.VITE_API_URL ?? "";
+      const base = getApiBase();
       const nameParts = form.contactName.trim().split(/\s+/);
       const payload = {
         first_name: nameParts[0] ?? "",
@@ -80,7 +81,7 @@ export default function ForAgent() {
     setEnquiryError(null);
     setEnquiring(true);
     try {
-      const base = import.meta.env.VITE_API_URL ?? "";
+      const base = getApiBase();
       const nameParts = enquiry.name.trim().split(/\s+/);
       const payload = {
         first_name: nameParts[0] ?? "",

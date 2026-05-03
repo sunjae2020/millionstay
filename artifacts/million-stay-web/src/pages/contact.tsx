@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { getApiBase } from "@/lib/api-base";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { motion } from "framer-motion";
@@ -36,7 +37,7 @@ export default function Contact() {
     }
     setSending(true);
     try {
-      const base = import.meta.env.VITE_API_URL ?? "";
+      const base = getApiBase();
       const res = await fetch(`${base}/api/v1/public/contact-inquiries`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

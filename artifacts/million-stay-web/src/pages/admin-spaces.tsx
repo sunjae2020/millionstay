@@ -3,7 +3,8 @@ import { useLocation } from "wouter";
 import AdminLayout from "@/components/admin-layout";
 import { Camera, Home } from "lucide-react";
 
-const API = import.meta.env.VITE_API_URL ?? "";
+import { getApiBase } from "@/lib/api-base";
+const API = getApiBase();
 const ADMIN_KEY = "ms_admin_key";
 function getKey() { return localStorage.getItem(ADMIN_KEY) ?? ""; }
 

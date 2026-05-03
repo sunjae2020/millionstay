@@ -7,11 +7,12 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { getApiBase } from "@/lib/api-base";
 
 export type RateInfo = { rate: number; inverse: number; source: string; effective_date: string };
 export type RatesMap = Record<string, RateInfo>;
 
-const API_BASE = `${import.meta.env.VITE_API_URL ?? ""}/api/v1`;
+const API_BASE = `${getApiBase()}/api/v1`;
 
 const LS_RATES = "millionstay_exchange_rates";
 const LS_RATES_TS = "millionstay_rates_timestamp";

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getApiBase } from "./api-base";
 
-const BASE = `${import.meta.env.VITE_API_URL ?? ""}/api/v1`;
+const BASE = `${getApiBase()}/api/v1`;
 const GUEST_TOKEN_KEY = "ms_guest_token";
 const GUEST_STORAGE_KEY = "ms-guest-storage";
 

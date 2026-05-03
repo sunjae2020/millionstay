@@ -5,8 +5,9 @@ import { Mail, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import logoHorizontal from "@assets/06.OR_NB_horizontal_ver_1775381659303.png";
+import { getApiBase } from "@/lib/api-base";
 
-const API_BASE = `${import.meta.env.VITE_API_URL ?? ""}/api/v1`;
+const API_BASE = `${getApiBase()}/api/v1`;
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");

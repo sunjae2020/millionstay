@@ -7,8 +7,9 @@ import {
   Shield, Download, RefreshCw, User, FileText, Receipt,
   Mail, AlertTriangle, Building2, Phone,
 } from "lucide-react";
+import { getApiBase } from "@/lib/api-base";
 
-const API_BASE = import.meta.env.VITE_API_URL ?? "";
+const API_BASE = getApiBase();
 
 type MyDataResponse = {
   success: true;

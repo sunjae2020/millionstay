@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Lock, Eye, EyeOff } from "lucide-react";
 
-const API = import.meta.env.VITE_API_URL ?? "";
+import { getApiBase } from "@/lib/api-base";
+const API = getApiBase();
 const ADMIN_KEY = "ms_admin_key";
 
 export default function AdminLogin() {

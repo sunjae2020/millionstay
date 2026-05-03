@@ -1,8 +1,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { setAuthTokenGetter, setBaseUrl } from "@workspace/api-client-react";
+import { getApiBase } from "./api-base";
 
-const API_BASE = import.meta.env.VITE_API_URL ?? "";
+const API_BASE = getApiBase();
 if (API_BASE) setBaseUrl(API_BASE);
 
 export interface GuestInfo {

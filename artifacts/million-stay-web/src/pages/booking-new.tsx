@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
+import { getApiBase } from "@/lib/api-base";
 import { format } from "date-fns";
 import { useGetPublicSpace, useCreateGuestBooking } from "@/lib/guest-api";
 import { useAuthStore } from "@/lib/store";
@@ -445,7 +446,7 @@ export default function BookingNew() {
     if (!token) { setStep(4); return; }
     setCreatingBooking(true);
     try {
-      const bookingRes = await fetch(`${import.meta.env.VITE_API_URL ?? ""}/api/v1/guest/bookings`, {
+      const bookingRes = await fetch(`${getApiBase()}/api/v1/guest/bookings`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
@@ -487,7 +488,7 @@ export default function BookingNew() {
         ? { first_name: regFirstName, last_name: regLastName, email: loginEmail, password: loginPassword, marketing_consent: marketingConsent }
         : { email: loginEmail, password: loginPassword };
 
-      const authRes = await fetch(`${import.meta.env.VITE_API_URL ?? ""}${apiPath}`, {
+      const authRes = await fetch(`${getApiBase()}${apiPath}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -506,7 +507,7 @@ export default function BookingNew() {
       toast({ title: loginMode === "register" ? "Account created! Creating your booking…" : "Signed in! Creating your booking…" });
 
       /* 2. Create the booking with the fresh token */
-      const bookingRes = await fetch(`${import.meta.env.VITE_API_URL ?? ""}/api/v1/guest/bookings`, {
+      const bookingRes = await fetch(`${getApiBase()}/api/v1/guest/bookings`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${newToken}` },
         body: JSON.stringify({

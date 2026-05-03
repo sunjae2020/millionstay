@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { FileImage, CheckCircle2, Clock, AlertCircle, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { getApiBase } from "@/lib/api-base";
 
 const DOC_STATUS: Record<string, { color: string; icon: typeof CheckCircle2; label: string }> = {
   Pending: { color: "text-amber-600 bg-amber-50", icon: Clock, label: "Pending review" },
@@ -46,7 +47,7 @@ export default function PortalDocuments() {
     setUploading(true);
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_API_URL ?? ""}/api/v1/guest/documents/upload`,
+        `${getApiBase()}/api/v1/guest/documents/upload`,
         {
           method: "POST",
           headers: {

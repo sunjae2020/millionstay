@@ -4,8 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Calendar, User, Tag, ChevronRight, BookOpen } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { getApiBase } from "@/lib/api-base";
 
-const BASE = import.meta.env.VITE_API_URL ?? "";
+const BASE = getApiBase();
 
 const CATEGORIES = ["All", "Tips & Guides", "Student Life", "Melbourne", "Housing", "News", "Lifestyle"];
 

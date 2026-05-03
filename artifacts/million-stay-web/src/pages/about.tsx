@@ -6,8 +6,9 @@ import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Star, ChevronRight, BookOpen, Calendar, Tag } from "lucide-react";
 import heroBg from "@assets/MS_Homepage_Photo_1920x1080_1775403929888.jpg";
+import { getApiBase } from "@/lib/api-base";
 
-const BASE = import.meta.env.VITE_API_URL ?? "";
+const BASE = getApiBase();
 
 const TEAM_DATA = [
   { name: "Sarah Johnson", key: "team_ceo", initials: "SJ" },
