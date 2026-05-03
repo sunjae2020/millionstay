@@ -34,3 +34,14 @@ export const generalLimiter = rateLimit({
   legacyHeaders: false,
   skip,
 });
+
+// Sensitive privacy endpoints: 1 request per minute, 10 per day per IP.
+// Heavy DB joins; APP 12 access path; should never be hammered.
+export const privacyExportLimiter = rateLimit({
+  windowMs: 24 * 60 * 60_000, // 24h
+  limit: 10,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { error: "Daily privacy-export limit reached. Contact info@millionstay.com if you need additional exports." },
+  skip,
+});

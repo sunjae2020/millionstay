@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, or, desc, asc, inArray } from "drizzle-orm";
+import { eq, and, or, desc, asc, inArray, isNull } from "drizzle-orm";
 import Stripe from "stripe";
 import {
   db,
@@ -1256,11 +1256,26 @@ router.get("/v1/guest/me/export", requireGuestAuth, async (req, res): Promise<vo
   try {
     const [profile] = await db.select().from(guestUsersTable).where(eq(guestUsersTable.id, guest.id));
     const emergencyContacts = await db.select().from(guestEmergencyContactsTable)
-      .where(eq(guestEmergencyContactsTable.guest_id, guest.id));
-    const bookings = await db.select().from(bookingsTable)
-      .where(eq(bookingsTable.contact_id, guest.id));
-    const invoices = await db.select().from(invoicesTable)
-      .where(eq(invoicesTable.contact_id, guest.id));
+      .where(eq(guestEmergencyContactsTable.guest_user_id, guest.id));
+
+    // SECURITY: only return bookings/invoices when the guest is the SOLE owner
+    // of their account (no other guest_users share the same account_id).
+    // Otherwise, on a shared account, exporting bookings would leak another
+    // user's data — refuse and direct to support.
+    let bookings: any[] = [];
+    let invoices: any[] = [];
+    if (guest.account_id) {
+      const siblings = await db
+        .select({ id: guestUsersTable.id })
+        .from(guestUsersTable)
+        .where(and(eq(guestUsersTable.account_id, guest.account_id), isNull(guestUsersTable.deleted_at)));
+      const isSoleOwner = siblings.length === 1 && siblings[0].id === guest.id;
+      if (isSoleOwner) {
+        bookings = await db.select().from(bookingsTable).where(eq(bookingsTable.account_id, guest.account_id));
+        invoices = await db.select().from(invoicesTable).where(eq(invoicesTable.account_id, guest.account_id));
+      }
+    }
+
     const consents = await db.select().from(marketingConsentsTable)
       .where(eq(marketingConsentsTable.email, profile?.email ?? ""));
 

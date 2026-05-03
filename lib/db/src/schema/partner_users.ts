@@ -14,6 +14,11 @@ export const partnerUsersTable = pgTable("partner_users", {
   avatar_url: text("avatar_url"),
   is_active: boolean("is_active").notNull().default(true),
   last_login_at: timestamp("last_login_at", { withTimezone: true }),
+  // Auth: invalidate any access token issued before this timestamp.
+  tokens_invalid_after: timestamp("tokens_invalid_after", { withTimezone: true }),
+  deleted_at: timestamp("deleted_at", { withTimezone: true }),
+  reset_token_hash: text("reset_token_hash"),
+  reset_token_expires_at: timestamp("reset_token_expires_at", { withTimezone: true }),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

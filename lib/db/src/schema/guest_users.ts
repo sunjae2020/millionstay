@@ -29,6 +29,13 @@ export const guestUsersTable = pgTable("guest_users", {
   avatar_public_id: text("avatar_public_id"),
   is_active: boolean("is_active").notNull().default(true),
   email_verified: boolean("email_verified").notNull().default(false),
+  // Auth: invalidate any access token issued before this timestamp.
+  tokens_invalid_after: timestamp("tokens_invalid_after", { withTimezone: true }),
+  // Soft-delete (privacy / GDPR-style)
+  deleted_at: timestamp("deleted_at", { withTimezone: true }),
+  // Password reset
+  reset_token_hash: text("reset_token_hash"),
+  reset_token_expires_at: timestamp("reset_token_expires_at", { withTimezone: true }),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

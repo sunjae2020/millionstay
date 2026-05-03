@@ -7,15 +7,20 @@ import { fileURLToPath } from "url";
 
 const router = Router();
 
-// CF-004: production hard block. The migration secret is committed to the repo,
-// so even with NODE_ENV checks this route is dangerous. Require an explicit
-// opt-in via DEV_MIGRATION_ENABLED=true (set out-of-band, never in repo).
+// CF-004: HARD production block. This route can TRUNCATE the entire DB.
+// Even with the secret, refuse to run in production under any circumstance.
+const IS_PRODUCTION = process.env["NODE_ENV"] === "production";
 const DEV_MIGRATION_ENABLED = process.env["DEV_MIGRATION_ENABLED"] === "true";
 const MIGRATION_SECRET = process.env["DEV_MIGRATION_SECRET"];
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 router.use((_req, res, next) => {
+  // CRITICAL: never expose this router in production, regardless of env flags.
+  if (IS_PRODUCTION) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
   if (!DEV_MIGRATION_ENABLED) {
     res.status(404).json({ error: "Not found" });
     return;

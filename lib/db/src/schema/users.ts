@@ -12,6 +12,8 @@ export const usersTable = pgTable("admin_users", {
   force_password_change: boolean("force_password_change").notNull().default(false),
   reset_token: text("reset_token"),
   reset_token_expires_at: timestamp("reset_token_expires_at", { withTimezone: true }),
+  // Auth: invalidate any access token issued before this timestamp.
+  tokens_invalid_after: timestamp("tokens_invalid_after", { withTimezone: true }),
   last_login_at: timestamp("last_login_at", { withTimezone: true }),
   deleted_at: timestamp("deleted_at", { withTimezone: true }),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

@@ -8,6 +8,9 @@ import { isCloudinaryConfigured, uploadToCloudinary } from "../utils/cloudinary"
 const router: IRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
+// SECURITY: all /v1/guest/* and /v1/cs/* routes require guest auth.
+router.use(["/v1/guest", "/v1/cs"], requireGuestAuth);
+
 const CS_CATEGORIES = ["General", "Accommodation", "Billing", "Maintenance", "Other"] as const;
 
 async function generateTicketRef(): Promise<string> {

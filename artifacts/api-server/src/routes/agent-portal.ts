@@ -16,6 +16,10 @@ import { requireAgentAuth, type PartnerAuthPayload } from "../middlewares/requir
 
 const router: IRouter = Router();
 
+// SECURITY: every /v1/agent/* route requires agent auth. Per-route checks are
+// kept as defence in depth (any new route inheriting this prefix is auto-protected).
+router.use("/v1/agent", requireAgentAuth);
+
 /* ─── helpers ─── */
 function maskTenantForAgent(contact: { first_name: string | null; last_name: string | null; email: string | null }) {
   return {

@@ -13,7 +13,7 @@ import {
   invoicesTable,
   contactsTable,
 } from "@workspace/db";
-import { requirePartnerAuth, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth";
+import { requireServiceHostAuth, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth";
 import { isCloudinaryConfigured, uploadToCloudinary, deleteFromCloudinary } from "../utils/cloudinary";
 
 const router: IRouter = Router();
@@ -28,16 +28,8 @@ const upload = multer({
   },
 });
 
-function requireServiceHostAuth(req: any, res: any, next: any) {
-  requirePartnerAuth(req, res, () => {
-    const partner = req.partner as PartnerAuthPayload;
-    if (partner.portal_type !== "service_host") {
-      res.status(403).json({ success: false, error: { code: "FORBIDDEN", message: "Service host access only" } });
-      return;
-    }
-    next();
-  });
-}
+// SECURITY: every /v1/service-host/* route requires service-host auth.
+router.use("/v1/service-host", requireServiceHostAuth);
 
 async function getHostServiceIds(accountId: number): Promise<number[]> {
   const hosts = await db

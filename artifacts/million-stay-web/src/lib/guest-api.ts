@@ -17,20 +17,70 @@ function clearAuthAndRedirect() {
   window.location.href = "/login?reason=session_expired";
 }
 
+export class ApiError extends Error {
+  readonly status: number;
+  readonly code: string;
+  readonly payload: unknown;
+  constructor(status: number, code: string, message: string, payload?: unknown) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = code;
+    this.payload = payload;
+  }
+  // Preserve legacy { status, data } shape consumers depend on.
+  get data(): unknown { return this.payload; }
+}
+
+function friendlyMessage(status: number, serverError?: unknown): string {
+  const serverMsg =
+    typeof serverError === "string" && serverError.length > 0 && serverError.length < 500
+      ? serverError
+      : null;
+  if (status === 0) return "Cannot connect to the server. Please check your network or try again later.";
+  if (status === 400) return serverMsg ?? "The request was invalid. Please check your input and try again.";
+  if (status === 401) return serverMsg ?? "Invalid email or password.";
+  if (status === 403) return serverMsg ?? "You don't have permission to perform this action.";
+  if (status === 404) return serverMsg ?? "The requested resource was not found.";
+  if (status === 408 || status === 504) return "The server is taking too long to respond. Please try again.";
+  if (status === 409) return serverMsg ?? "Duplicate or conflicting request.";
+  if (status === 413) return "File is too large.";
+  if (status === 429) return serverMsg ?? "Too many requests. Please wait a moment and try again.";
+  if (status === 502 || status === 503) return "The server is temporarily unavailable. Please try again shortly.";
+  if (status >= 500) return "A server error occurred. Please try again later.";
+  return serverMsg ?? `Something went wrong (HTTP ${status}). Please try again.`;
+}
+
+async function safeReadJson(res: Response): Promise<unknown> {
+  const text = await res.text().catch(() => "");
+  if (!text) return null;
+  try { return JSON.parse(text); } catch { return { _raw: text }; }
+}
+
 export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    headers: { "Content-Type": "application/json", ...authHeaders(), ...((options?.headers as Record<string, string>) ?? {}) },
-    ...options,
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      headers: { "Content-Type": "application/json", ...authHeaders(), ...((options?.headers as Record<string, string>) ?? {}) },
+      ...options,
+    });
+  } catch (err) {
+    throw new ApiError(0, "NETWORK", friendlyMessage(0), { cause: String(err) });
+  }
+  const body = await safeReadJson(res);
+
   if (res.status === 401) {
-    clearAuthAndRedirect();
-    throw { status: 401, data: { error: "Session expired" } };
+    // Login itself returns 401 with body — let the caller decide. Otherwise treat as expired session.
+    const isLoginAttempt = /\/auth\/(login|guest\/login|partner\/login)/.test(path);
+    if (!isLoginAttempt) clearAuthAndRedirect();
+    const serverErr = (body as any)?.error ?? (body as any)?.message;
+    throw new ApiError(401, "UNAUTHORIZED", friendlyMessage(401, serverErr), body);
   }
-  const json = await res.json();
   if (!res.ok) {
-    throw { status: res.status, data: json };
+    const serverErr = (body as any)?.error ?? (body as any)?.message;
+    throw new ApiError(res.status, "HTTP_" + res.status, friendlyMessage(res.status, serverErr), body);
   }
-  return json as T;
+  return body as T;
 }
 
 // ─── Types ───────────────────────────────────────────────────────────────────

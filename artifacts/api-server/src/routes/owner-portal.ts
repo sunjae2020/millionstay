@@ -15,6 +15,9 @@ import { requireOwnerAuth, type PartnerAuthPayload } from "../middlewares/requir
 
 const router: IRouter = Router();
 
+// SECURITY: every /v1/owner/* route requires owner auth (defence in depth).
+router.use("/v1/owner", requireOwnerAuth);
+
 /* ─── helpers ─── */
 function formatTenantForOwner(contact: { first_name: string | null; last_name: string | null; gender: string | null }) {
   const first = (contact.first_name ?? "").trim();
