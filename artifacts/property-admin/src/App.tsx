@@ -131,6 +131,12 @@ function ProtectedRouter() {
     return <Redirect to="/dashboard" />;
   }
 
+  // Force password change gate: when the server flags a forced rotation,
+  // hold the user on /reset-password regardless of where they navigate.
+  if (user?.force_password_change && location !== "/reset-password" && !isPublicPath) {
+    return <Redirect to="/reset-password" />;
+  }
+
   return <Router />;
 }
 

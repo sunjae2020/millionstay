@@ -111,7 +111,58 @@
   --destructive-border: hsl(var(--destructive));
 }
 
+.dark {
+  --button-outline: rgba(255,255,255,.10);
+  --badge-outline: rgba(255,255,255,.05);
+  --opaque-button-border-intensity: 9;
+  --elevate-1: rgba(255,255,255,.04);
+  --elevate-2: rgba(255,255,255,.09);
+
+  --background: 222 47% 11%;
+  --foreground: 210 40% 98%;
+  --border: 222 40% 18%;
+  --card: 222 44% 14%;
+  --card-foreground: 210 40% 98%;
+  --card-border: 222 40% 20%;
+  --sidebar: 222 50% 8%;
+  --sidebar-foreground: 210 40% 90%;
+  --sidebar-border: 222 40% 14%;
+  --sidebar-primary: 21 90% 55%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 222 44% 16%;
+  --sidebar-accent-foreground: 210 40% 90%;
+  --sidebar-ring: 21 90% 55%;
+  --popover: 222 44% 14%;
+  --popover-foreground: 210 40% 98%;
+  --popover-border: 222 40% 20%;
+  --primary: 21 90% 55%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 222 40% 18%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 222 40% 18%;
+  --muted-foreground: 215 20% 65%;
+  --accent: 222 40% 18%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62% 50%;
+  --destructive-foreground: 0 0% 100%;
+  --input: 222 40% 22%;
+  --ring: 21 90% 55%;
+  --chart-1: 21 90% 55%;
+  --chart-2: 221 83% 60%;
+  --chart-3: 142 71% 50%;
+  --chart-4: 48 96% 60%;
+  --chart-5: 0 72% 55%;
+}
+
 @layer base {
   * { @apply border-border; }
   body { @apply font-sans antialiased bg-background text-foreground; }
+}
+
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

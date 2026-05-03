@@ -7,6 +7,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://workspaceapi-server-production-ff8e.up.railway.app/api/:path*"
+    },
+    {
+      "source": "/((?!assets/|.*\\..*).*)",
+      "destination": "/index.html"
     }
   ]
 }

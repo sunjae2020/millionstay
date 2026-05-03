@@ -12,6 +12,8 @@ import Booking from "@/pages/booking";
 import BookingNew from "@/pages/booking-new";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
+import ForgotPassword from "@/pages/forgot-password";
+import ResetPassword from "@/pages/reset-password";
 import Portal from "@/pages/portal";
 import PortalBookings from "@/pages/portal-bookings";
 import PortalInvoices from "@/pages/portal-invoices";
@@ -60,6 +62,8 @@ function Router() {
       <Route path="/booking/:spaceId" component={Booking} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
       <Route path="/portal" component={Portal} />
       <Route path="/portal/bookings" component={PortalBookings} />
       <Route path="/portal/bookings/:id" component={PortalBookingDetail} />

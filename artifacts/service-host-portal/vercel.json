@@ -2,5 +2,15 @@
   "buildCommand": "echo 'Pre-built locally'",
   "installCommand": "echo 'No install needed'",
   "outputDirectory": "dist/public",
-  "framework": null
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://workspaceapi-server-production-ff8e.up.railway.app/api/:path*"
+    },
+    {
+      "source": "/((?!assets/|.*\\..*).*)",
+      "destination": "/index.html"
+    }
+  ]
 }

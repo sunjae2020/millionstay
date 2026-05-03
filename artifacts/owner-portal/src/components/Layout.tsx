@@ -2,15 +2,17 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/auth";
+import { useDarkMode } from "@/lib/darkMode";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import {
   LayoutDashboard, Building2, BookOpen, TrendingUp,
-  LogOut, User, ChevronRight, Menu, X,
+  LogOut, User, ChevronRight, Menu, X, Sun, Moon,
 } from "lucide-react";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { user, logout } = useAuth();
+  const { darkMode, toggleDarkMode } = useDarkMode();
   const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -72,7 +74,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </p>
         </div>
 
-        <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+        <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto scrollbar-hide">
           {navItems.map(({ href, icon: Icon, label }) => {
             const active = href === "/" ? location === "/" : location.startsWith(href);
             return (
@@ -109,6 +111,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <LanguageSwitcher variant="sidebar" />
           </div>
           <button
+            onClick={toggleDarkMode}
+            className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm text-sidebar-accent-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
+            aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            {darkMode ? t("nav.light_mode") ?? "Light mode" : t("nav.dark_mode") ?? "Dark mode"}
+          </button>
+          <button
             onClick={logout}
             className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm text-sidebar-accent-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
           >
@@ -131,7 +141,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
             alt="MillionStay"
             className="h-6 w-auto object-contain"
           />
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-1">
+            <button
+              onClick={toggleDarkMode}
+              className="p-2 rounded-lg hover:bg-muted transition-colors text-foreground/70 hover:text-foreground"
+              aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
             <LanguageSwitcher />
           </div>
         </header>

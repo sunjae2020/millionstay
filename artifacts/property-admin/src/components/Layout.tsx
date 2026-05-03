@@ -50,6 +50,8 @@ import {
   Home,
   DollarSign,
   Newspaper,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
@@ -569,7 +571,7 @@ function SidebarLogo({
   collapsed,
   onToggle,
 }: {
-  logo?: string;
+  logo?: string | null;
   brandName: string;
   collapsed?: boolean;
   onToggle?: () => void;
@@ -619,7 +621,8 @@ const COLLAPSED_KEY = "ms_sidebar_collapsed";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
-  const { logo, brandName } = useBrand();
+  const { logo, logoDark, brandName, darkMode, toggleDarkMode } = useBrand();
+  const effectiveLogo = darkMode && logoDark ? logoDark : logo;
   const { t } = useTranslation();
   const NAV = getNav(t);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -682,7 +685,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* Logo + collapse toggle */}
         <div className="relative flex-shrink-0">
           <SidebarLogo
-            logo={logo}
+            logo={effectiveLogo}
             brandName={brandName}
             collapsed={collapsed}
             onToggle={toggleCollapsed}
@@ -699,7 +702,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Navigation */}
         <nav className={cn(
-          "flex-1 overflow-y-auto py-3 flex flex-col gap-3",
+          "flex-1 overflow-y-auto scrollbar-hide py-3 flex flex-col gap-3",
           collapsed ? "px-1 items-center" : "px-2"
         )}>
           {/* Dashboards */}
@@ -768,9 +771,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </button>
 
           {/* Mobile brand */}
-          {logo ? (
+          {effectiveLogo ? (
             <img
-              src={logo}
+              src={effectiveLogo}
               alt={brandName}
               className="max-h-7 max-w-[130px] object-contain md:hidden"
             />
@@ -785,6 +788,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
           {/* Spacer */}
           <div className="flex-1" />
+
+          {/* Dark mode toggle */}
+          <button
+            onClick={toggleDarkMode}
+            className="p-2 rounded-md hover:bg-muted transition-colors text-foreground/70 hover:text-foreground"
+            aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+            title={darkMode ? "Light mode" : "Dark mode"}
+          >
+            {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
 
           {/* Language switcher — always visible, top right */}
           <HeaderLanguageSwitcher />

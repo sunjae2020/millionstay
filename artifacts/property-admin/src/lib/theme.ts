@@ -1,18 +1,27 @@
 export interface ThemeSettings {
-  primary_color: string;
   brand_name: string;
+  primary_color: string;
+  secondary_color: string;
+  accent_color: string;
   sidebar_theme: string;
   logo: string | null;
   favicon: string | null;
+  logo_dark: string | null;
+  favicon_dark: string | null;
+  custom_css: string | null;
+  dark_mode: boolean;
 }
 
 function hexToHsl(hex: string): { h: number; s: number; l: number } | null {
-  const match = hex.match(/^#([0-9a-f]{6})$/i);
+  const match = hex.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
   if (!match) return null;
 
-  const r = parseInt(match[1].slice(0, 2), 16) / 255;
-  const g = parseInt(match[1].slice(2, 4), 16) / 255;
-  const b = parseInt(match[1].slice(4, 6), 16) / 255;
+  let body = match[1];
+  if (body.length === 3) body = body.split("").map((c) => c + c).join("");
+
+  const r = parseInt(body.slice(0, 2), 16) / 255;
+  const g = parseInt(body.slice(2, 4), 16) / 255;
+  const b = parseInt(body.slice(4, 6), 16) / 255;
 
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
@@ -43,6 +52,12 @@ function hexToHsl(hex: string): { h: number; s: number; l: number } | null {
   };
 }
 
+function readableForeground(hex: string): string {
+  const hsl = hexToHsl(hex);
+  if (!hsl) return "0 0% 100%";
+  return hsl.l > 60 ? "222 47% 11%" : "0 0% 100%";
+}
+
 export function applyPrimaryColor(hex: string) {
   const hsl = hexToHsl(hex);
   if (!hsl) return;
@@ -54,12 +69,41 @@ export function applyPrimaryColor(hex: string) {
   root.style.setProperty("--ring", val);
   root.style.setProperty("--sidebar-primary", val);
   root.style.setProperty("--sidebar-ring", val);
-  root.style.setProperty("--primary-foreground", "0 0% 100%");
-  root.style.setProperty("--sidebar-primary-foreground", "0 0% 100%");
+  root.style.setProperty("--primary-foreground", readableForeground(hex));
+  root.style.setProperty("--sidebar-primary-foreground", readableForeground(hex));
 }
+
+export function applySecondaryColor(hex: string) {
+  const hsl = hexToHsl(hex);
+  if (!hsl) return;
+  const root = document.documentElement;
+  root.style.setProperty("--secondary", `${hsl.h} ${hsl.s}% ${hsl.l}%`);
+  root.style.setProperty("--secondary-foreground", readableForeground(hex));
+}
+
+export function applyAccentColor(hex: string) {
+  const hsl = hexToHsl(hex);
+  if (!hsl) return;
+  const root = document.documentElement;
+  root.style.setProperty("--accent", `${hsl.h} ${hsl.s}% ${hsl.l}%`);
+  root.style.setProperty("--accent-foreground", readableForeground(hex));
+}
+
+const SIDEBAR_VARS = [
+  "--sidebar",
+  "--sidebar-foreground",
+  "--sidebar-border",
+  "--sidebar-accent",
+  "--sidebar-accent-foreground",
+];
 
 export function applySidebarTheme(theme: string) {
   const root = document.documentElement;
+  // In full dark mode, let the .dark CSS rules govern the sidebar.
+  if (root.classList.contains("dark")) {
+    SIDEBAR_VARS.forEach((p) => root.style.removeProperty(p));
+    return;
+  }
   if (theme === "light") {
     root.style.setProperty("--sidebar", "0 0% 98%");
     root.style.setProperty("--sidebar-foreground", "222 47% 15%");
@@ -67,13 +111,56 @@ export function applySidebarTheme(theme: string) {
     root.style.setProperty("--sidebar-accent", "220 14% 93%");
     root.style.setProperty("--sidebar-accent-foreground", "222 47% 15%");
   } else {
-    // dark (default)
+    // dark sidebar in light app (default)
     root.style.setProperty("--sidebar", "222 47% 11%");
     root.style.setProperty("--sidebar-foreground", "210 40% 90%");
     root.style.setProperty("--sidebar-border", "222 40% 18%");
     root.style.setProperty("--sidebar-accent", "222 40% 18%");
     root.style.setProperty("--sidebar-accent-foreground", "210 40% 90%");
   }
+}
+
+const CUSTOM_CSS_ID = "ms-custom-css";
+
+export function applyCustomCss(css: string | null | undefined) {
+  let el = document.getElementById(CUSTOM_CSS_ID) as HTMLStyleElement | null;
+  if (!css) {
+    if (el) el.remove();
+    return;
+  }
+  if (!el) {
+    el = document.createElement("style");
+    el.id = CUSTOM_CSS_ID;
+    document.head.appendChild(el);
+  }
+  el.textContent = css;
+}
+
+export function applyDarkMode(enabled: boolean, sidebarTheme?: string) {
+  const root = document.documentElement;
+  if (enabled) {
+    root.classList.add("dark");
+    // Clear any per-color sidebar overrides so .dark rules win.
+    SIDEBAR_VARS.forEach((p) => root.style.removeProperty(p));
+  } else {
+    root.classList.remove("dark");
+    applySidebarTheme(sidebarTheme ?? loadTheme().sidebar_theme ?? "dark");
+  }
+}
+
+export function applyFavicon(url: string | null | undefined) {
+  if (typeof document === "undefined") return;
+  let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
+  if (!url) {
+    // Don't remove a default; just no-op.
+    return;
+  }
+  if (!link) {
+    link = document.createElement("link");
+    link.rel = "icon";
+    document.head.appendChild(link);
+  }
+  link.href = url;
 }
 
 const THEME_KEY = "ms_theme_settings";
@@ -94,8 +181,13 @@ export function loadTheme(): Partial<ThemeSettings> {
 
 export function initTheme() {
   const theme = loadTheme();
-  if (theme.primary_color) {
-    applyPrimaryColor(theme.primary_color);
-  }
-  applySidebarTheme(theme.sidebar_theme ?? "dark");
+  // Dark mode first so applySidebarTheme can branch correctly.
+  applyDarkMode(theme.dark_mode === true, theme.sidebar_theme ?? "dark");
+  if (theme.primary_color) applyPrimaryColor(theme.primary_color);
+  if (theme.secondary_color) applySecondaryColor(theme.secondary_color);
+  if (theme.accent_color) applyAccentColor(theme.accent_color);
+  applyCustomCss(theme.custom_css);
+  // Favicon: prefer dark variant when in dark mode.
+  const fav = theme.dark_mode && theme.favicon_dark ? theme.favicon_dark : theme.favicon ?? null;
+  applyFavicon(fav);
 }

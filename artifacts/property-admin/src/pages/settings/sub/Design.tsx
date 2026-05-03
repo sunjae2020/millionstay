@@ -14,9 +14,9 @@ export default function DesignPage() {
             {t("nav.design")}
           </>
         }
-        subtitle="Logo, favicon, colours and display preferences"
+        subtitle="Logo, favicon, colours, dark mode and display preferences"
       />
-      <div className="max-w-2xl px-8 py-6">
+      <div className="max-w-5xl px-8 py-6">
         <Design />
       </div>
     </Layout>

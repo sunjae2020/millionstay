@@ -1,6 +1,8 @@
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import LoginPage from "@/pages/LoginPage";
+import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import OwnerApplicationPage from "@/pages/OwnerApplicationPage";
 import DashboardPage from "@/pages/DashboardPage";
 import PropertiesPage from "@/pages/PropertiesPage";
@@ -23,6 +25,8 @@ function PortalRoutes() {
     return (
       <Switch>
         <Route path="/apply" component={OwnerApplicationPage} />
+        <Route path="/forgot-password" component={ForgotPasswordPage} />
+        <Route path="/reset-password" component={ResetPasswordPage} />
         <Route component={LoginPage} />
       </Switch>
     );

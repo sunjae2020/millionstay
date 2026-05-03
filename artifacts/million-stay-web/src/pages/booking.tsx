@@ -115,7 +115,8 @@ export default function Booking() {
             setCurrentStep(2);
           },
           onError: (error: unknown) => {
-            const msg = (error as { data?: { error?: string } })?.data?.error ?? t("booking.creating_account");
+            const e = error as { message?: string; data?: { error?: string } };
+            const msg = e?.message ?? e?.data?.error ?? t("booking.creating_account");
             toast({ title: t("booking.creating_account"), description: msg, variant: "destructive" });
           },
         }
