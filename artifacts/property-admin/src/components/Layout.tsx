@@ -592,18 +592,13 @@ function SidebarLogo({
 
   return (
     <div className="h-14 flex items-center px-3 border-b border-sidebar-border flex-shrink-0 gap-2">
-      {/* Logo or icon+name */}
+      {/* MillionStay logo (falls back to brand logo if one is configured) */}
       <div className="flex-1 min-w-0 flex items-center gap-2">
-        {logo ? (
-          <img src={logo} alt={brandName} className="max-h-8 max-w-[130px] object-contain" />
-        ) : (
-          <>
-            <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
-              <Building2 className="h-4 w-4 text-white" />
-            </div>
-            <span className="text-sidebar-foreground font-semibold text-sm truncate">{brandName}</span>
-          </>
-        )}
+        <img
+          src={logo ?? `${import.meta.env.BASE_URL}millionstay-logo.png`}
+          alt={brandName}
+          className="max-h-7 max-w-[150px] object-contain"
+        />
       </div>
       {/* Collapse button — desktop only */}
       <button
@@ -770,21 +765,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Menu className="h-5 w-5" />
           </button>
 
-          {/* Mobile brand */}
-          {effectiveLogo ? (
-            <img
-              src={effectiveLogo}
-              alt={brandName}
-              className="max-h-7 max-w-[130px] object-contain md:hidden"
-            />
-          ) : (
-            <div className="flex items-center gap-2 md:hidden">
-              <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
-                <Building2 className="h-4 w-4 text-white" />
-              </div>
-              <span className="font-semibold text-sm truncate">{brandName}</span>
-            </div>
-          )}
+          {/* Mobile brand — MillionStay logo */}
+          <img
+            src={effectiveLogo ?? `${import.meta.env.BASE_URL}millionstay-logo.png`}
+            alt={brandName}
+            className="max-h-7 max-w-[140px] object-contain md:hidden"
+          />
 
           {/* Spacer */}
           <div className="flex-1" />

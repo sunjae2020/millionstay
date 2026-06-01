@@ -30,18 +30,59 @@ export async function listTrackedCurrencies(): Promise<string[]> {
   return rows.map((r: { code: string }) => r.code).filter((c: string) => c && c !== "AUD");
 }
 
+type ProviderResult =
+  | { ok: true; rates: Record<string, number>; fetched_at?: string }
+  | { ok: false; error: string };
+
+// Fetch the latest provider rates (1 AUD = X) without touching the database.
+async function fetchProviderRates(): Promise<ProviderResult> {
+  const res = await fetch(PROVIDER_URL, {
+    headers: { "User-Agent": "millionstay/exchange-rate-sync" },
+  });
+  if (!res.ok) {
+    return { ok: false, error: `provider HTTP ${res.status}` };
+  }
+  const data = (await res.json()) as { result?: string; rates?: Record<string, number>; time_last_update_utc?: string };
+  if (data.result !== "success" || !data.rates) {
+    return { ok: false, error: "provider returned non-success" };
+  }
+  return { ok: true, rates: data.rates, fetched_at: data.time_last_update_utc };
+}
+
+export type LiveRates = {
+  ok: boolean;
+  error?: string;
+  fetched_at?: string;
+  // code -> "1 code = N AUD" (8 decimals)
+  rates: Record<string, string>;
+};
+
+// Live rates expressed as "1 X = N AUD" for every currency the provider returns.
+// Read-only preview for the admin UI; does not persist anything.
+export async function getLiveRatesVsAud(): Promise<LiveRates> {
+  try {
+    const r = await fetchProviderRates();
+    if (!r.ok) return { ok: false, error: r.error, rates: {} };
+    const rates: Record<string, string> = { AUD: "1.00000000" };
+    for (const [code, audPerUnit] of Object.entries(r.rates)) {
+      if (code === "AUD") continue;
+      if (typeof audPerUnit === "number" && audPerUnit > 0) {
+        rates[code] = (1 / audPerUnit).toFixed(8);
+      }
+    }
+    return { ok: true, fetched_at: r.fetched_at, rates };
+  } catch (err: any) {
+    return { ok: false, error: err?.message ?? String(err), rates: {} };
+  }
+}
+
 export async function syncExchangeRates(): Promise<SyncResult> {
   try {
-    const res = await fetch(PROVIDER_URL, {
-      headers: { "User-Agent": "millionstay/exchange-rate-sync" },
-    });
-    if (!res.ok) {
-      return { ok: false, updated: [], skipped: [], error: `provider HTTP ${res.status}` };
+    const provider = await fetchProviderRates();
+    if (!provider.ok) {
+      return { ok: false, updated: [], skipped: [], error: provider.error };
     }
-    const data = (await res.json()) as { result?: string; rates?: Record<string, number>; time_last_update_utc?: string };
-    if (data.result !== "success" || !data.rates) {
-      return { ok: false, updated: [], skipped: [], error: "provider returned non-success" };
-    }
+    const data = { rates: provider.rates, time_last_update_utc: provider.fetched_at };
 
     const tracked = await listTrackedCurrencies();
     const updated: string[] = [];

@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { db, exchangeRatesTable } from "@workspace/db";
 import { eq, desc, and } from "drizzle-orm";
 import * as z from "zod/v4";
-import { syncExchangeRates, getSyncInfo } from "../lib/exchangeRateSync";
+import { syncExchangeRates, getSyncInfo, getLiveRatesVsAud } from "../lib/exchangeRateSync";
 
 const router: IRouter = Router();
 
@@ -25,6 +25,12 @@ router.get("/v1/exchange-rates", async (_req, res): Promise<void> => {
 router.get("/v1/exchange-rates/sync-info", async (_req, res): Promise<void> => {
   const info = await getSyncInfo();
   res.json({ success: true, data: info });
+});
+
+// Read-only live market rates (1 X = N AUD) for the admin preview — not persisted.
+router.get("/v1/exchange-rates/live", async (_req, res): Promise<void> => {
+  const live = await getLiveRatesVsAud();
+  res.json({ success: live.ok, data: live });
 });
 
 router.post("/v1/exchange-rates", async (req, res): Promise<void> => {
