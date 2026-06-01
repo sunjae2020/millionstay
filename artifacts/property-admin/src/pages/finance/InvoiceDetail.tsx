@@ -26,6 +26,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { ArrowLeft, Trash2, Save, FileDown, Eye, Mail } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
+import { DocumentVersions } from "@/components/DocumentVersions";
 
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-600",
@@ -191,6 +192,7 @@ export default function InvoiceDetail() {
                 <Button variant="outline" disabled={pdfBusy} onClick={handleEmail}>
                   <Mail className="h-4 w-4 mr-1" /> Email
                 </Button>
+                <DocumentVersions entityType="invoice" entityId={Number(id)} freezeUrl={`/api/v1/invoices/${id}/freeze`} />
               </>
             )}
             {!isNew && (

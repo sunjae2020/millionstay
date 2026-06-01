@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Trash2, Save, Plus, FileDown, Eye, Mail } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
+import { DocumentVersions } from "@/components/DocumentVersions";
+import { FileText as FileTextIcon } from "lucide-react";
 
 interface LineItem { name: string; quantity: number; unit_price: number; }
 
@@ -138,6 +140,25 @@ export default function QuoteDetail() {
     } finally { setPdfBusy(false); }
   };
 
+  const convertToInvoice = async () => {
+    if (!window.confirm("Convert this quote into a draft invoice?")) return;
+    try {
+      const res = await apiFetch(`/api/v1/quotes/${id}/convert`, { method: "POST" });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) {
+        if (res.status === 409 && body?.invoice_id) {
+          navigate(`/finance/invoices/${body.invoice_id}`);
+          return;
+        }
+        throw new Error(body?.error ?? `HTTP ${res.status}`);
+      }
+      toast({ title: "Converted", description: `Created invoice ${body?.invoice?.invoice_ref ?? ""}.` });
+      navigate(`/finance/invoices/${body.invoice.id}`);
+    } catch (err) {
+      toast({ title: "Convert failed", description: err instanceof Error ? err.message : "Error", variant: "destructive" });
+    }
+  };
+
   const handleEmail = async () => {
     if (!window.confirm("Email this quote (PDF) to the recipient?")) return;
     setPdfBusy(true);
@@ -167,6 +188,7 @@ export default function QuoteDetail() {
                 <Button variant="outline" disabled={pdfBusy} onClick={() => handlePdf("preview")}><Eye className="h-4 w-4 mr-1" /> Preview</Button>
                 <Button variant="outline" disabled={pdfBusy} onClick={() => handlePdf("download")}><FileDown className="h-4 w-4 mr-1" /> PDF</Button>
                 <Button variant="outline" disabled={pdfBusy} onClick={handleEmail}><Mail className="h-4 w-4 mr-1" /> Email</Button>
+                <DocumentVersions entityType="quote" entityId={Number(id)} freezeUrl={`/api/v1/quotes/${id}/freeze`} />
                 <Button variant="destructive" onClick={remove}><Trash2 className="h-4 w-4 mr-1" /> Delete</Button>
               </>
             )}
@@ -184,6 +206,15 @@ export default function QuoteDetail() {
               {status === "Draft" && <Button onClick={() => transition("send")}>Send</Button>}
               {status === "Sent" && <Button className="bg-green-600 hover:bg-green-700" onClick={() => transition("accept")}>Mark Accepted</Button>}
               {status === "Sent" && <Button variant="outline" className="text-red-600 border-red-200" onClick={() => transition("decline")}>Decline</Button>}
+              {quote?.converted_invoice_id ? (
+                <Button variant="outline" onClick={() => navigate(`/finance/invoices/${quote.converted_invoice_id}`)}>
+                  <FileTextIcon className="h-4 w-4 mr-1" /> View Invoice
+                </Button>
+              ) : (status === "Sent" || status === "Accepted") && (
+                <Button className="bg-[#E8621A] hover:bg-[#d4561a] text-white" onClick={convertToInvoice}>
+                  <FileTextIcon className="h-4 w-4 mr-1" /> Convert to Invoice
+                </Button>
+              )}
             </div>
           </div>
         )}

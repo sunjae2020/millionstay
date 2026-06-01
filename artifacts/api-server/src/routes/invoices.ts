@@ -8,6 +8,7 @@ import { buildReceiptHtml } from "../lib/documents/receiptDocument";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
 import { normalizeLang, t } from "../lib/documents/i18n";
+import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
 import { sendDocumentEmail } from "../lib/email";
 import {
   CreateInvoiceBody,
@@ -333,6 +334,13 @@ async function emailInvoiceDocument(req: import("express").Request, res: import(
 
   if (!result.ok) { res.status(result.skipped ? 503 : 502).json({ error: result.error ?? "Send failed" }); return; }
 
+  // Freeze an immutable snapshot of exactly what was emailed (best-effort).
+  await freezeDocument({
+    entityType: "invoice", entityId: id,
+    docType: snapshotDocType("invoice", kind === "receipt" ? "receipt" : undefined),
+    ref: docInput.invoice_ref, pdf,
+  }).catch(() => null);
+
   // Sending an invoice advances Draft → Sent.
   if (kind === "invoice") {
     await db.update(invoicesTable).set({ status: "Sent", updated_at: new Date() })
@@ -343,6 +351,34 @@ async function emailInvoiceDocument(req: import("express").Request, res: import(
 
 router.post("/v1/invoices/:id/email", (req, res) => emailInvoiceDocument(req, res, "invoice"));
 router.post("/v1/invoices/:id/receipt/email", (req, res) => emailInvoiceDocument(req, res, "receipt"));
+
+/** Manually freeze the current invoice (or receipt) PDF as an immutable snapshot. */
+async function freezeInvoiceDocument(req: import("express").Request, res: import("express").Response, kind: "invoice" | "receipt"): Promise<void> {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const docInput = await buildInvoiceDocInput(id);
+  if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
+  const lang = normalizeLang(req.body?.lang as string);
+  const company = await resolveCompanyInfo();
+  const html = kind === "receipt" ? buildReceiptHtml(docInput, company, true, lang) : buildInvoiceHtml(docInput, company, true, lang);
+  let pdf: Buffer;
+  try {
+    pdf = await htmlToPdf(html);
+  } catch (err) {
+    if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
+    res.status(500).json({ error: "Failed to generate PDF" }); return;
+  }
+  const snap = await freezeDocument({
+    entityType: "invoice", entityId: id,
+    docType: snapshotDocType("invoice", kind === "receipt" ? "receipt" : undefined),
+    ref: docInput.invoice_ref, pdf,
+  });
+  if (!snap) { res.status(503).json({ error: "Document storage not configured" }); return; }
+  res.json({ ok: true, ...snap });
+}
+
+router.post("/v1/invoices/:id/freeze", (req, res) => freezeInvoiceDocument(req, res, "invoice"));
+router.post("/v1/invoices/:id/receipt/freeze", (req, res) => freezeInvoiceDocument(req, res, "receipt"));
 
 router.get("/v1/lookup/invoices", async (req, res): Promise<void> => {
   const { q } = req.query as Record<string, string>;

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { db, invoicesTable, contractsTable, accountsTable, bookingsTable, quotesTable } from "@workspace/db";
 import { and, eq, ilike, isNull, desc } from "drizzle-orm";
+import { listSnapshots } from "../lib/documents/freeze";
 
 /**
  * Document Hub — unified cross-cutting index over all customer-facing documents
@@ -134,6 +135,20 @@ router.get("/v1/documents", async (req, res): Promise<void> => {
 
   docs.sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
   res.json(docs);
+});
+
+/**
+ * List frozen (immutable) document snapshots for a record, with short-lived
+ * signed download URLs.
+ *   GET /v1/document-snapshots?entity_type=invoice&entity_id=123
+ */
+router.get("/v1/document-snapshots", async (req, res): Promise<void> => {
+  const entityType = String(req.query.entity_type ?? "");
+  const entityId = Number(req.query.entity_id);
+  if (!entityType || !Number.isFinite(entityId)) {
+    res.status(400).json({ error: "entity_type and entity_id are required" }); return;
+  }
+  res.json(await listSnapshots(entityType, entityId));
 });
 
 export default router;

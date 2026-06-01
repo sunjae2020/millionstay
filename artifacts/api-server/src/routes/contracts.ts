@@ -7,6 +7,7 @@ import { buildContractHtml, type ContractDocInput } from "../lib/documents/contr
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
 import { normalizeLang, t } from "../lib/documents/i18n";
+import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
 import { sendDocumentEmail } from "../lib/email";
 import { emailLogsTable } from "@workspace/db";
 
@@ -448,9 +449,30 @@ router.post("/v1/contracts/:id/email", async (req, res): Promise<void> => {
   }).catch(() => {});
 
   if (!result.ok) { res.status(result.skipped ? 503 : 502).json({ error: result.error ?? "Send failed" }); return; }
+  // Freeze an immutable snapshot of exactly what was emailed (best-effort).
+  await freezeDocument({ entityType: "contract", entityId: id, docType: snapshotDocType("contract"), ref: built.doc.contract_ref, pdf }).catch(() => null);
   await db.update(contractsTable).set({ status: "Sent", sent_at: new Date(), updated_at: new Date() })
     .where(and(eq(contractsTable.id, id), eq(contractsTable.status, "Draft")));
   res.json({ ok: true, id: result.id, to });
+});
+
+/** Manually freeze the current contract PDF as an immutable versioned snapshot. */
+router.post("/v1/contracts/:id/freeze", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const built = await buildContractDocInput(id);
+  if (!built) { res.status(404).json({ error: "Not found" }); return; }
+  const lang = normalizeLang(req.body?.lang as string);
+  let pdf: Buffer;
+  try {
+    pdf = await htmlToPdf(buildContractHtml(built.doc, await resolveCompanyInfo(), true, lang));
+  } catch (err) {
+    if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
+    res.status(500).json({ error: "Failed to generate PDF" }); return;
+  }
+  const snap = await freezeDocument({ entityType: "contract", entityId: id, docType: snapshotDocType("contract"), ref: built.doc.contract_ref, pdf });
+  if (!snap) { res.status(503).json({ error: "Document storage not configured" }); return; }
+  res.json({ ok: true, ...snap });
 });
 
 router.put("/v1/contracts/:id", async (req, res): Promise<void> => {

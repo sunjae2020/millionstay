@@ -22,6 +22,7 @@ import { LookupSelect } from "@/components/LookupSelect";
 import { ArrowLeft, Save, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
+import { DocumentVersions } from "@/components/DocumentVersions";
 
 const CURRENCIES = ["AUD", "USD", "SGD", "MYR", "GBP"];
 const statusColors: Record<string, string> = {
@@ -417,6 +418,7 @@ export default function ContractDetail() {
                   <Button type="button" variant="outline" disabled={pdfBusy} onClick={handleEmail}>
                     <Mail className="h-4 w-4 mr-2" />Email
                   </Button>
+                  <DocumentVersions entityType="contract" entityId={Number(id)} freezeUrl={`/api/v1/contracts/${id}/freeze`} />
                 </>
               )}
               {!isNew && (

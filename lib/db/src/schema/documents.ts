@@ -22,6 +22,9 @@ export const documentsTable = pgTable(
     file_size: integer("file_size").notNull(),
     mime_type: varchar("mime_type", { length: 100 }).notNull(),
     cloudinary_public_id: varchar("cloudinary_public_id", { length: 255 }).notNull(),
+    // Document Hub: human reference + version for frozen document snapshots.
+    doc_ref: varchar("doc_ref", { length: 64 }),
+    version: integer("version"),
     uploaded_by: integer("uploaded_by"),
     uploaded_by_type: varchar("uploaded_by_type", { length: 16 }),
     retention_until: timestamp("retention_until", { withTimezone: true }).notNull(),
