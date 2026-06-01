@@ -6,7 +6,7 @@ import { getRateToAud } from "../lib/rateSnapshot";
 import { buildContractHtml, type ContractDocInput } from "../lib/documents/contractDocument";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
-import { normalizeLang } from "../lib/documents/i18n";
+import { normalizeLang, t } from "../lib/documents/i18n";
 import { sendDocumentEmail } from "../lib/email";
 import { emailLogsTable } from "@workspace/db";
 
@@ -425,25 +425,25 @@ router.post("/v1/contracts/:id/email", async (req, res): Promise<void> => {
   }
   if (!to) { res.status(400).json({ error: "No recipient email — set one on the tenant account or pass { to }." }); return; }
 
+  const lang = normalizeLang(req.body?.lang as string);
   let pdf: Buffer;
   try {
-    pdf = await htmlToPdf(buildContractHtml(built.doc, await resolveCompanyInfo()));
+    pdf = await htmlToPdf(buildContractHtml(built.doc, await resolveCompanyInfo(), true, lang));
   } catch (err) {
     if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
     res.status(500).json({ error: "Failed to generate PDF" }); return;
   }
 
-  const subject = `Accommodation Agreement ${built.doc.contract_ref} from MillionStay`;
   const result = await sendDocumentEmail({
-    to, toName: built.doc.tenant_name, subject, docTypeLabel: "Agreement", ref: built.doc.contract_ref,
+    to, toName: built.doc.tenant_name, lang, docTypeLabel: t(lang, "doctype.contract"), ref: built.doc.contract_ref,
     amountLabel: built.doc.total_rent != null ? `${Number(built.doc.total_rent).toLocaleString("en-AU", { minimumFractionDigits: 2 })} ${built.doc.currency || "AUD"}` : null,
-    note: "Please review the attached agreement and reply to confirm.",
+    note: t(lang, "email.note.reviewAgreement"),
     pdf, filename: `${built.doc.contract_ref}.pdf`,
   });
 
   await db.insert(emailLogsTable).values({
     template_code: "document.contract", to_email: to, to_name: built.doc.tenant_name ?? null,
-    subject, resend_message_id: result.id ?? null, status: result.ok ? "Sent" : "Failed",
+    subject: result.subject, resend_message_id: result.id ?? null, status: result.ok ? "Sent" : "Failed",
     entity_type: "contract", entity_id: id, error_message: result.error ?? null,
   }).catch(() => {});
 

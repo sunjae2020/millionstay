@@ -85,6 +85,56 @@ const LABELS: Dict = {
   "terms":            { en: "Terms & Conditions",      ko: "약관",              zh: "条款与条件",   ja: "利用規約" },
   "signatures":       { en: "Signatures",              ko: "서명",              zh: "签名",         ja: "署名" },
   "signed":           { en: "Signed",                  ko: "서명일",            zh: "签署日期",     ja: "署名日" },
+
+  // ── Email cover (when documents are emailed) ──────────────────────────
+  "email.subject": {
+    en: "{doc} {ref} from MillionStay",
+    ko: "MillionStay {doc} {ref}",
+    zh: "MillionStay {doc} {ref}",
+    ja: "MillionStay {doc} {ref}",
+  },
+  "email.greeting.named": {
+    en: "Hi {name},", ko: "{name}님, 안녕하세요.", zh: "您好 {name}：", ja: "{name} 様",
+  },
+  "email.greeting.plain": {
+    en: "Hello,", ko: "안녕하세요.", zh: "您好：", ja: "ご担当者様",
+  },
+  "email.body": {
+    en: "Please find your {doc} attached as a PDF.",
+    ko: "{doc}를 PDF 파일로 첨부합니다.",
+    zh: "请查收附件中的{doc}（PDF）。",
+    ja: "{doc}をPDFファイルで添付いたします。",
+  },
+  "email.questions": {
+    en: "Questions? Contact us at {email}.",
+    ko: "문의사항은 {email}로 연락 주세요.",
+    zh: "如有疑问，请联系 {email}。",
+    ja: "ご不明な点は {email} までお問い合わせください。",
+  },
+  "email.sentTo": {
+    en: "This email was sent to {to}",
+    ko: "이 이메일은 {to} 주소로 발송되었습니다",
+    zh: "本邮件发送至 {to}",
+    ja: "このメールは {to} 宛に送信されました",
+  },
+  "email.note.due": {
+    en: "Payment is due by {date}.",
+    ko: "지급 기한은 {date}입니다.",
+    zh: "付款截止日期为 {date}。",
+    ja: "お支払期限は {date} です。",
+  },
+  "email.note.validUntil": {
+    en: "This quote is valid until {date}.",
+    ko: "본 견적은 {date}까지 유효합니다.",
+    zh: "本报价有效期至 {date}。",
+    ja: "本見積の有効期限は {date} です。",
+  },
+  "email.note.reviewAgreement": {
+    en: "Please review the attached agreement and reply to confirm.",
+    ko: "첨부된 계약서를 검토하신 후 회신하여 확인해 주세요.",
+    zh: "请查阅所附协议并回复确认。",
+    ja: "添付の契約書をご確認の上、ご返信ください。",
+  },
 };
 
 /** Translate a label key into the given language, interpolating {var} tokens. */

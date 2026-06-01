@@ -7,7 +7,7 @@ import { buildInvoiceHtml, type InvoiceDocInput } from "../lib/documents/invoice
 import { buildReceiptHtml } from "../lib/documents/receiptDocument";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
-import { normalizeLang } from "../lib/documents/i18n";
+import { normalizeLang, t } from "../lib/documents/i18n";
 import { sendDocumentEmail } from "../lib/email";
 import {
   CreateInvoiceBody,
@@ -304,8 +304,11 @@ async function emailInvoiceDocument(req: import("express").Request, res: import(
   const to = (req.body?.to as string)?.trim() || docInput.account_email;
   if (!to) { res.status(400).json({ error: "No recipient email — set one on the linked account or pass { to }." }); return; }
 
+  const lang = normalizeLang(req.body?.lang as string);
   const company = await resolveCompanyInfo();
-  const html = kind === "receipt" ? buildReceiptHtml(docInput, company) : buildInvoiceHtml(docInput, company);
+  const html = kind === "receipt"
+    ? buildReceiptHtml(docInput, company, true, lang)
+    : buildInvoiceHtml(docInput, company, true, lang);
   let pdf: Buffer;
   try {
     pdf = await htmlToPdf(html);
@@ -314,18 +317,17 @@ async function emailInvoiceDocument(req: import("express").Request, res: import(
     res.status(500).json({ error: "Failed to generate PDF" }); return;
   }
 
-  const label = kind === "receipt" ? "Receipt" : "Invoice";
-  const subject = `${label} ${docInput.invoice_ref} from MillionStay`;
+  const docTypeLabel = t(lang, kind === "receipt" ? "doctype.receipt" : "doctype.invoice");
   const result = await sendDocumentEmail({
-    to, toName: docInput.account_name, subject, docTypeLabel: label, ref: docInput.invoice_ref,
+    to, toName: docInput.account_name, lang, docTypeLabel, ref: docInput.invoice_ref,
     amountLabel: moneyLabel(docInput.amount, docInput.currency),
-    note: kind === "invoice" && docInput.due_date ? `Payment due ${docInput.due_date}.` : null,
+    note: kind === "invoice" && docInput.due_date ? t(lang, "email.note.due", { date: docInput.due_date }) : null,
     pdf, filename: `${docInput.invoice_ref}${kind === "receipt" ? "-receipt" : ""}.pdf`,
   });
 
   await db.insert(emailLogsTable).values({
     template_code: `document.${kind}`, to_email: to, to_name: docInput.account_name ?? null,
-    subject, resend_message_id: result.id ?? null, status: result.ok ? "Sent" : "Failed",
+    subject: result.subject, resend_message_id: result.id ?? null, status: result.ok ? "Sent" : "Failed",
     entity_type: "invoice", entity_id: id, error_message: result.error ?? null,
   }).catch(() => {});
 

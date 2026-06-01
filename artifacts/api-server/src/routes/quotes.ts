@@ -6,7 +6,7 @@ import { logAction } from "../utils/auditLog";
 import { buildQuoteHtml, type QuoteDocInput } from "../lib/documents/quoteDocument";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
-import { normalizeLang } from "../lib/documents/i18n";
+import { normalizeLang, t } from "../lib/documents/i18n";
 import { sendDocumentEmail } from "../lib/email";
 
 const router = Router();
@@ -279,25 +279,25 @@ router.post("/v1/quotes/:id/email", async (req, res): Promise<void> => {
   const to = (req.body?.to as string)?.trim() || docInput.party_email;
   if (!to) { res.status(400).json({ error: "No recipient email — set one on the account/lead or pass { to }." }); return; }
 
+  const lang = normalizeLang(req.body?.lang as string);
   let pdf: Buffer;
   try {
-    pdf = await htmlToPdf(buildQuoteHtml(docInput, await resolveCompanyInfo()));
+    pdf = await htmlToPdf(buildQuoteHtml(docInput, await resolveCompanyInfo(), true, lang));
   } catch (err) {
     if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
     res.status(500).json({ error: "Failed to generate PDF" }); return;
   }
 
-  const subject = `Quotation ${docInput.quote_ref} from MillionStay`;
   const result = await sendDocumentEmail({
-    to, toName: docInput.party_name, subject, docTypeLabel: "Quotation", ref: docInput.quote_ref,
+    to, toName: docInput.party_name, lang, docTypeLabel: t(lang, "doctype.quote"), ref: docInput.quote_ref,
     amountLabel: `${Number(docInput.total ?? 0).toLocaleString("en-AU", { minimumFractionDigits: 2 })} ${docInput.currency || "AUD"}`,
-    note: docInput.valid_until ? `This quote is valid until ${docInput.valid_until}.` : null,
+    note: docInput.valid_until ? t(lang, "email.note.validUntil", { date: docInput.valid_until }) : null,
     pdf, filename: `${docInput.quote_ref}.pdf`,
   });
 
   await db.insert(emailLogsTable).values({
     template_code: "document.quote", to_email: to, to_name: docInput.party_name ?? null,
-    subject, resend_message_id: result.id ?? null, status: result.ok ? "Sent" : "Failed",
+    subject: result.subject, resend_message_id: result.id ?? null, status: result.ok ? "Sent" : "Failed",
     entity_type: "quote", entity_id: id, error_message: result.error ?? null,
   }).catch(() => {});
 
