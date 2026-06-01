@@ -19,6 +19,8 @@ import {
   leadsTable,
   suburbsTable,
   exchangeRatesTable,
+  languagesTable,
+  translationsTable,
 } from "@workspace/db";
 import { insertLeadWithGeneratedRef } from "../lib/leadRef.js";
 import { sendLeadNotificationEmail } from "../lib/email.js";
@@ -1068,6 +1070,44 @@ router.get("/v1/public/exchange-rates", async (_req, res): Promise<void> => {
       rates: out,
     },
   });
+});
+
+/* ───────────────────────────────────────────────────────
+   GET /api/v1/public/languages
+   No auth. Enabled display languages for the website language switcher.
+──────────────────────────────────────────────────────── */
+router.get("/v1/public/languages", async (_req, res): Promise<void> => {
+  const rows = await db
+    .select()
+    .from(languagesTable)
+    .where(eq(languagesTable.enabled, true))
+    .orderBy(asc(languagesTable.sort_order), asc(languagesTable.code));
+  res.json({
+    success: true,
+    data: rows.map((r) => ({
+      code: r.code,
+      name: r.name,
+      english_name: r.english_name,
+      flag_iso: r.flag_iso,
+      is_default: r.is_default,
+    })),
+  });
+});
+
+/* ───────────────────────────────────────────────────────
+   GET /api/v1/public/translations/:lang
+   No auth. Flat { key: value } map for the requested language.
+   The website overlays these on top of its bundled defaults.
+──────────────────────────────────────────────────────── */
+router.get("/v1/public/translations/:lang", async (req, res): Promise<void> => {
+  const lang = String(req.params.lang).toLowerCase();
+  const rows = await db
+    .select({ key: translationsTable.key, value: translationsTable.value })
+    .from(translationsTable)
+    .where(eq(translationsTable.lang, lang));
+  const out: Record<string, string> = {};
+  for (const r of rows) if (r.value !== "") out[r.key] = r.value;
+  res.json({ success: true, data: out });
 });
 
 export default router;

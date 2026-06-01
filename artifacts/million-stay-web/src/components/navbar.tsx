@@ -10,6 +10,7 @@ import {
 } from "./ui/dropdown-menu";
 import { Menu, X, LayoutDashboard, LogOut, ChevronDown } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
+import { getApiBase } from "@/lib/api-base";
 import { CurrencySelector } from "./currency-selector";
 import logoHorizontal from "@assets/06.OR_NB_horizontal_ver_1775381659303.png";
 import logoMark from "@assets/05.OR_NB_Mark_simple_ver_1775381659302.png";
@@ -22,7 +23,11 @@ const NAV_HREFS = [
   { key: "links.forAgent", href: "/for-agent" },
 ];
 
-const LANGUAGES = [
+type LangOption = { code: string; label: string; iso: string; name: string };
+
+// Fallback list — used until the admin-managed languages load from the API
+// (and if the request fails).
+const FALLBACK_LANGUAGES: LangOption[] = [
   { code: "en", label: "EN", iso: "au", name: "English" },
   { code: "ko", label: "KO", iso: "kr", name: "한국어" },
   { code: "zh", label: "ZH", iso: "cn", name: "中文" },
@@ -55,7 +60,28 @@ export function Navbar() {
   const [location, setLocation] = useLocation();
   const { token, guest, logout } = useAuthStore();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [languages, setLanguages] = useState<LangOption[]>(FALLBACK_LANGUAGES);
   const navRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${getApiBase()}/api/v1/public/languages`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => {
+        const rows = json?.data;
+        if (cancelled || !Array.isArray(rows) || rows.length === 0) return;
+        setLanguages(
+          rows.map((l: any) => ({
+            code: l.code,
+            label: String(l.code).toUpperCase(),
+            iso: l.flag_iso || l.code,
+            name: l.name || l.english_name || l.code,
+          })),
+        );
+      })
+      .catch(() => { /* keep fallback */ });
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -80,7 +106,7 @@ export function Navbar() {
 
   const displayName = [guest?.first_name, guest?.last_name].filter(Boolean).join(" ") || guest?.email || "Guest";
   const initials = getInitials(displayName);
-  const currentLang = LANGUAGES.find((l) => l.code === i18n.language) ?? LANGUAGES[0]!;
+  const currentLang = languages.find((l) => l.code === i18n.language) ?? languages[0] ?? FALLBACK_LANGUAGES[0]!;
 
   return (
     <header ref={navRef} className="w-full bg-white shadow-sm z-50 sticky top-0">
@@ -121,7 +147,7 @@ export function Navbar() {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44 p-1">
-                {LANGUAGES.map((lang) => {
+                {languages.map((lang) => {
                   const isActive = i18n.language === lang.code;
                   return (
                     <button
@@ -226,7 +252,7 @@ export function Navbar() {
             <div className="border-t border-gray-100 mt-2 pt-2">
               <p className="px-3 py-1 text-xs text-gray-400 font-medium uppercase tracking-wide">{t("nav.language")}</p>
               <div className="grid grid-cols-5 gap-1 px-3 py-2">
-                {LANGUAGES.map((lang) => {
+                {languages.map((lang) => {
                   const isActive = i18n.language === lang.code;
                   return (
                     <button
