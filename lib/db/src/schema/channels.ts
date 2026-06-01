@@ -124,7 +124,8 @@ export const channelReservationsTable = pgTable(
   {
     id: serial("id").primaryKey(),
     channel_id: integer("channel_id").notNull(),
-    channel_listing_id: integer("channel_listing_id").notNull(),
+    // Nullable: a reservation webhook can arrive before the listing is mapped.
+    channel_listing_id: integer("channel_listing_id"),
     external_reservation_id: text("external_reservation_id").notNull(), // OTA reservation no.
     booking_id: integer("booking_id"), // matched internal booking (null = unmatched)
     space_id: integer("space_id"),

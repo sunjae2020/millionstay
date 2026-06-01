@@ -27,16 +27,28 @@ import {
   getGetSpaceAvailabilityQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Save, CalendarDays, Images, Plus, Trash2, PackagePlus } from "lucide-react";
+import { ArrowLeft, Save, CalendarDays, Images, Plus, Trash2, PackagePlus, Copy, Check, RefreshCw, CalendarClock } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { SpacePhotoManager } from "@/components/SpacePhotoManager";
+import { ChannelSyncPanel } from "@/components/ChannelSyncPanel";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, startOfMonth, endOfMonth, addMonths, getDay } from "date-fns";
+import { AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface SpaceForm {
   name: string;
@@ -109,6 +121,41 @@ export default function SpaceDetail() {
   const [addSvcSaving, setAddSvcSaving] = useState(false);
   const { toast } = useToast();
 
+  // OTA calendar feed (iCal export) state
+  const [feedUrl, setFeedUrl] = useState<string | null>(null);
+  const [feedLoading, setFeedLoading] = useState(false);
+  const [feedCopied, setFeedCopied] = useState(false);
+  const [rotateConfirmOpen, setRotateConfirmOpen] = useState(false);
+  const [revokeConfirmOpen, setRevokeConfirmOpen] = useState(false);
+
+  // OTA channel connections (iCal import) state
+  type Channel = { id: number; code: string; name: string };
+  type ChannelListing = {
+    id: number; channel_id: number; channel_name: string | null;
+    ical_import_url: string | null; sync_enabled: boolean;
+    last_import_at: string | null; last_export_at: string | null; last_sync_status: string | null; status: string;
+  };
+  const [channels, setChannels] = useState<Channel[]>([]);
+  const [listings, setListings] = useState<ChannelListing[]>([]);
+  const [listingUrls, setListingUrls] = useState<Record<number, string>>({});
+  const [addChannelId, setAddChannelId] = useState<string>("");
+  const [addImportUrl, setAddImportUrl] = useState<string>("");
+  const [addListingSaving, setAddListingSaving] = useState(false);
+  const [busyListingId, setBusyListingId] = useState<number | null>(null);
+  const [deleteListingId, setDeleteListingId] = useState<number | null>(null);
+
+  // Unified channel calendar state
+  type CalDay = {
+    date: string;
+    status: "available" | "blocked" | "booked" | "contracted";
+    source: string | null; channel_name: string | null;
+    booking_ref: string | null; block_reason: string | null; conflict: boolean;
+  };
+  type CalData = { days: CalDay[]; summary: { conflicts: number }; channels: { listing_id: number }[] };
+  const [calData, setCalData] = useState<CalData | null>(null);
+  const [calLoading, setCalLoading] = useState(false);
+  const [calMonth, setCalMonth] = useState<Date>(startOfMonth(new Date()));
+
   const loadSpaceServices = async () => {
     if (!id) return;
     setSvcLoading(true);
@@ -168,6 +215,222 @@ export default function SpaceDetail() {
       toast({ title: "Service removed" });
       setSpaceServices(prev => prev.filter(s => s.id !== mapId));
     }
+  };
+
+  const loadCalendarFeed = async () => {
+    if (!id) return;
+    try {
+      const res = await apiFetch(`/api/v1/spaces/${id}/calendar-feed`);
+      const json = await res.json();
+      if (json.success) setFeedUrl(json.data.feed_url ?? null);
+    } catch {
+      /* non-critical; leave feedUrl as-is */
+    }
+  };
+
+  const generateCalendarFeed = async () => {
+    if (!id) return;
+    setFeedLoading(true);
+    try {
+      const res = await apiFetch(`/api/v1/spaces/${id}/calendar-feed/token`, { method: "POST" });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error ?? "Failed to generate feed");
+      setFeedUrl(json.data.feed_url);
+      toast({ title: t("space.feed_generated_toast") });
+    } catch (e) {
+      toast({ title: t("common.error"), description: e instanceof Error ? e.message : "", variant: "destructive" });
+    } finally {
+      setFeedLoading(false);
+      setRotateConfirmOpen(false);
+    }
+  };
+
+  const revokeCalendarFeed = async () => {
+    if (!id) return;
+    setFeedLoading(true);
+    try {
+      const res = await apiFetch(`/api/v1/spaces/${id}/calendar-feed/token`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to revoke feed");
+      setFeedUrl(null);
+      toast({ title: t("space.feed_revoked_toast") });
+    } catch (e) {
+      toast({ title: t("common.error"), description: e instanceof Error ? e.message : "", variant: "destructive" });
+    } finally {
+      setFeedLoading(false);
+      setRevokeConfirmOpen(false);
+    }
+  };
+
+  const handleCopyFeed = async () => {
+    if (!feedUrl) return;
+    try {
+      await navigator.clipboard.writeText(feedUrl);
+      setFeedCopied(true);
+      setTimeout(() => setFeedCopied(false), 2000);
+    } catch {
+      /* clipboard blocked; ignore */
+    }
+  };
+
+  useEffect(() => {
+    if (!isNew && id) loadCalendarFeed();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, isNew]);
+
+  const loadChannels = async () => {
+    try {
+      const res = await apiFetch(`/api/v1/channels`);
+      const json = await res.json();
+      if (json.success) setChannels(json.data ?? []);
+    } catch { /* non-critical */ }
+  };
+
+  const loadListings = async () => {
+    if (!id) return;
+    try {
+      const res = await apiFetch(`/api/v1/spaces/${id}/channel-listings`);
+      const json = await res.json();
+      if (json.success) {
+        const rows: ChannelListing[] = json.data ?? [];
+        setListings(rows);
+        setListingUrls(Object.fromEntries(rows.map((r) => [r.id, r.ical_import_url ?? ""])));
+      }
+    } catch { /* non-critical */ }
+  };
+
+  const handleAddListing = async () => {
+    if (!id || !addChannelId) return;
+    setAddListingSaving(true);
+    try {
+      const res = await apiFetch(`/api/v1/spaces/${id}/channel-listings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ channel_id: Number(addChannelId), ical_import_url: addImportUrl || null }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error ?? "Failed to add connection");
+      setAddChannelId(""); setAddImportUrl("");
+      await loadListings();
+      toast({ title: t("space.ch_added_toast") });
+    } catch (e) {
+      toast({ title: t("common.error"), description: e instanceof Error ? e.message : "", variant: "destructive" });
+    } finally {
+      setAddListingSaving(false);
+    }
+  };
+
+  const handleSaveListingUrl = async (listingId: number) => {
+    setBusyListingId(listingId);
+    try {
+      const res = await apiFetch(`/api/v1/channel-listings/${listingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ical_import_url: listingUrls[listingId] || null }),
+      });
+      if (!res.ok) throw new Error("Failed to save URL");
+      await loadListings();
+      toast({ title: t("space.ch_url_saved_toast") });
+    } catch (e) {
+      toast({ title: t("common.error"), description: e instanceof Error ? e.message : "", variant: "destructive" });
+    } finally {
+      setBusyListingId(null);
+    }
+  };
+
+  const handleToggleListingSync = async (listing: ChannelListing, val: boolean) => {
+    setListings((prev) => prev.map((l) => (l.id === listing.id ? { ...l, sync_enabled: val } : l)));
+    try {
+      await apiFetch(`/api/v1/channel-listings/${listing.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sync_enabled: val }),
+      });
+    } catch {
+      // revert on failure
+      setListings((prev) => prev.map((l) => (l.id === listing.id ? { ...l, sync_enabled: !val } : l)));
+    }
+  };
+
+  const handleSyncListing = async (listingId: number) => {
+    setBusyListingId(listingId);
+    try {
+      const res = await apiFetch(`/api/v1/channel-listings/${listingId}/import`, { method: "POST" });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        toast({ title: t("space.ch_synced_toast"), description: `${json.data?.processed ?? 0} blocked dates` });
+      } else {
+        toast({ title: t("space.ch_sync_failed_toast"), description: json.data?.error ?? json.error ?? "", variant: "destructive" });
+      }
+      await loadListings();
+      if (id) qc.invalidateQueries({ queryKey: getGetSpaceAvailabilityQueryKey(id) });
+    } catch (e) {
+      toast({ title: t("space.ch_sync_failed_toast"), description: e instanceof Error ? e.message : "", variant: "destructive" });
+    } finally {
+      setBusyListingId(null);
+    }
+  };
+
+  const handlePushListing = async (listingId: number, kind: "availability" | "rates") => {
+    setBusyListingId(listingId);
+    try {
+      const res = await apiFetch(`/api/v1/channel-listings/${listingId}/push-${kind}`, { method: "POST" });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        toast({ title: t("space.ch_push_ok"), description: json.data?.message ?? "" });
+      } else {
+        toast({ title: t("space.ch_push_failed"), description: json.data?.message ?? json.error ?? "", variant: "destructive" });
+      }
+      await loadListings();
+    } catch (e) {
+      toast({ title: t("space.ch_push_failed"), description: e instanceof Error ? e.message : "", variant: "destructive" });
+    } finally {
+      setBusyListingId(null);
+    }
+  };
+
+  const handleDeleteListing = async (listingId: number) => {
+    setBusyListingId(listingId);
+    try {
+      const res = await apiFetch(`/api/v1/channel-listings/${listingId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to remove connection");
+      await loadListings();
+      if (id) qc.invalidateQueries({ queryKey: getGetSpaceAvailabilityQueryKey(id) });
+      toast({ title: t("space.ch_removed_toast") });
+    } catch (e) {
+      toast({ title: t("common.error"), description: e instanceof Error ? e.message : "", variant: "destructive" });
+    } finally {
+      setBusyListingId(null);
+      setDeleteListingId(null);
+    }
+  };
+
+  useEffect(() => {
+    if (!isNew && id) { loadChannels(); loadListings(); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, isNew]);
+
+  const loadChannelCalendar = async (month: Date) => {
+    if (!id) return;
+    setCalLoading(true);
+    try {
+      const from = format(startOfMonth(month), "yyyy-MM-dd");
+      const to = format(endOfMonth(month), "yyyy-MM-dd");
+      const res = await apiFetch(`/api/v1/spaces/${id}/channel-calendar?from=${from}&to=${to}`);
+      const json = await res.json();
+      if (json.success) setCalData(json.data);
+    } catch { /* non-critical */ } finally {
+      setCalLoading(false);
+    }
+  };
+
+  const goToMonth = (month: Date) => { setCalMonth(month); loadChannelCalendar(month); };
+
+  const calCellClasses = (d?: CalDay): string => {
+    if (!d || d.status === "available") return "bg-green-50 border-green-200 text-green-700";
+    if (d.status === "booked") return "bg-blue-50 border-blue-300 text-blue-800";
+    if (d.status === "contracted") return "bg-purple-50 border-purple-300 text-purple-800";
+    if (d.source === "manual") return "bg-slate-100 border-slate-300 text-slate-600";
+    return "bg-amber-50 border-amber-300 text-amber-800"; // ical / channel_api block
   };
 
   const { data: space, isLoading } = useGetSpace(
@@ -336,10 +599,12 @@ export default function SpaceDetail() {
       />
 
       <div className="p-6">
-        <Tabs defaultValue="details" onValueChange={(v) => { if (v === "services") loadSpaceServices(); }}>
+        <Tabs defaultValue="details" onValueChange={(v) => { if (v === "services") loadSpaceServices(); if (v === "channel-calendar") loadChannelCalendar(calMonth); }}>
           <TabsList className="mb-5 flex-wrap h-auto gap-1">
             <TabsTrigger value="details">{t("space.tab_details")}</TabsTrigger>
             {!isNew && <TabsTrigger value="availability">{t("space.tab_availability")}</TabsTrigger>}
+            {!isNew && <TabsTrigger value="channel-calendar">{t("space.tab_channel_calendar")}</TabsTrigger>}
+            {!isNew && <TabsTrigger value="channel-sync">{t("space.tab_channel_sync")}</TabsTrigger>}
             {!isNew && (
               <TabsTrigger value="photos" className="gap-1.5">
                 <Images className="h-3.5 w-3.5" /> {t("space.tab_photos")}
@@ -610,6 +875,165 @@ export default function SpaceDetail() {
                   <Input {...register("ical_import_url")} type="url" placeholder="https://..." />
                 </div>
               </div>
+
+              {/* ⑧ OTA CALENDAR FEED (iCal export) — saved spaces only */}
+              {!isNew && (
+                <div className="col-span-2 bg-card rounded-lg border p-5 flex flex-col gap-3">
+                  <div className="border-b pb-2">
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                      <CalendarClock className="h-3.5 w-3.5" />
+                      {t("space.feed_section")}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-1">{t("space.feed_desc")}</p>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5 pt-1">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.feed_url_label")}</Label>
+                    {feedUrl ? (
+                      <div className="flex items-center gap-2">
+                        <code className="text-xs bg-muted px-2 py-1.5 rounded font-mono flex-1 truncate" title={feedUrl}>
+                          {feedUrl}
+                        </code>
+                        <Button type="button" size="sm" variant="outline" onClick={handleCopyFeed} className="shrink-0 gap-1.5">
+                          {feedCopied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
+                          {feedCopied ? t("space.feed_copied") : t("space.feed_copy")}
+                        </Button>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">{t("space.feed_none")}</p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-1">
+                    {feedUrl ? (
+                      <>
+                        <Button type="button" size="sm" variant="outline" disabled={feedLoading} onClick={() => setRotateConfirmOpen(true)} className="gap-1.5">
+                          <RefreshCw className="h-3.5 w-3.5" />
+                          {t("space.feed_rotate")}
+                        </Button>
+                        <Button type="button" size="sm" variant="destructive" disabled={feedLoading} onClick={() => setRevokeConfirmOpen(true)}>
+                          {t("space.feed_revoke")}
+                        </Button>
+                      </>
+                    ) : (
+                      <Button type="button" size="sm" disabled={feedLoading} onClick={generateCalendarFeed} className="gap-1.5">
+                        <CalendarClock className="h-3.5 w-3.5" />
+                        {t("space.feed_generate")}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* ⑨ CHANNEL CONNECTIONS (iCal import) — saved spaces only */}
+              {!isNew && (
+                <div className="col-span-2 bg-card rounded-lg border p-5 flex flex-col gap-4">
+                  <div className="border-b pb-2">
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                      <CalendarDays className="h-3.5 w-3.5" />
+                      {t("space.ch_section")}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-1">{t("space.ch_desc")}</p>
+                  </div>
+
+                  {/* Existing connections */}
+                  {listings.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">{t("space.ch_none")}</p>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      {listings.map((l) => (
+                        <div key={l.id} className="rounded-lg border bg-muted/30 p-4 flex flex-col gap-3">
+                          <div className="flex items-center justify-between gap-3 flex-wrap">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary">{l.channel_name ?? `#${l.channel_id}`}</Badge>
+                              {l.last_sync_status && (
+                                <Badge variant={l.last_sync_status === "success" ? "outline" : "destructive"} className="text-[10px]">
+                                  {l.last_sync_status}
+                                </Badge>
+                              )}
+                              <span className="text-xs text-muted-foreground">
+                                {l.last_import_at
+                                  ? `${t("space.ch_last_synced")}: ${format(parseISO(l.last_import_at), "yyyy-MM-dd HH:mm")}`
+                                  : t("space.ch_never_synced")}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground">{t("space.ch_sync_on")}</span>
+                              <Switch checked={l.sync_enabled} onCheckedChange={(v) => handleToggleListingSync(l, v)} />
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-1.5">
+                            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.ch_import_url")}</Label>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                type="url"
+                                value={listingUrls[l.id] ?? ""}
+                                placeholder={t("space.ch_url_placeholder")}
+                                onChange={(e) => setListingUrls((prev) => ({ ...prev, [l.id]: e.target.value }))}
+                                onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
+                                className="flex-1 font-mono text-xs"
+                              />
+                              <Button type="button" size="sm" variant="outline" disabled={busyListingId === l.id} onClick={() => handleSaveListingUrl(l.id)}>
+                                {t("space.ch_save_url")}
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Button type="button" size="sm" disabled={busyListingId === l.id || !l.ical_import_url} onClick={() => handleSyncListing(l.id)} className="gap-1.5">
+                              <RefreshCw className={cn("h-3.5 w-3.5", busyListingId === l.id && "animate-spin")} />
+                              {t("space.ch_sync_now")}
+                            </Button>
+                            <Button type="button" size="sm" variant="outline" disabled={busyListingId === l.id} onClick={() => handlePushListing(l.id, "availability")}>
+                              {t("space.ch_push_availability")}
+                            </Button>
+                            <Button type="button" size="sm" variant="outline" disabled={busyListingId === l.id} onClick={() => handlePushListing(l.id, "rates")}>
+                              {t("space.ch_push_rates")}
+                            </Button>
+                            {l.last_export_at && (
+                              <span className="text-[11px] text-muted-foreground">{t("space.ch_last_pushed")}: {format(parseISO(l.last_export_at), "yyyy-MM-dd HH:mm")}</span>
+                            )}
+                            <Button type="button" size="sm" variant="ghost" className="text-destructive hover:text-destructive ml-auto" disabled={busyListingId === l.id} onClick={() => setDeleteListingId(l.id)}>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Add a new connection */}
+                  <div className="border-t pt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+                    <div className="flex flex-col gap-1.5 sm:w-48">
+                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.ch_channel")}</Label>
+                      <Select value={addChannelId} onValueChange={setAddChannelId}>
+                        <SelectTrigger><SelectValue placeholder={t("space.ch_select")} /></SelectTrigger>
+                        <SelectContent>
+                          {channels
+                            .filter((c) => c.code !== "direct" && !listings.some((l) => l.channel_id === c.id))
+                            .map((c) => (
+                              <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex flex-col gap-1.5 flex-1">
+                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.ch_import_url")}</Label>
+                      <Input
+                        type="url"
+                        value={addImportUrl}
+                        placeholder={t("space.ch_url_placeholder")}
+                        onChange={(e) => setAddImportUrl(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
+                        className="font-mono text-xs"
+                      />
+                    </div>
+                    <Button type="button" size="sm" disabled={!addChannelId || addListingSaving} onClick={handleAddListing} className="gap-1.5">
+                      <Plus className="h-3.5 w-3.5" />
+                      {t("space.ch_add")}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </form>
           </TabsContent>
 
@@ -681,6 +1105,103 @@ export default function SpaceDetail() {
                   </div>
                 </div>
               </div>
+            </TabsContent>
+          )}
+
+          {!isNew && (
+            <TabsContent value="channel-calendar">
+              <div className="max-w-3xl">
+                <div className="bg-card rounded-lg border p-5">
+                  {/* Month navigation */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Button type="button" size="icon" variant="outline" className="h-8 w-8" onClick={() => goToMonth(addMonths(calMonth, -1))}>
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <span className="text-sm font-medium w-36 text-center">{format(calMonth, "MMMM yyyy")}</span>
+                      <Button type="button" size="icon" variant="outline" className="h-8 w-8" onClick={() => goToMonth(addMonths(calMonth, 1))}>
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                      <Button type="button" size="sm" variant="ghost" onClick={() => goToMonth(startOfMonth(new Date()))}>{t("space.cal_today")}</Button>
+                    </div>
+                  </div>
+
+                  {/* Conflict alert */}
+                  {calData && calData.summary.conflicts > 0 && (
+                    <div className="flex items-center gap-2 mb-4 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-700">
+                      <AlertTriangle className="h-4 w-4 shrink-0" />
+                      {t("space.cal_conflict_alert", { count: calData.summary.conflicts })}
+                    </div>
+                  )}
+
+                  {/* Legend */}
+                  <div className="flex flex-wrap items-center gap-3 mb-4 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-green-100 border border-green-300 inline-block" />{t("space.cal_available")}</span>
+                    <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-blue-100 border border-blue-300 inline-block" />{t("space.cal_booked")}</span>
+                    <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-amber-100 border border-amber-300 inline-block" />{t("space.cal_ota_block")}</span>
+                    <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-slate-200 border border-slate-300 inline-block" />{t("space.cal_manual_block")}</span>
+                    <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-purple-100 border border-purple-300 inline-block" />{t("space.cal_contracted")}</span>
+                    <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded border-2 border-red-500 inline-block" />{t("space.cal_conflict")}</span>
+                  </div>
+
+                  {/* Weekday header */}
+                  <div className="grid grid-cols-7 gap-1.5 mb-1.5 text-center text-[10px] font-medium text-muted-foreground">
+                    {["S", "M", "T", "W", "T", "F", "S"].map((w, i) => <div key={i}>{w}</div>)}
+                  </div>
+
+                  {calLoading ? (
+                    <div className="py-8 text-center text-sm text-muted-foreground">{t("common.loading")}</div>
+                  ) : (() => {
+                    const dayMap = new Map((calData?.days ?? []).map((d) => [d.date, d]));
+                    const offset = getDay(calMonth); // leading blanks (0 = Sun)
+                    const total = endOfMonth(calMonth).getDate();
+                    const cells: (string | null)[] = [
+                      ...Array(offset).fill(null),
+                      ...Array.from({ length: total }, (_, i) => format(new Date(calMonth.getFullYear(), calMonth.getMonth(), i + 1), "yyyy-MM-dd")),
+                    ];
+                    return (
+                      <div className="grid grid-cols-7 gap-1.5">
+                        {cells.map((dateStr, idx) => {
+                          if (!dateStr) return <div key={`b${idx}`} />;
+                          const d = dayMap.get(dateStr);
+                          const dayNum = Number(dateStr.slice(-2));
+                          const secondary = d?.status === "booked"
+                            ? (d.source ?? "")
+                            : d?.status === "blocked"
+                              ? (d.channel_name ?? (d.source === "manual" ? "" : "OTA"))
+                              : "";
+                          const title = [dateStr, d?.status, d?.channel_name, d?.booking_ref, d?.block_reason, d?.conflict ? "⚠ conflict" : ""].filter(Boolean).join(" · ");
+                          return (
+                            <div
+                              key={dateStr}
+                              title={title}
+                              className={cn(
+                                "relative min-h-[3.25rem] rounded border p-1.5 flex flex-col",
+                                calCellClasses(d),
+                                d?.conflict && "ring-2 ring-red-500",
+                              )}
+                            >
+                              <span className="text-xs font-medium">{dayNum}</span>
+                              {secondary && <span className="text-[9px] leading-tight truncate mt-0.5 opacity-80">{secondary}</span>}
+                              {d?.conflict && <AlertTriangle className="h-3 w-3 text-red-600 absolute top-1 right-1" />}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+
+                  {!calLoading && (!calData || calData.channels.length === 0) && (
+                    <p className="text-xs text-muted-foreground mt-4">{t("space.cal_no_channels")}</p>
+                  )}
+                </div>
+              </div>
+            </TabsContent>
+          )}
+
+          {!isNew && id && (
+            <TabsContent value="channel-sync">
+              <ChannelSyncPanel spaceId={id} channels={channels} listings={listings} />
             </TabsContent>
           )}
 
@@ -830,6 +1351,58 @@ export default function SpaceDetail() {
           )}
         </Tabs>
       </div>
+
+      {/* OTA feed — rotate confirmation (invalidates the existing URL) */}
+      <AlertDialog open={rotateConfirmOpen} onOpenChange={setRotateConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("space.feed_rotate_title")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("space.feed_rotate_desc")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={generateCalendarFeed}>{t("space.feed_rotate")}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* OTA feed — revoke confirmation */}
+      <AlertDialog open={revokeConfirmOpen} onOpenChange={setRevokeConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("space.feed_revoke_title")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("space.feed_revoke_desc")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={revokeCalendarFeed}
+            >
+              {t("space.feed_revoke")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Channel connection — remove confirmation */}
+      <AlertDialog open={deleteListingId !== null} onOpenChange={(open) => { if (!open) setDeleteListingId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("space.ch_delete_title")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("space.ch_delete_desc")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deleteListingId && handleDeleteListing(deleteListingId)}
+            >
+              {t("common.delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Layout>
   );
 }

@@ -21,9 +21,23 @@ import {
   exchangeRatesTable,
   languagesTable,
   translationsTable,
+  channelsTable,
+  channelAccountsTable,
 } from "@workspace/db";
+import { ingestReservations } from "../lib/channels/reservations.js";
 import { insertLeadWithGeneratedRef } from "../lib/leadRef.js";
 import { sendLeadNotificationEmail } from "../lib/email.js";
+import { buildCalendar } from "../lib/ical.js";
+import { getSpaceCalendarEvents } from "../lib/spaceCalendar.js";
+import { timingSafeEqual } from "node:crypto";
+
+/** Constant-time string compare that tolerates differing lengths. */
+function tokensMatch(a: string, b: string): boolean {
+  const ab = Buffer.from(a);
+  const bb = Buffer.from(b);
+  if (ab.length !== bb.length) return false;
+  return timingSafeEqual(ab, bb);
+}
 
 function notifyLead(row: { lead_ref: string | null; first_name?: string | null; last_name?: string | null; email?: string | null; phone?: string | null; message?: string | null; description?: string | null }, inquiryType: string) {
   // Fire-and-forget — never block the response or surface errors to the public.
@@ -548,6 +562,71 @@ router.get("/v1/public/spaces/:id/availability", async (req, res): Promise<void>
       })),
     },
   });
+});
+
+/* ───────────────────────────────────────────────────────
+   GET /api/v1/public/spaces/:spaceId/calendar/:token(.ics)
+   Outbound iCal availability feed consumed by OTAs (Airbnb,
+   Booking.com, Expedia/Hotels.com). No auth — secured by the
+   unguessable per-space token. Returns text/calendar.
+──────────────────────────────────────────────────────── */
+router.get("/v1/public/spaces/:spaceId/calendar/:token", async (req, res): Promise<void> => {
+  const spaceId = Number(req.params.spaceId);
+  // The handed-out URL ends in ".ics"; strip it so the token compares cleanly.
+  const token = String(req.params.token).replace(/\.ics$/i, "");
+  if (!spaceId || !token) { res.status(404).send("Not found"); return; }
+
+  const [space] = await db
+    .select({
+      id: spacesTable.id,
+      name: spacesTable.name,
+      ical_export_token: spacesTable.ical_export_token,
+    })
+    .from(spacesTable)
+    .where(eq(spacesTable.id, spaceId));
+
+  // 404 (not 401/403) on any mismatch so the feed's existence isn't probeable.
+  if (!space || !space.ical_export_token || !tokensMatch(token, space.ical_export_token)) {
+    res.status(404).send("Not found");
+    return;
+  }
+
+  const events = await getSpaceCalendarEvents(spaceId);
+  const ics = buildCalendar(events, { calendarName: `MillionStay — ${space.name}` });
+
+  res.setHeader("Content-Type", "text/calendar; charset=utf-8");
+  res.setHeader("Content-Disposition", `inline; filename="space-${spaceId}.ics"`);
+  res.setHeader("Cache-Control", "public, max-age=300"); // 5-min CDN/OTA cache
+  res.status(200).send(ics);
+});
+
+/* ───────────────────────────────────────────────────────
+   POST /api/v1/channels/:code/reservations
+   Inbound OTA reservation webhook (Stage 4). No admin auth —
+   authenticated by a per-channel shared secret (X-Webhook-Secret)
+   matched against a channel_accounts credential. Real adapters
+   add the OTA's signature verification on top.
+──────────────────────────────────────────────────────── */
+router.post("/v1/channels/:code/reservations", async (req, res): Promise<void> => {
+  const code = String(req.params.code);
+  const secret = req.get("X-Webhook-Secret") ?? "";
+
+  const [channel] = await db.select({ id: channelsTable.id }).from(channelsTable).where(eq(channelsTable.code, code));
+  if (!channel) { res.status(404).json({ error: "unknown channel" }); return; }
+
+  const accounts = await db
+    .select({ cred: channelAccountsTable.credentials_ref })
+    .from(channelAccountsTable)
+    .where(eq(channelAccountsTable.channel_id, channel.id));
+  const authorized = !!secret && accounts.some((a) => a.cred && tokensMatch(secret, a.cred));
+  if (!authorized) { res.status(401).json({ error: "invalid webhook secret" }); return; }
+
+  try {
+    const result = await ingestReservations(code, req.body);
+    res.json({ success: true, data: result });
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : "ingest failed" });
+  }
 });
 
 /* ───────────────────────────────────────────────────────

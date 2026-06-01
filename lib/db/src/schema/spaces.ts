@@ -16,7 +16,12 @@ export const spacesTable = pgTable("spaces", {
   floor_number: integer("floor_number"),
   floor_area_sqm: real("floor_area_sqm"),
   description: text("description"),
+  // @deprecated single-feed import; OTA integration uses channel_listings.ical_import_url
+  // (one space can be listed on multiple channels). Kept until data is migrated.
   ical_import_url: text("ical_import_url"),
+  // Secret token for the outbound .ics feed (same content for every channel),
+  // served at /public/spaces/:id/calendar/:token.ics — prevents enumeration.
+  ical_export_token: text("ical_export_token"),
   status: text("status").notNull().default("Active"),
   property_id: integer("property_id"),
   parent_space_id: integer("parent_space_id"),
@@ -38,6 +43,9 @@ export const spaceOptionMapsTable = pgTable("space_option_maps", {
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// @deprecated Superseded by space_availability as the single source of truth
+// (SSOT) for the calendar. New code (incl. OTA sync) must write to
+// space_availability. Retained only until existing usages are migrated off.
 export const spaceBlockedDatesTable = pgTable("space_blocked_dates", {
   id: serial("id").primaryKey(),
   space_id: integer("space_id").notNull(),
