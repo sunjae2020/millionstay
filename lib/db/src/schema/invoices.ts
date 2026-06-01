@@ -5,6 +5,7 @@ export const invoicesTable = pgTable("invoices", {
   invoice_ref: text("invoice_ref").notNull().unique(),
   booking_id: integer("booking_id"),
   contract_id: integer("contract_id"),
+  quote_id: integer("quote_id"),
   account_id: integer("account_id"),
   amount: numeric("amount", { precision: 10, scale: 2 }).notNull().default("0"),
   currency: text("currency").notNull().default("AUD"),

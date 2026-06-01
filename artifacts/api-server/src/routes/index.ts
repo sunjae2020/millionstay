@@ -40,6 +40,8 @@ import exchangeRatesRouter from "./exchange-rates";
 import translationsRouter from "./translations";
 import documentsRouter from "./documents";
 import quotesRouter from "./quotes";
+import companyInfoRouter from "./company-info";
+import otaChannelsRouter from "./ota-channels";
 const router: IRouter = Router();
 
 router.use(healthRouter);
@@ -83,6 +85,8 @@ router.use(exchangeRatesRouter);
 router.use(translationsRouter);
 router.use(documentsRouter);
 router.use(quotesRouter);
+router.use(companyInfoRouter);
+router.use(otaChannelsRouter);
 // Note: partnerAuthRouter, agentPortalRouter, ownerPortalRouter are registered in app.ts
 // BEFORE the requireAuth middleware to allow partner JWT auth to bypass the admin auth guard.
 

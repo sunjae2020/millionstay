@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { t, normalizeLang, type DocLang } from "./documents/i18n";
 
 let resend: Resend | null = null;
 
@@ -32,34 +33,43 @@ const PORTAL_URL = process.env.PUBLIC_WEB_URL ?? "https://www.millionstay.com";
 export interface DocumentEmailOptions {
   to: string;
   toName?: string | null;
-  subject: string;
-  /** Human label of the document type, e.g. "Invoice", "Quotation". */
+  /** Document type label, already localised to `lang` (e.g. "청구서"). */
   docTypeLabel: string;
   ref: string;
   /** Optional amount line shown in the cover email, e.g. "1,450.00 AUD". */
   amountLabel?: string | null;
-  /** Optional extra sentence (e.g. due date / validity). */
+  /** Optional extra sentence (e.g. due date / validity), already localised. */
   note?: string | null;
   /** The rendered PDF to attach. */
   pdf: Buffer;
   filename: string;
+  /** Cover-email + subject language. Defaults to English. */
+  lang?: DocLang | string;
+  /** Optional subject override; otherwise built from docTypeLabel + ref. */
+  subject?: string;
 }
 
 /**
  * Send a customer-facing document (invoice / receipt / quote / contract) as a
- * branded cover email with the PDF attached. Best-effort: returns a result
- * object and never throws, so callers can record the outcome and continue.
+ * branded cover email with the PDF attached. The cover body, subject and the
+ * attached PDF are localised via `lang` (default English). Best-effort:
+ * returns a result object and never throws so callers can record the outcome.
  */
 export async function sendDocumentEmail(
   opts: DocumentEmailOptions,
-): Promise<{ ok: boolean; id?: string; skipped?: boolean; error?: string }> {
+): Promise<{ ok: boolean; id?: string; skipped?: boolean; error?: string; subject: string }> {
+  const lang = normalizeLang(typeof opts.lang === "string" ? opts.lang : opts.lang);
+  const subject = opts.subject ?? t(lang, "email.subject", { doc: opts.docTypeLabel, ref: opts.ref });
+
   const client = getResend();
   if (!client) {
     console.log(`[email] RESEND_API_KEY not set — skipping ${opts.docTypeLabel} ${opts.ref} to ${opts.to}`);
-    return { ok: false, skipped: true, error: "Email service not configured" };
+    return { ok: false, skipped: true, error: "Email service not configured", subject };
   }
 
-  const greeting = opts.toName ? `Hi <strong>${safeName(opts.toName)}</strong>,` : "Hello,";
+  const greeting = opts.toName
+    ? t(lang, "email.greeting.named", { name: `<strong>${safeName(opts.toName)}</strong>` })
+    : t(lang, "email.greeting.plain");
   const html = `
 <!DOCTYPE html><html><head><meta charset="utf-8"><style>
   body{font-family:'Inter',-apple-system,sans-serif;margin:0;padding:0;background:#f9fafb;color:#111;}
@@ -77,32 +87,32 @@ export async function sendDocumentEmail(
   <div class="header"><img src="${LOGO_URL}" alt="MillionStay" /></div>
   <div class="body">
     <p style="font-size:16px;">${greeting}</p>
-    <p style="color:#555;font-size:14px;">Please find your ${escapeHtml(opts.docTypeLabel.toLowerCase())} attached as a PDF.</p>
+    <p style="color:#555;font-size:14px;">${t(lang, "email.body", { doc: escapeHtml(opts.docTypeLabel) })}</p>
     <div class="ref-box">
       <div class="label">${escapeHtml(opts.docTypeLabel)}</div>
       <div class="ref">${escapeHtml(opts.ref)}</div>
       ${opts.amountLabel ? `<div class="amount">${escapeHtml(opts.amountLabel)}</div>` : ""}
     </div>
     ${opts.note ? `<p style="font-size:13px;color:#555;">${escapeHtml(opts.note)}</p>` : ""}
-    <p style="font-size:13px;color:#999;">Questions? Contact us at <a href="mailto:${SUPPORT_EMAIL}" style="color:#E8621A;">${SUPPORT_EMAIL}</a>.</p>
+    <p style="font-size:13px;color:#999;">${t(lang, "email.questions", { email: `<a href="mailto:${SUPPORT_EMAIL}" style="color:#E8621A;">${SUPPORT_EMAIL}</a>` })}</p>
   </div>
-  <div class="footer">© ${new Date().getFullYear()} MillionStay Pty Ltd · This email was sent to ${escapeHtml(opts.to)}</div>
+  <div class="footer">© ${new Date().getFullYear()} MillionStay Pty Ltd · ${t(lang, "email.sentTo", { to: escapeHtml(opts.to) })}</div>
 </div></body></html>`;
 
   try {
     const result = await client.emails.send({
       from: FROM,
       to: [opts.to],
-      subject: opts.subject,
+      subject,
       html,
       attachments: [{ filename: opts.filename, content: opts.pdf.toString("base64") }],
     });
     const id = (result as any)?.data?.id ?? undefined;
     console.log(`[email] ${opts.docTypeLabel} ${opts.ref} sent to ${opts.to} (${id ?? "no-id"})`);
-    return { ok: true, id };
+    return { ok: true, id, subject };
   } catch (err) {
     console.error(`[email] Failed to send ${opts.docTypeLabel} ${opts.ref}:`, err);
-    return { ok: false, error: err instanceof Error ? err.message : "Send failed" };
+    return { ok: false, error: err instanceof Error ? err.message : "Send failed", subject };
   }
 }
 

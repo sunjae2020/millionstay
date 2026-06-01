@@ -5,7 +5,7 @@ import { Layout, PageHeader } from "@/components/Layout";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Eye, FileDown, FileText, Receipt, FileSignature, ExternalLink } from "lucide-react";
+import { Search, Eye, FileDown, FileText, Receipt, FileSignature, ExternalLink, Mail } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
@@ -59,6 +59,7 @@ export default function DocumentHub() {
   const { toast } = useToast();
   const [q, setQ] = useState("");
   const [type, setType] = useState("_all");
+  const [docLang, setDocLang] = useState("en");
   const [busy, setBusy] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
@@ -74,9 +75,11 @@ export default function DocumentHub() {
     const key = `${doc.doc_type}:${doc.source_id}:${mode}`;
     setBusy(key);
     try {
-      const path = mode === "preview"
-        ? `${doc.pdf_url}${doc.pdf_url.includes("?") ? "&" : "?"}format=html`
-        : doc.pdf_url;
+      const params = new URLSearchParams();
+      if (mode === "preview") params.set("format", "html");
+      if (docLang !== "en") params.set("lang", docLang);
+      const qs = params.toString();
+      const path = qs ? `${doc.pdf_url}?${qs}` : doc.pdf_url;
       const res = await apiFetch(path);
       if (!res.ok) {
         const body = await res.json().catch(() => null);
@@ -105,6 +108,28 @@ export default function DocumentHub() {
     }
   };
 
+  // Email the document (PDF + cover) to its recipient in the selected language.
+  const handleEmail = async (doc: HubDocument) => {
+    const emailUrl = doc.pdf_url.replace(/\/pdf$/, "/email");
+    if (!window.confirm(`Email this ${doc.doc_type.toLowerCase()} to its recipient?`)) return;
+    const key = `${doc.doc_type}:${doc.source_id}:email`;
+    setBusy(key);
+    try {
+      const res = await apiFetch(emailUrl, {
+        method: "POST",
+        body: JSON.stringify({ lang: docLang }),
+        headers: { "Content-Type": "application/json" },
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.error ?? `HTTP ${res.status}`);
+      toast({ title: "Email sent", description: `${doc.doc_type} emailed to ${body?.to ?? "recipient"}.` });
+    } catch (err) {
+      toast({ title: "Email failed", description: err instanceof Error ? err.message : "Error", variant: "destructive" });
+    } finally {
+      setBusy(null);
+    }
+  };
+
   return (
     <Layout>
       <PageHeader
@@ -124,7 +149,17 @@ export default function DocumentHub() {
               <SelectItem value="_all">All Types</SelectItem>
               <SelectItem value="Invoice">Invoices</SelectItem>
               <SelectItem value="Receipt">Receipts</SelectItem>
+              <SelectItem value="Quote">Quotes</SelectItem>
               <SelectItem value="Contract">Contracts</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={docLang} onValueChange={setDocLang}>
+            <SelectTrigger className="w-36"><SelectValue placeholder="Language" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="en">English</SelectItem>
+              <SelectItem value="ko">한국어</SelectItem>
+              <SelectItem value="zh">中文</SelectItem>
+              <SelectItem value="ja">日本語</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -178,6 +213,10 @@ export default function DocumentHub() {
                           <button className="p-1.5 rounded hover:bg-muted transition-colors disabled:opacity-40"
                             title="Download PDF" disabled={!!busy} onClick={() => handlePdf(doc, "download")}>
                             <FileDown className="h-3.5 w-3.5 text-muted-foreground" />
+                          </button>
+                          <button className="p-1.5 rounded hover:bg-muted transition-colors disabled:opacity-40"
+                            title={`Email (${docLang.toUpperCase()})`} disabled={!!busy} onClick={() => handleEmail(doc)}>
+                            <Mail className="h-3.5 w-3.5 text-muted-foreground" />
                           </button>
                           <Link href={doc.detail_url}>
                             <button className="p-1.5 rounded hover:bg-muted transition-colors" title="Open record">

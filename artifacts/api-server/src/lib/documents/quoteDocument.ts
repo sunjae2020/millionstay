@@ -5,6 +5,7 @@
  * using the shared brand shell so it matches invoices/receipts/contracts.
  */
 import { renderDocumentShell, escapeHtml, getCompanyInfo, type CompanyInfo } from "./theme";
+import { t, docLocale, type DocLang } from "./i18n";
 
 export interface QuoteLine {
   name: string;
@@ -34,14 +35,14 @@ function money(amount: string | number | null, currency: string | null): string 
   return `${n.toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency || "AUD"}`;
 }
 
-function formatDate(value: string | Date | null): string {
+function formatDate(value: string | Date | null, lang: DocLang): string {
   if (!value) return "—";
   const d = typeof value === "string" ? new Date(value) : value;
   if (Number.isNaN(d.getTime())) return escapeHtml(String(value));
-  return d.toLocaleDateString("en-AU", { year: "numeric", month: "short", day: "numeric" });
+  return d.toLocaleDateString(docLocale(lang), { year: "numeric", month: "short", day: "numeric" });
 }
 
-export function buildQuoteBody(q: QuoteDocInput): string {
+export function buildQuoteBody(q: QuoteDocInput, lang: DocLang = "en"): string {
   const billTo = q.party_name
     ? `${escapeHtml(q.party_name)}${q.party_email ? `<br/>${escapeHtml(q.party_email)}` : ""}`
     : "—";
@@ -54,47 +55,47 @@ export function buildQuoteBody(q: QuoteDocInput): string {
           <td class="num">${li.quantity}</td>
           <td class="num">${money(li.total_price, q.currency)}</td>
         </tr>`).join("")
-    : `<tr><td colspan="4" style="color:#999;">${escapeHtml(q.description || "No items")}</td></tr>`;
+    : `<tr><td colspan="4" style="color:#999;">${escapeHtml(q.description || t(lang, "noItems"))}</td></tr>`;
 
   return `
     <div class="section" style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
       <div>
-        <h3>Quotation</h3>
+        <h3>${t(lang, "quote.heading")}</h3>
         <div class="ref-chip" style="font-size:20px;">${escapeHtml(q.quote_ref)}</div>
-        <div style="font-size:13px;color:#777;margin-top:4px;">Prepared ${formatDate(q.created_at)}</div>
+        <div style="font-size:13px;color:#777;margin-top:4px;">${t(lang, "prepared")} ${formatDate(q.created_at, lang)}</div>
       </div>
       <span class="badge" style="background:#dbeafe;color:#1d4ed8;">${escapeHtml(q.status || "Draft")}</span>
     </div>
 
     <div class="section">
-      <h3>Prepared For</h3>
+      <h3>${t(lang, "preparedFor")}</h3>
       <div style="font-size:14px;color:#333;">${billTo}</div>
       ${q.space_name ? `<div style="font-size:12px;color:#999;margin-top:8px;">${escapeHtml(q.space_name)}</div>` : ""}
     </div>
 
     <div class="section">
-      <h3>Quote Items</h3>
+      <h3>${t(lang, "quoteItems")}</h3>
       <table class="lines">
         <thead>
-          <tr><th>Description</th><th class="num">Unit</th><th class="num">Qty</th><th class="num">Amount</th></tr>
+          <tr><th>${t(lang, "description")}</th><th class="num">${t(lang, "unit")}</th><th class="num">${t(lang, "qty")}</th><th class="num">${t(lang, "amount")}</th></tr>
         </thead>
         <tbody>${rows}</tbody>
       </table>
     </div>
 
     <div class="total-box">
-      <span>Total${q.valid_until ? ` · Valid until ${formatDate(q.valid_until)}` : ""}</span>
+      <span>${t(lang, "total")}${q.valid_until ? ` · ${t(lang, "validUntil")} ${formatDate(q.valid_until, lang)}` : ""}</span>
       <span class="amount">${money(q.total, q.currency)}</span>
     </div>
 
-    ${q.notes?.trim() ? `<div class="info-box"><strong>Notes</strong><br/>${escapeHtml(q.notes)}</div>` : ""}
+    ${q.notes?.trim() ? `<div class="info-box"><strong>${t(lang, "notes")}</strong><br/>${escapeHtml(q.notes)}</div>` : ""}
   `;
 }
 
-export function buildQuoteHtml(q: QuoteDocInput, company?: CompanyInfo, forPrint = true): string {
+export function buildQuoteHtml(q: QuoteDocInput, company?: CompanyInfo, forPrint = true, lang: DocLang = "en"): string {
   return renderDocumentShell({
-    docType: "Quotation",
-    bodyHtml: buildQuoteBody(q),
+    docType: t(lang, "doctype.quote"),
+    bodyHtml: buildQuoteBody(q, lang),
     company: company ?? getCompanyInfo(),
     forPrint,
   });

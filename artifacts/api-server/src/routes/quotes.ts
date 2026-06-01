@@ -1,10 +1,13 @@
 import { Router } from "express";
-import { db, quotesTable, quoteLineItemsTable, accountsTable, leadsTable, spacesTable, emailLogsTable } from "@workspace/db";
+import { db, quotesTable, quoteLineItemsTable, accountsTable, leadsTable, spacesTable, emailLogsTable, invoicesTable } from "@workspace/db";
 import { eq, ilike, and, isNull, inArray, asc, desc } from "drizzle-orm";
 import { z } from "zod";
 import { logAction } from "../utils/auditLog";
 import { buildQuoteHtml, type QuoteDocInput } from "../lib/documents/quoteDocument";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
+import { resolveCompanyInfo } from "../lib/documents/companyInfo";
+import { normalizeLang, t } from "../lib/documents/i18n";
+import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
 import { sendDocumentEmail } from "../lib/email";
 
 const router = Router();
@@ -252,7 +255,7 @@ router.get("/v1/quotes/:id/pdf", async (req, res): Promise<void> => {
   if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
 
   const asHtml = req.query.format === "html";
-  const html = buildQuoteHtml(docInput, undefined, !asHtml);
+  const html = buildQuoteHtml(docInput, await resolveCompanyInfo(), !asHtml, normalizeLang(req.query.lang as string));
   if (asHtml) { res.type("html").send(html); return; }
   try {
     const pdf = await htmlToPdf(html);
@@ -277,32 +280,89 @@ router.post("/v1/quotes/:id/email", async (req, res): Promise<void> => {
   const to = (req.body?.to as string)?.trim() || docInput.party_email;
   if (!to) { res.status(400).json({ error: "No recipient email — set one on the account/lead or pass { to }." }); return; }
 
+  const lang = normalizeLang(req.body?.lang as string);
   let pdf: Buffer;
   try {
-    pdf = await htmlToPdf(buildQuoteHtml(docInput));
+    pdf = await htmlToPdf(buildQuoteHtml(docInput, await resolveCompanyInfo(), true, lang));
   } catch (err) {
     if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
     res.status(500).json({ error: "Failed to generate PDF" }); return;
   }
 
-  const subject = `Quotation ${docInput.quote_ref} from MillionStay`;
   const result = await sendDocumentEmail({
-    to, toName: docInput.party_name, subject, docTypeLabel: "Quotation", ref: docInput.quote_ref,
+    to, toName: docInput.party_name, lang, docTypeLabel: t(lang, "doctype.quote"), ref: docInput.quote_ref,
     amountLabel: `${Number(docInput.total ?? 0).toLocaleString("en-AU", { minimumFractionDigits: 2 })} ${docInput.currency || "AUD"}`,
-    note: docInput.valid_until ? `This quote is valid until ${docInput.valid_until}.` : null,
+    note: docInput.valid_until ? t(lang, "email.note.validUntil", { date: docInput.valid_until }) : null,
     pdf, filename: `${docInput.quote_ref}.pdf`,
   });
 
   await db.insert(emailLogsTable).values({
     template_code: "document.quote", to_email: to, to_name: docInput.party_name ?? null,
-    subject, resend_message_id: result.id ?? null, status: result.ok ? "Sent" : "Failed",
+    subject: result.subject, resend_message_id: result.id ?? null, status: result.ok ? "Sent" : "Failed",
     entity_type: "quote", entity_id: id, error_message: result.error ?? null,
   }).catch(() => {});
 
   if (!result.ok) { res.status(result.skipped ? 503 : 502).json({ error: result.error ?? "Send failed" }); return; }
+  // Freeze an immutable snapshot of exactly what was emailed (best-effort).
+  await freezeDocument({ entityType: "quote", entityId: id, docType: snapshotDocType("quote"), ref: docInput.quote_ref, pdf }).catch(() => null);
   await db.update(quotesTable).set({ status: "Sent", sent_at: new Date(), updated_at: new Date() })
     .where(and(eq(quotesTable.id, id), eq(quotesTable.status, "Draft")));
   res.json({ ok: true, id: result.id, to });
+});
+
+/** Manually freeze the current quote PDF as an immutable versioned snapshot. */
+router.post("/v1/quotes/:id/freeze", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const docInput = await buildQuoteDocInput(id);
+  if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
+  const lang = normalizeLang(req.body?.lang as string);
+  let pdf: Buffer;
+  try {
+    pdf = await htmlToPdf(buildQuoteHtml(docInput, await resolveCompanyInfo(), true, lang));
+  } catch (err) {
+    if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
+    res.status(500).json({ error: "Failed to generate PDF" }); return;
+  }
+  const snap = await freezeDocument({ entityType: "quote", entityId: id, docType: snapshotDocType("quote"), ref: docInput.quote_ref, pdf });
+  if (!snap) { res.status(503).json({ error: "Document storage not configured" }); return; }
+  res.json({ ok: true, ...snap });
+});
+
+/**
+ * Convert an accepted/sent quote into a Draft invoice.
+ * Idempotent guard: a quote can only be converted once.
+ */
+router.post("/v1/quotes/:id/convert", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const quote = await db.select().from(quotesTable).where(eq(quotesTable.id, id)).then(r => r[0]);
+  if (!quote) { res.status(404).json({ error: "Not found" }); return; }
+  if (quote.converted_invoice_id) {
+    res.status(409).json({ error: "Quote already converted", invoice_id: quote.converted_invoice_id }); return;
+  }
+
+  const year = new Date().getFullYear();
+  const existing = await db.select({ id: invoicesTable.id }).from(invoicesTable)
+    .where(ilike(invoicesTable.invoice_ref, `MS-INV-${year}-%`));
+  const invoiceRef = `MS-INV-${year}-${String(existing.length + 1).padStart(5, "0")}`;
+
+  const [invoice] = await db.insert(invoicesTable).values({
+    invoice_ref: invoiceRef,
+    account_id: quote.account_id ?? null,
+    quote_id: quote.id,
+    amount: quote.total ?? "0",
+    currency: quote.currency ?? "AUD",
+    status: "Draft",
+    description: quote.description ?? `Converted from quote ${quote.quote_ref}`,
+  }).returning();
+
+  await db.update(quotesTable)
+    .set({ converted_invoice_id: invoice.id, status: quote.status === "Draft" ? "Sent" : quote.status, updated_at: new Date() })
+    .where(eq(quotesTable.id, id));
+
+  await logAction({ entityType: "quote", entityId: id, action: "STATUS_CHANGE", oldValue: { quote_ref: quote.quote_ref }, newValue: { converted_invoice_id: invoice.id, invoice_ref: invoiceRef } });
+  res.status(201).json({ ok: true, invoice });
 });
 
 router.post("/v1/quotes/bulk-delete", async (req, res): Promise<void> => {

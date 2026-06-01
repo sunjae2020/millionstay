@@ -26,6 +26,7 @@ export const quotesTable = pgTable("quotes", {
   notes: text("notes"),
   sent_at: timestamp("sent_at", { withTimezone: true }),
   accepted_at: timestamp("accepted_at", { withTimezone: true }),
+  converted_invoice_id: integer("converted_invoice_id"),
   deleted_at: timestamp("deleted_at", { withTimezone: true }),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().default(sql`now()`),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().default(sql`now()`),

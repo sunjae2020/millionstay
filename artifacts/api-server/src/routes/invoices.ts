@@ -6,6 +6,9 @@ import { getRateToAud } from "../lib/rateSnapshot";
 import { buildInvoiceHtml, type InvoiceDocInput } from "../lib/documents/invoiceDocument";
 import { buildReceiptHtml } from "../lib/documents/receiptDocument";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
+import { resolveCompanyInfo } from "../lib/documents/companyInfo";
+import { normalizeLang, t } from "../lib/documents/i18n";
+import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
 import { sendDocumentEmail } from "../lib/email";
 import {
   CreateInvoiceBody,
@@ -241,7 +244,7 @@ router.get("/v1/invoices/:id/pdf", async (req, res): Promise<void> => {
   if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
 
   const asHtml = req.query.format === "html";
-  const html = buildInvoiceHtml(docInput, undefined, !asHtml);
+  const html = buildInvoiceHtml(docInput, await resolveCompanyInfo(), !asHtml, normalizeLang(req.query.lang as string));
 
   if (asHtml) {
     res.type("html").send(html);
@@ -263,7 +266,7 @@ router.get("/v1/invoices/:id/receipt/pdf", async (req, res): Promise<void> => {
   if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
 
   const asHtml = req.query.format === "html";
-  const html = buildReceiptHtml(docInput, undefined, !asHtml);
+  const html = buildReceiptHtml(docInput, await resolveCompanyInfo(), !asHtml, normalizeLang(req.query.lang as string));
 
   if (asHtml) { res.type("html").send(html); return; }
   await sendPdf(res, html, `${docInput.invoice_ref}-receipt`);
@@ -302,7 +305,11 @@ async function emailInvoiceDocument(req: import("express").Request, res: import(
   const to = (req.body?.to as string)?.trim() || docInput.account_email;
   if (!to) { res.status(400).json({ error: "No recipient email — set one on the linked account or pass { to }." }); return; }
 
-  const html = kind === "receipt" ? buildReceiptHtml(docInput) : buildInvoiceHtml(docInput);
+  const lang = normalizeLang(req.body?.lang as string);
+  const company = await resolveCompanyInfo();
+  const html = kind === "receipt"
+    ? buildReceiptHtml(docInput, company, true, lang)
+    : buildInvoiceHtml(docInput, company, true, lang);
   let pdf: Buffer;
   try {
     pdf = await htmlToPdf(html);
@@ -311,22 +318,28 @@ async function emailInvoiceDocument(req: import("express").Request, res: import(
     res.status(500).json({ error: "Failed to generate PDF" }); return;
   }
 
-  const label = kind === "receipt" ? "Receipt" : "Invoice";
-  const subject = `${label} ${docInput.invoice_ref} from MillionStay`;
+  const docTypeLabel = t(lang, kind === "receipt" ? "doctype.receipt" : "doctype.invoice");
   const result = await sendDocumentEmail({
-    to, toName: docInput.account_name, subject, docTypeLabel: label, ref: docInput.invoice_ref,
+    to, toName: docInput.account_name, lang, docTypeLabel, ref: docInput.invoice_ref,
     amountLabel: moneyLabel(docInput.amount, docInput.currency),
-    note: kind === "invoice" && docInput.due_date ? `Payment due ${docInput.due_date}.` : null,
+    note: kind === "invoice" && docInput.due_date ? t(lang, "email.note.due", { date: docInput.due_date }) : null,
     pdf, filename: `${docInput.invoice_ref}${kind === "receipt" ? "-receipt" : ""}.pdf`,
   });
 
   await db.insert(emailLogsTable).values({
     template_code: `document.${kind}`, to_email: to, to_name: docInput.account_name ?? null,
-    subject, resend_message_id: result.id ?? null, status: result.ok ? "Sent" : "Failed",
+    subject: result.subject, resend_message_id: result.id ?? null, status: result.ok ? "Sent" : "Failed",
     entity_type: "invoice", entity_id: id, error_message: result.error ?? null,
   }).catch(() => {});
 
   if (!result.ok) { res.status(result.skipped ? 503 : 502).json({ error: result.error ?? "Send failed" }); return; }
+
+  // Freeze an immutable snapshot of exactly what was emailed (best-effort).
+  await freezeDocument({
+    entityType: "invoice", entityId: id,
+    docType: snapshotDocType("invoice", kind === "receipt" ? "receipt" : undefined),
+    ref: docInput.invoice_ref, pdf,
+  }).catch(() => null);
 
   // Sending an invoice advances Draft → Sent.
   if (kind === "invoice") {
@@ -338,6 +351,34 @@ async function emailInvoiceDocument(req: import("express").Request, res: import(
 
 router.post("/v1/invoices/:id/email", (req, res) => emailInvoiceDocument(req, res, "invoice"));
 router.post("/v1/invoices/:id/receipt/email", (req, res) => emailInvoiceDocument(req, res, "receipt"));
+
+/** Manually freeze the current invoice (or receipt) PDF as an immutable snapshot. */
+async function freezeInvoiceDocument(req: import("express").Request, res: import("express").Response, kind: "invoice" | "receipt"): Promise<void> {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const docInput = await buildInvoiceDocInput(id);
+  if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
+  const lang = normalizeLang(req.body?.lang as string);
+  const company = await resolveCompanyInfo();
+  const html = kind === "receipt" ? buildReceiptHtml(docInput, company, true, lang) : buildInvoiceHtml(docInput, company, true, lang);
+  let pdf: Buffer;
+  try {
+    pdf = await htmlToPdf(html);
+  } catch (err) {
+    if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
+    res.status(500).json({ error: "Failed to generate PDF" }); return;
+  }
+  const snap = await freezeDocument({
+    entityType: "invoice", entityId: id,
+    docType: snapshotDocType("invoice", kind === "receipt" ? "receipt" : undefined),
+    ref: docInput.invoice_ref, pdf,
+  });
+  if (!snap) { res.status(503).json({ error: "Document storage not configured" }); return; }
+  res.json({ ok: true, ...snap });
+}
+
+router.post("/v1/invoices/:id/freeze", (req, res) => freezeInvoiceDocument(req, res, "invoice"));
+router.post("/v1/invoices/:id/receipt/freeze", (req, res) => freezeInvoiceDocument(req, res, "receipt"));
 
 router.get("/v1/lookup/invoices", async (req, res): Promise<void> => {
   const { q } = req.query as Record<string, string>;

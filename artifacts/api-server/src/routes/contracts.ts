@@ -5,6 +5,9 @@ import { logAction } from "../utils/auditLog";
 import { getRateToAud } from "../lib/rateSnapshot";
 import { buildContractHtml, type ContractDocInput } from "../lib/documents/contractDocument";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
+import { resolveCompanyInfo } from "../lib/documents/companyInfo";
+import { normalizeLang, t } from "../lib/documents/i18n";
+import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
 import { sendDocumentEmail } from "../lib/email";
 import { emailLogsTable } from "@workspace/db";
 
@@ -394,7 +397,7 @@ router.get("/v1/contracts/:id/pdf", async (req, res): Promise<void> => {
   if (!built) { res.status(404).json({ error: "Not found" }); return; }
 
   const asHtml = req.query.format === "html";
-  const html = buildContractHtml(built.doc, undefined, !asHtml);
+  const html = buildContractHtml(built.doc, await resolveCompanyInfo(), !asHtml, normalizeLang(req.query.lang as string));
   if (asHtml) { res.type("html").send(html); return; }
   try {
     const pdf = await htmlToPdf(html);
@@ -423,32 +426,53 @@ router.post("/v1/contracts/:id/email", async (req, res): Promise<void> => {
   }
   if (!to) { res.status(400).json({ error: "No recipient email — set one on the tenant account or pass { to }." }); return; }
 
+  const lang = normalizeLang(req.body?.lang as string);
   let pdf: Buffer;
   try {
-    pdf = await htmlToPdf(buildContractHtml(built.doc));
+    pdf = await htmlToPdf(buildContractHtml(built.doc, await resolveCompanyInfo(), true, lang));
   } catch (err) {
     if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
     res.status(500).json({ error: "Failed to generate PDF" }); return;
   }
 
-  const subject = `Accommodation Agreement ${built.doc.contract_ref} from MillionStay`;
   const result = await sendDocumentEmail({
-    to, toName: built.doc.tenant_name, subject, docTypeLabel: "Agreement", ref: built.doc.contract_ref,
+    to, toName: built.doc.tenant_name, lang, docTypeLabel: t(lang, "doctype.contract"), ref: built.doc.contract_ref,
     amountLabel: built.doc.total_rent != null ? `${Number(built.doc.total_rent).toLocaleString("en-AU", { minimumFractionDigits: 2 })} ${built.doc.currency || "AUD"}` : null,
-    note: "Please review the attached agreement and reply to confirm.",
+    note: t(lang, "email.note.reviewAgreement"),
     pdf, filename: `${built.doc.contract_ref}.pdf`,
   });
 
   await db.insert(emailLogsTable).values({
     template_code: "document.contract", to_email: to, to_name: built.doc.tenant_name ?? null,
-    subject, resend_message_id: result.id ?? null, status: result.ok ? "Sent" : "Failed",
+    subject: result.subject, resend_message_id: result.id ?? null, status: result.ok ? "Sent" : "Failed",
     entity_type: "contract", entity_id: id, error_message: result.error ?? null,
   }).catch(() => {});
 
   if (!result.ok) { res.status(result.skipped ? 503 : 502).json({ error: result.error ?? "Send failed" }); return; }
+  // Freeze an immutable snapshot of exactly what was emailed (best-effort).
+  await freezeDocument({ entityType: "contract", entityId: id, docType: snapshotDocType("contract"), ref: built.doc.contract_ref, pdf }).catch(() => null);
   await db.update(contractsTable).set({ status: "Sent", sent_at: new Date(), updated_at: new Date() })
     .where(and(eq(contractsTable.id, id), eq(contractsTable.status, "Draft")));
   res.json({ ok: true, id: result.id, to });
+});
+
+/** Manually freeze the current contract PDF as an immutable versioned snapshot. */
+router.post("/v1/contracts/:id/freeze", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const built = await buildContractDocInput(id);
+  if (!built) { res.status(404).json({ error: "Not found" }); return; }
+  const lang = normalizeLang(req.body?.lang as string);
+  let pdf: Buffer;
+  try {
+    pdf = await htmlToPdf(buildContractHtml(built.doc, await resolveCompanyInfo(), true, lang));
+  } catch (err) {
+    if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
+    res.status(500).json({ error: "Failed to generate PDF" }); return;
+  }
+  const snap = await freezeDocument({ entityType: "contract", entityId: id, docType: snapshotDocType("contract"), ref: built.doc.contract_ref, pdf });
+  if (!snap) { res.status(503).json({ error: "Document storage not configured" }); return; }
+  res.json({ ok: true, ...snap });
 });
 
 router.put("/v1/contracts/:id", async (req, res): Promise<void> => {
