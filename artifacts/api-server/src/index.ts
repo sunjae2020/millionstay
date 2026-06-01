@@ -9,6 +9,7 @@ import crypto from "crypto";
 import cron from "node-cron";
 import { SEED_FILE_PATH, importSeed } from "./lib/seedSync";
 import { syncExchangeRates } from "./lib/exchangeRateSync";
+import { syncAllChannelImports } from "./lib/icalImport";
 
 const rawPort = process.env["PORT"];
 
@@ -57,6 +58,21 @@ async function autoMigrateIfEmpty() {
     // Only auto-migrate in production — dev DB is managed manually
     if (process.env.NODE_ENV !== "production") return;
 
+    // OPT-IN SAFETY GATE: importSeed() TRUNCATEs live tables (bookings,
+    // contracts, invoices, channel_*) and restores the seed snapshot. Running
+    // that automatically on boot would wipe real customer & OTA-ingested
+    // bookings whenever the seed file changes. It is therefore disabled unless
+    // an operator explicitly opts in. To provision a fresh DB, deploy once with
+    // FORCE_SEED_MIGRATE=true, then unset it. For surgical syncs use the
+    // reviewed /api/v1/admin/db-sync/import endpoint instead.
+    if (process.env.FORCE_SEED_MIGRATE !== "true") {
+      logger.warn(
+        "Boot-time seed auto-migration is opt-in — skipping to protect live data. " +
+          "Set FORCE_SEED_MIGRATE=true to provision a fresh DB.",
+      );
+      return;
+    }
+
     const seedSql = fs.readFileSync(SEED_FILE_PATH, "utf-8");
 
     // Compute SHA-256 hash of the seed file to detect changes
@@ -83,7 +99,7 @@ async function autoMigrateIfEmpty() {
 
     logger.info(
       { appliedHash: appliedHash?.slice(0, 12) ?? "none", newHash: seedHash.slice(0, 12) },
-      "Seed changed — running full sync from dev DB..."
+      "FORCE_SEED_MIGRATE set — running full sync from seed..."
     );
 
     // Boot path tolerates partial failures: starting up with most data is
@@ -127,6 +143,18 @@ cron.schedule(
   },
   { timezone: "Australia/Sydney" },
 );
+
+// OTA inbound iCal import — hourly, plus a boot-time run. Pulls each channel
+// listing's remote calendar into space_availability (source='ical').
+syncAllChannelImports()
+  .then((r) => logger.info({ total: r.total, ok: r.ok, failed: r.failed }, "Boot-time iCal import sync"))
+  .catch((err) => logger.error({ err }, "Boot-time iCal import sync failed"));
+
+cron.schedule("0 * * * *", () => {
+  syncAllChannelImports()
+    .then((r) => logger.info({ total: r.total, ok: r.ok, failed: r.failed }, "Cron iCal import sync"))
+    .catch((err) => logger.error({ err }, "Cron iCal import sync failed"));
+});
 
 const server = app.listen(port, (err) => {
   if (err) {

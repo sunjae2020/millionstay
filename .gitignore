@@ -51,3 +51,6 @@ Thumbs.db
 .env.local
 .env.*
 .claude/
+
+# Sensitive credential docs (plaintext passwords — never commit/push)
+docs/LOGIN_CREDENTIALS.md
