@@ -19,8 +19,9 @@ import {
   getListContractsQueryKey, getGetContractQueryKey,
 } from "@workspace/api-client-react";
 import { LookupSelect } from "@/components/LookupSelect";
-import { ArrowLeft, Save, Trash2, CalendarDays, Plus, Pencil, List } from "lucide-react";
+import { ArrowLeft, Save, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
+import { useToast } from "@/hooks/use-toast";
 
 const CURRENCIES = ["AUD", "USD", "SGD", "MYR", "GBP"];
 const statusColors: Record<string, string> = {
@@ -299,6 +300,58 @@ export default function ContractDetail() {
 
   const status = contract?.status ?? "Draft";
 
+  const { toast } = useToast();
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const handlePdf = async (mode: "download" | "preview") => {
+    setPdfBusy(true);
+    try {
+      const path = mode === "preview"
+        ? `/api/v1/contracts/${id}/pdf?format=html`
+        : `/api/v1/contracts/${id}/pdf`;
+      const res = await apiFetch(path);
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error ?? `HTTP ${res.status}`);
+      }
+      const url = URL.createObjectURL(await res.blob());
+      if (mode === "preview") {
+        window.open(url, "_blank", "noopener,noreferrer");
+      } else {
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${contract?.contract_ref ?? "contract"}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (err) {
+      toast({
+        title: "PDF unavailable",
+        description: err instanceof Error ? err.message : "Failed to generate document.",
+        variant: "destructive",
+      });
+    } finally {
+      setPdfBusy(false);
+    }
+  };
+
+  const handleEmail = async () => {
+    if (!window.confirm("Email this agreement (PDF) to the tenant?")) return;
+    setPdfBusy(true);
+    try {
+      const res = await apiFetch(`/api/v1/contracts/${id}/email`, { method: "POST" });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.error ?? `HTTP ${res.status}`);
+      toast({ title: "Email sent", description: `Agreement emailed to ${body?.to ?? "recipient"}.` });
+      refetch();
+    } catch (err) {
+      toast({ title: "Email failed", description: err instanceof Error ? err.message : "Error", variant: "destructive" });
+    } finally {
+      setPdfBusy(false);
+    }
+  };
+
   const fsmActions = () => {
     if (isNew) return null;
     return (
@@ -353,6 +406,19 @@ export default function ContractDetail() {
               <Button type="button" variant="outline" onClick={() => navigate("/contracts/contracts")}>
                 <ArrowLeft className="h-4 w-4 mr-2" />{t('common.back')}
               </Button>
+              {!isNew && (
+                <>
+                  <Button type="button" variant="outline" disabled={pdfBusy} onClick={() => handlePdf("preview")}>
+                    <Eye className="h-4 w-4 mr-2" />Preview
+                  </Button>
+                  <Button type="button" variant="outline" disabled={pdfBusy} onClick={() => handlePdf("download")}>
+                    <FileDown className="h-4 w-4 mr-2" />PDF
+                  </Button>
+                  <Button type="button" variant="outline" disabled={pdfBusy} onClick={handleEmail}>
+                    <Mail className="h-4 w-4 mr-2" />Email
+                  </Button>
+                </>
+              )}
               {!isNew && (
                 <Button type="button" variant="outline" className="text-red-600"
                   onClick={() => { if (confirm("Delete this contract?")) deleteMutation.mutate({ id: Number(id) }); }}>

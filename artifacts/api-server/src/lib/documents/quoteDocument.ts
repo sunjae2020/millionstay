@@ -1,0 +1,101 @@
+/**
+ * Document Hub — Quote document builder (Phase 3)
+ *
+ * Renders a pre-sale quotation with line items, totals and a validity date,
+ * using the shared brand shell so it matches invoices/receipts/contracts.
+ */
+import { renderDocumentShell, escapeHtml, getCompanyInfo, type CompanyInfo } from "./theme";
+
+export interface QuoteLine {
+  name: string;
+  unit_price: string | number;
+  quantity: number;
+  total_price: string | number;
+}
+
+export interface QuoteDocInput {
+  quote_ref: string;
+  status: string;
+  currency: string | null;
+  subtotal: string | number | null;
+  total: string | number | null;
+  valid_until: string | null;
+  description: string | null;
+  notes: string | null;
+  created_at: string | Date | null;
+  party_name?: string | null;
+  party_email?: string | null;
+  space_name?: string | null;
+  line_items: QuoteLine[];
+}
+
+function money(amount: string | number | null, currency: string | null): string {
+  const n = Number(amount ?? 0);
+  return `${n.toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency || "AUD"}`;
+}
+
+function formatDate(value: string | Date | null): string {
+  if (!value) return "—";
+  const d = typeof value === "string" ? new Date(value) : value;
+  if (Number.isNaN(d.getTime())) return escapeHtml(String(value));
+  return d.toLocaleDateString("en-AU", { year: "numeric", month: "short", day: "numeric" });
+}
+
+export function buildQuoteBody(q: QuoteDocInput): string {
+  const billTo = q.party_name
+    ? `${escapeHtml(q.party_name)}${q.party_email ? `<br/>${escapeHtml(q.party_email)}` : ""}`
+    : "—";
+
+  const rows = q.line_items.length
+    ? q.line_items.map(li => `
+        <tr>
+          <td>${escapeHtml(li.name)}</td>
+          <td class="num">${money(li.unit_price, q.currency)}</td>
+          <td class="num">${li.quantity}</td>
+          <td class="num">${money(li.total_price, q.currency)}</td>
+        </tr>`).join("")
+    : `<tr><td colspan="4" style="color:#999;">${escapeHtml(q.description || "No items")}</td></tr>`;
+
+  return `
+    <div class="section" style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
+      <div>
+        <h3>Quotation</h3>
+        <div class="ref-chip" style="font-size:20px;">${escapeHtml(q.quote_ref)}</div>
+        <div style="font-size:13px;color:#777;margin-top:4px;">Prepared ${formatDate(q.created_at)}</div>
+      </div>
+      <span class="badge" style="background:#dbeafe;color:#1d4ed8;">${escapeHtml(q.status || "Draft")}</span>
+    </div>
+
+    <div class="section">
+      <h3>Prepared For</h3>
+      <div style="font-size:14px;color:#333;">${billTo}</div>
+      ${q.space_name ? `<div style="font-size:12px;color:#999;margin-top:8px;">${escapeHtml(q.space_name)}</div>` : ""}
+    </div>
+
+    <div class="section">
+      <h3>Quote Items</h3>
+      <table class="lines">
+        <thead>
+          <tr><th>Description</th><th class="num">Unit</th><th class="num">Qty</th><th class="num">Amount</th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+
+    <div class="total-box">
+      <span>Total${q.valid_until ? ` · Valid until ${formatDate(q.valid_until)}` : ""}</span>
+      <span class="amount">${money(q.total, q.currency)}</span>
+    </div>
+
+    ${q.notes?.trim() ? `<div class="info-box"><strong>Notes</strong><br/>${escapeHtml(q.notes)}</div>` : ""}
+  `;
+}
+
+export function buildQuoteHtml(q: QuoteDocInput, company?: CompanyInfo, forPrint = true): string {
+  return renderDocumentShell({
+    docType: "Quotation",
+    bodyHtml: buildQuoteBody(q),
+    company: company ?? getCompanyInfo(),
+    forPrint,
+  });
+}

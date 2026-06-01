@@ -46,3 +46,7 @@ export * from "./documents";
 export * from "./marketing_consents";
 export * from "./login_attempts";
 export * from "./exchange_rates";
+export * from "./translations";
+export * from "./quotes";
+export * from "./quote_line_items";
+export * from "./channels";

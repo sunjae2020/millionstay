@@ -37,6 +37,9 @@ import serviceCatalogRouter from "./service-catalog";
 import csTicketsRouter from "./cs-tickets";
 import blogPostsRouter from "./blog-posts";
 import exchangeRatesRouter from "./exchange-rates";
+import translationsRouter from "./translations";
+import documentsRouter from "./documents";
+import quotesRouter from "./quotes";
 const router: IRouter = Router();
 
 router.use(healthRouter);
@@ -77,6 +80,9 @@ router.use(serviceCatalogRouter);
 router.use(csTicketsRouter);
 router.use(blogPostsRouter);
 router.use(exchangeRatesRouter);
+router.use(translationsRouter);
+router.use(documentsRouter);
+router.use(quotesRouter);
 // Note: partnerAuthRouter, agentPortalRouter, ownerPortalRouter are registered in app.ts
 // BEFORE the requireAuth middleware to allow partner JWT auth to bypass the admin auth guard.
 

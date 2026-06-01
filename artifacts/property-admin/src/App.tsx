@@ -75,6 +75,11 @@ import WorkOrderDetail from "@/pages/maintenance/WorkOrderDetail";
 import CsTicketList from "@/pages/cs/CsTicketList";
 import CsTicketDetail from "@/pages/cs/CsTicketDetail";
 
+// Documents
+import DocumentHub from "@/pages/documents/DocumentHub";
+import QuoteList from "@/pages/documents/QuoteList";
+import QuoteDetail from "@/pages/documents/QuoteDetail";
+
 // Blog / Content
 import BlogList from "@/pages/blog/BlogList";
 import BlogDetail from "@/pages/blog/BlogDetail";
@@ -90,6 +95,7 @@ import DesignPage from "@/pages/settings/sub/Design";
 import ContractTypesPage from "@/pages/settings/sub/ContractTypes";
 import ProductGroupsPage from "@/pages/settings/sub/ProductGroups";
 import ProductTypesPage from "@/pages/settings/sub/ProductTypes";
+import TranslationsPage from "@/pages/settings/sub/Translations";
 import BookingReportPage from "@/pages/settings/sub/BookingReport";
 import IntegrationsPage from "@/pages/settings/sub/Integrations";
 import DbSyncPage from "@/pages/settings/DbSync";
@@ -234,6 +240,12 @@ function Router() {
       <Route path="/cs/tickets" component={CsTicketList} />
       <Route path="/cs/tickets/:id" component={CsTicketDetail} />
 
+      {/* ── DOCUMENTS ─────────────────────────────────── */}
+      <Route path="/documents" component={DocumentHub} />
+      <Route path="/documents/quotes" component={QuoteList} />
+      <Route path="/documents/quotes/new" component={QuoteDetail} />
+      <Route path="/documents/quotes/:id" component={QuoteDetail} />
+
       {/* ── FINANCE ───────────────────────────────────── */}
       <Route path="/finance/invoices" component={InvoiceList} />
       <Route path="/finance/invoices/new" component={InvoiceDetail} />
@@ -254,6 +266,7 @@ function Router() {
       {/* ── SETTINGS HUB ──────────────────────────────── */}
       <Route path="/settings" component={Settings} />
 
+      <Route path="/settings/translations" component={TranslationsPage} />
       <Route path="/settings/organisation" component={OrganisationPage} />
       <Route path="/settings/users" component={UsersPage} />
       <Route path="/settings/email-templates" component={EmailTemplatesPage} />

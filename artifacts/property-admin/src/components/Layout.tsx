@@ -25,6 +25,7 @@ import {
   MapPin,
   CalendarDays,
   FileText,
+  FileSignature,
   Box,
   Tag,
   Receipt,
@@ -50,6 +51,7 @@ import {
   Home,
   DollarSign,
   Newspaper,
+  Languages,
   Sun,
   Moon,
 } from "lucide-react";
@@ -125,6 +127,18 @@ function getNav(t: (k: string) => string): NavSection[] {
       ],
     },
     {
+      label: "Documents",
+      icon: FileText,
+      defaultOpen: false,
+      items: [
+        { href: "/documents", label: "All Documents", icon: FileText },
+        { href: "/documents/quotes", label: "Quotes", icon: FileText },
+        { href: "/finance/invoices", label: t("nav.invoice"), icon: Receipt },
+        { href: "/finance/receipts", label: t("nav.receipt"), icon: Receipt },
+        { href: "/booking/contracts", label: t("nav.contract"), icon: FileSignature },
+      ],
+    },
+    {
       label: t("nav.finance"),
       icon: CreditCard,
       defaultOpen: false,
@@ -160,6 +174,7 @@ function getNav(t: (k: string) => string): NavSection[] {
         { href: "/settings/cost-center", label: t("nav.cost_center"), icon: Wallet },
         { href: "/settings/suburbs", label: t("nav.suburb"), icon: MapPin },
         { href: "/settings/email-templates", label: t("nav.email_templates"), icon: Mail },
+        { href: "/settings/translations", label: "Languages", icon: Languages },
         { href: "/settings/integrations", label: t("nav.integrations"), icon: Plug },
         { href: "/settings/system-log", label: t("nav.system_log"), icon: ScrollText },
         { href: "/settings/design", label: t("nav.design"), icon: Palette },

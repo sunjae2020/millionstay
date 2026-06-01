@@ -1,8 +1,12 @@
 import { Router } from "express";
-import { db, invoicesTable, bookingsTable, contractsTable, accountsTable } from "@workspace/db";
+import { db, invoicesTable, bookingsTable, contractsTable, accountsTable, emailLogsTable } from "@workspace/db";
 import { eq, ilike, and, isNull, inArray } from "drizzle-orm";
 import { logAction } from "../utils/auditLog";
 import { getRateToAud } from "../lib/rateSnapshot";
+import { buildInvoiceHtml, type InvoiceDocInput } from "../lib/documents/invoiceDocument";
+import { buildReceiptHtml } from "../lib/documents/receiptDocument";
+import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
+import { sendDocumentEmail } from "../lib/email";
 import {
   CreateInvoiceBody,
   UpdateInvoiceBody,
@@ -180,6 +184,160 @@ router.post("/v1/invoices/:id/void", async (req, res): Promise<void> => {
   const [result] = await enrichInvoices([row]);
   res.json(result);
 });
+
+/**
+ * Build the enriched document input for a single invoice, including the
+ * billing account's email + formatted address (needed for the Bill-To block).
+ */
+async function buildInvoiceDocInput(invoiceId: number): Promise<InvoiceDocInput | null> {
+  const row = await db.select().from(invoicesTable).where(eq(invoicesTable.id, invoiceId)).then(r => r[0]);
+  if (!row) return null;
+  const [enriched] = await enrichInvoices([row]);
+
+  let account_email: string | null = null;
+  let account_address: string | null = null;
+  if (row.account_id) {
+    const [acc] = await db.select().from(accountsTable).where(eq(accountsTable.id, row.account_id));
+    if (acc) {
+      account_email = acc.account_email ?? null;
+      account_address = [
+        acc.address_line1,
+        acc.address_suburb,
+        [acc.address_state, acc.address_postcode].filter(Boolean).join(" "),
+        acc.address_country,
+      ].filter(Boolean).join(", ") || null;
+    }
+  }
+
+  return {
+    invoice_ref: enriched.invoice_ref,
+    status: enriched.status,
+    amount: enriched.amount,
+    currency: enriched.currency,
+    due_date: enriched.due_date,
+    paid_at: enriched.paid_at,
+    payment_method: enriched.payment_method,
+    description: enriched.description,
+    notes: enriched.notes,
+    created_at: enriched.created_at,
+    account_name: (enriched as any).account_name ?? null,
+    account_email,
+    account_address,
+    booking_ref: (enriched as any).booking_ref ?? null,
+    contract_ref: (enriched as any).contract_ref ?? null,
+  };
+}
+
+/**
+ * Render an invoice as a branded document.
+ *   GET /v1/invoices/:id/pdf               → application/pdf download
+ *   GET /v1/invoices/:id/pdf?format=html   → HTML preview (for in-app preview)
+ */
+router.get("/v1/invoices/:id/pdf", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const docInput = await buildInvoiceDocInput(id);
+  if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
+
+  const asHtml = req.query.format === "html";
+  const html = buildInvoiceHtml(docInput, undefined, !asHtml);
+
+  if (asHtml) {
+    res.type("html").send(html);
+    return;
+  }
+
+  await sendPdf(res, html, docInput.invoice_ref);
+});
+
+/**
+ * Render the payment receipt for a (paid) invoice.
+ *   GET /v1/invoices/:id/receipt/pdf  [?format=html]
+ */
+router.get("/v1/invoices/:id/receipt/pdf", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const docInput = await buildInvoiceDocInput(id);
+  if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
+
+  const asHtml = req.query.format === "html";
+  const html = buildReceiptHtml(docInput, undefined, !asHtml);
+
+  if (asHtml) { res.type("html").send(html); return; }
+  await sendPdf(res, html, `${docInput.invoice_ref}-receipt`);
+});
+
+/** Render HTML to PDF and stream it, mapping renderer failures to HTTP codes. */
+async function sendPdf(res: import("express").Response, html: string, refBase: string): Promise<void> {
+  try {
+    const pdf = await htmlToPdf(html);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `inline; filename="${refBase}.pdf"`);
+    res.setHeader("Content-Length", String(pdf.length));
+    res.send(pdf);
+  } catch (err) {
+    if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
+    console.error("[invoices] PDF generation failed:", err);
+    res.status(500).json({ error: "Failed to generate PDF" });
+  }
+}
+
+function moneyLabel(amount: string | number | null, currency: string | null): string {
+  return `${Number(amount ?? 0).toLocaleString("en-AU", { minimumFractionDigits: 2 })} ${currency || "AUD"}`;
+}
+
+/**
+ * Email an invoice (or its receipt) to the billing account as a branded PDF.
+ *   POST /v1/invoices/:id/email          body: { to?, kind?: "invoice"|"receipt" }
+ *   POST /v1/invoices/:id/receipt/email  (kind=receipt)
+ */
+async function emailInvoiceDocument(req: import("express").Request, res: import("express").Response, kind: "invoice" | "receipt"): Promise<void> {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const docInput = await buildInvoiceDocInput(id);
+  if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
+
+  const to = (req.body?.to as string)?.trim() || docInput.account_email;
+  if (!to) { res.status(400).json({ error: "No recipient email — set one on the linked account or pass { to }." }); return; }
+
+  const html = kind === "receipt" ? buildReceiptHtml(docInput) : buildInvoiceHtml(docInput);
+  let pdf: Buffer;
+  try {
+    pdf = await htmlToPdf(html);
+  } catch (err) {
+    if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
+    res.status(500).json({ error: "Failed to generate PDF" }); return;
+  }
+
+  const label = kind === "receipt" ? "Receipt" : "Invoice";
+  const subject = `${label} ${docInput.invoice_ref} from MillionStay`;
+  const result = await sendDocumentEmail({
+    to, toName: docInput.account_name, subject, docTypeLabel: label, ref: docInput.invoice_ref,
+    amountLabel: moneyLabel(docInput.amount, docInput.currency),
+    note: kind === "invoice" && docInput.due_date ? `Payment due ${docInput.due_date}.` : null,
+    pdf, filename: `${docInput.invoice_ref}${kind === "receipt" ? "-receipt" : ""}.pdf`,
+  });
+
+  await db.insert(emailLogsTable).values({
+    template_code: `document.${kind}`, to_email: to, to_name: docInput.account_name ?? null,
+    subject, resend_message_id: result.id ?? null, status: result.ok ? "Sent" : "Failed",
+    entity_type: "invoice", entity_id: id, error_message: result.error ?? null,
+  }).catch(() => {});
+
+  if (!result.ok) { res.status(result.skipped ? 503 : 502).json({ error: result.error ?? "Send failed" }); return; }
+
+  // Sending an invoice advances Draft → Sent.
+  if (kind === "invoice") {
+    await db.update(invoicesTable).set({ status: "Sent", updated_at: new Date() })
+      .where(and(eq(invoicesTable.id, id), eq(invoicesTable.status, "Draft")));
+  }
+  res.json({ ok: true, id: result.id, to });
+}
+
+router.post("/v1/invoices/:id/email", (req, res) => emailInvoiceDocument(req, res, "invoice"));
+router.post("/v1/invoices/:id/receipt/email", (req, res) => emailInvoiceDocument(req, res, "receipt"));
 
 router.get("/v1/lookup/invoices", async (req, res): Promise<void> => {
   const { q } = req.query as Record<string, string>;

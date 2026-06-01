@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Download, CheckCircle2 } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
+import { useToast } from "@/hooks/use-toast";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
 import { format } from "date-fns";
 
@@ -56,9 +57,40 @@ export default function ReceiptList() {
     queryFn: () => fetchReceipts(q || undefined, methodFilter),
   });
 
+  const { toast } = useToast();
+  const [busyId, setBusyId] = useState<number | null>(null);
+
   const rows: any[] = Array.isArray(data) ? data : [];
   const totalPaid = rows.reduce((sum, r) => sum + (r.amount ?? 0), 0);
   const pagination = usePagination(rows);
+
+  // Download the branded receipt PDF for a paid invoice.
+  const downloadReceipt = async (r: any) => {
+    setBusyId(r.id);
+    try {
+      const res = await apiFetch(`/api/v1/invoices/${r.id}/receipt/pdf`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error ?? `HTTP ${res.status}`);
+      }
+      const url = URL.createObjectURL(await res.blob());
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${r.invoice_ref}-receipt.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (err) {
+      toast({
+        title: "PDF unavailable",
+        description: err instanceof Error ? err.message : "Failed to generate receipt.",
+        variant: "destructive",
+      });
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   return (
     <Layout>

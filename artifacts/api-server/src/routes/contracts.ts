@@ -3,6 +3,10 @@ import { db, contractsTable, accountsTable, spacesTable, propertiesTable, contra
 import { eq, ilike, and, like, desc, isNull, inArray } from "drizzle-orm";
 import { logAction } from "../utils/auditLog";
 import { getRateToAud } from "../lib/rateSnapshot";
+import { buildContractHtml, type ContractDocInput } from "../lib/documents/contractDocument";
+import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
+import { sendDocumentEmail } from "../lib/email";
+import { emailLogsTable } from "@workspace/db";
 
 // ─── Invoice ref generator (returns a factory that increments safely) ────────
 async function makeInvoiceRefFactory(): Promise<() => string> {
@@ -347,6 +351,104 @@ router.get("/v1/contracts/:id", async (req, res): Promise<void> => {
   if (!row) { res.status(404).json({ error: "NOT_FOUND" }); return; }
   const [result] = await enrichContracts([row]);
   res.json(result);
+});
+
+/** Build the branded-document input for a contract (enriched names + fields). */
+async function buildContractDocInput(id: number): Promise<{ doc: ContractDocInput; tenantAccountId: number | null } | null> {
+  const [row] = await db.select().from(contractsTable).where(eq(contractsTable.id, id));
+  if (!row) return null;
+  const [c] = await enrichContracts([row]);
+  return {
+    tenantAccountId: row.tenant_account_id ?? null,
+    doc: {
+      contract_ref: c.contract_ref,
+      status: c.status,
+      tenant_name: (c as any).tenant_name ?? null,
+      landlord_name: (c as any).landlord_name ?? null,
+      space_name: (c as any).space_name ?? null,
+      product_name: (c as any).product_name ?? null,
+      booking_ref: (c as any).booking_ref ?? null,
+      start_date: c.start_date,
+      end_date: c.end_date,
+      weekly_rate: c.weekly_rate,
+      total_rent: c.total_rent,
+      bond_amount: c.bond_amount,
+      advance_amount: c.advance_amount,
+      currency: c.currency,
+      terms_text: c.terms_text,
+      notes: c.notes,
+      signed_at: c.signed_at,
+      created_at: c.created_at,
+    },
+  };
+}
+
+/**
+ * Render a contract as a branded agreement document.
+ *   GET /v1/contracts/:id/pdf  [?format=html]
+ */
+router.get("/v1/contracts/:id/pdf", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const built = await buildContractDocInput(id);
+  if (!built) { res.status(404).json({ error: "Not found" }); return; }
+
+  const asHtml = req.query.format === "html";
+  const html = buildContractHtml(built.doc, undefined, !asHtml);
+  if (asHtml) { res.type("html").send(html); return; }
+  try {
+    const pdf = await htmlToPdf(html);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `inline; filename="${built.doc.contract_ref}.pdf"`);
+    res.setHeader("Content-Length", String(pdf.length));
+    res.send(pdf);
+  } catch (err) {
+    if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
+    console.error("[contracts] PDF generation failed:", err);
+    res.status(500).json({ error: "Failed to generate PDF" });
+  }
+});
+
+/** Email a contract to the tenant as a branded PDF; advances Draft → Sent. */
+router.post("/v1/contracts/:id/email", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const built = await buildContractDocInput(id);
+  if (!built) { res.status(404).json({ error: "Not found" }); return; }
+
+  let to = (req.body?.to as string)?.trim() || null;
+  if (!to && built.tenantAccountId) {
+    const [acc] = await db.select().from(accountsTable).where(eq(accountsTable.id, built.tenantAccountId));
+    to = acc?.account_email ?? null;
+  }
+  if (!to) { res.status(400).json({ error: "No recipient email — set one on the tenant account or pass { to }." }); return; }
+
+  let pdf: Buffer;
+  try {
+    pdf = await htmlToPdf(buildContractHtml(built.doc));
+  } catch (err) {
+    if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
+    res.status(500).json({ error: "Failed to generate PDF" }); return;
+  }
+
+  const subject = `Accommodation Agreement ${built.doc.contract_ref} from MillionStay`;
+  const result = await sendDocumentEmail({
+    to, toName: built.doc.tenant_name, subject, docTypeLabel: "Agreement", ref: built.doc.contract_ref,
+    amountLabel: built.doc.total_rent != null ? `${Number(built.doc.total_rent).toLocaleString("en-AU", { minimumFractionDigits: 2 })} ${built.doc.currency || "AUD"}` : null,
+    note: "Please review the attached agreement and reply to confirm.",
+    pdf, filename: `${built.doc.contract_ref}.pdf`,
+  });
+
+  await db.insert(emailLogsTable).values({
+    template_code: "document.contract", to_email: to, to_name: built.doc.tenant_name ?? null,
+    subject, resend_message_id: result.id ?? null, status: result.ok ? "Sent" : "Failed",
+    entity_type: "contract", entity_id: id, error_message: result.error ?? null,
+  }).catch(() => {});
+
+  if (!result.ok) { res.status(result.skipped ? 503 : 502).json({ error: result.error ?? "Send failed" }); return; }
+  await db.update(contractsTable).set({ status: "Sent", sent_at: new Date(), updated_at: new Date() })
+    .where(and(eq(contractsTable.id, id), eq(contractsTable.status, "Draft")));
+  res.json({ ok: true, id: result.id, to });
 });
 
 router.put("/v1/contracts/:id", async (req, res): Promise<void> => {

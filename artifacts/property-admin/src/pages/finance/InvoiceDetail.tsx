@@ -23,7 +23,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ArrowLeft, Trash2, Save } from "lucide-react";
+import { ArrowLeft, Trash2, Save, FileDown, Eye, Mail } from "lucide-react";
+import { apiFetch } from "@/lib/apiFetch";
+import { useToast } from "@/hooks/use-toast";
 
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-600",
@@ -52,6 +54,61 @@ export default function InvoiceDetail() {
 
   const [payOpen, setPayOpen] = useState(false);
   const [payMethod, setPayMethod] = useState("BankTransfer");
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const { toast } = useToast();
+
+  // Generate the branded PDF, then either download it or open a preview tab.
+  const handlePdf = async (mode: "download" | "preview") => {
+    setPdfBusy(true);
+    try {
+      const path = mode === "preview"
+        ? `/api/v1/invoices/${id}/pdf?format=html`
+        : `/api/v1/invoices/${id}/pdf`;
+      const res = await apiFetch(path);
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error ?? `HTTP ${res.status}`);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      if (mode === "preview") {
+        window.open(url, "_blank", "noopener,noreferrer");
+      } else {
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${invoice?.invoice_ref ?? "invoice"}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (err) {
+      toast({
+        title: "PDF unavailable",
+        description: err instanceof Error ? err.message : "Failed to generate document.",
+        variant: "destructive",
+      });
+    } finally {
+      setPdfBusy(false);
+    }
+  };
+
+  // Email the branded invoice PDF to the billing account.
+  const handleEmail = async () => {
+    if (!window.confirm("Email this invoice (PDF) to the linked account?")) return;
+    setPdfBusy(true);
+    try {
+      const res = await apiFetch(`/api/v1/invoices/${id}/email`, { method: "POST" });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.error ?? `HTTP ${res.status}`);
+      toast({ title: "Email sent", description: `Invoice emailed to ${body?.to ?? "recipient"}.` });
+      refetch();
+    } catch (err) {
+      toast({ title: "Email failed", description: err instanceof Error ? err.message : "Error", variant: "destructive" });
+    } finally {
+      setPdfBusy(false);
+    }
+  };
 
   const { data: invoice, refetch } = useGetInvoice(Number(id), {
     query: { enabled: !isNew },
@@ -123,6 +180,19 @@ export default function InvoiceDetail() {
             <Button variant="outline" onClick={() => navigate("/finance/invoices")}>
               <ArrowLeft className="h-4 w-4 mr-1" /> {t('common.back')}
             </Button>
+            {!isNew && (
+              <>
+                <Button variant="outline" disabled={pdfBusy} onClick={() => handlePdf("preview")}>
+                  <Eye className="h-4 w-4 mr-1" /> Preview
+                </Button>
+                <Button variant="outline" disabled={pdfBusy} onClick={() => handlePdf("download")}>
+                  <FileDown className="h-4 w-4 mr-1" /> PDF
+                </Button>
+                <Button variant="outline" disabled={pdfBusy} onClick={handleEmail}>
+                  <Mail className="h-4 w-4 mr-1" /> Email
+                </Button>
+              </>
+            )}
             {!isNew && (
               <Button variant="destructive" onClick={() => deleteMutation.mutate({ id: Number(id) })}>
                 <Trash2 className="h-4 w-4 mr-1" /> {t('common.delete')}

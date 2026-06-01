@@ -29,6 +29,83 @@ const LOGO_URL = process.env.EMAIL_LOGO_URL ?? "https://www.millionstay.com/mill
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL ?? "info@millionstay.com";
 const PORTAL_URL = process.env.PUBLIC_WEB_URL ?? "https://www.millionstay.com";
 
+export interface DocumentEmailOptions {
+  to: string;
+  toName?: string | null;
+  subject: string;
+  /** Human label of the document type, e.g. "Invoice", "Quotation". */
+  docTypeLabel: string;
+  ref: string;
+  /** Optional amount line shown in the cover email, e.g. "1,450.00 AUD". */
+  amountLabel?: string | null;
+  /** Optional extra sentence (e.g. due date / validity). */
+  note?: string | null;
+  /** The rendered PDF to attach. */
+  pdf: Buffer;
+  filename: string;
+}
+
+/**
+ * Send a customer-facing document (invoice / receipt / quote / contract) as a
+ * branded cover email with the PDF attached. Best-effort: returns a result
+ * object and never throws, so callers can record the outcome and continue.
+ */
+export async function sendDocumentEmail(
+  opts: DocumentEmailOptions,
+): Promise<{ ok: boolean; id?: string; skipped?: boolean; error?: string }> {
+  const client = getResend();
+  if (!client) {
+    console.log(`[email] RESEND_API_KEY not set — skipping ${opts.docTypeLabel} ${opts.ref} to ${opts.to}`);
+    return { ok: false, skipped: true, error: "Email service not configured" };
+  }
+
+  const greeting = opts.toName ? `Hi <strong>${safeName(opts.toName)}</strong>,` : "Hello,";
+  const html = `
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+  body{font-family:'Inter',-apple-system,sans-serif;margin:0;padding:0;background:#f9fafb;color:#111;}
+  .container{max-width:560px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+  .header{background:#fff;padding:28px 32px;border-bottom:1px solid #f0f0f0;}
+  .header img{height:36px;width:auto;display:block;}
+  .body{padding:32px;}
+  .ref-box{background:#FFF7F0;border:1px solid #FCD9B6;border-radius:10px;padding:16px 20px;margin:20px 0;}
+  .ref-box .label{font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:#999;}
+  .ref-box .ref{font-size:18px;font-weight:700;color:#E8621A;font-family:monospace;letter-spacing:0.04em;}
+  .amount{font-size:15px;color:#111;margin-top:8px;font-weight:600;}
+  .footer{padding:20px 32px;border-top:1px solid #f0f0f0;font-size:12px;color:#999;text-align:center;}
+</style></head><body>
+<div class="container">
+  <div class="header"><img src="${LOGO_URL}" alt="MillionStay" /></div>
+  <div class="body">
+    <p style="font-size:16px;">${greeting}</p>
+    <p style="color:#555;font-size:14px;">Please find your ${escapeHtml(opts.docTypeLabel.toLowerCase())} attached as a PDF.</p>
+    <div class="ref-box">
+      <div class="label">${escapeHtml(opts.docTypeLabel)}</div>
+      <div class="ref">${escapeHtml(opts.ref)}</div>
+      ${opts.amountLabel ? `<div class="amount">${escapeHtml(opts.amountLabel)}</div>` : ""}
+    </div>
+    ${opts.note ? `<p style="font-size:13px;color:#555;">${escapeHtml(opts.note)}</p>` : ""}
+    <p style="font-size:13px;color:#999;">Questions? Contact us at <a href="mailto:${SUPPORT_EMAIL}" style="color:#E8621A;">${SUPPORT_EMAIL}</a>.</p>
+  </div>
+  <div class="footer">© ${new Date().getFullYear()} MillionStay Pty Ltd · This email was sent to ${escapeHtml(opts.to)}</div>
+</div></body></html>`;
+
+  try {
+    const result = await client.emails.send({
+      from: FROM,
+      to: [opts.to],
+      subject: opts.subject,
+      html,
+      attachments: [{ filename: opts.filename, content: opts.pdf.toString("base64") }],
+    });
+    const id = (result as any)?.data?.id ?? undefined;
+    console.log(`[email] ${opts.docTypeLabel} ${opts.ref} sent to ${opts.to} (${id ?? "no-id"})`);
+    return { ok: true, id };
+  } catch (err) {
+    console.error(`[email] Failed to send ${opts.docTypeLabel} ${opts.ref}:`, err);
+    return { ok: false, error: err instanceof Error ? err.message : "Send failed" };
+  }
+}
+
 export interface PasswordResetEmailOptions {
   to: string;
   name: string;
