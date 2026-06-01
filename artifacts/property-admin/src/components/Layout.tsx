@@ -136,6 +136,7 @@ function getNav(t: (k: string) => string): NavSection[] {
         { href: "/finance/invoices", label: t("nav.invoice"), icon: Receipt },
         { href: "/finance/receipts", label: t("nav.receipt"), icon: Receipt },
         { href: "/booking/contracts", label: t("nav.contract"), icon: FileSignature },
+        { href: "/settings/email-templates", label: t("nav.email_templates"), icon: Mail },
       ],
     },
     {
