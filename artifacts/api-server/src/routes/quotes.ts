@@ -5,6 +5,8 @@ import { z } from "zod";
 import { logAction } from "../utils/auditLog";
 import { buildQuoteHtml, type QuoteDocInput } from "../lib/documents/quoteDocument";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
+import { resolveCompanyInfo } from "../lib/documents/companyInfo";
+import { normalizeLang } from "../lib/documents/i18n";
 import { sendDocumentEmail } from "../lib/email";
 
 const router = Router();
@@ -252,7 +254,7 @@ router.get("/v1/quotes/:id/pdf", async (req, res): Promise<void> => {
   if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
 
   const asHtml = req.query.format === "html";
-  const html = buildQuoteHtml(docInput, undefined, !asHtml);
+  const html = buildQuoteHtml(docInput, await resolveCompanyInfo(), !asHtml, normalizeLang(req.query.lang as string));
   if (asHtml) { res.type("html").send(html); return; }
   try {
     const pdf = await htmlToPdf(html);
@@ -279,7 +281,7 @@ router.post("/v1/quotes/:id/email", async (req, res): Promise<void> => {
 
   let pdf: Buffer;
   try {
-    pdf = await htmlToPdf(buildQuoteHtml(docInput));
+    pdf = await htmlToPdf(buildQuoteHtml(docInput, await resolveCompanyInfo()));
   } catch (err) {
     if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
     res.status(500).json({ error: "Failed to generate PDF" }); return;

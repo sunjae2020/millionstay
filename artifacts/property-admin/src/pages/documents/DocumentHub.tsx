@@ -59,6 +59,7 @@ export default function DocumentHub() {
   const { toast } = useToast();
   const [q, setQ] = useState("");
   const [type, setType] = useState("_all");
+  const [docLang, setDocLang] = useState("en");
   const [busy, setBusy] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
@@ -74,9 +75,11 @@ export default function DocumentHub() {
     const key = `${doc.doc_type}:${doc.source_id}:${mode}`;
     setBusy(key);
     try {
-      const path = mode === "preview"
-        ? `${doc.pdf_url}${doc.pdf_url.includes("?") ? "&" : "?"}format=html`
-        : doc.pdf_url;
+      const params = new URLSearchParams();
+      if (mode === "preview") params.set("format", "html");
+      if (docLang !== "en") params.set("lang", docLang);
+      const qs = params.toString();
+      const path = qs ? `${doc.pdf_url}?${qs}` : doc.pdf_url;
       const res = await apiFetch(path);
       if (!res.ok) {
         const body = await res.json().catch(() => null);
@@ -124,7 +127,17 @@ export default function DocumentHub() {
               <SelectItem value="_all">All Types</SelectItem>
               <SelectItem value="Invoice">Invoices</SelectItem>
               <SelectItem value="Receipt">Receipts</SelectItem>
+              <SelectItem value="Quote">Quotes</SelectItem>
               <SelectItem value="Contract">Contracts</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={docLang} onValueChange={setDocLang}>
+            <SelectTrigger className="w-36"><SelectValue placeholder="Language" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="en">English</SelectItem>
+              <SelectItem value="ko">한국어</SelectItem>
+              <SelectItem value="zh">中文</SelectItem>
+              <SelectItem value="ja">日本語</SelectItem>
             </SelectContent>
           </Select>
         </div>

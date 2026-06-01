@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { apiFetch } from "@/lib/apiFetch";
 
 interface CompanyForm {
   company_name: string;
@@ -14,6 +16,7 @@ interface CompanyForm {
   phone: string;
   email: string;
   website: string;
+  logo_url: string;
   address1: string;
   address2: string;
   suburb: string;
@@ -23,28 +26,59 @@ interface CompanyForm {
   timezone: string;
 }
 
+const DEFAULTS: CompanyForm = {
+  company_name: "MillionStay Pty Ltd",
+  trading_name: "MillionStay",
+  abn: "",
+  phone: "",
+  email: "",
+  website: "",
+  logo_url: "",
+  address1: "",
+  address2: "",
+  suburb: "",
+  state: "VIC",
+  postcode: "",
+  country: "AU",
+  timezone: "Australia/Melbourne",
+};
+
 export function CompanyInfo() {
   const { toast } = useToast();
-  const { register, handleSubmit, control } = useForm<CompanyForm>({
-    defaultValues: {
-      company_name: "MillionStay Pty Ltd",
-      trading_name: "MillionStay",
-      abn: "",
-      phone: "",
-      email: "",
-      website: "",
-      address1: "",
-      address2: "",
-      suburb: "",
-      state: "VIC",
-      postcode: "",
-      country: "AU",
-      timezone: "Australia/Melbourne",
-    },
-  });
+  const [saving, setSaving] = useState(false);
+  const { register, handleSubmit, control, reset } = useForm<CompanyForm>({ defaultValues: DEFAULTS });
 
-  function onSubmit(_data: CompanyForm) {
-    toast({ title: "Saved", description: "Company information has been updated." });
+  // Load persisted company info (used as the issuer block on all documents).
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await apiFetch("/api/v1/company-info");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (active && data && typeof data === "object") {
+          reset({ ...DEFAULTS, ...data });
+        }
+      } catch { /* keep defaults */ }
+    })();
+    return () => { active = false; };
+  }, [reset]);
+
+  async function onSubmit(data: CompanyForm) {
+    setSaving(true);
+    try {
+      const res = await apiFetch("/api/v1/company-info", {
+        method: "PUT",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) { const b = await res.json().catch(() => null); throw new Error(b?.error ?? `HTTP ${res.status}`); }
+      toast({ title: "Saved", description: "Company information has been updated. It now appears on all documents." });
+    } catch (err) {
+      toast({ title: "Save failed", description: err instanceof Error ? err.message : "Error", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -78,6 +112,11 @@ export function CompanyInfo() {
         <div className="space-y-1.5">
           <Label>Website</Label>
           <Input {...register("website")} placeholder="https://millionstay.com.au" />
+        </div>
+        <div className="space-y-1.5 col-span-2">
+          <Label>Logo URL</Label>
+          <Input {...register("logo_url")} placeholder="https://www.millionstay.com/millionstay-logo.png" />
+          <p className="text-xs text-muted-foreground">Shown in the header of every document (invoice, receipt, quote, contract) and email.</p>
         </div>
       </div>
 
@@ -175,9 +214,9 @@ export function CompanyInfo() {
       </div>
 
       <div className="flex justify-end pt-2">
-        <Button type="submit">
+        <Button type="submit" disabled={saving}>
           <Save className="h-4 w-4 mr-2" />
-          Save
+          {saving ? "Saving…" : "Save"}
         </Button>
       </div>
     </form>

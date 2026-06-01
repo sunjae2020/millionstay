@@ -3,6 +3,7 @@
  *
  * Produces the branded HTML for an invoice, shared by the PDF renderer and
  * (future) email sender via the common document shell in `theme.ts`.
+ * Static labels are translated via `i18n.ts` when a `lang` is supplied.
  */
 import {
   renderDocumentShell,
@@ -10,6 +11,7 @@ import {
   getCompanyInfo,
   type CompanyInfo,
 } from "./theme";
+import { t, docLocale, type DocLang } from "./i18n";
 
 /** Enriched invoice shape as returned by `enrichInvoices()` in routes/invoices.ts. */
 export interface InvoiceDocInput {
@@ -45,15 +47,15 @@ function formatMoney(amount: string | number | null, currency: string | null): s
   return `${formatted} ${ccy}`;
 }
 
-function formatDate(value: string | Date | null): string {
+function formatDate(value: string | Date | null, lang: DocLang): string {
   if (!value) return "—";
   const d = typeof value === "string" ? new Date(value) : value;
   if (Number.isNaN(d.getTime())) return escapeHtml(String(value));
-  return d.toLocaleDateString("en-AU", { year: "numeric", month: "short", day: "numeric" });
+  return d.toLocaleDateString(docLocale(lang), { year: "numeric", month: "short", day: "numeric" });
 }
 
 /** Build the inner body HTML for an invoice (no shell). */
-export function buildInvoiceBody(inv: InvoiceDocInput): string {
+export function buildInvoiceBody(inv: InvoiceDocInput, lang: DocLang = "en"): string {
   const status = inv.status || "Draft";
   const style = STATUS_STYLE[status] ?? STATUS_STYLE.Draft;
   const billTo = inv.account_name
@@ -61,8 +63,8 @@ export function buildInvoiceBody(inv: InvoiceDocInput): string {
     : "—";
 
   const links = [
-    inv.booking_ref ? `Booking ${escapeHtml(inv.booking_ref)}` : null,
-    inv.contract_ref ? `Contract ${escapeHtml(inv.contract_ref)}` : null,
+    inv.booking_ref ? `${escapeHtml(inv.booking_ref)}` : null,
+    inv.contract_ref ? `${escapeHtml(inv.contract_ref)}` : null,
   ].filter(Boolean).join(" · ");
 
   const lineDesc = inv.description?.trim() || "Accommodation services";
@@ -70,24 +72,24 @@ export function buildInvoiceBody(inv: InvoiceDocInput): string {
   return `
     <div class="section" style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
       <div>
-        <h3>Invoice</h3>
+        <h3>${t(lang, "invoice.heading")}</h3>
         <div class="ref-chip" style="font-size:20px;">${escapeHtml(inv.invoice_ref)}</div>
-        <div style="font-size:13px;color:#777;margin-top:4px;">Issued ${formatDate(inv.created_at)}</div>
+        <div style="font-size:13px;color:#777;margin-top:4px;">${t(lang, "issued")} ${formatDate(inv.created_at, lang)}</div>
       </div>
       <span class="badge" style="background:${style.bg};color:${style.fg};">${escapeHtml(status)}</span>
     </div>
 
     <div class="section">
-      <h3>Bill To</h3>
+      <h3>${t(lang, "billTo")}</h3>
       <div style="font-size:14px;color:#333;">${billTo}</div>
       ${links ? `<div style="font-size:12px;color:#999;margin-top:8px;">${links}</div>` : ""}
     </div>
 
     <div class="section">
-      <h3>Details</h3>
+      <h3>${t(lang, "details")}</h3>
       <table class="lines">
         <thead>
-          <tr><th>Description</th><th class="num">Amount</th></tr>
+          <tr><th>${t(lang, "description")}</th><th class="num">${t(lang, "amount")}</th></tr>
         </thead>
         <tbody>
           <tr>
@@ -99,26 +101,26 @@ export function buildInvoiceBody(inv: InvoiceDocInput): string {
     </div>
 
     <div class="section">
-      <div class="row"><span class="label">Due Date</span><span class="value">${formatDate(inv.due_date)}</span></div>
+      <div class="row"><span class="label">${t(lang, "dueDate")}</span><span class="value">${formatDate(inv.due_date, lang)}</span></div>
       ${status === "Paid" ? `
-      <div class="row"><span class="label">Paid</span><span class="value">${formatDate(inv.paid_at)}${inv.payment_method ? ` · ${escapeHtml(inv.payment_method)}` : ""}</span></div>
+      <div class="row"><span class="label">${t(lang, "paid")}</span><span class="value">${formatDate(inv.paid_at, lang)}${inv.payment_method ? ` · ${escapeHtml(inv.payment_method)}` : ""}</span></div>
       ` : ""}
     </div>
 
     <div class="total-box">
-      <span>${status === "Paid" ? "Amount Paid" : "Amount Due"}</span>
+      <span>${status === "Paid" ? t(lang, "amountPaid") : t(lang, "amountDue")}</span>
       <span class="amount">${formatMoney(inv.amount, inv.currency)}</span>
     </div>
 
-    ${inv.notes?.trim() ? `<div class="info-box"><strong>Notes</strong><br/>${escapeHtml(inv.notes)}</div>` : ""}
+    ${inv.notes?.trim() ? `<div class="info-box"><strong>${t(lang, "notes")}</strong><br/>${escapeHtml(inv.notes)}</div>` : ""}
   `;
 }
 
 /** Build the full standalone HTML document for an invoice. */
-export function buildInvoiceHtml(inv: InvoiceDocInput, company?: CompanyInfo, forPrint = true): string {
+export function buildInvoiceHtml(inv: InvoiceDocInput, company?: CompanyInfo, forPrint = true, lang: DocLang = "en"): string {
   return renderDocumentShell({
-    docType: "Tax Invoice",
-    bodyHtml: buildInvoiceBody(inv),
+    docType: t(lang, "doctype.invoice"),
+    bodyHtml: buildInvoiceBody(inv, lang),
     company: company ?? getCompanyInfo(),
     forPrint,
   });

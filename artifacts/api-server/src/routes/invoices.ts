@@ -6,6 +6,8 @@ import { getRateToAud } from "../lib/rateSnapshot";
 import { buildInvoiceHtml, type InvoiceDocInput } from "../lib/documents/invoiceDocument";
 import { buildReceiptHtml } from "../lib/documents/receiptDocument";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
+import { resolveCompanyInfo } from "../lib/documents/companyInfo";
+import { normalizeLang } from "../lib/documents/i18n";
 import { sendDocumentEmail } from "../lib/email";
 import {
   CreateInvoiceBody,
@@ -241,7 +243,7 @@ router.get("/v1/invoices/:id/pdf", async (req, res): Promise<void> => {
   if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
 
   const asHtml = req.query.format === "html";
-  const html = buildInvoiceHtml(docInput, undefined, !asHtml);
+  const html = buildInvoiceHtml(docInput, await resolveCompanyInfo(), !asHtml, normalizeLang(req.query.lang as string));
 
   if (asHtml) {
     res.type("html").send(html);
@@ -263,7 +265,7 @@ router.get("/v1/invoices/:id/receipt/pdf", async (req, res): Promise<void> => {
   if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
 
   const asHtml = req.query.format === "html";
-  const html = buildReceiptHtml(docInput, undefined, !asHtml);
+  const html = buildReceiptHtml(docInput, await resolveCompanyInfo(), !asHtml, normalizeLang(req.query.lang as string));
 
   if (asHtml) { res.type("html").send(html); return; }
   await sendPdf(res, html, `${docInput.invoice_ref}-receipt`);
@@ -302,7 +304,8 @@ async function emailInvoiceDocument(req: import("express").Request, res: import(
   const to = (req.body?.to as string)?.trim() || docInput.account_email;
   if (!to) { res.status(400).json({ error: "No recipient email — set one on the linked account or pass { to }." }); return; }
 
-  const html = kind === "receipt" ? buildReceiptHtml(docInput) : buildInvoiceHtml(docInput);
+  const company = await resolveCompanyInfo();
+  const html = kind === "receipt" ? buildReceiptHtml(docInput, company) : buildInvoiceHtml(docInput, company);
   let pdf: Buffer;
   try {
     pdf = await htmlToPdf(html);

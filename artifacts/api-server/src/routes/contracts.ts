@@ -5,6 +5,8 @@ import { logAction } from "../utils/auditLog";
 import { getRateToAud } from "../lib/rateSnapshot";
 import { buildContractHtml, type ContractDocInput } from "../lib/documents/contractDocument";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
+import { resolveCompanyInfo } from "../lib/documents/companyInfo";
+import { normalizeLang } from "../lib/documents/i18n";
 import { sendDocumentEmail } from "../lib/email";
 import { emailLogsTable } from "@workspace/db";
 
@@ -394,7 +396,7 @@ router.get("/v1/contracts/:id/pdf", async (req, res): Promise<void> => {
   if (!built) { res.status(404).json({ error: "Not found" }); return; }
 
   const asHtml = req.query.format === "html";
-  const html = buildContractHtml(built.doc, undefined, !asHtml);
+  const html = buildContractHtml(built.doc, await resolveCompanyInfo(), !asHtml, normalizeLang(req.query.lang as string));
   if (asHtml) { res.type("html").send(html); return; }
   try {
     const pdf = await htmlToPdf(html);
@@ -425,7 +427,7 @@ router.post("/v1/contracts/:id/email", async (req, res): Promise<void> => {
 
   let pdf: Buffer;
   try {
-    pdf = await htmlToPdf(buildContractHtml(built.doc));
+    pdf = await htmlToPdf(buildContractHtml(built.doc, await resolveCompanyInfo()));
   } catch (err) {
     if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
     res.status(500).json({ error: "Failed to generate PDF" }); return;
