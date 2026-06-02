@@ -388,8 +388,8 @@ router.get("/v1/owner/revenue", requireOwnerAuth, async (req, res): Promise<void
         .orderBy(desc(invoicesTable.due_date))
     : [];
 
-  const totalRevenue = invoices.filter(i => i.status === "Paid").reduce((s, i) => s + (i.amount ?? 0), 0);
-  const pendingRevenue = invoices.filter(i => i.status !== "Paid" && i.status !== "Void").reduce((s, i) => s + (i.amount ?? 0), 0);
+  const totalRevenue = invoices.filter(i => i.status === "Paid").reduce((s, i) => s + Number(i.amount ?? 0), 0);
+  const pendingRevenue = invoices.filter(i => i.status !== "Paid" && i.status !== "Void").reduce((s, i) => s + Number(i.amount ?? 0), 0);
 
   const spaceMap = Object.fromEntries(spaces.map(s => [s.id, s]));
   const propMap = Object.fromEntries(properties.map(p => [p.id, p]));
