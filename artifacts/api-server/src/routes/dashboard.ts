@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, propertiesTable, spacesTable, contactsTable, accountsTable, bookingsTable, leadsTable, tasksTable, invoicesTable, contractsTable, workOrdersTable, systemLogsTable } from "@workspace/db";
-import { eq, count, and, gte, lte, sql, desc } from "drizzle-orm";
+import { eq, count, and, gte, lte, lt, sql, desc } from "drizzle-orm";
 
 const router: IRouter = Router();
 
@@ -66,7 +66,7 @@ router.get("/v1/dashboard/overview/kpis", async (_req, res) => {
       db.select({ count: count() }).from(bookingsTable).where(eq(bookingsTable.booking_status, "Active")),
       db.select({ count: count() }).from(spacesTable).where(eq(spacesTable.status, "Active")),
       db.select({ count: count() }).from(bookingsTable).where(eq(bookingsTable.booking_status, "Active")),
-      db.select({ amount: invoicesTable.amount }).from(invoicesTable).where(and(eq(invoicesTable.status, "Paid"), gte(invoicesTable.created_at, new Date(monthStart)), lte(invoicesTable.created_at, new Date(nextMonth)))),
+      db.select({ amount: invoicesTable.amount }).from(invoicesTable).where(and(eq(invoicesTable.status, "Paid"), gte(invoicesTable.created_at, new Date(monthStart)), lt(invoicesTable.created_at, new Date(nextMonth)))),
     ]);
 
     const monthlyRevenue = paidInvoices.reduce((sum, i) => sum + Number(i.amount ?? 0), 0);
@@ -107,8 +107,8 @@ router.get("/v1/finance/summary", async (req, res) => {
       return d >= monthStart && d < nextMonth;
     });
 
-    const totalRevenue = allInvoices.filter(i => i.status === "Paid").reduce((s, i) => s + (i.amount ?? 0), 0);
-    const monthRevenue = thisMonthInvoices.filter(i => i.status === "Paid").reduce((s, i) => s + (i.amount ?? 0), 0);
+    const totalRevenue = allInvoices.filter(i => i.status === "Paid").reduce((s, i) => s + Number(i.amount ?? 0), 0);
+    const monthRevenue = thisMonthInvoices.filter(i => i.status === "Paid").reduce((s, i) => s + Number(i.amount ?? 0), 0);
     const sentCount = allInvoices.filter(i => i.status === "Sent").length;
     const paidCount = thisMonthInvoices.filter(i => i.status === "Paid").length;
     const draftCount = allInvoices.filter(i => i.status === "Draft").length;
@@ -137,15 +137,14 @@ router.get("/v1/finance/revenue/monthly", async (req, res) => {
     const result: { month: string; revenue: number; invoice_count: number }[] = [];
     const now = new Date();
     for (let i = months - 1; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthStr = d.toISOString().slice(0, 7);
-      const start = monthStr + "-01";
-      const nextD = new Date(d.getFullYear(), d.getMonth() + 1, 1);
-      const end = nextD.toISOString().slice(0, 10);
+      // Compute month windows in UTC to avoid timezone-induced month shifts/overlaps.
+      const startD = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
+      const endD = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i + 1, 1));
+      const monthStr = startD.toISOString().slice(0, 7);
       const rows = await db.select({ amount: invoicesTable.amount })
         .from(invoicesTable)
-        .where(and(eq(invoicesTable.status, "Paid"), gte(invoicesTable.created_at, new Date(start)), lte(invoicesTable.created_at, new Date(end))));
-      result.push({ month: monthStr, revenue: Math.round(rows.reduce((s, r) => s + (r.amount ?? 0), 0) * 100) / 100, invoice_count: rows.length });
+        .where(and(eq(invoicesTable.status, "Paid"), gte(invoicesTable.created_at, startD), lt(invoicesTable.created_at, endD)));
+      result.push({ month: monthStr, revenue: Math.round(rows.reduce((s, r) => s + Number(r.amount ?? 0), 0) * 100) / 100, invoice_count: rows.length });
     }
     res.json(result);
   } catch (err) {
@@ -172,7 +171,7 @@ router.get("/v1/finance/revenue/by-property", async (req, res) => {
     const propRevenue: Record<number, number> = {};
     for (const inv of invoices) {
       const propId = inv.booking_id ? (bookingMap[inv.booking_id] ?? null) : null;
-      if (propId) propRevenue[propId] = (propRevenue[propId] ?? 0) + (inv.amount ?? 0);
+      if (propId) propRevenue[propId] = (propRevenue[propId] ?? 0) + Number(inv.amount ?? 0);
     }
     const propIds = Object.keys(propRevenue).map(Number);
     const props = propIds.length ? await db.select({ id: propertiesTable.id, name: propertiesTable.name }).from(propertiesTable) : [];
@@ -192,14 +191,13 @@ router.get("/v1/finance/tax-summary", async (req, res) => {
     const result: { month: string; gross_revenue: number; tax_rate: number; tax_amount: number; net_revenue: number }[] = [];
     const now = new Date();
     for (let i = months - 1; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthStr = d.toISOString().slice(0, 7);
-      const start = monthStr + "-01";
-      const nextD = new Date(d.getFullYear(), d.getMonth() + 1, 1);
-      const end = nextD.toISOString().slice(0, 10);
+      // UTC-consistent month windows (see revenue/monthly note).
+      const startD = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
+      const endD = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i + 1, 1));
+      const monthStr = startD.toISOString().slice(0, 7);
       const rows = await db.select({ amount: invoicesTable.amount }).from(invoicesTable)
-        .where(and(eq(invoicesTable.status, "Paid"), gte(invoicesTable.created_at, new Date(start)), lte(invoicesTable.created_at, new Date(end))));
-      const gross = rows.reduce((s, r) => s + (r.amount ?? 0), 0);
+        .where(and(eq(invoicesTable.status, "Paid"), gte(invoicesTable.created_at, startD), lt(invoicesTable.created_at, endD)));
+      const gross = rows.reduce((s, r) => s + Number(r.amount ?? 0), 0);
       const taxRate = 0.10;
       const taxAmount = gross * taxRate / (1 + taxRate);
       result.push({ month: monthStr, gross_revenue: Math.round(gross * 100) / 100, tax_rate: taxRate, tax_amount: Math.round(taxAmount * 100) / 100, net_revenue: Math.round((gross - taxAmount) * 100) / 100 });
