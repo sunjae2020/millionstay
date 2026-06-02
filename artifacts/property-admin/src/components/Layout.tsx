@@ -1,4 +1,4 @@
-import { Link, useLocation } from "wouter";
+import { Link, useLocation, useSearch } from "wouter";
 import { useTranslation } from "react-i18next";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useBrand } from "@/contexts/ThemeContext";
@@ -632,6 +632,7 @@ const COLLAPSED_KEY = "ms_sidebar_collapsed";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
+  const searchString = useSearch();
   const { logo, logoDark, brandName, darkMode, toggleDarkMode } = useBrand();
   const effectiveLogo = darkMode && logoDark ? logoDark : logo;
   const { t } = useTranslation();
@@ -735,25 +736,30 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <>
                 <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">Dashboards</p>
                 {[
-                  { href: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
-                  { href: "/dashboard/reservations", label: "Reservations", icon: CalendarDays },
-                  { href: "/dashboard/finance", label: "Finance", icon: DollarSign },
-                  { href: "/dashboard/operations", label: "Operations", icon: Wrench },
-                ].map(item => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      "flex items-center gap-2 rounded-md text-xs font-medium transition-colors py-1.5 pl-5 pr-3",
-                      (location === item.href || (item.href === "/dashboard" && (location === "/" || location === "/dashboard")))
-                        ? "bg-sidebar-primary/10 text-sidebar-primary font-semibold"
-                        : "text-sidebar-foreground/40 hover:text-sidebar-foreground/70 hover:bg-sidebar-accent"
-                    )}
-                  >
-                    <item.icon className="h-3 w-3 flex-shrink-0" />
-                    {item.label}
-                  </Link>
-                ))}
+                  { href: "/dashboard", tab: "overview", label: t("nav.dashboard"), icon: LayoutDashboard },
+                  { href: "/dashboard?tab=reservations", tab: "reservations", label: "Reservations", icon: CalendarDays },
+                  { href: "/dashboard?tab=finance", tab: "finance", label: "Finance", icon: DollarSign },
+                  { href: "/dashboard?tab=operations", tab: "operations", label: "Operations", icon: Wrench },
+                ].map(item => {
+                  const onDashboard = location === "/" || location === "/dashboard";
+                  const currentTab = new URLSearchParams(searchString).get("tab") ?? "overview";
+                  const active = onDashboard && currentTab === item.tab;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-2 rounded-md text-xs font-medium transition-colors py-1.5 pl-5 pr-3",
+                        active
+                          ? "bg-sidebar-primary/10 text-sidebar-primary font-semibold"
+                          : "text-sidebar-foreground/40 hover:text-sidebar-foreground/70 hover:bg-sidebar-accent"
+                      )}
+                    >
+                      <item.icon className="h-3 w-3 flex-shrink-0" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
               </>
             )}
           </div>
