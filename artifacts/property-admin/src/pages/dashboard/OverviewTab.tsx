@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { useTranslation } from "react-i18next";
 import { apiFetch } from "@/lib/apiFetch";
 import {
   useListSuburbs, useListProperties, useListSpaces,
@@ -130,7 +129,6 @@ function MiniStat({ icon: Icon, label, value, href }: {
 }
 
 export default function OverviewTab() {
-  const { t } = useTranslation();
   const { data: suburbs } = useListSuburbs();
   const { data: properties } = useListProperties();
   const { data: spaces } = useListSpaces();
@@ -339,16 +337,14 @@ export default function OverviewTab() {
 
       {/* Portfolio mini-stats */}
       <div>
-        <h2 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("dashboard.property_section", "Portfolio")}</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <h2 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">Portfolio</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
           <MiniStat icon={Building2} label="Properties" value={properties?.length} href="/property/properties" />
           <MiniStat icon={Layers} label="Spaces" value={totalSpaces} href="/property/spaces" />
           <MiniStat icon={TrendingUp} label="Active Spaces" value={activeSpaces} href="/property/spaces" />
           <MiniStat icon={Users} label="Contacts" value={contacts?.length} href="/account/contacts" />
           <MiniStat icon={FileText} label="Accounts" value={accounts?.length} href="/account/accounts" />
           <MiniStat icon={CheckSquare} label="Open Tasks" value={tasks?.filter(t => t.task_status !== "Done").length} href="/account/tasks" />
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-3">
           <MiniStat icon={TrendingUp} label="Leads" value={leads?.length} href="/account/leads" />
           <MiniStat icon={CalendarDays} label="Suburbs" value={suburbs?.length} href="/settings/suburbs" />
         </div>

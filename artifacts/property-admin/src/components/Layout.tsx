@@ -738,6 +738,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 {[
                   { href: "/dashboard", tab: "overview", label: t("nav.dashboard"), icon: LayoutDashboard },
                   { href: "/dashboard?tab=reservations", tab: "reservations", label: "Reservations", icon: CalendarDays },
+                  { href: "/dashboard?tab=crm", tab: "crm", label: "CRM", icon: Users },
                   { href: "/dashboard?tab=finance", tab: "finance", label: "Finance", icon: DollarSign },
                   { href: "/dashboard?tab=operations", tab: "operations", label: "Operations", icon: Wrench },
                 ].map(item => {

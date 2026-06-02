@@ -155,8 +155,12 @@ export default function FinanceTab() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <DashCard className="lg:col-span-2" title="6-Month Revenue Trend" icon={TrendingUp}>
-          {monthly.length === 0 ? (
-            <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">No data</div>
+          {monthly.length === 0 || monthly.every(m => (m.revenue ?? 0) === 0) ? (
+            <div className="h-48 flex flex-col items-center justify-center gap-1 text-center">
+              <TrendingUp className="h-6 w-6 text-muted-foreground/40" />
+              <p className="text-sm text-muted-foreground">No settled revenue in this period</p>
+              <p className="text-xs text-muted-foreground/70">Revenue appears here once invoices are marked paid</p>
+            </div>
           ) : (
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={monthly} margin={{ top: 16, right: 8, left: 0, bottom: 0 }}>
