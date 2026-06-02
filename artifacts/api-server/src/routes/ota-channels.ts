@@ -130,6 +130,33 @@ router.get("/v1/channels", async (_req, res): Promise<void> => {
   res.json({ success: true, data: rows });
 });
 
+/* GET /api/v1/channel-listings — ALL listings across every space (admin overview). */
+router.get("/v1/channel-listings", async (_req, res): Promise<void> => {
+  const rows = await db
+    .select({
+      id: channelListingsTable.id,
+      space_id: channelListingsTable.space_id,
+      space_name: spacesTable.name,
+      channel_id: channelListingsTable.channel_id,
+      channel_code: channelsTable.code,
+      channel_name: channelsTable.name,
+      external_listing_id: channelListingsTable.external_listing_id,
+      listing_url: channelListingsTable.listing_url,
+      ical_import_url: channelListingsTable.ical_import_url,
+      sync_enabled: channelListingsTable.sync_enabled,
+      sync_availability: channelListingsTable.sync_availability,
+      last_import_at: channelListingsTable.last_import_at,
+      last_export_at: channelListingsTable.last_export_at,
+      last_sync_status: channelListingsTable.last_sync_status,
+      status: channelListingsTable.status,
+    })
+    .from(channelListingsTable)
+    .leftJoin(channelsTable, eq(channelListingsTable.channel_id, channelsTable.id))
+    .leftJoin(spacesTable, eq(channelListingsTable.space_id, spacesTable.id))
+    .orderBy(asc(channelListingsTable.space_id), asc(channelListingsTable.id));
+  res.json({ success: true, data: rows });
+});
+
 /* GET /api/v1/spaces/:id/channel-listings — listings mapped to a space. */
 router.get("/v1/spaces/:id/channel-listings", async (req, res): Promise<void> => {
   const spaceId = Number(req.params.id);
