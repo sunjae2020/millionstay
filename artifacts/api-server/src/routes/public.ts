@@ -810,7 +810,11 @@ router.get("/v1/suburbs", async (req, res): Promise<void> => {
     ) as SQL);
   }
   const rows = await db.select().from(suburbsTable).where(and(...conditions)).orderBy(asc(suburbsTable.name));
-  res.json({ data: rows });
+  // Return a bare array to match the ListSuburbsResponse contract (zod.array).
+  // This route is mounted before requireAuth and shadows the authenticated
+  // suburbsRouter GET for ALL /api/v1/suburbs requests, so its shape must match
+  // what the generated useListSuburbs client expects — an array, not { data }.
+  res.json(rows);
 });
 
 router.get("/v1/public/blog", async (req, res): Promise<void> => {

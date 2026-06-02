@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import LoginPage from "@/pages/Login";
 import RegisterPage from "@/pages/Register";
 import ForgotPasswordPage from "@/pages/ForgotPassword";
@@ -407,7 +408,13 @@ function App() {
         <ThemeProvider>
           <AuthProvider>
             <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-              <ProtectedRouter />
+              {/* Top-level boundary: catches render errors thrown by a page
+                  component before its Layout (and the boundary inside it)
+                  mounts, so a page crash shows the error card instead of a
+                  fully blank white screen. */}
+              <ErrorBoundary>
+                <ProtectedRouter />
+              </ErrorBoundary>
             </WouterRouter>
             <Toaster />
           </AuthProvider>

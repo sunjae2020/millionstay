@@ -94,7 +94,7 @@ export default function Search() {
   const [hoveredId, setHoveredId] = useState<number | string | null>(null);
 
   const { data: suburbsData } = useListSuburbs();
-  const suburbs = suburbsData?.data ?? [];
+  const suburbs = suburbsData ?? [];
 
   /* ── Search 버튼 클릭: 현재 입력값을 applied에 반영 ── */
   const handleSearch = () => {

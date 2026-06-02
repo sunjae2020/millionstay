@@ -262,7 +262,7 @@ export default function Home() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">{t("home.search.any_suburb")}</SelectItem>
-                      {suburbsData?.data?.map((s) => (
+                      {suburbsData?.map((s) => (
                         <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
                       ))}
                     </SelectContent>
