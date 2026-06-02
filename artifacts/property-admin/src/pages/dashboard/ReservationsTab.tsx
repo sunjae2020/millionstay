@@ -1,15 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useLocation } from "wouter";
-import { Layout, PageHeader } from "@/components/Layout";
 import { apiFetch } from "@/lib/apiFetch";
 import {
-  useListBookings, useListProperties, useListSpaces, useListContacts,
+  useListBookings, useListProperties, useListSpaces,
   useCreateBooking, useCheckInBooking, useCheckOutBooking,
   getListBookingsQueryKey,
 } from "@workspace/api-client-react";
 import {
   CalendarDays, LogIn, LogOut, Clock, ChevronLeft, ChevronRight,
-  Users, CheckCircle, XCircle, Plus, Search, AlertTriangle, X,
+  Users, CheckCircle, Plus, Search, AlertTriangle, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +19,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { LookupSelect } from "@/components/LookupSelect";
+import { KpiCard, DashCard, Pill } from "@/components/dashboard/DashboardKit";
 
 const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   Draft:           { bg: "#f8fafc", text: "#64748b", border: "#cbd5e1" },
@@ -69,25 +69,6 @@ function diffDays(a: string, b: string): number {
   return Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86400000);
 }
 
-function KpiCard({ label, value, icon: Icon, colorClass, sublabel }: {
-  label: string; value: number | string;
-  icon: React.ComponentType<{ className?: string }>;
-  colorClass: string; sublabel?: string;
-}) {
-  return (
-    <div className="bg-card rounded-lg border p-5 flex items-start gap-4">
-      <div className={`rounded-lg p-2.5 ${colorClass}`}>
-        <Icon className="h-5 w-5 text-white" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm text-muted-foreground font-medium">{label}</p>
-        <p className="text-2xl font-bold text-foreground mt-0.5">{value}</p>
-        {sublabel && <p className="text-xs text-muted-foreground mt-1">{sublabel}</p>}
-      </div>
-    </div>
-  );
-}
-
 function GanttCalendar({
   weekStart,
   onBookingClick,
@@ -127,7 +108,7 @@ function GanttCalendar({
           ))}
         </div>
         {data.spaces.map(space => (
-          <div key={space.id} className="flex border-b hover:bg-gray-50 min-h-[44px]">
+          <div key={space.id} className="flex border-b hover:bg-gray-50 dark:hover:bg-muted/40 min-h-[44px]">
             <div className="w-44 shrink-0 px-3 py-2 border-r">
               <div className="text-xs font-medium truncate">{space.name}</div>
               {space.property_name && <div className="text-[10px] text-muted-foreground truncate">{space.property_name}</div>}
@@ -178,25 +159,11 @@ function GanttCalendar({
 }
 
 function ConfirmActionModal({
-  open,
-  onClose,
-  onConfirm,
-  title,
-  description,
-  warning,
-  confirmLabel,
-  confirmClass,
-  loading,
+  open, onClose, onConfirm, title, description, warning, confirmLabel, confirmClass, loading,
 }: {
-  open: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-  title: string;
-  description: string;
-  warning?: string;
-  confirmLabel: string;
-  confirmClass: string;
-  loading: boolean;
+  open: boolean; onClose: () => void; onConfirm: () => void;
+  title: string; description: string; warning?: string;
+  confirmLabel: string; confirmClass: string; loading: boolean;
 }) {
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
@@ -271,7 +238,6 @@ function ArrivalDeparturePanel({ type, onActionDone }: { type: "arrivals" | "dep
   const isArrivals = type === "arrivals";
   const Icon = isArrivals ? LogIn : LogOut;
   const actionLabel = isArrivals ? "Check In" : "Check Out";
-  const iconColor = isArrivals ? "text-green-600" : "text-amber-600";
   const btnClass = isArrivals
     ? "bg-green-600 hover:bg-green-700 text-white text-[10px] px-2 py-1 rounded font-medium"
     : "bg-amber-500 hover:bg-amber-600 text-white text-[10px] px-2 py-1 rounded font-medium";
@@ -280,13 +246,13 @@ function ArrivalDeparturePanel({ type, onActionDone }: { type: "arrivals" | "dep
 
   return (
     <>
-      <div className="bg-card rounded-lg border flex flex-col">
-        <div className="flex items-center gap-2 px-4 py-3 border-b">
-          <Icon className={`h-4 w-4 ${iconColor}`} />
-          <h3 className="text-sm font-semibold">{isArrivals ? "Today's Arrivals" : "Today's Departures"}</h3>
-          <span className="ml-auto text-xs bg-muted rounded-full px-2 py-0.5 font-medium">{items.length}</span>
-        </div>
-        <div className="flex-1 overflow-auto max-h-72">
+      <DashCard
+        title={isArrivals ? "Today's Arrivals" : "Today's Departures"}
+        icon={Icon}
+        action={<span className="text-xs bg-muted rounded-full px-2 py-0.5 font-medium">{items.length}</span>}
+        bodyClass="p-0"
+      >
+        <div className="overflow-auto max-h-72">
           {loading ? (
             <div className="p-4 text-xs text-muted-foreground">Loading…</div>
           ) : items.length === 0 ? (
@@ -308,9 +274,7 @@ function ArrivalDeparturePanel({ type, onActionDone }: { type: "arrivals" | "dep
                     )}
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium ${STATUS_BADGE[item.booking_status] ?? "bg-gray-100 text-gray-600"}`}>
-                      {item.booking_status}
-                    </span>
+                    <Pill className={STATUS_BADGE[item.booking_status] ?? "bg-gray-100 text-gray-600"}>{item.booking_status}</Pill>
                     <button className={btnClass} onClick={() => setConfirmItem(item)}>
                       {actionLabel}
                     </button>
@@ -320,7 +284,7 @@ function ArrivalDeparturePanel({ type, onActionDone }: { type: "arrivals" | "dep
             </div>
           )}
         </div>
-      </div>
+      </DashCard>
 
       <ConfirmActionModal
         open={!!confirmItem}
@@ -357,7 +321,7 @@ interface QuickBookingForm {
   currency: string;
 }
 
-function QuickBookingPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function QuickBookingPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [selectedPropertyId, setSelectedPropertyId] = useState<number | null>(null);
@@ -444,7 +408,7 @@ function QuickBookingPanel({ open, onClose }: { open: boolean; onClose: () => vo
             <Label className="text-xs font-medium">Guest (Contact)</Label>
             <div className="mt-1.5">
               <LookupSelect
-                entity="contacts"
+                lookupUrl="/api/v1/lookup/contacts"
                 value={form.contact_id}
                 onChange={v => setForm(f => ({ ...f, contact_id: v }))}
                 placeholder="Search guest…"
@@ -563,7 +527,7 @@ function QuickBookingPanel({ open, onClose }: { open: boolean; onClose: () => vo
   );
 }
 
-export default function DashboardReservations() {
+export default function ReservationsTab() {
   const [, navigate] = useLocation();
 
   const [weekStart, setWeekStart] = useState(() => {
@@ -614,130 +578,120 @@ export default function DashboardReservations() {
   const weekLabel = `${new Date(weekStart + "T12:00:00").toLocaleDateString("en", { month: "short", day: "numeric" })} – ${new Date(weekEndStr + "T12:00:00").toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })}`;
 
   return (
-    <Layout>
-      <PageHeader
-        title="Reservations Dashboard"
-        subtitle="Booking calendar, arrivals, departures, and reservation management"
-        actions={
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => navigate("/booking/bookings/new")} className="gap-1.5">
-              <Plus className="h-4 w-4" /> Full Form
-            </Button>
-            <Button size="sm" className="gap-1.5 bg-[#E8621A] hover:bg-[#d4541a] text-white" onClick={() => setQuickBookingOpen(true)}>
-              <Plus className="h-4 w-4" /> Quick Booking
-            </Button>
-          </div>
-        }
-      />
-
-      <div className="p-6 space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <KpiCard label="Active Bookings" value={activeCount} icon={CheckCircle} colorClass="bg-green-600" sublabel="Currently checked in" />
-          <KpiCard label="Pending Approval" value={pendingCount} icon={Clock} colorClass={pendingCount > 0 ? "bg-amber-500" : "bg-gray-400"} sublabel="Awaiting sign-off" />
-          <KpiCard label="New This Week" value={newThisWeek} icon={CalendarDays} colorClass="bg-blue-500" sublabel="Created last 7 days" />
-          <KpiCard label="Monthly Total" value={monthlyTotal} icon={Users} colorClass="bg-indigo-500" sublabel="All bookings this month" />
-        </div>
-
-        <div className="bg-card rounded-lg border">
-          <div className="flex items-center justify-between px-4 py-3 border-b flex-wrap gap-2">
-            <h3 className="text-sm font-semibold flex items-center gap-2">
-              <CalendarDays className="h-4 w-4 text-muted-foreground" />
-              7-Day Availability Calendar
-            </h3>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={prevWeek}><ChevronLeft className="h-4 w-4" /></Button>
-              <span className="text-xs text-muted-foreground font-medium min-w-[160px] text-center">{weekLabel}</span>
-              <Button variant="outline" size="sm" onClick={nextWeek}><ChevronRight className="h-4 w-4" /></Button>
-              <Button variant="outline" size="sm" onClick={goToday}>Today</Button>
-            </div>
-          </div>
-          <GanttCalendar
-            key={calendarKey}
-            weekStart={weekStart}
-            onBookingClick={(id) => navigate(`/booking/bookings/${id}`)}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ArrivalDeparturePanel type="arrivals" onActionDone={() => { refetchBookings(); setCalendarKey(k => k + 1); }} />
-          <ArrivalDeparturePanel type="departures" onActionDone={() => { refetchBookings(); setCalendarKey(k => k + 1); }} />
-        </div>
-
-        <div className="bg-card rounded-lg border">
-          <div className="flex items-center justify-between px-4 py-3 border-b">
-            <h3 className="text-sm font-semibold">All Bookings</h3>
-            <Link href="/booking/bookings" className="text-xs text-[#E8621A] hover:underline">Open full list →</Link>
-          </div>
-          <div className="px-4 py-3 border-b flex flex-wrap gap-3">
-            <div className="relative flex-1 min-w-[180px]">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                placeholder="Search ref or guest…"
-                value={search}
-                onChange={e => { setSearch(e.target.value); setPage(1); }}
-                className="pl-8 h-8 text-xs"
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); setPage(1); }}>
-              <SelectTrigger className="w-[160px] h-8 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {["All", "Draft", "PendingPayment", "PendingApproval", "Confirmed", "Active", "CheckedOut", "Cancelled"].map(s => (
-                  <SelectItem key={s} value={s} className="text-xs">{s === "All" ? "All Statuses" : s}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="overflow-auto">
-            <table className="w-full text-xs">
-              <thead className="bg-muted/50">
-                <tr>
-                  {["Ref #", "Guest", "Space", "Check-in", "Check-out", "Nights", "Amount", "Status", "Actions"].map(h => (
-                    <th key={h} className="px-3 py-2 text-left text-muted-foreground font-medium">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {paginated.length === 0 ? (
-                  <tr><td colSpan={9} className="px-3 py-6 text-center text-muted-foreground">No bookings found</td></tr>
-                ) : paginated.map(b => (
-                  <tr key={b.id} className="hover:bg-muted/30">
-                    <td className="px-3 py-2 font-mono font-medium">{b.booking_ref}</td>
-                    <td className="px-3 py-2">{(b as any).contact_name ?? "—"}</td>
-                    <td className="px-3 py-2">{(b as any).space_name ?? "—"}</td>
-                    <td className="px-3 py-2">{b.check_in_date ?? "—"}</td>
-                    <td className="px-3 py-2">{b.check_out_date ?? "—"}</td>
-                    <td className="px-3 py-2">{b.stay_nights ?? "—"}</td>
-                    <td className="px-3 py-2">
-                      {b.total_rent ? `${b.currency ?? "AUD"} ${parseFloat(b.total_rent).toLocaleString()}` : "—"}
-                    </td>
-                    <td className="px-3 py-2">
-                      <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${STATUS_BADGE[b.booking_status] ?? "bg-gray-100 text-gray-600"}`}>
-                        {b.booking_status}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2">
-                      <Link href={`/booking/bookings/${b.id}`} className="text-[#E8621A] hover:underline">View</Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {pageCount > 1 && (
-            <div className="flex items-center justify-between px-4 py-2 border-t text-xs">
-              <span className="text-muted-foreground">
-                Showing {(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, filteredBookings.length)} of {filteredBookings.length}
-              </span>
-              <div className="flex gap-1">
-                <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>‹ Prev</Button>
-                <Button variant="outline" size="sm" disabled={page === pageCount} onClick={() => setPage(p => p + 1)}>Next ›</Button>
-              </div>
-            </div>
-          )}
-        </div>
+    <div className="space-y-6">
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={() => navigate("/booking/bookings/new")} className="gap-1.5">
+          <Plus className="h-4 w-4" /> Full Form
+        </Button>
+        <Button size="sm" className="gap-1.5 bg-[#E8621A] hover:bg-[#d4541a] text-white" onClick={() => setQuickBookingOpen(true)}>
+          <Plus className="h-4 w-4" /> Quick Booking
+        </Button>
       </div>
 
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard label="Active Bookings" value={activeCount} icon={CheckCircle} accent="green" sublabel="Currently checked in" />
+        <KpiCard label="Pending Approval" value={pendingCount} icon={Clock} accent={pendingCount > 0 ? "amber" : "slate"} sublabel="Awaiting sign-off" trend={pendingCount > 0 ? "Action" : undefined} trendType="warning" />
+        <KpiCard label="New This Week" value={newThisWeek} icon={CalendarDays} accent="blue" sublabel="Created last 7 days" />
+        <KpiCard label="Monthly Total" value={monthlyTotal} icon={Users} accent="indigo" sublabel="All bookings this month" />
+      </div>
+
+      <DashCard
+        title="7-Day Availability Calendar"
+        icon={CalendarDays}
+        bodyClass="p-0"
+        action={
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={prevWeek}><ChevronLeft className="h-4 w-4" /></Button>
+            <span className="text-xs text-muted-foreground font-medium min-w-[160px] text-center">{weekLabel}</span>
+            <Button variant="outline" size="sm" onClick={nextWeek}><ChevronRight className="h-4 w-4" /></Button>
+            <Button variant="outline" size="sm" onClick={goToday}>Today</Button>
+          </div>
+        }
+      >
+        <GanttCalendar
+          key={calendarKey}
+          weekStart={weekStart}
+          onBookingClick={(id) => navigate(`/booking/bookings/${id}`)}
+        />
+      </DashCard>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <ArrivalDeparturePanel type="arrivals" onActionDone={() => { refetchBookings(); setCalendarKey(k => k + 1); }} />
+        <ArrivalDeparturePanel type="departures" onActionDone={() => { refetchBookings(); setCalendarKey(k => k + 1); }} />
+      </div>
+
+      <DashCard
+        title="All Bookings"
+        bodyClass="p-0"
+        action={<Link href="/booking/bookings" className="text-xs text-[#E8621A] hover:underline">Open full list →</Link>}
+      >
+        <div className="px-4 py-3 border-b flex flex-wrap gap-3">
+          <div className="relative flex-1 min-w-[180px]">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Search ref or guest…"
+              value={search}
+              onChange={e => { setSearch(e.target.value); setPage(1); }}
+              className="pl-8 h-8 text-xs"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); setPage(1); }}>
+            <SelectTrigger className="w-[160px] h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {["All", "Draft", "PendingPayment", "PendingApproval", "Confirmed", "Active", "CheckedOut", "Cancelled"].map(s => (
+                <SelectItem key={s} value={s} className="text-xs">{s === "All" ? "All Statuses" : s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="overflow-auto">
+          <table className="w-full text-xs">
+            <thead className="bg-muted/50">
+              <tr>
+                {["Ref #", "Guest", "Space", "Check-in", "Check-out", "Nights", "Amount", "Status", "Actions"].map(h => (
+                  <th key={h} className="px-3 py-2 text-left text-muted-foreground font-medium">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {paginated.length === 0 ? (
+                <tr><td colSpan={9} className="px-3 py-6 text-center text-muted-foreground">No bookings found</td></tr>
+              ) : paginated.map(b => (
+                <tr key={b.id} className="hover:bg-muted/30">
+                  <td className="px-3 py-2 font-mono font-medium">{b.booking_ref}</td>
+                  <td className="px-3 py-2">{(b as any).contact_name ?? "—"}</td>
+                  <td className="px-3 py-2">{(b as any).space_name ?? "—"}</td>
+                  <td className="px-3 py-2">{b.check_in_date ?? "—"}</td>
+                  <td className="px-3 py-2">{b.check_out_date ?? "—"}</td>
+                  <td className="px-3 py-2">{b.stay_nights ?? "—"}</td>
+                  <td className="px-3 py-2">
+                    {b.total_rent ? `${b.currency ?? "AUD"} ${parseFloat(b.total_rent).toLocaleString()}` : "—"}
+                  </td>
+                  <td className="px-3 py-2">
+                    <Pill className={STATUS_BADGE[b.booking_status] ?? "bg-gray-100 text-gray-600"}>{b.booking_status}</Pill>
+                  </td>
+                  <td className="px-3 py-2">
+                    <Link href={`/booking/bookings/${b.id}`} className="text-[#E8621A] hover:underline">View</Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {pageCount > 1 && (
+          <div className="flex items-center justify-between px-4 py-2 border-t text-xs">
+            <span className="text-muted-foreground">
+              Showing {(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, filteredBookings.length)} of {filteredBookings.length}
+            </span>
+            <div className="flex gap-1">
+              <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>‹ Prev</Button>
+              <Button variant="outline" size="sm" disabled={page === pageCount} onClick={() => setPage(p => p + 1)}>Next ›</Button>
+            </div>
+          </div>
+        )}
+      </DashCard>
+
       <QuickBookingPanel open={quickBookingOpen} onClose={() => setQuickBookingOpen(false)} />
-    </Layout>
+    </div>
   );
 }

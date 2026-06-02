@@ -12,9 +12,6 @@ import ForgotPasswordPage from "@/pages/ForgotPassword";
 import ResetPasswordPage from "@/pages/ResetPassword";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
-import DashboardReservations from "@/pages/DashboardReservations";
-import DashboardFinance from "@/pages/DashboardFinance";
-import DashboardOperations from "@/pages/DashboardOperations";
 import { ComingSoonPage } from "@/pages/ComingSoon";
 
 // Property
@@ -155,12 +152,19 @@ function Router() {
       <Route path="/forgot-password" component={ForgotPasswordPage} />
       <Route path="/reset-password" component={ResetPasswordPage} />
 
-      {/* ── Dashboard ──────────────────────────────────── */}
+      {/* ── Dashboard (single page, tabbed) ─────────────── */}
       <Route path="/" component={Dashboard} />
       <Route path="/dashboard" component={Dashboard} />
-      <Route path="/dashboard/reservations" component={DashboardReservations} />
-      <Route path="/dashboard/finance" component={DashboardFinance} />
-      <Route path="/dashboard/operations" component={DashboardOperations} />
+      {/* Legacy dashboard routes → unified tabbed dashboard */}
+      <Route path="/dashboard/reservations">
+        {() => <Redirect to="/dashboard?tab=reservations" />}
+      </Route>
+      <Route path="/dashboard/finance">
+        {() => <Redirect to="/dashboard?tab=finance" />}
+      </Route>
+      <Route path="/dashboard/operations">
+        {() => <Redirect to="/dashboard?tab=operations" />}
+      </Route>
 
       {/* ── ACCOUNT ───────────────────────────────────── */}
       <Route path="/account/contacts" component={ContactList} />
