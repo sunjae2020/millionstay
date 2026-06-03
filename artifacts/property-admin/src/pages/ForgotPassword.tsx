@@ -1,5 +1,6 @@
 import { useState, FormEvent } from "react";
 import { Link } from "wouter";
+import { useTranslation, Trans } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Mail } from "lucide-react";
@@ -9,6 +10,7 @@ import logoSrc from "/millionstay-logo.png";
 const BRAND = "#E8621A";
 
 export default function ForgotPasswordPage() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -26,12 +28,12 @@ export default function ForgotPasswordPage() {
       });
       const data = await res.json();
       if (!data.success) {
-        setError(data.error ?? "Something went wrong. Please try again.");
+        setError(data.error ?? t("forgot_password.error_generic"));
       } else {
         setSubmitted(true);
       }
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(t("forgot_password.error_generic"));
     } finally {
       setLoading(false);
     }
@@ -51,7 +53,7 @@ export default function ForgotPasswordPage() {
 
         <div className="relative z-10">
           <img src={logoSrc} alt="MillionStay" className="h-9 w-auto" />
-          <p className="text-white/30 text-[10px] tracking-[0.2em] uppercase mt-2 ml-0.5">Admin Portal</p>
+          <p className="text-white/30 text-[10px] tracking-[0.2em] uppercase mt-2 ml-0.5">{t("forgot_password.admin_portal")}</p>
         </div>
 
         <div className="relative z-10 space-y-4">
@@ -59,16 +61,16 @@ export default function ForgotPasswordPage() {
             <Mail className="h-7 w-7" style={{ color: BRAND }} />
           </div>
           <h2 className="text-[2rem] font-bold text-white leading-[1.2]">
-            Forgot your<br />
-            <span style={{ color: BRAND }}>password?</span>
+            {t("forgot_password.brand_heading_line1")}<br />
+            <span style={{ color: BRAND }}>{t("forgot_password.brand_heading_line2")}</span>
           </h2>
           <p className="text-white/45 text-sm leading-relaxed max-w-[260px]">
-            No worries. Enter your registered email address and we'll send you a secure link to reset your password.
+            {t("forgot_password.brand_subtitle")}
           </p>
         </div>
 
         <div className="relative z-10">
-          <p className="text-white/20 text-xs">© 2026 MillionStay · All rights reserved</p>
+          <p className="text-white/20 text-xs">{t("forgot_password.copyright")}</p>
         </div>
       </div>
 
@@ -88,35 +90,39 @@ export default function ForgotPasswordPage() {
                 </div>
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-slate-900">Check your email</h1>
+                <h1 className="text-2xl font-bold text-slate-900">{t("forgot_password.success_title")}</h1>
                 <p className="text-slate-500 text-sm mt-2 leading-relaxed">
-                  If an account exists for <strong>{email}</strong>, we've sent a password reset link. Please check your inbox (and spam folder).
+                  <Trans
+                    i18nKey="forgot_password.success_message"
+                    values={{ email }}
+                    components={{ 1: <strong /> }}
+                  />
                 </p>
               </div>
               <p className="text-xs text-slate-400">
-                The link will expire in <strong>1 hour</strong>.
+                <Trans i18nKey="forgot_password.link_expiry" components={{ 1: <strong /> }} />
               </p>
               <Link
                 href="/login"
                 className="inline-flex items-center justify-center w-full h-11 rounded-lg text-sm font-semibold text-white shadow-md"
                 style={{ background: `linear-gradient(135deg, ${BRAND} 0%, #FF8C3A 100%)` }}
               >
-                Back to Sign In
+                {t("forgot_password.back_to_sign_in")}
               </Link>
             </div>
           ) : (
             <>
               <div className="mb-7">
-                <h1 className="text-2xl font-bold text-slate-900">Reset Password</h1>
+                <h1 className="text-2xl font-bold text-slate-900">{t("forgot_password.title")}</h1>
                 <p className="text-slate-500 text-sm mt-1">
-                  Enter your email and we'll send you a reset link.
+                  {t("forgot_password.subtitle")}
                 </p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-1.5">
                   <Label htmlFor="email" className="text-sm font-medium text-slate-700">
-                    Email address
+                    {t("forgot_password.email_label")}
                   </Label>
                   <Input
                     id="email"
@@ -125,7 +131,7 @@ export default function ForgotPasswordPage() {
                     required
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    placeholder="your@email.com"
+                    placeholder={t("forgot_password.email_placeholder")}
                     className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400"
                   />
                 </div>
@@ -143,16 +149,16 @@ export default function ForgotPasswordPage() {
                   style={{ background: `linear-gradient(135deg, ${BRAND} 0%, #FF8C3A 100%)` }}
                 >
                   {loading
-                    ? <><Loader2 className="h-4 w-4 animate-spin" /> Sending…</>
-                    : "Send Reset Link →"
+                    ? <><Loader2 className="h-4 w-4 animate-spin" /> {t("forgot_password.sending")}</>
+                    : t("forgot_password.send_reset_link")
                   }
                 </button>
               </form>
 
               <p className="text-center text-sm text-slate-500 mt-6">
-                Remembered it?{" "}
+                {t("forgot_password.remembered_prompt")}{" "}
                 <Link href="/login" className="font-semibold hover:underline" style={{ color: BRAND }}>
-                  Back to Sign In
+                  {t("forgot_password.back_to_sign_in")}
                 </Link>
               </p>
             </>

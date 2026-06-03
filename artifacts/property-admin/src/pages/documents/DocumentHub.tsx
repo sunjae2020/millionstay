@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
@@ -56,6 +57,7 @@ async function fetchDocuments(q: string, type: string): Promise<HubDocument[]> {
 }
 
 export default function DocumentHub() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [q, setQ] = useState("");
   const [type, setType] = useState("_all");
@@ -99,8 +101,8 @@ export default function DocumentHub() {
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch (err) {
       toast({
-        title: "PDF unavailable",
-        description: err instanceof Error ? err.message : "Failed to generate document.",
+        title: t("document_hub.pdf_unavailable", "PDF unavailable"),
+        description: err instanceof Error ? err.message : t("document_hub.pdf_generate_failed", "Failed to generate document."),
         variant: "destructive",
       });
     } finally {
@@ -111,7 +113,7 @@ export default function DocumentHub() {
   // Email the document (PDF + cover) to its recipient in the selected language.
   const handleEmail = async (doc: HubDocument) => {
     const emailUrl = doc.pdf_url.replace(/\/pdf$/, "/email");
-    if (!window.confirm(`Email this ${doc.doc_type.toLowerCase()} to its recipient?`)) return;
+    if (!window.confirm(t("document_hub.email_confirm", "Email this {{type}} to its recipient?", { type: doc.doc_type.toLowerCase() }))) return;
     const key = `${doc.doc_type}:${doc.source_id}:email`;
     setBusy(key);
     try {
@@ -122,9 +124,9 @@ export default function DocumentHub() {
       });
       const body = await res.json().catch(() => null);
       if (!res.ok) throw new Error(body?.error ?? `HTTP ${res.status}`);
-      toast({ title: "Email sent", description: `${doc.doc_type} emailed to ${body?.to ?? "recipient"}.` });
+      toast({ title: t("document_hub.email_sent", "Email sent"), description: t("document_hub.email_sent_desc", "{{type}} emailed to {{recipient}}.", { type: doc.doc_type, recipient: body?.to ?? t("document_hub.recipient", "recipient") }) });
     } catch (err) {
-      toast({ title: "Email failed", description: err instanceof Error ? err.message : "Error", variant: "destructive" });
+      toast({ title: t("document_hub.email_failed", "Email failed"), description: err instanceof Error ? err.message : t("document_hub.error", "Error"), variant: "destructive" });
     } finally {
       setBusy(null);
     }
@@ -133,28 +135,28 @@ export default function DocumentHub() {
   return (
     <Layout>
       <PageHeader
-        title="Documents"
-        subtitle={`${rows.length} document${rows.length === 1 ? "" : "s"} · invoices, receipts & contracts`}
+        title={t("document_hub.title", "Documents")}
+        subtitle={t("document_hub.subtitle", "{{count}} documents · invoices, receipts & contracts", { count: rows.length })}
       />
 
       <div className="p-6">
         <div className="flex gap-3 mb-4 flex-wrap">
           <div className="relative flex-1 min-w-[200px] max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder="Search by reference…" value={q} onChange={(e) => setQ(e.target.value)} />
+            <Input className="pl-9" placeholder={t("document_hub.search_placeholder", "Search by reference…")} value={q} onChange={(e) => setQ(e.target.value)} />
           </div>
           <Select value={type} onValueChange={setType}>
-            <SelectTrigger className="w-44"><SelectValue placeholder="Type" /></SelectTrigger>
+            <SelectTrigger className="w-44"><SelectValue placeholder={t("common.type", "Type")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All Types</SelectItem>
-              <SelectItem value="Invoice">Invoices</SelectItem>
-              <SelectItem value="Receipt">Receipts</SelectItem>
-              <SelectItem value="Quote">Quotes</SelectItem>
-              <SelectItem value="Contract">Contracts</SelectItem>
+              <SelectItem value="_all">{t("document_hub.all_types", "All Types")}</SelectItem>
+              <SelectItem value="Invoice">{t("document_hub.invoices", "Invoices")}</SelectItem>
+              <SelectItem value="Receipt">{t("document_hub.receipts", "Receipts")}</SelectItem>
+              <SelectItem value="Quote">{t("document_hub.quotes", "Quotes")}</SelectItem>
+              <SelectItem value="Contract">{t("document_hub.contracts", "Contracts")}</SelectItem>
             </SelectContent>
           </Select>
           <Select value={docLang} onValueChange={setDocLang}>
-            <SelectTrigger className="w-36"><SelectValue placeholder="Language" /></SelectTrigger>
+            <SelectTrigger className="w-36"><SelectValue placeholder={t("document_hub.language", "Language")} /></SelectTrigger>
             <SelectContent>
               <SelectItem value="en">English</SelectItem>
               <SelectItem value="ko">한국어</SelectItem>
@@ -169,21 +171,21 @@ export default function DocumentHub() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Type</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Reference</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Party</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Linked To</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Amount</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Date</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.type", "Type")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("document_hub.reference", "Reference")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("document_hub.party", "Party")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("document_hub.linked_to", "Linked To")}</th>
+                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.amount", "Amount")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.status", "Status")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.date", "Date")}</th>
                   <th className="px-4 py-3 w-32"></th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {isLoading ? (
-                  <tr><td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">Loading…</td></tr>
+                  <tr><td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">{t("common.loading", "Loading…")}</td></tr>
                 ) : rows.length === 0 ? (
-                  <tr><td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">No documents found</td></tr>
+                  <tr><td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">{t("document_hub.no_documents", "No documents found")}</td></tr>
                 ) : pagination.paginatedItems.map((doc: HubDocument) => {
                   const meta = TYPE_META[doc.doc_type] ?? TYPE_META.Invoice;
                   const Icon = meta.icon;
@@ -207,19 +209,19 @@ export default function DocumentHub() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1 justify-end">
                           <button className="p-1.5 rounded hover:bg-muted transition-colors disabled:opacity-40"
-                            title="Preview" disabled={!!busy} onClick={() => handlePdf(doc, "preview")}>
+                            title={t("document_hub.preview", "Preview")} disabled={!!busy} onClick={() => handlePdf(doc, "preview")}>
                             <Eye className="h-3.5 w-3.5 text-muted-foreground" />
                           </button>
                           <button className="p-1.5 rounded hover:bg-muted transition-colors disabled:opacity-40"
-                            title="Download PDF" disabled={!!busy} onClick={() => handlePdf(doc, "download")}>
+                            title={t("document_hub.download_pdf", "Download PDF")} disabled={!!busy} onClick={() => handlePdf(doc, "download")}>
                             <FileDown className="h-3.5 w-3.5 text-muted-foreground" />
                           </button>
                           <button className="p-1.5 rounded hover:bg-muted transition-colors disabled:opacity-40"
-                            title={`Email (${docLang.toUpperCase()})`} disabled={!!busy} onClick={() => handleEmail(doc)}>
+                            title={t("document_hub.email_lang", "Email ({{lang}})", { lang: docLang.toUpperCase() })} disabled={!!busy} onClick={() => handleEmail(doc)}>
                             <Mail className="h-3.5 w-3.5 text-muted-foreground" />
                           </button>
                           <Link href={doc.detail_url}>
-                            <button className="p-1.5 rounded hover:bg-muted transition-colors" title="Open record">
+                            <button className="p-1.5 rounded hover:bg-muted transition-colors" title={t("document_hub.open_record", "Open record")}>
                               <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
                             </button>
                           </Link>

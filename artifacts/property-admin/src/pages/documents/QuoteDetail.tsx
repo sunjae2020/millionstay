@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Layout } from "@/components/Layout";
@@ -26,6 +27,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function QuoteDetail() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const qc = useQueryClient();
@@ -103,10 +105,10 @@ export default function QuoteDetail() {
       if (!res.ok) { const b = await res.json().catch(() => null); throw new Error(b?.error ?? `HTTP ${res.status}`); }
       const saved = await res.json();
       invalidate();
-      toast({ title: "Saved", description: `Quote ${saved.quote_ref} saved.` });
+      toast({ title: t("quote.toast_saved", "Saved"), description: t("quote.toast_saved_desc", "Quote {{ref}} saved.", { ref: saved.quote_ref }) });
       if (isNew) navigate(`/documents/quotes/${saved.id}`); else refetch();
     } catch (err) {
-      toast({ title: "Save failed", description: err instanceof Error ? err.message : "Error", variant: "destructive" });
+      toast({ title: t("quote.toast_save_failed", "Save failed"), description: err instanceof Error ? err.message : t("quote.error", "Error"), variant: "destructive" });
     } finally { setSaving(false); }
   };
 
@@ -116,7 +118,7 @@ export default function QuoteDetail() {
       if (!res.ok) { const b = await res.json().catch(() => null); throw new Error(b?.error ?? `HTTP ${res.status}`); }
       invalidate(); refetch();
     } catch (err) {
-      toast({ title: "Action failed", description: err instanceof Error ? err.message : "Error", variant: "destructive" });
+      toast({ title: t("quote.toast_action_failed", "Action failed"), description: err instanceof Error ? err.message : t("quote.error", "Error"), variant: "destructive" });
     }
   };
 
@@ -136,12 +138,12 @@ export default function QuoteDetail() {
       else { const a = document.createElement("a"); a.href = url; a.download = `${quote?.quote_ref ?? "quote"}.pdf`; document.body.appendChild(a); a.click(); a.remove(); }
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch (err) {
-      toast({ title: "PDF unavailable", description: err instanceof Error ? err.message : "Error", variant: "destructive" });
+      toast({ title: t("quote.toast_pdf_unavailable", "PDF unavailable"), description: err instanceof Error ? err.message : t("quote.error", "Error"), variant: "destructive" });
     } finally { setPdfBusy(false); }
   };
 
   const convertToInvoice = async () => {
-    if (!window.confirm("Convert this quote into a draft invoice?")) return;
+    if (!window.confirm(t("quote.confirm_convert", "Convert this quote into a draft invoice?"))) return;
     try {
       const res = await apiFetch(`/api/v1/quotes/${id}/convert`, { method: "POST" });
       const body = await res.json().catch(() => null);
@@ -152,24 +154,24 @@ export default function QuoteDetail() {
         }
         throw new Error(body?.error ?? `HTTP ${res.status}`);
       }
-      toast({ title: "Converted", description: `Created invoice ${body?.invoice?.invoice_ref ?? ""}.` });
+      toast({ title: t("quote.toast_converted", "Converted"), description: t("quote.toast_converted_desc", "Created invoice {{ref}}.", { ref: body?.invoice?.invoice_ref ?? "" }) });
       navigate(`/finance/invoices/${body.invoice.id}`);
     } catch (err) {
-      toast({ title: "Convert failed", description: err instanceof Error ? err.message : "Error", variant: "destructive" });
+      toast({ title: t("quote.toast_convert_failed", "Convert failed"), description: err instanceof Error ? err.message : t("quote.error", "Error"), variant: "destructive" });
     }
   };
 
   const handleEmail = async () => {
-    if (!window.confirm("Email this quote (PDF) to the recipient?")) return;
+    if (!window.confirm(t("quote.confirm_email", "Email this quote (PDF) to the recipient?"))) return;
     setPdfBusy(true);
     try {
       const res = await apiFetch(`/api/v1/quotes/${id}/email`, { method: "POST" });
       const body = await res.json().catch(() => null);
       if (!res.ok) throw new Error(body?.error ?? `HTTP ${res.status}`);
-      toast({ title: "Email sent", description: `Quote emailed to ${body?.to ?? "recipient"}.` });
+      toast({ title: t("quote.toast_email_sent", "Email sent"), description: t("quote.toast_email_sent_desc", "Quote emailed to {{to}}.", { to: body?.to ?? t("quote.recipient_fallback", "recipient") }) });
       refetch();
     } catch (err) {
-      toast({ title: "Email failed", description: err instanceof Error ? err.message : "Error", variant: "destructive" });
+      toast({ title: t("quote.toast_email_failed", "Email failed"), description: err instanceof Error ? err.message : t("quote.error", "Error"), variant: "destructive" });
     } finally { setPdfBusy(false); }
   };
 
@@ -178,41 +180,41 @@ export default function QuoteDetail() {
       <div className="p-4 sm:p-6 max-w-4xl mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight font-mono">{isNew ? "New Quote" : quote?.quote_ref ?? "Quote"}</h1>
-            {!isNew && <p className="text-sm text-muted-foreground">Quote #{id}</p>}
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight font-mono">{isNew ? t("quote.new_quote", "New Quote") : quote?.quote_ref ?? t("quote.quote", "Quote")}</h1>
+            {!isNew && <p className="text-sm text-muted-foreground">{t("quote.quote_number", "Quote #{{id}}", { id })}</p>}
           </div>
           <div className="flex gap-2 flex-wrap">
-            <Button variant="outline" onClick={() => navigate("/documents/quotes")}><ArrowLeft className="h-4 w-4 mr-1" /> Back</Button>
+            <Button variant="outline" onClick={() => navigate("/documents/quotes")}><ArrowLeft className="h-4 w-4 mr-1" /> {t("common.back", "Back")}</Button>
             {!isNew && (
               <>
-                <Button variant="outline" disabled={pdfBusy} onClick={() => handlePdf("preview")}><Eye className="h-4 w-4 mr-1" /> Preview</Button>
-                <Button variant="outline" disabled={pdfBusy} onClick={() => handlePdf("download")}><FileDown className="h-4 w-4 mr-1" /> PDF</Button>
-                <Button variant="outline" disabled={pdfBusy} onClick={handleEmail}><Mail className="h-4 w-4 mr-1" /> Email</Button>
+                <Button variant="outline" disabled={pdfBusy} onClick={() => handlePdf("preview")}><Eye className="h-4 w-4 mr-1" /> {t("quote.preview", "Preview")}</Button>
+                <Button variant="outline" disabled={pdfBusy} onClick={() => handlePdf("download")}><FileDown className="h-4 w-4 mr-1" /> {t("quote.pdf", "PDF")}</Button>
+                <Button variant="outline" disabled={pdfBusy} onClick={handleEmail}><Mail className="h-4 w-4 mr-1" /> {t("quote.email", "Email")}</Button>
                 <DocumentVersions entityType="quote" entityId={Number(id)} freezeUrl={`/api/v1/quotes/${id}/freeze`} />
-                <Button variant="destructive" onClick={remove}><Trash2 className="h-4 w-4 mr-1" /> Delete</Button>
+                <Button variant="destructive" onClick={remove}><Trash2 className="h-4 w-4 mr-1" /> {t("common.delete", "Delete")}</Button>
               </>
             )}
-            <Button disabled={saving} onClick={save}><Save className="h-4 w-4 mr-1" /> Save</Button>
+            <Button disabled={saving} onClick={save}><Save className="h-4 w-4 mr-1" /> {t("common.save", "Save")}</Button>
           </div>
         </div>
 
         {!isNew && (
           <div className="border rounded-lg bg-white p-4 mb-4 flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">Status:</span>
+              <span className="text-sm font-medium text-muted-foreground">{t("quote.status_label", "Status:")}</span>
               <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusColors[status] ?? "bg-gray-100 text-gray-600"}`}>{status}</span>
             </div>
             <div className="flex gap-2 sm:ml-auto flex-wrap">
-              {status === "Draft" && <Button onClick={() => transition("send")}>Send</Button>}
-              {status === "Sent" && <Button className="bg-green-600 hover:bg-green-700" onClick={() => transition("accept")}>Mark Accepted</Button>}
-              {status === "Sent" && <Button variant="outline" className="text-red-600 border-red-200" onClick={() => transition("decline")}>Decline</Button>}
+              {status === "Draft" && <Button onClick={() => transition("send")}>{t("common.send", "Send")}</Button>}
+              {status === "Sent" && <Button className="bg-green-600 hover:bg-green-700" onClick={() => transition("accept")}>{t("quote.mark_accepted", "Mark Accepted")}</Button>}
+              {status === "Sent" && <Button variant="outline" className="text-red-600 border-red-200" onClick={() => transition("decline")}>{t("quote.decline", "Decline")}</Button>}
               {quote?.converted_invoice_id ? (
                 <Button variant="outline" onClick={() => navigate(`/finance/invoices/${quote.converted_invoice_id}`)}>
-                  <FileTextIcon className="h-4 w-4 mr-1" /> View Invoice
+                  <FileTextIcon className="h-4 w-4 mr-1" /> {t("quote.view_invoice", "View Invoice")}
                 </Button>
               ) : (status === "Sent" || status === "Accepted") && (
                 <Button className="bg-[#E8621A] hover:bg-[#d4561a] text-white" onClick={convertToInvoice}>
-                  <FileTextIcon className="h-4 w-4 mr-1" /> Convert to Invoice
+                  <FileTextIcon className="h-4 w-4 mr-1" /> {t("quote.convert_to_invoice", "Convert to Invoice")}
                 </Button>
               )}
             </div>
@@ -221,58 +223,58 @@ export default function QuoteDetail() {
 
         <div className="space-y-4">
           <div className="border rounded-lg bg-white p-4 sm:p-6">
-            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Recipient</h2>
+            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">{t("quote.recipient", "Recipient")}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <Label>Account</Label>
+                <Label>{t("quote.account", "Account")}</Label>
                 <LookupSelect lookupUrl="/api/v1/lookup/accounts" value={accountId} onChange={setAccountId}
-                  placeholder="Search accounts…" displayValue={quote?.account_name ?? null} />
+                  placeholder={t("quote.search_accounts", "Search accounts…")} displayValue={quote?.account_name ?? null} />
               </div>
               <div>
-                <Label>Lead</Label>
-                <LookupSelect lookupUrl="/api/v1/lookup/leads" value={leadId} onChange={setLeadId} placeholder="Search leads…" />
+                <Label>{t("quote.lead", "Lead")}</Label>
+                <LookupSelect lookupUrl="/api/v1/lookup/leads" value={leadId} onChange={setLeadId} placeholder={t("quote.search_leads", "Search leads…")} />
               </div>
               <div>
-                <Label>Space</Label>
+                <Label>{t("quote.space", "Space")}</Label>
                 <LookupSelect lookupUrl="/api/v1/lookup/spaces" value={spaceId} onChange={setSpaceId}
-                  placeholder="Search spaces…" displayValue={quote?.space_name ?? null} />
+                  placeholder={t("quote.search_spaces", "Search spaces…")} displayValue={quote?.space_name ?? null} />
               </div>
             </div>
           </div>
 
           <div className="border rounded-lg bg-white p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide">Line Items</h2>
-              <Button type="button" size="sm" variant="outline" onClick={addItem}><Plus className="h-3.5 w-3.5 mr-1" /> Add Item</Button>
+              <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide">{t("quote.line_items", "Line Items")}</h2>
+              <Button type="button" size="sm" variant="outline" onClick={addItem}><Plus className="h-3.5 w-3.5 mr-1" /> {t("quote.add_item", "Add Item")}</Button>
             </div>
             <div className="space-y-2">
               <div className="hidden sm:grid grid-cols-12 gap-2 text-xs uppercase text-muted-foreground px-1">
-                <div className="col-span-6">Description</div><div className="col-span-2 text-right">Qty</div>
-                <div className="col-span-2 text-right">Unit Price</div><div className="col-span-2 text-right">Amount</div>
+                <div className="col-span-6">{t("common.description", "Description")}</div><div className="col-span-2 text-right">{t("quote.qty", "Qty")}</div>
+                <div className="col-span-2 text-right">{t("quote.unit_price", "Unit Price")}</div><div className="col-span-2 text-right">{t("common.amount", "Amount")}</div>
               </div>
               {items.map((it, idx) => (
                 <div key={idx} className="grid grid-cols-12 gap-2 items-center">
-                  <Input className="col-span-12 sm:col-span-6" placeholder="Item description" value={it.name} onChange={(e) => updateItem(idx, { name: e.target.value })} />
+                  <Input className="col-span-12 sm:col-span-6" placeholder={t("quote.item_description", "Item description")} value={it.name} onChange={(e) => updateItem(idx, { name: e.target.value })} />
                   <Input className="col-span-4 sm:col-span-2 text-right" type="number" min="1" value={it.quantity} onChange={(e) => updateItem(idx, { quantity: Number(e.target.value) })} />
                   <Input className="col-span-5 sm:col-span-2 text-right" type="number" step="0.01" value={it.unit_price} onChange={(e) => updateItem(idx, { unit_price: Number(e.target.value) })} />
                   <div className="col-span-2 sm:col-span-1 text-right text-sm tabular-nums">{((Number(it.unit_price) || 0) * (Number(it.quantity) || 0)).toLocaleString("en-AU", { minimumFractionDigits: 2 })}</div>
-                  <button className="col-span-1 text-red-500 hover:text-red-700" onClick={() => removeItem(idx)} title="Remove"><Trash2 className="h-4 w-4 mx-auto" /></button>
+                  <button className="col-span-1 text-red-500 hover:text-red-700" onClick={() => removeItem(idx)} title={t("quote.remove", "Remove")}><Trash2 className="h-4 w-4 mx-auto" /></button>
                 </div>
               ))}
             </div>
             <div className="flex justify-end mt-4 pt-4 border-t">
               <div className="text-right">
-                <span className="text-sm text-muted-foreground mr-3">Total</span>
+                <span className="text-sm text-muted-foreground mr-3">{t("common.total", "Total")}</span>
                 <span className="text-lg font-bold">{total.toLocaleString("en-AU", { minimumFractionDigits: 2 })} {currency}</span>
               </div>
             </div>
           </div>
 
           <div className="border rounded-lg bg-white p-4 sm:p-6">
-            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Details</h2>
+            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">{t("quote.details", "Details")}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label>Currency</Label>
+                <Label>{t("quote.currency", "Currency")}</Label>
                 <Select value={currency} onValueChange={setCurrency}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -282,16 +284,16 @@ export default function QuoteDetail() {
                 </Select>
               </div>
               <div>
-                <Label>Valid Until</Label>
+                <Label>{t("quote.valid_until", "Valid Until")}</Label>
                 <DateInput value={validUntil} onChange={setValidUntil} />
               </div>
               <div className="sm:col-span-2">
-                <Label>Description</Label>
-                <Input placeholder="Quote summary…" value={description} onChange={(e) => setDescription(e.target.value)} />
+                <Label>{t("common.description", "Description")}</Label>
+                <Input placeholder={t("quote.description_placeholder", "Quote summary…")} value={description} onChange={(e) => setDescription(e.target.value)} />
               </div>
               <div className="sm:col-span-2">
-                <Label>Notes</Label>
-                <Textarea rows={3} placeholder="Notes shown on the quote…" value={notes} onChange={(e) => setNotes(e.target.value)} />
+                <Label>{t("common.notes", "Notes")}</Label>
+                <Textarea rows={3} placeholder={t("quote.notes_placeholder", "Notes shown on the quote…")} value={notes} onChange={(e) => setNotes(e.target.value)} />
               </div>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, useParams } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Layout, PageHeader } from "@/components/Layout";
@@ -43,6 +44,11 @@ const EMPTY_LANG_DATA: LangData = {
 };
 
 const STATUS_OPTIONS = ["Draft", "Published", "Archived"];
+const STATUS_LABEL_KEYS: Record<string, string> = {
+  Draft: "blog.status_draft",
+  Published: "blog.status_published",
+  Archived: "blog.status_archived",
+};
 const CATEGORY_OPTIONS = ["Tips & Guides", "Student Life", "Melbourne", "Housing", "News", "Lifestyle"];
 
 function slugify(text: string) {
@@ -50,6 +56,7 @@ function slugify(text: string) {
 }
 
 function RichTextEditor({ value, onChange }: { value: string; onChange: (html: string) => void }) {
+  const { t } = useTranslation();
   const editorRef = useRef<HTMLDivElement>(null);
   const [preview, setPreview] = useState(false);
 
@@ -66,78 +73,78 @@ function RichTextEditor({ value, onChange }: { value: string; onChange: (html: s
   };
 
   const insertLink = () => {
-    const url = window.prompt("Enter URL:");
+    const url = window.prompt(t("blog.enter_url"));
     if (url) exec("createLink", url);
   };
 
   const insertImage = () => {
-    const url = window.prompt("Enter image URL:");
+    const url = window.prompt(t("blog.enter_image_url"));
     if (url) exec("insertImage", url);
   };
 
   return (
     <div className="border rounded-lg overflow-hidden bg-white">
       <div className="flex flex-wrap items-center gap-0.5 p-2 border-b bg-muted/30">
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("bold")} title="Bold">
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("bold")} title={t("blog.editor_bold")}>
           <Bold className="h-3.5 w-3.5" />
         </Button>
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("italic")} title="Italic">
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("italic")} title={t("blog.editor_italic")}>
           <Italic className="h-3.5 w-3.5" />
         </Button>
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("underline")} title="Underline">
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("underline")} title={t("blog.editor_underline")}>
           <Underline className="h-3.5 w-3.5" />
         </Button>
         <Separator orientation="vertical" className="h-5 mx-1" />
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("formatBlock", "h2")} title="Heading 2">
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("formatBlock", "h2")} title={t("blog.editor_heading2")}>
           <Heading2 className="h-3.5 w-3.5" />
         </Button>
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("formatBlock", "h3")} title="Heading 3">
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("formatBlock", "h3")} title={t("blog.editor_heading3")}>
           <Heading3 className="h-3.5 w-3.5" />
         </Button>
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("formatBlock", "p")} title="Paragraph">
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("formatBlock", "p")} title={t("blog.editor_paragraph")}>
           <AlignLeft className="h-3.5 w-3.5" />
         </Button>
         <Separator orientation="vertical" className="h-5 mx-1" />
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("justifyLeft")} title="Align Left">
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("justifyLeft")} title={t("blog.editor_align_left")}>
           <AlignLeft className="h-3.5 w-3.5" />
         </Button>
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("justifyCenter")} title="Align Center">
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("justifyCenter")} title={t("blog.editor_align_center")}>
           <AlignCenter className="h-3.5 w-3.5" />
         </Button>
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("justifyRight")} title="Align Right">
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("justifyRight")} title={t("blog.editor_align_right")}>
           <AlignRight className="h-3.5 w-3.5" />
         </Button>
         <Separator orientation="vertical" className="h-5 mx-1" />
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("insertUnorderedList")} title="Bullet List">
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("insertUnorderedList")} title={t("blog.editor_bullet_list")}>
           <List className="h-3.5 w-3.5" />
         </Button>
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("insertOrderedList")} title="Numbered List">
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("insertOrderedList")} title={t("blog.editor_numbered_list")}>
           <ListOrdered className="h-3.5 w-3.5" />
         </Button>
         <Separator orientation="vertical" className="h-5 mx-1" />
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={insertLink} title="Insert Link">
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={insertLink} title={t("blog.editor_insert_link")}>
           <LinkIcon className="h-3.5 w-3.5" />
         </Button>
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={insertImage} title="Insert Image">
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={insertImage} title={t("blog.editor_insert_image")}>
           <Image className="h-3.5 w-3.5" />
         </Button>
         <Separator orientation="vertical" className="h-5 mx-1" />
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("undo")} title="Undo">
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("undo")} title={t("blog.editor_undo")}>
           <Undo className="h-3.5 w-3.5" />
         </Button>
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("redo")} title="Redo">
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("redo")} title={t("blog.editor_redo")}>
           <Redo className="h-3.5 w-3.5" />
         </Button>
         <div className="ml-auto">
           <Button type="button" size="sm" variant="ghost" className="h-7 gap-1.5 text-xs" onClick={() => setPreview(!preview)}>
-            {preview ? <><EyeOff className="h-3.5 w-3.5" />Edit</> : <><Eye className="h-3.5 w-3.5" />Preview</>}
+            {preview ? <><EyeOff className="h-3.5 w-3.5" />{t("blog.editor_edit")}</> : <><Eye className="h-3.5 w-3.5" />{t("blog.editor_preview")}</>}
           </Button>
         </div>
       </div>
       {preview ? (
         <div
           className="min-h-[320px] p-4 prose prose-sm max-w-none"
-          dangerouslySetInnerHTML={{ __html: value || "<p class='text-muted-foreground italic'>No content yet</p>" }}
+          dangerouslySetInnerHTML={{ __html: value || `<p class='text-muted-foreground italic'>${t("blog.no_content_yet")}</p>` }}
         />
       ) : (
         <div
@@ -153,16 +160,17 @@ function RichTextEditor({ value, onChange }: { value: string; onChange: (html: s
 }
 
 function SeoPreview({ title, description, slug }: { title: string; description: string; slug: string }) {
+  const { t } = useTranslation();
   const url = `millionstay.com.au/blog/${slug}`;
   return (
     <div className="border rounded-lg p-4 bg-white">
-      <p className="text-xs text-muted-foreground mb-2">Search Engine Preview</p>
+      <p className="text-xs text-muted-foreground mb-2">{t("blog.search_engine_preview")}</p>
       <div className="text-green-700 text-xs mb-0.5">{url}</div>
       <div className="text-[#1a0dab] text-base hover:underline cursor-pointer line-clamp-1">
-        {title || "Page Title"}
+        {title || t("blog.page_title")}
       </div>
       <div className="text-sm text-muted-foreground line-clamp-2">
-        {description || "Page description will appear here…"}
+        {description || t("blog.page_description_placeholder")}
       </div>
     </div>
   );
@@ -175,6 +183,7 @@ const EMPTY_FORM = {
 };
 
 export default function BlogDetail() {
+  const { t } = useTranslation();
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -245,7 +254,7 @@ export default function BlogDetail() {
 
   const handleSave = async () => {
     if (!form.title.trim() || !form.slug.trim()) {
-      toast({ title: "Title and Slug are required", variant: "destructive" });
+      toast({ title: t("blog.title_slug_required"), variant: "destructive" });
       return;
     }
     setIsSaving(true);
@@ -266,10 +275,10 @@ export default function BlogDetail() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to save");
       qc.invalidateQueries({ queryKey: ["blog-posts"] });
-      toast({ title: isNew ? "Blog post created" : "Blog post updated" });
+      toast({ title: isNew ? t("blog.post_created") : t("blog.post_updated") });
       if (isNew) navigate(`/content/blog/${data.id}`);
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: t("blog.error"), description: err.message, variant: "destructive" });
     } finally {
       setIsSaving(false);
     }
@@ -280,10 +289,10 @@ export default function BlogDetail() {
       const res = await apiFetch(`/api/v1/blog-posts/${params.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete");
       qc.invalidateQueries({ queryKey: ["blog-posts"] });
-      toast({ title: "Blog post archived" });
+      toast({ title: t("blog.post_archived") });
       navigate("/content/blog");
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: t("blog.error"), description: err.message, variant: "destructive" });
     }
     setDeleteOpen(false);
   };
@@ -307,13 +316,13 @@ export default function BlogDetail() {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <FileText className="h-5 w-5" />
-            {isNew ? "New Blog Post" : form.title || "Edit Post"}
+            {isNew ? t("blog.new_blog_post") : form.title || t("blog.edit_post")}
           </div>
         }
         subtitle={!isNew && post ? (
           <div className="flex items-center gap-2">
             <Badge className={`text-[10px] ${post.status === "Published" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
-              {form.status}
+              {STATUS_LABEL_KEYS[form.status] ? t(STATUS_LABEL_KEYS[form.status]) : form.status}
             </Badge>
             <span className="text-xs text-muted-foreground">/{form.slug}</span>
           </div>
@@ -322,12 +331,12 @@ export default function BlogDetail() {
           <div className="flex items-center gap-2">
             {!isNew && (
               <Button variant="outline" size="sm" className="text-destructive border-destructive/30 hover:bg-destructive/5 gap-1.5" onClick={() => setDeleteOpen(true)}>
-                <Trash2 className="h-3.5 w-3.5" /> Archive
+                <Trash2 className="h-3.5 w-3.5" /> {t("blog.archive")}
               </Button>
             )}
             <Button size="sm" onClick={handleSave} disabled={isSaving} className="gap-1.5">
               {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-              {isSaving ? "Saving…" : "Save"}
+              {isSaving ? t("common.saving") : t("common.save")}
             </Button>
           </div>
         }
@@ -336,67 +345,67 @@ export default function BlogDetail() {
       <div className="p-6">
         <Tabs defaultValue="content" className="w-full">
           <TabsList className="mb-6">
-            <TabsTrigger value="content" className="gap-1.5"><FileText className="h-3.5 w-3.5" />Content</TabsTrigger>
-            <TabsTrigger value="settings" className="gap-1.5"><Globe className="h-3.5 w-3.5" />Settings</TabsTrigger>
-            <TabsTrigger value="seo" className="gap-1.5"><Search className="h-3.5 w-3.5" />SEO</TabsTrigger>
-            <TabsTrigger value="translations" className="gap-1.5"><Languages className="h-3.5 w-3.5" />Translations</TabsTrigger>
+            <TabsTrigger value="content" className="gap-1.5"><FileText className="h-3.5 w-3.5" />{t("blog.tab_content")}</TabsTrigger>
+            <TabsTrigger value="settings" className="gap-1.5"><Globe className="h-3.5 w-3.5" />{t("blog.tab_settings")}</TabsTrigger>
+            <TabsTrigger value="seo" className="gap-1.5"><Search className="h-3.5 w-3.5" />{t("blog.tab_seo")}</TabsTrigger>
+            <TabsTrigger value="translations" className="gap-1.5"><Languages className="h-3.5 w-3.5" />{t("blog.tab_translations")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="content" className="space-y-5">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               <div>
-                <Label>Title <span className="text-destructive">*</span></Label>
+                <Label>{t("blog.field_title")} <span className="text-destructive">*</span></Label>
                 <Input
                   className="mt-1"
                   value={form.title}
                   onChange={(e) => set("title", e.target.value)}
-                  placeholder="Enter blog post title…"
+                  placeholder={t("blog.title_placeholder")}
                 />
               </div>
               <div>
-                <Label>Slug <span className="text-destructive">*</span></Label>
+                <Label>{t("blog.field_slug")} <span className="text-destructive">*</span></Label>
                 <div className="flex items-center mt-1 gap-2">
                   <span className="text-sm text-muted-foreground whitespace-nowrap">/blog/</span>
                   <Input
                     value={form.slug}
                     onChange={(e) => { setSlugManuallyEdited(true); set("slug", slugify(e.target.value)); }}
-                    placeholder="my-blog-post"
+                    placeholder={t("blog.slug_placeholder")}
                   />
                 </div>
               </div>
             </div>
 
             <div>
-              <Label>Excerpt</Label>
+              <Label>{t("blog.field_excerpt")}</Label>
               <Textarea
                 className="mt-1 resize-none"
                 rows={3}
                 value={form.excerpt}
                 onChange={(e) => set("excerpt", e.target.value)}
-                placeholder="Brief description shown in blog listing…"
+                placeholder={t("blog.excerpt_placeholder")}
               />
             </div>
 
             <div>
-              <Label className="mb-2 block">Cover Image</Label>
+              <Label className="mb-2 block">{t("blog.field_cover_image")}</Label>
               <div className="flex gap-3 items-start">
                 <Input
                   value={form.cover_image_url}
                   onChange={(e) => set("cover_image_url", e.target.value)}
-                  placeholder="https://… (image URL)"
+                  placeholder={t("blog.cover_image_placeholder")}
                   className="flex-1"
                 />
                 {form.cover_image_url && (
                   <div className="w-24 h-16 rounded-lg overflow-hidden border flex-shrink-0">
-                    <img src={form.cover_image_url} alt="Cover" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                    <img src={form.cover_image_url} alt={t("blog.cover_alt")} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                   </div>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Paste a Cloudinary or external image URL. Recommended: 1200×630px.</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("blog.cover_image_hint")}</p>
             </div>
 
             <div>
-              <Label className="mb-2 block">Content</Label>
+              <Label className="mb-2 block">{t("blog.field_content")}</Label>
               <RichTextEditor value={form.content} onChange={(html) => setForm((prev) => ({ ...prev, content: html }))} />
             </div>
           </TabsContent>
@@ -404,18 +413,18 @@ export default function BlogDetail() {
           <TabsContent value="settings" className="space-y-5 max-w-2xl">
             <div className="grid grid-cols-2 gap-5">
               <div>
-                <Label>Status</Label>
+                <Label>{t("common.status")}</Label>
                 <Select value={form.status} onValueChange={(v) => set("status", v)}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {STATUS_OPTIONS.map((s) => (
-                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                      <SelectItem key={s} value={s}>{t(STATUS_LABEL_KEYS[s] ?? s)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>Published Date</Label>
+                <Label>{t("blog.field_published_date")}</Label>
                 <Input
                   type="datetime-local"
                   className="mt-1"
@@ -427,31 +436,31 @@ export default function BlogDetail() {
 
             <div className="grid grid-cols-2 gap-5">
               <div>
-                <Label>Category</Label>
+                <Label>{t("blog.field_category")}</Label>
                 <Select value={form.category || "_none"} onValueChange={(v) => set("category", v === "_none" ? "" : v)}>
-                  <SelectTrigger className="mt-1"><SelectValue placeholder="Select category…" /></SelectTrigger>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder={t("blog.select_category")} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="_none">No category</SelectItem>
+                    <SelectItem value="_none">{t("blog.no_category")}</SelectItem>
                     {CATEGORY_OPTIONS.map((c) => (
                       <SelectItem key={c} value={c}>{c}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground mt-1">Or type a custom category below</p>
+                <p className="text-xs text-muted-foreground mt-1">{t("blog.custom_category_hint")}</p>
                 <Input
                   className="mt-1"
                   value={form.category}
                   onChange={(e) => set("category", e.target.value)}
-                  placeholder="Custom category…"
+                  placeholder={t("blog.custom_category_placeholder")}
                 />
               </div>
               <div>
-                <Label>Author</Label>
+                <Label>{t("blog.field_author")}</Label>
                 <Input
                   className="mt-1"
                   value={form.author}
                   onChange={(e) => set("author", e.target.value)}
-                  placeholder="Author name…"
+                  placeholder={t("blog.author_placeholder")}
                 />
               </div>
             </div>
@@ -459,7 +468,7 @@ export default function BlogDetail() {
 
           <TabsContent value="seo" className="space-y-5 max-w-2xl">
             <div className="rounded-lg bg-blue-50 border border-blue-200 p-3 text-sm text-blue-800">
-              <strong>SEO</strong> — These fields control how your post appears in search engine results. Leave blank to use the post title and excerpt.
+              <strong>{t("blog.tab_seo")}</strong> — {t("blog.seo_info")}
             </div>
 
             <SeoPreview
@@ -469,45 +478,45 @@ export default function BlogDetail() {
             />
 
             <div>
-              <Label>SEO Title</Label>
+              <Label>{t("blog.field_seo_title")}</Label>
               <Input
                 className="mt-1"
                 value={form.seo_title}
                 onChange={(e) => set("seo_title", e.target.value)}
-                placeholder="SEO-optimised title (50–60 characters recommended)"
+                placeholder={t("blog.seo_title_placeholder")}
                 maxLength={70}
               />
-              <p className="text-xs text-muted-foreground mt-1">{form.seo_title.length}/70 characters</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("blog.char_count", { count: form.seo_title.length, max: 70 })}</p>
             </div>
 
             <div>
-              <Label>Meta Description</Label>
+              <Label>{t("blog.field_meta_description")}</Label>
               <Textarea
                 className="mt-1 resize-none"
                 rows={3}
                 value={form.seo_description}
                 onChange={(e) => set("seo_description", e.target.value)}
-                placeholder="Brief description for search results (150–160 characters recommended)"
+                placeholder={t("blog.meta_description_placeholder")}
                 maxLength={200}
               />
-              <p className="text-xs text-muted-foreground mt-1">{form.seo_description.length}/200 characters</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("blog.char_count", { count: form.seo_description.length, max: 200 })}</p>
             </div>
 
             <div>
-              <Label>Keywords</Label>
+              <Label>{t("blog.field_keywords")}</Label>
               <Input
                 className="mt-1"
                 value={form.seo_keywords}
                 onChange={(e) => set("seo_keywords", e.target.value)}
-                placeholder="student accommodation, Melbourne, housing, international students"
+                placeholder={t("blog.keywords_placeholder")}
               />
-              <p className="text-xs text-muted-foreground mt-1">Comma-separated keywords relevant to this post.</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("blog.keywords_hint")}</p>
             </div>
           </TabsContent>
 
           <TabsContent value="translations">
             <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800 mb-4">
-              <strong>Translations</strong> — Enter translated versions of your post for each supported language. These will be served to users based on their selected language. Save the main post (top-right Save button) to store all translations together.
+              <strong>{t("blog.tab_translations")}</strong> — {t("blog.translations_info")}
             </div>
 
             <Tabs defaultValue="ko">
@@ -517,7 +526,7 @@ export default function BlogDetail() {
                   return (
                     <TabsTrigger key={lang.code} value={lang.code} className="gap-1.5 relative">
                       <span>{lang.flag}</span>
-                      <span>{lang.label}</span>
+                      <span>{t(`blog.lang_${lang.code}`)}</span>
                       {hasData && (
                         <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-green-500" />
                       )}
@@ -528,6 +537,7 @@ export default function BlogDetail() {
 
               {LANGUAGES.map((lang) => {
                 const langData: LangData = translations[lang.code] ?? EMPTY_LANG_DATA;
+                const langLabel = t(`blog.lang_${lang.code}`);
                 const setLang = (field: keyof LangData, val: string) => {
                   setTranslations((prev) => ({
                     ...prev,
@@ -538,32 +548,32 @@ export default function BlogDetail() {
                   <TabsContent key={lang.code} value={lang.code} className="space-y-5">
                     <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
                       <span className="text-xl">{lang.flag}</span>
-                      {lang.label} — fill in translated content below
+                      {t("blog.lang_fill_in", { lang: langLabel })}
                     </div>
 
                     <div>
-                      <Label>Title ({lang.label})</Label>
+                      <Label>{t("blog.field_title")} ({langLabel})</Label>
                       <Input
                         className="mt-1"
                         value={langData.title}
                         onChange={(e) => setLang("title", e.target.value)}
-                        placeholder={`Translated title in ${lang.label}…`}
+                        placeholder={t("blog.translated_title_placeholder", { lang: langLabel })}
                       />
                     </div>
 
                     <div>
-                      <Label>Excerpt ({lang.label})</Label>
+                      <Label>{t("blog.field_excerpt")} ({langLabel})</Label>
                       <Textarea
                         className="mt-1 resize-none"
                         rows={2}
                         value={langData.excerpt}
                         onChange={(e) => setLang("excerpt", e.target.value)}
-                        placeholder={`Brief summary in ${lang.label}…`}
+                        placeholder={t("blog.translated_excerpt_placeholder", { lang: langLabel })}
                       />
                     </div>
 
                     <div>
-                      <Label className="mb-2 block">Content ({lang.label})</Label>
+                      <Label className="mb-2 block">{t("blog.field_content")} ({langLabel})</Label>
                       <RichTextEditor
                         key={`rte-${lang.code}`}
                         value={langData.content}
@@ -572,7 +582,7 @@ export default function BlogDetail() {
                     </div>
 
                     <Separator />
-                    <p className="text-sm font-medium text-muted-foreground">SEO — {lang.label}</p>
+                    <p className="text-sm font-medium text-muted-foreground">{t("blog.tab_seo")} — {langLabel}</p>
 
                     <SeoPreview
                       title={langData.seo_title || langData.title || form.title}
@@ -581,33 +591,33 @@ export default function BlogDetail() {
                     />
 
                     <div>
-                      <Label>SEO Title ({lang.label})</Label>
+                      <Label>{t("blog.field_seo_title")} ({langLabel})</Label>
                       <Input
                         className="mt-1"
                         value={langData.seo_title}
                         onChange={(e) => setLang("seo_title", e.target.value)}
-                        placeholder="SEO title…"
+                        placeholder={t("blog.seo_title_short_placeholder")}
                         maxLength={70}
                       />
                     </div>
                     <div>
-                      <Label>Meta Description ({lang.label})</Label>
+                      <Label>{t("blog.field_meta_description")} ({langLabel})</Label>
                       <Textarea
                         className="mt-1 resize-none"
                         rows={2}
                         value={langData.seo_description}
                         onChange={(e) => setLang("seo_description", e.target.value)}
-                        placeholder="Meta description…"
+                        placeholder={t("blog.meta_description_short_placeholder")}
                         maxLength={200}
                       />
                     </div>
                     <div>
-                      <Label>Keywords ({lang.label})</Label>
+                      <Label>{t("blog.field_keywords")} ({langLabel})</Label>
                       <Input
                         className="mt-1"
                         value={langData.seo_keywords}
                         onChange={(e) => setLang("seo_keywords", e.target.value)}
-                        placeholder="Comma-separated keywords…"
+                        placeholder={t("blog.keywords_short_placeholder")}
                       />
                     </div>
                   </TabsContent>
@@ -621,15 +631,15 @@ export default function BlogDetail() {
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Archive this post?</AlertDialogTitle>
+            <AlertDialogTitle>{t("blog.archive_this_post")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will archive the post and hide it from the public site. You can restore it by changing the status back to Published.
+              {t("blog.archive_confirm_description")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <Button variant="outline" className="border-amber-300 text-amber-700 hover:bg-amber-50" onClick={handleDelete}>
-              Archive Post
+              {t("blog.archive_post")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

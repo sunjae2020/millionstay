@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/apiFetch";
@@ -61,6 +62,7 @@ type Banner =
   | null;
 
 export default function DbSync() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [info, setInfo] = useState<SeedInfo | null>(null);
   const [loadingInfo, setLoadingInfo] = useState(true);
@@ -77,10 +79,10 @@ export default function DbSync() {
       if (res.ok && data.success) {
         setInfo(data.info);
       } else {
-        setBanner({ kind: "error", text: data?.error?.message ?? "Failed to load snapshot info" });
+        setBanner({ kind: "error", text: data?.error?.message ?? t("settings_dbsync.load_info_failed") });
       }
     } catch (err: any) {
-      setBanner({ kind: "error", text: err?.message ?? "Failed to load snapshot info" });
+      setBanner({ kind: "error", text: err?.message ?? t("settings_dbsync.load_info_failed") });
     } finally {
       setLoadingInfo(false);
     }
@@ -109,24 +111,23 @@ export default function DbSync() {
         setInfo(data.info);
         setBanner({
           kind: "success",
-          text: `Snapshot generated successfully (${formatBytes(data.info.sizeBytes)}, ${formatNumber(data.info.insertCount)} INSERTs).`,
+          text: t("settings_dbsync.export_success", {
+            size: formatBytes(data.info.sizeBytes),
+            inserts: formatNumber(data.info.insertCount),
+          }),
         });
       } else {
-        setBanner({ kind: "error", text: data?.error?.message ?? "Export failed" });
+        setBanner({ kind: "error", text: data?.error?.message ?? t("settings_dbsync.export_failed") });
       }
     } catch (err: any) {
-      setBanner({ kind: "error", text: err?.message ?? "Export failed" });
+      setBanner({ kind: "error", text: err?.message ?? t("settings_dbsync.export_failed") });
     } finally {
       setExporting(false);
     }
   }
 
   async function handleImport() {
-    if (
-      !window.confirm(
-        "This will TRUNCATE all data in the current database and replace it with the snapshot. This action cannot be undone. Continue?",
-      )
-    ) {
+    if (!window.confirm(t("settings_dbsync.import_confirm"))) {
       return;
     }
     setBanner(null);
@@ -143,7 +144,14 @@ export default function DbSync() {
         setImportResult(data.result);
         setBanner({
           kind: "success",
-          text: `Snapshot imported successfully (${data.result.executed} of ${data.result.total} statements applied${data.result.errors ? `, ${data.result.errors} errors` : ""}).`,
+          text:
+            t("settings_dbsync.import_success", {
+              executed: data.result.executed,
+              total: data.result.total,
+            }) +
+            (data.result.errors
+              ? " " + t("settings_dbsync.import_success_errors", { errors: data.result.errors })
+              : ""),
         });
       } else {
         // Surface rollback details when the server aborts a partial restore.
@@ -154,10 +162,10 @@ export default function DbSync() {
             total: data.error.total ?? 0,
           });
         }
-        setBanner({ kind: "error", text: data?.error?.message ?? "Import failed" });
+        setBanner({ kind: "error", text: data?.error?.message ?? t("settings_dbsync.import_failed") });
       }
     } catch (err: any) {
-      setBanner({ kind: "error", text: err?.message ?? "Import failed" });
+      setBanner({ kind: "error", text: err?.message ?? t("settings_dbsync.import_failed") });
     } finally {
       setImporting(false);
     }
@@ -165,7 +173,7 @@ export default function DbSync() {
 
   return (
     <Layout>
-      <PageHeader title="DB Sync" />
+      <PageHeader title={t("settings_dbsync.page_title")} />
 
       <div className="p-6 max-w-4xl space-y-6">
         <div>
@@ -173,10 +181,10 @@ export default function DbSync() {
             <div className="h-10 w-10 rounded-lg bg-orange-50 flex items-center justify-center">
               <Database className="h-5 w-5 text-orange-500" />
             </div>
-            <h1 className="text-2xl font-semibold text-foreground">Database Sync</h1>
+            <h1 className="text-2xl font-semibold text-foreground">{t("settings_dbsync.heading")}</h1>
           </div>
           <p className="text-sm text-muted-foreground mt-2">
-            Save the current dev DB as a snapshot, and apply it to production on deploy.
+            {t("settings_dbsync.intro")}
           </p>
         </div>
 
@@ -203,7 +211,7 @@ export default function DbSync() {
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-muted-foreground" />
               <h2 className="text-sm font-semibold text-foreground">
-                Current snapshot{" "}
+                {t("settings_dbsync.current_snapshot")}{" "}
                 <span className="font-normal text-muted-foreground">(seed-migration.sql)</span>
               </h2>
             </div>
@@ -221,30 +229,32 @@ export default function DbSync() {
           {loadingInfo && !info ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Loading…
+              {t("common.loading")}
             </div>
           ) : info && !info.exists ? (
             <div className="flex items-start gap-2 p-3 rounded-md border border-amber-200 bg-amber-50 text-sm text-amber-800">
               <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              <span>
-                No snapshot found yet. Run <strong>Step 1</strong> below to generate one.
-              </span>
+              <span>{t("settings_dbsync.no_snapshot")}</span>
             </div>
           ) : info ? (
             <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-              <Field label="File size" value={formatBytes(info.sizeBytes)} />
+              <Field label={t("settings_dbsync.field_file_size")} value={formatBytes(info.sizeBytes)} />
               <Field
-                label="Total lines"
-                value={info.lineCount != null ? `${formatNumber(info.lineCount)} lines` : "—"}
+                label={t("settings_dbsync.field_total_lines")}
+                value={
+                  info.lineCount != null
+                    ? t("settings_dbsync.lines_count", { count: formatNumber(info.lineCount) })
+                    : "—"
+                }
               />
-              <Field label="Created" value={formatDateTime(info.createdAt)} />
-              <Field label="Last modified" value={formatDateTime(info.modifiedAt)} />
+              <Field label={t("settings_dbsync.field_created")} value={formatDateTime(info.createdAt)} />
+              <Field label={t("settings_dbsync.field_last_modified")} value={formatDateTime(info.modifiedAt)} />
               <Field
-                label="INSERT statements"
+                label={t("settings_dbsync.field_insert_statements")}
                 value={info.insertCount != null ? formatNumber(info.insertCount) : "—"}
               />
               <Field
-                label="Sequence resets"
+                label={t("settings_dbsync.field_sequence_resets")}
                 value={info.setvalCount != null ? formatNumber(info.setvalCount) : "—"}
               />
             </div>
@@ -258,29 +268,24 @@ export default function DbSync() {
           <div className="flex items-center gap-2 mb-2">
             <Download className="h-4 w-4 text-muted-foreground" />
             <h2 className="text-sm font-semibold text-foreground">
-              Step 1 — Generate dev DB snapshot
+              {t("settings_dbsync.step1_title")}
             </h2>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
-            Exports the entire current database to <code className="px-1.5 py-0.5 rounded bg-muted text-xs">seed-migration.sql</code>.
-            This file is automatically applied to production on deploy.
+            {t("settings_dbsync.step1_desc_before")}
+            <code className="px-1.5 py-0.5 rounded bg-muted text-xs">seed-migration.sql</code>
+            {t("settings_dbsync.step1_desc_after")}
           </p>
 
           <div className="flex items-start gap-2 p-3 mb-4 rounded-md border border-muted bg-muted/40 text-sm text-muted-foreground">
             <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-            <span>
-              Export dumps the entire current database. It can take 30 seconds to 2 minutes
-              depending on database size.
-            </span>
+            <span>{t("settings_dbsync.step1_duration_note")}</span>
           </div>
 
           {info?.isProductionDb && (
             <div className="flex items-start gap-2 p-3 mb-4 rounded-md border border-red-200 bg-red-50 text-sm text-red-700">
               <XCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              <span>
-                Export is disabled because the API is connected to a production database.
-                Run Step 1 from the development environment only.
-              </span>
+              <span>{t("settings_dbsync.export_disabled_prod")}</span>
             </div>
           )}
 
@@ -293,12 +298,12 @@ export default function DbSync() {
             {exporting ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Generating…
+                {t("settings_dbsync.generating")}
               </>
             ) : (
               <>
                 <Download className="h-4 w-4 mr-2" />
-                Generate DB snapshot
+                {t("settings_dbsync.generate_snapshot")}
               </>
             )}
           </Button>
@@ -309,27 +314,25 @@ export default function DbSync() {
           <div className="flex items-center gap-2 mb-2">
             <Upload className="h-4 w-4 text-muted-foreground" />
             <h2 className="text-sm font-semibold text-foreground">
-              Step 2 — Import snapshot into current DB
+              {t("settings_dbsync.step2_title")}
             </h2>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
-            Applies the saved snapshot to the current database immediately. In a production
-            environment, this writes to the production database.
+            {t("settings_dbsync.step2_desc")}
           </p>
 
           <div className="flex items-start gap-2 p-3 mb-4 rounded-md border border-red-200 bg-red-50 text-sm text-red-700">
             <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
             <span>
-              <strong>Warning:</strong> all existing data will be deleted and replaced with the
-              snapshot data. This action cannot be undone.
+              <strong>{t("settings_dbsync.warning_label")}</strong> {t("settings_dbsync.step2_warning")}
             </span>
           </div>
 
           {importResult && (
             <div className="mb-4 rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
-              <div>Statements: {formatNumber(importResult.total)}</div>
-              <div>Executed: {formatNumber(importResult.executed)}</div>
-              <div>Errors: {formatNumber(importResult.errors)}</div>
+              <div>{t("settings_dbsync.result_statements")}: {formatNumber(importResult.total)}</div>
+              <div>{t("settings_dbsync.result_executed")}: {formatNumber(importResult.executed)}</div>
+              <div>{t("settings_dbsync.result_errors")}: {formatNumber(importResult.errors)}</div>
             </div>
           )}
 
@@ -343,12 +346,12 @@ export default function DbSync() {
             {importing ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Importing…
+                {t("settings_dbsync.importing")}
               </>
             ) : (
               <>
                 <Upload className="h-4 w-4 mr-2" />
-                Import snapshot into current DB
+                {t("settings_dbsync.import_snapshot")}
               </>
             )}
           </Button>
@@ -356,19 +359,11 @@ export default function DbSync() {
 
         {/* Recommended workflow */}
         <div className="rounded-lg border bg-muted/30 p-5">
-          <h3 className="text-sm font-semibold text-foreground mb-2">Recommended workflow</h3>
+          <h3 className="text-sm font-semibold text-foreground mb-2">{t("settings_dbsync.workflow_title")}</h3>
           <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-            <li>
-              In the development environment, run <strong>Step 1: Generate DB snapshot</strong>.
-            </li>
-            <li>
-              Publish (deploy) → the production server automatically imports the snapshot on
-              start-up if it has changed.
-            </li>
-            <li>
-              Use <strong>Step 2</strong> only if you need to re-apply the snapshot manually
-              (for example, on a freshly-reset prod DB).
-            </li>
+            <li>{t("settings_dbsync.workflow_step1")}</li>
+            <li>{t("settings_dbsync.workflow_step2")}</li>
+            <li>{t("settings_dbsync.workflow_step3")}</li>
           </ol>
         </div>
       </div>

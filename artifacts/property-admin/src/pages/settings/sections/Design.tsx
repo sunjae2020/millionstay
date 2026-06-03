@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import {
   applyPrimaryColor,
   applySecondaryColor,
@@ -88,6 +89,7 @@ function AssetCard({
   variant: "logo" | "favicon";
   dark?: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <div
       className={
@@ -108,7 +110,7 @@ function AssetCard({
         ) : (
           <div className="flex flex-col items-center gap-1 text-muted-foreground">
             <Upload className="h-5 w-5" />
-            <span className="text-xs">Click to upload</span>
+            <span className="text-xs">{t("settings_design.click_to_upload")}</span>
           </div>
         )}
       </div>
@@ -116,7 +118,7 @@ function AssetCard({
         <input type="file" accept={accept} className="hidden" onChange={onUpload} />
         <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors border rounded-md px-3 py-1.5 bg-background">
           <Upload className="h-3 w-3" />
-          {preview ? "Replace" : "Upload"}
+          {preview ? t("settings_design.replace") : t("common.upload")}
         </span>
       </label>
       <p className="text-xs text-muted-foreground text-center leading-relaxed">{hint}</p>
@@ -126,7 +128,7 @@ function AssetCard({
           onClick={onRemove}
           className="text-xs text-destructive hover:underline"
         >
-          Remove
+          {t("settings_design.remove")}
         </button>
       )}
     </div>
@@ -148,6 +150,7 @@ function PreviewPane({
   brandName: string;
   logo: string | null;
 }) {
+  const { t } = useTranslation();
   const bg = dark ? "#0F0F10" : accent;
   const surface = dark ? "#1C1917" : "#ffffff";
   const text = dark ? "#FAFAFA" : "#0F172A";
@@ -160,7 +163,7 @@ function PreviewPane({
       style={{ backgroundColor: bg, color: text }}
     >
       <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: subtext }}>
-        {dark ? "Dark Mode Preview" : "Light Mode Preview"}
+        {dark ? t("settings_design.dark_mode_preview") : t("settings_design.light_mode_preview")}
       </p>
       <div
         className="rounded-md border overflow-hidden"
@@ -181,16 +184,21 @@ function PreviewPane({
             </div>
           )}
           <span className="text-xs" style={{ color: subtext }}>
-            Contacts
+            {t("settings_design.preview_nav_contacts")}
           </span>
         </div>
         <div className="grid grid-cols-[140px_1fr]">
           <div className="p-2 space-y-1" style={{ borderRight: `1px solid ${border}` }}>
-            {["Dashboard", "Contacts", "Contracts", "Settings"].map((item, i) => {
+            {[
+              { key: "dashboard", label: t("settings_design.preview_nav_dashboard") },
+              { key: "contacts", label: t("settings_design.preview_nav_contacts") },
+              { key: "contracts", label: t("settings_design.preview_nav_contracts") },
+              { key: "settings", label: t("settings_design.preview_nav_settings") },
+            ].map((item, i) => {
               const active = i === 1;
               return (
                 <div
-                  key={item}
+                  key={item.key}
                   className="text-xs px-2 py-1.5 rounded"
                   style={{
                     backgroundColor: active ? primary + "26" : "transparent",
@@ -198,7 +206,7 @@ function PreviewPane({
                     fontWeight: active ? 600 : 400,
                   }}
                 >
-                  {item}
+                  {item.label}
                 </div>
               );
             })}
@@ -219,7 +227,7 @@ function PreviewPane({
                     border: i === 0 ? "none" : `1px solid ${border}`,
                   }}
                 >
-                  {i === 0 ? "Active" : "Inactive"}
+                  {i === 0 ? t("common.active") : t("common.inactive")}
                 </span>
               </div>
             ))}
@@ -231,19 +239,19 @@ function PreviewPane({
           className="text-xs px-3 py-1.5 rounded font-medium"
           style={{ backgroundColor: primary, color: "#fff" }}
         >
-          Primary Button
+          {t("settings_design.primary_button")}
         </span>
         <span
           className="text-xs px-3 py-1.5 rounded font-medium border"
           style={{ borderColor: primary, color: primary }}
         >
-          Outline Button
+          {t("settings_design.outline_button")}
         </span>
         <span
           className="text-xs px-3 py-1.5 rounded font-medium"
           style={{ backgroundColor: secondary, color: "#fff" }}
         >
-          Secondary
+          {t("settings_design.secondary_button")}
         </span>
       </div>
     </div>
@@ -251,6 +259,7 @@ function PreviewPane({
 }
 
 export function Design() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { refresh, darkMode, toggleDarkMode } = useBrand();
 
@@ -318,7 +327,10 @@ export function Design() {
     const useDark = darkMode && faviconDarkPreview ? faviconDarkPreview : faviconPreview;
     applyFavicon(useDark);
     refresh();
-    toast({ title: "Saved", description: "Branding settings have been updated." });
+    toast({
+      title: t("settings_design.toast_saved_title"),
+      description: t("settings_design.toast_saved_desc"),
+    });
   }
 
   function makeUploadHandler(
@@ -355,9 +367,9 @@ export function Design() {
       {/* Header with dark mode toggle */}
       <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-2xl font-semibold">Branding</h2>
+          <h2 className="text-2xl font-semibold">{t("settings_design.branding_title")}</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Customise your logo, colours, and visual identity
+            {t("settings_design.branding_subtitle")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -366,23 +378,23 @@ export function Design() {
             variant="outline"
             size="sm"
             onClick={toggleDarkMode}
-            title="Toggle admin dark mode"
+            title={t("settings_design.toggle_dark_mode")}
           >
             {darkMode ? (
               <>
                 <Sun className="h-4 w-4 mr-2" />
-                Light Mode
+                {t("settings_design.light_mode")}
               </>
             ) : (
               <>
                 <Moon className="h-4 w-4 mr-2" />
-                Dark Mode
+                {t("settings_design.dark_mode")}
               </>
             )}
           </Button>
           <Button type="submit">
             <Save className="h-4 w-4 mr-2" />
-            Save Branding
+            {t("settings_design.save_branding")}
           </Button>
         </div>
       </div>
@@ -391,19 +403,19 @@ export function Design() {
       <Card className="p-5 space-y-4">
         <div className="flex items-center gap-2">
           <ImageIcon className="h-4 w-4 text-primary" />
-          <h3 className="text-sm font-semibold uppercase tracking-wide">Logo & Favicon</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-wide">{t("settings_design.logo_favicon")}</h3>
         </div>
         <Separator />
 
         <div className="space-y-2">
           <p className="text-xs text-muted-foreground flex items-center gap-1.5">
             <Sun className="h-3.5 w-3.5" />
-            Light Mode Assets
+            {t("settings_design.light_mode_assets")}
           </p>
           <div className="grid md:grid-cols-2 gap-4">
             <AssetCard
-              label="Logo"
-              hint="PNG, JPG, SVG, WEBP — max 2MB"
+              label={t("settings_design.logo")}
+              hint={t("settings_design.logo_hint")}
               accept="image/png,image/svg+xml,image/jpeg,image/webp"
               preview={logoPreview}
               onUpload={makeUploadHandler(setLogoPreview, "logo")}
@@ -411,8 +423,8 @@ export function Design() {
               variant="logo"
             />
             <AssetCard
-              label="Favicon"
-              hint="ICO or PNG 32x32px — max 500KB"
+              label={t("settings_design.favicon")}
+              hint={t("settings_design.favicon_hint")}
               accept="image/png,image/x-icon,image/svg+xml"
               preview={faviconPreview}
               onUpload={makeUploadHandler(setFaviconPreview, "favicon")}
@@ -425,12 +437,12 @@ export function Design() {
         <div className="space-y-2 pt-2">
           <p className="text-xs text-muted-foreground flex items-center gap-1.5">
             <Moon className="h-3.5 w-3.5" />
-            Dark Mode Assets — Optional separate branding for dark mode
+            {t("settings_design.dark_mode_assets")}
           </p>
           <div className="grid md:grid-cols-2 gap-4">
             <AssetCard
-              label="Dark Logo"
-              hint="PNG, SVG — max 2MB"
+              label={t("settings_design.dark_logo")}
+              hint={t("settings_design.dark_logo_hint")}
               accept="image/png,image/svg+xml,image/jpeg,image/webp"
               preview={logoDarkPreview}
               onUpload={makeUploadHandler(setLogoDarkPreview, "logo_dark")}
@@ -439,8 +451,8 @@ export function Design() {
               dark
             />
             <AssetCard
-              label="Dark Favicon"
-              hint="ICO or PNG 32x32 — max 500KB"
+              label={t("settings_design.dark_favicon")}
+              hint={t("settings_design.dark_favicon_hint")}
               accept="image/png,image/x-icon,image/svg+xml"
               preview={faviconDarkPreview}
               onUpload={makeUploadHandler(setFaviconDarkPreview, "favicon_dark")}
@@ -453,12 +465,12 @@ export function Design() {
 
         <div className="grid md:grid-cols-2 gap-4 pt-2">
           <div className="space-y-1.5">
-            <Label>Brand Name</Label>
+            <Label>{t("settings_design.brand_name")}</Label>
             <Input {...register("brand_name")} placeholder="MillionStay" />
-            <p className="text-xs text-muted-foreground">Displayed in the sidebar and emails</p>
+            <p className="text-xs text-muted-foreground">{t("settings_design.brand_name_hint")}</p>
           </div>
           <div className="space-y-1.5">
-            <Label>Sidebar Theme (Light Mode)</Label>
+            <Label>{t("settings_design.sidebar_theme")}</Label>
             <Controller
               name="sidebar_theme"
               control={control}
@@ -468,14 +480,14 @@ export function Design() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="dark">Dark sidebar (default)</SelectItem>
-                    <SelectItem value="light">Light sidebar</SelectItem>
+                    <SelectItem value="dark">{t("settings_design.sidebar_dark_default")}</SelectItem>
+                    <SelectItem value="light">{t("settings_design.sidebar_light")}</SelectItem>
                   </SelectContent>
                 </Select>
               )}
             />
             <p className="text-xs text-muted-foreground">
-              Ignored when full Dark Mode is on
+              {t("settings_design.sidebar_theme_hint")}
             </p>
           </div>
         </div>
@@ -485,18 +497,18 @@ export function Design() {
       <Card className="p-5 space-y-4">
         <div className="flex items-center gap-2">
           <Palette className="h-4 w-4 text-primary" />
-          <h3 className="text-sm font-semibold uppercase tracking-wide">Colour Settings</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-wide">{t("settings_design.colour_settings")}</h3>
         </div>
         <Separator />
 
         <div className="grid md:grid-cols-3 gap-4">
-          <ColorField label="Primary Colour" name="primary_color" control={control} />
-          <ColorField label="Secondary Colour" name="secondary_color" control={control} />
-          <ColorField label="Accent Colour" name="accent_color" control={control} />
+          <ColorField label={t("settings_design.primary_colour")} name="primary_color" control={control} />
+          <ColorField label={t("settings_design.secondary_colour")} name="secondary_color" control={control} />
+          <ColorField label={t("settings_design.accent_colour")} name="accent_color" control={control} />
         </div>
 
         <div className="flex flex-wrap items-center gap-2 pt-1">
-          <span className="text-xs text-muted-foreground mr-1">Presets:</span>
+          <span className="text-xs text-muted-foreground mr-1">{t("settings_design.presets")}</span>
           <Controller
             name="primary_color"
             control={control}
@@ -506,7 +518,7 @@ export function Design() {
                   <button
                     key={c.value}
                     type="button"
-                    title={c.label}
+                    title={t(`settings_design.preset_${c.label.toLowerCase()}`)}
                     className="h-6 w-6 rounded-full border-2 transition-all"
                     style={{
                       backgroundColor: c.value,
@@ -526,11 +538,11 @@ export function Design() {
           <TabsList>
             <TabsTrigger value="light">
               <Sun className="h-3.5 w-3.5 mr-1.5" />
-              Light View
+              {t("settings_design.light_view")}
             </TabsTrigger>
             <TabsTrigger value="dark">
               <Moon className="h-3.5 w-3.5 mr-1.5" />
-              Dark View
+              {t("settings_design.dark_view")}
             </TabsTrigger>
           </TabsList>
           <TabsContent value="light" className="mt-3">
@@ -560,12 +572,12 @@ export function Design() {
       <Card className="p-5 space-y-4">
         <div className="flex items-center gap-2">
           <Building2 className="h-4 w-4 text-primary" />
-          <h3 className="text-sm font-semibold uppercase tracking-wide">Format</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-wide">{t("settings_design.format")}</h3>
         </div>
         <Separator />
         <div className="grid md:grid-cols-3 gap-4">
           <div className="space-y-1.5">
-            <Label>Date Format</Label>
+            <Label>{t("settings_design.date_format")}</Label>
             <Controller
               name="date_format"
               control={control}
@@ -585,7 +597,7 @@ export function Design() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Currency</Label>
+            <Label>{t("settings_design.currency")}</Label>
             <Controller
               name="currency"
               control={control}
@@ -606,7 +618,7 @@ export function Design() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Currency Position</Label>
+            <Label>{t("settings_design.currency_position")}</Label>
             <Controller
               name="currency_position"
               control={control}
@@ -616,8 +628,8 @@ export function Design() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="prefix">Prefix ($100)</SelectItem>
-                    <SelectItem value="suffix">Suffix (100$)</SelectItem>
+                    <SelectItem value="prefix">{t("settings_design.currency_prefix")}</SelectItem>
+                    <SelectItem value="suffix">{t("settings_design.currency_suffix")}</SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -631,13 +643,12 @@ export function Design() {
         <div className="flex items-center gap-2">
           <Code2 className="h-4 w-4 text-primary" />
           <h3 className="text-sm font-semibold uppercase tracking-wide">
-            Advanced: Custom CSS
+            {t("settings_design.advanced_custom_css")}
           </h3>
         </div>
         <Separator />
         <p className="text-xs text-muted-foreground">
-          Inject custom CSS rules. Applied globally on every page. Use carefully — invalid CSS
-          may break layout.
+          {t("settings_design.custom_css_hint")}
         </p>
         <Textarea
           {...register("custom_css")}
@@ -650,7 +661,7 @@ export function Design() {
       <div className="flex justify-end pt-2">
         <Button type="submit">
           <Save className="h-4 w-4 mr-2" />
-          Save Branding
+          {t("settings_design.save_branding")}
         </Button>
       </div>
     </form>

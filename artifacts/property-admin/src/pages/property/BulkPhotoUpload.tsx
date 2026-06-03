@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { apiFetch } from "@/lib/apiFetch";
@@ -55,6 +56,7 @@ function bestMatch(folderName: string, spaces: SpaceRow[]): number | null {
 }
 
 export default function BulkPhotoUpload() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -112,7 +114,7 @@ export default function BulkPhotoUpload() {
   const handleUpload = async () => {
     const matched = groups.filter((g) => g.matchedSpaceId !== null);
     if (!matched.length) {
-      toast({ title: "No matched spaces", description: "Please match at least one folder to a space before uploading.", variant: "destructive" });
+      toast({ title: t("bulk_photo.no_matched_spaces"), description: t("bulk_photo.no_matched_spaces_desc"), variant: "destructive" });
       return;
     }
 
@@ -154,7 +156,7 @@ export default function BulkPhotoUpload() {
             status: "error",
             uploaded: 0,
             total: group.files.length,
-            error: err?.message ?? "Upload failed",
+            error: err?.message ?? t("bulk_photo.upload_error"),
           },
         }));
       }
@@ -172,8 +174,8 @@ export default function BulkPhotoUpload() {
     });
 
     toast({
-      title: "Bulk upload complete",
-      description: `${totalUploaded} photo${totalUploaded !== 1 ? "s" : ""} uploaded to ${matched.length} space${matched.length !== 1 ? "s" : ""}.`,
+      title: t("bulk_photo.bulk_upload_complete"),
+      description: t("bulk_photo.bulk_upload_complete_desc", { photos: totalUploaded, spaces: matched.length }),
     });
   };
 
@@ -196,13 +198,13 @@ export default function BulkPhotoUpload() {
   return (
     <Layout>
       <PageHeader
-        title="New Bulk Upload"
-        subtitle="Select a folder — subfolders are matched to spaces automatically"
+        title={t("bulk_photo.new_bulk_upload")}
+        subtitle={t("bulk_photo.new_bulk_upload_subtitle")}
         actions={
           <Link href="/property/bulk-photo-upload">
             <Button variant="outline" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Sessions
+              {t("bulk_photo.back_to_sessions")}
             </Button>
           </Link>
         }
@@ -213,14 +215,14 @@ export default function BulkPhotoUpload() {
         <div className="border rounded-lg p-8 bg-muted/30 flex flex-col items-center gap-4">
           <FolderOpen className="h-12 w-12 text-muted-foreground" />
           <div className="text-center">
-            <p className="font-medium">Select a root folder</p>
+            <p className="font-medium">{t("bulk_photo.select_root_folder")}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Structure: <span className="font-mono">root&nbsp;/&nbsp;Space Name&nbsp;/&nbsp;photo.jpg</span>
+              {t("bulk_photo.structure_label")} <span className="font-mono">root&nbsp;/&nbsp;Space Name&nbsp;/&nbsp;photo.jpg</span>
             </p>
           </div>
           <Button variant="outline" onClick={() => inputRef.current?.click()}>
             <FolderOpen className="h-4 w-4 mr-2" />
-            Choose Folder
+            {t("bulk_photo.choose_folder")}
           </Button>
           <input
             ref={inputRef}
@@ -237,27 +239,27 @@ export default function BulkPhotoUpload() {
         {/* Summary badges */}
         {groups.length > 0 && (
           <div className="flex flex-wrap gap-2 items-center">
-            <Badge variant="secondary">{groups.length} folder{groups.length !== 1 ? "s" : ""}</Badge>
-            <Badge variant="secondary">{totalPhotos} photo{totalPhotos !== 1 ? "s" : ""}</Badge>
+            <Badge variant="secondary">{t("bulk_photo.folders_count", { count: groups.length })}</Badge>
+            <Badge variant="secondary">{t("bulk_photo.photos_count", { count: totalPhotos })}</Badge>
             <Badge className="bg-green-100 text-green-800 hover:bg-green-100 gap-1">
               <CheckCircle2 className="h-3 w-3" />
-              {matchedCount} auto-matched
+              {t("bulk_photo.auto_matched_count", { count: matchedCount })}
             </Badge>
             {unmatchedCount > 0 && (
               <Badge variant="destructive" className="gap-1">
                 <AlertCircle className="h-3 w-3" />
-                {unmatchedCount} unmatched — manual selection required
+                {t("bulk_photo.unmatched_count", { count: unmatchedCount })}
               </Badge>
             )}
             {hasResults && (
               <>
                 {doneCount > 0 && (
                   <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">
-                    ✓ {doneCount} completed
+                    ✓ {t("bulk_photo.completed_count", { count: doneCount })}
                   </Badge>
                 )}
                 {errorCount > 0 && (
-                  <Badge variant="destructive">{errorCount} failed</Badge>
+                  <Badge variant="destructive">{t("bulk_photo.failed_count", { count: errorCount })}</Badge>
                 )}
               </>
             )}
@@ -271,11 +273,11 @@ export default function BulkPhotoUpload() {
             <table className="w-full min-w-max text-sm">
               <thead className="bg-muted/50 border-b">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Folder</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Preview</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Matched Space</th>
-                  <th className="text-center px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide w-24">Photos</th>
-                  <th className="text-center px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide w-28">Status</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("bulk_photo.col_folder")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("bulk_photo.col_preview")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("bulk_photo.col_matched_space")}</th>
+                  <th className="text-center px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide w-24">{t("bulk_photo.col_photos")}</th>
+                  <th className="text-center px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide w-28">{t("common.status")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -309,10 +311,10 @@ export default function BulkPhotoUpload() {
                           disabled={!!st && st.status !== "error"}
                         >
                           <SelectTrigger className={`h-8 text-xs ${!group.matchedSpaceId ? "border-destructive" : ""}`}>
-                            <SelectValue placeholder="Select space..." />
+                            <SelectValue placeholder={t("bulk_photo.select_space_placeholder")} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="__none__">— Skip this folder —</SelectItem>
+                            <SelectItem value="__none__">{t("bulk_photo.skip_this_folder")}</SelectItem>
                             {spaces.map((sp) => (
                               <SelectItem key={sp.id} value={sp.id.toString()}>
                                 {sp.name}
@@ -331,24 +333,24 @@ export default function BulkPhotoUpload() {
 
                       <td className="px-4 py-3 text-center">
                         {!st && (
-                          <span className="text-muted-foreground text-xs">Pending</span>
+                          <span className="text-muted-foreground text-xs">{t("bulk_photo.status_pending")}</span>
                         )}
                         {st?.status === "uploading" && (
                           <span className="inline-flex items-center gap-1 text-[#E8621A] text-xs">
                             <Loader2 className="h-3 w-3 animate-spin" />
-                            Uploading
+                            {t("bulk_photo.status_uploading")}
                           </span>
                         )}
                         {st?.status === "done" && (
                           <span className="inline-flex items-center gap-1 text-green-600 text-xs">
                             <CheckCircle2 className="h-3 w-3" />
-                            {st.uploaded} uploaded
+                            {t("bulk_photo.status_uploaded_count", { count: st.uploaded })}
                           </span>
                         )}
                         {st?.status === "error" && (
                           <span className="inline-flex items-center gap-1 text-destructive text-xs" title={st.error}>
                             <XCircle className="h-3 w-3" />
-                            Failed
+                            {t("bulk_photo.status_failed")}
                           </span>
                         )}
                       </td>
@@ -365,7 +367,7 @@ export default function BulkPhotoUpload() {
         {uploading && (
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Uploading photos...</span>
+              <span className="text-muted-foreground">{t("bulk_photo.uploading_photos")}</span>
               <span className="font-medium">{progress}%</span>
             </div>
             <Progress value={progress} />
@@ -377,7 +379,7 @@ export default function BulkPhotoUpload() {
           <div className="flex justify-end">
             <Button onClick={handleUpload} disabled={uploading || matchedCount === 0} size="lg">
               <Upload className="h-4 w-4 mr-2" />
-              Upload {totalPhotos} photo{totalPhotos !== 1 ? "s" : ""} to {matchedCount} space{matchedCount !== 1 ? "s" : ""}
+              {t("bulk_photo.upload_to_spaces", { photos: totalPhotos, spaces: matchedCount })}
             </Button>
           </div>
         )}
@@ -386,12 +388,12 @@ export default function BulkPhotoUpload() {
           <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={() => navigate("/property/bulk-photo-upload")}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Sessions
+              {t("bulk_photo.back_to_sessions")}
             </Button>
             {errorCount > 0 && (
               <Button onClick={handleUpload}>
                 <Upload className="h-4 w-4 mr-2" />
-                Retry Failed
+                {t("bulk_photo.retry_failed")}
               </Button>
             )}
             {done && errorCount === 0 && (
@@ -403,7 +405,7 @@ export default function BulkPhotoUpload() {
                   setDone(false);
                 }}
               >
-                Upload Another Folder
+                {t("bulk_photo.upload_another_folder")}
               </Button>
             )}
           </div>
