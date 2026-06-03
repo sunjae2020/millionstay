@@ -57,6 +57,7 @@ import {
   Bot,
   BookOpen,
   MessagesSquare,
+  Sparkles,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
@@ -169,6 +170,7 @@ function getNav(t: (k: string) => string): NavSection[] {
       icon: Bot,
       defaultOpen: true,
       items: [
+        { href: "/ai/widget", label: "Chat Widget", icon: Sparkles },
         { href: "/ai/knowledge", label: "Knowledge Base", icon: BookOpen },
         { href: "/ai/conversations", label: "Conversations", icon: MessagesSquare },
       ],

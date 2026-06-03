@@ -85,6 +85,7 @@ import WebsiteContentList from "@/pages/content/WebsiteContentList";
 import WebsiteContentDetail from "@/pages/content/WebsiteContentDetail";
 import KnowledgeBase from "@/pages/ai/KnowledgeBase";
 import Conversations from "@/pages/ai/Conversations";
+import ChatWidgetSettings from "@/pages/ai/ChatWidgetSettings";
 
 // Settings
 import Settings from "@/pages/settings/Settings";
@@ -244,6 +245,7 @@ function Router() {
       <Route path="/content/pages/:pageKey" component={WebsiteContentDetail} />
 
       {/* ── AI ASSISTANT ───────────────────────────────── */}
+      <Route path="/ai/widget" component={ChatWidgetSettings} />
       <Route path="/ai/knowledge" component={KnowledgeBase} />
       <Route path="/ai/conversations" component={Conversations} />
 
