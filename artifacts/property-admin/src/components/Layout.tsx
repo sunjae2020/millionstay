@@ -54,6 +54,9 @@ import {
   Languages,
   Sun,
   Moon,
+  Bot,
+  BookOpen,
+  MessagesSquare,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
@@ -159,6 +162,15 @@ function getNav(t: (k: string) => string): NavSection[] {
       items: [
         { href: "/content/blog", label: "Blog Posts", icon: Newspaper },
         { href: "/content/pages", label: "Website Pages", icon: Globe },
+      ],
+    },
+    {
+      label: "AI Assistant",
+      icon: Bot,
+      defaultOpen: true,
+      items: [
+        { href: "/ai/knowledge", label: "Knowledge Base", icon: BookOpen },
+        { href: "/ai/conversations", label: "Conversations", icon: MessagesSquare },
       ],
     },
     {

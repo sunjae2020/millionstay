@@ -50,3 +50,6 @@ export * from "./translations";
 export * from "./quotes";
 export * from "./quote_line_items";
 export * from "./channels";
+export * from "./chat_conversations";
+export * from "./chat_messages";
+export * from "./knowledge_documents";
