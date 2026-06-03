@@ -769,5 +769,25 @@
     "share_title": "分享此文章",
     "more_articles": "更多文章",
     "no_content": "暂无内容。"
+  },
+  "chat": {
+    "title": "MillionStay 助手",
+    "subtitle": "咨询房间、价格和预订",
+    "greeting": "您好！我是 MillionStay 助手 Milly。您可以用任何语言向我咨询房间、价格、空房情况或预订方式。我能帮您什么？",
+    "placeholder": "输入您的消息…",
+    "open": "打开聊天助手",
+    "close": "关闭聊天",
+    "send": "发送",
+    "thinking": "思考中…",
+    "error_unavailable": "助手暂时不可用，请稍后再试。",
+    "error_generic": "抱歉，出现了问题，请重试。",
+    "error_network": "网络错误，请重试。",
+    "tool_search": "正在搜索可用房间…",
+    "tool_availability": "正在查询空房情况…",
+    "tool_details": "正在获取房间详情…",
+    "tool_inquiry": "正在登记您的咨询…",
+    "tool_working": "处理中…",
+    "room_fallback": "房间 #{{id}}",
+    "per_week": "/周"
   }
 }

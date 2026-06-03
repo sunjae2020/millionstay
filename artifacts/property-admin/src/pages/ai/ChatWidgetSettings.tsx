@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Card } from "@/components/ui/card";
@@ -16,6 +17,7 @@ interface IntegrationStatus {
 }
 
 export default function ChatWidgetSettings() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
@@ -43,9 +45,9 @@ export default function ChatWidgetSettings() {
       });
       if (!res.ok) throw new Error("Save failed");
       await qc.invalidateQueries({ queryKey: ["integration-status"] });
-      toast({ title: next ? "Chat widget enabled on landing page" : "Chat widget hidden from landing page" });
+      toast({ title: next ? t("ai.widget.enabled_toast") : t("ai.widget.disabled_toast") });
     } catch (e: any) {
-      toast({ title: "Could not update", description: e?.message, variant: "destructive" });
+      toast({ title: t("ai.widget.update_error"), description: e?.message, variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -54,8 +56,8 @@ export default function ChatWidgetSettings() {
   return (
     <Layout>
       <PageHeader
-        title="Chat Widget"
-        subtitle="Control the landing-page AI chat assistant and try it out live."
+        title={t("ai.widget.title")}
+        subtitle={t("ai.widget.subtitle")}
       />
       <div className="grid grid-cols-1 gap-6 p-6 lg:grid-cols-[1fr_400px]">
         {/* Settings column */}
@@ -63,9 +65,9 @@ export default function ChatWidgetSettings() {
           <Card className="p-5">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <Label className="text-sm font-semibold">Show chat widget on the landing page</Label>
+                <Label className="text-sm font-semibold">{t("ai.widget.show_label")}</Label>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  When on, visitors at millionstay.com see the floating chat button. Turn off to hide it for everyone.
+                  {t("ai.widget.show_help")}
                 </p>
               </div>
               <Switch checked={enabled} disabled={saving} onCheckedChange={setEnabled} />
@@ -73,27 +75,27 @@ export default function ChatWidgetSettings() {
           </Card>
 
           <Card className="p-5">
-            <h3 className="mb-3 text-sm font-semibold">Readiness</h3>
+            <h3 className="mb-3 text-sm font-semibold">{t("ai.widget.readiness")}</h3>
             <div className="space-y-2.5 text-sm">
               <StatusRow
                 ok={configured}
-                okText={`AI key configured${status?.ai.model ? ` · ${status.ai.model}` : ""}`}
-                badText="AI key not set — add it in Settings → Integrations → AI Chatbot"
+                okText={`${t("ai.widget.ai_key_ok")}${status?.ai.model ? ` · ${status.ai.model}` : ""}`}
+                badText={t("ai.widget.ai_key_bad")}
               />
               <StatusRow
                 ok={docCount > 0}
-                okText={`${docCount} knowledge document${docCount === 1 ? "" : "s"} available`}
-                badText="No knowledge documents yet — add FAQ/policy content in Knowledge Base"
+                okText={t("ai.widget.docs_ok", { count: docCount })}
+                badText={t("ai.widget.docs_bad")}
               />
               <StatusRow
                 ok={enabled}
-                okText="Widget is visible on the landing page"
-                badText="Widget is hidden from the landing page"
+                okText={t("ai.widget.visible_ok")}
+                badText={t("ai.widget.visible_bad")}
               />
             </div>
             {!configured && (
               <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
-                The preview will say "temporarily unavailable" until the AI key is configured.
+                {t("ai.widget.preview_note")}
               </p>
             )}
           </Card>
@@ -102,11 +104,11 @@ export default function ChatWidgetSettings() {
         {/* Live preview column */}
         <div>
           <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-            <MessageCircle className="h-4 w-4" /> Live preview
+            <MessageCircle className="h-4 w-4" /> {t("ai.widget.live_preview")}
           </div>
           <ChatPreview />
           <p className="mt-2 text-xs text-muted-foreground">
-            This talks to the real assistant — messages here are saved like any visitor conversation.
+            {t("ai.widget.live_preview_note")}
           </p>
         </div>
       </div>
@@ -136,10 +138,9 @@ interface RoomCard {
 }
 interface PreviewMsg { role: "user" | "assistant"; text: string; rooms?: RoomCard[] }
 
-const GREETING = "Hi! I'm Milly, the MillionStay assistant. Ask me about rooms, prices, availability, or booking — in any language.";
-
 function ChatPreview() {
-  const [messages, setMessages] = useState<PreviewMsg[]>([{ role: "assistant", text: GREETING }]);
+  const { t } = useTranslation();
+  const [messages, setMessages] = useState<PreviewMsg[]>([{ role: "assistant", text: t("ai.preview.greeting") }]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
@@ -174,7 +175,7 @@ function ChatPreview() {
         body: JSON.stringify({ session_id: sessionId.current, message: text, conversation_id: conversationId.current }),
       });
       if (!res.ok || !res.body) {
-        patchLast((m) => ({ ...m, text: res.status === 503 ? "The assistant is not configured yet (set the AI key)." : "Something went wrong." }));
+        patchLast((m) => ({ ...m, text: res.status === 503 ? t("ai.preview.error_not_configured") : t("ai.preview.error_generic") }));
         setBusy(false);
         return;
       }
@@ -194,24 +195,24 @@ function ChatPreview() {
           try { d = JSON.parse(line.slice(5).trim()); } catch { continue; }
           if (d.type === "meta") conversationId.current = d.conversation_id;
           else if (d.type === "delta") { setHint(null); patchLast((m) => ({ ...m, text: m.text + d.text })); }
-          else if (d.type === "tool") setHint("Working…");
+          else if (d.type === "tool") setHint(t("ai.preview.working"));
           else if (d.type === "ui" && d.kind === "spaces" && Array.isArray(d.data)) patchLast((m) => ({ ...m, rooms: d.data }));
           else if (d.type === "error") patchLast((m) => ({ ...m, text: m.text || d.message }));
         }
       }
     } catch {
-      patchLast((m) => ({ ...m, text: m.text || "Network error." }));
+      patchLast((m) => ({ ...m, text: m.text || t("ai.preview.error_network") }));
     } finally {
       setBusy(false);
       setHint(null);
     }
-  }, [input, busy]);
+  }, [input, busy, t]);
 
   return (
     <div className="flex h-[520px] w-full flex-col overflow-hidden rounded-2xl border shadow-sm">
       <div className="flex items-center gap-3 px-4 py-3 text-white" style={{ backgroundColor: ACCENT }}>
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 font-semibold">M</div>
-        <div className="text-sm font-semibold">MillionStay Assistant</div>
+        <div className="text-sm font-semibold">{t("ai.preview.title")}</div>
       </div>
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto bg-muted/40 px-3 py-4">
         {messages.map((m, i) => (
@@ -222,7 +223,7 @@ function ChatPreview() {
                 style={m.role === "user" ? { backgroundColor: ACCENT } : undefined}
               >
                 {m.text || (busy && i === messages.length - 1
-                  ? <span className="inline-flex items-center gap-1 text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" /> thinking…</span>
+                  ? <span className="inline-flex items-center gap-1 text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("ai.preview.thinking")}</span>
                   : "")}
               </div>
             </div>
@@ -233,7 +234,7 @@ function ChatPreview() {
                      className="flex items-center gap-2 rounded-xl border bg-card p-2 text-sm shadow-sm hover:shadow">
                     <Bot className="h-4 w-4" style={{ color: ACCENT }} />
                     <div className="min-w-0 flex-1">
-                      <div className="truncate font-medium">{r.name ?? `Room #${r.space_id}`}</div>
+                      <div className="truncate font-medium">{r.name ?? t("ai.preview.room_fallback", { id: r.space_id })}</div>
                       <div className="truncate text-xs text-muted-foreground">{[r.city, r.space_type].filter(Boolean).join(" · ")}</div>
                     </div>
                     {r.weekly_price != null && <span className="text-xs font-semibold" style={{ color: ACCENT }}>{r.currency ?? "AUD"} {r.weekly_price}</span>}
@@ -251,7 +252,7 @@ function ChatPreview() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); } }}
-          placeholder="Type a test message…"
+          placeholder={t("ai.preview.placeholder")}
           rows={1}
           className="max-h-24 flex-1 resize-none rounded-xl border bg-background px-3 py-2 text-sm outline-none"
         />

@@ -166,13 +166,13 @@ function getNav(t: (k: string) => string): NavSection[] {
       ],
     },
     {
-      label: "AI Assistant",
+      label: t("nav.ai_assistant"),
       icon: Bot,
       defaultOpen: true,
       items: [
-        { href: "/ai/widget", label: "Chat Widget", icon: Sparkles },
-        { href: "/ai/knowledge", label: "Knowledge Base", icon: BookOpen },
-        { href: "/ai/conversations", label: "Conversations", icon: MessagesSquare },
+        { href: "/ai/widget", label: t("nav.chat_widget"), icon: Sparkles },
+        { href: "/ai/knowledge", label: t("nav.knowledge_base"), icon: BookOpen },
+        { href: "/ai/conversations", label: t("nav.conversations"), icon: MessagesSquare },
       ],
     },
     {
