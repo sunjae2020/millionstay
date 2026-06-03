@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Card } from "@/components/ui/card";
@@ -28,6 +29,7 @@ interface Message {
 const ACCENT = "#E8621A";
 
 export default function Conversations() {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState<Conversation | null>(null);
 
   const { data, isLoading } = useQuery({
@@ -39,18 +41,18 @@ export default function Conversations() {
   return (
     <Layout>
       <PageHeader
-        title="AI Chat Conversations"
-        subtitle="Saved transcripts of visitor conversations with the AI assistant."
+        title={t("ai.conv.title")}
+        subtitle={t("ai.conv.subtitle")}
       />
       <div className="grid grid-cols-1 gap-4 p-6 lg:grid-cols-[360px_1fr]">
         {/* List */}
         <div className="space-y-2">
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
+            <p className="text-sm text-muted-foreground">{t("ai.conv.loading")}</p>
           ) : conversations.length === 0 ? (
             <Card className="flex flex-col items-center gap-2 p-8 text-center">
               <MessagesSquare className="h-7 w-7 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">No conversations yet.</p>
+              <p className="text-sm text-muted-foreground">{t("ai.conv.empty")}</p>
             </Card>
           ) : (
             conversations.map((c) => (
@@ -62,9 +64,9 @@ export default function Conversations() {
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="truncate text-sm font-medium">
-                    {c.contact_email ?? `Visitor ${c.session_id.slice(0, 8)}`}
+                    {c.contact_email ?? t("ai.conv.visitor", { id: c.session_id.slice(0, 8) })}
                   </span>
-                  {c.lead_id && <Badge style={{ backgroundColor: ACCENT }} className="text-white">Lead #{c.lead_id}</Badge>}
+                  {c.lead_id && <Badge style={{ backgroundColor: ACCENT }} className="text-white">{t("ai.conv.lead", { id: c.lead_id })}</Badge>}
                 </div>
                 <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
                   {c.language && <Badge variant="outline" className="text-xs">{c.language}</Badge>}
@@ -79,7 +81,7 @@ export default function Conversations() {
         <div>
           {selected ? <Transcript conversation={selected} /> : (
             <Card className="flex h-full min-h-[300px] items-center justify-center p-8 text-sm text-muted-foreground">
-              Select a conversation to view its transcript.
+              {t("ai.conv.select_prompt")}
             </Card>
           )}
         </div>
@@ -89,6 +91,7 @@ export default function Conversations() {
 }
 
 function Transcript({ conversation }: { conversation: Conversation }) {
+  const { t } = useTranslation();
   const { data, isLoading } = useQuery({
     queryKey: ["chat-conversations", conversation.id, "messages"],
     queryFn: () => apiJson<{ success: boolean; data: { messages: Message[] } }>(
@@ -100,13 +103,13 @@ function Transcript({ conversation }: { conversation: Conversation }) {
   return (
     <Card className="p-4">
       <div className="mb-3 flex items-center gap-2 border-b pb-3 text-sm">
-        <span className="font-medium">{conversation.contact_email ?? `Visitor ${conversation.session_id.slice(0, 8)}`}</span>
-        {conversation.lead_id && <Badge style={{ backgroundColor: ACCENT }} className="text-white">Lead #{conversation.lead_id}</Badge>}
+        <span className="font-medium">{conversation.contact_email ?? t("ai.conv.visitor", { id: conversation.session_id.slice(0, 8) })}</span>
+        {conversation.lead_id && <Badge style={{ backgroundColor: ACCENT }} className="text-white">{t("ai.conv.lead", { id: conversation.lead_id })}</Badge>}
         <span className="ml-auto text-xs text-muted-foreground">{conversation.status}</span>
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading transcript…</p>
+        <p className="text-sm text-muted-foreground">{t("ai.conv.loading_transcript")}</p>
       ) : (
         <div className="space-y-3">
           {messages.map((m) => (
@@ -118,7 +121,9 @@ function Transcript({ conversation }: { conversation: Conversation }) {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-xs font-medium text-muted-foreground">
-                  {m.role === "tool" ? `tool · ${m.tool_name ?? ""}` : m.role}
+                  {m.role === "tool"
+                    ? t("ai.conv.tool_label", { name: m.tool_name ?? "" })
+                    : m.role === "user" ? t("ai.conv.role_user") : t("ai.conv.role_assistant")}
                 </div>
                 <div className={`whitespace-pre-wrap break-words ${m.role === "tool" ? "font-mono text-xs text-muted-foreground" : ""}`}>
                   {m.role === "tool" ? truncate(m.content, 600) : m.content}

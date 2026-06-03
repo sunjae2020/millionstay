@@ -939,5 +939,25 @@
     "share_title": "この記事をシェア",
     "more_articles": "他の記事を読む",
     "no_content": "コンテンツがありません。"
+  },
+  "chat": {
+    "title": "MillionStay アシスタント",
+    "subtitle": "客室・料金・予約についてお尋ねください",
+    "greeting": "こんにちは！MillionStay アシスタントの Milly です。客室、料金、空室状況、予約方法など、どんな言語でもお気軽にお尋ねください。どのようなご用件でしょうか？",
+    "placeholder": "メッセージを入力…",
+    "open": "チャットアシスタントを開く",
+    "close": "チャットを閉じる",
+    "send": "送信",
+    "thinking": "考え中…",
+    "error_unavailable": "アシスタントは一時的にご利用いただけません。しばらくしてからもう一度お試しください。",
+    "error_generic": "申し訳ありません。問題が発生しました。もう一度お試しください。",
+    "error_network": "ネットワークエラーです。もう一度お試しください。",
+    "tool_search": "空室を検索中…",
+    "tool_availability": "空室状況を確認中…",
+    "tool_details": "客室の詳細を取得中…",
+    "tool_inquiry": "お問い合わせを登録中…",
+    "tool_working": "処理中…",
+    "room_fallback": "客室 #{{id}}",
+    "per_week": "/週"
   }
 }

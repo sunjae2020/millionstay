@@ -810,5 +810,25 @@
     "share_title": "이 게시물 공유하기",
     "more_articles": "다른 게시물 보기",
     "no_content": "내용이 없습니다."
+  },
+  "chat": {
+    "title": "MillionStay 어시스턴트",
+    "subtitle": "객실, 가격, 예약에 대해 물어보세요",
+    "greeting": "안녕하세요! MillionStay 어시스턴트 Milly예요. 객실, 가격, 예약 가능 여부, 예약 방법 등 무엇이든 어떤 언어로든 물어보세요. 무엇을 도와드릴까요?",
+    "placeholder": "메시지를 입력하세요…",
+    "open": "채팅 어시스턴트 열기",
+    "close": "채팅 닫기",
+    "send": "보내기",
+    "thinking": "생각 중…",
+    "error_unavailable": "어시스턴트를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+    "error_generic": "죄송합니다. 문제가 발생했습니다. 다시 시도해 주세요.",
+    "error_network": "네트워크 오류입니다. 다시 시도해 주세요.",
+    "tool_search": "이용 가능한 객실 검색 중…",
+    "tool_availability": "예약 가능 여부 확인 중…",
+    "tool_details": "객실 상세 정보 가져오는 중…",
+    "tool_inquiry": "문의 등록 중…",
+    "tool_working": "처리 중…",
+    "room_fallback": "객실 #{{id}}",
+    "per_week": "/주"
   }
 }

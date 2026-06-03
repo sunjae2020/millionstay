@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Card } from "@/components/ui/card";
@@ -27,6 +28,7 @@ interface KnowledgeDoc {
 const ACCENT = "#E8621A";
 
 export default function KnowledgeBase() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const { toast } = useToast();
   const [editing, setEditing] = useState<KnowledgeDoc | null>(null);
@@ -40,8 +42,8 @@ export default function KnowledgeBase() {
 
   const del = useMutation({
     mutationFn: (id: string) => apiJson(`/api/v1/knowledge/${id}`, { method: "DELETE" }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["knowledge"] }); toast({ title: "Document deleted" }); },
-    onError: (e: any) => toast({ title: "Delete failed", description: e?.message, variant: "destructive" }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["knowledge"] }); toast({ title: t("ai.kb.deleted_toast") }); },
+    onError: (e: any) => toast({ title: t("ai.kb.delete_failed"), description: e?.message, variant: "destructive" }),
   });
 
   const toggleStatus = useMutation({
@@ -51,30 +53,30 @@ export default function KnowledgeBase() {
         body: JSON.stringify({ status: doc.status === "active" ? "archived" : "active" }),
       }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["knowledge"] }),
-    onError: (e: any) => toast({ title: "Update failed", description: e?.message, variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("ai.kb.update_failed"), description: e?.message, variant: "destructive" }),
   });
 
   return (
     <Layout>
       <PageHeader
-        title="AI Knowledge Base"
-        subtitle="Documents the AI chat assistant uses to answer visitor questions (FAQ, policies, info)."
+        title={t("ai.kb.title")}
+        subtitle={t("ai.kb.subtitle")}
         actions={
           <Button onClick={() => setCreating(true)} style={{ backgroundColor: ACCENT }} className="text-white">
-            <Plus className="mr-1.5 h-4 w-4" /> Add document
+            <Plus className="mr-1.5 h-4 w-4" /> {t("ai.kb.add")}
           </Button>
         }
       />
 
       <div className="p-6">
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <p className="text-sm text-muted-foreground">{t("ai.kb.loading")}</p>
         ) : docs.length === 0 ? (
           <Card className="flex flex-col items-center gap-3 p-10 text-center">
             <BookOpen className="h-8 w-8 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">No knowledge documents yet. Add FAQ or policy content so the assistant can answer accurately.</p>
+            <p className="text-sm text-muted-foreground">{t("ai.kb.empty")}</p>
             <Button onClick={() => setCreating(true)} style={{ backgroundColor: ACCENT }} className="text-white">
-              <Plus className="mr-1.5 h-4 w-4" /> Add your first document
+              <Plus className="mr-1.5 h-4 w-4" /> {t("ai.kb.add_first")}
             </Button>
           </Card>
         ) : (
@@ -91,19 +93,19 @@ export default function KnowledgeBase() {
                     {d.language && <Badge variant="outline" className="text-xs">{d.language}</Badge>}
                     <Badge variant={d.status === "active" ? "default" : "secondary"} className="text-xs">{d.status}</Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground">Updated {new Date(d.updated_at).toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">{t("ai.kb.updated", { date: new Date(d.updated_at).toLocaleString() })}</p>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="sm" onClick={() => toggleStatus.mutate(d)} title={d.status === "active" ? "Archive" : "Re-activate"}>
+                  <Button variant="ghost" size="sm" onClick={() => toggleStatus.mutate(d)} title={d.status === "active" ? t("ai.kb.archive") : t("ai.kb.reactivate")}>
                     {d.status === "active" ? <Archive className="h-4 w-4" /> : <RotateCcw className="h-4 w-4" />}
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setEditing(d)} title="Edit">
+                  <Button variant="ghost" size="sm" onClick={() => setEditing(d)} title={t("ai.kb.edit")}>
                     <Pencil className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="ghost" size="sm"
-                    onClick={() => { if (confirm(`Delete "${d.title}"?`)) del.mutate(d.id); }}
-                    title="Delete"
+                    onClick={() => { if (confirm(t("ai.kb.confirm_delete", { title: d.title }))) del.mutate(d.id); }}
+                    title={t("ai.kb.delete")}
                   >
                     <Trash2 className="h-4 w-4 text-red-500" />
                   </Button>
@@ -122,6 +124,7 @@ export default function KnowledgeBase() {
 
 /** Create/edit modal. When `doc` is provided it loads full content for editing. */
 function DocEditor({ doc, onClose }: { doc?: KnowledgeDoc; onClose: () => void }) {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const { toast } = useToast();
   const isEdit = Boolean(doc);
@@ -169,58 +172,58 @@ function DocEditor({ doc, onClose }: { doc?: KnowledgeDoc; onClose: () => void }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["knowledge"] });
-      toast({ title: isEdit ? "Document updated" : "Document added" });
+      toast({ title: isEdit ? t("ai.kb.updated_toast") : t("ai.kb.added_toast") });
       onClose();
     },
-    onError: (e: any) => toast({ title: "Save failed", description: e?.message, variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("ai.kb.save_failed"), description: e?.message, variant: "destructive" }),
   });
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit document" : "Add knowledge document"}</DialogTitle>
+          <DialogTitle>{isEdit ? t("ai.kb.edit_title") : t("ai.kb.add_title")}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Title</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Refund & cancellation policy" />
+            <Label>{t("ai.kb.field_title")}</Label>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("ai.kb.title_placeholder")} />
           </div>
           <div className="space-y-1.5">
-            <Label>Language (optional)</Label>
-            <Input value={language} onChange={(e) => setLanguage(e.target.value)} placeholder="e.g. en, ko, zh" className="max-w-[160px]" />
+            <Label>{t("ai.kb.language")}</Label>
+            <Input value={language} onChange={(e) => setLanguage(e.target.value)} placeholder={t("ai.kb.language_placeholder")} className="max-w-[160px]" />
           </div>
 
           {!isEdit && (
             <div className="space-y-1.5">
-              <Label className="flex items-center gap-1.5"><Upload className="h-4 w-4" /> Upload a file (PDF / TXT / MD) — optional</Label>
+              <Label className="flex items-center gap-1.5"><Upload className="h-4 w-4" /> {t("ai.kb.upload_label")}</Label>
               <Input type="file" accept=".pdf,.txt,.md,.csv,text/plain,application/pdf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-              <p className="text-xs text-muted-foreground">Text is extracted from the file. Or paste content directly below.</p>
+              <p className="text-xs text-muted-foreground">{t("ai.kb.upload_help")}</p>
             </div>
           )}
 
           <div className="space-y-1.5">
-            <Label>Content {file ? "(leave empty to use the file's text)" : ""}</Label>
+            <Label>{t("ai.kb.content")} {file ? t("ai.kb.content_file_hint") : ""}</Label>
             <Textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={10}
-              placeholder="Paste the FAQ / policy / info text the assistant should use…"
+              placeholder={t("ai.kb.content_placeholder")}
               disabled={isEdit && !loadedContent}
             />
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button variant="outline" onClick={onClose}>{t("ai.kb.cancel")}</Button>
           <Button
             onClick={() => save.mutate()}
             disabled={save.isPending || (!title && !file) || (!content && !file)}
             style={{ backgroundColor: ACCENT }}
             className="text-white"
           >
-            {save.isPending ? "Saving…" : isEdit ? "Save changes" : "Add document"}
+            {save.isPending ? t("ai.kb.saving") : isEdit ? t("ai.kb.save_changes") : t("ai.kb.add")}
           </Button>
         </DialogFooter>
       </DialogContent>

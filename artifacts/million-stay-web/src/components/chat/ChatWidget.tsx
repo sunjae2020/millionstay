@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { MessageCircle, X, Send, Loader2, ExternalLink } from "lucide-react";
 import { getApiBase } from "@/lib/api-base";
 
@@ -37,12 +38,10 @@ function getSessionId(): string {
   }
 }
 
-const GREETING =
-  "Hi! I'm Milly, the MillionStay assistant. Ask me about rooms, prices, availability, or how booking works — in any language. How can I help?";
-
 export default function ChatWidget() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMsg[]>([{ role: "assistant", text: GREETING }]);
+  const [messages, setMessages] = useState<ChatMsg[]>([{ role: "assistant", text: t("chat.greeting") }]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [toolHint, setToolHint] = useState<string | null>(null);
@@ -86,8 +85,8 @@ export default function ChatWidget() {
 
       if (!res.ok || !res.body) {
         const errText = res.status === 503
-          ? "The assistant is temporarily unavailable. Please try again later."
-          : "Sorry, something went wrong. Please try again.";
+          ? t("chat.error_unavailable")
+          : t("chat.error_generic");
         patchLast((msg) => ({ ...msg, text: errText }));
         setBusy(false);
         return;
@@ -118,7 +117,7 @@ export default function ChatWidget() {
               patchLast((msg) => ({ ...msg, text: msg.text + data.text }));
               break;
             case "tool":
-              setToolHint(toolLabel(data.name));
+              setToolHint(toolLabel(data.name, t));
               break;
             case "ui":
               if (data.kind === "spaces" && Array.isArray(data.data)) {
@@ -135,18 +134,18 @@ export default function ChatWidget() {
         }
       }
     } catch {
-      patchLast((msg) => ({ ...msg, text: msg.text || "Network error. Please try again." }));
+      patchLast((msg) => ({ ...msg, text: msg.text || t("chat.error_network") }));
     } finally {
       setBusy(false);
       setToolHint(null);
     }
-  }, [input, busy]);
+  }, [input, busy, t]);
 
   return (
     <>
       {/* Launcher button */}
       <button
-        aria-label={open ? "Close chat" : "Open chat assistant"}
+        aria-label={open ? t("chat.close") : t("chat.open")}
         onClick={() => setOpen((o) => !o)}
         className="fixed bottom-5 right-5 z-[60] flex h-14 w-14 items-center justify-center rounded-full text-white shadow-lg transition-transform hover:scale-105 focus:outline-none"
         style={{ backgroundColor: ACCENT }}
@@ -160,8 +159,8 @@ export default function ChatWidget() {
           <div className="flex items-center gap-3 px-4 py-3 text-white" style={{ backgroundColor: ACCENT }}>
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 font-semibold">M</div>
             <div className="leading-tight">
-              <div className="text-sm font-semibold">MillionStay Assistant</div>
-              <div className="text-xs text-white/80">Ask about rooms, prices & booking</div>
+              <div className="text-sm font-semibold">{t("chat.title")}</div>
+              <div className="text-xs text-white/80">{t("chat.subtitle")}</div>
             </div>
           </div>
 
@@ -175,7 +174,7 @@ export default function ChatWidget() {
                     }`}
                     style={m.role === "user" ? { backgroundColor: ACCENT } : undefined}
                   >
-                    {m.text || (busy && i === messages.length - 1 ? <span className="inline-flex items-center gap-1 text-gray-400"><Loader2 className="h-3.5 w-3.5 animate-spin" /> thinking…</span> : "")}
+                    {m.text || (busy && i === messages.length - 1 ? <span className="inline-flex items-center gap-1 text-gray-400"><Loader2 className="h-3.5 w-3.5 animate-spin" /> {t("chat.thinking")}</span> : "")}
                   </div>
                 </div>
                 {m.rooms && m.rooms.length > 0 && (
@@ -190,13 +189,13 @@ export default function ChatWidget() {
                       >
                         {r.image && <img src={r.image} alt="" className="h-14 w-14 flex-shrink-0 rounded-lg object-cover" />}
                         <div className="min-w-0 flex-1">
-                          <div className="truncate text-sm font-medium text-gray-900">{r.name ?? `Room #${r.space_id}`}</div>
+                          <div className="truncate text-sm font-medium text-gray-900">{r.name ?? t("chat.room_fallback", { id: r.space_id })}</div>
                           <div className="truncate text-xs text-gray-500">
                             {[r.city, r.space_type].filter(Boolean).join(" · ")}
                           </div>
                           {r.weekly_price != null && (
                             <div className="text-xs font-semibold" style={{ color: ACCENT }}>
-                              {r.currency ?? "AUD"} {r.weekly_price}/week
+                              {r.currency ?? "AUD"} {r.weekly_price}{t("chat.per_week")}
                             </div>
                           )}
                         </div>
@@ -222,7 +221,7 @@ export default function ChatWidget() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); } }}
-              placeholder="Type your message…"
+              placeholder={t("chat.placeholder")}
               rows={1}
               className="max-h-28 flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-300"
             />
@@ -231,7 +230,7 @@ export default function ChatWidget() {
               disabled={busy || !input.trim()}
               className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-white disabled:opacity-40"
               style={{ backgroundColor: ACCENT }}
-              aria-label="Send"
+              aria-label={t("chat.send")}
             >
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </button>
@@ -242,13 +241,13 @@ export default function ChatWidget() {
   );
 }
 
-function toolLabel(name: string): string {
+function toolLabel(name: string, t: (key: string) => string): string {
   switch (name) {
-    case "search_spaces": return "Searching available rooms…";
-    case "get_space_availability": return "Checking availability…";
-    case "get_space_details": return "Fetching room details…";
-    case "create_inquiry": return "Registering your enquiry…";
-    default: return "Working…";
+    case "search_spaces": return t("chat.tool_search");
+    case "get_space_availability": return t("chat.tool_availability");
+    case "get_space_details": return t("chat.tool_details");
+    case "create_inquiry": return t("chat.tool_inquiry");
+    default: return t("chat.tool_working");
   }
 }
 
