@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -43,6 +43,7 @@ import AdminBookingDetail from "@/pages/admin-booking-detail";
 import AdminGuests from "@/pages/admin-guests";
 import AdminSpaces from "@/pages/admin-spaces";
 import ChatWidget from "@/components/chat/ChatWidget";
+import { getApiBase } from "@/lib/api-base";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -98,10 +99,25 @@ function Router() {
   );
 }
 
-/** Show the AI chat widget on public pages only (not the embedded admin UI). */
+/**
+ * Show the AI chat widget on public pages only (not the embedded admin UI),
+ * and only when an admin has enabled it (toggle in Admin → Integrations).
+ */
 function ChatGate() {
   const [location] = useLocation();
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    fetch(`${getApiBase()}/api/v1/public/chat/config`)
+      .then((r) => (r.ok ? r.json() : { enabled: false }))
+      .then((c) => { if (active) setEnabled(Boolean(c?.enabled)); })
+      .catch(() => { if (active) setEnabled(false); });
+    return () => { active = false; };
+  }, []);
+
   if (location.startsWith("/admin")) return null;
+  if (enabled !== true) return null;
   return <ChatWidget />;
 }
 

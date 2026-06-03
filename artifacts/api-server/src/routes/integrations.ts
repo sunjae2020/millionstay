@@ -18,6 +18,7 @@ const ALLOWED_KEYS = [
   "RESEND_API_KEY",
   "EMAIL_FROM",
   "ANTHROPIC_API_KEY",
+  "CHAT_WIDGET_ENABLED",
 ];
 
 function maskKey(key: string | undefined): string {
@@ -70,11 +71,14 @@ router.get("/v1/integrations/status", async (_req: Request, res: Response): Prom
   const resendKey = await getEnvVar("RESEND_API_KEY");
   const emailFrom = await getEnvVar("EMAIL_FROM");
   const anthropicKey = await getEnvVar("ANTHROPIC_API_KEY");
+  const widgetEnabledRaw = await getEnvVar("CHAT_WIDGET_ENABLED");
 
   const stripeConfigured = !!stripeKey;
   const cloudinaryConfigured = !!(cloudName && cloudApiKey && cloudApiSecret);
   const resendConfigured = !!resendKey;
   const aiConfigured = !!anthropicKey;
+  // Default to enabled when the toggle has never been saved.
+  const widgetEnabled = widgetEnabledRaw !== "false";
 
   const maskedCloudApiKey = maskKey(cloudApiKey);
   const maskedCloudApiSecret = maskKey(cloudApiSecret);
@@ -111,6 +115,7 @@ router.get("/v1/integrations/status", async (_req: Request, res: Response): Prom
         configured: aiConfigured,
         masked_key: maskKey(anthropicKey),
         model: aiConfigured ? (process.env["CHAT_MODEL"] || "claude-sonnet-4-6") : null,
+        widget_enabled: widgetEnabled,
         error: null,
       },
       maps: {

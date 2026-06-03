@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, chatConversationsTable } from "@workspace/db";
+import { db, chatConversationsTable, integrationSettings } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { isChatConfigured, ChatConfigError } from "../lib/chat/anthropic";
 import { runChatTurn, type ChatEvent } from "../lib/chat/agent";
@@ -7,6 +7,29 @@ import { runChatTurn, type ChatEvent } from "../lib/chat/agent";
 const router: IRouter = Router();
 
 const MAX_MESSAGE_LEN = 4000;
+
+/** Whether the landing-page widget should render. Admin-controlled, default on. */
+async function isWidgetEnabled(): Promise<boolean> {
+  try {
+    const [row] = await db
+      .select({ value: integrationSettings.value })
+      .from(integrationSettings)
+      .where(eq(integrationSettings.key, "CHAT_WIDGET_ENABLED"));
+    // Default to enabled when the setting has never been saved.
+    return row ? row.value !== "false" : true;
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * GET /api/v1/public/chat/config
+ * Public — the landing-page widget reads this to decide whether to show itself.
+ */
+router.get("/v1/public/chat/config", async (_req, res): Promise<void> => {
+  res.setHeader("Cache-Control", "no-store");
+  res.json({ enabled: await isWidgetEnabled(), configured: isChatConfigured() });
+});
 
 /**
  * POST /api/v1/public/chat
