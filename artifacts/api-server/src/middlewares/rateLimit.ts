@@ -35,6 +35,16 @@ export const generalLimiter = rateLimit({
   skip,
 });
 
+// AI customer chat: each turn calls an LLM (cost) — cap bursts per IP.
+export const chatLimiter = rateLimit({
+  windowMs: 60_000,
+  limit: 20,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { error: "You're sending messages too quickly. Please wait a moment." },
+  skip,
+});
+
 // Sensitive privacy endpoints: 1 request per minute, 10 per day per IP.
 // Heavy DB joins; APP 12 access path; should never be hammered.
 export const privacyExportLimiter = rateLimit({

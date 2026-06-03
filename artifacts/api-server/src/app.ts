@@ -24,9 +24,11 @@ import ownerPortalRouter from "./routes/owner-portal";
 import serviceHostPortalRouter from "./routes/service-host-portal";
 import pageContentsRouter from "./routes/page-contents";
 import privacyRouter from "./routes/privacy";
+import chatRouter from "./routes/chat";
+import knowledgeRouter from "./routes/knowledge";
 import { logger } from "./lib/logger";
 import { requireAuth } from "./middlewares/requireAuth";
-import { loginLimiter, applicationLimiter, generalLimiter, privacyExportLimiter } from "./middlewares/rateLimit";
+import { loginLimiter, applicationLimiter, generalLimiter, privacyExportLimiter, chatLimiter } from "./middlewares/rateLimit";
 
 // Resolve the directory of this file — works both in source and in the esbuild bundle.
 // In the bundle (artifacts/api-server/dist/index.mjs), import.meta.url correctly
@@ -193,11 +195,13 @@ app.use([
   "/api/v1/guest/me/export",
   "/api/v1/guest/me/deletion-request",
 ], privacyExportLimiter);
+app.use("/api/v1/public/chat", chatLimiter);
 app.use("/api/", generalLimiter);
 
 app.use("/api", authRouter);
 app.use("/api", healthRouter);
 app.use("/api", publicRouter);
+app.use("/api", chatRouter);
 app.use("/api", privacyRouter);
 app.use("/api", guestAuthRouter);
 app.use("/api", guestPortalRouter);
@@ -223,6 +227,7 @@ app.use("/api/v1", requireAuth);
 app.use("/api/v1/admin", dbSyncRouter);
 
 app.use("/api", spaceImagesRouter);
+app.use("/api", knowledgeRouter);
 app.use("/api", pageContentsRouter);
 app.use("/api", router);
 

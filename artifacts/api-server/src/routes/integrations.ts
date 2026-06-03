@@ -17,6 +17,7 @@ const ALLOWED_KEYS = [
   "CLOUDINARY_API_SECRET",
   "RESEND_API_KEY",
   "EMAIL_FROM",
+  "ANTHROPIC_API_KEY",
 ];
 
 function maskKey(key: string | undefined): string {
@@ -68,10 +69,12 @@ router.get("/v1/integrations/status", async (_req: Request, res: Response): Prom
   const cloudApiSecret = await getEnvVar("CLOUDINARY_API_SECRET");
   const resendKey = await getEnvVar("RESEND_API_KEY");
   const emailFrom = await getEnvVar("EMAIL_FROM");
+  const anthropicKey = await getEnvVar("ANTHROPIC_API_KEY");
 
   const stripeConfigured = !!stripeKey;
   const cloudinaryConfigured = !!(cloudName && cloudApiKey && cloudApiSecret);
   const resendConfigured = !!resendKey;
+  const aiConfigured = !!anthropicKey;
 
   const maskedCloudApiKey = maskKey(cloudApiKey);
   const maskedCloudApiSecret = maskKey(cloudApiSecret);
@@ -102,6 +105,12 @@ router.get("/v1/integrations/status", async (_req: Request, res: Response): Prom
         configured: resendConfigured,
         from_email: emailFrom ?? null,
         masked_key: maskKey(resendKey),
+        error: null,
+      },
+      ai: {
+        configured: aiConfigured,
+        masked_key: maskKey(anthropicKey),
+        model: aiConfigured ? (process.env["CHAT_MODEL"] || "claude-sonnet-4-6") : null,
         error: null,
       },
       maps: {
@@ -191,6 +200,27 @@ router.post("/v1/integrations/resend/test", async (req: Request, res: Response):
     res.json({ success: true, message_id: result.data?.id ?? null });
   } catch (e: any) {
     res.status(400).json({ success: false, error: e?.message ?? "Resend connection failed" });
+  }
+});
+
+router.post("/v1/integrations/anthropic/test", async (_req: Request, res: Response): Promise<void> => {
+  const key = await getEnvVar("ANTHROPIC_API_KEY");
+  if (!key) {
+    res.status(400).json({ success: false, error: "ANTHROPIC_API_KEY not configured" });
+    return;
+  }
+  try {
+    const { getAnthropic, CHAT_MODEL } = await import("../lib/chat/anthropic");
+    const client = getAnthropic();
+    // Minimal 1-token round-trip to validate the key + model.
+    await client.messages.create({
+      model: CHAT_MODEL,
+      max_tokens: 1,
+      messages: [{ role: "user", content: "ping" }],
+    });
+    res.json({ success: true, model: CHAT_MODEL });
+  } catch (e: any) {
+    res.status(400).json({ success: false, error: e?.message ?? "Anthropic connection failed" });
   }
 });
 

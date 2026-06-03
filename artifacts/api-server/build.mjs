@@ -32,7 +32,9 @@ async function buildAll() {
       "@swc/core",
       "playwright",
       "puppeteer",
-      "electron"
+      "electron",
+      "pdf-parse",
+      "pdfjs-dist"
     ],
     sourcemap: "linked",
     plugins: [

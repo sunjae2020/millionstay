@@ -17,6 +17,7 @@ interface IntegrationStatus {
   stripe: { configured: boolean; mode: string | null; masked_key: string; error: string | null };
   cloudinary: { configured: boolean; cloud_name: string | null; masked_api_key: string; masked_api_secret: string; plan: string | null; storage_mb: string | null; error: string | null };
   resend: { configured: boolean; from_email: string | null; masked_key: string; error: string | null };
+  ai: { configured: boolean; masked_key: string; model: string | null; error: string | null };
   maps: { provider: string; configured: boolean; note: string };
   ical: { provider: string; configured: boolean; note: string };
 }
@@ -260,8 +261,21 @@ const ICalFields = () => (
   </p>
 );
 
-const AiFields = () => (
-  <p className="text-sm text-muted-foreground">AI Chatbot integration is coming soon.</p>
+const AiFields = ({ status, onRefresh }: { status: IntegrationStatus | null; onRefresh: () => void }) => (
+  <div className="space-y-3">
+    <div className="flex flex-col gap-1">
+      <Label className="text-xs text-muted-foreground">Anthropic API Key (ANTHROPIC_API_KEY)</Label>
+      <MaskedKeyInput value={status?.ai.masked_key ?? ""} envKey="ANTHROPIC_API_KEY" onSaved={onRefresh} />
+    </div>
+    <p className="text-xs text-muted-foreground">
+      Powers the landing-page chat assistant. Get a key at{" "}
+      <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer" className="text-[#E8621A] hover:underline">
+        console.anthropic.com
+      </a>
+      {status?.ai.model && <> · Model: <strong>{status.ai.model}</strong></>}.
+    </p>
+    {status?.ai.error && <p className="text-xs text-red-600">{status.ai.error}</p>}
+  </div>
 );
 
 const CARDS: CardDef[] = [
@@ -335,10 +349,16 @@ const CARDS: CardDef[] = [
     id: "ai",
     emoji: "🤖",
     name: "AI Chatbot",
-    description: "AI-powered guest assistant for automated inquiry responses",
-    getBadge: () => ({ variant: "not-configured", label: "Coming Soon" }),
+    description: "AI-powered guest assistant for the landing-page chat widget",
+    getBadge: (s) => {
+      if (!s) return { variant: "not-configured", label: "Not Configured" };
+      if (s.ai.error) return { variant: "error", label: "Error" };
+      if (!s.ai.configured) return { variant: "not-configured", label: "Not Configured" };
+      return { variant: "connected", label: "Connected" };
+    },
     Fields: AiFields,
-    isComingSoon: true,
+    testEndpoint: "/api/v1/integrations/anthropic/test",
+    testLabel: "Test AI",
   },
 ];
 

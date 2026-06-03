@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -42,6 +42,7 @@ import AdminBookings from "@/pages/admin-bookings";
 import AdminBookingDetail from "@/pages/admin-booking-detail";
 import AdminGuests from "@/pages/admin-guests";
 import AdminSpaces from "@/pages/admin-spaces";
+import ChatWidget from "@/components/chat/ChatWidget";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -97,6 +98,13 @@ function Router() {
   );
 }
 
+/** Show the AI chat widget on public pages only (not the embedded admin UI). */
+function ChatGate() {
+  const [location] = useLocation();
+  if (location.startsWith("/admin")) return null;
+  return <ChatWidget />;
+}
+
 function AdminDomainRedirect() {
   useEffect(() => {
     if (window.location.hostname === "admin.millionstay.com") {
@@ -114,6 +122,7 @@ function App() {
           <AdminDomainRedirect />
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
             <Router />
+            <ChatGate />
           </WouterRouter>
           <Toaster />
         </TooltipProvider>
