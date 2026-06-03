@@ -53,7 +53,15 @@
     "cs_ticket": "CSチケット",
     "contract_list": "契約一覧",
     "invoice_list": "請求書一覧",
-    "tenant_lifecycle": "テナントライフサイクル"
+    "tenant_lifecycle": "テナントライフサイクル",
+    "documents": "ドキュメント",
+    "all_documents": "すべてのドキュメント",
+    "quotes": "見積書",
+    "exchange_rates": "為替レート",
+    "content": "コンテンツ",
+    "blog_posts": "ブログ記事",
+    "website_pages": "ウェブサイトページ",
+    "languages": "言語"
   },
   "dashboard": {
     "title": "ダッシュボード",

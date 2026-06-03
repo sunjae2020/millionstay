@@ -53,7 +53,15 @@
     "cs_ticket": "ตั๋วบริการลูกค้า",
     "contract_list": "รายการสัญญา",
     "invoice_list": "รายการใบแจ้งหนี้",
-    "tenant_lifecycle": "วงจรชีวิตผู้เช่า"
+    "tenant_lifecycle": "วงจรชีวิตผู้เช่า",
+    "documents": "เอกสาร",
+    "all_documents": "เอกสารทั้งหมด",
+    "quotes": "ใบเสนอราคา",
+    "exchange_rates": "อัตราแลกเปลี่ยน",
+    "content": "เนื้อหา",
+    "blog_posts": "บทความบล็อก",
+    "website_pages": "หน้าเว็บไซต์",
+    "languages": "ภาษา"
   },
   "dashboard": {
     "title": "แดชบอร์ด",

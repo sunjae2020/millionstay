@@ -53,7 +53,15 @@
     "cs_ticket": "CS Ticket",
     "contract_list": "Contract List",
     "invoice_list": "Invoice List",
-    "tenant_lifecycle": "Tenant Lifecycle"
+    "tenant_lifecycle": "Tenant Lifecycle",
+    "documents": "Documents",
+    "all_documents": "All Documents",
+    "quotes": "Quotes",
+    "exchange_rates": "Exchange Rates",
+    "content": "Content",
+    "blog_posts": "Blog Posts",
+    "website_pages": "Website Pages",
+    "languages": "Languages"
   },
   "dashboard": {
     "title": "Dashboard",

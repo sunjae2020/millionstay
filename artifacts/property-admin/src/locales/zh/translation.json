@@ -53,7 +53,15 @@
     "cs_ticket": "客服工单",
     "contract_list": "合同列表",
     "invoice_list": "发票列表",
-    "tenant_lifecycle": "租户生命周期"
+    "tenant_lifecycle": "租户生命周期",
+    "documents": "文档",
+    "all_documents": "所有文档",
+    "quotes": "报价单",
+    "exchange_rates": "汇率",
+    "content": "内容",
+    "blog_posts": "博客文章",
+    "website_pages": "网站页面",
+    "languages": "语言"
   },
   "dashboard": {
     "title": "仪表板",
