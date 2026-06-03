@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
@@ -33,6 +34,7 @@ async function fetchQuotes(q: string): Promise<any[]> {
 }
 
 export default function QuoteList() {
+  const { t } = useTranslation();
   const [, navigate] = useLocation();
   const [q, setQ] = useState("");
   const { data, isLoading } = useQuery({ queryKey: ["quotes", q], queryFn: () => fetchQuotes(q) });
@@ -41,15 +43,15 @@ export default function QuoteList() {
 
   return (
     <Layout>
-      <PageHeader title="Quotes" subtitle={`${rows.length} quotation${rows.length === 1 ? "" : "s"}`} />
+      <PageHeader title={t("quote.title", "Quotes")} subtitle={t("quote.count_quotations", "{{count}} quotations", { count: rows.length })} />
       <div className="p-6">
         <div className="flex gap-3 mb-4 flex-wrap">
           <div className="relative flex-1 min-w-[200px] max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder="Search by reference…" value={q} onChange={(e) => setQ(e.target.value)} />
+            <Input className="pl-9" placeholder={t("quote.search_placeholder", "Search by reference…")} value={q} onChange={(e) => setQ(e.target.value)} />
           </div>
           <Button className="bg-[#E8621A] hover:bg-[#d4561a] text-white" onClick={() => navigate("/documents/quotes/new")}>
-            <Plus className="h-4 w-4 mr-1" /> New Quote
+            <Plus className="h-4 w-4 mr-1" /> {t("quote.new_quote", "New Quote")}
           </Button>
         </div>
 
@@ -58,21 +60,21 @@ export default function QuoteList() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Reference</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Party</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Total</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Valid Until</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("quote.reference", "Reference")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("quote.party", "Party")}</th>
+                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.total", "Total")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("quote.valid_until", "Valid Until")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.status", "Status")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {isLoading ? (
-                  <tr><td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">Loading…</td></tr>
+                  <tr><td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">{t("common.loading", "Loading…")}</td></tr>
                 ) : rows.length === 0 ? (
                   <tr><td colSpan={5} className="px-4 py-12 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <FileText className="h-8 w-8 text-muted-foreground/40" />
-                      <p className="text-muted-foreground">No quotes yet</p>
+                      <p className="text-muted-foreground">{t("quote.empty", "No quotes yet")}</p>
                     </div>
                   </td></tr>
                 ) : pagination.paginatedItems.map((r: any) => (

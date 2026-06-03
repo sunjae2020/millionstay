@@ -1,4 +1,5 @@
 import { useState, FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "wouter";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +11,7 @@ import logoSrc from "/millionstay-logo.png";
 const BRAND = "#E8621A";
 
 export default function RegisterPage() {
+  const { t } = useTranslation();
   const [, navigate] = useLocation();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -35,11 +37,11 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError(t("register.error_passwords_no_match"));
       return;
     }
     if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+      setError(t("register.error_password_too_short"));
       return;
     }
     setLoading(true);
@@ -51,12 +53,12 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (!data.success) {
-        setError(data.error ?? "Registration failed. Please try again.");
+        setError(data.error ?? t("register.error_registration_failed"));
       } else {
         setSuccess(true);
       }
     } catch {
-      setError("Registration failed. Please try again.");
+      setError(t("register.error_registration_failed"));
     } finally {
       setLoading(false);
     }
@@ -72,9 +74,9 @@ export default function RegisterPage() {
             </div>
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Request Submitted</h1>
+            <h1 className="text-2xl font-bold text-slate-900">{t("register.success_title")}</h1>
             <p className="text-slate-500 text-sm mt-2 leading-relaxed">
-              Your account request has been submitted. An administrator will review it and activate your account shortly. You'll be able to log in once approved.
+              {t("register.success_message")}
             </p>
           </div>
           <Link
@@ -82,7 +84,7 @@ export default function RegisterPage() {
             className="inline-flex items-center justify-center w-full h-11 rounded-lg text-sm font-semibold text-white shadow-md"
             style={{ background: `linear-gradient(135deg, ${BRAND} 0%, #FF8C3A 100%)` }}
           >
-            Back to Sign In
+            {t("register.back_to_sign_in")}
           </Link>
         </div>
       </div>
@@ -103,23 +105,23 @@ export default function RegisterPage() {
 
         <div className="relative z-10">
           <img src={logoSrc} alt="MillionStay" className="h-9 w-auto" />
-          <p className="text-white/30 text-[10px] tracking-[0.2em] uppercase mt-2 ml-0.5">Admin Portal</p>
+          <p className="text-white/30 text-[10px] tracking-[0.2em] uppercase mt-2 ml-0.5">{t("register.admin_portal")}</p>
         </div>
 
         <div className="relative z-10 space-y-5">
           <h2 className="text-[2rem] font-bold text-white leading-[1.2]">
-            Join the<br />
+            {t("register.brand_heading_line1")}<br />
             <span style={{ color: BRAND }}>MillionStay</span><br />
-            team.
+            {t("register.brand_heading_line3")}
           </h2>
           <p className="text-white/45 text-sm leading-relaxed max-w-[260px]">
-            Request access to the admin panel. Accounts are reviewed and approved by a super administrator.
+            {t("register.brand_subtitle")}
           </p>
           <div className="space-y-3">
             {[
-              "Fill in your details below",
-              "Admin reviews your request",
-              "Get notified & log in",
+              t("register.step_fill_details"),
+              t("register.step_admin_reviews"),
+              t("register.step_get_notified"),
             ].map((step, i) => (
               <div key={i} className="flex items-center gap-3">
                 <div className="h-6 w-6 rounded-full flex items-center justify-center flex-shrink-0 text-white text-[11px] font-bold"
@@ -133,7 +135,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="relative z-10">
-          <p className="text-white/20 text-xs">© 2026 MillionStay · All rights reserved</p>
+          <p className="text-white/20 text-xs">{t("register.copyright", { year: 2026 })}</p>
         </div>
       </div>
 
@@ -146,9 +148,9 @@ export default function RegisterPage() {
           </div>
 
           <div className="mb-7">
-            <h1 className="text-2xl font-bold text-slate-900">Request Access</h1>
+            <h1 className="text-2xl font-bold text-slate-900">{t("register.title")}</h1>
             <p className="text-slate-500 text-sm mt-1">
-              Your account will be activated after admin approval.
+              {t("register.subtitle")}
             </p>
           </div>
 
@@ -156,24 +158,24 @@ export default function RegisterPage() {
             {/* Name row */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="firstName" className="text-sm font-medium text-slate-700">First Name</Label>
+                <Label htmlFor="firstName" className="text-sm font-medium text-slate-700">{t("register.first_name")}</Label>
                 <Input
                   id="firstName"
                   required
                   value={firstName}
                   onChange={e => setFirstName(e.target.value)}
-                  placeholder="Jane"
+                  placeholder={t("register.first_name_placeholder")}
                   className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="lastName" className="text-sm font-medium text-slate-700">Last Name</Label>
+                <Label htmlFor="lastName" className="text-sm font-medium text-slate-700">{t("register.last_name")}</Label>
                 <Input
                   id="lastName"
                   required
                   value={lastName}
                   onChange={e => setLastName(e.target.value)}
-                  placeholder="Smith"
+                  placeholder={t("register.last_name_placeholder")}
                   className="h-11 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400"
                 />
               </div>
@@ -181,7 +183,7 @@ export default function RegisterPage() {
 
             {/* Email */}
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-sm font-medium text-slate-700">Work Email</Label>
+              <Label htmlFor="email" className="text-sm font-medium text-slate-700">{t("register.work_email")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -196,7 +198,7 @@ export default function RegisterPage() {
 
             {/* Password */}
             <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-sm font-medium text-slate-700">Password</Label>
+              <Label htmlFor="password" className="text-sm font-medium text-slate-700">{t("register.password")}</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -204,7 +206,7 @@ export default function RegisterPage() {
                   required
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  placeholder="Min. 8 characters"
+                  placeholder={t("register.password_placeholder")}
                   className="h-11 bg-white border-slate-200 text-slate-900 pr-10 placeholder:text-slate-400"
                 />
                 <button type="button" tabIndex={-1} onClick={() => setShowPassword(v => !v)}
@@ -227,7 +229,7 @@ export default function RegisterPage() {
                     )} />
                   ))}
                   <span className="text-[10px] text-slate-400 ml-1 whitespace-nowrap">
-                    {["", "Weak", "Fair", "Good", "Strong"][passwordStrength]}
+                    {["", t("register.strength_weak"), t("register.strength_fair"), t("register.strength_good"), t("register.strength_strong")][passwordStrength]}
                   </span>
                 </div>
               )}
@@ -235,7 +237,7 @@ export default function RegisterPage() {
 
             {/* Confirm password */}
             <div className="space-y-1.5">
-              <Label htmlFor="confirmPassword" className="text-sm font-medium text-slate-700">Confirm Password</Label>
+              <Label htmlFor="confirmPassword" className="text-sm font-medium text-slate-700">{t("register.confirm_password")}</Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
@@ -243,7 +245,7 @@ export default function RegisterPage() {
                   required
                   value={confirmPassword}
                   onChange={e => setConfirmPassword(e.target.value)}
-                  placeholder="Re-enter password"
+                  placeholder={t("register.confirm_password_placeholder")}
                   className={cn(
                     "h-11 bg-white border-slate-200 text-slate-900 pr-10 placeholder:text-slate-400",
                     confirmPassword && confirmPassword !== password && "border-red-300 focus:border-red-400"
@@ -268,14 +270,14 @@ export default function RegisterPage() {
               className="w-full h-11 rounded-lg text-sm font-semibold text-white transition-opacity disabled:opacity-60 flex items-center justify-center gap-2 shadow-md mt-2"
               style={{ background: `linear-gradient(135deg, ${BRAND} 0%, #FF8C3A 100%)` }}
             >
-              {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</> : "Request Access →"}
+              {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> {t("register.submitting")}</> : t("register.submit_button")}
             </button>
           </form>
 
           <p className="text-center text-sm text-slate-500 mt-6">
-            Already have an account?{" "}
+            {t("register.already_have_account")}{" "}
             <Link href="/login" className="font-semibold hover:underline" style={{ color: BRAND }}>
-              Sign in
+              {t("register.sign_in")}
             </Link>
           </p>
         </div>

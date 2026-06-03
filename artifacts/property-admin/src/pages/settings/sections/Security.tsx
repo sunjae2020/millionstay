@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +21,7 @@ interface SecurityForm {
 }
 
 export function Security() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [twoFa, setTwoFa] = useState(false);
 
@@ -36,19 +38,19 @@ export function Security() {
   });
 
   function onSubmit(_data: SecurityForm) {
-    toast({ title: "Saved", description: "Security settings have been updated." });
+    toast({ title: t("settings_security.toast_saved_title"), description: t("settings_security.toast_saved_desc") });
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
-        <h3 className="text-base font-semibold">Session</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">Login session duration</p>
+        <h3 className="text-base font-semibold">{t("settings_security.session_title")}</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">{t("settings_security.session_desc")}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label>Session Timeout</Label>
+          <Label>{t("settings_security.session_timeout_label")}</Label>
           <Controller
             name="session_timeout"
             control={control}
@@ -56,11 +58,11 @@ export function Security() {
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="60">1 hour</SelectItem>
-                  <SelectItem value="240">4 hours</SelectItem>
-                  <SelectItem value="480">8 hours (default)</SelectItem>
-                  <SelectItem value="1440">24 hours</SelectItem>
-                  <SelectItem value="10080">7 days</SelectItem>
+                  <SelectItem value="60">{t("settings_security.timeout_1_hour")}</SelectItem>
+                  <SelectItem value="240">{t("settings_security.timeout_4_hours")}</SelectItem>
+                  <SelectItem value="480">{t("settings_security.timeout_8_hours_default")}</SelectItem>
+                  <SelectItem value="1440">{t("settings_security.timeout_24_hours")}</SelectItem>
+                  <SelectItem value="10080">{t("settings_security.timeout_7_days")}</SelectItem>
                 </SelectContent>
               </Select>
             )}
@@ -71,22 +73,22 @@ export function Security() {
       <Separator />
 
       <div>
-        <h3 className="text-base font-semibold">Password Policy</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">Requirements for admin account passwords</p>
+        <h3 className="text-base font-semibold">{t("settings_security.password_policy_title")}</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">{t("settings_security.password_policy_desc")}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label>Minimum Length</Label>
+          <Label>{t("settings_security.minimum_length_label")}</Label>
           <Input {...register("min_password_length")} type="number" min={6} max={32} placeholder="8" />
         </div>
       </div>
 
       <div className="space-y-3">
         {[
-          { name: "require_uppercase" as const, label: "Require uppercase letter (A–Z)" },
-          { name: "require_number" as const, label: "Require number (0–9)" },
-          { name: "require_special" as const, label: "Require special character (!@#$...)" },
+          { name: "require_uppercase" as const, label: t("settings_security.require_uppercase_label") },
+          { name: "require_number" as const, label: t("settings_security.require_number_label") },
+          { name: "require_special" as const, label: t("settings_security.require_special_label") },
         ].map(({ name, label }) => (
           <div key={name} className="flex items-center justify-between">
             <Label className="font-normal cursor-pointer">{label}</Label>
@@ -104,18 +106,18 @@ export function Security() {
       <Separator />
 
       <div>
-        <h3 className="text-base font-semibold">Login Security</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">Brute-force protection settings</p>
+        <h3 className="text-base font-semibold">{t("settings_security.login_security_title")}</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">{t("settings_security.login_security_desc")}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label>Max Login Attempts</Label>
+          <Label>{t("settings_security.max_login_attempts_label")}</Label>
           <Input {...register("login_attempt_limit")} type="number" min={3} max={10} placeholder="5" />
-          <p className="text-xs text-muted-foreground">Account will be locked after this many failures</p>
+          <p className="text-xs text-muted-foreground">{t("settings_security.max_login_attempts_helper")}</p>
         </div>
         <div className="space-y-1.5">
-          <Label>Lockout Duration (minutes)</Label>
+          <Label>{t("settings_security.lockout_duration_label")}</Label>
           <Input {...register("lockout_duration")} type="number" min={5} placeholder="30" />
         </div>
       </div>
@@ -123,14 +125,14 @@ export function Security() {
       <Separator />
 
       <div>
-        <h3 className="text-base font-semibold">Two-Factor Authentication (2FA)</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">Enforce 2FA for all admin accounts</p>
+        <h3 className="text-base font-semibold">{t("settings_security.two_factor_title")}</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">{t("settings_security.two_factor_desc")}</p>
       </div>
 
       <div className="flex items-center justify-between rounded-lg border px-4 py-3">
         <div>
-          <p className="text-sm font-medium">Enforce 2FA</p>
-          <p className="text-xs text-muted-foreground mt-0.5">Require TOTP authentication for all admin logins</p>
+          <p className="text-sm font-medium">{t("settings_security.enforce_2fa_label")}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{t("settings_security.enforce_2fa_helper")}</p>
         </div>
         <Switch checked={twoFa} onCheckedChange={setTwoFa} />
       </div>
@@ -139,8 +141,7 @@ export function Security() {
         <div className="flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3">
           <ShieldAlert className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
           <p className="text-xs text-amber-800">
-            Enabling 2FA will require all admins to set up an authenticator app on next login.
-            Google Authenticator or Authy are recommended.
+            {t("settings_security.two_factor_warning")}
           </p>
         </div>
       )}
@@ -148,7 +149,7 @@ export function Security() {
       <div className="flex justify-end pt-2">
         <Button type="submit">
           <Save className="h-4 w-4 mr-2" />
-          Save
+          {t("common.save")}
         </Button>
       </div>
     </form>

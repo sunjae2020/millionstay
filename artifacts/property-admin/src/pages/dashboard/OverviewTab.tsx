@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { apiFetch } from "@/lib/apiFetch";
 import {
@@ -31,6 +32,7 @@ function fmtMoney(n: number, currency = "AUD") {
 }
 
 function MiniCalendar({ bookings }: { bookings: any[] }) {
+  const { t } = useTranslation();
   const today = new Date();
   const dates: Date[] = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(today); d.setDate(d.getDate() + i); return d;
@@ -49,14 +51,14 @@ function MiniCalendar({ bookings }: { bookings: any[] }) {
   }
 
   if (spaces.length === 0) {
-    return <p className="text-sm text-muted-foreground text-center py-8">No upcoming bookings</p>;
+    return <p className="text-sm text-muted-foreground text-center py-8">{t("dash_overview.no_upcoming_bookings")}</p>;
   }
 
   return (
     <div className="overflow-auto">
       <div className="min-w-max">
         <div className="flex border-b">
-          <div className="w-32 shrink-0 px-2 py-1.5 text-[11px] font-semibold text-muted-foreground">Space</div>
+          <div className="w-32 shrink-0 px-2 py-1.5 text-[11px] font-semibold text-muted-foreground">{t("dash_overview.col_space")}</div>
           {dates.map((d) => (
             <div key={d.toISOString()} className={`w-14 shrink-0 text-center py-1.5 text-[11px] ${d.toDateString() === today.toDateString() ? "text-[#E8621A] font-bold" : "text-muted-foreground"}`}>
               <div>{d.getDate()}</div>
@@ -90,7 +92,7 @@ function MiniCalendar({ bookings }: { bookings: any[] }) {
         {["Active", "Confirmed", "PendingApproval", "Draft"].map((s) => (
           <div key={s} className="flex items-center gap-1">
             <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: CAL_COLORS[s] }} />
-            <span className="text-[10px] text-muted-foreground">{s}</span>
+            <span className="text-[10px] text-muted-foreground">{t(`dash_overview.status_${s.toLowerCase()}`)}</span>
           </div>
         ))}
       </div>
@@ -129,6 +131,7 @@ function MiniStat({ icon: Icon, label, value, href }: {
 }
 
 export default function OverviewTab() {
+  const { t } = useTranslation();
   const { data: suburbs } = useListSuburbs();
   const { data: properties } = useListProperties();
   const { data: spaces } = useListSpaces();
@@ -177,21 +180,21 @@ export default function OverviewTab() {
     .slice(0, 6);
 
   const alerts = [
-    overdueInvoices > 0 && { tone: "red" as const, text: `${overdueInvoices} overdue invoice${overdueInvoices === 1 ? "" : "s"} (${fmtMoney(overdueAmount)})`, href: "/finance/invoices" },
-    urgentWO > 0 && { tone: "red" as const, text: `${urgentWO} urgent work order${urgentWO === 1 ? "" : "s"} need attention`, href: "/maintenance/work-orders" },
-    pendingApprovals > 0 && { tone: "amber" as const, text: `${pendingApprovals} booking${pendingApprovals === 1 ? "" : "s"} pending approval`, href: "/booking/bookings" },
-    pendingProperties > 0 && { tone: "amber" as const, text: `${pendingProperties} propert${pendingProperties === 1 ? "y" : "ies"} awaiting approval`, href: "/property/properties" },
-    overdueTasks > 0 && { tone: "amber" as const, text: `${overdueTasks} overdue task${overdueTasks === 1 ? "" : "s"}`, href: "/account/tasks" },
+    overdueInvoices > 0 && { tone: "red" as const, text: t("dash_overview.alert_overdue_invoices", { count: overdueInvoices, amount: fmtMoney(overdueAmount) }), href: "/finance/invoices" },
+    urgentWO > 0 && { tone: "red" as const, text: t("dash_overview.alert_urgent_work_orders", { count: urgentWO }), href: "/maintenance/work-orders" },
+    pendingApprovals > 0 && { tone: "amber" as const, text: t("dash_overview.alert_pending_approvals", { count: pendingApprovals }), href: "/booking/bookings" },
+    pendingProperties > 0 && { tone: "amber" as const, text: t("dash_overview.alert_pending_properties", { count: pendingProperties }), href: "/property/properties" },
+    overdueTasks > 0 && { tone: "amber" as const, text: t("dash_overview.alert_overdue_tasks", { count: overdueTasks }), href: "/account/tasks" },
   ].filter(Boolean) as { tone: "red" | "amber"; text: string; href: string }[];
 
   function relTime(iso: string) {
     const diff = Date.now() - new Date(iso).getTime();
     const mins = Math.round(diff / 60000);
-    if (mins < 1) return "just now";
-    if (mins < 60) return `${mins}m ago`;
+    if (mins < 1) return t("dash_overview.time_just_now");
+    if (mins < 60) return t("dash_overview.time_minutes_ago", { count: mins });
     const hrs = Math.round(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    return `${Math.round(hrs / 24)}d ago`;
+    if (hrs < 24) return t("dash_overview.time_hours_ago", { count: hrs });
+    return t("dash_overview.time_days_ago", { count: Math.round(hrs / 24) });
   }
 
   return (
@@ -199,22 +202,22 @@ export default function OverviewTab() {
       {/* Primary KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
-          icon={BedDouble} accent="brand" label="Occupancy"
-          value={`${occupancyPct}%`} sublabel={`${activeBookings} active · ${totalSpaces} spaces`}
+          icon={BedDouble} accent="brand" label={t("dash_overview.kpi_occupancy")}
+          value={`${occupancyPct}%`} sublabel={t("dash_overview.kpi_occupancy_sub", { active: activeBookings, total: totalSpaces })}
           progress={occupancyPct}
         />
         <KpiCard
-          icon={LogIn} accent="green" label="Today's Check-ins"
-          value={todayCheckIns} sublabel={pendingApprovals > 0 ? `${pendingApprovals} pending approval` : "All confirmed"}
+          icon={LogIn} accent="green" label={t("dash_overview.kpi_today_checkins")}
+          value={todayCheckIns} sublabel={pendingApprovals > 0 ? t("dash_overview.kpi_pending_approval", { count: pendingApprovals }) : t("dash_overview.kpi_all_confirmed")}
         />
         <KpiCard
-          icon={LogOut} accent="blue" label="Today's Check-outs"
-          value={todayCheckOuts} sublabel={`${todayCheckOuts} departures scheduled`}
+          icon={LogOut} accent="blue" label={t("dash_overview.kpi_today_checkouts")}
+          value={todayCheckOuts} sublabel={t("dash_overview.kpi_departures_scheduled", { count: todayCheckOuts })}
         />
         <KpiCard
-          icon={DollarSign} accent="purple" label="Revenue This Month"
+          icon={DollarSign} accent="purple" label={t("dash_overview.kpi_revenue_this_month")}
           value={fmtMoney(monthlyRevenue)} sublabel={new Date().toLocaleDateString("en", { month: "long", year: "numeric" })}
-          trend={monthlyRevenue > 0 ? "Paid" : undefined} trendType="up"
+          trend={monthlyRevenue > 0 ? t("dash_overview.status_paid") : undefined} trendType="up"
         />
       </div>
 
@@ -222,34 +225,34 @@ export default function OverviewTab() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <DashCard
           className="lg:col-span-2"
-          title="7-Day Booking Calendar"
+          title={t("dash_overview.calendar_title")}
           icon={CalendarDays}
-          action={<Link href="/dashboard?tab=reservations" className="text-xs text-[#E8621A] hover:underline">Open reservations →</Link>}
+          action={<Link href="/dashboard?tab=reservations" className="text-xs text-[#E8621A] hover:underline">{t("dash_overview.open_reservations")} →</Link>}
         >
           <MiniCalendar bookings={bookings ?? []} />
         </DashCard>
 
         <div className="space-y-4">
-          <DashCard title="Quick Actions">
+          <DashCard title={t("dash_overview.quick_actions")}>
             <div className="grid grid-cols-2 gap-2">
               <Link href="/booking/bookings/new" className="flex items-center gap-2 rounded-lg border p-2.5 text-xs font-semibold text-muted-foreground hover:border-[#E8621A]/50 hover:text-[#E8621A] hover:bg-[#E8621A]/5 transition-all">
-                <Plus className="h-4 w-4" /> New Booking
+                <Plus className="h-4 w-4" /> {t("dash_overview.action_new_booking")}
               </Link>
               <Link href="/finance/invoices/new" className="flex items-center gap-2 rounded-lg border p-2.5 text-xs font-semibold text-muted-foreground hover:border-[#E8621A]/50 hover:text-[#E8621A] hover:bg-[#E8621A]/5 transition-all">
-                <Receipt className="h-4 w-4" /> Invoice
+                <Receipt className="h-4 w-4" /> {t("dash_overview.action_invoice")}
               </Link>
               <Link href="/property/properties/new" className="flex items-center gap-2 rounded-lg border p-2.5 text-xs font-semibold text-muted-foreground hover:border-[#E8621A]/50 hover:text-[#E8621A] hover:bg-[#E8621A]/5 transition-all">
-                <Building2 className="h-4 w-4" /> Property
+                <Building2 className="h-4 w-4" /> {t("dash_overview.action_property")}
               </Link>
               <Link href="/maintenance/work-orders/new" className="flex items-center gap-2 rounded-lg border p-2.5 text-xs font-semibold text-muted-foreground hover:border-[#E8621A]/50 hover:text-[#E8621A] hover:bg-[#E8621A]/5 transition-all">
-                <Wrench className="h-4 w-4" /> Work Order
+                <Wrench className="h-4 w-4" /> {t("dash_overview.action_work_order")}
               </Link>
             </div>
           </DashCard>
 
-          <DashCard title="Alerts" icon={AlertTriangle}>
+          <DashCard title={t("dash_overview.alerts")} icon={AlertTriangle}>
             {alerts.length === 0 ? (
-              <p className="text-xs text-muted-foreground py-2 text-center">All clear — nothing needs attention 🎉</p>
+              <p className="text-xs text-muted-foreground py-2 text-center">{t("dash_overview.alerts_all_clear")}</p>
             ) : (
               <div className="space-y-2">
                 {alerts.map((a, i) => (
@@ -277,23 +280,30 @@ export default function OverviewTab() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <DashCard
           className="lg:col-span-2"
-          title="Recent Bookings"
+          title={t("dash_overview.recent_bookings")}
           icon={CalendarDays}
           bodyClass="p-0"
-          action={<Link href="/booking/bookings" className="text-xs text-[#E8621A] hover:underline">View all →</Link>}
+          action={<Link href="/booking/bookings" className="text-xs text-[#E8621A] hover:underline">{t("dash_overview.view_all")} →</Link>}
         >
           <div className="overflow-auto">
             <table className="w-full text-xs">
               <thead className="bg-muted/50">
                 <tr>
-                  {["Ref #", "Guest", "Space", "Check-in", "Amount", "Status"].map(h => (
+                  {[
+                    t("dash_overview.col_ref"),
+                    t("dash_overview.col_guest"),
+                    t("dash_overview.col_space"),
+                    t("dash_overview.col_check_in"),
+                    t("common.amount"),
+                    t("common.status"),
+                  ].map(h => (
                     <th key={h} className="px-3 py-2 text-left text-muted-foreground font-medium">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {recentBookings.length === 0 ? (
-                  <tr><td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">No bookings yet</td></tr>
+                  <tr><td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">{t("dash_overview.no_bookings_yet")}</td></tr>
                 ) : recentBookings.map(b => (
                   <tr key={b.id} className="hover:bg-muted/30">
                     <td className="px-3 py-2 font-mono font-medium">
@@ -305,7 +315,7 @@ export default function OverviewTab() {
                     <td className="px-3 py-2">{b.total_rent ? `${b.currency ?? "AUD"} ${parseFloat(b.total_rent).toLocaleString()}` : "—"}</td>
                     <td className="px-3 py-2">
                       <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${STATUS_BADGE[b.booking_status] ?? "bg-gray-100 text-gray-600"}`}>
-                        {b.booking_status}
+                        {t(`dash_overview.status_${String(b.booking_status).toLowerCase()}`, { defaultValue: b.booking_status })}
                       </span>
                     </td>
                   </tr>
@@ -315,10 +325,10 @@ export default function OverviewTab() {
           </div>
         </DashCard>
 
-        <DashCard title="Activity Feed" icon={Activity} bodyClass="p-0">
+        <DashCard title={t("dash_overview.activity_feed")} icon={Activity} bodyClass="p-0">
           <div className="divide-y max-h-[340px] overflow-auto">
             {activity.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-8">No recent activity</p>
+              <p className="text-xs text-muted-foreground text-center py-8">{t("dash_overview.no_recent_activity")}</p>
             ) : activity.map(log => (
               <div key={log.id} className="flex items-start gap-3 px-4 py-2.5">
                 <span className="text-base mt-0.5 shrink-0">{activityEmoji(log.action)}</span>
@@ -337,16 +347,16 @@ export default function OverviewTab() {
 
       {/* Portfolio mini-stats */}
       <div>
-        <h2 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">Portfolio</h2>
+        <h2 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("dash_overview.portfolio")}</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-          <MiniStat icon={Building2} label="Properties" value={properties?.length} href="/property/properties" />
-          <MiniStat icon={Layers} label="Spaces" value={totalSpaces} href="/property/spaces" />
-          <MiniStat icon={TrendingUp} label="Active Spaces" value={activeSpaces} href="/property/spaces" />
-          <MiniStat icon={Users} label="Contacts" value={contacts?.length} href="/account/contacts" />
-          <MiniStat icon={FileText} label="Accounts" value={accounts?.length} href="/account/accounts" />
-          <MiniStat icon={CheckSquare} label="Open Tasks" value={tasks?.filter(t => t.task_status !== "Done").length} href="/account/tasks" />
-          <MiniStat icon={TrendingUp} label="Leads" value={leads?.length} href="/account/leads" />
-          <MiniStat icon={CalendarDays} label="Suburbs" value={suburbs?.length} href="/settings/suburbs" />
+          <MiniStat icon={Building2} label={t("dash_overview.stat_properties")} value={properties?.length} href="/property/properties" />
+          <MiniStat icon={Layers} label={t("dash_overview.stat_spaces")} value={totalSpaces} href="/property/spaces" />
+          <MiniStat icon={TrendingUp} label={t("dash_overview.stat_active_spaces")} value={activeSpaces} href="/property/spaces" />
+          <MiniStat icon={Users} label={t("dash_overview.stat_contacts")} value={contacts?.length} href="/account/contacts" />
+          <MiniStat icon={FileText} label={t("dash_overview.stat_accounts")} value={accounts?.length} href="/account/accounts" />
+          <MiniStat icon={CheckSquare} label={t("dash_overview.stat_open_tasks")} value={tasks?.filter(t => t.task_status !== "Done").length} href="/account/tasks" />
+          <MiniStat icon={TrendingUp} label={t("dash_overview.stat_leads")} value={leads?.length} href="/account/leads" />
+          <MiniStat icon={CalendarDays} label={t("dash_overview.stat_suburbs")} value={suburbs?.length} href="/settings/suburbs" />
         </div>
       </div>
     </div>

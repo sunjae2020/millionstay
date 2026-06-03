@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -133,6 +134,7 @@ const PAGE_FIELDS: Record<string, SectionField[]> = {
 // ─── Rich Text Editor ────────────────────────────────────────────────────────
 
 function RichTextEditor({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const { t } = useTranslation();
   const editorRef = useRef<HTMLDivElement>(null);
   const [preview, setPreview] = useState(false);
 
@@ -149,46 +151,46 @@ function RichTextEditor({ value, onChange }: { value: string; onChange: (v: stri
   };
 
   const insertLink = () => {
-    const url = window.prompt("URL 입력 / Enter URL:");
+    const url = window.prompt(t("website_content.enter_url"));
     if (url) exec("createLink", url);
   };
 
   const insertImg = () => {
-    const url = window.prompt("이미지 URL 입력 / Enter Image URL:");
+    const url = window.prompt(t("website_content.enter_image_url"));
     if (url) exec("insertImage", url);
   };
 
   return (
     <div className="border rounded-lg overflow-hidden bg-white">
       <div className="flex flex-wrap items-center gap-0.5 p-2 border-b bg-muted/30">
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("bold")} title="Bold"><Bold className="h-3.5 w-3.5" /></Button>
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("italic")} title="Italic"><Italic className="h-3.5 w-3.5" /></Button>
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("underline")} title="Underline"><Underline className="h-3.5 w-3.5" /></Button>
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("bold")} title={t("website_content.tool_bold")}><Bold className="h-3.5 w-3.5" /></Button>
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("italic")} title={t("website_content.tool_italic")}><Italic className="h-3.5 w-3.5" /></Button>
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("underline")} title={t("website_content.tool_underline")}><Underline className="h-3.5 w-3.5" /></Button>
         <Separator orientation="vertical" className="h-5 mx-1" />
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("formatBlock", "h2")} title="H2"><Heading2 className="h-3.5 w-3.5" /></Button>
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("formatBlock", "h3")} title="H3"><Heading3 className="h-3.5 w-3.5" /></Button>
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("formatBlock", "p")} title="Paragraph"><AlignLeft className="h-3.5 w-3.5" /></Button>
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("formatBlock", "h2")} title={t("website_content.tool_h2")}><Heading2 className="h-3.5 w-3.5" /></Button>
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("formatBlock", "h3")} title={t("website_content.tool_h3")}><Heading3 className="h-3.5 w-3.5" /></Button>
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("formatBlock", "p")} title={t("website_content.tool_paragraph")}><AlignLeft className="h-3.5 w-3.5" /></Button>
         <Separator orientation="vertical" className="h-5 mx-1" />
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("justifyLeft")} title="Align Left"><AlignLeft className="h-3.5 w-3.5" /></Button>
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("justifyCenter")} title="Align Center"><AlignCenter className="h-3.5 w-3.5" /></Button>
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("justifyRight")} title="Align Right"><AlignRight className="h-3.5 w-3.5" /></Button>
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("justifyLeft")} title={t("website_content.tool_align_left")}><AlignLeft className="h-3.5 w-3.5" /></Button>
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("justifyCenter")} title={t("website_content.tool_align_center")}><AlignCenter className="h-3.5 w-3.5" /></Button>
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("justifyRight")} title={t("website_content.tool_align_right")}><AlignRight className="h-3.5 w-3.5" /></Button>
         <Separator orientation="vertical" className="h-5 mx-1" />
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("insertUnorderedList")} title="Bullet List"><List className="h-3.5 w-3.5" /></Button>
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("insertOrderedList")} title="Numbered List"><ListOrdered className="h-3.5 w-3.5" /></Button>
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("insertUnorderedList")} title={t("website_content.tool_bullet_list")}><List className="h-3.5 w-3.5" /></Button>
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("insertOrderedList")} title={t("website_content.tool_numbered_list")}><ListOrdered className="h-3.5 w-3.5" /></Button>
         <Separator orientation="vertical" className="h-5 mx-1" />
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={insertLink} title="Link"><LinkIcon className="h-3.5 w-3.5" /></Button>
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={insertImg} title="Image"><Image className="h-3.5 w-3.5" /></Button>
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={insertLink} title={t("website_content.tool_link")}><LinkIcon className="h-3.5 w-3.5" /></Button>
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={insertImg} title={t("website_content.tool_image")}><Image className="h-3.5 w-3.5" /></Button>
         <Separator orientation="vertical" className="h-5 mx-1" />
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("undo")} title="Undo"><Undo className="h-3.5 w-3.5" /></Button>
-        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("redo")} title="Redo"><Redo className="h-3.5 w-3.5" /></Button>
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("undo")} title={t("website_content.tool_undo")}><Undo className="h-3.5 w-3.5" /></Button>
+        <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => exec("redo")} title={t("website_content.tool_redo")}><Redo className="h-3.5 w-3.5" /></Button>
         <div className="ml-auto">
           <Button type="button" size="sm" variant="ghost" className="h-7 gap-1.5 text-xs" onClick={() => setPreview(!preview)}>
-            {preview ? <><EyeOff className="h-3.5 w-3.5" />Edit</> : <><Eye className="h-3.5 w-3.5" />Preview</>}
+            {preview ? <><EyeOff className="h-3.5 w-3.5" />{t("common.edit")}</> : <><Eye className="h-3.5 w-3.5" />{t("website_content.preview")}</>}
           </Button>
         </div>
       </div>
       {preview ? (
-        <div className="min-h-[200px] p-4 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: value || "<p class='text-muted-foreground italic'>No content yet</p>" }} />
+        <div className="min-h-[200px] p-4 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: value || `<p class='text-muted-foreground italic'>${t("website_content.no_content_yet")}</p>` }} />
       ) : (
         <div
           ref={editorRef}
@@ -205,12 +207,13 @@ function RichTextEditor({ value, onChange }: { value: string; onChange: (v: stri
 // ─── SEO Preview ─────────────────────────────────────────────────────────────
 
 function SeoPreview({ title, description, url }: { title: string; description: string; url: string }) {
+  const { t } = useTranslation();
   return (
     <div className="border rounded-lg p-4 bg-white">
-      <p className="text-xs text-muted-foreground mb-2">Search Engine Preview</p>
+      <p className="text-xs text-muted-foreground mb-2">{t("website_content.search_engine_preview")}</p>
       <div className="text-green-700 text-xs mb-0.5">{url}</div>
-      <div className="text-[#1a0dab] text-base hover:underline cursor-pointer line-clamp-1">{title || "Page Title"}</div>
-      <div className="text-sm text-muted-foreground line-clamp-2">{description || "Page description will appear here…"}</div>
+      <div className="text-[#1a0dab] text-base hover:underline cursor-pointer line-clamp-1">{title || t("website_content.page_title_placeholder")}</div>
+      <div className="text-sm text-muted-foreground line-clamp-2">{description || t("website_content.page_description_placeholder")}</div>
     </div>
   );
 }
@@ -243,8 +246,10 @@ function LanguageTab({
   isSaving: boolean;
   pagePublicPath: string;
 }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState<LangContent>(initial);
   const [activeTab, setActiveTab] = useState<"content" | "seo">("content");
+  const fieldKeyPrefix = pageKey.replace(/-/g, "_");
 
   useEffect(() => {
     setForm(initial);
@@ -260,30 +265,32 @@ function LanguageTab({
         <TabsList>
           <TabsTrigger value="content" className="gap-1.5">
             <Globe className="h-3.5 w-3.5" />
-            Content
+            {t("website_content.tab_content")}
           </TabsTrigger>
           <TabsTrigger value="seo" className="gap-1.5">
             <Search className="h-3.5 w-3.5" />
-            SEO
+            {t("website_content.tab_seo")}
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="content" className="space-y-5 mt-4">
-          {fields.map((field) => (
+          {fields.map((field) => {
+            const fieldLabel = t(`website_content.field_${fieldKeyPrefix}_${field.key}`, { defaultValue: field.label });
+            return (
             <div key={field.key} className="space-y-1.5">
-              <Label className="text-sm font-medium">{field.label}</Label>
-              {field.hint && <p className="text-xs text-muted-foreground">{field.hint}</p>}
+              <Label className="text-sm font-medium">{fieldLabel}</Label>
+              {field.hint && <p className="text-xs text-muted-foreground">{t(`website_content.hint_${fieldKeyPrefix}_${field.key}`, { defaultValue: field.hint })}</p>}
               {field.type === "text" ? (
                 <Input
                   value={form.content[field.key] ?? ""}
                   onChange={(e) => setField(field.key, e.target.value)}
-                  placeholder={field.placeholder}
+                  placeholder={field.placeholder ? t(`website_content.ph_${fieldKeyPrefix}_${field.key}`, { defaultValue: field.placeholder }) : undefined}
                 />
               ) : field.type === "textarea" ? (
                 <Textarea
                   value={form.content[field.key] ?? ""}
                   onChange={(e) => setField(field.key, e.target.value)}
-                  placeholder={field.placeholder}
+                  placeholder={field.placeholder ? t(`website_content.ph_${fieldKeyPrefix}_${field.key}`, { defaultValue: field.placeholder }) : undefined}
                   rows={3}
                 />
               ) : field.type === "image" ? (
@@ -291,12 +298,12 @@ function LanguageTab({
                   <Input
                     value={form.content[field.key] ?? ""}
                     onChange={(e) => setField(field.key, e.target.value)}
-                    placeholder="https://…"
+                    placeholder={t("website_content.url_placeholder")}
                   />
                   {form.content[field.key] && (
                     <img
                       src={form.content[field.key]}
-                      alt={field.label}
+                      alt={fieldLabel}
                       className="h-32 w-full object-cover rounded-lg border"
                     />
                   )}
@@ -309,37 +316,38 @@ function LanguageTab({
                 />
               )}
             </div>
-          ))}
+            );
+          })}
         </TabsContent>
 
         <TabsContent value="seo" className="space-y-5 mt-4">
           <div className="space-y-1.5">
-            <Label>SEO Title</Label>
+            <Label>{t("website_content.seo_title")}</Label>
             <Input
               value={form.seo_title}
               onChange={(e) => setForm((f) => ({ ...f, seo_title: e.target.value }))}
-              placeholder="Page title for search engines (50–60 characters recommended)"
+              placeholder={t("website_content.seo_title_placeholder")}
               maxLength={120}
             />
-            <p className="text-xs text-muted-foreground">{form.seo_title.length} / 60 characters</p>
+            <p className="text-xs text-muted-foreground">{t("website_content.char_count_60", { count: form.seo_title.length })}</p>
           </div>
           <div className="space-y-1.5">
-            <Label>SEO Description</Label>
+            <Label>{t("website_content.seo_description")}</Label>
             <Textarea
               value={form.seo_description}
               onChange={(e) => setForm((f) => ({ ...f, seo_description: e.target.value }))}
-              placeholder="Meta description for search engines (120–160 characters recommended)"
+              placeholder={t("website_content.seo_description_placeholder")}
               rows={3}
               maxLength={320}
             />
-            <p className="text-xs text-muted-foreground">{form.seo_description.length} / 160 characters</p>
+            <p className="text-xs text-muted-foreground">{t("website_content.char_count_160", { count: form.seo_description.length })}</p>
           </div>
           <div className="space-y-1.5">
-            <Label>Keywords</Label>
+            <Label>{t("website_content.seo_keywords")}</Label>
             <Input
               value={form.seo_keywords}
               onChange={(e) => setForm((f) => ({ ...f, seo_keywords: e.target.value }))}
-              placeholder="student accommodation, Melbourne housing, international students, …"
+              placeholder={t("website_content.seo_keywords_placeholder")}
             />
           </div>
           <SeoPreview
@@ -357,7 +365,7 @@ function LanguageTab({
           className="bg-[#E8621A] hover:bg-[#E8621A]/90 text-white gap-2"
         >
           {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          Save {lang.label}
+          {t("website_content.save_language", { language: t(`website_content.lang_${lang.code}`) })}
         </Button>
       </div>
     </div>
@@ -367,6 +375,7 @@ function LanguageTab({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function WebsiteContentDetail() {
+  const { t } = useTranslation();
   const params = useParams<{ pageKey: string }>();
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -376,6 +385,7 @@ export default function WebsiteContentDetail() {
   const pageKey = params.pageKey ?? "";
   const pageDef = WEBSITE_PAGES.find((p) => p.key === pageKey);
   const fields = PAGE_FIELDS[pageKey] ?? [];
+  const pageLabel = pageDef ? t(`website_content.page_label_${pageDef.key.replace(/-/g, "_")}`) : pageKey;
 
   const { data: allRows = [], isLoading } = useQuery<any[]>({
     queryKey: ["page-contents", pageKey],
@@ -411,9 +421,16 @@ export default function WebsiteContentDetail() {
       });
       if (!res.ok) throw new Error("Save failed");
       await qc.invalidateQueries({ queryKey: ["page-contents", pageKey] });
-      toast({ title: "Saved", description: `${pageDef?.label ?? pageKey} — ${langCode.toUpperCase()} content saved successfully.` });
+      toast({
+        title: t("website_content.toast_saved_title"),
+        description: t("website_content.toast_saved_description", { page: pageLabel, language: langCode.toUpperCase() }),
+      });
     } catch {
-      toast({ title: "Error", description: "Failed to save content. Please try again.", variant: "destructive" });
+      toast({
+        title: t("website_content.toast_error_title"),
+        description: t("website_content.toast_save_failed_description"),
+        variant: "destructive",
+      });
     } finally {
       setSavingLang(null);
     }
@@ -423,8 +440,8 @@ export default function WebsiteContentDetail() {
     return (
       <Layout>
         <div className="p-6">
-          <p className="text-muted-foreground">Page not found: <code>{pageKey}</code></p>
-          <Button variant="link" onClick={() => navigate("/content/pages")}>Back to Website Pages</Button>
+          <p className="text-muted-foreground">{t("website_content.page_not_found")}: <code>{pageKey}</code></p>
+          <Button variant="link" onClick={() => navigate("/content/pages")}>{t("website_content.back_to_pages")}</Button>
         </div>
       </Layout>
     );
@@ -433,15 +450,15 @@ export default function WebsiteContentDetail() {
   return (
     <Layout>
       <PageHeader
-        title={pageDef.label}
-        description={pageDef.description}
+        title={pageLabel}
+        description={t(`website_content.page_desc_${pageDef.key.replace(/-/g, "_")}`)}
         actions={
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-xs">{pageDef.path}</Badge>
             <Button variant="outline" size="sm" asChild>
               <a href={`https://millionstay.com.au${pageDef.path}`} target="_blank" rel="noopener noreferrer" className="gap-1.5">
                 <Eye className="h-3.5 w-3.5" />
-                Preview
+                {t("website_content.preview")}
               </a>
             </Button>
           </div>
@@ -456,7 +473,7 @@ export default function WebsiteContentDetail() {
           onClick={() => navigate("/content/pages")}
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Website Pages
+          {t("website_content.back_to_pages")}
         </Button>
 
         {isLoading ? (
@@ -466,16 +483,16 @@ export default function WebsiteContentDetail() {
         ) : (
           <Tabs defaultValue="en">
             <div className="mb-4">
-              <p className="text-sm text-muted-foreground mb-2">Select language to edit:</p>
+              <p className="text-sm text-muted-foreground mb-2">{t("website_content.select_language")}</p>
               <TabsList className="flex flex-wrap gap-1 h-auto">
                 {LANGUAGES.map((lang) => {
                   const hasContent = allRows.some((r: any) => r.language === lang.code);
                   return (
                     <TabsTrigger key={lang.code} value={lang.code} className="gap-1.5 relative">
                       <span>{lang.flag}</span>
-                      <span>{lang.label}</span>
+                      <span>{t(`website_content.lang_${lang.code}`)}</span>
                       {hasContent && (
-                        <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-green-500" title="Has content" />
+                        <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-green-500" title={t("website_content.has_content")} />
                       )}
                     </TabsTrigger>
                   );
@@ -489,7 +506,7 @@ export default function WebsiteContentDetail() {
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
                       <span className="text-xl">{lang.flag}</span>
-                      {lang.label} Content
+                      {t("website_content.language_content", { language: t(`website_content.lang_${lang.code}`) })}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>

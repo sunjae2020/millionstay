@@ -1,5 +1,6 @@
 import { Layout, PageHeader } from "@/components/Layout";
 import { Construction } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface ComingSoonProps {
   title: string;
@@ -7,6 +8,7 @@ interface ComingSoonProps {
 }
 
 export function ComingSoonPage({ title, subtitle }: ComingSoonProps) {
+  const { t } = useTranslation();
   return (
     <Layout>
       <PageHeader title={title} subtitle={subtitle} />
@@ -15,9 +17,9 @@ export function ComingSoonPage({ title, subtitle }: ComingSoonProps) {
           <Construction className="h-8 w-8 text-muted-foreground" />
         </div>
         <div>
-          <h2 className="text-base font-semibold text-foreground">Coming Soon</h2>
+          <h2 className="text-base font-semibold text-foreground">{t("coming_soon.heading")}</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            This section is under development.
+            {t("coming_soon.description")}
           </p>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { useState, FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "wouter";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +11,7 @@ import logoSrc from "/millionstay-logo.png";
 const BRAND = "#E8621A";
 
 export default function ResetPasswordPage() {
+  const { t } = useTranslation();
   const [location] = useLocation();
   const token = new URLSearchParams(
     typeof window !== "undefined" ? window.location.search : ""
@@ -36,11 +38,11 @@ export default function ResetPasswordPage() {
     e.preventDefault();
     setError("");
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError(t("reset_password.error_passwords_mismatch"));
       return;
     }
     if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+      setError(t("reset_password.error_min_length"));
       return;
     }
     setLoading(true);
@@ -52,12 +54,12 @@ export default function ResetPasswordPage() {
       });
       const data = await res.json();
       if (!data.success) {
-        setError(data.error ?? "Reset failed. The link may have expired.");
+        setError(data.error ?? t("reset_password.error_reset_failed"));
       } else {
         setSuccess(true);
       }
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(t("reset_password.error_generic"));
     } finally {
       setLoading(false);
     }
@@ -72,16 +74,16 @@ export default function ResetPasswordPage() {
               <AlertCircle className="h-8 w-8 text-red-500" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Invalid Reset Link</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t("reset_password.invalid_link_title")}</h1>
           <p className="text-slate-500 text-sm leading-relaxed">
-            This password reset link is invalid or has already been used. Please request a new one.
+            {t("reset_password.invalid_link_message")}
           </p>
           <Link
             href="/forgot-password"
             className="inline-flex items-center justify-center w-full h-11 rounded-lg text-sm font-semibold text-white shadow-md"
             style={{ background: `linear-gradient(135deg, ${BRAND} 0%, #FF8C3A 100%)` }}
           >
-            Request New Link
+            {t("reset_password.request_new_link")}
           </Link>
         </div>
       </div>
@@ -97,16 +99,16 @@ export default function ResetPasswordPage() {
               <CheckCircle className="h-8 w-8" style={{ color: BRAND }} />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Password Updated</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t("reset_password.success_title")}</h1>
           <p className="text-slate-500 text-sm leading-relaxed">
-            Your password has been successfully updated. You can now sign in with your new credentials.
+            {t("reset_password.success_message")}
           </p>
           <Link
             href="/login"
             className="inline-flex items-center justify-center w-full h-11 rounded-lg text-sm font-semibold text-white shadow-md"
             style={{ background: `linear-gradient(135deg, ${BRAND} 0%, #FF8C3A 100%)` }}
           >
-            Sign In →
+            {t("reset_password.sign_in")} →
           </Link>
         </div>
       </div>
@@ -127,22 +129,22 @@ export default function ResetPasswordPage() {
 
         <div className="relative z-10">
           <img src={logoSrc} alt="MillionStay" className="h-9 w-auto" />
-          <p className="text-white/30 text-[10px] tracking-[0.2em] uppercase mt-2 ml-0.5">Admin Portal</p>
+          <p className="text-white/30 text-[10px] tracking-[0.2em] uppercase mt-2 ml-0.5">{t("reset_password.admin_portal")}</p>
         </div>
 
         <div className="relative z-10 space-y-4">
           <h2 className="text-[2rem] font-bold text-white leading-[1.2]">
-            Set a new<br />
-            <span style={{ color: BRAND }}>password.</span>
+            {t("reset_password.brand_heading_line1")}<br />
+            <span style={{ color: BRAND }}>{t("reset_password.brand_heading_line2")}</span>
           </h2>
           <p className="text-white/45 text-sm leading-relaxed max-w-[260px]">
-            Choose a strong password to keep your account secure.
+            {t("reset_password.brand_subtitle")}
           </p>
           <ul className="space-y-2">
             {[
-              "At least 8 characters",
-              "Include uppercase letters",
-              "Include numbers or symbols",
+              t("reset_password.tip_min_length"),
+              t("reset_password.tip_uppercase"),
+              t("reset_password.tip_numbers_symbols"),
             ].map((tip) => (
               <li key={tip} className="flex items-center gap-2 text-white/50 text-sm">
                 <span className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ background: BRAND }} />
@@ -153,7 +155,7 @@ export default function ResetPasswordPage() {
         </div>
 
         <div className="relative z-10">
-          <p className="text-white/20 text-xs">© 2026 MillionStay · All rights reserved</p>
+          <p className="text-white/20 text-xs">{t("reset_password.copyright")}</p>
         </div>
       </div>
 
@@ -166,15 +168,15 @@ export default function ResetPasswordPage() {
           </div>
 
           <div className="mb-7">
-            <h1 className="text-2xl font-bold text-slate-900">Set New Password</h1>
+            <h1 className="text-2xl font-bold text-slate-900">{t("reset_password.title")}</h1>
             <p className="text-slate-500 text-sm mt-1">
-              Enter and confirm your new password below.
+              {t("reset_password.subtitle")}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-sm font-medium text-slate-700">New Password</Label>
+              <Label htmlFor="password" className="text-sm font-medium text-slate-700">{t("reset_password.new_password_label")}</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -182,7 +184,7 @@ export default function ResetPasswordPage() {
                   required
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  placeholder="Min. 8 characters"
+                  placeholder={t("reset_password.new_password_placeholder")}
                   className="h-11 bg-white border-slate-200 text-slate-900 pr-10 placeholder:text-slate-400"
                 />
                 <button type="button" tabIndex={-1} onClick={() => setShowPassword(v => !v)}
@@ -204,14 +206,14 @@ export default function ResetPasswordPage() {
                     )} />
                   ))}
                   <span className="text-[10px] text-slate-400 ml-1 whitespace-nowrap">
-                    {["", "Weak", "Fair", "Good", "Strong"][passwordStrength]}
+                    {["", t("reset_password.strength_weak"), t("reset_password.strength_fair"), t("reset_password.strength_good"), t("reset_password.strength_strong")][passwordStrength]}
                   </span>
                 </div>
               )}
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="confirmPassword" className="text-sm font-medium text-slate-700">Confirm Password</Label>
+              <Label htmlFor="confirmPassword" className="text-sm font-medium text-slate-700">{t("reset_password.confirm_password_label")}</Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
@@ -219,7 +221,7 @@ export default function ResetPasswordPage() {
                   required
                   value={confirmPassword}
                   onChange={e => setConfirmPassword(e.target.value)}
-                  placeholder="Re-enter password"
+                  placeholder={t("reset_password.confirm_password_placeholder")}
                   className={cn(
                     "h-11 bg-white border-slate-200 text-slate-900 pr-10 placeholder:text-slate-400",
                     confirmPassword && confirmPassword !== password && "border-red-300"
@@ -244,13 +246,13 @@ export default function ResetPasswordPage() {
               className="w-full h-11 rounded-lg text-sm font-semibold text-white transition-opacity disabled:opacity-60 flex items-center justify-center gap-2 shadow-md mt-2"
               style={{ background: `linear-gradient(135deg, ${BRAND} 0%, #FF8C3A 100%)` }}
             >
-              {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Updating…</> : "Update Password →"}
+              {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> {t("reset_password.updating")}</> : `${t("reset_password.update_password")} →`}
             </button>
           </form>
 
           <p className="text-center text-sm text-slate-500 mt-6">
             <Link href="/login" className="font-semibold hover:underline" style={{ color: BRAND }}>
-              Back to Sign In
+              {t("reset_password.back_to_sign_in")}
             </Link>
           </p>
         </div>

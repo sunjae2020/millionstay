@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
+import { useTranslation } from "react-i18next";
 
 interface CompanyForm {
   company_name: string;
@@ -44,6 +45,7 @@ const DEFAULTS: CompanyForm = {
 };
 
 export function CompanyInfo() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const { register, handleSubmit, control, reset } = useForm<CompanyForm>({ defaultValues: DEFAULTS });
@@ -73,9 +75,9 @@ export function CompanyInfo() {
         headers: { "Content-Type": "application/json" },
       });
       if (!res.ok) { const b = await res.json().catch(() => null); throw new Error(b?.error ?? `HTTP ${res.status}`); }
-      toast({ title: "Saved", description: "Company information has been updated. It now appears on all documents." });
+      toast({ title: t("settings_company.save_success_title"), description: t("settings_company.save_success_desc") });
     } catch (err) {
-      toast({ title: "Save failed", description: err instanceof Error ? err.message : "Error", variant: "destructive" });
+      toast({ title: t("settings_company.save_failed_title"), description: err instanceof Error ? err.message : t("settings_company.error"), variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -84,64 +86,64 @@ export function CompanyInfo() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
-        <h3 className="text-base font-semibold">Basic Information</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">Legal entity name and business details</p>
+        <h3 className="text-base font-semibold">{t("settings_company.basic_info_title")}</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">{t("settings_company.basic_info_subtitle")}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label>Company Name (Legal)</Label>
+          <Label>{t("settings_company.company_name_legal_label")}</Label>
           <Input {...register("company_name")} placeholder="MillionStay Pty Ltd" />
         </div>
         <div className="space-y-1.5">
-          <Label>Trading Name</Label>
+          <Label>{t("settings_company.trading_name_label")}</Label>
           <Input {...register("trading_name")} placeholder="MillionStay" />
         </div>
         <div className="space-y-1.5">
-          <Label>ABN</Label>
+          <Label>{t("settings_company.abn_label")}</Label>
           <Input {...register("abn")} placeholder="XX XXX XXX XXX" />
         </div>
         <div className="space-y-1.5">
-          <Label>Phone</Label>
+          <Label>{t("common.phone")}</Label>
           <Input {...register("phone")} placeholder="+61 3 XXXX XXXX" />
         </div>
         <div className="space-y-1.5">
-          <Label>Email</Label>
+          <Label>{t("common.email")}</Label>
           <Input {...register("email")} type="email" placeholder="admin@millionstay.com" />
         </div>
         <div className="space-y-1.5">
-          <Label>Website</Label>
+          <Label>{t("settings_company.website_label")}</Label>
           <Input {...register("website")} placeholder="https://millionstay.com.au" />
         </div>
         <div className="space-y-1.5 col-span-2">
-          <Label>Logo URL</Label>
+          <Label>{t("settings_company.logo_url_label")}</Label>
           <Input {...register("logo_url")} placeholder="https://www.millionstay.com/millionstay-logo.png" />
-          <p className="text-xs text-muted-foreground">Shown in the header of every document (invoice, receipt, quote, contract) and email.</p>
+          <p className="text-xs text-muted-foreground">{t("settings_company.logo_url_helper")}</p>
         </div>
       </div>
 
       <Separator />
 
       <div>
-        <h3 className="text-base font-semibold">Address</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">Principal place of business</p>
+        <h3 className="text-base font-semibold">{t("settings_company.address_title")}</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">{t("settings_company.address_subtitle")}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2 space-y-1.5">
-          <Label>Address Line 1</Label>
-          <Input {...register("address1")} placeholder="Street address" />
+          <Label>{t("settings_company.address_line1_label")}</Label>
+          <Input {...register("address1")} placeholder={t("settings_company.address_line1_placeholder")} />
         </div>
         <div className="col-span-2 space-y-1.5">
-          <Label>Address Line 2 (optional)</Label>
-          <Input {...register("address2")} placeholder="Suite, level, unit..." />
+          <Label>{t("settings_company.address_line2_label")}</Label>
+          <Input {...register("address2")} placeholder={t("settings_company.address_line2_placeholder")} />
         </div>
         <div className="space-y-1.5">
-          <Label>Suburb</Label>
+          <Label>{t("settings_company.suburb_label")}</Label>
           <Input {...register("suburb")} placeholder="Melbourne" />
         </div>
         <div className="space-y-1.5">
-          <Label>State</Label>
+          <Label>{t("settings_company.state_label")}</Label>
           <Controller
             name="state"
             control={control}
@@ -158,11 +160,11 @@ export function CompanyInfo() {
           />
         </div>
         <div className="space-y-1.5">
-          <Label>Postcode</Label>
+          <Label>{t("settings_company.postcode_label")}</Label>
           <Input {...register("postcode")} placeholder="3000" />
         </div>
         <div className="space-y-1.5">
-          <Label>Country</Label>
+          <Label>{t("settings_company.country_label")}</Label>
           <Controller
             name="country"
             control={control}
@@ -170,10 +172,10 @@ export function CompanyInfo() {
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="AU">Australia</SelectItem>
-                  <SelectItem value="NZ">New Zealand</SelectItem>
-                  <SelectItem value="US">United States</SelectItem>
-                  <SelectItem value="GB">United Kingdom</SelectItem>
+                  <SelectItem value="AU">{t("settings_company.country_au")}</SelectItem>
+                  <SelectItem value="NZ">{t("settings_company.country_nz")}</SelectItem>
+                  <SelectItem value="US">{t("settings_company.country_us")}</SelectItem>
+                  <SelectItem value="GB">{t("settings_company.country_gb")}</SelectItem>
                 </SelectContent>
               </Select>
             )}
@@ -184,13 +186,13 @@ export function CompanyInfo() {
       <Separator />
 
       <div>
-        <h3 className="text-base font-semibold">Regional Settings</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">Timezone and display preferences</p>
+        <h3 className="text-base font-semibold">{t("settings_company.regional_title")}</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">{t("settings_company.regional_subtitle")}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label>Timezone</Label>
+          <Label>{t("settings_company.timezone_label")}</Label>
           <Controller
             name="timezone"
             control={control}
@@ -216,7 +218,7 @@ export function CompanyInfo() {
       <div className="flex justify-end pt-2">
         <Button type="submit" disabled={saving}>
           <Save className="h-4 w-4 mr-2" />
-          {saving ? "Saving…" : "Save"}
+          {saving ? t("common.saving") : t("common.save")}
         </Button>
       </div>
     </form>

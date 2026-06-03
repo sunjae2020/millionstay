@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,31 +26,35 @@ interface AdminUser {
   created_at: string;
 }
 
-function statusBadge(status: string) {
+type TFunc = (key: string, opts?: Record<string, unknown>) => string;
+
+function statusBadge(status: string, t: TFunc) {
   if (status === "pending") return (
     <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50 gap-1">
-      <Clock className="h-3 w-3" /> Pending
+      <Clock className="h-3 w-3" /> {t("settings_users.status_pending")}
     </Badge>
   );
   if (status === "rejected") return (
     <Badge variant="outline" className="text-red-600 border-red-300 bg-red-50 gap-1">
-      <X className="h-3 w-3" /> Rejected
+      <X className="h-3 w-3" /> {t("settings_users.status_rejected")}
     </Badge>
   );
   return (
     <Badge variant="outline" className="text-green-700 border-green-300 bg-green-50 gap-1">
-      <Check className="h-3 w-3" /> Active
+      <Check className="h-3 w-3" /> {t("common.active")}
     </Badge>
   );
 }
 
-function roleBadge(role: string) {
-  if (role === "SuperAdmin") return <Badge variant="destructive">Super Admin</Badge>;
-  if (role === "Admin") return <Badge>Admin</Badge>;
+function roleBadge(role: string, t: TFunc) {
+  if (role === "SuperAdmin") return <Badge variant="destructive">{t("settings_users.role_superadmin")}</Badge>;
+  if (role === "Admin") return <Badge>{t("settings_users.role_admin")}</Badge>;
+  if (role === "Viewer") return <Badge variant="secondary">{t("settings_users.role_viewer")}</Badge>;
   return <Badge variant="secondary">{role}</Badge>;
 }
 
 export function UserManagement() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
   const isSuperAdmin = currentUser?.role === "SuperAdmin";
@@ -103,9 +108,9 @@ export function UserManagement() {
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
       qc.invalidateQueries({ queryKey: ["admin-users"] });
-      toast({ title: action === "approve" ? "User approved" : action === "reject" ? "User rejected" : "User updated" });
+      toast({ title: action === "approve" ? t("settings_users.toast_user_approved") : action === "reject" ? t("settings_users.toast_user_rejected") : t("settings_users.toast_user_updated") });
     } catch (err: any) {
-      toast({ title: "Error", description: err.message ?? "Action failed", variant: "destructive" });
+      toast({ title: t("settings_users.toast_error"), description: err.message ?? t("settings_users.toast_action_failed"), variant: "destructive" });
     } finally {
       setActionLoading(prev => { const n = { ...prev }; delete n[id]; return n; });
     }
@@ -119,9 +124,9 @@ export function UserManagement() {
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
       qc.invalidateQueries({ queryKey: ["admin-users"] });
-      toast({ title: "User archived", description: "User has been archived and deactivated." });
+      toast({ title: t("settings_users.toast_user_archived"), description: t("settings_users.toast_user_archived_desc") });
     } catch (err: any) {
-      toast({ title: "Error", description: err.message ?? "Archive failed", variant: "destructive" });
+      toast({ title: t("settings_users.toast_error"), description: err.message ?? t("settings_users.toast_archive_failed"), variant: "destructive" });
     } finally {
       setActionLoading(prev => { const n = { ...prev }; delete n[id]; return n; });
     }
@@ -135,9 +140,9 @@ export function UserManagement() {
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
       qc.invalidateQueries({ queryKey: ["admin-users"] });
-      toast({ title: "User permanently deleted", description: "User has been permanently removed from the system." });
+      toast({ title: t("settings_users.toast_user_deleted"), description: t("settings_users.toast_user_deleted_desc") });
     } catch (err: any) {
-      toast({ title: "Error", description: err.message ?? "Delete failed", variant: "destructive" });
+      toast({ title: t("settings_users.toast_error"), description: err.message ?? t("settings_users.toast_delete_failed"), variant: "destructive" });
     } finally {
       setIsPermanentDeleting(false);
     }
@@ -153,12 +158,12 @@ export function UserManagement() {
         body: JSON.stringify({ ids: Array.from(selectedIds), permanent }),
       });
       const data = await res.json();
-      if (!data.success) throw new Error(data.error ?? "Bulk delete failed");
+      if (!data.success) throw new Error(data.error ?? t("settings_users.toast_bulk_delete_failed"));
       qc.invalidateQueries({ queryKey: ["admin-users"] });
-      toast({ title: permanent ? `${data.affected} users permanently deleted` : `${data.affected} users archived` });
+      toast({ title: permanent ? t("settings_users.toast_bulk_deleted", { count: data.affected }) : t("settings_users.toast_bulk_archived", { count: data.affected }) });
       clearSelection();
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: t("settings_users.toast_error"), description: err.message, variant: "destructive" });
     } finally {
       setIsBulkLoading(false);
     }
@@ -167,7 +172,7 @@ export function UserManagement() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12 text-muted-foreground">
-        <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading users…
+        <Loader2 className="h-5 w-5 animate-spin mr-2" /> {t("settings_users.loading_users")}
       </div>
     );
   }
@@ -175,9 +180,9 @@ export function UserManagement() {
   if (isError) {
     return (
       <div className="text-center py-12 space-y-3">
-        <p className="text-sm text-muted-foreground">Failed to load users.</p>
+        <p className="text-sm text-muted-foreground">{t("settings_users.load_failed")}</p>
         <Button variant="outline" size="sm" onClick={() => refetch()}>
-          <RefreshCw className="h-4 w-4 mr-2" /> Retry
+          <RefreshCw className="h-4 w-4 mr-2" /> {t("settings_users.retry")}
         </Button>
       </div>
     );
@@ -189,12 +194,12 @@ export function UserManagement() {
       {pendingUsers.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <h3 className="text-base font-semibold">Access Requests</h3>
+            <h3 className="text-base font-semibold">{t("settings_users.access_requests_title")}</h3>
             <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50">
-              {pendingUsers.length} pending
+              {t("settings_users.pending_count", { count: pendingUsers.length })}
             </Badge>
           </div>
-          <p className="text-sm text-muted-foreground">These users have requested admin access and are awaiting approval.</p>
+          <p className="text-sm text-muted-foreground">{t("settings_users.access_requests_desc")}</p>
 
           <div className="rounded-lg border border-amber-200 divide-y divide-amber-100 bg-amber-50/30">
             {pendingUsers.map(user => (
@@ -209,7 +214,7 @@ export function UserManagement() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {statusBadge(user.status)}
+                  {statusBadge(user.status, t)}
                   <Button
                     size="sm"
                     variant="outline"
@@ -221,7 +226,7 @@ export function UserManagement() {
                       ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                       : <X className="h-3.5 w-3.5" />
                     }
-                    Reject
+                    {t("common.reject")}
                   </Button>
                   <Button
                     size="sm"
@@ -233,7 +238,7 @@ export function UserManagement() {
                       ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                       : <Check className="h-3.5 w-3.5" />
                     }
-                    Approve
+                    {t("common.approve")}
                   </Button>
                 </div>
               </div>
@@ -246,8 +251,8 @@ export function UserManagement() {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-base font-semibold">Admin Accounts</h3>
-            <p className="text-sm text-muted-foreground mt-0.5">{activeUsers.length} user{activeUsers.length !== 1 ? "s" : ""} with admin access</p>
+            <h3 className="text-base font-semibold">{t("settings_users.admin_accounts_title")}</h3>
+            <p className="text-sm text-muted-foreground mt-0.5">{t("settings_users.admin_accounts_count", { count: activeUsers.length })}</p>
           </div>
           <div className="flex items-center gap-2">
             {isSuperAdmin && selectableUsers.length > 0 && (
@@ -256,9 +261,9 @@ export function UserManagement() {
                   checked={allSelected}
                   data-state={someSelected && !allSelected ? "indeterminate" : allSelected ? "checked" : "unchecked"}
                   onCheckedChange={toggleSelectAll}
-                  aria-label="Select all non-SuperAdmin users"
+                  aria-label={t("settings_users.select_all_aria")}
                 />
-                <span className="text-xs">Select all</span>
+                <span className="text-xs">{t("settings_users.select_all")}</span>
               </div>
             )}
             <Button variant="outline" size="sm" onClick={() => refetch()}>
@@ -269,7 +274,7 @@ export function UserManagement() {
 
         {isSuperAdmin && selectedIds.size > 0 && (
           <div className="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-orange-50 border border-orange-200">
-            <span className="text-sm font-medium text-orange-800">{selectedIds.size} user{selectedIds.size > 1 ? "s" : ""} selected</span>
+            <span className="text-sm font-medium text-orange-800">{t("settings_users.selected_count", { count: selectedIds.size })}</span>
             <button onClick={clearSelection} className="text-orange-500 hover:text-orange-700">
               <X className="h-3.5 w-3.5" />
             </button>
@@ -277,11 +282,11 @@ export function UserManagement() {
               {isBulkLoading && <Loader2 className="h-4 w-4 animate-spin text-orange-500" />}
               <Button size="sm" variant="outline" className="h-7 border-amber-300 text-amber-700 hover:bg-amber-50 gap-1.5"
                 onClick={() => setBulkAction("archive")} disabled={isBulkLoading}>
-                <Archive className="h-3.5 w-3.5" /> Archive Selected
+                <Archive className="h-3.5 w-3.5" /> {t("settings_users.archive_selected")}
               </Button>
               <Button size="sm" variant="destructive" className="h-7 gap-1.5"
                 onClick={() => setBulkAction("permanent")} disabled={isBulkLoading}>
-                <Trash2 className="h-3.5 w-3.5" /> Delete Forever
+                <Trash2 className="h-3.5 w-3.5" /> {t("settings_users.delete_forever")}
               </Button>
             </div>
           </div>
@@ -289,7 +294,7 @@ export function UserManagement() {
 
         <div className="rounded-lg border divide-y">
           {activeUsers.length === 0 ? (
-            <div className="px-4 py-8 text-center text-sm text-muted-foreground">No active users found.</div>
+            <div className="px-4 py-8 text-center text-sm text-muted-foreground">{t("settings_users.no_active_users")}</div>
           ) : (
             activeUsers.map(user => {
               const isSelectable = isSuperAdmin && user.id !== currentUser?.id && user.role !== "SuperAdmin";
@@ -302,7 +307,7 @@ export function UserManagement() {
                           <Checkbox
                             checked={selectedIds.has(user.id)}
                             onCheckedChange={() => toggleSelect(user.id)}
-                            aria-label={`Select ${user.first_name} ${user.last_name}`}
+                            aria-label={t("settings_users.select_user_aria", { name: `${user.first_name} ${user.last_name}` })}
                           />
                         )}
                       </div>
@@ -323,8 +328,8 @@ export function UserManagement() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {roleBadge(user.role)}
-                    {statusBadge(user.status)}
+                    {roleBadge(user.role, t)}
+                    {statusBadge(user.status, t)}
                     {user.id !== currentUser?.id && user.role !== "SuperAdmin" && (
                       <Button
                         variant="ghost"
@@ -350,15 +355,15 @@ export function UserManagement() {
       <Separator />
 
       <div>
-        <h3 className="text-base font-semibold">Role Descriptions</h3>
+        <h3 className="text-base font-semibold">{t("settings_users.role_descriptions_title")}</h3>
         <div className="mt-3 space-y-2 text-sm">
           {[
-            { role: "SuperAdmin", label: "Super Admin", desc: "Full access including permanent deletion and system settings" },
-            { role: "Admin", label: "Admin", desc: "Read and write access to all data; deletions are archived (reversible)" },
-            { role: "Viewer", label: "Viewer", desc: "Read-only access across all modules" },
-          ].map(({ role, label, desc }) => (
+            { role: "SuperAdmin", desc: t("settings_users.role_superadmin_desc") },
+            { role: "Admin", desc: t("settings_users.role_admin_desc") },
+            { role: "Viewer", desc: t("settings_users.role_viewer_desc") },
+          ].map(({ role, desc }) => (
             <div key={role} className="flex items-start gap-2">
-              {roleBadge(role)}
+              {roleBadge(role, t)}
               <span className="text-muted-foreground">{desc}</span>
             </div>
           ))}
@@ -371,33 +376,33 @@ export function UserManagement() {
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-destructive" />
-              {isSuperAdmin ? "Remove User" : "Archive User"}
+              {isSuperAdmin ? t("settings_users.remove_user_title") : t("settings_users.archive_user_title")}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {deleteTarget && (
                 <span>
                   <strong>{deleteTarget.first_name} {deleteTarget.last_name}</strong> ({deleteTarget.email})
                   {isSuperAdmin
-                    ? " — Choose how to remove this user. Archiving deactivates the account. Permanent deletion cannot be undone."
-                    : " — This user will be archived and deactivated. A Super Admin can restore the account if needed."}
+                    ? t("settings_users.remove_user_desc_superadmin")
+                    : t("settings_users.remove_user_desc_admin")}
                 </span>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className={isSuperAdmin ? "flex-col sm:flex-row gap-2" : ""}>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <Button
               variant="outline"
               className="border-amber-300 text-amber-700 hover:bg-amber-50"
               onClick={() => deleteTarget && archiveUser(deleteTarget.id)}>
-              Archive
+              {t("settings_users.archive")}
             </Button>
             {isSuperAdmin && (
               <Button
                 variant="destructive"
                 onClick={() => deleteTarget && permanentDeleteUser(deleteTarget.id)}
                 disabled={isPermanentDeleting}>
-                Delete Forever
+                {t("settings_users.delete_forever")}
               </Button>
             )}
           </AlertDialogFooter>
@@ -410,21 +415,21 @@ export function UserManagement() {
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-destructive" />
-              {bulkAction === "permanent" ? "Permanently Delete Users" : "Archive Users"}
+              {bulkAction === "permanent" ? t("settings_users.bulk_delete_title") : t("settings_users.bulk_archive_title")}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {bulkAction === "permanent"
-                ? `You are about to permanently delete ${selectedIds.size} user(s). This cannot be undone.`
-                : `You are about to archive ${selectedIds.size} user(s). Their accounts will be deactivated.`}
+                ? t("settings_users.bulk_delete_desc", { count: selectedIds.size })
+                : t("settings_users.bulk_archive_desc", { count: selectedIds.size })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <Button
               variant={bulkAction === "permanent" ? "destructive" : "outline"}
               className={bulkAction !== "permanent" ? "border-amber-300 text-amber-700 hover:bg-amber-50" : ""}
               onClick={() => handleBulkDelete(bulkAction === "permanent")}>
-              {bulkAction === "permanent" ? "Delete Forever" : "Archive All"}
+              {bulkAction === "permanent" ? t("settings_users.delete_forever") : t("settings_users.archive_all")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

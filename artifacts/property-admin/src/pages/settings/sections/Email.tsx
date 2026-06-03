@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Save, CheckCircle2, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation, Trans } from "react-i18next";
 
 interface EmailForm {
   provider: string;
@@ -31,6 +32,7 @@ function StatusBadge({ ok, label }: { ok: boolean; label: string }) {
 }
 
 export function Email() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const resendConfigured = !!import.meta.env.VITE_RESEND_CONFIGURED;
 
@@ -52,30 +54,30 @@ export function Email() {
   const provider = watch("provider");
 
   function onSubmit(_data: EmailForm) {
-    toast({ title: "Saved", description: "Email settings have been updated." });
+    toast({ title: t("settings_email.toast_saved_title"), description: t("settings_email.toast_saved_desc") });
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
-        <h3 className="text-base font-semibold">Current Status</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">Configuration status based on environment variables</p>
+        <h3 className="text-base font-semibold">{t("settings_email.current_status_title")}</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">{t("settings_email.current_status_desc")}</p>
       </div>
 
       <div className="rounded-lg border bg-muted/30 px-4 py-3 flex items-center gap-6">
-        <StatusBadge ok={resendConfigured} label={resendConfigured ? "Resend connected" : "Resend not configured"} />
-        <StatusBadge ok={false} label="SMTP not configured" />
+        <StatusBadge ok={resendConfigured} label={resendConfigured ? t("settings_email.resend_connected") : t("settings_email.resend_not_configured")} />
+        <StatusBadge ok={false} label={t("settings_email.smtp_not_configured")} />
       </div>
 
       <Separator />
 
       <div>
-        <h3 className="text-base font-semibold">Sending Configuration</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">Email delivery service and sender details</p>
+        <h3 className="text-base font-semibold">{t("settings_email.sending_config_title")}</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">{t("settings_email.sending_config_desc")}</p>
       </div>
 
       <div className="space-y-1.5">
-        <Label>Email Provider</Label>
+        <Label>{t("settings_email.email_provider_label")}</Label>
         <Controller
           name="provider"
           control={control}
@@ -83,8 +85,8 @@ export function Email() {
             <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="resend">Resend (recommended)</SelectItem>
-                <SelectItem value="smtp">SMTP</SelectItem>
+                <SelectItem value="resend">{t("settings_email.provider_resend")}</SelectItem>
+                <SelectItem value="smtp">{t("settings_email.provider_smtp")}</SelectItem>
               </SelectContent>
             </Select>
           )}
@@ -95,8 +97,8 @@ export function Email() {
         <div className="space-y-4">
           <div className="space-y-1.5">
             <Label className="flex items-center gap-2">
-              Resend API Key
-              <Badge variant="outline" className="text-xs">Set via Secrets</Badge>
+              {t("settings_email.resend_api_key_label")}
+              <Badge variant="outline" className="text-xs">{t("settings_email.set_via_secrets")}</Badge>
             </Label>
             <Input
               {...register("resend_api_key")}
@@ -105,22 +107,22 @@ export function Email() {
               disabled
             />
             <p className="text-xs text-muted-foreground">
-              Set the actual API key in Replit Secrets as <code className="bg-muted px-1 rounded">RESEND_API_KEY</code>.
+              <Trans i18nKey="settings_email.resend_api_key_helper" components={{ code: <code className="bg-muted px-1 rounded" /> }} />
             </p>
           </div>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2 space-y-1.5">
-            <Label>SMTP Host</Label>
+            <Label>{t("settings_email.smtp_host_label")}</Label>
             <Input {...register("smtp_host")} placeholder="smtp.example.com" />
           </div>
           <div className="space-y-1.5">
-            <Label>Port</Label>
+            <Label>{t("settings_email.port_label")}</Label>
             <Input {...register("smtp_port")} placeholder="587" />
           </div>
           <div className="space-y-1.5">
-            <Label>Security</Label>
+            <Label>{t("settings_email.security_label")}</Label>
             <Controller
               name="smtp_secure"
               control={control}
@@ -128,20 +130,20 @@ export function Email() {
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="tls">STARTTLS (587)</SelectItem>
-                    <SelectItem value="ssl">SSL/TLS (465)</SelectItem>
-                    <SelectItem value="none">None (25)</SelectItem>
+                    <SelectItem value="tls">{t("settings_email.security_starttls")}</SelectItem>
+                    <SelectItem value="ssl">{t("settings_email.security_ssl")}</SelectItem>
+                    <SelectItem value="none">{t("settings_email.security_none")}</SelectItem>
                   </SelectContent>
                 </Select>
               )}
             />
           </div>
           <div className="space-y-1.5">
-            <Label>SMTP Username</Label>
+            <Label>{t("settings_email.smtp_username_label")}</Label>
             <Input {...register("smtp_user")} placeholder="user@example.com" />
           </div>
           <div className="space-y-1.5">
-            <Label>SMTP Password</Label>
+            <Label>{t("settings_email.smtp_password_label")}</Label>
             <Input {...register("smtp_password")} type="password" placeholder="••••••••" />
           </div>
         </div>
@@ -150,20 +152,20 @@ export function Email() {
       <Separator />
 
       <div>
-        <h3 className="text-base font-semibold">Sender Details</h3>
+        <h3 className="text-base font-semibold">{t("settings_email.sender_details_title")}</h3>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label>From Name</Label>
+          <Label>{t("settings_email.from_name_label")}</Label>
           <Input {...register("from_name")} placeholder="MillionStay" />
         </div>
         <div className="space-y-1.5">
-          <Label>From Email</Label>
+          <Label>{t("settings_email.from_email_label")}</Label>
           <Input {...register("from_email")} type="email" placeholder="noreply@millionstay.com.au" />
         </div>
         <div className="space-y-1.5">
-          <Label>Reply-To (optional)</Label>
+          <Label>{t("settings_email.reply_to_label")}</Label>
           <Input {...register("reply_to")} type="email" placeholder="support@millionstay.com.au" />
         </div>
       </div>
@@ -171,7 +173,7 @@ export function Email() {
       <div className="flex justify-end pt-2">
         <Button type="submit">
           <Save className="h-4 w-4 mr-2" />
-          Save
+          {t("common.save")}
         </Button>
       </div>
     </form>

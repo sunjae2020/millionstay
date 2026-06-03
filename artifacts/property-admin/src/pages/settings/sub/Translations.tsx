@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ async function fetchRows(lang: string): Promise<Row[]> {
 const EMPTY_LANG = { code: "", name: "", english_name: "", flag_iso: "" };
 
 export default function TranslationsPage() {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const { toast } = useToast();
 
@@ -81,7 +83,7 @@ export default function TranslationsPage() {
       setEdits((e) => { const n = { ...e }; delete n[p.key]; return n; });
       qc.invalidateQueries({ queryKey: ["translations", lang] });
     },
-    onError: (e: any) => toast({ title: "Failed", description: String(e?.message ?? e), variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("settings_translations.toast_failed"), description: String(e?.message ?? e), variant: "destructive" }),
   });
 
   async function saveAll() {
@@ -94,9 +96,9 @@ export default function TranslationsPage() {
       }
       setEdits({});
       qc.invalidateQueries({ queryKey: ["translations", lang] });
-      toast({ title: `Saved ${entries.length} change${entries.length > 1 ? "s" : ""}` });
+      toast({ title: t("settings_translations.toast_saved_changes", { count: entries.length }) });
     } catch (e: any) {
-      toast({ title: "Save failed", description: String(e?.message ?? e), variant: "destructive" });
+      toast({ title: t("settings_translations.toast_save_failed"), description: String(e?.message ?? e), variant: "destructive" });
     }
   }
 
@@ -107,11 +109,11 @@ export default function TranslationsPage() {
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: "Language added" });
+      toast({ title: t("settings_translations.toast_language_added") });
       setNewLang(EMPTY_LANG);
       qc.invalidateQueries({ queryKey: ["tr-languages"] });
     },
-    onError: (e: any) => toast({ title: "Failed", description: String(e?.message ?? e), variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("settings_translations.toast_failed"), description: String(e?.message ?? e), variant: "destructive" }),
   });
 
   const toggleLang = useMutation({
@@ -130,10 +132,10 @@ export default function TranslationsPage() {
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: "Language removed" });
+      toast({ title: t("settings_translations.toast_language_removed") });
       qc.invalidateQueries({ queryKey: ["tr-languages"] });
     },
-    onError: (e: any) => toast({ title: "Cannot delete", description: String(e?.message ?? e), variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("settings_translations.toast_cannot_delete"), description: String(e?.message ?? e), variant: "destructive" }),
   });
 
   const addKey = useMutation({
@@ -143,12 +145,12 @@ export default function TranslationsPage() {
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: "Key added" });
+      toast({ title: t("settings_translations.toast_key_added") });
       setNewKey({ key: "", value: "" });
       setAddKeyOpen(false);
       qc.invalidateQueries({ queryKey: ["translations", lang] });
     },
-    onError: (e: any) => toast({ title: "Failed", description: String(e?.message ?? e), variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("settings_translations.toast_failed"), description: String(e?.message ?? e), variant: "destructive" }),
   });
 
   const removeKey = useMutation({
@@ -158,7 +160,7 @@ export default function TranslationsPage() {
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: "Key deleted across all languages" });
+      toast({ title: t("settings_translations.toast_key_deleted") });
       setDeleteKey(null);
       qc.invalidateQueries({ queryKey: ["translations", lang] });
     },
@@ -169,20 +171,20 @@ export default function TranslationsPage() {
   return (
     <Layout>
       <PageHeader
-        title={<><Languages className="h-5 w-5" />Languages & Translations</>}
-        subtitle="Edit the public website's text per language. Changes appear on the landing page (English is the base)."
+        title={<><Languages className="h-5 w-5" />{t("settings_translations.page_title")}</>}
+        subtitle={t("settings_translations.page_subtitle")}
       />
 
       <div className="px-8 py-6">
         <div className="flex flex-wrap items-center gap-3 mb-4">
           <div>
-            <Label className="text-xs text-muted-foreground">Editing language</Label>
+            <Label className="text-xs text-muted-foreground">{t("settings_translations.editing_language")}</Label>
             <Select value={lang} onValueChange={(v) => { setLang(v); setEdits({}); }}>
               <SelectTrigger className="w-56 mt-1"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {languages.map((l) => (
                   <SelectItem key={l.code} value={l.code}>
-                    {l.name} ({l.code}){!l.enabled ? " — disabled" : ""}
+                    {l.name} ({l.code}){!l.enabled ? ` — ${t("settings_translations.disabled")}` : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -190,13 +192,13 @@ export default function TranslationsPage() {
           </div>
           <div className="relative flex-1 max-w-sm self-end">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder="Search key or text…" value={q} onChange={(e) => setQ(e.target.value)} />
+            <Input className="pl-9" placeholder={t("settings_translations.search_placeholder")} value={q} onChange={(e) => setQ(e.target.value)} />
           </div>
           <div className="self-end ml-auto flex gap-2">
-            <Button variant="outline" onClick={() => setLangDialog(true)}><Globe className="h-4 w-4 mr-2" />Languages</Button>
-            <Button variant="outline" onClick={() => setAddKeyOpen(true)}><Plus className="h-4 w-4 mr-2" />Add Key</Button>
+            <Button variant="outline" onClick={() => setLangDialog(true)}><Globe className="h-4 w-4 mr-2" />{t("settings_translations.languages")}</Button>
+            <Button variant="outline" onClick={() => setAddKeyOpen(true)}><Plus className="h-4 w-4 mr-2" />{t("settings_translations.add_key")}</Button>
             <Button onClick={saveAll} disabled={dirtyCount === 0}>
-              <Save className="h-4 w-4 mr-2" />Save{dirtyCount > 0 ? ` (${dirtyCount})` : ""}
+              <Save className="h-4 w-4 mr-2" />{t("common.save")}{dirtyCount > 0 ? ` (${dirtyCount})` : ""}
             </Button>
           </div>
         </div>
@@ -205,17 +207,17 @@ export default function TranslationsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[28%]">Key</TableHead>
-                {!isEn && <TableHead className="w-[30%]">English (reference)</TableHead>}
-                <TableHead>{isEn ? "English value" : "Translation"}</TableHead>
+                <TableHead className="w-[28%]">{t("settings_translations.col_key")}</TableHead>
+                {!isEn && <TableHead className="w-[30%]">{t("settings_translations.col_english_reference")}</TableHead>}
+                <TableHead>{isEn ? t("settings_translations.col_english_value") : t("settings_translations.col_translation")}</TableHead>
                 <TableHead className="w-20"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {rowsQ.isLoading ? (
-                <TableRow><TableCell colSpan={isEn ? 3 : 4} className="text-center py-10 text-muted-foreground">Loading…</TableCell></TableRow>
+                <TableRow><TableCell colSpan={isEn ? 3 : 4} className="text-center py-10 text-muted-foreground">{t("common.loading")}</TableCell></TableRow>
               ) : filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={isEn ? 3 : 4} className="text-center py-10 text-muted-foreground">No keys found</TableCell></TableRow>
+                <TableRow><TableCell colSpan={isEn ? 3 : 4} className="text-center py-10 text-muted-foreground">{t("settings_translations.no_keys_found")}</TableCell></TableRow>
               ) : filtered.map((r) => {
                 const current = edits[r.key] ?? r.value;
                 const dirty = edits[r.key] !== undefined && edits[r.key] !== r.value;
@@ -233,10 +235,10 @@ export default function TranslationsPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1 justify-end">
-                        <Button size="icon" variant="ghost" disabled={!dirty || saveOne.isPending} onClick={() => saveOne.mutate({ key: r.key, value: current })} title="Save this row">
+                        <Button size="icon" variant="ghost" disabled={!dirty || saveOne.isPending} onClick={() => saveOne.mutate({ key: r.key, value: current })} title={t("settings_translations.save_row_title")}>
                           <Save className="h-3.5 w-3.5" />
                         </Button>
-                        <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setDeleteKey(r.key)} title="Delete key (all languages)">
+                        <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setDeleteKey(r.key)} title={t("settings_translations.delete_key_title")}>
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
@@ -247,18 +249,18 @@ export default function TranslationsPage() {
             </TableBody>
           </Table>
         </div>
-        <p className="text-xs text-muted-foreground mt-3">{filtered.length} of {rows.length} keys{dirtyCount > 0 ? ` · ${dirtyCount} unsaved` : ""}</p>
+        <p className="text-xs text-muted-foreground mt-3">{t("settings_translations.keys_count", { shown: filtered.length, total: rows.length })}{dirtyCount > 0 ? ` · ${t("settings_translations.unsaved_count", { count: dirtyCount })}` : ""}</p>
       </div>
 
       {/* Manage languages */}
       <Dialog open={langDialog} onOpenChange={setLangDialog}>
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Manage Languages</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("settings_translations.manage_languages")}</DialogTitle></DialogHeader>
           <div className="space-y-1 max-h-64 overflow-auto -mx-1 px-1">
             {languages.map((l) => (
               <div key={l.code} className="flex items-center gap-3 py-1.5 border-b last:border-0">
                 <Checkbox checked={l.enabled} onCheckedChange={(c) => toggleLang.mutate({ code: l.code, enabled: !!c })} />
-                <span className="text-sm flex-1">{l.name} <span className="text-muted-foreground">({l.code})</span>{l.is_default ? <span className="ml-1 text-xs text-primary">default</span> : ""}</span>
+                <span className="text-sm flex-1">{l.name} <span className="text-muted-foreground">({l.code})</span>{l.is_default ? <span className="ml-1 text-xs text-primary">{t("settings_translations.default")}</span> : ""}</span>
                 {l.code !== "en" && (
                   <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive h-7 w-7" onClick={() => removeLang.mutate(l.code)}>
                     <Trash2 className="h-3.5 w-3.5" />
@@ -269,26 +271,26 @@ export default function TranslationsPage() {
           </div>
           <div className="border-t pt-3 mt-1 grid grid-cols-2 gap-2">
             <div>
-              <Label className="text-xs">Code *</Label>
+              <Label className="text-xs">{t("settings_translations.field_code")} *</Label>
               <Input value={newLang.code} onChange={(e) => setNewLang((s) => ({ ...s, code: e.target.value }))} placeholder="es" className="mt-1" />
             </div>
             <div>
-              <Label className="text-xs">Native name *</Label>
+              <Label className="text-xs">{t("settings_translations.field_native_name")} *</Label>
               <Input value={newLang.name} onChange={(e) => setNewLang((s) => ({ ...s, name: e.target.value }))} placeholder="Español" className="mt-1" />
             </div>
             <div>
-              <Label className="text-xs">English name</Label>
+              <Label className="text-xs">{t("settings_translations.field_english_name")}</Label>
               <Input value={newLang.english_name} onChange={(e) => setNewLang((s) => ({ ...s, english_name: e.target.value }))} placeholder="Spanish" className="mt-1" />
             </div>
             <div>
-              <Label className="text-xs">Flag ISO</Label>
+              <Label className="text-xs">{t("settings_translations.field_flag_iso")}</Label>
               <Input value={newLang.flag_iso} onChange={(e) => setNewLang((s) => ({ ...s, flag_iso: e.target.value }))} placeholder="es" className="mt-1" />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setLangDialog(false)}>Close</Button>
+            <Button variant="outline" onClick={() => setLangDialog(false)}>{t("common.close")}</Button>
             <Button onClick={() => addLang.mutate()} disabled={!newLang.code.trim() || !newLang.name.trim() || addLang.isPending}>
-              {addLang.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}Add Language
+              {addLang.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}{t("settings_translations.add_language")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -297,20 +299,20 @@ export default function TranslationsPage() {
       {/* Add key */}
       <Dialog open={addKeyOpen} onOpenChange={setAddKeyOpen}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Add Translation Key</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("settings_translations.add_translation_key")}</DialogTitle></DialogHeader>
           <div className="space-y-3 py-1">
             <div>
-              <Label className="text-xs">Key (dot notation) *</Label>
+              <Label className="text-xs">{t("settings_translations.field_key_dot_notation")} *</Label>
               <Input value={newKey.key} onChange={(e) => setNewKey((s) => ({ ...s, key: e.target.value }))} placeholder="home.hero_title" className="mt-1 font-mono" />
             </div>
             <div>
-              <Label className="text-xs">Value for "{lang}"</Label>
+              <Label className="text-xs">{t("settings_translations.field_value_for_lang", { lang })}</Label>
               <Input value={newKey.value} onChange={(e) => setNewKey((s) => ({ ...s, value: e.target.value }))} className="mt-1" />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAddKeyOpen(false)}>Cancel</Button>
-            <Button onClick={() => addKey.mutate()} disabled={!newKey.key.trim() || addKey.isPending}>Add</Button>
+            <Button variant="outline" onClick={() => setAddKeyOpen(false)}>{t("common.cancel")}</Button>
+            <Button onClick={() => addKey.mutate()} disabled={!newKey.key.trim() || addKey.isPending}>{t("common.add")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -318,14 +320,14 @@ export default function TranslationsPage() {
       <AlertDialog open={deleteKey !== null} onOpenChange={(o) => !o && setDeleteKey(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete key</AlertDialogTitle>
+            <AlertDialogTitle>{t("settings_translations.delete_key")}</AlertDialogTitle>
             <AlertDialogDescription>
-              <span className="font-mono">{deleteKey}</span> will be removed for <strong>all languages</strong>. The landing page will fall back to its bundled default for this key.
+              <span className="font-mono">{deleteKey}</span>{" "}{t("settings_translations.delete_key_description")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <Button variant="destructive" onClick={() => deleteKey && removeKey.mutate(deleteKey)}>Delete</Button>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <Button variant="destructive" onClick={() => deleteKey && removeKey.mutate(deleteKey)}>{t("common.delete")}</Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

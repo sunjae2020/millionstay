@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -62,15 +63,16 @@ export const LANGUAGES = [
 ];
 
 export default function WebsiteContentList() {
+  const { t } = useTranslation();
   return (
     <Layout>
       <PageHeader
-        title="Website Pages"
-        description="Manage content and SEO for each page of the public website"
+        title={t("website_content.page_title")}
+        description={t("website_content.page_description")}
         actions={
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Globe className="h-4 w-4" />
-            {LANGUAGES.length} languages supported
+            {t("website_content.languages_supported", { count: LANGUAGES.length })}
           </div>
         }
       />
@@ -88,15 +90,15 @@ export default function WebsiteContentList() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-sm">{page.label}</h3>
+                        <h3 className="font-semibold text-sm">{t(`website_content.page_label_${page.key.replace(/-/g, "_")}`)}</h3>
                         <Badge variant="outline" className="text-xs px-1.5 py-0 font-normal">
                           {page.path}
                         </Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground line-clamp-2">{page.description}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{t(`website_content.page_desc_${page.key.replace(/-/g, "_")}`)}</p>
                       <div className="flex items-center gap-1 mt-3">
                         {LANGUAGES.map((l) => (
-                          <span key={l.code} className="text-sm" title={l.label}>{l.flag}</span>
+                          <span key={l.code} className="text-sm" title={t(`website_content.lang_${l.code}`)}>{l.flag}</span>
                         ))}
                       </div>
                     </div>

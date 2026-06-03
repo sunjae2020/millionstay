@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { apiFetch } from "@/lib/apiFetch";
 import { useListInvoices } from "@workspace/api-client-react";
@@ -68,6 +69,7 @@ function shortMonth(m: string) {
 }
 
 export default function FinanceTab() {
+  const { t } = useTranslation();
   const [summary, setSummary] = useState<FinanceSummary | null>(null);
   const [monthly, setMonthly] = useState<MonthlyRevenue[]>([]);
   const [byProp, setByProp] = useState<PropertyRevenue[]>([]);
@@ -126,13 +128,14 @@ export default function FinanceTab() {
       const r = await apiFetch(`/api/v1/invoices/${id}/${action}`, { method: "POST" });
       if (!r.ok) {
         const err = await r.json();
-        toast({ title: "Error", description: err.error ?? "Failed", variant: "destructive" });
+        toast({ title: t("dash_finance.toast_error_title"), description: err.error ?? t("dash_finance.toast_failed"), variant: "destructive" });
       } else {
-        toast({ title: "Done", description: `Invoice ${action === "send" ? "sent" : action === "pay" ? "marked as paid" : "voided"}.` });
+        const actionMsg = action === "send" ? t("dash_finance.action_sent") : action === "pay" ? t("dash_finance.action_marked_paid") : t("dash_finance.action_voided");
+        toast({ title: t("dash_finance.toast_done_title"), description: t("dash_finance.invoice_action_result", { action: actionMsg }) });
         refetch();
       }
     } catch {
-      toast({ title: "Error", description: "Network error", variant: "destructive" });
+      toast({ title: t("dash_finance.toast_error_title"), description: t("dash_finance.toast_network_error"), variant: "destructive" });
     }
   }
 
@@ -141,25 +144,25 @@ export default function FinanceTab() {
       <div className="flex justify-end">
         <Link href="/finance/invoices/new">
           <Button size="sm" className="gap-1.5 bg-[#E8621A] hover:bg-[#d4541a] text-white">
-            <Plus className="h-4 w-4" /> Create Invoice
+            <Plus className="h-4 w-4" /> {t("dash_finance.create_invoice")}
           </Button>
         </Link>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard label="Total Revenue (Settled)" value={summary ? fmt(summary.total_revenue) : "—"} icon={DollarSign} accent="green" sublabel="All paid invoices" />
-        <KpiCard label="Sent Invoices" value={summary?.sent_count ?? "—"} icon={FileText} accent="amber" sublabel="Awaiting payment" />
-        <KpiCard label="Paid This Month" value={summary?.paid_count ?? "—"} icon={CheckCircle} accent="brand" sublabel={currentMonthLabel} />
-        <KpiCard label="Overdue Invoices" value={summary?.overdue_count ?? "—"} icon={Clock} accent={summary?.overdue_count ? "red" : "slate"} sublabel="Past due date" trend={summary?.overdue_count ? "Follow up" : undefined} trendType="down" />
+        <KpiCard label={t("dash_finance.total_revenue_settled")} value={summary ? fmt(summary.total_revenue) : "—"} icon={DollarSign} accent="green" sublabel={t("dash_finance.all_paid_invoices")} />
+        <KpiCard label={t("dash_finance.sent_invoices")} value={summary?.sent_count ?? "—"} icon={FileText} accent="amber" sublabel={t("dash_finance.awaiting_payment")} />
+        <KpiCard label={t("dash_finance.paid_this_month")} value={summary?.paid_count ?? "—"} icon={CheckCircle} accent="brand" sublabel={currentMonthLabel} />
+        <KpiCard label={t("dash_finance.overdue_invoices")} value={summary?.overdue_count ?? "—"} icon={Clock} accent={summary?.overdue_count ? "red" : "slate"} sublabel={t("dash_finance.past_due_date")} trend={summary?.overdue_count ? t("dash_finance.follow_up") : undefined} trendType="down" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <DashCard className="lg:col-span-2" title="6-Month Revenue Trend" icon={TrendingUp}>
+        <DashCard className="lg:col-span-2" title={t("dash_finance.revenue_trend_6mo")} icon={TrendingUp}>
           {monthly.length === 0 || monthly.every(m => (m.revenue ?? 0) === 0) ? (
             <div className="h-48 flex flex-col items-center justify-center gap-1 text-center">
               <TrendingUp className="h-6 w-6 text-muted-foreground/40" />
-              <p className="text-sm text-muted-foreground">No settled revenue in this period</p>
-              <p className="text-xs text-muted-foreground/70">Revenue appears here once invoices are marked paid</p>
+              <p className="text-sm text-muted-foreground">{t("dash_finance.no_settled_revenue")}</p>
+              <p className="text-xs text-muted-foreground/70">{t("dash_finance.revenue_appears_hint")}</p>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={200}>
@@ -167,7 +170,7 @@ export default function FinanceTab() {
                 <XAxis dataKey="month" tickFormatter={shortMonth} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis hide />
                 <Tooltip
-                  formatter={(v: number) => [fmt(v), "Revenue"]}
+                  formatter={(v: number) => [fmt(v), t("dash_finance.revenue")]}
                   labelFormatter={(l: string) => shortMonth(l)}
                   contentStyle={{ fontSize: 12, borderRadius: 8 }}
                 />
@@ -180,14 +183,14 @@ export default function FinanceTab() {
             </ResponsiveContainer>
           )}
           <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground">
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#E8621A] inline-block" /> Current month</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#fcd9c4] inline-block" /> Historical</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#E8621A] inline-block" /> {t("dash_finance.current_month")}</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#fcd9c4] inline-block" /> {t("dash_finance.historical")}</span>
           </div>
         </DashCard>
 
-        <DashCard title="Payment Status">
+        <DashCard title={t("dash_finance.payment_status")}>
           {donutData.length === 0 ? (
-            <div className="h-[200px] flex items-center justify-center text-sm text-muted-foreground">No invoices</div>
+            <div className="h-[200px] flex items-center justify-center text-sm text-muted-foreground">{t("dash_finance.no_invoices")}</div>
           ) : (
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
@@ -196,8 +199,8 @@ export default function FinanceTab() {
                     <Cell key={i} fill={DONUT_COLORS[entry.name as keyof typeof DONUT_COLORS] ?? "#94a3b8"} />
                   ))}
                 </Pie>
-                <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11 }} />
-                <Tooltip formatter={(v: number, name: string) => [v, name]} contentStyle={{ fontSize: 11, borderRadius: 8 }} />
+                <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11 }} formatter={(value: string) => t(`dash_finance.donut_${value.toLowerCase()}`)} />
+                <Tooltip formatter={(v: number, name: string) => [v, t(`dash_finance.donut_${name.toLowerCase()}`)]} contentStyle={{ fontSize: 11, borderRadius: 8 }} />
               </PieChart>
             </ResponsiveContainer>
           )}
@@ -205,20 +208,20 @@ export default function FinanceTab() {
       </div>
 
       <DashCard
-        title="Invoice List"
+        title={t("dash_finance.invoice_list")}
         bodyClass="p-0"
-        action={<Link href="/finance/invoices" className="text-xs text-[#E8621A] hover:underline">Full list →</Link>}
+        action={<Link href="/finance/invoices" className="text-xs text-[#E8621A] hover:underline">{t("dash_finance.full_list")}</Link>}
       >
         <div className="px-4 py-3 border-b flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-[180px]">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input placeholder="Search invoice ref or account…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="pl-8 h-8 text-xs" />
+            <Input placeholder={t("dash_finance.search_placeholder")} value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} className="pl-8 h-8 text-xs" />
           </div>
           <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); setPage(1); }}>
             <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               {["All", "Draft", "Sent", "Paid", "Overdue", "Void"].map(s => (
-                <SelectItem key={s} value={s} className="text-xs">{s === "All" ? "All Statuses" : s}</SelectItem>
+                <SelectItem key={s} value={s} className="text-xs">{s === "All" ? t("dash_finance.all_statuses") : t(`dash_finance.status_${s.toLowerCase()}`)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -227,14 +230,14 @@ export default function FinanceTab() {
           <table className="w-full text-xs">
             <thead className="bg-muted/50">
               <tr>
-                {["Invoice #", "Account", "Amount", "Due Date", "Status", "Actions"].map(h => (
-                  <th key={h} className="px-3 py-2 text-left text-muted-foreground font-medium">{h}</th>
+                {[t("dash_finance.col_invoice_no"), t("dash_finance.col_account"), t("common.amount"), t("dash_finance.col_due_date"), t("common.status"), t("common.actions")].map((h, hi) => (
+                  <th key={hi} className="px-3 py-2 text-left text-muted-foreground font-medium">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y">
               {paginated.length === 0 ? (
-                <tr><td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">No invoices found</td></tr>
+                <tr><td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">{t("dash_finance.no_invoices_found")}</td></tr>
               ) : paginated.map(inv => (
                 <tr key={inv.id} className="hover:bg-muted/30">
                   <td className="px-3 py-2 font-mono">{inv.invoice_ref}</td>
@@ -242,24 +245,24 @@ export default function FinanceTab() {
                   <td className="px-3 py-2 font-medium">{fmt(inv.amount ?? 0)}</td>
                   <td className="px-3 py-2">{inv.due_date ?? "—"}</td>
                   <td className="px-3 py-2">
-                    <Pill className={STATUS_BADGE[inv.effective_status] ?? "bg-gray-100 text-gray-600"}>{inv.effective_status}</Pill>
+                    <Pill className={STATUS_BADGE[inv.effective_status] ?? "bg-gray-100 text-gray-600"}>{t(`dash_finance.status_${String(inv.effective_status).toLowerCase()}`)}</Pill>
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex gap-1.5 flex-wrap">
                       {inv.status === "Draft" && (
                         <>
-                          <button onClick={() => handleInvoiceAction(inv.id, "send")} className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 hover:bg-blue-200">Send</button>
-                          <Link href={`/finance/invoices/${inv.id}`} className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-700 hover:bg-gray-200">Edit</Link>
+                          <button onClick={() => handleInvoiceAction(inv.id, "send")} className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 hover:bg-blue-200">{t("common.send")}</button>
+                          <Link href={`/finance/invoices/${inv.id}`} className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-700 hover:bg-gray-200">{t("common.edit")}</Link>
                         </>
                       )}
                       {(inv.status === "Sent" || inv.effective_status === "Overdue") && (
                         <>
-                          <button onClick={() => handleInvoiceAction(inv.id, "pay")} className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 hover:bg-green-200">Mark Paid</button>
-                          <Link href={`/finance/invoices/${inv.id}`} className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-700 hover:bg-gray-200">View</Link>
+                          <button onClick={() => handleInvoiceAction(inv.id, "pay")} className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 hover:bg-green-200">{t("dash_finance.mark_paid")}</button>
+                          <Link href={`/finance/invoices/${inv.id}`} className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-700 hover:bg-gray-200">{t("common.view")}</Link>
                         </>
                       )}
                       {inv.status === "Paid" && (
-                        <Link href={`/finance/invoices/${inv.id}`} className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-700 hover:bg-gray-200">Receipt</Link>
+                        <Link href={`/finance/invoices/${inv.id}`} className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-700 hover:bg-gray-200">{t("dash_finance.receipt")}</Link>
                       )}
                     </div>
                   </td>
@@ -270,19 +273,19 @@ export default function FinanceTab() {
         </div>
         {pageCount > 1 && (
           <div className="flex items-center justify-between px-4 py-2 border-t text-xs">
-            <span className="text-muted-foreground">Showing {(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, filtered.length)} of {filtered.length}</span>
+            <span className="text-muted-foreground">{t("dash_finance.showing_range", { from: (page - 1) * PER_PAGE + 1, to: Math.min(page * PER_PAGE, filtered.length), total: filtered.length })}</span>
             <div className="flex gap-1">
-              <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>‹ Prev</Button>
-              <Button variant="outline" size="sm" disabled={page === pageCount} onClick={() => setPage(p => p + 1)}>Next ›</Button>
+              <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>‹ {t("common.prev")}</Button>
+              <Button variant="outline" size="sm" disabled={page === pageCount} onClick={() => setPage(p => p + 1)}>{t("common.next")} ›</Button>
             </div>
           </div>
         )}
       </DashCard>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <DashCard title="Revenue by Property" icon={Building2}>
+        <DashCard title={t("dash_finance.revenue_by_property")} icon={Building2}>
           {byProp.length === 0 ? (
-            <div className="text-sm text-muted-foreground text-center py-6">No data yet</div>
+            <div className="text-sm text-muted-foreground text-center py-6">{t("dash_finance.no_data_yet")}</div>
           ) : (
             <div className="space-y-3">
               {byProp.slice(0, 8).map((p, i) => (
@@ -306,19 +309,19 @@ export default function FinanceTab() {
           )}
         </DashCard>
 
-        <DashCard title="Tax Summary (6-Month)">
+        <DashCard title={t("dash_finance.tax_summary_6mo")}>
           <div className="overflow-auto">
             <table className="w-full text-xs">
               <thead className="bg-muted/50">
                 <tr>
-                  {["Period", "Gross Revenue", "Tax (10%)", "Net Revenue"].map(h => (
-                    <th key={h} className="px-2 py-1.5 text-left text-muted-foreground font-medium">{h}</th>
+                  {[t("dash_finance.col_period"), t("dash_finance.col_gross_revenue"), t("dash_finance.col_tax_10"), t("dash_finance.col_net_revenue")].map((h, hi) => (
+                    <th key={hi} className="px-2 py-1.5 text-left text-muted-foreground font-medium">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {taxRows.length === 0 ? (
-                  <tr><td colSpan={4} className="px-2 py-4 text-center text-muted-foreground">No data</td></tr>
+                  <tr><td colSpan={4} className="px-2 py-4 text-center text-muted-foreground">{t("common.no_data")}</td></tr>
                 ) : [...taxRows].reverse().map(row => (
                   <tr key={row.month} className="hover:bg-muted/30">
                     <td className="px-2 py-1.5 font-medium">{shortMonth(row.month)} {row.month.slice(0, 4)}</td>

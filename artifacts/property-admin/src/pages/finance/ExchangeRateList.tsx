@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { RefreshCw, Trash2, Plus, Loader2, Zap } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 type ExchangeRate = {
   id: number;
@@ -83,6 +84,7 @@ function fmt(d: string | null) {
 export default function ExchangeRateList() {
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [from, setFrom] = useState("KRW");
   const [rate, setRate] = useState("");
 
@@ -93,17 +95,17 @@ export default function ExchangeRateList() {
   const createMut = useMutation({
     mutationFn: createRate,
     onSuccess: () => {
-      toast({ title: "Currency pair added" });
+      toast({ title: t("exchange_rate.toast_pair_added") });
       setRate("");
       qc.invalidateQueries({ queryKey: ["exchange-rates"] });
     },
-    onError: (e: any) => toast({ title: "Failed", description: String(e?.message ?? e), variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("exchange_rate.toast_failed"), description: String(e?.message ?? e), variant: "destructive" }),
   });
 
   const deleteMut = useMutation({
     mutationFn: deleteRate,
     onSuccess: () => {
-      toast({ title: "Deleted" });
+      toast({ title: t("exchange_rate.toast_deleted") });
       qc.invalidateQueries({ queryKey: ["exchange-rates"] });
     },
   });
@@ -113,9 +115,12 @@ export default function ExchangeRateList() {
     onSuccess: (r) => {
       const d = r.data;
       if (d.ok) {
-        toast({ title: "Sync complete", description: `Updated: ${d.updated.join(", ") || "none"}${d.skipped.length ? ` · Skipped: ${d.skipped.join(", ")}` : ""}` });
+        toast({
+          title: t("exchange_rate.toast_sync_complete"),
+          description: t("exchange_rate.toast_sync_updated", { updated: d.updated.join(", ") || t("exchange_rate.none_value") }) + (d.skipped.length ? ` · ${t("exchange_rate.toast_sync_skipped", { skipped: d.skipped.join(", ") })}` : ""),
+        });
       } else {
-        toast({ title: "Sync failed", description: d.error ?? "unknown error", variant: "destructive" });
+        toast({ title: t("exchange_rate.toast_sync_failed"), description: d.error ?? t("exchange_rate.unknown_error"), variant: "destructive" });
       }
       qc.invalidateQueries({ queryKey: ["exchange-rates"] });
     },
@@ -134,7 +139,7 @@ export default function ExchangeRateList() {
   function applyLiveToInput() {
     const v = liveOf(from);
     if (v == null) {
-      toast({ title: "No live rate available", description: `${from} not returned by provider`, variant: "destructive" });
+      toast({ title: t("exchange_rate.toast_no_live_rate"), description: t("exchange_rate.toast_no_live_rate_desc", { currency: from }), variant: "destructive" });
       return;
     }
     setRate(v.toFixed(8));
@@ -143,17 +148,17 @@ export default function ExchangeRateList() {
   return (
     <Layout>
       <PageHeader
-        title="Exchange Rates"
-        subtitle="Manage currency pairs used across product pricing and customer-facing display. AUD is the base currency."
+        title={t("exchange_rate.page_title")}
+        subtitle={t("exchange_rate.page_subtitle")}
       />
 
       <div className="rounded-lg border bg-white p-4 mb-4">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <div className="text-sm text-muted-foreground">Last auto sync</div>
+            <div className="text-sm text-muted-foreground">{t("exchange_rate.last_auto_sync")}</div>
             <div className="font-medium">{fmt(info?.last_sync_at ?? null)}</div>
             <div className="text-xs text-muted-foreground mt-1">
-              Tracked currencies: {info?.tracked_count ?? 0} · Provider: open.er-api.com (free, AUD base)
+              {t("exchange_rate.tracked_currencies", { count: info?.tracked_count ?? 0 })} · {t("exchange_rate.provider_info")}
             </div>
           </div>
           <Button
@@ -162,16 +167,16 @@ export default function ExchangeRateList() {
             variant="outline"
           >
             {syncMut.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
-            Sync Now
+            {t("exchange_rate.sync_now")}
           </Button>
         </div>
       </div>
 
       <div className="rounded-lg border bg-white p-4 mb-4">
-        <div className="text-sm font-medium mb-3">Add / Update Currency Pair (vs AUD)</div>
+        <div className="text-sm font-medium mb-3">{t("exchange_rate.add_update_pair")}</div>
         <div className="flex flex-wrap items-end gap-3">
           <div>
-            <label className="text-xs text-muted-foreground block mb-1">From</label>
+            <label className="text-xs text-muted-foreground block mb-1">{t("exchange_rate.from")}</label>
             <Select value={from} onValueChange={setFrom}>
               <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -182,20 +187,20 @@ export default function ExchangeRateList() {
             </Select>
           </div>
           <div>
-            <label className="text-xs text-muted-foreground block mb-1">Rate (1 {from} = ? AUD)</label>
+            <label className="text-xs text-muted-foreground block mb-1">{t("exchange_rate.rate_label", { currency: from })}</label>
             <Input
               type="number"
               step="0.00000001"
               value={rate}
               onChange={(e) => setRate(e.target.value)}
-              placeholder="e.g. 0.00115"
+              placeholder={t("exchange_rate.rate_placeholder")}
               className="w-56"
             />
             <div className="text-xs text-muted-foreground mt-1 h-4">
               {liveQ.isLoading
-                ? "Loading live rate…"
+                ? t("exchange_rate.loading_live_rate")
                 : liveOf(from) != null
-                ? `Live: 1 ${from} = ${liveOf(from)!.toFixed(8)} AUD`
+                ? t("exchange_rate.live_rate_hint", { currency: from, rate: liveOf(from)!.toFixed(8) })
                 : ""}
             </div>
           </div>
@@ -204,15 +209,15 @@ export default function ExchangeRateList() {
             variant="outline"
             onClick={applyLiveToInput}
             disabled={liveQ.isLoading || liveOf(from) == null}
-            title="Fill the rate field with the current market rate"
+            title={t("exchange_rate.use_live_rate_tooltip")}
           >
             <Zap className="h-4 w-4 mr-2" />
-            Use Live Rate
+            {t("exchange_rate.use_live_rate")}
           </Button>
           <Button
             onClick={() => {
               if (!rate || Number(rate) <= 0) {
-                toast({ title: "Enter a positive rate", variant: "destructive" });
+                toast({ title: t("exchange_rate.toast_positive_rate"), variant: "destructive" });
                 return;
               }
               createMut.mutate({ from_currency: from, to_currency: "AUD", rate });
@@ -220,10 +225,10 @@ export default function ExchangeRateList() {
             disabled={createMut.isPending}
           >
             <Plus className="h-4 w-4 mr-2" />
-            Save
+            {t("common.save")}
           </Button>
           <div className="text-xs text-muted-foreground ml-2">
-            Tip: registering a pair here marks the currency as "tracked" — daily auto-sync will update it.
+            {t("exchange_rate.tip_tracked")}
           </div>
         </div>
       </div>
@@ -232,21 +237,21 @@ export default function ExchangeRateList() {
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b">
             <tr>
-              <th className="px-4 py-2 text-left">From</th>
-              <th className="px-4 py-2 text-left">To</th>
-              <th className="px-4 py-2 text-right">Rate (1 from = N to)</th>
-              <th className="px-4 py-2 text-right">Inverse (1 to = N from)</th>
-              <th className="px-4 py-2 text-right">Live (1 from = N AUD)</th>
-              <th className="px-4 py-2 text-right">Diff vs Live</th>
-              <th className="px-4 py-2 text-left">Source</th>
-              <th className="px-4 py-2 text-left">Effective Date</th>
-              <th className="px-4 py-2 text-left">Updated</th>
+              <th className="px-4 py-2 text-left">{t("exchange_rate.from")}</th>
+              <th className="px-4 py-2 text-left">{t("exchange_rate.to")}</th>
+              <th className="px-4 py-2 text-right">{t("exchange_rate.col_rate")}</th>
+              <th className="px-4 py-2 text-right">{t("exchange_rate.col_inverse")}</th>
+              <th className="px-4 py-2 text-right">{t("exchange_rate.col_live")}</th>
+              <th className="px-4 py-2 text-right">{t("exchange_rate.col_diff")}</th>
+              <th className="px-4 py-2 text-left">{t("exchange_rate.source")}</th>
+              <th className="px-4 py-2 text-left">{t("exchange_rate.effective_date")}</th>
+              <th className="px-4 py-2 text-left">{t("common.updated_at")}</th>
               <th className="px-4 py-2"></th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 && (
-              <tr><td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">No exchange rates yet — add a currency pair to start auto-sync.</td></tr>
+              <tr><td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">{t("exchange_rate.empty_state")}</td></tr>
             )}
             {rows.map((r) => {
               const n = Number(r.rate);
@@ -283,7 +288,7 @@ export default function ExchangeRateList() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        title="Update this pair to the current live rate (saved as manual)"
+                        title={t("exchange_rate.update_to_live_tooltip")}
                         disabled={createMut.isPending}
                         onClick={() =>
                           createMut.mutate({ from_currency: r.from_currency, to_currency: "AUD", rate: liveRate.toFixed(8) })
@@ -295,7 +300,7 @@ export default function ExchangeRateList() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => { if (confirm("Delete this rate?")) deleteMut.mutate(r.id); }}
+                      onClick={() => { if (confirm(t("exchange_rate.confirm_delete_rate"))) deleteMut.mutate(r.id); }}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

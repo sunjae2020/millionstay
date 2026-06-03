@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
 import { useListContacts, useListAccounts, useListLeads, useListTasks } from "@workspace/api-client-react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import {
@@ -37,6 +38,7 @@ const TASK_STATUS_BADGE: Record<string, string> = {
 };
 
 export default function CrmTab() {
+  const { t } = useTranslation();
   const { data: contacts } = useListContacts();
   const { data: accounts } = useListAccounts();
   const { data: leads } = useListLeads({});
@@ -99,27 +101,27 @@ export default function CrmTab() {
       <div className="flex justify-end gap-2">
         <Link href="/account/contacts/new">
           <Button variant="outline" size="sm" className="gap-1.5">
-            <UserPlus className="h-4 w-4" /> New Contact
+            <UserPlus className="h-4 w-4" /> {t("dash_crm.new_contact")}
           </Button>
         </Link>
         <Link href="/account/leads/new">
           <Button size="sm" className="gap-1.5 bg-[#E8621A] hover:bg-[#d4541a] text-white">
-            <Plus className="h-4 w-4" /> New Lead
+            <Plus className="h-4 w-4" /> {t("dash_crm.new_lead")}
           </Button>
         </Link>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard icon={Users} accent="blue" label="Total Contacts" value={contacts?.length ?? "—"} sublabel="People in CRM" />
-        <KpiCard icon={Briefcase} accent="purple" label="Accounts" value={accounts?.length ?? "—"} sublabel={`${guestAccounts} guests · ${ownerAccounts} owners`} />
-        <KpiCard icon={TrendingUp} accent="brand" label="Active Leads" value={activeLeads} sublabel={`${conversionRate}% conversion rate`} progress={conversionRate} trend={convertedLeads > 0 ? `${convertedLeads} won` : undefined} trendType="up" />
-        <KpiCard icon={CheckSquare} accent={overdueTasks > 0 ? "red" : "green"} label="Open Tasks" value={openTasks} sublabel={overdueTasks > 0 ? `${overdueTasks} overdue` : "All on track"} trend={overdueTasks > 0 ? "Overdue" : undefined} trendType="down" />
+        <KpiCard icon={Users} accent="blue" label={t("dash_crm.total_contacts")} value={contacts?.length ?? "—"} sublabel={t("dash_crm.people_in_crm")} />
+        <KpiCard icon={Briefcase} accent="purple" label={t("dash_crm.accounts")} value={accounts?.length ?? "—"} sublabel={t("dash_crm.guests_owners", { guests: guestAccounts, owners: ownerAccounts })} />
+        <KpiCard icon={TrendingUp} accent="brand" label={t("dash_crm.active_leads")} value={activeLeads} sublabel={t("dash_crm.conversion_rate_pct", { rate: conversionRate })} progress={conversionRate} trend={convertedLeads > 0 ? t("dash_crm.count_won", { count: convertedLeads }) : undefined} trendType="up" />
+        <KpiCard icon={CheckSquare} accent={overdueTasks > 0 ? "red" : "green"} label={t("dash_crm.open_tasks")} value={openTasks} sublabel={overdueTasks > 0 ? t("dash_crm.count_overdue", { count: overdueTasks }) : t("dash_crm.all_on_track")} trend={overdueTasks > 0 ? t("dash_crm.overdue") : undefined} trendType="down" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <DashCard className="lg:col-span-2" title="Lead Pipeline" icon={Filter}>
+        <DashCard className="lg:col-span-2" title={t("dash_crm.lead_pipeline")} icon={Filter}>
           {totalLeads === 0 ? (
-            <div className="h-40 flex items-center justify-center text-sm text-muted-foreground">No leads yet</div>
+            <div className="h-40 flex items-center justify-center text-sm text-muted-foreground">{t("dash_crm.no_leads_yet")}</div>
           ) : (
             <div className="space-y-4 py-1">
               {pipelineCounts.map(({ stage, count }) => (
@@ -127,9 +129,9 @@ export default function CrmTab() {
                   <div className="flex items-center justify-between text-xs mb-1.5">
                     <span className="font-medium flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full" style={{ background: PIPELINE_COLOR[stage] }} />
-                      {stage}
+                      {t(`dash_crm.stage_${stage.toLowerCase()}`)}
                     </span>
-                    <span className="text-muted-foreground">{count} {count === 1 ? "lead" : "leads"}</span>
+                    <span className="text-muted-foreground">{t("dash_crm.count_leads", { count })}</span>
                   </div>
                   <div className="h-3 bg-muted rounded-full overflow-hidden">
                     <div className="h-full rounded-full transition-[width] duration-700" style={{ width: `${(count / maxPipeline) * 100}%`, background: PIPELINE_COLOR[stage] }} />
@@ -137,16 +139,16 @@ export default function CrmTab() {
                 </div>
               ))}
               <div className="flex items-center justify-between pt-2 mt-1 border-t text-xs">
-                <span className="text-muted-foreground">Conversion (Converted / Total)</span>
+                <span className="text-muted-foreground">{t("dash_crm.conversion_converted_total")}</span>
                 <span className="font-bold" style={{ color: ACCENT.green.fg }}>{conversionRate}%</span>
               </div>
             </div>
           )}
         </DashCard>
 
-        <DashCard title="Lead Sources">
+        <DashCard title={t("dash_crm.lead_sources")}>
           {sourceData.length === 0 ? (
-            <div className="h-[200px] flex items-center justify-center text-sm text-muted-foreground">No data</div>
+            <div className="h-[200px] flex items-center justify-center text-sm text-muted-foreground">{t("common.no_data")}</div>
           ) : (
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
@@ -166,23 +168,23 @@ export default function CrmTab() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <DashCard
           className="lg:col-span-2"
-          title="Recent Leads"
+          title={t("dash_crm.recent_leads")}
           icon={TrendingUp}
           bodyClass="p-0"
-          action={<Link href="/account/leads" className="text-xs text-[#E8621A] hover:underline">View all →</Link>}
+          action={<Link href="/account/leads" className="text-xs text-[#E8621A] hover:underline">{t("dash_crm.view_all_arrow")}</Link>}
         >
           <div className="overflow-auto">
             <table className="w-full text-xs">
               <thead className="bg-muted/50">
                 <tr>
-                  {["Ref #", "Name", "Source", "Budget", "Status"].map(h => (
+                  {[t("dash_crm.col_ref"), t("common.name"), t("dash_crm.col_source"), t("dash_crm.col_budget"), t("common.status")].map(h => (
                     <th key={h} className="px-3 py-2 text-left text-muted-foreground font-medium">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {recentLeads.length === 0 ? (
-                  <tr><td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">No leads yet</td></tr>
+                  <tr><td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">{t("dash_crm.no_leads_yet")}</td></tr>
                 ) : recentLeads.map(l => (
                   <tr key={l.id} className="hover:bg-muted/30">
                     <td className="px-3 py-2 font-mono font-medium">
@@ -202,26 +204,30 @@ export default function CrmTab() {
         </DashCard>
 
         <DashCard
-          title="Open Tasks"
+          title={t("dash_crm.open_tasks")}
           icon={CheckSquare}
           bodyClass="p-0"
-          action={<Link href="/account/tasks" className="text-xs text-[#E8621A] hover:underline">All →</Link>}
+          action={<Link href="/account/tasks" className="text-xs text-[#E8621A] hover:underline">{t("dash_crm.all_arrow")}</Link>}
         >
           <div className="divide-y max-h-[340px] overflow-auto">
             {openTaskList.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-8">No open tasks 🎉</p>
-            ) : openTaskList.map(t => {
-              const overdue = t.due_date && t.due_date < today;
+              <p className="text-xs text-muted-foreground text-center py-8">{t("dash_crm.no_open_tasks")}</p>
+            ) : openTaskList.map(task => {
+              const overdue = task.due_date && task.due_date < today;
               return (
-                <Link key={t.id} href={`/account/tasks/${t.id}`} className="flex items-start gap-3 px-4 py-2.5 hover:bg-muted/30">
-                  <div className={`mt-1 h-2.5 w-2.5 rounded-full shrink-0 ${TASK_PRIORITY_DOT[t.priority ?? "Low"] ?? "bg-gray-400"}`} />
+                <Link key={task.id} href={`/account/tasks/${task.id}`} className="flex items-start gap-3 px-4 py-2.5 hover:bg-muted/30">
+                  <div className={`mt-1 h-2.5 w-2.5 rounded-full shrink-0 ${TASK_PRIORITY_DOT[task.priority ?? "Low"] ?? "bg-gray-400"}`} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium truncate">{t.subject ?? "Untitled task"}</p>
+                    <p className="text-xs font-medium truncate">{task.subject ?? t("dash_crm.untitled_task")}</p>
                     <p className={`text-[10px] mt-0.5 ${overdue ? "text-red-600 font-medium" : "text-muted-foreground"}`}>
-                      {t.due_date ? `Due ${t.due_date}${overdue ? " · overdue" : ""}` : "No due date"} · {t.priority ?? "Low"}
+                      {task.due_date
+                        ? (overdue
+                            ? t("dash_crm.due_date_overdue", { date: task.due_date })
+                            : t("dash_crm.due_date", { date: task.due_date }))
+                        : t("dash_crm.no_due_date")} · {t(`dash_crm.priority_${(task.priority ?? "Low").toLowerCase()}`)}
                     </p>
                   </div>
-                  <Pill className={TASK_STATUS_BADGE[t.task_status] ?? "bg-gray-100 text-gray-600"}>{t.task_status}</Pill>
+                  <Pill className={TASK_STATUS_BADGE[task.task_status] ?? "bg-gray-100 text-gray-600"}>{task.task_status}</Pill>
                 </Link>
               );
             })}
@@ -230,7 +236,7 @@ export default function CrmTab() {
       </div>
 
       {/* Account type breakdown */}
-      <DashCard title="Account Types" icon={Briefcase}>
+      <DashCard title={t("dash_crm.account_types")} icon={Briefcase}>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
             { type: "Guest", icon: BedDouble, accent: ACCENT.brand },
@@ -244,7 +250,7 @@ export default function CrmTab() {
               </div>
               <div>
                 <div className="text-lg font-bold leading-none">{accountTypeCounts[type] ?? 0}</div>
-                <div className="text-[11px] text-muted-foreground mt-1">{type === "SpaceOwner" ? "Space Owner" : type}</div>
+                <div className="text-[11px] text-muted-foreground mt-1">{t(`dash_crm.account_type_${type.toLowerCase()}`)}</div>
               </div>
             </div>
           ))}

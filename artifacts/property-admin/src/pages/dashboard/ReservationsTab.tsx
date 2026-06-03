@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "wouter";
 import { apiFetch } from "@/lib/apiFetch";
 import {
@@ -76,6 +77,7 @@ function GanttCalendar({
   weekStart: string;
   onBookingClick: (id: number, status: string) => void;
 }) {
+  const { t } = useTranslation();
   const [data, setData] = useState<CalendarData | null>(null);
   const [loading, setLoading] = useState(true);
   const weekEnd = addDays(weekStart, 7);
@@ -90,16 +92,16 @@ function GanttCalendar({
       .catch(() => setLoading(false));
   }, [weekStart]);
 
-  if (loading) return <div className="py-8 text-center text-sm text-muted-foreground">Loading calendar…</div>;
+  if (loading) return <div className="py-8 text-center text-sm text-muted-foreground">{t("dash_reservations.loading_calendar")}</div>;
   if (!data || data.spaces.length === 0) {
-    return <div className="py-8 text-center text-sm text-muted-foreground">No bookings in this period.</div>;
+    return <div className="py-8 text-center text-sm text-muted-foreground">{t("dash_reservations.no_bookings_period")}</div>;
   }
 
   return (
     <div className="overflow-auto">
       <div className="min-w-max">
         <div className="flex border-b bg-muted/30">
-          <div className="w-44 shrink-0 px-3 py-2 text-xs font-semibold text-muted-foreground border-r">Space</div>
+          <div className="w-44 shrink-0 px-3 py-2 text-xs font-semibold text-muted-foreground border-r">{t("dash_reservations.col_space")}</div>
           {days.map(d => (
             <div key={d} className={`w-24 shrink-0 border-r text-center py-2 text-xs ${d === today ? "bg-[#E8621A]/10 text-[#E8621A] font-bold" : "text-muted-foreground"}`}>
               <div className="font-medium">{new Date(d + "T12:00:00").getDate()}</div>
@@ -136,7 +138,7 @@ function GanttCalendar({
                       color: colors.text,
                       borderColor: colors.border,
                     }}
-                    title={`${bk.booking_ref} — ${bk.guest_name ?? "Guest"} · ${bk.booking_status}`}
+                    title={`${bk.booking_ref} — ${bk.guest_name ?? t("dash_reservations.guest_fallback")} · ${bk.booking_status}`}
                   >
                     {bk.booking_ref} {bk.guest_name ? `· ${bk.guest_name}` : ""}
                   </button>
@@ -165,6 +167,7 @@ function ConfirmActionModal({
   title: string; description: string; warning?: string;
   confirmLabel: string; confirmClass: string; loading: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
       <DialogContent className="max-w-md">
@@ -181,9 +184,9 @@ function ConfirmActionModal({
           )}
         </div>
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose} disabled={loading}>Cancel</Button>
+          <Button variant="outline" onClick={onClose} disabled={loading}>{t("common.cancel")}</Button>
           <Button className={confirmClass} onClick={onConfirm} disabled={loading}>
-            {loading ? "Processing…" : confirmLabel}
+            {loading ? t("dash_reservations.processing") : confirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -192,6 +195,7 @@ function ConfirmActionModal({
 }
 
 function ArrivalDeparturePanel({ type, onActionDone }: { type: "arrivals" | "departures"; onActionDone?: () => void }) {
+  const { t } = useTranslation();
   const [items, setItems] = useState<ArrivalDeparture[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmItem, setConfirmItem] = useState<ArrivalDeparture | null>(null);
@@ -222,14 +226,14 @@ function ArrivalDeparturePanel({ type, onActionDone }: { type: "arrivals" | "dep
         await checkOutMutation.mutateAsync({ id: confirmItem.id });
       }
       toast({
-        title: type === "arrivals" ? "✅ Checked In" : "✅ Checked Out",
-        description: `${confirmItem.contact_name ?? "Guest"} — ${confirmItem.booking_ref}`,
+        title: type === "arrivals" ? `✅ ${t("dash_reservations.toast_checked_in")}` : `✅ ${t("dash_reservations.toast_checked_out")}`,
+        description: `${confirmItem.contact_name ?? t("dash_reservations.guest_fallback")} — ${confirmItem.booking_ref}`,
       });
       setConfirmItem(null);
       load();
       onActionDone?.();
     } catch (e: any) {
-      toast({ title: "Error", description: e?.message ?? "Failed", variant: "destructive" });
+      toast({ title: t("dash_reservations.toast_error"), description: e?.message ?? t("dash_reservations.toast_failed"), variant: "destructive" });
     } finally {
       setProcessing(false);
     }
@@ -237,7 +241,7 @@ function ArrivalDeparturePanel({ type, onActionDone }: { type: "arrivals" | "dep
 
   const isArrivals = type === "arrivals";
   const Icon = isArrivals ? LogIn : LogOut;
-  const actionLabel = isArrivals ? "Check In" : "Check Out";
+  const actionLabel = isArrivals ? t("dash_reservations.check_in") : t("dash_reservations.check_out");
   const btnClass = isArrivals
     ? "bg-green-600 hover:bg-green-700 text-white text-[10px] px-2 py-1 rounded font-medium"
     : "bg-amber-500 hover:bg-amber-600 text-white text-[10px] px-2 py-1 rounded font-medium";
@@ -247,16 +251,16 @@ function ArrivalDeparturePanel({ type, onActionDone }: { type: "arrivals" | "dep
   return (
     <>
       <DashCard
-        title={isArrivals ? "Today's Arrivals" : "Today's Departures"}
+        title={isArrivals ? t("dash_reservations.todays_arrivals") : t("dash_reservations.todays_departures")}
         icon={Icon}
         action={<span className="text-xs bg-muted rounded-full px-2 py-0.5 font-medium">{items.length}</span>}
         bodyClass="p-0"
       >
         <div className="overflow-auto max-h-72">
           {loading ? (
-            <div className="p-4 text-xs text-muted-foreground">Loading…</div>
+            <div className="p-4 text-xs text-muted-foreground">{t("common.loading")}</div>
           ) : items.length === 0 ? (
-            <div className="p-6 text-xs text-muted-foreground text-center">None scheduled today</div>
+            <div className="p-6 text-xs text-muted-foreground text-center">{t("dash_reservations.none_scheduled_today")}</div>
           ) : (
             <div className="divide-y">
               {items.map(item => (
@@ -267,8 +271,8 @@ function ArrivalDeparturePanel({ type, onActionDone }: { type: "arrivals" | "dep
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold truncate">{item.contact_name ?? "Guest"}</p>
-                    <p className="text-[10px] text-muted-foreground truncate">{item.booking_ref} · {item.space_name ?? "Space"}</p>
+                    <p className="text-xs font-semibold truncate">{item.contact_name ?? t("dash_reservations.guest_fallback")}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{item.booking_ref} · {item.space_name ?? t("dash_reservations.col_space")}</p>
                     {item.property_address && (
                       <p className="text-[10px] text-muted-foreground truncate">{item.property_address}</p>
                     )}
@@ -290,18 +294,18 @@ function ArrivalDeparturePanel({ type, onActionDone }: { type: "arrivals" | "dep
         open={!!confirmItem}
         onClose={() => setConfirmItem(null)}
         onConfirm={handleConfirm}
-        title={isArrivals ? "Confirm Check-In" : "Confirm Check-Out"}
+        title={isArrivals ? t("dash_reservations.confirm_check_in") : t("dash_reservations.confirm_check_out")}
         description={
           isArrivals
-            ? `Check in ${confirmItem?.contact_name ?? "guest"} for booking ${confirmItem?.booking_ref}?`
-            : `Check out ${confirmItem?.contact_name ?? "guest"} for booking ${confirmItem?.booking_ref}?`
+            ? t("dash_reservations.confirm_check_in_desc", { name: confirmItem?.contact_name ?? t("dash_reservations.guest_lower"), ref: confirmItem?.booking_ref })
+            : t("dash_reservations.confirm_check_out_desc", { name: confirmItem?.contact_name ?? t("dash_reservations.guest_lower"), ref: confirmItem?.booking_ref })
         }
         warning={
           !isArrivals && hasOutstandingBalance
-            ? "Please verify all outstanding balances have been settled before check-out."
+            ? t("dash_reservations.outstanding_balance_warning")
             : undefined
         }
-        confirmLabel={isArrivals ? "Check In" : "Check Out"}
+        confirmLabel={isArrivals ? t("dash_reservations.check_in") : t("dash_reservations.check_out")}
         confirmClass={isArrivals ? "bg-green-600 hover:bg-green-700 text-white" : "bg-amber-500 hover:bg-amber-600 text-white"}
         loading={processing}
       />
@@ -322,6 +326,7 @@ interface QuickBookingForm {
 }
 
 export function QuickBookingPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const qc = useQueryClient();
   const [selectedPropertyId, setSelectedPropertyId] = useState<number | null>(null);
@@ -357,9 +362,9 @@ export function QuickBookingPanel({ open, onClose }: { open: boolean; onClose: (
   const stay = calcStay();
 
   async function handleSubmit() {
-    if (!form.space_id) { toast({ title: "Select a space", variant: "destructive" }); return; }
-    if (!form.check_in_date || !form.check_out_date) { toast({ title: "Enter check-in and check-out dates", variant: "destructive" }); return; }
-    if (form.check_out_date <= form.check_in_date) { toast({ title: "Check-out must be after check-in", variant: "destructive" }); return; }
+    if (!form.space_id) { toast({ title: t("dash_reservations.err_select_space"), variant: "destructive" }); return; }
+    if (!form.check_in_date || !form.check_out_date) { toast({ title: t("dash_reservations.err_enter_dates"), variant: "destructive" }); return; }
+    if (form.check_out_date <= form.check_in_date) { toast({ title: t("dash_reservations.err_checkout_after_checkin"), variant: "destructive" }); return; }
     setSubmitting(true);
     try {
       await createMutation.mutateAsync({
@@ -375,7 +380,7 @@ export function QuickBookingPanel({ open, onClose }: { open: boolean; onClose: (
           currency: form.currency,
         },
       });
-      toast({ title: "Booking created", description: "Draft booking saved successfully." });
+      toast({ title: t("dash_reservations.booking_created"), description: t("dash_reservations.booking_created_desc") });
       onClose();
       setForm({
         contact_id: null, space_id: null,
@@ -385,7 +390,7 @@ export function QuickBookingPanel({ open, onClose }: { open: boolean; onClose: (
       });
       setSelectedPropertyId(null);
     } catch (e: any) {
-      toast({ title: "Error", description: e?.message ?? "Failed to create booking", variant: "destructive" });
+      toast({ title: t("dash_reservations.toast_error"), description: e?.message ?? t("dash_reservations.err_create_booking"), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -398,30 +403,30 @@ export function QuickBookingPanel({ open, onClose }: { open: boolean; onClose: (
       <div className="flex-1 bg-black/30" onClick={onClose} />
       <div className="w-full max-w-md bg-background border-l shadow-xl flex flex-col">
         <div className="flex items-center justify-between px-5 py-4 border-b">
-          <h2 className="text-base font-semibold">Quick Booking</h2>
+          <h2 className="text-base font-semibold">{t("dash_reservations.quick_booking")}</h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
             <X className="h-5 w-5" />
           </button>
         </div>
         <div className="flex-1 overflow-auto p-5 space-y-4">
           <div>
-            <Label className="text-xs font-medium">Guest (Contact)</Label>
+            <Label className="text-xs font-medium">{t("dash_reservations.guest_contact")}</Label>
             <div className="mt-1.5">
               <LookupSelect
                 lookupUrl="/api/v1/lookup/contacts"
                 value={form.contact_id}
                 onChange={v => setForm(f => ({ ...f, contact_id: v }))}
-                placeholder="Search guest…"
+                placeholder={t("dash_reservations.search_guest")}
               />
             </div>
           </div>
 
           <div>
-            <Label className="text-xs font-medium">Property</Label>
+            <Label className="text-xs font-medium">{t("dash_reservations.property")}</Label>
             <Select value={selectedPropertyId?.toString() ?? ""} onValueChange={v => { setSelectedPropertyId(v ? parseInt(v) : null); setForm(f => ({ ...f, space_id: null })); }}>
-              <SelectTrigger className="mt-1.5 h-9 text-xs"><SelectValue placeholder="All properties" /></SelectTrigger>
+              <SelectTrigger className="mt-1.5 h-9 text-xs"><SelectValue placeholder={t("dash_reservations.all_properties")} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="" className="text-xs">All properties</SelectItem>
+                <SelectItem value="" className="text-xs">{t("dash_reservations.all_properties")}</SelectItem>
                 {(properties ?? []).map(p => (
                   <SelectItem key={p.id} value={String(p.id)} className="text-xs">{p.name}</SelectItem>
                 ))}
@@ -430,12 +435,12 @@ export function QuickBookingPanel({ open, onClose }: { open: boolean; onClose: (
           </div>
 
           <div>
-            <Label className="text-xs font-medium">Space <span className="text-red-500">*</span></Label>
+            <Label className="text-xs font-medium">{t("dash_reservations.col_space")} <span className="text-red-500">*</span></Label>
             <Select value={form.space_id?.toString() ?? ""} onValueChange={v => setForm(f => ({ ...f, space_id: v ? parseInt(v) : null }))}>
-              <SelectTrigger className="mt-1.5 h-9 text-xs"><SelectValue placeholder="Select space" /></SelectTrigger>
+              <SelectTrigger className="mt-1.5 h-9 text-xs"><SelectValue placeholder={t("dash_reservations.select_space")} /></SelectTrigger>
               <SelectContent>
                 {filteredSpaces.length === 0
-                  ? <SelectItem value="" disabled className="text-xs">No active spaces</SelectItem>
+                  ? <SelectItem value="" disabled className="text-xs">{t("dash_reservations.no_active_spaces")}</SelectItem>
                   : filteredSpaces.map(s => (
                     <SelectItem key={s.id} value={String(s.id)} className="text-xs">{s.name}</SelectItem>
                   ))}
@@ -445,22 +450,22 @@ export function QuickBookingPanel({ open, onClose }: { open: boolean; onClose: (
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-xs font-medium">Check-in <span className="text-red-500">*</span></Label>
+              <Label className="text-xs font-medium">{t("dash_reservations.col_checkin")} <span className="text-red-500">*</span></Label>
               <Input type="date" className="mt-1.5 h-9 text-xs" value={form.check_in_date} onChange={e => setForm(f => ({ ...f, check_in_date: e.target.value }))} />
             </div>
             <div>
-              <Label className="text-xs font-medium">Check-out <span className="text-red-500">*</span></Label>
+              <Label className="text-xs font-medium">{t("dash_reservations.col_checkout")} <span className="text-red-500">*</span></Label>
               <Input type="date" className="mt-1.5 h-9 text-xs" value={form.check_out_date} onChange={e => setForm(f => ({ ...f, check_out_date: e.target.value }))} />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-xs font-medium">Weekly Rate ({form.currency})</Label>
+              <Label className="text-xs font-medium">{t("dash_reservations.weekly_rate", { currency: form.currency })}</Label>
               <Input type="number" min={0} step={0.01} placeholder="0.00" className="mt-1.5 h-9 text-xs" value={form.agreed_weekly_rate} onChange={e => setForm(f => ({ ...f, agreed_weekly_rate: e.target.value }))} />
             </div>
             <div>
-              <Label className="text-xs font-medium">Currency</Label>
+              <Label className="text-xs font-medium">{t("dash_reservations.currency")}</Label>
               <Select value={form.currency} onValueChange={v => setForm(f => ({ ...f, currency: v }))}>
                 <SelectTrigger className="mt-1.5 h-9 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -474,7 +479,7 @@ export function QuickBookingPanel({ open, onClose }: { open: boolean; onClose: (
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-xs font-medium">Source</Label>
+              <Label className="text-xs font-medium">{t("dash_reservations.source")}</Label>
               <Select value={form.booking_source} onValueChange={v => setForm(f => ({ ...f, booking_source: v }))}>
                 <SelectTrigger className="mt-1.5 h-9 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -485,41 +490,41 @@ export function QuickBookingPanel({ open, onClose }: { open: boolean; onClose: (
               </Select>
             </div>
             <div>
-              <Label className="text-xs font-medium">Guests</Label>
+              <Label className="text-xs font-medium">{t("dash_reservations.guests")}</Label>
               <Input type="number" min={1} max={20} className="mt-1.5 h-9 text-xs" value={form.num_guests} onChange={e => setForm(f => ({ ...f, num_guests: parseInt(e.target.value) || 1 }))} />
             </div>
           </div>
 
           {stay && (
             <div className="bg-muted/50 rounded-lg p-3 space-y-1.5 border">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Stay Summary</p>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("dash_reservations.stay_summary")}</p>
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div>
                   <p className="text-lg font-bold">{stay.nights}</p>
-                  <p className="text-[10px] text-muted-foreground">Nights</p>
+                  <p className="text-[10px] text-muted-foreground">{t("dash_reservations.nights")}</p>
                 </div>
                 <div>
                   <p className="text-lg font-bold">{stay.weeks}</p>
-                  <p className="text-[10px] text-muted-foreground">Weeks</p>
+                  <p className="text-[10px] text-muted-foreground">{t("dash_reservations.weeks")}</p>
                 </div>
                 <div>
                   <p className="text-lg font-bold">{form.currency} {parseFloat(stay.total).toLocaleString()}</p>
-                  <p className="text-[10px] text-muted-foreground">Total Rent</p>
+                  <p className="text-[10px] text-muted-foreground">{t("dash_reservations.total_rent")}</p>
                 </div>
               </div>
             </div>
           )}
 
           <div>
-            <Label className="text-xs font-medium">Special Requests</Label>
-            <Textarea className="mt-1.5 text-xs" rows={3} placeholder="Optional notes or requests…" value={form.customer_notes} onChange={e => setForm(f => ({ ...f, customer_notes: e.target.value }))} />
+            <Label className="text-xs font-medium">{t("dash_reservations.special_requests")}</Label>
+            <Textarea className="mt-1.5 text-xs" rows={3} placeholder={t("dash_reservations.special_requests_placeholder")} value={form.customer_notes} onChange={e => setForm(f => ({ ...f, customer_notes: e.target.value }))} />
           </div>
         </div>
 
         <div className="border-t px-5 py-4 flex gap-3">
-          <Button variant="outline" onClick={onClose} className="flex-1" disabled={submitting}>Cancel</Button>
+          <Button variant="outline" onClick={onClose} className="flex-1" disabled={submitting}>{t("common.cancel")}</Button>
           <Button onClick={handleSubmit} className="flex-1 bg-[#E8621A] hover:bg-[#d4541a] text-white" disabled={submitting}>
-            {submitting ? "Creating…" : "Create Booking"}
+            {submitting ? t("dash_reservations.creating") : t("dash_reservations.create_booking")}
           </Button>
         </div>
       </div>
@@ -528,6 +533,7 @@ export function QuickBookingPanel({ open, onClose }: { open: boolean; onClose: (
 }
 
 export default function ReservationsTab() {
+  const { t } = useTranslation();
   const [, navigate] = useLocation();
 
   const [weekStart, setWeekStart] = useState(() => {
@@ -581,22 +587,22 @@ export default function ReservationsTab() {
     <div className="space-y-6">
       <div className="flex justify-end gap-2">
         <Button variant="outline" size="sm" onClick={() => navigate("/booking/bookings/new")} className="gap-1.5">
-          <Plus className="h-4 w-4" /> Full Form
+          <Plus className="h-4 w-4" /> {t("dash_reservations.full_form")}
         </Button>
         <Button size="sm" className="gap-1.5 bg-[#E8621A] hover:bg-[#d4541a] text-white" onClick={() => setQuickBookingOpen(true)}>
-          <Plus className="h-4 w-4" /> Quick Booking
+          <Plus className="h-4 w-4" /> {t("dash_reservations.quick_booking")}
         </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard label="Active Bookings" value={activeCount} icon={CheckCircle} accent="green" sublabel="Currently checked in" />
-        <KpiCard label="Pending Approval" value={pendingCount} icon={Clock} accent={pendingCount > 0 ? "amber" : "slate"} sublabel="Awaiting sign-off" trend={pendingCount > 0 ? "Action" : undefined} trendType="warning" />
-        <KpiCard label="New This Week" value={newThisWeek} icon={CalendarDays} accent="blue" sublabel="Created last 7 days" />
-        <KpiCard label="Monthly Total" value={monthlyTotal} icon={Users} accent="indigo" sublabel="All bookings this month" />
+        <KpiCard label={t("dash_reservations.active_bookings")} value={activeCount} icon={CheckCircle} accent="green" sublabel={t("dash_reservations.kpi_currently_checked_in")} />
+        <KpiCard label={t("dash_reservations.kpi_pending_approval")} value={pendingCount} icon={Clock} accent={pendingCount > 0 ? "amber" : "slate"} sublabel={t("dash_reservations.kpi_awaiting_signoff")} trend={pendingCount > 0 ? t("dash_reservations.kpi_action") : undefined} trendType="warning" />
+        <KpiCard label={t("dash_reservations.kpi_new_this_week")} value={newThisWeek} icon={CalendarDays} accent="blue" sublabel={t("dash_reservations.kpi_created_last_7_days")} />
+        <KpiCard label={t("dash_reservations.kpi_monthly_total")} value={monthlyTotal} icon={Users} accent="indigo" sublabel={t("dash_reservations.kpi_all_bookings_month")} />
       </div>
 
       <DashCard
-        title="7-Day Availability Calendar"
+        title={t("dash_reservations.availability_calendar")}
         icon={CalendarDays}
         bodyClass="p-0"
         action={
@@ -604,7 +610,7 @@ export default function ReservationsTab() {
             <Button variant="outline" size="sm" onClick={prevWeek}><ChevronLeft className="h-4 w-4" /></Button>
             <span className="text-xs text-muted-foreground font-medium min-w-[160px] text-center">{weekLabel}</span>
             <Button variant="outline" size="sm" onClick={nextWeek}><ChevronRight className="h-4 w-4" /></Button>
-            <Button variant="outline" size="sm" onClick={goToday}>Today</Button>
+            <Button variant="outline" size="sm" onClick={goToday}>{t("dash_reservations.today")}</Button>
           </div>
         }
       >
@@ -621,15 +627,15 @@ export default function ReservationsTab() {
       </div>
 
       <DashCard
-        title="All Bookings"
+        title={t("dash_reservations.all_bookings")}
         bodyClass="p-0"
-        action={<Link href="/booking/bookings" className="text-xs text-[#E8621A] hover:underline">Open full list →</Link>}
+        action={<Link href="/booking/bookings" className="text-xs text-[#E8621A] hover:underline">{t("dash_reservations.open_full_list")}</Link>}
       >
         <div className="px-4 py-3 border-b flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-[180px]">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
-              placeholder="Search ref or guest…"
+              placeholder={t("dash_reservations.search_ref_or_guest")}
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(1); }}
               className="pl-8 h-8 text-xs"
@@ -639,7 +645,7 @@ export default function ReservationsTab() {
             <SelectTrigger className="w-[160px] h-8 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
               {["All", "Draft", "PendingPayment", "PendingApproval", "Confirmed", "Active", "CheckedOut", "Cancelled"].map(s => (
-                <SelectItem key={s} value={s} className="text-xs">{s === "All" ? "All Statuses" : s}</SelectItem>
+                <SelectItem key={s} value={s} className="text-xs">{s === "All" ? t("dash_reservations.all_statuses") : s}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -648,14 +654,24 @@ export default function ReservationsTab() {
           <table className="w-full text-xs">
             <thead className="bg-muted/50">
               <tr>
-                {["Ref #", "Guest", "Space", "Check-in", "Check-out", "Nights", "Amount", "Status", "Actions"].map(h => (
-                  <th key={h} className="px-3 py-2 text-left text-muted-foreground font-medium">{h}</th>
+                {[
+                  t("dash_reservations.th_ref"),
+                  t("dash_reservations.col_guest"),
+                  t("dash_reservations.col_space"),
+                  t("dash_reservations.col_checkin"),
+                  t("dash_reservations.col_checkout"),
+                  t("dash_reservations.nights"),
+                  t("common.amount"),
+                  t("common.status"),
+                  t("common.actions"),
+                ].map((h, i) => (
+                  <th key={i} className="px-3 py-2 text-left text-muted-foreground font-medium">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y">
               {paginated.length === 0 ? (
-                <tr><td colSpan={9} className="px-3 py-6 text-center text-muted-foreground">No bookings found</td></tr>
+                <tr><td colSpan={9} className="px-3 py-6 text-center text-muted-foreground">{t("dash_reservations.no_bookings_found")}</td></tr>
               ) : paginated.map(b => (
                 <tr key={b.id} className="hover:bg-muted/30">
                   <td className="px-3 py-2 font-mono font-medium">{b.booking_ref}</td>
@@ -671,7 +687,7 @@ export default function ReservationsTab() {
                     <Pill className={STATUS_BADGE[b.booking_status] ?? "bg-gray-100 text-gray-600"}>{b.booking_status}</Pill>
                   </td>
                   <td className="px-3 py-2">
-                    <Link href={`/booking/bookings/${b.id}`} className="text-[#E8621A] hover:underline">View</Link>
+                    <Link href={`/booking/bookings/${b.id}`} className="text-[#E8621A] hover:underline">{t("common.view")}</Link>
                   </td>
                 </tr>
               ))}
@@ -681,11 +697,11 @@ export default function ReservationsTab() {
         {pageCount > 1 && (
           <div className="flex items-center justify-between px-4 py-2 border-t text-xs">
             <span className="text-muted-foreground">
-              Showing {(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, filteredBookings.length)} of {filteredBookings.length}
+              {t("dash_reservations.pagination_showing", { from: (page - 1) * PER_PAGE + 1, to: Math.min(page * PER_PAGE, filteredBookings.length), total: filteredBookings.length })}
             </span>
             <div className="flex gap-1">
-              <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>‹ Prev</Button>
-              <Button variant="outline" size="sm" disabled={page === pageCount} onClick={() => setPage(p => p + 1)}>Next ›</Button>
+              <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>‹ {t("common.prev")}</Button>
+              <Button variant="outline" size="sm" disabled={page === pageCount} onClick={() => setPage(p => p + 1)}>{t("common.next")} ›</Button>
             </div>
           </div>
         )}
