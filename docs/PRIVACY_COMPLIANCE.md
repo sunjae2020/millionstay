@@ -46,8 +46,11 @@ Code: `lib/db/src/schema/marketing_consents.ts`, `routes/privacy.ts` (unsubscrib
 | **Stripe** | USA / global | Card last-4, BIN, amount | Payments |
 | **Cloudinary** | USA / global | Uploaded images | Image storage |
 | **Google** Maps | Global | Property addresses → coordinates | Map display |
+| **Anthropic** (Claude) | USA | Landing-page chat messages a visitor types, plus admin-published knowledge content | AI customer chat assistant |
 
 The public privacy policy must list these vendors and disclose Standard Contractual Clauses (SCC) or equivalent contractual safeguards.
+
+**Anthropic note:** Visitor chat messages are sent to Anthropic's API to generate replies. Anthropic does not train models on API data and retains it only transiently for abuse monitoring. Visitors should be told not to share sensitive personal information in chat (the assistant is also instructed never to request passwords, payment-card, or passport details). The chat is optional and admin-toggleable (`CHAT_WIDGET_ENABLED`).
 
 ## APP 9 — Government identifiers
 
