@@ -53,7 +53,15 @@
     "cs_ticket": "CS 티켓",
     "contract_list": "계약 목록",
     "invoice_list": "청구서 목록",
-    "tenant_lifecycle": "입주자 생애주기"
+    "tenant_lifecycle": "입주자 생애주기",
+    "documents": "문서",
+    "all_documents": "전체 문서",
+    "quotes": "견적서",
+    "exchange_rates": "환율",
+    "content": "콘텐츠",
+    "blog_posts": "블로그 게시물",
+    "website_pages": "웹사이트 페이지",
+    "languages": "언어"
   },
   "dashboard": {
     "title": "대시보드",
