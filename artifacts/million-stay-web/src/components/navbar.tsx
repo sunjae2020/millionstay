@@ -21,6 +21,7 @@ const NAV_HREFS = [
   { key: "links.aboutUs", href: "/about" },
   { key: "links.forStudents", href: "/for-student" },
   { key: "links.forAgent", href: "/for-agent" },
+  { key: "links.forHomestayHost", href: "/for-homestay-host" },
 ];
 
 type LangOption = { code: string; label: string; iso: string; name: string };

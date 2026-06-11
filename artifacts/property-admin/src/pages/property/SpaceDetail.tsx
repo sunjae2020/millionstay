@@ -688,6 +688,7 @@ export default function SpaceDetail() {
                             <SelectItem value="Private Room">Private Room</SelectItem>
                             <SelectItem value="Shared Room">Shared Room</SelectItem>
                             <SelectItem value="Whole Property">Whole Property</SelectItem>
+                            <SelectItem value="Homestay">Homestay</SelectItem>
                             <SelectItem value="Other">Other</SelectItem>
                           </SelectContent>
                         </Select>

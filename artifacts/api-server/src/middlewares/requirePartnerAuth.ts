@@ -22,9 +22,9 @@ if (!PARTNER_JWT_SECRET) {
 const PARTNER_SECRET: string = PARTNER_JWT_SECRET ?? `${SESSION_SECRET}_partner_dev_only`;
 
 const PARTNER_ACCESS_TTL = 60 * 60; // 1h
-const ALLOWED_PORTAL_TYPES = new Set(["agent", "owner", "service_host"]);
+const ALLOWED_PORTAL_TYPES = new Set(["agent", "owner", "service_host", "homestay"]);
 
-export type PortalType = "agent" | "owner" | "service_host";
+export type PortalType = "agent" | "owner" | "service_host" | "homestay";
 
 export interface PartnerAuthPayload {
   id: number;
@@ -148,6 +148,17 @@ export async function requireServiceHostAuth(req: Request, res: Response, next: 
     const partner = (req as any).partner as PartnerAuthPayload;
     if (partner.portal_type !== "service_host") {
       res.status(403).json({ success: false, error: { code: "FORBIDDEN", message: "Service host access only" } });
+      return;
+    }
+    next();
+  });
+}
+
+export async function requireHomestayAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
+  await requirePartnerAuth(req, res, () => {
+    const partner = (req as any).partner as PartnerAuthPayload;
+    if (partner.portal_type !== "homestay") {
+      res.status(403).json({ success: false, error: { code: "FORBIDDEN", message: "Homestay host access only" } });
       return;
     }
     next();

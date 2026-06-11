@@ -12,7 +12,8 @@
       "stayPlans": "Stay Plans",
       "aboutUs": "About Us",
       "forStudents": "For Students",
-      "forAgent": "For Agent"
+      "forAgent": "For Agent",
+      "forHomestayHost": "Become a Host"
     }
   },
   "home": {
@@ -172,7 +173,8 @@
     "tab_all": "All",
     "tab_private": "Private",
     "tab_entire": "Entire",
-    "tab_shared": "Shared"
+    "tab_shared": "Shared",
+    "tab_homestay": "Homestay"
   },
   "space": {
     "per_week": "/ week",
@@ -830,5 +832,228 @@
     "tool_working": "Working…",
     "room_fallback": "Room #{{id}}",
     "per_week": "/week"
+  },
+  "homestay": {
+    "apply": {
+      "hero_tagline": "Open your home, change a life",
+      "hero_title": "Become a Homestay Host",
+      "breadcrumb_home": "Home",
+      "breadcrumb": "Become a Host",
+      "step_of": "Step {{current}} of {{total}}",
+      "step1_title": "Host Information",
+      "step2_title": "Your Household",
+      "step3_title": "Home & Rooms",
+      "step4_title": "Students & Packages",
+      "step5_title": "Your Profile",
+      "step6_title": "Contacts",
+      "step7_title": "Agreement",
+      "select": "Select…",
+      "first_name": "First name",
+      "last_name": "Last name",
+      "email": "Email",
+      "password": "Password",
+      "password_placeholder": "At least 12 characters",
+      "pw_min": "At least 12 characters",
+      "pw_upper": "One uppercase letter",
+      "pw_lower": "One lowercase letter",
+      "pw_digit": "One number",
+      "pw_special": "One special character",
+      "phone": "Phone",
+      "date_of_birth": "Date of birth",
+      "gender": "Gender",
+      "nationality": "Nationality",
+      "cultural_background": "Cultural background",
+      "address": "Address",
+      "suburb": "Suburb",
+      "heard_about": "How did you hear about us?",
+      "residents_title": "Household residents",
+      "add_resident": "Add resident",
+      "wwcc_note": "Residents aged 18+ require a Working with Children Check (WWCC).",
+      "res_name": "Name",
+      "res_age": "Age",
+      "res_gender": "Gender",
+      "res_relationship": "Relationship",
+      "smoking_in_home": "Smoking inside the home?",
+      "smoke_outside_allowed": "Is smoking outside allowed?",
+      "drink_in_home": "Alcohol consumed in the home?",
+      "guest_drink_allowed": "Are guests allowed to drink?",
+      "has_pets": "Do you have pets?",
+      "pet_types": "Pet types",
+      "pet_notes": "Pet notes",
+      "yes": "Yes",
+      "no": "No",
+      "building_type": "Building type",
+      "home_features": "Home features",
+      "rooms_title": "Available rooms",
+      "add_room": "Add room",
+      "room_n": "Room {{n}}",
+      "room_name": "Room name",
+      "bed_type": "Bed type",
+      "bath_type": "Bathroom",
+      "has_lock": "Room has a lock",
+      "room_comments": "Comments (optional)",
+      "pref_student_gender": "Preferred student gender",
+      "pref_student_age": "Preferred student age",
+      "host_under_18": "Willing to host students under 18?",
+      "wwcc_under18": "Hosting students under 18 requires a Working with Children Check.",
+      "packages_offered": "Meal packages offered",
+      "dietary": "Dietary options you can support",
+      "dietary_notes": "Dietary notes",
+      "welcome_message": "Welcome message",
+      "welcome_placeholder": "A warm greeting students will see first…",
+      "profile_description": "About you & your home",
+      "profile_placeholder": "Describe your family, lifestyle, neighbourhood and what makes your home special…",
+      "emergency_title": "Emergency contact",
+      "ec_name": "Contact name",
+      "ec_relationship": "Relationship",
+      "ec_phone": "Phone",
+      "ec_email": "Email",
+      "referral_title": "Referral",
+      "ref_heard_about": "How did you hear about hosting?",
+      "ref_referred_by_host": "Referred by an existing host?",
+      "ref_referrer_name": "Referrer's name",
+      "review_title": "Review your application",
+      "agreement_text": "By submitting this application you confirm that the information provided is accurate and complete. You agree to MillionStay's homestay host terms, to provide a safe and welcoming environment, and to comply with all applicable Working with Children Check requirements. Your listing will only be made public after admin approval.",
+      "agreement_accept": "I have read and accept the homestay host agreement above.",
+      "signature_name": "Signature (type your full name)",
+      "signature_placeholder": "Your full legal name",
+      "back": "Back",
+      "next": "Next",
+      "submit": "Submit application",
+      "submitting": "Submitting…",
+      "submit_failed": "Failed to submit. Please try again.",
+      "email_exists": "An account with this email already exists.",
+      "email_exists_login": "Log in instead",
+      "already_applied": "Already applied?",
+      "login_link": "Log in to your host portal"
+    },
+    "login": {
+      "title": "Host Portal",
+      "subtitle": "Log in to track your application",
+      "email": "Email",
+      "email_placeholder": "you@example.com",
+      "password": "Password",
+      "password_placeholder": "Enter your password",
+      "signing_in": "Signing in…",
+      "submit": "Log in",
+      "failed": "Invalid email or password.",
+      "new_applicant": "New applicant?",
+      "apply_link": "Apply to become a host"
+    },
+    "portal": {
+      "title": "Host Portal",
+      "logout": "Log out",
+      "load_failed": "Failed to load your application.",
+      "upload_failed": "Upload failed. Please try again.",
+      "landing_failed": "Failed to update your landing page.",
+      "login_anytime": "You can log in anytime; your listing goes public only after admin approval.",
+      "status": {
+        "submitted": "Application submitted",
+        "under_review": "Under review",
+        "docs_requested": "Documents requested",
+        "approved": "Approved",
+        "rejected": "Not approved"
+      },
+      "status_desc": {
+        "submitted": "We've received your application and will begin reviewing it shortly.",
+        "under_review": "Our team is reviewing your application. We'll be in touch soon.",
+        "docs_requested": "We need a few more documents before we can proceed. Please upload them below.",
+        "approved": "Congratulations! Your application is approved. You can now activate your public landing page.",
+        "rejected": "Unfortunately your application was not approved at this time. Please contact us for details."
+      },
+      "requested_title": "Requested documents",
+      "requested_sub": "Please upload the documents below to continue your review.",
+      "fulfilled": "Uploaded",
+      "upload": "Upload",
+      "uploading": "Uploading…",
+      "documents_title": "Documents",
+      "doc_type": {
+        "id": "ID",
+        "proof_of_address": "Proof of address",
+        "wwcc": "WWCC",
+        "property_photo": "Property photo",
+        "other": "Other"
+      },
+      "landing_title": "Landing page",
+      "landing_sub_approved": "Activate to make your homestay listing public on MillionStay.",
+      "landing_locked": "Activation becomes available once your application is approved.",
+      "landing_on": "Listing is live",
+      "landing_off": "Listing is hidden",
+      "summary_title": "Your application",
+      "edit": "Edit application"
+    },
+    "opt": {
+      "gender": {
+        "Male": "Male",
+        "Female": "Female",
+        "Other": "Other"
+      },
+      "heard": {
+        "Google": "Google",
+        "Advertising": "Advertising",
+        "Social media": "Social media",
+        "Friends": "Friends",
+        "Word of mouth": "Word of mouth",
+        "Other": "Other"
+      },
+      "building": {
+        "House": "House",
+        "Townhouse": "Townhouse",
+        "Apartment": "Apartment",
+        "Other": "Other"
+      },
+      "feature": {
+        "Pool": "Pool",
+        "Gym": "Gym",
+        "Carpet": "Carpet",
+        "No Carpet": "No Carpet"
+      },
+      "bed": {
+        "Single": "Single",
+        "Double": "Double",
+        "Queen": "Queen",
+        "King": "King",
+        "Bunk": "Bunk",
+        "Twin Single": "Twin Single",
+        "Triple": "Triple",
+        "King Single": "King Single",
+        "Independent Living": "Independent Living"
+      },
+      "bath": {
+        "Shared": "Shared",
+        "Own": "Own",
+        "Ensuite": "Ensuite"
+      },
+      "student_gender": {
+        "Male": "Male",
+        "Female": "Female",
+        "Either": "Either"
+      },
+      "student_age": {
+        "Over 18": "Adult (Over 18)",
+        "Under 18": "Minor (Under 18)",
+        "Either": "Either"
+      },
+      "package": {
+        "full_board": "Full Board",
+        "partial_board": "Partial Board",
+        "dinner_only": "Dinner Only",
+        "no_meals": "No Meals"
+      },
+      "package_desc": {
+        "full_board": "Breakfast, lunch and dinner",
+        "partial_board": "Breakfast & Dinner, Lunch on weekends",
+        "dinner_only": "Dinner only",
+        "no_meals": "No meals"
+      },
+      "dietary": {
+        "Halal": "Halal",
+        "Vegetarian": "Vegetarian",
+        "Vegan": "Vegan",
+        "Kosher": "Kosher",
+        "Gluten Free": "Gluten Free",
+        "Other": "Other"
+      }
+    }
   }
 }

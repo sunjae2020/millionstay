@@ -435,3 +435,90 @@ export async function sendLeadNotificationEmail(data: LeadNotificationData): Pro
     return false;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Homestay host-family application — applicant-facing emails.
+   English only, branded header. Best-effort: never throws.
+   ───────────────────────────────────────────────────────────────────────── */
+type HomestayEmailKind = "received" | "docs_requested" | "approved" | "rejected";
+
+interface HomestayHostEmailOptions {
+  to: string;
+  toName?: string | null;
+  applicationRef: string;
+  kind: HomestayEmailKind;
+  /** Extra note (e.g. requested document list, rejection reason). */
+  note?: string | null;
+  /** Portal URL the host can log in to. */
+  portalUrl?: string;
+}
+
+const HOMESTAY_EMAIL_COPY: Record<HomestayEmailKind, { subject: (ref: string) => string; heading: string; body: (portalUrl: string) => string }> = {
+  received: {
+    subject: (ref) => `We received your Homestay Host application (${ref})`,
+    heading: "Application received",
+    body: (portalUrl) =>
+      `Thank you for applying to become a MillionStay homestay host. Your application is now with our team for review.` +
+      ` You can log in to your host portal at any time to track your status and complete any outstanding steps:` +
+      ` <a href="${portalUrl}">${portalUrl}</a>.`,
+  },
+  docs_requested: {
+    subject: (ref) => `Action needed: documents for your Homestay Host application (${ref})`,
+    heading: "Additional documents requested",
+    body: (portalUrl) =>
+      `To continue reviewing your homestay host application, we need a few more documents.` +
+      ` Please log in to your host portal to upload them: <a href="${portalUrl}">${portalUrl}</a>.`,
+  },
+  approved: {
+    subject: (ref) => `You're approved as a MillionStay Homestay Host (${ref})`,
+    heading: "Welcome — you're approved!",
+    body: (portalUrl) =>
+      `Congratulations! Your homestay host application has been approved.` +
+      ` You can now activate your listing and start hosting. Log in to your host portal to get started:` +
+      ` <a href="${portalUrl}">${portalUrl}</a>.`,
+  },
+  rejected: {
+    subject: (ref) => `Update on your Homestay Host application (${ref})`,
+    heading: "Application update",
+    body: () =>
+      `Thank you for your interest in hosting with MillionStay. After review, we're unable to approve your` +
+      ` application at this time. If you believe this was in error or your circumstances change, please reply to this email.`,
+  },
+};
+
+export async function sendHomestayHostEmail(opts: HomestayHostEmailOptions): Promise<boolean> {
+  const client = getResend();
+  if (!client) {
+    console.log(`[email] (skipped — no RESEND_API_KEY) homestay ${opts.kind} → ${opts.to}`);
+    return false;
+  }
+  const copy = HOMESTAY_EMAIL_COPY[opts.kind];
+  const portalUrl = opts.portalUrl ?? `${PORTAL_URL}/host-portal`;
+  const noteHtml = opts.note
+    ? `<div style="margin-top:16px;padding:12px 16px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;color:#9a3412;font-size:14px;">${escapeHtml(opts.note)}</div>`
+    : "";
+  const html = `<!DOCTYPE html><html><body style="margin:0;background:#faf9f7;font-family:-apple-system,Segoe UI,Roboto,sans-serif;">
+<div style="max-width:560px;margin:0 auto;padding:24px;">
+  <div style="text-align:center;padding:8px 0 16px;"><img src="${LOGO_URL}" alt="MillionStay" style="height:32px;" /></div>
+  <div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:28px;">
+    <h1 style="font-size:20px;margin:0 0 12px;color:#1f2937;">${escapeHtml(copy.heading)}</h1>
+    <p style="font-size:14px;color:#4b5563;line-height:1.6;margin:0;">Hi ${safeName(opts.toName) || "there"},</p>
+    <p style="font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;">${copy.body(portalUrl)}</p>
+    ${noteHtml}
+    <p style="font-size:13px;color:#9ca3af;margin:20px 0 0;">Application reference: <strong>${escapeHtml(opts.applicationRef)}</strong></p>
+  </div>
+  <div style="text-align:center;color:#9ca3af;font-size:12px;padding:16px;">
+    Questions? Contact us at <a href="mailto:${SUPPORT_EMAIL}" style="color:#f97316;">${SUPPORT_EMAIL}</a><br/>
+    © ${new Date().getFullYear()} MillionStay
+  </div>
+</div>
+</body></html>`;
+  try {
+    await client.emails.send({ from: FROM, to: [opts.to], subject: copy.subject(opts.applicationRef), html });
+    console.log(`[email] Homestay ${opts.kind} sent for ${opts.applicationRef} → ${opts.to}`);
+    return true;
+  } catch (err) {
+    console.error(`[email] Failed to send homestay ${opts.kind}:`, err);
+    return false;
+  }
+}

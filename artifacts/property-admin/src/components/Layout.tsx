@@ -87,6 +87,7 @@ function getNav(t: (k: string) => string): NavSection[] {
         { href: "/account/accounts", label: t("nav.account"), icon: Briefcase },
         { href: "/account/tenant-lifecycle", label: t("nav.tenant_lifecycle"), icon: Home },
         { href: "/account/leads", label: t("nav.lead"), icon: TrendingUp },
+        { href: "/account/homestay-applications", label: t("nav.homestay_applications"), icon: Home },
         { href: "/account/tasks", label: t("nav.task"), icon: CheckSquare },
       ],
     },
