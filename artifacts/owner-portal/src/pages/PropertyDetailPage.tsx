@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
-import { apiGet } from "@/lib/api";
+import { apiGet, apiPatch } from "@/lib/api";
 import {
   ArrowLeft,
   MapPin,
@@ -13,6 +13,9 @@ import {
   DollarSign,
   Percent,
   Users,
+  Pencil,
+  Save,
+  Loader2,
 } from "lucide-react";
 
 interface Space {
@@ -107,13 +110,32 @@ export default function PropertyDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Inline editing of the property intro ("숙소 소개").
+  const [desc, setDesc] = useState("");
+  const [editingDesc, setEditingDesc] = useState(false);
+  const [savingDesc, setSavingDesc] = useState(false);
+
   useEffect(() => {
     setLoading(true);
     apiGet<{ success: boolean; data: PropertyDetail }>(`/v1/owner/properties/${params.id}`)
-      .then((d) => setData(d.data))
+      .then((d) => { setData(d.data); setDesc(d.data.property.description ?? ""); })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [params.id]);
+
+  async function saveDesc() {
+    setSavingDesc(true);
+    setError("");
+    try {
+      await apiPatch(`/v1/owner/properties/${params.id}`, { description: desc });
+      setData((prev) => (prev ? { ...prev, property: { ...prev.property, description: desc } } : prev));
+      setEditingDesc(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSavingDesc(false);
+    }
+  }
 
   const fmtDate = (d: string | null | undefined) =>
     d ? new Date(d).toLocaleDateString() : "—";
@@ -170,9 +192,6 @@ export default function PropertyDetailPage() {
                       .filter(Boolean)
                       .join(", ")}
                   </div>
-                  {data.property.description && (
-                    <p className="text-sm text-muted-foreground mt-2 max-w-2xl">{data.property.description}</p>
-                  )}
                 </div>
               </div>
               <span
@@ -192,6 +211,49 @@ export default function PropertyDetailPage() {
               <Stat icon={<Users className="w-4 h-4" />} label={t("property_detail.stat_total_contracts")} value={data.stats.total_contracts} />
             </div>
           </div>
+
+          {/* Property intro — editable by the owner */}
+          <Section title={t("property_detail.about_title", "About this property")}>
+            {editingDesc ? (
+              <div className="space-y-3">
+                <textarea
+                  value={desc}
+                  onChange={(e) => setDesc(e.target.value)}
+                  rows={5}
+                  placeholder={t("property_detail.about_placeholder", "Describe your property for guests…")}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 resize-y"
+                />
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={saveDesc}
+                    disabled={savingDesc}
+                    className="inline-flex items-center gap-2 rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-medium disabled:opacity-50 hover:opacity-90 transition-opacity"
+                  >
+                    {savingDesc ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    {t("common.save", "Save")}
+                  </button>
+                  <button
+                    onClick={() => { setDesc(data.property.description ?? ""); setEditingDesc(false); }}
+                    className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
+                  >
+                    {t("common.cancel", "Cancel")}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap max-w-2xl">
+                  {data.property.description || t("property_detail.no_description", "No description yet. Add one so guests learn about your property.")}
+                </p>
+                <button
+                  onClick={() => setEditingDesc(true)}
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline flex-shrink-0"
+                >
+                  <Pencil className="w-3.5 h-3.5" /> {t("common.edit", "Edit")}
+                </button>
+              </div>
+            )}
+          </Section>
 
           {/* Spaces */}
           <Section title={t("property_detail.spaces_title")}>

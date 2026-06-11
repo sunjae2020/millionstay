@@ -110,3 +110,19 @@ export async function apiPost<T>(path: string, body?: unknown): Promise<T> {
   const r = await apiFetch(path, { method: "POST", body: body == null ? undefined : JSON.stringify(body) });
   return handleResponse<T>(r, path);
 }
+
+export async function apiPut<T>(path: string, body?: unknown): Promise<T> {
+  const r = await apiFetch(path, { method: "PUT", body: body == null ? undefined : JSON.stringify(body) });
+  return handleResponse<T>(r, path);
+}
+
+export async function apiPatch<T>(path: string, body?: unknown): Promise<T> {
+  const r = await apiFetch(path, { method: "PATCH", body: body == null ? undefined : JSON.stringify(body) });
+  return handleResponse<T>(r, path);
+}
+
+/** Multipart upload — apiFetch omits the JSON Content-Type for FormData bodies. */
+export async function apiUpload<T>(path: string, formData: FormData): Promise<T> {
+  const r = await apiFetch(path, { method: "POST", body: formData });
+  return handleResponse<T>(r, path);
+}

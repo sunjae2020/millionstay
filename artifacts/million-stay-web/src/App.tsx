@@ -43,7 +43,9 @@ import AdminBookingDetail from "@/pages/admin-booking-detail";
 import AdminGuests from "@/pages/admin-guests";
 import AdminSpaces from "@/pages/admin-spaces";
 import ChatWidget from "@/components/chat/ChatWidget";
+import OwnerLanding from "@/pages/owner-landing";
 import { getApiBase } from "@/lib/api-base";
+import { getOwnerSiteSlug } from "@/lib/owner-site";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,9 +57,13 @@ const queryClient = new QueryClient({
 });
 
 function Router() {
+  // On a tenant subdomain ({slug}.millionstay.com), the home route renders the
+  // owner's one-page landing instead of the main site. All other routes
+  // (/spaces/:id, /booking, …) keep working so detail + booking flows function.
+  const ownerSlug = getOwnerSiteSlug();
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/">{ownerSlug ? <OwnerLanding slug={ownerSlug} /> : <Home />}</Route>
       <Route path="/search" component={Search} />
       <Route path="/spaces/:id" component={SpaceDetail} />
       <Route path="/booking/new" component={BookingNew} />

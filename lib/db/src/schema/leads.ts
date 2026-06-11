@@ -11,6 +11,9 @@ export const leadsTable = pgTable("leads", {
   phone: text("phone"),
   nationality: text("nationality"),
   lead_source: text("lead_source"),
+  // Owner-scoping anchor for leads captured from an owner landing site
+  // ({slug}.millionstay.com inquiry form). NULL for platform-wide leads.
+  owner_account_id: integer("owner_account_id"),
   lead_status: text("lead_status").notNull().default("New"),
   inquiry_type: text("inquiry_type"),
   message: text("message"),

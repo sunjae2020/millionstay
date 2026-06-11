@@ -13,7 +13,9 @@
     "properties": "My Properties",
     "occupancy": "Occupancy",
     "revenue": "Revenue",
-    "sign_out": "Sign out"
+    "sign_out": "Sign out",
+    "site": "My Site",
+    "inquiries": "Inquiries"
   },
   "common": {
     "loading": "Loading...",
@@ -87,7 +89,14 @@
     "no_bookings": "No bookings yet.",
     "my_properties": "My Properties",
     "no_properties": "No properties found.",
-    "checkin_label": "Check-in"
+    "checkin_label": "Check-in",
+    "site_live_title": "Your landing site",
+    "site_draft_badge": "Draft",
+    "site_cta_title": "Create your own landing site",
+    "site_cta_sub": "A public page where guests browse and book only your accommodation.",
+    "site_manage": "Manage site",
+    "site_get_started": "Get started",
+    "recent_inquiries": "Recent inquiries"
   },
   "properties": {
     "title": "My Properties",
@@ -159,5 +168,49 @@
     "Paid": "Paid",
     "Overdue": "Overdue",
     "Void": "Void"
+  },
+  "site": {
+    "title": "My Landing Site",
+    "subtitle": "Your own public page where guests browse and book only your accommodation.",
+    "view_site": "View site",
+    "address": "Address & visibility",
+    "subdomain": "Subdomain",
+    "checking": "Checking…",
+    "available": "Available",
+    "unavailable": "Not available",
+    "slug_too_short": "At least 3 characters",
+    "slug_invalid_format": "Use lowercase letters, numbers and hyphens",
+    "slug_reserved": "This name is reserved",
+    "slug_taken": "Already taken",
+    "published": "Published (live to the public)",
+    "branding": "Branding",
+    "logo_url": "Logo image URL",
+    "hero_image_url": "Hero background image URL",
+    "primary_color": "Primary color",
+    "content": "Content",
+    "content_hint": "Editing the {{lang}} version — switch language in the sidebar to translate.",
+    "hero_title": "Hero title",
+    "hero_subtitle": "Hero subtitle",
+    "about": "About / introduction",
+    "contact_email": "Contact email",
+    "contact_phone": "Contact phone",
+    "seo": "Search & sharing (SEO)",
+    "seo_title": "SEO title",
+    "seo_description": "SEO description",
+    "og_image_url": "Social share image URL",
+    "save": "Save changes",
+    "create": "Create site",
+    "saved": "Saved",
+    "logo": "Logo",
+    "hero_image": "Hero background",
+    "og_image": "Social share image",
+    "upload": "Upload",
+    "uploading": "Uploading…",
+    "remove": "Remove"
+  },
+  "inquiries": {
+    "title": "Inquiries",
+    "subtitle": "Messages from guests via your landing site.",
+    "empty": "No inquiries yet."
   }
 }

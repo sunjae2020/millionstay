@@ -9,6 +9,8 @@ import PropertiesPage from "@/pages/PropertiesPage";
 import PropertyDetailPage from "@/pages/PropertyDetailPage";
 import BookingsPage from "@/pages/BookingsPage";
 import RevenuePage from "@/pages/RevenuePage";
+import SitePage from "@/pages/SitePage";
+import InquiriesPage from "@/pages/InquiriesPage";
 
 function PortalRoutes() {
   const { user, loading } = useAuth();
@@ -39,6 +41,8 @@ function PortalRoutes() {
       <Route path="/properties/:id" component={PropertyDetailPage} />
       <Route path="/bookings" component={BookingsPage} />
       <Route path="/revenue" component={RevenuePage} />
+      <Route path="/site" component={SitePage} />
+      <Route path="/inquiries" component={InquiriesPage} />
       <Route>
         <div className="p-8 text-muted-foreground">Page not found</div>
       </Route>
