@@ -6,7 +6,23 @@
  * - Network errors / empty bodies handled gracefully.
  */
 
-const BASE = `${import.meta.env.VITE_API_URL ?? ""}/api`;
+// Resolve the API base URL.
+//
+// Dev: VITE_API_URL points at the local API server (e.g. http://localhost:5100).
+// Prod: when running under millionstay.com we hit the production Railway host
+//       directly. We do NOT use VITE_API_URL here because `.env.local` leaks
+//       the localhost value into production builds, which breaks the deployed
+//       portal ("Cannot connect to the server").
+const PROD_API = "https://workspaceapi-server-production-ff8e.up.railway.app";
+
+function apiBase(): string {
+  if (typeof window !== "undefined" && window.location.hostname.endsWith("millionstay.com")) {
+    return PROD_API;
+  }
+  return (import.meta.env.VITE_API_URL ?? "").trim();
+}
+
+const BASE = `${apiBase()}/api`;
 const TOKEN_KEY = "partner_token";
 
 export class ApiError extends Error {
