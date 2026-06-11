@@ -626,6 +626,7 @@ router.post("/v1/owner/site/upload-image", requireOwnerAuth, upload.single("imag
     const result = await uploadToCloudinary(req.file.buffer, { folder: "millionstay/owner-sites" });
     res.json({ success: true, url: result.secure_url, thumbnail_url: result.thumbnail_url });
   } catch (err: any) {
+    console.error("[owner/site/upload-image] upload failed:", err?.message, err);
     res.status(500).json({ error: err?.message ?? "Upload failed" });
   }
 });
