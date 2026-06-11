@@ -40,6 +40,7 @@
     "suburb": "地区",
     "email_templates": "邮件模板",
     "integrations": "集成",
+    "api_keys": "API 密钥",
     "system_log": "系统日志",
     "design": "设计与品牌",
     "reports": "报表",

@@ -26,6 +26,7 @@ import pageContentsRouter from "./routes/page-contents";
 import privacyRouter from "./routes/privacy";
 import chatRouter from "./routes/chat";
 import knowledgeRouter from "./routes/knowledge";
+import externalApiRouter from "./routes/external-api";
 import { logger } from "./lib/logger";
 import { requireAuth } from "./middlewares/requireAuth";
 import { loginLimiter, applicationLimiter, generalLimiter, privacyExportLimiter, chatLimiter } from "./middlewares/rateLimit";
@@ -203,6 +204,10 @@ app.use("/api", healthRouter);
 app.use("/api", publicRouter);
 app.use("/api", chatRouter);
 app.use("/api", privacyRouter);
+// External third-party API — authenticates with issued API Key + Secret
+// (requireApiKey inside the router), NOT the admin JWT. Mounted before the
+// requireAuth guard so it is never caught by admin authentication.
+app.use("/api/ext", externalApiRouter);
 app.use("/api", guestAuthRouter);
 app.use("/api", guestPortalRouter);
 app.use("/api", guestCsRouter);
