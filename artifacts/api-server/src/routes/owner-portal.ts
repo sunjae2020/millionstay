@@ -18,6 +18,7 @@ import {
 import { requireOwnerAuth, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth";
 import { isCloudinaryConfigured, uploadToCloudinary } from "../utils/cloudinary";
 import { logAction } from "../utils/auditLog";
+import { syncOwnerSubdomain } from "../lib/vercelDomains";
 
 const router: IRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
@@ -492,12 +493,13 @@ router.put("/v1/owner/site", requireOwnerAuth, async (req, res): Promise<void> =
   const fields = pickSiteFields(b);
 
   const [existing] = await db
-    .select({ id: ownerSitesTable.id })
+    .select({ id: ownerSitesTable.id, slug: ownerSitesTable.slug, status: ownerSitesTable.status })
     .from(ownerSitesTable)
     .where(eq(ownerSitesTable.account_id, partner.account_id))
     .limit(1);
 
   try {
+    let saved: { slug: string; status: string };
     if (existing) {
       const updates: Record<string, unknown> = { ...fields };
       if (slug !== undefined) updates.slug = slug;
@@ -507,6 +509,7 @@ router.put("/v1/owner/site", requireOwnerAuth, async (req, res): Promise<void> =
         .set(updates)
         .where(eq(ownerSitesTable.account_id, partner.account_id))
         .returning();
+      saved = { slug: row.slug, status: row.status };
       res.json({ success: true, data: row });
     } else {
       if (!slug) { res.status(400).json({ error: "slug is required to create your site" }); return; }
@@ -519,8 +522,16 @@ router.put("/v1/owner/site", requireOwnerAuth, async (req, res): Promise<void> =
           ...fields,
         } as any)
         .returning();
+      saved = { slug: row.slug, status: row.status };
       res.status(201).json({ success: true, data: row });
     }
+    // Provision/retire the Vercel subdomain off the request path (never blocks).
+    void syncOwnerSubdomain({
+      slug: saved.slug,
+      status: saved.status,
+      previousSlug: existing?.slug ?? null,
+      previousStatus: existing?.status ?? null,
+    });
   } catch (err: any) {
     if (err?.code === "23505") { res.status(409).json({ error: "That subdomain is already taken" }); return; }
     console.error("[owner/site] save failed:", err);
