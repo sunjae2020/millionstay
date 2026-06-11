@@ -33,6 +33,9 @@ import Contact from "@/pages/contact";
 import StayPlan from "@/pages/stay-plan";
 import ForStudent from "@/pages/for-student";
 import ForAgent from "@/pages/for-agent";
+import ForHomestayHost from "@/pages/for-homestay-host";
+import HostLogin from "@/pages/host-login";
+import HostPortal from "@/pages/host-portal";
 import FAQ from "@/pages/faq";
 import HouseRules from "@/pages/house-rules";
 import PrivacyPolicy from "@/pages/privacy-policy";
@@ -91,6 +94,9 @@ function Router() {
       <Route path="/stay-plan" component={StayPlan} />
       <Route path="/for-student" component={ForStudent} />
       <Route path="/for-agent" component={ForAgent} />
+      <Route path="/for-homestay-host" component={ForHomestayHost} />
+      <Route path="/host-login" component={HostLogin} />
+      <Route path="/host-portal" component={HostPortal} />
       <Route path="/faq" component={FAQ} />
       <Route path="/house-rules" component={HouseRules} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />

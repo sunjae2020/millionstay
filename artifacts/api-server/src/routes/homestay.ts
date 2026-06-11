@@ -1,0 +1,351 @@
+import { Router, type IRouter } from "express";
+import bcrypt from "bcryptjs";
+import multer from "multer";
+import { eq, and, isNull, desc, ilike, or, inArray } from "drizzle-orm";
+import {
+  db,
+  homestayHostApplicationsTable,
+  accountsTable,
+  partnerUsersTable,
+  documentsTable,
+} from "@workspace/db";
+import { generateHomestayRef } from "../lib/homestayRef.js";
+import { signPartnerJWT, requireHomestayAuth, invalidatePartnerCache, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth.js";
+import { sendHomestayHostEmail, sendLeadNotificationEmail } from "../lib/email.js";
+import { isCloudinaryConfigured, uploadToCloudinary } from "../utils/cloudinary.js";
+
+const BCRYPT_COST = 10;
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+
+// Fields a host may write on their application (whitelist — never trust raw body).
+const APPLICATION_FIELDS = [
+  "first_name", "last_name", "email", "phone", "date_of_birth", "gender", "nationality",
+  "cultural_background", "address", "suburb", "heard_about",
+  "residents", "smoking_in_home", "smoke_outside_allowed", "drink_in_home", "guest_drink_allowed",
+  "has_pets", "pet_types", "pet_notes", "building_type", "home_features", "rooms",
+  "pref_student_gender", "pref_student_age", "host_under_18", "packages_offered", "dietary", "dietary_notes",
+  "welcome_message", "profile_description", "emergency_contact", "extra_contact", "host_referral",
+  "agreement_accepted", "signature_name",
+] as const;
+
+function pickApplication(body: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const k of APPLICATION_FIELDS) if (body[k] !== undefined) out[k] = body[k];
+  return out;
+}
+
+// Strip sensitive/internal fields before returning an application to a host.
+function publicView(app: typeof homestayHostApplicationsTable.$inferSelect) {
+  const { reviewed_by, approval_notes, ...rest } = app;
+  return rest;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PUBLIC — online application submission (no auth)
+   ═══════════════════════════════════════════════════════════════════════════ */
+export const homestayPublicRouter: IRouter = Router();
+
+homestayPublicRouter.post("/v1/public/homestay-host-applications", async (req, res): Promise<void> => {
+  try {
+    const body = req.body as Record<string, any>;
+    const email = String(body.email ?? "").trim().toLowerCase();
+    const password = String(body.password ?? "");
+    const first_name = String(body.first_name ?? "").trim();
+    const last_name = String(body.last_name ?? "").trim();
+
+    if (!email || !first_name || !last_name) {
+      res.status(400).json({ success: false, error: "first_name, last_name and email are required" });
+      return;
+    }
+    if (password.length < 12) {
+      res.status(400).json({ success: false, error: "Password must be at least 12 characters" });
+      return;
+    }
+    if (!body.agreement_accepted) {
+      res.status(400).json({ success: false, error: "You must accept the host agreement" });
+      return;
+    }
+
+    // One portal login per email.
+    const [existingUser] = await db.select({ id: partnerUsersTable.id })
+      .from(partnerUsersTable).where(eq(partnerUsersTable.email, email)).limit(1);
+    if (existingUser) {
+      res.status(409).json({ success: false, error: "An account with this email already exists. Please log in." });
+      return;
+    }
+
+    // 1) Account (container) + 2) partner_user (host portal login, active immediately)
+    const [account] = await db.insert(accountsTable).values({
+      name: `${first_name} ${last_name}`.trim(),
+      account_type: "HomestayHost",
+      account_email: email,
+      phone1: body.phone ?? null,
+      status: "Active",
+    }).returning({ id: accountsTable.id });
+
+    const password_hash = await bcrypt.hash(password, BCRYPT_COST);
+    const [user] = await db.insert(partnerUsersTable).values({
+      account_id: account!.id,
+      portal_type: "homestay",
+      email,
+      password_hash,
+      first_name,
+      last_name,
+      phone: body.phone ?? null,
+      is_active: true,
+    }).returning({ id: partnerUsersTable.id });
+
+    // 3) Application
+    const fields = pickApplication(body);
+    const application_ref = await generateHomestayRef();
+    const [appRow] = await db.insert(homestayHostApplicationsTable).values({
+      ...fields,
+      application_ref,
+      email,
+      first_name,
+      last_name,
+      status: "Submitted",
+      account_id: account!.id,
+      partner_user_id: user!.id,
+      agreement_accepted: !!body.agreement_accepted,
+      agreement_accepted_at: new Date(),
+    } as any).returning();
+
+    // 4) Auto-login token (portal works regardless of approval)
+    const token = signPartnerJWT({ id: user!.id, email, account_id: account!.id, portal_type: "homestay" });
+
+    // 5) Emails — best-effort, never block
+    void sendHomestayHostEmail({ to: email, toName: first_name, applicationRef: application_ref, kind: "received" })
+      .catch((e) => console.error("[homestay] received email failed:", e));
+    const adminTo = process.env.LEAD_NOTIFICATION_EMAIL;
+    if (adminTo) {
+      void sendLeadNotificationEmail({
+        leadRef: application_ref, inquiryType: "Homestay Host Application",
+        firstName: first_name, lastName: last_name, email, phone: body.phone ?? null,
+        message: `New homestay host application (${application_ref})`, description: null,
+      }).catch((e) => console.error("[homestay] admin notify failed:", e));
+    }
+
+    res.status(201).json({ success: true, application_ref, token, application: publicView(appRow!) });
+  } catch (err: any) {
+    if (err?.code === "23505") { res.status(409).json({ success: false, error: "Duplicate entry" }); return; }
+    console.error("[homestay] submit failed:", err);
+    res.status(500).json({ success: false, error: "Failed to submit application" });
+  }
+});
+
+// Public homestay-host directory — ONLY approved hosts who have activated their
+// landing page are exposed (requirement: landing visibility requires approval).
+function directoryView(app: typeof homestayHostApplicationsTable.$inferSelect) {
+  return {
+    ref: app.application_ref,
+    host_name: app.first_name, // first name only — privacy
+    suburb: app.suburb,
+    welcome_message: app.welcome_message,
+    profile_description: app.profile_description,
+    building_type: app.building_type,
+    home_features: app.home_features,
+    rooms: app.rooms,
+    packages_offered: app.packages_offered,
+    pref_student_gender: app.pref_student_gender,
+    pref_student_age: app.pref_student_age,
+    host_under_18: app.host_under_18,
+  };
+}
+
+homestayPublicRouter.get("/v1/public/homestay-hosts", async (_req, res): Promise<void> => {
+  try {
+    const rows = await db.select().from(homestayHostApplicationsTable).where(and(
+      eq(homestayHostApplicationsTable.status, "Approved"),
+      eq(homestayHostApplicationsTable.landing_active, true),
+      isNull(homestayHostApplicationsTable.deleted_at),
+    )).orderBy(desc(homestayHostApplicationsTable.reviewed_at));
+    res.json({ success: true, data: rows.map(directoryView), meta: { total: rows.length } });
+  } catch (e) {
+    console.error("[homestay] public directory failed:", e);
+    res.status(500).json({ success: false, error: "Failed to load homestay hosts" });
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HOST PORTAL — requireHomestayAuth (login works regardless of approval)
+   ═══════════════════════════════════════════════════════════════════════════ */
+export const homestayPortalRouter: IRouter = Router();
+homestayPortalRouter.use("/v1/homestay", requireHomestayAuth);
+
+async function loadMyApplication(partner: PartnerAuthPayload) {
+  const [app] = await db.select().from(homestayHostApplicationsTable)
+    .where(and(eq(homestayHostApplicationsTable.partner_user_id, partner.id), isNull(homestayHostApplicationsTable.deleted_at)))
+    .limit(1);
+  return app ?? null;
+}
+
+// Current host's application + status
+homestayPortalRouter.get("/v1/homestay/me", async (req, res): Promise<void> => {
+  const partner = (req as any).partner as PartnerAuthPayload;
+  const app = await loadMyApplication(partner);
+  if (!app) { res.status(404).json({ success: false, error: "No application found" }); return; }
+  const docs = await db.select().from(documentsTable)
+    .where(and(
+      eq(documentsTable.entity_type, "HomestayHostApplication"),
+      eq(documentsTable.entity_id, app.id),
+      isNull(documentsTable.deleted_at),
+    ));
+  res.json({ success: true, application: publicView(app), documents: docs });
+});
+
+// Update own application (only while not yet approved/rejected)
+homestayPortalRouter.put("/v1/homestay/me", async (req, res): Promise<void> => {
+  const partner = (req as any).partner as PartnerAuthPayload;
+  const app = await loadMyApplication(partner);
+  if (!app) { res.status(404).json({ success: false, error: "No application found" }); return; }
+  if (["Approved", "Rejected"].includes(app.status)) {
+    res.status(409).json({ success: false, error: "Application is finalised and can no longer be edited" });
+    return;
+  }
+  const updates = pickApplication(req.body as Record<string, unknown>);
+  const [row] = await db.update(homestayHostApplicationsTable)
+    .set(updates).where(eq(homestayHostApplicationsTable.id, app.id)).returning();
+  res.json({ success: true, application: publicView(row!) });
+});
+
+// Upload a document (e.g. WWCC, ID, proof of residence, room photos)
+homestayPortalRouter.post("/v1/homestay/documents", upload.single("file"), async (req, res): Promise<void> => {
+  const partner = (req as any).partner as PartnerAuthPayload;
+  const app = await loadMyApplication(partner);
+  if (!app) { res.status(404).json({ success: false, error: "No application found" }); return; }
+  const file = (req as any).file as { buffer: Buffer; originalname: string; size: number; mimetype: string } | undefined;
+  if (!file) { res.status(400).json({ success: false, error: "file is required" }); return; }
+  if (!isCloudinaryConfigured()) { res.status(503).json({ success: false, error: "File storage not configured" }); return; }
+  const doc_type = String((req.body as any).doc_type ?? "Other").slice(0, 32);
+
+  const uploaded = await uploadToCloudinary(file.buffer, { folder: `homestay/${app.id}` });
+  const [doc] = await db.insert(documentsTable).values({
+    entity_type: "HomestayHostApplication",
+    entity_id: app.id,
+    doc_type,
+    file_name: file.originalname.slice(0, 255),
+    file_size: file.size,
+    mime_type: file.mimetype.slice(0, 100),
+    cloudinary_public_id: uploaded.public_id,
+    uploaded_by: partner.id,
+    uploaded_by_type: "PartnerUser",
+  } as any).returning();
+
+  // Mark any matching requested-doc as fulfilled.
+  const requested = (app.requested_docs as Array<{ doc_type: string; fulfilled?: boolean }> | null) ?? [];
+  if (requested.some((d) => d.doc_type === doc_type && !d.fulfilled)) {
+    const next = requested.map((d) => d.doc_type === doc_type ? { ...d, fulfilled: true } : d);
+    await db.update(homestayHostApplicationsTable).set({ requested_docs: next })
+      .where(eq(homestayHostApplicationsTable.id, app.id));
+  }
+  res.status(201).json({ success: true, document: doc });
+});
+
+// Toggle public landing-page exposure — ONLY allowed once Approved.
+homestayPortalRouter.post("/v1/homestay/landing/activate", async (req, res): Promise<void> => {
+  const partner = (req as any).partner as PartnerAuthPayload;
+  const app = await loadMyApplication(partner);
+  if (!app) { res.status(404).json({ success: false, error: "No application found" }); return; }
+  if (app.status !== "Approved") {
+    res.status(403).json({ success: false, error: "Landing page can only be activated after approval" });
+    return;
+  }
+  const active = req.body?.active !== false; // default true
+  const [row] = await db.update(homestayHostApplicationsTable)
+    .set({ landing_active: active }).where(eq(homestayHostApplicationsTable.id, app.id)).returning();
+  res.json({ success: true, landing_active: row!.landing_active });
+});
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ADMIN — requireAuth applied by the parent router (mounted in routes/index.ts)
+   ═══════════════════════════════════════════════════════════════════════════ */
+export const homestayAdminRouter: IRouter = Router();
+
+homestayAdminRouter.get("/v1/homestay-applications", async (req, res): Promise<void> => {
+  try {
+    const { q, status } = req.query as Record<string, string>;
+    const conds = [isNull(homestayHostApplicationsTable.deleted_at)];
+    if (status && status !== "all") conds.push(eq(homestayHostApplicationsTable.status, status));
+    if (q) conds.push(or(
+      ilike(homestayHostApplicationsTable.first_name, `%${q}%`),
+      ilike(homestayHostApplicationsTable.last_name, `%${q}%`),
+      ilike(homestayHostApplicationsTable.email, `%${q}%`),
+      ilike(homestayHostApplicationsTable.application_ref, `%${q}%`),
+    )!);
+    const rows = await db.select().from(homestayHostApplicationsTable)
+      .where(and(...conds)).orderBy(desc(homestayHostApplicationsTable.created_at));
+    res.json({ success: true, data: rows, meta: { total: rows.length } });
+  } catch (e) {
+    console.error("[homestay-admin] list failed:", e);
+    res.status(500).json({ error: "Failed to list applications" });
+  }
+});
+
+homestayAdminRouter.get("/v1/homestay-applications/:id", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const [app] = await db.select().from(homestayHostApplicationsTable).where(eq(homestayHostApplicationsTable.id, id));
+  if (!app) { res.status(404).json({ error: "Not found" }); return; }
+  const docs = await db.select().from(documentsTable).where(and(
+    eq(documentsTable.entity_type, "HomestayHostApplication"),
+    eq(documentsTable.entity_id, id),
+    isNull(documentsTable.deleted_at),
+  ));
+  res.json({ success: true, application: app, documents: docs });
+});
+
+async function setStatus(id: number, status: string, extra: Record<string, unknown>, reviewerId?: number) {
+  const [row] = await db.update(homestayHostApplicationsTable)
+    .set({ status, reviewed_by: reviewerId ?? null, reviewed_at: new Date(), ...extra })
+    .where(eq(homestayHostApplicationsTable.id, id)).returning();
+  return row ?? null;
+}
+
+homestayAdminRouter.post("/v1/homestay-applications/:id/approve", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const reviewer = (req as any).user?.id;
+  const row = await setStatus(id, "Approved", { approval_notes: req.body?.notes ?? null }, reviewer);
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  if (row.partner_user_id) invalidatePartnerCache(row.partner_user_id);
+  void sendHomestayHostEmail({ to: row.email, toName: row.first_name, applicationRef: row.application_ref, kind: "approved" })
+    .catch((e) => console.error("[homestay] approve email failed:", e));
+  res.json({ success: true, application: row });
+});
+
+homestayAdminRouter.post("/v1/homestay-applications/:id/reject", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const reviewer = (req as any).user?.id;
+  const row = await setStatus(id, "Rejected", { approval_notes: req.body?.notes ?? null, landing_active: false }, reviewer);
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  void sendHomestayHostEmail({ to: row.email, toName: row.first_name, applicationRef: row.application_ref, kind: "rejected", note: req.body?.notes ?? null })
+    .catch((e) => console.error("[homestay] reject email failed:", e));
+  res.json({ success: true, application: row });
+});
+
+homestayAdminRouter.post("/v1/homestay-applications/:id/request-docs", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const reviewer = (req as any).user?.id;
+  const docs = Array.isArray(req.body?.docs) ? req.body.docs : [];
+  if (!docs.length) { res.status(400).json({ error: "docs must be a non-empty array" }); return; }
+  const requested_docs = docs.map((d: any) => ({
+    doc_type: String(d.doc_type ?? d).slice(0, 32),
+    note: d.note ?? null,
+    requested_at: new Date().toISOString(),
+    fulfilled: false,
+  }));
+  const row = await setStatus(id, "DocsRequested", { requested_docs }, reviewer);
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  const noteText = requested_docs.map((d: any) => d.doc_type).join(", ");
+  void sendHomestayHostEmail({ to: row.email, toName: row.first_name, applicationRef: row.application_ref, kind: "docs_requested", note: `Requested: ${noteText}` })
+    .catch((e) => console.error("[homestay] docs email failed:", e));
+  res.json({ success: true, application: row });
+});
+
+homestayAdminRouter.put("/v1/homestay-applications/:id", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const { id: _id, created_at, deleted_at, ...updates } = req.body ?? {};
+  const [row] = await db.update(homestayHostApplicationsTable).set(updates)
+    .where(eq(homestayHostApplicationsTable.id, id)).returning();
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  res.json({ success: true, application: row });
+});

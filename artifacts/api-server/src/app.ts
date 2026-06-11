@@ -22,6 +22,7 @@ import partnerAuthRouter from "./routes/partner-auth";
 import agentPortalRouter from "./routes/agent-portal";
 import ownerPortalRouter from "./routes/owner-portal";
 import serviceHostPortalRouter from "./routes/service-host-portal";
+import { homestayPublicRouter, homestayPortalRouter } from "./routes/homestay";
 import pageContentsRouter from "./routes/page-contents";
 import privacyRouter from "./routes/privacy";
 import chatRouter from "./routes/chat";
@@ -190,6 +191,7 @@ app.use([
   "/api/v1/public/owner-applications",
   "/api/v1/public/agent-applications",
   "/api/v1/public/service-host-applications",
+  "/api/v1/public/homestay-host-applications",
 ], applicationLimiter);
 app.use([
   "/api/v1/guest/me/data",
@@ -202,6 +204,8 @@ app.use("/api/", generalLimiter);
 app.use("/api", authRouter);
 app.use("/api", healthRouter);
 app.use("/api", publicRouter);
+// Public homestay host application submission (no auth, rate-limited above).
+app.use("/api", homestayPublicRouter);
 app.use("/api", chatRouter);
 app.use("/api", privacyRouter);
 // External third-party API — authenticates with issued API Key + Secret
@@ -223,6 +227,9 @@ app.use("/api", partnerAuthRouter);
 app.use("/api", agentPortalRouter);
 app.use("/api", ownerPortalRouter);
 app.use("/api", serviceHostPortalRouter);
+// Homestay host portal — partner JWT (portal_type='homestay'); login works
+// regardless of approval. Mounted before requireAuth like the other portals.
+app.use("/api", homestayPortalRouter);
 
 app.use("/api", adminUsersRouter);
 app.use("/api/v1", requireAuth);

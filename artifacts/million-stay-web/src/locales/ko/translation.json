@@ -12,7 +12,8 @@
       "stayPlans": "숙박 플랜",
       "aboutUs": "회사 소개",
       "forStudents": "유학생 안내",
-      "forAgent": "에이전트 안내"
+      "forAgent": "에이전트 안내",
+      "forHomestayHost": "호스트 신청"
     }
   },
   "home": {
@@ -172,7 +173,8 @@
     "tab_all": "전체",
     "tab_private": "개인실",
     "tab_entire": "전체 공간",
-    "tab_shared": "다인실"
+    "tab_shared": "다인실",
+    "tab_homestay": "홈스테이"
   },
   "space": {
     "per_week": "/ 주",
@@ -830,5 +832,228 @@
     "tool_working": "처리 중…",
     "room_fallback": "객실 #{{id}}",
     "per_week": "/주"
+  },
+  "homestay": {
+    "apply": {
+      "hero_tagline": "당신의 집을 열어 누군가의 인생을 바꾸세요",
+      "hero_title": "홈스테이 호스트 되기",
+      "breadcrumb_home": "홈",
+      "breadcrumb": "호스트 신청",
+      "step_of": "{{total}}단계 중 {{current}}단계",
+      "step1_title": "호스트 정보",
+      "step2_title": "가족 구성",
+      "step3_title": "주택 및 방",
+      "step4_title": "학생 및 식사 패키지",
+      "step5_title": "프로필",
+      "step6_title": "연락처",
+      "step7_title": "동의",
+      "select": "선택…",
+      "first_name": "이름",
+      "last_name": "성",
+      "email": "이메일",
+      "password": "비밀번호",
+      "password_placeholder": "최소 12자 이상",
+      "pw_min": "최소 12자",
+      "pw_upper": "대문자 1자",
+      "pw_lower": "소문자 1자",
+      "pw_digit": "숫자 1자",
+      "pw_special": "특수문자 1자",
+      "phone": "전화번호",
+      "date_of_birth": "생년월일",
+      "gender": "성별",
+      "nationality": "국적",
+      "cultural_background": "문화적 배경",
+      "address": "주소",
+      "suburb": "지역(서버브)",
+      "heard_about": "어떻게 알게 되셨나요?",
+      "residents_title": "함께 거주하는 가족",
+      "add_resident": "구성원 추가",
+      "wwcc_note": "만 18세 이상 거주자는 아동 관련 업무 적격 확인서(WWCC)가 필요합니다.",
+      "res_name": "이름",
+      "res_age": "나이",
+      "res_gender": "성별",
+      "res_relationship": "관계",
+      "smoking_in_home": "실내 흡연이 가능한가요?",
+      "smoke_outside_allowed": "실외 흡연이 허용되나요?",
+      "drink_in_home": "가정 내 음주가 있나요?",
+      "guest_drink_allowed": "학생의 음주가 허용되나요?",
+      "has_pets": "반려동물이 있나요?",
+      "pet_types": "반려동물 종류",
+      "pet_notes": "반려동물 관련 메모",
+      "yes": "예",
+      "no": "아니오",
+      "building_type": "주택 유형",
+      "home_features": "주택 편의시설",
+      "rooms_title": "제공 가능한 방",
+      "add_room": "방 추가",
+      "room_n": "{{n}}번 방",
+      "room_name": "방 이름",
+      "bed_type": "침대 종류",
+      "bath_type": "욕실",
+      "has_lock": "방에 잠금장치 있음",
+      "room_comments": "비고 (선택)",
+      "pref_student_gender": "선호 학생 성별",
+      "pref_student_age": "선호 학생 연령",
+      "host_under_18": "만 18세 미만 학생도 받으시겠어요?",
+      "wwcc_under18": "만 18세 미만 학생 호스팅에는 아동 관련 업무 적격 확인서(WWCC)가 필요합니다.",
+      "packages_offered": "제공 식사 패키지",
+      "dietary": "지원 가능한 식이 옵션",
+      "dietary_notes": "식이 관련 메모",
+      "welcome_message": "환영 메시지",
+      "welcome_placeholder": "학생이 가장 먼저 보게 될 따뜻한 인사말…",
+      "profile_description": "호스트와 집 소개",
+      "profile_placeholder": "가족, 생활방식, 동네, 우리 집만의 특별함을 소개해 주세요…",
+      "emergency_title": "비상 연락처",
+      "ec_name": "연락처 이름",
+      "ec_relationship": "관계",
+      "ec_phone": "전화번호",
+      "ec_email": "이메일",
+      "referral_title": "추천 정보",
+      "ref_heard_about": "호스팅을 어떻게 알게 되셨나요?",
+      "ref_referred_by_host": "기존 호스트의 추천인가요?",
+      "ref_referrer_name": "추천인 이름",
+      "review_title": "신청 내용 확인",
+      "agreement_text": "본 신청서를 제출함으로써 제공한 정보가 정확하고 완전함을 확인합니다. MillionStay 홈스테이 호스트 약관에 동의하며, 안전하고 따뜻한 환경을 제공하고, 적용되는 모든 아동 관련 업무 적격 확인서(WWCC) 요건을 준수할 것에 동의합니다. 등록은 관리자 승인 후에만 공개됩니다.",
+      "agreement_accept": "위 홈스테이 호스트 약관을 읽고 동의합니다.",
+      "signature_name": "서명 (성명 전체 입력)",
+      "signature_placeholder": "법적 성명 전체",
+      "back": "이전",
+      "next": "다음",
+      "submit": "신청서 제출",
+      "submitting": "제출 중…",
+      "submit_failed": "제출에 실패했습니다. 다시 시도해 주세요.",
+      "email_exists": "이 이메일로 등록된 계정이 이미 있습니다.",
+      "email_exists_login": "로그인하기",
+      "already_applied": "이미 신청하셨나요?",
+      "login_link": "호스트 포털에 로그인"
+    },
+    "login": {
+      "title": "호스트 포털",
+      "subtitle": "로그인하여 신청 현황을 확인하세요",
+      "email": "이메일",
+      "email_placeholder": "you@example.com",
+      "password": "비밀번호",
+      "password_placeholder": "비밀번호를 입력하세요",
+      "signing_in": "로그인 중…",
+      "submit": "로그인",
+      "failed": "이메일 또는 비밀번호가 올바르지 않습니다.",
+      "new_applicant": "처음이신가요?",
+      "apply_link": "호스트 신청하기"
+    },
+    "portal": {
+      "title": "호스트 포털",
+      "logout": "로그아웃",
+      "load_failed": "신청 정보를 불러오지 못했습니다.",
+      "upload_failed": "업로드에 실패했습니다. 다시 시도해 주세요.",
+      "landing_failed": "랜딩 페이지 업데이트에 실패했습니다.",
+      "login_anytime": "언제든지 로그인할 수 있으며, 등록은 관리자 승인 후에만 공개됩니다.",
+      "status": {
+        "submitted": "신청서 제출됨",
+        "under_review": "검토 중",
+        "docs_requested": "서류 요청됨",
+        "approved": "승인됨",
+        "rejected": "미승인"
+      },
+      "status_desc": {
+        "submitted": "신청서를 접수했으며 곧 검토를 시작하겠습니다.",
+        "under_review": "담당팀이 신청서를 검토 중입니다. 곧 연락드리겠습니다.",
+        "docs_requested": "진행을 위해 몇 가지 서류가 더 필요합니다. 아래에서 업로드해 주세요.",
+        "approved": "축하합니다! 신청이 승인되었습니다. 이제 공개 랜딩 페이지를 활성화할 수 있습니다.",
+        "rejected": "안타깝게도 이번에는 신청이 승인되지 않았습니다. 자세한 내용은 문의해 주세요."
+      },
+      "requested_title": "요청된 서류",
+      "requested_sub": "검토를 계속하려면 아래 서류를 업로드해 주세요.",
+      "fulfilled": "업로드됨",
+      "upload": "업로드",
+      "uploading": "업로드 중…",
+      "documents_title": "서류",
+      "doc_type": {
+        "id": "신분증",
+        "proof_of_address": "주소 증명",
+        "wwcc": "WWCC",
+        "property_photo": "주택 사진",
+        "other": "기타"
+      },
+      "landing_title": "랜딩 페이지",
+      "landing_sub_approved": "활성화하면 MillionStay에 홈스테이 등록이 공개됩니다.",
+      "landing_locked": "신청이 승인되면 활성화할 수 있습니다.",
+      "landing_on": "등록 공개 중",
+      "landing_off": "등록 비공개",
+      "summary_title": "내 신청서",
+      "edit": "신청서 수정"
+    },
+    "opt": {
+      "gender": {
+        "Male": "남성",
+        "Female": "여성",
+        "Other": "기타"
+      },
+      "heard": {
+        "Google": "구글",
+        "Advertising": "광고",
+        "Social media": "소셜 미디어",
+        "Friends": "친구",
+        "Word of mouth": "입소문",
+        "Other": "기타"
+      },
+      "building": {
+        "House": "단독주택",
+        "Townhouse": "타운하우스",
+        "Apartment": "아파트",
+        "Other": "기타"
+      },
+      "feature": {
+        "Pool": "수영장",
+        "Gym": "헬스장",
+        "Carpet": "카펫",
+        "No Carpet": "카펫 없음"
+      },
+      "bed": {
+        "Single": "싱글",
+        "Double": "더블",
+        "Queen": "퀸",
+        "King": "킹",
+        "Bunk": "이층침대",
+        "Twin Single": "트윈 싱글",
+        "Triple": "트리플",
+        "King Single": "킹 싱글",
+        "Independent Living": "독립 생활"
+      },
+      "bath": {
+        "Shared": "공용",
+        "Own": "전용",
+        "Ensuite": "내부 욕실"
+      },
+      "student_gender": {
+        "Male": "남학생",
+        "Female": "여학생",
+        "Either": "무관"
+      },
+      "student_age": {
+        "Over 18": "성인 (만 18세 이상)",
+        "Under 18": "미성년 (만 18세 미만)",
+        "Either": "무관"
+      },
+      "package": {
+        "full_board": "풀 보드",
+        "partial_board": "파셜 보드",
+        "dinner_only": "저녁만",
+        "no_meals": "식사 미제공"
+      },
+      "package_desc": {
+        "full_board": "아침, 점심, 저녁 제공",
+        "partial_board": "아침 & 저녁, 주말 점심 제공",
+        "dinner_only": "저녁만 제공",
+        "no_meals": "식사 미제공"
+      },
+      "dietary": {
+        "Halal": "할랄",
+        "Vegetarian": "채식",
+        "Vegan": "비건",
+        "Kosher": "코셔",
+        "Gluten Free": "글루텐 프리",
+        "Other": "기타"
+      }
+    }
   }
 }

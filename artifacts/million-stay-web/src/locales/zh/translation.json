@@ -12,7 +12,8 @@
       "stayPlans": "住宿方案",
       "aboutUs": "关于我们",
       "forStudents": "留学生专区",
-      "forAgent": "中介专区"
+      "forAgent": "中介专区",
+      "forHomestayHost": "成为寄宿家庭"
     }
   },
   "home": {
@@ -131,7 +132,8 @@
       "type": "房型",
       "policy": "性别政策",
       "price": "周租金"
-    }
+    },
+    "tab_homestay": "寄宿家庭"
   },
   "space": {
     "per_week": "/ 周",
@@ -789,5 +791,228 @@
     "tool_working": "处理中…",
     "room_fallback": "房间 #{{id}}",
     "per_week": "/周"
+  },
+  "homestay": {
+    "apply": {
+      "hero_tagline": "敞开家门，改变一个人的人生",
+      "hero_title": "成为寄宿家庭",
+      "breadcrumb_home": "首页",
+      "breadcrumb": "成为寄宿家庭",
+      "step_of": "第 {{current}} 步，共 {{total}} 步",
+      "step1_title": "主人信息",
+      "step2_title": "家庭成员",
+      "step3_title": "住宅与房间",
+      "step4_title": "学生与餐食套餐",
+      "step5_title": "个人资料",
+      "step6_title": "联系方式",
+      "step7_title": "协议",
+      "select": "请选择…",
+      "first_name": "名字",
+      "last_name": "姓氏",
+      "email": "电子邮箱",
+      "password": "密码",
+      "password_placeholder": "至少12个字符",
+      "pw_min": "至少12个字符",
+      "pw_upper": "一个大写字母",
+      "pw_lower": "一个小写字母",
+      "pw_digit": "一个数字",
+      "pw_special": "一个特殊字符",
+      "phone": "电话",
+      "date_of_birth": "出生日期",
+      "gender": "性别",
+      "nationality": "国籍",
+      "cultural_background": "文化背景",
+      "address": "地址",
+      "suburb": "城区",
+      "heard_about": "您是如何了解到我们的？",
+      "residents_title": "家庭居住成员",
+      "add_resident": "添加成员",
+      "wwcc_note": "年满18岁的居住成员需持有儿童工作许可证（WWCC）。",
+      "res_name": "姓名",
+      "res_age": "年龄",
+      "res_gender": "性别",
+      "res_relationship": "关系",
+      "smoking_in_home": "室内是否吸烟？",
+      "smoke_outside_allowed": "是否允许室外吸烟？",
+      "drink_in_home": "家中是否饮酒？",
+      "guest_drink_allowed": "是否允许学生饮酒？",
+      "has_pets": "您有宠物吗？",
+      "pet_types": "宠物类型",
+      "pet_notes": "宠物备注",
+      "yes": "是",
+      "no": "否",
+      "building_type": "住宅类型",
+      "home_features": "住宅设施",
+      "rooms_title": "可提供的房间",
+      "add_room": "添加房间",
+      "room_n": "房间 {{n}}",
+      "room_name": "房间名称",
+      "bed_type": "床型",
+      "bath_type": "卫浴",
+      "has_lock": "房间带锁",
+      "room_comments": "备注（可选）",
+      "pref_student_gender": "偏好学生性别",
+      "pref_student_age": "偏好学生年龄",
+      "host_under_18": "是否愿意接待18岁以下学生？",
+      "wwcc_under18": "接待18岁以下学生需持有儿童工作许可证（WWCC）。",
+      "packages_offered": "提供的餐食套餐",
+      "dietary": "可支持的饮食选项",
+      "dietary_notes": "饮食备注",
+      "welcome_message": "欢迎语",
+      "welcome_placeholder": "学生首先会看到的温馨问候…",
+      "profile_description": "关于您与您的家",
+      "profile_placeholder": "介绍您的家庭、生活方式、社区以及您家的独特之处…",
+      "emergency_title": "紧急联系人",
+      "ec_name": "联系人姓名",
+      "ec_relationship": "关系",
+      "ec_phone": "电话",
+      "ec_email": "电子邮箱",
+      "referral_title": "推荐",
+      "ref_heard_about": "您是如何了解到寄宿家庭项目的？",
+      "ref_referred_by_host": "是否由现有寄宿家庭推荐？",
+      "ref_referrer_name": "推荐人姓名",
+      "review_title": "确认您的申请",
+      "agreement_text": "提交本申请即表示您确认所提供的信息真实完整。您同意MillionStay寄宿家庭主人条款，承诺提供安全友好的环境，并遵守所有适用的儿童工作许可证（WWCC）要求。您的房源仅在管理员批准后才会公开。",
+      "agreement_accept": "我已阅读并接受上述寄宿家庭主人协议。",
+      "signature_name": "签名（请输入全名）",
+      "signature_placeholder": "您的法定全名",
+      "back": "上一步",
+      "next": "下一步",
+      "submit": "提交申请",
+      "submitting": "提交中…",
+      "submit_failed": "提交失败，请重试。",
+      "email_exists": "该电子邮箱已存在账户。",
+      "email_exists_login": "改为登录",
+      "already_applied": "已经申请过了？",
+      "login_link": "登录您的主人门户"
+    },
+    "login": {
+      "title": "主人门户",
+      "subtitle": "登录以跟踪您的申请",
+      "email": "电子邮箱",
+      "email_placeholder": "you@example.com",
+      "password": "密码",
+      "password_placeholder": "请输入密码",
+      "signing_in": "登录中…",
+      "submit": "登录",
+      "failed": "电子邮箱或密码不正确。",
+      "new_applicant": "首次申请？",
+      "apply_link": "申请成为寄宿家庭"
+    },
+    "portal": {
+      "title": "主人门户",
+      "logout": "退出登录",
+      "load_failed": "无法加载您的申请。",
+      "upload_failed": "上传失败，请重试。",
+      "landing_failed": "更新落地页失败。",
+      "login_anytime": "您可以随时登录；您的房源仅在管理员批准后才会公开。",
+      "status": {
+        "submitted": "申请已提交",
+        "under_review": "审核中",
+        "docs_requested": "需要补充材料",
+        "approved": "已批准",
+        "rejected": "未通过"
+      },
+      "status_desc": {
+        "submitted": "我们已收到您的申请，将很快开始审核。",
+        "under_review": "我们的团队正在审核您的申请，很快会与您联系。",
+        "docs_requested": "我们需要更多材料才能继续。请在下方上传。",
+        "approved": "恭喜！您的申请已获批准。您现在可以激活公开落地页。",
+        "rejected": "很遗憾，您的申请此次未获批准。详情请联系我们。"
+      },
+      "requested_title": "需要的材料",
+      "requested_sub": "请上传以下材料以继续审核。",
+      "fulfilled": "已上传",
+      "upload": "上传",
+      "uploading": "上传中…",
+      "documents_title": "材料",
+      "doc_type": {
+        "id": "身份证件",
+        "proof_of_address": "地址证明",
+        "wwcc": "WWCC",
+        "property_photo": "房屋照片",
+        "other": "其他"
+      },
+      "landing_title": "落地页",
+      "landing_sub_approved": "激活后，您的寄宿家庭房源将在MillionStay上公开。",
+      "landing_locked": "申请获批后即可激活。",
+      "landing_on": "房源已上线",
+      "landing_off": "房源已隐藏",
+      "summary_title": "您的申请",
+      "edit": "编辑申请"
+    },
+    "opt": {
+      "gender": {
+        "Male": "男",
+        "Female": "女",
+        "Other": "其他"
+      },
+      "heard": {
+        "Google": "谷歌",
+        "Advertising": "广告",
+        "Social media": "社交媒体",
+        "Friends": "朋友",
+        "Word of mouth": "口碑推荐",
+        "Other": "其他"
+      },
+      "building": {
+        "House": "独立屋",
+        "Townhouse": "联排别墅",
+        "Apartment": "公寓",
+        "Other": "其他"
+      },
+      "feature": {
+        "Pool": "泳池",
+        "Gym": "健身房",
+        "Carpet": "地毯",
+        "No Carpet": "无地毯"
+      },
+      "bed": {
+        "Single": "单人床",
+        "Double": "双人床",
+        "Queen": "大号床",
+        "King": "特大床",
+        "Bunk": "上下铺",
+        "Twin Single": "双单人床",
+        "Triple": "三人床",
+        "King Single": "加大单人床",
+        "Independent Living": "独立生活空间"
+      },
+      "bath": {
+        "Shared": "共用",
+        "Own": "独立",
+        "Ensuite": "套内卫浴"
+      },
+      "student_gender": {
+        "Male": "男生",
+        "Female": "女生",
+        "Either": "皆可"
+      },
+      "student_age": {
+        "Over 18": "成人（18岁以上）",
+        "Under 18": "未成年（18岁以下）",
+        "Either": "皆可"
+      },
+      "package": {
+        "full_board": "全餐",
+        "partial_board": "部分供餐",
+        "dinner_only": "仅晚餐",
+        "no_meals": "不供餐"
+      },
+      "package_desc": {
+        "full_board": "早餐、午餐和晚餐",
+        "partial_board": "早餐和晚餐，周末含午餐",
+        "dinner_only": "仅晚餐",
+        "no_meals": "不供餐"
+      },
+      "dietary": {
+        "Halal": "清真",
+        "Vegetarian": "素食",
+        "Vegan": "纯素",
+        "Kosher": "犹太洁食",
+        "Gluten Free": "无麸质",
+        "Other": "其他"
+      }
+    }
   }
 }

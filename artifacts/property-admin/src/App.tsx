@@ -39,6 +39,8 @@ import TaskList from "@/pages/sales/TaskList";
 import TaskDetail from "@/pages/sales/TaskDetail";
 import LeadList from "@/pages/sales/LeadList";
 import LeadDetail from "@/pages/sales/LeadDetail";
+import HomestayApplications from "@/pages/crm/HomestayApplications";
+import HomestayApplicationDetail from "@/pages/crm/HomestayApplicationDetail";
 
 // Booking
 import ServiceHostList from "@/pages/booking/ServiceHostList";
@@ -190,6 +192,9 @@ function Router() {
       <Route path="/account/tasks" component={TaskList} />
       <Route path="/account/tasks/new" component={TaskDetail} />
       <Route path="/account/tasks/:id" component={TaskDetail} />
+
+      <Route path="/account/homestay-applications" component={HomestayApplications} />
+      <Route path="/account/homestay-applications/:id" component={HomestayApplicationDetail} />
 
       {/* ── PROPERTY ──────────────────────────────────── */}
       <Route path="/property/properties" component={PropertyList} />
