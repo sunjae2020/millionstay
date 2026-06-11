@@ -65,7 +65,8 @@
     "ai_assistant": "AI Assistant",
     "chat_widget": "Chat Widget",
     "knowledge_base": "Knowledge Base",
-    "conversations": "Conversations"
+    "conversations": "Conversations",
+    "addon_services": "Add-on Services"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -2429,5 +2430,60 @@
       "role_user": "user",
       "role_assistant": "assistant"
     }
+  },
+  "accommodation_options": {
+    "field": {
+      "contract_term": "Contract Term",
+      "room_type": "Room Type",
+      "meal_plan": "Meal Plan",
+      "guest_age": "Guest Age"
+    },
+    "contract_term": {
+      "short_term": "Short-term",
+      "mid_term": "Mid-term",
+      "long_term": "Long-term"
+    },
+    "room_type": {
+      "room_share": "Room Share",
+      "house_share": "House Share",
+      "entire_place": "Entire Place",
+      "homestay": "Homestay"
+    },
+    "meal_plan": {
+      "none": "No meals",
+      "partial_board": "Partial board (weekday 2 / weekend 3)",
+      "full_board": "Full board (7 days, 3 meals)"
+    },
+    "guest_age": {
+      "adult": "Adult",
+      "minor": "Minor (Under 18)"
+    },
+    "addon_category": {
+      "transport": "Transport",
+      "living": "Living",
+      "supplies": "Supplies",
+      "telecom": "Telecom",
+      "other": "Other"
+    },
+    "addon_unit": {
+      "per_booking": "Per booking",
+      "per_trip": "Per trip",
+      "per_week": "Per week",
+      "per_item": "Per item",
+      "per_month": "Per month"
+    },
+    "addon_subtitle": "Services sold on top of accommodation",
+    "col_name": "Name",
+    "col_category": "Category",
+    "col_price": "Price",
+    "col_unit": "Unit",
+    "code": "Code",
+    "currency": "Currency",
+    "description": "Description",
+    "empty": "No add-on services",
+    "edit_addon": "Edit Add-on Service",
+    "new_addon": "New Add-on Service",
+    "delete_addon": "Delete Add-on Service",
+    "delete_confirm": "This will remove the add-on service. Accommodations using it will lose the link."
   }
 }

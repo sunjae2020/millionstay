@@ -19,6 +19,7 @@ import {
   Palette,
   Plug,
   Database,
+  Package,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -95,6 +96,12 @@ const REF_CARDS: CardDef[] = [
     description: "Manage product type definitions",
     icon: Tag,
     href: "/settings/product-types",
+  },
+  {
+    title: "Add-on Services",
+    description: "Airport pickup, SIM, settlement and more",
+    icon: Package,
+    href: "/settings/addon-services",
   },
   {
     title: "Payment Info",

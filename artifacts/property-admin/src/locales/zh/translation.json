@@ -65,7 +65,8 @@
     "ai_assistant": "AI 助手",
     "chat_widget": "聊天小部件",
     "knowledge_base": "知识库",
-    "conversations": "对话记录"
+    "conversations": "对话记录",
+    "addon_services": "附加服务"
   },
   "dashboard": {
     "title": "仪表板",
@@ -2419,5 +2420,60 @@
       "role_user": "用户",
       "role_assistant": "助手"
     }
+  },
+  "accommodation_options": {
+    "field": {
+      "contract_term": "合约期限",
+      "room_type": "房型",
+      "meal_plan": "餐食方案",
+      "guest_age": "住客年龄"
+    },
+    "contract_term": {
+      "short_term": "短期",
+      "mid_term": "中期",
+      "long_term": "长期"
+    },
+    "room_type": {
+      "room_share": "合住房间",
+      "house_share": "合租房屋",
+      "entire_place": "整租",
+      "homestay": "寄宿家庭"
+    },
+    "meal_plan": {
+      "none": "不含餐",
+      "partial_board": "部分供餐（工作日2餐／周末3餐）",
+      "full_board": "全餐（每周7天3餐）"
+    },
+    "guest_age": {
+      "adult": "成人",
+      "minor": "未成年人（18岁以下）"
+    },
+    "addon_category": {
+      "transport": "交通",
+      "living": "生活",
+      "supplies": "用品",
+      "telecom": "通讯",
+      "other": "其他"
+    },
+    "addon_unit": {
+      "per_booking": "每次预订",
+      "per_trip": "每趟",
+      "per_week": "每周",
+      "per_item": "每件",
+      "per_month": "每月"
+    },
+    "addon_subtitle": "在住宿之外销售的服务",
+    "col_name": "名称",
+    "col_category": "分类",
+    "col_price": "价格",
+    "col_unit": "单位",
+    "code": "代码",
+    "currency": "货币",
+    "description": "描述",
+    "empty": "暂无附加服务",
+    "edit_addon": "编辑附加服务",
+    "new_addon": "新增附加服务",
+    "delete_addon": "删除附加服务",
+    "delete_confirm": "将删除该附加服务，使用它的住宿将解除关联。"
   }
 }

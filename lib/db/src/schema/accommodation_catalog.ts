@@ -1,4 +1,5 @@
 import { pgTable, serial, text, integer, real, boolean, timestamp } from "drizzle-orm/pg-core";
+import { contractTermEnum, roomTypeEnum, mealPlanEnum, guestAgeEnum } from "./accommodation_options";
 
 export const accommodationCatalogTable = pgTable("accommodation_catalog", {
   id: serial("id").primaryKey(),
@@ -21,6 +22,11 @@ export const accommodationCatalogTable = pgTable("accommodation_catalog", {
   max_stay_weeks: integer("max_stay_weeks"),
   billing_frequency: text("billing_frequency").default("Biweekly"),
   term_type: text("term_type"),
+  // Short-stay classification (see accommodation_options.ts). All nullable/additive.
+  contract_term: contractTermEnum("contract_term"),
+  room_type: roomTypeEnum("room_type"),
+  meal_plan: mealPlanEnum("meal_plan"),   // homestay only
+  guest_age: guestAgeEnum("guest_age"),   // homestay only
   bond_amount: real("bond_amount"),
   bond_weeks: real("bond_weeks").default(4),
   advance_weeks: real("advance_weeks").default(2),

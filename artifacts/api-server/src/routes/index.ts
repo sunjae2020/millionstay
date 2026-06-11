@@ -42,6 +42,7 @@ import documentsRouter from "./documents";
 import quotesRouter from "./quotes";
 import companyInfoRouter from "./company-info";
 import otaChannelsRouter from "./ota-channels";
+import addonServicesRouter from "./addon-services";
 const router: IRouter = Router();
 
 router.use(healthRouter);
@@ -87,6 +88,7 @@ router.use(documentsRouter);
 router.use(quotesRouter);
 router.use(companyInfoRouter);
 router.use(otaChannelsRouter);
+router.use(addonServicesRouter);
 // Note: partnerAuthRouter, agentPortalRouter, ownerPortalRouter are registered in app.ts
 // BEFORE the requireAuth middleware to allow partner JWT auth to bypass the admin auth guard.
 

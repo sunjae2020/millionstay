@@ -65,7 +65,8 @@
     "ai_assistant": "AI アシスタント",
     "chat_widget": "チャットウィジェット",
     "knowledge_base": "ナレッジベース",
-    "conversations": "会話履歴"
+    "conversations": "会話履歴",
+    "addon_services": "付帯サービス"
   },
   "dashboard": {
     "title": "ダッシュボード",
@@ -2419,5 +2420,60 @@
       "role_user": "ユーザー",
       "role_assistant": "アシスタント"
     }
+  },
+  "accommodation_options": {
+    "field": {
+      "contract_term": "契約期間",
+      "room_type": "部屋タイプ",
+      "meal_plan": "食事プラン",
+      "guest_age": "宿泊者年齢"
+    },
+    "contract_term": {
+      "short_term": "短期",
+      "mid_term": "中期",
+      "long_term": "長期"
+    },
+    "room_type": {
+      "room_share": "ルームシェア",
+      "house_share": "ハウスシェア",
+      "entire_place": "一棟貸し",
+      "homestay": "ホームステイ"
+    },
+    "meal_plan": {
+      "none": "食事なし",
+      "partial_board": "一部提供（平日2食／週末3食）",
+      "full_board": "フルボード（週7日3食）"
+    },
+    "guest_age": {
+      "adult": "成人",
+      "minor": "未成年（18歳以下）"
+    },
+    "addon_category": {
+      "transport": "交通",
+      "living": "生活",
+      "supplies": "備品",
+      "telecom": "通信",
+      "other": "その他"
+    },
+    "addon_unit": {
+      "per_booking": "予約ごと",
+      "per_trip": "片道ごと",
+      "per_week": "週ごと",
+      "per_item": "個ごと",
+      "per_month": "月ごと"
+    },
+    "addon_subtitle": "宿泊に追加して販売するサービス",
+    "col_name": "名称",
+    "col_category": "分類",
+    "col_price": "価格",
+    "col_unit": "単位",
+    "code": "コード",
+    "currency": "通貨",
+    "description": "説明",
+    "empty": "付帯サービスがありません",
+    "edit_addon": "付帯サービスを編集",
+    "new_addon": "付帯サービスを追加",
+    "delete_addon": "付帯サービスを削除",
+    "delete_confirm": "付帯サービスが削除されます。利用中の宿泊施設とのリンクが解除されます。"
   }
 }
