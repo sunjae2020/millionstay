@@ -82,8 +82,8 @@ export default function Booking() {
   const guestForm = useForm<GuestInfoData>({
     resolver: zodResolver(guestInfoSchema),
     defaultValues: {
-      first_name: authGuest?.name.split(" ")[0] ?? "",
-      last_name: authGuest?.name.split(" ")[1] ?? "",
+      first_name: authGuest?.first_name ?? "",
+      last_name: authGuest?.last_name ?? "",
       email: authGuest?.email ?? "",
       password: "",
       nationality: "",
@@ -111,7 +111,7 @@ export default function Booking() {
         },
         {
           onSuccess: (res) => {
-            setAuth(res.token, res.guest);
+            setAuth(res.token, res.user);
             setCurrentStep(2);
           },
           onError: (error: unknown) => {
@@ -371,7 +371,7 @@ export default function Booking() {
                     <div className="space-y-4">
                       <div className="rounded-lg bg-primary/5 border border-primary/20 p-4">
                         <p className="text-sm font-medium text-foreground">
-                          {t("booking.booking_as")}: <span className="text-primary">{authGuest.name}</span>
+                          {t("booking.booking_as")}: <span className="text-primary">{[authGuest.first_name, authGuest.last_name].filter(Boolean).join(" ")}</span>
                         </p>
                         <p className="text-xs text-muted-foreground">{authGuest.email}</p>
                       </div>
@@ -535,16 +535,16 @@ export default function Booking() {
                     <span className="text-muted-foreground">{t("booking.weekly_rent")}</span>
                     <span className="font-medium">${weeklyPrice}</span>
                   </div>
-                  {space.admin_fee != null && (
+                  {selectedProduct?.admin_fee != null && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">{t("booking.admin_fee")}</span>
-                      <span>${space.admin_fee}</span>
+                      <span>${selectedProduct.admin_fee}</span>
                     </div>
                   )}
-                  {space.bond_amount != null && (
+                  {selectedProduct?.bond_amount != null && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">{t("booking.bond")}</span>
-                      <span>${space.bond_amount}</span>
+                      <span>${selectedProduct.bond_amount}</span>
                     </div>
                   )}
                 </div>

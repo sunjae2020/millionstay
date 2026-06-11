@@ -55,7 +55,7 @@ export default function WorkOrderDetail() {
   const isNew = id === "new";
 
   const { data: wo, refetch } = useGetWorkOrder(Number(id), {
-    query: { enabled: !isNew },
+    query: { enabled: !isNew, queryKey: getGetWorkOrderQueryKey(Number(id)) },
   });
 
   const { register, handleSubmit, reset, control } = useForm<FormData>({

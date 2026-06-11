@@ -68,7 +68,7 @@ export default function WebsiteContentList() {
     <Layout>
       <PageHeader
         title={t("website_content.page_title")}
-        description={t("website_content.page_description")}
+        subtitle={t("website_content.page_description")}
         actions={
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Globe className="h-4 w-4" />

@@ -14,6 +14,7 @@ import {
   useGetAccount, useCreateAccount, useUpdateAccount,
   useListBookings, useListContracts, useListInvoices,
   getListAccountsQueryKey, getGetAccountQueryKey,
+  getListBookingsQueryKey, getListContractsQueryKey, getListInvoicesQueryKey,
 } from "@workspace/api-client-react";
 import { LookupSelect } from "@/components/LookupSelect";
 import { useQueryClient } from "@tanstack/react-query";
@@ -100,17 +101,17 @@ export default function AccountDetail() {
 
   const { data: bookings } = useListBookings(
     { account_id: id ?? undefined },
-    { query: { enabled: !isNew && !!id } }
+    { query: { enabled: !isNew && !!id, queryKey: getListBookingsQueryKey({ account_id: id ?? undefined }) } }
   );
 
   const { data: contracts } = useListContracts(
     { tenant_account_id: id ?? undefined },
-    { query: { enabled: !isNew && !!id } }
+    { query: { enabled: !isNew && !!id, queryKey: getListContractsQueryKey({ tenant_account_id: id ?? undefined }) } }
   );
 
   const { data: invoices } = useListInvoices(
     { account_id: id ?? undefined },
-    { query: { enabled: !isNew && !!id } }
+    { query: { enabled: !isNew && !!id, queryKey: getListInvoicesQueryKey({ account_id: id ?? undefined }) } }
   );
 
   const { register, handleSubmit, reset, control, watch, formState: { errors } } = useForm<AccountForm>({

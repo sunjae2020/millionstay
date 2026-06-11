@@ -451,7 +451,7 @@ export default function WebsiteContentDetail() {
     <Layout>
       <PageHeader
         title={pageLabel}
-        description={t(`website_content.page_desc_${pageDef.key.replace(/-/g, "_")}`)}
+        subtitle={t(`website_content.page_desc_${pageDef.key.replace(/-/g, "_")}`)}
         actions={
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-xs">{pageDef.path}</Badge>

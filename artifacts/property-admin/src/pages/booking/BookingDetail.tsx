@@ -19,6 +19,7 @@ import {
   useListBookingDocuments, useCreateBookingDocument, useVerifyBookingDocument, useRejectBookingDocument,
   useListInvoices,
   getListBookingsQueryKey, getGetBookingQueryKey, getListBookingDocumentsQueryKey,
+  getListInvoicesQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
 import { ArrowLeft, Save, FileText, CheckCircle2, XCircle, Upload, ExternalLink, Plus, Trash2, Camera } from "lucide-react";
@@ -109,12 +110,12 @@ export default function BookingDetail() {
   const [svcNotes, setSvcNotes] = useState("");
   function resetServiceForm() { setSvcName(""); setSvcType("one_time"); setSvcQty("1"); setSvcPrice(""); setSvcFreq(""); setSvcNotes(""); }
 
-  const { data: booking, refetch } = useGetBooking(Number(id), { query: { enabled: !isNew } });
+  const { data: booking, refetch } = useGetBooking(Number(id), { query: { enabled: !isNew, queryKey: getGetBookingQueryKey(Number(id)) } });
   const { data: documents } = useListBookingDocuments(Number(id), {
     query: { enabled: !isNew, queryKey: getListBookingDocumentsQueryKey(Number(id)) },
   });
   const { data: invoices } = useListInvoices({ booking_id: isNew ? undefined : Number(id) }, {
-    query: { enabled: !isNew },
+    query: { enabled: !isNew, queryKey: getListInvoicesQueryKey({ booking_id: isNew ? undefined : Number(id) }) },
   });
 
   const { data: linkedContract, refetch: refetchContract } = useQuery({
@@ -332,7 +333,7 @@ export default function BookingDetail() {
                   placeholder={t("booking.placeholder_account")}
                   value={field.value}
                   onChange={field.onChange}
-                  displayText={booking?.account_name ?? undefined}
+                  displayValue={booking?.account_name ?? undefined}
                 />
               )} />
             </div>
@@ -344,7 +345,7 @@ export default function BookingDetail() {
                   placeholder={t("booking.placeholder_contact")}
                   value={field.value}
                   onChange={field.onChange}
-                  displayText={booking?.contact_name ?? undefined}
+                  displayValue={booking?.contact_name ?? undefined}
                 />
               )} />
             </div>
@@ -378,7 +379,7 @@ export default function BookingDetail() {
                 placeholder={t("booking.placeholder_space")}
                 value={field.value}
                 onChange={field.onChange}
-                displayText={booking?.space_name ?? undefined}
+                displayValue={booking?.space_name ?? undefined}
               />
             )} />
           </div>
@@ -400,7 +401,7 @@ export default function BookingDetail() {
                 placeholder="Select accommodation product…"
                 value={field.value}
                 onChange={field.onChange}
-                displayText={(booking as any)?.product_name ?? (booking as any)?.contract_product_name ?? undefined}
+                displayValue={(booking as any)?.product_name ?? (booking as any)?.contract_product_name ?? undefined}
               />
             )} />
           </div>

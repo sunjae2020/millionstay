@@ -1,0 +1,126 @@
+# CLAUDE.md
+
+Agent operating guide for the **MillionStay** monorepo. For deep architecture and
+feature history, read [replit.md](replit.md) — this file is the operational digest.
+
+## What this is
+
+A pnpm workspace monorepo for **MillionStay**, a property-management SaaS. One
+Express API backs six React+Vite frontends (admin, guest web, three partner
+portals, a sandbox). Node 24, TypeScript 5.9, PostgreSQL + Drizzle ORM, Zod
+validation, Orval-generated API client, esbuild bundling.
+
+## Layout
+
+```
+artifacts/
+  api-server/          Express 5 API — all backend logic, routes under /api/v1/
+  million-stay-web/    Guest booking portal (brand #E8621A)
+  property-admin/      Admin SaaS (dashboards, CRUD, CMS, finance)
+  agent-portal/        Partner: agents (bookings, commissions)
+  owner-portal/        Partner: owners (occupancy/revenue, tenant masking)
+  service-host-portal/ Partner: cleaners/drivers (jobs, schedule, earnings)
+  mockup-sandbox/      Throwaway UI prototyping
+lib/
+  db/                  Drizzle schema + migrations (@workspace/db)
+  api-zod/             Shared Zod schemas (@workspace/api-zod) — prefer for validation
+  api-spec/            OpenAPI spec
+  api-client-react/    Orval-generated hooks
+scripts/               dev.sh, privacy checks, post-merge, translate
+docs/                  CONTRIBUTING, LOCAL_DEV, runbooks, proposals
+```
+
+## Local dev
+
+```bash
+./scripts/dev.sh                 # all services (one Ctrl+C stops all)
+./scripts/dev.sh api web         # subset: api|web|admin|agent|owner|host
+```
+
+| Service              | Port  | Filter                              |
+| -------------------- | ----- | ----------------------------------- |
+| api-server           | 8080  | `@workspace/api-server`             |
+| million-stay-web     | 5173  | `@workspace/million-stay-web`       |
+| property-admin       | 5174  | `@workspace/property-admin`         |
+| agent-portal         | 5175  | `@workspace/agent-portal`           |
+| owner-portal         | 5176  | `@workspace/owner-portal`           |
+| service-host-portal  | 5177  | `@workspace/service-host-portal`    |
+
+> ⚠️ **Local dev runs against the real production Supabase DB** (Supavisor
+> session pooler). There is no separate dev database — be careful with
+> destructive queries. See [docs/LOCAL_DEV.md](docs/LOCAL_DEV.md).
+
+## Verifying changes (the feedback loop)
+
+There is **no automated test suite** yet. Before considering a change done:
+
+```bash
+pnpm typecheck                                   # whole workspace (libs + apps + scripts) — MUST stay green
+pnpm --filter @workspace/<pkg> typecheck         # single package, faster
+pnpm --filter @workspace/<pkg> build             # vite/esbuild build (what deploys run)
+```
+
+For backend behavior, run the service and hit it with `curl`. For frontend,
+verify in the browser via `./scripts/dev.sh`.
+
+### CI ([.github/workflows/ci.yml](.github/workflows/ci.yml))
+
+- **`verify` (required, must pass to merge):** whole-workspace `pnpm typecheck`
+  + builds of all deploy targets (`mockup-sandbox` excluded — throwaway, needs
+  `PORT`/`BASE_PATH` to even load its vite config).
+- **`privacy-checks`** ([.github/workflows/privacy-checks.yml](.github/workflows/privacy-checks.yml))
+  runs the static + coverage privacy scripts.
+
+### Type-check status
+
+`pnpm typecheck` is **green across the whole workspace** as of the 2026-06
+burndown (146 pre-existing errors cleared — these had never blocked deploys
+because Railway/Vercel build with vite/esbuild, which don't run `tsc`). CI now
+gates it, so keep it green. Two notable classes were fixed:
+
+- **Real runtime bugs** surfaced by the types — e.g. the DSAR deletion endpoint
+  referenced `guest_emergency_contacts.guest_id` (actual column: `guest_user_id`)
+  and set a nonexistent `status` column; `lookup.ts` selected a nonexistent
+  `properties.address_line1`. These would have thrown at runtime.
+- **Convention mismatches** — Drizzle `numeric` columns are strings (wrap writes
+  in `String(...)`, reads in `Number(...)`); generated api-zod/api-client types
+  occasionally lag the live API (a few are bridged via
+  [artifacts/property-admin/src/types/api-augmentations.d.ts](artifacts/property-admin/src/types/api-augmentations.d.ts) —
+  prefer regenerating the client when the OpenAPI spec is updated).
+
+## Commit / deploy
+
+- **pre-commit hook** ([.githooks/pre-commit](.githooks/pre-commit)) runs privacy/security
+  static checks on staged files. Bypass only when justified: `git commit --no-verify`.
+- Deploy model: commit locally, **push 2–3×/day**, not per change. Don't fix-by-deploy.
+- **Auto-deploy on merge to `main`:**
+  - `api-server` → Railway
+  - `million-stay-web` → Vercel
+- **MANUAL deploy required** for `property-admin` (no auto-deploy wired up):
+  ```bash
+  pnpm --filter @workspace/property-admin build
+  vercel --prod --yes --cwd artifacts/property-admin
+  ```
+  (Railway CLI auth has expired — redeploys via merge to main or Railway dashboard.)
+
+## Conventions
+
+- **Money columns** (`invoices.amount`, `promotions.discount_amount`) are
+  `numeric(10,2)` → Drizzle returns **strings**; wrap with `Number()` before math.
+- **Lookup endpoints** return `{ id, display, ...extra }` consistently.
+- **Validation:** prefer Zod schemas from `@workspace/api-zod`.
+- **Auth:** guest/admin/partner JWTs are separate. Partner auth
+  (`PARTNER_JWT_SECRET`) is order-sensitive in Express routing — don't reorder
+  route mounts without checking partner vs admin precedence.
+- **Privacy (Australian APPs):** sensitive docs use Cloudinary signed URLs +
+  retention dates; marketing needs consent. Don't weaken privacy code — CI
+  enforces it. See [docs/PRIVACY_COMPLIANCE.md](docs/PRIVACY_COMPLIANCE.md) and
+  [docs/NDB_INCIDENT_RUNBOOK.md](docs/NDB_INCIDENT_RUNBOOK.md).
+- **DB migrations:** `db:push` for dev sync; `db:generate` → `db:migrate` for
+  prod-bound changes (SQL in `lib/db/drizzle/`).
+
+## Secrets
+
+CLI tokens (Supabase, GitHub, Cloudflare, Resend) live in `.env.local` (root,
+gitignored). Per-service runtime config in `artifacts/*/.env*` (gitignored).
+Never commit credentials or paste them into `.claude/settings.json`.

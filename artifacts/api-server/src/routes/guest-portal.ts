@@ -155,7 +155,7 @@ router.post("/v1/guest/bookings", async (req, res): Promise<void> => {
         space_id,
         check_in_date,
         check_out_date,
-        stay_weeks: stayWeeks,
+        stay_weeks: String(stayWeeks),
         num_guests: num_guests ?? 1,
         customer_notes: notes,
         booking_status: "Pending",
@@ -773,7 +773,7 @@ router.post("/v1/guest/payment/confirm", async (req, res): Promise<void> => {
           invoice_ref,
           booking_id: booking.id,
           account_id: booking.account_id ?? undefined,
-          amount: invoiceAmount,
+          amount: String(invoiceAmount),
           currency: "AUD",
           exchange_rate_to_aud: "1",
           status: payment_method === "bank_transfer" ? "Sent" : "Paid",
@@ -1335,7 +1335,7 @@ router.post("/v1/guest/me/deletion-request", requireGuestAuth, async (req, res):
     // legal retention obligations (ATO 5y for invoices, tenancy 7y for contracts).
     await db.update(guestUsersTable)
       .set({
-        status: "PendingDeletion",
+        is_active: false,
         deleted_at: new Date(),
         // Pseudonymise PII in the profile record while retaining FK integrity.
         first_name: "Deleted",
@@ -1347,7 +1347,7 @@ router.post("/v1/guest/me/deletion-request", requireGuestAuth, async (req, res):
 
     // Hard-delete emergency contacts (no retention obligation).
     await db.delete(guestEmergencyContactsTable)
-      .where(eq(guestEmergencyContactsTable.guest_id, guest.id));
+      .where(eq(guestEmergencyContactsTable.guest_user_id, guest.id));
 
     await logAction({
       entityType: "guest_users",

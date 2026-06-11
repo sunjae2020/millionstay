@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Required gate — must pass to merge.
+  # Whole-workspace typecheck (libs + all apps + scripts) is green as of the
+  # 2026-06 burndown, plus the per-package builds that Railway/Vercel run.
+  verify:
+    name: Typecheck & build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck (libs + apps + scripts)
+        run: pnpm typecheck
+
+      - name: Build deploy targets
+        # mockup-sandbox is a throwaway prototyping app (not deployed) whose
+        # vite.config.ts requires PORT/BASE_PATH at load time — excluded here.
+        run: >-
+          pnpm -r
+          --filter "./artifacts/**"
+          --filter "!@workspace/mockup-sandbox"
+          --if-present run build

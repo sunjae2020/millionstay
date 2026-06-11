@@ -12,7 +12,22 @@ export async function logAction({
 }: {
   entityType: string;
   entityId: number | string;
-  action: "CREATE" | "UPDATE" | "DELETE" | "STATUS_CHANGE" | "LOGIN" | "PAYMENT" | "VERIFY" | "BLOCK" | "UNBLOCK";
+  action:
+    | "CREATE"
+    | "UPDATE"
+    | "DELETE"
+    | "STATUS_CHANGE"
+    | "LOGIN"
+    | "PAYMENT"
+    | "VERIFY"
+    | "BLOCK"
+    | "UNBLOCK"
+    | "AUTO_CREATED"
+    | "ADD_SERVICE"
+    | "REMOVE_SERVICE"
+    | "SCHEDULE_ADD"
+    | "SCHEDULE_UPDATE"
+    | "SCHEDULE_DELETE";
   actorId?: number | null;
   actorEmail?: string | null;
   oldValue?: object | null;

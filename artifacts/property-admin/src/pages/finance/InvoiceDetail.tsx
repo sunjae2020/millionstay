@@ -112,7 +112,7 @@ export default function InvoiceDetail() {
   };
 
   const { data: invoice, refetch } = useGetInvoice(Number(id), {
-    query: { enabled: !isNew },
+    query: { enabled: !isNew, queryKey: getGetInvoiceQueryKey(Number(id)) },
   });
 
   const { register, handleSubmit, reset, control } = useForm<FormData>({

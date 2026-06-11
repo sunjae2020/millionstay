@@ -54,7 +54,7 @@ async function buildBookingResponse(booking: typeof bookingsTable.$inferSelect) 
     space_name: space?.name ?? null,
     space_type: space?.space_type ?? null,
     booking_mode: space?.booking_mode ?? null,
-    property_address: property ? `${property.address ?? ""} ${property.suburb ?? ""}`.trim() : null,
+    property_address: property ? `${property.address ?? ""} ${property.city ?? ""}`.trim() : null,
   };
 }
 
@@ -406,7 +406,7 @@ router.patch("/v1/bookings/:id/confirm", async (req, res): Promise<void> => {
       "═══════════════════════════════════════════════════════",
       "",
       "PROPERTY DETAILS",
-      `  Property    : ${property?.name ?? "—"} — ${property?.address ?? "—"}, ${property?.suburb ?? ""} ${property?.state ?? ""}`.trim(),
+      `  Property    : ${property?.name ?? "—"} — ${property?.address ?? "—"}, ${property?.city ?? ""} ${property?.state ?? ""}`.trim(),
       `  Space/Room  : ${space?.name ?? "—"} (${space?.space_type ?? "—"})`,
       "",
       "PARTIES",

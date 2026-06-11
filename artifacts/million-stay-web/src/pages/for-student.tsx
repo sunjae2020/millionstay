@@ -238,7 +238,7 @@ export default function ForStudent() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {spaces.map((space, i) => <SpaceCard key={(space as Record<string, unknown>).id as number} space={space} index={i} />)}
+              {spaces.map((space, i) => <SpaceCard key={space.id} space={space} index={i} />)}
             </div>
           )}
           <div className="text-center mt-10">

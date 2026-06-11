@@ -19,6 +19,7 @@ import {
   useLookupAccounts,
   useLookupCommissions,
   useLookupContractProducts,
+  type LookupItem,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Save } from "lucide-react";
@@ -53,7 +54,10 @@ export default function BeneficiaryDetail() {
 
   const { data: accounts } = useLookupAccounts({});
   const { data: commissions } = useLookupCommissions({});
-  const { data: contractProducts } = useLookupContractProducts({});
+  // The /v1/lookup/contract-products route returns LookupItem[] ({ id, display }),
+  // but the generated client mistypes it as { id, name }. Reflect the real shape.
+  const { data: contractProductsRaw } = useLookupContractProducts({});
+  const contractProducts = contractProductsRaw as unknown as LookupItem[] | undefined;
 
   const createMutation = useCreateBeneficiary({
     mutation: {

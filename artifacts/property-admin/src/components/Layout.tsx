@@ -834,7 +834,7 @@ export function PageHeader({
   actions,
 }: {
   title: React.ReactNode;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   actions?: React.ReactNode;
 }) {
   return (

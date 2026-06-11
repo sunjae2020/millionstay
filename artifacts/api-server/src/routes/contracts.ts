@@ -67,7 +67,7 @@ async function generateContractInvoicesAndSchedules(contractId: number): Promise
   const start = contract.start_date;
   const end = contract.end_date;
   const currency = contract.currency ?? "AUD";
-  const weeklyRate = parseFloat(contract.weekly_rate ?? "0");
+  const weeklyRate = contract.weekly_rate ?? 0;
 
   // ── Build location label ────────────────────────────────────────────────────
   let locationLabel = "";
@@ -172,7 +172,7 @@ async function generateContractInvoicesAndSchedules(contractId: number): Promise
             booking_id: contract.booking_id ?? null,
             contract_id: contractId,
             account_id: contract.tenant_account_id ?? null,
-            amount: lineAmount,
+            amount: String(lineAmount),
             currency: lineCurrency,
             exchange_rate_to_aud: await getRateToAud(lineCurrency),
             status: "Sent",
@@ -214,7 +214,7 @@ async function generateContractInvoicesAndSchedules(contractId: number): Promise
           booking_id: contract.booking_id ?? null,
           contract_id: contractId,
           account_id: contract.tenant_account_id ?? null,
-          amount: lineAmount,
+          amount: String(lineAmount),
           currency: lineCurrency,
           exchange_rate_to_aud: await getRateToAud(lineCurrency),
           status: "Sent",

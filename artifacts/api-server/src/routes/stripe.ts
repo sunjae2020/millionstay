@@ -39,7 +39,7 @@ router.post("/v1/stripe/webhook", async (req, res): Promise<void> => {
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    event = stripe.webhooks.constructEvent(req.body, Array.isArray(sig) ? sig[0] : sig, webhookSecret);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Webhook signature verification failed";
     res.status(400).json({ error: msg });

@@ -157,7 +157,7 @@ router.get("/v1/agent/bookings", requireAgentAuth, async (req, res): Promise<voi
 /* GET /api/v1/agent/bookings/:id */
 router.get("/v1/agent/bookings/:id", requireAgentAuth, async (req, res): Promise<void> => {
   const partner = (req as any).partner as PartnerAuthPayload;
-  const id = parseInt(req.params.id, 10);
+  const id = parseInt(String(req.params.id), 10);
   if (isNaN(id)) { res.status(400).json({ success: false, error: "Invalid id" }); return; }
 
   const [booking] = await db

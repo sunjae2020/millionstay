@@ -55,7 +55,16 @@ router.get("/v1/promotions", async (req, res): Promise<void> => {
 router.post("/v1/promotions", async (req, res): Promise<void> => {
   const parsed = CreatePromotionBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
-  const [row] = await db.insert(promotionsTable).values(parsed.data).returning();
+  const d = parsed.data;
+  const [row] = await db.insert(promotionsTable).values({
+    ...d,
+    // numeric(10,2) column — Drizzle expects a string
+    discount_amount: d.discount_amount != null ? String(d.discount_amount) : d.discount_amount,
+    // notNull columns with DB defaults — the generated zod allows null; coerce to undefined to use the default
+    term_type: d.term_type ?? undefined,
+    promotion_type: d.promotion_type ?? undefined,
+    status: d.status ?? undefined,
+  }).returning();
   res.status(201).json(row);
 });
 
@@ -72,8 +81,18 @@ router.put("/v1/promotions/:id", async (req, res): Promise<void> => {
   if (!paramsParsed.success) { res.status(400).json({ error: paramsParsed.error.message }); return; }
   const bodyParsed = UpdatePromotionBody.safeParse(req.body);
   if (!bodyParsed.success) { res.status(400).json({ error: bodyParsed.error.message }); return; }
+  const b = bodyParsed.data;
   const [row] = await db.update(promotionsTable)
-    .set({ ...bodyParsed.data, updated_at: new Date() })
+    .set({
+      ...b,
+      // numeric(10,2) column — Drizzle expects a string
+      discount_amount: b.discount_amount != null ? String(b.discount_amount) : b.discount_amount,
+      // notNull columns — coerce null to undefined so an explicit null can't violate the constraint
+      term_type: b.term_type ?? undefined,
+      promotion_type: b.promotion_type ?? undefined,
+      status: b.status ?? undefined,
+      updated_at: new Date(),
+    })
     .where(eq(promotionsTable.id, paramsParsed.data.id))
     .returning();
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
