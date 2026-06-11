@@ -17,6 +17,7 @@ import {
 } from "@workspace/db";
 import { requireOwnerAuth, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth";
 import { isCloudinaryConfigured, uploadToCloudinary } from "../utils/cloudinary";
+import { logAction } from "../utils/auditLog";
 
 const router: IRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
@@ -147,7 +148,7 @@ router.get("/v1/owner/properties", requireOwnerAuth, async (req, res): Promise<v
 /* GET /api/v1/owner/properties/:id */
 router.get("/v1/owner/properties/:id", requireOwnerAuth, async (req, res): Promise<void> => {
   const partner = (req as any).partner as PartnerAuthPayload;
-  const propertyId = parseInt(req.params.id, 10);
+  const propertyId = parseInt(String(req.params.id), 10);
   if (!Number.isFinite(propertyId)) {
     res.status(400).json({ success: false, error: "Invalid property id" });
     return;
@@ -549,6 +550,7 @@ router.patch("/v1/owner/properties/:id", requireOwnerAuth, async (req, res): Pro
   if (!Object.keys(updates).length) { res.status(400).json({ error: "Nothing to update" }); return; }
 
   const [row] = await db.update(propertiesTable).set(updates).where(eq(propertiesTable.id, id)).returning();
+  await logAction({ entityType: "property", entityId: id, action: "UPDATE", actorId: partner.id, actorEmail: partner.email, newValue: updates, ipAddress: req.ip ?? null });
   res.json({ success: true, data: row });
 });
 
@@ -573,6 +575,7 @@ router.patch("/v1/owner/spaces/:id", requireOwnerAuth, async (req, res): Promise
   if (!Object.keys(updates).length) { res.status(400).json({ error: "Nothing to update" }); return; }
 
   const [row] = await db.update(spacesTable).set(updates).where(eq(spacesTable.id, id)).returning();
+  await logAction({ entityType: "space", entityId: id, action: "UPDATE", actorId: partner.id, actorEmail: partner.email, newValue: updates, ipAddress: req.ip ?? null });
   res.json({ success: true, data: row });
 });
 
