@@ -40,6 +40,7 @@
     "suburb": "지역",
     "email_templates": "이메일 템플릿",
     "integrations": "연동",
+    "api_keys": "API 키",
     "system_log": "시스템 로그",
     "design": "디자인 & 브랜딩",
     "reports": "리포트",

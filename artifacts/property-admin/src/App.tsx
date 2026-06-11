@@ -100,6 +100,7 @@ import TranslationsPage from "@/pages/settings/sub/Translations";
 import BookingReportPage from "@/pages/settings/sub/BookingReport";
 import IntegrationsPage from "@/pages/settings/sub/Integrations";
 import AddonServicesPage from "@/pages/settings/sub/AddonServices";
+import ApiKeysPage from "@/pages/settings/sub/ApiKeys";
 import DbSyncPage from "@/pages/settings/DbSync";
 import PaymentInfoList from "@/pages/crm/PaymentInfoList";
 import PaymentInfoDetail from "@/pages/crm/PaymentInfoDetail";
@@ -286,6 +287,7 @@ function Router() {
       <Route path="/settings/email-templates" component={EmailTemplatesPage} />
       <Route path="/settings/design" component={DesignPage} />
       <Route path="/settings/integrations" component={IntegrationsPage} />
+      <Route path="/settings/api-keys" component={ApiKeysPage} />
       <Route path="/settings/db-sync" component={DbSyncPage} />
 
       <Route path="/settings/contract-types" component={ContractTypesPage} />

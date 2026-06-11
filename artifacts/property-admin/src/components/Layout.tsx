@@ -38,6 +38,7 @@ import {
   Wallet,
   Mail,
   ScrollText,
+  KeyRound,
   BarChart3,
   Palette,
   Plug,
@@ -191,6 +192,7 @@ function getNav(t: (k: string) => string): NavSection[] {
         { href: "/settings/email-templates", label: t("nav.email_templates"), icon: Mail },
         { href: "/settings/translations", label: t("nav.languages"), icon: Languages },
         { href: "/settings/integrations", label: t("nav.integrations"), icon: Plug },
+        { href: "/settings/api-keys", label: t("nav.api_keys"), icon: KeyRound },
         { href: "/settings/system-log", label: t("nav.system_log"), icon: ScrollText },
         { href: "/settings/design", label: t("nav.design"), icon: Palette },
         {

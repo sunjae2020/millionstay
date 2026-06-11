@@ -54,3 +54,4 @@ export * from "./chat_conversations";
 export * from "./chat_messages";
 export * from "./knowledge_documents";
 export * from "./accommodation_options";
+export * from "./api_credentials";
