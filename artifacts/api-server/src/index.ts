@@ -90,7 +90,7 @@ async function autoMigrateIfEmpty() {
     const metaRows = await db.execute(sql.raw(
       `SELECT value FROM _seed_meta WHERE key = 'seed_hash'`
     ));
-    const appliedHash = (metaRows[0] as any)?.value ?? null;
+    const appliedHash = (metaRows as any)[0]?.value ?? null;
 
     if (appliedHash === seedHash) {
       logger.info({ seedHash: seedHash.slice(0, 12) }, "Seed unchanged — skipping auto-migration");

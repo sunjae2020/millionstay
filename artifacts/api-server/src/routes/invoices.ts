@@ -82,7 +82,7 @@ router.post("/v1/invoices", async (req, res): Promise<void> => {
     booking_id: parsed.data.booking_id ?? null,
     contract_id: parsed.data.contract_id ?? null,
     account_id: parsed.data.account_id ?? null,
-    amount: parsed.data.amount ?? 0,
+    amount: String(parsed.data.amount ?? 0),
     currency: ccy,
     exchange_rate_to_aud: await getRateToAud(ccy),
     due_date: parsed.data.due_date ?? null,
@@ -107,7 +107,7 @@ router.put("/v1/invoices/:id", async (req, res): Promise<void> => {
   if (parsed.data.booking_id !== undefined) updates.booking_id = parsed.data.booking_id;
   if (parsed.data.contract_id !== undefined) updates.contract_id = parsed.data.contract_id;
   if (parsed.data.account_id !== undefined) updates.account_id = parsed.data.account_id;
-  if (parsed.data.amount != null) updates.amount = parsed.data.amount;
+  if (parsed.data.amount != null) updates.amount = String(parsed.data.amount);
   if (parsed.data.currency != null) updates.currency = parsed.data.currency;
   if (parsed.data.due_date !== undefined) updates.due_date = parsed.data.due_date;
   if (parsed.data.description !== undefined) updates.description = parsed.data.description;

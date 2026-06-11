@@ -25,11 +25,14 @@ const today = new Date().toISOString().split("T")[0];
 export default function Search() {
   const { t } = useTranslation();
 
-  const SPACE_TYPES = [
-    { value: "all",         label: t("search.type_all"),    icon: Home },
-    { value: "EntireSpace", label: t("search.type_entire"), icon: Building2 },
-    { value: "RoomSpace",   label: t("search.type_room"),   icon: BedDouble },
-    { value: "BedSpace",    label: t("search.type_bed"),    icon: BedDouble },
+  // Room-type tabs (header, immediate apply). Single source of truth now that the
+  // duplicate Room Type block was removed from the advanced filter panel.
+  const TYPE_TABS = [
+    { v: "all",         l: t("search.tab_all") },
+    { v: "RoomSpace",   l: t("search.tab_private") },
+    { v: "EntireSpace", l: t("search.tab_entire") },
+    { v: "BedSpace",    l: t("search.tab_shared") },
+    { v: "Homestay",    l: t("search.tab_homestay") },
   ];
 
   const GENDER_OPTIONS = [
@@ -88,7 +91,7 @@ export default function Search() {
   const [page,         setPage]      = useState(1);
   const [suburbOpen,   setSuburbOpen] = useState<SuburbDropdown>(null);
   const [showAdvanced, setShowAdvanced] = useState(
-    init.space_type !== "all" || init.gender_policy !== "all" ||
+    init.gender_policy !== "all" ||
     init.min_price > 100 || init.max_price < 1200
   );
   const [hoveredId, setHoveredId] = useState<number | string | null>(null);
@@ -114,7 +117,7 @@ export default function Search() {
   /* ── API query params (applied 기반, page 기반) ── */
   const queryParams = {
     suburb_id:    applied.suburb_id ? parseInt(applied.suburb_id) : undefined,
-    space_type:   applied.space_type !== "all" ? (applied.space_type as "EntireSpace" | "RoomSpace" | "BedSpace") : undefined,
+    space_type:   applied.space_type !== "all" ? (applied.space_type as "EntireSpace" | "RoomSpace" | "BedSpace" | "Homestay") : undefined,
     gender_policy: applied.gender_policy !== "all" ? (applied.gender_policy as "FemaleOnly" | "Mixed") : undefined,
     min_price:    applied.min_price > 100  ? applied.min_price : undefined,
     max_price:    applied.max_price < 1200 ? applied.max_price : undefined,
@@ -129,7 +132,7 @@ export default function Search() {
   });
 
   const apiTotal = (spacesData?.meta as Record<string, unknown>)?.total as number ?? 0;
-  const apiSpaces = (spacesData?.data ?? []) as Record<string, unknown>[];
+  const apiSpaces = (spacesData?.data ?? []) as unknown as Record<string, unknown>[];
   // If the API returns nothing AND no filters are active, show the curated
   // fallback list of real DB spaces so the page is never empty.
   const noFiltersActive =
@@ -151,7 +154,7 @@ export default function Search() {
     setSuburbId(""); setCheckIn(""); setCheckOut("");
   };
   const clearAdvanced = () => {
-    setSpaceType("all"); setGenderPolicy("all"); setPriceRange([100, 1200]);
+    setGenderPolicy("all"); setPriceRange([100, 1200]);
   };
   const clearAll = () => {
     setSuburbId(""); setCheckIn(""); setCheckOut("");
@@ -162,7 +165,7 @@ export default function Search() {
 
   /* ── Active filter counts (applied 기준으로 표시) ── */
   const hasBasicFilters    = !!applied.suburb_id || !!applied.check_in;
-  const advancedFilters    = [applied.space_type !== "all", applied.gender_policy !== "all", applied.min_price > 100 || applied.max_price < 1200];
+  const advancedFilters    = [applied.gender_policy !== "all", applied.min_price > 100 || applied.max_price < 1200];
   const advancedCount      = advancedFilters.filter(Boolean).length;
   const hasAdvancedFilters = advancedCount > 0;
   const hasAnyFilters      = hasBasicFilters || hasAdvancedFilters;
@@ -170,7 +173,7 @@ export default function Search() {
   /* ── Advanced clear: input + applied 함께 초기화 ── */
   const clearAdvancedAll = () => {
     clearAdvanced();
-    setApplied((p) => ({ ...p, space_type: "all", gender_policy: "all", min_price: 100, max_price: 1200 }));
+    setApplied((p) => ({ ...p, gender_policy: "all", min_price: 100, max_price: 1200 }));
     setPage(1);
   };
 
@@ -388,33 +391,6 @@ export default function Search() {
               <div className="max-w-7xl mx-auto px-4 md:px-6 py-4">
                 <div className="flex flex-wrap gap-x-8 gap-y-4 items-start">
 
-                  {/* Room Type */}
-                  <div className="shrink-0">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">{t("search.room_type")}</p>
-                    <div className="flex gap-1.5 flex-wrap">
-                      {SPACE_TYPES.map((opt) => {
-                        const active = spaceType === opt.value;
-                        return (
-                          <button
-                            key={opt.value}
-                            onClick={() => { setSpaceType(opt.value); }}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                              active
-                                ? "bg-primary border-primary text-white shadow-sm"
-                                : "bg-white border-gray-200 text-gray-600 hover:border-primary/50 hover:text-primary"
-                            }`}
-                          >
-                            <opt.icon className="h-3 w-3" />
-                            {opt.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Vertical divider */}
-                  <div className="hidden md:block h-14 w-px bg-gray-200 self-center" />
-
                   {/* Budget */}
                   <div className="shrink-0 min-w-[220px]">
                     <div className="flex justify-between mb-2">
@@ -522,7 +498,7 @@ export default function Search() {
             </AnimatePresence>
 
             {/* Result header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between mb-6">
               <div>
                 {appliedSuburbName && (
                   <p className="font-cursive text-primary text-lg italic mb-0.5">{t("search.rooms_in", { suburb: appliedSuburbName })}</p>
@@ -537,14 +513,9 @@ export default function Search() {
                   </p>
                 )}
               </div>
-              {/* Quick type tabs (desktop) — 즉시 Search 적용 */}
-              <div className="hidden lg:flex gap-1">
-                {[
-                  { v: "all",         l: t("search.tab_all") },
-                  { v: "RoomSpace",   l: t("search.tab_private") },
-                  { v: "EntireSpace", l: t("search.tab_entire") },
-                  { v: "BedSpace",    l: t("search.tab_shared") },
-                ].map((opt) => (
+              {/* Quick type tabs — 즉시 Search 적용 (모바일에서는 가로 스크롤) */}
+              <div className="flex gap-1 overflow-x-auto -mx-1 px-1 lg:mx-0 lg:px-0 pb-1 lg:pb-0" style={{ scrollbarWidth: "none" }}>
+                {TYPE_TABS.map((opt) => (
                   <button
                     key={opt.v}
                     onClick={() => {
@@ -552,7 +523,7 @@ export default function Search() {
                       setApplied((p) => ({ ...p, space_type: opt.v }));
                       setPage(1);
                     }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
+                    className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
                       applied.space_type === opt.v
                         ? "bg-primary border-primary text-white"
                         : "bg-white border-gray-200 text-gray-600 hover:border-primary/40"
@@ -624,7 +595,7 @@ export default function Search() {
                       onMouseLeave={() => setHoveredId(null)}
                     >
                       <SpaceCard
-                        space={space as Parameters<typeof SpaceCard>[0]["space"]}
+                        space={space as unknown as Parameters<typeof SpaceCard>[0]["space"]}
                         index={i}
                         highlighted={hoveredId === space.id}
                         checkIn={checkIn}

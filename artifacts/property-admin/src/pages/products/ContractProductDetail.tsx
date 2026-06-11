@@ -17,7 +17,7 @@ import {
   useActivateContractProduct, useDeactivateContractProduct, useArchiveContractProduct,
   useDeleteContractProduct,
   getListContractProductsQueryKey, getGetContractProductQueryKey,
-  useGetPromotion,
+  useGetPromotion, getGetPromotionQueryKey,
 } from "@workspace/api-client-react";
 import { LookupSelect } from "@/components/LookupSelect";
 import { ArrowLeft, Save, Trash2, Tag } from "lucide-react";
@@ -76,7 +76,7 @@ export default function ContractProductDetail() {
   const isNew = id === "new";
 
   const { data: product, refetch } = useGetContractProduct(Number(id), {
-    query: { enabled: !isNew },
+    query: { enabled: !isNew, queryKey: getGetContractProductQueryKey(Number(id)) },
   });
 
   const { register, handleSubmit, reset, control, watch, setValue } = useForm<FormData>({
@@ -98,7 +98,7 @@ export default function ContractProductDetail() {
 
   // Load promotion details when promotion_id changes
   const { data: selectedPromotion } = useGetPromotion(watchedPromotionId!, {
-    query: { enabled: !!watchedPromotionId },
+    query: { enabled: !!watchedPromotionId, queryKey: getGetPromotionQueryKey(watchedPromotionId!) },
   });
 
   // Auto-fill from promotion when it changes

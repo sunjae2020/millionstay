@@ -282,7 +282,7 @@ export default function SpaceDetail() {
   const { data: spaceData, isLoading } = useGetPublicSpace(spaceId, {
     query: { enabled: !!spaceId, queryKey: getGetPublicSpaceQueryKey(spaceId) },
   });
-  const { data: allSpaces } = useListPublicSpaces({
+  const { data: allSpaces } = useListPublicSpaces(undefined, {
     query: { queryKey: ["related-spaces", spaceId] },
   });
 
@@ -291,14 +291,14 @@ export default function SpaceDetail() {
   // Auto-select the first product (or "best_value" tagged) when space data loads
   useEffect(() => {
     if (space?.products && space.products.length > 0 && selectedProduct === null) {
-      const bestValue = space.products.find((p: { product_tag?: string }) => p.product_tag === "best_value");
+      const bestValue = space.products.find((p) => p.product_tag === "best_value");
       const autoSelect = bestValue ?? space.products[0];
       setSelectedProduct(autoSelect.id);
     }
   }, [space?.products, selectedProduct]);
 
   const relatedSpaces = useMemo(() => {
-    const list = (allSpaces?.data ?? []) as Record<string, unknown>[];
+    const list = (allSpaces?.data ?? []) as unknown as Record<string, unknown>[];
     return list.filter((s) => s.id !== spaceId).slice(0, 3);
   }, [allSpaces, spaceId]);
 
@@ -307,7 +307,7 @@ export default function SpaceDetail() {
     if (!date || !space) { setCheckOut(""); return; }
     try {
       const product = space.products?.find((p) => p.id === selectedProduct);
-      const weeks = product?.min_contract_period ?? space.min_stay_weeks ?? space.min_contract_period ?? 4;
+      const weeks = product?.min_contract_period ?? space.min_stay_weeks ?? 4;
       const parsed = parseISO(date);
       if (isNaN(parsed.getTime())) { setCheckOut(""); return; }
       setCheckOut(format(addWeeks(parsed, weeks), "yyyy-MM-dd"));
@@ -323,8 +323,8 @@ export default function SpaceDetail() {
   const stayWeeks = stayDays ? stayDays / 7 : null;
 
   const selectedPriceProduct = space?.products?.find((p) => p.id === selectedProduct);
-  const weeklyRate = selectedPriceProduct?.price ?? space?.base_weekly_price ?? 0;
-  const priceCurrency: string = ((space as any)?.base_currency || (selectedPriceProduct as any)?.currency || "AUD").toString().toUpperCase();
+  const weeklyRate = Number(selectedPriceProduct?.price ?? space?.base_weekly_price ?? 0);
+  const priceCurrency: string = (space?.base_currency || selectedPriceProduct?.currency || "AUD").toString().toUpperCase();
   const { formatReference } = useDisplayCurrency();
   const weeklyRateRef = Number(weeklyRate) > 0 ? formatReference(Number(weeklyRate), priceCurrency) : null;
   // Pro-rata: weekly_rate / 7 × days
@@ -396,12 +396,12 @@ export default function SpaceDetail() {
   }
 
   const images = (space.images ?? []) as Array<{ id?: number | string | null; file_url: string; thumbnail_url?: string | null; caption?: string | null }>;
-  const addressParts = [space.address_line1, space.suburb_name, space.state].filter(Boolean);
-  const addressStr = addressParts.join(", ") + (space.postcode ? ` ${space.postcode}` : "");
+  const addressParts = [space.property_address, space.suburb_name, space.property_state].filter(Boolean);
+  const addressStr = addressParts.join(", ") + (space.property_postcode ? ` ${space.property_postcode}` : "");
   const amenities = (space.options ?? []) as Array<{ id: number | string; name: string }>;
-  const lat = Number((space as Record<string, unknown>).latitude);
-  const lng = Number((space as Record<string, unknown>).longitude);
-  const isMapBlurred = (space as Record<string, unknown>).privacy_map_blur === true;
+  const lat = Number(space.latitude);
+  const lng = Number(space.longitude);
+  const isMapBlurred = space.privacy_map_blur === true;
   const hasMap = !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
 
   return (
@@ -454,18 +454,8 @@ export default function SpaceDetail() {
             <div>
               <h1 className="text-2xl font-bold text-gray-900 mb-3">{space.name}</h1>
               <div className="flex flex-wrap gap-2">
-                {space.bedrooms != null && (
-                  <span className="bg-orange-50 text-primary text-xs font-semibold px-3 py-1 rounded-full border border-orange-200">
-                    🛏️ {space.bedrooms} Bedroom{space.bedrooms > 1 ? "s" : ""}
-                  </span>
-                )}
-                {space.bathrooms != null && (
-                  <span className="bg-orange-50 text-primary text-xs font-semibold px-3 py-1 rounded-full border border-orange-200">
-                    🚿 {space.bathrooms} Bathroom{space.bathrooms > 1 ? "s" : ""}
-                  </span>
-                )}
                 <span className="bg-orange-50 text-primary text-xs font-semibold px-3 py-1 rounded-full border border-orange-200">
-                  📅 {space.min_stay_weeks ?? space.min_contract_period ?? 4} Weeks min.
+                  📅 {space.min_stay_weeks ?? 4} Weeks min.
                 </span>
                 {space.max_occupancy && (
                   <span className="bg-orange-50 text-primary text-xs font-semibold px-3 py-1 rounded-full border border-orange-200">
@@ -512,7 +502,7 @@ export default function SpaceDetail() {
                   <h2 className="text-base font-bold text-gray-800 mb-4">Stay Plans</h2>
                   <div className="space-y-2">
                     {space.products.map((p) => {
-                      const baseRate = space.base_weekly_price ?? 0;
+                      const baseRate = Number(space.base_weekly_price ?? 0);
                       const saving = baseRate > (p.price ?? 0) ? baseRate - (p.price ?? 0) : null;
                       return (
                         <button key={p.id} onClick={() => { setSelectedProduct(p.id); handleCheckInChange(checkIn); }}

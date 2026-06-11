@@ -17,7 +17,7 @@ import {
 import { format } from "date-fns";
 
 const BASE = "/api/v1";
-function authHeaders() {
+function authHeaders(): Record<string, string> {
   const token = localStorage.getItem("ms_guest_token");
   return token ? { Authorization: `Bearer ${token}` } : {};
 }

@@ -337,7 +337,6 @@ async function createSpace(
         space_policy_id: policyId,
         landlord_account_id: landlordAccountId,
         booking_mode: "Request",
-        min_stay_weeks: 4,
         status: "Active",
       }).returning({ id: spacesTable.id });
       ok(`Space: ${name}`);

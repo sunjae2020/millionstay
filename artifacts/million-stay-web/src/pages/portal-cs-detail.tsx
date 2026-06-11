@@ -11,7 +11,7 @@ import { ArrowLeft, Send, ImageIcon, X, Loader2, Clock, CheckCircle2, XCircle, A
 import { useToast } from "@/hooks/use-toast";
 
 const BASE = "/api/v1";
-function authHeaders() {
+function authHeaders(): Record<string, string> {
   const token = localStorage.getItem("ms_guest_token");
   return token ? { Authorization: `Bearer ${token}` } : {};
 }

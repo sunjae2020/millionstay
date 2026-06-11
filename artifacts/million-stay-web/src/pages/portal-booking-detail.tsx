@@ -232,7 +232,7 @@ export default function PortalBookingDetail() {
                       </div>
                     ))}
                   </div>
-                  {b.special_requests && (
+                  {Boolean(b.special_requests) && (
                     <>
                       <Separator />
                       <div>

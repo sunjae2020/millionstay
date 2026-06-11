@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   useGetServiceHost, useCreateServiceHost, useUpdateServiceHost,
-  getListServiceHostsQueryKey,
+  getListServiceHostsQueryKey, getGetServiceHostQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Save } from "lucide-react";
@@ -40,7 +40,7 @@ export default function ServiceHostDetail() {
   const [, setLocation] = useLocation();
   const qc = useQueryClient();
 
-  const { data: host } = useGetServiceHost({ id: Number(id) }, { query: { enabled: !isNew } });
+  const { data: host } = useGetServiceHost(Number(id), { query: { enabled: !isNew, queryKey: getGetServiceHostQueryKey(Number(id)) } });
 
   const { register, handleSubmit, reset, control, watch, setValue } = useForm<FormData>({
     defaultValues: {
@@ -119,7 +119,7 @@ export default function ServiceHostDetail() {
                   placeholder="Search accounts..."
                   value={field.value ?? null}
                   onChange={field.onChange}
-                  displayText={(host as any)?.account_name}
+                  displayValue={(host as any)?.account_name}
                 />
               )}
             />
@@ -135,7 +135,7 @@ export default function ServiceHostDetail() {
                   placeholder="Search contract products..."
                   value={field.value ?? null}
                   onChange={field.onChange}
-                  displayText={(host as any)?.contract_product_name}
+                  displayValue={(host as any)?.contract_product_name}
                 />
               )}
             />

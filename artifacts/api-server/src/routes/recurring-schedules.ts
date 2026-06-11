@@ -161,7 +161,7 @@ router.post("/v1/recurring-schedules/generate-due", async (req, res): Promise<vo
         booking_id: schedule.booking_id,
         account_id: schedule.account_id,
         contract_id: schedule.contract_id ?? null,
-        amount: totalAmount,
+        amount: String(totalAmount),
         currency: schedule.currency,
         exchange_rate_to_aud: await getRateToAud(schedule.currency),
         status: "Sent",

@@ -136,7 +136,7 @@ export default function ContractDetail() {
   };
 
   const { data: contract, refetch } = useGetContract(Number(id), {
-    query: { enabled: !isNew },
+    query: { enabled: !isNew, queryKey: getGetContractQueryKey(Number(id)) },
   });
 
   const { data: scheduleData } = useQuery({

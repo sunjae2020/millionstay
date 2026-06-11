@@ -45,7 +45,7 @@ const FREQ_LABELS: Record<string, string> = {
   Monthly: "Monthly",
 };
 
-function formatDiscount(promo: { promotion_type: string; discount_percentage?: number | null; discount_amount?: number | null; free_nights?: number | null }) {
+function formatDiscount(promo: { promotion_type?: string; discount_percentage?: number | null; discount_amount?: number | null; free_nights?: number | null }) {
   if (promo.promotion_type === "Percentage" && promo.discount_percentage != null) return `${promo.discount_percentage}%`;
   if (promo.promotion_type === "Fixed" && promo.discount_amount != null) return `$${promo.discount_amount.toFixed(0)}`;
   if (promo.promotion_type === "FreeNights" && promo.free_nights != null) return `${promo.free_nights} nights`;
@@ -229,7 +229,7 @@ export default function PromotionList() {
                       <Link href={`/products/promotions/${p.id}`} className="text-[#E8621A] hover:underline">{p.name}</Link>
                     </TableCell>
                     <TableCell>
-                      <Badge className={TERM_COLORS[p.term_type] ?? "bg-gray-100 text-gray-600"}>{TERM_LABELS[p.term_type] ?? p.term_type}</Badge>
+                      <Badge className={TERM_COLORS[p.term_type ?? ""] ?? "bg-gray-100 text-gray-600"}>{TERM_LABELS[p.term_type ?? ""] ?? p.term_type}</Badge>
                     </TableCell>
                     <TableCell className="text-sm font-mono font-semibold">{formatDiscount(p)}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{stayRange(p)}</TableCell>
@@ -238,7 +238,7 @@ export default function PromotionList() {
                       {p.code ? <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">{p.code}</code> : "—"}
                     </TableCell>
                     <TableCell>
-                      <Badge className={STATUS_COLORS[p.status] ?? "bg-gray-100 text-gray-700"}>{p.status}</Badge>
+                      <Badge className={STATUS_COLORS[p.status ?? ""] ?? "bg-gray-100 text-gray-700"}>{p.status}</Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">

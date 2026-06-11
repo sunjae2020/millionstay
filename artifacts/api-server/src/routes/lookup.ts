@@ -103,7 +103,7 @@ router.get("/v1/lookup/spaces", async (req, res): Promise<void> => {
     id: spacesTable.id,
     name: spacesTable.name,
     space_type: spacesTable.space_type,
-    property_address: propertiesTable.address_line1,
+    property_address: propertiesTable.address,
     base_weekly_price: spacesTable.base_weekly_price,
   })
     .from(spacesTable)

@@ -86,6 +86,21 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+/** Accommodation pricing tier returned by the single-space detail endpoint. */
+export interface SpaceProduct {
+  id: number;
+  name: string;
+  price: number | null;
+  min_contract_period: number | null;
+  min_contract_period_unit: string | null;
+  bond_amount: number | null;
+  admin_fee: number | null;
+  cleaning_fee: number | null;
+  /** Not returned by the API yet; reserved for "best_value" style tagging. */
+  product_tag?: string | null;
+  currency?: string | null;
+}
+
 export interface SpaceSummary {
   id: number;
   name: string;
@@ -93,30 +108,39 @@ export interface SpaceSummary {
   booking_mode: string | null;
   max_occupancy: number | null;
   base_weekly_price: string | null;
+  base_daily_price?: string | null;
   base_currency: string | null;
   min_stay_weeks: number | null;
   description: string | null;
   status: string;
+  floor_number?: number | null;
+  floor_area_sqm?: string | null;
   property_id: number | null;
   parent_space_id: number | null;
   property_name: string | null;
   property_address: string | null;
   property_city: string | null;
   property_state: string | null;
+  property_postcode?: string | null;
   latitude: string | null;
   longitude: string | null;
+  privacy_map_blur?: boolean;
   primary_image?: string | null;
   primary_thumbnail?: string | null;
   suburb_name?: string | null;
   suburb_id?: number | null;
   images?: Array<{ id: number; file_url: string; thumbnail_url?: string | null; caption?: string | null; is_primary?: boolean }>;
+  images_from_parent?: boolean;
   options?: Array<{ id: number; name: string; category?: string | null }>;
+  space_options?: Array<{ name: string | null; display_name?: string | null; option_category?: string | null }>;
   policies?: Array<{ id: number; name: string; value?: string | null }>;
+  /** Pricing tiers — only returned by GET /public/spaces/:id (detail view). */
+  products?: SpaceProduct[];
 }
 
 export interface PublicSpacesParams {
   suburb_id?: number;
-  space_type?: "EntireSpace" | "RoomSpace" | "BedSpace";
+  space_type?: "EntireSpace" | "RoomSpace" | "BedSpace" | "Homestay";
   gender_policy?: "FemaleOnly" | "Mixed";
   min_price?: number;
   max_price?: number;
@@ -220,6 +244,8 @@ interface RegisterPayload {
   first_name?: string;
   last_name?: string;
   phone?: string;
+  /** Sent by the booking wizard; currently ignored server-side. */
+  nationality?: string;
   marketing_consent?: boolean;
 }
 
@@ -252,18 +278,17 @@ interface CreateGuestBookingPayload {
   check_out_date: string;
   num_guests?: number;
   special_requests?: string;
+  /** Sent by the booking flow to indicate the chosen pricing tier; currently ignored server-side. */
+  product_id?: number;
 }
 
 interface BookingResponse {
   id: number;
-  booking_reference?: string;
+  booking_ref: string;
   booking_status: string;
-  space_id: number;
   check_in_date: string;
   check_out_date: string;
-  num_guests?: number | null;
-  total_amount?: string | null;
-  currency?: string | null;
+  created_at?: string | null;
 }
 
 export function useCreateGuestBooking() {
@@ -304,10 +329,10 @@ export function getListMyBookingsQueryKey() {
 }
 
 export function useListMyBookings(
-  options?: { query?: { enabled?: boolean } }
+  options?: { query?: { enabled?: boolean; queryKey?: readonly unknown[] } }
 ) {
   return useQuery({
-    queryKey: getListMyBookingsQueryKey(),
+    queryKey: options?.query?.queryKey ?? getListMyBookingsQueryKey(),
     queryFn: () => apiFetch<{ success: boolean; data: MyBooking[] }>("/guest/bookings"),
     enabled: options?.query?.enabled ?? true,
   });
@@ -344,10 +369,10 @@ export function getListMyInvoicesQueryKey() {
 }
 
 export function useListMyInvoices(
-  options?: { query?: { enabled?: boolean } }
+  options?: { query?: { enabled?: boolean; queryKey?: readonly unknown[] } }
 ) {
   return useQuery({
-    queryKey: getListMyInvoicesQueryKey(),
+    queryKey: options?.query?.queryKey ?? getListMyInvoicesQueryKey(),
     queryFn: () => apiFetch<{ success: boolean; data: MyInvoice[] }>("/guest/invoices"),
     enabled: options?.query?.enabled ?? true,
   });
@@ -371,10 +396,10 @@ export function getListMyDocumentsQueryKey() {
 }
 
 export function useListMyDocuments(
-  options?: { query?: { enabled?: boolean } }
+  options?: { query?: { enabled?: boolean; queryKey?: readonly unknown[] } }
 ) {
   return useQuery({
-    queryKey: getListMyDocumentsQueryKey(),
+    queryKey: options?.query?.queryKey ?? getListMyDocumentsQueryKey(),
     queryFn: () => apiFetch<{ success: boolean; data: MyDocument[] }>("/guest/documents"),
     enabled: options?.query?.enabled ?? true,
   });

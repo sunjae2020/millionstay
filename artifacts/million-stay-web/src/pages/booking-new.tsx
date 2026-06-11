@@ -133,10 +133,10 @@ function SummaryCard({
     <div className="rounded-2xl border bg-white shadow-sm p-5 space-y-4 sticky top-24">
       <h3 className="font-semibold text-gray-800 text-sm">Booking Summary</h3>
       <div className="space-y-1.5 text-xs text-gray-600">
-        {session.space_name && (
+        {Boolean(session.space_name) && (
           <div className="flex items-start gap-1.5"><Home className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" /><span>{session.space_name as string}</span></div>
         )}
-        {session.check_in_date && session.check_out_date && (
+        {Boolean(session.check_in_date) && Boolean(session.check_out_date) && (
           <div className="flex items-start gap-1.5"><Calendar className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
             <span>
               {(() => { try { return format(new Date(session.check_in_date as string), "dd/MM/yyyy"); } catch { return session.check_in_date as string; } })()}
@@ -267,7 +267,7 @@ export default function BookingNew() {
   /* form state */
   const [numGuests, setNumGuests]           = useState(1);
   const [specialRequests, setSpecialRequests] = useState("");
-  const [guestName, setGuestName]           = useState(guest?.name ?? "");
+  const [guestName, setGuestName]           = useState(guest ? [guest.first_name, guest.last_name].filter(Boolean).join(" ") : "");
   const [guestEmail, setGuestEmail]         = useState(guest?.email ?? "");
   const [guestPhone, setGuestPhone]         = useState("");
   const [selectedServices, setSelectedServices] = useState<number[]>([]);
@@ -366,7 +366,7 @@ export default function BookingNew() {
         space_id:          spaceId,
         product_id:        product?.id ?? productId,
         space_name:        space.name,
-        property_address:  space.address ?? space.suburb_name ?? "Melbourne",
+        property_address:  space.property_address ?? space.suburb_name ?? "Melbourne",
         agreed_weekly_rate: weeklyRate,
         stay_weeks:        stayWeeks,
         // Fees come from the selected product (null = not charged for this product)
@@ -565,7 +565,7 @@ export default function BookingNew() {
                   space ? (
                     <div className="bg-orange-50 border border-orange-100 rounded-xl p-4">
                       <p className="font-semibold text-gray-800">{space.name}</p>
-                      <p className="text-sm text-gray-500">{space.address ?? space.suburb_name ?? "Melbourne"}</p>
+                      <p className="text-sm text-gray-500">{space.property_address ?? space.suburb_name ?? "Melbourne"}</p>
                       {weeklyRate > 0 && <p className="text-sm font-bold text-primary mt-1">${weeklyRate}/week</p>}
                     </div>
                   ) : null}

@@ -11,7 +11,7 @@ export interface GuestInfo {
   email: string;
   first_name: string | null;
   last_name: string | null;
-  phone: string | null;
+  phone?: string | null;
   account_id: number | null;
   avatar_url?: string | null;
 }
