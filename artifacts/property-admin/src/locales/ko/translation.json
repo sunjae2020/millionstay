@@ -66,7 +66,8 @@
     "ai_assistant": "AI 어시스턴트",
     "chat_widget": "채팅 위젯",
     "knowledge_base": "지식 베이스",
-    "conversations": "대화 내역"
+    "conversations": "대화 내역",
+    "addon_services": "부가 서비스"
   },
   "dashboard": {
     "title": "대시보드",
@@ -2420,5 +2421,60 @@
       "role_user": "사용자",
       "role_assistant": "어시스턴트"
     }
+  },
+  "accommodation_options": {
+    "field": {
+      "contract_term": "계약 기간",
+      "room_type": "룸 형태",
+      "meal_plan": "식사 옵션",
+      "guest_age": "투숙객 연령"
+    },
+    "contract_term": {
+      "short_term": "단기",
+      "mid_term": "중기",
+      "long_term": "장기"
+    },
+    "room_type": {
+      "room_share": "룸 쉐어",
+      "house_share": "하우스 쉐어",
+      "entire_place": "전체 렌트",
+      "homestay": "홈스테이"
+    },
+    "meal_plan": {
+      "none": "식사 미제공",
+      "partial_board": "부분 제공 (주중 2끼 / 주말 3끼)",
+      "full_board": "풀보드 (주 7일 3끼)"
+    },
+    "guest_age": {
+      "adult": "성인",
+      "minor": "미성년자 (만 18세 이하)"
+    },
+    "addon_category": {
+      "transport": "교통",
+      "living": "생활",
+      "supplies": "비품",
+      "telecom": "통신",
+      "other": "기타"
+    },
+    "addon_unit": {
+      "per_booking": "예약당",
+      "per_trip": "편도당",
+      "per_week": "주당",
+      "per_item": "개당",
+      "per_month": "월당"
+    },
+    "addon_subtitle": "숙소 외 추가 판매 서비스",
+    "col_name": "이름",
+    "col_category": "분류",
+    "col_price": "가격",
+    "col_unit": "단위",
+    "code": "코드",
+    "currency": "통화",
+    "description": "설명",
+    "empty": "부가 서비스가 없습니다",
+    "edit_addon": "부가 서비스 수정",
+    "new_addon": "부가 서비스 추가",
+    "delete_addon": "부가 서비스 삭제",
+    "delete_confirm": "부가 서비스가 삭제됩니다. 연결된 숙소의 연결이 해제됩니다."
   }
 }

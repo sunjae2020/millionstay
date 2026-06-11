@@ -16,6 +16,8 @@ import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { AccommodationOptionFields } from "@/components/AccommodationOptionFields";
+import { HOMESTAY_ROOM_TYPE } from "@/lib/accommodationOptions";
 
 const STATUS_COLORS: Record<string, string> = {
   Active: "bg-green-100 text-green-700",
@@ -138,6 +140,10 @@ export default function ProductDetail() {
       max_stay_weeks: product.max_stay_weeks ?? "",
       billing_frequency: product.billing_frequency ?? "Biweekly",
       term_type: product.term_type ?? "",
+      contract_term: product.contract_term ?? "",
+      room_type: product.room_type ?? "",
+      meal_plan: product.meal_plan ?? "",
+      guest_age: product.guest_age ?? "",
       bond_amount: product.bond_amount != null ? String(product.bond_amount) : "",
       bond_weeks: product.bond_weeks != null ? String(product.bond_weeks) : "4",
       advance_weeks: product.advance_weeks != null ? String(product.advance_weeks) : "2",
@@ -158,6 +164,7 @@ export default function ProductDetail() {
       product_group_id: "", product_type_id: "", promotion_id: "", gst_included: false,
       min_contract_period: "", min_contract_period_unit: "weeks",
       max_stay_weeks: "", billing_frequency: "Biweekly", term_type: "",
+      contract_term: "", room_type: "", meal_plan: "", guest_age: "",
       bond_amount: "", bond_weeks: "4", advance_weeks: "2",
       admin_fee: "", cleaning_fee: "",
       includes_wifi: false, includes_parking: false, includes_utilities: false,
@@ -184,6 +191,11 @@ export default function ProductDetail() {
         admin_fee: values.admin_fee !== "" ? Number(values.admin_fee) : null,
         cleaning_fee: values.cleaning_fee !== "" ? Number(values.cleaning_fee) : null,
         term_type: values.term_type || null,
+        contract_term: values.contract_term || null,
+        room_type: values.room_type || null,
+        // meal_plan / guest_age only apply to homestay; clear otherwise
+        meal_plan: values.room_type === HOMESTAY_ROOM_TYPE ? (values.meal_plan || null) : null,
+        guest_age: values.room_type === HOMESTAY_ROOM_TYPE ? (values.guest_age || null) : null,
       };
       const url = isNew ? "/api/v1/accommodations" : `/api/v1/accommodations/${id}`;
       const method = isNew ? "POST" : "PUT";
@@ -367,6 +379,28 @@ export default function ProductDetail() {
                 <Label>Bond Amount (AUD override)</Label>
                 <Input {...register("bond_amount")} type="number" step="0.01" placeholder="Leave blank to use bond weeks" className="mt-1" />
               </div>
+            </div>
+
+            <div>
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mt-2 mb-3">
+                {t("accommodation_options.section", "Classification")}
+              </h3>
+              <AccommodationOptionFields
+                value={{
+                  contract_term: watch("contract_term"),
+                  room_type: watch("room_type"),
+                  meal_plan: watch("meal_plan"),
+                  guest_age: watch("guest_age"),
+                }}
+                onChange={(patch) => {
+                  for (const [k, v] of Object.entries(patch)) setValue(k as any, v as any);
+                  // leaving homestay clears its meal/age sub-options
+                  if (patch.room_type && patch.room_type !== HOMESTAY_ROOM_TYPE) {
+                    setValue("meal_plan" as any, "");
+                    setValue("guest_age" as any, "");
+                  }
+                }}
+              />
             </div>
 
             <div>

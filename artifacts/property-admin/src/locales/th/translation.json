@@ -66,7 +66,8 @@
     "ai_assistant": "ผู้ช่วย AI",
     "chat_widget": "วิดเจ็ตแชท",
     "knowledge_base": "ฐานความรู้",
-    "conversations": "บทสนทนา"
+    "conversations": "บทสนทนา",
+    "addon_services": "บริการเสริม"
   },
   "dashboard": {
     "title": "แดชบอร์ด",
@@ -2420,5 +2421,60 @@
       "role_user": "ผู้ใช้",
       "role_assistant": "ผู้ช่วย"
     }
+  },
+  "accommodation_options": {
+    "field": {
+      "contract_term": "ระยะสัญญา",
+      "room_type": "ประเภทห้อง",
+      "meal_plan": "แผนอาหาร",
+      "guest_age": "อายุผู้เข้าพัก"
+    },
+    "contract_term": {
+      "short_term": "ระยะสั้น",
+      "mid_term": "ระยะกลาง",
+      "long_term": "ระยะยาว"
+    },
+    "room_type": {
+      "room_share": "แชร์ห้อง",
+      "house_share": "แชร์บ้าน",
+      "entire_place": "เช่าทั้งหลัง",
+      "homestay": "โฮมสเตย์"
+    },
+    "meal_plan": {
+      "none": "ไม่รวมอาหาร",
+      "partial_board": "บางส่วน (วันธรรมดา 2 มื้อ / สุดสัปดาห์ 3 มื้อ)",
+      "full_board": "เต็มรูปแบบ (7 วัน 3 มื้อ)"
+    },
+    "guest_age": {
+      "adult": "ผู้ใหญ่",
+      "minor": "ผู้เยาว์ (อายุไม่เกิน 18 ปี)"
+    },
+    "addon_category": {
+      "transport": "การเดินทาง",
+      "living": "การใช้ชีวิต",
+      "supplies": "ของใช้",
+      "telecom": "การสื่อสาร",
+      "other": "อื่นๆ"
+    },
+    "addon_unit": {
+      "per_booking": "ต่อการจอง",
+      "per_trip": "ต่อเที่ยว",
+      "per_week": "ต่อสัปดาห์",
+      "per_item": "ต่อชิ้น",
+      "per_month": "ต่อเดือน"
+    },
+    "addon_subtitle": "บริการที่ขายเพิ่มจากที่พัก",
+    "col_name": "ชื่อ",
+    "col_category": "หมวดหมู่",
+    "col_price": "ราคา",
+    "col_unit": "หน่วย",
+    "code": "รหัส",
+    "currency": "สกุลเงิน",
+    "description": "คำอธิบาย",
+    "empty": "ไม่มีบริการเสริม",
+    "edit_addon": "แก้ไขบริการเสริม",
+    "new_addon": "เพิ่มบริการเสริม",
+    "delete_addon": "ลบบริการเสริม",
+    "delete_confirm": "การดำเนินการนี้จะลบบริการเสริม ที่พักที่ใช้งานอยู่จะสูญเสียการเชื่อมโยง"
   }
 }

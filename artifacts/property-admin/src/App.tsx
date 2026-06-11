@@ -99,6 +99,7 @@ import ProductTypesPage from "@/pages/settings/sub/ProductTypes";
 import TranslationsPage from "@/pages/settings/sub/Translations";
 import BookingReportPage from "@/pages/settings/sub/BookingReport";
 import IntegrationsPage from "@/pages/settings/sub/Integrations";
+import AddonServicesPage from "@/pages/settings/sub/AddonServices";
 import ApiKeysPage from "@/pages/settings/sub/ApiKeys";
 import DbSyncPage from "@/pages/settings/DbSync";
 import PaymentInfoList from "@/pages/crm/PaymentInfoList";
@@ -292,6 +293,7 @@ function Router() {
       <Route path="/settings/contract-types" component={ContractTypesPage} />
       <Route path="/settings/product-groups" component={ProductGroupsPage} />
       <Route path="/settings/product-types" component={ProductTypesPage} />
+      <Route path="/settings/addon-services" component={AddonServicesPage} />
 
       <Route path="/settings/payment-info" component={PaymentInfoList} />
       <Route path="/settings/payment-info/new" component={PaymentInfoDetail} />
