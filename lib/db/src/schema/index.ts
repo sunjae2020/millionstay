@@ -53,3 +53,4 @@ export * from "./channels";
 export * from "./chat_conversations";
 export * from "./chat_messages";
 export * from "./knowledge_documents";
+export * from "./api_credentials";

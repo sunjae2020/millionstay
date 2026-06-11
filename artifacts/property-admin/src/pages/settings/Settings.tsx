@@ -18,6 +18,7 @@ import {
   Settings2,
   Palette,
   Plug,
+  KeyRound,
   Database,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -59,6 +60,12 @@ const ADMIN_CARDS: CardDef[] = [
     description: "Stripe, Cloudinary, Resend and more",
     icon: Plug,
     href: "/settings/integrations",
+  },
+  {
+    title: "API Keys",
+    description: "Issue API keys for external app integration",
+    icon: KeyRound,
+    href: "/settings/api-keys",
   },
   {
     title: "System Log",
