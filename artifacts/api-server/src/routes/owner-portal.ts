@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
-import { eq, and, desc, inArray } from "drizzle-orm";
+import multer from "multer";
+import { eq, and, desc, inArray, isNull } from "drizzle-orm";
 import {
   db,
   bookingsTable,
@@ -10,10 +11,16 @@ import {
   invoicesTable,
   accountsTable,
   contactsTable,
+  ownerSitesTable,
+  leadsTable,
+  validateSlug,
 } from "@workspace/db";
 import { requireOwnerAuth, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth";
+import { isCloudinaryConfigured, uploadToCloudinary } from "../utils/cloudinary";
+import { logAction } from "../utils/auditLog";
 
 const router: IRouter = Router();
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 // SECURITY: every /v1/owner/* route requires owner auth (defence in depth).
 router.use("/v1/owner", requireOwnerAuth);
@@ -141,7 +148,7 @@ router.get("/v1/owner/properties", requireOwnerAuth, async (req, res): Promise<v
 /* GET /api/v1/owner/properties/:id */
 router.get("/v1/owner/properties/:id", requireOwnerAuth, async (req, res): Promise<void> => {
   const partner = (req as any).partner as PartnerAuthPayload;
-  const propertyId = parseInt(req.params.id, 10);
+  const propertyId = parseInt(String(req.params.id), 10);
   if (!Number.isFinite(propertyId)) {
     res.status(400).json({ success: false, error: "Invalid property id" });
     return;
@@ -416,6 +423,200 @@ router.get("/v1/owner/revenue", requireOwnerAuth, async (req, res): Promise<void
       invoices: enrichedInvoices,
     },
   });
+});
+
+/* ═══════════════════════════════════════════════════════
+   Owner landing site ("내 사이트") — {slug}.millionstay.com
+═══════════════════════════════════════════════════════ */
+
+// Columns the owner is allowed to set on their landing site.
+function pickSiteFields(body: any) {
+  const out: Record<string, unknown> = {};
+  for (const k of [
+    "logo_url", "primary_color", "hero_image_url", "content",
+    "seo_title", "seo_description", "og_image_url",
+  ]) {
+    if (body[k] !== undefined) out[k] = body[k];
+  }
+  return out;
+}
+
+/* GET /api/v1/owner/site — current owner's landing site (or null defaults) */
+router.get("/v1/owner/site", requireOwnerAuth, async (req, res): Promise<void> => {
+  const partner = (req as any).partner as PartnerAuthPayload;
+  const [site] = await db
+    .select()
+    .from(ownerSitesTable)
+    .where(eq(ownerSitesTable.account_id, partner.account_id))
+    .limit(1);
+  res.json({ success: true, data: site ?? null });
+});
+
+/* GET /api/v1/owner/site/slug-available?slug= — validity + uniqueness check */
+router.get("/v1/owner/site/slug-available", requireOwnerAuth, async (req, res): Promise<void> => {
+  const partner = (req as any).partner as PartnerAuthPayload;
+  const slug = String(req.query.slug ?? "").trim().toLowerCase();
+  const reason = validateSlug(slug);
+  if (reason) { res.json({ success: true, available: false, reason }); return; }
+
+  const [taken] = await db
+    .select({ account_id: ownerSitesTable.account_id })
+    .from(ownerSitesTable)
+    .where(eq(ownerSitesTable.slug, slug))
+    .limit(1);
+  // Available if free, or already owned by this account.
+  const available = !taken || taken.account_id === partner.account_id;
+  res.json({ success: true, available, reason: available ? null : "taken" });
+});
+
+/* PUT /api/v1/owner/site — create/update + publish (immediate) */
+router.put("/v1/owner/site", requireOwnerAuth, async (req, res): Promise<void> => {
+  const partner = (req as any).partner as PartnerAuthPayload;
+  const b = req.body ?? {};
+
+  const slug = b.slug !== undefined ? String(b.slug).trim().toLowerCase() : undefined;
+  if (slug !== undefined) {
+    const reason = validateSlug(slug);
+    if (reason) { res.status(400).json({ error: `Invalid slug: ${reason}` }); return; }
+  }
+
+  // status: only 'draft' | 'published'
+  let status: string | undefined;
+  if (b.status !== undefined) {
+    status = String(b.status);
+    if (status !== "draft" && status !== "published") {
+      res.status(400).json({ error: "status must be 'draft' or 'published'" }); return;
+    }
+  }
+
+  const fields = pickSiteFields(b);
+
+  const [existing] = await db
+    .select({ id: ownerSitesTable.id })
+    .from(ownerSitesTable)
+    .where(eq(ownerSitesTable.account_id, partner.account_id))
+    .limit(1);
+
+  try {
+    if (existing) {
+      const updates: Record<string, unknown> = { ...fields };
+      if (slug !== undefined) updates.slug = slug;
+      if (status !== undefined) updates.status = status;
+      const [row] = await db
+        .update(ownerSitesTable)
+        .set(updates)
+        .where(eq(ownerSitesTable.account_id, partner.account_id))
+        .returning();
+      res.json({ success: true, data: row });
+    } else {
+      if (!slug) { res.status(400).json({ error: "slug is required to create your site" }); return; }
+      const [row] = await db
+        .insert(ownerSitesTable)
+        .values({
+          account_id: partner.account_id,
+          slug,
+          status: status ?? "published",
+          ...fields,
+        } as any)
+        .returning();
+      res.status(201).json({ success: true, data: row });
+    }
+  } catch (err: any) {
+    if (err?.code === "23505") { res.status(409).json({ error: "That subdomain is already taken" }); return; }
+    console.error("[owner/site] save failed:", err);
+    res.status(500).json({ error: "Failed to save site" });
+  }
+});
+
+/* ═══════════════════════════════════════════════════════
+   Owner content editing — property / space intro text
+═══════════════════════════════════════════════════════ */
+
+/* PATCH /api/v1/owner/properties/:id — edit intro (owned properties only) */
+router.patch("/v1/owner/properties/:id", requireOwnerAuth, async (req, res): Promise<void> => {
+  const partner = (req as any).partner as PartnerAuthPayload;
+  const id = Number(req.params.id);
+  if (!id) { res.status(400).json({ error: "Invalid property id" }); return; }
+
+  const [prop] = await db
+    .select({ id: propertiesTable.id })
+    .from(propertiesTable)
+    .where(and(eq(propertiesTable.id, id), eq(propertiesTable.owner_account_id, partner.account_id)))
+    .limit(1);
+  if (!prop) { res.status(404).json({ error: "Property not found" }); return; }
+
+  const updates: Record<string, unknown> = {};
+  if (req.body?.description !== undefined) updates.description = String(req.body.description);
+  if (!Object.keys(updates).length) { res.status(400).json({ error: "Nothing to update" }); return; }
+
+  const [row] = await db.update(propertiesTable).set(updates).where(eq(propertiesTable.id, id)).returning();
+  await logAction({ entityType: "property", entityId: id, action: "UPDATE", actorId: partner.id, actorEmail: partner.email, newValue: updates, ipAddress: req.ip ?? null });
+  res.json({ success: true, data: row });
+});
+
+/* PATCH /api/v1/owner/spaces/:id — edit name/description (owned spaces only) */
+router.patch("/v1/owner/spaces/:id", requireOwnerAuth, async (req, res): Promise<void> => {
+  const partner = (req as any).partner as PartnerAuthPayload;
+  const id = Number(req.params.id);
+  if (!id) { res.status(400).json({ error: "Invalid space id" }); return; }
+
+  // Ownership is enforced via the parent property's owner_account_id.
+  const [space] = await db
+    .select({ id: spacesTable.id })
+    .from(spacesTable)
+    .innerJoin(propertiesTable, eq(spacesTable.property_id, propertiesTable.id))
+    .where(and(eq(spacesTable.id, id), eq(propertiesTable.owner_account_id, partner.account_id)))
+    .limit(1);
+  if (!space) { res.status(404).json({ error: "Space not found" }); return; }
+
+  const updates: Record<string, unknown> = {};
+  if (req.body?.name !== undefined) updates.name = String(req.body.name);
+  if (req.body?.description !== undefined) updates.description = String(req.body.description);
+  if (!Object.keys(updates).length) { res.status(400).json({ error: "Nothing to update" }); return; }
+
+  const [row] = await db.update(spacesTable).set(updates).where(eq(spacesTable.id, id)).returning();
+  await logAction({ entityType: "space", entityId: id, action: "UPDATE", actorId: partner.id, actorEmail: partner.email, newValue: updates, ipAddress: req.ip ?? null });
+  res.json({ success: true, data: row });
+});
+
+/* GET /api/v1/owner/site/inquiries — leads captured from this owner's landing site */
+router.get("/v1/owner/site/inquiries", requireOwnerAuth, async (req, res): Promise<void> => {
+  const partner = (req as any).partner as PartnerAuthPayload;
+  const limit = Math.min(Number(req.query.limit) || 50, 200);
+
+  const rows = await db
+    .select({
+      id: leadsTable.id,
+      lead_ref: leadsTable.lead_ref,
+      first_name: leadsTable.first_name,
+      last_name: leadsTable.last_name,
+      email: leadsTable.email,
+      phone: leadsTable.phone,
+      message: leadsTable.message,
+      lead_status: leadsTable.lead_status,
+      created_at: leadsTable.created_at,
+    })
+    .from(leadsTable)
+    .where(and(
+      eq(leadsTable.owner_account_id, partner.account_id),
+      isNull(leadsTable.deleted_at),
+    ))
+    .orderBy(desc(leadsTable.created_at))
+    .limit(limit);
+
+  res.json({ success: true, data: rows, meta: { total: rows.length } });
+});
+
+/* POST /api/v1/owner/site/upload-image — single image → Cloudinary, returns URL */
+router.post("/v1/owner/site/upload-image", requireOwnerAuth, upload.single("image"), async (req, res): Promise<void> => {
+  try {
+    if (!req.file) { res.status(400).json({ error: "No file provided" }); return; }
+    if (!isCloudinaryConfigured()) { res.status(503).json({ error: "Image upload not configured" }); return; }
+    const result = await uploadToCloudinary(req.file.buffer, { folder: "millionstay/owner-sites" });
+    res.json({ success: true, url: result.secure_url, thumbnail_url: result.thumbnail_url });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message ?? "Upload failed" });
+  }
 });
 
 export default router;

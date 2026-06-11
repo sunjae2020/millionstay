@@ -23,6 +23,7 @@ import {
   translationsTable,
   channelsTable,
   channelAccountsTable,
+  ownerSitesTable,
 } from "@workspace/db";
 import { ingestReservations } from "../lib/channels/reservations.js";
 import { insertLeadWithGeneratedRef } from "../lib/leadRef.js";
@@ -70,21 +71,29 @@ function productMinDays(period: number | null, unit: string | null): number | nu
 const router: IRouter = Router();
 
 /* ───────────────────────────────────────────────────────
-   GET /api/v1/public/spaces
-   Query params: suburb_id, city, space_type, gender_policy,
-                 min_price, max_price, start_date, end_date,
-                 limit, offset
+   listPublicSpaces — shared search used by the global landing
+   (GET /v1/public/spaces) and per-owner landing sites
+   (GET /v1/public/sites/:slug/spaces). Pass opts.propertyIds to
+   restrict results to one owner's properties ("본인 숙소만 검색").
 ──────────────────────────────────────────────────────── */
-router.get("/v1/public/spaces", async (req, res): Promise<void> => {
+async function listPublicSpaces(
+  q: Record<string, string>,
+  opts?: { propertyIds?: number[] },
+): Promise<{ data: any[]; meta: { total: number; limit: number; offset: number } }> {
   const {
     city, suburb_id, space_type, gender_policy,
     min_price, max_price, start_date, end_date,
     limit: limitStr = "20", offset: offsetStr = "0",
-  } = req.query as Record<string, string>;
+  } = q;
 
   const limit  = Math.min(Number(limitStr)  || 20, 100);
   const offset = Number(offsetStr) || 0;
   const today  = new Date().toISOString().split("T")[0];
+
+  // Owner scoping: an empty property set can never match anything.
+  if (opts?.propertyIds && opts.propertyIds.length === 0) {
+    return { data: [], meta: { total: 0, limit, offset } };
+  }
 
   /* ── Step 1: Always-on occupancy exclusions ──────────────────── */
   // Exclude spaces with any active/ongoing booking (check_out hasn't passed)
@@ -116,11 +125,66 @@ router.get("/v1/public/spaces", async (req, res): Promise<void> => {
     EntireSpace: "Whole Property",
     RoomSpace:   "Private Room",
     BedSpace:    "Shared Room",
+    Homestay:    "Homestay",
   };
   const dbSpaceType = space_type ? (SPACE_TYPE_MAP[space_type] ?? space_type) : null;
 
+  // Homestay is offered through products/services, not only the space_type column.
+  // When the homestay filter is active, also include any space that is LINKED to a
+  // homestay offering via:
+  //   (b) an accommodation product flagged room_type = 'homestay', or
+  //   (c) a homestay service — attached to one of the space's accommodation products
+  //       (accommodation_service_catalog) or directly to the space (space_service_catalog).
+  let homestaySpaceIds: number[] = [];
+  if (dbSpaceType === "Homestay") {
+    const ids = new Set<number>();
+    const hsServices = await db
+      .select({ id: serviceCatalogTable.id })
+      .from(serviceCatalogTable)
+      .where(ilike(serviceCatalogTable.name, "%homestay%"));
+    const hsServiceIds = hsServices.map((r) => r.id);
+
+    // (b) accommodation products explicitly classified as homestay
+    const accHomestay = await db
+      .select({ space_id: accommodationCatalogTable.space_id })
+      .from(accommodationCatalogTable)
+      .where(eq(accommodationCatalogTable.room_type, "homestay"));
+    accHomestay.forEach((r) => r.space_id != null && ids.add(r.space_id));
+
+    if (hsServiceIds.length) {
+      // (c1) space's accommodation product linked to a homestay service
+      const accBySvc = await db
+        .select({ space_id: accommodationCatalogTable.space_id })
+        .from(accommodationCatalogTable)
+        .innerJoin(
+          accommodationServiceCatalogTable,
+          eq(accommodationServiceCatalogTable.accommodation_id, accommodationCatalogTable.id),
+        )
+        .where(inArray(accommodationServiceCatalogTable.service_id, hsServiceIds));
+      accBySvc.forEach((r) => r.space_id != null && ids.add(r.space_id));
+
+      // (c2) space directly linked to a homestay service
+      const spaceBySvc = await db
+        .select({ space_id: spaceServiceCatalogTable.space_id })
+        .from(spaceServiceCatalogTable)
+        .where(inArray(spaceServiceCatalogTable.service_id, hsServiceIds));
+      spaceBySvc.forEach((r) => r.space_id != null && ids.add(r.space_id));
+    }
+    homestaySpaceIds = [...ids];
+  }
+
   const conditions: SQL[] = [eq(spacesTable.status, "Active")];
-  if (dbSpaceType) conditions.push(eq(spacesTable.space_type, dbSpaceType));
+  if (opts?.propertyIds) conditions.push(inArray(spacesTable.property_id, opts.propertyIds));
+  if (dbSpaceType === "Homestay") {
+    // explicit space_type OR linked-via-product/service
+    conditions.push(
+      homestaySpaceIds.length
+        ? (or(eq(spacesTable.space_type, "Homestay"), inArray(spacesTable.id, homestaySpaceIds)) as SQL)
+        : eq(spacesTable.space_type, "Homestay"),
+    );
+  } else if (dbSpaceType) {
+    conditions.push(eq(spacesTable.space_type, dbSpaceType));
+  }
   if (suburb_id)  conditions.push(eq(propertiesTable.suburb_id, Number(suburb_id)));
   // Gender policy via space_policies join
   if (gender_policy === "FemaleOnly") {
@@ -338,7 +402,126 @@ router.get("/v1/public/spaces", async (req, res): Promise<void> => {
     };
   });
 
-  res.json({ success: true, data, meta: { total, limit, offset } });
+  return { data, meta: { total, limit, offset } };
+}
+
+/* ───────────────────────────────────────────────────────
+   GET /api/v1/public/spaces
+   Query params: suburb_id, city, space_type, gender_policy,
+                 min_price, max_price, start_date, end_date,
+                 limit, offset
+──────────────────────────────────────────────────────── */
+router.get("/v1/public/spaces", async (req, res): Promise<void> => {
+  const result = await listPublicSpaces(req.query as Record<string, string>);
+  res.json({ success: true, ...result });
+});
+
+/* ───────────────────────────────────────────────────────
+   Owner landing sites — public, served at {slug}.millionstay.com
+
+   Resolve a published owner site by its subdomain slug and return
+   the site config + the owner's account_id (for scoped search).
+──────────────────────────────────────────────────────── */
+async function resolvePublishedSite(slug: string) {
+  const clean = String(slug ?? "").trim().toLowerCase();
+  if (!clean) return null;
+  const [site] = await db
+    .select()
+    .from(ownerSitesTable)
+    .where(and(
+      eq(ownerSitesTable.slug, clean),
+      eq(ownerSitesTable.status, "published"),
+      isNull(ownerSitesTable.deleted_at),
+    ))
+    .limit(1);
+  return site ?? null;
+}
+
+/** The owner's property IDs — the search-isolation anchor for a landing site. */
+async function ownerPropertyIds(accountId: number): Promise<number[]> {
+  const rows = await db
+    .select({ id: propertiesTable.id })
+    .from(propertiesTable)
+    .where(and(eq(propertiesTable.owner_account_id, accountId), isNull(propertiesTable.deleted_at)));
+  return rows.map((r) => r.id);
+}
+
+/* GET /api/v1/public/sites/:slug — landing site config (no auth) */
+router.get("/v1/public/sites/:slug", async (req, res): Promise<void> => {
+  const site = await resolvePublishedSite(req.params.slug);
+  if (!site) { res.status(404).json({ error: "Site not found" }); return; }
+
+  const propertyIds = await ownerPropertyIds(site.account_id);
+  const activeSpaces = propertyIds.length
+    ? await db
+        .select({ id: spacesTable.id })
+        .from(spacesTable)
+        .where(and(inArray(spacesTable.property_id, propertyIds), eq(spacesTable.status, "Active")))
+    : [];
+
+  res.json({
+    success: true,
+    data: {
+      slug: site.slug,
+      logo_url: site.logo_url,
+      primary_color: site.primary_color,
+      hero_image_url: site.hero_image_url,
+      content: site.content,
+      seo_title: site.seo_title,
+      seo_description: site.seo_description,
+      og_image_url: site.og_image_url,
+      space_count: activeSpaces.length,
+    },
+  });
+});
+
+/* GET /api/v1/public/sites/:slug/spaces — owner-scoped search (no auth) */
+router.get("/v1/public/sites/:slug/spaces", async (req, res): Promise<void> => {
+  const site = await resolvePublishedSite(req.params.slug);
+  if (!site) { res.status(404).json({ error: "Site not found" }); return; }
+
+  const propertyIds = await ownerPropertyIds(site.account_id);
+  const result = await listPublicSpaces(req.query as Record<string, string>, { propertyIds });
+  res.json({ success: true, ...result });
+});
+
+/* POST /api/v1/public/sites/:slug/inquiry — direct enquiry to the owner */
+router.post("/v1/public/sites/:slug/inquiry", async (req, res): Promise<void> => {
+  const site = await resolvePublishedSite(req.params.slug);
+  if (!site) { res.status(404).json({ error: "Site not found" }); return; }
+
+  const b = req.body ?? {};
+  const name = String(b.name ?? "").trim();
+  const email = String(b.email ?? "").trim();
+  const phone = b.phone ? String(b.phone).trim() : null;
+  const message = b.message ? String(b.message).trim() : "";
+
+  if (!name) { res.status(400).json({ error: "name is required" }); return; }
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+    res.status(400).json({ error: "valid email is required" }); return;
+  }
+
+  const nameParts = name.split(/\s+/);
+  const first_name = nameParts[0];
+  const last_name = nameParts.slice(1).join(" ") || "—";
+
+  const row = await insertLeadWithGeneratedRef({
+    first_name,
+    last_name,
+    email,
+    phone,
+    lead_source: "OwnerLandingSite",
+    owner_account_id: site.account_id,
+    inquiry_type: "AccommodationEnquiry",
+    lead_status: "New",
+    message: message || null,
+    description: `Owner site: ${site.slug} (account #${site.account_id})`,
+    manual_input: false,
+    status: "Active",
+  });
+
+  notifyLead(row, `Owner Site Inquiry — ${site.slug}`);
+  res.status(201).json({ success: true, lead_ref: row.lead_ref, id: row.id });
 });
 
 /* ───────────────────────────────────────────────────────
