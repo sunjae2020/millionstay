@@ -66,10 +66,16 @@ const ALLOWED_ORIGINS = (process.env["ALLOWED_ORIGINS"] ?? "")
 
 function isOriginAllowed(origin: string): boolean {
   if (ALLOWED_ORIGINS.includes(origin)) return true;
-  if (isProduction) return false;
-  // Dev-only allowances
   try {
     const { hostname, protocol } = new URL(origin);
+    // Always allow our own apex + ANY subdomain over https. Owner landing sites
+    // create arbitrary {slug}.millionstay.com origins that must reach the public
+    // API; authenticated routes are still gated by JWT, so this is safe.
+    if (protocol === "https:" && (hostname === "millionstay.com" || hostname.endsWith(".millionstay.com"))) {
+      return true;
+    }
+    if (isProduction) return false;
+    // Dev-only allowances
     if (protocol !== "http:" && protocol !== "https:") return false;
     if (hostname === "localhost" || hostname === "127.0.0.1") return true;
     if (hostname.endsWith(".replit.dev")) return true;
