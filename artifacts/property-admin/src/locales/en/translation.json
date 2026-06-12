@@ -2771,11 +2771,15 @@
     "recipient_host": "Host family",
     "recipient_agent": "Agent",
     "recipient_ops": "Operations team",
+    "btn_collect_payment": "Collect payment",
+    "paid": "Paid",
+    "payment_hint": "Opens a Stripe checkout for deposit + placement fee",
     "toast_host_accepted": "Host accepted the placement",
     "toast_contract_issued": "Contract issued for signing",
     "toast_updated": "Placement updated",
     "toast_sent": "Agreement sent",
-    "toast_link_copied": "Signing link copied"
+    "toast_link_copied": "Signing link copied",
+    "toast_payment_link": "Stripe checkout opened in a new tab"
   },
   "homestayDoc": {
     "title": "Signature & document",
