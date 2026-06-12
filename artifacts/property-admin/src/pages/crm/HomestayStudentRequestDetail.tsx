@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, GraduationCap, PencilLine, ShieldCheck } from "lucide-react";
+import { ArrowLeft, GraduationCap, PencilLine, ShieldCheck, Sparkles, Wand2, Loader2, MapPin, Check, AlertTriangle, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
 import { StudentStatusBadge, STUDENT_STATUS_ORDER, STUDENT_STATUS_CONFIG, type StudentStatus } from "./HomestayStudentRequests";
@@ -79,6 +79,24 @@ interface StudentRequestFull {
 
 interface DetailResponse { success: boolean; request: StudentRequestFull }
 
+interface HostSuggestion {
+  host_application_id: number;
+  host_name: string;
+  suburb: string | null;
+  score: number;
+  matched: string[];
+  concerns: string[];
+  rationale?: string;
+}
+interface SuggestionsResponse { success: boolean; suggestions: HostSuggestion[]; ai_used: boolean }
+
+// Colour the score badge by band.
+function scoreBadge(score: number): string {
+  if (score >= 75) return "bg-green-100 text-green-700 border-green-200";
+  if (score >= 50) return "bg-amber-100 text-amber-700 border-amber-200";
+  return "bg-gray-100 text-gray-600 border-gray-200";
+}
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="border rounded-lg overflow-hidden">
@@ -127,6 +145,20 @@ export default function HomestayStudentRequestDetail() {
 
   const req = data?.request;
   const p = req?.preferences ?? {};
+
+  // Host recommendations — lazy: only fetched once the user clicks "Find matches"
+  // (the request hits Claude for rationale, so we don't auto-run it).
+  const [showMatches, setShowMatches] = useState(false);
+  const { data: matchData, isFetching: matchLoading, error: matchError } = useQuery({
+    queryKey: ["homestay-host-suggestions", id],
+    queryFn: async (): Promise<SuggestionsResponse> => {
+      const res = await apiFetch(`${API}/${id}/host-suggestions?limit=5&rationale=1`);
+      if (!res.ok) throw new Error("Failed to load suggestions");
+      return res.json();
+    },
+    enabled: showMatches && !!id,
+    staleTime: 5 * 60_000,
+  });
 
   // Seed the dialog with the current status + ops notes when it opens.
   useEffect(() => {
@@ -203,6 +235,67 @@ export default function HomestayStudentRequestDetail() {
           {req.notes && (
             <div className="text-xs text-muted-foreground"><span className="font-medium text-foreground">{t("homestayStudent.label_notes")}:</span> {req.notes}</div>
           )}
+        </div>
+
+        {/* AI host-family recommendations */}
+        <div className="border rounded-lg overflow-hidden">
+          <div className="bg-orange-50 border-b px-4 py-2 flex items-center justify-between gap-2">
+            <span className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider inline-flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5" /> {t("homestayStudent.match_title")}
+            </span>
+            <Button size="sm" variant="outline" className="gap-1.5 h-7" onClick={() => setShowMatches(true)} disabled={matchLoading}>
+              {matchLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+              {showMatches ? t("homestayStudent.match_refresh") : t("homestayStudent.match_find")}
+            </Button>
+          </div>
+          <div className="p-4">
+            {!showMatches ? (
+              <p className="text-sm text-muted-foreground">{t("homestayStudent.match_hint")}</p>
+            ) : matchLoading ? (
+              <p className="text-sm text-muted-foreground inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> {t("homestayStudent.match_loading")}</p>
+            ) : matchError ? (
+              <p className="text-sm text-red-600">{t("homestayStudent.error")}</p>
+            ) : !matchData?.suggestions.length ? (
+              <p className="text-sm text-muted-foreground">{t("homestayStudent.match_empty")}</p>
+            ) : (
+              <div className="space-y-3">
+                {matchData.ai_used === false && (
+                  <p className="text-[11px] text-muted-foreground">{t("homestayStudent.match_no_ai")}</p>
+                )}
+                {matchData.suggestions.map((s) => (
+                  <div key={s.host_application_id} className="border rounded-lg p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <Link href={`/account/homestay-applications/${s.host_application_id}`} className="font-medium hover:underline inline-flex items-center gap-1.5">
+                        {s.host_name || `#${s.host_application_id}`}
+                        <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                      </Link>
+                      <span className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border ${scoreBadge(s.score)}`}>
+                        {t("homestayStudent.match_score")}: {s.score}
+                      </span>
+                    </div>
+                    {s.suburb && (
+                      <p className="text-xs text-muted-foreground mt-0.5 inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> {s.suburb}</p>
+                    )}
+                    {s.rationale && <p className="text-sm text-foreground/80 italic mt-2">"{s.rationale}"</p>}
+                    {(s.matched.length > 0 || s.concerns.length > 0) && (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {s.matched.map((m, i) => (
+                          <span key={`m${i}`} className="inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded bg-green-50 text-green-700 border border-green-200">
+                            <Check className="h-3 w-3" /> {m}
+                          </span>
+                        ))}
+                        {s.concerns.map((c, i) => (
+                          <span key={`c${i}`} className="inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
+                            <AlertTriangle className="h-3 w-3" /> {c}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Student personal */}

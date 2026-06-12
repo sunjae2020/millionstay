@@ -2699,6 +2699,14 @@
     "notes_placeholder": "Internal notes about this application…",
     "btn_update_status": "Update status",
     "update_status_title": "Update application status",
-    "toast_updated": "Application updated"
+    "toast_updated": "Application updated",
+    "match_title": "Recommended host families",
+    "match_find": "Find matches",
+    "match_refresh": "Refresh",
+    "match_hint": "Generate an AI-ranked shortlist of approved host families that fit this student's conditions (gender, pets, smoking, diet, age policy, area).",
+    "match_loading": "Scoring approved hosts…",
+    "match_empty": "No compatible approved hosts found for this student's conditions.",
+    "match_score": "Score",
+    "match_no_ai": "AI rationale unavailable (Anthropic key not configured) — showing rule-based scores only."
   }
 }
