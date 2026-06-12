@@ -131,12 +131,17 @@ const CLAUSES: Clause[] = [
     title: "Overseas disclosure (APP 8)",
     body: (
       <>
-        Some cloud providers we rely on store or process personal information outside Australia, including in
-        the United States — for example our application hosting and database providers, our media/document
-        storage provider, and our email-delivery provider. Before disclosing information to an overseas
-        recipient, we take reasonable steps to ensure the recipient does not breach the APPs (for example,
-        through data-processing agreements and the provider's security certifications and contractual
-        obligations).
+        Some cloud providers we rely on store or process personal information outside Australia. They are: our
+        database provider (Supabase, Singapore), which holds all structured personal information; our web and
+        application hosting providers (Vercel and Railway, United States); our media/document storage provider
+        (Cloudinary, United States); our email-delivery provider (Resend, United States and Japan); our payment
+        processor (Stripe, United States); our DNS/CDN/security provider (Cloudflare, global); and Anthropic's
+        Claude AI service (United States), which we use for our chat assistant and to help generate host-match
+        explanations from homestay application details (including, with your consent, sensitive information such
+        as dietary, allergy and cultural or religious preferences). Anthropic does not use this data to train
+        its models and retains it only transiently. Before disclosing information to an overseas recipient, we
+        take reasonable steps to ensure the recipient does not breach the APPs (for example, through
+        data-processing agreements and the provider's security certifications and contractual obligations).
       </>
     ),
   },
@@ -165,13 +170,15 @@ const CLAUSES: Clause[] = [
   },
   {
     n: "12",
-    title: "Cookies & analytics",
+    title: "Cookies & third-party content",
     body: (
       <>
-        Our website uses cookies and similar technologies to keep you signed in, analyse traffic and improve
-        your experience. You can disable cookies in your browser, though some features (including sign-in and
-        applications) may not function correctly without them. Any analytics data is pseudonymised and subject
-        to the relevant provider's privacy policy.
+        Our website uses only essential, first-party cookies needed to keep you signed in and operate
+        applications — we do not use third-party advertising or analytics cookies and do not run Google
+        Analytics. You can disable cookies in your browser, though some features (including sign-in and
+        applications) may not function correctly without them. Some pages load web fonts from Google Fonts
+        (Google, United States) and map tiles from OpenStreetMap; those providers receive only technical
+        request data such as your IP address, not your account information.
       </>
     ),
   },
@@ -289,7 +296,7 @@ export default function HomestayPrivacy() {
             <p className="text-sm text-gray-600">For privacy enquiries, access requests or complaints:</p>
             <div className="mt-3 space-y-1 text-sm text-gray-700">
               <p><span className="font-medium">Email:</span>{" "}
-                <a href="mailto:millionstay.com@gmail.com" className="hover:underline" style={{ color: HS.brand }}>millionstay.com@gmail.com</a>
+                <a href="mailto:privacy@millionstay.com" className="hover:underline" style={{ color: HS.brand }}>privacy@millionstay.com</a>
               </p>
               <p><span className="font-medium">Website:</span> homestay.millionstay.com</p>
               <p><span className="font-medium">Address:</span> Melbourne, Victoria, Australia</p>

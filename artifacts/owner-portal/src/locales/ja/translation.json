@@ -37,6 +37,7 @@
     "submitting": "送信中...",
     "submit_error": "申請を送信できませんでした。もう一度お試しください。",
     "privacy_note": "ご入力の情報は厳重に管理し、申請対応のためにのみ使用します。",
+    "privacy_policy_link": "Privacy Policy",
     "success_title": "申請を受け付けました!",
     "success_message": "ありがとうございます。オーナー担当チームが 1〜2 営業日以内にご連絡いたします。",
     "reference_label": "申請番号:"

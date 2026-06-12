@@ -153,6 +153,7 @@
     "success_title": "Application received!",
     "success_message": "Thanks for your interest in partnering with MillionStay. Our partnerships team will review your application and reach out within 1-2 business days.",
     "reference_label": "Your reference:",
-    "privacy_note": "By submitting, you agree to be contacted by MillionStay regarding your application."
+    "privacy_note": "By submitting, you agree to be contacted by MillionStay regarding your application.",
+    "privacy_policy_link": "Privacy Policy"
   }
 }

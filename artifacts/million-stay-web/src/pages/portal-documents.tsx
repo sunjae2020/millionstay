@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useListMyDocuments, getListMyDocumentsQueryKey } from "@/lib/guest-api";
 import { useAuthStore } from "@/lib/store";
@@ -74,7 +74,11 @@ export default function PortalDocuments() {
       <div className="flex-1 max-w-5xl mx-auto w-full px-4 py-8 space-y-6">
             {/* Upload new document */}
             <div className="bg-white rounded-2xl border p-6">
-              <h2 className="font-semibold text-gray-800 mb-4">{t("portal.documents.upload_title")}</h2>
+              <h2 className="font-semibold text-gray-800 mb-2">{t("portal.documents.upload_title")}</h2>
+              <p className="text-xs text-gray-500 mb-4">
+                {t("portal.documents.privacy_notice")}{" "}
+                <Link href="/privacy-policy" className="text-primary hover:underline">{t("portal.documents.privacy_link")}</Link>
+              </p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {["passport", "visa", "enrollment", "bank_statement", "other"].map((type) => (
                   <label key={type} className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-primary hover:bg-orange-50 transition-all text-center">

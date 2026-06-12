@@ -330,6 +330,17 @@ export default function StudentApply() {
             </div>
           </div>
 
+          {/* Collection & sensitive-information consent notice (APP 5 / APP 3.3) */}
+          <div className="rounded-lg border p-4 text-sm text-gray-600 leading-relaxed" style={{ borderColor: HS.brand + "33", backgroundColor: HS.cream }}>
+            <p>
+              We collect the information in this form to assess your application and match you with a suitable homestay placement. Details about your dietary needs, allergies, and cultural or religious preferences are <strong>sensitive information</strong>, which we collect and use for matching only with your consent — including sending the relevant details to an AI service (Anthropic) to generate an explanation of why a host is a good match.
+            </p>
+            <p className="mt-2">
+              By submitting this application you consent to this collection and use. See our{" "}
+              <a href="/homestay/privacy" className="underline" style={{ color: HS.brand }}>Privacy Policy</a>.
+            </p>
+          </div>
+
           {/* T&C */}
           <div>
             <SectionTitle>Terms &amp; Conditions</SectionTitle>

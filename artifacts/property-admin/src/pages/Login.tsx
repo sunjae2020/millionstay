@@ -257,6 +257,16 @@ export default function LoginPage() {
               <p className="text-center text-xs text-slate-400">
                 Secure access · MillionStay Admin v2
               </p>
+              <p className="text-center text-xs text-slate-400">
+                <a
+                  href="https://www.millionstay.com/privacy-policy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-slate-600 hover:underline"
+                >
+                  Privacy Policy
+                </a>
+              </p>
             </div>
           </div>
         </div>

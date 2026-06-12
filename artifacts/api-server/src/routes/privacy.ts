@@ -66,7 +66,7 @@ router.get("/v1/privacy/unsubscribe", async (req, res): Promise<void> => {
     res.status(400).type("html").send(
       renderPage(
         "Unsubscribe link is invalid or expired",
-        `<p>This unsubscribe link is no longer valid. Please open the most recent email from us and use the link inside, or contact <a href="mailto:millionstay.com@gmail.com">millionstay.com@gmail.com</a>.</p>`,
+        `<p>This unsubscribe link is no longer valid. Please open the most recent email from us and use the link inside, or contact <a href="mailto:privacy@millionstay.com">privacy@millionstay.com</a>.</p>`,
         "#dc2626",
       ),
     );
@@ -89,7 +89,7 @@ router.get("/v1/privacy/unsubscribe", async (req, res): Promise<void> => {
     res.status(500).type("html").send(
       renderPage(
         "Something went wrong",
-        `<p>We couldn't process your request right now. Please try again later or email <a href="mailto:millionstay.com@gmail.com">millionstay.com@gmail.com</a>.</p>`,
+        `<p>We couldn't process your request right now. Please try again later or email <a href="mailto:privacy@millionstay.com">privacy@millionstay.com</a>.</p>`,
         "#dc2626",
       ),
     );

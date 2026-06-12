@@ -235,6 +235,9 @@ export default function ChatWidget() {
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </button>
           </form>
+          <div className="bg-white px-3 pb-2 text-center text-[10px] leading-snug text-gray-400">
+            {t("chat.disclaimer")}
+          </div>
         </div>
       )}
     </>

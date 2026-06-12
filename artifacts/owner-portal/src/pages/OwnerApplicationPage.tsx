@@ -224,7 +224,17 @@ export default function OwnerApplicationPage() {
               )}
             </button>
 
-            <p className="text-xs text-slate-400 text-center pt-2">{t("apply.privacy_note")}</p>
+            <p className="text-xs text-slate-400 text-center pt-2">
+              {t("apply.privacy_note")}{" "}
+              <a
+                href="https://www.millionstay.com/privacy-policy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-slate-600"
+              >
+                {t("apply.privacy_policy_link")}
+              </a>
+            </p>
           </form>
         )}
       </main>

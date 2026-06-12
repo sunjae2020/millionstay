@@ -15,6 +15,7 @@ import {
   bookingServicesTable,
   marketingConsentsTable,
   documentsTable,
+  csTicketsTable,
 } from "@workspace/db";
 import { requireGuestAuth } from "../middlewares/requireGuestAuth";
 import { sendBookingConfirmation } from "../lib/email";
@@ -505,6 +506,23 @@ router.put("/v1/guest/profile", async (req, res): Promise<void> => {
         await db.update(accountsTable).set({ name: fullName }).where(eq(accountsTable.id, guest.account_id));
       }
     }
+
+    // APP 10/13 — audit the self-correction. Log only WHICH fields changed,
+    // never the values, so bank/identity PII never lands in system_logs.
+    const changedFields = Object.entries({
+      first_name, last_name, phone, nationality, date_of_birth, gender,
+      university, department, student_id, study_year,
+      bank_name, bank_account_name, bank_bsb, bank_account_number, preferred_payment_method,
+    }).filter(([, v]) => v !== undefined).map(([k]) => k);
+    await logAction({
+      entityType: "guest_users",
+      entityId: guest.id,
+      action: "UPDATE",
+      actorId: guest.id,
+      actorEmail: guest.email ?? null,
+      newValue: { event: "PROFILE_SELF_CORRECTION", fields: changedFields },
+      ipAddress: req.ip ?? null,
+    });
 
     res.json({ success: true, data: updated });
   } catch (err) {
@@ -1173,7 +1191,44 @@ router.get("/v1/guest/me/data", async (req, res): Promise<void> => {
       .where(docFilter)
       .orderBy(desc(documentsTable.created_at));
 
-    // 7. Marketing consents
+    // 7. Contracts — tenancy contracts where this account is the tenant
+    //    (sole-owner only, mirrors the bookings/invoices guard).
+    const contracts = accountSoleOwner && guest.account_id
+      ? await db
+          .select({
+            id: contractsTable.id,
+            contract_ref: contractsTable.contract_ref,
+            status: contractsTable.status,
+            start_date: contractsTable.start_date,
+            end_date: contractsTable.end_date,
+            weekly_rate: contractsTable.weekly_rate,
+            total_rent: contractsTable.total_rent,
+            currency: contractsTable.currency,
+            signed_at: contractsTable.signed_at,
+            created_at: contractsTable.created_at,
+          })
+          .from(contractsTable)
+          .where(eq(contractsTable.tenant_account_id, guest.account_id))
+          .orderBy(desc(contractsTable.created_at))
+      : [];
+
+    // 8. Customer-support tickets raised by this guest.
+    const supportTickets = await db
+      .select({
+        id: csTicketsTable.id,
+        ticket_ref: csTicketsTable.ticket_ref,
+        category: csTicketsTable.category,
+        subject: csTicketsTable.subject,
+        description: csTicketsTable.description,
+        status: csTicketsTable.status,
+        created_at: csTicketsTable.created_at,
+        closed_at: csTicketsTable.closed_at,
+      })
+      .from(csTicketsTable)
+      .where(eq(csTicketsTable.guest_user_id, guest.id))
+      .orderBy(desc(csTicketsTable.created_at));
+
+    // 9. Marketing consents
     const consents = await db
       .select({
         id: marketingConsentsTable.id,
@@ -1197,13 +1252,17 @@ router.get("/v1/guest/me/data", async (req, res): Promise<void> => {
         emergency_contacts: emergencyContacts,
         bookings,
         invoices,
+        contracts,
         documents: docs,
+        support_tickets: supportTickets,
         marketing_consents: consents,
       },
       counts: {
         bookings: bookings.length,
         invoices: invoices.length,
+        contracts: contracts.length,
         documents: docs.length,
+        support_tickets: supportTickets.length,
         emergency_contacts: emergencyContacts.length,
         marketing_consents: consents.length,
       },
@@ -1279,13 +1338,22 @@ router.get("/v1/guest/me/export", requireGuestAuth, async (req, res): Promise<vo
     const consents = await db.select().from(marketingConsentsTable)
       .where(eq(marketingConsentsTable.email, profile?.email ?? ""));
 
-    // Strip internal-only fields before disclosure.
-    const sanitized = profile ? {
-      ...profile,
-      password_hash: undefined,
-      reset_token: undefined,
-      reset_token_expires: undefined,
-    } : null;
+    // Strip internal-only / auth-secret fields before disclosure.
+    // NOTE: these keys MUST match the real column names in guest_users
+    // (password_hash, reset_token_hash, reset_token_expires_at) — an earlier
+    // version stripped `reset_token`/`reset_token_expires`, which do not exist,
+    // so the reset-token hash + expiry leaked into the user-downloadable JSON.
+    let sanitized: Record<string, unknown> | null = null;
+    if (profile) {
+      const {
+        password_hash: _ph,
+        reset_token_hash: _rth,
+        reset_token_expires_at: _rte,
+        tokens_invalid_after: _tia,
+        ...rest
+      } = profile as Record<string, unknown>;
+      sanitized = rest;
+    }
 
     await logAction({
       entityType: "guest_users",
@@ -1333,21 +1401,63 @@ router.post("/v1/guest/me/deletion-request", requireGuestAuth, async (req, res):
 
     // Soft-delete: mark account, preserve booking/invoice records under
     // legal retention obligations (ATO 5y for invoices, tenancy 7y for contracts).
+    //
+    // Pseudonymise ALL directly-identifying PII in the profile record while
+    // retaining FK integrity. The email is unique+NOT NULL, so it is replaced
+    // with a collision-free tombstone rather than nulled. (Earlier versions
+    // left email, DOB, nationality, gender, student_id and full bank details
+    // intact — those are now cleared.)
     await db.update(guestUsersTable)
       .set({
         is_active: false,
         deleted_at: new Date(),
-        // Pseudonymise PII in the profile record while retaining FK integrity.
         first_name: "Deleted",
         last_name: "User",
+        email: `deleted+${guest.id}@deleted.millionstay.invalid`,
         phone: null,
+        nationality: null,
+        date_of_birth: null,
+        gender: null,
+        student_id: null,
+        university: null,
+        department: null,
+        study_year: null,
+        bank_name: null,
+        bank_account_name: null,
+        bank_bsb: null,
+        bank_account_number: null,
+        preferred_payment_method: null,
         avatar_url: null,
+        avatar_public_id: null,
+        // Invalidate any outstanding session/reset tokens for this account.
+        tokens_invalid_after: new Date(),
+        reset_token_hash: null,
+        reset_token_expires_at: null,
       })
       .where(eq(guestUsersTable.id, guest.id));
 
-    // Hard-delete emergency contacts (no retention obligation).
+    // Hard-delete emergency contacts (third-party PII, no retention obligation).
     await db.delete(guestEmergencyContactsTable)
       .where(eq(guestEmergencyContactsTable.guest_user_id, guest.id));
+
+    // Remove marketing-consent linkage for this person (no retention obligation;
+    // keyed by the original email, which we are about to stop holding).
+    if (profile.email) {
+      await db.delete(marketingConsentsTable)
+        .where(eq(marketingConsentsTable.email, profile.email.toLowerCase().trim()));
+    }
+
+    // Soft-delete the guest's own sensitive documents (ID/visa scans etc.).
+    // Booking/contract/invoice documents are attached to other entity_types and
+    // remain under their statutory retention; the purge cron destroys the
+    // Cloudinary assets for anything soft-deleted or past retention.
+    await db.update(documentsTable)
+      .set({ deleted_at: new Date() })
+      .where(and(
+        eq(documentsTable.entity_type, "guest_user"),
+        eq(documentsTable.entity_id, guest.id),
+        isNull(documentsTable.deleted_at),
+      ));
 
     await logAction({
       entityType: "guest_users",

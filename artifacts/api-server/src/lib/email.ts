@@ -1,5 +1,8 @@
 import { Resend } from "resend";
+import { db, marketingConsentsTable } from "@workspace/db";
+import { and, eq } from "drizzle-orm";
 import { t, normalizeLang, type DocLang } from "./documents/i18n";
+import { buildUnsubscribeUrl } from "./unsubscribeToken";
 
 let resend: Resend | null = null;
 
@@ -520,5 +523,96 @@ export async function sendHomestayHostEmail(opts: HomestayHostEmailOptions): Pro
   } catch (err) {
     console.error(`[email] Failed to send homestay ${opts.kind}:`, err);
     return false;
+  }
+}
+
+export interface MarketingEmailOptions {
+  to: string;
+  subject: string;
+  /** Inner HTML body for the email (without the surrounding layout/footer). */
+  bodyHtml: string;
+  toName?: string | null;
+  channel?: "email";
+}
+
+/**
+ * Send a MARKETING (promotional) email — the ONLY sanctioned path for
+ * non-transactional email. Enforces Australian APP 7 / Spam Act 2003:
+ *
+ *   1. Consent gate — refuses to send unless the recipient has an active
+ *      opt-in in `marketing_consents` that has not been withdrawn. (Express
+ *      consent only; absence of a record = no consent = no send.)
+ *   2. Functional unsubscribe — every message carries a one-click unsubscribe
+ *      link in the body AND RFC 8058 `List-Unsubscribe` / `List-Unsubscribe-Post`
+ *      headers so mail clients can offer native one-click opt-out.
+ *   3. Sender identification — the branded footer names the legal entity.
+ *
+ * Never call `client.emails.send` directly for promotional content — route it
+ * through here so the consent check and unsubscribe link can never be skipped.
+ */
+export async function sendMarketingEmail(
+  opts: MarketingEmailOptions,
+): Promise<{ ok: boolean; skipped?: boolean; error?: string; id?: string }> {
+  const to = opts.to.toLowerCase().trim();
+  const channel = opts.channel ?? "email";
+
+  // 1. Consent gate (APP 7.2 / Spam Act s.16).
+  const [consent] = await db
+    .select()
+    .from(marketingConsentsTable)
+    .where(and(eq(marketingConsentsTable.email, to), eq(marketingConsentsTable.channel, channel)))
+    .limit(1);
+  const optedIn = !!consent?.opted_in_at && !consent?.opted_out_at;
+  if (!optedIn) {
+    console.log(`[email] marketing send refused — no active consent for ${to}`);
+    return { ok: false, skipped: true, error: "No active marketing consent" };
+  }
+
+  const client = getResend();
+  if (!client) {
+    console.log(`[email] RESEND_API_KEY not set — skipping marketing email to ${to}`);
+    return { ok: false, skipped: true, error: "Email service not configured" };
+  }
+
+  // 2. Unsubscribe link (Spam Act s.18).
+  const unsubUrl = buildUnsubscribeUrl(to, channel);
+  const html = `
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+  body{font-family:'Inter',-apple-system,sans-serif;margin:0;padding:0;background:#f9fafb;color:#111;}
+  .container{max-width:560px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+  .header{background:#fff;padding:28px 32px;border-bottom:1px solid #f0f0f0;}
+  .header img{height:36px;width:auto;display:block;}
+  .body{padding:32px;font-size:14px;color:#374151;line-height:1.6;}
+  .footer{padding:20px 32px;border-top:1px solid #f0f0f0;font-size:12px;color:#999;text-align:center;}
+  .footer a{color:#E8621A;}
+</style></head><body>
+<div class="container">
+  <div class="header"><img src="${LOGO_URL}" alt="MillionStay" /></div>
+  <div class="body">${opts.bodyHtml}</div>
+  <div class="footer">
+    © ${new Date().getFullYear()} MillionStay Pty Ltd · Melbourne, Victoria, Australia<br/>
+    You are receiving this because you opted in to marketing from MillionStay.<br/>
+    <a href="${unsubUrl}">Unsubscribe</a> · <a href="${PORTAL_URL}/privacy-policy">Privacy Policy</a>
+  </div>
+</div></body></html>`;
+
+  try {
+    const result = await client.emails.send({
+      from: FROM,
+      to: [to],
+      subject: opts.subject,
+      html,
+      // 3. RFC 8058 one-click unsubscribe headers.
+      headers: {
+        "List-Unsubscribe": `<${unsubUrl}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
+    });
+    const id = (result as any)?.data?.id ?? undefined;
+    console.log(`[email] marketing email sent to ${to} (${id ?? "no-id"})`);
+    return { ok: true, id };
+  } catch (err) {
+    console.error(`[email] Failed to send marketing email to ${to}:`, err);
+    return { ok: false, error: err instanceof Error ? err.message : "Send failed" };
   }
 }

@@ -13,8 +13,8 @@ MillionStay is bound by the **Privacy Act 1988 (Cth)**, the **Australian Privacy
 
 | Control | Status |
 | --- | --- |
-| Public privacy policy at `/privacy` | ⏳ Draft pending |
-| Privacy contact (`privacy@millionstay.com`) published | ⏳ Mailbox pending |
+| Public privacy policy at `/privacy-policy` (main) + `/homestay/privacy` | ✅ Live |
+| Privacy contact (`privacy@millionstay.com`) published | ⚠️ Published in policy + DSAR endpoints — **mailbox must be provisioned** |
 
 ## APP 2 — Anonymity / pseudonymity
 
@@ -45,8 +45,10 @@ Code: `lib/db/src/schema/marketing_consents.ts`, `routes/privacy.ts` (unsubscrib
 | **Cloudflare** | Global edge | IP, request metadata, DNS | DNS, CDN, WAF |
 | **Stripe** | USA / global | Card last-4, BIN, amount | Payments |
 | **Cloudinary** | USA / global | Uploaded images | Image storage |
-| **Google** Maps | Global | Property addresses → coordinates | Map display |
-| **Anthropic** (Claude) | USA | Landing-page chat messages a visitor types, plus admin-published knowledge content | AI customer chat assistant |
+| **OpenStreetMap** (tiles) | EU / global | Visitor IP (browser fetches map tiles directly) | Map display |
+| **Google Fonts** | USA / global | Visitor IP + User-Agent (browser fetches fonts directly) | Web fonts on all frontends |
+| **Third-party partner API consumers** | Varies | Curated booking data (booking ref, guest name, dates, rates) via scoped `/api/ext/v1` keys — no email/phone/passport/payment | Authorised partner integrations |
+| **Anthropic** (Claude) | USA | (1) Landing-page chat messages a visitor types + admin-published knowledge content; (2) homestay application attributes — nationality, minor status, dietary, allergies, smoking, cultural/religious preferences — used to generate host-match rationale | AI customer chat assistant + homestay host-matching |
 
 The public privacy policy must list these vendors and disclose Standard Contractual Clauses (SCC) or equivalent contractual safeguards.
 
