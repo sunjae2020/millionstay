@@ -4,13 +4,41 @@
 import { getApiBase } from "./api-base";
 
 export interface StudentPreferences {
-  suburb?: string;
+  // Personal (extends the top-level student columns)
+  native_language?: string;
+  english_level?: string;
+  relationship_with_host?: string;
+  additional_comment?: string;
+  // School information (in Australia)
   school?: string;
-  timetable?: string;
-  study_type?: string;
+  course_name?: string;
+  course_start_date?: string;
+  campus_location?: string;
+  // Homestay information
+  homestay_start_date?: string;
+  duration_weeks?: string;
+  room_type?: string;
   meals?: string;
+  allergic_to_pets?: string;
+  can_live_with_pets?: string;
+  smoker?: string;
+  can_live_with_smokers?: string;
+  beliefs?: string;
   dietary?: string;
-  environment?: string;
+  food_avoided?: string;
+  hobbies?: string;
+  can_live_with_students?: string;
+  can_live_with_children?: string;
+  other_requirements?: string;
+  self_introduction?: string;
+  // Airport pickup
+  airport_pickup_option?: string;
+  arrival_date?: string;
+  arrival_time?: string;
+  flight_no?: string;
+  // Emergency contact
+  emergency_contact?: { name?: string; relationship?: string; contact_no?: string; email?: string };
+  // Optional arrival support
   addons?: { guardian_service?: boolean; airport_pickup?: boolean; settlement_support?: boolean };
 }
 
