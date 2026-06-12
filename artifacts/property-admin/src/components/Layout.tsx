@@ -60,6 +60,7 @@ import {
   MessagesSquare,
   Sparkles,
   GraduationCap,
+  Handshake,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
@@ -90,6 +91,7 @@ function getNav(t: (k: string) => string): NavSection[] {
         { href: "/account/leads", label: t("nav.lead"), icon: TrendingUp },
         { href: "/account/homestay-applications", label: t("nav.homestay_applications"), icon: Home },
         { href: "/account/homestay-student-requests", label: t("nav.homestay_student_requests"), icon: GraduationCap },
+        { href: "/account/homestay-placements", label: t("nav.homestay_placements"), icon: Handshake },
         { href: "/account/tasks", label: t("nav.task"), icon: CheckSquare },
       ],
     },

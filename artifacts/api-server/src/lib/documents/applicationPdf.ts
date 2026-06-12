@@ -10,7 +10,7 @@
  * One body builder + two thin mappers keep the field→row mapping in a single place.
  */
 import { renderDocumentShell, escapeHtml, getCompanyInfo, type CompanyInfo } from "./theme";
-import type { HomestayStudentRequest, HomestayHostApplication } from "@workspace/db";
+import type { HomestayStudentRequest, HomestayHostApplication, HomestayPlacement } from "@workspace/db";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Input shapes
@@ -404,6 +404,78 @@ export function hostApplicationToDoc(
     submittedAt: row.created_at,
     sections,
     freeText,
+    signatures: resolveSignatures(signing, signed),
+    signed,
+  };
+}
+
+/** Standard Homestay Placement Agreement terms (English). Edit in one place. */
+export const STANDARD_PLACEMENT_TERMS =
+  "This Homestay Placement Agreement is made between MillionStay, the host family, and the " +
+  "student (and their guardian, where the student is under 18).\n\n" +
+  "1. Placement. The host family agrees to provide accommodation and the agreed meal plan to the " +
+  "student for the term shown above. The student agrees to respect the host family's home and house rules.\n\n" +
+  "2. Fees. The placement fee, deposit and ongoing accommodation fee shown above are payable in advance " +
+  "as invoiced. The deposit is refundable at the end of the placement subject to no outstanding amounts or damage.\n\n" +
+  "3. Meals & facilities. Meals are provided per the selected package. The student has use of the agreed " +
+  "room and shared facilities.\n\n" +
+  "4. Conduct & safety. The student will follow reasonable house rules. Where the student is a minor, the " +
+  "host family confirms all adult household members hold a valid Working with Children Check.\n\n" +
+  "5. Changes & cancellation. Either party may request changes through MillionStay. Cancellation before " +
+  "move-in: the placement fee is non-refundable; the deposit is refunded. After move-in, at least two (2) " +
+  "weeks' written notice is required; fees are pro-rated to the move-out date.\n\n" +
+  "6. Privacy. Personal information is handled in line with MillionStay's Privacy Policy and the Australian " +
+  "Privacy Principles.\n\n" +
+  "By signing below, each party confirms they have read, understood and agree to these terms.";
+
+export function placementToDoc(
+  placement: HomestayPlacement,
+  host: HomestayHostApplication | null,
+  student: HomestayStudentRequest | null,
+  signing?: SigningView,
+  opts: { signed?: boolean; termsText?: string } = {},
+): ApplicationDocInput {
+  const signed = opts.signed ?? (signing?.status === "signed");
+  const money = (n: unknown) => {
+    const num = Number(n ?? 0);
+    return `${placement.currency || "AUD"} ${num.toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+  const studentName = student ? `${student.student_first_name} ${student.student_last_name}`.trim() : "—";
+  const hostName = host ? `${host.first_name} ${host.last_name}`.trim() : "—";
+
+  const sections: ApplicationDocSection[] = [];
+  const push = (s: ApplicationDocSection | null) => { if (s) sections.push(s); };
+
+  push(section("Parties", [
+    ["Student", studentName],
+    ["Student email", val(student?.student_email)],
+    ["Guardian", student?.is_minor ? val(student?.guardian_name) : "—"],
+    ["Host family", hostName],
+    ["Host email", val(host?.email)],
+    ["Provider", "MillionStay Pty Ltd"],
+  ]));
+
+  push(section("Placement", [
+    ["Suburb", val(host?.suburb)],
+    ["Address", val(host?.address)],
+    ["Move-in date", val(placement.move_in_date)],
+    ["Move-out date", val(placement.move_out_date)],
+  ]));
+
+  push(section("Fees", [
+    ["Placement fee", money(placement.placement_fee)],
+    ["Deposit", money(placement.deposit)],
+    ["Accommodation fee (monthly)", money(placement.monthly_fee)],
+    ["Currency", val(placement.currency)],
+  ]));
+
+  return {
+    docType: "Homestay Placement Agreement",
+    ref: placement.placement_ref,
+    status: placement.status,
+    submittedAt: placement.created_at,
+    sections,
+    freeText: [{ heading: "Agreement terms", body: opts.termsText ?? STANDARD_PLACEMENT_TERMS }],
     signatures: resolveSignatures(signing, signed),
     signed,
   };

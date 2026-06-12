@@ -443,7 +443,7 @@ export async function sendLeadNotificationEmail(data: LeadNotificationData): Pro
    Homestay host-family application — applicant-facing emails.
    English only, branded header. Best-effort: never throws.
    ───────────────────────────────────────────────────────────────────────── */
-type HomestayEmailKind = "received" | "docs_requested" | "approved" | "rejected";
+type HomestayEmailKind = "received" | "docs_requested" | "approved" | "rejected" | "placement_proposed" | "placement_signed";
 
 interface HomestayHostEmailOptions {
   to: string;
@@ -486,6 +486,20 @@ const HOMESTAY_EMAIL_COPY: Record<HomestayEmailKind, { subject: (ref: string) =>
     body: () =>
       `Thank you for your interest in hosting with MillionStay. After review, we're unable to approve your` +
       ` application at this time. If you believe this was in error or your circumstances change, please reply to this email.`,
+  },
+  placement_proposed: {
+    subject: (ref) => `New student match for your homestay (${ref})`,
+    heading: "You have a new student match",
+    body: (portalUrl) =>
+      `Great news — our team has matched a student with your homestay. Please log in to your host portal to` +
+      ` review the placement details and accept the match: <a href="${portalUrl}">${portalUrl}</a>.`,
+  },
+  placement_signed: {
+    subject: (ref) => `Your homestay placement agreement is signed (${ref})`,
+    heading: "Placement agreement signed",
+    body: (portalUrl) =>
+      `The homestay placement agreement has been signed by all parties. A signed copy is attached/emailed` +
+      ` separately. You can view the placement in your host portal: <a href="${portalUrl}">${portalUrl}</a>.`,
   },
 };
 
