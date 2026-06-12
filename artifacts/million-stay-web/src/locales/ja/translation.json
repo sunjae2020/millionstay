@@ -1020,6 +1020,7 @@
       "ref_referrer_name": "紹介者の氏名",
       "review_title": "申請内容の確認",
       "agreement_text": "本申請を送信することで、提供した情報が正確かつ完全であることを確認します。MillionStayのホームステイホスト規約に同意し、安全で温かい環境を提供し、適用されるすべてのWorking with Children Check要件を遵守することに同意します。掲載は管理者の承認後にのみ公開されます。",
+      "agreement_title": "ホームステイ規約および同意",
       "agreement_accept": "上記のホームステイホスト規約を読み、同意します。",
       "signature_name": "署名（氏名を入力）",
       "signature_placeholder": "正式な氏名",

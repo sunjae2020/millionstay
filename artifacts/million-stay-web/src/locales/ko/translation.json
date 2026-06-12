@@ -914,6 +914,7 @@
       "ref_referrer_name": "추천인 이름",
       "review_title": "신청 내용 확인",
       "agreement_text": "본 신청서를 제출함으로써 제공한 정보가 정확하고 완전함을 확인합니다. MillionStay 홈스테이 호스트 약관에 동의하며, 안전하고 따뜻한 환경을 제공하고, 적용되는 모든 아동 관련 업무 적격 확인서(WWCC) 요건을 준수할 것에 동의합니다. 등록은 관리자 승인 후에만 공개됩니다.",
+      "agreement_title": "홈스테이 약관 및 동의",
       "agreement_accept": "위 홈스테이 호스트 약관을 읽고 동의합니다.",
       "signature_name": "서명 (성명 전체 입력)",
       "signature_placeholder": "법적 성명 전체",
