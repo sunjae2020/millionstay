@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, asc, desc, inArray, gte, lte, or, isNull, ilike, SQL } from "drizzle-orm";
+import { eq, ne, and, asc, desc, inArray, gte, lte, or, isNull, ilike, SQL } from "drizzle-orm";
 import {
   db,
   spacesTable,
@@ -120,69 +120,22 @@ async function listPublicSpaces(
   ]);
 
   /* ── Step 2: Build base DB conditions ───────────────────────── */
-  // Map frontend space_type values to DB values
+  // Map frontend space_type values to DB values.
+  // NOTE: Homestay is intentionally NOT a public self-serve search type — it is
+  // an admin-brokered MATCHING product (see docs/proposals/HOMESTAY_WORKFLOW.md),
+  // so homestay spaces are always EXCLUDED from this listing below.
   const SPACE_TYPE_MAP: Record<string, string> = {
     EntireSpace: "Whole Property",
     RoomSpace:   "Private Room",
     BedSpace:    "Shared Room",
-    Homestay:    "Homestay",
   };
   const dbSpaceType = space_type ? (SPACE_TYPE_MAP[space_type] ?? space_type) : null;
 
-  // Homestay is offered through products/services, not only the space_type column.
-  // When the homestay filter is active, also include any space that is LINKED to a
-  // homestay offering via:
-  //   (b) an accommodation product flagged room_type = 'homestay', or
-  //   (c) a homestay service — attached to one of the space's accommodation products
-  //       (accommodation_service_catalog) or directly to the space (space_service_catalog).
-  let homestaySpaceIds: number[] = [];
-  if (dbSpaceType === "Homestay") {
-    const ids = new Set<number>();
-    const hsServices = await db
-      .select({ id: serviceCatalogTable.id })
-      .from(serviceCatalogTable)
-      .where(ilike(serviceCatalogTable.name, "%homestay%"));
-    const hsServiceIds = hsServices.map((r) => r.id);
-
-    // (b) accommodation products explicitly classified as homestay
-    const accHomestay = await db
-      .select({ space_id: accommodationCatalogTable.space_id })
-      .from(accommodationCatalogTable)
-      .where(eq(accommodationCatalogTable.room_type, "homestay"));
-    accHomestay.forEach((r) => r.space_id != null && ids.add(r.space_id));
-
-    if (hsServiceIds.length) {
-      // (c1) space's accommodation product linked to a homestay service
-      const accBySvc = await db
-        .select({ space_id: accommodationCatalogTable.space_id })
-        .from(accommodationCatalogTable)
-        .innerJoin(
-          accommodationServiceCatalogTable,
-          eq(accommodationServiceCatalogTable.accommodation_id, accommodationCatalogTable.id),
-        )
-        .where(inArray(accommodationServiceCatalogTable.service_id, hsServiceIds));
-      accBySvc.forEach((r) => r.space_id != null && ids.add(r.space_id));
-
-      // (c2) space directly linked to a homestay service
-      const spaceBySvc = await db
-        .select({ space_id: spaceServiceCatalogTable.space_id })
-        .from(spaceServiceCatalogTable)
-        .where(inArray(spaceServiceCatalogTable.service_id, hsServiceIds));
-      spaceBySvc.forEach((r) => r.space_id != null && ids.add(r.space_id));
-    }
-    homestaySpaceIds = [...ids];
-  }
-
   const conditions: SQL[] = [eq(spacesTable.status, "Active")];
+  // Homestay listings are matched by the ops team, never browsed publicly.
+  conditions.push(or(ne(spacesTable.space_type, "Homestay"), isNull(spacesTable.space_type)) as SQL);
   if (opts?.propertyIds) conditions.push(inArray(spacesTable.property_id, opts.propertyIds));
-  if (dbSpaceType === "Homestay") {
-    // explicit space_type OR linked-via-product/service
-    conditions.push(
-      homestaySpaceIds.length
-        ? (or(eq(spacesTable.space_type, "Homestay"), inArray(spacesTable.id, homestaySpaceIds)) as SQL)
-        : eq(spacesTable.space_type, "Homestay"),
-    );
-  } else if (dbSpaceType) {
+  if (dbSpaceType && dbSpaceType !== "Homestay") {
     conditions.push(eq(spacesTable.space_type, dbSpaceType));
   }
   if (suburb_id)  conditions.push(eq(propertiesTable.suburb_id, Number(suburb_id)));
