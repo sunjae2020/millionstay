@@ -12,6 +12,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, GraduationCap, PencilLine, ShieldCheck, Sparkles, Wand2, Loader2, MapPin, Check, AlertTriangle, ExternalLink, Handshake } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
+import { HomestaySignatureCard } from "@/components/HomestaySignatureCard";
 import { StudentStatusBadge, STUDENT_STATUS_ORDER, STUDENT_STATUS_CONFIG, type StudentStatus } from "./HomestayStudentRequests";
 
 const API = "/api/v1/homestay-student-requests";
@@ -269,6 +270,9 @@ export default function HomestayStudentRequestDetail() {
             <div className="text-xs text-muted-foreground"><span className="font-medium text-foreground">{t("homestayStudent.label_notes")}:</span> {req.notes}</div>
           )}
         </div>
+
+        {/* Signature & document */}
+        <HomestaySignatureCard contextType="student_app" contextId={id} entityType="homestay_student_request" />
 
         {/* AI host-family recommendations */}
         <div className="border rounded-lg overflow-hidden">

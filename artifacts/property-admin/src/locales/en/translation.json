@@ -2776,5 +2776,25 @@
     "toast_updated": "Placement updated",
     "toast_sent": "Agreement sent",
     "toast_link_copied": "Signing link copied"
+  },
+  "homestayDoc": {
+    "title": "Signature & document",
+    "none": "No signing request for this record yet.",
+    "status_label": "Document",
+    "signed": "Signed",
+    "pending": "Awaiting signature",
+    "btn_preview": "Preview PDF",
+    "btn_download": "Download PDF",
+    "btn_copy_link": "Copy signing link",
+    "btn_resend": "Send / Resend",
+    "send_title": "Send signed document",
+    "recipient_applicant": "Applicant",
+    "recipient_agent": "Agent",
+    "recipient_ops": "Operations team",
+    "history_title": "Email history",
+    "history_empty": "No emails sent for this record yet.",
+    "toast_sent": "Document sent",
+    "toast_link_copied": "Signing link copied",
+    "error": "Something went wrong"
   }
 }
