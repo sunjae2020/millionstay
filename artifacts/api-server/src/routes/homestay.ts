@@ -134,7 +134,10 @@ homestayPublicRouter.post("/v1/public/homestay-host-applications", async (req, r
       res.status(400).json({ success: false, error: "Password must be at least 12 characters" });
       return;
     }
-    if (!body.agreement_accepted) {
+    // Draft mode: save progress with a login but skip the agreement gate — the host
+    // finalises later via POST /v1/homestay/submit.
+    const isDraft = body.draft === true;
+    if (!isDraft && !body.agreement_accepted) {
       res.status(400).json({ success: false, error: "You must accept the host agreement" });
       return;
     }
@@ -177,29 +180,31 @@ homestayPublicRouter.post("/v1/public/homestay-host-applications", async (req, r
       email,
       first_name,
       last_name,
-      status: "Submitted",
+      status: isDraft ? "Draft" : "Submitted",
       account_id: account!.id,
       partner_user_id: user!.id,
       agreement_accepted: !!body.agreement_accepted,
-      agreement_accepted_at: new Date(),
+      agreement_accepted_at: body.agreement_accepted ? new Date() : null,
     } as any).returning();
 
     // 4) Auto-login token (portal works regardless of approval)
     const token = signPartnerJWT({ id: user!.id, email, account_id: account!.id, portal_type: "homestay" });
 
-    // 5) Emails — best-effort, never block
-    void sendHomestayHostEmail({ to: email, toName: first_name, applicationRef: application_ref, kind: "received" })
-      .catch((e) => console.error("[homestay] received email failed:", e));
-    const adminTo = process.env.LEAD_NOTIFICATION_EMAIL;
-    if (adminTo) {
-      void sendLeadNotificationEmail({
-        leadRef: application_ref, inquiryType: "Homestay Host Application",
-        firstName: first_name, lastName: last_name, email, phone: body.phone ?? null,
-        message: `New homestay host application (${application_ref})`, description: null,
-      }).catch((e) => console.error("[homestay] admin notify failed:", e));
+    // 5) Emails — best-effort, never block. Skipped for Drafts (not yet submitted).
+    if (!isDraft) {
+      void sendHomestayHostEmail({ to: email, toName: first_name, applicationRef: application_ref, kind: "received" })
+        .catch((e) => console.error("[homestay] received email failed:", e));
+      const adminTo = process.env.LEAD_NOTIFICATION_EMAIL;
+      if (adminTo) {
+        void sendLeadNotificationEmail({
+          leadRef: application_ref, inquiryType: "Homestay Host Application",
+          firstName: first_name, lastName: last_name, email, phone: body.phone ?? null,
+          message: `New homestay host application (${application_ref})`, description: null,
+        }).catch((e) => console.error("[homestay] admin notify failed:", e));
+      }
     }
 
-    void logAction({ entityType: HOMESTAY_ENTITY, entityId: appRow!.id, action: "CREATE", actorId: user!.id, actorEmail: email, newValue: { application_ref, status: "Submitted" } });
+    void logAction({ entityType: HOMESTAY_ENTITY, entityId: appRow!.id, action: "CREATE", actorId: user!.id, actorEmail: email, newValue: { application_ref, status: isDraft ? "Draft" : "Submitted" } });
 
     res.status(201).json({ success: true, application_ref, token, application: publicView(appRow!) });
   } catch (err: any) {
@@ -309,6 +314,75 @@ homestayPortalRouter.post("/v1/homestay/landing/activate", async (req, res): Pro
   catch (e) { console.error("[homestay] space activation toggle failed:", e); }
   void logAction({ entityType: HOMESTAY_ENTITY, entityId: app.id, action: "UPDATE", actorId: partner.id, actorEmail: partner.email, newValue: { landing_active: active } });
   res.json({ success: true, landing_active: row!.landing_active });
+});
+
+// WWCC / insurance compliance — host may set/update any time.
+homestayPortalRouter.put("/v1/homestay/compliance", async (req, res): Promise<void> => {
+  const partner = (req as any).partner as PartnerAuthPayload;
+  const app = await loadMyApplication(partner);
+  if (!app) { res.status(404).json({ success: false, error: "No application found" }); return; }
+  const b = req.body ?? {};
+  const updates: Record<string, unknown> = {};
+  if (Array.isArray(b.wwcc_records)) {
+    updates.wwcc_records = b.wwcc_records.slice(0, 20).map((w: any) => ({
+      name: String(w.name ?? "").slice(0, 120),
+      wwcc_number: String(w.wwcc_number ?? "").slice(0, 60),
+      expiry_date: w.expiry_date ?? null,
+      verified: !!w.verified,
+    }));
+  }
+  for (const k of ["insurance_provider", "insurance_policy_no", "insurance_expiry"]) {
+    if (b[k] !== undefined) updates[k] = b[k] === "" ? null : String(b[k]).slice(0, 120);
+  }
+  if (!Object.keys(updates).length) { res.status(400).json({ success: false, error: "Nothing to update" }); return; }
+  const [row] = await db.update(homestayHostApplicationsTable).set(updates)
+    .where(eq(homestayHostApplicationsTable.id, app.id)).returning();
+  void logAction({ entityType: HOMESTAY_ENTITY, entityId: app.id, action: "UPDATE", actorId: partner.id, actorEmail: partner.email, newValue: { compliance: Object.keys(updates) } });
+  res.json({ success: true, application: publicView(row!) });
+});
+
+// Bank payout details — collected only AFTER approval (sensitive PII).
+homestayPortalRouter.put("/v1/homestay/bank", async (req, res): Promise<void> => {
+  const partner = (req as any).partner as PartnerAuthPayload;
+  const app = await loadMyApplication(partner);
+  if (!app) { res.status(404).json({ success: false, error: "No application found" }); return; }
+  if (app.status !== "Approved") {
+    res.status(403).json({ success: false, error: "Bank details can only be added after approval" });
+    return;
+  }
+  const b = req.body ?? {};
+  const updates: Record<string, unknown> = {};
+  for (const k of ["bank_name", "bank_account_name", "bank_bsb", "bank_account_number", "bank_swift"]) {
+    if (b[k] !== undefined) updates[k] = b[k] === "" ? null : String(b[k]).slice(0, 120);
+  }
+  if (!Object.keys(updates).length) { res.status(400).json({ success: false, error: "Nothing to update" }); return; }
+  const [row] = await db.update(homestayHostApplicationsTable).set(updates)
+    .where(eq(homestayHostApplicationsTable.id, app.id)).returning();
+  // Audit which bank fields changed — never log the values themselves (PII).
+  void logAction({ entityType: HOMESTAY_ENTITY, entityId: app.id, action: "UPDATE", actorId: partner.id, actorEmail: partner.email, newValue: { bank_updated: Object.keys(updates) } });
+  res.json({ success: true, application: publicView(row!) });
+});
+
+// Finalise a Draft application → Submitted (requires agreement acceptance).
+homestayPortalRouter.post("/v1/homestay/submit", async (req, res): Promise<void> => {
+  const partner = (req as any).partner as PartnerAuthPayload;
+  const app = await loadMyApplication(partner);
+  if (!app) { res.status(404).json({ success: false, error: "No application found" }); return; }
+  if (app.status !== "Draft") {
+    res.status(409).json({ success: false, error: "Only a Draft application can be submitted" });
+    return;
+  }
+  if (!app.agreement_accepted && req.body?.agreement_accepted !== true) {
+    res.status(400).json({ success: false, error: "You must accept the host agreement" });
+    return;
+  }
+  const [row] = await db.update(homestayHostApplicationsTable)
+    .set({ status: "Submitted", agreement_accepted: true, agreement_accepted_at: new Date(), signature_name: req.body?.signature_name ?? app.signature_name })
+    .where(eq(homestayHostApplicationsTable.id, app.id)).returning();
+  void logAction({ entityType: HOMESTAY_ENTITY, entityId: app.id, action: "STATUS_CHANGE", actorId: partner.id, actorEmail: partner.email, newValue: { status: "Submitted" } });
+  void sendHomestayHostEmail({ to: row!.email, toName: row!.first_name, applicationRef: row!.application_ref, kind: "received" })
+    .catch((e) => console.error("[homestay] submit email failed:", e));
+  res.json({ success: true, application: publicView(row!) });
 });
 
 /* ═══════════════════════════════════════════════════════════════════════════
