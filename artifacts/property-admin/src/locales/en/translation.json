@@ -70,7 +70,8 @@
     "addon_services": "Add-on Services",
     "homestay_applications": "Homestay Applications",
     "homestay_student_requests": "Student Applications",
-    "homestay_placements": "Homestay Placements"
+    "homestay_placements": "Homestay Placements",
+    "document_templates": "Document Templates"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -2826,6 +2827,34 @@
     "history_empty": "No emails sent for this record yet.",
     "toast_sent": "Document sent",
     "toast_link_copied": "Signing link copied",
+    "error": "Something went wrong"
+  },
+  "documentTemplate": {
+    "title": "Document Templates",
+    "subtitle": "Edit the homestay email and contract copy sent to applicants and hosts.",
+    "kind_email": "Email",
+    "kind_contract": "Contract",
+    "col_name": "Template",
+    "col_key": "Key",
+    "col_locales": "Locales",
+    "col_status": "Status",
+    "status_draft": "Draft",
+    "status_published": "Published",
+    "status_archived": "Archived",
+    "empty": "No templates found.",
+    "not_found": "Template not found.",
+    "f_subject": "Subject",
+    "f_body": "Body (HTML)",
+    "preview": "Preview",
+    "variables": "Variables",
+    "variables_hint": "Click to insert. Use {{name}} format in the subject and body.",
+    "add_locale": "Add language",
+    "btn_save": "Save draft",
+    "btn_publish": "Publish",
+    "btn_test": "Send test",
+    "toast_saved": "Template saved",
+    "toast_published": "Template published",
+    "toast_test_sent": "Test email sent",
     "error": "Something went wrong"
   }
 }

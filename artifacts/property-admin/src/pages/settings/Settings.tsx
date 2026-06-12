@@ -57,6 +57,12 @@ const ADMIN_CARDS: CardDef[] = [
     href: "/settings/email-templates",
   },
   {
+    title: "Document Templates",
+    description: "Editable homestay email + contract templates",
+    icon: FileText,
+    href: "/settings/document-templates",
+  },
+  {
     title: "Integrations",
     description: "Stripe, Cloudinary, Resend and more",
     icon: Plug,
