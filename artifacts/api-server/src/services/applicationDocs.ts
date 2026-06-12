@@ -24,6 +24,7 @@ import {
 } from "../lib/documents/applicationPdf.js";
 import { isCloudinaryConfigured, uploadPrivateToCloudinary } from "../utils/cloudinary.js";
 import { sendDocumentEmail } from "../lib/email.js";
+import { resolveTemplate } from "../lib/documents/templateEngine.js";
 
 type SigningRow = typeof contractSigningRequestsTable.$inferSelect;
 
@@ -71,7 +72,9 @@ export async function buildDocForSigning(
       .where(eq(homestayHostApplicationsTable.id, placement.host_application_id)).limit(1);
     const [student] = await db.select().from(homestayStudentRequestsTable)
       .where(eq(homestayStudentRequestsTable.id, placement.student_request_id)).limit(1);
-    return placementToDoc(placement, host ?? null, student ?? null, view, opts);
+    // Editable terms (falls back to STANDARD_PLACEMENT_TERMS inside placementToDoc).
+    const termsTpl = await resolveTemplate({ kind: "contract", key: "homestay_placement_terms", locale: "en" });
+    return placementToDoc(placement, host ?? null, student ?? null, view, { ...opts, termsText: termsTpl?.bodyHtml || undefined });
   }
   return null;
 }
