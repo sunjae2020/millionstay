@@ -2583,6 +2583,21 @@
     "doc_note_placeholder": "给申请人的备注（可选）…",
     "toast_approved": "申请已批准",
     "toast_rejected": "申请已拒绝",
-    "toast_docs_requested": "已要求材料"
+    "toast_docs_requested": "已要求材料",
+    "section_compliance": "合规",
+    "section_bank": "银行信息",
+    "wwcc_title": "儿童工作核查（WWCC）",
+    "wwcc_number": "WWCC编号",
+    "wwcc_expiry": "到期日",
+    "wwcc_verified": "已核实",
+    "no_wwcc": "暂无WWCC记录。",
+    "f_insurance_provider": "保险公司",
+    "f_insurance_policy": "保单号",
+    "f_insurance_expiry": "保险到期日",
+    "f_bank_name": "银行名称",
+    "f_bank_account_name": "账户名称",
+    "f_bank_bsb": "BSB",
+    "f_bank_account_number": "账号",
+    "f_bank_swift": "SWIFT / BIC"
   }
 }

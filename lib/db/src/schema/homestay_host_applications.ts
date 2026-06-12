@@ -85,6 +85,22 @@ export const homestayHostApplicationsTable = pgTable("homestay_host_applications
   reviewed_at: timestamp("reviewed_at", { withTimezone: true }),
   approval_notes: text("approval_notes"),
 
+  // ── Compliance — WWCC (Working with Children Check) & insurance ───────────
+  // wwcc_records: [{ name, wwcc_number, expiry_date (YYYY-MM-DD), verified }]
+  // One entry per 18+ resident when hosting under-18 students.
+  wwcc_records: jsonb("wwcc_records").notNull().default([]),
+  insurance_provider: text("insurance_provider"),
+  insurance_policy_no: text("insurance_policy_no"),
+  insurance_expiry: text("insurance_expiry"), // YYYY-MM-DD
+
+  // ── Bank (host payout) — collected in the portal AFTER approval, never in the
+  // public form, to minimise PII exposure. Used for fortnightly host payments.
+  bank_name: text("bank_name"),
+  bank_account_name: text("bank_account_name"),
+  bank_bsb: text("bank_bsb"),
+  bank_account_number: text("bank_account_number"),
+  bank_swift: text("bank_swift"),
+
   // ── Links & exposure ─────────────────────────────────────────────────────
   account_id: integer("account_id"),            // set when approved
   partner_user_id: integer("partner_user_id"),  // host portal login (created on submit)

@@ -1031,7 +1031,11 @@
       "email_exists": "このメールアドレスのアカウントは既に存在します。",
       "email_exists_login": "ログインする",
       "already_applied": "すでに申請済みですか？",
-      "login_link": "ホストポータルにログイン"
+      "login_link": "ホストポータルにログイン",
+      "save_draft": "下書き保存",
+      "saving_draft": "保存中…",
+      "draft_failed": "下書きの保存に失敗しました。もう一度お試しください。",
+      "draft_needs_login": "下書きを保存する前に、氏名・メールアドレス・有効なパスワードを入力してください。"
     },
     "login": {
       "title": "ホストポータル",
@@ -1058,14 +1062,16 @@
         "under_review": "審査中",
         "docs_requested": "書類のリクエスト",
         "approved": "承認済み",
-        "rejected": "不承認"
+        "rejected": "不承認",
+        "draft": "下書き"
       },
       "status_desc": {
         "submitted": "申請を受け付けました。まもなく審査を開始します。",
         "under_review": "担当チームが申請を審査中です。まもなくご連絡します。",
         "docs_requested": "手続きを進めるため、追加の書類が必要です。以下からアップロードしてください。",
         "approved": "おめでとうございます！申請が承認されました。公開ランディングページを有効化できます。",
-        "rejected": "残念ながら今回は申請が承認されませんでした。詳細はお問い合わせください。"
+        "rejected": "残念ながら今回は申請が承認されませんでした。詳細はお問い合わせください。",
+        "draft": "申請が下書きとして保存されています。入力を完了して送信すると審査が始まります。"
       },
       "requested_title": "リクエストされた書類",
       "requested_sub": "審査を続けるため、以下の書類をアップロードしてください。",
@@ -1086,7 +1092,43 @@
       "landing_on": "掲載は公開中",
       "landing_off": "掲載は非公開",
       "summary_title": "申請内容",
-      "edit": "申請を編集"
+      "edit": "申請を編集",
+      "draft_saved_notice": "下書きを保存しました。下記からいつでも申請を完了して送信できます。",
+      "draft_banner_title": "申請は下書きの状態です",
+      "draft_banner_desc": "審査を開始するには、入力を完了して送信してください。",
+      "draft_agreement": "提供した情報が正確であることを確認し、ホームステイホスト規約に同意します。",
+      "draft_signature_placeholder": "署名としてフルネームを入力してください",
+      "draft_submit": "完了して送信",
+      "submitting": "送信中…",
+      "submit_failed": "申請の送信に失敗しました。もう一度お試しください。",
+      "compliance_title": "コンプライアンス",
+      "compliance_sub": "児童関連業務適格確認（WWCC）と保険情報を最新の状態に保ってください。",
+      "compliance_failed": "コンプライアンス情報の保存に失敗しました。",
+      "wwcc_title": "児童関連業務適格確認（WWCC）",
+      "wwcc_note": "18歳未満の学生を受け入れるホストには有効なWWCCが必要です。",
+      "wwcc_add": "WWCCを追加",
+      "wwcc_empty": "WWCCの記録はまだありません。",
+      "wwcc_name": "保持者名",
+      "wwcc_number": "WWCC番号",
+      "wwcc_expiry": "有効期限",
+      "wwcc_verified": "確認済み",
+      "wwcc_unverified": "保留中",
+      "ins_provider": "保険会社",
+      "ins_policy": "証券番号",
+      "ins_expiry": "保険有効期限",
+      "save_compliance": "コンプライアンスを保存",
+      "bank_title": "銀行情報",
+      "bank_helper": "隔週のホスト支払いに使用します。",
+      "bank_locked": "申請が承認された後にご利用いただけます。",
+      "bank_failed": "銀行情報の保存に失敗しました。",
+      "bank_name": "銀行名",
+      "bank_account_name": "口座名義",
+      "bank_bsb": "BSB",
+      "bank_account_number": "口座番号",
+      "bank_swift": "SWIFT / BIC",
+      "save_bank": "銀行情報を保存",
+      "saving": "保存中…",
+      "saved": "保存しました"
     },
     "opt": {
       "gender": {

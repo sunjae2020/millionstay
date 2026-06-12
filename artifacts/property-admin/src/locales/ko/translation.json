@@ -2583,6 +2583,21 @@
     "doc_note_placeholder": "신청자에게 전할 메모 (선택사항)…",
     "toast_approved": "신청이 승인되었습니다",
     "toast_rejected": "신청이 거절되었습니다",
-    "toast_docs_requested": "서류가 요청되었습니다"
+    "toast_docs_requested": "서류가 요청되었습니다",
+    "section_compliance": "규정 준수",
+    "section_bank": "은행 정보",
+    "wwcc_title": "아동 대상 활동 적격 확인(WWCC)",
+    "wwcc_number": "WWCC 번호",
+    "wwcc_expiry": "만료일",
+    "wwcc_verified": "확인됨",
+    "no_wwcc": "등록된 WWCC가 없습니다.",
+    "f_insurance_provider": "보험사",
+    "f_insurance_policy": "증권 번호",
+    "f_insurance_expiry": "보험 만료일",
+    "f_bank_name": "은행명",
+    "f_bank_account_name": "예금주",
+    "f_bank_bsb": "BSB",
+    "f_bank_account_number": "계좌번호",
+    "f_bank_swift": "SWIFT / BIC"
   }
 }

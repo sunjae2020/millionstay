@@ -2583,6 +2583,21 @@
     "doc_note_placeholder": "หมายเหตุถึงผู้สมัคร (ไม่บังคับ)…",
     "toast_approved": "อนุมัติใบสมัครแล้ว",
     "toast_rejected": "ปฏิเสธใบสมัครแล้ว",
-    "toast_docs_requested": "ขอเอกสารแล้ว"
+    "toast_docs_requested": "ขอเอกสารแล้ว",
+    "section_compliance": "การปฏิบัติตามข้อกำหนด",
+    "section_bank": "ข้อมูลธนาคาร",
+    "wwcc_title": "การตรวจสอบการทำงานกับเด็ก (WWCC)",
+    "wwcc_number": "หมายเลข WWCC",
+    "wwcc_expiry": "วันหมดอายุ",
+    "wwcc_verified": "ยืนยันแล้ว",
+    "no_wwcc": "ไม่มีบันทึก WWCC",
+    "f_insurance_provider": "บริษัทประกัน",
+    "f_insurance_policy": "หมายเลขกรมธรรม์",
+    "f_insurance_expiry": "วันหมดอายุประกัน",
+    "f_bank_name": "ชื่อธนาคาร",
+    "f_bank_account_name": "ชื่อบัญชี",
+    "f_bank_bsb": "BSB",
+    "f_bank_account_number": "เลขที่บัญชี",
+    "f_bank_swift": "SWIFT / BIC"
   }
 }

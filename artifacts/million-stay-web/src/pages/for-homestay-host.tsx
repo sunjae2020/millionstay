@@ -10,10 +10,10 @@ import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
 import {
   ChevronRight, ChevronLeft, Plus, Trash2, Eye, EyeOff, Lock,
-  AlertCircle, Home as HomeIcon,
+  AlertCircle, Home as HomeIcon, Save,
 } from "lucide-react";
 import {
-  submitHostApplication, setHomestayToken, HomestayApiError,
+  submitHostApplication, saveDraftApplication, setHomestayToken, HomestayApiError,
   type HomestayResident, type HomestayRoom,
 } from "@/lib/homestay-api";
 
@@ -86,6 +86,7 @@ export default function ForHomestayHost() {
   const [step, setStep] = useState(1);
   const [showPw, setShowPw] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [emailExists, setEmailExists] = useState(false);
 
@@ -174,6 +175,32 @@ export default function ForHomestayHost() {
       }
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // A draft still needs the core credentials (email + valid password) so the host
+  // can log back in to finish later. The agreement is NOT required for a draft.
+  const draftValid = !!(f.first_name && f.last_name && f.email && pwValid);
+
+  const handleSaveDraft = async () => {
+    if (!draftValid) {
+      setError(t("homestay.apply.draft_needs_login"));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    setError(null); setEmailExists(false); setSavingDraft(true);
+    try {
+      const res = await saveDraftApplication({ ...f });
+      setHomestayToken(res.token);
+      setLocation("/host-portal?draft=saved");
+    } catch (err) {
+      if (err instanceof HomestayApiError && err.status === 409) {
+        setEmailExists(true);
+      } else {
+        setError(err instanceof Error ? err.message : t("homestay.apply.draft_failed"));
+      }
+    } finally {
+      setSavingDraft(false);
     }
   };
 
@@ -581,23 +608,33 @@ export default function ForHomestayHost() {
           )}
 
           {/* ── Nav buttons ── */}
-          <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+          <div className="flex items-center justify-between gap-3 pt-4 border-t border-gray-100">
             {step > 1 ? (
               <Button type="button" variant="outline" onClick={back}>
                 <ChevronLeft className="h-4 w-4 mr-1" /> {t("homestay.apply.back")}
               </Button>
             ) : <span />}
-            {step < TOTAL_STEPS ? (
-              <Button type="button" onClick={next} disabled={!stepValid(step)} className="bg-primary hover:bg-primary/90 text-white">
-                {t("homestay.apply.next")} <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            ) : (
-              <Button type="button" onClick={handleSubmit} disabled={!stepValid(7) || submitting}
-                className="bg-primary hover:bg-primary/90 text-white font-bold">
-                <HomeIcon className="h-4 w-4 mr-1.5" />
-                {submitting ? t("homestay.apply.submitting") : t("homestay.apply.submit")}
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {/* Save as Draft — visible from step 2 onward */}
+              {step >= 2 && (
+                <Button type="button" variant="outline" onClick={handleSaveDraft} disabled={savingDraft || submitting}
+                  className="border-primary/40 text-primary hover:bg-orange-50">
+                  <Save className="h-4 w-4 mr-1.5" />
+                  {savingDraft ? t("homestay.apply.saving_draft") : t("homestay.apply.save_draft")}
+                </Button>
+              )}
+              {step < TOTAL_STEPS ? (
+                <Button type="button" onClick={next} disabled={!stepValid(step)} className="bg-primary hover:bg-primary/90 text-white">
+                  {t("homestay.apply.next")} <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              ) : (
+                <Button type="button" onClick={handleSubmit} disabled={!stepValid(7) || submitting}
+                  className="bg-primary hover:bg-primary/90 text-white font-bold">
+                  <HomeIcon className="h-4 w-4 mr-1.5" />
+                  {submitting ? t("homestay.apply.submitting") : t("homestay.apply.submit")}
+                </Button>
+              )}
+            </div>
           </div>
         </motion.div>
 
