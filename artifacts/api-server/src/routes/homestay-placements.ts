@@ -15,9 +15,11 @@ import { and, desc, eq, isNull } from "drizzle-orm";
 import {
   db,
   homestayPlacementsTable,
+  homestayPlacementPaymentsTable,
   homestayHostApplicationsTable,
   homestayStudentRequestsTable,
   homestayHostAvailabilityTable,
+  paymentInfoTable,
 } from "@workspace/db";
 import { generatePlacementRef } from "../lib/homestayRef.js";
 import { createSigningRequest, signingBaseUrl, type SignerSpec } from "../services/contractSigning.js";
@@ -105,7 +107,10 @@ homestayPlacementAdminRouter.get("/v1/homestay-placements/:id", async (req, res)
   const [row] = await db.select().from(homestayPlacementsTable)
     .where(eq(homestayPlacementsTable.id, id)).limit(1);
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
-  res.json({ success: true, placement: await enrich(row) });
+  const payments = await db.select().from(homestayPlacementPaymentsTable)
+    .where(eq(homestayPlacementPaymentsTable.placement_id, id))
+    .orderBy(desc(homestayPlacementPaymentsTable.created_at));
+  res.json({ success: true, placement: await enrich(row), payments });
 });
 
 // ── Create (Proposed) ────────────────────────────────────────────────────────
@@ -247,49 +252,114 @@ homestayPlacementAdminRouter.post("/v1/homestay-placements/:id/contract", async 
   }
 });
 
-// ── Collect payment (Stripe Checkout) ────────────────────────────────────────
-// Creates a hosted Stripe Checkout session for the deposit + placement fee. On
-// successful payment the webhook (routes/stripe.ts) advances AwaitingPayment →
-// Active. Requires the placement to be AwaitingPayment (contract signed).
-homestayPlacementAdminRouter.post("/v1/homestay-placements/:id/payment", async (req, res): Promise<void> => {
+// ── Charge (upfront / monthly · card / bank transfer) ────────────────────────
+// One unified charge endpoint. Records a homestay_placement_payments row, then:
+//   - card: Stripe Checkout (base + 2% surcharge), webhook marks it paid.
+//   - bank_transfer: returns the active bank account to relay; ops marks paid.
+// upfront base = placement_fee + deposit (requires AwaitingPayment);
+// monthly base = monthly_fee (requires Active).
+const SURCHARGE_RATE = 0.02;
+
+homestayPlacementAdminRouter.post("/v1/homestay-placements/:id/charge", async (req, res): Promise<void> => {
   try {
-    const stripe = getStripe();
-    if (!stripe) { res.status(503).json({ error: "Stripe is not configured" }); return; }
     const id = Number(req.params.id);
+    const kind = String(req.body?.kind ?? "upfront");
+    const method = String(req.body?.method ?? "card");
+    if (!["upfront", "monthly"].includes(kind)) { res.status(400).json({ error: "kind must be upfront|monthly" }); return; }
+    if (!["card", "bank_transfer"].includes(method)) { res.status(400).json({ error: "method must be card|bank_transfer" }); return; }
+
     const [row] = await db.select().from(homestayPlacementsTable).where(eq(homestayPlacementsTable.id, id)).limit(1);
     if (!row) { res.status(404).json({ error: "Not found" }); return; }
-    if (row.status !== "AwaitingPayment") {
-      res.status(409).json({ error: "Placement must be AwaitingPayment (sign the contract first)" });
+    if (kind === "upfront" && row.status !== "AwaitingPayment") {
+      res.status(409).json({ error: "Upfront payment requires AwaitingPayment (sign the contract first)" }); return;
+    }
+    if (kind === "monthly" && row.status !== "Active") {
+      res.status(409).json({ error: "Monthly charges require an Active placement" }); return;
+    }
+
+    const base = kind === "upfront"
+      ? Number(row.placement_fee) + Number(row.deposit)
+      : Number(row.monthly_fee);
+    if (!(base > 0)) { res.status(400).json({ error: "Nothing to charge for this kind" }); return; }
+
+    const surcharge = method === "card" ? Math.round(base * SURCHARGE_RATE * 100) / 100 : 0;
+    const total = Math.round((base + surcharge) * 100) / 100;
+    const currency = row.currency || "AUD";
+
+    if (method === "bank_transfer") {
+      const [bank] = await db.select().from(paymentInfoTable)
+        .where(and(eq(paymentInfoTable.payment_type, "BankTransfer"), eq(paymentInfoTable.status, "Active"), isNull(paymentInfoTable.deleted_at)))
+        .limit(1);
+      const [pay] = await db.insert(homestayPlacementPaymentsTable).values({
+        placement_id: id, kind, method: "bank_transfer", status: "pending",
+        base_amount: String(base), surcharge_amount: "0", amount: String(base), currency,
+        payment_info_id: bank?.id ?? null,
+        period_start: req.body?.period_start ?? null, period_end: req.body?.period_end ?? null,
+      }).returning();
+      void logAction({ entityType: ENTITY, entityId: id, action: "CREATE", actorId: (req as any).user?.id ?? null, newValue: { payment_id: pay!.id, kind, method: "bank_transfer", amount: base } });
+      res.status(201).json({ success: true, method: "bank_transfer", payment: pay, bank: bank ?? null });
       return;
     }
-    const amount = Number(row.placement_fee) + Number(row.deposit);
-    if (!(amount > 0)) { res.status(400).json({ error: "No deposit or placement fee to charge" }); return; }
+
+    // card → Stripe Checkout
+    const stripe = getStripe();
+    if (!stripe) { res.status(503).json({ error: "Stripe is not configured" }); return; }
+    const [pay] = await db.insert(homestayPlacementPaymentsTable).values({
+      placement_id: id, kind, method: "card", status: "pending",
+      base_amount: String(base), surcharge_amount: String(surcharge), amount: String(total), currency,
+      period_start: req.body?.period_start ?? null, period_end: req.body?.period_end ?? null,
+    }).returning();
 
     const [student] = await db.select().from(homestayStudentRequestsTable)
       .where(eq(homestayStudentRequestsTable.id, row.student_request_id)).limit(1);
-    const base = (process.env.PUBLIC_WEB_URL ?? "https://www.millionstay.com").replace(/\/+$/, "");
+    const webBase = (process.env.PUBLIC_WEB_URL ?? "https://www.millionstay.com").replace(/\/+$/, "");
+    const label = kind === "upfront"
+      ? `Homestay ${row.placement_ref} — deposit + placement fee (incl. 2% card fee)`
+      : `Homestay ${row.placement_ref} — monthly fee (incl. 2% card fee)`;
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: [{
-        price_data: {
-          currency: (row.currency || "AUD").toLowerCase(),
-          product_data: { name: `Homestay placement ${row.placement_ref} — deposit + placement fee` },
-          unit_amount: Math.round(amount * 100),
-        },
+        price_data: { currency: currency.toLowerCase(), product_data: { name: label }, unit_amount: Math.round(total * 100) },
         quantity: 1,
       }],
-      metadata: { placement_id: String(id), placement_ref: row.placement_ref },
+      metadata: { placement_payment_id: String(pay!.id), placement_id: String(id), placement_ref: row.placement_ref, kind },
       customer_email: student?.student_email || student?.guardian_email || undefined,
-      success_url: `${base}/?payment=success&ref=${encodeURIComponent(row.placement_ref)}`,
-      cancel_url: `${base}/?payment=cancelled&ref=${encodeURIComponent(row.placement_ref)}`,
+      success_url: `${webBase}/?payment=success&ref=${encodeURIComponent(row.placement_ref)}`,
+      cancel_url: `${webBase}/?payment=cancelled&ref=${encodeURIComponent(row.placement_ref)}`,
     });
 
-    void logAction({ entityType: ENTITY, entityId: id, action: "CREATE", actorId: (req as any).user?.id ?? null, newValue: { stripe_session: session.id, kind: "placement_payment", amount } });
-    res.json({ success: true, url: session.url, amount, currency: row.currency });
+    void logAction({ entityType: ENTITY, entityId: id, action: "CREATE", actorId: (req as any).user?.id ?? null, newValue: { payment_id: pay!.id, stripe_session: session.id, kind, method: "card", base, surcharge, total } });
+    res.json({ success: true, method: "card", url: session.url, payment: pay, base, surcharge, total, currency });
   } catch (err) {
-    console.error("[homestay-placements] payment failed:", err);
-    res.status(500).json({ error: "Failed to create payment session" });
+    console.error("[homestay-placements] charge failed:", err);
+    res.status(500).json({ error: "Failed to create charge" });
+  }
+});
+
+// ── Mark a bank-transfer charge as paid (ops) ────────────────────────────────
+homestayPlacementAdminRouter.post("/v1/homestay-placement-payments/:paymentId/mark-paid", async (req, res): Promise<void> => {
+  try {
+    const paymentId = Number(req.params.paymentId);
+    const now = new Date();
+    const [pay] = await db.update(homestayPlacementPaymentsTable)
+      .set({ status: "paid", paid_at: now })
+      .where(and(eq(homestayPlacementPaymentsTable.id, paymentId), eq(homestayPlacementPaymentsTable.status, "pending")))
+      .returning();
+    if (!pay) { res.status(409).json({ error: "Charge not found or not pending" }); return; }
+    // An upfront payment activates the placement (same as the card webhook).
+    if (pay.kind === "upfront") {
+      const [pl] = await db.update(homestayPlacementsTable)
+        .set({ status: "Active", confirmed_at: now, updated_at: now })
+        .where(and(eq(homestayPlacementsTable.id, pay.placement_id), eq(homestayPlacementsTable.status, "AwaitingPayment")))
+        .returning();
+      if (pl) await db.update(homestayStudentRequestsTable).set({ status: "Placed", updated_at: now }).where(eq(homestayStudentRequestsTable.id, pl.student_request_id));
+    }
+    void logAction({ entityType: ENTITY, entityId: pay.placement_id, action: "PAYMENT", actorId: (req as any).user?.id ?? null, newValue: { payment_id: paymentId, method: "bank_transfer", status: "paid" } });
+    res.json({ success: true, payment: pay });
+  } catch (err) {
+    console.error("[homestay-placements] mark-paid failed:", err);
+    res.status(500).json({ error: "Failed to mark paid" });
   }
 });
 
