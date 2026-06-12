@@ -59,6 +59,7 @@ import {
   BookOpen,
   MessagesSquare,
   Sparkles,
+  GraduationCap,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
@@ -88,6 +89,7 @@ function getNav(t: (k: string) => string): NavSection[] {
         { href: "/account/tenant-lifecycle", label: t("nav.tenant_lifecycle"), icon: Home },
         { href: "/account/leads", label: t("nav.lead"), icon: TrendingUp },
         { href: "/account/homestay-applications", label: t("nav.homestay_applications"), icon: Home },
+        { href: "/account/homestay-student-requests", label: t("nav.homestay_student_requests"), icon: GraduationCap },
         { href: "/account/tasks", label: t("nav.task"), icon: CheckSquare },
       ],
     },

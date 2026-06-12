@@ -6,10 +6,20 @@
 // applicant is redirected to /sign/:token to complete the signature. Matching
 // is admin-brokered (Phase 5), so no portal login is created here.
 import { Router, type IRouter } from "express";
+import { and, desc, eq, ilike, isNull, or } from "drizzle-orm";
 import { db, homestayStudentRequestsTable } from "@workspace/db";
 import { generateStudentRef } from "../lib/homestayRef.js";
 import { createSigningRequest, type SignerSpec } from "../services/contractSigning.js";
 import { sendLeadNotificationEmail } from "../lib/email.js";
+import { logAction } from "../utils/auditLog.js";
+
+const STUDENT_ENTITY = "homestay_student_request";
+
+// Ops queue states (see schema + docs/proposals/HOMESTAY_WORKFLOW.md §6).
+const STUDENT_STATUSES = [
+  "Draft", "Submitted", "UnderReview", "Matching", "Proposed",
+  "Confirmed", "Placed", "Completed", "Cancelled", "Rejected",
+] as const;
 
 export const homestayStudentPublicRouter: IRouter = Router();
 
@@ -120,4 +130,60 @@ homestayStudentPublicRouter.post("/v1/public/homestay-student-requests", async (
     console.error("[homestay-student] submit failed:", err);
     res.status(500).json({ success: false, error: "Failed to submit application" });
   }
+});
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ADMIN — ops review/matching queue. requireAuth is applied by the parent
+   router (mounted in routes/index.ts under /api/v1). Mirrors the host
+   application admin router in routes/homestay.ts.
+   ═══════════════════════════════════════════════════════════════════════════ */
+export const homestayStudentAdminRouter: IRouter = Router();
+
+// List requests, newest first. Optional ?q= (ref/name/email) and ?status=.
+homestayStudentAdminRouter.get("/v1/homestay-student-requests", async (req, res): Promise<void> => {
+  try {
+    const { q, status } = req.query as Record<string, string>;
+    const conds = [isNull(homestayStudentRequestsTable.deleted_at)];
+    if (status && status !== "all") conds.push(eq(homestayStudentRequestsTable.status, status));
+    if (q) conds.push(or(
+      ilike(homestayStudentRequestsTable.student_first_name, `%${q}%`),
+      ilike(homestayStudentRequestsTable.student_last_name, `%${q}%`),
+      ilike(homestayStudentRequestsTable.student_email, `%${q}%`),
+      ilike(homestayStudentRequestsTable.request_ref, `%${q}%`),
+    )!);
+    const rows = await db.select().from(homestayStudentRequestsTable)
+      .where(and(...conds)).orderBy(desc(homestayStudentRequestsTable.created_at));
+    res.json({ success: true, data: rows, meta: { total: rows.length } });
+  } catch (e) {
+    console.error("[homestay-student-admin] list failed:", e);
+    res.status(500).json({ error: "Failed to list student requests" });
+  }
+});
+
+// Single request (full record, incl. preferences JSONB).
+homestayStudentAdminRouter.get("/v1/homestay-student-requests/:id", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const [row] = await db.select().from(homestayStudentRequestsTable)
+    .where(eq(homestayStudentRequestsTable.id, id));
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  res.json({ success: true, request: row });
+});
+
+// Advance the request through the ops queue + record ops notes. Stamps the
+// reviewer/time on every transition.
+homestayStudentAdminRouter.post("/v1/homestay-student-requests/:id/status", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const status = String(req.body?.status ?? "").trim();
+  if (!STUDENT_STATUSES.includes(status as (typeof STUDENT_STATUSES)[number])) {
+    res.status(400).json({ error: `status must be one of: ${STUDENT_STATUSES.join(", ")}` });
+    return;
+  }
+  const reviewer = (req as any).user?.id;
+  const set: Record<string, unknown> = { status, reviewed_by: reviewer ?? null, reviewed_at: new Date() };
+  if (req.body?.notes !== undefined) set.notes = req.body.notes === "" ? null : String(req.body.notes);
+  const [row] = await db.update(homestayStudentRequestsTable).set(set)
+    .where(eq(homestayStudentRequestsTable.id, id)).returning();
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  void logAction({ entityType: STUDENT_ENTITY, entityId: id, action: "STATUS_CHANGE", actorId: reviewer ?? null, newValue: { status } });
+  res.json({ success: true, request: row });
 });

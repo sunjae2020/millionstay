@@ -41,6 +41,8 @@ import LeadList from "@/pages/sales/LeadList";
 import LeadDetail from "@/pages/sales/LeadDetail";
 import HomestayApplications from "@/pages/crm/HomestayApplications";
 import HomestayApplicationDetail from "@/pages/crm/HomestayApplicationDetail";
+import HomestayStudentRequests from "@/pages/crm/HomestayStudentRequests";
+import HomestayStudentRequestDetail from "@/pages/crm/HomestayStudentRequestDetail";
 
 // Booking
 import ServiceHostList from "@/pages/booking/ServiceHostList";
@@ -195,6 +197,8 @@ function Router() {
 
       <Route path="/account/homestay-applications" component={HomestayApplications} />
       <Route path="/account/homestay-applications/:id" component={HomestayApplicationDetail} />
+      <Route path="/account/homestay-student-requests" component={HomestayStudentRequests} />
+      <Route path="/account/homestay-student-requests/:id" component={HomestayStudentRequestDetail} />
 
       {/* ── PROPERTY ──────────────────────────────────── */}
       <Route path="/property/properties" component={PropertyList} />
