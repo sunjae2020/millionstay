@@ -16,6 +16,9 @@ import {
   submitHostApplication, saveDraftApplication, setHomestayToken, HomestayApiError,
   type HomestayResident, type HomestayRoom,
 } from "@/lib/homestay-api";
+import { HomestayTermsBody } from "@/lib/homestay-terms-content";
+import { ScrollToAgree } from "@/components/ScrollToAgree";
+import { HS } from "@/lib/homestay-theme";
 
 // ─── Option constants ─────────────────────────────────────────────────────────
 const GENDERS = ["Male", "Female", "Other"];
@@ -582,16 +585,18 @@ export default function ForHomestayHost() {
                 <p><strong>{t("homestay.apply.rooms_title")}:</strong> {f.rooms.length}</p>
                 <p><strong>{t("homestay.apply.residents_title")}:</strong> {f.residents.length}</p>
                 <p><strong>{t("homestay.apply.packages_offered")}:</strong> {f.packages_offered.map((p) => t(`homestay.opt.package.${p}`)).join(", ")}</p>
-                <div className="border-t border-gray-200 pt-2 mt-2 text-xs leading-relaxed text-gray-500">
-                  {t("homestay.apply.agreement_text")}
-                </div>
               </div>
 
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input type="checkbox" checked={f.agreement_accepted} onChange={(e) => set("agreement_accepted", e.target.checked)}
-                  className="mt-0.5 h-4 w-4 accent-primary" />
-                <span className="text-sm text-gray-700">{t("homestay.apply.agreement_accept")}</span>
-              </label>
+              <h3 className="font-semibold text-gray-800 pt-2">{t("homestay.apply.agreement_title")}</h3>
+              <p className="text-sm text-gray-500">{t("homestay.apply.agreement_text")}</p>
+              <ScrollToAgree
+                accent={HS.brand}
+                checked={f.agreement_accepted}
+                onChange={(v) => set("agreement_accepted", v)}
+                label={t("homestay.apply.agreement_accept")}
+              >
+                <HomestayTermsBody />
+              </ScrollToAgree>
 
               <Field label={t("homestay.apply.signature_name")} required>
                 <Input value={f.signature_name} onChange={(e) => set("signature_name", e.target.value)} placeholder={t("homestay.apply.signature_placeholder")} className="h-11" />

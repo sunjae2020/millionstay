@@ -4,6 +4,8 @@ import { Loader2, ShieldCheck } from "lucide-react";
 import { HomestayLayout } from "@/components/homestay/HomestayLayout";
 import { HsPageHero } from "@/components/homestay/sections";
 import { HS, HS_FONT } from "@/lib/homestay-theme";
+import { HomestayTermsBody } from "@/lib/homestay-terms-content";
+import { ScrollToAgree } from "@/components/ScrollToAgree";
 import { submitStudentApplication, type StudentApplicationInput } from "@/lib/students-api";
 
 // 2.5 Apply Now — the online student application (Phase 3). Mirrors the official
@@ -329,11 +331,16 @@ export default function StudentApply() {
           </div>
 
           {/* T&C */}
-          <div className="rounded-2xl border border-gray-100 p-6">
-            <label className="flex items-start gap-3 text-sm text-gray-700">
-              <input type="checkbox" checked={f.terms_accepted} onChange={(e) => set("terms_accepted", e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>I have read and agree to the <strong>Terms &amp; Conditions</strong>. I understand the next step is to e-sign this application{isMinor ? ", and that a guardian must co-sign" : ""}.</span>
-            </label>
+          <div>
+            <SectionTitle>Terms &amp; Conditions</SectionTitle>
+            <ScrollToAgree
+              accent={HS.brand}
+              checked={f.terms_accepted}
+              onChange={(v) => set("terms_accepted", v)}
+              label={<>I have read and agree to the <strong>Terms &amp; Conditions</strong> above. I understand the next step is to e-sign this application{isMinor ? ", and that a guardian must co-sign" : ""}.</>}
+            >
+              <HomestayTermsBody />
+            </ScrollToAgree>
           </div>
 
           {error && <p className="text-sm text-red-600">{error}</p>}
