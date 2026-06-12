@@ -3,6 +3,7 @@ import { db, marketingConsentsTable } from "@workspace/db";
 import { and, eq } from "drizzle-orm";
 import { t, normalizeLang, type DocLang } from "./documents/i18n";
 import { buildUnsubscribeUrl } from "./unsubscribeToken";
+import { resolveTemplate, renderString } from "./documents/templateEngine";
 
 let resend: Resend | null = null;
 
@@ -514,15 +515,32 @@ export async function sendHomestayHostEmail(opts: HomestayHostEmailOptions): Pro
   const noteHtml = opts.note
     ? `<div style="margin-top:16px;padding:12px 16px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;color:#9a3412;font-size:14px;">${escapeHtml(opts.note)}</div>`
     : "";
+
+  // Prefer an editable, published template; fall back to the hardcoded copy so a
+  // missing/unpublished template never blocks the send.
+  const tplKey = `homestay.${opts.kind === "received" ? "host_received" : opts.kind}`;
+  const tpl = await resolveTemplate({ kind: "email", key: tplKey, locale: "en" });
+  let subject: string;
+  let cardInner: string;
+  if (tpl && tpl.bodyHtml) {
+    const vars = { ref: opts.applicationRef, name: safeName(opts.toName) || "there", portal_url: portalUrl, note: opts.note ?? "" };
+    subject = renderString(tpl.subject || copy.subject(opts.applicationRef), vars);
+    cardInner = `${renderString(tpl.bodyHtml, vars)}${noteHtml}
+    <p style="font-size:13px;color:#9ca3af;margin:20px 0 0;">Application reference: <strong>${escapeHtml(opts.applicationRef)}</strong></p>`;
+  } else {
+    subject = copy.subject(opts.applicationRef);
+    cardInner = `<h1 style="font-size:20px;margin:0 0 12px;color:#1f2937;">${escapeHtml(copy.heading)}</h1>
+    <p style="font-size:14px;color:#4b5563;line-height:1.6;margin:0;">Hi ${safeName(opts.toName) || "there"},</p>
+    <p style="font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;">${copy.body(portalUrl)}</p>
+    ${noteHtml}
+    <p style="font-size:13px;color:#9ca3af;margin:20px 0 0;">Application reference: <strong>${escapeHtml(opts.applicationRef)}</strong></p>`;
+  }
+
   const html = `<!DOCTYPE html><html><body style="margin:0;background:#faf9f7;font-family:-apple-system,Segoe UI,Roboto,sans-serif;">
 <div style="max-width:560px;margin:0 auto;padding:24px;">
   <div style="text-align:center;padding:8px 0 16px;"><img src="${LOGO_URL}" alt="MillionStay" style="height:32px;" /></div>
   <div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:28px;">
-    <h1 style="font-size:20px;margin:0 0 12px;color:#1f2937;">${escapeHtml(copy.heading)}</h1>
-    <p style="font-size:14px;color:#4b5563;line-height:1.6;margin:0;">Hi ${safeName(opts.toName) || "there"},</p>
-    <p style="font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;">${copy.body(portalUrl)}</p>
-    ${noteHtml}
-    <p style="font-size:13px;color:#9ca3af;margin:20px 0 0;">Application reference: <strong>${escapeHtml(opts.applicationRef)}</strong></p>
+    ${cardInner}
   </div>
   <div style="text-align:center;color:#9ca3af;font-size:12px;padding:16px;">
     Questions? Contact us at <a href="mailto:${SUPPORT_EMAIL}" style="color:#f97316;">${SUPPORT_EMAIL}</a><br/>
@@ -531,8 +549,8 @@ export async function sendHomestayHostEmail(opts: HomestayHostEmailOptions): Pro
 </div>
 </body></html>`;
   try {
-    await client.emails.send({ from: FROM, to: [opts.to], subject: copy.subject(opts.applicationRef), html });
-    console.log(`[email] Homestay ${opts.kind} sent for ${opts.applicationRef} → ${opts.to}`);
+    await client.emails.send({ from: FROM, to: [opts.to], subject, html });
+    console.log(`[email] Homestay ${opts.kind} sent for ${opts.applicationRef} → ${opts.to}${tpl ? " (template)" : ""}`);
     return true;
   } catch (err) {
     console.error(`[email] Failed to send homestay ${opts.kind}:`, err);
