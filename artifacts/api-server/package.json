@@ -7,7 +7,9 @@
     "dev": "export NODE_ENV=development && pnpm run build && node --env-file-if-exists=.env --enable-source-maps ./dist/index.mjs",
     "build": "node ./build.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "seed:homestay-samples": "node --env-file-if-exists=.env scripts/seed-homestay-samples.mjs",
+    "cleanup:homestay-samples": "node --env-file-if-exists=.env scripts/cleanup-homestay-samples.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",

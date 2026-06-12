@@ -21,6 +21,17 @@ import {
   type SignerSpec,
   type SigningContextType,
 } from "../services/contractSigning.js";
+import {
+  buildDocForSigning,
+  generateAndStoreSignedPdf,
+  processSignedApplication,
+  resolveRecipients,
+  emailApplicationPdf,
+  refForSigning,
+  type RecipientSelection,
+} from "../services/applicationDocs.js";
+import { buildApplicationHtml } from "../lib/documents/applicationPdf.js";
+import { isCloudinaryConfigured, generateSignedUrl } from "../utils/cloudinary.js";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    PUBLIC — token-addressed signing (no auth)
@@ -163,9 +174,115 @@ contractSigningPublicRouter.post("/v1/public/contract-signing/:token/sign", asyn
     }).catch(() => {});
 
     res.json({ success: true, message: "Document signed successfully." });
+
+    // Best-effort, fire-and-forget: render the signed PDF, store it privately,
+    // and email it (applicant + linked agent + ops). Never blocks the response.
+    void processSignedApplication({ ...row, status: "signed", signatures: enriched, signed_at: now })
+      .catch((e) => console.error("[ContractSign] post-sign pdf/email failed:", e));
   } catch (err) {
     console.error("[ContractSign] sign error:", err);
     res.status(500).json({ error: "server_error", message: "Failed to process signatures." });
+  }
+});
+
+// GET /v1/public/contract-signing/:token/preview — token-gated HTML preview of the
+// application (submit-time pending view, or the signed view once signed).
+contractSigningPublicRouter.get("/v1/public/contract-signing/:token/preview", async (req, res): Promise<void> => {
+  try {
+    const [row] = await db
+      .select()
+      .from(contractSigningRequestsTable)
+      .where(eq(contractSigningRequestsTable.token, req.params.token))
+      .limit(1);
+    if (!row) {
+      res.status(404).send("Not found");
+      return;
+    }
+    const doc = await buildDocForSigning(row, { signed: row.status === "signed" });
+    if (!doc) {
+      res.status(404).send("Document unavailable");
+      return;
+    }
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.send(buildApplicationHtml(doc, false));
+  } catch (err) {
+    console.error("[ContractSign] preview error:", err);
+    res.status(500).send("Failed to render preview.");
+  }
+});
+
+// GET /v1/public/contract-signing/:token/pdf — token-gated signed PDF. Redirects
+// to a short-lived Cloudinary signed URL when stored; otherwise renders on the fly.
+contractSigningPublicRouter.get("/v1/public/contract-signing/:token/pdf", async (req, res): Promise<void> => {
+  try {
+    const [row] = await db
+      .select()
+      .from(contractSigningRequestsTable)
+      .where(eq(contractSigningRequestsTable.token, req.params.token))
+      .limit(1);
+    if (!row) {
+      res.status(404).json({ error: "not_found", message: "Signing request not found." });
+      return;
+    }
+    if (row.status !== "signed") {
+      res.status(409).json({ error: "not_signed", message: "This document has not been signed yet." });
+      return;
+    }
+    if (row.pdf_url && isCloudinaryConfigured()) {
+      res.redirect(generateSignedUrl(row.pdf_url, 900));
+      return;
+    }
+    // No stored copy — render on the fly (and lazily store for next time).
+    const { pdf } = await generateAndStoreSignedPdf(row);
+    if (!pdf) {
+      res.status(503).json({ error: "pdf_unavailable", message: "The signed PDF could not be generated." });
+      return;
+    }
+    const ref = await refForSigning(row);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `inline; filename="${ref}.pdf"`);
+    res.send(pdf);
+  } catch (err) {
+    console.error("[ContractSign] pdf error:", err);
+    res.status(500).json({ error: "server_error", message: "Failed to fetch the signed PDF." });
+  }
+});
+
+// POST /v1/public/contract-signing/:token/send — (re)send the signed PDF to the
+// selected recipients. Selection is expressed in the body { applicant, agent, ops }.
+contractSigningPublicRouter.post("/v1/public/contract-signing/:token/send", async (req, res): Promise<void> => {
+  try {
+    const [row] = await db
+      .select()
+      .from(contractSigningRequestsTable)
+      .where(eq(contractSigningRequestsTable.token, req.params.token))
+      .limit(1);
+    if (!row) {
+      res.status(404).json({ error: "not_found", message: "Signing request not found." });
+      return;
+    }
+    if (row.status !== "signed") {
+      res.status(409).json({ error: "not_signed", message: "This document has not been signed yet." });
+      return;
+    }
+    const body = (req.body ?? {}) as RecipientSelection;
+    const select: RecipientSelection = {
+      applicant: body.applicant ?? true,
+      agent: body.agent ?? false,
+      ops: body.ops ?? false,
+    };
+    const { pdf } = await generateAndStoreSignedPdf(row);
+    if (!pdf) {
+      res.status(503).json({ error: "pdf_unavailable", message: "The signed PDF could not be generated." });
+      return;
+    }
+    const recipients = await resolveRecipients(row);
+    const ref = await refForSigning(row);
+    const sent = await emailApplicationPdf(row, pdf, recipients, select, ref);
+    res.json({ success: true, sent });
+  } catch (err) {
+    console.error("[ContractSign] send error:", err);
+    res.status(500).json({ error: "server_error", message: "Failed to send the document." });
   }
 });
 

@@ -165,7 +165,7 @@ function authHeaders(): Record<string, string> {
 /** Submit the public host application (no auth). */
 export async function submitHostApplication(
   data: Record<string, unknown>
-): Promise<{ success: boolean; application_ref: string; token: string; application: HomestayApplication }> {
+): Promise<{ success: boolean; application_ref: string; token: string; signing_token: string | null; application: HomestayApplication }> {
   const res = await fetch(`${BASE}/public/homestay-host-applications`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
