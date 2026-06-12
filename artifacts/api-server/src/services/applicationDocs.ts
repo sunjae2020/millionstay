@@ -10,6 +10,7 @@ import {
   contractSigningRequestsTable,
   homestayStudentRequestsTable,
   homestayHostApplicationsTable,
+  homestayPlacementsTable,
   accountsTable,
 } from "@workspace/db";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf.js";
@@ -17,6 +18,7 @@ import {
   buildApplicationHtml,
   studentApplicationToDoc,
   hostApplicationToDoc,
+  placementToDoc,
   type ApplicationDocInput,
 } from "../lib/documents/applicationPdf.js";
 import { isCloudinaryConfigured, uploadPrivateToCloudinary } from "../utils/cloudinary.js";
@@ -28,12 +30,15 @@ export interface RecipientSelection {
   applicant?: boolean;
   agent?: boolean;
   ops?: boolean;
+  /** Host family — only meaningful for placement_contract documents. */
+  host?: boolean;
 }
 
 export interface ResolvedRecipients {
   applicant?: { email: string; name?: string };
   agent?: { email: string; name?: string };
   ops?: { email: string };
+  host?: { email: string; name?: string };
 }
 
 /** Build the ApplicationDocInput for a signing request's underlying record. */
@@ -57,7 +62,16 @@ export async function buildDocForSigning(
       .where(eq(homestayHostApplicationsTable.id, signing.context_id)).limit(1);
     return row ? hostApplicationToDoc(row, view, opts) : null;
   }
-  // placement_contract is rendered elsewhere; not handled here.
+  if (signing.context_type === "placement_contract") {
+    const [placement] = await db.select().from(homestayPlacementsTable)
+      .where(eq(homestayPlacementsTable.id, signing.context_id)).limit(1);
+    if (!placement) return null;
+    const [host] = await db.select().from(homestayHostApplicationsTable)
+      .where(eq(homestayHostApplicationsTable.id, placement.host_application_id)).limit(1);
+    const [student] = await db.select().from(homestayStudentRequestsTable)
+      .where(eq(homestayStudentRequestsTable.id, placement.student_request_id)).limit(1);
+    return placementToDoc(placement, host ?? null, student ?? null, view, opts);
+  }
   return null;
 }
 
@@ -125,6 +139,23 @@ export async function resolveRecipients(signing: SigningRow): Promise<ResolvedRe
       const [row] = await db.select().from(homestayHostApplicationsTable)
         .where(eq(homestayHostApplicationsTable.id, signing.context_id)).limit(1);
       if (row?.email) out.applicant = { email: row.email, name: `${row.first_name} ${row.last_name}`.trim() };
+    } else if (signing.context_type === "placement_contract") {
+      const [placement] = await db.select().from(homestayPlacementsTable)
+        .where(eq(homestayPlacementsTable.id, signing.context_id)).limit(1);
+      if (placement) {
+        const [student] = await db.select().from(homestayStudentRequestsTable)
+          .where(eq(homestayStudentRequestsTable.id, placement.student_request_id)).limit(1);
+        const [host] = await db.select().from(homestayHostApplicationsTable)
+          .where(eq(homestayHostApplicationsTable.id, placement.host_application_id)).limit(1);
+        const studentEmail = student?.student_email || student?.guardian_email;
+        if (studentEmail) out.applicant = { email: studentEmail, name: `${student!.student_first_name} ${student!.student_last_name}`.trim() };
+        if (host?.email) out.host = { email: host.email, name: `${host.first_name} ${host.last_name}`.trim() };
+        if (placement.agent_account_id) {
+          const [agent] = await db.select().from(accountsTable)
+            .where(eq(accountsTable.id, placement.agent_account_id)).limit(1);
+          if (agent?.account_email) out.agent = { email: agent.account_email, name: agent.name };
+        }
+      }
     }
   } catch (err) {
     console.error("[applicationDocs] resolveRecipients failed:", err);
@@ -143,10 +174,14 @@ export async function emailApplicationPdf(
   select: RecipientSelection,
   ref: string,
 ): Promise<string[]> {
-  const docTypeLabel = signing.context_type === "host_app" ? "Host Family Application" : "Student Application";
+  const docTypeLabel =
+    signing.context_type === "host_app" ? "Host Family Application"
+    : signing.context_type === "placement_contract" ? "Homestay Placement Agreement"
+    : "Student Application";
   const filename = `${ref}.pdf`;
   const targets: Array<{ email: string; name?: string }> = [];
   if (select.applicant && recipients.applicant) targets.push(recipients.applicant);
+  if (select.host && recipients.host) targets.push(recipients.host);
   if (select.agent && recipients.agent) targets.push(recipients.agent);
   if (select.ops && recipients.ops) targets.push({ email: recipients.ops.email });
 
@@ -182,7 +217,7 @@ export async function emailApplicationPdf(
  */
 export async function processSignedApplication(
   signing: SigningRow,
-  select: RecipientSelection = { applicant: true, agent: true, ops: true },
+  select: RecipientSelection = { applicant: true, agent: true, ops: true, host: true },
 ): Promise<void> {
   const ref = await refForSigning(signing);
   const { pdf } = await generateAndStoreSignedPdf(signing);
@@ -203,6 +238,11 @@ export async function refForSigning(signing: Pick<SigningRow, "context_type" | "
       const [row] = await db.select({ ref: homestayHostApplicationsTable.application_ref })
         .from(homestayHostApplicationsTable)
         .where(eq(homestayHostApplicationsTable.id, signing.context_id)).limit(1);
+      if (row?.ref) return row.ref;
+    } else if (signing.context_type === "placement_contract") {
+      const [row] = await db.select({ ref: homestayPlacementsTable.placement_ref })
+        .from(homestayPlacementsTable)
+        .where(eq(homestayPlacementsTable.id, signing.context_id)).limit(1);
       if (row?.ref) return row.ref;
     }
   } catch { /* fall through */ }

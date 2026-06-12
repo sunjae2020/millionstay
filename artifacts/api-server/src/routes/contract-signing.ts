@@ -10,8 +10,8 @@
 // signature images + legal metadata are captured in JSONB; rendering is wired up
 // per concrete document (host application, placement contract) in later phases.
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
-import { db, contractSigningRequestsTable } from "@workspace/db";
+import { and, eq } from "drizzle-orm";
+import { db, contractSigningRequestsTable, homestayPlacementsTable } from "@workspace/db";
 import { logAction } from "../utils/auditLog.js";
 import {
   appendAuditEvent,
@@ -176,9 +176,17 @@ contractSigningPublicRouter.post("/v1/public/contract-signing/:token/sign", asyn
     res.json({ success: true, message: "Document signed successfully." });
 
     // Best-effort, fire-and-forget: render the signed PDF, store it privately,
-    // and email it (applicant + linked agent + ops). Never blocks the response.
+    // and email it (applicant + host + linked agent + ops). Never blocks the response.
     void processSignedApplication({ ...row, status: "signed", signatures: enriched, signed_at: now })
       .catch((e) => console.error("[ContractSign] post-sign pdf/email failed:", e));
+
+    // A signed placement contract advances the placement to AwaitingPayment.
+    if (row.context_type === "placement_contract") {
+      void db.update(homestayPlacementsTable)
+        .set({ status: "AwaitingPayment", confirmed_at: now, updated_at: now })
+        .where(and(eq(homestayPlacementsTable.id, row.context_id), eq(homestayPlacementsTable.status, "HostAccepted")))
+        .catch((e) => console.error("[ContractSign] placement advance failed:", e));
+    }
   } catch (err) {
     console.error("[ContractSign] sign error:", err);
     res.status(500).json({ error: "server_error", message: "Failed to process signatures." });

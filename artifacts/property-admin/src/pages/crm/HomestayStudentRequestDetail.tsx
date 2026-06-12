@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "wouter";
+import { useLocation, useParams, Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, GraduationCap, PencilLine, ShieldCheck, Sparkles, Wand2, Loader2, MapPin, Check, AlertTriangle, ExternalLink } from "lucide-react";
+import { ArrowLeft, GraduationCap, PencilLine, ShieldCheck, Sparkles, Wand2, Loader2, MapPin, Check, AlertTriangle, ExternalLink, Handshake } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
 import { StudentStatusBadge, STUDENT_STATUS_ORDER, STUDENT_STATUS_CONFIG, type StudentStatus } from "./HomestayStudentRequests";
@@ -129,9 +130,15 @@ export default function HomestayStudentRequestDetail() {
   const params = useParams<{ id: string }>();
   const id = parseInt(params.id ?? "0", 10);
 
+  const [, navigate] = useLocation();
   const [statusOpen, setStatusOpen] = useState(false);
   const [nextStatus, setNextStatus] = useState<StudentStatus>("UnderReview");
   const [notes, setNotes] = useState("");
+
+  // Create-placement dialog (from a host suggestion).
+  const [placeOpen, setPlaceOpen] = useState(false);
+  const [placeHost, setPlaceHost] = useState<{ id: number; name: string } | null>(null);
+  const [placeForm, setPlaceForm] = useState({ move_in_date: "", move_out_date: "", placement_fee: "", deposit: "", monthly_fee: "", currency: "AUD" });
 
   const { data, isLoading } = useQuery({
     queryKey: ["homestay-student-request", id],
@@ -179,6 +186,32 @@ export default function HomestayStudentRequestDetail() {
       qc.invalidateQueries({ queryKey: ["homestay-student-request", id] });
       qc.invalidateQueries({ queryKey: ["homestay-student-requests"] });
       setStatusOpen(false);
+    },
+    onError: (e: any) => toast({ title: t("homestayStudent.error"), description: e.message, variant: "destructive" }),
+  });
+
+  const createPlacement = useMutation({
+    mutationFn: async () => {
+      const res = await apiFetch(`/api/v1/homestay-placements`, {
+        method: "POST",
+        body: JSON.stringify({
+          student_request_id: id,
+          host_application_id: placeHost?.id,
+          move_in_date: placeForm.move_in_date || undefined,
+          move_out_date: placeForm.move_out_date || undefined,
+          placement_fee: placeForm.placement_fee || "0",
+          deposit: placeForm.deposit || "0",
+          monthly_fee: placeForm.monthly_fee || "0",
+          currency: placeForm.currency || "AUD",
+        }),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error ?? "Failed to create placement");
+      return res.json();
+    },
+    onSuccess: (d: any) => {
+      toast({ title: t("homestayStudent.placement_created") });
+      setPlaceOpen(false);
+      if (d?.placement?.id) navigate(`/account/homestay-placements/${d.placement.id}`);
     },
     onError: (e: any) => toast({ title: t("homestayStudent.error"), description: e.message, variant: "destructive" }),
   });
@@ -291,6 +324,15 @@ export default function HomestayStudentRequestDetail() {
                         ))}
                       </div>
                     )}
+                    <div className="mt-3 flex justify-end">
+                      <Button
+                        size="sm"
+                        className="gap-1.5 h-7"
+                        onClick={() => { setPlaceHost({ id: s.host_application_id, name: s.host_name }); setPlaceForm((f) => ({ ...f, move_in_date: p.homestay_start_date ?? "" })); setPlaceOpen(true); }}
+                      >
+                        <Handshake className="h-3.5 w-3.5" /> {t("homestayStudent.create_placement")}
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -428,6 +470,50 @@ export default function HomestayStudentRequestDetail() {
             <Button variant="outline" onClick={() => setStatusOpen(false)}>{t("common.cancel")}</Button>
             <Button onClick={() => updateStatus.mutate()} disabled={updateStatus.isPending}>
               {updateStatus.isPending ? t("common.saving") : t("common.save")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create placement dialog */}
+      <Dialog open={placeOpen} onOpenChange={setPlaceOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>{t("homestayStudent.create_placement")}</DialogTitle></DialogHeader>
+          <div className="grid gap-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              {t("homestayStudent.placement_with")}: <span className="font-medium text-foreground">{placeHost?.name}</span>
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <Label>{t("homestayPlacement.f_move_in")}</Label>
+                <Input type="date" value={placeForm.move_in_date} onChange={(e) => setPlaceForm((f) => ({ ...f, move_in_date: e.target.value }))} />
+              </div>
+              <div className="grid gap-1.5">
+                <Label>{t("homestayPlacement.f_move_out")}</Label>
+                <Input type="date" value={placeForm.move_out_date} onChange={(e) => setPlaceForm((f) => ({ ...f, move_out_date: e.target.value }))} />
+              </div>
+              <div className="grid gap-1.5">
+                <Label>{t("homestayPlacement.f_placement_fee")}</Label>
+                <Input type="number" inputMode="decimal" value={placeForm.placement_fee} onChange={(e) => setPlaceForm((f) => ({ ...f, placement_fee: e.target.value }))} />
+              </div>
+              <div className="grid gap-1.5">
+                <Label>{t("homestayPlacement.f_deposit")}</Label>
+                <Input type="number" inputMode="decimal" value={placeForm.deposit} onChange={(e) => setPlaceForm((f) => ({ ...f, deposit: e.target.value }))} />
+              </div>
+              <div className="grid gap-1.5">
+                <Label>{t("homestayPlacement.f_monthly_fee")}</Label>
+                <Input type="number" inputMode="decimal" value={placeForm.monthly_fee} onChange={(e) => setPlaceForm((f) => ({ ...f, monthly_fee: e.target.value }))} />
+              </div>
+              <div className="grid gap-1.5">
+                <Label>{t("homestayPlacement.f_currency")}</Label>
+                <Input value={placeForm.currency} onChange={(e) => setPlaceForm((f) => ({ ...f, currency: e.target.value }))} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPlaceOpen(false)}>{t("common.cancel")}</Button>
+            <Button onClick={() => createPlacement.mutate()} disabled={createPlacement.isPending}>
+              {createPlacement.isPending ? t("common.saving") : t("homestayStudent.create_placement")}
             </Button>
           </DialogFooter>
         </DialogContent>

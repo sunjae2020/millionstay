@@ -43,6 +43,8 @@ import HomestayApplications from "@/pages/crm/HomestayApplications";
 import HomestayApplicationDetail from "@/pages/crm/HomestayApplicationDetail";
 import HomestayStudentRequests from "@/pages/crm/HomestayStudentRequests";
 import HomestayStudentRequestDetail from "@/pages/crm/HomestayStudentRequestDetail";
+import HomestayPlacements from "@/pages/crm/HomestayPlacements";
+import HomestayPlacementDetail from "@/pages/crm/HomestayPlacementDetail";
 
 // Booking
 import ServiceHostList from "@/pages/booking/ServiceHostList";
@@ -199,6 +201,8 @@ function Router() {
       <Route path="/account/homestay-applications/:id" component={HomestayApplicationDetail} />
       <Route path="/account/homestay-student-requests" component={HomestayStudentRequests} />
       <Route path="/account/homestay-student-requests/:id" component={HomestayStudentRequestDetail} />
+      <Route path="/account/homestay-placements" component={HomestayPlacements} />
+      <Route path="/account/homestay-placements/:id" component={HomestayPlacementDetail} />
 
       {/* ── PROPERTY ──────────────────────────────────── */}
       <Route path="/property/properties" component={PropertyList} />
