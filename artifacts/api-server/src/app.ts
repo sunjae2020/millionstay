@@ -23,6 +23,7 @@ import agentPortalRouter from "./routes/agent-portal";
 import ownerPortalRouter from "./routes/owner-portal";
 import serviceHostPortalRouter from "./routes/service-host-portal";
 import { homestayPublicRouter, homestayPortalRouter } from "./routes/homestay";
+import { contractSigningPublicRouter, contractSigningAdminRouter } from "./routes/contract-signing";
 import pageContentsRouter from "./routes/page-contents";
 import privacyRouter from "./routes/privacy";
 import chatRouter from "./routes/chat";
@@ -212,6 +213,8 @@ app.use("/api", healthRouter);
 app.use("/api", publicRouter);
 // Public homestay host application submission (no auth, rate-limited above).
 app.use("/api", homestayPublicRouter);
+// Public e-signature: token-addressed signing page fetch + submit (no auth).
+app.use("/api", contractSigningPublicRouter);
 app.use("/api", chatRouter);
 app.use("/api", privacyRouter);
 // External third-party API — authenticates with issued API Key + Secret
@@ -247,6 +250,8 @@ app.use("/api/v1/admin", dbSyncRouter);
 app.use("/api", spaceImagesRouter);
 app.use("/api", knowledgeRouter);
 app.use("/api", pageContentsRouter);
+// Admin e-signature management (create / list / cancel) — behind requireAuth.
+app.use("/api", contractSigningAdminRouter);
 app.use("/api", router);
 
 // In production, serve the built SPAs so a single Cloud Run process handles everything.

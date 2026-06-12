@@ -48,6 +48,7 @@ import AdminSpaces from "@/pages/admin-spaces";
 import ChatWidget from "@/components/chat/ChatWidget";
 import OwnerLanding from "@/pages/owner-landing";
 import HomestayLanding from "@/pages/homestay-landing";
+import Sign from "@/pages/sign";
 import { getApiBase } from "@/lib/api-base";
 import { getOwnerSiteSlug } from "@/lib/owner-site";
 import { isHomestaySubdomain } from "@/lib/homestay-site";
@@ -71,6 +72,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/">{homestay ? <HomestayLanding /> : ownerSlug ? <OwnerLanding slug={ownerSlug} /> : <Home />}</Route>
+      <Route path="/sign/:token" component={Sign} />
       <Route path="/search" component={Search} />
       <Route path="/spaces/:id" component={SpaceDetail} />
       <Route path="/booking/new" component={BookingNew} />
