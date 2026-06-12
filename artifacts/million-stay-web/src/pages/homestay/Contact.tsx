@@ -60,6 +60,12 @@ export default function HomestayContact() {
         <div className="text-center">
           <h1 className="text-3xl md:text-4xl font-bold" style={{ fontFamily: HS_FONT.head, color: HS.darkBrown }}>Let's talk</h1>
           <p className="mt-3 text-gray-600">Whether you want to host, find a homestay, or partner with us, we're here to help.</p>
+          <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-x-6 gap-y-1 text-sm text-gray-600">
+            <span><span className="font-medium">Email:</span>{" "}
+              <a href="mailto:millionstay.com@gmail.com" className="hover:underline" style={{ color: HS.brand }}>millionstay.com@gmail.com</a>
+            </span>
+            <span><span className="font-medium">Location:</span> Melbourne, Victoria, Australia</span>
+          </div>
         </div>
 
         <div className="mt-10 grid gap-3 sm:grid-cols-3">

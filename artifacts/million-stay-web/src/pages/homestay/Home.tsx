@@ -11,7 +11,7 @@ import { HS, HS_FONT } from "@/lib/homestay-theme";
 const WHY = [
   { icon: Users, title: "People match, not algorithms", body: "Every placement is reviewed and matched by our operations team." },
   { icon: Baby, title: "Students of all ages", body: "Adult and younger students alike, with guardian consent and signature built in for anyone under 18." },
-  { icon: ShieldCheck, title: "Safety first", body: "Working With Children Check (WWCC) and other safety documents are part of host review." },
+  { icon: ShieldCheck, title: "Safety first", body: "Working with Children Check (WWCC) and other safety documents are part of host review." },
   { icon: Globe2, title: "Fully online, end to end", body: "Application, documents, e-signature, and payment, all in one place. No paper forms." },
   { icon: BadgeCheck, title: "Transparent every step", body: "Clear review stages and email updates, so you always know where things stand." },
 ];

@@ -172,6 +172,7 @@ function HubCard({ card }: { card: CardDef }) {
 export default function Settings() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const [, navigate] = useLocation();
   const isSuperAdmin =
     !!user && ["Super Admin", "SuperAdmin", "superadmin", "super_admin"].includes(user.role);
   return (
@@ -236,7 +237,7 @@ export default function Settings() {
               <button
                 key={c.href}
                 className="group flex flex-col items-center gap-3 p-6 rounded-lg border bg-card hover:bg-accent/40 hover:border-primary/40 transition-all text-center"
-                onClick={() => {}}
+                onClick={() => navigate(c.href)}
               >
                 <div className="h-12 w-12 rounded-xl bg-orange-50 flex items-center justify-center group-hover:bg-orange-100 transition-colors">
                   <BarChart3 className="h-6 w-6 text-orange-500" />

@@ -485,9 +485,15 @@ export default function Home() {
           <h2 className="text-white font-bold text-4xl md:text-5xl uppercase tracking-widest mb-8">
             {t("home.cta.title")}
           </h2>
-          <button className="w-20 h-20 rounded-full bg-white/20 border-4 border-white flex items-center justify-center mx-auto hover:bg-white/30 transition-colors group">
+          <a
+            href="https://www.youtube.com/@millionstay"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Watch MillionStay on YouTube"
+            className="w-20 h-20 rounded-full bg-white/20 border-4 border-white flex items-center justify-center mx-auto hover:bg-white/30 transition-colors group"
+          >
             <PlayCircle className="h-10 w-10 text-white group-hover:scale-105 transition-transform" />
-          </button>
+          </a>
         </div>
       </section>
 

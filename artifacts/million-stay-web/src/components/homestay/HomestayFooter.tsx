@@ -67,7 +67,7 @@ export function HomestayFooter() {
       </div>
       <div className="border-t border-white/10">
         <div className="max-w-6xl mx-auto px-5 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/50">
-          <span>© {""}Million Homestay — homestay.millionstay.com</span>
+          <span>© {new Date().getFullYear()} Million Homestay — homestay.millionstay.com</span>
           <div className="flex items-center gap-4">
             <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
