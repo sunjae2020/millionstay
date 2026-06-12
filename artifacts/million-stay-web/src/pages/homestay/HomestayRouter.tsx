@@ -1,60 +1,71 @@
-import { Switch, Route } from "wouter";
+import { useEffect } from "react";
+import { Switch, Route, useLocation } from "wouter";
 import HomestayHome from "./Home";
 import HomestayContact from "./Contact";
 import HomestayComingSoon from "./ComingSoon";
 import AboutUs from "./AboutUs";
-import HowItWorks from "./HowItWorks";
-import Mission from "./Mission";
-import Vision from "./Vision";
 import StudentBecome from "./StudentBecome";
-import StudentAdvantages from "./StudentAdvantages";
-import StudentTips from "./StudentTips";
-import StudentEssentialInfo from "./StudentEssentialInfo";
 import StudentApply from "./StudentApply";
 import HostBecome from "./HostBecome";
-import HostBenefits from "./HostBenefits";
-import HostTips from "./HostTips";
 import HostApply from "./HostApply";
 import PartnersWorking from "./PartnersWorking";
-import StudyTour from "./StudyTour";
+import HomestayPrivacy from "./HomestayPrivacy";
+import HomestayTerms from "./HomestayTerms";
 import Sign from "@/pages/sign";
 import ForHomestayHost from "@/pages/for-homestay-host";
 import HostLogin from "@/pages/host-login";
 import HostPortal from "@/pages/host-portal";
 
-// Dedicated router for homestay.millionstay.com. Site map: 5 top menus + home.
-// Content pages are live; the online student application + agent portal funnel
-// to "coming soon" / contact until their phase ships.
+// Redirects a former sub-page URL to its anchored section on the consolidated
+// page (e.g. /students/advantages → /students#advantages). The destination
+// page's HomestayLayout reads the hash and scrolls to the section.
+function HashRedirect({ to }: { to: string }) {
+  const [, navigate] = useLocation();
+  useEffect(() => {
+    navigate(to, { replace: true });
+  }, [to, navigate]);
+  return null;
+}
+
+// Dedicated router for homestay.millionstay.com. Single-tier site map: 5 top
+// menus (About / Student / Host Family / Partners / Contact) + home. Former
+// sub-pages are now #anchored sections, with their old URLs redirected below so
+// existing links and search-engine results keep working.
 export default function HomestayRouter() {
   return (
     <Switch>
       <Route path="/" component={HomestayHome} />
 
-      {/* About Us */}
+      {/* About Us (How It Works / Mission / Vision absorbed as sections) */}
       <Route path="/about" component={AboutUs} />
-      <Route path="/how-it-works" component={HowItWorks} />
-      <Route path="/mission" component={Mission} />
-      <Route path="/vision" component={Vision} />
+      <Route path="/how-it-works"><HashRedirect to="/about#how-it-works" /></Route>
+      <Route path="/mission"><HashRedirect to="/about#mission" /></Route>
+      <Route path="/vision"><HashRedirect to="/about#vision" /></Route>
 
-      {/* Student */}
+      {/* Student (Advantages / Tips / Essential Information absorbed) */}
       <Route path="/students" component={StudentBecome} />
-      <Route path="/students/advantages" component={StudentAdvantages} />
-      <Route path="/students/tips" component={StudentTips} />
-      <Route path="/students/essential-information" component={StudentEssentialInfo} />
+      <Route path="/students/advantages"><HashRedirect to="/students#advantages" /></Route>
+      <Route path="/students/tips"><HashRedirect to="/students#tips" /></Route>
+      <Route path="/students/essential-information"><HashRedirect to="/students#essentials" /></Route>
       <Route path="/students/apply" component={StudentApply} />
 
-      {/* Host Family */}
+      {/* Host Family (Benefits / Tips absorbed) */}
       <Route path="/hosts/become-a-host" component={HostBecome} />
-      <Route path="/hosts/benefits" component={HostBenefits} />
-      <Route path="/hosts/tips" component={HostTips} />
+      <Route path="/hosts/benefits"><HashRedirect to="/hosts/become-a-host#benefits" /></Route>
+      <Route path="/hosts/tips"><HashRedirect to="/hosts/become-a-host#tips" /></Route>
       <Route path="/hosts/apply" component={HostApply} />
 
-      {/* Partners */}
+      {/* Partners (Study Tour absorbed) */}
       <Route path="/partners" component={PartnersWorking} />
-      <Route path="/partners/study-tour" component={StudyTour} />
+      <Route path="/partners/study-tour"><HashRedirect to="/partners#study-tour" /></Route>
 
       {/* Contact */}
       <Route path="/contact" component={HomestayContact} />
+
+      {/* Legal */}
+      <Route path="/privacy" component={HomestayPrivacy} />
+      <Route path="/privacy-policy"><HashRedirect to="/privacy" /></Route>
+      <Route path="/terms" component={HomestayTerms} />
 
       {/* Live flows (existing pages) */}
       <Route path="/for-homestay-host" component={ForHomestayHost} />

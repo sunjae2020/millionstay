@@ -22,9 +22,13 @@ export function HsPageHero({ eyebrow, title, lead }: { eyebrow?: string; title: 
   );
 }
 
-export function HsSection({ heading, children, tint }: { heading?: string; children: ReactNode; tint?: boolean }) {
+export function HsSection({ id, heading, children, tint }: { id?: string; heading?: string; children: ReactNode; tint?: boolean }) {
   return (
-    <section style={tint ? { backgroundColor: "#f6efec" } : undefined} className={tint ? "border-y border-gray-100" : ""}>
+    <section
+      id={id}
+      style={{ ...(tint ? { backgroundColor: "#f6efec" } : {}), ...(id ? { scrollMarginTop: "5rem" } : {}) }}
+      className={tint ? "border-y border-gray-100" : ""}
+    >
       <div className="max-w-4xl mx-auto px-5 py-12 md:py-16">
         {heading && <h2 className="text-2xl font-bold mb-6" style={{ fontFamily: HS_FONT.head, color: HS.darkBrown }}>{heading}</h2>}
         {children}
