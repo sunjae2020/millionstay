@@ -45,6 +45,7 @@ import otaChannelsRouter from "./ota-channels";
 import addonServicesRouter from "./addon-services";
 import apiCredentialsRouter from "./api-credentials";
 import { homestayAdminRouter } from "./homestay";
+import { homestayStudentAdminRouter } from "./homestay-students";
 const router: IRouter = Router();
 
 router.use(healthRouter);
@@ -93,6 +94,7 @@ router.use(otaChannelsRouter);
 router.use(addonServicesRouter);
 router.use(apiCredentialsRouter);
 router.use(homestayAdminRouter);
+router.use(homestayStudentAdminRouter);
 // Note: partnerAuthRouter, agentPortalRouter, ownerPortalRouter are registered in app.ts
 // BEFORE the requireAuth middleware to allow partner JWT auth to bypass the admin auth guard.
 
