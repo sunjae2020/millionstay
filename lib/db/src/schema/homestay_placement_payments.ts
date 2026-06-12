@@ -11,10 +11,16 @@ export const homestayPlacementPaymentsTable = pgTable("homestay_placement_paymen
   id: serial("id").primaryKey(),
   placement_id: integer("placement_id").notNull(), // homestay_placements.id
   kind: text("kind").notNull(),                    // upfront | monthly
+  method: text("method").notNull().default("card"),// card | bank_transfer
+  // amount = base_amount + surcharge_amount (the total actually charged)
   amount: numeric("amount", { precision: 10, scale: 2 }).notNull().default("0"),
+  base_amount: numeric("base_amount", { precision: 10, scale: 2 }).notNull().default("0"),
+  // Card payments add a 2% surcharge (auto-calculated); bank transfer = 0.
+  surcharge_amount: numeric("surcharge_amount", { precision: 10, scale: 2 }).notNull().default("0"),
   currency: text("currency").notNull().default("AUD"),
   status: text("status").notNull().default("pending"), // pending | paid | failed | refunded
 
+  payment_info_id: integer("payment_info_id"),     // bank account used (bank_transfer)
   invoice_id: integer("invoice_id"),               // optional link to invoices.id
   stripe_payment_intent_id: text("stripe_payment_intent_id"),
   stripe_invoice_id: text("stripe_invoice_id"),    // for subscription cycles

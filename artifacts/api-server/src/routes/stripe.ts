@@ -1,6 +1,6 @@
 import { Router } from "express";
 import Stripe from "stripe";
-import { db, invoicesTable, homestayPlacementsTable, homestayStudentRequestsTable } from "@workspace/db";
+import { db, invoicesTable, homestayPlacementsTable, homestayStudentRequestsTable, homestayPlacementPaymentsTable } from "@workspace/db";
 import { and, eq } from "drizzle-orm";
 import { logAction } from "../utils/auditLog";
 
@@ -68,8 +68,34 @@ router.post("/v1/stripe/webhook", async (req, res): Promise<void> => {
 
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
+        const paid = session.payment_status === "paid";
+
+        // Preferred path: a specific placement-payment charge (upfront or monthly).
+        const placementPaymentId = session.metadata?.placement_payment_id ? Number(session.metadata.placement_payment_id) : null;
+        if (placementPaymentId && paid) {
+          const now = new Date();
+          const [pay] = await db.update(homestayPlacementPaymentsTable)
+            .set({
+              status: "paid", paid_at: now,
+              stripe_payment_intent_id: typeof session.payment_intent === "string" ? session.payment_intent : undefined,
+            })
+            .where(and(eq(homestayPlacementPaymentsTable.id, placementPaymentId), eq(homestayPlacementPaymentsTable.status, "pending")))
+            .returning();
+          if (pay && pay.kind === "upfront") {
+            const [pl] = await db.update(homestayPlacementsTable)
+              .set({ status: "Active", confirmed_at: now, stripe_customer_id: typeof session.customer === "string" ? session.customer : undefined, updated_at: now })
+              .where(and(eq(homestayPlacementsTable.id, pay.placement_id), eq(homestayPlacementsTable.status, "AwaitingPayment")))
+              .returning();
+            if (pl) await db.update(homestayStudentRequestsTable).set({ status: "Placed", updated_at: now }).where(eq(homestayStudentRequestsTable.id, pl.student_request_id));
+          }
+          await logAction({ entityType: "homestay_placement", entityId: pay?.placement_id ?? 0, action: "PAYMENT", newValue: { placement_payment_id: placementPaymentId, kind: pay?.kind, stripe_session: session.id } }).catch(() => {});
+          console.log(`[Stripe] checkout.session.completed → placement_payment ${placementPaymentId} paid`);
+          break;
+        }
+
+        // Back-compat path: a session tagged only with placement_id (Phase E upfront).
         const placementId = session.metadata?.placement_id ? Number(session.metadata.placement_id) : null;
-        if (placementId && session.payment_status === "paid") {
+        if (placementId && paid) {
           const now = new Date();
           const [pl] = await db.update(homestayPlacementsTable)
             .set({

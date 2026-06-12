@@ -42,6 +42,22 @@ interface Placement {
 
 interface SigningReq { id: number; token: string; status: string; context_type: string; signed_at?: string | null }
 
+interface PlacementPayment {
+  id: number;
+  kind: "upfront" | "monthly";
+  method: "card" | "bank_transfer";
+  status: "pending" | "paid" | "failed" | "refunded";
+  amount: string;
+  base_amount: string;
+  surcharge_amount: string;
+  currency: string;
+  period_start?: string | null;
+  period_end?: string | null;
+  paid_at?: string | null;
+  created_at: string;
+}
+interface BankInfo { name?: string; bank_name?: string; bsb_number?: string; account_number?: string; account_name?: string; swift_code?: string }
+
 function Section({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
     <div className="border rounded-lg overflow-hidden">
@@ -76,10 +92,14 @@ export default function HomestayPlacementDetail() {
   const [nextStatus, setNextStatus] = useState<PlacementStatus>("Active");
   const [sendOpen, setSendOpen] = useState(false);
   const [sendSel, setSendSel] = useState({ applicant: true, host: true, agent: false, ops: false });
+  const [chargeOpen, setChargeOpen] = useState(false);
+  const [chargeKind, setChargeKind] = useState<"upfront" | "monthly">("upfront");
+  const [chargeMethod, setChargeMethod] = useState<"card" | "bank_transfer">("card");
+  const [bankInfo, setBankInfo] = useState<BankInfo | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["homestay-placement", id],
-    queryFn: async (): Promise<{ placement: Placement }> => {
+    queryFn: async (): Promise<{ placement: Placement; payments?: PlacementPayment[] }> => {
       const res = await apiFetch(`${API}/${id}`);
       if (!res.ok) throw new Error("Failed to load placement");
       return res.json();
@@ -87,6 +107,7 @@ export default function HomestayPlacementDetail() {
     enabled: !!id,
   });
   const p = data?.placement;
+  const payments = data?.payments ?? [];
 
   // Signing requests for this placement (to surface the contract status + PDF).
   const { data: signing } = useQuery({
@@ -147,18 +168,39 @@ export default function HomestayPlacementDetail() {
     onError: (e: any) => toast({ title: t("homestayPlacement.error"), description: e.message, variant: "destructive" }),
   });
 
-  const collectPayment = useMutation({
+  const charge = useMutation({
     mutationFn: async () => {
-      const res = await apiFetch(`${API}/${id}/payment`, { method: "POST" });
-      if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error ?? "Failed to start payment");
+      const res = await apiFetch(`${API}/${id}/charge`, { method: "POST", body: JSON.stringify({ kind: chargeKind, method: chargeMethod }) });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error ?? "Failed to start charge");
       return res.json();
     },
     onSuccess: (d: any) => {
-      if (d?.url) window.open(d.url, "_blank", "noopener");
-      toast({ title: t("homestayPlacement.toast_payment_link") });
+      if (d?.method === "card" && d?.url) {
+        window.open(d.url, "_blank", "noopener");
+        toast({ title: t("homestayPlacement.toast_payment_link") });
+        setChargeOpen(false);
+      } else if (d?.method === "bank_transfer") {
+        setBankInfo(d?.bank ?? null); // keep dialog open to show bank details
+        toast({ title: t("homestayPlacement.toast_bank_charge") });
+      }
+      invalidate();
     },
     onError: (e: any) => toast({ title: t("homestayPlacement.error"), description: e.message, variant: "destructive" }),
   });
+
+  const markPaid = useMutation({
+    mutationFn: async (paymentId: number) => {
+      const res = await apiFetch(`/api/v1/homestay-placement-payments/${paymentId}/mark-paid`, { method: "POST" });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => { toast({ title: t("homestayPlacement.toast_marked_paid") }); invalidate(); },
+    onError: (e: any) => toast({ title: t("homestayPlacement.error"), description: e.message, variant: "destructive" }),
+  });
+
+  function openCharge(kind: "upfront" | "monthly") {
+    setChargeKind(kind); setChargeMethod("card"); setBankInfo(null); setChargeOpen(true);
+  }
 
   if (isLoading) return <Layout><p className="p-6 text-sm text-muted-foreground">{t("common.loading")}</p></Layout>;
   if (!p) return <Layout><p className="p-6 text-sm text-muted-foreground">{t("homestayPlacement.not_found")}</p></Layout>;
@@ -224,16 +266,18 @@ export default function HomestayPlacementDetail() {
         <Section
           title={t("homestayPlacement.section_fees")}
           action={
-            (canPay || isActive) && (
-              canPay ? (
-                <Button size="sm" className="gap-1.5 h-7" onClick={() => collectPayment.mutate()} disabled={collectPayment.isPending}>
-                  {collectPayment.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CreditCard className="h-3.5 w-3.5" />}
-                  {t("homestayPlacement.btn_collect_payment")}
+            <div className="flex gap-2">
+              {canPay && (
+                <Button size="sm" className="gap-1.5 h-7" onClick={() => openCharge("upfront")}>
+                  <CreditCard className="h-3.5 w-3.5" /> {t("homestayPlacement.btn_collect_upfront")}
                 </Button>
-              ) : (
-                <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700"><Check className="h-3.5 w-3.5" /> {t("homestayPlacement.paid")}</span>
-              )
-            )
+              )}
+              {isActive && (
+                <Button size="sm" variant="outline" className="gap-1.5 h-7" onClick={() => openCharge("monthly")}>
+                  <CreditCard className="h-3.5 w-3.5" /> {t("homestayPlacement.btn_charge_monthly")}
+                </Button>
+              )}
+            </div>
           }
         >
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -242,10 +286,34 @@ export default function HomestayPlacementDetail() {
             <Field label={t("homestayPlacement.f_monthly_fee")} value={money(p.monthly_fee)} />
             <Field label={t("homestayPlacement.f_currency")} value={p.currency} />
           </div>
-          {canPay && (
-            <p className="text-xs text-muted-foreground mt-3">
-              {t("homestayPlacement.payment_hint")} — {money(String(Number(p.placement_fee ?? 0) + Number(p.deposit ?? 0)))}
-            </p>
+        </Section>
+
+        {/* Payments */}
+        <Section title={t("homestayPlacement.section_payments")}>
+          {payments.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("homestayPlacement.payments_none")}</p>
+          ) : (
+            <div className="space-y-2">
+              {payments.map((pay) => (
+                <div key={pay.id} className="flex flex-wrap items-center justify-between gap-2 border rounded-md px-3 py-2">
+                  <div className="flex flex-wrap items-center gap-2 text-sm">
+                    <span className="font-medium">{t(`homestayPlacement.kind_${pay.kind}`)}</span>
+                    <span className="text-xs text-muted-foreground">· {t(`homestayPlacement.method_${pay.method}`)}</span>
+                    <span className="font-medium">{pay.currency} {Number(pay.amount).toLocaleString("en-AU", { minimumFractionDigits: 2 })}</span>
+                    {Number(pay.surcharge_amount) > 0 && (
+                      <span className="text-[11px] text-muted-foreground">({t("homestayPlacement.incl_surcharge")} {pay.currency} {Number(pay.surcharge_amount).toLocaleString("en-AU", { minimumFractionDigits: 2 })})</span>
+                    )}
+                    <span className={`text-xs font-medium ${pay.status === "paid" ? "text-green-700" : pay.status === "pending" ? "text-amber-700" : "text-red-600"}`}>· {t(`homestayPlacement.paystatus_${pay.status}`)}</span>
+                    {pay.paid_at && <span className="text-[11px] text-muted-foreground">{new Date(pay.paid_at).toLocaleDateString()}</span>}
+                  </div>
+                  {pay.method === "bank_transfer" && pay.status === "pending" && (
+                    <Button size="sm" variant="outline" className="h-7 gap-1.5" onClick={() => markPaid.mutate(pay.id)} disabled={markPaid.isPending}>
+                      <Check className="h-3.5 w-3.5" /> {t("homestayPlacement.btn_mark_paid")}
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
           )}
         </Section>
 
@@ -337,6 +405,56 @@ export default function HomestayPlacementDetail() {
             <Button onClick={() => resend.mutate()} disabled={resend.isPending}>
               {resend.isPending ? t("common.saving") : t("homestayPlacement.btn_send")}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Charge dialog (method chooser + bank box) */}
+      <Dialog open={chargeOpen} onOpenChange={setChargeOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{chargeKind === "upfront" ? t("homestayPlacement.btn_collect_upfront") : t("homestayPlacement.btn_charge_monthly")}</DialogTitle>
+          </DialogHeader>
+          {bankInfo !== null ? (
+            // Bank-transfer charge created → show details for the applicant to pay.
+            <div className="grid gap-2 py-2 text-sm">
+              <p className="text-muted-foreground">{t("homestayPlacement.bank_relay_hint")}</p>
+              {bankInfo ? (
+                <div className="border rounded-md p-3 grid gap-1">
+                  <div><span className="text-muted-foreground">{t("homestayPlacement.bank_account_name")}:</span> <span className="font-medium">{bankInfo.account_name || "—"}</span></div>
+                  <div><span className="text-muted-foreground">{t("homestayPlacement.bank_name")}:</span> <span className="font-medium">{bankInfo.bank_name || "—"}</span></div>
+                  <div><span className="text-muted-foreground">BSB:</span> <span className="font-medium">{bankInfo.bsb_number || "—"}</span></div>
+                  <div><span className="text-muted-foreground">{t("homestayPlacement.bank_account_number")}:</span> <span className="font-medium">{bankInfo.account_number || "—"}</span></div>
+                  {bankInfo.swift_code && <div><span className="text-muted-foreground">SWIFT:</span> <span className="font-medium">{bankInfo.swift_code}</span></div>}
+                </div>
+              ) : (
+                <p className="text-amber-700">{t("homestayPlacement.bank_none")}</p>
+              )}
+              <p className="text-xs text-muted-foreground">{t("homestayPlacement.bank_mark_paid_hint")}</p>
+            </div>
+          ) : (
+            <div className="grid gap-3 py-2 text-sm">
+              <p className="text-muted-foreground">
+                {t("homestayPlacement.charge_amount")}: <span className="font-medium text-foreground">{money(chargeKind === "upfront" ? String(Number(p.placement_fee ?? 0) + Number(p.deposit ?? 0)) : p.monthly_fee)}</span>
+              </p>
+              <div className="grid gap-2">
+                {(["card", "bank_transfer"] as const).map((m) => (
+                  <label key={m} className="flex items-center gap-2 border rounded-md px-3 py-2 cursor-pointer">
+                    <input type="radio" name="charge-method" checked={chargeMethod === m} onChange={() => setChargeMethod(m)} className="h-4 w-4" />
+                    <span className="font-medium">{t(`homestayPlacement.method_${m}`)}</span>
+                    {m === "card" && <span className="text-[11px] text-muted-foreground">{t("homestayPlacement.card_surcharge_note")}</span>}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setChargeOpen(false)}>{bankInfo !== null ? t("common.close") : t("common.cancel")}</Button>
+            {bankInfo === null && (
+              <Button onClick={() => charge.mutate()} disabled={charge.isPending}>
+                {charge.isPending ? t("common.saving") : (chargeMethod === "card" ? t("homestayPlacement.btn_open_checkout") : t("homestayPlacement.btn_create_bank_charge"))}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
