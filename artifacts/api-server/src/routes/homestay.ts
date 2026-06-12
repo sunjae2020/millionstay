@@ -14,6 +14,7 @@ import {
 } from "@workspace/db";
 import { generateHomestayRef } from "../lib/homestayRef.js";
 import { signPartnerJWT, requireHomestayAuth, invalidatePartnerCache, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth.js";
+import { createSigningRequest } from "../services/contractSigning.js";
 import { sendHomestayHostEmail, sendLeadNotificationEmail } from "../lib/email.js";
 import { isCloudinaryConfigured, uploadToCloudinary } from "../utils/cloudinary.js";
 import { logAction } from "../utils/auditLog.js";
@@ -190,6 +191,22 @@ homestayPublicRouter.post("/v1/public/homestay-host-applications", async (req, r
     // 4) Auto-login token (portal works regardless of approval)
     const token = signPartnerJWT({ id: user!.id, email, account_id: account!.id, portal_type: "homestay" });
 
+    // 4b) E-signature request — submitted hosts draw their signature at /sign/:token
+    // (parity with the student flow). Drafts skip this until they finalise.
+    let signing_token: string | null = null;
+    if (!isDraft) {
+      try {
+        const signing = await createSigningRequest({
+          contextType: "host_app",
+          contextId: appRow!.id,
+          signers: [{ role: "host", name: `${first_name} ${last_name}`.trim(), email, required: true }],
+        });
+        signing_token = signing.token;
+      } catch (e) {
+        console.error("[homestay] signing request creation failed:", e);
+      }
+    }
+
     // 5) Emails — best-effort, never block. Skipped for Drafts (not yet submitted).
     if (!isDraft) {
       void sendHomestayHostEmail({ to: email, toName: first_name, applicationRef: application_ref, kind: "received" })
@@ -206,7 +223,7 @@ homestayPublicRouter.post("/v1/public/homestay-host-applications", async (req, r
 
     void logAction({ entityType: HOMESTAY_ENTITY, entityId: appRow!.id, action: "CREATE", actorId: user!.id, actorEmail: email, newValue: { application_ref, status: isDraft ? "Draft" : "Submitted" } });
 
-    res.status(201).json({ success: true, application_ref, token, application: publicView(appRow!) });
+    res.status(201).json({ success: true, application_ref, token, signing_token, application: publicView(appRow!) });
   } catch (err: any) {
     if (err?.code === "23505") { res.status(409).json({ success: false, error: "Duplicate entry" }); return; }
     console.error("[homestay] submit failed:", err);

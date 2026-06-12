@@ -168,8 +168,11 @@ export default function ForHomestayHost() {
     setError(null); setEmailExists(false); setSubmitting(true);
     try {
       const res = await submitHostApplication({ ...f });
+      // Keep the portal JWT so the host is logged in after signing, but send them
+      // to draw their signature first (parity with the student flow). If signing
+      // could not be created, fall back to the portal.
       setHomestayToken(res.token);
-      setLocation("/host-portal");
+      setLocation(res.signing_token ? `/sign/${res.signing_token}` : "/host-portal");
     } catch (err) {
       if (err instanceof HomestayApiError && err.status === 409) {
         setEmailExists(true);

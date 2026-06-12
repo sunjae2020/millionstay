@@ -1,6 +1,7 @@
 import { useRef, useEffect, useCallback, useState } from "react";
 import { RotateCcw, PenLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { HS, HS_TINT } from "@/lib/homestay-theme";
 
 // Canvas signature pad — draws with mouse/touch and emits a PNG data URL.
 // Ported from Edubee CRM (self-contained; no third-party signature library).
@@ -131,12 +132,15 @@ export default function SignaturePad({
 
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
-      {label && <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">{label}</p>}
-      <div className="relative rounded-lg border border-gray-200 bg-white overflow-hidden">
+      {label && <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: HS.mocha }}>{label}</p>}
+      <div
+        className="relative rounded-xl border overflow-hidden"
+        style={{ borderColor: HS.mocha, backgroundColor: HS_TINT.cream }}
+      >
         {isEmpty && !disabled && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 pointer-events-none select-none">
-            <PenLine className="w-5 h-5 text-gray-300" />
-            <p className="text-xs text-gray-400">Draw your signature here</p>
+            <PenLine className="w-5 h-5" style={{ color: HS.mocha }} />
+            <p className="text-xs" style={{ color: HS.mocha }}>Draw your signature here</p>
           </div>
         )}
         <canvas
@@ -148,7 +152,7 @@ export default function SignaturePad({
       </div>
       {!disabled && (
         <div className="flex justify-end">
-          <Button type="button" variant="ghost" size="sm" onClick={clear} className="h-7 px-2 text-xs text-muted-foreground hover:text-red-500 gap-1">
+          <Button type="button" variant="ghost" size="sm" onClick={clear} className="h-7 px-2 text-xs gap-1" style={{ color: HS.brand }}>
             <RotateCcw className="w-3 h-3" /> Clear
           </Button>
         </div>

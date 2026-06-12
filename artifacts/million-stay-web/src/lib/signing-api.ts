@@ -65,3 +65,31 @@ export async function submitSignatures(
   const body = await readJson(res);
   if (!res.ok) throw new SigningError(res.status, body?.error ?? "error", body?.message ?? "Failed to submit signatures.");
 }
+
+/** Token-gated HTML preview of the application (pending before signing, signed after). */
+export function previewUrl(token: string): string {
+  return `${BASE}/${encodeURIComponent(token)}/preview`;
+}
+
+/** Token-gated signed PDF (redirects to a short-lived signed URL, or renders inline). */
+export function signedPdfUrl(token: string): string {
+  return `${BASE}/${encodeURIComponent(token)}/pdf`;
+}
+
+export interface RecipientSelection {
+  applicant?: boolean;
+  agent?: boolean;
+  ops?: boolean;
+}
+
+/** Re-send the signed application PDF to the selected recipients. */
+export async function sendApplicationPdf(token: string, select: RecipientSelection): Promise<string[]> {
+  const res = await fetch(`${BASE}/${encodeURIComponent(token)}/send`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(select),
+  });
+  const body = await readJson(res);
+  if (!res.ok) throw new SigningError(res.status, body?.error ?? "error", body?.message ?? "Failed to send the document.");
+  return (body?.sent as string[]) ?? [];
+}
