@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Handshake, Check, FileSignature, FileText, Send, ExternalLink, Loader2, Copy } from "lucide-react";
+import { ArrowLeft, Handshake, Check, FileSignature, FileText, Send, ExternalLink, Loader2, Copy, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
 import { PlacementStatusBadge, PLACEMENT_STATUS_ORDER, PLACEMENT_STATUS_CONFIG, type PlacementStatus } from "./HomestayPlacements";
@@ -147,6 +147,19 @@ export default function HomestayPlacementDetail() {
     onError: (e: any) => toast({ title: t("homestayPlacement.error"), description: e.message, variant: "destructive" }),
   });
 
+  const collectPayment = useMutation({
+    mutationFn: async () => {
+      const res = await apiFetch(`${API}/${id}/payment`, { method: "POST" });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error ?? "Failed to start payment");
+      return res.json();
+    },
+    onSuccess: (d: any) => {
+      if (d?.url) window.open(d.url, "_blank", "noopener");
+      toast({ title: t("homestayPlacement.toast_payment_link") });
+    },
+    onError: (e: any) => toast({ title: t("homestayPlacement.error"), description: e.message, variant: "destructive" }),
+  });
+
   if (isLoading) return <Layout><p className="p-6 text-sm text-muted-foreground">{t("common.loading")}</p></Layout>;
   if (!p) return <Layout><p className="p-6 text-sm text-muted-foreground">{t("homestayPlacement.not_found")}</p></Layout>;
 
@@ -154,6 +167,8 @@ export default function HomestayPlacementDetail() {
   const contractSigned = latestSigning?.status === "signed";
   const canAccept = p.status === "Proposed";
   const canIssue = ["Proposed", "HostAccepted", "AwaitingPayment"].includes(p.status);
+  const canPay = p.status === "AwaitingPayment";
+  const isActive = ["Active", "Ending", "Completed"].includes(p.status);
 
   return (
     <Layout>
@@ -206,13 +221,32 @@ export default function HomestayPlacementDetail() {
           </div>
         </Section>
 
-        <Section title={t("homestayPlacement.section_fees")}>
+        <Section
+          title={t("homestayPlacement.section_fees")}
+          action={
+            (canPay || isActive) && (
+              canPay ? (
+                <Button size="sm" className="gap-1.5 h-7" onClick={() => collectPayment.mutate()} disabled={collectPayment.isPending}>
+                  {collectPayment.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CreditCard className="h-3.5 w-3.5" />}
+                  {t("homestayPlacement.btn_collect_payment")}
+                </Button>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700"><Check className="h-3.5 w-3.5" /> {t("homestayPlacement.paid")}</span>
+              )
+            )
+          }
+        >
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <Field label={t("homestayPlacement.f_placement_fee")} value={money(p.placement_fee)} />
             <Field label={t("homestayPlacement.f_deposit")} value={money(p.deposit)} />
             <Field label={t("homestayPlacement.f_monthly_fee")} value={money(p.monthly_fee)} />
             <Field label={t("homestayPlacement.f_currency")} value={p.currency} />
           </div>
+          {canPay && (
+            <p className="text-xs text-muted-foreground mt-3">
+              {t("homestayPlacement.payment_hint")} — {money(String(Number(p.placement_fee ?? 0) + Number(p.deposit ?? 0)))}
+            </p>
+          )}
         </Section>
 
         {/* Contract & signature */}

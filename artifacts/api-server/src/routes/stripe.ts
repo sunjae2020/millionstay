@@ -1,12 +1,12 @@
 import { Router } from "express";
 import Stripe from "stripe";
-import { db, invoicesTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { db, invoicesTable, homestayPlacementsTable, homestayStudentRequestsTable } from "@workspace/db";
+import { and, eq } from "drizzle-orm";
 import { logAction } from "../utils/auditLog";
 
 const router = Router();
 
-function getStripe(): Stripe | null {
+export function getStripe(): Stripe | null {
   const key = process.env["STRIPE_SECRET_KEY"];
   if (!key) return null;
   return new Stripe(key, { apiVersion: "2025-02-24.acacia" });
@@ -63,6 +63,34 @@ router.post("/v1/stripe/webhook", async (req, res): Promise<void> => {
           });
         }
         console.log(`[Stripe] payment_intent.succeeded: ${pi.id}`);
+        break;
+      }
+
+      case "checkout.session.completed": {
+        const session = event.data.object as Stripe.Checkout.Session;
+        const placementId = session.metadata?.placement_id ? Number(session.metadata.placement_id) : null;
+        if (placementId && session.payment_status === "paid") {
+          const now = new Date();
+          const [pl] = await db.update(homestayPlacementsTable)
+            .set({
+              status: "Active",
+              confirmed_at: now,
+              stripe_customer_id: typeof session.customer === "string" ? session.customer : undefined,
+              updated_at: now,
+            })
+            .where(and(eq(homestayPlacementsTable.id, placementId), eq(homestayPlacementsTable.status, "AwaitingPayment")))
+            .returning();
+          if (pl) {
+            await db.update(homestayStudentRequestsTable)
+              .set({ status: "Placed", updated_at: now })
+              .where(eq(homestayStudentRequestsTable.id, pl.student_request_id));
+            await logAction({
+              entityType: "homestay_placement", entityId: placementId, action: "PAYMENT",
+              newValue: { status: "Active", stripe_session: session.id, amount_total: session.amount_total },
+            });
+          }
+          console.log(`[Stripe] checkout.session.completed → placement ${placementId} Active`);
+        }
         break;
       }
 

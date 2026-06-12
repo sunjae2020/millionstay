@@ -23,6 +23,7 @@ import { generatePlacementRef } from "../lib/homestayRef.js";
 import { createSigningRequest, signingBaseUrl, type SignerSpec } from "../services/contractSigning.js";
 import { sendHomestayHostEmail } from "../lib/email.js";
 import { logAction } from "../utils/auditLog.js";
+import { getStripe } from "./stripe.js";
 
 const ENTITY = "homestay_placement";
 
@@ -243,6 +244,52 @@ homestayPlacementAdminRouter.post("/v1/homestay-placements/:id/contract", async 
   } catch (err) {
     console.error("[homestay-placements] contract failed:", err);
     res.status(500).json({ error: "Failed to create placement contract" });
+  }
+});
+
+// ── Collect payment (Stripe Checkout) ────────────────────────────────────────
+// Creates a hosted Stripe Checkout session for the deposit + placement fee. On
+// successful payment the webhook (routes/stripe.ts) advances AwaitingPayment →
+// Active. Requires the placement to be AwaitingPayment (contract signed).
+homestayPlacementAdminRouter.post("/v1/homestay-placements/:id/payment", async (req, res): Promise<void> => {
+  try {
+    const stripe = getStripe();
+    if (!stripe) { res.status(503).json({ error: "Stripe is not configured" }); return; }
+    const id = Number(req.params.id);
+    const [row] = await db.select().from(homestayPlacementsTable).where(eq(homestayPlacementsTable.id, id)).limit(1);
+    if (!row) { res.status(404).json({ error: "Not found" }); return; }
+    if (row.status !== "AwaitingPayment") {
+      res.status(409).json({ error: "Placement must be AwaitingPayment (sign the contract first)" });
+      return;
+    }
+    const amount = Number(row.placement_fee) + Number(row.deposit);
+    if (!(amount > 0)) { res.status(400).json({ error: "No deposit or placement fee to charge" }); return; }
+
+    const [student] = await db.select().from(homestayStudentRequestsTable)
+      .where(eq(homestayStudentRequestsTable.id, row.student_request_id)).limit(1);
+    const base = (process.env.PUBLIC_WEB_URL ?? "https://www.millionstay.com").replace(/\/+$/, "");
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      line_items: [{
+        price_data: {
+          currency: (row.currency || "AUD").toLowerCase(),
+          product_data: { name: `Homestay placement ${row.placement_ref} — deposit + placement fee` },
+          unit_amount: Math.round(amount * 100),
+        },
+        quantity: 1,
+      }],
+      metadata: { placement_id: String(id), placement_ref: row.placement_ref },
+      customer_email: student?.student_email || student?.guardian_email || undefined,
+      success_url: `${base}/?payment=success&ref=${encodeURIComponent(row.placement_ref)}`,
+      cancel_url: `${base}/?payment=cancelled&ref=${encodeURIComponent(row.placement_ref)}`,
+    });
+
+    void logAction({ entityType: ENTITY, entityId: id, action: "CREATE", actorId: (req as any).user?.id ?? null, newValue: { stripe_session: session.id, kind: "placement_payment", amount } });
+    res.json({ success: true, url: session.url, amount, currency: row.currency });
+  } catch (err) {
+    console.error("[homestay-placements] payment failed:", err);
+    res.status(500).json({ error: "Failed to create payment session" });
   }
 });
 
