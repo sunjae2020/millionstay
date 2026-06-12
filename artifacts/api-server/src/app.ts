@@ -24,6 +24,7 @@ import ownerPortalRouter from "./routes/owner-portal";
 import serviceHostPortalRouter from "./routes/service-host-portal";
 import { homestayPublicRouter, homestayPortalRouter } from "./routes/homestay";
 import { contractSigningPublicRouter, contractSigningAdminRouter } from "./routes/contract-signing";
+import { homestayStudentPublicRouter } from "./routes/homestay-students";
 import pageContentsRouter from "./routes/page-contents";
 import privacyRouter from "./routes/privacy";
 import chatRouter from "./routes/chat";
@@ -199,6 +200,7 @@ app.use([
   "/api/v1/public/agent-applications",
   "/api/v1/public/service-host-applications",
   "/api/v1/public/homestay-host-applications",
+  "/api/v1/public/homestay-student-requests",
 ], applicationLimiter);
 app.use([
   "/api/v1/guest/me/data",
@@ -215,6 +217,8 @@ app.use("/api", publicRouter);
 app.use("/api", homestayPublicRouter);
 // Public e-signature: token-addressed signing page fetch + submit (no auth).
 app.use("/api", contractSigningPublicRouter);
+// Public homestay student application intake (no auth).
+app.use("/api", homestayStudentPublicRouter);
 app.use("/api", chatRouter);
 app.use("/api", privacyRouter);
 // External third-party API — authenticates with issued API Key + Secret

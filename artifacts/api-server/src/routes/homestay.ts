@@ -8,6 +8,9 @@ import {
   accountsTable,
   partnerUsersTable,
   documentsTable,
+  propertiesTable,
+  spacesTable,
+  suburbsTable,
 } from "@workspace/db";
 import { generateHomestayRef } from "../lib/homestayRef.js";
 import { signPartnerJWT, requireHomestayAuth, invalidatePartnerCache, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth.js";
@@ -38,6 +41,72 @@ function pickApplication(body: Record<string, unknown>): Record<string, unknown>
 function publicView(app: typeof homestayHostApplicationsTable.$inferSelect) {
   const { reviewed_by, approval_notes, ...rest } = app;
   return rest;
+}
+
+type RoomRow = { name?: string; bed_type?: string; bath_type?: string; has_lock?: boolean; comments?: string };
+
+// Rough occupancy hint from the bed type (twin/bunk/double+ sleep two).
+function bedOccupancy(bedType?: string): number {
+  const b = (bedType ?? "").toLowerCase();
+  return /twin|bunk|double|queen|king|triple/.test(b) ? 2 : 1;
+}
+
+// On approval, materialise the host's homestay listing: one property for the
+// home + one space per advertised room, classified space_type='Homestay'.
+// Spaces start 'Inactive' (hidden) and only go 'Active' when the host turns on
+// their landing page (requires Approved) — so approval alone never exposes them.
+// Idempotent: if a property already exists for the host account, do nothing.
+async function ensureHomestayListings(app: typeof homestayHostApplicationsTable.$inferSelect): Promise<void> {
+  if (!app.account_id) return;
+  const [existing] = await db.select({ id: propertiesTable.id })
+    .from(propertiesTable)
+    .where(and(eq(propertiesTable.owner_account_id, app.account_id), isNull(propertiesTable.deleted_at)))
+    .limit(1);
+  if (existing) return; // already provisioned
+
+  // Best-effort suburb match (application stores suburb as free text).
+  let suburb_id: number | null = null;
+  if (app.suburb) {
+    const [s] = await db.select({ id: suburbsTable.id }).from(suburbsTable)
+      .where(ilike(suburbsTable.name, app.suburb)).limit(1);
+    suburb_id = s?.id ?? null;
+  }
+
+  const [property] = await db.insert(propertiesTable).values({
+    name: `${app.first_name} ${app.last_name}`.trim() + " — Homestay",
+    address: app.address ?? null,
+    suburb_id,
+    owner_account_id: app.account_id,
+    approval_status: "Approved",
+    description: app.profile_description ?? null,
+  }).returning({ id: propertiesTable.id });
+
+  const rooms = (app.rooms as RoomRow[] | null) ?? [];
+  const list = rooms.length ? rooms : [{ name: "Homestay Room" }];
+  await db.insert(spacesTable).values(
+    list.map((r, i) => ({
+      name: r.name?.trim() || `Homestay Room ${i + 1}`,
+      space_type: "Homestay",
+      max_occupancy: bedOccupancy(r.bed_type),
+      base_currency: "AUD",
+      description: r.comments ?? null,
+      status: "Inactive", // hidden until the host activates their landing page
+      property_id: property!.id,
+      landlord_account_id: app.account_id,
+    })),
+  );
+}
+
+// Flip every homestay space owned by this host account between public/hidden.
+async function setHomestaySpacesActive(accountId: number | null, active: boolean): Promise<void> {
+  if (!accountId) return;
+  const props = await db.select({ id: propertiesTable.id }).from(propertiesTable)
+    .where(eq(propertiesTable.owner_account_id, accountId));
+  const propIds = props.map((p) => p.id);
+  if (!propIds.length) return;
+  await db.update(spacesTable)
+    .set({ status: active ? "Active" : "Inactive" })
+    .where(and(inArray(spacesTable.property_id, propIds), eq(spacesTable.space_type, "Homestay")));
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -254,6 +323,9 @@ homestayPortalRouter.post("/v1/homestay/landing/activate", async (req, res): Pro
   const active = req.body?.active !== false; // default true
   const [row] = await db.update(homestayHostApplicationsTable)
     .set({ landing_active: active }).where(eq(homestayHostApplicationsTable.id, app.id)).returning();
+  // Show/hide the host's homestay spaces in public search in lockstep.
+  try { await setHomestaySpacesActive(app.account_id, active); }
+  catch (e) { console.error("[homestay] space activation toggle failed:", e); }
   res.json({ success: true, landing_active: row!.landing_active });
 });
 
@@ -307,6 +379,10 @@ homestayAdminRouter.post("/v1/homestay-applications/:id/approve", async (req, re
   const row = await setStatus(id, "Approved", { approval_notes: req.body?.notes ?? null }, reviewer);
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
   if (row.partner_user_id) invalidatePartnerCache(row.partner_user_id);
+  // Provision the host's property + homestay spaces (hidden until they activate
+  // their landing page). Best-effort — never fail the approval on a listing error.
+  try { await ensureHomestayListings(row); }
+  catch (e) { console.error("[homestay] listing provisioning failed:", e); }
   void sendHomestayHostEmail({ to: row.email, toName: row.first_name, applicationRef: row.application_ref, kind: "approved" })
     .catch((e) => console.error("[homestay] approve email failed:", e));
   res.json({ success: true, application: row });
@@ -317,6 +393,9 @@ homestayAdminRouter.post("/v1/homestay-applications/:id/reject", async (req, res
   const reviewer = (req as any).user?.id;
   const row = await setStatus(id, "Rejected", { approval_notes: req.body?.notes ?? null, landing_active: false }, reviewer);
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  // Pull any previously-exposed homestay spaces off public search.
+  try { await setHomestaySpacesActive(row.account_id, false); }
+  catch (e) { console.error("[homestay] space deactivation failed:", e); }
   void sendHomestayHostEmail({ to: row.email, toName: row.first_name, applicationRef: row.application_ref, kind: "rejected", note: req.body?.notes ?? null })
     .catch((e) => console.error("[homestay] reject email failed:", e));
   res.json({ success: true, application: row });
