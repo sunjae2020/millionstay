@@ -500,7 +500,7 @@ export default function PromotionDetail() {
                       </div>
                       <div className="space-y-2">
                         {assocServices.map(s => (
-                          <WouterLink key={s.id} href={`/products/services/${s.id}`}>
+                          <WouterLink key={s.id} href={`/services/${s.id}`}>
                             <div className="flex items-center justify-between p-3 rounded-lg border hover:border-[#E8621A]/40 hover:bg-orange-50/40 transition-colors cursor-pointer group">
                               <div className="flex items-center gap-3">
                                 <span className="text-sm font-medium group-hover:text-[#E8621A] transition-colors">{s.name}</span>
