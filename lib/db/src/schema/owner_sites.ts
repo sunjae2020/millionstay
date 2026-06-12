@@ -62,7 +62,7 @@ export const RESERVED_SLUGS = new Set<string>([
   "static", "assets", "cdn", "mail", "smtp", "ftp", "dev", "staging", "test",
   "public", "dashboard", "portal", "support", "help", "account", "accounts",
   "booking", "bookings", "search", "login", "register", "auth", "blog",
-  "millionstay", "status", "docs",
+  "millionstay", "status", "docs", "homestay",
 ]);
 
 /** Returns null when valid, otherwise a machine-readable reason code. */
