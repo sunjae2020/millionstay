@@ -80,8 +80,9 @@ export default function AboutUs() {
             deposit + first period) and an ongoing monthly subscription for the stay.
           </p>
           <p className="mt-3 text-sm text-gray-500 italic">
-            Current amounts: weekly fee [ ], placement fee [ ], deposit [ ], guardian service [ ], airport pickup [ ].
-            Refund terms per the placement agreement.
+            The exact amounts — including the weekly fee, placement fee, deposit, and optional services such as
+            guardian service and airport pickup — are confirmed in writing before any payment, and set out in
+            your placement agreement along with the refund terms.
           </p>
           <p className="mt-4 text-sm font-medium" style={{ color: HS.darkBrown }}>
             Our operations team reviews every application — we don't promise a guaranteed placement, and matching
