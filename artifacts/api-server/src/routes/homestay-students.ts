@@ -7,11 +7,13 @@
 // is admin-brokered (Phase 5), so no portal login is created here.
 import { Router, type IRouter } from "express";
 import { and, desc, eq, ilike, isNull, or } from "drizzle-orm";
-import { db, homestayStudentRequestsTable } from "@workspace/db";
+import { db, homestayStudentRequestsTable, homestayHostApplicationsTable, homestayHostAvailabilityTable } from "@workspace/db";
 import { generateStudentRef } from "../lib/homestayRef.js";
 import { createSigningRequest, type SignerSpec } from "../services/contractSigning.js";
 import { sendLeadNotificationEmail } from "../lib/email.js";
 import { logAction } from "../utils/auditLog.js";
+import { rankHosts } from "../lib/homestay/matching.js";
+import { attachRationales } from "../lib/homestay/matchRationale.js";
 
 const STUDENT_ENTITY = "homestay_student_request";
 
@@ -186,4 +188,47 @@ homestayStudentAdminRouter.post("/v1/homestay-student-requests/:id/status", asyn
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
   void logAction({ entityType: STUDENT_ENTITY, entityId: id, action: "STATUS_CHANGE", actorId: reviewer ?? null, newValue: { status } });
   res.json({ success: true, request: row });
+});
+
+// AI-assisted host recommendations (Phase 5b). Deterministic scoring engine
+// filters + ranks approved hosts against the student's conditions; Claude adds a
+// best-effort rationale per candidate. Read-only — generating suggestions has no
+// side effects. ?limit=5 caps the shortlist, ?rationale=0 skips the LLM call.
+homestayStudentAdminRouter.get("/v1/homestay-student-requests/:id/host-suggestions", async (req, res): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    const limit = Math.min(Math.max(Number(req.query.limit) || 5, 1), 20);
+    const wantRationale = String(req.query.rationale ?? "1") !== "0";
+
+    const [student] = await db.select().from(homestayStudentRequestsTable)
+      .where(eq(homestayStudentRequestsTable.id, id));
+    if (!student) { res.status(404).json({ error: "Not found" }); return; }
+
+    // Approved, non-deleted hosts + their availability row (left join — a host
+    // with no availability row is treated as available by the matching engine).
+    const rows = await db.select({
+      host: homestayHostApplicationsTable,
+      availability: homestayHostAvailabilityTable,
+    })
+      .from(homestayHostApplicationsTable)
+      .leftJoin(
+        homestayHostAvailabilityTable,
+        eq(homestayHostAvailabilityTable.host_application_id, homestayHostApplicationsTable.id),
+      )
+      .where(and(
+        eq(homestayHostApplicationsTable.status, "Approved"),
+        isNull(homestayHostApplicationsTable.deleted_at),
+      ));
+
+    const ranked = rankHosts(student, rows).slice(0, limit);
+    const { suggestions, ai_used } = wantRationale
+      ? await attachRationales(student, ranked)
+      : { suggestions: ranked, ai_used: false };
+
+    // Read-only — no audit entry (audit log is reserved for mutations).
+    res.json({ success: true, suggestions, ai_used });
+  } catch (err) {
+    console.error("[homestay-student-admin] host-suggestions failed:", err);
+    res.status(500).json({ error: "Failed to generate host suggestions" });
+  }
 });
