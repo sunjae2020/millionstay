@@ -71,6 +71,7 @@
     "submitting": "제출 중...",
     "submit_error": "신청서를 제출할 수 없습니다. 다시 시도해주세요.",
     "privacy_note": "입력하신 정보는 신청 처리 목적으로만 사용되며 비밀로 보관됩니다.",
+    "privacy_policy_link": "Privacy Policy",
     "success_title": "신청이 접수되었습니다!",
     "success_message": "감사합니다. 오너 담당팀에서 검토 후 영업일 기준 1–2일 이내에 연락드리겠습니다.",
     "reference_label": "접수 번호:"

@@ -10,6 +10,7 @@ import cron from "node-cron";
 import { SEED_FILE_PATH, importSeed } from "./lib/seedSync";
 import { syncExchangeRates } from "./lib/exchangeRateSync";
 import { syncAllChannelImports } from "./lib/icalImport";
+import { purgeExpiredDocuments } from "./lib/retentionPurge";
 
 const rawPort = process.env["PORT"];
 
@@ -155,6 +156,23 @@ cron.schedule("0 * * * *", () => {
     .then((r) => logger.info({ total: r.total, ok: r.ok, failed: r.failed }, "Cron iCal import sync"))
     .catch((err) => logger.error({ err }, "Cron iCal import sync failed"));
 });
+
+// Retention purge (APP 11.5) — daily at 03:15 Sydney. Physically destroys
+// documents whose retention has elapsed or that were soft-deleted by a DSAR
+// deletion request (Cloudinary asset + DB row). Boot-time run on startup too.
+purgeExpiredDocuments()
+  .then((r) => logger.info({ scanned: r.scanned, destroyed: r.destroyed, errors: r.errors }, "Boot-time retention purge"))
+  .catch((err) => logger.error({ err }, "Boot-time retention purge failed"));
+
+cron.schedule(
+  "15 3 * * *",
+  () => {
+    purgeExpiredDocuments()
+      .then((r) => logger.info({ scanned: r.scanned, destroyed: r.destroyed, errors: r.errors }, "Cron retention purge"))
+      .catch((err) => logger.error({ err }, "Cron retention purge failed"));
+  },
+  { timezone: "Australia/Sydney" },
+);
 
 const server = app.listen(port, (err) => {
   if (err) {

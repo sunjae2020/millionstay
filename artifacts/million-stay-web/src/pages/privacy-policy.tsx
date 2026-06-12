@@ -43,12 +43,12 @@ const SECTIONS = [
   {
     number: "08",
     title: "Disclosure to Third Parties (APP 6)",
-    body: `We may disclose your personal information to: our staff, contractors and service providers who assist in delivering our services (including property managers, maintenance contractors, IT providers, hosting providers, email-delivery providers, and image/document storage providers); government bodies or regulators where required or authorised by law (such as the Residential Tenancies Bond Authority, the Australian Taxation Office, or law-enforcement agencies pursuant to a lawful request); financial institutions and payment processors for payment, refund and bond processing; and professional advisers such as lawyers, accountants and auditors. We do not sell, rent or trade your personal information.`,
+    body: `We may disclose your personal information to: our staff, contractors and service providers who assist in delivering our services (including property managers, maintenance contractors, IT providers, hosting providers, email-delivery providers, and image/document storage providers); government bodies or regulators where required or authorised by law (such as the Residential Tenancies Bond Authority, the Australian Taxation Office, or law-enforcement agencies pursuant to a lawful request); financial institutions and payment processors for payment, refund and bond processing; professional advisers such as lawyers, accountants and auditors; and authorised business partners (such as referring agents or property owners) who integrate with our systems through our secure, credential-issued and scope-limited partner API, which exposes only the limited booking information necessary for that integration and never passwords, payment-card, passport or contact details. We do not sell, rent or trade your personal information.`,
   },
   {
     number: "09",
     title: "Overseas Disclosure of Information (APP 8)",
-    body: `Some of the cloud service providers we rely on store or process personal information outside Australia. In particular: our application is hosted on Replit's cloud infrastructure (United States); media files (e.g. ID document images, room photos) are stored on Cloudinary, which by default stores objects in Amazon Web Services US-East-1 (Northern Virginia, United States); transactional and marketing email is sent through Resend, whose email infrastructure operates in Amazon Web Services US-East-1 (United States); and where you make a card payment we use Stripe, which processes payment data in the United States and other countries where Stripe operates. Before disclosing information to any overseas recipient, we take reasonable steps to ensure that the recipient does not breach the APPs in relation to that information (for example, by relying on a written Data Processing Agreement, the recipient's SOC 2 compliance, and contractual confidentiality and security obligations).`,
+    body: `Some of the cloud service providers we rely on store or process personal information outside Australia. The recipients, their location and the data involved are: our database (all structured personal information) is hosted on Supabase in Singapore; our web frontends are hosted on Vercel and our application server on Railway (United States); media files and documents (e.g. ID/visa images, signed contracts, room photos) are stored on Cloudinary (United States and global edge); transactional and marketing email is sent through Resend (United States and Japan); card payments are processed by Stripe (United States and other countries where Stripe operates); DNS, CDN and security filtering are provided by Cloudflare (global edge); and our customer-chat assistant and homestay host-matching feature use Anthropic's Claude API (United States) — see "Automated and AI-assisted processing" below. Before disclosing information to any overseas recipient, we take reasonable steps to ensure that the recipient does not breach the APPs in relation to that information (for example, by relying on a written Data Processing Agreement, the recipient's SOC 2 compliance, and contractual confidentiality and security obligations).`,
   },
   {
     number: "10",
@@ -62,8 +62,8 @@ const SECTIONS = [
   },
   {
     number: "12",
-    title: "Cookies & Website Analytics",
-    body: `Our website uses cookies and similar tracking technologies to improve your experience, keep you signed in, analyse traffic and personalise content. Cookies are small data files stored on your device. You may disable cookies through your browser settings; however, some features (including signing in and bookings) may not function correctly without them. We use Google Analytics to understand how visitors use our site; data collected is pseudonymised and subject to Google's own privacy policy.`,
+    title: "Cookies & Third-Party Website Content",
+    body: `Our website uses only essential, first-party cookies that are necessary to keep you signed in and to operate bookings — we do not use third-party advertising or analytics cookies, and we do not run Google Analytics or similar visitor-tracking pixels. Cookies are small data files stored on your device; you may disable them through your browser settings, though some features (including signing in and bookings) may not work correctly without them. Some pages load resources directly from third-party providers, which necessarily receive your IP address as part of serving that content: web fonts are loaded from Google Fonts (Google, United States), and interactive maps display tiles from OpenStreetMap (OpenStreetMap Foundation). These providers receive only technical request data (such as your IP address and browser type) and not your account information.`,
   },
   {
     number: "13",
@@ -73,7 +73,7 @@ const SECTIONS = [
   {
     number: "14",
     title: "Retention & Destruction (APP 11.2)",
-    body: `We retain personal information for only as long as it is needed for the purposes for which it was collected or as required by law. Indicative retention periods are: tax invoices and receipts — 5 years (Income Tax Assessment Act); tenancy contracts and leases — 7 years (state tenancy laws); identity, passport and visa images — 30 days after the related verification or check-out, whichever is later; general booking metadata — for the duration of the customer relationship plus 2 years; marketing-consent audit records — until 2 years after consent is withdrawn; and website-analytics logs — up to 26 months. Once the retention period ends, we securely destroy or de-identify the information.`,
+    body: `We retain personal information for only as long as it is needed for the purposes for which it was collected or as required by law. Indicative retention periods are: tax invoices and receipts — 5 years (Income Tax Assessment Act); tenancy contracts and leases — 7 years (state tenancy laws); identity, passport and visa images — 30 days after the related verification or check-out, whichever is later; general booking metadata — for the duration of the customer relationship plus 2 years; marketing-consent audit records — until 2 years after consent is withdrawn; and server request/security logs — up to 12 months. Once the retention period ends, we securely destroy or de-identify the information.`,
   },
   {
     number: "15",
@@ -92,6 +92,11 @@ const SECTIONS = [
   },
   {
     number: "18",
+    title: "Automated and AI-assisted Processing",
+    body: `We use Anthropic's Claude AI service (United States) in two ways. (1) Our website chat assistant sends the messages you type to Anthropic to generate replies; please do not enter sensitive personal information (such as passwords, payment-card or passport details) into the chat — the assistant is instructed never to request them, and the chat is optional. (2) For homestay applications, we send selected application details — which may include nationality, whether the applicant is a minor, dietary requirements, allergies, smoking status and any cultural or religious preferences relevant to living arrangements — to Claude to help generate a written explanation of why a particular host family may be a suitable match. This assists, but does not solely determine, our matching decisions; a staff member reviews matches. Anthropic processes this data only to return a response, does not use it to train its models, and retains it only transiently for abuse monitoring. Because some of this information is "sensitive information" under the Privacy Act, we collect and use it for matching only with your consent, which you give when you submit a homestay application; you may withdraw consent or request a non-automated process by contacting our Privacy Officer.`,
+  },
+  {
+    number: "19",
     title: "Changes to This Policy",
     body: `We may update this Privacy Policy from time to time to reflect changes in our practices, the services we offer, or legal requirements. The updated policy will be posted on this page with a revised effective date. Where the change is material we will take additional steps to notify you (for example, an in-app notice or email). Continued use of our services after the effective date constitutes your acceptance of the updated policy.`,
   },
@@ -160,7 +165,7 @@ export default function PrivacyPolicy() {
               </p>
               <div className="mt-3 space-y-1 text-sm">
                 <p className="text-gray-700"><span className="font-medium">Privacy Officer:</span>{" "}
-                  <a href="mailto:millionstay.com@gmail.com" className="text-primary hover:underline">millionstay.com@gmail.com</a>
+                  <a href="mailto:privacy@millionstay.com" className="text-primary hover:underline">privacy@millionstay.com</a>
                 </p>
                 <p className="text-gray-700"><span className="font-medium">Website:</span>{" "}
                   <a href="https://www.millionstay.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">www.millionstay.com</a>

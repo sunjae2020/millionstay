@@ -194,7 +194,9 @@
     "weekly_rent": "周租金",
     "bond": "押金",
     "space_not_found": "找不到该房间。",
-    "browse_spaces": "浏览房间"
+    "browse_spaces": "浏览房间",
+    "privacy_notice": "Creating an account is subject to our Privacy Policy. Passport, visa, and financial documents requested later are collected to verify your eligibility and are held securely.",
+    "privacy_link": "Privacy Policy."
   },
   "house_rules": {
     "hero_tagline": "和睦共处，美好生活",
@@ -280,7 +282,9 @@
       "uploaded": "上传于",
       "status_pending": "审核中",
       "status_approved": "已认证",
-      "status_rejected": "已拒绝"
+      "status_rejected": "已拒绝",
+      "privacy_notice": "These documents are collected to verify your identity and eligibility and to process your tenancy. They are stored securely with restricted access and retained in line with our retention policy. See our",
+      "privacy_link": "Privacy Policy."
     },
     "cs": {
       "title": "消息中心",
@@ -761,7 +765,9 @@
     "subject_stay": "住宿计划",
     "subject_visa": "学生签证支持",
     "subject_agent": "代理 / 合作伙伴",
-    "subject_other": "其他"
+    "subject_other": "其他",
+    "privacy_notice": "We collect this information only to respond to your enquiry. See our",
+    "privacy_link": "Privacy Policy."
   },
   "blog_post": {
     "back": "返回博客",
@@ -777,6 +783,7 @@
     "subtitle": "咨询房间、价格和预订",
     "greeting": "您好！我是 MillionStay 助手 Milly。您可以用任何语言向我咨询房间、价格、空房情况或预订方式。我能帮您什么？",
     "placeholder": "输入您的消息…",
+    "disclaimer": "请勿提供密码、银行卡或护照信息。消息将发送至 AI 服务以生成回复。",
     "open": "打开聊天助手",
     "close": "关闭聊天",
     "send": "发送",

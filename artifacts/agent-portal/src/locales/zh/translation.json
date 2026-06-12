@@ -153,6 +153,7 @@
     "success_title": "申请已收到！",
     "success_message": "感谢您有意与 MillionStay 合作。合作团队将审核您的申请，并在 1-2 个工作日内与您联系。",
     "reference_label": "申请编号：",
-    "privacy_note": "提交即表示您同意 MillionStay 就此申请与您联系。"
+    "privacy_note": "提交即表示您同意 MillionStay 就此申请与您联系。",
+    "privacy_policy_link": "Privacy Policy"
   }
 }

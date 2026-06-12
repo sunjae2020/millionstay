@@ -318,7 +318,9 @@
     "weekly_rent": "ค่าเช่ารายสัปดาห์",
     "bond": "เงินประกัน",
     "space_not_found": "ไม่พบห้องพัก",
-    "browse_spaces": "ดูห้องพัก"
+    "browse_spaces": "ดูห้องพัก",
+    "privacy_notice": "Creating an account is subject to our Privacy Policy. Passport, visa, and financial documents requested later are collected to verify your eligibility and are held securely.",
+    "privacy_link": "Privacy Policy."
   },
   "house_rules": {
     "hero_tagline": "อยู่ร่วมกันอย่างมีความสุข",
@@ -404,7 +406,9 @@
       "uploaded": "อัปโหลดเมื่อ",
       "status_pending": "รอการตรวจสอบ",
       "status_approved": "ตรวจสอบแล้ว",
-      "status_rejected": "ถูกปฏิเสธ"
+      "status_rejected": "ถูกปฏิเสธ",
+      "privacy_notice": "These documents are collected to verify your identity and eligibility and to process your tenancy. They are stored securely with restricted access and retained in line with our retention policy. See our",
+      "privacy_link": "Privacy Policy."
     },
     "cs": {
       "title": "การสื่อสาร",
@@ -907,7 +911,9 @@
     "subject_stay": "แผนการเข้าพัก",
     "subject_visa": "การสนับสนุนวีซ่านักเรียน",
     "subject_agent": "ตัวแทน / พันธมิตร",
-    "subject_other": "อื่น ๆ"
+    "subject_other": "อื่น ๆ",
+    "privacy_notice": "We collect this information only to respond to your enquiry. See our",
+    "privacy_link": "Privacy Policy."
   },
   "blog_post": {
     "back": "กลับไปยังบล็อก",
@@ -923,6 +929,7 @@
     "subtitle": "สอบถามเกี่ยวกับห้องพัก ราคา และการจอง",
     "greeting": "สวัสดีค่ะ! ฉันชื่อ Milly ผู้ช่วยของ MillionStay สอบถามเกี่ยวกับห้องพัก ราคา ห้องว่าง หรือวิธีการจองได้ทุกภาษาเลยค่ะ มีอะไรให้ช่วยไหมคะ?",
     "placeholder": "พิมพ์ข้อความของคุณ…",
+    "disclaimer": "กรุณาอย่าระบุรหัสผ่าน ข้อมูลบัตรชำระเงิน หรือหนังสือเดินทาง ข้อความจะถูกส่งไปยังบริการ AI เพื่อสร้างคำตอบ",
     "open": "เปิดผู้ช่วยแชท",
     "close": "ปิดแชท",
     "send": "ส่ง",

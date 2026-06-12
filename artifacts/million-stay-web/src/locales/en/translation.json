@@ -235,7 +235,9 @@
     "weekly_rent": "Weekly rent",
     "bond": "Bond",
     "space_not_found": "Space not found.",
-    "browse_spaces": "Browse spaces"
+    "browse_spaces": "Browse spaces",
+    "privacy_notice": "Creating an account is subject to our Privacy Policy. Passport, visa, and financial documents requested later are collected to verify your eligibility and are held securely.",
+    "privacy_link": "Privacy Policy."
   },
   "house_rules": {
     "hero_tagline": "Living together, harmoniously",
@@ -321,7 +323,9 @@
       "uploaded": "Uploaded",
       "status_pending": "Pending review",
       "status_approved": "Verified",
-      "status_rejected": "Rejected"
+      "status_rejected": "Rejected",
+      "privacy_notice": "These documents are collected to verify your identity and eligibility and to process your tenancy. They are stored securely with restricted access and retained in line with our retention policy. See our",
+      "privacy_link": "Privacy Policy."
     },
     "cs": {
       "title": "Communications",
@@ -802,7 +806,9 @@
     "subject_stay": "Stay Plans",
     "subject_visa": "Student Visa Support",
     "subject_agent": "Agent / Partnership",
-    "subject_other": "Other"
+    "subject_other": "Other",
+    "privacy_notice": "We collect this information only to respond to your enquiry. See our",
+    "privacy_link": "Privacy Policy."
   },
   "blog_post": {
     "back": "Back to Blog",
@@ -818,6 +824,7 @@
     "subtitle": "Ask about rooms, prices & booking",
     "greeting": "Hi! I'm Milly, the MillionStay assistant. Ask me about rooms, prices, availability, or how booking works — in any language. How can I help?",
     "placeholder": "Type your message…",
+    "disclaimer": "Please don't share passwords, payment-card or passport details. Messages are sent to an AI service to generate replies.",
     "open": "Open chat assistant",
     "close": "Close chat",
     "send": "Send",

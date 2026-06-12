@@ -439,6 +439,10 @@ export default function Booking() {
                           {t("booking.already_account")}{" "}
                           <Link href="/login" className="text-primary hover:underline">{t("booking.login_here")}</Link>
                         </p>
+                        <p className="text-xs text-center text-muted-foreground">
+                          {t("booking.privacy_notice")}{" "}
+                          <Link href="/privacy-policy" className="text-primary hover:underline">{t("booking.privacy_link")}</Link>
+                        </p>
                       </form>
                     </Form>
                   )}

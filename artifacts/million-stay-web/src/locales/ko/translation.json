@@ -235,7 +235,9 @@
     "weekly_rent": "주간 임대료",
     "bond": "보증금",
     "space_not_found": "숙소를 찾을 수 없습니다.",
-    "browse_spaces": "숙소 둘러보기"
+    "browse_spaces": "숙소 둘러보기",
+    "privacy_notice": "Creating an account is subject to our Privacy Policy. Passport, visa, and financial documents requested later are collected to verify your eligibility and are held securely.",
+    "privacy_link": "Privacy Policy."
   },
   "house_rules": {
     "hero_tagline": "함께 조화롭게 생활해요",
@@ -321,7 +323,9 @@
       "uploaded": "업로드됨",
       "status_pending": "검토 중",
       "status_approved": "인증됨",
-      "status_rejected": "반려"
+      "status_rejected": "반려",
+      "privacy_notice": "These documents are collected to verify your identity and eligibility and to process your tenancy. They are stored securely with restricted access and retained in line with our retention policy. See our",
+      "privacy_link": "Privacy Policy."
     },
     "cs": {
       "title": "커뮤니케이션",
@@ -802,7 +806,9 @@
     "subject_stay": "숙박 플랜",
     "subject_visa": "학생 비자 지원",
     "subject_agent": "에이전트 / 파트너십",
-    "subject_other": "기타"
+    "subject_other": "기타",
+    "privacy_notice": "We collect this information only to respond to your enquiry. See our",
+    "privacy_link": "Privacy Policy."
   },
   "blog_post": {
     "back": "블로그로 돌아가기",
@@ -818,6 +824,7 @@
     "subtitle": "객실, 가격, 예약에 대해 물어보세요",
     "greeting": "안녕하세요! MillionStay 어시스턴트 Milly예요. 객실, 가격, 예약 가능 여부, 예약 방법 등 무엇이든 어떤 언어로든 물어보세요. 무엇을 도와드릴까요?",
     "placeholder": "메시지를 입력하세요…",
+    "disclaimer": "비밀번호·결제 카드·여권 정보는 입력하지 마세요. 메시지는 답변 생성을 위해 AI 서비스로 전송됩니다.",
     "open": "채팅 어시스턴트 열기",
     "close": "채팅 닫기",
     "send": "보내기",

@@ -19,6 +19,7 @@ import dbSyncRouter from "./routes/db-sync";
 import stripeRouter from "./routes/stripe";
 import adminUsersRouter from "./routes/admin-users";
 import partnerAuthRouter from "./routes/partner-auth";
+import partnerPrivacyRouter from "./routes/partner-privacy";
 import agentPortalRouter from "./routes/agent-portal";
 import ownerPortalRouter from "./routes/owner-portal";
 import serviceHostPortalRouter from "./routes/service-host-portal";
@@ -237,6 +238,7 @@ if (process.env["NODE_ENV"] !== "production") {
 // Partner auth + portals — must be registered BEFORE adminUsersRouter which applies requireAuth
 // to every request passing through it via router.use(requireAuth)
 app.use("/api", partnerAuthRouter);
+app.use("/api", partnerPrivacyRouter);
 app.use("/api", agentPortalRouter);
 app.use("/api", ownerPortalRouter);
 app.use("/api", serviceHostPortalRouter);

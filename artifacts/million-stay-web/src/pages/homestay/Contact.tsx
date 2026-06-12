@@ -111,6 +111,10 @@ export default function HomestayContact() {
               <button type="submit" disabled={sending} className="w-full py-3 rounded-lg font-semibold text-white inline-flex items-center justify-center gap-2" style={{ backgroundColor: HS.brand }}>
                 {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send message"}
               </button>
+              <p className="text-xs text-gray-500">
+                We collect this information only to respond to your enquiry. See our{" "}
+                <Link href="/homestay/privacy" className="underline" style={{ color: HS.brand }}>Privacy Policy</Link>.
+              </p>
             </form>
           )}
         </div>

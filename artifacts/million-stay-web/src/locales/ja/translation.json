@@ -319,7 +319,9 @@
     "weekly_rent": "週間家賃",
     "bond": "敷金",
     "space_not_found": "物件が見つかりません。",
-    "browse_spaces": "物件を探す"
+    "browse_spaces": "物件を探す",
+    "privacy_notice": "Creating an account is subject to our Privacy Policy. Passport, visa, and financial documents requested later are collected to verify your eligibility and are held securely.",
+    "privacy_link": "Privacy Policy."
   },
   "house_rules": {
     "hero_tagline": "共に、心地よく暮らす",
@@ -405,7 +407,9 @@
       "uploaded": "アップロード日",
       "status_pending": "審査中",
       "status_approved": "承認済み",
-      "status_rejected": "却下"
+      "status_rejected": "却下",
+      "privacy_notice": "These documents are collected to verify your identity and eligibility and to process your tenancy. They are stored securely with restricted access and retained in line with our retention policy. See our",
+      "privacy_link": "Privacy Policy."
     },
     "cs": {
       "title": "コミュニケーション",
@@ -908,7 +912,9 @@
     "subject_stay": "滞在プラン",
     "subject_visa": "学生ビザサポート",
     "subject_agent": "エージェント / パートナーシップ",
-    "subject_other": "その他"
+    "subject_other": "その他",
+    "privacy_notice": "We collect this information only to respond to your enquiry. See our",
+    "privacy_link": "Privacy Policy."
   },
   "blog_post": {
     "back": "ブログに戻る",
@@ -924,6 +930,7 @@
     "subtitle": "客室・料金・予約についてお尋ねください",
     "greeting": "こんにちは！MillionStay アシスタントの Milly です。客室、料金、空室状況、予約方法など、どんな言語でもお気軽にお尋ねください。どのようなご用件でしょうか？",
     "placeholder": "メッセージを入力…",
+    "disclaimer": "パスワード・クレジットカード・パスポート情報は入力しないでください。メッセージは返信生成のためAIサービスに送信されます。",
     "open": "チャットアシスタントを開く",
     "close": "チャットを閉じる",
     "send": "送信",

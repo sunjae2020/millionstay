@@ -200,6 +200,10 @@ export default function Contact() {
               >
                 {sending ? t("contact_page.sending") : t("contact_page.submit")}
               </Button>
+              <p className="text-xs text-gray-500">
+                {t("contact_page.privacy_notice")}{" "}
+                <Link href="/privacy-policy" className="text-primary hover:underline">{t("contact_page.privacy_link")}</Link>
+              </p>
             </form>
           </motion.div>
         </div>
