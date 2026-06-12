@@ -47,7 +47,7 @@ import AdminGuests from "@/pages/admin-guests";
 import AdminSpaces from "@/pages/admin-spaces";
 import ChatWidget from "@/components/chat/ChatWidget";
 import OwnerLanding from "@/pages/owner-landing";
-import HomestayLanding from "@/pages/homestay-landing";
+import HomestayRouter from "@/pages/homestay/HomestayRouter";
 import Sign from "@/pages/sign";
 import { getApiBase } from "@/lib/api-base";
 import { getOwnerSiteSlug } from "@/lib/owner-site";
@@ -63,15 +63,16 @@ const queryClient = new QueryClient({
 });
 
 function Router() {
+  // homestay.millionstay.com is a dedicated site with its own shell + routes.
+  if (isHomestaySubdomain()) return <HomestayRouter />;
+
   // On a tenant subdomain ({slug}.millionstay.com), the home route renders the
-  // owner's one-page landing instead of the main site. On homestay.millionstay.com
-  // it renders the dedicated homestay landing. All other routes (/spaces/:id,
-  // /booking, …) keep working so detail + booking flows function.
-  const homestay = isHomestaySubdomain();
-  const ownerSlug = homestay ? null : getOwnerSiteSlug();
+  // owner's one-page landing instead of the main site. All other routes
+  // (/spaces/:id, /booking, …) keep working so detail + booking flows function.
+  const ownerSlug = getOwnerSiteSlug();
   return (
     <Switch>
-      <Route path="/">{homestay ? <HomestayLanding /> : ownerSlug ? <OwnerLanding slug={ownerSlug} /> : <Home />}</Route>
+      <Route path="/">{ownerSlug ? <OwnerLanding slug={ownerSlug} /> : <Home />}</Route>
       <Route path="/sign/:token" component={Sign} />
       <Route path="/search" component={Search} />
       <Route path="/spaces/:id" component={SpaceDetail} />
