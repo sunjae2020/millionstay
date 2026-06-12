@@ -2593,6 +2593,21 @@
     "doc_note_placeholder": "Note for applicant (optional)…",
     "toast_approved": "Application approved",
     "toast_rejected": "Application rejected",
-    "toast_docs_requested": "Documents requested"
+    "toast_docs_requested": "Documents requested",
+    "section_compliance": "Compliance",
+    "section_bank": "Bank details",
+    "wwcc_title": "Working With Children Check (WWCC)",
+    "wwcc_number": "WWCC number",
+    "wwcc_expiry": "Expiry date",
+    "wwcc_verified": "Verified",
+    "no_wwcc": "No WWCC records.",
+    "f_insurance_provider": "Insurance provider",
+    "f_insurance_policy": "Policy number",
+    "f_insurance_expiry": "Insurance expiry",
+    "f_bank_name": "Bank name",
+    "f_bank_account_name": "Account name",
+    "f_bank_bsb": "BSB",
+    "f_bank_account_number": "Account number",
+    "f_bank_swift": "SWIFT / BIC"
   }
 }

@@ -925,7 +925,11 @@
       "email_exists": "An account with this email already exists.",
       "email_exists_login": "Log in instead",
       "already_applied": "Already applied?",
-      "login_link": "Log in to your host portal"
+      "login_link": "Log in to your host portal",
+      "save_draft": "Save as Draft",
+      "saving_draft": "Saving…",
+      "draft_failed": "Failed to save your draft. Please try again.",
+      "draft_needs_login": "Please complete your name, email and a valid password before saving a draft."
     },
     "login": {
       "title": "Host Portal",
@@ -952,14 +956,16 @@
         "under_review": "Under review",
         "docs_requested": "Documents requested",
         "approved": "Approved",
-        "rejected": "Not approved"
+        "rejected": "Not approved",
+        "draft": "Draft"
       },
       "status_desc": {
         "submitted": "We've received your application and will begin reviewing it shortly.",
         "under_review": "Our team is reviewing your application. We'll be in touch soon.",
         "docs_requested": "We need a few more documents before we can proceed. Please upload them below.",
         "approved": "Congratulations! Your application is approved. You can now activate your public landing page.",
-        "rejected": "Unfortunately your application was not approved at this time. Please contact us for details."
+        "rejected": "Unfortunately your application was not approved at this time. Please contact us for details.",
+        "draft": "Your application is saved as a draft. Complete and submit it to begin the review."
       },
       "requested_title": "Requested documents",
       "requested_sub": "Please upload the documents below to continue your review.",
@@ -980,7 +986,43 @@
       "landing_on": "Listing is live",
       "landing_off": "Listing is hidden",
       "summary_title": "Your application",
-      "edit": "Edit application"
+      "edit": "Edit application",
+      "draft_saved_notice": "Draft saved. You can finish and submit your application below anytime.",
+      "draft_banner_title": "Your application is a draft",
+      "draft_banner_desc": "Complete and submit it to start the review process.",
+      "draft_agreement": "I confirm the information provided is accurate and I accept the homestay host agreement.",
+      "draft_signature_placeholder": "Type your full name as signature",
+      "draft_submit": "Complete & Submit",
+      "submitting": "Submitting…",
+      "submit_failed": "Failed to submit your application. Please try again.",
+      "compliance_title": "Compliance",
+      "compliance_sub": "Keep your Working With Children Check and insurance details up to date.",
+      "compliance_failed": "Failed to save compliance details.",
+      "wwcc_title": "Working With Children Check (WWCC)",
+      "wwcc_note": "A valid WWCC is required for hosts taking students under 18.",
+      "wwcc_add": "Add WWCC",
+      "wwcc_empty": "No WWCC records yet.",
+      "wwcc_name": "Holder name",
+      "wwcc_number": "WWCC number",
+      "wwcc_expiry": "Expiry date",
+      "wwcc_verified": "Verified",
+      "wwcc_unverified": "Pending",
+      "ins_provider": "Insurance provider",
+      "ins_policy": "Policy number",
+      "ins_expiry": "Insurance expiry",
+      "save_compliance": "Save compliance",
+      "bank_title": "Bank details",
+      "bank_helper": "We use this for your fortnightly host payments.",
+      "bank_locked": "Available after your application is approved.",
+      "bank_failed": "Failed to save bank details.",
+      "bank_name": "Bank name",
+      "bank_account_name": "Account name",
+      "bank_bsb": "BSB",
+      "bank_account_number": "Account number",
+      "bank_swift": "SWIFT / BIC",
+      "save_bank": "Save bank details",
+      "saving": "Saving…",
+      "saved": "Saved"
     },
     "opt": {
       "gender": {

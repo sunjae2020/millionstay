@@ -925,7 +925,11 @@
       "email_exists": "이 이메일로 등록된 계정이 이미 있습니다.",
       "email_exists_login": "로그인하기",
       "already_applied": "이미 신청하셨나요?",
-      "login_link": "호스트 포털에 로그인"
+      "login_link": "호스트 포털에 로그인",
+      "save_draft": "임시 저장",
+      "saving_draft": "저장 중…",
+      "draft_failed": "임시 저장에 실패했습니다. 다시 시도해 주세요.",
+      "draft_needs_login": "임시 저장하기 전에 이름, 이메일, 유효한 비밀번호를 입력해 주세요."
     },
     "login": {
       "title": "호스트 포털",
@@ -952,14 +956,16 @@
         "under_review": "검토 중",
         "docs_requested": "서류 요청됨",
         "approved": "승인됨",
-        "rejected": "미승인"
+        "rejected": "미승인",
+        "draft": "임시 저장"
       },
       "status_desc": {
         "submitted": "신청서를 접수했으며 곧 검토를 시작하겠습니다.",
         "under_review": "담당팀이 신청서를 검토 중입니다. 곧 연락드리겠습니다.",
         "docs_requested": "진행을 위해 몇 가지 서류가 더 필요합니다. 아래에서 업로드해 주세요.",
         "approved": "축하합니다! 신청이 승인되었습니다. 이제 공개 랜딩 페이지를 활성화할 수 있습니다.",
-        "rejected": "안타깝게도 이번에는 신청이 승인되지 않았습니다. 자세한 내용은 문의해 주세요."
+        "rejected": "안타깝게도 이번에는 신청이 승인되지 않았습니다. 자세한 내용은 문의해 주세요.",
+        "draft": "신청서가 임시 저장되었습니다. 작성을 완료하고 제출하면 심사가 시작됩니다."
       },
       "requested_title": "요청된 서류",
       "requested_sub": "검토를 계속하려면 아래 서류를 업로드해 주세요.",
@@ -980,7 +986,43 @@
       "landing_on": "등록 공개 중",
       "landing_off": "등록 비공개",
       "summary_title": "내 신청서",
-      "edit": "신청서 수정"
+      "edit": "신청서 수정",
+      "draft_saved_notice": "임시 저장되었습니다. 아래에서 언제든지 신청서를 완료하고 제출할 수 있습니다.",
+      "draft_banner_title": "신청서가 임시 저장 상태입니다",
+      "draft_banner_desc": "심사를 시작하려면 작성을 완료하고 제출하세요.",
+      "draft_agreement": "제공한 정보가 정확함을 확인하며 홈스테이 호스트 약관에 동의합니다.",
+      "draft_signature_placeholder": "서명으로 전체 이름을 입력하세요",
+      "draft_submit": "완료 및 제출",
+      "submitting": "제출 중…",
+      "submit_failed": "신청서 제출에 실패했습니다. 다시 시도해 주세요.",
+      "compliance_title": "규정 준수",
+      "compliance_sub": "아동 대상 활동 적격 확인(WWCC)과 보험 정보를 최신 상태로 유지하세요.",
+      "compliance_failed": "규정 준수 정보 저장에 실패했습니다.",
+      "wwcc_title": "아동 대상 활동 적격 확인(WWCC)",
+      "wwcc_note": "만 18세 미만 학생을 받는 호스트는 유효한 WWCC가 필요합니다.",
+      "wwcc_add": "WWCC 추가",
+      "wwcc_empty": "등록된 WWCC가 없습니다.",
+      "wwcc_name": "소지자 이름",
+      "wwcc_number": "WWCC 번호",
+      "wwcc_expiry": "만료일",
+      "wwcc_verified": "확인됨",
+      "wwcc_unverified": "대기 중",
+      "ins_provider": "보험사",
+      "ins_policy": "증권 번호",
+      "ins_expiry": "보험 만료일",
+      "save_compliance": "규정 준수 저장",
+      "bank_title": "은행 정보",
+      "bank_helper": "격주 호스트 정산금 지급에 사용됩니다.",
+      "bank_locked": "신청이 승인된 후 이용할 수 있습니다.",
+      "bank_failed": "은행 정보 저장에 실패했습니다.",
+      "bank_name": "은행명",
+      "bank_account_name": "예금주",
+      "bank_bsb": "BSB",
+      "bank_account_number": "계좌번호",
+      "bank_swift": "SWIFT / BIC",
+      "save_bank": "은행 정보 저장",
+      "saving": "저장 중…",
+      "saved": "저장됨"
     },
     "opt": {
       "gender": {

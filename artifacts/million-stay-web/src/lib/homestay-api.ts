@@ -79,6 +79,13 @@ export interface HomestayReferral {
   referrer_name: string;
 }
 
+export interface HomestayWwccRecord {
+  name: string;
+  wwcc_number: string;
+  expiry_date: string; // YYYY-MM-DD
+  verified?: boolean;
+}
+
 export interface HomestayApplication {
   id?: number;
   application_ref?: string;
@@ -119,6 +126,17 @@ export interface HomestayApplication {
   host_referral?: HomestayReferral;
   agreement_accepted?: boolean;
   signature_name?: string;
+  // Compliance
+  wwcc_records?: HomestayWwccRecord[];
+  insurance_provider?: string;
+  insurance_policy_no?: string;
+  insurance_expiry?: string;
+  // Bank (visible/editable only after approval)
+  bank_name?: string;
+  bank_account_name?: string;
+  bank_bsb?: string;
+  bank_account_number?: string;
+  bank_swift?: string;
 }
 
 export interface HomestayDocument {
@@ -219,6 +237,81 @@ export async function uploadHostDocument(
   const body = await readJson(res);
   if (!res.ok) {
     throw new HomestayApiError(res.status, body?.error ?? body?.message ?? "Upload failed", body);
+  }
+  return body;
+}
+
+/** Save the public host application as a Draft (no auth). Password required, agreement NOT. */
+export async function saveDraftApplication(
+  data: Record<string, unknown>
+): Promise<{ success: boolean; application_ref: string; token: string; application: HomestayApplication }> {
+  const res = await fetch(`${BASE}/public/homestay-host-applications`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...data, draft: true }),
+  });
+  const body = await readJson(res);
+  if (!res.ok) {
+    throw new HomestayApiError(res.status, body?.error ?? body?.message ?? "Failed to save draft", body);
+  }
+  return body;
+}
+
+/** Finalise a Draft application (Draft → Submitted). Requires agreement + signature. */
+export async function submitDraft(
+  data: { agreement_accepted?: boolean; signature_name?: string }
+): Promise<{ application: HomestayApplication }> {
+  const res = await fetch(`${BASE}/homestay/submit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(data),
+  });
+  const body = await readJson(res);
+  if (!res.ok) {
+    throw new HomestayApiError(res.status, body?.error ?? body?.message ?? "Failed to submit application", body);
+  }
+  return body;
+}
+
+/** Update compliance (WWCC records + insurance). */
+export async function updateCompliance(
+  data: {
+    wwcc_records?: HomestayWwccRecord[];
+    insurance_provider?: string;
+    insurance_policy_no?: string;
+    insurance_expiry?: string;
+  }
+): Promise<{ application: HomestayApplication }> {
+  const res = await fetch(`${BASE}/homestay/compliance`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(data),
+  });
+  const body = await readJson(res);
+  if (!res.ok) {
+    throw new HomestayApiError(res.status, body?.error ?? body?.message ?? "Failed to save compliance details", body);
+  }
+  return body;
+}
+
+/** Update bank details (only when status === 'Approved'). */
+export async function updateBank(
+  data: {
+    bank_name?: string;
+    bank_account_name?: string;
+    bank_bsb?: string;
+    bank_account_number?: string;
+    bank_swift?: string;
+  }
+): Promise<{ application: HomestayApplication }> {
+  const res = await fetch(`${BASE}/homestay/bank`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(data),
+  });
+  const body = await readJson(res);
+  if (!res.ok) {
+    throw new HomestayApiError(res.status, body?.error ?? body?.message ?? "Failed to save bank details", body);
   }
   return body;
 }

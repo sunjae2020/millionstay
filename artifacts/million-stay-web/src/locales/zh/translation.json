@@ -884,7 +884,11 @@
       "email_exists": "该电子邮箱已存在账户。",
       "email_exists_login": "改为登录",
       "already_applied": "已经申请过了？",
-      "login_link": "登录您的主人门户"
+      "login_link": "登录您的主人门户",
+      "save_draft": "保存为草稿",
+      "saving_draft": "保存中…",
+      "draft_failed": "草稿保存失败，请重试。",
+      "draft_needs_login": "保存草稿前，请填写姓名、邮箱和有效密码。"
     },
     "login": {
       "title": "主人门户",
@@ -911,14 +915,16 @@
         "under_review": "审核中",
         "docs_requested": "需要补充材料",
         "approved": "已批准",
-        "rejected": "未通过"
+        "rejected": "未通过",
+        "draft": "草稿"
       },
       "status_desc": {
         "submitted": "我们已收到您的申请，将很快开始审核。",
         "under_review": "我们的团队正在审核您的申请，很快会与您联系。",
         "docs_requested": "我们需要更多材料才能继续。请在下方上传。",
         "approved": "恭喜！您的申请已获批准。您现在可以激活公开落地页。",
-        "rejected": "很遗憾，您的申请此次未获批准。详情请联系我们。"
+        "rejected": "很遗憾，您的申请此次未获批准。详情请联系我们。",
+        "draft": "您的申请已保存为草稿。完成并提交后将开始审核。"
       },
       "requested_title": "需要的材料",
       "requested_sub": "请上传以下材料以继续审核。",
@@ -939,7 +945,43 @@
       "landing_on": "房源已上线",
       "landing_off": "房源已隐藏",
       "summary_title": "您的申请",
-      "edit": "编辑申请"
+      "edit": "编辑申请",
+      "draft_saved_notice": "草稿已保存。您可以随时在下方完成并提交申请。",
+      "draft_banner_title": "您的申请为草稿状态",
+      "draft_banner_desc": "完成并提交后即可开始审核流程。",
+      "draft_agreement": "我确认所提供的信息准确无误，并接受寄宿家庭主人协议。",
+      "draft_signature_placeholder": "输入您的全名作为签名",
+      "draft_submit": "完成并提交",
+      "submitting": "提交中…",
+      "submit_failed": "提交申请失败，请重试。",
+      "compliance_title": "合规",
+      "compliance_sub": "请保持儿童工作核查（WWCC）和保险信息为最新。",
+      "compliance_failed": "保存合规信息失败。",
+      "wwcc_title": "儿童工作核查（WWCC）",
+      "wwcc_note": "接收18岁以下学生的主人需提供有效的WWCC。",
+      "wwcc_add": "添加WWCC",
+      "wwcc_empty": "暂无WWCC记录。",
+      "wwcc_name": "持有人姓名",
+      "wwcc_number": "WWCC编号",
+      "wwcc_expiry": "到期日",
+      "wwcc_verified": "已核实",
+      "wwcc_unverified": "待核实",
+      "ins_provider": "保险公司",
+      "ins_policy": "保单号",
+      "ins_expiry": "保险到期日",
+      "save_compliance": "保存合规信息",
+      "bank_title": "银行信息",
+      "bank_helper": "用于每两周一次的主人付款。",
+      "bank_locked": "申请获批后可用。",
+      "bank_failed": "保存银行信息失败。",
+      "bank_name": "银行名称",
+      "bank_account_name": "账户名称",
+      "bank_bsb": "BSB",
+      "bank_account_number": "账号",
+      "bank_swift": "SWIFT / BIC",
+      "save_bank": "保存银行信息",
+      "saving": "保存中…",
+      "saved": "已保存"
     },
     "opt": {
       "gender": {

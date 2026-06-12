@@ -25,12 +25,13 @@ interface Resident { name?: string; age?: number | string; gender?: string; rela
 interface Room { name?: string; bed_type?: string; bath_type?: string; has_lock?: boolean; comments?: string }
 interface RequestedDoc { doc_type: string; note?: string; requested_at?: string; fulfilled?: boolean }
 interface EmergencyContact { name?: string; relationship?: string; phone?: string; email?: string }
+interface WwccRecord { name?: string; wwcc_number?: string; expiry_date?: string; verified?: boolean }
 interface UploadedDoc { id: number; doc_type: string; file_name: string; cloudinary_public_id?: string; created_at: string }
 
 interface HomestayApplicationFull {
   id: number;
   application_ref: string;
-  status: "Submitted" | "UnderReview" | "DocsRequested" | "Approved" | "Rejected";
+  status: "Draft" | "Submitted" | "UnderReview" | "DocsRequested" | "Approved" | "Rejected";
   first_name: string;
   last_name: string;
   email: string;
@@ -70,6 +71,17 @@ interface HomestayApplicationFull {
   approval_notes?: string | null;
   landing_active?: boolean;
   created_at: string;
+  // Compliance
+  wwcc_records?: WwccRecord[];
+  insurance_provider?: string | null;
+  insurance_policy_no?: string | null;
+  insurance_expiry?: string | null;
+  // Bank
+  bank_name?: string | null;
+  bank_account_name?: string | null;
+  bank_bsb?: string | null;
+  bank_account_number?: string | null;
+  bank_swift?: string | null;
 }
 
 interface DetailResponse {
@@ -105,6 +117,16 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
       </span>
     </div>
   );
+}
+
+/** True if a YYYY-MM-DD date is in the past or within the next 30 days. */
+function isExpiringSoon(date?: string | null): boolean {
+  if (!date) return false;
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return false;
+  const threshold = new Date();
+  threshold.setDate(threshold.getDate() + 30);
+  return d <= threshold;
 }
 
 function YesNo({ value }: { value?: boolean }) {
@@ -429,6 +451,65 @@ export default function HomestayApplicationDetail() {
             <Field label={t("homestay.f_agreement_accepted")} value={<YesNo value={app.agreement_accepted} />} />
             <Field label={t("homestay.f_agreement_at")} value={app.agreement_accepted_at ? new Date(app.agreement_accepted_at).toLocaleString() : null} />
             <Field label={t("homestay.f_signature")} value={app.signature_name} />
+          </div>
+        </Section>
+
+        {/* Compliance */}
+        <Section title={t("homestay.section_compliance")}>
+          <div className="mb-4">
+            <p className="text-xs font-semibold text-muted-foreground mb-2">{t("homestay.wwcc_title")}</p>
+            {app.wwcc_records && app.wwcc_records.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("homestay.f_name")}</TableHead>
+                    <TableHead>{t("homestay.wwcc_number")}</TableHead>
+                    <TableHead>{t("homestay.wwcc_expiry")}</TableHead>
+                    <TableHead>{t("homestay.wwcc_verified")}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {app.wwcc_records.map((w, i) => {
+                    const expiring = isExpiringSoon(w.expiry_date);
+                    return (
+                      <TableRow key={i}>
+                        <TableCell>{w.name || "—"}</TableCell>
+                        <TableCell>{w.wwcc_number || "—"}</TableCell>
+                        <TableCell className={expiring ? "text-red-600 font-semibold" : ""}>{w.expiry_date || "—"}</TableCell>
+                        <TableCell>
+                          {w.verified
+                            ? <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700"><CheckIcon className="h-3.5 w-3.5" /> {t("common.yes")}</span>
+                            : <span className="text-xs text-muted-foreground">{t("common.no")}</span>}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            ) : (
+              <p className="text-sm text-muted-foreground">{t("homestay.no_wwcc")}</p>
+            )}
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-3 border-t">
+            <Field label={t("homestay.f_insurance_provider")} value={app.insurance_provider} />
+            <Field label={t("homestay.f_insurance_policy")} value={app.insurance_policy_no} />
+            <Field
+              label={t("homestay.f_insurance_expiry")}
+              value={app.insurance_expiry
+                ? <span className={isExpiringSoon(app.insurance_expiry) ? "text-red-600 font-semibold" : ""}>{app.insurance_expiry}</span>
+                : null}
+            />
+          </div>
+        </Section>
+
+        {/* Bank details */}
+        <Section title={t("homestay.section_bank")}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <Field label={t("homestay.f_bank_name")} value={app.bank_name} />
+            <Field label={t("homestay.f_bank_account_name")} value={app.bank_account_name} />
+            <Field label={t("homestay.f_bank_bsb")} value={app.bank_bsb} />
+            <Field label={t("homestay.f_bank_account_number")} value={app.bank_account_number} />
+            <Field label={t("homestay.f_bank_swift")} value={app.bank_swift} />
           </div>
         </Section>
 

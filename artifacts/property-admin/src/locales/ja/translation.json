@@ -2583,6 +2583,21 @@
     "doc_note_placeholder": "申請者へのメモ（任意）…",
     "toast_approved": "申請を承認しました",
     "toast_rejected": "申請を却下しました",
-    "toast_docs_requested": "書類を依頼しました"
+    "toast_docs_requested": "書類を依頼しました",
+    "section_compliance": "コンプライアンス",
+    "section_bank": "銀行情報",
+    "wwcc_title": "児童関連業務適格確認（WWCC）",
+    "wwcc_number": "WWCC番号",
+    "wwcc_expiry": "有効期限",
+    "wwcc_verified": "確認済み",
+    "no_wwcc": "WWCCの記録はありません。",
+    "f_insurance_provider": "保険会社",
+    "f_insurance_policy": "証券番号",
+    "f_insurance_expiry": "保険有効期限",
+    "f_bank_name": "銀行名",
+    "f_bank_account_name": "口座名義",
+    "f_bank_bsb": "BSB",
+    "f_bank_account_number": "口座番号",
+    "f_bank_swift": "SWIFT / BIC"
   }
 }
