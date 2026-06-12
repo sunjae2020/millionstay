@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
+import { HomestaySignatureCard } from "@/components/HomestaySignatureCard";
 import { HomestayStatusBadge } from "./HomestayApplications";
 
 const API = "/api/v1/homestay-applications";
@@ -285,6 +286,9 @@ export default function HomestayApplicationDetail() {
             <div className="text-xs text-muted-foreground"><span className="font-medium text-foreground">{t("homestay.label_notes")}:</span> {app.approval_notes}</div>
           )}
         </div>
+
+        {/* Signature & document */}
+        <HomestaySignatureCard contextType="host_app" contextId={id} entityType="homestay_host_application" />
 
         {/* Host info */}
         <Section title={t("homestay.section_host")}>

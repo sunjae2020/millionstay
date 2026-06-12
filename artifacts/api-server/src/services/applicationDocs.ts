@@ -12,6 +12,7 @@ import {
   homestayHostApplicationsTable,
   homestayPlacementsTable,
   accountsTable,
+  emailLogsTable,
 } from "@workspace/db";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf.js";
 import {
@@ -167,8 +168,15 @@ export async function resolveRecipients(signing: SigningRow): Promise<ResolvedRe
  * Email the application PDF to the selected recipients. Best-effort — collects
  * results, never throws. Returns the list of addresses successfully sent to.
  */
+/** Map a signing context to the (entity_type, template_code) used in email_log. */
+function logMeta(contextType: string): { entityType: string; templateCode: string } {
+  if (contextType === "host_app") return { entityType: "homestay_host_application", templateCode: "document.homestay_host_application" };
+  if (contextType === "placement_contract") return { entityType: "homestay_placement", templateCode: "document.homestay_placement_contract" };
+  return { entityType: "homestay_student_request", templateCode: "document.homestay_student_application" };
+}
+
 export async function emailApplicationPdf(
-  signing: Pick<SigningRow, "context_type">,
+  signing: Pick<SigningRow, "context_type" | "context_id">,
   pdf: Buffer,
   recipients: ResolvedRecipients,
   select: RecipientSelection,
@@ -178,6 +186,7 @@ export async function emailApplicationPdf(
     signing.context_type === "host_app" ? "Host Family Application"
     : signing.context_type === "placement_contract" ? "Homestay Placement Agreement"
     : "Student Application";
+  const { entityType, templateCode } = logMeta(signing.context_type);
   const filename = `${ref}.pdf`;
   const targets: Array<{ email: string; name?: string }> = [];
   if (select.applicant && recipients.applicant) targets.push(recipients.applicant);
@@ -204,6 +213,18 @@ export async function emailApplicationPdf(
         note: "A signed copy of your homestay application is attached as a PDF.",
       });
       if (result.ok) sent.push(t.email);
+      // Record the send in the per-record email history (best-effort).
+      await db.insert(emailLogsTable).values({
+        template_code: templateCode,
+        to_email: t.email,
+        to_name: t.name ?? null,
+        subject: result.subject,
+        resend_message_id: result.id ?? null,
+        status: result.ok ? "Sent" : "Failed",
+        entity_type: entityType,
+        entity_id: signing.context_id,
+        error_message: result.error ?? null,
+      }).catch(() => {});
     } catch (err) {
       console.error(`[applicationDocs] email to ${t.email} failed:`, err);
     }
