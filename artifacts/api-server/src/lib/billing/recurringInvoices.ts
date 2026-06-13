@@ -14,8 +14,31 @@ import {
   contractsTable,
   spacesTable,
   propertiesTable,
+  integrationSettings,
 } from "@workspace/db";
 import { getRateToAud } from "../rateSnapshot.js";
+
+/** Settings key (also an integrations ALLOWED_KEY) toggling the recurring cron. */
+export const RECURRING_INVOICES_ENABLED_KEY = "RECURRING_INVOICES_ENABLED";
+
+/**
+ * Whether automated recurring invoicing is enabled. App-controlled: a process.env
+ * override wins (explicit "true"/"false"), otherwise the integration_settings flag
+ * decides (default off). Read fresh each run so a toggle in the admin takes effect
+ * on the next cron tick with no redeploy. Mirrors the #49 ops-email pattern.
+ */
+export async function isRecurringInvoicesEnabled(): Promise<boolean> {
+  const env = process.env[RECURRING_INVOICES_ENABLED_KEY];
+  if (env === "true") return true;
+  if (env === "false") return false;
+  try {
+    const [row] = await db.select().from(integrationSettings)
+      .where(eq(integrationSettings.key, RECURRING_INVOICES_ENABLED_KEY)).limit(1);
+    return row?.value === "true";
+  } catch {
+    return false;
+  }
+}
 
 /** Today in Sydney (YYYY-MM-DD), matching the cron timezone. */
 function sydneyToday(): string {
@@ -64,11 +87,17 @@ async function nextInvoiceRef(): Promise<string> {
   return `MS-INV-${year}-${String(counter + 1).padStart(5, "0")}`;
 }
 
-export interface RecurringBillingResult { scanned: number; created: number; skipped: number; ended: number; errors: number }
+export interface RecurringBillingResult { enabled: boolean; scanned: number; created: number; skipped: number; ended: number; errors: number }
 
 export async function generateRecurringInvoices(): Promise<RecurringBillingResult> {
   const today = sydneyToday();
-  const result: RecurringBillingResult = { scanned: 0, created: 0, skipped: 0, ended: 0, errors: 0 };
+  const result: RecurringBillingResult = { enabled: true, scanned: 0, created: 0, skipped: 0, ended: 0, errors: 0 };
+
+  // App-controlled gate (integration_settings, env override). Off → no-op.
+  if (!(await isRecurringInvoicesEnabled())) {
+    result.enabled = false;
+    return result;
+  }
 
   const due = await db.select().from(recurringSchedulesTable)
     .where(and(

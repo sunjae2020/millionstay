@@ -20,6 +20,7 @@ const ALLOWED_KEYS = [
   "LEAD_NOTIFICATION_EMAIL",
   "ANTHROPIC_API_KEY",
   "CHAT_WIDGET_ENABLED",
+  "RECURRING_INVOICES_ENABLED",
 ];
 
 function maskKey(key: string | undefined): string {
@@ -132,6 +133,9 @@ router.get("/v1/integrations/status", async (_req: Request, res: Response): Prom
         provider: "iCal Sync",
         configured: false,
         note: "Configure iCal URLs on each Space",
+      },
+      billing: {
+        recurring_invoices_enabled: (await getEnvVar("RECURRING_INVOICES_ENABLED")) === "true",
       },
     },
   });
