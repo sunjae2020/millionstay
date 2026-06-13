@@ -51,14 +51,8 @@ const ADMIN_CARDS: CardDef[] = [
     href: "/settings/design",
   },
   {
-    title: "Email Templates",
-    description: "Customise system email notifications",
-    icon: Mail,
-    href: "/settings/email-templates",
-  },
-  {
     title: "Document Templates",
-    description: "Editable homestay email + contract templates",
+    description: "Editable email + contract templates",
     icon: FileText,
     href: "/settings/document-templates",
   },
