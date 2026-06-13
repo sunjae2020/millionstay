@@ -7,6 +7,8 @@
  * a clear 503 rather than crashing the process at startup.
  */
 
+import { accessSync, constants as fsConstants } from "node:fs";
+
 // Minimal structural types so this module type-checks without @types/puppeteer
 // in scope. The dynamic import is resolved at runtime.
 type PdfPage = {
@@ -27,6 +29,35 @@ export class PdfUnavailableError extends Error {
   readonly name = "PdfUnavailableError";
 }
 
+/**
+ * Resolve a system Chromium binary, in priority order:
+ *   1. PUPPETEER_EXECUTABLE_PATH (explicit override)
+ *   2. a `chromium`/`chrome` binary found on PATH (Railway/nixpacks installs one)
+ * Returns undefined when none is found, so puppeteer falls back to the Chromium
+ * it downloaded at install time (this is the local-dev path).
+ */
+function resolveSystemChromium(): string | undefined {
+  const explicit = process.env.PUPPETEER_EXECUTABLE_PATH;
+  if (explicit) return explicit;
+
+  // The nix `chromium` package (and Debian) exposes one of these on PATH.
+  const candidates = ["chromium", "chromium-browser", "google-chrome-stable", "google-chrome"];
+  const dirs = (process.env.PATH ?? "").split(":").filter(Boolean);
+  for (const name of candidates) {
+    for (const dir of dirs) {
+      const full = `${dir}/${name}`;
+      try {
+        // X_OK — present and executable.
+        accessSync(full, fsConstants.X_OK);
+        return full;
+      } catch {
+        // not here — keep looking
+      }
+    }
+  }
+  return undefined;
+}
+
 async function launchBrowser(): Promise<PdfBrowser> {
   let puppeteer: any;
   try {
@@ -36,9 +67,13 @@ async function launchBrowser(): Promise<PdfBrowser> {
       "PDF generation is unavailable: the 'puppeteer' package is not installed.",
     );
   }
+  const executablePath = resolveSystemChromium();
   try {
     return (await puppeteer.launch({
       headless: true,
+      // Use the system Chromium when present (Railway/containers); otherwise let
+      // puppeteer use its bundled download (local dev).
+      ...(executablePath ? { executablePath } : {}),
       // Flags required to run Chromium inside containers (Railway, Docker).
       args: [
         "--no-sandbox",
