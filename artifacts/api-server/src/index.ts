@@ -11,6 +11,7 @@ import { SEED_FILE_PATH, importSeed } from "./lib/seedSync";
 import { syncExchangeRates } from "./lib/exchangeRateSync";
 import { syncAllChannelImports } from "./lib/icalImport";
 import { purgeExpiredDocuments } from "./lib/retentionPurge";
+import { generateMonthlyPlacementCharges } from "./lib/homestay/monthlyBilling";
 
 const rawPort = process.env["PORT"];
 
@@ -170,6 +171,19 @@ cron.schedule(
     purgeExpiredDocuments()
       .then((r) => logger.info({ scanned: r.scanned, destroyed: r.destroyed, errors: r.errors }, "Cron retention purge"))
       .catch((err) => logger.error({ err }, "Cron retention purge failed"));
+  },
+  { timezone: "Australia/Sydney" },
+);
+
+// Homestay monthly rent — daily at 02:00 Sydney. Generates a per-cycle card
+// payment link for each Active placement whose next_billing_date is due and
+// emails the student. No boot-time run (would risk double-billing on restart).
+cron.schedule(
+  "0 2 * * *",
+  () => {
+    generateMonthlyPlacementCharges()
+      .then((r) => logger.info({ ...r }, "Cron homestay monthly billing"))
+      .catch((err) => logger.error({ err }, "Cron homestay monthly billing failed"));
   },
   { timezone: "Australia/Sydney" },
 );

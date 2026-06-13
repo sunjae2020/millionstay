@@ -353,7 +353,12 @@ homestayPlacementAdminRouter.post("/v1/homestay-placement-payments/:paymentId/ma
         .set({ status: "Active", confirmed_at: now, updated_at: now })
         .where(and(eq(homestayPlacementsTable.id, pay.placement_id), eq(homestayPlacementsTable.status, "AwaitingPayment")))
         .returning();
-      if (pl) await db.update(homestayStudentRequestsTable).set({ status: "Placed", updated_at: now }).where(eq(homestayStudentRequestsTable.id, pl.student_request_id));
+      if (pl) {
+        await db.update(homestayStudentRequestsTable).set({ status: "Placed", updated_at: now }).where(eq(homestayStudentRequestsTable.id, pl.student_request_id));
+        if (!pl.next_billing_date && Number(pl.monthly_fee) > 0) {
+          await db.update(homestayPlacementsTable).set({ next_billing_date: pl.move_in_date || now.toISOString().slice(0, 10) }).where(eq(homestayPlacementsTable.id, pl.id));
+        }
+      }
     }
     void logAction({ entityType: ENTITY, entityId: pay.placement_id, action: "PAYMENT", actorId: (req as any).user?.id ?? null, newValue: { payment_id: paymentId, method: "bank_transfer", status: "paid" } });
     res.json({ success: true, payment: pay });
