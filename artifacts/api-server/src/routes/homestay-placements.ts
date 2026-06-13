@@ -325,8 +325,8 @@ homestayPlacementAdminRouter.post("/v1/homestay-placements/:id/charge", async (r
       }],
       metadata: { placement_payment_id: String(pay!.id), placement_id: String(id), placement_ref: row.placement_ref, kind },
       customer_email: student?.student_email || student?.guardian_email || undefined,
-      success_url: `${webBase}/?payment=success&ref=${encodeURIComponent(row.placement_ref)}`,
-      cancel_url: `${webBase}/?payment=cancelled&ref=${encodeURIComponent(row.placement_ref)}`,
+      success_url: `${webBase}/payment-result?status=success&ref=${encodeURIComponent(row.placement_ref)}`,
+      cancel_url: `${webBase}/payment-result?status=cancelled&ref=${encodeURIComponent(row.placement_ref)}`,
     });
 
     void logAction({ entityType: ENTITY, entityId: id, action: "CREATE", actorId: (req as any).user?.id ?? null, newValue: { payment_id: pay!.id, stripe_session: session.id, kind, method: "card", base, surcharge, total } });

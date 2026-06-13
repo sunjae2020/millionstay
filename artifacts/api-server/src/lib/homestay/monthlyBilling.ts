@@ -98,8 +98,8 @@ export async function generateMonthlyPlacementCharges(): Promise<MonthlyBillingR
         line_items: [{ price_data: { currency: currency.toLowerCase(), product_data: { name: `Homestay ${pl.placement_ref} — monthly fee ${periodStart} (incl. 2% card fee)` }, unit_amount: Math.round(total * 100) }, quantity: 1 }],
         metadata: { placement_payment_id: String(pay!.id), placement_id: String(pl.id), placement_ref: pl.placement_ref, kind: "monthly" },
         customer_email: studentEmail || undefined,
-        success_url: `${webBase}/?payment=success&ref=${encodeURIComponent(pl.placement_ref)}`,
-        cancel_url: `${webBase}/?payment=cancelled&ref=${encodeURIComponent(pl.placement_ref)}`,
+        success_url: `${webBase}/payment-result?status=success&ref=${encodeURIComponent(pl.placement_ref)}`,
+        cancel_url: `${webBase}/payment-result?status=cancelled&ref=${encodeURIComponent(pl.placement_ref)}`,
       });
 
       // Email the student the payment link (template → fallback). Best-effort.

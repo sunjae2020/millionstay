@@ -49,6 +49,7 @@ import ChatWidget from "@/components/chat/ChatWidget";
 import OwnerLanding from "@/pages/owner-landing";
 import HomestayRouter from "@/pages/homestay/HomestayRouter";
 import Sign from "@/pages/sign";
+import PaymentResult from "@/pages/payment-result";
 import { getApiBase } from "@/lib/api-base";
 import { getOwnerSiteSlug } from "@/lib/owner-site";
 import { isHomestaySubdomain } from "@/lib/homestay-site";
@@ -98,6 +99,7 @@ function Router() {
       <Route path="/blog/:slug" component={BlogPost} />
       <Route path="/blog" component={Blog} />
       <Route path="/contact" component={Contact} />
+      <Route path="/payment-result" component={PaymentResult} />
       <Route path="/stay-plan" component={StayPlan} />
       <Route path="/for-student" component={ForStudent} />
       <Route path="/for-agent" component={ForAgent} />
