@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
-import { apiGet } from "@/lib/api";
+import { useServerList } from "@/lib/useServerList";
+import { TablePagination } from "@/components/TablePagination";
 import { Briefcase, MapPin, Calendar, DollarSign, FileText, ChevronRight } from "lucide-react";
 
 interface Job {
@@ -44,27 +45,19 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function JobsPage() {
   const { t } = useTranslation();
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    apiGet<{ success: boolean; data: Job[] }>("/v1/service-host/jobs")
-      .then((r) => { if (r.success) setJobs(r.data); })
-      .catch(() => setError(t("jobs.load_failed")))
-      .finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const filtered = jobs.filter((j) => {
-    const q = search.toLowerCase();
-    return (
-      j.name.toLowerCase().includes(q) ||
-      (j.booking?.booking_ref ?? "").toLowerCase().includes(q) ||
-      (j.booking?.property?.name ?? "").toLowerCase().includes(q)
-    );
-  });
+  const {
+    items: jobs,
+    loading,
+    error,
+    page,
+    pageSize,
+    total,
+    totalPages,
+    setPage,
+    setPageSize,
+  } = useServerList<Job>("/v1/service-host/jobs", { search });
 
   return (
     <Layout>
@@ -75,7 +68,7 @@ export default function JobsPage() {
             <p className="text-sm text-muted-foreground mt-1">{t("jobs.subtitle")}</p>
           </div>
           <div className="text-sm text-muted-foreground">
-            {t("jobs.count", { count: filtered.length })}
+            {t("jobs.count", { count: total })}
           </div>
         </div>
 
@@ -93,7 +86,7 @@ export default function JobsPage() {
           <div className="space-y-3">
             {[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-muted rounded-xl animate-pulse" />)}
           </div>
-        ) : filtered.length === 0 ? (
+        ) : jobs.length === 0 ? (
           <div className="bg-card border border-border rounded-xl p-12 text-center">
             <Briefcase className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
             <p className="text-sm font-medium text-foreground">{t("jobs.no_jobs")}</p>
@@ -103,7 +96,7 @@ export default function JobsPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {filtered.map((job) => (
+            {jobs.map((job) => (
               <Link key={job.id} href={`/jobs/${job.id}`} className="block bg-card border border-border rounded-xl p-5 hover:shadow-md hover:border-primary/40 transition cursor-pointer">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -175,6 +168,16 @@ export default function JobsPage() {
                 </div>
               </Link>
             ))}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <TablePagination
+                page={page}
+                pageSize={pageSize}
+                total={total}
+                totalPages={totalPages}
+                onPage={setPage}
+                onPageSize={setPageSize}
+              />
+            </div>
           </div>
         )}
       </div>

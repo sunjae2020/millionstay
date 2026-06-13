@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
-import { eq, ne, and, desc, asc, inArray, sql } from "drizzle-orm";
+import { eq, ne, and, or, ilike, desc, asc, inArray, sql } from "drizzle-orm";
 import {
   db,
   bookingsTable,
@@ -15,6 +15,7 @@ import {
 } from "@workspace/db";
 import { requireServiceHostAuth, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth";
 import { isCloudinaryConfigured, uploadToCloudinary, deleteFromCloudinary } from "../utils/cloudinary";
+import { parsePageParams, pageMeta } from "../utils/pagination";
 
 const router: IRouter = Router();
 const ALLOWED_PHOTO_MIME = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"]);
@@ -136,12 +137,38 @@ router.get("/v1/service-host/jobs", requireServiceHostAuth, async (req, res): Pr
   try {
     const partner = (req as any).partner as PartnerAuthPayload;
     const accountId = partner.account_id;
+    const { limit, offset, page, q } = parsePageParams(req.query);
     const hostIds = await getHostServiceIds(accountId);
 
     if (hostIds.length === 0) {
-      res.json({ success: true, data: [] });
+      res.json({ success: true, data: [], meta: pageMeta(0, { limit, offset, page }) });
       return;
     }
+
+    // Join booking + property so search (job name / booking ref / property) and
+    // paging happen in the DB rather than over the whole result set.
+    const conds = [
+      inArray(bookingServicesTable.service_id, hostIds),
+      ne(bookingServicesTable.status, "Deleted"),
+    ];
+    if (q) {
+      conds.push(
+        or(
+          ilike(bookingServicesTable.name, `%${q}%`),
+          ilike(bookingsTable.booking_ref, `%${q}%`),
+          ilike(propertiesTable.name, `%${q}%`),
+        )!,
+      );
+    }
+    const whereExpr = and(...conds);
+
+    const [{ total }] = await db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(bookingServicesTable)
+      .leftJoin(bookingsTable, eq(bookingServicesTable.booking_id, bookingsTable.id))
+      .leftJoin(spacesTable, eq(bookingsTable.space_id, spacesTable.id))
+      .leftJoin(propertiesTable, eq(spacesTable.property_id, propertiesTable.id))
+      .where(whereExpr);
 
     const services = await db
       .select({
@@ -161,16 +188,16 @@ router.get("/v1/service-host/jobs", requireServiceHostAuth, async (req, res): Pr
         created_at: bookingServicesTable.created_at,
       })
       .from(bookingServicesTable)
-      .where(
-        and(
-          inArray(bookingServicesTable.service_id, hostIds),
-          ne(bookingServicesTable.status, "Deleted")
-        )
-      )
-      .orderBy(desc(bookingServicesTable.created_at));
+      .leftJoin(bookingsTable, eq(bookingServicesTable.booking_id, bookingsTable.id))
+      .leftJoin(spacesTable, eq(bookingsTable.space_id, spacesTable.id))
+      .leftJoin(propertiesTable, eq(spacesTable.property_id, propertiesTable.id))
+      .where(whereExpr)
+      .orderBy(desc(bookingServicesTable.created_at))
+      .limit(limit)
+      .offset(offset);
 
     if (services.length === 0) {
-      res.json({ success: true, data: [] });
+      res.json({ success: true, data: [], meta: pageMeta(total ?? 0, { limit, offset, page }) });
       return;
     }
 
@@ -225,7 +252,7 @@ router.get("/v1/service-host/jobs", requireServiceHostAuth, async (req, res): Pr
       booking: bookingMap[s.booking_id] ?? null,
     }));
 
-    res.json({ success: true, data: enriched });
+    res.json({ success: true, data: enriched, meta: pageMeta(total ?? 0, { limit, offset, page }) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, error: "Internal server error" });

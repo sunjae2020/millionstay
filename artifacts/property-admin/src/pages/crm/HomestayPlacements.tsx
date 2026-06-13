@@ -4,12 +4,15 @@ import { Link } from "wouter";
 import { formatDate } from "@/lib/date";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useQuery } from "@tanstack/react-query";
-import { Handshake, Eye } from "lucide-react";
+import { TablePagination } from "@/components/ui/TablePagination";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { Handshake, Eye, Search } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 
 const API = "/api/v1/homestay-placements";
+const PAGE_SIZE = 25;
 
 export type PlacementStatus =
   | "Proposed" | "HostAccepted" | "AwaitingPayment" | "Active"
@@ -57,23 +60,42 @@ export function PlacementStatusBadge({ status }: { status: string }) {
   );
 }
 
-async function fetchPlacements(status: string): Promise<Placement[]> {
+async function fetchPlacements(
+  q: string,
+  status: string,
+  page: number,
+  pageSize: number,
+): Promise<{ items: Placement[]; total: number }> {
   const params = new URLSearchParams();
+  if (q) params.set("q", q);
   if (status) params.set("status", status);
+  params.set("limit", String(pageSize));
+  params.set("offset", String((page - 1) * pageSize));
   const res = await apiFetch(`${API}?${params.toString()}`);
   if (!res.ok) throw new Error("Failed to load placements");
   const json = await res.json();
-  return (json.data ?? []) as Placement[];
+  const items = (json.data ?? []) as Placement[];
+  return { items, total: json.meta?.total ?? items.length };
 }
 
 export default function HomestayPlacements() {
   const { t } = useTranslation();
+  const [q, setQ] = useState("");
   const [status, setStatus] = useState<"" | PlacementStatus>("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE);
 
-  const { data: rows = [], isLoading } = useQuery({
-    queryKey: ["homestay-placements", status],
-    queryFn: () => fetchPlacements(status),
+  const setSearch = (v: string) => { setQ(v); setPage(1); };
+  const setStatusFilter = (v: "" | PlacementStatus) => { setStatus(v); setPage(1); };
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["homestay-placements", q, status, page, pageSize],
+    queryFn: () => fetchPlacements(q, status, page, pageSize),
+    placeholderData: keepPreviousData,
   });
+  const rows = data?.items ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
     <Layout>
@@ -83,9 +105,18 @@ export default function HomestayPlacements() {
       />
 
       <div className="px-6 py-6">
+        <div className="relative max-w-sm mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            className="pl-9"
+            placeholder={t("homestayPlacement.search_placeholder", "Search placement ref…")}
+            value={q}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
         <div className="flex flex-wrap gap-2">
           <button
-            onClick={() => setStatus("")}
+            onClick={() => setStatusFilter("")}
             className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
               status === "" ? "bg-orange-100 text-orange-700 border-orange-200" : "bg-white text-muted-foreground border-border hover:bg-muted/50"
             }`}
@@ -98,7 +129,7 @@ export default function HomestayPlacements() {
             return (
               <button
                 key={s}
-                onClick={() => setStatus(s)}
+                onClick={() => setStatusFilter(s)}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                   active ? cfg.badge : "bg-white text-muted-foreground border-border hover:bg-muted/50"
                 }`}
@@ -153,10 +184,20 @@ export default function HomestayPlacements() {
               ))}
             </TableBody>
           </Table>
+          <TablePagination
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            totalPages={totalPages}
+            hasNext={page < totalPages}
+            hasPrev={page > 1}
+            onPage={setPage}
+            onPageSize={(n) => { setPageSize(n); setPage(1); }}
+          />
         </div>
 
         <p className="text-xs text-muted-foreground mt-3">
-          {rows.length} {t("homestayPlacement.count_label")}
+          {total} {t("homestayPlacement.count_label")}
         </p>
       </div>
     </Layout>

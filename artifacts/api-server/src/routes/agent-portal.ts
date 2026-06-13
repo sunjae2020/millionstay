@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, desc, sql, inArray } from "drizzle-orm";
+import { eq, and, or, desc, sql, ilike, inArray } from "drizzle-orm";
 import {
   db,
   bookingsTable,
@@ -13,6 +13,7 @@ import {
   contactsTable,
 } from "@workspace/db";
 import { requireAgentAuth, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth";
+import { parsePageParams, pageMeta, paginateArray } from "../utils/pagination";
 
 const router: IRouter = Router();
 
@@ -91,11 +92,43 @@ router.get("/v1/agent/dashboard", requireAgentAuth, async (req, res): Promise<vo
   });
 });
 
-/* GET /api/v1/agent/bookings */
+/* GET /api/v1/agent/bookings — server-side paginated + searchable.
+   Query: ?limit=&offset= (or ?page=), ?q= (booking ref / tenant / property / space),
+   ?booking_status= (Draft|Confirmed|Active|CheckedOut|Cancelled). */
 router.get("/v1/agent/bookings", requireAgentAuth, async (req, res): Promise<void> => {
   const partner = (req as any).partner as PartnerAuthPayload;
+  const { limit, offset, page, q } = parsePageParams(req.query);
+  const statusFilter = typeof req.query.booking_status === "string" ? req.query.booking_status : "";
 
-  const bookings = await db
+  const conds = [
+    eq(bookingsTable.agent_account_id, partner.account_id),
+    eq(bookingsTable.status, "Active"),
+  ];
+  if (statusFilter) conds.push(eq(bookingsTable.booking_status, statusFilter));
+  if (q) {
+    conds.push(
+      or(
+        ilike(bookingsTable.booking_ref, `%${q}%`),
+        ilike(contactsTable.first_name, `%${q}%`),
+        ilike(contactsTable.last_name, `%${q}%`),
+        ilike(contactsTable.email, `%${q}%`),
+        ilike(propertiesTable.name, `%${q}%`),
+        ilike(spacesTable.name, `%${q}%`),
+      )!,
+    );
+  }
+  const whereExpr = and(...conds);
+
+  // Joins let us filter + count + paginate entirely in the DB.
+  const [{ total }] = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(bookingsTable)
+    .leftJoin(spacesTable, eq(bookingsTable.space_id, spacesTable.id))
+    .leftJoin(propertiesTable, eq(spacesTable.property_id, propertiesTable.id))
+    .leftJoin(contactsTable, eq(bookingsTable.contact_id, contactsTable.id))
+    .where(whereExpr);
+
+  const rows = await db
     .select({
       id: bookingsTable.id,
       booking_ref: bookingsTable.booking_ref,
@@ -107,51 +140,41 @@ router.get("/v1/agent/bookings", requireAgentAuth, async (req, res): Promise<voi
       currency: bookingsTable.currency,
       space_id: bookingsTable.space_id,
       contact_id: bookingsTable.contact_id,
+      space_name: spacesTable.name,
+      property_name: propertiesTable.name,
+      contact_first: contactsTable.first_name,
+      contact_last: contactsTable.last_name,
+      contact_email: contactsTable.email,
     })
     .from(bookingsTable)
-    .where(and(eq(bookingsTable.agent_account_id, partner.account_id), eq(bookingsTable.status, "Active")))
-    .orderBy(desc(bookingsTable.created_at));
+    .leftJoin(spacesTable, eq(bookingsTable.space_id, spacesTable.id))
+    .leftJoin(propertiesTable, eq(spacesTable.property_id, propertiesTable.id))
+    .leftJoin(contactsTable, eq(bookingsTable.contact_id, contactsTable.id))
+    .where(whereExpr)
+    .orderBy(desc(bookingsTable.created_at))
+    .limit(limit)
+    .offset(offset);
 
-  // Fetch space names
-  const spaceIds = [...new Set(bookings.map(b => b.space_id).filter(Boolean))] as number[];
-  const spaces = spaceIds.length
-    ? await db.select({ id: spacesTable.id, name: spacesTable.name, property_id: spacesTable.property_id })
-        .from(spacesTable).where(inArray(spacesTable.id, spaceIds))
-    : [];
+  const data = rows.map((r) => ({
+    id: r.id,
+    booking_ref: r.booking_ref,
+    booking_status: r.booking_status,
+    check_in_date: r.check_in_date,
+    check_out_date: r.check_out_date,
+    agreed_weekly_rate: r.agreed_weekly_rate,
+    total_rent: r.total_rent,
+    currency: r.currency,
+    space_id: r.space_id,
+    contact_id: r.contact_id,
+    space_name: r.space_name ?? "—",
+    property_name: r.property_name ?? "—",
+    tenant:
+      r.contact_first || r.contact_last || r.contact_email
+        ? maskTenantForAgent({ first_name: r.contact_first, last_name: r.contact_last, email: r.contact_email })
+        : null,
+  }));
 
-  // Fetch property names
-  const propertyIds = [...new Set(spaces.map(s => s.property_id).filter(Boolean))] as number[];
-  const properties = propertyIds.length
-    ? await db.select({ id: propertiesTable.id, name: propertiesTable.name })
-        .from(propertiesTable).where(inArray(propertiesTable.id, propertyIds))
-    : [];
-
-  // Fetch contacts (tenant info: name + email only — no other personal info)
-  const contactIds = [...new Set(bookings.map(b => b.contact_id).filter(Boolean))] as number[];
-  const contacts = contactIds.length
-    ? await db
-        .select({ id: contactsTable.id, first_name: contactsTable.first_name, last_name: contactsTable.last_name, email: contactsTable.email })
-        .from(contactsTable)
-        .where(inArray(contactsTable.id, contactIds))
-    : [];
-
-  const spaceMap = Object.fromEntries(spaces.map(s => [s.id, s]));
-  const propMap = Object.fromEntries(properties.map(p => [p.id, p]));
-  const contactMap = Object.fromEntries(contacts.map(c => [c.id, c]));
-
-  const result = bookings.map(b => {
-    const space = b.space_id ? spaceMap[b.space_id] : null;
-    const property = space?.property_id ? propMap[space.property_id] : null;
-    const contact = b.contact_id ? contactMap[b.contact_id] : null;
-    return {
-      ...b,
-      space_name: space?.name ?? "—",
-      property_name: property?.name ?? "—",
-      tenant: contact ? maskTenantForAgent(contact) : null,
-    };
-  });
-
-  res.json({ success: true, data: result });
+  res.json({ success: true, data, meta: pageMeta(total ?? 0, { limit, offset, page }) });
 });
 
 /* GET /api/v1/agent/bookings/:id */
@@ -266,8 +289,15 @@ router.get("/v1/agent/commission", requireAgentAuth, async (req, res): Promise<v
     };
   });
 
+  // Aggregates are computed over ALL bookings; only the breakdown list is paginated.
   const totalEarned = earningsBreakdown.reduce((s, r) => s + r.commission_earned, 0);
   const paidCount = earningsBreakdown.filter(r => ["Active", "CheckedOut"].includes(r.booking_status)).length;
+
+  const { limit, offset, page, q } = parsePageParams(req.query);
+  const filtered = q
+    ? earningsBreakdown.filter(r => (r.booking_ref ?? "").toLowerCase().includes(q.toLowerCase()))
+    : earningsBreakdown;
+  const pagedBreakdown = paginateArray(filtered, { limit, offset });
 
   res.json({
     success: true,
@@ -277,8 +307,9 @@ router.get("/v1/agent/commission", requireAgentAuth, async (req, res): Promise<v
       total_earned: totalEarned,
       paid_count: paidCount,
       pending_count: earningsBreakdown.length - paidCount,
-      breakdown: earningsBreakdown,
+      breakdown: pagedBreakdown,
     },
+    meta: pageMeta(filtered.length, { limit, offset, page }),
   });
 });
 

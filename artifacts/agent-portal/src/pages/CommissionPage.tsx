@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
-import { DollarSign, TrendingUp, Clock, CheckCircle } from "lucide-react";
+import { TablePagination } from "@/components/TablePagination";
+import { DollarSign, TrendingUp, Clock, CheckCircle, Search } from "lucide-react";
 
 interface CommissionApiData {
   account_name: string;
@@ -41,18 +42,56 @@ function StatCard({ label, value, icon: Icon, iconCls }: { label: string; value:
   );
 }
 
+const PAGE_SIZE = 25;
+
 export default function CommissionPage() {
   const { t } = useTranslation();
   const [data, setData] = useState<CommissionApiData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE);
+  const [total, setTotal] = useState(0);
+
+  // Debounce search; reset to first page when it changes.
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(id);
+  }, [search]);
 
   useEffect(() => {
-    apiGet<{ success: boolean; data: CommissionApiData }>("/v1/agent/commission")
-      .then((d) => setData(d.data))
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, []);
+    let cancelled = false;
+    setLoading(true);
+    const sp = new URLSearchParams();
+    sp.set("limit", String(pageSize));
+    sp.set("offset", String((page - 1) * pageSize));
+    if (debouncedSearch) sp.set("q", debouncedSearch);
+    apiGet<{ success: boolean; data: CommissionApiData; meta?: { total?: number } }>(
+      `/v1/agent/commission?${sp.toString()}`,
+    )
+      .then((d) => {
+        if (cancelled) return;
+        setData(d.data);
+        setTotal(d.meta?.total ?? d.data.breakdown.length);
+        setError("");
+      })
+      .catch((e) => {
+        if (!cancelled) setError(e.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [page, pageSize, debouncedSearch]);
+
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
     <Layout>
@@ -91,8 +130,17 @@ export default function CommissionPage() {
           </div>
 
           <div className="bg-card border border-card-border rounded-xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-border">
+            <div className="px-6 py-4 border-b border-border flex flex-wrap items-center justify-between gap-3">
               <h2 className="font-semibold text-foreground">{t("commission.breakdown")}</h2>
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={t("commission.col_ref")}
+                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+                />
+              </div>
             </div>
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b border-border">
@@ -132,6 +180,14 @@ export default function CommissionPage() {
                 ))}
               </tbody>
             </table>
+            <TablePagination
+              page={page}
+              pageSize={pageSize}
+              total={total}
+              totalPages={totalPages}
+              onPage={setPage}
+              onPageSize={setPageSize}
+            />
           </div>
         </>
       )}

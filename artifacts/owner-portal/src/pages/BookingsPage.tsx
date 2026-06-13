@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
-import { apiGet } from "@/lib/api";
+import { useServerList } from "@/lib/useServerList";
+import { TablePagination } from "@/components/TablePagination";
 import { OccupancyCalendar } from "@/components/OccupancyCalendar";
 import { Calendar, CalendarDays, List, Search, X } from "lucide-react";
 
@@ -29,41 +30,33 @@ const STATUS_CLS: Record<string, string> = {
 export default function BookingsPage() {
   const { t } = useTranslation();
   const [view, setView] = useState<"calendar" | "list">("calendar");
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
-  useEffect(() => {
-    apiGet<{ success: boolean; data: Booking[] }>("/v1/owner/bookings")
-      .then((d) => setBookings(d.data))
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, []);
+  const params = useMemo(
+    () => ({
+      booking_status: statusFilter || undefined,
+      date_from: dateFrom || undefined,
+      date_to: dateTo || undefined,
+    }),
+    [statusFilter, dateFrom, dateTo],
+  );
 
-  const q = search.trim().toLowerCase();
-  const filtered = bookings.filter((b) => {
-    if (statusFilter && b.booking_status !== statusFilter) return false;
-    if (q) {
-      const hay = [b.booking_ref, b.tenant?.first_name, b.tenant?.last_name, b.tenant?.display_name, b.property_name, b.space_name]
-        .filter(Boolean).join(" ").toLowerCase();
-      if (!hay.includes(q)) return false;
-    }
-    // Date range: keep bookings whose stay overlaps [dateFrom, dateTo].
-    // check_out empty = ongoing (open-ended), so it always overlaps dateTo.
-    if (dateFrom || dateTo) {
-      const ci = b.check_in_date || "";
-      const co = b.check_out_date || "";
-      if (dateTo && ci && ci > dateTo) return false;     // starts after the window
-      if (dateFrom && co && co < dateFrom) return false; // ended before the window
-    }
-    return true;
-  });
+  const {
+    items: bookings,
+    loading,
+    error,
+    page,
+    pageSize,
+    total,
+    totalPages,
+    setPage,
+    setPageSize,
+  } = useServerList<Booking>("/v1/owner/bookings", { search, params });
 
-  const hasFilters = !!(statusFilter || q || dateFrom || dateTo);
+  const hasFilters = !!(statusFilter || search.trim() || dateFrom || dateTo);
   const clearFilters = () => { setStatusFilter(""); setSearch(""); setDateFrom(""); setDateTo(""); };
 
   return (
@@ -147,7 +140,7 @@ export default function BookingsPage() {
         )}
 
         <span className="text-sm text-muted-foreground ml-auto self-center">
-          {t("bookings.result_count", { count: filtered.length })}
+          {t("bookings.result_count", { count: total })}
         </span>
       </div>
 
@@ -173,10 +166,10 @@ export default function BookingsPage() {
             {loading && (
               <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">{t("common.loading")}</td></tr>
             )}
-            {!loading && filtered.length === 0 && (
+            {!loading && bookings.length === 0 && (
               <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">{t("bookings.no_bookings")}</td></tr>
             )}
-            {filtered.map((b) => (
+            {bookings.map((b) => (
               <tr key={b.id} className="hover:bg-muted/30 transition-colors">
                 <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{b.booking_ref ?? `#${b.id}`}</td>
                 <td className="px-4 py-3">
@@ -217,6 +210,14 @@ export default function BookingsPage() {
             ))}
           </tbody>
         </table>
+        <TablePagination
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          totalPages={totalPages}
+          onPage={setPage}
+          onPageSize={setPageSize}
+        />
       </div>
       </>
       )}
