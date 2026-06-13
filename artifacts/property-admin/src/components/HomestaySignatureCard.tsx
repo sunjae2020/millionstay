@@ -16,25 +16,30 @@ interface SigningReq { id: number; token: string; status: string; context_type: 
 interface EmailLog { id: number; to_email: string; status: string; subject?: string; sent_at: string }
 
 /**
- * Admin card surfacing a homestay record's e-signature document: status, PDF
+ * Admin card surfacing a record's e-signature document: status, PDF
  * preview/download, signing-link copy, resend-to-recipients, and email history.
  * Reuses the public token endpoints (preview/pdf/send) shipped with the e-sign flow.
+ * Used for homestay applications and regular contracts. When `issuePath` is given
+ * and no signing request exists yet, an "Issue signing request" button POSTs to it
+ * (contracts must be issued explicitly; homestay auto-creates on submit).
  */
 export function HomestaySignatureCard({
   contextType,
   contextId,
   entityType,
+  issuePath,
 }: {
-  contextType: "student_app" | "host_app";
+  contextType: "student_app" | "host_app" | "contract";
   contextId: number;
-  entityType: "homestay_student_request" | "homestay_host_application";
+  entityType: "homestay_student_request" | "homestay_host_application" | "contract";
+  issuePath?: string;
 }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [sendOpen, setSendOpen] = useState(false);
   const [sel, setSel] = useState({ applicant: true, agent: false, ops: false });
 
-  const { data: signing } = useQuery({
+  const { data: signing, refetch: refetchSigning } = useQuery({
     queryKey: ["homestay-signing", contextType, contextId],
     queryFn: async (): Promise<SigningReq[]> => {
       const res = await apiFetch(`${SIGNING_API}/${contextType}/${contextId}`);
@@ -56,6 +61,17 @@ export function HomestaySignatureCard({
     enabled: !!contextId,
   });
 
+  const issue = useMutation({
+    mutationFn: async () => {
+      if (!issuePath) throw new Error("No issue path");
+      const res = await apiFetch(issuePath, { method: "POST", body: JSON.stringify({}) });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => { toast({ title: t("homestayDoc.toast_issued", "Signing request created") }); refetchSigning(); },
+    onError: (e: any) => toast({ title: t("homestayDoc.error"), description: e.message, variant: "destructive" }),
+  });
+
   const resend = useMutation({
     mutationFn: async () => {
       if (!latest) throw new Error("No document");
@@ -63,7 +79,18 @@ export function HomestaySignatureCard({
       if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
-    onSuccess: (d: any) => { toast({ title: t("homestayDoc.toast_sent"), description: (d?.sent ?? []).join(", ") }); setSendOpen(false); refetchLogs(); },
+    onSuccess: (d: any) => {
+      const sent: string[] = d?.sent ?? [];
+      refetchLogs();
+      if (sent.length === 0) {
+        // Nothing was actually emailed (e.g. "Operations team" selected but no
+        // notification email configured). Warn and keep the dialog open.
+        toast({ title: t("homestayDoc.toast_none_sent"), description: t("homestayDoc.toast_none_sent_desc"), variant: "destructive" });
+        return;
+      }
+      toast({ title: t("homestayDoc.toast_sent"), description: sent.join(", ") });
+      setSendOpen(false);
+    },
     onError: (e: any) => toast({ title: t("homestayDoc.error"), description: e.message, variant: "destructive" }),
   });
 
@@ -76,7 +103,14 @@ export function HomestaySignatureCard({
       </div>
       <div className="p-4 space-y-4">
         {!latest ? (
-          <p className="text-sm text-muted-foreground">{t("homestayDoc.none")}</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="text-sm text-muted-foreground">{t("homestayDoc.none")}</p>
+            {issuePath && (
+              <Button size="sm" className="gap-1.5" onClick={() => issue.mutate()} disabled={issue.isPending}>
+                <FileSignature className="h-4 w-4" /> {issue.isPending ? t("common.saving") : t("homestayDoc.btn_issue", "Issue signing request")}
+              </Button>
+            )}
+          </div>
         ) : (
           <>
             <div className="flex flex-wrap items-center gap-3 text-sm">

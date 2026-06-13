@@ -19,6 +19,7 @@ const CONTEXT_LABEL: Record<string, string> = {
   host_app: "Host Family Application",
   student_app: "Student Application",
   placement_contract: "Homestay Agreement",
+  contract: "Accommodation Agreement",
 };
 
 const CONSENT_TEXT =
@@ -78,6 +79,10 @@ export default function Sign() {
 
   const contextLabel = req ? (CONTEXT_LABEL[req.context_type] ?? "Application") : "Application";
   const isHost = req?.context_type === "host_app";
+  // Regular tenancy/accommodation contracts reuse this page but drop the
+  // Homestay-specific wording.
+  const isContract = req?.context_type === "contract";
+  const docNoun = isContract ? "agreement" : "application";
 
   async function handleSubmit() {
     if (!req) return;
@@ -106,9 +111,9 @@ export default function Sign() {
   return (
     <HomestayLayout title={`${contextLabel} — Signature`}>
       <HsPageHero
-        eyebrow="Million Homestay"
+        eyebrow={isContract ? "MillionStay" : "Million Homestay"}
         title={`${contextLabel} — Signature`}
-        lead="Review your application, then sign below. Your electronic signature is legally binding."
+        lead={`Review your ${docNoun}, then sign below. Your electronic signature is legally binding.`}
       />
 
       <section className="px-6 pb-20">
@@ -143,7 +148,7 @@ export default function Sign() {
                 <CheckCircle2 className="w-9 h-9" style={{ color: HS.brand }} />
               </div>
               <h2 className="mt-5 text-2xl font-bold" style={{ fontFamily: HS_FONT.head, color: HS.darkBrown }}>
-                Thank you — your application is signed
+                Thank you — your {docNoun} is signed
               </h2>
               <p className="mt-2 text-gray-600">
                 Your signature has been recorded. A signed PDF copy has been emailed to you.
@@ -157,7 +162,7 @@ export default function Sign() {
                   className="inline-flex items-center gap-2 rounded-xl border px-5 py-3 text-sm font-semibold transition"
                   style={{ borderColor: HS.mocha, color: HS.darkBrown, fontFamily: HS_FONT.body }}
                 >
-                  {isHost ? "Go to your host portal" : "Back to Million Homestay"}
+                  {isHost ? "Go to your host portal" : isContract ? "Back to MillionStay" : "Back to Million Homestay"}
                   <ArrowRight className="w-4 h-4" />
                 </a>
               </div>
@@ -217,7 +222,7 @@ export default function Sign() {
 
               <div className="mt-7">
                 <HsButton type="button" onClick={handleSubmit} disabled={submitting || !consent || requiredMissing}>
-                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign application"}
+                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : isContract ? "Sign agreement" : "Sign application"}
                 </HsButton>
               </div>
             </div>

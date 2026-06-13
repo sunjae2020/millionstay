@@ -9,7 +9,8 @@ import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
 import { normalizeLang, t } from "../lib/documents/i18n";
 import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
-import { sendDocumentEmail } from "../lib/email";
+import { sendDocumentEmail, resolveDocEmailCopy } from "../lib/email";
+import { getStripe } from "./stripe";
 import {
   CreateInvoiceBody,
   UpdateInvoiceBody,
@@ -319,10 +320,17 @@ async function emailInvoiceDocument(req: import("express").Request, res: import(
   }
 
   const docTypeLabel = t(lang, kind === "receipt" ? "doctype.receipt" : "doctype.invoice");
+  const amountLabel = moneyLabel(docInput.amount, docInput.currency);
+  // Editable email copy (Templates Studio); falls back to the hardcoded note.
+  const fallbackNote = kind === "invoice" && docInput.due_date ? t(lang, "email.note.due", { date: docInput.due_date }) : null;
+  const copy = await resolveDocEmailCopy(kind === "receipt" ? "email.receipt" : "email.invoice", lang, {
+    ref: docInput.invoice_ref, name: docInput.account_name ?? "", amount: amountLabel, due_date: docInput.due_date ?? "",
+  });
   const result = await sendDocumentEmail({
     to, toName: docInput.account_name, lang, docTypeLabel, ref: docInput.invoice_ref,
-    amountLabel: moneyLabel(docInput.amount, docInput.currency),
-    note: kind === "invoice" && docInput.due_date ? t(lang, "email.note.due", { date: docInput.due_date }) : null,
+    amountLabel,
+    note: copy.note ?? fallbackNote,
+    subject: copy.subject,
     pdf, filename: `${docInput.invoice_ref}${kind === "receipt" ? "-receipt" : ""}.pdf`,
   });
 
@@ -379,6 +387,57 @@ async function freezeInvoiceDocument(req: import("express").Request, res: import
 
 router.post("/v1/invoices/:id/freeze", (req, res) => freezeInvoiceDocument(req, res, "invoice"));
 router.post("/v1/invoices/:id/receipt/freeze", (req, res) => freezeInvoiceDocument(req, res, "receipt"));
+
+/**
+ * Create a Stripe Checkout session to collect payment for an invoice and return
+ * the hosted payment URL. metadata.invoice_id lets the Stripe webhook mark the
+ * invoice Paid on completion (see routes/stripe.ts). Issuing a link advances a
+ * Draft invoice to Sent. Mirrors the homestay placement checkout flow.
+ */
+router.post("/v1/invoices/:id/checkout", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const [row] = await db.select().from(invoicesTable).where(eq(invoicesTable.id, id));
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  if (row.status === "Paid") { res.status(400).json({ error: "Invoice is already paid." }); return; }
+  if (row.status === "Void" || row.status === "Archived") { res.status(400).json({ error: "Invoice is not collectable." }); return; }
+
+  const amount = Number(row.amount);
+  if (!(amount > 0)) { res.status(400).json({ error: "Invoice amount must be greater than zero." }); return; }
+
+  const stripe = getStripe();
+  if (!stripe) { res.status(503).json({ error: "Stripe is not configured" }); return; }
+
+  let email: string | null = null;
+  if (row.account_id) {
+    const [acc] = await db.select().from(accountsTable).where(eq(accountsTable.id, row.account_id));
+    email = acc?.account_email ?? null;
+  }
+
+  const webBase = (process.env.PUBLIC_WEB_URL ?? "https://www.millionstay.com").replace(/\/+$/, "");
+  const session = await stripe.checkout.sessions.create({
+    mode: "payment",
+    line_items: [{
+      price_data: {
+        currency: (row.currency || "AUD").toLowerCase(),
+        product_data: { name: `Invoice ${row.invoice_ref}${row.description ? ` — ${row.description}` : ""}`.slice(0, 250) },
+        unit_amount: Math.round(amount * 100),
+      },
+      quantity: 1,
+    }],
+    metadata: { invoice_id: String(id), invoice_ref: row.invoice_ref },
+    customer_email: email || undefined,
+    success_url: `${webBase}/payment-result?status=success&ref=${encodeURIComponent(row.invoice_ref)}`,
+    cancel_url: `${webBase}/payment-result?status=cancelled&ref=${encodeURIComponent(row.invoice_ref)}`,
+  });
+
+  if (row.status === "Draft") {
+    await db.update(invoicesTable).set({ status: "Sent", updated_at: new Date() })
+      .where(and(eq(invoicesTable.id, id), eq(invoicesTable.status, "Draft")));
+  }
+  await logAction({ entityType: "invoice", entityId: id, action: "STATUS_CHANGE", newValue: { checkout_session: session.id } }).catch(() => {});
+  res.json({ success: true, url: session.url });
+});
 
 router.get("/v1/lookup/invoices", async (req, res): Promise<void> => {
   const { q } = req.query as Record<string, string>;

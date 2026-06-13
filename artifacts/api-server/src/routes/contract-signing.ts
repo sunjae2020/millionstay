@@ -10,8 +10,8 @@
 // signature images + legal metadata are captured in JSONB; rendering is wired up
 // per concrete document (host application, placement contract) in later phases.
 import { Router, type IRouter } from "express";
-import { and, eq } from "drizzle-orm";
-import { db, contractSigningRequestsTable, homestayPlacementsTable } from "@workspace/db";
+import { and, eq, inArray } from "drizzle-orm";
+import { db, contractSigningRequestsTable, homestayPlacementsTable, contractsTable } from "@workspace/db";
 import { logAction } from "../utils/auditLog.js";
 import {
   appendAuditEvent,
@@ -22,7 +22,7 @@ import {
   type SigningContextType,
 } from "../services/contractSigning.js";
 import {
-  buildDocForSigning,
+  buildSignedDocumentHtml,
   generateAndStoreSignedPdf,
   processSignedApplication,
   resolveRecipients,
@@ -30,7 +30,6 @@ import {
   refForSigning,
   type RecipientSelection,
 } from "../services/applicationDocs.js";
-import { buildApplicationHtml } from "../lib/documents/applicationPdf.js";
 import { isCloudinaryConfigured, generateSignedUrl } from "../utils/cloudinary.js";
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -187,6 +186,15 @@ contractSigningPublicRouter.post("/v1/public/contract-signing/:token/sign", asyn
         .where(and(eq(homestayPlacementsTable.id, row.context_id), eq(homestayPlacementsTable.status, "HostAccepted")))
         .catch((e) => console.error("[ContractSign] placement advance failed:", e));
     }
+
+    // A signed regular contract advances Draft/Sent → Signed (activation stays
+    // a manual admin step that pre-generates invoices via /v1/contracts/:id/activate).
+    if (row.context_type === "contract") {
+      void db.update(contractsTable)
+        .set({ status: "Signed", signed_at: now, updated_at: now })
+        .where(and(eq(contractsTable.id, row.context_id), inArray(contractsTable.status, ["Draft", "Sent"])))
+        .catch((e) => console.error("[ContractSign] contract advance failed:", e));
+    }
   } catch (err) {
     console.error("[ContractSign] sign error:", err);
     res.status(500).json({ error: "server_error", message: "Failed to process signatures." });
@@ -206,13 +214,13 @@ contractSigningPublicRouter.get("/v1/public/contract-signing/:token/preview", as
       res.status(404).send("Not found");
       return;
     }
-    const doc = await buildDocForSigning(row, { signed: row.status === "signed" });
-    if (!doc) {
+    const html = await buildSignedDocumentHtml(row, { signed: row.status === "signed", forPrint: false });
+    if (!html) {
       res.status(404).send("Document unavailable");
       return;
     }
     res.setHeader("Content-Type", "text/html; charset=utf-8");
-    res.send(buildApplicationHtml(doc, false));
+    res.send(html);
   } catch (err) {
     console.error("[ContractSign] preview error:", err);
     res.status(500).send("Failed to render preview.");

@@ -1,7 +1,7 @@
 import { CheckCircle2, XCircle } from "lucide-react";
 
-// Stripe redirect target for homestay placement payments (success_url / cancel_url).
-// Reads ?status=success|cancelled&ref=HSP-… and shows a simple confirmation.
+// Stripe redirect target for payments (homestay placements + regular invoices).
+// Reads ?status=success|cancelled&ref=… (HSP-… or MS-INV-…) and shows a confirmation.
 export default function PaymentResult() {
   const params = new URLSearchParams(window.location.search);
   const status = params.get("status") ?? "success";
@@ -21,7 +21,7 @@ export default function PaymentResult() {
         </h1>
         <p className="mt-2 text-gray-600">
           {ok
-            ? "Thank you — your homestay payment has been received. A receipt will follow by email."
+            ? "Thank you — your payment has been received. A receipt will follow by email."
             : "Your payment was not completed. You can use your payment link again at any time, or contact us for help."}
         </p>
         {ref && (

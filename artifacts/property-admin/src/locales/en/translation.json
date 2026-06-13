@@ -2780,6 +2780,8 @@
     "toast_contract_issued": "Contract issued for signing",
     "toast_updated": "Placement updated",
     "toast_sent": "Agreement sent",
+    "toast_none_sent": "Nothing was sent",
+    "toast_none_sent_desc": "No recipient was configured for your selection. Set the operations notification email in Settings → Integrations, or choose a recipient with an email on file.",
     "toast_link_copied": "Signing link copied",
     "toast_payment_link": "Stripe checkout opened in a new tab",
     "section_payments": "Payments",
@@ -2843,6 +2845,8 @@
     "history_title": "Email history",
     "history_empty": "No emails sent for this record yet.",
     "toast_sent": "Document sent",
+    "toast_none_sent": "Nothing was sent",
+    "toast_none_sent_desc": "No recipient was configured for your selection. Set the operations notification email in Settings → Integrations, or choose a recipient with an email on file.",
     "toast_link_copied": "Signing link copied",
     "error": "Something went wrong"
   },

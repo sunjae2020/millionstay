@@ -120,6 +120,26 @@ export async function sendDocumentEmail(
   }
 }
 
+/**
+ * Resolve a published email template's cover copy (subject + note) for a
+ * customer-facing document email. Returns {} when no published template exists,
+ * so callers keep their hardcoded fallback. The template body is a plain-text
+ * note sentence (it is escaped into the fixed branded cover, like the
+ * hardcoded notes); the subject is optional. Both support {{var}} placeholders.
+ */
+export async function resolveDocEmailCopy(
+  key: string,
+  locale: string | undefined,
+  vars: Record<string, unknown>,
+): Promise<{ subject?: string; note?: string }> {
+  const tpl = await resolveTemplate({ kind: "email", key, locale });
+  if (!tpl) return {};
+  return {
+    subject: tpl.subject ? renderString(tpl.subject, vars) : undefined,
+    note: tpl.bodyHtml ? renderString(tpl.bodyHtml, vars) : undefined,
+  };
+}
+
 export interface PasswordResetEmailOptions {
   to: string;
   name: string;

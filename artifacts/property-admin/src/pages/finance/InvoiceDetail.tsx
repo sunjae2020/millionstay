@@ -112,6 +112,25 @@ export default function InvoiceDetail() {
     }
   };
 
+  const handleCheckout = async () => {
+    setPdfBusy(true);
+    try {
+      const res = await apiFetch(`/api/v1/invoices/${id}/checkout`, { method: "POST" });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.error ?? `HTTP ${res.status}`);
+      if (body?.url) {
+        await navigator.clipboard?.writeText(body.url).catch(() => {});
+        window.open(body.url, "_blank", "noopener,noreferrer");
+        toast({ title: "Payment link created", description: "Stripe Checkout opened; link copied to clipboard." });
+      }
+      refetch();
+    } catch (err) {
+      toast({ title: "Could not create payment link", description: err instanceof Error ? err.message : "Error", variant: "destructive" });
+    } finally {
+      setPdfBusy(false);
+    }
+  };
+
   const { data: invoice, refetch } = useGetInvoice(Number(id), {
     query: { enabled: !isNew, queryKey: getGetInvoiceQueryKey(Number(id)) },
   });
@@ -225,6 +244,11 @@ export default function InvoiceDetail() {
               {status === "Sent" && (
                 <Button variant="default" className="bg-green-600 hover:bg-green-700" onClick={() => setPayOpen(true)}>
                   {t('invoice.btn_mark_paid')}
+                </Button>
+              )}
+              {(status === "Draft" || status === "Sent") && (
+                <Button variant="outline" disabled={pdfBusy} onClick={handleCheckout}>
+                  {t('invoice.btn_collect_payment', 'Collect payment')}
                 </Button>
               )}
               {(status === "Draft" || status === "Sent") && (
