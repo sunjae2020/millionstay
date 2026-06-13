@@ -17,7 +17,7 @@ import { apiFetch } from "@/lib/apiFetch";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/date";
 
 const FREQ_COLORS: Record<string, string> = {
   Weekly:   "bg-blue-100 text-blue-700",
@@ -56,8 +56,7 @@ async function generateDueInvoices() {
 }
 
 function fmtDate(d: string | null) {
-  if (!d) return "—";
-  try { return format(new Date(d), "dd MMM yyyy"); } catch { return d; }
+  return formatDate(d);
 }
 
 function isOverdue(nextDue: string | null) {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useParams } from "wouter";
+import { formatDateTime } from "@/lib/date";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -308,10 +309,10 @@ export default function TaskDetail() {
               </div>
               {!isNew && task && (
                 <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
-                  <div><span className="font-medium text-foreground">Created:</span> {new Date(task.created_at).toLocaleString()}</div>
-                  <div><span className="font-medium text-foreground">Updated:</span> {new Date(task.updated_at).toLocaleString()}</div>
+                  <div><span className="font-medium text-foreground">Created:</span> {formatDateTime(task.created_at)}</div>
+                  <div><span className="font-medium text-foreground">Updated:</span> {formatDateTime(task.updated_at)}</div>
                   {task.completed_at && (
-                    <div><span className="font-medium text-foreground">Completed:</span> {new Date(task.completed_at).toLocaleString()}</div>
+                    <div><span className="font-medium text-foreground">Completed:</span> {formatDateTime(task.completed_at)}</div>
                   )}
                 </div>
               )}

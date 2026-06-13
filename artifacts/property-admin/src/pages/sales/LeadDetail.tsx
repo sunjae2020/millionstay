@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useParams } from "wouter";
+import { formatDateTime } from "@/lib/date";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -401,7 +402,7 @@ export default function LeadDetail() {
                   <div><span className="text-muted-foreground">Booking ID:</span> <span className="font-medium">{lead.converted_booking_id}</span></div>
                 )}
                 {lead.converted_at && (
-                  <div><span className="text-muted-foreground">Converted At:</span> <span className="font-medium">{new Date(lead.converted_at).toLocaleString()}</span></div>
+                  <div><span className="text-muted-foreground">Converted At:</span> <span className="font-medium">{formatDateTime(lead.converted_at)}</span></div>
                 )}
               </div>
             </div>
@@ -446,8 +447,8 @@ export default function LeadDetail() {
               </div>
               {!isNew && lead && (
                 <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
-                  <div><span className="font-medium text-foreground">Created:</span> {new Date(lead.created_at).toLocaleString()}</div>
-                  <div><span className="font-medium text-foreground">Updated:</span> {new Date(lead.updated_at).toLocaleString()}</div>
+                  <div><span className="font-medium text-foreground">Created:</span> {formatDateTime(lead.created_at)}</div>
+                  <div><span className="font-medium text-foreground">Updated:</span> {formatDateTime(lead.updated_at)}</div>
                 </div>
               )}
             </div>

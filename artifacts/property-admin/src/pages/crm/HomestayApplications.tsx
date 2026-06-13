@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
+import { formatDate } from "@/lib/date";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -152,7 +153,7 @@ export default function HomestayApplications() {
                   <TableCell className="text-sm text-muted-foreground">{a.email}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{a.suburb || <span className="text-muted-foreground/40">—</span>}</TableCell>
                   <TableCell><HomestayStatusBadge status={a.status} /></TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{a.created_at ? new Date(a.created_at).toLocaleDateString() : "—"}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{a.created_at ? formatDate(a.created_at) : "—"}</TableCell>
                   <TableCell>
                     {a.landing_active ? (
                       <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700">

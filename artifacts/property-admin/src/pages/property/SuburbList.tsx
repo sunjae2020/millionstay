@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useListSuburbs, useDeleteSuburb, getListSuburbsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2, Archive, X, AlertTriangle, Loader2 } from "lucide-react";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/date";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
 import {
   AlertDialog,
@@ -191,7 +191,7 @@ export default function SuburbList() {
                     <td className="px-4 py-3 text-muted-foreground">{suburb.country_code}</td>
                     <td className="px-4 py-3"><StatusBadge status={suburb.status} /></td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">
-                      {format(new Date(suburb.created_at), "dd MMM yyyy")}
+                      {formatDate(suburb.created_at)}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">

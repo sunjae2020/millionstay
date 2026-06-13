@@ -14,7 +14,7 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2, Archive, X, AlertTriangle, Loader2 } from "lucide-react";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/date";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
 import {
   AlertDialog,
@@ -215,7 +215,7 @@ export default function SpaceList() {
                     <td className="px-4 py-3 text-muted-foreground text-xs">{space.policy_name ?? "—"}</td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">{space.parent_space_name ?? "—"}</td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">
-                      {format(new Date(space.created_at), "dd MMM yyyy")}
+                      {formatDate(space.created_at)}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { formatDateTime as fmtDateTime } from "@/lib/date";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -43,12 +44,7 @@ function formatBytes(n: number | null): string {
 }
 
 function formatDateTime(iso: string | null): string {
-  if (!iso) return "—";
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return iso;
-  }
+  return fmtDateTime(iso);
 }
 
 function formatNumber(n: number | null): string {

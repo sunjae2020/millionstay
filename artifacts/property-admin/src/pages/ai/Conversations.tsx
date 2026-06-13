@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
+import { formatDateTime } from "@/lib/date";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -70,7 +71,7 @@ export default function Conversations() {
                 </div>
                 <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
                   {c.language && <Badge variant="outline" className="text-xs">{c.language}</Badge>}
-                  <span>{new Date(c.last_message_at ?? c.created_at).toLocaleString()}</span>
+                  <span>{formatDateTime(c.last_message_at ?? c.created_at)}</span>
                 </div>
               </Card>
             ))

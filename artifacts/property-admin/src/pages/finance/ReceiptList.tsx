@@ -10,7 +10,7 @@ import { Search, Download, CheckCircle2 } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
-import { format } from "date-fns";
+import { formatDate, formatDateTime } from "@/lib/date";
 
 const STATUS_COLORS: Record<string, string> = {
   Paid:  "bg-green-100 text-green-700",
@@ -38,13 +38,11 @@ async function fetchReceipts(q?: string, method?: string) {
 }
 
 function fmtDate(d: string | Date | null) {
-  if (!d) return "—";
-  try { return format(new Date(d), "dd MMM yyyy"); } catch { return String(d); }
+  return formatDate(d);
 }
 
 function fmtDateTime(d: string | Date | null) {
-  if (!d) return "—";
-  try { return format(new Date(d), "dd MMM yyyy, HH:mm"); } catch { return String(d); }
+  return formatDateTime(d);
 }
 
 export default function ReceiptList() {

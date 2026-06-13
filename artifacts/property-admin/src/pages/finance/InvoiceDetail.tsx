@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
+import { formatDate } from "@/lib/date";
 import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
@@ -321,7 +322,7 @@ export default function InvoiceDetail() {
                 </div>
                 <div>
                   <span className="text-muted-foreground">{t('invoice.col_payment_date')}:</span>
-                  <p className="font-medium mt-1">{invoice.paid_at ? new Date(invoice.paid_at).toLocaleDateString() : "—"}</p>
+                  <p className="font-medium mt-1">{invoice.paid_at ? formatDate(invoice.paid_at) : "—"}</p>
                 </div>
               </div>
             </div>

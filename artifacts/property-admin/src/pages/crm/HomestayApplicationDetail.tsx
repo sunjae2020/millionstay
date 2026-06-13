@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams } from "wouter";
 import { Link } from "wouter";
+import { formatDate, formatDateTime } from "@/lib/date";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -453,7 +454,7 @@ export default function HomestayApplicationDetail() {
         <Section title={t("homestay.section_agreement")}>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <Field label={t("homestay.f_agreement_accepted")} value={<YesNo value={app.agreement_accepted} />} />
-            <Field label={t("homestay.f_agreement_at")} value={app.agreement_accepted_at ? new Date(app.agreement_accepted_at).toLocaleString() : null} />
+            <Field label={t("homestay.f_agreement_at")} value={app.agreement_accepted_at ? formatDateTime(app.agreement_accepted_at) : null} />
             <Field label={t("homestay.f_signature")} value={app.signature_name} />
           </div>
         </Section>
@@ -526,7 +527,7 @@ export default function HomestayApplicationDetail() {
                   <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{d.file_name}</p>
-                    <p className="text-xs text-muted-foreground">{d.doc_type}{d.created_at ? ` · ${new Date(d.created_at).toLocaleDateString()}` : ""}</p>
+                    <p className="text-xs text-muted-foreground">{d.doc_type}{d.created_at ? ` · ${formatDate(d.created_at)}` : ""}</p>
                   </div>
                 </li>
               ))}

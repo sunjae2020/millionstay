@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Plus, FileText } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/date";
 
 const STATUS_COLORS: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-500",
@@ -21,8 +21,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 function fmtDate(d: string | null) {
-  if (!d) return "—";
-  try { return format(new Date(d), "dd MMM yyyy"); } catch { return d; }
+  return formatDate(d);
 }
 
 async function fetchQuotes(q: string): Promise<any[]> {

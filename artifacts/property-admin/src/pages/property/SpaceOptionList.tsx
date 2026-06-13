@@ -13,7 +13,7 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2, Archive, X, AlertTriangle, Loader2 } from "lucide-react";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/date";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
 import {
   AlertDialog,
@@ -172,7 +172,7 @@ export default function SpaceOptionList() {
                     <td className="px-4 py-3 text-muted-foreground">{opt.category ?? "—"}</td>
                     <td className="px-4 py-3"><StatusBadge status={opt.status} /></td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">
-                      {format(new Date(opt.created_at), "dd MMM yyyy")}
+                      {formatDate(opt.created_at)}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">

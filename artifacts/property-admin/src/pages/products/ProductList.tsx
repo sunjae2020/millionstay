@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
+import { formatDate } from "@/lib/date";
 
 const PROMO_PERIOD: Record<number, string> = {
   1: "Weekly",
@@ -29,9 +30,7 @@ const PROMO_PERIOD: Record<number, string> = {
 };
 
 function fmtDate(val: string | null | undefined): string {
-  if (!val) return "—";
-  const d = new Date(val);
-  return d.toLocaleDateString("en-AU", { day: "2-digit", month: "short", year: "numeric" });
+  return formatDate(val);
 }
 
 type Product = {

@@ -10,7 +10,7 @@ import { Search, Eye, FileDown, FileText, Receipt, FileSignature, ExternalLink, 
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/date";
 
 interface HubDocument {
   doc_type: "Invoice" | "Receipt" | "Contract";
@@ -43,8 +43,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 function fmtDate(d: string | null) {
-  if (!d) return "—";
-  try { return format(new Date(d), "dd MMM yyyy"); } catch { return d; }
+  return formatDate(d);
 }
 
 async function fetchDocuments(q: string, type: string): Promise<HubDocument[]> {

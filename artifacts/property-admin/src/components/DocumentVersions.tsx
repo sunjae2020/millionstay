@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { History, FileDown, Lock } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
+import { formatDateTime } from "@/lib/date";
 
 interface Snapshot {
   id: string;
@@ -90,7 +90,7 @@ export function DocumentVersions({
                     <span className="font-mono font-semibold text-[#E8621A]">v{s.version ?? "?"}</span>
                     <span className="text-muted-foreground ml-2">{s.file_name}</span>
                     <div className="text-xs text-muted-foreground">
-                      {s.created_at ? format(new Date(s.created_at), "dd MMM yyyy, HH:mm") : "—"}
+                      {s.created_at ? formatDateTime(s.created_at) : "—"}
                       {" · "}{(s.file_size / 1024).toFixed(0)} KB
                     </div>
                   </div>
