@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useParams, Link } from "wouter";
+import { formatDateTime } from "@/lib/date";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -263,7 +264,7 @@ export default function HomestayStudentRequestDetail() {
           </div>
           {req.reviewed_at && (
             <div className="text-xs text-muted-foreground">
-              <span className="font-medium text-foreground">{t("homestayStudent.f_reviewed_at")}:</span> {new Date(req.reviewed_at).toLocaleString()}
+              <span className="font-medium text-foreground">{t("homestayStudent.f_reviewed_at")}:</span> {formatDateTime(req.reviewed_at)}
             </div>
           )}
           {req.notes && (
@@ -370,7 +371,7 @@ export default function HomestayStudentRequestDetail() {
               <Field label={t("homestayStudent.f_guardian_relationship")} value={req.guardian_relationship} />
               <Field label={t("homestayStudent.f_guardian_email")} value={req.guardian_email} />
               <Field label={t("homestayStudent.f_guardian_phone")} value={req.guardian_phone} />
-              <Field label={t("homestayStudent.f_guardian_consent_at")} value={req.guardian_consent_at ? new Date(req.guardian_consent_at).toLocaleString() : null} />
+              <Field label={t("homestayStudent.f_guardian_consent_at")} value={req.guardian_consent_at ? formatDateTime(req.guardian_consent_at) : null} />
             </div>
           </Section>
         )}
@@ -446,7 +447,7 @@ export default function HomestayStudentRequestDetail() {
         <Section title={t("homestayStudent.section_terms")}>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <Field label={t("homestayStudent.f_terms_accepted")} value={<YesNoTag value={req.terms_accepted} />} />
-            <Field label={t("homestayStudent.f_terms_accepted_at")} value={req.terms_accepted_at ? new Date(req.terms_accepted_at).toLocaleString() : null} />
+            <Field label={t("homestayStudent.f_terms_accepted_at")} value={req.terms_accepted_at ? formatDateTime(req.terms_accepted_at) : null} />
           </div>
         </Section>
       </div>

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
-import { format } from "date-fns";
+import { formatDateTime } from "@/lib/date";
 import { Search, HeadphonesIcon, ChevronRight, Clock, AlertCircle, CheckCircle2, XCircle, RefreshCw, Archive, X, AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
@@ -284,7 +284,7 @@ export default function CsTicketList() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-xs text-gray-400 hidden md:table-cell whitespace-nowrap">
-                          {format(new Date(ticket.updated_at), "dd/MM/yy HH:mm")}
+                          {formatDateTime(ticket.updated_at)}
                         </td>
                         <td className="px-4 py-3">
                           <ChevronRight className="h-4 w-4 text-gray-300" />

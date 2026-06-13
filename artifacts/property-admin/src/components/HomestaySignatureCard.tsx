@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { FileText, FileSignature, Send, Copy, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
+import { formatDateTime } from "@/lib/date";
 
 const SIGNING_API = "/api/v1/contract-signing";
 const PUBLIC_SIGNING = "/api/v1/public/contract-signing";
@@ -83,7 +84,7 @@ export function HomestaySignatureCard({
               <span className={`font-medium ${signed ? "text-green-700" : "text-amber-700"}`}>
                 {signed ? t("homestayDoc.signed") : t("homestayDoc.pending")}
               </span>
-              {latest.signed_at && <span className="text-xs text-muted-foreground">· {new Date(latest.signed_at).toLocaleString()}</span>}
+              {latest.signed_at && <span className="text-xs text-muted-foreground">· {formatDateTime(latest.signed_at)}</span>}
             </div>
             <div className="flex flex-wrap gap-2">
               <a href={`${PUBLIC_SIGNING}/${latest.token}/preview`} target="_blank" rel="noopener noreferrer">
@@ -120,7 +121,7 @@ export function HomestaySignatureCard({
             <ul className="space-y-1">
               {logs.map((l) => (
                 <li key={l.id} className="text-xs text-muted-foreground flex items-center gap-2">
-                  <span className="tabular-nums">{new Date(l.sent_at).toLocaleString()}</span>
+                  <span className="tabular-nums">{formatDateTime(l.sent_at)}</span>
                   <span className="text-foreground">{l.to_email}</span>
                   <span className={l.status === "Sent" ? "text-green-600" : "text-red-600"}>· {l.status}</span>
                 </li>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
+import { formatDate } from "@/lib/date";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -142,7 +143,7 @@ export default function HomestayPlacements() {
                   <TableCell className="text-sm text-muted-foreground">{r.host_name || "—"}{r.host_suburb ? ` · ${r.host_suburb}` : ""}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{r.move_in_date || <span className="text-muted-foreground/40">—</span>}</TableCell>
                   <TableCell><PlacementStatusBadge status={r.status} /></TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{r.created_at ? new Date(r.created_at).toLocaleDateString() : "—"}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{r.created_at ? formatDate(r.created_at) : "—"}</TableCell>
                   <TableCell>
                     <Link href={`/account/homestay-placements/${r.id}`}>
                       <Button size="sm" variant="ghost" className="gap-1.5"><Eye className="h-3.5 w-3.5" /> {t("common.view")}</Button>

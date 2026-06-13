@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
+import { formatDate, formatDateTime } from "@/lib/date";
 import {
   ArrowLeft, Send, ImageIcon, X, Loader2, Clock, CheckCircle2, XCircle,
   AlertCircle, User, Calendar, Tag, Flag, RefreshCw, Shield, Eye, EyeOff
@@ -232,7 +232,7 @@ export default function CsTicketDetail() {
                 </div>
                 <h1 className="text-lg font-bold text-gray-900">{ticket.subject}</h1>
                 <p className="text-xs text-gray-400 mt-1">
-                  {t('common.created_at')}: {format(new Date(ticket.created_at), "dd MMM yyyy, HH:mm")} · {t('common.updated_at')}: {format(new Date(ticket.updated_at), "dd MMM yyyy, HH:mm")}
+                  {t('common.created_at')}: {formatDateTime(ticket.created_at)} · {t('common.updated_at')}: {formatDateTime(ticket.updated_at)}
                 </p>
               </div>
             </div>
@@ -254,7 +254,7 @@ export default function CsTicketDetail() {
                         </div>
                       )}
                       <span className="text-xs text-gray-400">
-                        {isAdmin ? t('csticket.sender_admin', 'You (Admin)') : ticket.guest_name ?? t('csticket.sender_guest', 'Guest')} · {format(new Date(msg.created_at), "dd/MM/yy HH:mm")}
+                        {isAdmin ? t('csticket.sender_admin', 'You (Admin)') : ticket.guest_name ?? t('csticket.sender_guest', 'Guest')} · {formatDateTime(msg.created_at)}
                         {isInternalMsg && <span className="ml-1.5 text-amber-500">({t('csticket.internal_note', 'Internal Note')})</span>}
                       </span>
                     </div>
@@ -373,8 +373,8 @@ export default function CsTicketDetail() {
               <p className="text-xs text-gray-500 mt-0.5">{ticket.booking_status}</p>
               {ticket.check_in_date && (
                 <p className="text-xs text-gray-400 mt-1">
-                  {format(new Date(ticket.check_in_date), "dd/MM/yyyy")} →{" "}
-                  {ticket.check_out_date ? format(new Date(ticket.check_out_date), "dd/MM/yyyy") : "—"}
+                  {formatDate(ticket.check_in_date)} →{" "}
+                  {ticket.check_out_date ? formatDate(ticket.check_out_date) : "—"}
                 </p>
               )}
             </div>

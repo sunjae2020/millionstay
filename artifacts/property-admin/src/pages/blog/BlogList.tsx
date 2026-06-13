@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
+import { formatDate as fmtDate } from "@/lib/date";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Layout, PageHeader } from "@/components/Layout";
@@ -96,8 +97,7 @@ export default function BlogList() {
   };
 
   function formatDate(dateStr: string | null) {
-    if (!dateStr) return "—";
-    return new Date(dateStr).toLocaleDateString("en-AU", { day: "2-digit", month: "short", year: "numeric" });
+    return fmtDate(dateStr);
   }
 
   return (

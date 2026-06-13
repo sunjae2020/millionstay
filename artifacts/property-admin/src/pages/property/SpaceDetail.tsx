@@ -48,6 +48,7 @@ import { ChannelSyncPanel } from "@/components/ChannelSyncPanel";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { format, parseISO, startOfMonth, endOfMonth, addMonths, getDay } from "date-fns";
+import { formatDateTime } from "@/lib/date";
 import { AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface SpaceForm {
@@ -954,7 +955,7 @@ export default function SpaceDetail() {
                               )}
                               <span className="text-xs text-muted-foreground">
                                 {l.last_import_at
-                                  ? `${t("space.ch_last_synced")}: ${format(parseISO(l.last_import_at), "yyyy-MM-dd HH:mm")}`
+                                  ? `${t("space.ch_last_synced")}: ${formatDateTime(l.last_import_at)}`
                                   : t("space.ch_never_synced")}
                               </span>
                             </div>
@@ -991,7 +992,7 @@ export default function SpaceDetail() {
                               {t("space.ch_push_rates")}
                             </Button>
                             {l.last_export_at && (
-                              <span className="text-[11px] text-muted-foreground">{t("space.ch_last_pushed")}: {format(parseISO(l.last_export_at), "yyyy-MM-dd HH:mm")}</span>
+                              <span className="text-[11px] text-muted-foreground">{t("space.ch_last_pushed")}: {formatDateTime(l.last_export_at)}</span>
                             )}
                             <Button type="button" size="sm" variant="ghost" className="text-destructive hover:text-destructive ml-auto" disabled={busyListingId === l.id} onClick={() => setDeleteListingId(l.id)}>
                               <Trash2 className="h-3.5 w-3.5" />

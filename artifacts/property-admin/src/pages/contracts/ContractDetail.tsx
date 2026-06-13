@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
+import { formatDate } from "@/lib/date";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -437,8 +438,8 @@ export default function ContractDetail() {
               <div className="flex items-center gap-3 flex-wrap">
                 <span className="text-sm font-medium text-muted-foreground">Status:</span>
                 <Badge className={statusColors[status] ?? ""}>{status}</Badge>
-                {contract.sent_at && <span className="text-xs text-muted-foreground">Sent: {new Date(contract.sent_at).toLocaleDateString()}</span>}
-                {contract.signed_at && <span className="text-xs text-muted-foreground">Signed: {new Date(contract.signed_at).toLocaleDateString()}</span>}
+                {contract.sent_at && <span className="text-xs text-muted-foreground">Sent: {formatDate(contract.sent_at)}</span>}
+                {contract.signed_at && <span className="text-xs text-muted-foreground">Signed: {formatDate(contract.signed_at)}</span>}
               </div>
               {fsmActions()}
             </div>

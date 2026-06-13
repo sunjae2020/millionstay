@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { formatDateTime } from "@/lib/date";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -197,7 +198,7 @@ function CredentialRow({ cred, onChanged, onRotated }: {
         ))}
       </div>
       <div className="text-xs text-muted-foreground">
-        Last used: {cred.last_used_at ? new Date(cred.last_used_at).toLocaleString() : "never"}
+        Last used: {cred.last_used_at ? formatDateTime(cred.last_used_at) : "never"}
       </div>
       {!revoked && (
         <div className="flex items-center justify-end gap-2 pt-1">

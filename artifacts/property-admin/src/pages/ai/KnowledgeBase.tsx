@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { formatDateTime } from "@/lib/date";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -93,7 +94,7 @@ export default function KnowledgeBase() {
                     {d.language && <Badge variant="outline" className="text-xs">{d.language}</Badge>}
                     <Badge variant={d.status === "active" ? "default" : "secondary"} className="text-xs">{d.status}</Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground">{t("ai.kb.updated", { date: new Date(d.updated_at).toLocaleString() })}</p>
+                  <p className="text-xs text-muted-foreground">{t("ai.kb.updated", { date: formatDateTime(d.updated_at) })}</p>
                 </div>
                 <div className="flex items-center gap-1">
                   <Button variant="ghost" size="sm" onClick={() => toggleStatus.mutate(d)} title={d.status === "active" ? t("ai.kb.archive") : t("ai.kb.reactivate")}>

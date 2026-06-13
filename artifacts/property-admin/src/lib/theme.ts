@@ -10,6 +10,9 @@ export interface ThemeSettings {
   favicon_dark: string | null;
   custom_css: string | null;
   dark_mode: boolean;
+  date_format: string;
+  currency: string;
+  currency_position: string;
 }
 
 function hexToHsl(hex: string): { h: number; s: number; l: number } | null {

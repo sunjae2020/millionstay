@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useParams, Link } from "wouter";
+import { formatDate } from "@/lib/date";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
@@ -514,7 +515,7 @@ export default function BookingDetail() {
                             </span>
                           </td>
                           <td className="px-4 py-3 text-muted-foreground">{doc.expiry_date ?? "—"}</td>
-                          <td className="px-4 py-3 text-muted-foreground">{new Date(doc.created_at).toLocaleDateString()}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{formatDate(doc.created_at)}</td>
                           <td className="px-4 py-3">
                             <div className="flex gap-1">
                               {doc.verified_status !== "Verified" && (

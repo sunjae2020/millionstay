@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useLocation, useParams } from "wouter";
+import { formatDateTime } from "@/lib/date";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
@@ -219,7 +220,7 @@ export default function ServiceHostDetail() {
             </div>
             {!isNew && (
               <>
-                <div><Label className="text-muted-foreground text-xs">{t("common.created_at")}</Label><p className="text-sm mt-1">{host?.created_at ? new Date(host.created_at).toLocaleString() : "—"}</p></div>
+                <div><Label className="text-muted-foreground text-xs">{t("common.created_at")}</Label><p className="text-sm mt-1">{host?.created_at ? formatDateTime(host.created_at) : "—"}</p></div>
               </>
             )}
           </div>

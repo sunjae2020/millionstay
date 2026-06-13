@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { formatDateTime } from "@/lib/date";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,8 +78,7 @@ async function triggerSync() {
 }
 
 function fmt(d: string | null) {
-  if (!d) return "—";
-  try { return new Date(d).toLocaleString(); } catch { return d; }
+  return formatDateTime(d);
 }
 
 export default function ExchangeRateList() {

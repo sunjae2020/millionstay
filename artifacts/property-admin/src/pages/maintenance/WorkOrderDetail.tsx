@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useParams, useLocation } from "wouter";
+import { formatDate } from "@/lib/date";
 import { useForm, Controller } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -305,7 +306,7 @@ export default function WorkOrderDetail() {
             <div className="border rounded-lg bg-green-50 p-6">
               <h2 className="text-sm font-semibold uppercase text-green-600 tracking-wide mb-2">{t('workorder.section_completed', 'Completed')}</h2>
               <p className="text-sm text-green-700">
-                {t('workorder.completed_on', 'Completed on')} {new Date(wo.completed_at).toLocaleDateString()}
+                {t('workorder.completed_on', 'Completed on')} {formatDate(wo.completed_at)}
                 {wo.cost != null && ` — ${t('workorder.final_cost', 'Final cost')}: $${wo.cost.toFixed(2)} AUD`}
               </p>
             </div>

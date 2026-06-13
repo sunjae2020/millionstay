@@ -5,7 +5,7 @@ import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, CheckCircle2, AlertCircle, Trash2 } from "lucide-react";
-import { format } from "date-fns";
+import { formatDateTime } from "@/lib/date";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -108,7 +108,7 @@ export default function BulkPhotoUploadList() {
                 sessions.map((session) => (
                   <tr key={session.id} className="hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3 font-medium">
-                      {format(new Date(session.date), "dd MMM yyyy, HH:mm")}
+                      {formatDateTime(session.date)}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">
                       {session.spacesCount} space{session.spacesCount !== 1 ? "s" : ""}
