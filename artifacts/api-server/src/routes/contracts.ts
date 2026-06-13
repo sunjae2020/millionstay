@@ -10,6 +10,7 @@ import { normalizeLang, t } from "../lib/documents/i18n";
 import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
 import { sendDocumentEmail, resolveDocEmailCopy } from "../lib/email";
 import { resolveTemplate } from "../lib/documents/templateEngine";
+import { createSigningRequest, type SignerSpec } from "../services/contractSigning";
 import { emailLogsTable } from "@workspace/db";
 
 // ─── Invoice ref generator (returns a factory that increments safely) ────────
@@ -358,7 +359,7 @@ router.get("/v1/contracts/:id", async (req, res): Promise<void> => {
 });
 
 /** Build the branded-document input for a contract (enriched names + fields). */
-async function buildContractDocInput(id: number): Promise<{ doc: ContractDocInput; tenantAccountId: number | null } | null> {
+export async function buildContractDocInput(id: number): Promise<{ doc: ContractDocInput; tenantAccountId: number | null } | null> {
   const [row] = await db.select().from(contractsTable).where(eq(contractsTable.id, id));
   if (!row) return null;
   const [c] = await enrichContracts([row]);
@@ -569,6 +570,44 @@ router.post("/v1/contracts/:id/sign", async (req, res): Promise<void> => {
   await logAction({ entityType: "contract", entityId: id, action: "STATUS_CHANGE", newValue: { status: "Signed" } });
   const [result] = await enrichContracts([row]);
   res.json(result);
+});
+
+/**
+ * Issue an e-signature request for a contract. Creates a contract_signing_requests
+ * row (context_type="contract") with the tenant (required) and landlord (optional)
+ * as signers, and returns the public signing token + URL. The tenant signs at
+ * /sign/:token; on signing the contract advances Draft/Sent → Signed and a signed
+ * PDF is generated + emailed (see contract-signing.ts / applicationDocs.ts).
+ */
+router.post("/v1/contracts/:id/issue-signing", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const [contract] = await db.select().from(contractsTable).where(eq(contractsTable.id, id));
+  if (!contract) { res.status(404).json({ error: "NOT_FOUND" }); return; }
+
+  const signers: SignerSpec[] = [];
+  if (contract.tenant_account_id) {
+    const [tenant] = await db.select().from(accountsTable).where(eq(accountsTable.id, contract.tenant_account_id));
+    if (tenant?.account_email) signers.push({ role: "tenant", name: tenant.name ?? "Tenant", email: tenant.account_email, required: true });
+  }
+  if (contract.landlord_account_id) {
+    const [landlord] = await db.select().from(accountsTable).where(eq(accountsTable.id, contract.landlord_account_id));
+    if (landlord?.account_email) signers.push({ role: "landlord", name: landlord.name ?? "Landlord", email: landlord.account_email, required: false });
+  }
+  if (!signers.some((s) => s.required)) {
+    res.status(400).json({ error: "The tenant account needs an email address before a signing request can be issued." });
+    return;
+  }
+
+  const result = await createSigningRequest({
+    contextType: "contract", contextId: id, signers,
+    expiryDays: req.body?.expiry_days ? Number(req.body.expiry_days) : undefined,
+  });
+  await logAction({
+    entityType: "contract", entityId: id, action: "CREATE",
+    newValue: { issued_signing_request_id: result.id, signers: signers.map((s) => ({ role: s.role, email: s.email })) },
+  }).catch(() => {});
+  res.status(201).json({ id: result.id, token: result.token, signing_url: result.signingUrl, expires_at: result.expiresAt });
 });
 
 router.post("/v1/contracts/:id/activate", async (req, res): Promise<void> => {

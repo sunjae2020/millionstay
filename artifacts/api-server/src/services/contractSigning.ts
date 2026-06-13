@@ -11,7 +11,7 @@ import { randomBytes } from "crypto";
 import { sql } from "drizzle-orm";
 import { db, contractSigningRequestsTable } from "@workspace/db";
 
-export type SigningContextType = "host_app" | "student_app" | "placement_contract";
+export type SigningContextType = "host_app" | "student_app" | "placement_contract" | "contract";
 
 export interface SignerSpec {
   role: string;

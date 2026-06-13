@@ -24,6 +24,7 @@ import { ArrowLeft, Save, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Ey
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentVersions } from "@/components/DocumentVersions";
+import { HomestaySignatureCard } from "@/components/HomestaySignatureCard";
 
 const CURRENCIES = ["AUD", "USD", "SGD", "MYR", "GBP"];
 const statusColors: Record<string, string> = {
@@ -446,6 +447,16 @@ export default function ContractDetail() {
           )}
 
           <div className="grid grid-cols-1 gap-6 max-w-4xl">
+            {/* E-signature */}
+            {!isNew && contract && (
+              <HomestaySignatureCard
+                contextType="contract"
+                contextId={Number(id)}
+                entityType="contract"
+                issuePath={`/api/v1/contracts/${id}/issue-signing`}
+              />
+            )}
+
             {/* General */}
             <div className="border rounded-lg bg-white p-4 sm:p-6">
               <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">{t('contract.section_general')}</h2>

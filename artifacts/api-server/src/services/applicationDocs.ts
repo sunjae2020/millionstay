@@ -11,6 +11,7 @@ import {
   homestayStudentRequestsTable,
   homestayHostApplicationsTable,
   homestayPlacementsTable,
+  contractsTable,
   accountsTable,
   emailLogsTable,
 } from "@workspace/db";
@@ -22,6 +23,9 @@ import {
   placementToDoc,
   type ApplicationDocInput,
 } from "../lib/documents/applicationPdf.js";
+import { buildContractHtml, type ContractSignature } from "../lib/documents/contractDocument.js";
+import { resolveCompanyInfo } from "../lib/documents/companyInfo.js";
+import { buildContractDocInput } from "../routes/contracts.js";
 import { isCloudinaryConfigured, uploadPrivateToCloudinary } from "../utils/cloudinary.js";
 import { sendDocumentEmail } from "../lib/email.js";
 import { resolveTemplate } from "../lib/documents/templateEngine.js";
@@ -76,7 +80,47 @@ export async function buildDocForSigning(
     const termsTpl = await resolveTemplate({ kind: "contract", key: "homestay_placement_terms", locale: "en" });
     return placementToDoc(placement, host ?? null, student ?? null, view, { ...opts, termsText: termsTpl?.bodyHtml || undefined });
   }
+  // "contract" (regular tenancy/accommodation agreement) is rendered through its
+  // own builder (buildContractHtml), not the ApplicationDocInput shell — see
+  // buildSignedDocumentHtml. buildDocForSigning is only used by the application
+  // shell paths, so it returns null here.
   return null;
+}
+
+/** Map contract_signing_requests.signatures JSONB → ContractSignature[]. */
+function toContractSignatures(raw: unknown): ContractSignature[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((s: any) => ({
+    role: String(s?.role ?? ""),
+    name: String(s?.name ?? ""),
+    email: s?.email ?? null,
+    signatureImage: s?.signatureImage ?? null,
+    serverSignedAt: s?.serverSignedAt ?? s?.signedAt ?? null,
+    ip: s?.ip ?? null,
+    consentText: s?.consent?.text ?? null,
+  }));
+}
+
+/**
+ * Render the document for a signing request to HTML. Homestay applications use
+ * the ApplicationDocInput shell; a regular "contract" uses buildContractHtml
+ * (reusing the same renderer as /v1/contracts/:id/pdf, with drawn signatures
+ * embedded once signed). Returns null when the underlying record is gone.
+ */
+export async function buildSignedDocumentHtml(
+  signing: Pick<SigningRow, "context_type" | "context_id" | "status" | "signers" | "signatures" | "signed_at">,
+  opts: { signed?: boolean; forPrint?: boolean } = {},
+): Promise<string | null> {
+  if (signing.context_type === "contract") {
+    const built = await buildContractDocInput(signing.context_id);
+    if (!built) return null;
+    const signed = opts.signed ?? signing.status === "signed";
+    const sigs = toContractSignatures(signing.signatures);
+    const doc = { ...built.doc, signed, signatures: sigs.length ? sigs : null };
+    return buildContractHtml(doc, await resolveCompanyInfo(), opts.forPrint ?? true);
+  }
+  const doc = await buildDocForSigning(signing, { signed: opts.signed });
+  return doc ? buildApplicationHtml(doc, opts.forPrint ?? true) : null;
 }
 
 /**
@@ -89,10 +133,10 @@ export async function generateAndStoreSignedPdf(
   signing: SigningRow,
 ): Promise<{ pdf: Buffer | null; pdfUrl: string | null }> {
   try {
-    const doc = await buildDocForSigning(signing, { signed: true });
-    if (!doc) return { pdf: null, pdfUrl: null };
+    const html = await buildSignedDocumentHtml(signing, { signed: true, forPrint: true });
+    if (!html) return { pdf: null, pdfUrl: null };
 
-    const pdf = await htmlToPdf(buildApplicationHtml(doc));
+    const pdf = await htmlToPdf(html);
 
     let pdfUrl: string | null = signing.pdf_url ?? null;
     if (isCloudinaryConfigured()) {
@@ -143,6 +187,14 @@ export async function resolveRecipients(signing: SigningRow): Promise<ResolvedRe
       const [row] = await db.select().from(homestayHostApplicationsTable)
         .where(eq(homestayHostApplicationsTable.id, signing.context_id)).limit(1);
       if (row?.email) out.applicant = { email: row.email, name: `${row.first_name} ${row.last_name}`.trim() };
+    } else if (signing.context_type === "contract") {
+      const [row] = await db.select().from(contractsTable)
+        .where(eq(contractsTable.id, signing.context_id)).limit(1);
+      if (row?.tenant_account_id) {
+        const [tenant] = await db.select().from(accountsTable)
+          .where(eq(accountsTable.id, row.tenant_account_id)).limit(1);
+        if (tenant?.account_email) out.applicant = { email: tenant.account_email, name: tenant.name };
+      }
     } else if (signing.context_type === "placement_contract") {
       const [placement] = await db.select().from(homestayPlacementsTable)
         .where(eq(homestayPlacementsTable.id, signing.context_id)).limit(1);
@@ -175,6 +227,7 @@ export async function resolveRecipients(signing: SigningRow): Promise<ResolvedRe
 function logMeta(contextType: string): { entityType: string; templateCode: string } {
   if (contextType === "host_app") return { entityType: "homestay_host_application", templateCode: "document.homestay_host_application" };
   if (contextType === "placement_contract") return { entityType: "homestay_placement", templateCode: "document.homestay_placement_contract" };
+  if (contextType === "contract") return { entityType: "contract", templateCode: "document.contract" };
   return { entityType: "homestay_student_request", templateCode: "document.homestay_student_application" };
 }
 
@@ -188,6 +241,7 @@ export async function emailApplicationPdf(
   const docTypeLabel =
     signing.context_type === "host_app" ? "Host Family Application"
     : signing.context_type === "placement_contract" ? "Homestay Placement Agreement"
+    : signing.context_type === "contract" ? "Accommodation Agreement"
     : "Student Application";
   const { entityType, templateCode } = logMeta(signing.context_type);
   const filename = `${ref}.pdf`;
@@ -213,7 +267,9 @@ export async function emailApplicationPdf(
         pdf,
         filename,
         lang: "en",
-        note: "A signed copy of your homestay application is attached as a PDF.",
+        note: signing.context_type === "contract"
+          ? "A signed copy of your agreement is attached as a PDF."
+          : "A signed copy of your homestay application is attached as a PDF.",
       });
       if (result.ok) sent.push(t.email);
       // Record the send in the per-record email history (best-effort).
@@ -267,6 +323,11 @@ export async function refForSigning(signing: Pick<SigningRow, "context_type" | "
       const [row] = await db.select({ ref: homestayPlacementsTable.placement_ref })
         .from(homestayPlacementsTable)
         .where(eq(homestayPlacementsTable.id, signing.context_id)).limit(1);
+      if (row?.ref) return row.ref;
+    } else if (signing.context_type === "contract") {
+      const [row] = await db.select({ ref: contractsTable.contract_ref })
+        .from(contractsTable)
+        .where(eq(contractsTable.id, signing.context_id)).limit(1);
       if (row?.ref) return row.ref;
     }
   } catch { /* fall through */ }

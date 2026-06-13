@@ -8,6 +8,17 @@
 import { renderDocumentShell, escapeHtml, getCompanyInfo, type CompanyInfo } from "./theme";
 import { t, docLocale, type DocLang } from "./i18n";
 
+/** A captured drawn signature (from contract_signing_requests.signatures). */
+export interface ContractSignature {
+  role: string;
+  name: string;
+  email?: string | null;
+  signatureImage?: string | null;
+  serverSignedAt?: string | null;
+  ip?: string | null;
+  consentText?: string | null;
+}
+
 export interface ContractDocInput {
   contract_ref: string;
   status: string;
@@ -27,6 +38,10 @@ export interface ContractDocInput {
   notes: string | null;
   signed_at: string | Date | null;
   created_at: string | Date | null;
+  /** Drawn e-signatures to embed (when signed via the signing flow). */
+  signatures?: ContractSignature[] | null;
+  /** True once signed — switches the static block to the drawn signatures. */
+  signed?: boolean;
 }
 
 function money(amount: number | null, currency: string | null): string {
@@ -39,6 +54,47 @@ function formatDate(value: string | Date | null, lang: DocLang): string {
   const d = typeof value === "string" ? new Date(value) : value;
   if (Number.isNaN(d.getTime())) return escapeHtml(String(value));
   return d.toLocaleDateString(docLocale(lang), { year: "numeric", month: "short", day: "numeric" });
+}
+
+function formatDateTime(value: string | null | undefined, lang: DocLang): string {
+  if (!value) return "—";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return escapeHtml(String(value));
+  return d.toLocaleString(docLocale(lang), { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
+/**
+ * Drawn-signature block (mirrors applicationPdf renderSignatureBlock). Used when
+ * the contract was signed via the e-signature flow; otherwise the static
+ * landlord/tenant ruled-line block is rendered.
+ */
+function renderDrawnSignatures(c: ContractDocInput, lang: DocLang): string {
+  const sigs = c.signatures ?? [];
+  if (!sigs.length) return "";
+  const cards = sigs.map((s) => {
+    const roleLabel = escapeHtml(s.role.charAt(0).toUpperCase() + s.role.slice(1));
+    const sigArea = c.signed && s.signatureImage
+      ? `<img src="${s.signatureImage}" alt="Signature of ${escapeHtml(s.name)}" style="max-height:64px;max-width:100%;display:block;" />`
+      : `<div style="border-bottom:1px solid #999;height:48px;"></div>
+         <div style="font-size:11px;color:#bbb;margin-top:4px;">Pending signature</div>`;
+    const meta = c.signed && s.signatureImage
+      ? `<div style="font-size:11px;color:#777;margin-top:8px;line-height:1.6;">
+           <strong style="color:#555;">${escapeHtml(s.name)}</strong> · ${roleLabel}<br/>
+           ${s.email ? `${escapeHtml(s.email)}<br/>` : ""}
+           ${t(lang, "signed")} ${formatDateTime(s.serverSignedAt, lang)}${s.ip ? ` · IP ${escapeHtml(s.ip)}` : ""}<br/>
+           <span style="color:#999;">${escapeHtml(s.consentText ?? "Consent recorded electronically.")}</span>
+         </div>`
+      : `<div style="font-size:11px;color:#777;margin-top:8px;">
+           <strong style="color:#555;">${escapeHtml(s.name)}</strong> · ${roleLabel}
+         </div>`;
+    return `<div style="flex:1 1 240px;min-width:220px;padding:14px;border:1px solid #f0f0f0;border-radius:10px;">
+      ${sigArea}${meta}
+    </div>`;
+  });
+  return `<div class="section" style="margin-top:32px;">
+    <h3>${t(lang, "signatures")}</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:16px;margin-top:12px;">${cards.join("")}</div>
+  </div>`;
 }
 
 /** Render free-text terms, preserving paragraph breaks, with escaping. */
@@ -88,7 +144,9 @@ export function buildContractBody(c: ContractDocInput, lang: DocLang = "en"): st
 
     ${c.notes?.trim() ? `<div class="info-box"><strong>${t(lang, "notes")}</strong><br/>${escapeHtml(c.notes)}</div>` : ""}
 
-    <div class="section" style="margin-top:32px;">
+    ${c.signatures?.length
+      ? renderDrawnSignatures(c, lang)
+      : `<div class="section" style="margin-top:32px;">
       <h3>${t(lang, "signatures")}</h3>
       <div style="display:flex;gap:32px;margin-top:24px;">
         <div style="flex:1;">
@@ -100,7 +158,7 @@ export function buildContractBody(c: ContractDocInput, lang: DocLang = "en"): st
           <div style="font-size:12px;color:#777;margin-top:6px;">${t(lang, "tenant")}${signedSuffix}</div>
         </div>
       </div>
-    </div>
+    </div>`}
   `;
 }
 
