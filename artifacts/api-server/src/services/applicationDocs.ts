@@ -4,7 +4,7 @@
 // All functions are BEST-EFFORT: they never throw to the caller (the signing
 // response must not be blocked or failed by PDF/email problems). Mirrors the
 // best-effort email pattern already used across the homestay routes.
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import {
   db,
   contractSigningRequestsTable,
@@ -14,6 +14,7 @@ import {
   contractsTable,
   accountsTable,
   emailLogsTable,
+  integrationSettings,
 } from "@workspace/db";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf.js";
 import {
@@ -165,9 +166,28 @@ export async function generateAndStoreSignedPdf(
 }
 
 /** Resolve applicant / agent / ops email addresses for a signing request. */
+/**
+ * Operations / notification recipient. Prefer process.env (env vars + values
+ * loaded at startup or set live via the integrations UI), then fall back to the
+ * integration_settings KV directly — so a value set in the DB takes effect
+ * without waiting for a server restart.
+ */
+async function resolveOpsEmail(): Promise<string | undefined> {
+  const KEYS = ["LEAD_NOTIFICATION_EMAIL", "LEADS_NOTIFY_EMAIL", "SUPPORT_EMAIL"] as const;
+  const fromEnv = process.env[KEYS[0]] || process.env[KEYS[1]] || process.env[KEYS[2]];
+  if (fromEnv) return fromEnv;
+  try {
+    const rows = await db.select().from(integrationSettings).where(inArray(integrationSettings.key, [...KEYS]));
+    const map = new Map(rows.map((r) => [r.key, r.value]));
+    return map.get(KEYS[0]) || map.get(KEYS[1]) || map.get(KEYS[2]) || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function resolveRecipients(signing: SigningRow): Promise<ResolvedRecipients> {
   const out: ResolvedRecipients = {};
-  const ops = process.env.LEAD_NOTIFICATION_EMAIL || process.env.LEADS_NOTIFY_EMAIL || process.env.SUPPORT_EMAIL;
+  const ops = await resolveOpsEmail();
   if (ops) out.ops = { email: ops };
 
   try {
