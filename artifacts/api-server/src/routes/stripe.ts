@@ -100,6 +100,25 @@ router.post("/v1/stripe/webhook", async (req, res): Promise<void> => {
           break;
         }
 
+        // Invoice path: a session tagged with invoice_id (regular ops). Guarded
+        // so a placement session (which also carries placement_id) never falls here.
+        const invoiceId = session.metadata?.invoice_id ? Number(session.metadata.invoice_id) : null;
+        if (invoiceId && !placementPaymentId && paid) {
+          const now = new Date();
+          const [inv] = await db.update(invoicesTable)
+            .set({ status: "Paid", payment_method: "Card", paid_at: now, updated_at: now })
+            .where(and(eq(invoicesTable.id, invoiceId), eq(invoicesTable.status, "Sent")))
+            .returning();
+          if (inv) {
+            await logAction({
+              entityType: "invoice", entityId: invoiceId, action: "PAYMENT",
+              newValue: { status: "Paid", stripe_session: session.id, amount_total: session.amount_total },
+            }).catch(() => {});
+          }
+          console.log(`[Stripe] checkout.session.completed → invoice ${invoiceId} paid`);
+          break;
+        }
+
         // Back-compat path: a session tagged only with placement_id (Phase E upfront).
         const placementId = session.metadata?.placement_id ? Number(session.metadata.placement_id) : null;
         if (placementId && paid) {
