@@ -23,6 +23,9 @@ export const homestayPlacementsTable = pgTable("homestay_placements", {
 
   move_in_date: text("move_in_date"),
   move_out_date: text("move_out_date"),
+  // Next monthly-rent billing date (YYYY-MM-DD). Set on activation, advanced by
+  // the monthly-billing cron each cycle. Null = no recurring billing.
+  next_billing_date: text("next_billing_date"),
 
   // ── Pricing (numeric → string) ───────────────────────────────────────────
   placement_fee: numeric("placement_fee", { precision: 10, scale: 2 }).notNull().default("0"),

@@ -86,7 +86,14 @@ router.post("/v1/stripe/webhook", async (req, res): Promise<void> => {
               .set({ status: "Active", confirmed_at: now, stripe_customer_id: typeof session.customer === "string" ? session.customer : undefined, updated_at: now })
               .where(and(eq(homestayPlacementsTable.id, pay.placement_id), eq(homestayPlacementsTable.status, "AwaitingPayment")))
               .returning();
-            if (pl) await db.update(homestayStudentRequestsTable).set({ status: "Placed", updated_at: now }).where(eq(homestayStudentRequestsTable.id, pl.student_request_id));
+            if (pl) {
+              await db.update(homestayStudentRequestsTable).set({ status: "Placed", updated_at: now }).where(eq(homestayStudentRequestsTable.id, pl.student_request_id));
+              // Anchor monthly billing (first cycle on move-in, or today if past/unset).
+              if (!pl.next_billing_date && Number(pl.monthly_fee) > 0) {
+                const anchor = pl.move_in_date || now.toISOString().slice(0, 10);
+                await db.update(homestayPlacementsTable).set({ next_billing_date: anchor }).where(eq(homestayPlacementsTable.id, pl.id));
+              }
+            }
           }
           await logAction({ entityType: "homestay_placement", entityId: pay?.placement_id ?? 0, action: "PAYMENT", newValue: { placement_payment_id: placementPaymentId, kind: pay?.kind, stripe_session: session.id } }).catch(() => {});
           console.log(`[Stripe] checkout.session.completed → placement_payment ${placementPaymentId} paid`);

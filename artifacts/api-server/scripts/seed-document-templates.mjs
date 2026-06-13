@@ -39,6 +39,13 @@ const TEMPLATES = [
   { kind: "email", key: "homestay.placement_signed", name: "Homestay — placement agreement signed", category: "Homestay", vars: EMAIL_VARS,
     subject: "Your homestay placement agreement is signed ({{ref}})",
     body: p("Placement agreement signed", `The homestay placement agreement has been signed by all parties. A signed copy is emailed separately. You can view the placement in your host portal: ${PORTAL}.`) },
+  { kind: "email", key: "homestay.payment_due", name: "Homestay — monthly fee due", category: "Homestay",
+    vars: { ref: { type: "string" }, name: { type: "string" }, amount: { type: "string" }, period: { type: "date" }, pay_url: { type: "url" } },
+    subject: "Homestay monthly fee due ({{ref}})",
+    body: `<h1 style="font-size:20px;margin:0 0 12px;color:#1f2937;">Monthly homestay fee</h1>` +
+      `<p style="font-size:14px;color:#4b5563;line-height:1.6;">Hi {{name}}, your homestay monthly fee of <strong>{{amount}}</strong> for the period starting {{period}} is due. Please pay securely here:</p>` +
+      `<p style="margin:18px 0;"><a href="{{pay_url}}" style="background:#E8621A;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Pay now</a></p>` +
+      `<p style="font-size:12px;color:#9ca3af;">A 2% card processing fee is included. Reference: {{ref}}.</p>` },
   { kind: "contract", key: "homestay_placement_terms", name: "Homestay Placement Agreement — terms", category: "Homestay", vars: {},
     subject: null,
     body: [
