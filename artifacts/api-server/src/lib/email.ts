@@ -103,21 +103,47 @@ export async function sendDocumentEmail(
   <div class="footer">© ${new Date().getFullYear()} MillionStay Pty Ltd · ${t(lang, "email.sentTo", { to: escapeHtml(opts.to) })}</div>
 </div></body></html>`;
 
-  try {
-    const result = await client.emails.send({
-      from: FROM,
-      to: [opts.to],
-      subject,
-      html,
-      attachments: [{ filename: opts.filename, content: opts.pdf.toString("base64") }],
-    });
-    const id = (result as any)?.data?.id ?? undefined;
-    console.log(`[email] ${opts.docTypeLabel} ${opts.ref} sent to ${opts.to} (${id ?? "no-id"})`);
-    return { ok: true, id, subject };
-  } catch (err) {
-    console.error(`[email] Failed to send ${opts.docTypeLabel} ${opts.ref}:`, err);
-    return { ok: false, error: err instanceof Error ? err.message : "Send failed", subject };
+  const payload = {
+    from: FROM,
+    to: [opts.to],
+    subject,
+    html,
+    attachments: [{ filename: opts.filename, content: opts.pdf.toString("base64") }],
+  };
+
+  // Resend does NOT throw on API errors — it returns { data, error }. A null id
+  // with an ignored error is why sends were logged "Sent" but never delivered.
+  // Check error explicitly, and retry on rate limits (free tier = 2 req/s).
+  const MAX_ATTEMPTS = 4;
+  let lastError = "Send failed";
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const { data, error } = await client.emails.send(payload);
+      if (!error && data?.id) {
+        console.log(`[email] ${opts.docTypeLabel} ${opts.ref} sent to ${opts.to} (${data.id})`);
+        return { ok: true, id: data.id, subject };
+      }
+      const e = error as { statusCode?: number; name?: string; message?: string } | null;
+      lastError = e?.message || e?.name || "Send returned no message id";
+      const isRateLimited = e?.statusCode === 429 || /rate.?limit|too.?many/i.test(`${e?.name} ${e?.message}`);
+      if (isRateLimited && attempt < MAX_ATTEMPTS) {
+        await new Promise((r) => setTimeout(r, 600 * attempt));
+        continue;
+      }
+      console.error(`[email] Resend rejected ${opts.docTypeLabel} ${opts.ref} to ${opts.to}:`, lastError);
+      return { ok: false, error: lastError, subject };
+    } catch (err) {
+      // Network/transport failure (rare — SDK normally returns errors in-band).
+      lastError = err instanceof Error ? err.message : "Send failed";
+      if (attempt < MAX_ATTEMPTS) {
+        await new Promise((r) => setTimeout(r, 600 * attempt));
+        continue;
+      }
+      console.error(`[email] Failed to send ${opts.docTypeLabel} ${opts.ref}:`, err);
+      return { ok: false, error: lastError, subject };
+    }
   }
+  return { ok: false, error: lastError, subject };
 }
 
 /**

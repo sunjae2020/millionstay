@@ -105,6 +105,11 @@ gates it, so keep it green. Two notable classes were fixed:
 
 ## Conventions
 
+- **Cross-product features:** every new feature applies across **Homestay,
+  Short-term and Long-term** without distinction, wherever applicable — build
+  shared/generic by default (extend a discriminator like `context_type`/`kind`,
+  don't fork per product). **When applicability is unclear, confirm by text
+  first.** See [docs/CROSS_PRODUCT_FEATURE_POLICY.md](docs/CROSS_PRODUCT_FEATURE_POLICY.md).
 - **Money columns** (`invoices.amount`, `promotions.discount_amount`) are
   `numeric(10,2)` → Drizzle returns **strings**; wrap with `Number()` before math.
 - **Lookup endpoints** return `{ id, display, ...extra }` consistently.
