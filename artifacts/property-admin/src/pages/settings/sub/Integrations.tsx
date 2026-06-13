@@ -20,6 +20,7 @@ interface IntegrationStatus {
   ai: { configured: boolean; masked_key: string; model: string | null; error: string | null };
   maps: { provider: string; configured: boolean; note: string };
   ical: { provider: string; configured: boolean; note: string };
+  billing?: { recurring_invoices_enabled: boolean };
 }
 
 type BadgeVariant = "connected" | "test" | "not-required" | "not-configured" | "error";
@@ -286,6 +287,38 @@ const AiFields = ({ status, onRefresh }: { status: IntegrationStatus | null; onR
   </div>
 );
 
+const BillingFields = ({ status, onRefresh }: { status: IntegrationStatus | null; onRefresh: () => void }) => {
+  const [saving, setSaving] = useState(false);
+  const enabled = status?.billing?.recurring_invoices_enabled ?? false;
+  async function toggle() {
+    setSaving(true);
+    try {
+      await apiFetch("/api/v1/integrations/update-env", {
+        method: "POST",
+        body: JSON.stringify({ key: "RECURRING_INVOICES_ENABLED", value: enabled ? "false" : "true" }),
+      });
+      onRefresh();
+    } finally {
+      setSaving(false);
+    }
+  }
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-3">
+        <Button size="sm" variant={enabled ? "outline" : "default"} className="h-8 text-xs" onClick={toggle} disabled={saving}>
+          {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : enabled ? "Disable" : "Enable"}
+        </Button>
+        <span className="text-sm">{enabled ? "Enabled" : "Disabled"}</span>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        When enabled, a daily job (02:30 Sydney) auto-generates the next due invoice for any
+        contract schedule set to <strong>incremental</strong> billing. Legacy contracts whose invoices
+        were pre-generated up front are never affected. Off by default.
+      </p>
+    </div>
+  );
+};
+
 const CARDS: CardDef[] = [
   {
     id: "stripe",
@@ -367,6 +400,19 @@ const CARDS: CardDef[] = [
     Fields: AiFields,
     testEndpoint: "/api/v1/integrations/anthropic/test",
     testLabel: "Test AI",
+  },
+  {
+    id: "billing",
+    emoji: "🔁",
+    name: "Recurring Billing",
+    description: "Auto-generate periodic rent invoices for long-term contracts on incremental billing",
+    getBadge: (s) => {
+      if (!s) return { variant: "not-configured", label: "Not Configured" };
+      return s.billing?.recurring_invoices_enabled
+        ? { variant: "connected", label: "Enabled" }
+        : { variant: "not-configured", label: "Disabled" };
+    },
+    Fields: BillingFields,
   },
 ];
 

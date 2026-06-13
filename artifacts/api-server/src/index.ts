@@ -193,19 +193,19 @@ cron.schedule(
 // Recurring rent for regular long-term contracts — daily at 02:30 Sydney.
 // Generates one "Sent" invoice per due cycle for schedules opted into incremental
 // billing (billing_mode='incremental'); legacy pre-generated contracts are
-// untouched. Gated behind RECURRING_INVOICES_ENABLED so the deploy is inert until
-// ops opt in. No boot-time run (avoids duplicate charges on restart).
-if (process.env.RECURRING_INVOICES_ENABLED === "true") {
-  cron.schedule(
-    "30 2 * * *",
-    () => {
-      generateRecurringInvoices()
-        .then((r) => logger.info({ ...r }, "Cron recurring invoice billing"))
-        .catch((err) => logger.error({ err }, "Cron recurring invoice billing failed"));
-    },
-    { timezone: "Australia/Sydney" },
-  );
-}
+// untouched. The cron is always registered; generateRecurringInvoices() self-gates
+// on the RECURRING_INVOICES_ENABLED setting (integration_settings, env override) at
+// run time, so ops can toggle it from the admin with no redeploy. Off by default.
+// No boot-time run (avoids duplicate charges on restart).
+cron.schedule(
+  "30 2 * * *",
+  () => {
+    generateRecurringInvoices()
+      .then((r) => logger.info({ ...r }, "Cron recurring invoice billing"))
+      .catch((err) => logger.error({ err }, "Cron recurring invoice billing failed"));
+  },
+  { timezone: "Australia/Sydney" },
+);
 
 const server = app.listen(port, (err) => {
   if (err) {
