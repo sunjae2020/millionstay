@@ -2,10 +2,12 @@ import { Link } from "wouter";
 import { Mail, Facebook, Twitter, Instagram, Youtube, Globe } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import logoHorizontal from "@assets/06.OR_NB_horizontal_ver_1775381659303.png";
+import { useSupportEmail } from "@/lib/guest-api";
 
 export function Footer() {
   const { t } = useTranslation();
   const year = new Date().getFullYear();
+  const supportEmail = useSupportEmail();
 
   const navLinks = [
     { label: t("footer.home"), href: "/" },
@@ -36,7 +38,7 @@ export function Footer() {
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2 text-gray-400">
                 <Mail className="h-3.5 w-3.5 text-primary shrink-0" />
-                <a href="mailto:info@millionstay.com" className="hover:text-primary transition-colors">info@millionstay.com</a>
+                <a href={`mailto:${supportEmail}`} className="hover:text-primary transition-colors">{supportEmail}</a>
               </div>
               <div className="flex items-center gap-2 text-gray-400">
                 <Globe className="h-3.5 w-3.5 text-primary shrink-0" />

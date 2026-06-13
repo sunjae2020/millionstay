@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useLocation, useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "@/lib/store";
-import { apiFetch, type MyInvoice } from "@/lib/guest-api";
+import { apiFetch, useSupportEmail, type MyInvoice } from "@/lib/guest-api";
 import { Printer, ArrowLeft, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
@@ -31,6 +31,7 @@ export default function PortalReceipt() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { token, guest } = useAuthStore();
+  const supportEmail = useSupportEmail();
 
   useEffect(() => {
     if (!token) setLocation(`/login?redirect=/portal/invoices/${id}/receipt`);
@@ -155,7 +156,7 @@ export default function PortalReceipt() {
               <div>
                 <p className="text-[9px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Issued By</p>
                 <p className="text-sm font-semibold text-gray-900">MillionStay Pty Ltd</p>
-                <p className="text-xs text-gray-500">info@millionstay.com.au</p>
+                <p className="text-xs text-gray-500">{supportEmail}</p>
                 <p className="text-xs text-gray-500">Melbourne, VIC, Australia</p>
               </div>
               <div>
@@ -276,7 +277,7 @@ export default function PortalReceipt() {
             <div className="px-8 py-4 flex items-center justify-between border-t border-gray-100">
               <div>
                 <p className="text-xs font-bold text-gray-700">MillionStay Pty Ltd</p>
-                <p className="text-[10px] text-gray-400">ABN: 12 345 678 901 &nbsp;|&nbsp; info@millionstay.com.au</p>
+                <p className="text-[10px] text-gray-400">ABN: 12 345 678 901 &nbsp;|&nbsp; {supportEmail}</p>
               </div>
               <div className="text-right">
                 <p className="text-[10px] text-gray-400">Thank you for choosing</p>

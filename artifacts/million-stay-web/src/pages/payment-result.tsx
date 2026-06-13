@@ -1,4 +1,5 @@
 import { CheckCircle2, XCircle } from "lucide-react";
+import { useSupportEmail } from "@/lib/guest-api";
 
 // Stripe redirect target for payments (homestay placements + regular invoices).
 // Reads ?status=success|cancelled&ref=… (HSP-… or MS-INV-…) and shows a confirmation.
@@ -7,6 +8,7 @@ export default function PaymentResult() {
   const status = params.get("status") ?? "success";
   const ref = params.get("ref") ?? "";
   const ok = status === "success";
+  const supportEmail = useSupportEmail();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
@@ -37,7 +39,7 @@ export default function PaymentResult() {
           Back to MillionStay
         </a>
         <p className="mt-4 text-xs text-gray-400">
-          Questions? <a href="mailto:info@millionstay.com" className="underline">info@millionstay.com</a>
+          Questions? <a href={`mailto:${supportEmail}`} className="underline">{supportEmail}</a>
         </p>
       </div>
     </div>

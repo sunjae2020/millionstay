@@ -4,6 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { t, normalizeLang, type DocLang } from "./documents/i18n";
 import { buildUnsubscribeUrl } from "./unsubscribeToken";
 import { resolveTemplate, renderString } from "./documents/templateEngine";
+import { resolveCompanyInfo } from "./documents/companyInfo";
 
 let resend: Resend | null = null;
 let resendKey: string | null = null;
@@ -39,7 +40,20 @@ function getResend(): Resend | null {
 
 const FROM = process.env.EMAIL_FROM ?? "MillionStay <noreply@contact.millionstay.com>";
 const LOGO_URL = process.env.EMAIL_LOGO_URL ?? "https://www.millionstay.com/millionstay-logo.png";
-const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL ?? "info@millionstay.com";
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL ?? "millionstay.com@gmail.com";
+
+/**
+ * The customer-facing support / contact email shown in transactional emails.
+ * Single source of truth = Settings → Organisation (company_info.email), falling
+ * back to the SUPPORT_EMAIL env/default. Resolved per-send so changes apply live.
+ */
+async function resolveSupportEmail(): Promise<string> {
+  try {
+    return (await resolveCompanyInfo()).email || SUPPORT_EMAIL;
+  } catch {
+    return SUPPORT_EMAIL;
+  }
+}
 const PORTAL_URL = process.env.PUBLIC_WEB_URL ?? "https://www.millionstay.com";
 
 export interface DocumentEmailOptions {
@@ -79,6 +93,7 @@ export async function sendDocumentEmail(
     return { ok: false, skipped: true, error: "Email service not configured", subject };
   }
 
+  const supportEmail = await resolveSupportEmail();
   const greeting = opts.toName
     ? t(lang, "email.greeting.named", { name: `<strong>${safeName(opts.toName)}</strong>` })
     : t(lang, "email.greeting.plain");
@@ -106,7 +121,7 @@ export async function sendDocumentEmail(
       ${opts.amountLabel ? `<div class="amount">${escapeHtml(opts.amountLabel)}</div>` : ""}
     </div>
     ${opts.note ? `<p style="font-size:13px;color:#555;">${escapeHtml(opts.note)}</p>` : ""}
-    <p style="font-size:13px;color:#999;">${t(lang, "email.questions", { email: `<a href="mailto:${SUPPORT_EMAIL}" style="color:#E8621A;">${SUPPORT_EMAIL}</a>` })}</p>
+    <p style="font-size:13px;color:#999;">${t(lang, "email.questions", { email: `<a href="mailto:${supportEmail}" style="color:#E8621A;">${supportEmail}</a>` })}</p>
   </div>
   <div class="footer">© ${new Date().getFullYear()} MillionStay Pty Ltd · ${t(lang, "email.sentTo", { to: escapeHtml(opts.to) })}</div>
 </div></body></html>`;
@@ -307,6 +322,7 @@ export async function sendBookingConfirmation(data: BookingConfirmationData): Pr
   }
 
   const { to, guestName, bookingRef, spaceName, propertyAddress, checkIn, checkOut, weeklyRate, totalDue, currency = "AUD", isLongTerm } = data;
+  const supportEmail = await resolveSupportEmail();
 
   const html = `
 <!DOCTYPE html>
@@ -388,7 +404,7 @@ export async function sendBookingConfirmation(data: BookingConfirmationData): Pr
     </a>
 
     <p style="font-size:13px;color:#999;">
-      Questions? Contact us at <a href="mailto:${SUPPORT_EMAIL}" style="color:#E8621A;">${SUPPORT_EMAIL}</a>
+      Questions? Contact us at <a href="mailto:${supportEmail}" style="color:#E8621A;">${supportEmail}</a>
     </p>
   </div>
   <div class="footer">
@@ -430,7 +446,7 @@ export interface LeadNotificationData {
  * Best-effort — always returns boolean, never throws.
  */
 export async function sendLeadNotificationEmail(data: LeadNotificationData): Promise<boolean> {
-  const to = process.env.LEADS_NOTIFY_EMAIL ?? SUPPORT_EMAIL;
+  const to = process.env.LEADS_NOTIFY_EMAIL ?? (await resolveSupportEmail());
   const client = getResend();
   if (!client) {
     console.log(`[email] RESEND_API_KEY not set — new lead ${data.leadRef} (${data.inquiryType}) from ${data.email}`);
@@ -565,6 +581,7 @@ export async function sendHomestayHostEmail(opts: HomestayHostEmailOptions): Pro
     return false;
   }
   const copy = HOMESTAY_EMAIL_COPY[opts.kind];
+  const supportEmail = await resolveSupportEmail();
   const portalUrl = opts.portalUrl ?? `${PORTAL_URL}/host-portal`;
   const noteHtml = opts.note
     ? `<div style="margin-top:16px;padding:12px 16px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;color:#9a3412;font-size:14px;">${escapeHtml(opts.note)}</div>`
@@ -597,7 +614,7 @@ export async function sendHomestayHostEmail(opts: HomestayHostEmailOptions): Pro
     ${cardInner}
   </div>
   <div style="text-align:center;color:#9ca3af;font-size:12px;padding:16px;">
-    Questions? Contact us at <a href="mailto:${SUPPORT_EMAIL}" style="color:#f97316;">${SUPPORT_EMAIL}</a><br/>
+    Questions? Contact us at <a href="mailto:${supportEmail}" style="color:#f97316;">${supportEmail}</a><br/>
     © ${new Date().getFullYear()} MillionStay
   </div>
 </div>

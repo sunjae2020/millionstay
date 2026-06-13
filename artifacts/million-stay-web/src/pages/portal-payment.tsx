@@ -19,7 +19,7 @@ import {
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
-import { apiFetch, type MyInvoice } from "@/lib/guest-api";
+import { apiFetch, useSupportEmail, type MyInvoice } from "@/lib/guest-api";
 
 const BRAND = "#E8621A";
 const API = getApiBase();
@@ -186,6 +186,7 @@ export default function PortalPayment() {
   const [, setLocation] = useLocation();
   const { token } = useAuthStore();
   const { toast } = useToast();
+  const supportEmail = useSupportEmail();
 
   const params = new URLSearchParams(window.location.search);
   const invoiceId = params.get("invoice_id");
@@ -434,7 +435,7 @@ export default function PortalPayment() {
                   {stripeConfigured === false && (
                     <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 text-sm text-amber-700">
                       <p className="font-semibold mb-1">Online card payment is not available</p>
-                      <p className="text-xs text-amber-600">Please use the bank transfer option or contact us at info@millionstay.com.au to arrange payment.</p>
+                      <p className="text-xs text-amber-600">Please use the bank transfer option or contact us at {supportEmail} to arrange payment.</p>
                     </div>
                   )}
 

@@ -3,6 +3,7 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
+import { useSupportEmail } from "@/lib/guest-api";
 import heroBg from "@assets/MS_Homepage_Photo_1920x1080_1775403929888.jpg";
 
 function fade(delay = 0) {
@@ -11,6 +12,7 @@ function fade(delay = 0) {
 
 export default function HouseRules() {
   const { t } = useTranslation();
+  const supportEmail = useSupportEmail();
 
   const rules = [
     { number: "01", title: t("house_rules.r1_title"), body: t("house_rules.r1_body") },
@@ -84,8 +86,8 @@ export default function HouseRules() {
             <motion.div {...fade(0.5)} className="bg-orange-50 border border-orange-100 rounded-xl px-6 py-5">
               <p className="text-sm text-gray-600 leading-relaxed">
                 {t("house_rules.agreement")}{" "}
-                <a href="mailto:info@millionstay.com" className="text-primary hover:underline font-medium">
-                  info@millionstay.com
+                <a href={`mailto:${supportEmail}`} className="text-primary hover:underline font-medium">
+                  {supportEmail}
                 </a>.
               </p>
             </motion.div>
