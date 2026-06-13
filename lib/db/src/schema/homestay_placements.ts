@@ -23,9 +23,13 @@ export const homestayPlacementsTable = pgTable("homestay_placements", {
 
   move_in_date: text("move_in_date"),
   move_out_date: text("move_out_date"),
-  // Next monthly-rent billing date (YYYY-MM-DD). Set on activation, advanced by
-  // the monthly-billing cron each cycle. Null = no recurring billing.
+  // Next rent billing date (YYYY-MM-DD). Set on activation, advanced by the
+  // billing cron each cycle. Null = no recurring billing.
   next_billing_date: text("next_billing_date"),
+  // Per-placement billing overrides (null = use the global homestay billing
+  // settings). Cycle is in WEEKS (default 4 = four-weekly rent).
+  billing_cycle_weeks: integer("billing_cycle_weeks"),
+  billing_method: text("billing_method"), // card | bank_transfer
 
   // ── Pricing (numeric → string) ───────────────────────────────────────────
   placement_fee: numeric("placement_fee", { precision: 10, scale: 2 }).notNull().default("0"),

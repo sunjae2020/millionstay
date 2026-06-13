@@ -5,6 +5,7 @@ import {
   Building,
   UserCog,
   FileText,
+  CreditCard,
   Layers,
   Tag,
   Landmark,
@@ -55,6 +56,12 @@ const ADMIN_CARDS: CardDef[] = [
     description: "Editable email + contract templates",
     icon: FileText,
     href: "/settings/document-templates",
+  },
+  {
+    title: "Homestay Billing",
+    description: "Rent cycle, payment method, card fee, lead days",
+    icon: CreditCard,
+    href: "/settings/homestay-billing",
   },
   {
     title: "Integrations",

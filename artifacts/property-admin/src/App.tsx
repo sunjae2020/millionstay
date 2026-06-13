@@ -100,6 +100,7 @@ import UsersPage from "@/pages/settings/sub/Users";
 import EmailTemplatesPage from "@/pages/settings/sub/EmailTemplates";
 import DocumentTemplatesPage from "@/pages/settings/sub/DocumentTemplates";
 import DocumentTemplateEditPage from "@/pages/settings/sub/DocumentTemplateEdit";
+import HomestayBillingPage from "@/pages/settings/sub/HomestayBilling";
 import DesignPage from "@/pages/settings/sub/Design";
 import ContractTypesPage from "@/pages/settings/sub/ContractTypes";
 import ProductGroupsPage from "@/pages/settings/sub/ProductGroups";
@@ -302,6 +303,7 @@ function Router() {
       <Route path="/settings/email-templates" component={EmailTemplatesPage} />
       <Route path="/settings/document-templates" component={DocumentTemplatesPage} />
       <Route path="/settings/document-templates/:id" component={DocumentTemplateEditPage} />
+      <Route path="/settings/homestay-billing" component={HomestayBillingPage} />
       <Route path="/settings/design" component={DesignPage} />
       <Route path="/settings/integrations" component={IntegrationsPage} />
       <Route path="/settings/api-keys" component={ApiKeysPage} />

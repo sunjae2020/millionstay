@@ -21,11 +21,14 @@ import {
   homestayHostAvailabilityTable,
   paymentInfoTable,
 } from "@workspace/db";
+import { Resend } from "resend";
 import { generatePlacementRef } from "../lib/homestayRef.js";
 import { createSigningRequest, signingBaseUrl, type SignerSpec } from "../services/contractSigning.js";
 import { sendHomestayHostEmail } from "../lib/email.js";
 import { logAction } from "../utils/auditLog.js";
 import { getStripe } from "./stripe.js";
+import { getHomestayBillingSettings, saveHomestayBillingSettings, type HomestayBillingSettings } from "../lib/homestay/billingSettings.js";
+import { resolveTemplate, renderString } from "../lib/documents/templateEngine.js";
 
 const ENTITY = "homestay_placement";
 
@@ -252,21 +255,53 @@ homestayPlacementAdminRouter.post("/v1/homestay-placements/:id/contract", async 
   }
 });
 
-// ── Charge (upfront / monthly · card / bank transfer) ────────────────────────
-// One unified charge endpoint. Records a homestay_placement_payments row, then:
-//   - card: Stripe Checkout (base + 2% surcharge), webhook marks it paid.
-//   - bank_transfer: returns the active bank account to relay; ops marks paid.
-// upfront base = placement_fee + deposit (requires AwaitingPayment);
-// monthly base = monthly_fee (requires Active).
-const SURCHARGE_RATE = 0.02;
+// ── Billing settings (global defaults) ───────────────────────────────────────
+homestayPlacementAdminRouter.get("/v1/homestay-billing-settings", async (_req, res): Promise<void> => {
+  res.json({ data: await getHomestayBillingSettings() });
+});
+homestayPlacementAdminRouter.put("/v1/homestay-billing-settings", async (req, res): Promise<void> => {
+  try {
+    const b = req.body as Partial<HomestayBillingSettings>;
+    await saveHomestayBillingSettings({
+      cycle_weeks: Number(b.cycle_weeks),
+      default_method: b.default_method === "bank_transfer" ? "bank_transfer" : "card",
+      surcharge_pct: Number(b.surcharge_pct),
+      lead_days: Number(b.lead_days),
+    });
+    void logAction({ entityType: "homestay_billing_settings", entityId: 1, action: "UPDATE", actorId: (req as any).user?.id ?? null, newValue: b });
+    res.json({ data: await getHomestayBillingSettings() });
+  } catch (err) {
+    console.error("[homestay-placements] save billing settings failed:", err);
+    res.status(500).json({ error: "Failed to save settings" });
+  }
+});
 
+// ── Per-placement billing override ───────────────────────────────────────────
+homestayPlacementAdminRouter.post("/v1/homestay-placements/:id/billing", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const weeks = req.body?.billing_cycle_weeks;
+  const method = req.body?.billing_method;
+  const [row] = await db.update(homestayPlacementsTable).set({
+    billing_cycle_weeks: weeks === null || weeks === undefined || weeks === "" ? null : Math.max(1, Math.min(52, Math.round(Number(weeks)))),
+    billing_method: method === "card" || method === "bank_transfer" ? method : null,
+    updated_at: new Date(),
+  }).where(eq(homestayPlacementsTable.id, id)).returning();
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  res.json({ success: true, placement: await enrich(row) });
+});
+
+// ── Create a charge (PENDING — not sent) ─────────────────────────────────────
+// Records a homestay_placement_payments row but does NOT collect payment. Ops
+// (or the cron) creates pending charges; sending/collecting is a separate step
+// (POST /homestay-placement-payments/:id/send). method/surcharge default to the
+// global billing settings (+ per-placement override).
+//   upfront base = placement_fee + deposit (requires AwaitingPayment)
+//   monthly base = monthly_fee per cycle  (requires Active)
 homestayPlacementAdminRouter.post("/v1/homestay-placements/:id/charge", async (req, res): Promise<void> => {
   try {
     const id = Number(req.params.id);
     const kind = String(req.body?.kind ?? "upfront");
-    const method = String(req.body?.method ?? "card");
     if (!["upfront", "monthly"].includes(kind)) { res.status(400).json({ error: "kind must be upfront|monthly" }); return; }
-    if (!["card", "bank_transfer"].includes(method)) { res.status(400).json({ error: "method must be card|bank_transfer" }); return; }
 
     const [row] = await db.select().from(homestayPlacementsTable).where(eq(homestayPlacementsTable.id, id)).limit(1);
     if (!row) { res.status(404).json({ error: "Not found" }); return; }
@@ -277,63 +312,102 @@ homestayPlacementAdminRouter.post("/v1/homestay-placements/:id/charge", async (r
       res.status(409).json({ error: "Monthly charges require an Active placement" }); return;
     }
 
-    const base = kind === "upfront"
-      ? Number(row.placement_fee) + Number(row.deposit)
-      : Number(row.monthly_fee);
-    if (!(base > 0)) { res.status(400).json({ error: "Nothing to charge for this kind" }); return; }
+    const settings = await getHomestayBillingSettings();
+    const method = ["card", "bank_transfer"].includes(String(req.body?.method))
+      ? String(req.body.method)
+      : (row.billing_method || settings.default_method);
 
-    const surcharge = method === "card" ? Math.round(base * SURCHARGE_RATE * 100) / 100 : 0;
+    const base = kind === "upfront" ? Number(row.placement_fee) + Number(row.deposit) : Number(row.monthly_fee);
+    if (!(base > 0)) { res.status(400).json({ error: "Nothing to charge for this kind" }); return; }
+    const surcharge = method === "card" ? Math.round(base * (settings.surcharge_pct / 100) * 100) / 100 : 0;
     const total = Math.round((base + surcharge) * 100) / 100;
     const currency = row.currency || "AUD";
 
+    let payment_info_id: number | null = null;
+    let bank = null;
     if (method === "bank_transfer") {
-      const [bank] = await db.select().from(paymentInfoTable)
+      [bank] = await db.select().from(paymentInfoTable)
         .where(and(eq(paymentInfoTable.payment_type, "BankTransfer"), eq(paymentInfoTable.status, "Active"), isNull(paymentInfoTable.deleted_at)))
         .limit(1);
-      const [pay] = await db.insert(homestayPlacementPaymentsTable).values({
-        placement_id: id, kind, method: "bank_transfer", status: "pending",
-        base_amount: String(base), surcharge_amount: "0", amount: String(base), currency,
-        payment_info_id: bank?.id ?? null,
-        period_start: req.body?.period_start ?? null, period_end: req.body?.period_end ?? null,
-      }).returning();
-      void logAction({ entityType: ENTITY, entityId: id, action: "CREATE", actorId: (req as any).user?.id ?? null, newValue: { payment_id: pay!.id, kind, method: "bank_transfer", amount: base } });
-      res.status(201).json({ success: true, method: "bank_transfer", payment: pay, bank: bank ?? null });
-      return;
+      payment_info_id = bank?.id ?? null;
     }
 
-    // card → Stripe Checkout
-    const stripe = getStripe();
-    if (!stripe) { res.status(503).json({ error: "Stripe is not configured" }); return; }
     const [pay] = await db.insert(homestayPlacementPaymentsTable).values({
-      placement_id: id, kind, method: "card", status: "pending",
+      placement_id: id, kind, method, status: "pending",
       base_amount: String(base), surcharge_amount: String(surcharge), amount: String(total), currency,
+      payment_info_id,
       period_start: req.body?.period_start ?? null, period_end: req.body?.period_end ?? null,
     }).returning();
 
+    void logAction({ entityType: ENTITY, entityId: id, action: "CREATE", actorId: (req as any).user?.id ?? null, newValue: { payment_id: pay!.id, kind, method, base, surcharge, total } });
+    res.status(201).json({ success: true, payment: pay, method, bank });
+  } catch (err) {
+    console.error("[homestay-placements] charge failed:", err);
+    res.status(500).json({ error: "Failed to create charge" });
+  }
+});
+
+// ── Send / collect a pending charge ──────────────────────────────────────────
+//   card: create a Stripe Checkout link, email the student, return the URL.
+//   bank_transfer: return the active bank account details to relay.
+homestayPlacementAdminRouter.post("/v1/homestay-placement-payments/:paymentId/send", async (req, res): Promise<void> => {
+  try {
+    const paymentId = Number(req.params.paymentId);
+    const [pay] = await db.select().from(homestayPlacementPaymentsTable).where(eq(homestayPlacementPaymentsTable.id, paymentId)).limit(1);
+    if (!pay) { res.status(404).json({ error: "Charge not found" }); return; }
+    if (pay.status !== "pending") { res.status(409).json({ error: "Charge is not pending" }); return; }
+    const [row] = await db.select().from(homestayPlacementsTable).where(eq(homestayPlacementsTable.id, pay.placement_id)).limit(1);
+    if (!row) { res.status(404).json({ error: "Placement not found" }); return; }
+
+    if (pay.method === "bank_transfer") {
+      const [bank] = await db.select().from(paymentInfoTable)
+        .where(and(eq(paymentInfoTable.payment_type, "BankTransfer"), eq(paymentInfoTable.status, "Active"), isNull(paymentInfoTable.deleted_at)))
+        .limit(1);
+      res.json({ success: true, method: "bank_transfer", bank: bank ?? null });
+      return;
+    }
+
+    // card → Stripe Checkout link + email the student
+    const stripe = getStripe();
+    if (!stripe) { res.status(503).json({ error: "Stripe is not configured" }); return; }
     const [student] = await db.select().from(homestayStudentRequestsTable)
       .where(eq(homestayStudentRequestsTable.id, row.student_request_id)).limit(1);
+    const studentEmail = student?.student_email || student?.guardian_email || null;
     const webBase = (process.env.PUBLIC_WEB_URL ?? "https://www.millionstay.com").replace(/\/+$/, "");
-    const label = kind === "upfront"
-      ? `Homestay ${row.placement_ref} — deposit + placement fee (incl. 2% card fee)`
-      : `Homestay ${row.placement_ref} — monthly fee (incl. 2% card fee)`;
+    const label = pay.kind === "upfront"
+      ? `Homestay ${row.placement_ref} — deposit + placement fee (incl. card fee)`
+      : `Homestay ${row.placement_ref} — rent ${pay.period_start ?? ""} (incl. card fee)`;
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      line_items: [{
-        price_data: { currency: currency.toLowerCase(), product_data: { name: label }, unit_amount: Math.round(total * 100) },
-        quantity: 1,
-      }],
-      metadata: { placement_payment_id: String(pay!.id), placement_id: String(id), placement_ref: row.placement_ref, kind },
-      customer_email: student?.student_email || student?.guardian_email || undefined,
+      line_items: [{ price_data: { currency: (pay.currency || "AUD").toLowerCase(), product_data: { name: label }, unit_amount: Math.round(Number(pay.amount) * 100) }, quantity: 1 }],
+      metadata: { placement_payment_id: String(pay.id), placement_id: String(row.id), placement_ref: row.placement_ref, kind: pay.kind },
+      customer_email: studentEmail || undefined,
       success_url: `${webBase}/payment-result?status=success&ref=${encodeURIComponent(row.placement_ref)}`,
       cancel_url: `${webBase}/payment-result?status=cancelled&ref=${encodeURIComponent(row.placement_ref)}`,
     });
 
-    void logAction({ entityType: ENTITY, entityId: id, action: "CREATE", actorId: (req as any).user?.id ?? null, newValue: { payment_id: pay!.id, stripe_session: session.id, kind, method: "card", base, surcharge, total } });
-    res.json({ success: true, method: "card", url: session.url, payment: pay, base, surcharge, total, currency });
+    if (studentEmail && process.env.RESEND_API_KEY && session.url) {
+      const vars = {
+        ref: row.placement_ref,
+        name: student ? `${student.student_first_name} ${student.student_last_name}`.trim() : "there",
+        amount: `${pay.currency} ${Number(pay.amount).toLocaleString("en-AU", { minimumFractionDigits: 2 })}`,
+        period: pay.period_start ?? "",
+        pay_url: session.url,
+      };
+      const tpl = await resolveTemplate({ kind: "email", key: "homestay.payment_due", locale: "en" });
+      const subject = tpl ? renderString(tpl.subject || `Homestay payment due (${row.placement_ref})`, vars) : `Homestay payment due (${row.placement_ref})`;
+      const inner = tpl ? renderString(tpl.bodyHtml, vars)
+        : `<p>Hi ${vars.name}, your homestay payment of <strong>${vars.amount}</strong> is due. <a href="${vars.pay_url}">Pay now</a>. Ref: ${vars.ref}.</p>`;
+      const html = `<!DOCTYPE html><html><body style="margin:0;background:#faf9f7;font-family:-apple-system,Segoe UI,Roboto,sans-serif;"><div style="max-width:560px;margin:0 auto;padding:24px;"><div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:28px;">${inner}</div></div></body></html>`;
+      try { await new Resend(process.env.RESEND_API_KEY).emails.send({ from: process.env.EMAIL_FROM ?? "MillionStay <noreply@contact.millionstay.com>", to: [studentEmail], subject, html }); } catch (e) { console.error("[homestay-placements] send email failed:", e); }
+    }
+
+    void logAction({ entityType: ENTITY, entityId: row.id, action: "PAYMENT", actorId: (req as any).user?.id ?? null, newValue: { payment_id: pay.id, sent: true, stripe_session: session.id } });
+    res.json({ success: true, method: "card", url: session.url, emailed: !!studentEmail });
   } catch (err) {
-    console.error("[homestay-placements] charge failed:", err);
-    res.status(500).json({ error: "Failed to create charge" });
+    console.error("[homestay-placements] send charge failed:", err);
+    res.status(500).json({ error: "Failed to send charge" });
   }
 });
 

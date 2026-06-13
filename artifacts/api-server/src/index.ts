@@ -11,7 +11,7 @@ import { SEED_FILE_PATH, importSeed } from "./lib/seedSync";
 import { syncExchangeRates } from "./lib/exchangeRateSync";
 import { syncAllChannelImports } from "./lib/icalImport";
 import { purgeExpiredDocuments } from "./lib/retentionPurge";
-import { generateMonthlyPlacementCharges } from "./lib/homestay/monthlyBilling";
+import { generateRentCharges } from "./lib/homestay/monthlyBilling";
 
 const rawPort = process.env["PORT"];
 
@@ -175,15 +175,16 @@ cron.schedule(
   { timezone: "Australia/Sydney" },
 );
 
-// Homestay monthly rent — daily at 02:00 Sydney. Generates a per-cycle card
-// payment link for each Active placement whose next_billing_date is due and
-// emails the student. No boot-time run (would risk double-billing on restart).
+// Homestay rent — daily at 02:00 Sydney. Generates a PENDING per-cycle charge for
+// each Active placement whose next_billing_date is due (within the lead window);
+// ops send/collect each from the admin. No boot-time run (would risk duplicate
+// charges on restart; the per-period guard also protects against this).
 cron.schedule(
   "0 2 * * *",
   () => {
-    generateMonthlyPlacementCharges()
-      .then((r) => logger.info({ ...r }, "Cron homestay monthly billing"))
-      .catch((err) => logger.error({ err }, "Cron homestay monthly billing failed"));
+    generateRentCharges()
+      .then((r) => logger.info({ ...r }, "Cron homestay rent billing"))
+      .catch((err) => logger.error({ err }, "Cron homestay rent billing failed"));
   },
   { timezone: "Australia/Sydney" },
 );

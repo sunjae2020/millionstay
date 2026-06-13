@@ -147,6 +147,7 @@ function getNav(t: (k: string) => string): NavSection[] {
         { href: "/finance/receipts", label: t("nav.receipt"), icon: Receipt },
         { href: "/booking/contracts", label: t("nav.contract"), icon: FileSignature },
         { href: "/settings/document-templates", label: t("nav.document_templates"), icon: FileText },
+        { href: "/settings/homestay-billing", label: t("nav.homestay_billing"), icon: CreditCard },
       ],
     },
     {
@@ -195,6 +196,7 @@ function getNav(t: (k: string) => string): NavSection[] {
         { href: "/settings/cost-center", label: t("nav.cost_center"), icon: Wallet },
         { href: "/settings/suburbs", label: t("nav.suburb"), icon: MapPin },
         { href: "/settings/document-templates", label: t("nav.document_templates"), icon: FileText },
+        { href: "/settings/homestay-billing", label: t("nav.homestay_billing"), icon: CreditCard },
         { href: "/settings/translations", label: t("nav.languages"), icon: Languages },
         { href: "/settings/integrations", label: t("nav.integrations"), icon: Plug },
         { href: "/settings/api-keys", label: t("nav.api_keys"), icon: KeyRound },

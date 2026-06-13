@@ -71,7 +71,8 @@
     "homestay_applications": "Homestay Applications",
     "homestay_student_requests": "Student Applications",
     "homestay_placements": "Homestay Placements",
-    "document_templates": "Document Templates"
+    "document_templates": "Document Templates",
+    "homestay_billing": "Homestay Billing"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -2807,7 +2808,23 @@
     "btn_open_checkout": "Open checkout",
     "btn_create_bank_charge": "Create bank charge",
     "toast_bank_charge": "Bank charge created — share the details below",
-    "toast_marked_paid": "Charge marked paid"
+    "toast_marked_paid": "Charge marked paid",
+    "f_rent_per_cycle": "Rent (per cycle)",
+    "f_cycle": "Billing cycle",
+    "f_method": "Default method",
+    "f_next_billing": "Next billing",
+    "weeks": "weeks",
+    "override": "override",
+    "global_default": "Global default",
+    "btn_edit_billing": "Edit billing",
+    "btn_send_link": "Send link",
+    "btn_show_bank": "Show bank details",
+    "btn_create_charge": "Create charge",
+    "bank_title": "Bank transfer details",
+    "billing_override_title": "Placement billing override",
+    "charge_pending_hint": "This creates a pending charge. Send it (card link / bank details) from the Payments list.",
+    "toast_charge_created": "Pending charge created",
+    "toast_link_sent": "Payment link opened and emailed to the student"
   },
   "homestayDoc": {
     "title": "Signature & document",
@@ -2856,6 +2873,22 @@
     "toast_saved": "Template saved",
     "toast_published": "Template published",
     "toast_test_sent": "Test email sent",
+    "error": "Something went wrong"
+  },
+  "homestayBilling": {
+    "title": "Homestay Billing",
+    "subtitle": "Global defaults for homestay rent billing. Each placement can override the cycle and method.",
+    "cycle_weeks": "Billing cycle (weeks)",
+    "cycle_weeks_hint": "Rent is charged every N weeks (default 4 = four-weekly).",
+    "default_method": "Default payment method",
+    "method_card": "Stripe card",
+    "method_bank_transfer": "Bank transfer",
+    "surcharge_pct": "Card surcharge (%)",
+    "surcharge_pct_hint": "Added to card payments (upfront + rent). Bank transfer has no surcharge.",
+    "lead_days": "Charge lead days",
+    "lead_days_hint": "Generate the pending charge this many days before the due date.",
+    "note_cron": "A daily job creates a pending charge each cycle; ops send each one (card link / bank details) from the placement.",
+    "toast_saved": "Billing settings saved",
     "error": "Something went wrong"
   }
 }
