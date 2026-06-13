@@ -184,6 +184,8 @@
       "unblock": "解除",
       "convert": "转为短期",
       "clear_term": "取消转换"
-    }
+    },
+    "search_space": "搜索物业或房间…",
+    "jump_to": "跳转到日期"
   }
 }

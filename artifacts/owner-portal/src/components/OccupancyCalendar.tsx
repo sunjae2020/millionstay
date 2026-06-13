@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { apiGet, apiPost, apiDelete, ApiError } from "@/lib/api";
-import { ChevronLeft, ChevronRight, Ban, Sun, RotateCcw, CalendarOff } from "lucide-react";
+import { ChevronLeft, ChevronRight, Ban, Sun, RotateCcw, CalendarOff, Search } from "lucide-react";
 
 /* ── types ── */
 interface SpaceLite { id: number; name: string; space_type: string | null; status: string }
@@ -56,6 +56,8 @@ export function OccupancyCalendar() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [dailyRate, setDailyRate] = useState("");
   const [busy, setBusy] = useState(false);
+  const [spaceQuery, setSpaceQuery] = useState("");
+  const [jumpDate, setJumpDate] = useState(toISO(today));
 
   const grid = useMemo(() => buildGrid(cursor.year, cursor.month), [cursor]);
 
@@ -77,6 +79,33 @@ export function OccupancyCalendar() {
     () => properties.find((p) => p.id === propertyId)?.spaces ?? [],
     [properties, propertyId],
   );
+
+  // Flat list of every space (with its property) — backs the cross-property search.
+  const allSpaces = useMemo(
+    () => properties.flatMap((p) => p.spaces.map((s) => ({ ...s, property_id: p.id, property_name: p.name }))),
+    [properties],
+  );
+  const sq = spaceQuery.trim().toLowerCase();
+  // When searching, list matching spaces across ALL properties; otherwise the
+  // current property's spaces.
+  const spaceOptions = useMemo(() => {
+    if (sq) return allSpaces.filter((s) => `${s.property_name} ${s.name}`.toLowerCase().includes(sq));
+    return spacesForProperty.map((s) => ({ ...s, property_id: propertyId ?? 0, property_name: "" }));
+  }, [allSpaces, spacesForProperty, propertyId, sq]);
+
+  function selectSpace(id: number) {
+    setSpaceId(id);
+    const s = allSpaces.find((x) => x.id === id);
+    if (s) setPropertyId(s.property_id);
+  }
+
+  // If the active search filters out the current space, jump to the first match.
+  useEffect(() => {
+    if (spaceOptions.length && !spaceOptions.some((s) => s.id === spaceId)) {
+      selectSpace(spaceOptions[0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spaceOptions]);
 
   // Fetch calendar for the visible grid range whenever the space or month changes.
   function reload() {
@@ -140,35 +169,59 @@ export function OccupancyCalendar() {
 
   return (
     <div className="space-y-4">
-      {/* Pickers + month nav */}
+      {/* Search + pickers + date jump + month nav */}
       <div className="flex flex-wrap items-center gap-3">
-        <select
-          value={propertyId ?? ""}
-          onChange={(e) => {
-            const pid = Number(e.target.value);
-            setPropertyId(pid);
-            const sp = properties.find((p) => p.id === pid)?.spaces ?? [];
-            setSpaceId(sp[0]?.id ?? null);
-          }}
-          className="px-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        >
-          {properties.map((p) => (
-            <option key={p.id} value={p.id}>{p.name}</option>
-          ))}
-        </select>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <input
+            type="text"
+            value={spaceQuery}
+            onChange={(e) => setSpaceQuery(e.target.value)}
+            placeholder={t("calendar.search_space")}
+            className="w-56 pl-9 pr-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </div>
+
+        {!sq && (
+          <select
+            value={propertyId ?? ""}
+            onChange={(e) => {
+              const pid = Number(e.target.value);
+              setPropertyId(pid);
+              const sp = properties.find((p) => p.id === pid)?.spaces ?? [];
+              setSpaceId(sp[0]?.id ?? null);
+            }}
+            className="px-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            {properties.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+        )}
 
         <select
           value={spaceId ?? ""}
-          onChange={(e) => setSpaceId(Number(e.target.value))}
-          className="px-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          onChange={(e) => selectSpace(Number(e.target.value))}
+          className="px-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring max-w-[16rem]"
         >
-          {spacesForProperty.length === 0 && <option value="">{t("calendar.no_spaces")}</option>}
-          {spacesForProperty.map((s) => (
-            <option key={s.id} value={s.id}>{s.name}</option>
+          {spaceOptions.length === 0 && <option value="">{t("calendar.no_spaces")}</option>}
+          {spaceOptions.map((s) => (
+            <option key={s.id} value={s.id}>{sq && s.property_name ? `${s.property_name} · ${s.name}` : s.name}</option>
           ))}
         </select>
 
         <div className="flex items-center gap-2 ml-auto">
+          <input
+            type="date"
+            value={jumpDate}
+            title={t("calendar.jump_to")}
+            onChange={(e) => {
+              setJumpDate(e.target.value);
+              const d = new Date(e.target.value + "T00:00:00");
+              if (!isNaN(d.getTime())) setCursor({ year: d.getFullYear(), month: d.getMonth() });
+            }}
+            className="px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
           <button onClick={() => setCursor((c) => { const m = c.month - 1; return m < 0 ? { year: c.year - 1, month: 11 } : { year: c.year, month: m }; })}
             className="p-2 rounded-lg border border-input hover:bg-muted/60" aria-label="prev">
             <ChevronLeft className="w-4 h-4" />
@@ -226,7 +279,7 @@ export function OccupancyCalendar() {
                   : status === "blocked" ? day?.block_reason ?? t("calendar.legend.blocked")
                   : ""
                 }
-                className={`min-h-[60px] rounded-lg border text-left p-1.5 transition-colors ${STATUS_CELL[status]} ${!inMonth ? "opacity-40" : ""} ${isSel ? "ring-2 ring-primary ring-offset-1 ring-offset-background" : ""} ${clickable ? "cursor-pointer" : "cursor-not-allowed"}`}
+                className={`min-h-[60px] rounded-lg border text-left p-1.5 transition-colors ${STATUS_CELL[status]} ${!inMonth ? "opacity-40" : ""} ${isSel ? "ring-2 ring-primary ring-offset-1 ring-offset-background" : iso === jumpDate ? "ring-1 ring-primary" : ""} ${clickable ? "cursor-pointer" : "cursor-not-allowed"}`}
               >
                 <div className="text-xs font-medium">{d.getDate()}</div>
                 {status === "booked" && (
