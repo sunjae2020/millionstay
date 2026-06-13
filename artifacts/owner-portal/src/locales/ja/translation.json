@@ -184,6 +184,8 @@
       "unblock": "解除",
       "convert": "短期転換",
       "clear_term": "転換解除"
-    }
+    },
+    "search_space": "物件・スペースを検索…",
+    "jump_to": "日付へ移動"
   }
 }

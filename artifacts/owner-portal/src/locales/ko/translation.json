@@ -237,6 +237,8 @@
       "unblock": "해제",
       "convert": "단기전환",
       "clear_term": "전환해제"
-    }
+    },
+    "search_space": "자산 또는 공간 검색…",
+    "jump_to": "날짜로 이동"
   }
 }
