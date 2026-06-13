@@ -1,0 +1,23 @@
+# Railway / nixpacks build config for the api-server service.
+#
+# Why this exists: the API renders PDFs (homestay e-sign docs, invoices, quotes,
+# contracts) with Puppeteer. Puppeteer's *bundled* Chromium needs system shared
+# libraries that the default nixpacks image does not provide, so `puppeteer.launch()`
+# fails on Railway with PdfUnavailableError → the /pdf and /send endpoints return
+# 503 { "error": "pdf_unavailable" }. Installing the nix `chromium` package brings a
+# working browser (with its runtime deps) onto PATH; src/lib/documents/pdf.ts then
+# auto-detects it via resolveSystemChromium().
+#
+# NOTE: nixpacks reads this file from the Railway service's *root directory*. This
+# repo is a pnpm workspace whose install runs at the repo root, so the file lives
+# here. If the api-server service's Root Directory is set to artifacts/api-server,
+# move this file there instead.
+
+[phases.setup]
+# "..." keeps nixpacks' auto-detected packages (node, pnpm) and appends chromium.
+nixPkgs = ["...", "chromium"]
+
+[variables]
+# We use the system (nix) Chromium found on PATH, so skip puppeteer's ~150MB
+# Chromium download at install time.
+PUPPETEER_SKIP_DOWNLOAD = "true"
