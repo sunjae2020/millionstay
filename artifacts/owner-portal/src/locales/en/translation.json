@@ -115,7 +115,9 @@
     "col_period": "Period",
     "col_rate": "Rate",
     "col_status": "Status",
-    "no_bookings": "No bookings found"
+    "no_bookings": "No bookings found",
+    "view_calendar": "Calendar",
+    "view_list": "List"
   },
   "property_detail": {
     "back": "Back to properties",
@@ -213,5 +215,23 @@
     "title": "Inquiries",
     "subtitle": "Messages from guests via your landing site.",
     "empty": "No inquiries yet."
+  },
+  "calendar": {
+    "no_spaces": "No spaces",
+    "legend": {
+      "available": "Available",
+      "booked": "Booked",
+      "blocked": "Blocked (suspended)",
+      "short_term": "Short-term"
+    },
+    "selected_count": "{{count}} day(s) selected",
+    "select_hint": "Select dates on the calendar to block or convert them.",
+    "daily_rate": "Daily rate",
+    "action": {
+      "block": "Block",
+      "unblock": "Unblock",
+      "convert": "Short-term",
+      "clear_term": "Clear"
+    }
   }
 }

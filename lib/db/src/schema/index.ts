@@ -17,6 +17,7 @@ export * from "./contracts";
 export * from "./invoices";
 export * from "./work_orders";
 export * from "./space_availability";
+export * from "./space_term_calendar";
 export * from "./recurring_schedules";
 export * from "./system_logs";
 export * from "./email_templates";

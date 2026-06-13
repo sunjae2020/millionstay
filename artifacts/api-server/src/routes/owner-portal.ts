@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
-import { eq, and, desc, inArray, isNull } from "drizzle-orm";
+import { eq, and, desc, inArray, isNull, isNotNull, gte, lte } from "drizzle-orm";
 import {
   db,
   bookingsTable,
@@ -13,6 +13,8 @@ import {
   contactsTable,
   ownerSitesTable,
   leadsTable,
+  spaceAvailabilityTable,
+  spaceTermCalendarTable,
   validateSlug,
 } from "@workspace/db";
 import { requireOwnerAuth, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth";
@@ -37,6 +39,29 @@ function formatTenantForOwner(contact: { first_name: string | null; last_name: s
     last_name: last || "—",
     gender: contact.gender ?? "—",
   };
+}
+
+/**
+ * Accept either { dates: ["YYYY-MM-DD", ...] } or an inclusive { from, to }
+ * range and return a deduped, sorted list of ISO dates (capped at 366 days).
+ */
+function normaliseDates(body: any): string[] {
+  const isoRe = /^\d{4}-\d{2}-\d{2}$/;
+  const out = new Set<string>();
+  if (Array.isArray(body?.dates)) {
+    for (const d of body.dates) if (typeof d === "string" && isoRe.test(d)) out.add(d);
+  } else if (typeof body?.from === "string" && typeof body?.to === "string" && isoRe.test(body.from) && isoRe.test(body.to)) {
+    let from = body.from, to = body.to;
+    if (to < from) [from, to] = [to, from];
+    let guard = 0;
+    for (let d = from; d <= to && guard < 366; guard++) {
+      out.add(d);
+      const nd = new Date(d + "T00:00:00Z");
+      nd.setUTCDate(nd.getUTCDate() + 1);
+      d = nd.toISOString().slice(0, 10);
+    }
+  }
+  return [...out].sort();
 }
 
 /* GET /api/v1/owner/dashboard */
@@ -424,6 +449,294 @@ router.get("/v1/owner/revenue", requireOwnerAuth, async (req, res): Promise<void
       invoices: enrichedInvoices,
     },
   });
+});
+
+/* ═══════════════════════════════════════════════════════
+   Occupancy calendar — bookings + operation blocks + short-term
+   conversion markers, all scoped to the owner's own spaces.
+═══════════════════════════════════════════════════════ */
+
+const CAL_ACTIVE_BOOKING_STATUSES = ["Confirmed", "Pending", "PendingApproval", "Active", "CheckedOut"];
+
+function addDays(isoDate: string, n: number): string {
+  const d = new Date(isoDate + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Resolve the spaces this owner controls, optionally narrowed by property/space. */
+async function resolveOwnerSpaces(accountId: number, propertyId?: number, spaceId?: number) {
+  const properties = await db
+    .select({ id: propertiesTable.id, name: propertiesTable.name })
+    .from(propertiesTable)
+    .where(eq(propertiesTable.owner_account_id, accountId));
+  let propertyIds = properties.map(p => p.id);
+  if (propertyId) propertyIds = propertyIds.filter(id => id === propertyId);
+  if (!propertyIds.length) return { properties, spaces: [] as Array<{ id: number; name: string; space_type: string | null; property_id: number | null }> };
+
+  const spaces = await db
+    .select({ id: spacesTable.id, name: spacesTable.name, space_type: spacesTable.space_type, property_id: spacesTable.property_id })
+    .from(spacesTable)
+    .where(and(inArray(spacesTable.property_id, propertyIds), isNull(spacesTable.deleted_at)));
+
+  return { properties, spaces: spaceId ? spaces.filter(s => s.id === spaceId) : spaces };
+}
+
+/** Verify a single space belongs to this owner; returns the space row or null. */
+async function ownerSpace(accountId: number, spaceId: number) {
+  const [space] = await db
+    .select({ id: spacesTable.id, name: spacesTable.name, property_id: spacesTable.property_id })
+    .from(spacesTable)
+    .innerJoin(propertiesTable, eq(spacesTable.property_id, propertiesTable.id))
+    .where(and(eq(spacesTable.id, spaceId), eq(propertiesTable.owner_account_id, accountId)))
+    .limit(1);
+  return space ?? null;
+}
+
+/* GET /api/v1/owner/calendar?from=&to=&property_id=&space_id=
+   Per-space, per-date occupancy with masked tenant labels. */
+router.get("/v1/owner/calendar", requireOwnerAuth, async (req, res): Promise<void> => {
+  const partner = (req as any).partner as PartnerAuthPayload;
+
+  const today = new Date().toISOString().slice(0, 10);
+  const from = String(req.query.from ?? today);
+  let to = String(req.query.to ?? addDays(from, 60));
+  if (to > addDays(from, 400)) to = addDays(from, 400); // guard runaway ranges
+  if (to < from) to = from;
+
+  const propertyId = req.query.property_id ? Number(req.query.property_id) : undefined;
+  const spaceId = req.query.space_id ? Number(req.query.space_id) : undefined;
+
+  const { properties, spaces } = await resolveOwnerSpaces(partner.account_id, propertyId, spaceId);
+  const propMap = Object.fromEntries(properties.map(p => [p.id, p.name]));
+  const spaceIds = spaces.map(s => s.id);
+
+  if (!spaceIds.length) {
+    res.json({ success: true, data: { from, to, properties, spaces: [] } });
+    return;
+  }
+
+  const [bookings, blocks, terms] = await Promise.all([
+    db
+      .select({
+        id: bookingsTable.id,
+        space_id: bookingsTable.space_id,
+        booking_ref: bookingsTable.booking_ref,
+        booking_status: bookingsTable.booking_status,
+        contact_id: bookingsTable.contact_id,
+        check_in_date: bookingsTable.check_in_date,
+        check_out_date: bookingsTable.check_out_date,
+      })
+      .from(bookingsTable)
+      .where(and(
+        inArray(bookingsTable.space_id, spaceIds),
+        eq(bookingsTable.status, "Active"),
+        inArray(bookingsTable.booking_status, CAL_ACTIVE_BOOKING_STATUSES),
+        isNotNull(bookingsTable.check_in_date),
+        isNotNull(bookingsTable.check_out_date),
+        lte(bookingsTable.check_in_date, to),
+        gte(bookingsTable.check_out_date, from),
+      )),
+    db
+      .select({
+        space_id: spaceAvailabilityTable.space_id,
+        date: spaceAvailabilityTable.date,
+        block_reason: spaceAvailabilityTable.block_reason,
+      })
+      .from(spaceAvailabilityTable)
+      .where(and(
+        inArray(spaceAvailabilityTable.space_id, spaceIds),
+        eq(spaceAvailabilityTable.is_available, false),
+        gte(spaceAvailabilityTable.date, from),
+        lte(spaceAvailabilityTable.date, to),
+      )),
+    db
+      .select({
+        space_id: spaceTermCalendarTable.space_id,
+        date: spaceTermCalendarTable.date,
+        term_type: spaceTermCalendarTable.term_type,
+        daily_rate: spaceTermCalendarTable.daily_rate,
+        currency: spaceTermCalendarTable.currency,
+      })
+      .from(spaceTermCalendarTable)
+      .where(and(
+        inArray(spaceTermCalendarTable.space_id, spaceIds),
+        gte(spaceTermCalendarTable.date, from),
+        lte(spaceTermCalendarTable.date, to),
+      )),
+  ]);
+
+  // Mask tenant identity (owner portal never exposes full guest details).
+  const contactIds = [...new Set(bookings.map(b => b.contact_id).filter(Boolean))] as number[];
+  const contacts = contactIds.length
+    ? await db
+        .select({ id: contactsTable.id, first_name: contactsTable.first_name, last_name: contactsTable.last_name, gender: contactsTable.gender })
+        .from(contactsTable)
+        .where(inArray(contactsTable.id, contactIds))
+    : [];
+  const contactMap = Object.fromEntries(contacts.map(c => [c.id, c]));
+
+  type Day = {
+    date: string;
+    status: "available" | "booked" | "blocked" | "short_term";
+    booking_ref: string | null;
+    tenant: string | null;
+    block_reason: string | null;
+    daily_rate: string | null;
+    currency: string | null;
+  };
+
+  const result = spaces.map(space => {
+    const sBookings = bookings.filter(b => b.space_id === space.id);
+    const blockSet = new Map(blocks.filter(b => b.space_id === space.id).map(b => [String(b.date), b]));
+    const termMap = new Map(terms.filter(t => t.space_id === space.id).map(t => [String(t.date), t]));
+
+    const days: Day[] = [];
+    const summary = { available: 0, booked: 0, blocked: 0, short_term: 0 };
+    for (let d = from; d <= to; d = addDays(d, 1)) {
+      // checkout date is exclusive
+      const bk = sBookings.find(b => b.check_in_date! <= d && d < b.check_out_date!);
+      const blk = blockSet.get(d);
+      const term = termMap.get(d);
+
+      let day: Day;
+      if (bk) {
+        const c = bk.contact_id ? contactMap[bk.contact_id] : null;
+        day = { date: d, status: "booked", booking_ref: bk.booking_ref ?? null, tenant: c ? formatTenantForOwner(c).display_name : null, block_reason: null, daily_rate: null, currency: null };
+      } else if (blk) {
+        day = { date: d, status: "blocked", booking_ref: null, tenant: null, block_reason: blk.block_reason ?? null, daily_rate: null, currency: null };
+      } else if (term) {
+        day = { date: d, status: "short_term", booking_ref: null, tenant: null, block_reason: null, daily_rate: term.daily_rate ?? null, currency: term.currency ?? null };
+      } else {
+        day = { date: d, status: "available", booking_ref: null, tenant: null, block_reason: null, daily_rate: null, currency: null };
+      }
+      days.push(day);
+      summary[day.status]++;
+    }
+
+    return {
+      space_id: space.id,
+      space_name: space.name,
+      space_type: space.space_type,
+      property_id: space.property_id,
+      property_name: space.property_id ? propMap[space.property_id] ?? null : null,
+      days,
+      summary,
+    };
+  });
+
+  res.json({ success: true, data: { from, to, properties, spaces: result } });
+});
+
+/* POST /api/v1/owner/spaces/:id/block — mark dates as operation-suspended */
+router.post("/v1/owner/spaces/:id/block", requireOwnerAuth, async (req, res): Promise<void> => {
+  const partner = (req as any).partner as PartnerAuthPayload;
+  const id = Number(req.params.id);
+  if (!id) { res.status(400).json({ error: "Invalid space id" }); return; }
+
+  const space = await ownerSpace(partner.account_id, id);
+  if (!space) { res.status(404).json({ error: "Space not found" }); return; }
+
+  const dates = normaliseDates(req.body);
+  const reason = typeof req.body?.reason === "string" && req.body.reason.trim() ? req.body.reason.trim() : "Owner block";
+  if (!dates.length) { res.status(400).json({ error: "dates array (or from/to) is required" }); return; }
+
+  for (const date of dates) {
+    await db.insert(spaceAvailabilityTable)
+      .values({ space_id: id, date, is_available: false, block_reason: reason, source: "manual" })
+      .onConflictDoUpdate({
+        target: [spaceAvailabilityTable.space_id, spaceAvailabilityTable.date],
+        set: { is_available: false, block_reason: reason, source: "manual" },
+      });
+  }
+  await logAction({ entityType: "space", entityId: id, action: "BLOCK", actorId: partner.id, actorEmail: partner.email, newValue: { dates, reason }, ipAddress: req.ip ?? null });
+  res.json({ success: true, blocked_count: dates.length });
+});
+
+/* POST /api/v1/owner/spaces/:id/unblock — clear operation-suspension blocks.
+   Only clears manual (owner) blocks, never booking/OTA-originated rows. */
+router.post("/v1/owner/spaces/:id/unblock", requireOwnerAuth, async (req, res): Promise<void> => {
+  const partner = (req as any).partner as PartnerAuthPayload;
+  const id = Number(req.params.id);
+  if (!id) { res.status(400).json({ error: "Invalid space id" }); return; }
+
+  const space = await ownerSpace(partner.account_id, id);
+  if (!space) { res.status(404).json({ error: "Space not found" }); return; }
+
+  const dates = normaliseDates(req.body);
+  if (!dates.length) { res.status(400).json({ error: "dates array (or from/to) is required" }); return; }
+
+  let cleared = 0;
+  for (const date of dates) {
+    const r = await db.delete(spaceAvailabilityTable)
+      .where(and(
+        eq(spaceAvailabilityTable.space_id, id),
+        eq(spaceAvailabilityTable.date, date),
+        eq(spaceAvailabilityTable.source, "manual"),
+        eq(spaceAvailabilityTable.is_available, false),
+      ))
+      .returning({ id: spaceAvailabilityTable.id });
+    cleared += r.length;
+  }
+  await logAction({ entityType: "space", entityId: id, action: "UNBLOCK", actorId: partner.id, actorEmail: partner.email, newValue: { dates }, ipAddress: req.ip ?? null });
+  res.json({ success: true, unblocked_count: cleared });
+});
+
+/* POST /api/v1/owner/spaces/:id/term — flag dates as short-term + set daily rate */
+router.post("/v1/owner/spaces/:id/term", requireOwnerAuth, async (req, res): Promise<void> => {
+  const partner = (req as any).partner as PartnerAuthPayload;
+  const id = Number(req.params.id);
+  if (!id) { res.status(400).json({ error: "Invalid space id" }); return; }
+
+  const space = await ownerSpace(partner.account_id, id);
+  if (!space) { res.status(404).json({ error: "Space not found" }); return; }
+
+  const dates = normaliseDates(req.body);
+  if (!dates.length) { res.status(400).json({ error: "dates array (or from/to) is required" }); return; }
+
+  const term_type = "short_term"; // only term the owner UI converts to today
+  const currency = typeof req.body?.currency === "string" && req.body.currency.trim() ? req.body.currency.trim() : "AUD";
+  // Daily rate: numeric column → store as string. Optional but validated when present.
+  let daily_rate: string | null = null;
+  if (req.body?.daily_rate !== undefined && req.body.daily_rate !== null && String(req.body.daily_rate) !== "") {
+    const n = Number(req.body.daily_rate);
+    if (!Number.isFinite(n) || n < 0) { res.status(400).json({ error: "daily_rate must be a non-negative number" }); return; }
+    daily_rate = String(n);
+  }
+
+  for (const date of dates) {
+    await db.insert(spaceTermCalendarTable)
+      .values({ space_id: id, date, term_type, daily_rate, currency })
+      .onConflictDoUpdate({
+        target: [spaceTermCalendarTable.space_id, spaceTermCalendarTable.date],
+        set: { term_type, daily_rate, currency, updated_at: new Date() },
+      });
+  }
+  await logAction({ entityType: "space", entityId: id, action: "TERM_SET", actorId: partner.id, actorEmail: partner.email, newValue: { dates, term_type, daily_rate, currency }, ipAddress: req.ip ?? null });
+  res.json({ success: true, converted_count: dates.length });
+});
+
+/* DELETE /api/v1/owner/spaces/:id/term — clear short-term conversion markers */
+router.delete("/v1/owner/spaces/:id/term", requireOwnerAuth, async (req, res): Promise<void> => {
+  const partner = (req as any).partner as PartnerAuthPayload;
+  const id = Number(req.params.id);
+  if (!id) { res.status(400).json({ error: "Invalid space id" }); return; }
+
+  const space = await ownerSpace(partner.account_id, id);
+  if (!space) { res.status(404).json({ error: "Space not found" }); return; }
+
+  const dates = normaliseDates(req.body);
+  if (!dates.length) { res.status(400).json({ error: "dates array (or from/to) is required" }); return; }
+
+  let cleared = 0;
+  for (const date of dates) {
+    const r = await db.delete(spaceTermCalendarTable)
+      .where(and(eq(spaceTermCalendarTable.space_id, id), eq(spaceTermCalendarTable.date, date)))
+      .returning({ id: spaceTermCalendarTable.id });
+    cleared += r.length;
+  }
+  await logAction({ entityType: "space", entityId: id, action: "TERM_CLEAR", actorId: partner.id, actorEmail: partner.email, newValue: { dates }, ipAddress: req.ip ?? null });
+  res.json({ success: true, cleared_count: cleared });
 });
 
 /* ═══════════════════════════════════════════════════════

@@ -121,6 +121,11 @@ export async function apiPatch<T>(path: string, body?: unknown): Promise<T> {
   return handleResponse<T>(r, path);
 }
 
+export async function apiDelete<T>(path: string, body?: unknown): Promise<T> {
+  const r = await apiFetch(path, { method: "DELETE", body: body == null ? undefined : JSON.stringify(body) });
+  return handleResponse<T>(r, path);
+}
+
 /** Multipart upload — apiFetch omits the JSON Content-Type for FormData bodies. */
 export async function apiUpload<T>(path: string, formData: FormData): Promise<T> {
   const r = await apiFetch(path, { method: "POST", body: formData });
