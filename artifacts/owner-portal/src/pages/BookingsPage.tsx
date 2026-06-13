@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
-import { Calendar } from "lucide-react";
+import { OccupancyCalendar } from "@/components/OccupancyCalendar";
+import { Calendar, CalendarDays, List } from "lucide-react";
 
 interface Booking {
   id: number;
@@ -27,6 +28,7 @@ const STATUS_CLS: Record<string, string> = {
 
 export default function BookingsPage() {
   const { t } = useTranslation();
+  const [view, setView] = useState<"calendar" | "list">("calendar");
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -45,11 +47,31 @@ export default function BookingsPage() {
 
   return (
     <Layout>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">{t("bookings.title")}</h1>
-        <p className="text-muted-foreground text-sm mt-1">{t("bookings.subtitle")}</p>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">{t("bookings.title")}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{t("bookings.subtitle")}</p>
+        </div>
+        <div className="inline-flex rounded-lg border border-input overflow-hidden">
+          <button
+            onClick={() => setView("calendar")}
+            className={`inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium ${view === "calendar" ? "bg-primary text-primary-foreground" : "bg-background text-foreground hover:bg-muted/60"}`}
+          >
+            <CalendarDays className="w-4 h-4" /> {t("bookings.view_calendar")}
+          </button>
+          <button
+            onClick={() => setView("list")}
+            className={`inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium ${view === "list" ? "bg-primary text-primary-foreground" : "bg-background text-foreground hover:bg-muted/60"}`}
+          >
+            <List className="w-4 h-4" /> {t("bookings.view_list")}
+          </button>
+        </div>
       </div>
 
+      {view === "calendar" && <OccupancyCalendar />}
+
+      {view === "list" && (
+      <>
       <div className="flex gap-3 mb-6">
         <select
           value={statusFilter}
@@ -130,6 +152,8 @@ export default function BookingsPage() {
           </tbody>
         </table>
       </div>
+      </>
+      )}
     </Layout>
   );
 }

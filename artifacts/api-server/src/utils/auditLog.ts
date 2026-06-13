@@ -22,6 +22,8 @@ export async function logAction({
     | "VERIFY"
     | "BLOCK"
     | "UNBLOCK"
+    | "TERM_SET"
+    | "TERM_CLEAR"
     | "AUTO_CREATED"
     | "ADD_SERVICE"
     | "REMOVE_SERVICE"
