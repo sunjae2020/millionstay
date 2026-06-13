@@ -19,7 +19,8 @@
     "loading": "読み込み中...",
     "all_statuses": "すべてのステータス",
     "ongoing": "進行中",
-    "tbd": "未定"
+    "tbd": "未定",
+    "clear": "クリア"
   },
   "login": {
     "headline_1": "あなたの物件、",
@@ -108,7 +109,11 @@
     "col_status": "ステータス",
     "no_bookings": "予約が見つかりません",
     "view_calendar": "カレンダー",
-    "view_list": "リスト"
+    "view_list": "リスト",
+    "search_placeholder": "参照・入居者・物件を検索…",
+    "date_from": "開始日",
+    "date_to": "終了日",
+    "result_count": "{{count}}件"
   },
   "property_detail": {
     "back": "物件一覧に戻る",

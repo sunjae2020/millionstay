@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
 import { OccupancyCalendar } from "@/components/OccupancyCalendar";
-import { Calendar, CalendarDays, List } from "lucide-react";
+import { Calendar, CalendarDays, List, Search, X } from "lucide-react";
 
 interface Booking {
   id: number;
@@ -33,6 +33,9 @@ export default function BookingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [search, setSearch] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   useEffect(() => {
     apiGet<{ success: boolean; data: Booking[] }>("/v1/owner/bookings")
@@ -41,9 +44,27 @@ export default function BookingsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered = statusFilter
-    ? bookings.filter((b) => b.booking_status === statusFilter)
-    : bookings;
+  const q = search.trim().toLowerCase();
+  const filtered = bookings.filter((b) => {
+    if (statusFilter && b.booking_status !== statusFilter) return false;
+    if (q) {
+      const hay = [b.booking_ref, b.tenant?.first_name, b.tenant?.last_name, b.tenant?.display_name, b.property_name, b.space_name]
+        .filter(Boolean).join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    // Date range: keep bookings whose stay overlaps [dateFrom, dateTo].
+    // check_out empty = ongoing (open-ended), so it always overlaps dateTo.
+    if (dateFrom || dateTo) {
+      const ci = b.check_in_date || "";
+      const co = b.check_out_date || "";
+      if (dateTo && ci && ci > dateTo) return false;     // starts after the window
+      if (dateFrom && co && co < dateFrom) return false; // ended before the window
+    }
+    return true;
+  });
+
+  const hasFilters = !!(statusFilter || q || dateFrom || dateTo);
+  const clearFilters = () => { setStatusFilter(""); setSearch(""); setDateFrom(""); setDateTo(""); };
 
   return (
     <Layout>
@@ -72,7 +93,18 @@ export default function BookingsPage() {
 
       {view === "list" && (
       <>
-      <div className="flex gap-3 mb-6">
+      <div className="flex flex-wrap items-end gap-3 mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t("bookings.search_placeholder")}
+            className="w-64 pl-9 pr-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </div>
+
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
@@ -83,6 +115,40 @@ export default function BookingsPage() {
             <option key={s} value={s}>{t(`status.${s}`, s)}</option>
           ))}
         </select>
+
+        <div className="flex flex-col">
+          <label className="text-xs text-muted-foreground mb-1">{t("bookings.date_from")}</label>
+          <input
+            type="date"
+            value={dateFrom}
+            max={dateTo || undefined}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </div>
+        <div className="flex flex-col">
+          <label className="text-xs text-muted-foreground mb-1">{t("bookings.date_to")}</label>
+          <input
+            type="date"
+            value={dateTo}
+            min={dateFrom || undefined}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="px-3 py-2 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </div>
+
+        {hasFilters && (
+          <button
+            onClick={clearFilters}
+            className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-input text-foreground text-sm font-medium hover:bg-muted/60"
+          >
+            <X className="w-4 h-4" /> {t("common.clear")}
+          </button>
+        )}
+
+        <span className="text-sm text-muted-foreground ml-auto self-center">
+          {t("bookings.result_count", { count: filtered.length })}
+        </span>
       </div>
 
       {error && (
