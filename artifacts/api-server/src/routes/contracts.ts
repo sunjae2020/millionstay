@@ -8,7 +8,8 @@ import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
 import { normalizeLang, t } from "../lib/documents/i18n";
 import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
-import { sendDocumentEmail } from "../lib/email";
+import { sendDocumentEmail, resolveDocEmailCopy } from "../lib/email";
+import { resolveTemplate } from "../lib/documents/templateEngine";
 import { emailLogsTable } from "@workspace/db";
 
 // ─── Invoice ref generator (returns a factory that increments safely) ────────
@@ -361,6 +362,13 @@ async function buildContractDocInput(id: number): Promise<{ doc: ContractDocInpu
   const [row] = await db.select().from(contractsTable).where(eq(contractsTable.id, id));
   if (!row) return null;
   const [c] = await enrichContracts([row]);
+  // Terms: per-contract terms_text wins; otherwise fall back to the editable
+  // `contract.terms` template (Templates Studio), then to none.
+  let termsText = c.terms_text;
+  if (!termsText?.trim()) {
+    const tpl = await resolveTemplate({ kind: "contract", key: "contract.terms", locale: "en" });
+    if (tpl?.bodyHtml?.trim()) termsText = tpl.bodyHtml;
+  }
   return {
     tenantAccountId: row.tenant_account_id ?? null,
     doc: {
@@ -378,7 +386,7 @@ async function buildContractDocInput(id: number): Promise<{ doc: ContractDocInpu
       bond_amount: c.bond_amount,
       advance_amount: c.advance_amount,
       currency: c.currency,
-      terms_text: c.terms_text,
+      terms_text: termsText,
       notes: c.notes,
       signed_at: c.signed_at,
       created_at: c.created_at,
@@ -435,10 +443,16 @@ router.post("/v1/contracts/:id/email", async (req, res): Promise<void> => {
     res.status(500).json({ error: "Failed to generate PDF" }); return;
   }
 
+  const amountLabel = built.doc.total_rent != null ? `${Number(built.doc.total_rent).toLocaleString("en-AU", { minimumFractionDigits: 2 })} ${built.doc.currency || "AUD"}` : null;
+  // Editable email copy (Templates Studio); falls back to the hardcoded note.
+  const copy = await resolveDocEmailCopy("email.contract", lang, {
+    ref: built.doc.contract_ref, name: built.doc.tenant_name ?? "", amount: amountLabel ?? "",
+  });
   const result = await sendDocumentEmail({
     to, toName: built.doc.tenant_name, lang, docTypeLabel: t(lang, "doctype.contract"), ref: built.doc.contract_ref,
-    amountLabel: built.doc.total_rent != null ? `${Number(built.doc.total_rent).toLocaleString("en-AU", { minimumFractionDigits: 2 })} ${built.doc.currency || "AUD"}` : null,
-    note: t(lang, "email.note.reviewAgreement"),
+    amountLabel,
+    note: copy.note ?? t(lang, "email.note.reviewAgreement"),
+    subject: copy.subject,
     pdf, filename: `${built.doc.contract_ref}.pdf`,
   });
 

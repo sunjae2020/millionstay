@@ -46,6 +46,42 @@ const TEMPLATES = [
       `<p style="font-size:14px;color:#4b5563;line-height:1.6;">Hi {{name}}, your homestay monthly fee of <strong>{{amount}}</strong> for the period starting {{period}} is due. Please pay securely here:</p>` +
       `<p style="margin:18px 0;"><a href="{{pay_url}}" style="background:#E8621A;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Pay now</a></p>` +
       `<p style="font-size:12px;color:#9ca3af;">A 2% card processing fee is included. Reference: {{ref}}.</p>` },
+  // ── Regular short/long-term operations (bookings · contracts · invoices) ──
+  // Email templates here supply the cover-email NOTE sentence (+ optional
+  // subject). The body is plain text injected into the fixed branded shell, so
+  // it mirrors the current hardcoded note — publishing changes nothing until
+  // ops edit it. Subject is omitted (null) so the default subject is kept.
+  { kind: "email", key: "email.contract", name: "Contract — cover email", category: "Documents",
+    vars: { ref: { type: "string" }, name: { type: "string" }, amount: { type: "string" } },
+    subject: null,
+    body: "Please review the attached agreement. If everything looks correct, sign and return it at your earliest convenience." },
+  { kind: "email", key: "email.invoice", name: "Invoice — cover email", category: "Documents",
+    vars: { ref: { type: "string" }, name: { type: "string" }, amount: { type: "string" }, due_date: { type: "date" } },
+    subject: null,
+    body: "Please find your invoice attached. Payment is due by {{due_date}}." },
+  { kind: "email", key: "email.receipt", name: "Receipt — cover email", category: "Documents",
+    vars: { ref: { type: "string" }, name: { type: "string" }, amount: { type: "string" } },
+    subject: null,
+    body: "Thank you for your payment. A receipt is attached for your records." },
+  { kind: "contract", key: "contract.terms", name: "Tenancy/Accommodation Agreement — default terms", category: "Documents", vars: {},
+    subject: null,
+    body: [
+      "This Accommodation Agreement is made between MillionStay (or the landlord named above) and the tenant named above.",
+      "",
+      "1. Premises & term. The landlord agrees to let the premises shown above to the tenant for the term shown above. The tenant agrees to keep the premises in good condition and to comply with the house rules.",
+      "",
+      "2. Rent & charges. Rent is payable in advance at the rate shown above, as invoiced. Any bond and advance amounts shown above are payable before the start of the term.",
+      "",
+      "3. Bond. The bond is held as security against damage and unpaid amounts and is refundable at the end of the term subject to no outstanding amounts or damage beyond fair wear and tear.",
+      "",
+      "4. Use & conduct. The tenant will use the premises only for residential purposes, will not cause nuisance, and will allow reasonable access for inspection and repairs with notice.",
+      "",
+      "5. Termination. Either party may end this agreement in line with the notice requirements of the applicable residential tenancy laws. Rent is payable up to the move-out date.",
+      "",
+      "6. Privacy. Personal information is handled in line with MillionStay's Privacy Policy and the Australian Privacy Principles.",
+      "",
+      "By signing below, each party confirms they have read, understood and agree to these terms.",
+    ].join("\n") },
   { kind: "contract", key: "homestay_placement_terms", name: "Homestay Placement Agreement — terms", category: "Homestay", vars: {},
     subject: null,
     body: [

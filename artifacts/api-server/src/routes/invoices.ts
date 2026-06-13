@@ -9,7 +9,7 @@ import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
 import { normalizeLang, t } from "../lib/documents/i18n";
 import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
-import { sendDocumentEmail } from "../lib/email";
+import { sendDocumentEmail, resolveDocEmailCopy } from "../lib/email";
 import {
   CreateInvoiceBody,
   UpdateInvoiceBody,
@@ -319,10 +319,17 @@ async function emailInvoiceDocument(req: import("express").Request, res: import(
   }
 
   const docTypeLabel = t(lang, kind === "receipt" ? "doctype.receipt" : "doctype.invoice");
+  const amountLabel = moneyLabel(docInput.amount, docInput.currency);
+  // Editable email copy (Templates Studio); falls back to the hardcoded note.
+  const fallbackNote = kind === "invoice" && docInput.due_date ? t(lang, "email.note.due", { date: docInput.due_date }) : null;
+  const copy = await resolveDocEmailCopy(kind === "receipt" ? "email.receipt" : "email.invoice", lang, {
+    ref: docInput.invoice_ref, name: docInput.account_name ?? "", amount: amountLabel, due_date: docInput.due_date ?? "",
+  });
   const result = await sendDocumentEmail({
     to, toName: docInput.account_name, lang, docTypeLabel, ref: docInput.invoice_ref,
-    amountLabel: moneyLabel(docInput.amount, docInput.currency),
-    note: kind === "invoice" && docInput.due_date ? t(lang, "email.note.due", { date: docInput.due_date }) : null,
+    amountLabel,
+    note: copy.note ?? fallbackNote,
+    subject: copy.subject,
     pdf, filename: `${docInput.invoice_ref}${kind === "receipt" ? "-receipt" : ""}.pdf`,
   });
 
