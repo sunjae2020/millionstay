@@ -442,3 +442,15 @@ export function useUpdateMyProfile() {
     },
   });
 }
+
+/** Public-safe company contact email (single source = Settings → Organisation).
+ *  Falls back to the representative address so pages always render. */
+export const SUPPORT_EMAIL_FALLBACK = "millionstay.com@gmail.com";
+export function useSupportEmail(): string {
+  const { data } = useQuery({
+    queryKey: ["public-company-contact"],
+    queryFn: () => apiFetch<{ success: boolean; data: { email?: string } }>("/public/company-contact"),
+    staleTime: 1000 * 60 * 60,
+  });
+  return data?.data?.email || SUPPORT_EMAIL_FALLBACK;
+}

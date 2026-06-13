@@ -28,6 +28,7 @@ import {
 import { ingestReservations } from "../lib/channels/reservations.js";
 import { insertLeadWithGeneratedRef } from "../lib/leadRef.js";
 import { sendLeadNotificationEmail } from "../lib/email.js";
+import { resolveCompanyInfo } from "../lib/documents/companyInfo.js";
 import { buildCalendar } from "../lib/ical.js";
 import { getSpaceCalendarEvents } from "../lib/spaceCalendar.js";
 import { timingSafeEqual } from "node:crypto";
@@ -69,6 +70,18 @@ function productMinDays(period: number | null, unit: string | null): number | nu
 }
 
 const router: IRouter = Router();
+
+/* GET /api/v1/public/company-contact — public-safe company contact details
+   (single source = Settings → Organisation). Used by the guest web for the
+   support email shown in the footer / contact / receipt pages. */
+router.get("/v1/public/company-contact", async (_req, res): Promise<void> => {
+  try {
+    const c = await resolveCompanyInfo();
+    res.json({ success: true, data: { email: c.email, phone: c.phone, tradingName: c.tradingName, website: c.website } });
+  } catch {
+    res.json({ success: true, data: { email: "millionstay.com@gmail.com", phone: "", tradingName: "MillionStay", website: "https://www.millionstay.com" } });
+  }
+});
 
 /* ───────────────────────────────────────────────────────
    listPublicSpaces — shared search used by the global landing

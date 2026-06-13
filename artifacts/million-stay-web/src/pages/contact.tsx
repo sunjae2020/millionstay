@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getApiBase } from "@/lib/api-base";
+import { useSupportEmail } from "@/lib/guest-api";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { motion } from "framer-motion";
@@ -17,6 +18,7 @@ function fade(delay = 0) {
 export default function Contact() {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const supportEmail = useSupportEmail();
   const [form, setForm] = useState({ first_name: "", last_name: "", email: "", subject: "", message: "" });
   const [sending, setSending] = useState(false);
 
@@ -98,8 +100,8 @@ export default function Contact() {
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">{t("contact_page.email")}</p>
-                  <a href="mailto:info@millionstay.com" className="text-sm text-gray-700 hover:text-primary">
-                    info@millionstay.com
+                  <a href={`mailto:${supportEmail}`} className="text-sm text-gray-700 hover:text-primary">
+                    {supportEmail}
                   </a>
                 </div>
               </div>

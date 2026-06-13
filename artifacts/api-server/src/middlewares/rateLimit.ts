@@ -52,6 +52,6 @@ export const privacyExportLimiter = rateLimit({
   limit: 10,
   standardHeaders: "draft-7",
   legacyHeaders: false,
-  message: { error: "Daily privacy-export limit reached. Contact info@millionstay.com if you need additional exports." },
+  message: { error: "Daily privacy-export limit reached. Contact millionstay.com@gmail.com if you need additional exports." },
   skip,
 });

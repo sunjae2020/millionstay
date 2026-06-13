@@ -49,7 +49,7 @@ export function getCompanyInfo(): CompanyInfo {
     legalName: process.env.COMPANY_LEGAL_NAME ?? "MillionStay Pty Ltd",
     tradingName: process.env.COMPANY_TRADING_NAME ?? "MillionStay",
     abn: process.env.COMPANY_ABN ?? "",
-    email: process.env.SUPPORT_EMAIL ?? "info@millionstay.com",
+    email: process.env.SUPPORT_EMAIL ?? "millionstay.com@gmail.com",
     phone: process.env.COMPANY_PHONE ?? "",
     website: process.env.PUBLIC_WEB_URL ?? "https://www.millionstay.com",
     address: process.env.COMPANY_ADDRESS ?? "Melbourne, VIC, Australia",
