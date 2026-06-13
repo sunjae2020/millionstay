@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Save, Send, CheckCircle2, Eye, Code } from "lucide-react";
+import { ArrowLeft, Save, Send, CheckCircle2, Eye, Code, Type } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 const API = "/api/v1/document-templates";
 const LOCALES = ["en", "ko", "ja", "zh", "th"];
@@ -56,7 +57,7 @@ export default function DocumentTemplateEdit() {
 
   const [locale, setLocale] = useState("en");
   const [drafts, setDrafts] = useState<Record<string, { subject: string; body_html: string }>>({});
-  const [mode, setMode] = useState<"html" | "preview">("html");
+  const [mode, setMode] = useState<"visual" | "html" | "preview">("visual");
 
   // Seed editable drafts from the fetched translations.
   useEffect(() => {
@@ -151,11 +152,14 @@ export default function DocumentTemplateEdit() {
               <div className="flex items-center justify-between">
                 <Label>{t("documentTemplate.f_body")}</Label>
                 <div className="flex gap-1">
+                  <button onClick={() => setMode("visual")} className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded border ${mode === "visual" ? "bg-muted" : "bg-white"}`}><Type className="h-3 w-3" /> {t("documentTemplate.visual")}</button>
                   <button onClick={() => setMode("html")} className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded border ${mode === "html" ? "bg-muted" : "bg-white"}`}><Code className="h-3 w-3" /> HTML</button>
                   <button onClick={() => setMode("preview")} className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded border ${mode === "preview" ? "bg-muted" : "bg-white"}`}><Eye className="h-3 w-3" /> {t("documentTemplate.preview")}</button>
                 </div>
               </div>
-              {mode === "html" ? (
+              {mode === "visual" ? (
+                <RichTextEditor value={cur.body_html} onChange={(html) => setCur({ body_html: html })} placeholder="Hi {{name}}, …" />
+              ) : mode === "html" ? (
                 <Textarea value={cur.body_html} onChange={(e) => setCur({ body_html: e.target.value })} rows={18} className="font-mono text-xs" placeholder="<p>Hi {{name}}, …</p>" />
               ) : (
                 <div className="border rounded-md p-4 bg-white min-h-[300px]">
