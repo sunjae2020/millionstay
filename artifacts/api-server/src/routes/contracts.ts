@@ -62,7 +62,10 @@ function formatPeriodLabel(freq: string, dateStr: string): string {
 // ─── Core: generate invoices + payment schedules for a contract ───────────────
 // Uses contract_line_items as the source of truth.
 // Falls back to contract_products if no line items exist (backward compat).
-async function generateContractInvoicesAndSchedules(contractId: number): Promise<{ invoices: number; schedules: number }> {
+async function generateContractInvoicesAndSchedules(
+  contractId: number,
+  billingMode: "upfront" | "incremental" = "upfront",
+): Promise<{ invoices: number; schedules: number }> {
   const [contract] = await db.select().from(contractsTable).where(eq(contractsTable.id, contractId));
   if (!contract || !contract.start_date || !contract.end_date) return { invoices: 0, schedules: 0 };
 
@@ -150,8 +153,31 @@ async function generateContractInvoicesAndSchedules(contractId: number): Promise
     const lineName = line.name;
 
     if (line.billing_trigger === "recurring") {
-      // Generate periodic invoices + schedules across the contract period
       const freq = line.billing_frequency ?? "Monthly";
+
+      // Incremental mode: create ONE schedule the daily cron bills cycle-by-cycle,
+      // instead of pre-generating every invoice for the whole term up front.
+      if (billingMode === "incremental") {
+        const [sched] = await db.insert(recurringSchedulesTable).values({
+          booking_id: contract.booking_id ?? 0,
+          contract_id: contractId,
+          account_id: contract.tenant_account_id ?? 0,
+          schedule_type: line.item_type === "Rent" ? "Rent" : lineName,
+          frequency: freq,
+          amount: String(lineAmount),
+          currency: lineCurrency,
+          gst_included: line.gst_included ?? true,
+          start_date: start,
+          end_date: end,
+          next_due_date: start,
+          billing_mode: "incremental",
+          is_active: true,
+        }).returning({ id: recurringSchedulesTable.id });
+        schedulesCreated.push(sched.id);
+        continue;
+      }
+
+      // Generate periodic invoices + schedules across the contract period
       let current = start;
       let safety = 0;
 
@@ -617,8 +643,10 @@ router.post("/v1/contracts/:id/activate", async (req, res): Promise<void> => {
     .where(eq(contractsTable.id, id)).returning();
   if (!row) { res.status(404).json({ error: "NOT_FOUND" }); return; }
 
-  // Auto-generate invoices + payment schedules
-  const generated = await generateContractInvoicesAndSchedules(id);
+  // Auto-generate invoices + payment schedules. mode="incremental" creates a
+  // cron-billed schedule instead of pre-generating the whole term up front.
+  const billingMode = req.body?.mode === "incremental" ? "incremental" : "upfront";
+  const generated = await generateContractInvoicesAndSchedules(id, billingMode);
 
   // Also set linked booking to Active
   if (row.booking_id) {
@@ -670,7 +698,7 @@ router.post("/v1/contracts/:id/payment-schedule", async (req, res): Promise<void
   const contractId = Number(req.params.id);
   const [contract] = await db.select().from(contractsTable).where(eq(contractsTable.id, contractId));
   if (!contract) { res.status(404).json({ error: "NOT_FOUND" }); return; }
-  const { schedule_type, frequency, amount, currency, start_date, end_date, next_due_date, is_active, gst_included } = req.body;
+  const { schedule_type, frequency, amount, currency, start_date, end_date, next_due_date, is_active, gst_included, billing_mode } = req.body;
   const [row] = await db.insert(recurringSchedulesTable).values({
     booking_id: contract.booking_id ?? 0,
     contract_id: contractId,
@@ -682,6 +710,7 @@ router.post("/v1/contracts/:id/payment-schedule", async (req, res): Promise<void
     start_date: start_date,
     end_date: end_date ?? null,
     next_due_date: next_due_date ?? start_date,
+    billing_mode: billing_mode === "incremental" ? "incremental" : null,
     is_active: is_active !== false,
     gst_included: gst_included !== false,
   }).returning();
@@ -693,8 +722,9 @@ router.post("/v1/contracts/:id/payment-schedule", async (req, res): Promise<void
 router.patch("/v1/contracts/:id/payment-schedule/:schedId", async (req, res): Promise<void> => {
   const contractId = Number(req.params.id);
   const schedId = Number(req.params.schedId);
-  const { schedule_type, frequency, amount, currency, start_date, end_date, next_due_date, is_active, gst_included } = req.body;
+  const { schedule_type, frequency, amount, currency, start_date, end_date, next_due_date, is_active, gst_included, billing_mode } = req.body;
   const updates: Record<string, any> = { updated_at: new Date() };
+  if (billing_mode !== undefined) updates.billing_mode = billing_mode === "incremental" ? "incremental" : null;
   if (schedule_type !== undefined) updates.schedule_type = schedule_type;
   if (frequency !== undefined) updates.frequency = frequency;
   if (amount !== undefined) updates.amount = String(amount);

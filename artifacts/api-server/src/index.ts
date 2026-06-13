@@ -12,6 +12,7 @@ import { syncExchangeRates } from "./lib/exchangeRateSync";
 import { syncAllChannelImports } from "./lib/icalImport";
 import { purgeExpiredDocuments } from "./lib/retentionPurge";
 import { generateRentCharges } from "./lib/homestay/monthlyBilling";
+import { generateRecurringInvoices } from "./lib/billing/recurringInvoices";
 
 const rawPort = process.env["PORT"];
 
@@ -188,6 +189,23 @@ cron.schedule(
   },
   { timezone: "Australia/Sydney" },
 );
+
+// Recurring rent for regular long-term contracts — daily at 02:30 Sydney.
+// Generates one "Sent" invoice per due cycle for schedules opted into incremental
+// billing (billing_mode='incremental'); legacy pre-generated contracts are
+// untouched. Gated behind RECURRING_INVOICES_ENABLED so the deploy is inert until
+// ops opt in. No boot-time run (avoids duplicate charges on restart).
+if (process.env.RECURRING_INVOICES_ENABLED === "true") {
+  cron.schedule(
+    "30 2 * * *",
+    () => {
+      generateRecurringInvoices()
+        .then((r) => logger.info({ ...r }, "Cron recurring invoice billing"))
+        .catch((err) => logger.error({ err }, "Cron recurring invoice billing failed"));
+    },
+    { timezone: "Australia/Sydney" },
+  );
+}
 
 const server = app.listen(port, (err) => {
   if (err) {
