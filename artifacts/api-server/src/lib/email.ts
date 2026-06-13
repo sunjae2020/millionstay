@@ -6,6 +6,7 @@ import { buildUnsubscribeUrl } from "./unsubscribeToken";
 import { resolveTemplate, renderString } from "./documents/templateEngine";
 
 let resend: Resend | null = null;
+let resendKey: string | null = null;
 
 /** HTML-escape user-supplied text before interpolating into templates. */
 export function escapeHtml(input: string | null | undefined): string {
@@ -24,8 +25,15 @@ function safeName(name: string | null | undefined, max = 80): string {
 }
 
 function getResend(): Resend | null {
-  if (!process.env.RESEND_API_KEY) return null;
-  if (!resend) resend = new Resend(process.env.RESEND_API_KEY);
+  const key = process.env.RESEND_API_KEY;
+  if (!key) return null;
+  // Re-create the client when the key changes (e.g. updated live via Settings →
+  // Integrations) so a new key takes effect without a server restart. The client
+  // was previously cached forever, so a stale/invalid key kept being used.
+  if (!resend || resendKey !== key) {
+    resend = new Resend(key);
+    resendKey = key;
+  }
   return resend;
 }
 
