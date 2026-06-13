@@ -2845,6 +2845,7 @@
     "not_found": "Template not found.",
     "f_subject": "Subject",
     "f_body": "Body (HTML)",
+    "visual": "Visual",
     "preview": "Preview",
     "variables": "Variables",
     "variables_hint": "Click to insert. Use {{name}} format in the subject and body.",
