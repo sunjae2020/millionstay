@@ -21,7 +21,8 @@
     "loading": "Loading...",
     "all_statuses": "All statuses",
     "ongoing": "Ongoing",
-    "tbd": "TBD"
+    "tbd": "TBD",
+    "clear": "Clear"
   },
   "login": {
     "headline_1": "Your properties,",
@@ -117,7 +118,11 @@
     "col_status": "Status",
     "no_bookings": "No bookings found",
     "view_calendar": "Calendar",
-    "view_list": "List"
+    "view_list": "List",
+    "search_placeholder": "Search ref, tenant, property…",
+    "date_from": "From",
+    "date_to": "To",
+    "result_count": "{{count}} result(s)"
   },
   "property_detail": {
     "back": "Back to properties",

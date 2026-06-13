@@ -19,7 +19,8 @@
     "loading": "加载中...",
     "all_statuses": "所有状态",
     "ongoing": "进行中",
-    "tbd": "待定"
+    "tbd": "待定",
+    "clear": "清除"
   },
   "login": {
     "headline_1": "您的物业,",
@@ -108,7 +109,11 @@
     "col_status": "状态",
     "no_bookings": "未找到预订",
     "view_calendar": "日历",
-    "view_list": "列表"
+    "view_list": "列表",
+    "search_placeholder": "搜索编号·租户·物业…",
+    "date_from": "起始日",
+    "date_to": "结束日",
+    "result_count": "{{count}} 条"
   },
   "property_detail": {
     "back": "返回物业列表",

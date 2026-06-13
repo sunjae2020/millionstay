@@ -21,7 +21,8 @@
     "loading": "로딩 중...",
     "all_statuses": "모든 상태",
     "ongoing": "진행 중",
-    "tbd": "미정"
+    "tbd": "미정",
+    "clear": "초기화"
   },
   "login": {
     "headline_1": "당신의 자산,",
@@ -117,7 +118,11 @@
     "col_status": "상태",
     "no_bookings": "예약을 찾을 수 없습니다",
     "view_calendar": "캘린더",
-    "view_list": "리스트"
+    "view_list": "리스트",
+    "search_placeholder": "참조·임차인·자산 검색…",
+    "date_from": "시작일",
+    "date_to": "종료일",
+    "result_count": "{{count}}건"
   },
   "property_detail": {
     "back": "자산 목록으로",

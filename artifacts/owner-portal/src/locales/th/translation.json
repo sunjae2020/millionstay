@@ -19,7 +19,8 @@
     "loading": "กำลังโหลด...",
     "all_statuses": "ทุกสถานะ",
     "ongoing": "กำลังดำเนินการ",
-    "tbd": "รอกำหนด"
+    "tbd": "รอกำหนด",
+    "clear": "ล้าง"
   },
   "login": {
     "headline_1": "ทรัพย์สินของคุณ,",
@@ -108,7 +109,11 @@
     "col_status": "สถานะ",
     "no_bookings": "ไม่พบการจอง",
     "view_calendar": "ปฏิทิน",
-    "view_list": "รายการ"
+    "view_list": "รายการ",
+    "search_placeholder": "ค้นหา รหัส ผู้เช่า ทรัพย์…",
+    "date_from": "ตั้งแต่",
+    "date_to": "ถึง",
+    "result_count": "{{count}} รายการ"
   },
   "property_detail": {
     "back": "กลับไปยังทรัพย์สิน",
