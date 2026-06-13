@@ -182,7 +182,17 @@ export default function HomestayPlacementDetail() {
       if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
-    onSuccess: (d: any) => { toast({ title: t("homestayPlacement.toast_sent"), description: (d?.sent ?? []).join(", ") }); setSendOpen(false); },
+    onSuccess: (d: any) => {
+      const sent: string[] = d?.sent ?? [];
+      if (sent.length === 0) {
+        // Nothing actually emailed (e.g. "Operations team" selected but no
+        // notification email configured). Warn and keep the dialog open.
+        toast({ title: t("homestayPlacement.toast_none_sent"), description: t("homestayPlacement.toast_none_sent_desc"), variant: "destructive" });
+        return;
+      }
+      toast({ title: t("homestayPlacement.toast_sent"), description: sent.join(", ") });
+      setSendOpen(false);
+    },
     onError: (e: any) => toast({ title: t("homestayPlacement.error"), description: e.message, variant: "destructive" }),
   });
 

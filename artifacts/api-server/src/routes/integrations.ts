@@ -71,6 +71,9 @@ router.get("/v1/integrations/status", async (_req: Request, res: Response): Prom
   const cloudApiSecret = await getEnvVar("CLOUDINARY_API_SECRET");
   const resendKey = await getEnvVar("RESEND_API_KEY");
   const emailFrom = await getEnvVar("EMAIL_FROM");
+  // Recipient that receives "Operations team" copies of signed applications and
+  // new-lead/application alerts. Read by resolveRecipients() + the lead notifiers.
+  const opsEmail = await getEnvVar("LEAD_NOTIFICATION_EMAIL");
   const anthropicKey = await getEnvVar("ANTHROPIC_API_KEY");
   const widgetEnabledRaw = await getEnvVar("CHAT_WIDGET_ENABLED");
 
@@ -109,6 +112,7 @@ router.get("/v1/integrations/status", async (_req: Request, res: Response): Prom
       resend: {
         configured: resendConfigured,
         from_email: emailFrom ?? null,
+        ops_email: opsEmail ?? null,
         masked_key: maskKey(resendKey),
         error: null,
       },

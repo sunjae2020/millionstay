@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 interface IntegrationStatus {
   stripe: { configured: boolean; mode: string | null; masked_key: string; error: string | null };
   cloudinary: { configured: boolean; cloud_name: string | null; masked_api_key: string; masked_api_secret: string; plan: string | null; storage_mb: string | null; error: string | null };
-  resend: { configured: boolean; from_email: string | null; masked_key: string; error: string | null };
+  resend: { configured: boolean; from_email: string | null; ops_email: string | null; masked_key: string; error: string | null };
   ai: { configured: boolean; masked_key: string; model: string | null; error: string | null };
   maps: { provider: string; configured: boolean; note: string };
   ical: { provider: string; configured: boolean; note: string };
@@ -200,6 +200,14 @@ function ResendFields({ status, onRefresh }: { status: IntegrationStatus | null;
       <div className="flex flex-col gap-1">
         <Label className="text-xs text-muted-foreground">From Email (EMAIL_FROM)</Label>
         <MaskedKeyInput value={status?.resend.from_email ?? ""} envKey="EMAIL_FROM" onSaved={onRefresh} />
+      </div>
+      <div className="flex flex-col gap-1">
+        <Label className="text-xs text-muted-foreground">Operations notification email (LEAD_NOTIFICATION_EMAIL)</Label>
+        <MaskedKeyInput value={status?.resend.ops_email ?? ""} envKey="LEAD_NOTIFICATION_EMAIL" onSaved={onRefresh} />
+        <p className="text-xs text-muted-foreground">
+          Receives the “Operations team” copy of signed applications/contracts and new lead &amp; application alerts.
+          If empty, selecting “Operations team” sends to no one.
+        </p>
       </div>
       <div className="space-y-1">
         <div className="flex gap-2">

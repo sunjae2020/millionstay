@@ -79,7 +79,18 @@ export function HomestaySignatureCard({
       if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
-    onSuccess: (d: any) => { toast({ title: t("homestayDoc.toast_sent"), description: (d?.sent ?? []).join(", ") }); setSendOpen(false); refetchLogs(); },
+    onSuccess: (d: any) => {
+      const sent: string[] = d?.sent ?? [];
+      refetchLogs();
+      if (sent.length === 0) {
+        // Nothing was actually emailed (e.g. "Operations team" selected but no
+        // notification email configured). Warn and keep the dialog open.
+        toast({ title: t("homestayDoc.toast_none_sent"), description: t("homestayDoc.toast_none_sent_desc"), variant: "destructive" });
+        return;
+      }
+      toast({ title: t("homestayDoc.toast_sent"), description: sent.join(", ") });
+      setSendOpen(false);
+    },
     onError: (e: any) => toast({ title: t("homestayDoc.error"), description: e.message, variant: "destructive" }),
   });
 
