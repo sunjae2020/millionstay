@@ -3,7 +3,11 @@ import { pgTable, serial, text, integer, timestamp } from "drizzle-orm/pg-core";
 export const csTicketsTable = pgTable("cs_tickets", {
   id: serial("id").primaryKey(),
   ticket_ref: text("ticket_ref").notNull().unique(),
-  guest_user_id: integer("guest_user_id").notNull(),
+  // Who opened the ticket. 'guest' tickets use guest_user_id; partner-portal
+  // tickets (agent/owner/service_host) use partner_user_id. Exactly one is set.
+  requester_type: text("requester_type").notNull().default("guest"),
+  guest_user_id: integer("guest_user_id"),
+  partner_user_id: integer("partner_user_id"),
   booking_id: integer("booking_id"),
   category: text("category").notNull().default("General"),
   subject: text("subject").notNull(),

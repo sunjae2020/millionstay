@@ -6,7 +6,7 @@ import { useDarkMode } from "@/lib/darkMode";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import {
   LayoutDashboard, BookOpen, Building2, DollarSign,
-  LogOut, User, ChevronRight, Menu, X, Sun, Moon,
+  LogOut, User, ChevronRight, Menu, X, Sun, Moon, LifeBuoy,
 } from "lucide-react";
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -21,6 +21,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/bookings", icon: BookOpen, label: t("nav.my_bookings") },
     { href: "/properties", icon: Building2, label: t("nav.properties") },
     { href: "/commission", icon: DollarSign, label: t("nav.commission") },
+    { href: "/support", icon: LifeBuoy, label: t("nav.support", "Support") },
   ];
 
   useEffect(() => { setSidebarOpen(false); }, [location]);

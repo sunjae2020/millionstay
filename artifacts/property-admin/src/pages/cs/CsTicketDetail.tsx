@@ -38,6 +38,14 @@ const PRIORITY_COLORS: Record<string, string> = {
   Urgent: "bg-red-100 text-red-600",
 };
 
+// Who opened the ticket — guest or one of the partner portals.
+const REQUESTER_CONFIG: Record<string, { label: string; color: string }> = {
+  guest:        { label: "Guest",        color: "bg-sky-100 text-sky-700" },
+  agent:        { label: "Agent",        color: "bg-indigo-100 text-indigo-700" },
+  owner:        { label: "Owner",        color: "bg-emerald-100 text-emerald-700" },
+  service_host: { label: "Service Host", color: "bg-amber-100 text-amber-700" },
+};
+
 const STATUSES = ["Open", "InProgress", "Resolved", "Closed"] as const;
 const PRIORITIES = ["Low", "Normal", "High", "Urgent"] as const;
 
@@ -65,6 +73,10 @@ interface TicketDetail {
   booking_status: string | null;
   check_in_date: string | null;
   check_out_date: string | null;
+  requester_type?: string | null;
+  requester_name?: string | null;
+  requester_email?: string | null;
+  requester_phone?: string | null;
   guest_name: string;
   guest_email: string;
   guest_phone: string | null;
@@ -217,6 +229,10 @@ export default function CsTicketDetail() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap mb-2">
                   <span className="text-xs font-mono text-gray-400">{ticket.ticket_ref}</span>
+                  {(() => {
+                    const rc = REQUESTER_CONFIG[ticket.requester_type ?? "guest"] ?? REQUESTER_CONFIG.guest;
+                    return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${rc.color}`}>{rc.label}</span>;
+                  })()}
                   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${CATEGORY_COLORS[ticket.category] ?? "bg-gray-100 text-gray-600"}`}>
                     {ticket.category}
                   </span>
@@ -353,14 +369,15 @@ export default function CsTicketDetail() {
 
         {/* RIGHT: Sidebar */}
         <div className="space-y-4">
-          {/* Guest Info */}
+          {/* Requester Info */}
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
             <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3 flex items-center gap-1.5">
-              <User className="h-3.5 w-3.5" /> {t('csticket.label_guest')}
+              <User className="h-3.5 w-3.5" />
+              {(REQUESTER_CONFIG[ticket.requester_type ?? "guest"] ?? REQUESTER_CONFIG.guest).label}
             </h3>
-            <p className="font-semibold text-gray-900 text-sm">{ticket.guest_name ?? "—"}</p>
-            <p className="text-gray-500 text-xs mt-0.5">{ticket.guest_email ?? "—"}</p>
-            {ticket.guest_phone && <p className="text-gray-500 text-xs mt-0.5">{ticket.guest_phone}</p>}
+            <p className="font-semibold text-gray-900 text-sm">{ticket.requester_name ?? ticket.guest_name ?? "—"}</p>
+            <p className="text-gray-500 text-xs mt-0.5">{ticket.requester_email ?? ticket.guest_email ?? "—"}</p>
+            {(ticket.requester_phone ?? ticket.guest_phone) && <p className="text-gray-500 text-xs mt-0.5">{ticket.requester_phone ?? ticket.guest_phone}</p>}
           </div>
 
           {/* Booking Info */}
