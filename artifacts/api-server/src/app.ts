@@ -23,6 +23,7 @@ import partnerPrivacyRouter from "./routes/partner-privacy";
 import agentPortalRouter from "./routes/agent-portal";
 import ownerPortalRouter from "./routes/owner-portal";
 import serviceHostPortalRouter from "./routes/service-host-portal";
+import partnerCsRouter from "./routes/partner-cs";
 import { homestayPublicRouter, homestayPortalRouter } from "./routes/homestay";
 import { contractSigningPublicRouter, contractSigningAdminRouter } from "./routes/contract-signing";
 import { homestayStudentPublicRouter } from "./routes/homestay-students";
@@ -242,6 +243,9 @@ app.use("/api", partnerPrivacyRouter);
 app.use("/api", agentPortalRouter);
 app.use("/api", ownerPortalRouter);
 app.use("/api", serviceHostPortalRouter);
+// Partner support tickets — any partner type (agent/owner/service_host) can open
+// a ticket with admin. Scoped to the caller's own tickets; no peer-to-peer.
+app.use("/api", partnerCsRouter);
 // Homestay host portal — partner JWT (portal_type='homestay'); login works
 // regardless of approval. Mounted before requireAuth like the other portals.
 app.use("/api", homestayPortalRouter);

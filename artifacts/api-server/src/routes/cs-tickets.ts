@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
 import { eq, desc, and, ilike, or, sql, isNull, inArray } from "drizzle-orm";
-import { db, csTicketsTable, csMessagesTable, guestUsersTable, bookingsTable } from "@workspace/db";
+import { db, csTicketsTable, csMessagesTable, guestUsersTable, partnerUsersTable, bookingsTable } from "@workspace/db";
 import { requireAuth } from "../middlewares/requireAuth";
 import { isCloudinaryConfigured, uploadToCloudinary } from "../utils/cloudinary";
 
@@ -30,25 +30,35 @@ router.post("/v1/cs/admin/upload-image", requireAuth, upload.single("image"), as
 ───────────────────────────────────────────── */
 router.get("/v1/cs-tickets", requireAuth, async (req, res): Promise<void> => {
   try {
-    const { status, category, q, limit = "50", offset = "0" } = req.query as Record<string, string>;
+    const { status, category, requester_type, q, limit = "50", offset = "0" } = req.query as Record<string, string>;
 
     const conditions: any[] = [isNull(csTicketsTable.deleted_at)];
     if (status) conditions.push(eq(csTicketsTable.status, status));
     if (category) conditions.push(eq(csTicketsTable.category, category));
+    if (requester_type) conditions.push(eq(csTicketsTable.requester_type, requester_type));
     if (q) conditions.push(or(
       ilike(csTicketsTable.subject, `%${q}%`),
       ilike(csTicketsTable.ticket_ref, `%${q}%`),
     ));
 
+    // Requester is either a guest (guest_user_id) or a partner-portal user
+    // (partner_user_id). Resolve a single display name/email via COALESCE.
+    const requesterName = sql<string>`COALESCE(
+      NULLIF(TRIM(CONCAT(${guestUsersTable.first_name}, ' ', ${guestUsersTable.last_name})), ''),
+      NULLIF(TRIM(CONCAT(${partnerUsersTable.first_name}, ' ', ${partnerUsersTable.last_name})), '')
+    )`;
+    const requesterEmail = sql<string>`COALESCE(${guestUsersTable.email}, ${partnerUsersTable.email})`;
+
     const tickets = await db
       .select({
         ticket: csTicketsTable,
-        guest_name: sql<string>`CONCAT(${guestUsersTable.first_name}, ' ', ${guestUsersTable.last_name})`,
-        guest_email: guestUsersTable.email,
+        requester_name: requesterName,
+        requester_email: requesterEmail,
         booking_ref: bookingsTable.booking_ref,
       })
       .from(csTicketsTable)
       .leftJoin(guestUsersTable, eq(csTicketsTable.guest_user_id, guestUsersTable.id))
+      .leftJoin(partnerUsersTable, eq(csTicketsTable.partner_user_id, partnerUsersTable.id))
       .leftJoin(bookingsTable, eq(csTicketsTable.booking_id, bookingsTable.id))
       .where(and(...conditions))
       .orderBy(desc(csTicketsTable.updated_at))
@@ -60,7 +70,15 @@ router.get("/v1/cs-tickets", requireAuth, async (req, res): Promise<void> => {
 
     res.json({
       success: true,
-      data: tickets.map(r => ({ ...r.ticket, guest_name: r.guest_name, guest_email: r.guest_email, booking_ref: r.booking_ref })),
+      data: tickets.map(r => ({
+        ...r.ticket,
+        // Keep guest_* keys for backward compatibility with existing UI.
+        guest_name: r.requester_name,
+        guest_email: r.requester_email,
+        requester_name: r.requester_name,
+        requester_email: r.requester_email,
+        booking_ref: r.booking_ref,
+      })),
       meta: { total: totalResult[0]?.total ?? 0 },
     });
   } catch {
@@ -77,9 +95,12 @@ router.get("/v1/cs-tickets/:id", requireAuth, async (req, res): Promise<void> =>
     const [row] = await db
       .select({
         ticket: csTicketsTable,
-        guest_name: sql<string>`CONCAT(${guestUsersTable.first_name}, ' ', ${guestUsersTable.last_name})`,
-        guest_email: guestUsersTable.email,
-        guest_phone: guestUsersTable.phone,
+        requester_name: sql<string>`COALESCE(
+          NULLIF(TRIM(CONCAT(${guestUsersTable.first_name}, ' ', ${guestUsersTable.last_name})), ''),
+          NULLIF(TRIM(CONCAT(${partnerUsersTable.first_name}, ' ', ${partnerUsersTable.last_name})), '')
+        )`,
+        requester_email: sql<string>`COALESCE(${guestUsersTable.email}, ${partnerUsersTable.email})`,
+        requester_phone: sql<string>`COALESCE(${guestUsersTable.phone}, ${partnerUsersTable.phone})`,
         booking_ref: bookingsTable.booking_ref,
         booking_status: bookingsTable.booking_status,
         check_in_date: bookingsTable.check_in_date,
@@ -87,6 +108,7 @@ router.get("/v1/cs-tickets/:id", requireAuth, async (req, res): Promise<void> =>
       })
       .from(csTicketsTable)
       .leftJoin(guestUsersTable, eq(csTicketsTable.guest_user_id, guestUsersTable.id))
+      .leftJoin(partnerUsersTable, eq(csTicketsTable.partner_user_id, partnerUsersTable.id))
       .leftJoin(bookingsTable, eq(csTicketsTable.booking_id, bookingsTable.id))
       .where(eq(csTicketsTable.id, id));
 
@@ -100,9 +122,13 @@ router.get("/v1/cs-tickets/:id", requireAuth, async (req, res): Promise<void> =>
       success: true,
       data: {
         ...row.ticket,
-        guest_name: row.guest_name,
-        guest_email: row.guest_email,
-        guest_phone: row.guest_phone,
+        // Keep guest_* keys for backward compatibility with existing UI.
+        guest_name: row.requester_name,
+        guest_email: row.requester_email,
+        guest_phone: row.requester_phone,
+        requester_name: row.requester_name,
+        requester_email: row.requester_email,
+        requester_phone: row.requester_phone,
         booking_ref: row.booking_ref,
         booking_status: row.booking_status,
         check_in_date: row.check_in_date,

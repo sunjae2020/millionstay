@@ -6,7 +6,7 @@ import { useDarkMode } from "@/lib/darkMode";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import {
   LayoutDashboard, Briefcase, CalendarDays, DollarSign,
-  LogOut, User, ChevronRight, Menu, X, Sun, Moon,
+  LogOut, User, ChevronRight, Menu, X, Sun, Moon, LifeBuoy,
 } from "lucide-react";
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -21,6 +21,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/jobs", icon: Briefcase, label: t("nav.my_jobs") },
     { href: "/schedule", icon: CalendarDays, label: t("nav.schedule") },
     { href: "/earnings", icon: DollarSign, label: t("nav.earnings") },
+    { href: "/support", icon: LifeBuoy, label: t("nav.support", "Support") },
   ];
 
   useEffect(() => { setSidebarOpen(false); }, [location]);

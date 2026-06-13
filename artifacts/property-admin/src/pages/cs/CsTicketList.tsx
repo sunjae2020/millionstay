@@ -41,6 +41,14 @@ const CATEGORY_COLORS: Record<string, string> = {
   Other:         "bg-gray-100 text-gray-600",
 };
 
+// Who opened the ticket — guest or one of the partner portals.
+const REQUESTER_CONFIG: Record<string, { label: string; color: string }> = {
+  guest:        { label: "Guest",        color: "bg-sky-100 text-sky-700" },
+  agent:        { label: "Agent",        color: "bg-indigo-100 text-indigo-700" },
+  owner:        { label: "Owner",        color: "bg-emerald-100 text-emerald-700" },
+  service_host: { label: "Service Host", color: "bg-amber-100 text-amber-700" },
+};
+
 interface CsTicket {
   id: number;
   ticket_ref: string;
@@ -48,6 +56,9 @@ interface CsTicket {
   subject: string;
   status: string;
   priority: string;
+  requester_type?: string | null;
+  requester_name?: string | null;
+  requester_email?: string | null;
   guest_name: string | null;
   guest_email: string | null;
   booking_ref: string | null;
@@ -63,6 +74,7 @@ async function fetchTickets(params: Record<string, string>) {
 
 const STATUSES = ["All", "Open", "InProgress", "Resolved", "Closed"] as const;
 const CATEGORIES = ["All", "General", "Accommodation", "Billing", "Maintenance", "Other"] as const;
+const REQUESTER_TYPES = ["All", "guest", "agent", "owner", "service_host"] as const;
 
 export default function CsTicketList() {
   const { t } = useTranslation();
@@ -72,6 +84,7 @@ export default function CsTicketList() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
   const [category, setCategory] = useState("All");
+  const [requesterType, setRequesterType] = useState("All");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkAction, setBulkAction] = useState<"archive" | "permanent" | null>(null);
   const [isBulkLoading, setIsBulkLoading] = useState(false);
@@ -80,6 +93,7 @@ export default function CsTicketList() {
   const params: Record<string, string> = { limit: "500" };
   if (status !== "All") params.status = status;
   if (category !== "All") params.category = category;
+  if (requesterType !== "All") params.requester_type = requesterType;
   if (search.trim()) params.q = search.trim();
 
   const { data, isLoading, refetch } = useQuery({
@@ -200,6 +214,14 @@ export default function CsTicketList() {
               {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c === "All" ? t("csticket.all_categories") : c}</SelectItem>)}
             </SelectContent>
           </Select>
+          <Select value={requesterType} onValueChange={v => handleFilterChange(() => setRequesterType(v))}>
+            <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {REQUESTER_TYPES.map(rt => (
+                <SelectItem key={rt} value={rt}>{rt === "All" ? t("csticket.all_types", "All types") : (REQUESTER_CONFIG[rt]?.label ?? rt)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {isSuperAdmin && selectedIds.size > 0 && (
@@ -237,7 +259,8 @@ export default function CsTicketList() {
                     {isSuperAdmin && <th className="px-3 py-3 w-8"><Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} /></th>}
                     <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap">{t("csticket.col_ref")}</th>
                     <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">{t("csticket.col_subject")}</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden sm:table-cell whitespace-nowrap">{t("csticket.col_guest")}</th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden sm:table-cell whitespace-nowrap">{t("csticket.col_type", "Type")}</th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden sm:table-cell whitespace-nowrap">{t("csticket.col_requester", "Requester")}</th>
                     <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden md:table-cell whitespace-nowrap">{t("csticket.col_category")}</th>
                     <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap">{t("csticket.col_status")}</th>
                     <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden lg:table-cell whitespace-nowrap">{t("csticket.col_priority")}</th>
@@ -264,8 +287,14 @@ export default function CsTicketList() {
                           )}
                         </td>
                         <td className="px-4 py-3 hidden sm:table-cell whitespace-nowrap">
-                          <p className="text-gray-700 text-xs">{ticket.guest_name ?? "—"}</p>
-                          <p className="text-gray-400 text-xs">{ticket.guest_email ?? ""}</p>
+                          {(() => {
+                            const rc = REQUESTER_CONFIG[ticket.requester_type ?? "guest"] ?? REQUESTER_CONFIG.guest;
+                            return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${rc.color}`}>{rc.label}</span>;
+                          })()}
+                        </td>
+                        <td className="px-4 py-3 hidden sm:table-cell whitespace-nowrap">
+                          <p className="text-gray-700 text-xs">{ticket.requester_name ?? ticket.guest_name ?? "—"}</p>
+                          <p className="text-gray-400 text-xs">{ticket.requester_email ?? ticket.guest_email ?? ""}</p>
                         </td>
                         <td className="px-4 py-3 hidden md:table-cell whitespace-nowrap">
                           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${CATEGORY_COLORS[ticket.category] ?? "bg-gray-100 text-gray-600"}`}>

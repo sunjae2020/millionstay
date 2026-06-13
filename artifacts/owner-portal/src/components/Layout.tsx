@@ -6,7 +6,7 @@ import { useDarkMode } from "@/lib/darkMode";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import {
   LayoutDashboard, Building2, BookOpen, TrendingUp,
-  LogOut, User, ChevronRight, Menu, X, Sun, Moon, Globe, Inbox,
+  LogOut, User, ChevronRight, Menu, X, Sun, Moon, Globe, Inbox, LifeBuoy,
 } from "lucide-react";
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -23,6 +23,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/revenue", icon: TrendingUp, label: t("nav.revenue") },
     { href: "/site", icon: Globe, label: t("nav.site", "My Site") },
     { href: "/inquiries", icon: Inbox, label: t("nav.inquiries", "Inquiries") },
+    { href: "/support", icon: LifeBuoy, label: t("nav.support", "Support") },
   ];
 
   useEffect(() => {
