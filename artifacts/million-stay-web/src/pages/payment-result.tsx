@@ -1,0 +1,45 @@
+import { CheckCircle2, XCircle } from "lucide-react";
+
+// Stripe redirect target for homestay placement payments (success_url / cancel_url).
+// Reads ?status=success|cancelled&ref=HSP-… and shows a simple confirmation.
+export default function PaymentResult() {
+  const params = new URLSearchParams(window.location.search);
+  const status = params.get("status") ?? "success";
+  const ref = params.get("ref") ?? "";
+  const ok = status === "success";
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
+      <div className="w-full max-w-md bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
+        {ok ? (
+          <CheckCircle2 className="w-12 h-12 mx-auto text-green-500" />
+        ) : (
+          <XCircle className="w-12 h-12 mx-auto text-gray-400" />
+        )}
+        <h1 className="mt-5 text-2xl font-bold text-gray-900">
+          {ok ? "Payment received" : "Payment cancelled"}
+        </h1>
+        <p className="mt-2 text-gray-600">
+          {ok
+            ? "Thank you — your homestay payment has been received. A receipt will follow by email."
+            : "Your payment was not completed. You can use your payment link again at any time, or contact us for help."}
+        </p>
+        {ref && (
+          <p className="mt-4 text-sm text-gray-400">
+            Reference: <span className="font-mono font-medium text-gray-600">{ref}</span>
+          </p>
+        )}
+        <a
+          href="/"
+          className="mt-7 inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold text-white"
+          style={{ backgroundColor: "#E8621A" }}
+        >
+          Back to MillionStay
+        </a>
+        <p className="mt-4 text-xs text-gray-400">
+          Questions? <a href="mailto:info@millionstay.com" className="underline">info@millionstay.com</a>
+        </p>
+      </div>
+    </div>
+  );
+}
