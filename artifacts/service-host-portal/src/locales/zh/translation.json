@@ -233,6 +233,7 @@
     "status_closed": "已关闭",
     "created": "创建时间",
     "last_reply": "最近回复",
-    "no_reply_yet": "暂无回复"
+    "no_reply_yet": "暂无回复",
+    "english_label": "英语"
   }
 }

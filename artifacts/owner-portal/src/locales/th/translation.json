@@ -226,6 +226,7 @@
     "status_closed": "ปิดแล้ว",
     "created": "สร้างเมื่อ",
     "last_reply": "ตอบล่าสุด",
-    "no_reply_yet": "ยังไม่มีการตอบกลับ"
+    "no_reply_yet": "ยังไม่มีการตอบกลับ",
+    "english_label": "ภาษาอังกฤษ"
   }
 }
