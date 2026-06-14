@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { ArrowRight, Users, Baby, ShieldCheck, Globe2, BadgeCheck } from "lucide-react";
+import { ArrowRight, Users, Baby, ShieldCheck, Globe2, BadgeCheck, Headphones } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import hero from "@assets/MS_Homepage_Photo_1920x1080_1775403929888.jpg";
 import { HomestayLayout } from "@/components/homestay/HomestayLayout";
@@ -18,6 +18,7 @@ export default function HomestayHome() {
     { icon: ShieldCheck, title: t("homestay.home.why_3_title"), body: t("homestay.home.why_3_body") },
     { icon: Globe2, title: t("homestay.home.why_4_title"), body: t("homestay.home.why_4_body") },
     { icon: BadgeCheck, title: t("homestay.home.why_5_title"), body: t("homestay.home.why_5_body") },
+    { icon: Headphones, title: t("homestay.home.why_6_title"), body: t("homestay.home.why_6_body") },
   ];
 
   const EXPLORE = [
