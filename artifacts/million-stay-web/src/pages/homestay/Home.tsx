@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { ArrowRight, Users, Baby, ShieldCheck, Globe2, BadgeCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import hero from "@assets/MS_Homepage_Photo_1920x1080_1775403929888.jpg";
 import { HomestayLayout } from "@/components/homestay/HomestayLayout";
 import { HS, HS_FONT } from "@/lib/homestay-theme";
@@ -8,23 +9,31 @@ import { HS, HS_FONT } from "@/lib/homestay-theme";
 // CTAs to not-yet-built features (student apply, partners, full process) route
 // to their pages, which render the "coming soon" stub until that phase ships.
 
-const WHY = [
-  { icon: Users, title: "People match, not algorithms", body: "Every placement is reviewed and matched by our operations team." },
-  { icon: Baby, title: "Students of all ages", body: "Adult and younger students alike, with guardian consent and signature built in for anyone under 18." },
-  { icon: ShieldCheck, title: "Safety first", body: "Working with Children Check (WWCC) and other safety documents are part of host review." },
-  { icon: Globe2, title: "Fully online, end to end", body: "Application, documents, e-signature, and payment, all in one place. No paper forms." },
-  { icon: BadgeCheck, title: "Transparent every step", body: "Clear review stages and email updates, so you always know where things stand." },
-];
-
-const EXPLORE = [
-  { title: "For students", body: "Apply online, get matched by our team, pay securely, and arrive with support.", cta: "Apply now", href: "/students/apply" },
-  { title: "For host families", body: "Apply online today, track your progress in your own portal, and control your listing.", cta: "Become a Host", href: "/for-homestay-host" },
-  { title: "For partners", body: "Education agents and institutes — apply and manage on behalf of your students.", cta: "Partner with us", href: "/partners" },
-];
-
-const STEPS = ["Apply", "Review", "Match", "Confirm", "Arrive"];
-
 export default function HomestayHome() {
+  const { t } = useTranslation();
+
+  const WHY = [
+    { icon: Users, title: t("homestay.home.why_1_title"), body: t("homestay.home.why_1_body") },
+    { icon: Baby, title: t("homestay.home.why_2_title"), body: t("homestay.home.why_2_body") },
+    { icon: ShieldCheck, title: t("homestay.home.why_3_title"), body: t("homestay.home.why_3_body") },
+    { icon: Globe2, title: t("homestay.home.why_4_title"), body: t("homestay.home.why_4_body") },
+    { icon: BadgeCheck, title: t("homestay.home.why_5_title"), body: t("homestay.home.why_5_body") },
+  ];
+
+  const EXPLORE = [
+    { title: t("homestay.home.explore_1_title"), body: t("homestay.home.explore_1_body"), cta: t("homestay.home.explore_1_cta"), href: "/students/apply" },
+    { title: t("homestay.home.explore_2_title"), body: t("homestay.home.explore_2_body"), cta: t("homestay.home.explore_2_cta"), href: "/for-homestay-host" },
+    { title: t("homestay.home.explore_3_title"), body: t("homestay.home.explore_3_body"), cta: t("homestay.home.explore_3_cta"), href: "/partners" },
+  ];
+
+  const STEPS = [
+    t("homestay.home.step_1"),
+    t("homestay.home.step_2"),
+    t("homestay.home.step_3"),
+    t("homestay.home.step_4"),
+    t("homestay.home.step_5"),
+  ];
+
   return (
     <HomestayLayout>
       {/* Hero */}
@@ -36,20 +45,17 @@ export default function HomestayHome() {
         <div className="relative max-w-6xl mx-auto px-5 py-24 md:py-32">
           <div className="max-w-2xl text-white">
             <h1 className="text-4xl md:text-5xl font-extrabold leading-tight" style={{ fontFamily: HS_FONT.head }}>
-              Find your Australian home — or open your home to a student.
+              {t("homestay.home.hero_title")}
             </h1>
             <p className="mt-5 text-lg text-white/90">
-              <strong>Million Homestay</strong> is a review-and-match homestay service in Australia.
-              We're not a self-serve booking site — real people on our operations team review every host
-              family and match every student by hand, with safety at the centre. From application to
-              payment to arrival support, the whole journey is online.
+              {t("homestay.home.hero_lead")}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/students/apply" className="px-6 py-3 rounded-lg font-semibold text-white inline-flex items-center gap-2" style={{ backgroundColor: HS.brand }}>
-                Find a Homestay <ArrowRight className="w-4 h-4" />
+                {t("homestay.home.hero_cta_find")} <ArrowRight className="w-4 h-4" />
               </Link>
               <Link href="/for-homestay-host" className="px-6 py-3 rounded-lg font-semibold inline-flex items-center gap-2 bg-white text-gray-900">
-                Become a Host
+                {t("homestay.home.hero_cta_host")}
               </Link>
             </div>
           </div>
@@ -58,7 +64,7 @@ export default function HomestayHome() {
 
       {/* Why Million Homestay */}
       <section className="max-w-6xl mx-auto px-5 py-16 md:py-20">
-        <h2 className="text-3xl font-bold text-center" style={{ fontFamily: HS_FONT.head, color: HS.darkBrown }}>Why Million Homestay</h2>
+        <h2 className="text-3xl font-bold text-center" style={{ fontFamily: HS_FONT.head, color: HS.darkBrown }}>{t("homestay.home.why_heading")}</h2>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
           {WHY.map(({ icon: Icon, title, body }) => (
             <div key={title} className="rounded-2xl p-6" style={{ backgroundColor: HS.cream }}>
@@ -89,7 +95,7 @@ export default function HomestayHome() {
 
       {/* How it works at a glance */}
       <section className="max-w-6xl mx-auto px-5 py-16 md:py-20 text-center">
-        <h2 className="text-3xl font-bold" style={{ fontFamily: HS_FONT.head, color: HS.darkBrown }}>How it works</h2>
+        <h2 className="text-3xl font-bold" style={{ fontFamily: HS_FONT.head, color: HS.darkBrown }}>{t("homestay.home.how_heading")}</h2>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-x-3 gap-y-3">
           {STEPS.map((s, i) => (
             <div key={s} className="flex items-center gap-3">
@@ -99,11 +105,10 @@ export default function HomestayHome() {
           ))}
         </div>
         <p className="mt-6 text-gray-600 max-w-2xl mx-auto">
-          You apply online, our operations team reviews and matches by hand, you sign and pay securely,
-          and we support your arrival — including airport pickup and settlement.
+          {t("homestay.home.how_body")}
         </p>
         <Link href="/how-it-works" className="mt-7 inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-white" style={{ backgroundColor: HS.brand }}>
-          See the full process <ArrowRight className="w-4 h-4" />
+          {t("homestay.home.how_cta")} <ArrowRight className="w-4 h-4" />
         </Link>
       </section>
     </HomestayLayout>

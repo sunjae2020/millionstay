@@ -68,7 +68,8 @@
     "knowledge_base": "지식 베이스",
     "conversations": "대화 내역",
     "addon_services": "부가 서비스",
-    "homestay_applications": "홈스테이 신청"
+    "homestay_applications": "홈스테이 신청",
+    "page_translations": "페이지 번역"
   },
   "dashboard": {
     "title": "대시보드",

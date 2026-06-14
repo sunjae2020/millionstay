@@ -68,7 +68,8 @@
     "knowledge_base": "知识库",
     "conversations": "对话记录",
     "addon_services": "附加服务",
-    "homestay_applications": "寄宿家庭申请"
+    "homestay_applications": "寄宿家庭申请",
+    "page_translations": "页面翻译"
   },
   "dashboard": {
     "title": "仪表板",

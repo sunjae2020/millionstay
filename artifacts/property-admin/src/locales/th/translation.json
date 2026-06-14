@@ -68,7 +68,8 @@
     "knowledge_base": "ฐานความรู้",
     "conversations": "บทสนทนา",
     "addon_services": "บริการเสริม",
-    "homestay_applications": "ใบสมัครโฮมสเตย์"
+    "homestay_applications": "ใบสมัครโฮมสเตย์",
+    "page_translations": "การแปลหน้า"
   },
   "dashboard": {
     "title": "แดชบอร์ด",

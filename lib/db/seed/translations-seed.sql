@@ -30,6 +30,7 @@ INSERT INTO languages (code, name, english_name, flag_iso, enabled, is_default, 
 INSERT INTO languages (code, name, english_name, flag_iso, enabled, is_default, sort_order) VALUES ('zh', '中文', 'Chinese', 'cn', true, false, 2) ON CONFLICT (code) DO NOTHING;
 INSERT INTO languages (code, name, english_name, flag_iso, enabled, is_default, sort_order) VALUES ('ja', '日本語', 'Japanese', 'jp', true, false, 3) ON CONFLICT (code) DO NOTHING;
 INSERT INTO languages (code, name, english_name, flag_iso, enabled, is_default, sort_order) VALUES ('th', 'ไทย', 'Thai', 'th', true, false, 4) ON CONFLICT (code) DO NOTHING;
+INSERT INTO languages (code, name, english_name, flag_iso, enabled, is_default, sort_order) VALUES ('vi', 'Tiếng Việt', 'Vietnamese', 'vn', true, false, 5) ON CONFLICT (code) DO NOTHING;
 
 INSERT INTO translations (lang, key, value) VALUES
   ('en', 'nav.search', 'Find a Room'),
