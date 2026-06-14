@@ -2905,5 +2905,10 @@
     "note_cron": "A daily job creates a pending charge each cycle; ops send each one (card link / bank details) from the placement.",
     "toast_saved": "Billing settings saved",
     "error": "Something went wrong"
+  },
+  "cstranslate": {
+    "original_label": "Original",
+    "failed_retry": "Translation failed — retry",
+    "admin_compose_hint": "Write in any language — the customer reads it auto-translated into {{lang}}."
   }
 }

@@ -31,7 +31,7 @@ const CATEGORIES = ["General", "Accommodation", "Billing", "Maintenance", "Other
 interface Booking { id: number; booking_ref: string; booking_status: string; }
 
 export default function PortalCsNew() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [, setLocation] = useLocation();
   const { token } = useAuthStore();
   const { toast } = useToast();
@@ -94,6 +94,9 @@ export default function PortalCsNew() {
         subject: form.subject.trim(),
         description: form.description.trim(),
         image_urls: images.map(i => i.url),
+        // The language the guest is browsing in — the whole ticket is conducted
+        // in this language and admin replies are auto-translated into it.
+        customer_language: (i18n.language || "en").slice(0, 2),
       };
       if (form.booking_id && form.booking_id !== "_none") body.booking_id = Number(form.booking_id);
       const res = await gFetch<{ success: boolean; data: { id: number } }>("/guest/cs-tickets", {

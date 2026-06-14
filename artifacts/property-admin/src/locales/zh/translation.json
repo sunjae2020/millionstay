@@ -2600,5 +2600,10 @@
     "f_bank_bsb": "BSB",
     "f_bank_account_number": "账号",
     "f_bank_swift": "SWIFT / BIC"
+  },
+  "cstranslate": {
+    "original_label": "原文",
+    "failed_retry": "翻译失败 — 重试",
+    "admin_compose_hint": "可用任意语言书写 — 客户会看到自动翻译成{{lang}}的内容。"
   }
 }

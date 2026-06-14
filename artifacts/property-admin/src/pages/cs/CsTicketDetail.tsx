@@ -49,12 +49,21 @@ const REQUESTER_CONFIG: Record<string, { label: string; color: string }> = {
 const STATUSES = ["Open", "InProgress", "Resolved", "Closed"] as const;
 const PRIORITIES = ["Low", "Normal", "High", "Urgent"] as const;
 
+// Human-readable names for the CS languages (used for the "Original (Korean)" labels).
+const LANG_NAMES: Record<string, string> = {
+  en: "English", ko: "한국어", ja: "日本語", zh: "中文", th: "ไทย", vi: "Tiếng Việt",
+};
+const langName = (code?: string | null) => (code ? LANG_NAMES[code] ?? code.toUpperCase() : "");
+
 interface Message {
   id: number;
   ticket_id: number;
   sender_type: string;
   sender_id: number;
   message: string;
+  original_lang?: string | null;
+  translations?: Record<string, string> | null;
+  translation_status?: string | null;
   image_urls: string | null;
   is_internal: number;
   created_at: string;
@@ -77,6 +86,8 @@ interface TicketDetail {
   requester_name?: string | null;
   requester_email?: string | null;
   requester_phone?: string | null;
+  customer_language?: string | null;
+  translation_enabled?: boolean | null;
   guest_name: string;
   guest_email: string;
   guest_phone: string | null;
@@ -95,7 +106,10 @@ export default function CsTicketDetail() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const qc = useQueryClient();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  // The admin composes in their portal UI language; the backend translates the
+  // reply into the ticket's customer_language. Normalise to a 2-letter code.
+  const adminLang = (i18n.language || "en").slice(0, 2);
   const fileRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -150,6 +164,7 @@ export default function CsTicketDetail() {
           message: reply.trim(),
           image_urls: images.map(i => i.url),
           is_internal: isInternal,
+          lang: adminLang,
         }),
       });
       return res.json();
@@ -161,6 +176,17 @@ export default function CsTicketDetail() {
       qc.invalidateQueries({ queryKey: ["admin-cs-tickets"] });
     },
     onError: () => toast({ title: "Error", description: "Failed to send message.", variant: "destructive" }),
+  });
+
+  const retranslateMutation = useMutation({
+    mutationFn: async (messageId: number) => {
+      const res = await apiFetch(`/api/v1/cs-tickets/${id}/messages/${messageId}/retranslate`, { method: "POST" });
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-cs-ticket", id] });
+    },
+    onError: () => toast({ title: "Error", description: "Failed to retranslate.", variant: "destructive" }),
   });
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -260,6 +286,13 @@ export default function CsTicketDetail() {
               const isAdmin = msg.sender_type === "admin";
               const isInternalMsg = msg.is_internal === 1;
               const parsedImgs: string[] = (() => { try { return msg.image_urls ? JSON.parse(msg.image_urls) : []; } catch { return []; } })();
+              // Admins read in English. Show the English copy as the primary text;
+              // internal notes are never translated, so show them verbatim.
+              const tr = msg.translations || {};
+              const origLang = msg.original_lang || (isAdmin ? "en" : (ticket.customer_language || "en"));
+              const adminText = isInternalMsg || origLang === "en" ? msg.message : (tr.en || msg.message);
+              const hasOriginal = !isInternalMsg && origLang !== "en";
+              const status = msg.translation_status;
               return (
                 <div key={msg.id} className={`flex ${isAdmin ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[80%]`}>
@@ -281,8 +314,26 @@ export default function CsTicketDetail() {
                           ? "bg-primary text-white rounded-tr-sm"
                           : "bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm"
                     }`}>
-                      {msg.message}
+                      {adminText}
                     </div>
+                    {/* Original (customer language) + translation status */}
+                    {hasOriginal && (
+                      <div className={`mt-1 rounded-xl px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap bg-gray-50 border border-gray-100 text-gray-500 ${isAdmin ? "ml-auto" : ""}`}>
+                        <span className="font-medium text-gray-400">{t('cstranslate.original_label', 'Original')} · {langName(origLang)}: </span>
+                        {msg.message}
+                      </div>
+                    )}
+                    {!isInternalMsg && status === "failed" && (
+                      <button
+                        type="button"
+                        onClick={() => retranslateMutation.mutate(msg.id)}
+                        disabled={retranslateMutation.isPending}
+                        className={`mt-1 inline-flex items-center gap-1 text-xs text-red-500 hover:text-red-600 ${isAdmin ? "ml-auto" : ""}`}
+                      >
+                        <RefreshCw className={`h-3 w-3 ${retranslateMutation.isPending ? "animate-spin" : ""}`} />
+                        {t('cstranslate.failed_retry', 'Translation failed — retry')}
+                      </button>
+                    )}
                     {parsedImgs.length > 0 && (
                       <div className={`flex gap-2 mt-2 flex-wrap ${isAdmin ? "justify-end" : "justify-start"}`}>
                         {parsedImgs.map((url, i) => (
@@ -320,6 +371,11 @@ export default function CsTicketDetail() {
                 {isInternal ? t('csticket.internal_note_hint', 'Not visible to guest') : t('csticket.guest_reply_hint', 'Visible to guest')}
               </span>
             </div>
+            {!isInternal && ticket.translation_enabled !== false && (ticket.customer_language && ticket.customer_language !== "en") && (
+              <p className="text-xs text-sky-600 bg-sky-50 border border-sky-100 rounded-lg px-3 py-2 mb-3">
+                {t('cstranslate.admin_compose_hint', 'Write in any language — the customer reads it auto-translated into {{lang}}.', { lang: langName(ticket.customer_language) })}
+              </p>
+            )}
             <Textarea
               placeholder={isInternal ? t('csticket.placeholder_internal_note', 'Add an internal note (not visible to guest)…') : t('csticket.placeholder_reply')}
               value={reply}
