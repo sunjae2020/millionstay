@@ -16,7 +16,11 @@
     "sign_out": "ログアウト",
     "support": "サポート",
     "dark_mode": "ダークモード",
-    "light_mode": "ライトモード"
+    "light_mode": "ライトモード",
+    "site": "マイサイト",
+    "inquiries": "お問い合わせ",
+    "switch_to_light": "ライトモードに切り替え",
+    "switch_to_dark": "ダークモードに切り替え"
   },
   "common": {
     "loading": "読み込み中...",
@@ -93,7 +97,14 @@
     "no_bookings": "予約はまだありません。",
     "my_properties": "マイ物件",
     "no_properties": "物件が見つかりません。",
-    "checkin_label": "チェックイン"
+    "checkin_label": "チェックイン",
+    "site_live_title": "あなたのランディングサイト",
+    "site_draft_badge": "下書き",
+    "site_cta_title": "あなた専用のランディングサイトを作成",
+    "site_cta_sub": "ゲストがあなたの宿泊施設だけを閲覧・予約できる公開ページです。",
+    "site_manage": "サイトを管理",
+    "site_get_started": "はじめる",
+    "recent_inquiries": "最近のお問い合わせ"
   },
   "properties": {
     "title": "マイ物件",
@@ -228,5 +239,50 @@
     "last_reply": "最新の返信",
     "no_reply_yet": "返信はまだありません",
     "english_label": "英語"
+  },
+  "site": {
+    "title": "マイランディングサイト",
+    "subtitle": "ゲストがあなたの宿泊施設だけを閲覧・予約できる、あなた専用の公開ページです。",
+    "view_site": "サイトを表示",
+    "address": "アドレスと公開設定",
+    "subdomain": "サブドメイン",
+    "checking": "確認中…",
+    "available": "利用可能",
+    "unavailable": "利用できません",
+    "slug_too_short": "3文字以上で入力してください",
+    "slug_invalid_format": "小文字・数字・ハイフンのみ使用できます",
+    "slug_reserved": "この名前は予約されています",
+    "slug_taken": "すでに使用されています",
+    "published": "公開中（一般公開）",
+    "branding": "ブランディング",
+    "logo_url": "ロゴ画像URL",
+    "hero_image_url": "ヒーロー背景画像URL",
+    "primary_color": "メインカラー",
+    "content": "コンテンツ",
+    "content_hint": "{{lang}} 版を編集中です — 翻訳するにはサイドバーで言語を切り替えてください。",
+    "hero_title": "ヒーロータイトル",
+    "hero_subtitle": "ヒーローサブタイトル",
+    "about": "紹介・概要",
+    "contact_email": "連絡先メール",
+    "contact_phone": "連絡先電話番号",
+    "seo": "検索・共有（SEO）",
+    "seo_title": "SEOタイトル",
+    "seo_description": "SEO説明",
+    "og_image_url": "ソーシャル共有画像URL",
+    "save": "変更を保存",
+    "create": "サイトを作成",
+    "saved": "保存しました",
+    "logo": "ロゴ",
+    "hero_image": "ヒーロー背景",
+    "og_image": "ソーシャル共有画像",
+    "upload": "アップロード",
+    "uploading": "アップロード中…",
+    "remove": "削除"
+  },
+  "inquiries": {
+    "title": "お問い合わせ",
+    "subtitle": "ランディングサイトを通じて寄せられたゲストからのメッセージです。",
+    "empty": "まだお問い合わせはありません。",
+    "search_placeholder": "名前・メール・メッセージで検索…"
   }
 }

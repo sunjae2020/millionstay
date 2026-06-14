@@ -18,7 +18,9 @@
     "inquiries": "문의",
     "support": "고객지원",
     "dark_mode": "다크 모드",
-    "light_mode": "라이트 모드"
+    "light_mode": "라이트 모드",
+    "switch_to_light": "라이트 모드로 전환",
+    "switch_to_dark": "다크 모드로 전환"
   },
   "common": {
     "loading": "로딩 중...",
@@ -223,7 +225,8 @@
   "inquiries": {
     "title": "문의",
     "subtitle": "랜딩 사이트를 통해 들어온 게스트 문의입니다.",
-    "empty": "아직 문의가 없습니다."
+    "empty": "아직 문의가 없습니다.",
+    "search_placeholder": "이름, 이메일 또는 메시지 검색…"
   },
   "calendar": {
     "no_spaces": "공간 없음",
