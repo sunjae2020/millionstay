@@ -2422,6 +2422,14 @@
       "tool_label": "เครื่องมือ · {{name}}",
       "role_user": "ผู้ใช้",
       "role_assistant": "ผู้ช่วย"
+    },
+    "cs_translate": {
+      "title": "โมเดลแปลอัตโนมัติ CS",
+      "help": "โมเดลที่ใช้แปลข้อความฝ่ายสนับสนุนลูกค้าระหว่างภาษาของลูกค้ากับภาษาอังกฤษ Haiku เร็วและต้นทุนต่ำ ส่วน Sonnet คุณภาพสูงกว่าแต่แพงกว่า",
+      "model_haiku": "Claude Haiku 4.5 — เร็วและประหยัด (แนะนำ)",
+      "model_sonnet": "Claude Sonnet 4.6 — คุณภาพสูงกว่า แพงกว่า",
+      "saved_toast": "อัปเดตโมเดลการแปลแล้ว",
+      "needs_key": "ตั้งค่า Anthropic API key ด้านบนเพื่อเปิดใช้งานการแปล"
     }
   },
   "accommodation_options": {
@@ -2600,5 +2608,10 @@
     "f_bank_bsb": "BSB",
     "f_bank_account_number": "เลขที่บัญชี",
     "f_bank_swift": "SWIFT / BIC"
+  },
+  "cstranslate": {
+    "original_label": "ต้นฉบับ",
+    "failed_retry": "การแปลล้มเหลว — ลองใหม่",
+    "admin_compose_hint": "เขียนภาษาใดก็ได้ — ลูกค้าจะเห็นข้อความที่แปลอัตโนมัติเป็น {{lang}}"
   }
 }

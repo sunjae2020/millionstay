@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, useLocation, Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/lib/store";
 import { PortalLayout } from "@/components/portal-layout";
 import { Button } from "@/components/ui/button";
@@ -61,8 +62,17 @@ interface Message {
   sender_type: string;
   sender_id: number;
   message: string;
+  original_lang?: string | null;
+  translations?: Record<string, string> | null;
   image_urls: string | null;
   created_at: string;
+}
+
+// Pick the message text in a given language: the original if it was written in
+// that language, otherwise the cached translation (or null if unavailable).
+function textInLang(msg: Message, lang: string): string | null {
+  if ((msg.original_lang || "en") === lang) return msg.message;
+  return msg.translations?.[lang] ?? null;
 }
 
 interface TicketDetail {
@@ -83,6 +93,9 @@ interface TicketDetail {
 export default function PortalCsDetail() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
+  const { t, i18n } = useTranslation();
+  // The guest reads the conversation in their current site language.
+  const guestLang = (i18n.language || "en").slice(0, 2);
   const { token } = useAuthStore();
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -226,6 +239,11 @@ export default function PortalCsDetail() {
           {ticket.messages.map((msg) => {
             const isGuest = msg.sender_type === "guest";
             const parsedImgs: string[] = (() => { try { return msg.image_urls ? JSON.parse(msg.image_urls) : []; } catch { return []; } })();
+            // Show the message in the guest's language as the primary text, and
+            // the English copy underneath (per "shown in their language and English").
+            const primaryText = textInLang(msg, guestLang) ?? msg.message;
+            const englishText = textInLang(msg, "en");
+            const showEnglish = guestLang !== "en" && englishText != null && englishText !== primaryText;
             return (
               <div key={msg.id} className={`flex ${isGuest ? "justify-end" : "justify-start"}`}>
                 <div className={`max-w-[80%] ${isGuest ? "order-2" : "order-1"}`}>
@@ -244,8 +262,16 @@ export default function PortalCsDetail() {
                       ? "bg-primary text-white rounded-tr-sm"
                       : "bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm"
                   }`}>
-                    {msg.message}
+                    {primaryText}
                   </div>
+                  {showEnglish && (
+                    <div className={`mt-1 rounded-xl px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap border ${
+                      isGuest ? "bg-primary/5 border-primary/10 text-gray-600" : "bg-gray-50 border-gray-100 text-gray-500"
+                    }`}>
+                      <span className="font-medium opacity-70">{t("cstranslate.english_label", "English")}: </span>
+                      {englishText}
+                    </div>
+                  )}
                   {parsedImgs.length > 0 && (
                     <div className={`flex gap-2 mt-2 flex-wrap ${isGuest ? "justify-end" : "justify-start"}`}>
                       {parsedImgs.map((url, i) => (

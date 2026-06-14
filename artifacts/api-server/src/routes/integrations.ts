@@ -21,6 +21,8 @@ const ALLOWED_KEYS = [
   "ANTHROPIC_API_KEY",
   "CHAT_WIDGET_ENABLED",
   "RECURRING_INVOICES_ENABLED",
+  // Model for CS message auto-translation (defaults to Haiku 4.5 when unset).
+  "CS_TRANSLATE_MODEL",
 ];
 
 function maskKey(key: string | undefined): string {
@@ -121,6 +123,8 @@ router.get("/v1/integrations/status", async (_req: Request, res: Response): Prom
         configured: aiConfigured,
         masked_key: maskKey(anthropicKey),
         model: aiConfigured ? (process.env["CHAT_MODEL"] || "claude-sonnet-4-6") : null,
+        // Model used for CS message auto-translation (separate, cheaper model).
+        cs_translate_model: process.env["CS_TRANSLATE_MODEL"] || "claude-haiku-4-5-20251001",
         widget_enabled: widgetEnabled,
         error: null,
       },

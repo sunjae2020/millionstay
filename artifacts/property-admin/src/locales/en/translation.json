@@ -2436,6 +2436,14 @@
       "tool_label": "tool · {{name}}",
       "role_user": "user",
       "role_assistant": "assistant"
+    },
+    "cs_translate": {
+      "title": "CS Auto-Translation Model",
+      "help": "Model used to translate customer-support messages between the customers language and English. Haiku is fast and low-cost; Sonnet is higher quality but more expensive.",
+      "model_haiku": "Claude Haiku 4.5 — fast & low-cost (recommended)",
+      "model_sonnet": "Claude Sonnet 4.6 — higher quality, more expensive",
+      "saved_toast": "Translation model updated",
+      "needs_key": "Set the Anthropic API key above to enable translation."
     }
   },
   "accommodation_options": {
@@ -2905,5 +2913,10 @@
     "note_cron": "A daily job creates a pending charge each cycle; ops send each one (card link / bank details) from the placement.",
     "toast_saved": "Billing settings saved",
     "error": "Something went wrong"
+  },
+  "cstranslate": {
+    "original_label": "Original",
+    "failed_retry": "Translation failed — retry",
+    "admin_compose_hint": "Write in any language — the customer reads it auto-translated into {{lang}}."
   }
 }

@@ -13,8 +13,15 @@ import { MessageCircle, Send, Loader2, ExternalLink, Bot, AlertCircle, CheckCirc
 const ACCENT = "#E8621A";
 
 interface IntegrationStatus {
-  ai: { configured: boolean; masked_key: string; model: string | null; widget_enabled: boolean; error: string | null };
+  ai: { configured: boolean; masked_key: string; model: string | null; cs_translate_model?: string | null; widget_enabled: boolean; error: string | null };
 }
+
+// Options offered for the CS auto-translation model. Haiku is the cost-effective
+// default; Sonnet is available for higher-quality (more expensive) translation.
+const CS_TRANSLATE_MODELS = [
+  { value: "claude-haiku-4-5-20251001", labelKey: "ai.cs_translate.model_haiku" },
+  { value: "claude-sonnet-4-6", labelKey: "ai.cs_translate.model_sonnet" },
+];
 
 export default function ChatWidgetSettings() {
   const { t } = useTranslation();
@@ -29,6 +36,24 @@ export default function ChatWidgetSettings() {
   const status: IntegrationStatus | undefined = data?.data;
   const enabled = status?.ai.widget_enabled ?? true;
   const configured = status?.ai.configured ?? false;
+  const csModel = status?.ai.cs_translate_model ?? "claude-haiku-4-5-20251001";
+
+  async function setCsModel(next: string) {
+    setSaving(true);
+    try {
+      const res = await apiFetch("/api/v1/integrations/update-env", {
+        method: "POST",
+        body: JSON.stringify({ key: "CS_TRANSLATE_MODEL", value: next }),
+      });
+      if (!res.ok) throw new Error("Save failed");
+      await qc.invalidateQueries({ queryKey: ["integration-status"] });
+      toast({ title: t("ai.cs_translate.saved_toast", "Translation model updated") });
+    } catch (e: any) {
+      toast({ title: t("ai.widget.update_error"), description: e?.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  }
 
   const { data: kb } = useQuery({
     queryKey: ["knowledge"],
@@ -97,6 +122,27 @@ export default function ChatWidgetSettings() {
               <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
                 {t("ai.widget.preview_note")}
               </p>
+            )}
+          </Card>
+
+          {/* CS message auto-translation model */}
+          <Card className="p-5">
+            <Label className="text-sm font-semibold">{t("ai.cs_translate.title", "CS Auto-Translation Model")}</Label>
+            <p className="mt-1 mb-3 text-xs text-muted-foreground">
+              {t("ai.cs_translate.help", "Model used to translate customer-support messages between the customer's language and English. Haiku is fast and low-cost; Sonnet is higher quality but more expensive.")}
+            </p>
+            <select
+              value={csModel}
+              disabled={saving || !configured}
+              onChange={(e) => void setCsModel(e.target.value)}
+              className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none disabled:opacity-50"
+            >
+              {CS_TRANSLATE_MODELS.map((m) => (
+                <option key={m.value} value={m.value}>{t(m.labelKey)}</option>
+              ))}
+            </select>
+            {!configured && (
+              <p className="mt-2 text-xs text-amber-600">{t("ai.cs_translate.needs_key", "Set the Anthropic API key above to enable translation.")}</p>
             )}
           </Card>
         </div>
