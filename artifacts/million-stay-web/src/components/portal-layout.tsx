@@ -48,7 +48,7 @@ function LanguageSwitcher() {
           {LANGUAGES.map((lang) => (
             <button
               key={lang.code}
-              onClick={() => { i18n.changeLanguage(lang.code); setOpen(false); }}
+              onClick={() => { i18n.changeLanguage(lang.code); localStorage.setItem("ms_language", lang.code); setOpen(false); }}
               className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-orange-50 hover:text-primary transition-colors ${
                 lang.code === i18n.language ? "bg-orange-50 text-primary font-semibold" : "text-gray-600"
               }`}
