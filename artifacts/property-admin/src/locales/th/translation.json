@@ -1458,7 +1458,9 @@
     "translated_excerpt_placeholder": "สรุปสั้น ๆ เป็น{{lang}}…",
     "seo_title_short_placeholder": "ชื่อ SEO…",
     "meta_description_short_placeholder": "คำอธิบายเมตา…",
-    "keywords_short_placeholder": "คำสำคัญที่คั่นด้วยจุลภาค…"
+    "keywords_short_placeholder": "คำสำคัญที่คั่นด้วยจุลภาค…",
+    "site_guest": "เว็บไซต์แขก",
+    "site_homestay": "โฮมสเตย์"
   },
   "document_hub": {
     "title": "เอกสาร",
@@ -2628,5 +2630,9 @@
     "original_label": "ต้นฉบับ",
     "failed_retry": "การแปลล้มเหลว — ลองใหม่",
     "admin_compose_hint": "เขียนภาษาใดก็ได้ — ลูกค้าจะเห็นข้อความที่แปลอัตโนมัติเป็น {{lang}}"
+  },
+  "page_translations": {
+    "site_guest": "เว็บไซต์แขก",
+    "site_homestay": "โฮมสเตย์"
   }
 }

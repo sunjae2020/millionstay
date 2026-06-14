@@ -2,7 +2,7 @@ import { HomestayLayout } from "@/components/homestay/HomestayLayout";
 import { HsPageHero, HsSection, HsNumbered, HsCTA } from "@/components/homestay/sections";
 import { HS } from "@/lib/homestay-theme";
 import { useTranslation } from "react-i18next";
-import { usePageContent } from "@/lib/usePageContent";
+import { usePageContent, useHomestaySeo } from "@/lib/usePageContent";
 
 // About Us — single-tier page. Absorbs the former How It Works (#how-it-works),
 // Mission (#mission) and Vision (#vision) sub-pages as anchored sections.
@@ -10,6 +10,7 @@ import { usePageContent } from "@/lib/usePageContent";
 export default function AboutUs() {
   const { t } = useTranslation();
   const pc = usePageContent("homestay-about");
+  useHomestaySeo("homestay-about", { titleFallback: t("homestay.about.page_title") });
 
   const STUDENT_STEPS = [
     { title: t("homestay.about.student_steps_1_title"), body: t("homestay.about.student_steps_1_body") },

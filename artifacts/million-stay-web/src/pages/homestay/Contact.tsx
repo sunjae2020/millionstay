@@ -5,7 +5,7 @@ import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import { getApiBase } from "@/lib/api-base";
 import { HomestayLayout } from "@/components/homestay/HomestayLayout";
 import { HS, HS_FONT } from "@/lib/homestay-theme";
-import { usePageContent } from "@/lib/usePageContent";
+import { usePageContent, useHomestaySeo } from "@/lib/usePageContent";
 
 // 5. CONTACT US — content from the Million Homestay site-content doc (page 5).
 // Reuses the existing public contact endpoint (POST /v1/public/contact-inquiries),
@@ -15,6 +15,7 @@ const ROLE_VALUES = ["Host family", "Student", "Agent or institute", "Other"];
 export default function HomestayContact() {
   const { t } = useTranslation();
   const pc = usePageContent("homestay-contact");
+  useHomestaySeo("homestay-contact", { titleFallback: t("homestay.contact.layout_title") });
   const ROLES = [
     { value: "Host family", label: t("homestay.contact.role_host_family") },
     { value: "Student", label: t("homestay.contact.role_student") },

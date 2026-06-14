@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import hero from "@assets/MS_Homepage_Photo_1920x1080_1775403929888.jpg";
 import { HomestayLayout } from "@/components/homestay/HomestayLayout";
 import { HS, HS_FONT } from "@/lib/homestay-theme";
-import { usePageContent } from "@/lib/usePageContent";
+import { usePageContent, useHomestaySeo } from "@/lib/usePageContent";
 
 // 0. MAIN HOME — content from the Million Homestay site-content doc (page 0).
 // CTAs to not-yet-built features (student apply, partners, full process) route
@@ -13,6 +13,7 @@ import { usePageContent } from "@/lib/usePageContent";
 export default function HomestayHome() {
   const { t } = useTranslation();
   const pc = usePageContent("homestay-home");
+  useHomestaySeo("homestay-home");
 
   const WHY = [
     { icon: Users, title: t("homestay.home.why_1_title"), body: t("homestay.home.why_1_body") },

@@ -1462,7 +1462,9 @@
     "translated_excerpt_placeholder": "Brief summary in {{lang}}…",
     "seo_title_short_placeholder": "SEO title…",
     "meta_description_short_placeholder": "Meta description…",
-    "keywords_short_placeholder": "Comma-separated keywords…"
+    "keywords_short_placeholder": "Comma-separated keywords…",
+    "site_guest": "Guest Site",
+    "site_homestay": "Homestay"
   },
   "document_hub": {
     "title": "Documents",
@@ -2933,5 +2935,9 @@
     "original_label": "Original",
     "failed_retry": "Translation failed — retry",
     "admin_compose_hint": "Write in any language — the customer reads it auto-translated into {{lang}}."
+  },
+  "page_translations": {
+    "site_guest": "Guest Site",
+    "site_homestay": "Homestay"
   }
 }
