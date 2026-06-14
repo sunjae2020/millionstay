@@ -13,6 +13,17 @@ function normalizeLang(raw: unknown): string {
   return SUPPORTED_PARTNER_LANGS.includes(code) ? code : "en";
 }
 
+// Adopt the language the partner actually wrote in (auto-detected from the
+// message text) as the ticket's customer_language, so subsequent admin replies
+// are translated into it. The UI locale is an unreliable signal, so a Korean
+// partner whose ticket was created with customer_language="en" would otherwise
+// never receive Korean translations of admin replies. Mirrors guest-cs.ts.
+async function adoptCustomerLanguage(ticketId: number, current: string, detected: string): Promise<void> {
+  if (detected && detected !== "en" && detected !== current && SUPPORTED_PARTNER_LANGS.includes(detected)) {
+    await db.update(csTicketsTable).set({ customer_language: detected }).where(eq(csTicketsTable.id, ticketId));
+  }
+}
+
 const router: IRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
@@ -111,13 +122,14 @@ router.post("/v1/partner/cs-tickets", async (req, res): Promise<void> => {
       is_internal: 0,
     }).returning();
 
-    await translateAndStoreMessage({
+    const patch = await translateAndStoreMessage({
       messageId: msg.id,
       text: description.trim(),
       originalLang: customerLang,
       customerLanguage: customerLang,
       enabled: ticket.translation_enabled,
     });
+    await adoptCustomerLanguage(ticket.id, ticket.customer_language, patch.original_lang);
 
     res.status(201).json({ success: true, data: ticket });
   } catch {
@@ -196,6 +208,7 @@ router.post("/v1/partner/cs-tickets/:id/messages", async (req, res): Promise<voi
       customerLanguage: ticket.customer_language,
       enabled: ticket.translation_enabled,
     });
+    await adoptCustomerLanguage(id, ticket.customer_language, patch.original_lang);
 
     res.status(201).json({ success: true, data: { ...msg, ...patch } });
   } catch {
