@@ -10,8 +10,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { ArrowLeft, Send, ImageIcon, X, Loader2, Clock, CheckCircle2, XCircle, AlertCircle, Calendar, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { getApiBase } from "@/lib/api-base";
 
-const BASE = "/api/v1";
+const BASE = `${getApiBase()}/api/v1`;
 function authHeaders(): Record<string, string> {
   const token = localStorage.getItem("ms_guest_token");
   return token ? { Authorization: `Bearer ${token}` } : {};

@@ -15,8 +15,9 @@ import {
   CalendarDays, ShieldCheck, Star, Bell,
 } from "lucide-react";
 import { format } from "date-fns";
+import { getApiBase } from "@/lib/api-base";
 
-const BASE = "/api/v1";
+const BASE = `${getApiBase()}/api/v1`;
 function authHeaders(): Record<string, string> {
   const token = localStorage.getItem("ms_guest_token");
   return token ? { Authorization: `Bearer ${token}` } : {};
