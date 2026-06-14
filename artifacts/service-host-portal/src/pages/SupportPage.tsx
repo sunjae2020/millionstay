@@ -76,6 +76,7 @@ export default function SupportPage() {
         subject: subject.trim(),
         description: description.trim(),
         image_urls: images.map((i) => i.url),
+        customer_language: (i18n.language || "en").slice(0, 2),
       }),
     onSuccess: () => {
       setShowForm(false);
