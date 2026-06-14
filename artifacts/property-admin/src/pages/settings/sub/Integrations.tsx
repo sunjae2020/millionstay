@@ -319,6 +319,36 @@ const BillingFields = ({ status, onRefresh }: { status: IntegrationStatus | null
   );
 };
 
+const GoogleSheetsFields = () => (
+  <div className="space-y-3 text-sm">
+    <p className="text-muted-foreground">
+      Sync the <strong>Homestay Student Applications</strong> ops queue with a Google Sheet.
+      Editing a row's <strong>status</strong> or <strong>notes</strong> in the sheet updates the
+      matching application in real time. Student/guardian details stay read-only.
+    </p>
+    <ol className="list-decimal list-inside space-y-1.5 text-xs text-muted-foreground">
+      <li>
+        Issue an API key with the <code className="bg-muted px-1 rounded">homestay:read</code> and{" "}
+        <code className="bg-muted px-1 rounded">homestay:write</code> scopes.
+      </li>
+      <li>In your Google Sheet, add the provided Apps Script and paste the key into Script Properties.</li>
+      <li>Run the install step once, then use the sheet's <strong>MillionStay → Pull latest</strong> menu.</li>
+    </ol>
+    <div className="flex flex-wrap items-center gap-2 pt-1">
+      <Link href="/settings/api-keys">
+        <Button size="sm" className="h-8 text-xs">Issue API Key</Button>
+      </Link>
+      <a
+        href="https://github.com/sunjae2020/millionstay/blob/main/docs/integrations/google-sheets-homestay.md"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <Button size="sm" variant="outline" className="h-8 text-xs">Setup Guide</Button>
+      </a>
+    </div>
+  </div>
+);
+
 const CARDS: CardDef[] = [
   {
     id: "stripe",
@@ -400,6 +430,14 @@ const CARDS: CardDef[] = [
     Fields: AiFields,
     testEndpoint: "/api/v1/integrations/anthropic/test",
     testLabel: "Test AI",
+  },
+  {
+    id: "google-sheets",
+    emoji: "📊",
+    name: "Google Sheets",
+    description: "Sync Homestay Student Applications with a Google Sheet (status & ops notes)",
+    getBadge: () => ({ variant: "not-required", label: "Self-service" }),
+    Fields: GoogleSheetsFields,
   },
   {
     id: "billing",

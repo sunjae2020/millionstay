@@ -19,7 +19,9 @@ import { parsePageParams, pageMeta } from "../utils/pagination.js";
 const STUDENT_ENTITY = "homestay_student_request";
 
 // Ops queue states (see schema + docs/proposals/HOMESTAY_WORKFLOW.md §6).
-const STUDENT_STATUSES = [
+// Exported so the external API (Google Sheets integration) validates against the
+// same single source of truth.
+export const STUDENT_STATUSES = [
   "Draft", "Submitted", "UnderReview", "Matching", "Proposed",
   "Confirmed", "Placed", "Completed", "Cancelled", "Rejected",
 ] as const;
