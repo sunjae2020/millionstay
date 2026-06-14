@@ -4,6 +4,14 @@ import { eq, desc, and, sql, lte } from "drizzle-orm";
 import { db, csTicketsTable, csMessagesTable, bookingsTable, announcementsTable, guestDirectMessagesTable } from "@workspace/db";
 import { requireGuestAuth } from "../middlewares/requireGuestAuth";
 import { isCloudinaryConfigured, uploadToCloudinary } from "../utils/cloudinary";
+import { translateAndStoreMessage } from "../lib/chat/translateMessage";
+
+// Languages the guest web app ships — the customer may converse in any of these.
+const SUPPORTED_GUEST_LANGS = ["en", "ja", "ko", "th", "vi", "zh"];
+function normalizeLang(raw: unknown): string {
+  const code = typeof raw === "string" ? raw.trim().toLowerCase().slice(0, 2) : "";
+  return SUPPORTED_GUEST_LANGS.includes(code) ? code : "en";
+}
 
 const router: IRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
@@ -67,7 +75,7 @@ router.get("/v1/guest/cs-tickets", requireGuestAuth, async (req, res): Promise<v
 router.post("/v1/guest/cs-tickets", requireGuestAuth, async (req, res): Promise<void> => {
   try {
     const guestId = (req as any).guest.id;
-    const { category, subject, description, booking_id, image_urls } = req.body;
+    const { category, subject, description, booking_id, image_urls, customer_language } = req.body;
 
     if (!subject?.trim() || !description?.trim()) {
       res.status(400).json({ success: false, error: { code: "VALIDATION", message: "subject and description are required" } });
@@ -75,6 +83,7 @@ router.post("/v1/guest/cs-tickets", requireGuestAuth, async (req, res): Promise<
     }
 
     const ticket_ref = await generateTicketRef();
+    const customerLang = normalizeLang(customer_language);
 
     const [ticket] = await db.insert(csTicketsTable).values({
       ticket_ref,
@@ -85,16 +94,26 @@ router.post("/v1/guest/cs-tickets", requireGuestAuth, async (req, res): Promise<
       description: description.trim(),
       status: "Open",
       priority: "Normal",
+      customer_language: customerLang,
     }).returning();
 
     if (description?.trim()) {
-      await db.insert(csMessagesTable).values({
+      const [msg] = await db.insert(csMessagesTable).values({
         ticket_id: ticket.id,
         sender_type: "guest",
         sender_id: guestId,
         message: description.trim(),
+        original_lang: customerLang,
         image_urls: image_urls?.length ? JSON.stringify(image_urls) : null,
         is_internal: 0,
+      }).returning();
+      // Guest writes in their own language → translate to English for the admin.
+      await translateAndStoreMessage({
+        messageId: msg.id,
+        text: description.trim(),
+        originalLang: customerLang,
+        customerLanguage: customerLang,
+        enabled: ticket.translation_enabled,
       });
     }
 
@@ -153,8 +172,12 @@ router.post("/v1/guest/cs-tickets/:id/messages", requireGuestAuth, async (req, r
       return;
     }
 
-    const [ticket] = await db.select({ id: csTicketsTable.id, status: csTicketsTable.status })
-      .from(csTicketsTable)
+    const [ticket] = await db.select({
+      id: csTicketsTable.id,
+      status: csTicketsTable.status,
+      customer_language: csTicketsTable.customer_language,
+      translation_enabled: csTicketsTable.translation_enabled,
+    }).from(csTicketsTable)
       .where(and(eq(csTicketsTable.id, id), eq(csTicketsTable.guest_user_id, guestId)));
 
     if (!ticket) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Ticket not found" } }); return; }
@@ -165,6 +188,7 @@ router.post("/v1/guest/cs-tickets/:id/messages", requireGuestAuth, async (req, r
       sender_type: "guest",
       sender_id: guestId,
       message: message.trim(),
+      original_lang: ticket.customer_language,
       image_urls: image_urls?.length ? JSON.stringify(image_urls) : null,
       is_internal: 0,
     }).returning();
@@ -175,7 +199,15 @@ router.post("/v1/guest/cs-tickets/:id/messages", requireGuestAuth, async (req, r
       await db.update(csTicketsTable).set({ updated_at: new Date() }).where(eq(csTicketsTable.id, id));
     }
 
-    res.status(201).json({ success: true, data: msg });
+    const patch = await translateAndStoreMessage({
+      messageId: msg.id,
+      text: message.trim(),
+      originalLang: ticket.customer_language,
+      customerLanguage: ticket.customer_language,
+      enabled: ticket.translation_enabled,
+    });
+
+    res.status(201).json({ success: true, data: { ...msg, ...patch } });
   } catch {
     res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to send message" } });
   }

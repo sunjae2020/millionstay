@@ -4,6 +4,14 @@ import { eq, desc, and, sql } from "drizzle-orm";
 import { db, csTicketsTable, csMessagesTable } from "@workspace/db";
 import { requirePartnerAuth, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth";
 import { isCloudinaryConfigured, uploadToCloudinary } from "../utils/cloudinary";
+import { translateAndStoreMessage } from "../lib/chat/translateMessage";
+
+// Languages the partner portals ship (no Vietnamese, unlike the guest web app).
+const SUPPORTED_PARTNER_LANGS = ["en", "ja", "ko", "th", "zh"];
+function normalizeLang(raw: unknown): string {
+  const code = typeof raw === "string" ? raw.trim().toLowerCase().slice(0, 2) : "";
+  return SUPPORTED_PARTNER_LANGS.includes(code) ? code : "en";
+}
 
 const router: IRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
@@ -69,7 +77,7 @@ router.get("/v1/partner/cs-tickets", async (req, res): Promise<void> => {
 router.post("/v1/partner/cs-tickets", async (req, res): Promise<void> => {
   try {
     const partner = (req as any).partner as PartnerAuthPayload;
-    const { category, subject, description, image_urls } = req.body;
+    const { category, subject, description, image_urls, customer_language } = req.body;
 
     if (!subject?.trim() || !description?.trim()) {
       res.status(400).json({ success: false, error: { code: "VALIDATION", message: "subject and description are required" } });
@@ -77,6 +85,7 @@ router.post("/v1/partner/cs-tickets", async (req, res): Promise<void> => {
     }
 
     const ticket_ref = await generateTicketRef();
+    const customerLang = normalizeLang(customer_language);
 
     const [ticket] = await db.insert(csTicketsTable).values({
       ticket_ref,
@@ -89,15 +98,25 @@ router.post("/v1/partner/cs-tickets", async (req, res): Promise<void> => {
       description: description.trim(),
       status: "Open",
       priority: "Normal",
+      customer_language: customerLang,
     }).returning();
 
-    await db.insert(csMessagesTable).values({
+    const [msg] = await db.insert(csMessagesTable).values({
       ticket_id: ticket.id,
       sender_type: partner.portal_type,
       sender_id: partner.id,
       message: description.trim(),
+      original_lang: customerLang,
       image_urls: image_urls?.length ? JSON.stringify(image_urls) : null,
       is_internal: 0,
+    }).returning();
+
+    await translateAndStoreMessage({
+      messageId: msg.id,
+      text: description.trim(),
+      originalLang: customerLang,
+      customerLanguage: customerLang,
+      enabled: ticket.translation_enabled,
     });
 
     res.status(201).json({ success: true, data: ticket });
@@ -143,8 +162,12 @@ router.post("/v1/partner/cs-tickets/:id/messages", async (req, res): Promise<voi
       return;
     }
 
-    const [ticket] = await db.select({ id: csTicketsTable.id, status: csTicketsTable.status })
-      .from(csTicketsTable)
+    const [ticket] = await db.select({
+      id: csTicketsTable.id,
+      status: csTicketsTable.status,
+      customer_language: csTicketsTable.customer_language,
+      translation_enabled: csTicketsTable.translation_enabled,
+    }).from(csTicketsTable)
       .where(and(eq(csTicketsTable.id, id), eq(csTicketsTable.partner_user_id, partner.id)));
 
     if (!ticket) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Ticket not found" } }); return; }
@@ -155,6 +178,7 @@ router.post("/v1/partner/cs-tickets/:id/messages", async (req, res): Promise<voi
       sender_type: partner.portal_type,
       sender_id: partner.id,
       message: message.trim(),
+      original_lang: ticket.customer_language,
       image_urls: image_urls?.length ? JSON.stringify(image_urls) : null,
       is_internal: 0,
     }).returning();
@@ -165,7 +189,15 @@ router.post("/v1/partner/cs-tickets/:id/messages", async (req, res): Promise<voi
       await db.update(csTicketsTable).set({ updated_at: new Date() }).where(eq(csTicketsTable.id, id));
     }
 
-    res.status(201).json({ success: true, data: msg });
+    const patch = await translateAndStoreMessage({
+      messageId: msg.id,
+      text: message.trim(),
+      originalLang: ticket.customer_language,
+      customerLanguage: ticket.customer_language,
+      enabled: ticket.translation_enabled,
+    });
+
+    res.status(201).json({ success: true, data: { ...msg, ...patch } });
   } catch {
     res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to send message" } });
   }

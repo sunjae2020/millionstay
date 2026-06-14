@@ -4,6 +4,7 @@ import { eq, desc, and, ilike, or, sql, isNull, inArray } from "drizzle-orm";
 import { db, csTicketsTable, csMessagesTable, guestUsersTable, partnerUsersTable, bookingsTable } from "@workspace/db";
 import { requireAuth } from "../middlewares/requireAuth";
 import { isCloudinaryConfigured, uploadToCloudinary } from "../utils/cloudinary";
+import { translateAndStoreMessage } from "../lib/chat/translateMessage";
 
 const router: IRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
@@ -168,22 +169,30 @@ router.post("/v1/cs-tickets/:id/messages", requireAuth, async (req, res): Promis
   try {
     const adminId = (req as any).user.id;
     const id = Number(req.params.id);
-    const { message, image_urls, is_internal = false } = req.body;
+    // `lang` is the language the admin composed in (their portal UI language);
+    // defaults to English. The customer reads it in the ticket's customer_language.
+    const { message, image_urls, is_internal = false, lang } = req.body;
 
     if (!message?.trim()) {
       res.status(400).json({ success: false, error: { code: "VALIDATION", message: "message is required" } });
       return;
     }
 
-    const [ticket] = await db.select({ id: csTicketsTable.id })
-      .from(csTicketsTable).where(eq(csTicketsTable.id, id));
+    const [ticket] = await db.select({
+      id: csTicketsTable.id,
+      customer_language: csTicketsTable.customer_language,
+      translation_enabled: csTicketsTable.translation_enabled,
+    }).from(csTicketsTable).where(eq(csTicketsTable.id, id));
     if (!ticket) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Ticket not found" } }); return; }
+
+    const originalLang = typeof lang === "string" && lang.trim() ? lang.trim() : "en";
 
     const [msg] = await db.insert(csMessagesTable).values({
       ticket_id: id,
       sender_type: "admin",
       sender_id: adminId,
       message: message.trim(),
+      original_lang: originalLang,
       image_urls: image_urls?.length ? JSON.stringify(image_urls) : null,
       is_internal: is_internal ? 1 : 0,
     }).returning();
@@ -193,9 +202,53 @@ router.post("/v1/cs-tickets/:id/messages", requireAuth, async (req, res): Promis
         .where(and(eq(csTicketsTable.id, id), eq(csTicketsTable.status, "Open")));
     }
 
-    res.status(201).json({ success: true, data: msg });
+    // Internal notes are admin-only — never shown to the customer, so skip
+    // translation. Customer-facing replies translate synchronously so the
+    // returned message already carries both languages.
+    const patch = await translateAndStoreMessage({
+      messageId: msg.id,
+      text: message.trim(),
+      originalLang,
+      customerLanguage: ticket.customer_language,
+      enabled: ticket.translation_enabled && !is_internal,
+    });
+
+    res.status(201).json({ success: true, data: { ...msg, ...patch } });
   } catch {
     res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to send message" } });
+  }
+});
+
+/* ─────────────────────────────────────────────
+   ADMIN: Re-translate a single message (retry failed / fill missing)
+───────────────────────────────────────────── */
+router.post("/v1/cs-tickets/:id/messages/:mid/retranslate", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const ticketId = Number(req.params.id);
+    const mid = Number(req.params.mid);
+
+    const [ticket] = await db.select({
+      customer_language: csTicketsTable.customer_language,
+      translation_enabled: csTicketsTable.translation_enabled,
+    }).from(csTicketsTable).where(eq(csTicketsTable.id, ticketId));
+    if (!ticket) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Ticket not found" } }); return; }
+
+    const [msg] = await db.select().from(csMessagesTable)
+      .where(and(eq(csMessagesTable.id, mid), eq(csMessagesTable.ticket_id, ticketId)));
+    if (!msg) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Message not found" } }); return; }
+
+    const originalLang = msg.original_lang || (msg.sender_type === "admin" ? "en" : ticket.customer_language);
+    const patch = await translateAndStoreMessage({
+      messageId: mid,
+      text: msg.message,
+      originalLang,
+      customerLanguage: ticket.customer_language,
+      enabled: ticket.translation_enabled && msg.is_internal === 0,
+    });
+
+    res.json({ success: true, data: { ...msg, ...patch } });
+  } catch {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: "Failed to retranslate message" } });
   }
 });
 

@@ -1,3 +1,5 @@
+import { eq } from "drizzle-orm";
+import { db, csMessagesTable } from "@workspace/db";
 import { getAnthropic, getCsTranslateModel, isChatConfigured } from "./anthropic.js";
 
 /**
@@ -109,4 +111,80 @@ export async function translateMessage(
     inputTokens: msg.usage?.input_tokens ?? null,
     outputTokens: msg.usage?.output_tokens ?? null,
   };
+}
+
+/** Fields written back to a cs_messages row after a translation attempt. */
+export interface MessageTranslationPatch {
+  original_lang: string;
+  translations: Record<string, string>;
+  translation_status: "done" | "failed" | "skipped";
+  translation_input_tokens: number | null;
+  translation_output_tokens: number | null;
+}
+
+/**
+ * Translate a just-inserted CS message into { customer_language, en } and
+ * persist the result onto the row. Best-effort: any failure (missing API key,
+ * model error, bad output) is swallowed and recorded as translation_status =
+ * 'failed' so the original message is never lost and the UI can offer a retry.
+ * Returns the patch that was written, so the caller can merge it into the
+ * message it returns to the client (synchronous translate-on-send UX).
+ */
+export async function translateAndStoreMessage(opts: {
+  messageId: number;
+  text: string;
+  originalLang: string;
+  customerLanguage: string;
+  enabled: boolean;
+}): Promise<MessageTranslationPatch> {
+  const { messageId, text, originalLang, customerLanguage, enabled } = opts;
+  const targets = enabled ? targetLangsFor(originalLang, customerLanguage) : [];
+
+  // Nothing to do — original language already covers every needed language, or
+  // translation is disabled for this ticket. Record the source language anyway.
+  if (targets.length === 0) {
+    const patch: MessageTranslationPatch = {
+      original_lang: originalLang,
+      translations: {},
+      translation_status: enabled ? "done" : "skipped",
+      translation_input_tokens: null,
+      translation_output_tokens: null,
+    };
+    await db.update(csMessagesTable)
+      .set({ original_lang: patch.original_lang, translation_status: patch.translation_status })
+      .where(eq(csMessagesTable.id, messageId));
+    return patch;
+  }
+
+  try {
+    const result = await translateMessage(text, originalLang, targets);
+    const patch: MessageTranslationPatch = {
+      original_lang: originalLang,
+      translations: result.translations,
+      translation_status: "done",
+      translation_input_tokens: result.inputTokens,
+      translation_output_tokens: result.outputTokens,
+    };
+    await db.update(csMessagesTable).set({
+      original_lang: patch.original_lang,
+      translations: patch.translations,
+      translation_status: patch.translation_status,
+      translation_input_tokens: patch.translation_input_tokens,
+      translation_output_tokens: patch.translation_output_tokens,
+    }).where(eq(csMessagesTable.id, messageId));
+    return patch;
+  } catch (err) {
+    console.error(`CS translation failed for message ${messageId}:`, (err as Error)?.message);
+    const patch: MessageTranslationPatch = {
+      original_lang: originalLang,
+      translations: {},
+      translation_status: "failed",
+      translation_input_tokens: null,
+      translation_output_tokens: null,
+    };
+    await db.update(csMessagesTable)
+      .set({ original_lang: patch.original_lang, translation_status: patch.translation_status })
+      .where(eq(csMessagesTable.id, messageId));
+    return patch;
+  }
 }
