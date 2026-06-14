@@ -2422,6 +2422,14 @@
       "tool_label": "도구 · {{name}}",
       "role_user": "사용자",
       "role_assistant": "어시스턴트"
+    },
+    "cs_translate": {
+      "title": "CS 자동 번역 모델",
+      "help": "고객 지원 메시지를 고객 언어와 영어 간에 번역하는 데 사용하는 모델입니다. Haiku는 빠르고 저렴하며, Sonnet은 품질이 더 높지만 비용이 더 듭니다.",
+      "model_haiku": "Claude Haiku 4.5 — 빠르고 저렴 (권장)",
+      "model_sonnet": "Claude Sonnet 4.6 — 더 높은 품질, 더 비쌈",
+      "saved_toast": "번역 모델이 업데이트되었습니다",
+      "needs_key": "번역을 사용하려면 위에서 Anthropic API 키를 설정하세요."
     }
   },
   "accommodation_options": {

@@ -123,6 +123,8 @@ router.get("/v1/integrations/status", async (_req: Request, res: Response): Prom
         configured: aiConfigured,
         masked_key: maskKey(anthropicKey),
         model: aiConfigured ? (process.env["CHAT_MODEL"] || "claude-sonnet-4-6") : null,
+        // Model used for CS message auto-translation (separate, cheaper model).
+        cs_translate_model: process.env["CS_TRANSLATE_MODEL"] || "claude-haiku-4-5-20251001",
         widget_enabled: widgetEnabled,
         error: null,
       },

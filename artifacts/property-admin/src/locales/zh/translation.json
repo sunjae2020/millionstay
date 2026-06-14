@@ -2422,6 +2422,14 @@
       "tool_label": "工具 · {{name}}",
       "role_user": "用户",
       "role_assistant": "助手"
+    },
+    "cs_translate": {
+      "title": "客服自动翻译模型",
+      "help": "用于在客户语言与英语之间翻译客服消息的模型。Haiku 快速且低成本；Sonnet 质量更高但更昂贵。",
+      "model_haiku": "Claude Haiku 4.5 — 快速、低成本（推荐）",
+      "model_sonnet": "Claude Sonnet 4.6 — 质量更高、更昂贵",
+      "saved_toast": "翻译模型已更新",
+      "needs_key": "请先在上方设置 Anthropic API 密钥以启用翻译。"
     }
   },
   "accommodation_options": {
