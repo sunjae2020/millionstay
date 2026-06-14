@@ -110,6 +110,15 @@ gates it, so keep it green. Two notable classes were fixed:
   shared/generic by default (extend a discriminator like `context_type`/`kind`,
   don't fork per product). **When applicability is unclear, confirm by text
   first.** See [docs/CROSS_PRODUCT_FEATURE_POLICY.md](docs/CROSS_PRODUCT_FEATURE_POLICY.md).
+- **i18n by default:** any user-facing content that is added or modified must be
+  translated into **every locale the affected app supports** as part of the same
+  work — never ship English-only and defer translation. Locale sets:
+  `million-stay-web` (guest/homestay) ships **en, ja, ko, th, vi, zh**; partner
+  portals (`agent`/`owner`/`service-host`) ship **en, ja, ko, th, zh** (no `vi`).
+  English (`en`) is the source of truth in `src/locales/en/translation.json`; add
+  the key there, then fill every other locale via `scripts/translate-i18n.mjs`
+  (or the admin AI-translate endpoint) and verify before calling the change done.
+  When new content's translatability is unclear, confirm by text first.
 - **Money columns** (`invoices.amount`, `promotions.discount_amount`) are
   `numeric(10,2)` → Drizzle returns **strings**; wrap with `Number()` before math.
 - **Lookup endpoints** return `{ id, display, ...extra }` consistently.
