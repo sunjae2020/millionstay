@@ -13,14 +13,18 @@
     "my_bookings": "我的预订",
     "properties": "物业",
     "commission": "佣金",
-    "sign_out": "退出登录"
+    "sign_out": "退出登录",
+    "support": "客户支持",
+    "dark_mode": "深色模式",
+    "light_mode": "浅色模式"
   },
   "common": {
     "loading": "加载中...",
     "all_statuses": "所有状态",
     "ongoing": "进行中",
     "tbd": "待定",
-    "back": "返回"
+    "back": "返回",
+    "cancel": "取消"
   },
   "login": {
     "headline_1": "自信地",
@@ -155,5 +159,41 @@
     "reference_label": "申请编号：",
     "privacy_note": "提交即表示您同意 MillionStay 就此申请与您联系。",
     "privacy_policy_link": "Privacy Policy"
+  },
+  "support": {
+    "title": "客户支持",
+    "subtitle": "联系 MillionStay 管理团队。只有您和管理员可以看到这些消息。",
+    "new_ticket": "新工单",
+    "category": "类别",
+    "subject": "主题",
+    "subject_placeholder": "简要概述",
+    "description": "消息",
+    "description_placeholder": "请描述我们能如何帮助您…",
+    "attach": "附件",
+    "submit": "提交",
+    "empty": "暂无工单。创建一个以联系管理员。",
+    "create_failed": "创建工单失败。",
+    "upload_failed": "图片上传失败。",
+    "back": "返回客户支持",
+    "not_found": "未找到工单。",
+    "submitted": "提交时间",
+    "sender_admin": "MillionStay 客服",
+    "sender_you": "您",
+    "reply_placeholder": "输入回复…",
+    "send": "发送",
+    "send_failed": "消息发送失败。",
+    "closed_note": "此工单已关闭。如需进一步帮助，请创建新工单。",
+    "category_general": "一般",
+    "category_accommodation": "住宿",
+    "category_billing": "账单",
+    "category_maintenance": "维护",
+    "category_other": "其他",
+    "status_open": "待处理",
+    "status_inprogress": "处理中",
+    "status_resolved": "已解决",
+    "status_closed": "已关闭",
+    "created": "创建时间",
+    "last_reply": "最近回复",
+    "no_reply_yet": "暂无回复"
   }
 }

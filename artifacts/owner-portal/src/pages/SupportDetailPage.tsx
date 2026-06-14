@@ -58,14 +58,14 @@ interface TicketDetail {
   updated_at: string;
 }
 
-function fmt(d: string): string {
-  try { return new Date(d).toLocaleString(); } catch { return d; }
+function fmt(d: string, locale?: string): string {
+  try { return new Date(d).toLocaleString(locale); } catch { return d; }
 }
 
 export default function SupportDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const qc = useQueryClient();
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -165,7 +165,7 @@ export default function SupportDetailPage() {
             </span>
           </div>
           <h1 className="text-lg font-bold text-foreground">{ticket.subject}</h1>
-          <p className="text-xs text-muted-foreground mt-1">{t("support.submitted", "Submitted")} {fmt(ticket.created_at)}</p>
+          <p className="text-xs text-muted-foreground mt-1">{t("support.submitted", "Submitted")} {fmt(ticket.created_at, i18n.language)}</p>
         </div>
 
         {/* Conversation */}
@@ -183,7 +183,7 @@ export default function SupportDetailPage() {
                       </div>
                     )}
                     <span className="text-xs text-muted-foreground">
-                      {isAdmin ? t("support.sender_admin", "MillionStay Support") : t("support.sender_you", "You")} · {fmt(msg.created_at)}
+                      {isAdmin ? t("support.sender_admin", "MillionStay Support") : t("support.sender_you", "You")} · {fmt(msg.created_at, i18n.language)}
                     </span>
                   </div>
                   <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${

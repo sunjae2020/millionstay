@@ -13,7 +13,10 @@
     "my_jobs": "My Jobs",
     "schedule": "Schedule",
     "earnings": "Earnings",
-    "sign_out": "Sign out"
+    "sign_out": "Sign out",
+    "support": "Support",
+    "dark_mode": "Dark mode",
+    "light_mode": "Light mode"
   },
   "common": {
     "loading": "Loading...",
@@ -195,5 +198,41 @@
     "reference_label": "Your reference:",
     "privacy_note": "By submitting, you agree to be contacted by MillionStay regarding your application.",
     "privacy_policy_link": "Privacy Policy"
+  },
+  "support": {
+    "title": "Support",
+    "subtitle": "Contact the MillionStay admin team. Only you and admin can see these messages.",
+    "new_ticket": "New ticket",
+    "category": "Category",
+    "subject": "Subject",
+    "subject_placeholder": "Brief summary",
+    "description": "Message",
+    "description_placeholder": "Describe how we can help…",
+    "attach": "Attach",
+    "submit": "Submit",
+    "empty": "No tickets yet. Open one to contact admin.",
+    "create_failed": "Failed to create ticket.",
+    "upload_failed": "Image upload failed.",
+    "back": "Back to Support",
+    "not_found": "Ticket not found.",
+    "submitted": "Submitted",
+    "sender_admin": "MillionStay Support",
+    "sender_you": "You",
+    "reply_placeholder": "Type your reply…",
+    "send": "Send",
+    "send_failed": "Failed to send message.",
+    "closed_note": "This ticket is closed. Open a new ticket if you need further help.",
+    "category_general": "General",
+    "category_accommodation": "Accommodation",
+    "category_billing": "Billing",
+    "category_maintenance": "Maintenance",
+    "category_other": "Other",
+    "status_open": "Open",
+    "status_inprogress": "In progress",
+    "status_resolved": "Resolved",
+    "status_closed": "Closed",
+    "created": "Created",
+    "last_reply": "Last reply",
+    "no_reply_yet": "No replies yet"
   }
 }
