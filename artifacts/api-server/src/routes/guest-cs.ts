@@ -13,11 +13,30 @@ function normalizeLang(raw: unknown): string {
   return SUPPORTED_GUEST_LANGS.includes(code) ? code : "en";
 }
 
+/**
+ * Adopt the language the guest actually wrote in (auto-detected from the message
+ * text) as the ticket's customer_language, so subsequent admin replies are
+ * translated into it. The UI locale defaults to English, so a Korean-speaking
+ * guest browsing in English would otherwise leave customer_language="en" and
+ * translation would never kick in. Only "upgrade" to a non-English language —
+ * never downgrade back to English — to avoid flip-flopping on short messages.
+ */
+async function adoptCustomerLanguage(ticketId: number, current: string, detected: string): Promise<void> {
+  if (detected && detected !== "en" && detected !== current && SUPPORTED_GUEST_LANGS.includes(detected)) {
+    await db.update(csTicketsTable).set({ customer_language: detected }).where(eq(csTicketsTable.id, ticketId));
+  }
+}
+
 const router: IRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
-// SECURITY: all /v1/guest/* and /v1/cs/* routes require guest auth.
-router.use(["/v1/guest", "/v1/cs"], requireGuestAuth);
+// SECURITY: all /v1/guest/* routes require guest auth.
+// NOTE: we intentionally do NOT prefix-guard /v1/cs here. This router is mounted
+// before the admin cs-tickets router, and a broad "/v1/cs" guard would also
+// swallow the admin upload route /v1/cs/admin/upload-image with requireGuestAuth
+// (rejecting valid admin tokens). The only guest /v1/cs route below
+// (/v1/cs/upload-image) carries its own inline requireGuestAuth instead.
+router.use("/v1/guest", requireGuestAuth);
 
 const CS_CATEGORIES = ["General", "Accommodation", "Billing", "Maintenance", "Other"] as const;
 
@@ -107,14 +126,17 @@ router.post("/v1/guest/cs-tickets", requireGuestAuth, async (req, res): Promise<
         image_urls: image_urls?.length ? JSON.stringify(image_urls) : null,
         is_internal: 0,
       }).returning();
-      // Guest writes in their own language → translate to English for the admin.
-      await translateAndStoreMessage({
+      // Guest writes in their own language → detect it and translate to English
+      // for the admin. Adopt the detected language as the ticket's so admin
+      // replies are translated back into it.
+      const patch = await translateAndStoreMessage({
         messageId: msg.id,
         text: description.trim(),
         originalLang: customerLang,
         customerLanguage: customerLang,
         enabled: ticket.translation_enabled,
       });
+      await adoptCustomerLanguage(ticket.id, ticket.customer_language, patch.original_lang);
     }
 
     res.status(201).json({ success: true, data: ticket });
@@ -206,6 +228,7 @@ router.post("/v1/guest/cs-tickets/:id/messages", requireGuestAuth, async (req, r
       customerLanguage: ticket.customer_language,
       enabled: ticket.translation_enabled,
     });
+    await adoptCustomerLanguage(ticket.id, ticket.customer_language, patch.original_lang);
 
     res.status(201).json({ success: true, data: { ...msg, ...patch } });
   } catch {

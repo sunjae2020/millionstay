@@ -113,6 +113,83 @@ export async function translateMessage(
   };
 }
 
+export interface AutoTranslateResult {
+  /** The language the message was actually detected to be written in. */
+  detectedLang: string;
+  translations: Record<string, string>;
+  inputTokens: number | null;
+  outputTokens: number | null;
+}
+
+/**
+ * Detect the language a CS message is actually written in AND translate it into
+ * the languages the conversation needs ({ en, customerLanguage }) — in a single
+ * model call. The UI locale is an unreliable signal (a guest browsing the site
+ * in English may still type their message in Korean), so we detect from the text
+ * itself rather than trusting a declared language. Returns the detected source
+ * language plus translations for every needed language except the source.
+ */
+export async function translateMessageAuto(
+  text: string,
+  customerLanguage: string,
+): Promise<AutoTranslateResult> {
+  // Admin reads English; the customer reads their own language.
+  const needed = [...new Set(["en", customerLanguage])].filter((l) => l in LANG_INFO);
+  if (!text.trim()) {
+    return { detectedLang: "en", translations: {}, inputTokens: null, outputTokens: null };
+  }
+  if (!isChatConfigured()) {
+    throw new Error("AI translation is not configured: set ANTHROPIC_API_KEY.");
+  }
+
+  const anthropic = getAnthropic();
+  const supportedCodes = Object.keys(LANG_INFO);
+  const codeList = supportedCodes.join(", ");
+  const targetSpec = needed
+    .map((l) => `"${l}" (${LANG_INFO[l]?.name ?? l}${LANG_INFO[l]?.style ? ` — ${LANG_INFO[l]?.style}` : ""})`)
+    .join(", ");
+
+  const system =
+    `You are a professional translator and language detector handling customer-support messages for MillionStay / Million Homestay, ` +
+    `a student accommodation and homestay platform in Melbourne, Australia. ` +
+    `First, detect the language the message is actually written in; it is one of these codes: ${codeList}. ` +
+    `Then translate its full meaning faithfully and naturally, in a polite, helpful support tone, into each of these target languages EXCEPT the detected source language: ${targetSpec}. ` +
+    `Keep the brand names "MillionStay" and "Million Homestay" in English. Keep Australian suburb, city and university names in English. ` +
+    `Keep ticket references (e.g. CS-2026-0001), booking references, URLs, email addresses, amounts, dates and numbers EXACTLY as written. ` +
+    `Preserve line breaks and punctuation. Do not add greetings, signatures, notes or commentary that are not in the source. ` +
+    `Respond with ONLY a JSON object of the form {"detected":"<code>","translations":{"<code>":"<translated text>"}}. ` +
+    `The "detected" value must be one of ${codeList}. The "translations" keys must be a subset of [${needed.map((l) => `"${l}"`).join(", ")}] and must omit the detected source language. Do not add other keys.`;
+
+  const msg = await anthropic.messages.create({
+    model: getCsTranslateModel(),
+    max_tokens: 4096,
+    system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
+    messages: [{ role: "user", content: text }],
+  });
+
+  const raw = msg.content.map((b) => (b.type === "text" ? b.text : "")).join("");
+  const jsonStr = raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1);
+  const parsed = JSON.parse(jsonStr) as { detected?: unknown; translations?: Record<string, unknown> };
+
+  const detectedRaw = typeof parsed.detected === "string" ? parsed.detected.trim().toLowerCase().slice(0, 2) : "";
+  const detectedLang = detectedRaw in LANG_INFO ? detectedRaw : "en";
+
+  const translations: Record<string, string> = {};
+  const src = (parsed.translations ?? {}) as Record<string, unknown>;
+  for (const lang of needed) {
+    if (lang === detectedLang) continue;
+    const v = src[lang];
+    if (typeof v === "string" && v.trim()) translations[lang] = v.trim();
+  }
+
+  return {
+    detectedLang,
+    translations,
+    inputTokens: msg.usage?.input_tokens ?? null,
+    outputTokens: msg.usage?.output_tokens ?? null,
+  };
+}
+
 /** Fields written back to a cs_messages row after a translation attempt. */
 export interface MessageTranslationPatch {
   original_lang: string;
@@ -138,15 +215,14 @@ export async function translateAndStoreMessage(opts: {
   enabled: boolean;
 }): Promise<MessageTranslationPatch> {
   const { messageId, text, originalLang, customerLanguage, enabled } = opts;
-  const targets = enabled ? targetLangsFor(originalLang, customerLanguage) : [];
 
-  // Nothing to do — original language already covers every needed language, or
-  // translation is disabled for this ticket. Record the source language anyway.
-  if (targets.length === 0) {
+  // Translation disabled (e.g. an admin-only internal note) — record the
+  // declared source language and skip the model call entirely.
+  if (!enabled) {
     const patch: MessageTranslationPatch = {
       original_lang: originalLang,
       translations: {},
-      translation_status: enabled ? "done" : "skipped",
+      translation_status: "skipped",
       translation_input_tokens: null,
       translation_output_tokens: null,
     };
@@ -157,9 +233,11 @@ export async function translateAndStoreMessage(opts: {
   }
 
   try {
-    const result = await translateMessage(text, originalLang, targets);
+    // Detect the language actually written (not the UI locale, which is
+    // unreliable) and translate into { en, customer_language } in one call.
+    const result = await translateMessageAuto(text, customerLanguage);
     const patch: MessageTranslationPatch = {
-      original_lang: originalLang,
+      original_lang: result.detectedLang,
       translations: result.translations,
       translation_status: "done",
       translation_input_tokens: result.inputTokens,
