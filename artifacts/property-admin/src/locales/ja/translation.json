@@ -1695,7 +1695,22 @@
     "field_contact_hours_label": "営業時間ラベル",
     "field_contact_hours": "営業時間",
     "field_contact_form_title": "フォームセクションタイトル",
-    "field_contact_form_subtitle": "フォームセクションサブタイトル"
+    "field_contact_form_subtitle": "フォームセクションサブタイトル",
+    "site_www": "ゲストサイト",
+    "site_homestay": "ホームステイ",
+    "lang_th": "タイ語",
+    "page_label_homestay_home": "ホーム",
+    "page_desc_homestay_home": "ホームステイのランディング — ヒーロー、強み、流れの見出し",
+    "page_label_homestay_about": "会社概要",
+    "page_desc_homestay_about": "ヒーロー、ブリッジング、ミッション、ビジョンの各セクション",
+    "page_label_homestay_students": "学生向け",
+    "page_desc_homestay_students": "学生ページのヒーロー導入",
+    "page_label_homestay_hosts": "ホストファミリー",
+    "page_desc_homestay_hosts": "ホストファミリーページのヒーロー導入",
+    "page_label_homestay_partners": "パートナー",
+    "page_desc_homestay_partners": "パートナーページのヒーロー導入",
+    "page_label_homestay_contact": "お問い合わせ",
+    "page_desc_homestay_contact": "お問い合わせの見出し、サブ見出し、所在地"
   },
   "dash_channels": {
     "intro_prefix": "すべてのスペースにわたるOTAチャネル接続を一元的に確認できます。スペースごとの設定は各",

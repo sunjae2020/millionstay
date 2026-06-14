@@ -49,7 +49,9 @@ const STATUS_LABEL_KEYS: Record<string, string> = {
   Published: "blog.status_published",
   Archived: "blog.status_archived",
 };
-const CATEGORY_OPTIONS = ["Tips & Guides", "Student Life", "Melbourne", "Housing", "News", "Lifestyle"];
+// "Homestay" posts are surfaced on the homestay site's blog (homestay.millionstay.com/blog)
+// and are kept out of the guest (www) blog listing.
+const CATEGORY_OPTIONS = ["Tips & Guides", "Student Life", "Melbourne", "Housing", "News", "Lifestyle", "Homestay"];
 
 function slugify(text: string) {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");

@@ -1695,7 +1695,22 @@
     "field_contact_hours_label": "ป้ายกำกับเวลาทำการ",
     "field_contact_hours": "เวลาทำการ",
     "field_contact_form_title": "ชื่อส่วนแบบฟอร์ม",
-    "field_contact_form_subtitle": "ชื่อรองส่วนแบบฟอร์ม"
+    "field_contact_form_subtitle": "ชื่อรองส่วนแบบฟอร์ม",
+    "site_www": "เว็บไซต์แขก",
+    "site_homestay": "โฮมสเตย์",
+    "lang_th": "ไทย",
+    "page_label_homestay_home": "หน้าแรก",
+    "page_desc_homestay_home": "หน้าแรกโฮมสเตย์ — ฮีโร่ จุดเด่น และหัวข้อขั้นตอน",
+    "page_label_homestay_about": "เกี่ยวกับเรา",
+    "page_desc_homestay_about": "ฮีโร่ การเชื่อมโยง พันธกิจ และวิสัยทัศน์",
+    "page_label_homestay_students": "สำหรับนักเรียน",
+    "page_desc_homestay_students": "บทนำฮีโร่หน้านักเรียน",
+    "page_label_homestay_hosts": "ครอบครัวโฮสต์",
+    "page_desc_homestay_hosts": "บทนำฮีโร่หน้าครอบครัวโฮสต์",
+    "page_label_homestay_partners": "พันธมิตร",
+    "page_desc_homestay_partners": "บทนำฮีโร่หน้าพันธมิตร",
+    "page_label_homestay_contact": "ติดต่อ",
+    "page_desc_homestay_contact": "หัวข้อ หัวข้อย่อย และที่ตั้งการติดต่อ"
   },
   "dash_channels": {
     "intro_prefix": "มุมมองรวมของการเชื่อมต่อช่องทาง OTA ทุกช่องทางในทุกพื้นที่ การตั้งค่าของแต่ละพื้นที่อยู่ในหน้ารายละเอียดของแต่ละ",

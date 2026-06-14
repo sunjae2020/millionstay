@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import hero from "@assets/MS_Homepage_Photo_1920x1080_1775403929888.jpg";
 import { HomestayLayout } from "@/components/homestay/HomestayLayout";
 import { HS, HS_FONT } from "@/lib/homestay-theme";
+import { usePageContent } from "@/lib/usePageContent";
 
 // 0. MAIN HOME — content from the Million Homestay site-content doc (page 0).
 // CTAs to not-yet-built features (student apply, partners, full process) route
@@ -11,6 +12,7 @@ import { HS, HS_FONT } from "@/lib/homestay-theme";
 
 export default function HomestayHome() {
   const { t } = useTranslation();
+  const pc = usePageContent("homestay-home");
 
   const WHY = [
     { icon: Users, title: t("homestay.home.why_1_title"), body: t("homestay.home.why_1_body") },
@@ -46,17 +48,17 @@ export default function HomestayHome() {
         <div className="relative max-w-6xl mx-auto px-5 py-24 md:py-32">
           <div className="max-w-2xl text-white">
             <h1 className="text-4xl md:text-5xl font-extrabold leading-tight" style={{ fontFamily: HS_FONT.head }}>
-              {t("homestay.home.hero_title")}
+              {pc("hero_title", t("homestay.home.hero_title"))}
             </h1>
             <p className="mt-5 text-lg text-white/90">
-              {t("homestay.home.hero_lead")}
+              {pc("hero_lead", t("homestay.home.hero_lead"))}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/students/apply" className="px-6 py-3 rounded-lg font-semibold text-white inline-flex items-center gap-2" style={{ backgroundColor: HS.brand }}>
-                {t("homestay.home.hero_cta_find")} <ArrowRight className="w-4 h-4" />
+                {pc("hero_cta_find", t("homestay.home.hero_cta_find"))} <ArrowRight className="w-4 h-4" />
               </Link>
               <Link href="/for-homestay-host" className="px-6 py-3 rounded-lg font-semibold inline-flex items-center gap-2 bg-white text-gray-900">
-                {t("homestay.home.hero_cta_host")}
+                {pc("hero_cta_host", t("homestay.home.hero_cta_host"))}
               </Link>
             </div>
           </div>
@@ -65,7 +67,7 @@ export default function HomestayHome() {
 
       {/* Why Million Homestay */}
       <section className="max-w-6xl mx-auto px-5 py-16 md:py-20">
-        <h2 className="text-3xl font-bold text-center" style={{ fontFamily: HS_FONT.head, color: HS.darkBrown }}>{t("homestay.home.why_heading")}</h2>
+        <h2 className="text-3xl font-bold text-center" style={{ fontFamily: HS_FONT.head, color: HS.darkBrown }}>{pc("why_heading", t("homestay.home.why_heading"))}</h2>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
           {WHY.map(({ icon: Icon, title, body }) => (
             <div key={title} className="rounded-2xl p-6" style={{ backgroundColor: HS.cream }}>
@@ -96,7 +98,7 @@ export default function HomestayHome() {
 
       {/* How it works at a glance */}
       <section className="max-w-6xl mx-auto px-5 py-16 md:py-20 text-center">
-        <h2 className="text-3xl font-bold" style={{ fontFamily: HS_FONT.head, color: HS.darkBrown }}>{t("homestay.home.how_heading")}</h2>
+        <h2 className="text-3xl font-bold" style={{ fontFamily: HS_FONT.head, color: HS.darkBrown }}>{pc("how_heading", t("homestay.home.how_heading"))}</h2>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-x-3 gap-y-3">
           {STEPS.map((s, i) => (
             <div key={s} className="flex items-center gap-3">
@@ -106,10 +108,10 @@ export default function HomestayHome() {
           ))}
         </div>
         <p className="mt-6 text-gray-600 max-w-2xl mx-auto">
-          {t("homestay.home.how_body")}
+          {pc("how_body", t("homestay.home.how_body"))}
         </p>
         <Link href="/how-it-works" className="mt-7 inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-white" style={{ backgroundColor: HS.brand }}>
-          {t("homestay.home.how_cta")} <ArrowRight className="w-4 h-4" />
+          {pc("how_cta", t("homestay.home.how_cta"))} <ArrowRight className="w-4 h-4" />
         </Link>
       </section>
     </HomestayLayout>

@@ -1699,7 +1699,22 @@
     "field_contact_hours_label": "Hours Label",
     "field_contact_hours": "Business Hours",
     "field_contact_form_title": "Form Section Title",
-    "field_contact_form_subtitle": "Form Section Subtitle"
+    "field_contact_form_subtitle": "Form Section Subtitle",
+    "site_www": "Guest Site",
+    "site_homestay": "Homestay",
+    "lang_th": "Thai",
+    "page_label_homestay_home": "Home",
+    "page_desc_homestay_home": "Homestay landing — hero, why-us and how-it-works headings",
+    "page_label_homestay_about": "About Us",
+    "page_desc_homestay_about": "Hero, bridging, mission and vision sections",
+    "page_label_homestay_students": "For Students",
+    "page_desc_homestay_students": "Student page hero intro",
+    "page_label_homestay_hosts": "Host Family",
+    "page_desc_homestay_hosts": "Host family page hero intro",
+    "page_label_homestay_partners": "Partners",
+    "page_desc_homestay_partners": "Partners page hero intro",
+    "page_label_homestay_contact": "Contact",
+    "page_desc_homestay_contact": "Contact heading, subheading and location"
   },
   "dash_channels": {
     "intro_prefix": "Central view of every OTA channel connection across all spaces. Per-space setup lives on each",

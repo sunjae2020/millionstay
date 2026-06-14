@@ -1695,7 +1695,22 @@
     "field_contact_hours_label": "营业时间标签",
     "field_contact_hours": "营业时间",
     "field_contact_form_title": "表单板块标题",
-    "field_contact_form_subtitle": "表单板块副标题"
+    "field_contact_form_subtitle": "表单板块副标题",
+    "site_www": "访客网站",
+    "site_homestay": "寄宿家庭",
+    "lang_th": "泰语",
+    "page_label_homestay_home": "首页",
+    "page_desc_homestay_home": "寄宿家庭着陆页 — 主视觉、优势与流程标题",
+    "page_label_homestay_about": "关于我们",
+    "page_desc_homestay_about": "主视觉、桥接、使命与愿景板块",
+    "page_label_homestay_students": "学生专区",
+    "page_desc_homestay_students": "学生页面主视觉简介",
+    "page_label_homestay_hosts": "寄宿家庭",
+    "page_desc_homestay_hosts": "寄宿家庭页面主视觉简介",
+    "page_label_homestay_partners": "合作伙伴",
+    "page_desc_homestay_partners": "合作伙伴页面主视觉简介",
+    "page_label_homestay_contact": "联系我们",
+    "page_desc_homestay_contact": "联系标题、副标题与位置"
   },
   "dash_channels": {
     "intro_prefix": "集中查看所有空间的每个OTA渠道连接。各空间的设置位于每个",
