@@ -233,6 +233,7 @@
     "status_closed": "종료됨",
     "created": "등록일",
     "last_reply": "최근 답변",
-    "no_reply_yet": "아직 답변 없음"
+    "no_reply_yet": "아직 답변 없음",
+    "english_label": "영어"
   }
 }

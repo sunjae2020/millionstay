@@ -233,6 +233,7 @@
     "status_closed": "Closed",
     "created": "Created",
     "last_reply": "Last reply",
-    "no_reply_yet": "No replies yet"
+    "no_reply_yet": "No replies yet",
+    "english_label": "English"
   }
 }

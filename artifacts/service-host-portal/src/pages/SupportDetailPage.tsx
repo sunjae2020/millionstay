@@ -41,8 +41,17 @@ interface Message {
   sender_type: string;
   sender_id: number;
   message: string;
+  original_lang?: string | null;
+  translations?: Record<string, string> | null;
   image_urls: string | null;
   created_at: string;
+}
+
+// Pick the message text in a given language: the original if it was written in
+// that language, otherwise the cached translation (or null if unavailable).
+function textInLang(msg: Message, lang: string): string | null {
+  if ((msg.original_lang || "en") === lang) return msg.message;
+  return msg.translations?.[lang] ?? null;
 }
 
 interface TicketDetail {
@@ -173,6 +182,12 @@ export default function SupportDetailPage() {
           {ticket.messages.map((msg) => {
             const isAdmin = msg.sender_type === "admin";
             const parsedImgs: string[] = (() => { try { return msg.image_urls ? JSON.parse(msg.image_urls) : []; } catch { return []; } })();
+            // Show the message in the viewer's language as primary text, with the
+            // English copy underneath (so the partner and admin share a reference).
+            const viewerLang = (i18n.language || "en").slice(0, 2);
+            const primaryText = textInLang(msg, viewerLang) ?? msg.message;
+            const englishText = textInLang(msg, "en");
+            const showEnglish = viewerLang !== "en" && englishText != null && englishText !== primaryText;
             return (
               <div key={msg.id} className={`flex ${isAdmin ? "justify-start" : "justify-end"}`}>
                 <div className="max-w-[80%]">
@@ -191,8 +206,16 @@ export default function SupportDetailPage() {
                       ? "bg-card border border-card-border text-foreground rounded-tl-sm shadow-sm"
                       : "bg-primary text-primary-foreground rounded-tr-sm"
                   }`}>
-                    {msg.message}
+                    {primaryText}
                   </div>
+                  {showEnglish && (
+                    <div className={`mt-1 rounded-xl px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap border ${
+                      isAdmin ? "bg-muted/50 border-border text-muted-foreground" : "bg-primary/5 border-primary/10 text-muted-foreground"
+                    }`}>
+                      <span className="font-medium opacity-70">{t("support.english_label", "English")}: </span>
+                      {englishText}
+                    </div>
+                  )}
                   {parsedImgs.length > 0 && (
                     <div className={`flex gap-2 mt-2 flex-wrap ${isAdmin ? "justify-start" : "justify-end"}`}>
                       {parsedImgs.map((url, i) => (

@@ -226,6 +226,7 @@
     "status_closed": "クローズ",
     "created": "作成日",
     "last_reply": "最新の返信",
-    "no_reply_yet": "返信はまだありません"
+    "no_reply_yet": "返信はまだありません",
+    "english_label": "英語"
   }
 }
