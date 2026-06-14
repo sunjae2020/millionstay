@@ -8,8 +8,11 @@ import {
   spaceAvailabilityTable,
   contractProductsTable,
   tasksTable,
+  homestayStudentRequestsTable,
 } from "@workspace/db";
-import { requireApiKey, requireScope } from "../middlewares/requireApiKey";
+import { requireApiKey, requireScope, type ApiClient } from "../middlewares/requireApiKey";
+import { logAction } from "../utils/auditLog";
+import { STUDENT_STATUSES } from "./homestay-students";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PUBLIC EXTERNAL API — mounted at /api/ext/v1
@@ -328,6 +331,103 @@ router.patch("/v1/tasks/:id", requireScope("tasks:write"), async (req, res): Pro
     .returning();
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
   res.json(taskView(row));
+});
+
+// ─── Homestay student requests (Google Sheets integration) ───────────────────
+//
+// A bound Google Apps Script keeps an ops spreadsheet in sync:
+//   • homestay:read  — pull the request list to seed/refresh the sheet
+//   • homestay:write — push an edited row back (status + ops notes only)
+// Student/guardian PII is intentionally NOT writable from the sheet — only the
+// ops-managed fields (status, notes) round-trip. Matching by request_ref keeps
+// the sheet's human-readable column as the join key.
+
+const STUDENT_ENTITY = "homestay_student_request";
+
+function studentRequestView(r: typeof homestayStudentRequestsTable.$inferSelect) {
+  const prefs = (r.preferences ?? {}) as Record<string, unknown>;
+  return {
+    id: r.id,
+    request_ref: r.request_ref,
+    status: r.status,
+    student_first_name: r.student_first_name,
+    student_last_name: r.student_last_name,
+    student_email: r.student_email,
+    student_phone: r.student_phone,
+    nationality: r.nationality,
+    is_minor: r.is_minor,
+    // A curated, read-only slice of preferences so the sheet has useful context.
+    suburb: prefs.suburb ?? null,
+    school: prefs.school ?? null,
+    move_in_date: prefs.move_in_date ?? null,
+    duration_weeks: prefs.duration_weeks ?? null,
+    // Round-trippable ops fields.
+    notes: r.notes,
+    reviewed_at: r.reviewed_at,
+    created_at: r.created_at,
+    updated_at: r.updated_at,
+  };
+}
+
+router.get("/v1/homestay-student-requests", requireScope("homestay:read"), async (req, res): Promise<void> => {
+  const conds: SQL[] = [isNull(homestayStudentRequestsTable.deleted_at)];
+  const { status } = req.query;
+  if (typeof status === "string" && status && status !== "all") {
+    conds.push(eq(homestayStudentRequestsTable.status, status));
+  }
+  const rows = await db
+    .select()
+    .from(homestayStudentRequestsTable)
+    .where(and(...conds))
+    .orderBy(desc(homestayStudentRequestsTable.created_at))
+    .limit(500);
+  res.json(rows.map(studentRequestView));
+});
+
+router.patch("/v1/homestay-student-requests/by-ref/:ref", requireScope("homestay:write"), async (req, res): Promise<void> => {
+  const ref = String(req.params.ref ?? "").trim();
+  if (!ref) { res.status(400).json({ error: "request_ref is required" }); return; }
+
+  const b = req.body ?? {};
+  const updates: Record<string, unknown> = { updated_at: new Date() };
+  let statusChange: string | null = null;
+
+  if (b.status !== undefined) {
+    const status = String(b.status).trim();
+    if (!STUDENT_STATUSES.includes(status as (typeof STUDENT_STATUSES)[number])) {
+      res.status(400).json({ error: `status must be one of: ${STUDENT_STATUSES.join(", ")}` });
+      return;
+    }
+    updates.status = status;
+    updates.reviewed_at = new Date();
+    statusChange = status;
+  }
+  if (b.notes !== undefined) updates.notes = b.notes === "" || b.notes === null ? null : String(b.notes);
+
+  // Only updated_at present → nothing editable was supplied.
+  if (Object.keys(updates).length === 1) {
+    res.status(400).json({ error: "Nothing to update — supply 'status' and/or 'notes'" });
+    return;
+  }
+
+  const [row] = await db
+    .update(homestayStudentRequestsTable)
+    .set(updates)
+    .where(and(eq(homestayStudentRequestsTable.request_ref, ref), isNull(homestayStudentRequestsTable.deleted_at)))
+    .returning();
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+
+  const client = (req as any).apiClient as ApiClient | undefined;
+  void logAction({
+    entityType: STUDENT_ENTITY,
+    entityId: row.id,
+    action: statusChange ? "STATUS_CHANGE" : "UPDATE",
+    actorId: null,
+    actorEmail: `integration:google_sheets${client ? `:${client.name}` : ""}`,
+    newValue: { status: updates.status, notes: updates.notes },
+  });
+
+  res.json(studentRequestView(row));
 });
 
 export default router;

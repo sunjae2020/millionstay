@@ -31,6 +31,7 @@ const SCOPE_GROUPS: { domain: string; scopes: { value: string; action: string }[
   { domain: "Availability", scopes: [{ value: "availability:read", action: "Read" }, { value: "availability:write", action: "Write" }] },
   { domain: "Pricing", scopes: [{ value: "pricing:read", action: "Read" }, { value: "pricing:write", action: "Write" }] },
   { domain: "Tasks", scopes: [{ value: "tasks:read", action: "Read" }, { value: "tasks:write", action: "Write" }] },
+  { domain: "Homestay Students", scopes: [{ value: "homestay:read", action: "Read" }, { value: "homestay:write", action: "Write" }] },
 ];
 
 function CopyField({ label, value }: { label: string; value: string }) {

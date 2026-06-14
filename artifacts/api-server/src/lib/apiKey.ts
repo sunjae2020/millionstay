@@ -13,6 +13,8 @@ export const API_SCOPES = [
   "pricing:write",
   "tasks:read",
   "tasks:write",
+  "homestay:read",
+  "homestay:write",
 ] as const;
 
 export type ApiScope = (typeof API_SCOPES)[number];
