@@ -25,6 +25,7 @@ import {
   channelAccountsTable,
   ownerSitesTable,
   pageContentsTable,
+  blogCategoriesTable,
 } from "@workspace/db";
 import { ingestReservations } from "../lib/channels/reservations.js";
 import { insertLeadWithGeneratedRef } from "../lib/leadRef.js";
@@ -1020,6 +1021,17 @@ router.get("/v1/public/page-contents/:pageKey/:language", async (req, res): Prom
     return;
   }
   res.json({ page_key: pageKey, language, ...row });
+});
+
+// Active blog categories for the public blog filter (homestay-only categories
+// are filtered out client-side per site).
+router.get("/v1/public/blog-categories", async (_req, res): Promise<void> => {
+  const rows = await db
+    .select({ id: blogCategoriesTable.id, name: blogCategoriesTable.name })
+    .from(blogCategoriesTable)
+    .where(eq(blogCategoriesTable.is_active, true))
+    .orderBy(asc(blogCategoriesTable.sort_order), asc(blogCategoriesTable.name));
+  res.json({ data: rows });
 });
 
 router.get("/v1/public/blog/:slug", async (req, res): Promise<void> => {

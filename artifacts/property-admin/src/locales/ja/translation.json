@@ -69,7 +69,8 @@
     "conversations": "会話履歴",
     "addon_services": "付帯サービス",
     "homestay_applications": "ホームステイ申請",
-    "page_translations": "ページ翻訳"
+    "page_translations": "ページ翻訳",
+    "blog_categories": "ブログカテゴリ"
   },
   "dashboard": {
     "title": "ダッシュボード",
@@ -2634,5 +2635,9 @@
   "page_translations": {
     "site_guest": "ゲストサイト",
     "site_homestay": "ホームステイ"
+  },
+  "blog_categories": {
+    "title": "ブログカテゴリ",
+    "subtitle": "ブログ記事と公開ブログのフィルターで使うカテゴリを管理します。"
   }
 }

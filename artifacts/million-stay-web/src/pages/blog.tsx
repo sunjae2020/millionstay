@@ -8,7 +8,24 @@ import { getApiBase } from "@/lib/api-base";
 
 const BASE = getApiBase();
 
-const CATEGORIES = ["All", "Tips & Guides", "Student Life", "Melbourne", "Housing", "News", "Lifestyle"];
+// Fallback list used only if the admin-managed category endpoint can't be reached.
+const DEFAULT_CATEGORIES = ["All", "Tips & Guides", "Student Life", "Melbourne", "Housing", "News", "Lifestyle"];
+// "Homestay" posts live on the homestay site's blog, not the guest blog.
+const GUEST_HIDDEN_CATEGORY = "Homestay";
+
+async function fetchCategories(): Promise<string[]> {
+  try {
+    const res = await fetch(`${BASE}/api/v1/public/blog-categories`);
+    if (!res.ok) return DEFAULT_CATEGORIES;
+    const json = await res.json();
+    const names = (json.data ?? [])
+      .map((c: any) => c.name)
+      .filter((n: string) => n !== GUEST_HIDDEN_CATEGORY);
+    return ["All", ...names];
+  } catch {
+    return DEFAULT_CATEGORIES;
+  }
+}
 
 function formatDate(dateStr: string | null) {
   if (!dateStr) return "";
@@ -29,6 +46,12 @@ async function fetchBlogPosts(category?: string) {
 
 export default function Blog() {
   const [activeCategory, setActiveCategory] = useState("All");
+
+  const { data: CATEGORIES = DEFAULT_CATEGORIES } = useQuery({
+    queryKey: ["public-blog-categories"],
+    queryFn: fetchCategories,
+    staleTime: 5 * 60 * 1000,
+  });
 
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ["public-blog", activeCategory],

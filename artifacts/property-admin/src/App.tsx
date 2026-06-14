@@ -87,6 +87,7 @@ import QuoteDetail from "@/pages/documents/QuoteDetail";
 // Blog / Content
 import BlogList from "@/pages/blog/BlogList";
 import BlogDetail from "@/pages/blog/BlogDetail";
+import BlogCategories from "@/pages/blog/BlogCategories";
 import WebsiteContentList from "@/pages/content/WebsiteContentList";
 import WebsiteContentDetail from "@/pages/content/WebsiteContentDetail";
 import PageTranslations from "@/pages/content/PageTranslations";
@@ -258,6 +259,7 @@ function Router() {
 
       {/* ── CONTENT / BLOG ────────────────────────────── */}
       <Route path="/content/blog" component={BlogList} />
+      <Route path="/content/blog-categories" component={BlogCategories} />
       <Route path="/content/blog/new" component={BlogDetail} />
       <Route path="/content/blog/:id" component={BlogDetail} />
       <Route path="/content/pages" component={WebsiteContentList} />

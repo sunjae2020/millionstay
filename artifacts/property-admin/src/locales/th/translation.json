@@ -69,7 +69,8 @@
     "conversations": "บทสนทนา",
     "addon_services": "บริการเสริม",
     "homestay_applications": "ใบสมัครโฮมสเตย์",
-    "page_translations": "การแปลหน้า"
+    "page_translations": "การแปลหน้า",
+    "blog_categories": "หมวดหมู่บล็อก"
   },
   "dashboard": {
     "title": "แดชบอร์ด",
@@ -2634,5 +2635,9 @@
   "page_translations": {
     "site_guest": "เว็บไซต์แขก",
     "site_homestay": "โฮมสเตย์"
+  },
+  "blog_categories": {
+    "title": "หมวดหมู่บล็อก",
+    "subtitle": "จัดการหมวดหมู่ที่ใช้กับบทความบล็อกและตัวกรองบล็อกสาธารณะ"
   }
 }
