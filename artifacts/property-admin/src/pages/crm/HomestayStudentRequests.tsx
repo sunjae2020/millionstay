@@ -6,11 +6,13 @@ import { Layout, PageHeader } from "@/components/Layout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useQuery } from "@tanstack/react-query";
+import { TablePagination } from "@/components/ui/TablePagination";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { GraduationCap, Search, Eye, ShieldCheck } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 
 const API = "/api/v1/homestay-student-requests";
+const PAGE_SIZE = 25;
 
 export type StudentStatus =
   | "Draft" | "Submitted" | "UnderReview" | "Matching" | "Proposed"
@@ -65,25 +67,42 @@ export function StudentStatusBadge({ status }: { status: string }) {
   );
 }
 
-async function fetchRequests(q: string, status: string): Promise<StudentRequest[]> {
+async function fetchRequests(
+  q: string,
+  status: string,
+  page: number,
+  pageSize: number,
+): Promise<{ items: StudentRequest[]; total: number }> {
   const params = new URLSearchParams();
   if (q) params.set("q", q);
   if (status) params.set("status", status);
+  params.set("limit", String(pageSize));
+  params.set("offset", String((page - 1) * pageSize));
   const res = await apiFetch(`${API}?${params.toString()}`);
   if (!res.ok) throw new Error("Failed to load student requests");
   const json = await res.json();
-  return (json.data ?? []) as StudentRequest[];
+  const items = (json.data ?? []) as StudentRequest[];
+  return { items, total: json.meta?.total ?? items.length };
 }
 
 export default function HomestayStudentRequests() {
   const { t } = useTranslation();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"" | StudentStatus>("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE);
 
-  const { data: requests = [], isLoading } = useQuery({
-    queryKey: ["homestay-student-requests", q, status],
-    queryFn: () => fetchRequests(q, status),
+  const setSearch = (v: string) => { setQ(v); setPage(1); };
+  const setStatusFilter = (v: "" | StudentStatus) => { setStatus(v); setPage(1); };
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["homestay-student-requests", q, status, page, pageSize],
+    queryFn: () => fetchRequests(q, status, page, pageSize),
+    placeholderData: keepPreviousData,
   });
+  const requests = data?.items ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
     <Layout>
@@ -100,13 +119,13 @@ export default function HomestayStudentRequests() {
               className="pl-9"
               placeholder={t("homestayStudent.search_placeholder")}
               value={q}
-              onChange={(e) => setQ(e.target.value)}
+              onChange={(e) => setSearch(e.target.value)}
             />
           </div>
 
           <div className="flex flex-wrap gap-2">
             <button
-              onClick={() => setStatus("")}
+              onClick={() => setStatusFilter("")}
               className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                 status === "" ? "bg-orange-100 text-orange-700 border-orange-200" : "bg-white text-muted-foreground border-border hover:bg-muted/50"
               }`}
@@ -119,7 +138,7 @@ export default function HomestayStudentRequests() {
               return (
                 <button
                   key={s}
-                  onClick={() => setStatus(s)}
+                  onClick={() => setStatusFilter(s)}
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                     active ? cfg.badge : "bg-white text-muted-foreground border-border hover:bg-muted/50"
                   }`}
@@ -182,10 +201,20 @@ export default function HomestayStudentRequests() {
               ))}
             </TableBody>
           </Table>
+          <TablePagination
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            totalPages={totalPages}
+            hasNext={page < totalPages}
+            hasPrev={page > 1}
+            onPage={setPage}
+            onPageSize={(n) => { setPageSize(n); setPage(1); }}
+          />
         </div>
 
         <p className="text-xs text-muted-foreground mt-3">
-          {requests.length} {t("homestayStudent.count_label")}
+          {total} {t("homestayStudent.count_label")}
         </p>
       </div>
     </Layout>

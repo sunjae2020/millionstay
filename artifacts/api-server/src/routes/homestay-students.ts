@@ -6,7 +6,7 @@
 // applicant is redirected to /sign/:token to complete the signature. Matching
 // is admin-brokered (Phase 5), so no portal login is created here.
 import { Router, type IRouter } from "express";
-import { and, desc, eq, ilike, isNull, or } from "drizzle-orm";
+import { and, desc, eq, ilike, isNull, or, sql } from "drizzle-orm";
 import { db, homestayStudentRequestsTable, homestayHostApplicationsTable, homestayHostAvailabilityTable } from "@workspace/db";
 import { generateStudentRef } from "../lib/homestayRef.js";
 import { createSigningRequest, type SignerSpec } from "../services/contractSigning.js";
@@ -14,6 +14,7 @@ import { sendLeadNotificationEmail } from "../lib/email.js";
 import { logAction } from "../utils/auditLog.js";
 import { rankHosts } from "../lib/homestay/matching.js";
 import { attachRationales } from "../lib/homestay/matchRationale.js";
+import { parsePageParams, pageMeta } from "../utils/pagination.js";
 
 const STUDENT_ENTITY = "homestay_student_request";
 
@@ -144,7 +145,8 @@ export const homestayStudentAdminRouter: IRouter = Router();
 // List requests, newest first. Optional ?q= (ref/name/email) and ?status=.
 homestayStudentAdminRouter.get("/v1/homestay-student-requests", async (req, res): Promise<void> => {
   try {
-    const { q, status } = req.query as Record<string, string>;
+    const { status } = req.query as Record<string, string>;
+    const { limit, offset, page, q } = parsePageParams(req.query);
     const conds = [isNull(homestayStudentRequestsTable.deleted_at)];
     if (status && status !== "all") conds.push(eq(homestayStudentRequestsTable.status, status));
     if (q) conds.push(or(
@@ -153,9 +155,17 @@ homestayStudentAdminRouter.get("/v1/homestay-student-requests", async (req, res)
       ilike(homestayStudentRequestsTable.student_email, `%${q}%`),
       ilike(homestayStudentRequestsTable.request_ref, `%${q}%`),
     )!);
+    const whereExpr = and(...conds);
+    const [{ total }] = await db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(homestayStudentRequestsTable)
+      .where(whereExpr);
     const rows = await db.select().from(homestayStudentRequestsTable)
-      .where(and(...conds)).orderBy(desc(homestayStudentRequestsTable.created_at));
-    res.json({ success: true, data: rows, meta: { total: rows.length } });
+      .where(whereExpr)
+      .orderBy(desc(homestayStudentRequestsTable.created_at))
+      .limit(limit)
+      .offset(offset);
+    res.json({ success: true, data: rows, meta: pageMeta(total ?? 0, { limit, offset, page }) });
   } catch (e) {
     console.error("[homestay-student-admin] list failed:", e);
     res.status(500).json({ error: "Failed to list student requests" });

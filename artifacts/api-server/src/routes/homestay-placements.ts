@@ -11,7 +11,7 @@
 // Mounted behind requireAuth by routes/index.ts. Money columns are numeric →
 // strings; wrap writes in String(), reads in Number().
 import { Router, type IRouter } from "express";
-import { and, desc, eq, isNull } from "drizzle-orm";
+import { and, desc, eq, isNull, ilike, sql } from "drizzle-orm";
 import {
   db,
   homestayPlacementsTable,
@@ -29,6 +29,7 @@ import { logAction } from "../utils/auditLog.js";
 import { getStripe } from "./stripe.js";
 import { getHomestayBillingSettings, saveHomestayBillingSettings, type HomestayBillingSettings } from "../lib/homestay/billingSettings.js";
 import { resolveTemplate, renderString } from "../lib/documents/templateEngine.js";
+import { parsePageParams, pageMeta } from "../utils/pagination.js";
 
 const ENTITY = "homestay_placement";
 
@@ -92,12 +93,22 @@ async function enrich(p: typeof homestayPlacementsTable.$inferSelect) {
 homestayPlacementAdminRouter.get("/v1/homestay-placements", async (req, res): Promise<void> => {
   try {
     const { status } = req.query as Record<string, string>;
+    const { limit, offset, page, q } = parsePageParams(req.query);
     const conds = [isNull(homestayPlacementsTable.deleted_at)];
     if (status && status !== "all") conds.push(eq(homestayPlacementsTable.status, status));
+    if (q) conds.push(ilike(homestayPlacementsTable.placement_ref, `%${q}%`));
+    const whereExpr = and(...conds);
+    const [{ total }] = await db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(homestayPlacementsTable)
+      .where(whereExpr);
     const rows = await db.select().from(homestayPlacementsTable)
-      .where(and(...conds)).orderBy(desc(homestayPlacementsTable.created_at));
+      .where(whereExpr)
+      .orderBy(desc(homestayPlacementsTable.created_at))
+      .limit(limit)
+      .offset(offset);
     const data = await Promise.all(rows.map(enrich));
-    res.json({ success: true, data, meta: { total: data.length } });
+    res.json({ success: true, data, meta: pageMeta(total ?? 0, { limit, offset, page }) });
   } catch (e) {
     console.error("[homestay-placements] list failed:", e);
     res.status(500).json({ error: "Failed to list placements" });

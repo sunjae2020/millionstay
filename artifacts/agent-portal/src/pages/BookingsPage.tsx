@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
-import { apiGet } from "@/lib/api";
+import { useServerList } from "@/lib/useServerList";
+import { TablePagination } from "@/components/TablePagination";
 import { Search, ChevronRight } from "lucide-react";
 
 interface Booking {
@@ -28,31 +29,14 @@ const STATUS_CLS: Record<string, string> = {
 
 export default function BookingsPage() {
   const { t } = useTranslation();
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
-  useEffect(() => {
-    apiGet<{ success: boolean; data: Booking[] }>("/v1/agent/bookings")
-      .then((d) => setBookings(d.data))
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, []);
-
-  const filtered = bookings.filter((b) => {
-    const matchStatus = !statusFilter || b.booking_status === statusFilter;
-    if (!matchStatus) return false;
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return (
-      b.tenant?.display_name?.toLowerCase().includes(q) ||
-      b.property_name?.toLowerCase().includes(q) ||
-      String(b.id).includes(q) ||
-      b.booking_ref?.toLowerCase().includes(q)
-    );
-  });
+  const { items: bookings, loading, error, page, pageSize, total, totalPages, setPage, setPageSize } =
+    useServerList<Booking>("/v1/agent/bookings", {
+      search,
+      params: { booking_status: statusFilter || undefined },
+    });
 
   return (
     <Layout>
@@ -107,10 +91,10 @@ export default function BookingsPage() {
             {loading && (
               <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">{t("common.loading")}</td></tr>
             )}
-            {!loading && filtered.length === 0 && (
+            {!loading && bookings.length === 0 && (
               <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">{t("bookings.no_bookings")}</td></tr>
             )}
-            {filtered.map((b) => (
+            {bookings.map((b) => (
               <tr key={b.id} className="hover:bg-muted/30 transition-colors">
                 <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{b.booking_ref ?? `#${b.id}`}</td>
                 <td className="px-4 py-3">
@@ -142,6 +126,14 @@ export default function BookingsPage() {
           </tbody>
         </table>
         </div>
+        <TablePagination
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          totalPages={totalPages}
+          onPage={setPage}
+          onPageSize={setPageSize}
+        />
       </div>
     </Layout>
   );

@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
-import { eq, and, desc, inArray, isNull, isNotNull, gte, lte } from "drizzle-orm";
+import { eq, and, or, ilike, desc, inArray, isNull, isNotNull, gte, lte, sql } from "drizzle-orm";
 import {
   db,
   bookingsTable,
@@ -21,6 +21,7 @@ import { requireOwnerAuth, type PartnerAuthPayload } from "../middlewares/requir
 import { isCloudinaryConfigured, uploadToCloudinary } from "../utils/cloudinary";
 import { logAction } from "../utils/auditLog";
 import { syncOwnerSubdomain } from "../lib/vercelDomains";
+import { parsePageParams, pageMeta, paginateArray } from "../utils/pagination";
 
 const router: IRouter = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
@@ -312,24 +313,41 @@ router.get("/v1/owner/properties/:id", requireOwnerAuth, async (req, res): Promi
 /* GET /api/v1/owner/bookings */
 router.get("/v1/owner/bookings", requireOwnerAuth, async (req, res): Promise<void> => {
   const partner = (req as any).partner as PartnerAuthPayload;
+  const { limit, offset, page, q } = parsePageParams(req.query);
+  const statusFilter = typeof req.query.booking_status === "string" ? req.query.booking_status : "";
 
-  const properties = await db
-    .select({ id: propertiesTable.id })
-    .from(propertiesTable)
-    .where(eq(propertiesTable.owner_account_id, partner.account_id));
+  const conds = [
+    eq(propertiesTable.owner_account_id, partner.account_id),
+    eq(bookingsTable.status, "Active"),
+  ];
+  if (statusFilter) conds.push(eq(bookingsTable.booking_status, statusFilter));
+  if (q) {
+    conds.push(
+      or(
+        ilike(bookingsTable.booking_ref, `%${q}%`),
+        ilike(contactsTable.first_name, `%${q}%`),
+        ilike(contactsTable.last_name, `%${q}%`),
+        ilike(propertiesTable.name, `%${q}%`),
+        ilike(spacesTable.name, `%${q}%`),
+      )!,
+    );
+  }
+  // Date-range overlap: a booking with an open-ended (null) check-out is always ongoing.
+  const dateFrom = typeof req.query.date_from === "string" ? req.query.date_from : "";
+  const dateTo = typeof req.query.date_to === "string" ? req.query.date_to : "";
+  if (dateTo) conds.push(or(isNull(bookingsTable.check_in_date), lte(bookingsTable.check_in_date, dateTo))!);
+  if (dateFrom) conds.push(or(isNull(bookingsTable.check_out_date), gte(bookingsTable.check_out_date, dateFrom))!);
+  const whereExpr = and(...conds);
 
-  const propertyIds = properties.map(p => p.id);
-  if (!propertyIds.length) { res.json({ success: true, data: [] }); return; }
+  const [{ total }] = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(bookingsTable)
+    .innerJoin(spacesTable, eq(bookingsTable.space_id, spacesTable.id))
+    .innerJoin(propertiesTable, eq(spacesTable.property_id, propertiesTable.id))
+    .leftJoin(contactsTable, eq(bookingsTable.contact_id, contactsTable.id))
+    .where(whereExpr);
 
-  const spaces = await db
-    .select({ id: spacesTable.id, name: spacesTable.name, property_id: spacesTable.property_id })
-    .from(spacesTable)
-    .where(inArray(spacesTable.property_id, propertyIds));
-
-  const spaceIds = spaces.map(s => s.id);
-  if (!spaceIds.length) { res.json({ success: true, data: [] }); return; }
-
-  const bookings = await db
+  const rows = await db
     .select({
       id: bookingsTable.id,
       booking_ref: bookingsTable.booking_ref,
@@ -341,39 +359,40 @@ router.get("/v1/owner/bookings", requireOwnerAuth, async (req, res): Promise<voi
       agreed_weekly_rate: bookingsTable.agreed_weekly_rate,
       total_rent: bookingsTable.total_rent,
       currency: bookingsTable.currency,
+      space_name: spacesTable.name,
+      property_name: propertiesTable.name,
+      contact_first: contactsTable.first_name,
+      contact_last: contactsTable.last_name,
+      contact_gender: contactsTable.gender,
     })
     .from(bookingsTable)
-    .where(and(inArray(bookingsTable.space_id, spaceIds), eq(bookingsTable.status, "Active")))
-    .orderBy(desc(bookingsTable.created_at));
+    .innerJoin(spacesTable, eq(bookingsTable.space_id, spacesTable.id))
+    .innerJoin(propertiesTable, eq(spacesTable.property_id, propertiesTable.id))
+    .leftJoin(contactsTable, eq(bookingsTable.contact_id, contactsTable.id))
+    .where(whereExpr)
+    .orderBy(desc(bookingsTable.created_at))
+    .limit(limit)
+    .offset(offset);
 
-  const contactIds = [...new Set(bookings.map(b => b.contact_id).filter(Boolean))] as number[];
-  const contacts = contactIds.length
-    ? await db
-        .select({ id: contactsTable.id, first_name: contactsTable.first_name, last_name: contactsTable.last_name, gender: contactsTable.gender })
-        .from(contactsTable)
-        .where(inArray(contactsTable.id, contactIds))
-    : [];
+  const result = rows.map((r) => ({
+    id: r.id,
+    booking_ref: r.booking_ref,
+    booking_status: r.booking_status,
+    space_id: r.space_id,
+    contact_id: r.contact_id,
+    check_in_date: r.check_in_date,
+    check_out_date: r.check_out_date,
+    agreed_weekly_rate: r.agreed_weekly_rate,
+    total_rent: r.total_rent,
+    currency: r.currency,
+    space_name: r.space_name ?? "—",
+    property_name: r.property_name ?? "—",
+    tenant: r.contact_id
+      ? formatTenantForOwner({ first_name: r.contact_first, last_name: r.contact_last, gender: r.contact_gender })
+      : null,
+  }));
 
-  const spaceMap = Object.fromEntries(spaces.map(s => [s.id, s]));
-  const propMap = Object.fromEntries(
-    (await db.select({ id: propertiesTable.id, name: propertiesTable.name }).from(propertiesTable).where(inArray(propertiesTable.id, propertyIds)))
-      .map(p => [p.id, p])
-  );
-  const contactMap = Object.fromEntries(contacts.map(c => [c.id, c]));
-
-  const result = bookings.map(b => {
-    const space = b.space_id ? spaceMap[b.space_id] : null;
-    const property = space?.property_id ? propMap[space.property_id] : null;
-    const contact = b.contact_id ? contactMap[b.contact_id] : null;
-    return {
-      ...b,
-      space_name: space?.name ?? "—",
-      property_name: (property as any)?.name ?? "—",
-      tenant: contact ? formatTenantForOwner(contact) : null,
-    };
-  });
-
-  res.json({ success: true, data: result });
+  res.json({ success: true, data: result, meta: pageMeta(total ?? 0, { limit, offset, page }) });
 });
 
 /* GET /api/v1/owner/revenue */
@@ -440,14 +459,30 @@ router.get("/v1/owner/revenue", requireOwnerAuth, async (req, res): Promise<void
     };
   });
 
+  // Aggregates span all invoices; only the invoice list is paginated/searched.
+  const { limit, offset, page, q } = parsePageParams(req.query);
+  const statusFilter = typeof req.query.status === "string" ? req.query.status : "";
+  const lowerQ = q.toLowerCase();
+  const filteredInvoices = enrichedInvoices.filter((inv) => {
+    if (statusFilter && inv.status !== statusFilter) return false;
+    if (!lowerQ) return true;
+    return (
+      (inv.invoice_ref ?? "").toLowerCase().includes(lowerQ) ||
+      inv.property_name.toLowerCase().includes(lowerQ) ||
+      inv.space_name.toLowerCase().includes(lowerQ)
+    );
+  });
+  const pagedInvoices = paginateArray(filteredInvoices, { limit, offset });
+
   res.json({
     success: true,
     data: {
       properties,
       total_revenue: totalRevenue,
       pending_revenue: pendingRevenue,
-      invoices: enrichedInvoices,
+      invoices: pagedInvoices,
     },
+    meta: pageMeta(filteredInvoices.length, { limit, offset, page }),
   });
 });
 
@@ -906,7 +941,30 @@ router.patch("/v1/owner/spaces/:id", requireOwnerAuth, async (req, res): Promise
 /* GET /api/v1/owner/site/inquiries — leads captured from this owner's landing site */
 router.get("/v1/owner/site/inquiries", requireOwnerAuth, async (req, res): Promise<void> => {
   const partner = (req as any).partner as PartnerAuthPayload;
-  const limit = Math.min(Number(req.query.limit) || 50, 200);
+  // Dashboard previews pass a small ?limit with no offset → keep that working;
+  // the full Inquiries page passes limit/offset (+ optional ?q) for real paging.
+  const { limit, offset, page, q } = parsePageParams(req.query, { defaultLimit: 50, maxLimit: 200 });
+  const statusFilter = typeof req.query.status === "string" ? req.query.status : "";
+
+  const conds = [eq(leadsTable.owner_account_id, partner.account_id), isNull(leadsTable.deleted_at)];
+  if (statusFilter) conds.push(eq(leadsTable.lead_status, statusFilter));
+  if (q) {
+    conds.push(
+      or(
+        ilike(leadsTable.first_name, `%${q}%`),
+        ilike(leadsTable.last_name, `%${q}%`),
+        ilike(leadsTable.email, `%${q}%`),
+        ilike(leadsTable.lead_ref, `%${q}%`),
+        ilike(leadsTable.message, `%${q}%`),
+      )!,
+    );
+  }
+  const whereExpr = and(...conds);
+
+  const [{ total }] = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(leadsTable)
+    .where(whereExpr);
 
   const rows = await db
     .select({
@@ -921,14 +979,12 @@ router.get("/v1/owner/site/inquiries", requireOwnerAuth, async (req, res): Promi
       created_at: leadsTable.created_at,
     })
     .from(leadsTable)
-    .where(and(
-      eq(leadsTable.owner_account_id, partner.account_id),
-      isNull(leadsTable.deleted_at),
-    ))
+    .where(whereExpr)
     .orderBy(desc(leadsTable.created_at))
-    .limit(limit);
+    .limit(limit)
+    .offset(offset);
 
-  res.json({ success: true, data: rows, meta: { total: rows.length } });
+  res.json({ success: true, data: rows, meta: pageMeta(total ?? 0, { limit, offset, page }) });
 });
 
 /* POST /api/v1/owner/site/upload-image — single image → Cloudinary, returns URL */

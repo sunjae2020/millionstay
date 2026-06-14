@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
-import { apiGet } from "@/lib/api";
-import { Inbox, Mail, Phone } from "lucide-react";
+import { useServerList } from "@/lib/useServerList";
+import { TablePagination } from "@/components/TablePagination";
+import { Inbox, Mail, Phone, Search } from "lucide-react";
 
 export interface Inquiry {
   id: number;
@@ -57,18 +58,19 @@ export function InquiryRow({ q }: { q: Inquiry }) {
   );
 }
 
+const STATUSES = ["New", "Contacted", "Converted", "Closed"];
+
 export default function InquiriesPage() {
   const { t } = useTranslation();
-  const [items, setItems] = useState<Inquiry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
-  useEffect(() => {
-    apiGet<{ success: boolean; data: Inquiry[] }>("/v1/owner/site/inquiries?limit=200")
-      .then((d) => setItems(d.data))
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, []);
+  const { items, loading, error, page, pageSize, total, totalPages, setPage, setPageSize } =
+    useServerList<Inquiry>("/v1/owner/site/inquiries", {
+      search,
+      pageSize: 50,
+      params: { status: statusFilter || undefined },
+    });
 
   return (
     <Layout>
@@ -77,6 +79,28 @@ export default function InquiriesPage() {
           <Inbox className="w-6 h-6 text-primary" /> {t("inquiries.title", "Inquiries")}
         </h1>
         <p className="text-muted-foreground text-sm mt-1">{t("inquiries.subtitle", "Messages from guests via your landing site.")}</p>
+      </div>
+
+      <div className="flex flex-wrap gap-3 mb-6">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t("inquiries.search_placeholder", "Search name, email or message…")}
+            className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+          />
+        </div>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="px-3 py-2.5 rounded-lg border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          <option value="">{t("common.all_statuses", "All statuses")}</option>
+          {STATUSES.map((s) => (
+            <option key={s} value={s}>{t(`status.${s}`, s)}</option>
+          ))}
+        </select>
       </div>
 
       {error && (
@@ -90,8 +114,18 @@ export default function InquiriesPage() {
           {t("inquiries.empty", "No inquiries yet.")}
         </div>
       ) : (
-        <div className="bg-card border border-card-border rounded-xl divide-y divide-border">
-          {items.map((q) => <InquiryRow key={q.id} q={q} />)}
+        <div className="bg-card border border-card-border rounded-xl overflow-hidden">
+          <div className="divide-y divide-border">
+            {items.map((q) => <InquiryRow key={q.id} q={q} />)}
+          </div>
+          <TablePagination
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            totalPages={totalPages}
+            onPage={setPage}
+            onPageSize={setPageSize}
+          />
         </div>
       )}
     </Layout>
