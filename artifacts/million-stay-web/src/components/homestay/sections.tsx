@@ -1,5 +1,6 @@
 import { type ReactNode } from "react";
 import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Check, ArrowRight, Clock } from "lucide-react";
 import { HS, HS_FONT } from "@/lib/homestay-theme";
 
@@ -86,12 +87,13 @@ export function HsBullets({ items }: { items: Array<{ title?: string; body: Reac
 }
 
 export function HsCTA({ buttons }: { buttons: Array<{ label: string; href: string; variant?: "primary" | "outline"; disabled?: boolean }> }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-wrap gap-3">
       {buttons.map((b) =>
         b.disabled ? (
-          <span key={b.label} className="px-6 py-3 rounded-lg font-semibold border border-gray-200 text-gray-400 cursor-not-allowed inline-flex items-center gap-2" title="Coming soon">
-            {b.label} <span className="text-xs font-normal">(coming soon)</span>
+          <span key={b.label} className="px-6 py-3 rounded-lg font-semibold border border-gray-200 text-gray-400 cursor-not-allowed inline-flex items-center gap-2" title={t("homestay.sections.coming_soon")}>
+            {b.label} <span className="text-xs font-normal">{t("homestay.sections.coming_soon_paren")}</span>
           </span>
         ) : b.variant === "outline" ? (
           <Link key={b.label} href={b.href} className="px-6 py-3 rounded-lg font-semibold border border-gray-300 text-gray-800 inline-flex items-center gap-2">{b.label}</Link>
@@ -107,11 +109,12 @@ export function HsCTA({ buttons }: { buttons: Array<{ label: string; href: strin
 
 // Inline notice for a feature that ships in a later phase.
 export function HsComingSoon({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
   return (
     <div className="rounded-2xl border border-dashed p-6 flex gap-4" style={{ borderColor: HS.mocha, backgroundColor: "#f6efec" }}>
       <Clock className="w-6 h-6 shrink-0" style={{ color: HS.brand }} />
       <div>
-        <p className="font-semibold" style={{ color: HS.darkBrown }}>Coming soon</p>
+        <p className="font-semibold" style={{ color: HS.darkBrown }}>{t("homestay.sections.coming_soon")}</p>
         <p className="mt-1 text-sm text-gray-600">{children}</p>
       </div>
     </div>

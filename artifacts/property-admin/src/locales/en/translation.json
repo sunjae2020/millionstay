@@ -72,7 +72,8 @@
     "homestay_student_requests": "Student Applications",
     "homestay_placements": "Homestay Placements",
     "document_templates": "Document Templates",
-    "homestay_billing": "Homestay Billing"
+    "homestay_billing": "Homestay Billing",
+    "page_translations": "Page Translations"
   },
   "dashboard": {
     "title": "Dashboard",

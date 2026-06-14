@@ -7,6 +7,7 @@ import koTranslations from "../locales/ko/translation.json";
 import zhTranslations from "../locales/zh/translation.json";
 import jaTranslations from "../locales/ja/translation.json";
 import thTranslations from "../locales/th/translation.json";
+import viTranslations from "../locales/vi/translation.json";
 
 // Bundled defaults — used immediately (no flash) and as an offline fallback.
 // Admin-managed values from the database are overlaid on top after load.
@@ -16,6 +17,7 @@ const resources = {
   zh: { translation: zhTranslations },
   ja: { translation: jaTranslations },
   th: { translation: thTranslations },
+  vi: { translation: viTranslations },
 };
 
 const savedLanguage = localStorage.getItem("ms_language") || "en";

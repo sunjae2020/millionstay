@@ -68,7 +68,8 @@
     "knowledge_base": "ナレッジベース",
     "conversations": "会話履歴",
     "addon_services": "付帯サービス",
-    "homestay_applications": "ホームステイ申請"
+    "homestay_applications": "ホームステイ申請",
+    "page_translations": "ページ翻訳"
   },
   "dashboard": {
     "title": "ダッシュボード",

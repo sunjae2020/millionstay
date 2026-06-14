@@ -89,6 +89,7 @@ import BlogList from "@/pages/blog/BlogList";
 import BlogDetail from "@/pages/blog/BlogDetail";
 import WebsiteContentList from "@/pages/content/WebsiteContentList";
 import WebsiteContentDetail from "@/pages/content/WebsiteContentDetail";
+import PageTranslations from "@/pages/content/PageTranslations";
 import KnowledgeBase from "@/pages/ai/KnowledgeBase";
 import Conversations from "@/pages/ai/Conversations";
 import ChatWidgetSettings from "@/pages/ai/ChatWidgetSettings";
@@ -261,6 +262,7 @@ function Router() {
       <Route path="/content/blog/:id" component={BlogDetail} />
       <Route path="/content/pages" component={WebsiteContentList} />
       <Route path="/content/pages/:pageKey" component={WebsiteContentDetail} />
+      <Route path="/content/page-translations" component={PageTranslations} />
 
       {/* ── AI ASSISTANT ───────────────────────────────── */}
       <Route path="/ai/widget" component={ChatWidgetSettings} />

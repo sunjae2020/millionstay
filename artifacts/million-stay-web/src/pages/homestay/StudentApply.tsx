@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { HomestayLayout } from "@/components/homestay/HomestayLayout";
@@ -18,6 +19,36 @@ const ROOM_TYPES = ["Single room", "Twin room"];
 const MEAL_OPTIONS = ["Full board (all meals)", "Half board (breakfast & dinner)", "Dinner only", "No meals"];
 const AIRPORT_OPTIONS = ["Not required", "One way", "Return"];
 const YES_NO = ["Yes", "No"];
+
+// Display-label translation keys for the option VALUES above (values stay in
+// English for the API; only the shown text is localised).
+const ENGLISH_LEVEL_LABELS: Record<string, string> = {
+  "Beginner": "english_level_beginner",
+  "Elementary": "english_level_elementary",
+  "Intermediate": "english_level_intermediate",
+  "Upper-intermediate": "english_level_upper_intermediate",
+  "Advanced": "english_level_advanced",
+  "Native": "english_level_native",
+};
+const ROOM_TYPE_LABELS: Record<string, string> = {
+  "Single room": "room_type_single",
+  "Twin room": "room_type_twin",
+};
+const MEAL_LABELS: Record<string, string> = {
+  "Full board (all meals)": "meals_full_board",
+  "Half board (breakfast & dinner)": "meals_half_board",
+  "Dinner only": "meals_dinner_only",
+  "No meals": "meals_none",
+};
+const AIRPORT_LABELS: Record<string, string> = {
+  "Not required": "airport_not_required",
+  "One way": "airport_one_way",
+  "Return": "airport_return",
+};
+const YES_NO_LABELS: Record<string, string> = {
+  "Yes": "yes_no_yes",
+  "No": "yes_no_no",
+};
 
 const inputCls = "w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2";
 const textareaCls = inputCls + " min-h-[88px] resize-y";
@@ -55,6 +86,7 @@ function ageFromDob(dob: string): number | null {
 }
 
 export default function StudentApply() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const [f, setF] = useState({
     // Personal
@@ -93,13 +125,13 @@ export default function StudentApply() {
     e.preventDefault();
     setError(null);
     if (!f.student_first_name || !f.student_last_name || !f.date_of_birth) {
-      setError("Please provide the student's name and date of birth."); return;
+      setError(t("homestay.student_apply.error_name_dob")); return;
     }
-    if (age == null) { setError("Please enter a valid date of birth."); return; }
+    if (age == null) { setError(t("homestay.student_apply.error_invalid_dob")); return; }
     if (isMinor && (!f.guardian_name || !f.guardian_email)) {
-      setError("Students under 18 must provide a guardian name and email."); return;
+      setError(t("homestay.student_apply.error_guardian_required")); return;
     }
-    if (!f.terms_accepted) { setError("Please accept the Terms & Conditions to continue."); return; }
+    if (!f.terms_accepted) { setError(t("homestay.student_apply.error_terms_required")); return; }
 
     const payload: StudentApplicationInput = {
       student_first_name: f.student_first_name,
@@ -160,55 +192,55 @@ export default function StudentApply() {
       // Continue to e-signature (student + guardian co-sign for under-18s).
       setLocation(`/sign/${r.signing_token}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to submit. Please try again.");
+      setError(err instanceof Error ? err.message : t("homestay.student_apply.error_submit_failed"));
       setSubmitting(false);
     }
   }
 
   const sel = (k: string, value: string) => (
     <select className={inputCls + " bg-white"} style={ring} value={value} onChange={(e) => set(k, e.target.value)}>
-      <option value="">Please select</option>
-      {YES_NO.map((o) => <option key={o}>{o}</option>)}
+      <option value="">{t("homestay.student_apply.please_select")}</option>
+      {YES_NO.map((o) => <option key={o} value={o}>{t(`homestay.student_apply.${YES_NO_LABELS[o]}`)}</option>)}
     </select>
   );
 
   return (
-    <HomestayLayout title="Apply Now">
+    <HomestayLayout title={t("homestay.student_apply.page_title")}>
       <HsPageHero
-        eyebrow="Students"
-        title="Homestay application"
-        lead={<p>Tell us about yourself and what you’re looking for in a host family. Accept the Terms &amp; Conditions, then e-sign. Our operations team reviews every application and matches by hand — never automatically.</p>}
+        eyebrow={t("homestay.student_apply.eyebrow")}
+        title={t("homestay.student_apply.hero_title")}
+        lead={<p>{t("homestay.student_apply.hero_lead")}</p>}
       />
       <section className="max-w-3xl mx-auto px-5 py-12">
         <form onSubmit={handleSubmit} className="space-y-10">
           {/* Student's personal information */}
           <div>
-            <SectionTitle>Student’s personal information</SectionTitle>
+            <SectionTitle>{t("homestay.student_apply.section_personal")}</SectionTitle>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Family name (surname)" required><input className={inputCls} style={ring} value={f.student_last_name} onChange={(e) => set("student_last_name", e.target.value)} /></Field>
-              <Field label="Given name" required><input className={inputCls} style={ring} value={f.student_first_name} onChange={(e) => set("student_first_name", e.target.value)} /></Field>
-              <Field label="Date of birth" required><input type="date" className={inputCls} style={ring} value={f.date_of_birth} onChange={(e) => set("date_of_birth", e.target.value)} /></Field>
-              <Field label="Gender">
+              <Field label={t("homestay.student_apply.label_family_name")} required><input className={inputCls} style={ring} value={f.student_last_name} onChange={(e) => set("student_last_name", e.target.value)} /></Field>
+              <Field label={t("homestay.student_apply.label_given_name")} required><input className={inputCls} style={ring} value={f.student_first_name} onChange={(e) => set("student_first_name", e.target.value)} /></Field>
+              <Field label={t("homestay.student_apply.label_date_of_birth")} required><input type="date" className={inputCls} style={ring} value={f.date_of_birth} onChange={(e) => set("date_of_birth", e.target.value)} /></Field>
+              <Field label={t("homestay.student_apply.label_gender")}>
                 <select className={inputCls + " bg-white"} style={ring} value={f.gender} onChange={(e) => set("gender", e.target.value)}>
-                  <option value="">Prefer not to say</option><option>Female</option><option>Male</option><option>Other</option>
+                  <option value="">{t("homestay.student_apply.gender_prefer_not")}</option><option value="Female">{t("homestay.student_apply.gender_female")}</option><option value="Male">{t("homestay.student_apply.gender_male")}</option><option value="Other">{t("homestay.student_apply.gender_other")}</option>
                 </select>
               </Field>
-              <Field label="Nationality"><input className={inputCls} style={ring} value={f.nationality} onChange={(e) => set("nationality", e.target.value)} /></Field>
-              <Field label="Email"><input type="email" className={inputCls} style={ring} value={f.student_email} onChange={(e) => set("student_email", e.target.value)} /></Field>
-              <Field label="Phone"><input className={inputCls} style={ring} value={f.student_phone} onChange={(e) => set("student_phone", e.target.value)} /></Field>
-              <Field label="Native language"><input className={inputCls} style={ring} value={f.native_language} onChange={(e) => set("native_language", e.target.value)} /></Field>
-              <Field label="English level">
+              <Field label={t("homestay.student_apply.label_nationality")}><input className={inputCls} style={ring} value={f.nationality} onChange={(e) => set("nationality", e.target.value)} /></Field>
+              <Field label={t("homestay.student_apply.label_email")}><input type="email" className={inputCls} style={ring} value={f.student_email} onChange={(e) => set("student_email", e.target.value)} /></Field>
+              <Field label={t("homestay.student_apply.label_phone")}><input className={inputCls} style={ring} value={f.student_phone} onChange={(e) => set("student_phone", e.target.value)} /></Field>
+              <Field label={t("homestay.student_apply.label_native_language")}><input className={inputCls} style={ring} value={f.native_language} onChange={(e) => set("native_language", e.target.value)} /></Field>
+              <Field label={t("homestay.student_apply.label_english_level")}>
                 <select className={inputCls + " bg-white"} style={ring} value={f.english_level} onChange={(e) => set("english_level", e.target.value)}>
-                  <option value="">Please select</option>
-                  {ENGLISH_LEVELS.map((t) => <option key={t}>{t}</option>)}
+                  <option value="">{t("homestay.student_apply.please_select")}</option>
+                  {ENGLISH_LEVELS.map((o) => <option key={o} value={o}>{t(`homestay.student_apply.${ENGLISH_LEVEL_LABELS[o]}`)}</option>)}
                 </select>
               </Field>
             </div>
             <div className="mt-4 space-y-4">
-              <Field label="Type of relationship you hope to have with your host">
-                <input className={inputCls} style={ring} value={f.relationship_with_host} onChange={(e) => set("relationship_with_host", e.target.value)} placeholder="e.g. friendly and supportive, lots of conversation, independent…" />
+              <Field label={t("homestay.student_apply.label_relationship_with_host")}>
+                <input className={inputCls} style={ring} value={f.relationship_with_host} onChange={(e) => set("relationship_with_host", e.target.value)} placeholder={t("homestay.student_apply.placeholder_relationship_with_host")} />
               </Field>
-              <Field label="Additional comment">
+              <Field label={t("homestay.student_apply.label_additional_comment")}>
                 <textarea className={textareaCls} style={ring} value={f.additional_comment} onChange={(e) => set("additional_comment", e.target.value)} />
               </Field>
             </div>
@@ -219,67 +251,67 @@ export default function StudentApply() {
             <div className="rounded-2xl p-6" style={{ backgroundColor: HS.cream }}>
               <div className="flex items-center gap-2 mb-1">
                 <ShieldCheck className="w-5 h-5" style={{ color: HS.brand }} />
-                <h2 className="text-lg font-bold" style={{ fontFamily: HS_FONT.head, color: HS.darkBrown }}>Guardian (required, under 18)</h2>
+                <h2 className="text-lg font-bold" style={{ fontFamily: HS_FONT.head, color: HS.darkBrown }}>{t("homestay.student_apply.guardian_heading")}</h2>
               </div>
-              <p className="text-sm text-gray-600 mb-4">The student is under 18, so a parent or legal guardian must provide consent and co-sign the application.</p>
+              <p className="text-sm text-gray-600 mb-4">{t("homestay.student_apply.guardian_note")}</p>
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Guardian name" required><input className={inputCls} style={ring} value={f.guardian_name} onChange={(e) => set("guardian_name", e.target.value)} /></Field>
-                <Field label="Guardian email" required><input type="email" className={inputCls} style={ring} value={f.guardian_email} onChange={(e) => set("guardian_email", e.target.value)} /></Field>
-                <Field label="Guardian phone"><input className={inputCls} style={ring} value={f.guardian_phone} onChange={(e) => set("guardian_phone", e.target.value)} /></Field>
-                <Field label="Relationship"><input className={inputCls} style={ring} value={f.guardian_relationship} onChange={(e) => set("guardian_relationship", e.target.value)} placeholder="Parent, legal guardian…" /></Field>
+                <Field label={t("homestay.student_apply.label_guardian_name")} required><input className={inputCls} style={ring} value={f.guardian_name} onChange={(e) => set("guardian_name", e.target.value)} /></Field>
+                <Field label={t("homestay.student_apply.label_guardian_email")} required><input type="email" className={inputCls} style={ring} value={f.guardian_email} onChange={(e) => set("guardian_email", e.target.value)} /></Field>
+                <Field label={t("homestay.student_apply.label_guardian_phone")}><input className={inputCls} style={ring} value={f.guardian_phone} onChange={(e) => set("guardian_phone", e.target.value)} /></Field>
+                <Field label={t("homestay.student_apply.label_guardian_relationship")}><input className={inputCls} style={ring} value={f.guardian_relationship} onChange={(e) => set("guardian_relationship", e.target.value)} placeholder={t("homestay.student_apply.placeholder_guardian_relationship")} /></Field>
               </div>
             </div>
           )}
 
           {/* School information */}
           <div>
-            <SectionTitle>School information (in Australia)</SectionTitle>
+            <SectionTitle>{t("homestay.student_apply.section_school")}</SectionTitle>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="School name"><input className={inputCls} style={ring} value={f.school} onChange={(e) => set("school", e.target.value)} /></Field>
-              <Field label="Course name"><input className={inputCls} style={ring} value={f.course_name} onChange={(e) => set("course_name", e.target.value)} /></Field>
-              <Field label="Course start date"><input type="date" className={inputCls} style={ring} value={f.course_start_date} onChange={(e) => set("course_start_date", e.target.value)} /></Field>
-              <Field label="Campus location"><input className={inputCls} style={ring} value={f.campus_location} onChange={(e) => set("campus_location", e.target.value)} /></Field>
+              <Field label={t("homestay.student_apply.label_school_name")}><input className={inputCls} style={ring} value={f.school} onChange={(e) => set("school", e.target.value)} /></Field>
+              <Field label={t("homestay.student_apply.label_course_name")}><input className={inputCls} style={ring} value={f.course_name} onChange={(e) => set("course_name", e.target.value)} /></Field>
+              <Field label={t("homestay.student_apply.label_course_start_date")}><input type="date" className={inputCls} style={ring} value={f.course_start_date} onChange={(e) => set("course_start_date", e.target.value)} /></Field>
+              <Field label={t("homestay.student_apply.label_campus_location")}><input className={inputCls} style={ring} value={f.campus_location} onChange={(e) => set("campus_location", e.target.value)} /></Field>
             </div>
           </div>
 
           {/* Homestay information */}
           <div>
-            <SectionTitle>Homestay information</SectionTitle>
+            <SectionTitle>{t("homestay.student_apply.section_homestay")}</SectionTitle>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Homestay start date"><input type="date" className={inputCls} style={ring} value={f.homestay_start_date} onChange={(e) => set("homestay_start_date", e.target.value)} /></Field>
-              <Field label="Duration" hint="minimum 4 weeks"><input type="number" min={4} className={inputCls} style={ring} value={f.duration_weeks} onChange={(e) => set("duration_weeks", e.target.value)} placeholder="Number of weeks" /></Field>
-              <Field label="Room preference">
+              <Field label={t("homestay.student_apply.label_homestay_start_date")}><input type="date" className={inputCls} style={ring} value={f.homestay_start_date} onChange={(e) => set("homestay_start_date", e.target.value)} /></Field>
+              <Field label={t("homestay.student_apply.label_duration")} hint={t("homestay.student_apply.hint_duration")}><input type="number" min={4} className={inputCls} style={ring} value={f.duration_weeks} onChange={(e) => set("duration_weeks", e.target.value)} placeholder={t("homestay.student_apply.placeholder_duration")} /></Field>
+              <Field label={t("homestay.student_apply.label_room_preference")}>
                 <select className={inputCls + " bg-white"} style={ring} value={f.room_type} onChange={(e) => set("room_type", e.target.value)}>
-                  {ROOM_TYPES.map((t) => <option key={t}>{t}</option>)}
+                  {ROOM_TYPES.map((o) => <option key={o} value={o}>{t(`homestay.student_apply.${ROOM_TYPE_LABELS[o]}`)}</option>)}
                 </select>
               </Field>
-              <Field label="Meals">
+              <Field label={t("homestay.student_apply.label_meals")}>
                 <select className={inputCls + " bg-white"} style={ring} value={f.meals} onChange={(e) => set("meals", e.target.value)}>
-                  {MEAL_OPTIONS.map((t) => <option key={t}>{t}</option>)}
+                  {MEAL_OPTIONS.map((o) => <option key={o} value={o}>{t(`homestay.student_apply.${MEAL_LABELS[o]}`)}</option>)}
                 </select>
               </Field>
-              <Field label="Are you allergic to dogs / cats?">{sel("allergic_to_pets", f.allergic_to_pets)}</Field>
-              <Field label="Can you live with pets?">{sel("can_live_with_pets", f.can_live_with_pets)}</Field>
-              <Field label="Do you smoke?">{sel("smoker", f.smoker)}</Field>
-              <Field label="Can you live with people who smoke?">{sel("can_live_with_smokers", f.can_live_with_smokers)}</Field>
-              <Field label="Can you live with other students?">{sel("can_live_with_students", f.can_live_with_students)}</Field>
-              <Field label="Can you live with children in your homestay?">{sel("can_live_with_children", f.can_live_with_children)}</Field>
+              <Field label={t("homestay.student_apply.label_allergic_to_pets")}>{sel("allergic_to_pets", f.allergic_to_pets)}</Field>
+              <Field label={t("homestay.student_apply.label_can_live_with_pets")}>{sel("can_live_with_pets", f.can_live_with_pets)}</Field>
+              <Field label={t("homestay.student_apply.label_do_you_smoke")}>{sel("smoker", f.smoker)}</Field>
+              <Field label={t("homestay.student_apply.label_can_live_with_smokers")}>{sel("can_live_with_smokers", f.can_live_with_smokers)}</Field>
+              <Field label={t("homestay.student_apply.label_can_live_with_students")}>{sel("can_live_with_students", f.can_live_with_students)}</Field>
+              <Field label={t("homestay.student_apply.label_can_live_with_children")}>{sel("can_live_with_children", f.can_live_with_children)}</Field>
             </div>
             <div className="mt-4 space-y-4">
-              <Field label="Do you have religious / cultural / personal beliefs your homestay should know about?">
+              <Field label={t("homestay.student_apply.label_beliefs")}>
                 <textarea className={textareaCls} style={ring} value={f.beliefs} onChange={(e) => set("beliefs", e.target.value)} />
               </Field>
-              <Field label="Any known allergies or special diet requirements">
-                <textarea className={textareaCls} style={ring} value={f.dietary} onChange={(e) => set("dietary", e.target.value)} placeholder="Halal, vegetarian, nut allergy…" />
+              <Field label={t("homestay.student_apply.label_dietary")}>
+                <textarea className={textareaCls} style={ring} value={f.dietary} onChange={(e) => set("dietary", e.target.value)} placeholder={t("homestay.student_apply.placeholder_dietary")} />
               </Field>
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Any food that you do not eat"><input className={inputCls} style={ring} value={f.food_avoided} onChange={(e) => set("food_avoided", e.target.value)} /></Field>
-                <Field label="What are your hobbies?"><input className={inputCls} style={ring} value={f.hobbies} onChange={(e) => set("hobbies", e.target.value)} /></Field>
+                <Field label={t("homestay.student_apply.label_food_avoided")}><input className={inputCls} style={ring} value={f.food_avoided} onChange={(e) => set("food_avoided", e.target.value)} /></Field>
+                <Field label={t("homestay.student_apply.label_hobbies")}><input className={inputCls} style={ring} value={f.hobbies} onChange={(e) => set("hobbies", e.target.value)} /></Field>
               </div>
-              <Field label="Other requirements">
+              <Field label={t("homestay.student_apply.label_other_requirements")}>
                 <textarea className={textareaCls} style={ring} value={f.other_requirements} onChange={(e) => set("other_requirements", e.target.value)} />
               </Field>
-              <Field label="Briefly introduce yourself to your host family">
+              <Field label={t("homestay.student_apply.label_self_introduction")}>
                 <textarea className={textareaCls} style={ring} value={f.self_introduction} onChange={(e) => set("self_introduction", e.target.value)} />
               </Field>
             </div>
@@ -287,40 +319,40 @@ export default function StudentApply() {
 
           {/* Airport pickup */}
           <div>
-            <SectionTitle>Airport pickup</SectionTitle>
-            <p className="text-sm text-gray-500 mb-4">Melbourne Tullamarine Airport only.</p>
-            <Field label="Airport pickup required?">
+            <SectionTitle>{t("homestay.student_apply.section_airport")}</SectionTitle>
+            <p className="text-sm text-gray-500 mb-4">{t("homestay.student_apply.airport_note")}</p>
+            <Field label={t("homestay.student_apply.label_airport_required")}>
               <select className={inputCls + " bg-white"} style={ring} value={f.airport_pickup_option} onChange={(e) => set("airport_pickup_option", e.target.value)}>
-                {AIRPORT_OPTIONS.map((t) => <option key={t}>{t}</option>)}
+                {AIRPORT_OPTIONS.map((o) => <option key={o} value={o}>{t(`homestay.student_apply.${AIRPORT_LABELS[o]}`)}</option>)}
               </select>
             </Field>
             {airportRequired && (
               <div className="grid gap-4 sm:grid-cols-3 mt-4">
-                <Field label="Arrival date"><input type="date" className={inputCls} style={ring} value={f.arrival_date} onChange={(e) => set("arrival_date", e.target.value)} /></Field>
-                <Field label="Arrival time"><input type="time" className={inputCls} style={ring} value={f.arrival_time} onChange={(e) => set("arrival_time", e.target.value)} /></Field>
-                <Field label="Flight no."><input className={inputCls} style={ring} value={f.flight_no} onChange={(e) => set("flight_no", e.target.value)} /></Field>
+                <Field label={t("homestay.student_apply.label_arrival_date")}><input type="date" className={inputCls} style={ring} value={f.arrival_date} onChange={(e) => set("arrival_date", e.target.value)} /></Field>
+                <Field label={t("homestay.student_apply.label_arrival_time")}><input type="time" className={inputCls} style={ring} value={f.arrival_time} onChange={(e) => set("arrival_time", e.target.value)} /></Field>
+                <Field label={t("homestay.student_apply.label_flight_no")}><input className={inputCls} style={ring} value={f.flight_no} onChange={(e) => set("flight_no", e.target.value)} /></Field>
               </div>
             )}
           </div>
 
           {/* Emergency contact */}
           <div>
-            <SectionTitle>Emergency contact</SectionTitle>
+            <SectionTitle>{t("homestay.student_apply.section_emergency")}</SectionTitle>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Name"><input className={inputCls} style={ring} value={f.ec_name} onChange={(e) => set("ec_name", e.target.value)} /></Field>
-              <Field label="Relationship"><input className={inputCls} style={ring} value={f.ec_relationship} onChange={(e) => set("ec_relationship", e.target.value)} /></Field>
-              <Field label="Contact number"><input className={inputCls} style={ring} value={f.ec_contact_no} onChange={(e) => set("ec_contact_no", e.target.value)} /></Field>
-              <Field label="Email address"><input type="email" className={inputCls} style={ring} value={f.ec_email} onChange={(e) => set("ec_email", e.target.value)} /></Field>
+              <Field label={t("homestay.student_apply.label_ec_name")}><input className={inputCls} style={ring} value={f.ec_name} onChange={(e) => set("ec_name", e.target.value)} /></Field>
+              <Field label={t("homestay.student_apply.label_ec_relationship")}><input className={inputCls} style={ring} value={f.ec_relationship} onChange={(e) => set("ec_relationship", e.target.value)} /></Field>
+              <Field label={t("homestay.student_apply.label_ec_contact_no")}><input className={inputCls} style={ring} value={f.ec_contact_no} onChange={(e) => set("ec_contact_no", e.target.value)} /></Field>
+              <Field label={t("homestay.student_apply.label_ec_email")}><input type="email" className={inputCls} style={ring} value={f.ec_email} onChange={(e) => set("ec_email", e.target.value)} /></Field>
             </div>
           </div>
 
           {/* Optional arrival support */}
           <div>
-            <SectionTitle>Optional arrival support</SectionTitle>
+            <SectionTitle>{t("homestay.student_apply.section_arrival_support")}</SectionTitle>
             <div className="space-y-2">
               {[
-                ["guardian_service", "Guardian service"],
-                ["settlement_support", "Settlement support"],
+                ["guardian_service", t("homestay.student_apply.addon_guardian_service")],
+                ["settlement_support", t("homestay.student_apply.addon_settlement_support")],
               ].map(([k, label]) => (
                 <label key={k} className="flex items-center gap-3 text-sm text-gray-700">
                   <input type="checkbox" checked={(f as any)[k]} onChange={(e) => set(k, e.target.checked)} className="h-4 w-4" />
@@ -333,22 +365,22 @@ export default function StudentApply() {
           {/* Collection & sensitive-information consent notice (APP 5 / APP 3.3) */}
           <div className="rounded-lg border p-4 text-sm text-gray-600 leading-relaxed" style={{ borderColor: HS.brand + "33", backgroundColor: HS.cream }}>
             <p>
-              We collect the information in this form to assess your application and match you with a suitable homestay placement. Details about your dietary needs, allergies, and cultural or religious preferences are <strong>sensitive information</strong>, which we collect and use for matching only with your consent — including sending the relevant details to an AI service (Anthropic) to generate an explanation of why a host is a good match.
+              {t("homestay.student_apply.consent_notice")}
             </p>
             <p className="mt-2">
-              By submitting this application you consent to this collection and use. See our{" "}
-              <a href="/homestay/privacy" className="underline" style={{ color: HS.brand }}>Privacy Policy</a>.
+              {t("homestay.student_apply.consent_privacy_prefix")}{" "}
+              <a href="/homestay/privacy" className="underline" style={{ color: HS.brand }}>{t("homestay.student_apply.consent_privacy_link")}</a>.
             </p>
           </div>
 
           {/* T&C */}
           <div>
-            <SectionTitle>Terms &amp; Conditions</SectionTitle>
+            <SectionTitle>{t("homestay.student_apply.section_terms")}</SectionTitle>
             <ScrollToAgree
               accent={HS.brand}
               checked={f.terms_accepted}
               onChange={(v) => set("terms_accepted", v)}
-              label={<>I have read and agree to the <strong>Terms &amp; Conditions</strong> above. I understand the next step is to e-sign this application{isMinor ? ", and that a guardian must co-sign" : ""}.</>}
+              label={isMinor ? t("homestay.student_apply.terms_agree_label_minor") : t("homestay.student_apply.terms_agree_label")}
             >
               <HomestayTermsBody />
             </ScrollToAgree>
@@ -357,7 +389,7 @@ export default function StudentApply() {
           {error && <p className="text-sm text-red-600">{error}</p>}
 
           <button type="submit" disabled={submitting} className="w-full py-3 rounded-lg font-semibold text-white inline-flex items-center justify-center gap-2" style={{ backgroundColor: HS.brand }}>
-            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Continue to e-signature"}
+            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : t("homestay.student_apply.submit_continue")}
           </button>
         </form>
       </section>

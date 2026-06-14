@@ -26,6 +26,12 @@ export const translationsTable = pgTable(
     lang: text("lang").notNull(),
     key: text("key").notNull(),
     value: text("value").notNull().default(""),
+    // Provenance for the AI-translate → manual-review workflow.
+    // "machine" = written by the AI translation endpoint and not yet reviewed;
+    // "human" = authored or confirmed by a person. `reviewed_at` is stamped when
+    // a human saves the value.
+    source: text("source").notNull().default("human"),
+    reviewed_at: timestamp("reviewed_at", { withTimezone: true }),
     updated_by: integer("updated_by"),
     created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
