@@ -13,14 +13,18 @@
     "properties": "マイ物件",
     "occupancy": "入居状況",
     "revenue": "収益",
-    "sign_out": "ログアウト"
+    "sign_out": "ログアウト",
+    "support": "サポート",
+    "dark_mode": "ダークモード",
+    "light_mode": "ライトモード"
   },
   "common": {
     "loading": "読み込み中...",
     "all_statuses": "すべてのステータス",
     "ongoing": "進行中",
     "tbd": "未定",
-    "clear": "クリア"
+    "clear": "クリア",
+    "cancel": "キャンセル"
   },
   "login": {
     "headline_1": "あなたの物件、",
@@ -187,5 +191,41 @@
     },
     "search_space": "物件・スペースを検索…",
     "jump_to": "日付へ移動"
+  },
+  "support": {
+    "title": "サポート",
+    "subtitle": "MillionStay管理チームにお問い合わせください。このメッセージはご本人と管理者のみが閲覧できます。",
+    "new_ticket": "新規チケット",
+    "category": "カテゴリー",
+    "subject": "件名",
+    "subject_placeholder": "簡単な概要",
+    "description": "メッセージ",
+    "description_placeholder": "ご用件をご記入ください…",
+    "attach": "添付",
+    "submit": "送信",
+    "empty": "まだチケットはありません。新規作成して管理者にお問い合わせください。",
+    "create_failed": "チケットの作成に失敗しました。",
+    "upload_failed": "画像のアップロードに失敗しました。",
+    "back": "サポートに戻る",
+    "not_found": "チケットが見つかりません。",
+    "submitted": "受付日",
+    "sender_admin": "MillionStay サポート",
+    "sender_you": "あなた",
+    "reply_placeholder": "返信を入力…",
+    "send": "送信",
+    "send_failed": "メッセージの送信に失敗しました。",
+    "closed_note": "このチケットはクローズされています。さらにサポートが必要な場合は新規チケットを作成してください。",
+    "category_general": "一般",
+    "category_accommodation": "宿泊",
+    "category_billing": "請求",
+    "category_maintenance": "メンテナンス",
+    "category_other": "その他",
+    "status_open": "受付中",
+    "status_inprogress": "対応中",
+    "status_resolved": "解決済み",
+    "status_closed": "クローズ",
+    "created": "作成日",
+    "last_reply": "最新の返信",
+    "no_reply_yet": "返信はまだありません"
   }
 }

@@ -13,7 +13,10 @@
     "my_jobs": "งานของฉัน",
     "schedule": "กำหนดการ",
     "earnings": "รายได้",
-    "sign_out": "ออกจากระบบ"
+    "sign_out": "ออกจากระบบ",
+    "support": "ฝ่ายสนับสนุน",
+    "dark_mode": "โหมดมืด",
+    "light_mode": "โหมดสว่าง"
   },
   "common": {
     "loading": "กำลังโหลด...",
@@ -195,5 +198,41 @@
     "reference_label": "เลขอ้างอิง:",
     "privacy_note": "การส่งใบสมัครถือว่าคุณยินยอมให้ MillionStay ติดต่อคุณเกี่ยวกับใบสมัครนี้",
     "privacy_policy_link": "Privacy Policy"
+  },
+  "support": {
+    "title": "ฝ่ายสนับสนุน",
+    "subtitle": "ติดต่อทีมผู้ดูแล MillionStay เฉพาะคุณและผู้ดูแลเท่านั้นที่เห็นข้อความเหล่านี้",
+    "new_ticket": "ตั๋วใหม่",
+    "category": "หมวดหมู่",
+    "subject": "หัวข้อ",
+    "subject_placeholder": "สรุปสั้นๆ",
+    "description": "ข้อความ",
+    "description_placeholder": "อธิบายว่าเราจะช่วยอย่างไร…",
+    "attach": "แนบไฟล์",
+    "submit": "ส่ง",
+    "empty": "ยังไม่มีตั๋ว เปิดตั๋วใหม่เพื่อติดต่อผู้ดูแล",
+    "create_failed": "สร้างตั๋วไม่สำเร็จ",
+    "upload_failed": "อัปโหลดรูปภาพไม่สำเร็จ",
+    "back": "กลับไปหน้าฝ่ายสนับสนุน",
+    "not_found": "ไม่พบตั๋ว",
+    "submitted": "ส่งเมื่อ",
+    "sender_admin": "ฝ่ายสนับสนุน MillionStay",
+    "sender_you": "คุณ",
+    "reply_placeholder": "พิมพ์คำตอบ…",
+    "send": "ส่ง",
+    "send_failed": "ส่งข้อความไม่สำเร็จ",
+    "closed_note": "ตั๋วนี้ถูกปิดแล้ว เปิดตั๋วใหม่หากต้องการความช่วยเหลือเพิ่มเติม",
+    "category_general": "ทั่วไป",
+    "category_accommodation": "ที่พัก",
+    "category_billing": "การเรียกเก็บเงิน",
+    "category_maintenance": "การบำรุงรักษา",
+    "category_other": "อื่นๆ",
+    "status_open": "เปิด",
+    "status_inprogress": "กำลังดำเนินการ",
+    "status_resolved": "แก้ไขแล้ว",
+    "status_closed": "ปิดแล้ว",
+    "created": "สร้างเมื่อ",
+    "last_reply": "ตอบล่าสุด",
+    "no_reply_yet": "ยังไม่มีการตอบกลับ"
   }
 }

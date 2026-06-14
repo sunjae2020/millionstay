@@ -13,7 +13,10 @@
     "my_jobs": "내 작업",
     "schedule": "일정",
     "earnings": "수익",
-    "sign_out": "로그아웃"
+    "sign_out": "로그아웃",
+    "support": "고객지원",
+    "dark_mode": "다크 모드",
+    "light_mode": "라이트 모드"
   },
   "common": {
     "loading": "로딩 중...",
@@ -195,5 +198,41 @@
     "reference_label": "신청 번호:",
     "privacy_note": "제출함으로써 신청과 관련하여 MillionStay의 연락을 받는 것에 동의합니다.",
     "privacy_policy_link": "Privacy Policy"
+  },
+  "support": {
+    "title": "고객지원",
+    "subtitle": "MillionStay 관리자 팀에 문의하세요. 이 메시지는 본인과 관리자만 볼 수 있습니다.",
+    "new_ticket": "새 문의",
+    "category": "분류",
+    "subject": "제목",
+    "subject_placeholder": "간단한 요약",
+    "description": "메시지",
+    "description_placeholder": "어떻게 도와드릴지 알려주세요…",
+    "attach": "첨부",
+    "submit": "제출",
+    "empty": "아직 문의가 없습니다. 새 문의를 등록해 관리자에게 문의하세요.",
+    "create_failed": "문의 등록에 실패했습니다.",
+    "upload_failed": "이미지 업로드에 실패했습니다.",
+    "back": "고객지원으로 돌아가기",
+    "not_found": "문의를 찾을 수 없습니다.",
+    "submitted": "등록일",
+    "sender_admin": "MillionStay 고객지원",
+    "sender_you": "나",
+    "reply_placeholder": "답변을 입력하세요…",
+    "send": "보내기",
+    "send_failed": "메시지 전송에 실패했습니다.",
+    "closed_note": "종료된 문의입니다. 추가 도움이 필요하면 새 문의를 등록하세요.",
+    "category_general": "일반",
+    "category_accommodation": "숙소",
+    "category_billing": "결제",
+    "category_maintenance": "유지보수",
+    "category_other": "기타",
+    "status_open": "접수됨",
+    "status_inprogress": "처리 중",
+    "status_resolved": "해결됨",
+    "status_closed": "종료됨",
+    "created": "등록일",
+    "last_reply": "최근 답변",
+    "no_reply_yet": "아직 답변 없음"
   }
 }
