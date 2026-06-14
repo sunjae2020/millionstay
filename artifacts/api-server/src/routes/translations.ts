@@ -204,6 +204,69 @@ async function translateBatch(
   return JSON.parse(jsonStr) as Record<string, string>;
 }
 
+const PRESERVE_RULES =
+  `Keep the brand names "MillionStay" and "Million Homestay" in English. Keep Australian suburb, city and university names in English. ` +
+  `Preserve any HTML tags, {{placeholders}} and punctuation. Translate naturally for a marketing website.`;
+
+// Translate ONE string and return plain text (no JSON). Used as a robust fallback
+// when a batch's JSON output truncates or contains unescaped quotes.
+async function translateOnePlain(en: string, langName: string, style: string): Promise<string> {
+  const anthropic = getAnthropic();
+  const system =
+    `You are a professional translator for MillionStay / Million Homestay (student accommodation & homestay, Melbourne, Australia). ${style} ${PRESERVE_RULES} ` +
+    `Translate the user's message into ${langName}. Respond with ONLY the translation as plain text — no quotes, no JSON, no commentary.`;
+  const msg = await anthropic.messages.create({
+    model: CHAT_MODEL,
+    max_tokens: 4096,
+    system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
+    messages: [{ role: "user", content: en }],
+  });
+  return msg.content.map((b) => (b.type === "text" ? b.text : "")).join("").trim();
+}
+
+// Review a batch of candidate translations against their English source and
+// return the FINAL translation per key (unchanged if good, corrected otherwise).
+async function reviewBatch(
+  entries: Array<{ key: string; en: string; current: string }>,
+  langName: string,
+  style: string,
+): Promise<Record<string, string>> {
+  const anthropic = getAnthropic();
+  const system =
+    `You are a senior bilingual editor reviewing machine translations for the MillionStay / Million Homestay marketing site (Melbourne, Australia). ${style} ${PRESERVE_RULES} ` +
+    `You receive a JSON object mapping i18n keys to {"en": <English source>, "current": <candidate ${langName} translation, possibly empty>}. ` +
+    `For each key return the FINAL ${langName} translation: keep "current" unchanged when it is accurate, natural and complete; otherwise return a corrected (or, if empty, a new) translation. ` +
+    `Respond with ONLY a JSON object using the SAME keys mapping to the final string. Escape any quotes inside values. Do not add, drop, or rename keys.`;
+  const payload: Record<string, { en: string; current: string }> = {};
+  for (const e of entries) payload[e.key] = { en: e.en, current: e.current };
+  const msg = await anthropic.messages.create({
+    model: CHAT_MODEL,
+    max_tokens: 8192,
+    system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
+    messages: [{ role: "user", content: JSON.stringify(payload) }],
+  });
+  const text = msg.content.map((b) => (b.type === "text" ? b.text : "")).join("");
+  const jsonStr = text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1);
+  return JSON.parse(jsonStr) as Record<string, string>;
+}
+
+// Review ONE candidate and return plain text — robust per-key fallback.
+async function reviewOnePlain(en: string, current: string, langName: string, style: string): Promise<string> {
+  if (!current.trim()) return translateOnePlain(en, langName, style);
+  const anthropic = getAnthropic();
+  const system =
+    `You are a senior bilingual editor for MillionStay / Million Homestay (Melbourne, Australia). ${style} ${PRESERVE_RULES} ` +
+    `The user gives an English source and a candidate ${langName} translation. Return the FINAL ${langName} translation: keep the candidate if it is accurate, natural and complete; otherwise correct it. ` +
+    `Respond with ONLY the final translation as plain text — no quotes, no JSON, no commentary.`;
+  const msg = await anthropic.messages.create({
+    model: CHAT_MODEL,
+    max_tokens: 4096,
+    system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
+    messages: [{ role: "user", content: `English: ${en}\n\nCandidate (${langName}): ${current}` }],
+  });
+  return msg.content.map((b) => (b.type === "text" ? b.text : "")).join("").trim();
+}
+
 // POST /v1/translations/ai-translate — machine-translate English source strings
 // into the requested languages and store them as source='machine' (unreviewed).
 router.post("/v1/translations/ai-translate", async (req, res): Promise<void> => {
@@ -301,6 +364,116 @@ router.post("/v1/translations/ai-translate", async (req, res): Promise<void> => 
       return;
     }
     console.error("[translations] ai-translate failed:", e);
+    errors.push({ lang: "*", message: e instanceof Error ? e.message : String(e) });
+  }
+
+  res.json({ success: errors.length === 0, data: { source_keys: source.length, langs, summary }, errors });
+});
+
+/* ────────────────────── AI review ────────────────────── */
+
+const AiReviewBody = z
+  .object({
+    keyPrefix: z.string().optional(),
+    keys: z.array(z.string()).optional(),
+    targetLangs: z.array(z.string()).optional(),
+  })
+  .refine((b) => b.keyPrefix || (b.keys && b.keys.length > 0), {
+    message: "Provide keyPrefix or a non-empty keys array.",
+  });
+
+// POST /v1/translations/ai-review — review every translation against its English
+// source, correct any issues (and fill empties), then stamp reviewed_at so the
+// editor no longer flags them as unreviewed. Idempotent and resumable.
+router.post("/v1/translations/ai-review", async (req, res): Promise<void> => {
+  const parsed = AiReviewBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ success: false, error: { code: "INVALID_BODY", issues: parsed.error.issues } });
+    return;
+  }
+  if (!isChatConfigured()) {
+    res.status(503).json({ success: false, error: { code: "AI_NOT_CONFIGURED", message: "Set the Anthropic API key in Admin → Settings → Integrations." } });
+    return;
+  }
+  const { keyPrefix, keys, targetLangs } = parsed.data;
+  const user = (req as any).user as { id: number } | undefined;
+
+  const enRows = await db.select().from(translationsTable).where(eq(translationsTable.lang, "en"));
+  const keySet = keys ? new Set(keys) : null;
+  const source = enRows
+    .filter((r) => (keySet ? keySet.has(r.key) : r.key === keyPrefix || r.key.startsWith(keyPrefix + ".")))
+    .filter((r) => r.value && r.value.trim().length > 0)
+    .map((r) => ({ key: r.key, en: r.value }));
+
+  if (source.length === 0) {
+    res.status(404).json({ success: false, error: { code: "NO_SOURCE", message: "No English source strings found for the given keys/prefix." } });
+    return;
+  }
+
+  let langs = (targetLangs ?? []).map((l) => l.toLowerCase()).filter((l) => l !== "en");
+  if (langs.length === 0) {
+    const enabled = await db.select().from(languagesTable).where(eq(languagesTable.enabled, true));
+    langs = enabled.filter((l) => l.code !== "en" && !l.is_default).map((l) => l.code);
+  }
+
+  const BATCH = 12;
+  const now = new Date();
+  const summary: Record<string, { reviewed: number; changed: number; filled: number }> = {};
+  const errors: Array<{ lang: string; message: string }> = [];
+
+  async function persist(lang: string, key: string, value: string): Promise<void> {
+    await db
+      .insert(translationsTable)
+      .values({ lang, key, value, source: "machine", reviewed_at: now, updated_by: user?.id ?? null })
+      .onConflictDoUpdate({
+        target: [translationsTable.lang, translationsTable.key],
+        set: { value, reviewed_at: now, updated_by: user?.id ?? null, updated_at: now },
+      });
+  }
+
+  try {
+    for (const lang of langs) {
+      const info = LANG_INFO[lang] ?? { name: lang, style: "Use formal, natural language." };
+      const existingRows = await db.select().from(translationsTable).where(eq(translationsTable.lang, lang));
+      const existing = new Map(existingRows.map((r) => [r.key, r.value]));
+      const items = source.map((s) => ({ key: s.key, en: s.en, current: existing.get(s.key) ?? "" }));
+      let reviewed = 0, changed = 0, filled = 0;
+
+      for (let i = 0; i < items.length; i += BATCH) {
+        const chunk = items.slice(i, i + BATCH);
+        let map: Record<string, string> | null = null;
+        try {
+          map = await reviewBatch(chunk, info.name, info.style);
+        } catch (be) {
+          if (be instanceof ChatConfigError) throw be;
+          map = null; // fall through to per-key
+        }
+        for (const item of chunk) {
+          let final: string | undefined = map ? map[item.key] : undefined;
+          if (typeof final !== "string" || final.length === 0) {
+            try {
+              final = await reviewOnePlain(item.en, item.current, info.name, info.style);
+            } catch (one_e) {
+              if (one_e instanceof ChatConfigError) throw one_e;
+              errors.push({ lang, message: `key ${item.key}: ${one_e instanceof Error ? one_e.message : String(one_e)}` });
+              continue;
+            }
+          }
+          if (typeof final !== "string" || final.length === 0) continue;
+          await persist(lang, item.key, final);
+          reviewed++;
+          if (!item.current) filled++;
+          else if (final.trim() !== item.current.trim()) changed++;
+        }
+      }
+      summary[lang] = { reviewed, changed, filled };
+    }
+  } catch (e) {
+    if (e instanceof ChatConfigError) {
+      res.status(503).json({ success: false, error: { code: "AI_NOT_CONFIGURED", message: e.message } });
+      return;
+    }
+    console.error("[translations] ai-review failed:", e);
     errors.push({ lang: "*", message: e instanceof Error ? e.message : String(e) });
   }
 

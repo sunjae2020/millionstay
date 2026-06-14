@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Languages, Save, Sparkles, Loader2, ExternalLink } from "lucide-react";
+import { Languages, Save, Sparkles, Loader2, ExternalLink, CheckCheck } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 
@@ -137,6 +137,26 @@ export default function PageTranslations() {
     onError: (e: any) => toast({ title: t("page_translations.toast_ai_failed", { defaultValue: "AI translation failed" }), description: String(e?.message ?? e), variant: "destructive" }),
   });
 
+  // AI-review every translation on this page against the English source, correct
+  // issues + fill empties, and mark them reviewed (clears the unreviewed badge).
+  const aiReview = useMutation({
+    mutationFn: async () => {
+      const res = await apiFetch(`${TR_API}/ai-review`, { method: "POST", body: JSON.stringify({ keyPrefix: prefix }) });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error?.message ?? `HTTP ${res.status}`);
+      return json;
+    },
+    onSuccess: (json: any) => {
+      const summary = json?.data?.summary ?? {};
+      const reviewed = Object.values(summary).reduce((acc: number, s: any) => acc + (s?.reviewed ?? 0), 0);
+      const changed = Object.values(summary).reduce((acc: number, s: any) => acc + (s?.changed ?? 0), 0);
+      toast({ title: t("page_translations.toast_review_done", { defaultValue: "Reviewed {{count}} value(s), {{changed}} corrected", count: reviewed, changed }) });
+      qc.invalidateQueries({ queryKey: ["page-translations"] });
+    },
+    onError: (e: any) => toast({ title: t("page_translations.toast_review_failed", { defaultValue: "AI review failed" }), description: String(e?.message ?? e), variant: "destructive" }),
+  });
+
+  const aiBusy = aiTranslate.isPending || aiReview.isPending;
   const previewUrl = page.path ? `https://homestay.millionstay.com${page.path}` : null;
 
   return (
@@ -177,11 +197,20 @@ export default function PageTranslations() {
             <Button
               variant="outline"
               onClick={() => aiTranslate.mutate({ allLangs: true })}
-              disabled={aiTranslate.isPending}
+              disabled={aiBusy}
               title={t("page_translations.ai_all_title", { defaultValue: "Translate this page into every enabled language (skips values that already exist)" })}
             >
               {aiTranslate.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
               {t("page_translations.ai_all", { defaultValue: "AI translate page (all languages)" })}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => aiReview.mutate()}
+              disabled={aiBusy}
+              title={t("page_translations.ai_review_title", { defaultValue: "Review every translation on this page against the English source, correct issues, and mark reviewed" })}
+            >
+              {aiReview.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCheck className="h-4 w-4 mr-2" />}
+              {t("page_translations.ai_review", { defaultValue: "AI review page" })}
             </Button>
             <Button onClick={saveAll} disabled={dirtyCount === 0}>
               <Save className="h-4 w-4 mr-2" />{t("common.save")}{dirtyCount > 0 ? ` (${dirtyCount})` : ""}

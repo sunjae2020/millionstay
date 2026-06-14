@@ -89,10 +89,12 @@ async function main() {
     console.log(`✓ Seeded ${seeded} English keys\n`);
   }
 
-  // Step 2: AI-translate into every enabled non-English language.
-  // Translate page-by-page (smaller, bounded requests) with limited concurrency,
-  // rather than one giant request. overwrite=false → safe to re-run for gaps.
-  console.log("=== Step 2: AI translate (Anthropic), page by page ===");
+  // Step 2: AI-translate (or, with REVIEW=1, AI-review) every enabled non-English
+  // language. Page-by-page (smaller, bounded requests) with limited concurrency,
+  // rather than one giant request. Both endpoints are idempotent/resumable.
+  const REVIEW = process.env.REVIEW === "1";
+  const endpoint = REVIEW ? "/api/v1/translations/ai-review" : "/api/v1/translations/ai-translate";
+  console.log(`=== Step 2: ${REVIEW ? "AI review" : "AI translate"} (Anthropic), page by page ===`);
 
   // Derive per-page prefixes. For a deep namespace (e.g. "homestay.home") just
   // translate it directly; for a top namespace ("homestay") split by sub-page.
@@ -106,16 +108,18 @@ async function main() {
   const allErrors = [];
   let idx = 0;
 
+  const metric = REVIEW ? "reviewed" : "translated";
   async function worker() {
     while (idx < prefixes.length) {
       const prefix = prefixes[idx++];
       try {
-        const result = await api("POST", "/api/v1/translations/ai-translate", { keyPrefix: prefix, overwrite: false }, token);
+        const body = REVIEW ? { keyPrefix: prefix } : { keyPrefix: prefix, overwrite: false };
+        const result = await api("POST", endpoint, body, token);
         const summary = result?.data?.summary ?? {};
         let line = `  ✓ ${prefix}:`;
         for (const [lang, s] of Object.entries(summary)) {
-          totals[lang] = (totals[lang] ?? 0) + (s.translated ?? 0);
-          line += ` ${lang}=${s.translated}`;
+          totals[lang] = (totals[lang] ?? 0) + (s[metric] ?? 0);
+          line += REVIEW ? ` ${lang}=${s.reviewed}(${s.changed}✎)` : ` ${lang}=${s.translated}`;
         }
         console.log(line);
         if (Array.isArray(result?.errors) && result.errors.length) allErrors.push(...result.errors.map((e) => ({ prefix, ...e })));
@@ -128,9 +132,9 @@ async function main() {
 
   await Promise.all(Array.from({ length: CONCURRENCY }, () => worker()));
 
-  console.log("\n  Totals translated:", JSON.stringify(totals));
+  console.log(`\n  Totals ${metric}:`, JSON.stringify(totals));
   if (allErrors.length) console.log("  errors:", JSON.stringify(allErrors).slice(0, 800));
-  console.log("\n✓ Done. Review machine translations in Admin → Content → Page Translations.");
+  console.log("\n✓ Done. Review in Admin → Content → Page Translations.");
 }
 
 main().catch((e) => { console.error("\n✗ Failed:", e.message); process.exit(1); });
