@@ -2,12 +2,14 @@ import { HomestayLayout } from "@/components/homestay/HomestayLayout";
 import { HsPageHero, HsSection, HsNumbered, HsCTA } from "@/components/homestay/sections";
 import { HS } from "@/lib/homestay-theme";
 import { useTranslation } from "react-i18next";
+import { usePageContent } from "@/lib/usePageContent";
 
 // About Us — single-tier page. Absorbs the former How It Works (#how-it-works),
 // Mission (#mission) and Vision (#vision) sub-pages as anchored sections.
 
 export default function AboutUs() {
   const { t } = useTranslation();
+  const pc = usePageContent("homestay-about");
 
   const STUDENT_STEPS = [
     { title: t("homestay.about.student_steps_1_title"), body: t("homestay.about.student_steps_1_body") },
@@ -28,18 +30,18 @@ export default function AboutUs() {
   return (
     <HomestayLayout title={t("homestay.about.page_title")}>
       <HsPageHero
-        eyebrow={t("homestay.about.hero_eyebrow")}
-        title={t("homestay.about.hero_title")}
+        eyebrow={pc("hero_eyebrow", t("homestay.about.hero_eyebrow"))}
+        title={pc("hero_title", t("homestay.about.hero_title"))}
         lead={
           <>
-            <p>{t("homestay.about.hero_lead_p1")}</p>
-            <p>{t("homestay.about.hero_lead_p2")}</p>
+            <p>{pc("hero_lead_p1", t("homestay.about.hero_lead_p1"))}</p>
+            <p>{pc("hero_lead_p2", t("homestay.about.hero_lead_p2"))}</p>
           </>
         }
       />
-      <HsSection heading={t("homestay.about.bridging_heading")}>
+      <HsSection heading={pc("bridging_heading", t("homestay.about.bridging_heading"))}>
         <p className="text-gray-600">
-          {t("homestay.about.bridging_body")}
+          {pc("bridging_body", t("homestay.about.bridging_body"))}
         </p>
       </HsSection>
       <HsSection heading={t("homestay.about.tailored_heading")} tint>
@@ -78,16 +80,16 @@ export default function AboutUs() {
       </HsSection>
 
       {/* Mission (formerly /mission) */}
-      <HsSection id="mission" heading={t("homestay.about.mission_heading")} tint>
+      <HsSection id="mission" heading={pc("mission_heading", t("homestay.about.mission_heading"))} tint>
         <p className="text-gray-600">
-          {t("homestay.about.mission_body")}
+          {pc("mission_body", t("homestay.about.mission_body"))}
         </p>
       </HsSection>
 
       {/* Vision (formerly /vision) */}
-      <HsSection id="vision" heading={t("homestay.about.vision_heading")}>
+      <HsSection id="vision" heading={pc("vision_heading", t("homestay.about.vision_heading"))}>
         <p className="text-gray-600">
-          {t("homestay.about.vision_body")}
+          {pc("vision_body", t("homestay.about.vision_body"))}
         </p>
       </HsSection>
     </HomestayLayout>

@@ -24,6 +24,7 @@ import {
   channelsTable,
   channelAccountsTable,
   ownerSitesTable,
+  pageContentsTable,
 } from "@workspace/db";
 import { ingestReservations } from "../lib/channels/reservations.js";
 import { insertLeadWithGeneratedRef } from "../lib/leadRef.js";
@@ -967,12 +968,18 @@ router.get("/v1/suburbs", async (req, res): Promise<void> => {
 });
 
 router.get("/v1/public/blog", async (req, res): Promise<void> => {
-  const { limit, category } = req.query as Record<string, string>;
+  const { limit, category, exclude_category } = req.query as Record<string, string>;
   const conditions: SQL[] = [
     isNull(blogPostsTable.deleted_at),
     eq(blogPostsTable.status, "Published"),
   ];
   if (category) conditions.push(eq(blogPostsTable.category, category));
+  // The guest (www) blog passes exclude_category=Homestay so homestay-only posts
+  // stay on the homestay site and don't leak into the guest "All" listing. The
+  // OR-isNull keeps uncategorised posts visible (ne() alone drops NULL rows).
+  if (exclude_category) {
+    conditions.push(or(isNull(blogPostsTable.category), ne(blogPostsTable.category, exclude_category))!);
+  }
   const rows = await db.select({
     id: blogPostsTable.id,
     title: blogPostsTable.title,
@@ -989,6 +996,30 @@ router.get("/v1/public/blog", async (req, res): Promise<void> => {
     .orderBy(desc(blogPostsTable.published_at))
     .limit(Number(limit) || 20);
   res.json({ data: rows });
+});
+
+// Public read of CMS-managed website page content. Used by the public sites
+// (www + homestay) to overlay editor-managed copy on top of the i18n defaults —
+// an empty/missing row simply means "use the built-in i18n text". The admin
+// editor writes via the authenticated /v1/page-contents routes; this is the
+// unauthenticated read counterpart. pageKey is namespaced per site (e.g.
+// "home" for www, "homestay-home" for the homestay site).
+router.get("/v1/public/page-contents/:pageKey/:language", async (req, res): Promise<void> => {
+  const { pageKey, language } = req.params;
+  const [row] = await db
+    .select({
+      content: pageContentsTable.content,
+      seo_title: pageContentsTable.seo_title,
+      seo_description: pageContentsTable.seo_description,
+      seo_keywords: pageContentsTable.seo_keywords,
+    })
+    .from(pageContentsTable)
+    .where(and(eq(pageContentsTable.page_key, pageKey), eq(pageContentsTable.language, language)));
+  if (!row) {
+    res.json({ page_key: pageKey, language, content: {}, seo_title: null, seo_description: null, seo_keywords: null });
+    return;
+  }
+  res.json({ page_key: pageKey, language, ...row });
 });
 
 router.get("/v1/public/blog/:slug", async (req, res): Promise<void> => {

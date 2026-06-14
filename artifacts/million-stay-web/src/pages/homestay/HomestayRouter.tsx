@@ -9,6 +9,8 @@ import StudentApply from "./StudentApply";
 import HostBecome from "./HostBecome";
 import HostApply from "./HostApply";
 import PartnersWorking from "./PartnersWorking";
+import HomestayBlog from "./HomestayBlog";
+import HomestayBlogPost from "./HomestayBlogPost";
 import HomestayPrivacy from "./HomestayPrivacy";
 import HomestayTerms from "./HomestayTerms";
 import Sign from "@/pages/sign";
@@ -58,6 +60,10 @@ export default function HomestayRouter() {
       {/* Partners (Study Tour absorbed) */}
       <Route path="/partners" component={PartnersWorking} />
       <Route path="/partners/study-tour"><HashRedirect to="/partners#study-tour" /></Route>
+
+      {/* Blog — page exists but is intentionally hidden from the main nav. */}
+      <Route path="/blog" component={HomestayBlog} />
+      <Route path="/blog/:slug" component={HomestayBlogPost} />
 
       {/* Contact */}
       <Route path="/contact" component={HomestayContact} />

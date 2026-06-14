@@ -1695,7 +1695,22 @@
     "field_contact_hours_label": "운영 시간 레이블",
     "field_contact_hours": "영업 시간",
     "field_contact_form_title": "양식 섹션 제목",
-    "field_contact_form_subtitle": "양식 섹션 부제목"
+    "field_contact_form_subtitle": "양식 섹션 부제목",
+    "site_www": "게스트 사이트",
+    "site_homestay": "홈스테이",
+    "lang_th": "태국어",
+    "page_label_homestay_home": "홈",
+    "page_desc_homestay_home": "홈스테이 랜딩 — 히어로, 강점, 진행 방식 제목",
+    "page_label_homestay_about": "회사 소개",
+    "page_desc_homestay_about": "히어로, 브리징, 미션, 비전 섹션",
+    "page_label_homestay_students": "학생 안내",
+    "page_desc_homestay_students": "학생 페이지 히어로 인트로",
+    "page_label_homestay_hosts": "호스트 가족",
+    "page_desc_homestay_hosts": "호스트 가족 페이지 히어로 인트로",
+    "page_label_homestay_partners": "파트너",
+    "page_desc_homestay_partners": "파트너 페이지 히어로 인트로",
+    "page_label_homestay_contact": "연락처",
+    "page_desc_homestay_contact": "연락처 제목, 부제목, 위치"
   },
   "dash_channels": {
     "intro_prefix": "모든 공간에 걸친 OTA 채널 연결을 한눈에 확인합니다. 공간별 설정은 각",

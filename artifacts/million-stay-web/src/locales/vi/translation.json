@@ -14,9 +14,26 @@
       "why_5_body": "Các giai đoạn xét duyệt rõ ràng và cập nhật qua email, để bạn luôn biết tình hình.",
       "why_6_title": "Đội ngũ hỗ trợ tận tâm",
       "why_6_body": "Những con người thật bạn có thể liên hệ trước, trong và sau kỳ lưu trú — qua điện thoại, email hoặc trò chuyện."
+    },
+    "blog": {
+      "eyebrow": "Blog Million Homestay",
+      "title": "Câu chuyện, mẹo và hướng dẫn homestay",
+      "lead": "Lời khuyên và câu chuyện cho sinh viên và gia đình bản xứ — cách hòa nhập, tận hưởng cuộc sống homestay và hơn thế nữa.",
+      "empty_title": "Chưa có bài viết",
+      "empty_body": "Hãy quay lại sớm để xem các câu chuyện, mẹo và hướng dẫn homestay.",
+      "read": "Đọc bài viết"
     }
   },
   "cstranslate": {
     "english_label": "Tiếng Anh"
+  },
+  "blog_post": {
+    "back": "Quay lại Blog",
+    "not_found_title": "Không tìm thấy bài viết",
+    "not_found_text": "Bài viết bạn tìm có thể đã bị xóa hoặc không tồn tại.",
+    "share": "Chia sẻ",
+    "share_title": "Chia sẻ bài viết này",
+    "more_articles": "Xem thêm bài viết",
+    "no_content": "Bài viết này chưa có nội dung."
   }
 }

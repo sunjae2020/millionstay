@@ -1,69 +1,114 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
-  Home, GraduationCap, Handshake, Info, HelpCircle, Phone,
+  Home, GraduationCap, Handshake, Info, HelpCircle, Phone, Users,
   ChevronRight, Globe,
 } from "lucide-react";
 
-export const WEBSITE_PAGES = [
+// Each website page is content-managed per language via the page_contents table
+// (page_key + language). The public sites overlay this CMS copy on top of their
+// i18n defaults. Page keys are namespaced per site: the guest site (www) uses
+// bare keys ("home", "about", …) for backwards compatibility, while the homestay
+// site uses a "homestay-" prefix so the two sites stay cleanly separated in one
+// shared table.
+
+export interface WebsitePageDef {
+  key: string;
+  label: string;
+  description: string;
+  icon: typeof Home;
+  path: string;
+  site: string;
+  previewBase: string;
+}
+
+export interface LanguageDef {
+  code: string;
+  label: string;
+  flag: string;
+}
+
+const LANG: Record<string, LanguageDef> = {
+  en: { code: "en", label: "English", flag: "🇦🇺" },
+  ko: { code: "ko", label: "Korean", flag: "🇰🇷" },
+  zh: { code: "zh", label: "Chinese (Simplified)", flag: "🇨🇳" },
+  ja: { code: "ja", label: "Japanese", flag: "🇯🇵" },
+  vi: { code: "vi", label: "Vietnamese", flag: "🇻🇳" },
+  th: { code: "th", label: "Thai", flag: "🇹🇭" },
+};
+
+export interface WebsiteSiteDef {
+  id: string;
+  label: string;
+  host: string;
+  previewBase: string;
+  languages: LanguageDef[];
+  pages: WebsitePageDef[];
+}
+
+// Guest site — www.millionstay.com. Bare page keys (unchanged historical data).
+const WWW_PREVIEW = "https://millionstay.com.au";
+const WWW_LANGS = [LANG.en, LANG.ko, LANG.zh, LANG.ja, LANG.vi];
+const WWW_PAGES: Omit<WebsitePageDef, "site" | "previewBase">[] = [
+  { key: "home", label: "Home", description: "Main landing page — hero, features, stats and CTA sections", icon: Home, path: "/" },
+  { key: "for-student", label: "For Students", description: "Student program page — welcome intro, features and benefits", icon: GraduationCap, path: "/for-student" },
+  { key: "for-agent", label: "For Agent", description: "Agent partner page — programme benefits and how it works", icon: Handshake, path: "/for-agent" },
+  { key: "about", label: "About Us", description: "Company story, mission, team and values", icon: Info, path: "/about" },
+  { key: "faq", label: "FAQ", description: "Frequently asked questions and answers", icon: HelpCircle, path: "/faq" },
+  { key: "contact", label: "Contact", description: "Contact details, address and enquiry form text", icon: Phone, path: "/contact" },
+];
+
+// Homestay site — homestay.millionstay.com. "homestay-" prefixed page keys.
+const HS_PREVIEW = "https://homestay.millionstay.com";
+const HS_LANGS = [LANG.en, LANG.ja, LANG.ko, LANG.th, LANG.zh];
+const HS_PAGES: Omit<WebsitePageDef, "site" | "previewBase">[] = [
+  { key: "homestay-home", label: "Home", description: "Homestay landing — hero, why-us and how-it-works headings", icon: Home, path: "/" },
+  { key: "homestay-about", label: "About Us", description: "Hero, bridging, mission and vision sections", icon: Info, path: "/about" },
+  { key: "homestay-students", label: "For Students", description: "Student page hero intro", icon: GraduationCap, path: "/students" },
+  { key: "homestay-hosts", label: "Host Family", description: "Host family page hero intro", icon: Users, path: "/hosts/become-a-host" },
+  { key: "homestay-partners", label: "Partners", description: "Partners page hero intro", icon: Handshake, path: "/partners" },
+  { key: "homestay-contact", label: "Contact", description: "Contact heading, subheading and location", icon: Phone, path: "/contact" },
+];
+
+export const SITES: WebsiteSiteDef[] = [
   {
-    key: "home",
-    label: "Home",
-    description: "Main landing page — hero, features, stats and CTA sections",
-    icon: Home,
-    path: "/",
+    id: "www",
+    label: "Guest Site",
+    host: "www.millionstay.com",
+    previewBase: WWW_PREVIEW,
+    languages: WWW_LANGS,
+    pages: WWW_PAGES.map((p) => ({ ...p, site: "www", previewBase: WWW_PREVIEW })),
   },
   {
-    key: "for-student",
-    label: "For Students",
-    description: "Student program page — welcome intro, features and benefits",
-    icon: GraduationCap,
-    path: "/for-student",
-  },
-  {
-    key: "for-agent",
-    label: "For Agent",
-    description: "Agent partner page — programme benefits and how it works",
-    icon: Handshake,
-    path: "/for-agent",
-  },
-  {
-    key: "about",
-    label: "About Us",
-    description: "Company story, mission, team and values",
-    icon: Info,
-    path: "/about",
-  },
-  {
-    key: "faq",
-    label: "FAQ",
-    description: "Frequently asked questions and answers",
-    icon: HelpCircle,
-    path: "/faq",
-  },
-  {
-    key: "contact",
-    label: "Contact",
-    description: "Contact details, address and enquiry form text",
-    icon: Phone,
-    path: "/contact",
+    id: "homestay",
+    label: "Homestay",
+    host: "homestay.millionstay.com",
+    previewBase: HS_PREVIEW,
+    languages: HS_LANGS,
+    pages: HS_PAGES.map((p) => ({ ...p, site: "homestay", previewBase: HS_PREVIEW })),
   },
 ];
 
-export const LANGUAGES = [
-  { code: "en", label: "English", flag: "🇦🇺" },
-  { code: "ko", label: "Korean", flag: "🇰🇷" },
-  { code: "zh", label: "Chinese (Simplified)", flag: "🇨🇳" },
-  { code: "ja", label: "Japanese", flag: "🇯🇵" },
-  { code: "vi", label: "Vietnamese", flag: "🇻🇳" },
-];
+// Flattened list of every page across sites — used by the detail page to resolve
+// a page key. Kept exported under the historical name for compatibility.
+export const WEBSITE_PAGES: WebsitePageDef[] = SITES.flatMap((s) => s.pages);
+
+export function getSiteForPage(pageKey: string): WebsiteSiteDef | undefined {
+  return SITES.find((s) => s.pages.some((p) => p.key === pageKey));
+}
+
+// Backwards-compatible default language list (guest site set).
+export const LANGUAGES: LanguageDef[] = WWW_LANGS;
 
 export default function WebsiteContentList() {
   const { t } = useTranslation();
+  const [activeSite, setActiveSite] = useState(SITES[0].id);
+  const site = SITES.find((s) => s.id === activeSite) ?? SITES[0];
+
   return (
     <Layout>
       <PageHeader
@@ -72,15 +117,34 @@ export default function WebsiteContentList() {
         actions={
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Globe className="h-4 w-4" />
-            {t("website_content.languages_supported", { count: LANGUAGES.length })}
+            {t("website_content.languages_supported", { count: site.languages.length })}
           </div>
         }
       />
 
       <div className="p-6">
+        {/* Site switcher — the guest site and the homestay site are managed
+            separately even though they share one content table. */}
+        <div className="mb-6 inline-flex rounded-lg border bg-muted/30 p-1">
+          {SITES.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => setActiveSite(s.id)}
+              className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                activeSite === s.id ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Globe className="h-3.5 w-3.5" />
+              <span>{t(`website_content.site_${s.id}`, { defaultValue: s.label })}</span>
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal">{s.host}</Badge>
+            </button>
+          ))}
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {WEBSITE_PAGES.map((page) => {
+          {site.pages.map((page) => {
             const Icon = page.icon;
+            const labelKey = page.key.replace(/-/g, "_");
             return (
               <Link key={page.key} href={`/content/pages/${page.key}`}>
                 <Card className="p-5 hover:border-[#E8621A]/40 hover:shadow-md transition-all cursor-pointer group">
@@ -90,15 +154,15 @@ export default function WebsiteContentList() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-sm">{t(`website_content.page_label_${page.key.replace(/-/g, "_")}`)}</h3>
+                        <h3 className="font-semibold text-sm">{t(`website_content.page_label_${labelKey}`, { defaultValue: page.label })}</h3>
                         <Badge variant="outline" className="text-xs px-1.5 py-0 font-normal">
                           {page.path}
                         </Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground line-clamp-2">{t(`website_content.page_desc_${page.key.replace(/-/g, "_")}`)}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{t(`website_content.page_desc_${labelKey}`, { defaultValue: page.description })}</p>
                       <div className="flex items-center gap-1 mt-3">
-                        {LANGUAGES.map((l) => (
-                          <span key={l.code} className="text-sm" title={t(`website_content.lang_${l.code}`)}>{l.flag}</span>
+                        {site.languages.map((l) => (
+                          <span key={l.code} className="text-sm" title={t(`website_content.lang_${l.code}`, { defaultValue: l.label })}>{l.flag}</span>
                         ))}
                       </div>
                     </div>

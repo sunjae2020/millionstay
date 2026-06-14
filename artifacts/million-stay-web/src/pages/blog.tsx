@@ -18,6 +18,9 @@ function formatDate(dateStr: string | null) {
 async function fetchBlogPosts(category?: string) {
   const qs = new URLSearchParams();
   if (category && category !== "All") qs.set("category", category);
+  // Homestay-tagged posts are surfaced on the homestay site only — keep them out
+  // of the guest blog's "All" listing.
+  else qs.set("exclude_category", "Homestay");
   const res = await fetch(`${BASE}/api/v1/public/blog?${qs}`);
   if (!res.ok) throw new Error("Failed to fetch posts");
   const json = await res.json();

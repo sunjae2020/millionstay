@@ -5,6 +5,7 @@ import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import { getApiBase } from "@/lib/api-base";
 import { HomestayLayout } from "@/components/homestay/HomestayLayout";
 import { HS, HS_FONT } from "@/lib/homestay-theme";
+import { usePageContent } from "@/lib/usePageContent";
 
 // 5. CONTACT US — content from the Million Homestay site-content doc (page 5).
 // Reuses the existing public contact endpoint (POST /v1/public/contact-inquiries),
@@ -13,6 +14,7 @@ const ROLE_VALUES = ["Host family", "Student", "Agent or institute", "Other"];
 
 export default function HomestayContact() {
   const { t } = useTranslation();
+  const pc = usePageContent("homestay-contact");
   const ROLES = [
     { value: "Host family", label: t("homestay.contact.role_host_family") },
     { value: "Student", label: t("homestay.contact.role_student") },
@@ -67,13 +69,13 @@ export default function HomestayContact() {
     <HomestayLayout title={t("homestay.contact.layout_title")}>
       <section className="max-w-5xl mx-auto px-5 py-16 md:py-20">
         <div className="text-center">
-          <h1 className="text-3xl md:text-4xl font-bold" style={{ fontFamily: HS_FONT.head, color: HS.darkBrown }}>{t("homestay.contact.heading")}</h1>
-          <p className="mt-3 text-gray-600">{t("homestay.contact.subheading")}</p>
+          <h1 className="text-3xl md:text-4xl font-bold" style={{ fontFamily: HS_FONT.head, color: HS.darkBrown }}>{pc("heading", t("homestay.contact.heading"))}</h1>
+          <p className="mt-3 text-gray-600">{pc("subheading", t("homestay.contact.subheading"))}</p>
           <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-x-6 gap-y-1 text-sm text-gray-600">
             <span><span className="font-medium">{t("homestay.contact.email_label")}</span>{" "}
               <a href="mailto:millionstay.com@gmail.com" className="hover:underline" style={{ color: HS.brand }}>millionstay.com@gmail.com</a>
             </span>
-            <span><span className="font-medium">{t("homestay.contact.location_label")}</span> {t("homestay.contact.location_value")}</span>
+            <span><span className="font-medium">{t("homestay.contact.location_label")}</span> {pc("location_value", t("homestay.contact.location_value"))}</span>
           </div>
         </div>
 

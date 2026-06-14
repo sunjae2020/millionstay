@@ -1638,6 +1638,14 @@
       "terms_agree_label": "I have read and agree to the Terms & Conditions above. I understand the next step is to e-sign this application.",
       "terms_agree_label_minor": "I have read and agree to the Terms & Conditions above. I understand the next step is to e-sign this application, and that a guardian must co-sign.",
       "submit_continue": "Continue to e-signature"
+    },
+    "blog": {
+      "eyebrow": "Million Homestay Blog",
+      "title": "Homestay stories, tips & guides",
+      "lead": "Advice and stories for students and host families — settling in, making the most of homestay life, and more.",
+      "empty_title": "No posts yet",
+      "empty_body": "Check back soon for homestay stories, tips, and guides.",
+      "read": "Read article"
     }
   },
   "cstranslate": {

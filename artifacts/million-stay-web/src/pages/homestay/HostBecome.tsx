@@ -1,6 +1,7 @@
 import { HomestayLayout } from "@/components/homestay/HomestayLayout";
 import { HsPageHero, HsSection, HsNumbered, HsCards, HsBullets, HsCTA } from "@/components/homestay/sections";
 import { useTranslation } from "react-i18next";
+import { usePageContent } from "@/lib/usePageContent";
 
 // Host Family — single-tier page. Absorbs the former Host Family Benefits
 // (#benefits) and 10 Useful Tips (#tips) sub-pages as anchored sections.
@@ -8,6 +9,7 @@ import { useTranslation } from "react-i18next";
 
 export default function HostBecome() {
   const { t } = useTranslation();
+  const pc = usePageContent("homestay-hosts");
 
   const STEPS = [
     { title: t("homestay.hosts.steps_1_title"), body: t("homestay.hosts.steps_1_body") },
@@ -49,11 +51,11 @@ export default function HostBecome() {
   return (
     <HomestayLayout title={t("homestay.hosts.page_title")}>
       <HsPageHero
-        eyebrow={t("homestay.hosts.hero_eyebrow")}
-        title={t("homestay.hosts.hero_title")}
+        eyebrow={pc("hero_eyebrow", t("homestay.hosts.hero_eyebrow"))}
+        title={pc("hero_title", t("homestay.hosts.hero_title"))}
         lead={
           <p>
-            {t("homestay.hosts.hero_lead")}
+            {pc("hero_lead", t("homestay.hosts.hero_lead"))}
           </p>
         }
       />

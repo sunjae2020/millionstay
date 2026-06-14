@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
-import { WEBSITE_PAGES, LANGUAGES } from "./WebsiteContentList";
+import { WEBSITE_PAGES, getSiteForPage, SITES } from "./WebsiteContentList";
 
 // ─── Page Section Definitions ───────────────────────────────────────────────
 
@@ -129,6 +129,52 @@ const PAGE_FIELDS: Record<string, SectionField[]> = {
     { key: "form_title", label: "Form Section Title", type: "text" },
     { key: "form_subtitle", label: "Form Section Subtitle", type: "textarea" },
   ],
+
+  // ── Homestay site (homestay.millionstay.com) — fields here map to the
+  //    overlay points wired into the homestay page components. An empty field
+  //    falls back to the built-in i18n copy on the live site.
+  "homestay-home": [
+    { key: "hero_title", label: "Hero Title", type: "text" },
+    { key: "hero_lead", label: "Hero Lead", type: "textarea" },
+    { key: "hero_cta_find", label: "Primary CTA — Find a Homestay", type: "text" },
+    { key: "hero_cta_host", label: "Secondary CTA — Become a Host", type: "text" },
+    { key: "why_heading", label: '"Why Million Homestay" Heading', type: "text" },
+    { key: "how_heading", label: '"How It Works" Heading', type: "text" },
+    { key: "how_body", label: '"How It Works" Body', type: "textarea" },
+    { key: "how_cta", label: '"How It Works" CTA Text', type: "text" },
+  ],
+  "homestay-about": [
+    { key: "hero_eyebrow", label: "Hero Eyebrow", type: "text" },
+    { key: "hero_title", label: "Hero Title", type: "text" },
+    { key: "hero_lead_p1", label: "Hero Lead — Paragraph 1", type: "textarea" },
+    { key: "hero_lead_p2", label: "Hero Lead — Paragraph 2", type: "textarea" },
+    { key: "bridging_heading", label: "Bridging Section Heading", type: "text" },
+    { key: "bridging_body", label: "Bridging Section Body", type: "richtext" },
+    { key: "mission_heading", label: "Mission Heading", type: "text" },
+    { key: "mission_body", label: "Mission Body", type: "richtext" },
+    { key: "vision_heading", label: "Vision Heading", type: "text" },
+    { key: "vision_body", label: "Vision Body", type: "richtext" },
+  ],
+  "homestay-students": [
+    { key: "hero_eyebrow", label: "Hero Eyebrow", type: "text" },
+    { key: "hero_title", label: "Hero Title", type: "text" },
+    { key: "hero_lead", label: "Hero Lead", type: "textarea" },
+  ],
+  "homestay-hosts": [
+    { key: "hero_eyebrow", label: "Hero Eyebrow", type: "text" },
+    { key: "hero_title", label: "Hero Title", type: "text" },
+    { key: "hero_lead", label: "Hero Lead", type: "textarea" },
+  ],
+  "homestay-partners": [
+    { key: "hero_eyebrow", label: "Hero Eyebrow", type: "text" },
+    { key: "hero_title", label: "Hero Title", type: "text" },
+    { key: "hero_lead", label: "Hero Lead", type: "textarea" },
+  ],
+  "homestay-contact": [
+    { key: "heading", label: "Contact Heading", type: "text" },
+    { key: "subheading", label: "Contact Subheading", type: "textarea" },
+    { key: "location_value", label: "Location Value", type: "text" },
+  ],
 };
 
 // ─── Rich Text Editor ────────────────────────────────────────────────────────
@@ -237,6 +283,7 @@ function LanguageTab({
   onSave,
   isSaving,
   pagePublicPath,
+  previewHost,
 }: {
   pageKey: string;
   lang: { code: string; label: string; flag: string };
@@ -245,6 +292,7 @@ function LanguageTab({
   onSave: (lang: string, data: LangContent) => void;
   isSaving: boolean;
   pagePublicPath: string;
+  previewHost: string;
 }) {
   const { t } = useTranslation();
   const [form, setForm] = useState<LangContent>(initial);
@@ -353,7 +401,7 @@ function LanguageTab({
           <SeoPreview
             title={form.seo_title}
             description={form.seo_description}
-            url={`millionstay.com.au${pagePublicPath}`}
+            url={`${previewHost}${pagePublicPath}`}
           />
         </TabsContent>
       </Tabs>
@@ -365,7 +413,7 @@ function LanguageTab({
           className="bg-[#E8621A] hover:bg-[#E8621A]/90 text-white gap-2"
         >
           {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          {t("website_content.save_language", { language: t(`website_content.lang_${lang.code}`) })}
+          {t("website_content.save_language", { language: t(`website_content.lang_${lang.code}`, { defaultValue: lang.label }) })}
         </Button>
       </div>
     </div>
@@ -384,8 +432,12 @@ export default function WebsiteContentDetail() {
 
   const pageKey = params.pageKey ?? "";
   const pageDef = WEBSITE_PAGES.find((p) => p.key === pageKey);
+  const site = getSiteForPage(pageKey);
+  const languages = site?.languages ?? SITES[0].languages;
+  const previewBase = pageDef?.previewBase ?? "https://millionstay.com.au";
+  const previewHost = previewBase.replace(/^https?:\/\//, "");
   const fields = PAGE_FIELDS[pageKey] ?? [];
-  const pageLabel = pageDef ? t(`website_content.page_label_${pageDef.key.replace(/-/g, "_")}`) : pageKey;
+  const pageLabel = pageDef ? t(`website_content.page_label_${pageDef.key.replace(/-/g, "_")}`, { defaultValue: pageDef.label }) : pageKey;
 
   const { data: allRows = [], isLoading } = useQuery<any[]>({
     queryKey: ["page-contents", pageKey],
@@ -451,12 +503,13 @@ export default function WebsiteContentDetail() {
     <Layout>
       <PageHeader
         title={pageLabel}
-        subtitle={t(`website_content.page_desc_${pageDef.key.replace(/-/g, "_")}`)}
+        subtitle={t(`website_content.page_desc_${pageDef.key.replace(/-/g, "_")}`, { defaultValue: pageDef.description })}
         actions={
           <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs">{site?.host ?? pageDef.path}</Badge>
             <Badge variant="outline" className="text-xs">{pageDef.path}</Badge>
             <Button variant="outline" size="sm" asChild>
-              <a href={`https://millionstay.com.au${pageDef.path}`} target="_blank" rel="noopener noreferrer" className="gap-1.5">
+              <a href={`${previewBase}${pageDef.path}`} target="_blank" rel="noopener noreferrer" className="gap-1.5">
                 <Eye className="h-3.5 w-3.5" />
                 {t("website_content.preview")}
               </a>
@@ -485,12 +538,12 @@ export default function WebsiteContentDetail() {
             <div className="mb-4">
               <p className="text-sm text-muted-foreground mb-2">{t("website_content.select_language")}</p>
               <TabsList className="flex flex-wrap gap-1 h-auto">
-                {LANGUAGES.map((lang) => {
+                {languages.map((lang) => {
                   const hasContent = allRows.some((r: any) => r.language === lang.code);
                   return (
                     <TabsTrigger key={lang.code} value={lang.code} className="gap-1.5 relative">
                       <span>{lang.flag}</span>
-                      <span>{t(`website_content.lang_${lang.code}`)}</span>
+                      <span>{t(`website_content.lang_${lang.code}`, { defaultValue: lang.label })}</span>
                       {hasContent && (
                         <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-green-500" title={t("website_content.has_content")} />
                       )}
@@ -500,13 +553,13 @@ export default function WebsiteContentDetail() {
               </TabsList>
             </div>
 
-            {LANGUAGES.map((lang) => (
+            {languages.map((lang) => (
               <TabsContent key={lang.code} value={lang.code}>
                 <Card>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
                       <span className="text-xl">{lang.flag}</span>
-                      {t("website_content.language_content", { language: t(`website_content.lang_${lang.code}`) })}
+                      {t("website_content.language_content", { language: t(`website_content.lang_${lang.code}`, { defaultValue: lang.label }) })}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -518,6 +571,7 @@ export default function WebsiteContentDetail() {
                       onSave={handleSave}
                       isSaving={savingLang === lang.code}
                       pagePublicPath={pageDef.path}
+                      previewHost={previewHost}
                     />
                   </CardContent>
                 </Card>

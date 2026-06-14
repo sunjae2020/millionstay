@@ -1,6 +1,7 @@
 import { HomestayLayout } from "@/components/homestay/HomestayLayout";
 import { HsPageHero, HsSection, HsBullets, HsCards, HsNumbered, HsCTA } from "@/components/homestay/sections";
 import { useTranslation } from "react-i18next";
+import { usePageContent } from "@/lib/usePageContent";
 
 // Student — single-tier page. Absorbs the former Advantages (#advantages),
 // 10 Useful Tips (#tips) and Essential Information (#essentials) sub-pages as
@@ -8,6 +9,7 @@ import { useTranslation } from "react-i18next";
 
 export default function StudentBecome() {
   const { t } = useTranslation();
+  const pc = usePageContent("homestay-students");
 
   const APPLYING = [
     { body: t("homestay.students.applying_1_body") },
@@ -55,11 +57,11 @@ export default function StudentBecome() {
   return (
     <HomestayLayout title={t("homestay.students.page_title")}>
       <HsPageHero
-        eyebrow={t("homestay.students.hero_eyebrow")}
-        title={t("homestay.students.hero_title")}
+        eyebrow={pc("hero_eyebrow", t("homestay.students.hero_eyebrow"))}
+        title={pc("hero_title", t("homestay.students.hero_title"))}
         lead={
           <p>
-            {t("homestay.students.hero_lead")}
+            {pc("hero_lead", t("homestay.students.hero_lead"))}
           </p>
         }
       />
