@@ -169,6 +169,7 @@ function getNav(t: (k: string) => string): NavSection[] {
       defaultOpen: true,
       items: [
         { href: "/content/blog", label: t("nav.blog_posts"), icon: Newspaper },
+        { href: "/content/blog-categories", label: t("nav.blog_categories"), icon: Tag },
         { href: "/content/pages", label: t("nav.website_pages"), icon: Globe },
         { href: "/content/page-translations", label: t("nav.page_translations"), icon: Languages },
       ],

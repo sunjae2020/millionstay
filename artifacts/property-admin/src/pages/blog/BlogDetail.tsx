@@ -212,6 +212,20 @@ export default function BlogDetail() {
     enabled: !isNew,
   });
 
+  // Category dropdown options come from the admin-managed list (active only);
+  // fall back to the historical defaults if the list can't be loaded.
+  const { data: categoryList } = useQuery({
+    queryKey: ["blog-categories"],
+    queryFn: async () => {
+      const res = await apiFetch("/api/v1/blog-categories");
+      if (!res.ok) return [] as { name: string; is_active: boolean }[];
+      return (await res.json()).data ?? [];
+    },
+  });
+  const categoryOptions: string[] = (categoryList && categoryList.length)
+    ? categoryList.filter((c: any) => c.is_active).map((c: any) => c.name)
+    : CATEGORY_OPTIONS;
+
   useEffect(() => {
     if (post) {
       setForm({
@@ -448,7 +462,7 @@ export default function BlogDetail() {
                   <SelectTrigger className="mt-1"><SelectValue placeholder={t("blog.select_category")} /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="_none">{t("blog.no_category")}</SelectItem>
-                    {CATEGORY_OPTIONS.map((c) => (
+                    {categoryOptions.map((c) => (
                       <SelectItem key={c} value={c}>{c}</SelectItem>
                     ))}
                   </SelectContent>
@@ -470,6 +484,17 @@ export default function BlogDetail() {
                   placeholder={t("blog.author_placeholder")}
                 />
               </div>
+            </div>
+
+            <div>
+              <Label>{t("blog.field_keywords")}</Label>
+              <Input
+                className="mt-1"
+                value={form.seo_keywords}
+                onChange={(e) => set("seo_keywords", e.target.value)}
+                placeholder={t("blog.keywords_placeholder")}
+              />
+              <p className="text-xs text-muted-foreground mt-1">{t("blog.keywords_hint")}</p>
             </div>
           </TabsContent>
 

@@ -69,7 +69,8 @@
     "conversations": "대화 내역",
     "addon_services": "부가 서비스",
     "homestay_applications": "홈스테이 신청",
-    "page_translations": "페이지 번역"
+    "page_translations": "페이지 번역",
+    "blog_categories": "블로그 카테고리"
   },
   "dashboard": {
     "title": "대시보드",
@@ -2634,5 +2635,9 @@
   "page_translations": {
     "site_guest": "게스트 사이트",
     "site_homestay": "홈스테이"
+  },
+  "blog_categories": {
+    "title": "블로그 카테고리",
+    "subtitle": "블로그 글과 공개 블로그 필터에 사용할 카테고리를 관리합니다."
   }
 }

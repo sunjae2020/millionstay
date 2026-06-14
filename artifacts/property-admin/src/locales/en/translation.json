@@ -73,7 +73,8 @@
     "homestay_placements": "Homestay Placements",
     "document_templates": "Document Templates",
     "homestay_billing": "Homestay Billing",
-    "page_translations": "Page Translations"
+    "page_translations": "Page Translations",
+    "blog_categories": "Blog Categories"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -2939,5 +2940,9 @@
   "page_translations": {
     "site_guest": "Guest Site",
     "site_homestay": "Homestay"
+  },
+  "blog_categories": {
+    "title": "Blog Categories",
+    "subtitle": "Manage the categories available to blog posts and the public blog filter."
   }
 }

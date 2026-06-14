@@ -69,7 +69,8 @@
     "conversations": "对话记录",
     "addon_services": "附加服务",
     "homestay_applications": "寄宿家庭申请",
-    "page_translations": "页面翻译"
+    "page_translations": "页面翻译",
+    "blog_categories": "博客分类"
   },
   "dashboard": {
     "title": "仪表板",
@@ -2634,5 +2635,9 @@
   "page_translations": {
     "site_guest": "访客网站",
     "site_homestay": "寄宿家庭"
+  },
+  "blog_categories": {
+    "title": "博客分类",
+    "subtitle": "管理博客文章和公开博客筛选所用的分类。"
   }
 }
