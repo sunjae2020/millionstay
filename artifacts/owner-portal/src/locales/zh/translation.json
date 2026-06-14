@@ -16,7 +16,11 @@
     "sign_out": "退出登录",
     "support": "客户支持",
     "dark_mode": "深色模式",
-    "light_mode": "浅色模式"
+    "light_mode": "浅色模式",
+    "site": "我的网站",
+    "inquiries": "咨询",
+    "switch_to_light": "切换到浅色模式",
+    "switch_to_dark": "切换到深色模式"
   },
   "common": {
     "loading": "加载中...",
@@ -93,7 +97,14 @@
     "no_bookings": "暂无预订。",
     "my_properties": "我的物业",
     "no_properties": "未找到物业。",
-    "checkin_label": "入住"
+    "checkin_label": "入住",
+    "site_live_title": "您的专属网站",
+    "site_draft_badge": "草稿",
+    "site_cta_title": "创建您的专属网站",
+    "site_cta_sub": "访客可在此浏览并预订您房源的公开页面。",
+    "site_manage": "管理网站",
+    "site_get_started": "开始使用",
+    "recent_inquiries": "最近的咨询"
   },
   "properties": {
     "title": "我的物业",
@@ -228,5 +239,50 @@
     "last_reply": "最近回复",
     "no_reply_yet": "暂无回复",
     "english_label": "英语"
+  },
+  "site": {
+    "title": "我的专属网站",
+    "subtitle": "您的专属公开页面，访客可在此浏览并预订您的房源。",
+    "view_site": "查看网站",
+    "address": "网址与公开设置",
+    "subdomain": "子域名",
+    "checking": "检查中…",
+    "available": "可用",
+    "unavailable": "不可用",
+    "slug_too_short": "至少 3 个字符",
+    "slug_invalid_format": "仅可使用小写字母、数字和连字符",
+    "slug_reserved": "该名称已被保留",
+    "slug_taken": "已被占用",
+    "published": "已发布（对外公开）",
+    "branding": "品牌",
+    "logo_url": "Logo 图片网址",
+    "hero_image_url": "主图背景图片网址",
+    "primary_color": "主色调",
+    "content": "内容",
+    "content_hint": "正在编辑 {{lang}} 版本 — 在侧边栏切换语言以进行翻译。",
+    "hero_title": "主标题",
+    "hero_subtitle": "副标题",
+    "about": "关于 / 简介",
+    "contact_email": "联系邮箱",
+    "contact_phone": "联系电话",
+    "seo": "搜索与分享 (SEO)",
+    "seo_title": "SEO 标题",
+    "seo_description": "SEO 描述",
+    "og_image_url": "社交分享图片网址",
+    "save": "保存更改",
+    "create": "创建网站",
+    "saved": "已保存",
+    "logo": "Logo",
+    "hero_image": "主图背景",
+    "og_image": "社交分享图片",
+    "upload": "上传",
+    "uploading": "上传中…",
+    "remove": "移除"
+  },
+  "inquiries": {
+    "title": "咨询",
+    "subtitle": "通过您的网站收到的访客留言。",
+    "empty": "暂无咨询。",
+    "search_placeholder": "搜索姓名、邮箱或留言…"
   }
 }

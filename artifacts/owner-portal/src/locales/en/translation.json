@@ -18,7 +18,9 @@
     "inquiries": "Inquiries",
     "support": "Support",
     "dark_mode": "Dark mode",
-    "light_mode": "Light mode"
+    "light_mode": "Light mode",
+    "switch_to_light": "Switch to light mode",
+    "switch_to_dark": "Switch to dark mode"
   },
   "common": {
     "loading": "Loading...",
@@ -223,7 +225,8 @@
   "inquiries": {
     "title": "Inquiries",
     "subtitle": "Messages from guests via your landing site.",
-    "empty": "No inquiries yet."
+    "empty": "No inquiries yet.",
+    "search_placeholder": "Search name, email or message…"
   },
   "calendar": {
     "no_spaces": "No spaces",
