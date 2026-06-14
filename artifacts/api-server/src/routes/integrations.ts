@@ -21,6 +21,8 @@ const ALLOWED_KEYS = [
   "ANTHROPIC_API_KEY",
   "CHAT_WIDGET_ENABLED",
   "RECURRING_INVOICES_ENABLED",
+  // Model for CS message auto-translation (defaults to Haiku 4.5 when unset).
+  "CS_TRANSLATE_MODEL",
 ];
 
 function maskKey(key: string | undefined): string {

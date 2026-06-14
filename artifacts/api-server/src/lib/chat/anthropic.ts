@@ -36,3 +36,14 @@ export function isChatConfigured(): boolean {
 
 /** Model used for the customer chat assistant. Overridable via CHAT_MODEL. */
 export const CHAT_MODEL = process.env["CHAT_MODEL"] || "claude-sonnet-4-6";
+
+/**
+ * Model used for CS message auto-translation. Kept separate from CHAT_MODEL so
+ * the high-volume, simple translation workload can run on a cheaper model
+ * (Haiku) than the conversational assistant. Read as a function (not a const)
+ * because admins change it at runtime via Admin → Settings → Integrations, which
+ * updates process.env — see CS_TRANSLATE_MODEL in the integrations ALLOWED_KEYS.
+ */
+export function getCsTranslateModel(): string {
+  return process.env["CS_TRANSLATE_MODEL"] || "claude-haiku-4-5-20251001";
+}
