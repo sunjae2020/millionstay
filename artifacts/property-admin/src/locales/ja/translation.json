@@ -1458,7 +1458,9 @@
     "translated_excerpt_placeholder": "{{lang}}での簡単な要約…",
     "seo_title_short_placeholder": "SEOタイトル…",
     "meta_description_short_placeholder": "メタディスクリプション…",
-    "keywords_short_placeholder": "カンマ区切りのキーワード…"
+    "keywords_short_placeholder": "カンマ区切りのキーワード…",
+    "site_guest": "ゲストサイト",
+    "site_homestay": "ホームステイ"
   },
   "document_hub": {
     "title": "ドキュメント",
@@ -2628,5 +2630,9 @@
     "original_label": "原文",
     "failed_retry": "翻訳に失敗しました — 再試行",
     "admin_compose_hint": "どの言語で書いても構いません — お客様には{{lang}}に自動翻訳されて表示されます。"
+  },
+  "page_translations": {
+    "site_guest": "ゲストサイト",
+    "site_homestay": "ホームステイ"
   }
 }

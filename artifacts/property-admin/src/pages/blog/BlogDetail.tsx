@@ -193,7 +193,12 @@ export default function BlogDetail() {
   const isNew = !params.id || params.id === "new";
   const [isSaving, setIsSaving] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [form, setForm] = useState(EMPTY_FORM);
+  // A new post opened from the Homestay blog tab carries ?category=Homestay so
+  // it lands in the right site by default.
+  const initialCategory = isNew
+    ? new URLSearchParams(typeof window !== "undefined" ? window.location.search : "").get("category") ?? ""
+    : "";
+  const [form, setForm] = useState({ ...EMPTY_FORM, category: initialCategory });
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [translations, setTranslations] = useState<Record<string, LangData>>({});
 

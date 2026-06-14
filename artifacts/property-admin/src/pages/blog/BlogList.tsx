@@ -29,6 +29,15 @@ const STATUS_LABEL_KEYS: Record<string, string> = {
   Archived: "blog.status_archived",
 };
 
+// Posts are split per public site by category: the homestay site shows only
+// "Homestay"-category posts (kept off the guest blog); the guest site shows
+// everything else.
+const HOMESTAY_CATEGORY = "Homestay";
+const BLOG_SITES = [
+  { id: "guest", label: "Guest Site", host: "www.millionstay.com" },
+  { id: "homestay", label: "Homestay", host: "homestay.millionstay.com" },
+];
+
 async function fetchBlogPosts(params: Record<string, string>) {
   const qs = new URLSearchParams(Object.fromEntries(Object.entries(params).filter(([, v]) => v)));
   const res = await apiFetch(`/api/v1/blog-posts?${qs}`);
@@ -46,6 +55,7 @@ export default function BlogList() {
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("_all");
+  const [site, setSite] = useState("guest");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkAction, setBulkAction] = useState<"archive" | "permanent" | null>(null);
   const [isBulkLoading, setIsBulkLoading] = useState(false);
@@ -58,7 +68,10 @@ export default function BlogList() {
     }),
   });
 
-  const pagination = usePagination(posts);
+  const sitePosts = posts.filter((p: any) =>
+    site === "homestay" ? p.category === HOMESTAY_CATEGORY : p.category !== HOMESTAY_CATEGORY,
+  );
+  const pagination = usePagination(sitePosts);
   const pageIds = pagination.paginatedItems.map((p: any) => p.id);
   const allPageSelected = pageIds.length > 0 && pageIds.every((id: number) => selectedIds.has(id));
   const somePageSelected = pageIds.some((id: number) => selectedIds.has(id));
@@ -104,15 +117,32 @@ export default function BlogList() {
     <Layout>
       <PageHeader
         title={<><FileText className="h-5 w-5" />{t("blog.title")}</>}
-        subtitle={t("blog.posts_total", { count: posts.length })}
+        subtitle={t("blog.posts_total", { count: sitePosts.length })}
         actions={
-          <Link href="/content/blog/new">
+          <Link href={site === "homestay" ? `/content/blog/new?category=${encodeURIComponent(HOMESTAY_CATEGORY)}` : "/content/blog/new"}>
             <Button><Plus className="h-4 w-4 mr-2" />{t("blog.new_post")}</Button>
           </Link>
         }
       />
 
       <div className="p-6">
+        {/* Site switcher — Guest (www) and Homestay blogs are managed separately
+            (split by the "Homestay" category). */}
+        <div className="mb-4 inline-flex rounded-lg border bg-muted/30 p-1">
+          {BLOG_SITES.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => { setSite(s.id); clearSelection(); }}
+              className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                site === s.id ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <span>{t(`blog.site_${s.id}`, { defaultValue: s.label })}</span>
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal">{s.host}</Badge>
+            </button>
+          ))}
+        </div>
+
         <div className="flex items-center gap-3 mb-4">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -163,7 +193,7 @@ export default function BlogList() {
             <TableBody>
               {isLoading ? (
                 <TableRow><TableCell colSpan={isSuperAdmin ? 7 : 6} className="text-center py-12 text-muted-foreground">{t("common.loading")}</TableCell></TableRow>
-              ) : posts.length === 0 ? (
+              ) : sitePosts.length === 0 ? (
                 <TableRow><TableCell colSpan={isSuperAdmin ? 7 : 6} className="text-center py-12 text-muted-foreground">
                   <div className="flex flex-col items-center gap-3">
                     <FileText className="h-8 w-8 text-muted-foreground/40" />

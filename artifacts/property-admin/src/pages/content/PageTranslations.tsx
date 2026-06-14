@@ -20,7 +20,28 @@ import { useToast } from "@/hooks/use-toast";
 // translation page-by-page. `path` is the public URL on homestay.millionstay.com.
 type PageDef = { prefix: string; label: string; site: string; path?: string };
 
+// Sites are managed separately (Guest www vs Homestay) even though the keys all
+// live in one translations table. Guest pages map to the www landing-page i18n
+// namespaces; homestay pages to the homestay.* namespaces.
+const SITES = [
+  { id: "guest", label: "Guest Site", host: "www.millionstay.com", previewBase: "https://millionstay.com.au" },
+  { id: "homestay", label: "Homestay", host: "homestay.millionstay.com", previewBase: "https://homestay.millionstay.com" },
+];
+
 const PAGES: PageDef[] = [
+  // Guest site — www.millionstay.com (top-level i18n namespaces)
+  { prefix: "home", label: "Guest · Home", site: "guest", path: "/" },
+  { prefix: "about", label: "Guest · About Us", site: "guest", path: "/about" },
+  { prefix: "student", label: "Guest · For Students", site: "guest", path: "/for-student" },
+  { prefix: "agent", label: "Guest · For Agent", site: "guest", path: "/for-agent" },
+  { prefix: "faq", label: "Guest · FAQ", site: "guest", path: "/faq" },
+  { prefix: "contact_page", label: "Guest · Contact", site: "guest", path: "/contact" },
+  { prefix: "stay_plan", label: "Guest · Stay Plans", site: "guest", path: "/stay-plans" },
+  { prefix: "blog_post", label: "Guest · Blog", site: "guest", path: "/blog" },
+  { prefix: "nav", label: "Guest · Navigation", site: "guest" },
+  { prefix: "footer", label: "Guest · Footer", site: "guest" },
+  { prefix: "search", label: "Guest · Search", site: "guest", path: "/search" },
+  // Homestay site — homestay.millionstay.com
   { prefix: "homestay.home", label: "Homestay · Home", site: "homestay", path: "/" },
   { prefix: "homestay.about", label: "Homestay · About Us", site: "homestay", path: "/about" },
   { prefix: "homestay.students", label: "Homestay · Students", site: "homestay", path: "/students" },
@@ -69,12 +90,22 @@ export default function PageTranslations() {
   const languages = langsQ.data ?? [];
   const targetLangs = languages.filter((l) => l.enabled && !l.is_default && l.code !== "en");
 
-  const [prefix, setPrefix] = useState(PAGES[0]!.prefix);
+  const [site, setSite] = useState(SITES[0]!.id);
+  const [prefix, setPrefix] = useState(PAGES.find((p) => p.site === SITES[0]!.id)!.prefix);
   const [lang, setLang] = useState("ko");
   const [edits, setEdits] = useState<Record<string, string>>({});
 
+  const sitePages = PAGES.filter((p) => p.site === site);
   const page = PAGES.find((p) => p.prefix === prefix)!;
+  const siteDef = SITES.find((s) => s.id === site)!;
   const isEn = lang === "en";
+
+  function switchSite(id: string) {
+    setSite(id);
+    const first = PAGES.find((p) => p.site === id);
+    if (first) setPrefix(first.prefix);
+    setEdits({});
+  }
 
   const rowsQ = useQuery({ queryKey: ["page-translations", lang], queryFn: () => fetchRows(lang) });
   const pageRows = useMemo(() => {
@@ -157,7 +188,7 @@ export default function PageTranslations() {
   });
 
   const aiBusy = aiTranslate.isPending || aiReview.isPending;
-  const previewUrl = page.path ? `https://homestay.millionstay.com${page.path}` : null;
+  const previewUrl = page.path ? `${siteDef.previewBase}${page.path}` : null;
 
   return (
     <Layout>
@@ -167,13 +198,29 @@ export default function PageTranslations() {
       />
 
       <div className="px-8 py-6">
+        {/* Site switcher — Guest (www) and Homestay are managed separately. */}
+        <div className="mb-4 inline-flex rounded-lg border bg-muted/30 p-1">
+          {SITES.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => switchSite(s.id)}
+              className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                site === s.id ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <span>{t(`page_translations.site_${s.id}`, { defaultValue: s.label })}</span>
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal">{s.host}</Badge>
+            </button>
+          ))}
+        </div>
+
         <div className="flex flex-wrap items-end gap-3 mb-4">
           <div>
             <Label className="text-xs text-muted-foreground">{t("page_translations.page", { defaultValue: "Page" })}</Label>
             <Select value={prefix} onValueChange={(v) => { setPrefix(v); setEdits({}); }}>
               <SelectTrigger className="w-72 mt-1"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {PAGES.map((p) => (<SelectItem key={p.prefix} value={p.prefix}>{p.label}</SelectItem>))}
+                {sitePages.map((p) => (<SelectItem key={p.prefix} value={p.prefix}>{p.label}</SelectItem>))}
               </SelectContent>
             </Select>
           </div>

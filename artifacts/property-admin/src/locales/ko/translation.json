@@ -1458,7 +1458,9 @@
     "translated_excerpt_placeholder": "{{lang}}로 된 간단한 요약…",
     "seo_title_short_placeholder": "SEO 제목…",
     "meta_description_short_placeholder": "메타 설명…",
-    "keywords_short_placeholder": "쉼표로 구분된 키워드…"
+    "keywords_short_placeholder": "쉼표로 구분된 키워드…",
+    "site_guest": "게스트 사이트",
+    "site_homestay": "홈스테이"
   },
   "document_hub": {
     "title": "문서",
@@ -2628,5 +2630,9 @@
     "original_label": "원문",
     "failed_retry": "번역 실패 — 다시 시도",
     "admin_compose_hint": "어떤 언어로 작성해도 됩니다 — 고객은 {{lang}}(으)로 자동 번역되어 봅니다."
+  },
+  "page_translations": {
+    "site_guest": "게스트 사이트",
+    "site_homestay": "홈스테이"
   }
 }

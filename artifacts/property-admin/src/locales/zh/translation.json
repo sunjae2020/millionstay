@@ -1458,7 +1458,9 @@
     "translated_excerpt_placeholder": "{{lang}}简短摘要…",
     "seo_title_short_placeholder": "SEO 标题…",
     "meta_description_short_placeholder": "元描述…",
-    "keywords_short_placeholder": "以逗号分隔的关键词…"
+    "keywords_short_placeholder": "以逗号分隔的关键词…",
+    "site_guest": "访客网站",
+    "site_homestay": "寄宿家庭"
   },
   "document_hub": {
     "title": "文档",
@@ -2628,5 +2630,9 @@
     "original_label": "原文",
     "failed_retry": "翻译失败 — 重试",
     "admin_compose_hint": "可用任意语言书写 — 客户会看到自动翻译成{{lang}}的内容。"
+  },
+  "page_translations": {
+    "site_guest": "访客网站",
+    "site_homestay": "寄宿家庭"
   }
 }

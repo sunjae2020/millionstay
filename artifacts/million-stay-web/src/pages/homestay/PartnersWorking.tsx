@@ -1,13 +1,14 @@
 import { useTranslation } from "react-i18next";
 import { HomestayLayout } from "@/components/homestay/HomestayLayout";
 import { HsPageHero, HsSection, HsBullets, HsNumbered, HsCTA } from "@/components/homestay/sections";
-import { usePageContent } from "@/lib/usePageContent";
+import { usePageContent, useHomestaySeo } from "@/lib/usePageContent";
 
 // Partners — single-tier page. Absorbs the former Study Tour (#study-tour)
 // sub-page as an anchored section.
 export default function PartnersWorking() {
   const { t } = useTranslation();
   const pc = usePageContent("homestay-partners");
+  useHomestaySeo("homestay-partners", { titleFallback: t("homestay.partners.layout_title") });
 
   const STUDY_TOUR_INCLUDES = [
     { body: t("homestay.partners.study_tour_includes_0") },
