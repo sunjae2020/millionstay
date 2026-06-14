@@ -20,7 +20,35 @@ const resources = {
   vi: { translation: viTranslations },
 };
 
-const savedLanguage = localStorage.getItem("ms_language") || "en";
+const SUPPORTED_LANGS = ["en", "ko", "zh", "ja", "th", "vi"] as const;
+
+// Resolve a browser/OS language tag (e.g. "ko-KR", "zh-Hans-CN") to a supported
+// locale. Returns null when there's no match.
+function matchSupported(tag: string | undefined | null): string | null {
+  if (!tag) return null;
+  const base = tag.toLowerCase().split("-")[0];
+  return SUPPORTED_LANGS.find((l) => l === base) ?? null;
+}
+
+// First visit → follow the device/OS language (navigator.languages, in
+// preference order). Once the user picks a language manually it's saved to
+// localStorage and that choice wins on every later visit.
+function getInitialLanguage(): string {
+  const saved = localStorage.getItem("ms_language");
+  if (saved && (SUPPORTED_LANGS as readonly string[]).includes(saved)) return saved;
+
+  const candidates =
+    typeof navigator !== "undefined"
+      ? [...(navigator.languages ?? []), navigator.language]
+      : [];
+  for (const tag of candidates) {
+    const match = matchSupported(tag);
+    if (match) return match;
+  }
+  return "en";
+}
+
+const savedLanguage = getInitialLanguage();
 
 i18n
   .use(initReactI18next)
