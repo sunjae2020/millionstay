@@ -53,7 +53,7 @@ const ADMIN_CARDS: CardDef[] = [
   },
   {
     title: "Document Templates",
-    description: "Editable email + contract templates",
+    description: "Editable email + contract + PDF templates",
     icon: FileText,
     href: "/settings/document-templates",
   },
