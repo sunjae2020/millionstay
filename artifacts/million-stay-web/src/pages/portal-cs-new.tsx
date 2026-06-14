@@ -11,8 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Send, X, Loader2, ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { getApiBase } from "@/lib/api-base";
 
-const BASE = "/api/v1";
+const BASE = `${getApiBase()}/api/v1`;
 function authHeaders(): Record<string, string> {
   const token = localStorage.getItem("ms_guest_token");
   return token ? { Authorization: `Bearer ${token}` } : {};
