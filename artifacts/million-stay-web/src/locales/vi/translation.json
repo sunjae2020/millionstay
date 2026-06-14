@@ -1,1 +1,19 @@
-{}
+{
+  "homestay": {
+    "home": {
+      "why_heading": "Vì sao chọn Million Homestay",
+      "why_1_title": "Ghép đôi bởi con người, không phải thuật toán",
+      "why_1_body": "Mọi sự sắp xếp chỗ ở đều được đội ngũ của chúng tôi xem xét và ghép đôi.",
+      "why_2_title": "Học sinh ở mọi lứa tuổi",
+      "why_2_body": "Cả người lớn lẫn học sinh nhỏ tuổi, với sự đồng ý và chữ ký của người giám hộ được tích hợp sẵn cho người dưới 18 tuổi.",
+      "why_3_title": "An toàn là trên hết",
+      "why_3_body": "Kiểm tra Working with Children Check (WWCC) và các giấy tờ an toàn khác là một phần trong quá trình xét duyệt chủ nhà.",
+      "why_4_title": "Trực tuyến hoàn toàn, từ đầu đến cuối",
+      "why_4_body": "Đơn đăng ký, giấy tờ, chữ ký điện tử và thanh toán, tất cả ở một nơi. Không cần giấy tờ in.",
+      "why_5_title": "Minh bạch ở mọi bước",
+      "why_5_body": "Các giai đoạn xét duyệt rõ ràng và cập nhật qua email, để bạn luôn biết tình hình.",
+      "why_6_title": "Đội ngũ hỗ trợ tận tâm",
+      "why_6_body": "Những con người thật bạn có thể liên hệ trước, trong và sau kỳ lưu trú — qua điện thoại, email hoặc trò chuyện."
+    }
+  }
+}
