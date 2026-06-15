@@ -14,6 +14,7 @@ import { requireApiKey, requireScope, type ApiClient } from "../middlewares/requ
 import { logAction } from "../utils/auditLog";
 import { STUDENT_STATUSES } from "./homestay-students";
 import { generateStudentRef } from "../lib/homestayRef";
+import { formatFirstName, formatLastName } from "../lib/nameFormat";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PUBLIC EXTERNAL API — mounted at /api/ext/v1
@@ -450,8 +451,8 @@ function ageFromDob(dob: string): number | null {
 // push never creates duplicates.
 router.post("/v1/homestay-student-requests", requireScope("homestay:write"), async (req, res): Promise<void> => {
   const b = req.body ?? {};
-  const first = String(b.student_first_name ?? "").trim();
-  const last = String(b.student_last_name ?? "").trim();
+  const first = formatFirstName(b.student_first_name);
+  const last = formatLastName(b.student_last_name);
   if (!first || !last) {
     res.status(400).json({ error: "student_first_name and student_last_name are required" });
     return;

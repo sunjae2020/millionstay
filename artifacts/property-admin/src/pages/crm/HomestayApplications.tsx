@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { formatDate } from "@/lib/date";
+import { formatPersonName } from "@/lib/nameFormat";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -167,7 +168,7 @@ export default function HomestayApplications() {
                   </TableCell>
                   <TableCell>
                     <Link href={`/account/homestay-applications/${a.id}`} className="font-medium hover:underline">
-                      {a.first_name} {a.last_name}
+                      {formatPersonName(a.first_name, a.last_name)}
                     </Link>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{a.email}</TableCell>

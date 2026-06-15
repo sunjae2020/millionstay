@@ -13,6 +13,7 @@ import {
   suburbsTable,
 } from "@workspace/db";
 import { generateHomestayRef } from "../lib/homestayRef.js";
+import { formatFirstName, formatLastName } from "../lib/nameFormat.js";
 import { signPartnerJWT, requireHomestayAuth, invalidatePartnerCache, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth.js";
 import { createSigningRequest } from "../services/contractSigning.js";
 import { sendHomestayHostEmail, sendLeadNotificationEmail } from "../lib/email.js";
@@ -125,8 +126,8 @@ homestayPublicRouter.post("/v1/public/homestay-host-applications", async (req, r
     const body = req.body as Record<string, any>;
     const email = String(body.email ?? "").trim().toLowerCase();
     const password = String(body.password ?? "");
-    const first_name = String(body.first_name ?? "").trim();
-    const last_name = String(body.last_name ?? "").trim();
+    const first_name = formatFirstName(body.first_name);
+    const last_name = formatLastName(body.last_name);
 
     if (!email || !first_name || !last_name) {
       res.status(400).json({ success: false, error: "first_name, last_name and email are required" });
@@ -509,6 +510,8 @@ homestayAdminRouter.post("/v1/homestay-applications/:id/request-docs", async (re
 homestayAdminRouter.put("/v1/homestay-applications/:id", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
   const { id: _id, created_at, deleted_at, ...updates } = req.body ?? {};
+  if (typeof updates.first_name === "string") updates.first_name = formatFirstName(updates.first_name);
+  if (typeof updates.last_name === "string") updates.last_name = formatLastName(updates.last_name);
   const [row] = await db.update(homestayHostApplicationsTable).set(updates)
     .where(eq(homestayHostApplicationsTable.id, id)).returning();
   if (!row) { res.status(404).json({ error: "Not found" }); return; }

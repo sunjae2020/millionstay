@@ -23,6 +23,7 @@ import {
 } from "@workspace/db";
 import { Resend } from "resend";
 import { generatePlacementRef } from "../lib/homestayRef.js";
+import { formatPersonName } from "../lib/nameFormat.js";
 import { createSigningRequest, signingBaseUrl, type SignerSpec } from "../services/contractSigning.js";
 import { sendHomestayHostEmail } from "../lib/email.js";
 import { logAction } from "../utils/auditLog.js";
@@ -80,10 +81,10 @@ async function enrich(p: typeof homestayPlacementsTable.$inferSelect) {
     .where(eq(homestayStudentRequestsTable.id, p.student_request_id)).limit(1);
   return {
     ...p,
-    host_name: host ? `${host.first_name} ${host.last_name}`.trim() : null,
+    host_name: host ? formatPersonName(host.first_name, host.last_name) : null,
     host_email: host?.email ?? null,
     host_suburb: host?.suburb ?? null,
-    student_name: student ? `${student.student_first_name} ${student.student_last_name}`.trim() : null,
+    student_name: student ? formatPersonName(student.student_first_name, student.student_last_name) : null,
     student_email: student?.student_email ?? student?.guardian_email ?? null,
     student_is_minor: student?.is_minor ?? false,
   };

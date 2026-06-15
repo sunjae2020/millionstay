@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useParams, Link } from "wouter";
 import { formatDateTime } from "@/lib/date";
+import { formatPersonName } from "@/lib/nameFormat";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -221,7 +222,7 @@ export default function HomestayStudentRequestDetail() {
   if (isLoading) return <Layout><p className="p-6 text-sm text-muted-foreground">{t("common.loading")}</p></Layout>;
   if (!req) return <Layout><p className="p-6 text-sm text-muted-foreground">{t("homestayStudent.not_found")}</p></Layout>;
 
-  const fullName = `${req.student_first_name ?? ""} ${req.student_last_name ?? ""}`.trim();
+  const fullName = formatPersonName(req.student_first_name, req.student_last_name);
   const airportRequired = !!p.airport_pickup_option && p.airport_pickup_option !== "Not required";
 
   return (
