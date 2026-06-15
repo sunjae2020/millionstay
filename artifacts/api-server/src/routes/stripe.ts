@@ -4,6 +4,8 @@ import { db, invoicesTable, homestayPlacementsTable, homestayStudentRequestsTabl
 import { and, eq } from "drizzle-orm";
 import { logAction } from "../utils/auditLog";
 import { createCommissionForPlacement } from "../lib/homestay/commission";
+import { notifyPlacementActivated } from "../lib/homestay/notify";
+import { formatPersonName } from "../lib/nameFormat";
 
 const router = Router();
 
@@ -96,6 +98,20 @@ router.post("/v1/stripe/webhook", async (req, res): Promise<void> => {
               }
               // Accrue the agent commission on activation (best-effort, idempotent).
               try { await createCommissionForPlacement(pl.id); } catch (e) { console.error("[Stripe] commission accrual failed:", e); }
+              // Notify the student + guardian of activation (best-effort).
+              try {
+                const [stu] = await db.select().from(homestayStudentRequestsTable)
+                  .where(eq(homestayStudentRequestsTable.id, pl.student_request_id)).limit(1);
+                if (stu) {
+                  void notifyPlacementActivated({
+                    studentEmail: stu.student_email,
+                    guardianEmail: stu.guardian_email,
+                    studentName: formatPersonName(stu.student_first_name, stu.student_last_name),
+                    placementRef: pl.placement_ref,
+                    moveInDate: pl.move_in_date,
+                  }).catch((e) => console.error("[Stripe] activation notify failed:", e));
+                }
+              } catch (e) { console.error("[Stripe] activation notify load failed:", e); }
             }
           }
           await logAction({ entityType: "homestay_placement", entityId: pay?.placement_id ?? 0, action: "PAYMENT", newValue: { placement_payment_id: placementPaymentId, kind: pay?.kind, stripe_session: session.id } }).catch(() => {});

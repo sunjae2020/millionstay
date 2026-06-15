@@ -28,6 +28,7 @@ import { generatePlacementRef } from "../lib/homestayRef.js";
 import { formatPersonName } from "../lib/nameFormat.js";
 import { createSigningRequest, signingBaseUrl, type SignerSpec } from "../services/contractSigning.js";
 import { sendHomestayHostEmail } from "../lib/email.js";
+import { notifyPlacementProposed, notifyPlacementActivated, notifyPaymentReminder } from "../lib/homestay/notify.js";
 import { logAction } from "../utils/auditLog.js";
 import { getStripe } from "./stripe.js";
 import { getHomestayBillingSettings, saveHomestayBillingSettings, type HomestayBillingSettings } from "../lib/homestay/billingSettings.js";
@@ -191,6 +192,14 @@ homestayPlacementAdminRouter.post("/v1/homestay-placements", async (req, res): P
     void sendHomestayHostEmail({
       to: host.email, toName: host.first_name, applicationRef: placement_ref, kind: "placement_proposed",
     }).catch((e) => console.error("[homestay-placements] host notify failed:", e));
+
+    // Notify the student + guardian of the match (best-effort).
+    void notifyPlacementProposed({
+      studentEmail: student.student_email,
+      guardianEmail: student.guardian_email,
+      studentName: formatPersonName(student.student_first_name, student.student_last_name),
+      placementRef: placement_ref,
+    }).catch((e) => console.error("[homestay-placements] student notify failed:", e));
 
     void logAction({ entityType: ENTITY, entityId: row!.id, action: "CREATE", actorId: (req as any).user?.id ?? null, newValue: { placement_ref, status: "Proposed" } });
     res.status(201).json({ success: true, placement: { ...(await enrich(row!)), booking_id: bookingId } });
@@ -498,6 +507,20 @@ homestayPlacementAdminRouter.post("/v1/homestay-placement-payments/:paymentId/ma
         }
         // Accrue the agent commission on activation (best-effort, idempotent).
         try { await createCommissionForPlacement(pl.id); } catch (e) { console.error("[homestay] commission accrual failed:", e); }
+        // Notify the student + guardian of activation (best-effort).
+        try {
+          const [stu] = await db.select().from(homestayStudentRequestsTable)
+            .where(eq(homestayStudentRequestsTable.id, pl.student_request_id)).limit(1);
+          if (stu) {
+            void notifyPlacementActivated({
+              studentEmail: stu.student_email,
+              guardianEmail: stu.guardian_email,
+              studentName: formatPersonName(stu.student_first_name, stu.student_last_name),
+              placementRef: pl.placement_ref,
+              moveInDate: pl.move_in_date,
+            }).catch((e) => console.error("[homestay-placements] activation notify failed:", e));
+          }
+        } catch (e) { console.error("[homestay-placements] activation notify load failed:", e); }
       }
     }
     void logAction({ entityType: ENTITY, entityId: pay.placement_id, action: "PAYMENT", actorId: (req as any).user?.id ?? null, newValue: { payment_id: paymentId, method: "bank_transfer", status: "paid" } });
@@ -505,6 +528,43 @@ homestayPlacementAdminRouter.post("/v1/homestay-placement-payments/:paymentId/ma
   } catch (err) {
     console.error("[homestay-placements] mark-paid failed:", err);
     res.status(500).json({ error: "Failed to mark paid" });
+  }
+});
+
+// ── Payment reminder (ops-triggered) ─────────────────────────────────────────
+// Emails the student (CC guardian) a reminder for the latest PENDING charge on a
+// placement. Best-effort email; payUrl is omitted (regenerating a Stripe session
+// is out of scope — this is purely a nudge). 404 if placement/charge missing.
+homestayPlacementAdminRouter.post("/v1/homestay-placements/:id/payment-reminder", async (req, res): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) { res.status(400).json({ error: "Invalid placement id" }); return; }
+    const [pl] = await db.select().from(homestayPlacementsTable).where(eq(homestayPlacementsTable.id, id)).limit(1);
+    if (!pl) { res.status(404).json({ error: "Placement not found" }); return; }
+
+    const [charge] = await db.select().from(homestayPlacementPaymentsTable)
+      .where(and(eq(homestayPlacementPaymentsTable.placement_id, id), eq(homestayPlacementPaymentsTable.status, "pending")))
+      .orderBy(desc(homestayPlacementPaymentsTable.created_at))
+      .limit(1);
+    if (!charge) { res.status(404).json({ error: "No pending charge to remind about" }); return; }
+
+    const [student] = await db.select().from(homestayStudentRequestsTable)
+      .where(eq(homestayStudentRequestsTable.id, pl.student_request_id)).limit(1);
+
+    const emailed = await notifyPaymentReminder({
+      studentEmail: student?.student_email ?? null,
+      guardianEmail: student?.guardian_email ?? null,
+      studentName: student ? formatPersonName(student.student_first_name, student.student_last_name) : null,
+      placementRef: pl.placement_ref,
+      amount: Number(charge.amount),
+      currency: charge.currency || "AUD",
+    });
+
+    void logAction({ entityType: ENTITY, entityId: id, action: "PAYMENT", actorId: (req as any).user?.id ?? null, newValue: { payment_id: charge.id, kind: "payment_reminder", emailed } });
+    res.json({ success: true, emailed });
+  } catch (err) {
+    console.error("[homestay-placements] payment-reminder failed:", err);
+    res.status(500).json({ error: "Failed to send payment reminder" });
   }
 });
 
