@@ -2818,7 +2818,18 @@
     "manual_search_placeholder": "ค้นหาด้วยชื่อ อีเมล หรือรหัสอ้างอิง…",
     "manual_search_hint": "จับคู่ได้เฉพาะครอบครัวอุปถัมภ์ที่ได้รับอนุมัติแล้วเท่านั้น",
     "manual_search_loading": "กำลังค้นหา…",
-    "manual_search_empty": "ไม่พบครอบครัวอุปถัมภ์ที่ได้รับอนุมัติ"
+    "manual_search_empty": "ไม่พบครอบครัวอุปถัมภ์ที่ได้รับอนุมัติ",
+    "filter_region": "เขต/พื้นที่",
+    "filter_region_placeholder": "เช่น Melbourne",
+    "filter_gender": "เพศที่ต้องการ",
+    "filter_pets": "สัตว์เลี้ยง",
+    "filter_children": "เด็ก",
+    "filter_any": "ทั้งหมด",
+    "filter_clear": "ล้างตัวกรอง",
+    "gender_male": "ชาย",
+    "gender_female": "หญิง",
+    "gender_either": "ได้ทั้งสอง",
+    "manual_search_no_match": "ไม่พบครอบครัวอุปถัมภ์ที่ตรงกับตัวกรองเหล่านี้"
   },
   "homestayPlacement": {
     "list_title": "การจัดที่พักโฮมสเตย์",
