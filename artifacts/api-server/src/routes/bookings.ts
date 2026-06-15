@@ -19,6 +19,7 @@ import {
 } from "@workspace/db";
 import { logAction } from "../utils/auditLog";
 import { getRateToAud } from "../lib/rateSnapshot";
+import { createBookingRecurringSchedule } from "../lib/billing/bookingSchedule";
 import {
   ListBookingsQueryParams,
   CreateBookingBody,
@@ -526,6 +527,14 @@ router.patch("/v1/bookings/:id/confirm", async (req, res): Promise<void> => {
     await logAction({ entityType: "contract", entityId: newContract.id, action: "AUTO_CREATED", newValue: { contract_ref: contractRef, booking_ref: existing.booking_ref } });
   } else if (existingContracts.length > 0) {
     contractId = existingContracts[0].id;
+  }
+
+  // Best-effort: auto-create a PendingApproval recurring rent schedule for
+  // recurring-style stays. Must never change the response or throw.
+  try {
+    await createBookingRecurringSchedule(row.id);
+  } catch (e) {
+    console.error("[bookings] auto recurring schedule failed:", e);
   }
 
   const bookingResponse = await buildBookingResponse(row);

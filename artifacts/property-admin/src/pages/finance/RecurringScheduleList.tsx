@@ -31,6 +31,12 @@ const TYPE_LABELS: Record<string, string> = {
   AdminFee:   "Admin Fee",
 };
 
+const APPROVAL_COLORS: Record<string, string> = {
+  PendingApproval: "bg-amber-100 text-amber-700",
+  Approved:        "bg-green-100 text-green-700",
+  Rejected:        "bg-red-100 text-red-700",
+};
+
 async function fetchSchedules(q?: string, activeFilter?: string) {
   const params = new URLSearchParams();
   if (q) params.set("q", q);
@@ -52,6 +58,12 @@ async function toggleSchedule(id: number, is_active: boolean) {
 async function generateDueInvoices() {
   const res = await apiFetch("/api/v1/recurring-schedules/generate-due", { method: "POST" });
   if (!res.ok) throw new Error("Generation failed");
+  return res.json();
+}
+
+async function setApproval(id: number, action: "approve" | "reject") {
+  const res = await apiFetch(`/api/v1/recurring-schedules/${id}/${action}`, { method: "POST" });
+  if (!res.ok) throw new Error("Failed to update approval");
   return res.json();
 }
 
@@ -89,6 +101,22 @@ export default function RecurringScheduleList() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["recurring-schedules"] });
       setToggleTarget(null);
+    },
+  });
+
+  const approvalMutation = useMutation({
+    mutationFn: ({ id, action }: { id: number; action: "approve" | "reject" }) =>
+      setApproval(id, action),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ["recurring-schedules"] });
+      toast({
+        title: variables.action === "approve"
+          ? t("recurring.approved_toast")
+          : t("recurring.rejected_toast"),
+      });
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: err?.message, variant: "destructive" });
     },
   });
 
@@ -205,15 +233,16 @@ export default function RecurringScheduleList() {
                   <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_amount")}</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_start_date")}</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_next_due_date")}</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.approval_status")}</th>
                   <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_status")}</th>
                   <th className="px-4 py-3 w-16"></th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {isLoading ? (
-                  <tr><td colSpan={isSuperAdmin ? 10 : 9} className="px-4 py-10 text-center text-muted-foreground">{t("common.loading")}</td></tr>
+                  <tr><td colSpan={isSuperAdmin ? 11 : 10} className="px-4 py-10 text-center text-muted-foreground">{t("common.loading")}</td></tr>
                 ) : rows.length === 0 ? (
-                  <tr><td colSpan={isSuperAdmin ? 10 : 9} className="px-4 py-10 text-center text-muted-foreground">
+                  <tr><td colSpan={isSuperAdmin ? 11 : 10} className="px-4 py-10 text-center text-muted-foreground">
                     {t("recurring.no_schedules")}
                   </td></tr>
                 ) : pagination.paginatedItems.map((s: any) => {
@@ -247,6 +276,40 @@ export default function RecurringScheduleList() {
                           <span className={`text-xs font-medium ${overdue ? "text-red-600" : "text-gray-700"}`}>
                             {fmtDate(s.next_due_date)}
                           </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col items-start gap-1.5">
+                          <Badge className={`text-xs ${APPROVAL_COLORS[s.approval_status] ?? "bg-gray-100 text-gray-500"}`}>
+                            {s.approval_status === "PendingApproval"
+                              ? t("recurring.status_pending")
+                              : s.approval_status === "Approved"
+                                ? t("recurring.status_approved")
+                                : s.approval_status === "Rejected"
+                                  ? t("recurring.status_rejected")
+                                  : s.approval_status ?? "—"}
+                          </Badge>
+                          {s.approval_status === "PendingApproval" && (
+                            <div className="flex gap-1.5">
+                              <Button
+                                size="sm"
+                                className="h-6 px-2 text-xs bg-green-600 hover:bg-green-700"
+                                disabled={approvalMutation.isPending}
+                                onClick={() => approvalMutation.mutate({ id: s.id, action: "approve" })}
+                              >
+                                {t("recurring.approve")}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-6 px-2 text-xs border-red-300 text-red-700 hover:bg-red-50"
+                                disabled={approvalMutation.isPending}
+                                onClick={() => approvalMutation.mutate({ id: s.id, action: "reject" })}
+                              >
+                                {t("recurring.reject")}
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </td>
                       <td className="px-4 py-3">

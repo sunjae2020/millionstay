@@ -103,6 +103,7 @@ export async function generateRecurringInvoices(): Promise<RecurringBillingResul
     .where(and(
       eq(recurringSchedulesTable.billing_mode, "incremental"),
       eq(recurringSchedulesTable.is_active, true),
+      eq(recurringSchedulesTable.approval_status, "Approved"),
       isNull(recurringSchedulesTable.deleted_at),
       lte(recurringSchedulesTable.next_due_date, today),
       sql`${recurringSchedulesTable.amount} > 0`,
