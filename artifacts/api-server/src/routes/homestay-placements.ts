@@ -32,7 +32,7 @@ import { getHomestayBillingSettings, saveHomestayBillingSettings, type HomestayB
 import { resolveTemplate, renderString } from "../lib/documents/templateEngine.js";
 import { parsePageParams, pageMeta } from "../utils/pagination.js";
 import { createBookingForPlacement } from "../lib/homestay/placementBooking.js";
-import { createPlacementInvoice } from "../lib/homestay/placementInvoice.js";
+import { createPlacementInvoice, createExtensionInvoice } from "../lib/homestay/placementInvoice.js";
 
 const ENTITY = "homestay_placement";
 
@@ -293,6 +293,26 @@ homestayPlacementAdminRouter.post("/v1/homestay-placements/:id/invoice", async (
     if (/not found/i.test(msg)) { res.status(404).json({ error: msg }); return; }
     console.error("[homestay-placements] invoice failed:", err);
     res.status(500).json({ error: "Failed to create placement invoice" });
+  }
+});
+
+// Extend a placement's stay and bill the extra period as an itemized,
+// booking-linked invoice (weekly-equivalent of the monthly fee × extra weeks).
+homestayPlacementAdminRouter.post("/v1/homestay-placements/:id/extend", async (req, res): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) { res.status(400).json({ error: "Invalid placement id" }); return; }
+    const newMoveOut = String(req.body?.new_move_out_date ?? "").trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(newMoveOut)) { res.status(400).json({ error: "new_move_out_date must be YYYY-MM-DD" }); return; }
+    const invoice = await createExtensionInvoice(id, newMoveOut);
+    void logAction({ entityType: ENTITY, entityId: id, action: "UPDATE", actorId: (req as any).user?.id ?? null, newValue: { extended_to: newMoveOut, invoice_id: invoice?.id ?? null } });
+    res.status(201).json({ success: true, invoice });
+  } catch (err: any) {
+    const msg = err?.message ?? "Failed to extend placement";
+    if (/not found/i.test(msg)) { res.status(404).json({ error: msg }); return; }
+    if (/must be after|no move-in/i.test(msg)) { res.status(400).json({ error: msg }); return; }
+    console.error("[homestay-placements] extend failed:", err);
+    res.status(500).json({ error: "Failed to extend placement" });
   }
 });
 
