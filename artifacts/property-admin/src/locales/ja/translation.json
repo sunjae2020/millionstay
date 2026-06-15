@@ -2240,7 +2240,20 @@
     "bulk_archive_title": "ユーザーをアーカイブ",
     "bulk_delete_desc": "{{count}}人のユーザーを完全に削除しようとしています。この操作は元に戻せません。",
     "bulk_archive_desc": "{{count}}人のユーザーをアーカイブしようとしています。これらのアカウントは無効化されます。",
-    "archive_all": "すべてアーカイブ"
+    "archive_all": "すべてアーカイブ",
+    "add_user": "ユーザーを追加",
+    "add_user_title": "新規ユーザーを追加",
+    "add_user_desc": "管理者アカウントを直接作成します。ユーザーは初回ログイン時に仮パスワードの変更を求められます。",
+    "field_first_name": "名",
+    "field_last_name": "姓",
+    "field_email": "メールアドレス",
+    "field_temp_password": "仮パスワード",
+    "field_temp_password_hint": "パスワードポリシーを満たす必要があります。ユーザーは初回ログイン時に変更します。",
+    "field_role": "役割",
+    "create_user": "ユーザーを作成",
+    "toast_user_created": "ユーザーを作成しました",
+    "toast_user_created_desc": "アカウントが作成され、有効になりました。",
+    "toast_create_failed": "ユーザーの作成に失敗しました"
   },
   "coming_soon": {
     "heading": "近日公開予定",

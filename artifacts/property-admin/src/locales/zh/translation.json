@@ -2240,7 +2240,20 @@
     "bulk_archive_title": "归档用户",
     "bulk_delete_desc": "您即将永久删除 {{count}} 个用户。此操作无法撤销。",
     "bulk_archive_desc": "您即将归档 {{count}} 个用户。这些账户将被停用。",
-    "archive_all": "全部归档"
+    "archive_all": "全部归档",
+    "add_user": "添加用户",
+    "add_user_title": "添加新用户",
+    "add_user_desc": "直接创建管理员账户。用户在首次登录时需更改临时密码。",
+    "field_first_name": "名",
+    "field_last_name": "姓",
+    "field_email": "邮箱",
+    "field_temp_password": "临时密码",
+    "field_temp_password_hint": "必须符合密码策略。用户在首次登录时更改。",
+    "field_role": "角色",
+    "create_user": "创建用户",
+    "toast_user_created": "用户已创建",
+    "toast_user_created_desc": "账户已创建并已激活。",
+    "toast_create_failed": "创建用户失败"
   },
   "coming_soon": {
     "heading": "敬请期待",

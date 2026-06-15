@@ -2240,7 +2240,20 @@
     "bulk_archive_title": "Archive Users",
     "bulk_delete_desc": "You are about to permanently delete {{count}} user(s). This cannot be undone.",
     "bulk_archive_desc": "You are about to archive {{count}} user(s). Their accounts will be deactivated.",
-    "archive_all": "Archive All"
+    "archive_all": "Archive All",
+    "add_user": "Add User",
+    "add_user_title": "Add New User",
+    "add_user_desc": "Create an admin account directly. The user will be asked to change the temporary password on first login.",
+    "field_first_name": "First name",
+    "field_last_name": "Last name",
+    "field_email": "Email",
+    "field_temp_password": "Temporary password",
+    "field_temp_password_hint": "Must meet the password policy. The user changes it on first login.",
+    "field_role": "Role",
+    "create_user": "Create User",
+    "toast_user_created": "User created",
+    "toast_user_created_desc": "The account has been created and is active.",
+    "toast_create_failed": "Failed to create user"
   },
   "coming_soon": {
     "heading": "Coming Soon",
