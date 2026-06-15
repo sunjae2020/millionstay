@@ -2672,6 +2672,7 @@
     "col_student": "学生",
     "col_email": "メール",
     "col_school": "学校",
+    "col_agent": "エージェント",
     "col_start": "開始日",
     "col_status": "ステータス",
     "col_submitted": "提出日",

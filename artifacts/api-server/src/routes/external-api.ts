@@ -479,7 +479,15 @@ router.post("/v1/homestay-student-requests", requireScope("homestay:write"), asy
   const is_minor = age != null && age >= 0 && age < 18;
 
   const basePrefs = b.preferences && typeof b.preferences === "object" ? b.preferences : {};
-  const preferences = { ...basePrefs, import: { source: "google_sheets", ref: externalRef || null, client: client?.name ?? null } };
+  // Referring agent name (sheet "Agent name") — kept in preferences so it
+  // surfaces in the admin list. Explicit top-level body field wins over
+  // anything nested in `preferences`.
+  const agentName = b.agent != null ? String(b.agent).trim() : "";
+  const preferences = {
+    ...basePrefs,
+    ...(agentName ? { agent: agentName } : {}),
+    import: { source: "google_sheets", ref: externalRef || null, client: client?.name ?? null },
+  };
 
   const request_ref = await generateStudentRef();
   const [row] = await db.insert(homestayStudentRequestsTable).values({

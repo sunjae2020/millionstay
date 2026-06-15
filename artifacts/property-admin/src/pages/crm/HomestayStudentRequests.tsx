@@ -24,6 +24,8 @@ export interface StudentPreferences {
   campus_location?: string;
   homestay_start_date?: string;
   duration_weeks?: string;
+  /** Referring agent name (free text from Google Sheets import). */
+  agent?: string;
   [k: string]: unknown;
 }
 
@@ -160,6 +162,7 @@ export default function HomestayStudentRequests() {
                 <TableHead>{t("homestayStudent.col_student")}</TableHead>
                 <TableHead>{t("homestayStudent.col_email")}</TableHead>
                 <TableHead>{t("homestayStudent.col_school")}</TableHead>
+                <TableHead>{t("homestayStudent.col_agent")}</TableHead>
                 <TableHead>{t("homestayStudent.col_start")}</TableHead>
                 <TableHead>{t("homestayStudent.col_status")}</TableHead>
                 <TableHead>{t("homestayStudent.col_submitted")}</TableHead>
@@ -168,9 +171,9 @@ export default function HomestayStudentRequests() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-10 text-muted-foreground">{t("common.loading")}</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center py-10 text-muted-foreground">{t("common.loading")}</TableCell></TableRow>
               ) : requests.length === 0 ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-10 text-muted-foreground">{t("homestayStudent.empty")}</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center py-10 text-muted-foreground">{t("homestayStudent.empty")}</TableCell></TableRow>
               ) : requests.map((r) => (
                 <TableRow key={r.id}>
                   <TableCell>
@@ -190,6 +193,7 @@ export default function HomestayStudentRequests() {
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{r.student_email || <span className="text-muted-foreground/40">—</span>}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{r.preferences?.school || <span className="text-muted-foreground/40">—</span>}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{r.preferences?.agent || <span className="text-muted-foreground/40">—</span>}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{r.preferences?.homestay_start_date || <span className="text-muted-foreground/40">—</span>}</TableCell>
                   <TableCell><StudentStatusBadge status={r.status} /></TableCell>
                   <TableCell className="text-sm text-muted-foreground">{r.created_at ? formatDate(r.created_at) : "—"}</TableCell>

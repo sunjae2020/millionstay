@@ -2672,6 +2672,7 @@
     "col_student": "学生",
     "col_email": "邮箱",
     "col_school": "学校",
+    "col_agent": "代理",
     "col_start": "开始日期",
     "col_status": "状态",
     "col_submitted": "提交时间",

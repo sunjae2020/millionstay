@@ -2672,6 +2672,7 @@
     "col_student": "학생",
     "col_email": "이메일",
     "col_school": "학교",
+    "col_agent": "에이전트",
     "col_start": "시작일",
     "col_status": "상태",
     "col_submitted": "제출일",
