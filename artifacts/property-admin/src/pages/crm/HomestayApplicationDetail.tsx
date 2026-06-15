@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useParams } from "wouter";
 import { Link } from "wouter";
 import { formatDate, formatDateTime } from "@/lib/date";
+import { formatPersonName } from "@/lib/nameFormat";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -223,7 +224,7 @@ export default function HomestayApplicationDetail() {
   if (isLoading) return <Layout><p className="p-6 text-sm text-muted-foreground">{t("common.loading")}</p></Layout>;
   if (!app) return <Layout><p className="p-6 text-sm text-muted-foreground">{t("homestay.not_found")}</p></Layout>;
 
-  const fullName = `${app.first_name ?? ""} ${app.last_name ?? ""}`.trim();
+  const fullName = formatPersonName(app.first_name, app.last_name);
 
   return (
     <Layout>

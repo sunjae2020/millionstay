@@ -15,6 +15,7 @@ import { logAction } from "../utils/auditLog.js";
 import { rankHosts } from "../lib/homestay/matching.js";
 import { attachRationales } from "../lib/homestay/matchRationale.js";
 import { parsePageParams, pageMeta } from "../utils/pagination.js";
+import { formatFirstName, formatLastName } from "../lib/nameFormat.js";
 
 const STUDENT_ENTITY = "homestay_student_request";
 
@@ -43,8 +44,8 @@ function ageFromDob(dob: string): number | null {
 homestayStudentPublicRouter.post("/v1/public/homestay-student-requests", async (req, res): Promise<void> => {
   try {
     const body = req.body as Record<string, any>;
-    const student_first_name = String(body.student_first_name ?? "").trim();
-    const student_last_name = String(body.student_last_name ?? "").trim();
+    const student_first_name = formatFirstName(body.student_first_name);
+    const student_last_name = formatLastName(body.student_last_name);
     const date_of_birth = String(body.date_of_birth ?? "").trim();
 
     if (!student_first_name || !student_last_name || !date_of_birth) {

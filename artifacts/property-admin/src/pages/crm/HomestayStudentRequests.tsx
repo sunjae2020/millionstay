@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { formatDate } from "@/lib/date";
+import { formatPersonName } from "@/lib/nameFormat";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -179,7 +180,7 @@ export default function HomestayStudentRequests() {
                   </TableCell>
                   <TableCell>
                     <Link href={`/account/homestay-student-requests/${r.id}`} className="font-medium hover:underline inline-flex items-center gap-1.5">
-                      {r.student_first_name} {r.student_last_name}
+                      {formatPersonName(r.student_first_name, r.student_last_name)}
                       {r.is_minor && (
                         <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1 py-0.5" title={t("homestayStudent.minor")}>
                           <ShieldCheck className="h-3 w-3" /> {t("homestayStudent.minor_short")}
