@@ -34,6 +34,26 @@ const ROOM_TYPE_LABELS: Record<string, string> = {
   "Single room": "room_type_single",
   "Twin room": "room_type_twin",
 };
+// Unified product classification (values map directly to the DB enums in
+// accommodation_options.ts so a booking can be created from the request as-is).
+const STAY_TYPES = ["homestay", "homestay_self_board", "share"];
+const STAY_TYPE_LABELS: Record<string, string> = {
+  "homestay": "stay_type_homestay",            // 호스트 가정 + 식사
+  "homestay_self_board": "stay_type_self_board", // 호스트 가정, 식사 미포함
+  "share": "stay_type_share",                  // 호스트 없음, 숙소만
+};
+const SPACE_SHARINGS = ["entire_place", "house_share", "room_share"];
+const SPACE_SHARING_LABELS: Record<string, string> = {
+  "entire_place": "space_entire",   // 독채
+  "house_share": "space_own_room",  // 독방 (공용공간 공유)
+  "room_share": "space_room_share", // 룸 쉐어
+};
+const CONTRACT_TERM_OPTS = ["short_term", "mid_term", "long_term"];
+const CONTRACT_TERM_LABELS: Record<string, string> = {
+  "short_term": "term_short", // 단기
+  "mid_term": "term_mid",     // 중기
+  "long_term": "term_long",   // 장기
+};
 const MEAL_LABELS: Record<string, string> = {
   "Full board (all meals)": "meals_full_board",
   "Half board (breakfast & dinner)": "meals_half_board",
@@ -120,6 +140,7 @@ export default function StudentApply() {
     // School
     school: "", course_name: "", course_start_date: "", campus_location: "",
     // Homestay
+    stay_type: STAY_TYPES[0], space_sharing: "", contract_term: "",
     homestay_start_date: "", duration_weeks: "", room_type: ROOM_TYPES[0], meals: MEAL_OPTIONS[0],
     allergic_to_pets: "", can_live_with_pets: "", smoker: "", can_live_with_smokers: "",
     beliefs: "", dietary: "", food_avoided: "", hobbies: "",
@@ -176,6 +197,9 @@ export default function StudentApply() {
         course_name: f.course_name,
         course_start_date: f.course_start_date,
         campus_location: f.campus_location,
+        stay_type: f.stay_type,
+        space_sharing: f.space_sharing,
+        contract_term: f.contract_term,
         homestay_start_date: f.homestay_start_date,
         duration_weeks: f.duration_weeks,
         room_type: f.room_type,
@@ -337,6 +361,23 @@ export default function StudentApply() {
           <div>
             <SectionTitle>{t("homestay.student_apply.section_homestay")}</SectionTitle>
             <div className="grid gap-4 sm:grid-cols-2">
+              <Field label={t("homestay.student_apply.label_stay_type")} hint={t("homestay.student_apply.hint_stay_type")}>
+                <select className={inputCls + " bg-white"} style={ring} value={f.stay_type} onChange={(e) => set("stay_type", e.target.value)}>
+                  {STAY_TYPES.map((o) => <option key={o} value={o}>{t(`homestay.student_apply.${STAY_TYPE_LABELS[o]}`)}</option>)}
+                </select>
+              </Field>
+              <Field label={t("homestay.student_apply.label_contract_term")}>
+                <select className={inputCls + " bg-white"} style={ring} value={f.contract_term} onChange={(e) => set("contract_term", e.target.value)}>
+                  <option value="">{t("homestay.student_apply.please_select")}</option>
+                  {CONTRACT_TERM_OPTS.map((o) => <option key={o} value={o}>{t(`homestay.student_apply.${CONTRACT_TERM_LABELS[o]}`)}</option>)}
+                </select>
+              </Field>
+              <Field label={t("homestay.student_apply.label_space_sharing")} hint={t("homestay.student_apply.hint_space_sharing")}>
+                <select className={inputCls + " bg-white"} style={ring} value={f.space_sharing} onChange={(e) => set("space_sharing", e.target.value)}>
+                  <option value="">{t("homestay.student_apply.please_select")}</option>
+                  {SPACE_SHARINGS.map((o) => <option key={o} value={o}>{t(`homestay.student_apply.${SPACE_SHARING_LABELS[o]}`)}</option>)}
+                </select>
+              </Field>
               <Field label={t("homestay.student_apply.label_homestay_start_date")}><input type="date" className={inputCls} style={ring} value={f.homestay_start_date} onChange={(e) => set("homestay_start_date", e.target.value)} /></Field>
               <Field label={t("homestay.student_apply.label_duration")} hint={t("homestay.student_apply.hint_duration")}><input type="number" min={4} className={inputCls} style={ring} value={f.duration_weeks} onChange={(e) => set("duration_weeks", e.target.value)} placeholder={t("homestay.student_apply.placeholder_duration")} /></Field>
               <Field label={t("homestay.student_apply.label_room_preference")}>
