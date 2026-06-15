@@ -30,6 +30,8 @@ export interface StudentPreferences {
    * `agentDisplayName` normalises both for display.
    */
   agent?: { agent_name?: string; [k: string]: unknown } | string;
+  /** Import metadata; `ref` holds the original Google Sheets submission timestamp. */
+  import?: { ref?: string | null; [k: string]: unknown };
   [k: string]: unknown;
 }
 
@@ -207,7 +209,7 @@ export default function HomestayStudentRequests() {
                   <TableCell className="text-sm text-muted-foreground">{agentDisplayName(r.preferences?.agent) || <span className="text-muted-foreground/40">—</span>}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{r.preferences?.homestay_start_date || <span className="text-muted-foreground/40">—</span>}</TableCell>
                   <TableCell><StudentStatusBadge status={r.status} /></TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{r.created_at ? formatDate(r.created_at) : "—"}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{formatDate(r.preferences?.import?.ref || r.created_at)}</TableCell>
                   <TableCell>
                     <Link href={`/account/homestay-student-requests/${r.id}`}>
                       <Button size="sm" variant="ghost" className="gap-1.5"><Eye className="h-3.5 w-3.5" /> {t("common.view")}</Button>
