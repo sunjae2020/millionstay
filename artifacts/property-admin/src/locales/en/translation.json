@@ -1,4 +1,24 @@
 {
+  "dash_homestay": {
+    "placements_by_status": "Placements by status",
+    "requests_by_status": "Student requests by status",
+    "agent_commissions": "Agent commissions",
+    "kpi_active_placements": "Active placements",
+    "kpi_active_placements_sub": "Currently active",
+    "kpi_total_paid": "Total paid",
+    "kpi_total_paid_sub": "All settled payments",
+    "kpi_paid_month": "Paid this month",
+    "kpi_pending": "Pending charges",
+    "kpi_pending_sub": "Awaiting payment",
+    "commission_pending": "Pending",
+    "commission_approved": "Approved",
+    "commission_paid": "Paid",
+    "col_agent": "Agent",
+    "col_total": "Total",
+    "count": "Count",
+    "no_commissions": "No commissions yet",
+    "no_data": "No data"
+  },
   "nav": {
     "dashboard": "Dashboard",
     "account": "Account",

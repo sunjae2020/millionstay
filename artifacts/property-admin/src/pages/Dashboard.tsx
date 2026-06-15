@@ -1,7 +1,7 @@
 import { useSearch, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
-import { LayoutDashboard, CalendarDays, DollarSign, Wrench, Users, Radio } from "lucide-react";
+import { LayoutDashboard, CalendarDays, DollarSign, Wrench, Users, Radio, Handshake } from "lucide-react";
 import { DashTabs, type TabDef } from "@/components/dashboard/DashboardKit";
 import OverviewTab from "@/pages/dashboard/OverviewTab";
 import ReservationsTab from "@/pages/dashboard/ReservationsTab";
@@ -9,6 +9,7 @@ import FinanceTab from "@/pages/dashboard/FinanceTab";
 import OperationsTab from "@/pages/dashboard/OperationsTab";
 import CrmTab from "@/pages/dashboard/CrmTab";
 import ChannelsTab from "@/pages/dashboard/ChannelsTab";
+import HomestayOpsTab from "@/pages/dashboard/HomestayOpsTab";
 
 const TABS: TabDef[] = [
   { id: "overview",     label: "Overview",     icon: LayoutDashboard },
@@ -17,6 +18,7 @@ const TABS: TabDef[] = [
   { id: "crm",          label: "CRM",          icon: Users },
   { id: "finance",      label: "Finance",      icon: DollarSign },
   { id: "operations",   label: "Operations",   icon: Wrench },
+  { id: "homestay_ops", label: "Homestay Ops", icon: Handshake },
 ];
 
 const VALID = new Set(TABS.map(t => t.id));
@@ -65,6 +67,7 @@ export default function Dashboard() {
         {active === "crm" && <CrmTab />}
         {active === "finance" && <FinanceTab />}
         {active === "operations" && <OperationsTab />}
+        {active === "homestay_ops" && <HomestayOpsTab />}
       </div>
     </Layout>
   );
