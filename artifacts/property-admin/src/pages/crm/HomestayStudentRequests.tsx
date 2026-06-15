@@ -24,8 +24,12 @@ export interface StudentPreferences {
   campus_location?: string;
   homestay_start_date?: string;
   duration_weeks?: string;
-  /** Referring agent name (free text from Google Sheets import). */
-  agent?: string;
+  /**
+   * Referring agent. The public student form stores an object
+   * (`{ uses_agent, agent_name, ... }`); some imports may store a bare string.
+   * `agentDisplayName` normalises both for display.
+   */
+  agent?: { agent_name?: string; [k: string]: unknown } | string;
   [k: string]: unknown;
 }
 
@@ -40,6 +44,13 @@ export interface StudentRequest {
   nationality?: string | null;
   preferences?: StudentPreferences;
   created_at: string;
+}
+
+/** Normalise the agent preference (object or string) to a display string. */
+function agentDisplayName(agent: StudentPreferences["agent"]): string {
+  if (!agent) return "";
+  if (typeof agent === "string") return agent;
+  return typeof agent.agent_name === "string" ? agent.agent_name : "";
 }
 
 export const STUDENT_STATUS_CONFIG: Record<StudentStatus, { key: string; badge: string; dot: string }> = {
@@ -193,7 +204,7 @@ export default function HomestayStudentRequests() {
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{r.student_email || <span className="text-muted-foreground/40">—</span>}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{r.preferences?.school || <span className="text-muted-foreground/40">—</span>}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{r.preferences?.agent || <span className="text-muted-foreground/40">—</span>}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{agentDisplayName(r.preferences?.agent) || <span className="text-muted-foreground/40">—</span>}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{r.preferences?.homestay_start_date || <span className="text-muted-foreground/40">—</span>}</TableCell>
                   <TableCell><StudentStatusBadge status={r.status} /></TableCell>
                   <TableCell className="text-sm text-muted-foreground">{r.created_at ? formatDate(r.created_at) : "—"}</TableCell>
