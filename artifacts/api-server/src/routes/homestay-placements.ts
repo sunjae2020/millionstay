@@ -31,6 +31,7 @@ import { getStripe } from "./stripe.js";
 import { getHomestayBillingSettings, saveHomestayBillingSettings, type HomestayBillingSettings } from "../lib/homestay/billingSettings.js";
 import { resolveTemplate, renderString } from "../lib/documents/templateEngine.js";
 import { parsePageParams, pageMeta } from "../utils/pagination.js";
+import { createBookingForPlacement } from "../lib/homestay/placementBooking.js";
 
 const ENTITY = "homestay_placement";
 
@@ -173,13 +174,22 @@ homestayPlacementAdminRouter.post("/v1/homestay-placements", async (req, res): P
     await adjustOccupied(host_application_id, +1);
     await syncStudentStatus(student_request_id, "Proposed");
 
+    // Auto-create the operational/financial booking spine for this match
+    // (best-effort — a placement is still valid if the booking can't be made).
+    let bookingId: number | null = null;
+    try {
+      bookingId = await createBookingForPlacement({ placement: row!, student, host });
+    } catch (e) {
+      console.error("[homestay] auto-booking failed:", e);
+    }
+
     // Notify the host (best-effort).
     void sendHomestayHostEmail({
       to: host.email, toName: host.first_name, applicationRef: placement_ref, kind: "placement_proposed",
     }).catch((e) => console.error("[homestay-placements] host notify failed:", e));
 
     void logAction({ entityType: ENTITY, entityId: row!.id, action: "CREATE", actorId: (req as any).user?.id ?? null, newValue: { placement_ref, status: "Proposed" } });
-    res.status(201).json({ success: true, placement: await enrich(row!) });
+    res.status(201).json({ success: true, placement: { ...(await enrich(row!)), booking_id: bookingId } });
   } catch (err: any) {
     if (err?.code === "23505") { res.status(409).json({ error: "Duplicate placement" }); return; }
     console.error("[homestay-placements] create failed:", err);

@@ -7,7 +7,7 @@
 // is admin-brokered (Phase 5), so no portal login is created here.
 import { Router, type IRouter } from "express";
 import { and, desc, eq, ilike, isNull, or, sql } from "drizzle-orm";
-import { db, homestayStudentRequestsTable, homestayHostApplicationsTable, homestayHostAvailabilityTable } from "@workspace/db";
+import { db, homestayStudentRequestsTable, homestayHostApplicationsTable, homestayHostAvailabilityTable, accountsTable, usersTable } from "@workspace/db";
 import { generateStudentRef } from "../lib/homestayRef.js";
 import { createSigningRequest, type SignerSpec } from "../services/contractSigning.js";
 import { sendLeadNotificationEmail } from "../lib/email.js";
@@ -175,13 +175,30 @@ homestayStudentAdminRouter.get("/v1/homestay-student-requests", async (req, res)
   }
 });
 
-// Single request (full record, incl. preferences JSONB).
+// Single request (full record, incl. preferences JSONB). Augmented with
+// human-readable names for the assignment fields (mapped agent account +
+// assigned ops staff) so the UI can prefill the assignment pickers.
 homestayStudentAdminRouter.get("/v1/homestay-student-requests/:id", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
   const [row] = await db.select().from(homestayStudentRequestsTable)
     .where(eq(homestayStudentRequestsTable.id, id));
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
-  res.json({ success: true, request: row });
+
+  let agent_account_name: string | null = null;
+  if (row.agent_account_id != null) {
+    const [acc] = await db.select({ name: accountsTable.name }).from(accountsTable)
+      .where(eq(accountsTable.id, row.agent_account_id));
+    agent_account_name = acc?.name ?? null;
+  }
+
+  let assigned_staff_name: string | null = null;
+  if (row.assigned_staff_user_id != null) {
+    const [u] = await db.select({ first_name: usersTable.first_name, last_name: usersTable.last_name })
+      .from(usersTable).where(eq(usersTable.id, row.assigned_staff_user_id));
+    if (u) assigned_staff_name = `${u.first_name} ${u.last_name}`.trim() || null;
+  }
+
+  res.json({ success: true, request: { ...row, agent_account_name, assigned_staff_name } });
 });
 
 // Advance the request through the ops queue + record ops notes. Stamps the
@@ -200,6 +217,31 @@ homestayStudentAdminRouter.post("/v1/homestay-student-requests/:id/status", asyn
     .where(eq(homestayStudentRequestsTable.id, id)).returning();
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
   void logAction({ entityType: STUDENT_ENTITY, entityId: id, action: "STATUS_CHANGE", actorId: reviewer ?? null, newValue: { status } });
+  res.json({ success: true, request: row });
+});
+
+// Assignment — map the application's agent to a real Agent account and assign an
+// ops staff member. Only the fields present in the body are touched (undefined =
+// leave as-is, null = clear).
+homestayStudentAdminRouter.post("/v1/homestay-student-requests/:id/assignment", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const body = req.body as Record<string, unknown>;
+  const set: Record<string, unknown> = {};
+  if (body.agent_account_id !== undefined) {
+    set.agent_account_id = body.agent_account_id === null ? null : Number(body.agent_account_id);
+  }
+  if (body.assigned_staff_user_id !== undefined) {
+    set.assigned_staff_user_id = body.assigned_staff_user_id === null ? null : Number(body.assigned_staff_user_id);
+  }
+  if (Object.keys(set).length === 0) {
+    res.status(400).json({ error: "No assignment fields provided" });
+    return;
+  }
+  const actor = (req as any).user?.id;
+  const [row] = await db.update(homestayStudentRequestsTable).set(set)
+    .where(eq(homestayStudentRequestsTable.id, id)).returning();
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  void logAction({ entityType: STUDENT_ENTITY, entityId: id, action: "UPDATE", actorId: actor ?? null, newValue: { assignment: set } });
   res.json({ success: true, request: row });
 });
 

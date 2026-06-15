@@ -55,6 +55,9 @@ export const homestayStudentRequestsTable = pgTable("homestay_student_requests",
   reviewed_by: integer("reviewed_by"),     // admin user id
   reviewed_at: timestamp("reviewed_at", { withTimezone: true }),
   notes: text("notes"),                    // ops notes
+  // Ops owner of this request (담당직원). → admin_users.id. Carried onto the
+  // booking when a placement is created.
+  assigned_staff_user_id: integer("assigned_staff_user_id"),
 
   deleted_at: timestamp("deleted_at", { withTimezone: true }),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

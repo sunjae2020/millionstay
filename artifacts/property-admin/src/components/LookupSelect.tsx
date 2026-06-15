@@ -29,7 +29,8 @@ export function LookupSelect({ value, onChange, lookupUrl, placeholder = "Search
     setQuery(q);
     setLoading(true);
     try {
-      const url = `${lookupUrl}?q=${encodeURIComponent(q)}`;
+      const sep = lookupUrl.includes("?") ? "&" : "?";
+      const url = `${lookupUrl}${sep}q=${encodeURIComponent(q)}`;
       const res = await fetch(url);
       const data: LookupItem[] = await res.json();
       setResults(data);
