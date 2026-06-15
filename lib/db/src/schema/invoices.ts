@@ -22,3 +22,18 @@ export const invoicesTable = pgTable("invoices", {
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// Itemised invoice lines. An invoice may have zero rows (legacy single-amount
+// invoices keep using invoices.amount + description) or N rows whose total_amount
+// sums to invoices.amount. Money columns are numeric → strings.
+export const invoiceLineItemsTable = pgTable("invoice_line_items", {
+  id: serial("id").primaryKey(),
+  invoice_id: integer("invoice_id").notNull(), // invoices.id
+  label: text("label").notNull(),              // e.g. "Homestay placement fee"
+  description: text("description"),
+  quantity: numeric("quantity", { precision: 10, scale: 2 }).notNull().default("1"),
+  unit_amount: numeric("unit_amount", { precision: 10, scale: 2 }).notNull().default("0"),
+  total_amount: numeric("total_amount", { precision: 10, scale: 2 }).notNull().default("0"),
+  sort_order: integer("sort_order").notNull().default(0),
+  created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});

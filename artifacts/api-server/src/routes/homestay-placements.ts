@@ -32,6 +32,7 @@ import { getHomestayBillingSettings, saveHomestayBillingSettings, type HomestayB
 import { resolveTemplate, renderString } from "../lib/documents/templateEngine.js";
 import { parsePageParams, pageMeta } from "../utils/pagination.js";
 import { createBookingForPlacement } from "../lib/homestay/placementBooking.js";
+import { createPlacementInvoice } from "../lib/homestay/placementInvoice.js";
 
 const ENTITY = "homestay_placement";
 
@@ -274,6 +275,24 @@ homestayPlacementAdminRouter.post("/v1/homestay-placements/:id/contract", async 
   } catch (err) {
     console.error("[homestay-placements] contract failed:", err);
     res.status(500).json({ error: "Failed to create placement contract" });
+  }
+});
+
+// ── Generate an itemized, booking-linked invoice from the placement ──────────
+// Builds a Draft invoice + line items (placement fee, deposit, first month, and
+// any priced placement services). Idempotent per placement (see lib).
+homestayPlacementAdminRouter.post("/v1/homestay-placements/:id/invoice", async (req, res): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) { res.status(400).json({ error: "Invalid placement id" }); return; }
+    const invoice = await createPlacementInvoice(id);
+    void logAction({ entityType: ENTITY, entityId: id, action: "CREATE", actorId: (req as any).user?.id ?? null, newValue: { invoice_id: invoice.id, invoice_ref: invoice.invoice_ref, kind: "placement_invoice" } });
+    res.status(201).json({ success: true, invoice });
+  } catch (err: any) {
+    const msg = err?.message ?? "Failed to create placement invoice";
+    if (/not found/i.test(msg)) { res.status(404).json({ error: msg }); return; }
+    console.error("[homestay-placements] invoice failed:", err);
+    res.status(500).json({ error: "Failed to create placement invoice" });
   }
 });
 
