@@ -88,6 +88,7 @@ export async function createRentScheduleForPlacement(placementId: number): Promi
       start_date: start,
       next_due_date: start,
       billing_mode: "incremental",
+      approval_status: "PendingApproval",
       is_active: true,
     })
     .returning({ id: recurringSchedulesTable.id });

@@ -1121,7 +1121,15 @@
     "col_amount": "Amount",
     "col_frequency": "Frequency",
     "col_next_date": "Next Date",
-    "col_status": "Status"
+    "col_status": "Status",
+    "approval_status": "Approval",
+    "status_pending": "Pending Approval",
+    "status_approved": "Approved",
+    "status_rejected": "Rejected",
+    "approve": "Approve",
+    "reject": "Reject",
+    "approved_toast": "Schedule approved",
+    "rejected_toast": "Schedule rejected"
   },
   "tenant_lifecycle": {
     "title": "Tenant Lifecycle",

@@ -1121,7 +1121,15 @@
     "col_amount": "금액",
     "col_frequency": "주기",
     "col_next_date": "다음 날짜",
-    "col_status": "상태"
+    "col_status": "상태",
+    "approval_status": "승인",
+    "status_pending": "승인 대기",
+    "status_approved": "승인됨",
+    "status_rejected": "거부됨",
+    "approve": "승인",
+    "reject": "거부",
+    "approved_toast": "일정이 승인되었습니다",
+    "rejected_toast": "일정이 거부되었습니다"
   },
   "tenant_lifecycle": {
     "title": "입주자 생애주기",

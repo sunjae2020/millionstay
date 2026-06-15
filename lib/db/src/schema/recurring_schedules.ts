@@ -19,6 +19,11 @@ export const recurringSchedulesTable = pgTable("recurring_schedule", {
   // null = legacy (invoices pre-generated up front at activation);
   // "incremental" = the recurring-invoice cron bills one cycle at a time.
   billing_mode: text("billing_mode"),
+  // Approval gate: auto-created schedules start "PendingApproval" and are NOT
+  // billed by the recurring cron until an admin approves them. Manual/legacy
+  // schedules default to "Approved" (no behaviour change).
+  // PendingApproval | Approved | Rejected
+  approval_status: text("approval_status").notNull().default("Approved"),
   is_active: boolean("is_active").notNull().default(true),
   deleted_at: timestamp("deleted_at"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

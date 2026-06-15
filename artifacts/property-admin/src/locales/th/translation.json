@@ -1121,7 +1121,15 @@
     "col_amount": "จำนวนเงิน",
     "col_frequency": "ความถี่",
     "col_next_date": "วันถัดไป",
-    "col_status": "สถานะ"
+    "col_status": "สถานะ",
+    "approval_status": "การอนุมัติ",
+    "status_pending": "รออนุมัติ",
+    "status_approved": "อนุมัติแล้ว",
+    "status_rejected": "ปฏิเสธแล้ว",
+    "approve": "อนุมัติ",
+    "reject": "ปฏิเสธ",
+    "approved_toast": "อนุมัติตารางแล้ว",
+    "rejected_toast": "ปฏิเสธตารางแล้ว"
   },
   "tenant_lifecycle": {
     "title": "วงจรชีวิตผู้เช่า",

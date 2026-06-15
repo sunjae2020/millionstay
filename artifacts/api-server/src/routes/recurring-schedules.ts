@@ -131,12 +131,35 @@ router.patch("/v1/recurring-schedules/:id/deactivate", async (req, res): Promise
   res.json(result);
 });
 
+// Approval gate: auto-created schedules start as 'PendingApproval' and are billed
+// only after an admin approves them. The recurring cron skips non-Approved rows.
+router.post("/v1/recurring-schedules/:id/approve", async (req, res): Promise<void> => {
+  const [row] = await db.update(recurringSchedulesTable)
+    .set({ approval_status: "Approved", is_active: true, updated_at: new Date() })
+    .where(eq(recurringSchedulesTable.id, Number(req.params.id)))
+    .returning();
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  const [schedule] = await enrichSchedules([row]);
+  res.json({ success: true, schedule });
+});
+
+router.post("/v1/recurring-schedules/:id/reject", async (req, res): Promise<void> => {
+  const [row] = await db.update(recurringSchedulesTable)
+    .set({ approval_status: "Rejected", is_active: false, updated_at: new Date() })
+    .where(eq(recurringSchedulesTable.id, Number(req.params.id)))
+    .returning();
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  const [schedule] = await enrichSchedules([row]);
+  res.json({ success: true, schedule });
+});
+
 router.post("/v1/recurring-schedules/generate-due", async (req, res): Promise<void> => {
   const today = new Date().toISOString().slice(0, 10);
 
   const dueSchedules = await db.select().from(recurringSchedulesTable)
     .where(and(
       eq(recurringSchedulesTable.is_active, true),
+      eq(recurringSchedulesTable.approval_status, "Approved"),
       lte(recurringSchedulesTable.next_due_date, today),
     ));
 

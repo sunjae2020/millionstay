@@ -1121,7 +1121,15 @@
     "col_amount": "金額",
     "col_frequency": "頻度",
     "col_next_date": "次回日付",
-    "col_status": "ステータス"
+    "col_status": "ステータス",
+    "approval_status": "承認",
+    "status_pending": "承認待ち",
+    "status_approved": "承認済み",
+    "status_rejected": "却下",
+    "approve": "承認",
+    "reject": "却下",
+    "approved_toast": "スケジュールを承認しました",
+    "rejected_toast": "スケジュールを却下しました"
   },
   "tenant_lifecycle": {
     "title": "テナントライフサイクル",
