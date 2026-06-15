@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { randomBytes } from "node:crypto";
-import { eq, and, gte, lte, isNull, inArray, desc, type SQL } from "drizzle-orm";
+import { eq, and, gte, lte, isNull, inArray, desc, sql, type SQL } from "drizzle-orm";
 import {
   db,
   bookingsTable,
@@ -13,6 +13,7 @@ import {
 import { requireApiKey, requireScope, type ApiClient } from "../middlewares/requireApiKey";
 import { logAction } from "../utils/auditLog";
 import { STUDENT_STATUSES } from "./homestay-students";
+import { generateStudentRef } from "../lib/homestayRef";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PUBLIC EXTERNAL API — mounted at /api/ext/v1
@@ -428,6 +429,88 @@ router.patch("/v1/homestay-student-requests/by-ref/:ref", requireScope("homestay
   });
 
   res.json(studentRequestView(row));
+});
+
+// Whole years between a YYYY-MM-DD date of birth and today (null if unparseable).
+function ageFromDob(dob: string): number | null {
+  const d = new Date(dob);
+  if (isNaN(d.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - d.getFullYear();
+  const m = now.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+  return age;
+}
+
+// Create a homestay student request from an external source (Google Sheets
+// import of Time Study applications). UNLIKE the public intake endpoint, this
+// has NO side effects — no e-signature request, no notification email. It is an
+// admin-side bulk import: status "Submitted", submitted_by "agent". Idempotent
+// via `external_ref` (stored at preferences.import.ref) so re-running the sheet
+// push never creates duplicates.
+router.post("/v1/homestay-student-requests", requireScope("homestay:write"), async (req, res): Promise<void> => {
+  const b = req.body ?? {};
+  const first = String(b.student_first_name ?? "").trim();
+  const last = String(b.student_last_name ?? "").trim();
+  if (!first || !last) {
+    res.status(400).json({ error: "student_first_name and student_last_name are required" });
+    return;
+  }
+
+  const externalRef = b.external_ref != null ? String(b.external_ref).trim() : "";
+  const client = (req as any).apiClient as ApiClient | undefined;
+
+  // Idempotency — skip if a request was already imported with this external_ref.
+  if (externalRef) {
+    const [dup] = await db
+      .select({ id: homestayStudentRequestsTable.id, request_ref: homestayStudentRequestsTable.request_ref })
+      .from(homestayStudentRequestsTable)
+      .where(and(
+        isNull(homestayStudentRequestsTable.deleted_at),
+        sql`${homestayStudentRequestsTable.preferences} -> 'import' ->> 'ref' = ${externalRef}`,
+      ))
+      .limit(1);
+    if (dup) { res.json({ created: false, duplicate: true, id: dup.id, request_ref: dup.request_ref }); return; }
+  }
+
+  const dob = String(b.date_of_birth ?? "").trim();
+  const age = dob ? ageFromDob(dob) : null;
+  const is_minor = age != null && age >= 0 && age < 18;
+
+  const basePrefs = b.preferences && typeof b.preferences === "object" ? b.preferences : {};
+  const preferences = { ...basePrefs, import: { source: "google_sheets", ref: externalRef || null, client: client?.name ?? null } };
+
+  const request_ref = await generateStudentRef();
+  const [row] = await db.insert(homestayStudentRequestsTable).values({
+    request_ref,
+    status: "Submitted",
+    submitted_by: "agent",
+    student_first_name: first,
+    student_last_name: last,
+    student_email: String(b.student_email ?? "").trim().toLowerCase() || null,
+    student_phone: b.student_phone ? String(b.student_phone) : null,
+    date_of_birth: dob || null,
+    is_minor,
+    gender: b.gender ? String(b.gender) : null,
+    nationality: b.nationality ? String(b.nationality) : null,
+    guardian_name: b.guardian_name ? String(b.guardian_name) : null,
+    guardian_email: b.guardian_email ? String(b.guardian_email).trim().toLowerCase() : null,
+    guardian_phone: b.guardian_phone ? String(b.guardian_phone) : null,
+    guardian_relationship: b.guardian_relationship ? String(b.guardian_relationship) : null,
+    preferences,
+    terms_accepted: false,
+  }).returning();
+
+  void logAction({
+    entityType: STUDENT_ENTITY,
+    entityId: row!.id,
+    action: "CREATE",
+    actorId: null,
+    actorEmail: `integration:google_sheets${client ? `:${client.name}` : ""}`,
+    newValue: { request_ref, external_ref: externalRef || null },
+  });
+
+  res.status(201).json({ created: true, id: row!.id, request_ref });
 });
 
 export default router;
