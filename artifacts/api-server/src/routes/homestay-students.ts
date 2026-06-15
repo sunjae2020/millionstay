@@ -14,6 +14,7 @@ import { sendLeadNotificationEmail } from "../lib/email.js";
 import { logAction } from "../utils/auditLog.js";
 import { rankHosts } from "../lib/homestay/matching.js";
 import { attachRationales } from "../lib/homestay/matchRationale.js";
+import { sendStudentPortalInvite } from "../lib/homestay/studentPortalInvite.js";
 import { parsePageParams, pageMeta } from "../utils/pagination.js";
 import { formatFirstName, formatLastName } from "../lib/nameFormat.js";
 
@@ -285,5 +286,33 @@ homestayStudentAdminRouter.get("/v1/homestay-student-requests/:id/host-suggestio
   } catch (err) {
     console.error("[homestay-student-admin] host-suggestions failed:", err);
     res.status(500).json({ error: "Failed to generate host suggestions" });
+  }
+});
+
+// Student portal login provisioning (ops-triggered). Provisions (or reuses) a
+// guest_users login for the placed student and emails a set-password link,
+// reusing the existing guest password-reset token flow. The student can then
+// access the guest portal (/portal/*) to view their booking, invoices and
+// payments. Requires the student to have an email and an account_id (set when
+// the placement/booking is created).
+homestayStudentAdminRouter.post("/v1/homestay-student-requests/:id/portal-invite", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const actor = (req as any).user?.id;
+  try {
+    const result = await sendStudentPortalInvite(id);
+    void logAction({ entityType: STUDENT_ENTITY, entityId: id, action: "UPDATE", actorId: actor ?? null, newValue: { portal_invite: true } });
+    res.status(201).json({ success: true, ...result });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Failed to send portal invite";
+    if (/not found/i.test(msg)) {
+      res.status(404).json({ success: false, error: msg });
+      return;
+    }
+    if (/no email|no account/i.test(msg)) {
+      res.status(400).json({ success: false, error: msg });
+      return;
+    }
+    console.error("[homestay-student-admin] portal-invite failed:", err);
+    res.status(500).json({ success: false, error: "Failed to send portal invite" });
   }
 });

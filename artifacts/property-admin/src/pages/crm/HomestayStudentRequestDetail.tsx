@@ -224,6 +224,18 @@ export default function HomestayStudentRequestDetail() {
     onError: (e: any) => toast({ title: t("homestayStudent.error"), description: e.message, variant: "destructive" }),
   });
 
+  const sendPortalInvite = useMutation({
+    mutationFn: async () => {
+      const res = await apiFetch(`${API}/${id}/portal-invite`, { method: "POST" });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error ?? await res.text());
+      return res.json();
+    },
+    onSuccess: (d: any) => {
+      toast({ title: d?.emailed ? t("homestayStudent.invite_sent") : t("homestayStudent.invite_provisioned") });
+    },
+    onError: (e: any) => toast({ title: t("homestayStudent.error"), description: e.message, variant: "destructive" }),
+  });
+
   const createPlacement = useMutation({
     mutationFn: async () => {
       const res = await apiFetch(`/api/v1/homestay-placements`, {
@@ -330,7 +342,10 @@ export default function HomestayStudentRequestDetail() {
                 placeholder={t("homestayStudent.assignment_staff")}
               />
             </div>
-            <div className="sm:col-span-2 flex justify-end">
+            <div className="sm:col-span-2 flex justify-end gap-2">
+              <Button size="sm" variant="outline" onClick={() => sendPortalInvite.mutate()} disabled={sendPortalInvite.isPending}>
+                {sendPortalInvite.isPending ? t("common.saving") : t("homestayStudent.send_portal_invite")}
+              </Button>
               <Button size="sm" onClick={() => saveAssignment.mutate()} disabled={saveAssignment.isPending}>
                 {saveAssignment.isPending ? t("common.saving") : t("common.save")}
               </Button>
