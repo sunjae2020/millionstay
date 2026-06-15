@@ -5,6 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { logAction } from "../utils/auditLog";
 import { createCommissionForPlacement } from "../lib/homestay/commission";
 import { postInvoicePaid } from "../lib/billing/gl";
+import { createRentScheduleForPlacement } from "../lib/homestay/rentSchedule";
 import { notifyPlacementActivated } from "../lib/homestay/notify";
 import { formatPersonName } from "../lib/nameFormat";
 
@@ -103,6 +104,8 @@ router.post("/v1/stripe/webhook", async (req, res): Promise<void> => {
               }
               // Accrue the agent commission on activation (best-effort, idempotent).
               try { await createCommissionForPlacement(pl.id); } catch (e) { console.error("[Stripe] commission accrual failed:", e); }
+              // Set up unified monthly-rent billing on the booking (best-effort, idempotent).
+              try { await createRentScheduleForPlacement(pl.id); } catch (e) { console.error("[Stripe] rent schedule failed:", e); }
               // Notify the student + guardian of activation (best-effort).
               try {
                 const [stu] = await db.select().from(homestayStudentRequestsTable)

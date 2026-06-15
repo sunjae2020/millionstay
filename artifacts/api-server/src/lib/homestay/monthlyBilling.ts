@@ -12,6 +12,7 @@ import {
   paymentInfoTable,
 } from "@workspace/db";
 import { getHomestayBillingSettings } from "./billingSettings.js";
+import { hasActiveRentSchedule } from "./rentSchedule.js";
 
 /** Today in Sydney (YYYY-MM-DD), matching the cron timezone. */
 function sydneyToday(): string {
@@ -50,6 +51,11 @@ export async function generateRentCharges(): Promise<RentBillingResult> {
 
   for (const pl of due) {
     try {
+      // Unified billing: if this placement's booking has a recurring schedule,
+      // rent is billed as booking invoices by generateRecurringInvoices — skip
+      // here so it's never billed twice.
+      if (await hasActiveRentSchedule(pl.booking_id)) { result.skipped++; continue; }
+
       const periodStart = pl.next_billing_date!;
       const cycleWeeks = pl.billing_cycle_weeks || settings.cycle_weeks;
       const periodEnd = addDays(periodStart, cycleWeeks * 7);
