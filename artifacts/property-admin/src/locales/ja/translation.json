@@ -2812,7 +2812,13 @@
     "match_loading": "承認済みホストを採点中…",
     "match_empty": "この学生の条件に合う承認済みホストが見つかりませんでした。",
     "match_score": "スコア",
-    "match_no_ai": "AIによる根拠は利用できません（Anthropicキーが未設定です）— ルールベースのスコアのみ表示しています。"
+    "match_no_ai": "AIによる根拠は利用できません（Anthropicキーが未設定です）— ルールベースのスコアのみ表示しています。",
+    "match_manual": "手動で検索",
+    "manual_search_title": "ホストファミリーを検索",
+    "manual_search_placeholder": "氏名・メール・参照番号で検索…",
+    "manual_search_hint": "承認済みのホストファミリーのみ配置できます。",
+    "manual_search_loading": "検索中…",
+    "manual_search_empty": "承認済みのホストファミリーが見つかりません。"
   },
   "homestayPlacement": {
     "list_title": "ホームステイ配置",

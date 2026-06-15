@@ -2812,7 +2812,13 @@
     "match_loading": "正在为已批准房东评分…",
     "match_empty": "未找到符合该学生条件的兼容的已批准房东。",
     "match_score": "评分",
-    "match_no_ai": "AI 解析不可用（未配置 Anthropic 密钥）— 仅显示基于规则的评分。"
+    "match_no_ai": "AI 解析不可用（未配置 Anthropic 密钥）— 仅显示基于规则的评分。",
+    "match_manual": "手动搜索",
+    "manual_search_title": "搜索寄宿家庭",
+    "manual_search_placeholder": "按姓名、邮箱或编号搜索…",
+    "manual_search_hint": "只能为已批准的寄宿家庭创建安置。",
+    "manual_search_loading": "搜索中…",
+    "manual_search_empty": "未找到已批准的寄宿家庭。"
   },
   "homestayPlacement": {
     "list_title": "寄宿安置",

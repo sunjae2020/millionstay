@@ -2799,7 +2799,13 @@
     "match_loading": "Scoring approved hosts…",
     "match_empty": "No compatible approved hosts found for this student's conditions.",
     "match_score": "Score",
-    "match_no_ai": "AI rationale unavailable (Anthropic key not configured) — showing rule-based scores only."
+    "match_no_ai": "AI rationale unavailable (Anthropic key not configured) — showing rule-based scores only.",
+    "match_manual": "Search manually",
+    "manual_search_title": "Search host families",
+    "manual_search_placeholder": "Search by name, email or ref…",
+    "manual_search_hint": "Only approved host families can be placed.",
+    "manual_search_loading": "Searching…",
+    "manual_search_empty": "No approved host families found."
   },
   "homestayPlacement": {
     "list_title": "Homestay Placements",
