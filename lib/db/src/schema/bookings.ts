@@ -1,6 +1,7 @@
 import { pgTable, serial, text, integer, boolean, timestamp, date, numeric } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { contractTermEnum, roomTypeEnum, mealPlanEnum } from "./accommodation_options";
 
 export const bookingsTable = pgTable("bookings", {
   id: serial("id").primaryKey(),
@@ -24,6 +25,20 @@ export const bookingsTable = pgTable("bookings", {
   product_id: integer("product_id"),
   contract_product_id: integer("contract_product_id"),
   agent_account_id: integer("agent_account_id"),
+  // ── Unified product classification (homestay / self-board / share) ──
+  // A booking carries its own snapshot of the product classification so that
+  // homestay ⇄ self-board ⇄ share conversions are just attribute changes on the
+  // same row. NULL on legacy short-term bookings created before this column set.
+  //   room_type='homestay'                     → homestay (with a host family)
+  //   room_type='homestay'  + meal_plan='none' → homestay self-board (no meals)
+  //   room_type in (entire_place|house_share|room_share) → share (no host family)
+  room_type: roomTypeEnum("room_type"),
+  meal_plan: mealPlanEnum("meal_plan"),
+  contract_term: contractTermEnum("contract_term"),
+  // Host family this booking is placed with (homestay only; NULL for share).
+  host_application_id: integer("host_application_id"),
+  // Internal ops owner of this booking (담당직원). → users.id
+  assigned_staff_user_id: integer("assigned_staff_user_id"),
   cancellation_reason: text("cancellation_reason"),
   cancelled_at: timestamp("cancelled_at", { withTimezone: true }),
   status: text("status").notNull().default("Active"),

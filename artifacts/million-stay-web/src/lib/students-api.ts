@@ -15,6 +15,12 @@ export interface StudentPreferences {
   course_start_date?: string;
   campus_location?: string;
   // Homestay information
+  // Unified product classification — values map to the DB enums
+  // (accommodation_options.ts): stay_type drives meal applicability, space_sharing
+  // → room_type, contract_term → contract_term. Used to spin up a booking.
+  stay_type?: string;       // "homestay" | "homestay_self_board" | "share"
+  space_sharing?: string;   // "entire_place" | "house_share" | "room_share"
+  contract_term?: string;   // "short_term" | "mid_term" | "long_term"
   homestay_start_date?: string;
   duration_weeks?: string;
   room_type?: string;

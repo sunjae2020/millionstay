@@ -11,6 +11,7 @@ import {
   propertiesTable,
   spacesTable,
   suburbsTable,
+  accommodationCatalogTable,
 } from "@workspace/db";
 import { generateHomestayRef } from "../lib/homestayRef.js";
 import { formatFirstName, formatLastName } from "../lib/nameFormat.js";
@@ -57,6 +58,16 @@ function bedOccupancy(bedType?: string): number {
   return /twin|bunk|double|queen|king|triple/.test(b) ? 2 : 1;
 }
 
+// Headline meal plan for the inventory catalog from the host's offered packages.
+// (The actual meal_plan is chosen per booking; this just classifies the listing.)
+// Form values: "full_board" | "partial_board" | "no_meals" → meal_plan enum.
+function headlineMealPlan(packages: unknown): "full_board" | "partial_board" | "none" {
+  const set = new Set((Array.isArray(packages) ? packages : []).map((p) => String(p)));
+  if (set.has("full_board")) return "full_board";
+  if (set.has("partial_board")) return "partial_board";
+  return "none";
+}
+
 // On approval, materialise the host's homestay listing: one property for the
 // home + one space per advertised room, classified space_type='Homestay'.
 // Spaces start 'Inactive' (hidden) and only go 'Active' when the host turns on
@@ -89,7 +100,7 @@ async function ensureHomestayListings(app: typeof homestayHostApplicationsTable.
 
   const rooms = (app.rooms as RoomRow[] | null) ?? [];
   const list = rooms.length ? rooms : [{ name: "Homestay Room" }];
-  await db.insert(spacesTable).values(
+  const createdSpaces = await db.insert(spacesTable).values(
     list.map((r, i) => ({
       name: r.name?.trim() || `Homestay Room ${i + 1}`,
       space_type: "Homestay",
@@ -100,7 +111,26 @@ async function ensureHomestayListings(app: typeof homestayHostApplicationsTable.
       property_id: property!.id,
       landlord_account_id: app.account_id,
     })),
+  ).returning({ id: spacesTable.id, name: spacesTable.name });
+
+  // Classify each room in the unified product catalog as a homestay listing, so
+  // it surfaces in shared search/matching/booking flows alongside short-term
+  // stock. meal_plan is the host's headline offering (chosen per booking later);
+  // includes_meals mirrors it. contract_term stays NULL (set per booking).
+  const meal_plan = headlineMealPlan(app.packages_offered);
+  await db.insert(accommodationCatalogTable).values(
+    createdSpaces.map((s) => ({
+      name: s.name,
+      space_id: s.id,
+      room_type: "homestay" as const,
+      meal_plan,
+      includes_meals: meal_plan !== "none",
+      currency: "AUD",
+      product_provider_account_id: app.account_id,
+      status: "Active",
+    })),
   );
+
   void logAction({ entityType: HOMESTAY_ENTITY, entityId: app.id, action: "AUTO_CREATED", newValue: { property_id: property!.id, rooms: list.length } });
 }
 
