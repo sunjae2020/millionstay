@@ -1,6 +1,7 @@
 import { Router } from "express";
-import { db, invoicesTable, bookingsTable, contractsTable, accountsTable, emailLogsTable } from "@workspace/db";
-import { eq, ilike, and, isNull, inArray } from "drizzle-orm";
+import { db, invoicesTable, invoiceLineItemsTable, bookingsTable, contractsTable, accountsTable, emailLogsTable } from "@workspace/db";
+import { eq, ilike, and, asc, isNull, inArray } from "drizzle-orm";
+import { z } from "zod";
 import { logAction } from "../utils/auditLog";
 import { getRateToAud } from "../lib/rateSnapshot";
 import { buildInvoiceHtml, type InvoiceDocInput } from "../lib/documents/invoiceDocument";
@@ -25,6 +26,51 @@ async function nextInvoiceRef(): Promise<string> {
     .where(ilike(invoicesTable.invoice_ref, `MS-INV-${year}-%`));
   const count = rows.length + 1;
   return `MS-INV-${year}-${String(count).padStart(5, "0")}`;
+}
+
+/**
+ * Optional itemised line items accepted on invoice create/update. When present
+ * and non-empty, they drive the stored invoice `amount` and the itemised PDF
+ * rendering. Money fields are stored as strings (numeric columns).
+ */
+const LineItemInput = z.object({
+  label: z.string().min(1),
+  description: z.string().nullish(),
+  quantity: z.number().positive().optional(),
+  unit_amount: z.number(),
+});
+type LineItemInput = z.infer<typeof LineItemInput>;
+const LineItemsBody = z.object({ line_items: z.array(LineItemInput).optional() });
+
+const round2 = (n: number): number => Math.round(n * 100) / 100;
+
+/** Map validated line-item inputs to insert rows for a given invoice. */
+function buildLineItemRows(invoiceId: number, items: LineItemInput[]) {
+  return items.map((it, idx) => {
+    const qty = it.quantity ?? 1;
+    return {
+      invoice_id: invoiceId,
+      label: it.label,
+      description: it.description ?? null,
+      quantity: String(qty),
+      unit_amount: String(it.unit_amount),
+      total_amount: String(round2(qty * it.unit_amount)),
+      sort_order: idx,
+    };
+  });
+}
+
+/** Sum of line-item totals, as a string for the numeric `amount` column. */
+function sumLineItems(items: LineItemInput[]): string {
+  const total = items.reduce((acc, it) => acc + round2((it.quantity ?? 1) * it.unit_amount), 0);
+  return String(round2(total));
+}
+
+/** Fetch a single invoice's line items, ordered by sort_order. */
+async function getLineItems(invoiceId: number) {
+  return db.select().from(invoiceLineItemsTable)
+    .where(eq(invoiceLineItemsTable.invoice_id, invoiceId))
+    .orderBy(asc(invoiceLineItemsTable.sort_order), asc(invoiceLineItemsTable.id));
 }
 
 async function enrichInvoices(rows: (typeof invoicesTable.$inferSelect)[]) {
@@ -76,34 +122,48 @@ router.get("/v1/invoices", async (req, res): Promise<void> => {
 router.post("/v1/invoices", async (req, res): Promise<void> => {
   const parsed = CreateInvoiceBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  const itemsParsed = LineItemsBody.safeParse(req.body);
+  if (!itemsParsed.success) { res.status(400).json({ error: itemsParsed.error.message }); return; }
+  const lineItems = itemsParsed.data.line_items ?? [];
+  const hasLineItems = lineItems.length > 0;
+
   const invoice_ref = await nextInvoiceRef();
   const ccy = parsed.data.currency ?? "AUD";
+  const amount = hasLineItems ? sumLineItems(lineItems) : String(parsed.data.amount ?? 0);
   const [row] = await db.insert(invoicesTable).values({
     invoice_ref,
     booking_id: parsed.data.booking_id ?? null,
     contract_id: parsed.data.contract_id ?? null,
     account_id: parsed.data.account_id ?? null,
-    amount: String(parsed.data.amount ?? 0),
+    amount,
     currency: ccy,
     exchange_rate_to_aud: await getRateToAud(ccy),
     due_date: parsed.data.due_date ?? null,
     description: parsed.data.description ?? null,
     notes: parsed.data.notes ?? null,
   }).returning();
+  if (hasLineItems) {
+    await db.insert(invoiceLineItemsTable).values(buildLineItemRows(row.id, lineItems));
+  }
   const [result] = await enrichInvoices([row]);
-  res.status(201).json(result);
+  res.status(201).json({ ...result, line_items: hasLineItems ? await getLineItems(row.id) : [] });
 });
 
 router.get("/v1/invoices/:id", async (req, res): Promise<void> => {
   const row = await db.select().from(invoicesTable).where(eq(invoicesTable.id, Number(req.params.id))).then(r => r[0]);
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
   const [result] = await enrichInvoices([row]);
-  res.json(result);
+  res.json({ ...result, line_items: await getLineItems(row.id) });
 });
 
 router.put("/v1/invoices/:id", async (req, res): Promise<void> => {
   const parsed = UpdateInvoiceBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  const itemsParsed = LineItemsBody.safeParse(req.body);
+  if (!itemsParsed.success) { res.status(400).json({ error: itemsParsed.error.message }); return; }
+  const lineItems = itemsParsed.data.line_items; // undefined = leave untouched
+  const id = Number(req.params.id);
+
   const updates: Partial<typeof invoicesTable.$inferInsert> = { updated_at: new Date() };
   if (parsed.data.booking_id !== undefined) updates.booking_id = parsed.data.booking_id;
   if (parsed.data.contract_id !== undefined) updates.contract_id = parsed.data.contract_id;
@@ -113,10 +173,18 @@ router.put("/v1/invoices/:id", async (req, res): Promise<void> => {
   if (parsed.data.due_date !== undefined) updates.due_date = parsed.data.due_date;
   if (parsed.data.description !== undefined) updates.description = parsed.data.description;
   if (parsed.data.notes !== undefined) updates.notes = parsed.data.notes;
-  const [row] = await db.update(invoicesTable).set(updates).where(eq(invoicesTable.id, Number(req.params.id))).returning();
+  // When line_items are provided, they own the amount.
+  if (lineItems !== undefined) updates.amount = sumLineItems(lineItems);
+  const [row] = await db.update(invoicesTable).set(updates).where(eq(invoicesTable.id, id)).returning();
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  if (lineItems !== undefined) {
+    await db.delete(invoiceLineItemsTable).where(eq(invoiceLineItemsTable.invoice_id, id));
+    if (lineItems.length > 0) {
+      await db.insert(invoiceLineItemsTable).values(buildLineItemRows(id, lineItems));
+    }
+  }
   const [result] = await enrichInvoices([row]);
-  res.json(result);
+  res.json({ ...result, line_items: await getLineItems(id) });
 });
 
 router.post("/v1/invoices/bulk-delete", async (req, res): Promise<void> => {
@@ -229,6 +297,13 @@ async function buildInvoiceDocInput(invoiceId: number): Promise<InvoiceDocInput 
     account_address,
     booking_ref: (enriched as any).booking_ref ?? null,
     contract_ref: (enriched as any).contract_ref ?? null,
+    line_items: (await getLineItems(invoiceId)).map(li => ({
+      label: li.label,
+      description: li.description,
+      quantity: li.quantity,
+      unit_amount: li.unit_amount,
+      total_amount: li.total_amount,
+    })),
   };
 }
 
@@ -405,6 +480,11 @@ router.post("/v1/invoices/:id/checkout", async (req, res): Promise<void> => {
   const amount = Number(row.amount);
   if (!(amount > 0)) { res.status(400).json({ error: "Invoice amount must be greater than zero." }); return; }
 
+  const surchargePct = Number((req.body?.surcharge_pct ?? 0));
+  const hasSurcharge = Number.isFinite(surchargePct) && surchargePct > 0;
+  const surcharge = hasSurcharge ? round2(amount * surchargePct / 100) : 0;
+  const chargeable = round2(amount + surcharge);
+
   const stripe = getStripe();
   if (!stripe) { res.status(503).json({ error: "Stripe is not configured" }); return; }
 
@@ -420,12 +500,16 @@ router.post("/v1/invoices/:id/checkout", async (req, res): Promise<void> => {
     line_items: [{
       price_data: {
         currency: (row.currency || "AUD").toLowerCase(),
-        product_data: { name: `Invoice ${row.invoice_ref}${row.description ? ` — ${row.description}` : ""}`.slice(0, 250) },
-        unit_amount: Math.round(amount * 100),
+        product_data: { name: `Invoice ${row.invoice_ref}${row.description ? ` — ${row.description}` : ""}${hasSurcharge ? ` (incl. ${surchargePct}% card surcharge)` : ""}`.slice(0, 250) },
+        unit_amount: Math.round(chargeable * 100),
       },
       quantity: 1,
     }],
-    metadata: { invoice_id: String(id), invoice_ref: row.invoice_ref },
+    metadata: {
+      invoice_id: String(id),
+      invoice_ref: row.invoice_ref,
+      ...(hasSurcharge ? { surcharge_pct: String(surchargePct) } : {}),
+    },
     customer_email: email || undefined,
     success_url: `${webBase}/payment-result?status=success&ref=${encodeURIComponent(row.invoice_ref)}`,
     cancel_url: `${webBase}/payment-result?status=cancelled&ref=${encodeURIComponent(row.invoice_ref)}`,

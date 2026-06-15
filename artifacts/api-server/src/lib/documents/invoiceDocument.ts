@@ -30,6 +30,13 @@ export interface InvoiceDocInput {
   account_address?: string | null;
   booking_ref?: string | null;
   contract_ref?: string | null;
+  line_items?: Array<{
+    label: string;
+    description?: string | null;
+    quantity: string | number;
+    unit_amount: string | number;
+    total_amount: string | number;
+  }>;
 }
 
 const STATUS_STYLE: Record<string, { bg: string; fg: string }> = {
@@ -54,6 +61,53 @@ function formatDate(value: string | Date | null, lang: DocLang): string {
   return d.toLocaleDateString(docLocale(lang), { year: "numeric", month: "short", day: "numeric" });
 }
 
+function formatQty(value: string | number): string {
+  const n = Number(value ?? 0);
+  return Number.isInteger(n) ? String(n) : n.toLocaleString("en-AU", { maximumFractionDigits: 2 });
+}
+
+/**
+ * Render the invoice details table: an itemised table when line items exist,
+ * otherwise the legacy single description/amount row (unchanged).
+ */
+function renderDetailsTable(inv: InvoiceDocInput, lang: DocLang): string {
+  const items = inv.line_items ?? [];
+  if (items.length > 0) {
+    const rows = items.map(li => `
+          <tr>
+            <td>${escapeHtml(li.label)}${li.description?.trim() ? `<div style="font-size:12px;color:#999;">${escapeHtml(li.description)}</div>` : ""}</td>
+            <td class="num">${escapeHtml(formatQty(li.quantity))}</td>
+            <td class="num">${formatMoney(li.unit_amount, inv.currency)}</td>
+            <td class="num">${formatMoney(li.total_amount, inv.currency)}</td>
+          </tr>`).join("");
+    return `
+      <table class="lines">
+        <thead>
+          <tr><th>${t(lang, "description")}</th><th class="num">${t(lang, "qty")}</th><th class="num">${t(lang, "unit")}</th><th class="num">${t(lang, "amount")}</th></tr>
+        </thead>
+        <tbody>${rows}
+          <tr>
+            <td colspan="3" class="num"><strong>${t(lang, "total")}</strong></td>
+            <td class="num"><strong>${formatMoney(inv.amount, inv.currency)}</strong></td>
+          </tr>
+        </tbody>
+      </table>`;
+  }
+  const lineDesc = inv.description?.trim() || "Accommodation services";
+  return `
+      <table class="lines">
+        <thead>
+          <tr><th>${t(lang, "description")}</th><th class="num">${t(lang, "amount")}</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>${escapeHtml(lineDesc)}</td>
+            <td class="num">${formatMoney(inv.amount, inv.currency)}</td>
+          </tr>
+        </tbody>
+      </table>`;
+}
+
 /** Build the inner body HTML for an invoice (no shell). */
 export function buildInvoiceBody(inv: InvoiceDocInput, lang: DocLang = "en"): string {
   const status = inv.status || "Draft";
@@ -66,8 +120,6 @@ export function buildInvoiceBody(inv: InvoiceDocInput, lang: DocLang = "en"): st
     inv.booking_ref ? `${escapeHtml(inv.booking_ref)}` : null,
     inv.contract_ref ? `${escapeHtml(inv.contract_ref)}` : null,
   ].filter(Boolean).join(" · ");
-
-  const lineDesc = inv.description?.trim() || "Accommodation services";
 
   return `
     <div class="section" style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
@@ -87,17 +139,7 @@ export function buildInvoiceBody(inv: InvoiceDocInput, lang: DocLang = "en"): st
 
     <div class="section">
       <h3>${t(lang, "details")}</h3>
-      <table class="lines">
-        <thead>
-          <tr><th>${t(lang, "description")}</th><th class="num">${t(lang, "amount")}</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>${escapeHtml(lineDesc)}</td>
-            <td class="num">${formatMoney(inv.amount, inv.currency)}</td>
-          </tr>
-        </tbody>
-      </table>
+      ${renderDetailsTable(inv, lang)}
     </div>
 
     <div class="section">

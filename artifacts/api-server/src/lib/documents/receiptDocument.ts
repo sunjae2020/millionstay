@@ -21,6 +21,35 @@ function formatDate(value: string | Date | null, lang: DocLang): string {
   return d.toLocaleDateString(docLocale(lang), { year: "numeric", month: "short", day: "numeric" });
 }
 
+function formatQty(value: string | number): string {
+  const n = Number(value ?? 0);
+  return Number.isInteger(n) ? String(n) : n.toLocaleString("en-AU", { maximumFractionDigits: 2 });
+}
+
+/** Itemised "what was paid for" block, when line items exist. */
+function renderItemsTable(inv: InvoiceDocInput, lang: DocLang): string {
+  const items = inv.line_items ?? [];
+  const rows = items.map(li => `
+          <tr>
+            <td>${escapeHtml(li.label)}${li.description?.trim() ? `<div style="font-size:12px;color:#999;">${escapeHtml(li.description)}</div>` : ""}</td>
+            <td class="num">${escapeHtml(formatQty(li.quantity))}</td>
+            <td class="num">${formatMoney(li.unit_amount, inv.currency)}</td>
+            <td class="num">${formatMoney(li.total_amount, inv.currency)}</td>
+          </tr>`).join("");
+  return `
+      <table class="lines">
+        <thead>
+          <tr><th>${t(lang, "description")}</th><th class="num">${t(lang, "qty")}</th><th class="num">${t(lang, "unit")}</th><th class="num">${t(lang, "amount")}</th></tr>
+        </thead>
+        <tbody>${rows}
+          <tr>
+            <td colspan="3" class="num"><strong>${t(lang, "total")}</strong></td>
+            <td class="num"><strong>${formatMoney(inv.amount, inv.currency)}</strong></td>
+          </tr>
+        </tbody>
+      </table>`;
+}
+
 export function buildReceiptBody(inv: InvoiceDocInput, lang: DocLang = "en"): string {
   const isPaid = inv.status === "Paid";
   const billTo = inv.account_name
@@ -47,7 +76,9 @@ export function buildReceiptBody(inv: InvoiceDocInput, lang: DocLang = "en"): st
     </div>
 
     <div class="section">
-      <div class="row"><span class="label">${t(lang, "for")}</span><span class="value">${escapeHtml(inv.description?.trim() || "Accommodation services")}</span></div>
+      ${(inv.line_items?.length ?? 0) > 0
+        ? renderItemsTable(inv, lang)
+        : `<div class="row"><span class="label">${t(lang, "for")}</span><span class="value">${escapeHtml(inv.description?.trim() || "Accommodation services")}</span></div>`}
       <div class="row"><span class="label">${t(lang, "paymentMethod")}</span><span class="value">${escapeHtml(inv.payment_method || "—")}</span></div>
       <div class="row"><span class="label">${t(lang, "paymentDate")}</span><span class="value">${formatDate(inv.paid_at, lang)}</span></div>
     </div>
