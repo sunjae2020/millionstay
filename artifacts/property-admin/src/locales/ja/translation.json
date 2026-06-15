@@ -2818,7 +2818,18 @@
     "manual_search_placeholder": "氏名・メール・参照番号で検索…",
     "manual_search_hint": "承認済みのホストファミリーのみ配置できます。",
     "manual_search_loading": "検索中…",
-    "manual_search_empty": "承認済みのホストファミリーが見つかりません。"
+    "manual_search_empty": "承認済みのホストファミリーが見つかりません。",
+    "filter_region": "地域・郊外",
+    "filter_region_placeholder": "例：Melbourne",
+    "filter_gender": "希望する性別",
+    "filter_pets": "ペット",
+    "filter_children": "子供",
+    "filter_any": "すべて",
+    "filter_clear": "フィルターをクリア",
+    "gender_male": "男性",
+    "gender_female": "女性",
+    "gender_either": "どちらでも",
+    "manual_search_no_match": "条件に一致するホストファミリーがありません。"
   },
   "homestayPlacement": {
     "list_title": "ホームステイ配置",

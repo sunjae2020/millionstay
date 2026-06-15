@@ -2805,7 +2805,18 @@
     "manual_search_placeholder": "Search by name, email or ref…",
     "manual_search_hint": "Only approved host families can be placed.",
     "manual_search_loading": "Searching…",
-    "manual_search_empty": "No approved host families found."
+    "manual_search_empty": "No approved host families found.",
+    "filter_region": "Suburb / area",
+    "filter_region_placeholder": "e.g. Melbourne",
+    "filter_gender": "Preferred gender",
+    "filter_pets": "Pets",
+    "filter_children": "Children",
+    "filter_any": "Any",
+    "filter_clear": "Clear filters",
+    "gender_male": "Male",
+    "gender_female": "Female",
+    "gender_either": "Either",
+    "manual_search_no_match": "No host families match these filters."
   },
   "homestayPlacement": {
     "list_title": "Homestay Placements",

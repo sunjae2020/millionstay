@@ -99,6 +99,7 @@ interface HostSuggestion {
 }
 interface SuggestionsResponse { success: boolean; suggestions: HostSuggestion[]; ai_used: boolean }
 
+interface HostResident { name?: string; age?: number | string; gender?: string; relationship?: string }
 interface HostRow {
   id: number;
   application_ref: string;
@@ -107,8 +108,17 @@ interface HostRow {
   email?: string | null;
   suburb?: string | null;
   status: string;
+  has_pets?: boolean;
+  pref_student_gender?: string | null; // Male | Female | Either
+  residents?: HostResident[];
 }
 interface HostSearchResponse { success: boolean; data: HostRow[] }
+
+// Does the host household include an under-18 resident? Derived from the
+// residents blob ([{ name, age, gender, relationship }]).
+function hostHasChildren(h: HostRow): boolean {
+  return Array.isArray(h.residents) && h.residents.some((r) => r?.age != null && r.age !== "" && Number(r.age) < 18);
+}
 
 // Colour the score badge by band.
 function scoreBadge(score: number): string {
@@ -196,6 +206,9 @@ export default function HomestayStudentRequestDetail() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQ, setSearchQ] = useState("");
   const [searchQDebounced, setSearchQDebounced] = useState("");
+  // Structured filters applied client-side over the fetched Approved hosts:
+  // suburb (region, contains), preferred student gender, pets, children at home.
+  const [filters, setFilters] = useState({ suburb: "", gender: "any", pets: "any", children: "any" });
   useEffect(() => {
     const h = setTimeout(() => setSearchQDebounced(searchQ.trim()), 300);
     return () => clearTimeout(h);
@@ -203,7 +216,7 @@ export default function HomestayStudentRequestDetail() {
   const { data: hostSearch, isFetching: hostSearchLoading } = useQuery({
     queryKey: ["homestay-host-search", searchQDebounced],
     queryFn: async (): Promise<HostSearchResponse> => {
-      const sp = new URLSearchParams({ status: "Approved", limit: "20" });
+      const sp = new URLSearchParams({ status: "Approved", limit: "100" });
       if (searchQDebounced) sp.set("q", searchQDebounced);
       const res = await apiFetch(`/api/v1/homestay-applications?${sp.toString()}`);
       if (!res.ok) throw new Error("Failed to search hosts");
@@ -212,6 +225,18 @@ export default function HomestayStudentRequestDetail() {
     enabled: searchOpen,
     staleTime: 60_000,
   });
+
+  // Apply the structured filters to the fetched Approved hosts. Gender matches
+  // the host's preferred-student-gender exactly (pick "Either" for flexible hosts).
+  const hostRows = hostSearch?.data ?? [];
+  const filteredHosts = hostRows.filter((h) => {
+    if (filters.suburb.trim() && !(h.suburb ?? "").toLowerCase().includes(filters.suburb.trim().toLowerCase())) return false;
+    if (filters.gender !== "any" && (h.pref_student_gender ?? "Either") !== filters.gender) return false;
+    if (filters.pets !== "any" && !!h.has_pets !== (filters.pets === "yes")) return false;
+    if (filters.children !== "any" && hostHasChildren(h) !== (filters.children === "yes")) return false;
+    return true;
+  });
+  const filtersActive = !!filters.suburb.trim() || filters.gender !== "any" || filters.pets !== "any" || filters.children !== "any";
 
   // Pick a host (from search or suggestion) → seed and open the placement dialog.
   function openPlacementFor(host: { id: number; name: string }) {
@@ -614,7 +639,7 @@ export default function HomestayStudentRequestDetail() {
 
       {/* Manual host-family search dialog */}
       <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-xl">
           <DialogHeader><DialogTitle>{t("homestayStudent.manual_search_title")}</DialogTitle></DialogHeader>
           <div className="grid gap-3 py-2">
             <div className="relative">
@@ -627,15 +652,73 @@ export default function HomestayStudentRequestDetail() {
                 placeholder={t("homestayStudent.manual_search_placeholder")}
               />
             </div>
-            <p className="text-[11px] text-muted-foreground">{t("homestayStudent.manual_search_hint")}</p>
+            {/* Filters: region, preferred gender, pets, children */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="grid gap-1">
+                <Label className="text-[11px] text-muted-foreground">{t("homestayStudent.filter_region")}</Label>
+                <div className="relative">
+                  <MapPin className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    className="pl-7 h-9"
+                    value={filters.suburb}
+                    onChange={(e) => setFilters((f) => ({ ...f, suburb: e.target.value }))}
+                    placeholder={t("homestayStudent.filter_region_placeholder")}
+                  />
+                </div>
+              </div>
+              <div className="grid gap-1">
+                <Label className="text-[11px] text-muted-foreground">{t("homestayStudent.filter_gender")}</Label>
+                <Select value={filters.gender} onValueChange={(v) => setFilters((f) => ({ ...f, gender: v }))}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="any">{t("homestayStudent.filter_any")}</SelectItem>
+                    <SelectItem value="Male">{t("homestayStudent.gender_male")}</SelectItem>
+                    <SelectItem value="Female">{t("homestayStudent.gender_female")}</SelectItem>
+                    <SelectItem value="Either">{t("homestayStudent.gender_either")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-1">
+                <Label className="text-[11px] text-muted-foreground">{t("homestayStudent.filter_pets")}</Label>
+                <Select value={filters.pets} onValueChange={(v) => setFilters((f) => ({ ...f, pets: v }))}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="any">{t("homestayStudent.filter_any")}</SelectItem>
+                    <SelectItem value="yes">{t("common.yes")}</SelectItem>
+                    <SelectItem value="no">{t("common.no")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-1">
+                <Label className="text-[11px] text-muted-foreground">{t("homestayStudent.filter_children")}</Label>
+                <Select value={filters.children} onValueChange={(v) => setFilters((f) => ({ ...f, children: v }))}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="any">{t("homestayStudent.filter_any")}</SelectItem>
+                    <SelectItem value="yes">{t("common.yes")}</SelectItem>
+                    <SelectItem value="no">{t("common.no")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[11px] text-muted-foreground">{t("homestayStudent.manual_search_hint")}</p>
+              {filtersActive && (
+                <Button variant="ghost" size="sm" className="h-6 px-2 text-[11px]" onClick={() => setFilters({ suburb: "", gender: "any", pets: "any", children: "any" })}>
+                  {t("homestayStudent.filter_clear")}
+                </Button>
+              )}
+            </div>
             <div className="max-h-80 overflow-y-auto -mx-1 px-1">
               {hostSearchLoading ? (
                 <p className="text-sm text-muted-foreground inline-flex items-center gap-2 py-4"><Loader2 className="h-4 w-4 animate-spin" /> {t("homestayStudent.manual_search_loading")}</p>
-              ) : !hostSearch?.data?.length ? (
+              ) : !hostRows.length ? (
                 <p className="text-sm text-muted-foreground py-4">{t("homestayStudent.manual_search_empty")}</p>
+              ) : !filteredHosts.length ? (
+                <p className="text-sm text-muted-foreground py-4">{t("homestayStudent.manual_search_no_match")}</p>
               ) : (
                 <div className="space-y-2">
-                  {hostSearch.data.map((h) => {
+                  {filteredHosts.map((h) => {
                     const name = formatPersonName(h.first_name, h.last_name) || h.application_ref;
                     return (
                       <div key={h.id} className="flex items-center justify-between gap-2 border rounded-lg p-2.5">
@@ -647,6 +730,13 @@ export default function HomestayStudentRequestDetail() {
                           <p className="text-xs text-muted-foreground truncate">
                             {h.application_ref}{h.suburb ? ` · ${h.suburb}` : ""}{h.email ? ` · ${h.email}` : ""}
                           </p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {h.pref_student_gender && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200">{t("homestayStudent.filter_gender")}: {h.pref_student_gender}</span>
+                            )}
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200">{t("homestayStudent.filter_pets")}: {h.has_pets ? t("common.yes") : t("common.no")}</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200">{t("homestayStudent.filter_children")}: {hostHasChildren(h) ? t("common.yes") : t("common.no")}</span>
+                          </div>
                         </div>
                         <Button size="sm" className="gap-1.5 h-7 shrink-0" onClick={() => openPlacementFor({ id: h.id, name })}>
                           <Handshake className="h-3.5 w-3.5" /> {t("homestayStudent.create_placement")}

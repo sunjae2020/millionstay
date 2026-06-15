@@ -2818,7 +2818,18 @@
     "manual_search_placeholder": "按姓名、邮箱或编号搜索…",
     "manual_search_hint": "只能为已批准的寄宿家庭创建安置。",
     "manual_search_loading": "搜索中…",
-    "manual_search_empty": "未找到已批准的寄宿家庭。"
+    "manual_search_empty": "未找到已批准的寄宿家庭。",
+    "filter_region": "地区",
+    "filter_region_placeholder": "例如 Melbourne",
+    "filter_gender": "偏好性别",
+    "filter_pets": "宠物",
+    "filter_children": "孩子",
+    "filter_any": "全部",
+    "filter_clear": "清除筛选",
+    "gender_male": "男",
+    "gender_female": "女",
+    "gender_either": "均可",
+    "manual_search_no_match": "没有符合这些筛选条件的寄宿家庭。"
   },
   "homestayPlacement": {
     "list_title": "寄宿安置",

@@ -2818,7 +2818,18 @@
     "manual_search_placeholder": "이름, 이메일 또는 참조번호로 검색…",
     "manual_search_hint": "승인된 호스트 패밀리만 매칭할 수 있습니다.",
     "manual_search_loading": "검색 중…",
-    "manual_search_empty": "승인된 호스트 패밀리가 없습니다."
+    "manual_search_empty": "승인된 호스트 패밀리가 없습니다.",
+    "filter_region": "지역",
+    "filter_region_placeholder": "예: Melbourne",
+    "filter_gender": "선호 성별",
+    "filter_pets": "반려동물",
+    "filter_children": "자녀",
+    "filter_any": "전체",
+    "filter_clear": "필터 초기화",
+    "gender_male": "남성",
+    "gender_female": "여성",
+    "gender_either": "무관",
+    "manual_search_no_match": "조건에 맞는 호스트 패밀리가 없습니다."
   },
   "homestayPlacement": {
     "list_title": "홈스테이 배정",
