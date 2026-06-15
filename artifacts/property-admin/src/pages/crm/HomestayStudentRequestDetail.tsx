@@ -14,6 +14,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, GraduationCap, PencilLine, ShieldCheck, Sparkles, Wand2, Loader2, MapPin, Check, AlertTriangle, ExternalLink, Handshake } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
+import { LookupSelect } from "@/components/LookupSelect";
 import { HomestaySignatureCard } from "@/components/HomestaySignatureCard";
 import { StudentStatusBadge, STUDENT_STATUS_ORDER, STUDENT_STATUS_CONFIG, type StudentStatus } from "./HomestayStudentRequests";
 
@@ -78,6 +79,10 @@ interface StudentRequestFull {
   terms_accepted_at?: string | null;
   notes?: string | null;
   reviewed_at?: string | null;
+  agent_account_id?: number | null;
+  assigned_staff_user_id?: number | null;
+  agent_account_name?: string | null;
+  assigned_staff_name?: string | null;
   created_at: string;
 }
 
@@ -138,6 +143,11 @@ export default function HomestayStudentRequestDetail() {
   const [nextStatus, setNextStatus] = useState<StudentStatus>("UnderReview");
   const [notes, setNotes] = useState("");
 
+  // Assignment — mapped agent account + assigned ops staff. Initialised from the
+  // loaded request below.
+  const [agentAccountId, setAgentAccountId] = useState<number | null>(null);
+  const [assignedStaffId, setAssignedStaffId] = useState<number | null>(null);
+
   // Create-placement dialog (from a host suggestion).
   const [placeOpen, setPlaceOpen] = useState(false);
   const [placeHost, setPlaceHost] = useState<{ id: number; name: string } | null>(null);
@@ -172,7 +182,12 @@ export default function HomestayStudentRequestDetail() {
 
   // Seed the dialog with the current status + ops notes when it opens.
   useEffect(() => {
-    if (req) { setNextStatus(req.status); setNotes(req.notes ?? ""); }
+    if (req) {
+      setNextStatus(req.status);
+      setNotes(req.notes ?? "");
+      setAgentAccountId(req.agent_account_id ?? null);
+      setAssignedStaffId(req.assigned_staff_user_id ?? null);
+    }
   }, [req]);
 
   const updateStatus = useMutation({
@@ -189,6 +204,22 @@ export default function HomestayStudentRequestDetail() {
       qc.invalidateQueries({ queryKey: ["homestay-student-request", id] });
       qc.invalidateQueries({ queryKey: ["homestay-student-requests"] });
       setStatusOpen(false);
+    },
+    onError: (e: any) => toast({ title: t("homestayStudent.error"), description: e.message, variant: "destructive" }),
+  });
+
+  const saveAssignment = useMutation({
+    mutationFn: async () => {
+      const res = await apiFetch(`${API}/${id}/assignment`, {
+        method: "POST",
+        body: JSON.stringify({ agent_account_id: agentAccountId, assigned_staff_user_id: assignedStaffId }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: t("homestayStudent.assignment_saved") });
+      qc.invalidateQueries({ queryKey: ["homestay-student-request", id] });
     },
     onError: (e: any) => toast({ title: t("homestayStudent.error"), description: e.message, variant: "destructive" }),
   });
@@ -271,6 +302,40 @@ export default function HomestayStudentRequestDetail() {
           {req.notes && (
             <div className="text-xs text-muted-foreground"><span className="font-medium text-foreground">{t("homestayStudent.label_notes")}:</span> {req.notes}</div>
           )}
+        </div>
+
+        {/* Assignment */}
+        <div className="border rounded-lg overflow-hidden">
+          <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">
+            {t("homestayStudent.assignment_title")}
+          </div>
+          <div className="p-4 grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-1.5">
+              <Label>{t("homestayStudent.assignment_agent")}</Label>
+              <LookupSelect
+                value={agentAccountId}
+                onChange={setAgentAccountId}
+                lookupUrl="/api/v1/lookup/accounts?type=Agent"
+                displayValue={req.agent_account_name}
+                placeholder={t("homestayStudent.assignment_agent")}
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label>{t("homestayStudent.assignment_staff")}</Label>
+              <LookupSelect
+                value={assignedStaffId}
+                onChange={setAssignedStaffId}
+                lookupUrl="/api/v1/lookup/admin-users"
+                displayValue={req.assigned_staff_name}
+                placeholder={t("homestayStudent.assignment_staff")}
+              />
+            </div>
+            <div className="sm:col-span-2 flex justify-end">
+              <Button size="sm" onClick={() => saveAssignment.mutate()} disabled={saveAssignment.isPending}>
+                {saveAssignment.isPending ? t("common.saving") : t("common.save")}
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Signature & document */}

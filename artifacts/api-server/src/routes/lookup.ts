@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { ilike, and, eq, SQL, asc } from "drizzle-orm";
-import { db, contactsTable, accountsTable, commissionsTable, paymentInfoTable, spacesTable, suburbsTable, propertiesTable, accommodationCatalogTable, productGroupsTable, productTypesTable, contractTypesTable } from "@workspace/db";
+import { ilike, and, eq, isNull, SQL, asc } from "drizzle-orm";
+import { db, contactsTable, accountsTable, commissionsTable, paymentInfoTable, spacesTable, suburbsTable, propertiesTable, accommodationCatalogTable, productGroupsTable, productTypesTable, contractTypesTable, usersTable } from "@workspace/db";
 
 const router: IRouter = Router();
 
@@ -51,6 +51,35 @@ router.get("/v1/lookup/accounts", async (req, res): Promise<void> => {
   res.json(rows.map((r) => ({
     id: r.id,
     display: `${r.name} (${r.account_type})`,
+  })));
+});
+
+// Admin (ops staff) users — for assignment pickers. Active, non-deleted only.
+router.get("/v1/lookup/admin-users", async (req, res): Promise<void> => {
+  const q = (req.query["q"] as string) || "";
+  const conditions: SQL[] = [
+    isNull(usersTable.deleted_at),
+    eq(usersTable.is_active, true),
+  ];
+  if (q) {
+    const { or } = await import("drizzle-orm");
+    conditions.push(or(
+      ilike(usersTable.first_name, `%${q}%`),
+      ilike(usersTable.last_name, `%${q}%`),
+      ilike(usersTable.email, `%${q}%`),
+    )!);
+  }
+  const rows = await db.select({
+    id: usersTable.id,
+    first_name: usersTable.first_name,
+    last_name: usersTable.last_name,
+    email: usersTable.email,
+  }).from(usersTable)
+    .where(and(...conditions))
+    .limit(20);
+  res.json(rows.map((r) => ({
+    id: r.id,
+    display: `${`${r.first_name} ${r.last_name}`.trim()} (${r.email})`,
   })));
 });
 

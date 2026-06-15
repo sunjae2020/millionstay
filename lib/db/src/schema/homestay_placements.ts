@@ -41,6 +41,11 @@ export const homestayPlacementsTable = pgTable("homestay_placements", {
   stripe_customer_id: text("stripe_customer_id"),
   stripe_subscription_id: text("stripe_subscription_id"),
 
+  // Unified operational/financial spine: the booking auto-created for this
+  // match (see the homestay/share unification plan). The placement remains the
+  // CRM match record; the booking carries dates, pricing, services & billing.
+  booking_id: integer("booking_id"), // bookings.id — auto-created on placement
+
   // ── Lifecycle timestamps ─────────────────────────────────────────────────
   proposed_at: timestamp("proposed_at", { withTimezone: true }),
   host_accepted_at: timestamp("host_accepted_at", { withTimezone: true }),
