@@ -1,4 +1,24 @@
 {
+  "dash_homestay": {
+    "placements_by_status": "การจัดวางตามสถานะ",
+    "requests_by_status": "คำขอนักเรียนตามสถานะ",
+    "agent_commissions": "ค่าคอมมิชชันเอเจนต์",
+    "kpi_active_placements": "การจัดวางที่ใช้งานอยู่",
+    "kpi_active_placements_sub": "กำลังใช้งาน",
+    "kpi_total_paid": "ยอดชำระทั้งหมด",
+    "kpi_total_paid_sub": "ชำระเรียบร้อยทั้งหมด",
+    "kpi_paid_month": "ชำระเดือนนี้",
+    "kpi_pending": "ค่าใช้จ่ายค้างชำระ",
+    "kpi_pending_sub": "รอการชำระเงิน",
+    "commission_pending": "รอดำเนินการ",
+    "commission_approved": "อนุมัติแล้ว",
+    "commission_paid": "จ่ายแล้ว",
+    "col_agent": "เอเจนต์",
+    "col_total": "รวม",
+    "count": "จำนวน",
+    "no_commissions": "ยังไม่มีค่าคอมมิชชัน",
+    "no_data": "ไม่มีข้อมูล"
+  },
   "nav": {
     "dashboard": "แดชบอร์ด",
     "account": "จัดการบัญชี",

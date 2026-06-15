@@ -1,4 +1,24 @@
 {
+  "dash_homestay": {
+    "placements_by_status": "按状态划分的安置",
+    "requests_by_status": "按状态划分的学生申请",
+    "agent_commissions": "代理佣金",
+    "kpi_active_placements": "活跃安置",
+    "kpi_active_placements_sub": "当前活跃",
+    "kpi_total_paid": "已付总额",
+    "kpi_total_paid_sub": "全部已结算",
+    "kpi_paid_month": "本月已付",
+    "kpi_pending": "待付费用",
+    "kpi_pending_sub": "等待付款",
+    "commission_pending": "待处理",
+    "commission_approved": "已批准",
+    "commission_paid": "已支付",
+    "col_agent": "代理",
+    "col_total": "合计",
+    "count": "数量",
+    "no_commissions": "暂无佣金",
+    "no_data": "暂无数据"
+  },
   "nav": {
     "dashboard": "仪表板",
     "account": "账户管理",

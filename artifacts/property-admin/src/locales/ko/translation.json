@@ -1,4 +1,24 @@
 {
+  "dash_homestay": {
+    "placements_by_status": "상태별 배치",
+    "requests_by_status": "상태별 학생 신청",
+    "agent_commissions": "에이전트 커미션",
+    "kpi_active_placements": "활성 배치",
+    "kpi_active_placements_sub": "현재 활성",
+    "kpi_total_paid": "총 결제액",
+    "kpi_total_paid_sub": "정산 완료 전체",
+    "kpi_paid_month": "이번 달 결제",
+    "kpi_pending": "미결제 청구",
+    "kpi_pending_sub": "결제 대기",
+    "commission_pending": "대기",
+    "commission_approved": "승인됨",
+    "commission_paid": "지급됨",
+    "col_agent": "에이전트",
+    "col_total": "합계",
+    "count": "건수",
+    "no_commissions": "아직 커미션이 없습니다",
+    "no_data": "데이터 없음"
+  },
   "nav": {
     "dashboard": "대시보드",
     "account": "계정 관리",

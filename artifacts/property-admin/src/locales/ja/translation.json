@@ -1,4 +1,24 @@
 {
+  "dash_homestay": {
+    "placements_by_status": "ステータス別の配置",
+    "requests_by_status": "ステータス別の学生申請",
+    "agent_commissions": "エージェント手数料",
+    "kpi_active_placements": "進行中の配置",
+    "kpi_active_placements_sub": "現在アクティブ",
+    "kpi_total_paid": "支払総額",
+    "kpi_total_paid_sub": "決済完了の合計",
+    "kpi_paid_month": "今月の支払い",
+    "kpi_pending": "未払い請求",
+    "kpi_pending_sub": "支払い待ち",
+    "commission_pending": "保留中",
+    "commission_approved": "承認済み",
+    "commission_paid": "支払済み",
+    "col_agent": "エージェント",
+    "col_total": "合計",
+    "count": "件数",
+    "no_commissions": "手数料はまだありません",
+    "no_data": "データなし"
+  },
   "nav": {
     "dashboard": "ダッシュボード",
     "account": "アカウント管理",
