@@ -2240,7 +2240,20 @@
     "bulk_archive_title": "사용자 보관",
     "bulk_delete_desc": "{{count}}명의 사용자를 영구적으로 삭제하려고 합니다. 이 작업은 되돌릴 수 없습니다.",
     "bulk_archive_desc": "{{count}}명의 사용자를 보관하려고 합니다. 해당 계정은 비활성화됩니다.",
-    "archive_all": "전체 보관"
+    "archive_all": "전체 보관",
+    "add_user": "사용자 추가",
+    "add_user_title": "신규 사용자 추가",
+    "add_user_desc": "관리자 계정을 직접 생성합니다. 사용자는 첫 로그인 시 임시 비밀번호를 변경해야 합니다.",
+    "field_first_name": "이름",
+    "field_last_name": "성",
+    "field_email": "이메일",
+    "field_temp_password": "임시 비밀번호",
+    "field_temp_password_hint": "비밀번호 정책을 충족해야 합니다. 사용자는 첫 로그인 시 변경합니다.",
+    "field_role": "역할",
+    "create_user": "사용자 생성",
+    "toast_user_created": "사용자가 생성되었습니다",
+    "toast_user_created_desc": "계정이 생성되어 활성화되었습니다.",
+    "toast_create_failed": "사용자 생성에 실패했습니다"
   },
   "coming_soon": {
     "heading": "준비 중입니다",

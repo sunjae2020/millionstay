@@ -13,6 +13,14 @@ import {
   AlertDialog, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 
 interface AdminUser {
   id: number;
@@ -66,6 +74,11 @@ export function UserManagement() {
   const [bulkAction, setBulkAction] = useState<"archive" | "permanent" | null>(null);
   const [isBulkLoading, setIsBulkLoading] = useState(false);
 
+  const emptyForm = { first_name: "", last_name: "", email: "", password: "", role: "Admin" };
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState(emptyForm);
+  const [isCreating, setIsCreating] = useState(false);
+
   const { data, isLoading, isError, refetch } = useQuery<{ success: boolean; users: AdminUser[] }>({
     queryKey: ["admin-users"],
     queryFn: async () => {
@@ -96,6 +109,27 @@ export function UserManagement() {
   };
 
   const clearSelection = () => setSelectedIds(new Set());
+
+  async function createUser() {
+    setIsCreating(true);
+    try {
+      const res = await apiFetch("/api/v1/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(createForm),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error ?? t("settings_users.toast_create_failed"));
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+      toast({ title: t("settings_users.toast_user_created"), description: t("settings_users.toast_user_created_desc") });
+      setCreateOpen(false);
+      setCreateForm(emptyForm);
+    } catch (err: any) {
+      toast({ title: t("settings_users.toast_error"), description: err.message ?? t("settings_users.toast_create_failed"), variant: "destructive" });
+    } finally {
+      setIsCreating(false);
+    }
+  }
 
   async function updateUser(id: number, payload: object, action: string) {
     setActionLoading(prev => ({ ...prev, [id]: action }));
@@ -269,6 +303,11 @@ export function UserManagement() {
             <Button variant="outline" size="sm" onClick={() => refetch()}>
               <RefreshCw className="h-4 w-4" />
             </Button>
+            {isSuperAdmin && (
+              <Button size="sm" className="gap-1.5" onClick={() => { setCreateForm(emptyForm); setCreateOpen(true); }}>
+                <UserPlus className="h-4 w-4" /> {t("settings_users.add_user")}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -434,6 +473,66 @@ export function UserManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* ── Create User Dialog ─────────────────────────────────── */}
+      <Dialog open={createOpen} onOpenChange={(o) => { if (!isCreating) setCreateOpen(o); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-4 w-4" /> {t("settings_users.add_user_title")}
+            </DialogTitle>
+            <DialogDescription>{t("settings_users.add_user_desc")}</DialogDescription>
+          </DialogHeader>
+          <form
+            className="space-y-4"
+            onSubmit={(e) => { e.preventDefault(); if (!isCreating) createUser(); }}
+          >
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="cu-first">{t("settings_users.field_first_name")}</Label>
+                <Input id="cu-first" value={createForm.first_name} required
+                  onChange={(e) => setCreateForm(f => ({ ...f, first_name: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="cu-last">{t("settings_users.field_last_name")}</Label>
+                <Input id="cu-last" value={createForm.last_name} required
+                  onChange={(e) => setCreateForm(f => ({ ...f, last_name: e.target.value }))} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cu-email">{t("settings_users.field_email")}</Label>
+              <Input id="cu-email" type="email" value={createForm.email} required
+                onChange={(e) => setCreateForm(f => ({ ...f, email: e.target.value }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cu-password">{t("settings_users.field_temp_password")}</Label>
+              <Input id="cu-password" type="text" value={createForm.password} required autoComplete="off"
+                onChange={(e) => setCreateForm(f => ({ ...f, password: e.target.value }))} />
+              <p className="text-xs text-muted-foreground">{t("settings_users.field_temp_password_hint")}</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cu-role">{t("settings_users.field_role")}</Label>
+              <Select value={createForm.role} onValueChange={(v) => setCreateForm(f => ({ ...f, role: v }))}>
+                <SelectTrigger id="cu-role"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Admin">{t("settings_users.role_admin")}</SelectItem>
+                  <SelectItem value="Viewer">{t("settings_users.role_viewer")}</SelectItem>
+                  <SelectItem value="SuperAdmin">{t("settings_users.role_superadmin")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setCreateOpen(false)} disabled={isCreating}>
+                {t("common.cancel")}
+              </Button>
+              <Button type="submit" disabled={isCreating} className="gap-1.5">
+                {isCreating && <Loader2 className="h-4 w-4 animate-spin" />}
+                {t("settings_users.create_user")}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
