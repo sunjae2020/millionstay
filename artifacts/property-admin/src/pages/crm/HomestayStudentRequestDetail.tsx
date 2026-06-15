@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, GraduationCap, PencilLine, ShieldCheck, Sparkles, Wand2, Loader2, MapPin, Check, AlertTriangle, ExternalLink, Handshake } from "lucide-react";
+import { ArrowLeft, GraduationCap, PencilLine, ShieldCheck, Sparkles, Wand2, Loader2, MapPin, Check, AlertTriangle, ExternalLink, Handshake, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
 import { LookupSelect } from "@/components/LookupSelect";
@@ -99,6 +99,17 @@ interface HostSuggestion {
 }
 interface SuggestionsResponse { success: boolean; suggestions: HostSuggestion[]; ai_used: boolean }
 
+interface HostRow {
+  id: number;
+  application_ref: string;
+  first_name: string;
+  last_name: string;
+  email?: string | null;
+  suburb?: string | null;
+  status: string;
+}
+interface HostSearchResponse { success: boolean; data: HostRow[] }
+
 // Colour the score badge by band.
 function scoreBadge(score: number): string {
   if (score >= 75) return "bg-green-100 text-green-700 border-green-200";
@@ -179,6 +190,36 @@ export default function HomestayStudentRequestDetail() {
     enabled: showMatches && !!id,
     staleTime: 5 * 60_000,
   });
+
+  // Manual host-family search — fallback when no AI suggestion fits. Only
+  // Approved hosts are searchable, since placement creation requires Approved.
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQ, setSearchQ] = useState("");
+  const [searchQDebounced, setSearchQDebounced] = useState("");
+  useEffect(() => {
+    const h = setTimeout(() => setSearchQDebounced(searchQ.trim()), 300);
+    return () => clearTimeout(h);
+  }, [searchQ]);
+  const { data: hostSearch, isFetching: hostSearchLoading } = useQuery({
+    queryKey: ["homestay-host-search", searchQDebounced],
+    queryFn: async (): Promise<HostSearchResponse> => {
+      const sp = new URLSearchParams({ status: "Approved", limit: "20" });
+      if (searchQDebounced) sp.set("q", searchQDebounced);
+      const res = await apiFetch(`/api/v1/homestay-applications?${sp.toString()}`);
+      if (!res.ok) throw new Error("Failed to search hosts");
+      return res.json();
+    },
+    enabled: searchOpen,
+    staleTime: 60_000,
+  });
+
+  // Pick a host (from search or suggestion) → seed and open the placement dialog.
+  function openPlacementFor(host: { id: number; name: string }) {
+    setPlaceHost(host);
+    setPlaceForm((f) => ({ ...f, move_in_date: p.homestay_start_date ?? "" }));
+    setSearchOpen(false);
+    setPlaceOpen(true);
+  }
 
   // Seed the dialog with the current status + ops notes when it opens.
   useEffect(() => {
@@ -362,10 +403,15 @@ export default function HomestayStudentRequestDetail() {
             <span className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider inline-flex items-center gap-1.5">
               <Sparkles className="h-3.5 w-3.5" /> {t("homestayStudent.match_title")}
             </span>
-            <Button size="sm" variant="outline" className="gap-1.5 h-7" onClick={() => setShowMatches(true)} disabled={matchLoading}>
-              {matchLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
-              {showMatches ? t("homestayStudent.match_refresh") : t("homestayStudent.match_find")}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" className="gap-1.5 h-7" onClick={() => setSearchOpen(true)}>
+                <Search className="h-3.5 w-3.5" /> {t("homestayStudent.match_manual")}
+              </Button>
+              <Button size="sm" variant="outline" className="gap-1.5 h-7" onClick={() => setShowMatches(true)} disabled={matchLoading}>
+                {matchLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+                {showMatches ? t("homestayStudent.match_refresh") : t("homestayStudent.match_find")}
+              </Button>
+            </div>
           </div>
           <div className="p-4">
             {!showMatches ? (
@@ -375,7 +421,12 @@ export default function HomestayStudentRequestDetail() {
             ) : matchError ? (
               <p className="text-sm text-red-600">{t("homestayStudent.error")}</p>
             ) : !matchData?.suggestions.length ? (
-              <p className="text-sm text-muted-foreground">{t("homestayStudent.match_empty")}</p>
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">{t("homestayStudent.match_empty")}</p>
+                <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setSearchOpen(true)}>
+                  <Search className="h-3.5 w-3.5" /> {t("homestayStudent.match_manual")}
+                </Button>
+              </div>
             ) : (
               <div className="space-y-3">
                 {matchData.ai_used === false && (
@@ -414,7 +465,7 @@ export default function HomestayStudentRequestDetail() {
                       <Button
                         size="sm"
                         className="gap-1.5 h-7"
-                        onClick={() => { setPlaceHost({ id: s.host_application_id, name: s.host_name }); setPlaceForm((f) => ({ ...f, move_in_date: p.homestay_start_date ?? "" })); setPlaceOpen(true); }}
+                        onClick={() => openPlacementFor({ id: s.host_application_id, name: s.host_name })}
                       >
                         <Handshake className="h-3.5 w-3.5" /> {t("homestayStudent.create_placement")}
                       </Button>
@@ -557,6 +608,58 @@ export default function HomestayStudentRequestDetail() {
             <Button onClick={() => updateStatus.mutate()} disabled={updateStatus.isPending}>
               {updateStatus.isPending ? t("common.saving") : t("common.save")}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manual host-family search dialog */}
+      <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>{t("homestayStudent.manual_search_title")}</DialogTitle></DialogHeader>
+          <div className="grid gap-3 py-2">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                autoFocus
+                className="pl-8"
+                value={searchQ}
+                onChange={(e) => setSearchQ(e.target.value)}
+                placeholder={t("homestayStudent.manual_search_placeholder")}
+              />
+            </div>
+            <p className="text-[11px] text-muted-foreground">{t("homestayStudent.manual_search_hint")}</p>
+            <div className="max-h-80 overflow-y-auto -mx-1 px-1">
+              {hostSearchLoading ? (
+                <p className="text-sm text-muted-foreground inline-flex items-center gap-2 py-4"><Loader2 className="h-4 w-4 animate-spin" /> {t("homestayStudent.manual_search_loading")}</p>
+              ) : !hostSearch?.data?.length ? (
+                <p className="text-sm text-muted-foreground py-4">{t("homestayStudent.manual_search_empty")}</p>
+              ) : (
+                <div className="space-y-2">
+                  {hostSearch.data.map((h) => {
+                    const name = formatPersonName(h.first_name, h.last_name) || h.application_ref;
+                    return (
+                      <div key={h.id} className="flex items-center justify-between gap-2 border rounded-lg p-2.5">
+                        <div className="min-w-0">
+                          <Link href={`/account/homestay-applications/${h.id}`} className="font-medium text-sm hover:underline inline-flex items-center gap-1.5">
+                            {name}
+                            <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
+                          </Link>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {h.application_ref}{h.suburb ? ` · ${h.suburb}` : ""}{h.email ? ` · ${h.email}` : ""}
+                          </p>
+                        </div>
+                        <Button size="sm" className="gap-1.5 h-7 shrink-0" onClick={() => openPlacementFor({ id: h.id, name })}>
+                          <Handshake className="h-3.5 w-3.5" /> {t("homestayStudent.create_placement")}
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSearchOpen(false)}>{t("common.close")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

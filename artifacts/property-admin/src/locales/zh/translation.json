@@ -1,4 +1,21 @@
 {
+  "journal": {
+    "title": "日记账 / 总分类账",
+    "subtitle": "日记账分录与试算表",
+    "trial_balance": "试算表",
+    "journal_entries": "日记账分录",
+    "col_date": "日期",
+    "col_description": "摘要",
+    "col_account": "科目",
+    "col_debit": "借方",
+    "col_credit": "贷方",
+    "col_balance": "余额",
+    "col_total": "合计",
+    "source": "来源",
+    "filter_from": "起始日期",
+    "filter_to": "结束日期",
+    "empty": "所选期间没有数据"
+  },
   "dash_homestay": {
     "placements_by_status": "按状态划分的安置",
     "requests_by_status": "按状态划分的学生申请",
@@ -79,6 +96,7 @@
     "all_documents": "所有文档",
     "quotes": "报价单",
     "exchange_rates": "汇率",
+    "journal": "日记账",
     "content": "内容",
     "blog_posts": "博客文章",
     "website_pages": "网站页面",
@@ -2794,7 +2812,13 @@
     "match_loading": "正在为已批准房东评分…",
     "match_empty": "未找到符合该学生条件的兼容的已批准房东。",
     "match_score": "评分",
-    "match_no_ai": "AI 解析不可用（未配置 Anthropic 密钥）— 仅显示基于规则的评分。"
+    "match_no_ai": "AI 解析不可用（未配置 Anthropic 密钥）— 仅显示基于规则的评分。",
+    "match_manual": "手动搜索",
+    "manual_search_title": "搜索寄宿家庭",
+    "manual_search_placeholder": "按姓名、邮箱或编号搜索…",
+    "manual_search_hint": "只能为已批准的寄宿家庭创建安置。",
+    "manual_search_loading": "搜索中…",
+    "manual_search_empty": "未找到已批准的寄宿家庭。"
   },
   "homestayPlacement": {
     "list_title": "寄宿安置",

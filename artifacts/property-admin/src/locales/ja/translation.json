@@ -1,4 +1,21 @@
 {
+  "journal": {
+    "title": "仕訳帳 / 総勘定元帳",
+    "subtitle": "仕訳と試算表",
+    "trial_balance": "試算表",
+    "journal_entries": "仕訳",
+    "col_date": "日付",
+    "col_description": "摘要",
+    "col_account": "勘定科目",
+    "col_debit": "借方",
+    "col_credit": "貸方",
+    "col_balance": "残高",
+    "col_total": "合計",
+    "source": "発生源",
+    "filter_from": "開始日",
+    "filter_to": "終了日",
+    "empty": "選択した期間のデータはありません"
+  },
   "dash_homestay": {
     "placements_by_status": "ステータス別の配置",
     "requests_by_status": "ステータス別の学生申請",
@@ -79,6 +96,7 @@
     "all_documents": "すべてのドキュメント",
     "quotes": "見積書",
     "exchange_rates": "為替レート",
+    "journal": "仕訳帳",
     "content": "コンテンツ",
     "blog_posts": "ブログ記事",
     "website_pages": "ウェブサイトページ",
@@ -2794,7 +2812,13 @@
     "match_loading": "承認済みホストを採点中…",
     "match_empty": "この学生の条件に合う承認済みホストが見つかりませんでした。",
     "match_score": "スコア",
-    "match_no_ai": "AIによる根拠は利用できません（Anthropicキーが未設定です）— ルールベースのスコアのみ表示しています。"
+    "match_no_ai": "AIによる根拠は利用できません（Anthropicキーが未設定です）— ルールベースのスコアのみ表示しています。",
+    "match_manual": "手動で検索",
+    "manual_search_title": "ホストファミリーを検索",
+    "manual_search_placeholder": "氏名・メール・参照番号で検索…",
+    "manual_search_hint": "承認済みのホストファミリーのみ配置できます。",
+    "manual_search_loading": "検索中…",
+    "manual_search_empty": "承認済みのホストファミリーが見つかりません。"
   },
   "homestayPlacement": {
     "list_title": "ホームステイ配置",

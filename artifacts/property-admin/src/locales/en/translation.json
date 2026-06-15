@@ -1,4 +1,21 @@
 {
+  "journal": {
+    "title": "Journal / General Ledger",
+    "subtitle": "Journal entries and trial balance",
+    "trial_balance": "Trial balance",
+    "journal_entries": "Journal entries",
+    "col_date": "Date",
+    "col_description": "Description",
+    "col_account": "Account",
+    "col_debit": "Debit",
+    "col_credit": "Credit",
+    "col_balance": "Balance",
+    "col_total": "Total",
+    "source": "Source",
+    "filter_from": "From",
+    "filter_to": "To",
+    "empty": "No data for the selected period"
+  },
   "dash_homestay": {
     "placements_by_status": "Placements by status",
     "requests_by_status": "Student requests by status",
@@ -79,6 +96,7 @@
     "all_documents": "All Documents",
     "quotes": "Quotes",
     "exchange_rates": "Exchange Rates",
+    "journal": "Journal",
     "content": "Content",
     "blog_posts": "Blog Posts",
     "website_pages": "Website Pages",
@@ -2781,7 +2799,13 @@
     "match_loading": "Scoring approved hosts…",
     "match_empty": "No compatible approved hosts found for this student's conditions.",
     "match_score": "Score",
-    "match_no_ai": "AI rationale unavailable (Anthropic key not configured) — showing rule-based scores only."
+    "match_no_ai": "AI rationale unavailable (Anthropic key not configured) — showing rule-based scores only.",
+    "match_manual": "Search manually",
+    "manual_search_title": "Search host families",
+    "manual_search_placeholder": "Search by name, email or ref…",
+    "manual_search_hint": "Only approved host families can be placed.",
+    "manual_search_loading": "Searching…",
+    "manual_search_empty": "No approved host families found."
   },
   "homestayPlacement": {
     "list_title": "Homestay Placements",

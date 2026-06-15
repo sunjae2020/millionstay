@@ -4,6 +4,7 @@ import { db, invoicesTable, homestayPlacementsTable, homestayStudentRequestsTabl
 import { and, eq } from "drizzle-orm";
 import { logAction } from "../utils/auditLog";
 import { createCommissionForPlacement } from "../lib/homestay/commission";
+import { postInvoicePaid } from "../lib/billing/gl";
 import { createRentScheduleForPlacement } from "../lib/homestay/rentSchedule";
 import { notifyPlacementActivated } from "../lib/homestay/notify";
 import { formatPersonName } from "../lib/nameFormat";
@@ -56,15 +57,19 @@ router.post("/v1/stripe/webhook", async (req, res): Promise<void> => {
         const pi = event.data.object as Stripe.PaymentIntent;
         const invoiceId = pi.metadata?.invoice_id ? Number(pi.metadata.invoice_id) : null;
         if (invoiceId) {
-          await db.update(invoicesTable)
-            .set({ status: "Paid", paid_at: new Date(), updated_at: new Date() })
-            .where(eq(invoicesTable.id, invoiceId));
+          const now = new Date();
+          const [inv] = await db.update(invoicesTable)
+            .set({ status: "Paid", paid_at: now, updated_at: now })
+            .where(eq(invoicesTable.id, invoiceId))
+            .returning();
           await logAction({
             entityType: "invoice",
             entityId: invoiceId,
             action: "PAYMENT",
             newValue: { status: "Paid", stripe_payment_intent: pi.id, amount: pi.amount },
           });
+          // Auto-post the GL entry (best-effort; never blocks the webhook).
+          if (inv) void postInvoicePaid({ id: inv.id, amount: Number(inv.amount), currency: inv.currency, paidAt: now.toISOString() });
         }
         console.log(`[Stripe] payment_intent.succeeded: ${pi.id}`);
         break;
@@ -136,6 +141,8 @@ router.post("/v1/stripe/webhook", async (req, res): Promise<void> => {
               entityType: "invoice", entityId: invoiceId, action: "PAYMENT",
               newValue: { status: "Paid", stripe_session: session.id, amount_total: session.amount_total },
             }).catch(() => {});
+            // Auto-post the GL entry (best-effort; never blocks the webhook).
+            void postInvoicePaid({ id: inv.id, amount: Number(inv.amount), currency: inv.currency, paidAt: now.toISOString() });
           }
           console.log(`[Stripe] checkout.session.completed → invoice ${invoiceId} paid`);
           break;
