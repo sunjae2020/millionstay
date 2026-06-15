@@ -479,13 +479,14 @@ router.post("/v1/homestay-student-requests", requireScope("homestay:write"), asy
   const is_minor = age != null && age >= 0 && age < 18;
 
   const basePrefs = b.preferences && typeof b.preferences === "object" ? b.preferences : {};
-  // Referring agent name (sheet "Agent name") — kept in preferences so it
-  // surfaces in the admin list. Explicit top-level body field wins over
-  // anything nested in `preferences`.
+  // Referring agent name (sheet "Agent name") — stored in the SAME shape the
+  // public student form uses (`preferences.agent = { agent_name, ... }`) so the
+  // admin list renders it uniformly. Explicit body field wins over any nested
+  // `preferences.agent`.
   const agentName = b.agent != null ? String(b.agent).trim() : "";
   const preferences = {
     ...basePrefs,
-    ...(agentName ? { agent: agentName } : {}),
+    ...(agentName ? { agent: { ...(typeof (basePrefs as any).agent === "object" ? (basePrefs as any).agent : {}), agent_name: agentName } } : {}),
     import: { source: "google_sheets", ref: externalRef || null, client: client?.name ?? null },
   };
 
