@@ -18,6 +18,7 @@ import {
   homestayCommissionPlansTable,
   agentCommissionLedgerTable,
 } from "@workspace/db";
+import { postCommissionAccrued, postCommissionPaid } from "../billing/gl.js";
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
 
@@ -88,6 +89,9 @@ export async function createCommissionForPlacement(placementId: number): Promise
     })
     .returning({ id: agentCommissionLedgerTable.id });
 
+  // Auto-post the GL accrual (best-effort; never blocks the accrual flow).
+  void postCommissionAccrued({ id: row!.id, amount: Number(amount), currency: placement.currency || "AUD" });
+
   return row!.id;
 }
 
@@ -108,5 +112,7 @@ export async function markCommissionPaid(id: number): Promise<typeof agentCommis
     .set({ status: "Paid", paid_at: new Date(), updated_at: new Date() })
     .where(and(eq(agentCommissionLedgerTable.id, id), eq(agentCommissionLedgerTable.status, "Approved")))
     .returning();
+  // Auto-post the GL payment (best-effort; never blocks the pay flow).
+  if (row) void postCommissionPaid({ id: row.id, amount: Number(row.amount), currency: row.currency });
   return row ?? null;
 }

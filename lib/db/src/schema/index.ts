@@ -69,3 +69,4 @@ export * from "./contract_signing_requests";
 export * from "./homestay_host_availability";
 export * from "./document_templates";
 export * from "./document_template_translations";
+export * from "./journal";

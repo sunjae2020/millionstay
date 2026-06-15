@@ -161,6 +161,7 @@ function getNav(t: (k: string) => string): NavSection[] {
         { href: "/finance/commissions", label: t("nav.commission"), icon: Percent },
         { href: "/finance/recurring", label: t("nav.recurring"), icon: RefreshCw },
         { href: "/finance/exchange-rates", label: t("nav.exchange_rates"), icon: DollarSign },
+        { href: "/finance/journal", label: t("nav.journal"), icon: BookOpen },
       ],
     },
     {

@@ -1,4 +1,21 @@
 {
+  "journal": {
+    "title": "日记账 / 总分类账",
+    "subtitle": "日记账分录与试算表",
+    "trial_balance": "试算表",
+    "journal_entries": "日记账分录",
+    "col_date": "日期",
+    "col_description": "摘要",
+    "col_account": "科目",
+    "col_debit": "借方",
+    "col_credit": "贷方",
+    "col_balance": "余额",
+    "col_total": "合计",
+    "source": "来源",
+    "filter_from": "起始日期",
+    "filter_to": "结束日期",
+    "empty": "所选期间没有数据"
+  },
   "dash_homestay": {
     "placements_by_status": "按状态划分的安置",
     "requests_by_status": "按状态划分的学生申请",
@@ -79,6 +96,7 @@
     "all_documents": "所有文档",
     "quotes": "报价单",
     "exchange_rates": "汇率",
+    "journal": "日记账",
     "content": "内容",
     "blog_posts": "博客文章",
     "website_pages": "网站页面",

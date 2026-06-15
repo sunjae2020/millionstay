@@ -1,4 +1,21 @@
 {
+  "journal": {
+    "title": "สมุดรายวัน / บัญชีแยกประเภททั่วไป",
+    "subtitle": "รายการบันทึกบัญชีและงบทดลอง",
+    "trial_balance": "งบทดลอง",
+    "journal_entries": "รายการบันทึกบัญชี",
+    "col_date": "วันที่",
+    "col_description": "รายละเอียด",
+    "col_account": "บัญชี",
+    "col_debit": "เดบิต",
+    "col_credit": "เครดิต",
+    "col_balance": "ยอดคงเหลือ",
+    "col_total": "รวม",
+    "source": "แหล่งที่มา",
+    "filter_from": "จากวันที่",
+    "filter_to": "ถึงวันที่",
+    "empty": "ไม่มีข้อมูลสำหรับช่วงเวลาที่เลือก"
+  },
   "dash_homestay": {
     "placements_by_status": "การจัดวางตามสถานะ",
     "requests_by_status": "คำขอนักเรียนตามสถานะ",
@@ -79,6 +96,7 @@
     "all_documents": "เอกสารทั้งหมด",
     "quotes": "ใบเสนอราคา",
     "exchange_rates": "อัตราแลกเปลี่ยน",
+    "journal": "สมุดรายวัน",
     "content": "เนื้อหา",
     "blog_posts": "บทความบล็อก",
     "website_pages": "หน้าเว็บไซต์",

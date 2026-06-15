@@ -68,6 +68,7 @@ import InvoiceDetail from "@/pages/finance/InvoiceDetail";
 import ReceiptList from "@/pages/finance/ReceiptList";
 import RecurringScheduleList from "@/pages/finance/RecurringScheduleList";
 import ExchangeRateList from "@/pages/finance/ExchangeRateList";
+import Journal from "@/pages/finance/Journal";
 import CommissionList from "@/pages/crm/CommissionList";
 import CommissionDetail from "@/pages/crm/CommissionDetail";
 
@@ -297,6 +298,7 @@ function Router() {
 
       <Route path="/finance/recurring" component={RecurringScheduleList} />
       <Route path="/finance/exchange-rates" component={ExchangeRateList} />
+      <Route path="/finance/journal" component={Journal} />
 
       {/* ── SETTINGS HUB ──────────────────────────────── */}
       <Route path="/settings" component={Settings} />

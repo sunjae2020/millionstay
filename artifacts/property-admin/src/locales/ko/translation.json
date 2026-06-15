@@ -1,4 +1,21 @@
 {
+  "journal": {
+    "title": "분개장 / 총계정원장",
+    "subtitle": "분개 항목 및 시산표",
+    "trial_balance": "시산표",
+    "journal_entries": "분개 항목",
+    "col_date": "날짜",
+    "col_description": "적요",
+    "col_account": "계정",
+    "col_debit": "차변",
+    "col_credit": "대변",
+    "col_balance": "잔액",
+    "col_total": "합계",
+    "source": "출처",
+    "filter_from": "시작일",
+    "filter_to": "종료일",
+    "empty": "선택한 기간에 대한 데이터가 없습니다"
+  },
   "dash_homestay": {
     "placements_by_status": "상태별 배치",
     "requests_by_status": "상태별 학생 신청",
@@ -79,6 +96,7 @@
     "all_documents": "전체 문서",
     "quotes": "견적서",
     "exchange_rates": "환율",
+    "journal": "분개장",
     "content": "콘텐츠",
     "blog_posts": "블로그 게시물",
     "website_pages": "웹사이트 페이지",

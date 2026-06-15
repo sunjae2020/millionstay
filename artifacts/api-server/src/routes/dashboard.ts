@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db, propertiesTable, spacesTable, contactsTable, accountsTable, bookingsTable, leadsTable, tasksTable, invoicesTable, contractsTable, workOrdersTable, systemLogsTable, homestayPlacementsTable, homestayStudentRequestsTable, homestayPlacementPaymentsTable, agentCommissionLedgerTable } from "@workspace/db";
 import { eq, count, and, gte, lte, lt, sql, desc, isNull } from "drizzle-orm";
+import { listEntries, trialBalance } from "../lib/billing/gl";
 
 const router: IRouter = Router();
 
@@ -320,6 +321,28 @@ router.get("/v1/homestay-ops/summary", async (_req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch homestay ops summary" });
+  }
+});
+
+// ── General ledger (read-only) ─────────────────────────────────────────────
+
+router.get("/v1/gl/entries", async (req, res) => {
+  try {
+    const { from, to } = req.query as Record<string, string>;
+    const data = await listEntries({ from: from || undefined, to: to || undefined });
+    res.json({ data });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch GL entries" });
+  }
+});
+
+router.get("/v1/gl/trial-balance", async (req, res) => {
+  try {
+    const { from, to } = req.query as Record<string, string>;
+    const { data, totals } = await trialBalance({ from: from || undefined, to: to || undefined });
+    res.json({ data, totals });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch trial balance" });
   }
 });
 

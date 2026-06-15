@@ -12,6 +12,7 @@ import { normalizeLang, t } from "../lib/documents/i18n";
 import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
 import { sendDocumentEmail, resolveDocEmailCopy } from "../lib/email";
 import { getStripe } from "./stripe";
+import { postInvoicePaid } from "../lib/billing/gl";
 import {
   CreateInvoiceBody,
   UpdateInvoiceBody,
@@ -241,6 +242,8 @@ router.post("/v1/invoices/:id/pay", async (req, res): Promise<void> => {
     .returning();
   if (!row) { res.status(400).json({ error: "Invoice not in Sent status" }); return; }
   await logAction({ entityType: "invoice", entityId: row.id, action: "PAYMENT", oldValue: { status: "Sent" }, newValue: { status: "Paid", payment_method: parsed.data.payment_method } });
+  // Auto-post the GL entry (best-effort; never blocks or alters the response).
+  void postInvoicePaid({ id: row.id, amount: Number(row.amount), currency: row.currency, paidAt: paidAt.toISOString() });
   const [result] = await enrichInvoices([row]);
   res.json(result);
 });

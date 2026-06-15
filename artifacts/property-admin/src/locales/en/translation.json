@@ -1,4 +1,21 @@
 {
+  "journal": {
+    "title": "Journal / General Ledger",
+    "subtitle": "Journal entries and trial balance",
+    "trial_balance": "Trial balance",
+    "journal_entries": "Journal entries",
+    "col_date": "Date",
+    "col_description": "Description",
+    "col_account": "Account",
+    "col_debit": "Debit",
+    "col_credit": "Credit",
+    "col_balance": "Balance",
+    "col_total": "Total",
+    "source": "Source",
+    "filter_from": "From",
+    "filter_to": "To",
+    "empty": "No data for the selected period"
+  },
   "dash_homestay": {
     "placements_by_status": "Placements by status",
     "requests_by_status": "Student requests by status",
@@ -79,6 +96,7 @@
     "all_documents": "All Documents",
     "quotes": "Quotes",
     "exchange_rates": "Exchange Rates",
+    "journal": "Journal",
     "content": "Content",
     "blog_posts": "Blog Posts",
     "website_pages": "Website Pages",
