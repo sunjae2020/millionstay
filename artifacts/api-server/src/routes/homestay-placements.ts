@@ -37,6 +37,7 @@ import { parsePageParams, pageMeta } from "../utils/pagination.js";
 import { createBookingForPlacement } from "../lib/homestay/placementBooking.js";
 import { createPlacementInvoice, createExtensionInvoice } from "../lib/homestay/placementInvoice.js";
 import { createCommissionForPlacement, approveCommission, markCommissionPaid } from "../lib/homestay/commission.js";
+import { createRentScheduleForPlacement } from "../lib/homestay/rentSchedule.js";
 
 const ENTITY = "homestay_placement";
 
@@ -507,6 +508,8 @@ homestayPlacementAdminRouter.post("/v1/homestay-placement-payments/:paymentId/ma
         }
         // Accrue the agent commission on activation (best-effort, idempotent).
         try { await createCommissionForPlacement(pl.id); } catch (e) { console.error("[homestay] commission accrual failed:", e); }
+        // Set up unified monthly-rent billing on the booking (best-effort, idempotent).
+        try { await createRentScheduleForPlacement(pl.id); } catch (e) { console.error("[homestay] rent schedule failed:", e); }
         // Notify the student + guardian of activation (best-effort).
         try {
           const [stu] = await db.select().from(homestayStudentRequestsTable)
