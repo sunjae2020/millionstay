@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { db, invoicesTable, homestayPlacementsTable, homestayStudentRequestsTable, homestayPlacementPaymentsTable } from "@workspace/db";
 import { and, eq } from "drizzle-orm";
 import { logAction } from "../utils/auditLog";
+import { createCommissionForPlacement } from "../lib/homestay/commission";
 
 const router = Router();
 
@@ -93,6 +94,8 @@ router.post("/v1/stripe/webhook", async (req, res): Promise<void> => {
                 const anchor = pl.move_in_date || now.toISOString().slice(0, 10);
                 await db.update(homestayPlacementsTable).set({ next_billing_date: anchor }).where(eq(homestayPlacementsTable.id, pl.id));
               }
+              // Accrue the agent commission on activation (best-effort, idempotent).
+              try { await createCommissionForPlacement(pl.id); } catch (e) { console.error("[Stripe] commission accrual failed:", e); }
             }
           }
           await logAction({ entityType: "homestay_placement", entityId: pay?.placement_id ?? 0, action: "PAYMENT", newValue: { placement_payment_id: placementPaymentId, kind: pay?.kind, stripe_session: session.id } }).catch(() => {});
