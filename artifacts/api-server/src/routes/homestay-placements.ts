@@ -20,6 +20,8 @@ import {
   homestayStudentRequestsTable,
   homestayHostAvailabilityTable,
   paymentInfoTable,
+  agentCommissionLedgerTable,
+  accountsTable,
 } from "@workspace/db";
 import { Resend } from "resend";
 import { generatePlacementRef } from "../lib/homestayRef.js";
@@ -33,6 +35,7 @@ import { resolveTemplate, renderString } from "../lib/documents/templateEngine.j
 import { parsePageParams, pageMeta } from "../utils/pagination.js";
 import { createBookingForPlacement } from "../lib/homestay/placementBooking.js";
 import { createPlacementInvoice, createExtensionInvoice } from "../lib/homestay/placementInvoice.js";
+import { createCommissionForPlacement, approveCommission, markCommissionPaid } from "../lib/homestay/commission.js";
 
 const ENTITY = "homestay_placement";
 
@@ -493,6 +496,8 @@ homestayPlacementAdminRouter.post("/v1/homestay-placement-payments/:paymentId/ma
         if (!pl.next_billing_date && Number(pl.monthly_fee) > 0) {
           await db.update(homestayPlacementsTable).set({ next_billing_date: pl.move_in_date || now.toISOString().slice(0, 10) }).where(eq(homestayPlacementsTable.id, pl.id));
         }
+        // Accrue the agent commission on activation (best-effort, idempotent).
+        try { await createCommissionForPlacement(pl.id); } catch (e) { console.error("[homestay] commission accrual failed:", e); }
       }
     }
     void logAction({ entityType: ENTITY, entityId: pay.placement_id, action: "PAYMENT", actorId: (req as any).user?.id ?? null, newValue: { payment_id: paymentId, method: "bank_transfer", status: "paid" } });
@@ -501,6 +506,51 @@ homestayPlacementAdminRouter.post("/v1/homestay-placement-payments/:paymentId/ma
     console.error("[homestay-placements] mark-paid failed:", err);
     res.status(500).json({ error: "Failed to mark paid" });
   }
+});
+
+// ── Agent commission ledger (accrued on activation; Pending→Approved→Paid) ───
+homestayPlacementAdminRouter.get("/v1/homestay-commissions", async (req, res): Promise<void> => {
+  try {
+    const statusFilter = typeof req.query["status"] === "string" ? String(req.query["status"]) : null;
+    const rows = await db
+      .select({
+        id: agentCommissionLedgerTable.id,
+        placement_id: agentCommissionLedgerTable.placement_id,
+        agent_account_id: agentCommissionLedgerTable.agent_account_id,
+        agent_name: accountsTable.name,
+        base_amount: agentCommissionLedgerTable.base_amount,
+        fixed_component: agentCommissionLedgerTable.fixed_component,
+        percentage_component: agentCommissionLedgerTable.percentage_component,
+        amount: agentCommissionLedgerTable.amount,
+        currency: agentCommissionLedgerTable.currency,
+        status: agentCommissionLedgerTable.status,
+        approved_at: agentCommissionLedgerTable.approved_at,
+        paid_at: agentCommissionLedgerTable.paid_at,
+        created_at: agentCommissionLedgerTable.created_at,
+      })
+      .from(agentCommissionLedgerTable)
+      .leftJoin(accountsTable, eq(accountsTable.id, agentCommissionLedgerTable.agent_account_id))
+      .where(statusFilter ? eq(agentCommissionLedgerTable.status, statusFilter) : undefined)
+      .orderBy(desc(agentCommissionLedgerTable.id));
+    res.json({ data: rows });
+  } catch (err) {
+    console.error("[homestay-placements] list commissions failed:", err);
+    res.status(500).json({ error: "Failed to list commissions" });
+  }
+});
+
+homestayPlacementAdminRouter.post("/v1/homestay-commissions/:id/approve", async (req, res): Promise<void> => {
+  const row = await approveCommission(Number(req.params.id));
+  if (!row) { res.status(409).json({ error: "Commission not found or not Pending" }); return; }
+  void logAction({ entityType: "homestay_commission", entityId: row.id, action: "UPDATE", actorId: (req as any).user?.id ?? null, newValue: { status: "Approved" } });
+  res.json({ success: true, commission: row });
+});
+
+homestayPlacementAdminRouter.post("/v1/homestay-commissions/:id/mark-paid", async (req, res): Promise<void> => {
+  const row = await markCommissionPaid(Number(req.params.id));
+  if (!row) { res.status(409).json({ error: "Commission not found or not Approved" }); return; }
+  void logAction({ entityType: "homestay_commission", entityId: row.id, action: "UPDATE", actorId: (req as any).user?.id ?? null, newValue: { status: "Paid" } });
+  res.json({ success: true, commission: row });
 });
 
 // ── Cancel (soft) ────────────────────────────────────────────────────────────
