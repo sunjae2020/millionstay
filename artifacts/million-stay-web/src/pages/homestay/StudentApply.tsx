@@ -49,6 +49,23 @@ const YES_NO_LABELS: Record<string, string> = {
   "Yes": "yes_no_yes",
   "No": "yes_no_no",
 };
+const VISA_TYPES = ["Student Visa", "Working Holiday Visa", "Tourist Visa (ETA)", "Other"];
+const SNS_TYPES = ["KakaoTalk", "LINE", "WeChat", "WhatsApp", "Instagram", "Facebook", "Other"];
+const REFERRAL_SOURCES = ["Friend (Referral)", "Website", "Blog", "Instagram", "Kakao/Line Group", "Other"];
+const VISA_LABELS: Record<string, string> = {
+  "Student Visa": "visa_student",
+  "Working Holiday Visa": "visa_working_holiday",
+  "Tourist Visa (ETA)": "visa_tourist",
+  "Other": "visa_other",
+};
+const SNS_LABELS: Record<string, string> = {
+  "KakaoTalk": "sns_kakaotalk", "LINE": "sns_line", "WeChat": "sns_wechat",
+  "WhatsApp": "sns_whatsapp", "Instagram": "sns_instagram", "Facebook": "sns_facebook", "Other": "sns_other",
+};
+const REFERRAL_LABELS: Record<string, string> = {
+  "Friend (Referral)": "referral_friend", "Website": "referral_website", "Blog": "referral_blog",
+  "Instagram": "referral_instagram", "Kakao/Line Group": "referral_kakao_line", "Other": "referral_other",
+};
 
 const inputCls = "w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2";
 const textareaCls = inputCls + " min-h-[88px] resize-y";
@@ -91,8 +108,13 @@ export default function StudentApply() {
   const [f, setF] = useState({
     // Personal
     student_first_name: "", student_last_name: "", student_email: "", student_phone: "",
-    date_of_birth: "", gender: "", nationality: "",
+    date_of_birth: "", gender: "", nationality: "", other_name: "",
     native_language: "", english_level: "", relationship_with_host: "", additional_comment: "",
+    sns_type: "", sns_id: "", visa_type: "", referral_source: "",
+    // Home country address
+    addr_street: "", addr_street2: "", addr_city: "", addr_state: "", addr_postcode: "", addr_country: "",
+    // Agent / staff
+    uses_agent: "", agent_name: "", staff_name: "", staff_email: "", staff_contact: "",
     // Guardian (under 18)
     guardian_name: "", guardian_email: "", guardian_phone: "", guardian_relationship: "",
     // School
@@ -170,6 +192,18 @@ export default function StudentApply() {
         can_live_with_children: f.can_live_with_children,
         other_requirements: f.other_requirements,
         self_introduction: f.self_introduction,
+        other_name: f.other_name,
+        referral_source: f.referral_source,
+        visa_type: f.visa_type,
+        sns: { type: f.sns_type, id: f.sns_id },
+        home_address: {
+          street: f.addr_street, street2: f.addr_street2, city: f.addr_city,
+          state: f.addr_state, postcode: f.addr_postcode, country: f.addr_country,
+        },
+        agent: {
+          uses_agent: f.uses_agent, agent_name: f.agent_name,
+          staff_name: f.staff_name, staff_email: f.staff_email, staff_contact: f.staff_contact,
+        },
         airport_pickup_option: f.airport_pickup_option,
         arrival_date: airportRequired ? f.arrival_date : "",
         arrival_time: airportRequired ? f.arrival_time : "",
@@ -204,6 +238,13 @@ export default function StudentApply() {
     </select>
   );
 
+  const selectFrom = (k: string, value: string, values: string[], labels: Record<string, string>) => (
+    <select className={inputCls + " bg-white"} style={ring} value={value} onChange={(e) => set(k, e.target.value)}>
+      <option value="">{t("homestay.student_apply.please_select")}</option>
+      {values.map((o) => <option key={o} value={o}>{t(`homestay.student_apply.${labels[o]}`)}</option>)}
+    </select>
+  );
+
   return (
     <HomestayLayout title={t("homestay.student_apply.page_title")}>
       <HsPageHero
@@ -219,6 +260,7 @@ export default function StudentApply() {
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label={t("homestay.student_apply.label_family_name")} required><input className={inputCls} style={ring} value={f.student_last_name} onChange={(e) => set("student_last_name", e.target.value)} /></Field>
               <Field label={t("homestay.student_apply.label_given_name")} required><input className={inputCls} style={ring} value={f.student_first_name} onChange={(e) => set("student_first_name", e.target.value)} /></Field>
+              <Field label={t("homestay.student_apply.label_other_name")}><input className={inputCls} style={ring} value={f.other_name} onChange={(e) => set("other_name", e.target.value)} /></Field>
               <Field label={t("homestay.student_apply.label_date_of_birth")} required><input type="date" className={inputCls} style={ring} value={f.date_of_birth} onChange={(e) => set("date_of_birth", e.target.value)} /></Field>
               <Field label={t("homestay.student_apply.label_gender")}>
                 <select className={inputCls + " bg-white"} style={ring} value={f.gender} onChange={(e) => set("gender", e.target.value)}>
@@ -235,6 +277,10 @@ export default function StudentApply() {
                   {ENGLISH_LEVELS.map((o) => <option key={o} value={o}>{t(`homestay.student_apply.${ENGLISH_LEVEL_LABELS[o]}`)}</option>)}
                 </select>
               </Field>
+              <Field label={t("homestay.student_apply.label_visa_type")}>{selectFrom("visa_type", f.visa_type, VISA_TYPES, VISA_LABELS)}</Field>
+              <Field label={t("homestay.student_apply.label_referral_source")}>{selectFrom("referral_source", f.referral_source, REFERRAL_SOURCES, REFERRAL_LABELS)}</Field>
+              <Field label={t("homestay.student_apply.label_sns_type")}>{selectFrom("sns_type", f.sns_type, SNS_TYPES, SNS_LABELS)}</Field>
+              <Field label={t("homestay.student_apply.label_sns_id")}><input className={inputCls} style={ring} value={f.sns_id} onChange={(e) => set("sns_id", e.target.value)} /></Field>
             </div>
             <div className="mt-4 space-y-4">
               <Field label={t("homestay.student_apply.label_relationship_with_host")}>
@@ -243,6 +289,19 @@ export default function StudentApply() {
               <Field label={t("homestay.student_apply.label_additional_comment")}>
                 <textarea className={textareaCls} style={ring} value={f.additional_comment} onChange={(e) => set("additional_comment", e.target.value)} />
               </Field>
+            </div>
+          </div>
+
+          {/* Home country address */}
+          <div>
+            <SectionTitle>{t("homestay.student_apply.section_address")}</SectionTitle>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label={t("homestay.student_apply.label_addr_street")}><input className={inputCls} style={ring} value={f.addr_street} onChange={(e) => set("addr_street", e.target.value)} /></Field>
+              <Field label={t("homestay.student_apply.label_addr_street2")}><input className={inputCls} style={ring} value={f.addr_street2} onChange={(e) => set("addr_street2", e.target.value)} /></Field>
+              <Field label={t("homestay.student_apply.label_addr_city")}><input className={inputCls} style={ring} value={f.addr_city} onChange={(e) => set("addr_city", e.target.value)} /></Field>
+              <Field label={t("homestay.student_apply.label_addr_state")}><input className={inputCls} style={ring} value={f.addr_state} onChange={(e) => set("addr_state", e.target.value)} /></Field>
+              <Field label={t("homestay.student_apply.label_addr_postcode")}><input className={inputCls} style={ring} value={f.addr_postcode} onChange={(e) => set("addr_postcode", e.target.value)} /></Field>
+              <Field label={t("homestay.student_apply.label_addr_country")}><input className={inputCls} style={ring} value={f.addr_country} onChange={(e) => set("addr_country", e.target.value)} /></Field>
             </div>
           </div>
 
@@ -360,6 +419,22 @@ export default function StudentApply() {
                 </label>
               ))}
             </div>
+          </div>
+
+          {/* Agent / staff */}
+          <div>
+            <SectionTitle>{t("homestay.student_apply.section_agent")}</SectionTitle>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label={t("homestay.student_apply.label_uses_agent")}>{sel("uses_agent", f.uses_agent)}</Field>
+            </div>
+            {f.uses_agent === "Yes" && (
+              <div className="grid gap-4 sm:grid-cols-2 mt-4">
+                <Field label={t("homestay.student_apply.label_agent_name")}><input className={inputCls} style={ring} value={f.agent_name} onChange={(e) => set("agent_name", e.target.value)} /></Field>
+                <Field label={t("homestay.student_apply.label_staff_name")}><input className={inputCls} style={ring} value={f.staff_name} onChange={(e) => set("staff_name", e.target.value)} /></Field>
+                <Field label={t("homestay.student_apply.label_staff_email")}><input type="email" className={inputCls} style={ring} value={f.staff_email} onChange={(e) => set("staff_email", e.target.value)} /></Field>
+                <Field label={t("homestay.student_apply.label_staff_contact")}><input className={inputCls} style={ring} value={f.staff_contact} onChange={(e) => set("staff_contact", e.target.value)} /></Field>
+              </div>
+            )}
           </div>
 
           {/* Collection & sensitive-information consent notice (APP 5 / APP 3.3) */}

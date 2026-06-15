@@ -40,6 +40,13 @@ export interface StudentPreferences {
   emergency_contact?: { name?: string; relationship?: string; contact_no?: string; email?: string };
   // Optional arrival support
   addons?: { guardian_service?: boolean; airport_pickup?: boolean; settlement_support?: boolean };
+  // Extra intake fields (parity with the Time Study program & service application)
+  other_name?: string;
+  referral_source?: string;
+  visa_type?: string;
+  sns?: { type?: string; id?: string };
+  home_address?: { street?: string; street2?: string; city?: string; state?: string; postcode?: string; country?: string };
+  agent?: { uses_agent?: string; agent_name?: string; staff_name?: string; staff_email?: string; staff_contact?: string };
 }
 
 export interface StudentApplicationInput {
