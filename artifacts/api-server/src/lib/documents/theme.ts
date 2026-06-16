@@ -26,7 +26,7 @@ export const DOC_TOKENS = {
   border: "#f0f0f0",
   accentBg: "#FFF7F0",
   accentBorder: "#FCD9B6",
-  font: `'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans JP', 'Noto Sans KR', 'Noto Sans Thai', sans-serif`,
+  font: `'Inter', 'Noto Sans KR', 'Noto Sans JP', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`,
   monoFont: `'SFMono-Regular', ui-monospace, Menlo, Consolas, monospace`,
   radius: "14px",
   lineHeight: "1.5",
@@ -94,6 +94,12 @@ export function renderDocumentShell(opts: RenderShellOptions): string {
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>${escapeHtml(opts.docType)} · ${escapeHtml(company.tradingName)}</title>
+<!-- Brand font (Inter) + Noto fallbacks so non-Latin text (ko/ja/zh/th) renders
+     correctly in headless Chromium, which ships no CJK/Thai fonts. pdf.ts waits
+     for document.fonts.ready before printing so these are embedded, not tofu. -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Sans+Thai:wght@400;500;700&display=swap" />
 <style>
   @page { size: A4; margin: 0; }
   * { box-sizing: border-box; }
@@ -112,6 +118,7 @@ export function renderDocumentShell(opts: RenderShellOptions): string {
     background: ${t.cardBg};
     border-radius: ${print ? "0" : t.radius};
     overflow: hidden;
+    border-top: 4px solid ${t.brand};
     ${print ? "" : "box-shadow: 0 2px 8px rgba(0,0,0,0.08);"}
   }
   .doc-header {
