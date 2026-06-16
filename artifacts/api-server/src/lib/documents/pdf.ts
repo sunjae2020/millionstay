@@ -13,6 +13,7 @@ import { accessSync, constants as fsConstants } from "node:fs";
 // in scope. The dynamic import is resolved at runtime.
 type PdfPage = {
   setContent(html: string, opts: { waitUntil: string; timeout: number }): Promise<void>;
+  evaluate<T>(fn: () => T | Promise<T>): Promise<T>;
   pdf(opts: Record<string, unknown>): Promise<Uint8Array>;
   close(): Promise<void>;
 };
@@ -121,6 +122,14 @@ export async function htmlToPdf(html: string): Promise<Buffer> {
     // errored — robust against a slow/unreachable logo CDN, unlike networkidle0
     // which can hang the whole render if a single request never settles.
     await page.setContent(html, { waitUntil: "load", timeout: 20_000 });
+    // Wait for web fonts (Inter + Noto CJK/Thai) to finish loading before
+    // printing, so non-Latin text renders with the embedded font rather than
+    // tofu boxes. Bounded by a race so a slow/unreachable font CDN can never
+    // hang the render — worst case we print with whatever has loaded.
+    await Promise.race([
+      page.evaluate(() => (globalThis as { document?: { fonts?: { ready?: Promise<unknown> } } }).document?.fonts?.ready).catch(() => undefined),
+      new Promise((resolve) => setTimeout(resolve, 5_000)),
+    ]);
     const bytes = await page.pdf({
       format: "A4",
       printBackground: true,

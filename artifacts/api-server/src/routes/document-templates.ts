@@ -8,6 +8,7 @@ import { db, documentTemplatesTable, documentTemplateTranslationsTable } from "@
 import { resolveTemplate, renderString, sampleVarsFromSchema } from "../lib/documents/templateEngine.js";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf.js";
 import { renderDocumentShell } from "../lib/documents/theme.js";
+import { renderSampleDocumentHtml } from "../lib/documents/sampleDocs.js";
 import { logAction } from "../utils/auditLog.js";
 
 const router: IRouter = Router();
@@ -151,11 +152,15 @@ router.post("/v1/document-templates/:id/test-generate", async (req, res): Promis
 
     const vars = { ...sampleVarsFromSchema(resolved.variablesSchema), ...(req.body?.vars ?? {}) };
     const bodyHtml = renderString(resolved.bodyHtml, vars);
-    const html = renderDocumentShell({
-      docType: tpl.name,
-      bodyHtml: `<div class="section">${bodyHtml}</div>`,
-      forPrint: true,
-    });
+    // For the four document templates, render the FULL branded document with
+    // representative student/host/financial data so ops see the real output;
+    // other templates fall back to the body wrapped in the generic shell.
+    const html = (await renderSampleDocumentHtml(tpl.key, bodyHtml, locale))
+      ?? renderDocumentShell({
+        docType: tpl.name,
+        bodyHtml: `<div class="section">${bodyHtml}</div>`,
+        forPrint: true,
+      });
     const pdf = await htmlToPdf(html);
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `inline; filename="${tpl.key}-${locale}-sample.pdf"`);
