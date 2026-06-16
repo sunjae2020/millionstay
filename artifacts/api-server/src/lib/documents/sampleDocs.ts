@@ -41,10 +41,14 @@ const sampleQuote: QuoteDocInput = {
 
 const sampleContract: ContractDocInput = {
   contract_ref: "MS-C-2026-00017", status: "Sent",
-  tenant_name: "Minjae Kim", landlord_name: "MillionStay Pty Ltd",
+  tenant_name: "Minjae Kim", tenant_email: "minjae.kim@example.com",
+  tenant_address: "12 Lygon Street, Carlton VIC 3053, Australia",
+  landlord_name: "MillionStay Pty Ltd", landlord_email: "leasing@millionstay.com",
+  landlord_address: "Melbourne VIC 3000, Australia",
   space_name: "Carlton homestay — single room", product_name: "Long-term accommodation",
   booking_ref: "MS-BKG-2026-0042",
   start_date: "2026-07-15", end_date: "2026-12-15",
+  effective_date: "2026-07-15", expiry_date: "2026-12-15", billing_frequency: "Monthly",
   weekly_rate: 360, total_rent: 9360, bond_amount: 1200, advance_amount: 1450,
   currency: "AUD", terms_text: null, notes: null,
   signed_at: null, created_at: new Date().toISOString(),

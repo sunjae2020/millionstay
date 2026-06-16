@@ -23,12 +23,20 @@ export interface ContractDocInput {
   contract_ref: string;
   status: string;
   tenant_name?: string | null;
+  tenant_email?: string | null;
+  tenant_address?: string | null;
   landlord_name?: string | null;
+  landlord_email?: string | null;
+  landlord_address?: string | null;
   space_name?: string | null;
   product_name?: string | null;
   booking_ref?: string | null;
   start_date: string | null;
   end_date: string | null;
+  effective_date?: string | null;
+  expiry_date?: string | null;
+  /** Rent billing frequency (Monthly | Weekly | Biweekly) from the product. */
+  billing_frequency?: string | null;
   weekly_rate: number | null;
   total_rent: number | null;
   bond_amount: number | null;
@@ -106,8 +114,27 @@ function renderTerms(text: string | null, lang: DocLang): string {
   return `<div class="section"><h3>${t(lang, "terms")}</h3>${paragraphs.join("")}</div>`;
 }
 
+/** Map a product billing frequency to a localised label. */
+function freqLabel(freq: string | null | undefined, lang: DocLang): string {
+  const f = (freq ?? "").toLowerCase();
+  if (f === "monthly") return t(lang, "freq.monthly");
+  if (f === "weekly") return t(lang, "freq.weekly");
+  if (f === "biweekly" || f === "fortnightly") return t(lang, "freq.fortnightly");
+  return freq ? escapeHtml(freq) : "";
+}
+
 export function buildContractBody(c: ContractDocInput, lang: DocLang = "en"): string {
+  const row = (label: string, value: string) =>
+    `<div class="row"><span class="label">${label}</span><span class="value">${value}</span></div>`;
   const signedSuffix = c.signed_at ? ` · ${t(lang, "signed")} ${formatDate(c.signed_at, lang)}` : "";
+
+  // Fees split: bond + advance are payable up front; rent recurs.
+  const bond = Number(c.bond_amount ?? 0);
+  const advance = Number(c.advance_amount ?? 0);
+  const initialTotal = bond + advance;
+  const cycle = freqLabel(c.billing_frequency, lang);
+  const hasOngoing = c.weekly_rate != null || c.total_rent != null;
+
   return `
     <div class="section" style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
       <div>
@@ -119,26 +146,42 @@ export function buildContractBody(c: ContractDocInput, lang: DocLang = "en"): st
     </div>
 
     <div class="section">
-      <h3>${t(lang, "parties")}</h3>
-      <div class="row"><span class="label">${t(lang, "landlord")}</span><span class="value">${escapeHtml(c.landlord_name || getCompanyInfo().legalName)}</span></div>
-      <div class="row"><span class="label">${t(lang, "tenant")}</span><span class="value">${escapeHtml(c.tenant_name || "—")}</span></div>
+      <h3>${t(lang, "tenant")}</h3>
+      ${row(t(lang, "name"), escapeHtml(c.tenant_name || "—"))}
+      ${c.tenant_email ? row(t(lang, "email"), escapeHtml(c.tenant_email)) : ""}
+      ${c.tenant_address ? row(t(lang, "address"), escapeHtml(c.tenant_address)) : ""}
+    </div>
+
+    <div class="section">
+      <h3>${t(lang, "landlord")}</h3>
+      ${row(t(lang, "name"), escapeHtml(c.landlord_name || getCompanyInfo().legalName))}
+      ${c.landlord_email ? row(t(lang, "email"), escapeHtml(c.landlord_email)) : ""}
+      ${c.landlord_address ? row(t(lang, "address"), escapeHtml(c.landlord_address)) : ""}
     </div>
 
     <div class="section">
       <h3>${t(lang, "premisesTerm")}</h3>
-      ${c.space_name ? `<div class="row"><span class="label">${t(lang, "premises")}</span><span class="value">${escapeHtml(c.space_name)}</span></div>` : ""}
-      ${c.product_name ? `<div class="row"><span class="label">${t(lang, "product")}</span><span class="value">${escapeHtml(c.product_name)}</span></div>` : ""}
-      <div class="row"><span class="label">${t(lang, "startDate")}</span><span class="value">${formatDate(c.start_date, lang)}</span></div>
-      <div class="row"><span class="label">${t(lang, "endDate")}</span><span class="value">${formatDate(c.end_date, lang)}</span></div>
+      ${c.space_name ? row(t(lang, "premises"), escapeHtml(c.space_name)) : ""}
+      ${c.product_name ? row(t(lang, "product"), escapeHtml(c.product_name)) : ""}
+      ${row(t(lang, "startDate"), formatDate(c.start_date, lang))}
+      ${row(t(lang, "endDate"), formatDate(c.end_date, lang))}
+      ${c.effective_date ? row(t(lang, "effectiveDate"), formatDate(c.effective_date, lang)) : ""}
+      ${c.expiry_date ? row(t(lang, "expiryDate"), formatDate(c.expiry_date, lang)) : ""}
     </div>
 
     <div class="section">
-      <h3>${t(lang, "financials")}</h3>
-      <div class="row"><span class="label">${t(lang, "weeklyRate")}</span><span class="value">${money(c.weekly_rate, c.currency)}</span></div>
-      <div class="row"><span class="label">${t(lang, "totalRent")}</span><span class="value">${money(c.total_rent, c.currency)}</span></div>
-      <div class="row"><span class="label">${t(lang, "bond")}</span><span class="value">${money(c.bond_amount, c.currency)}</span></div>
-      <div class="row"><span class="label">${t(lang, "advance")}</span><span class="value">${money(c.advance_amount, c.currency)}</span></div>
+      <h3>${t(lang, "feesInitial")}</h3>
+      ${bond > 0 ? row(`· ${t(lang, "bond")}`, money(c.bond_amount, c.currency)) : ""}
+      ${advance > 0 ? row(`· ${t(lang, "advance")}`, money(c.advance_amount, c.currency)) : ""}
+      ${row(t(lang, "totalDueNow"), money(initialTotal, c.currency))}
     </div>
+
+    ${hasOngoing ? `<div class="section">
+      <h3>${t(lang, "feesOngoing")}</h3>
+      ${c.weekly_rate != null ? row(t(lang, "weeklyRate"), money(c.weekly_rate, c.currency)) : ""}
+      ${cycle ? row(t(lang, "billingCycle"), cycle) : ""}
+      ${c.total_rent != null ? row(t(lang, "totalRent"), money(c.total_rent, c.currency)) : ""}
+    </div>` : ""}
 
     ${renderTerms(c.terms_text, lang)}
 
