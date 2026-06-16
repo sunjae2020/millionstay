@@ -4,8 +4,8 @@
  * Renders a pre-sale quotation with line items, totals and a validity date,
  * using the shared brand shell so it matches invoices/receipts/contracts.
  */
-import { renderDocumentShell, escapeHtml, getCompanyInfo, type CompanyInfo } from "./theme";
-import { t, docLocale, type DocLang } from "./i18n";
+import { renderDocumentShell, escapeHtml, getCompanyInfo, statusWatermarkColor, type CompanyInfo } from "./theme";
+import { t, docLocale, statusLabel, type DocLang } from "./i18n";
 import { CARD_SURCHARGE_PCT } from "./invoiceDocument";
 
 export interface QuoteLine {
@@ -105,10 +105,13 @@ export function buildQuoteBody(q: QuoteDocInput, lang: DocLang = "en", termsHtml
 }
 
 export function buildQuoteHtml(q: QuoteDocInput, company?: CompanyInfo, forPrint = true, lang: DocLang = "en", termsHtml = ""): string {
+  const status = q.status || "Draft";
   return renderDocumentShell({
     docType: t(lang, "doctype.quote"),
     bodyHtml: buildQuoteBody(q, lang, termsHtml),
     company: company ?? getCompanyInfo(),
     forPrint,
+    watermark: { text: statusLabel(lang, status), color: statusWatermarkColor(status) },
+    compact: q.line_items.length <= 1,
   });
 }

@@ -4,8 +4,8 @@
  * A receipt is a paid invoice rendered as a payment confirmation. It reuses the
  * same enriched invoice data and shared brand shell as the invoice document.
  */
-import { renderDocumentShell, escapeHtml, getCompanyInfo, type CompanyInfo } from "./theme";
-import { t, docLocale, type DocLang } from "./i18n";
+import { renderDocumentShell, escapeHtml, getCompanyInfo, statusWatermarkColor, type CompanyInfo } from "./theme";
+import { t, docLocale, statusLabel, type DocLang } from "./i18n";
 import type { InvoiceDocInput } from "./invoiceDocument";
 
 function formatMoney(amount: string | number | null, currency: string | null): string {
@@ -98,10 +98,13 @@ export function buildReceiptBody(inv: InvoiceDocInput, lang: DocLang = "en", ter
 }
 
 export function buildReceiptHtml(inv: InvoiceDocInput, company?: CompanyInfo, forPrint = true, lang: DocLang = "en", termsHtml = ""): string {
+  const status = inv.status || "Draft";
   return renderDocumentShell({
     docType: t(lang, "doctype.receipt"),
     bodyHtml: buildReceiptBody(inv, lang, termsHtml),
     company: company ?? getCompanyInfo(),
     forPrint,
+    watermark: { text: statusLabel(lang, status), color: statusWatermarkColor(status) },
+    compact: (inv.line_items?.length ?? 0) <= 1,
   });
 }

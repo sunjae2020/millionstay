@@ -187,7 +187,24 @@ const LABELS: Dict = {
     th: "โปรดตรวจสอบข้อตกลงที่แนบมาและตอบกลับเพื่อยืนยัน",
     vi: "Vui lòng xem lại thỏa thuận đính kèm và trả lời để xác nhận.",
   },
+
+  // ── Document status labels (used for the diagonal status watermark) ──────
+  "status.Draft":    { en: "Draft",     ko: "초안",      zh: "草稿",   ja: "下書き",   th: "ฉบับร่าง",  vi: "Bản nháp" },
+  "status.Sent":     { en: "Sent",      ko: "발송됨",    zh: "已发送", ja: "送信済",   th: "ส่งแล้ว",   vi: "Đã gửi" },
+  "status.Paid":     { en: "Paid",      ko: "결제완료",  zh: "已付款", ja: "支払済",   th: "ชำระแล้ว",  vi: "Đã thanh toán" },
+  "status.Void":     { en: "Void",      ko: "무효",      zh: "作废",   ja: "無効",     th: "ยกเลิก",    vi: "Đã hủy" },
+  "status.Archived": { en: "Archived",  ko: "보관됨",    zh: "已归档", ja: "アーカイブ", th: "เก็บถาวร",  vi: "Đã lưu trữ" },
+  "status.Accepted": { en: "Accepted",  ko: "수락됨",    zh: "已接受", ja: "承認済",   th: "ยอมรับแล้ว", vi: "Đã chấp nhận" },
+  "status.Declined": { en: "Declined",  ko: "거절됨",    zh: "已拒绝", ja: "却下",     th: "ปฏิเสธแล้ว", vi: "Đã từ chối" },
+  "status.Expired":  { en: "Expired",   ko: "만료됨",    zh: "已过期", ja: "期限切れ", th: "หมดอายุ",   vi: "Đã hết hạn" },
+  "status.Overdue":  { en: "Overdue",   ko: "연체",      zh: "逾期",   ja: "期限超過", th: "เกินกำหนด", vi: "Quá hạn" },
 };
+
+/** Localised display label for a document status; falls back to the raw value. */
+export function statusLabel(lang: DocLang, status: string): string {
+  const entry = LABELS[`status.${status}`];
+  return entry ? (entry[lang] ?? entry.en) : status;
+}
 
 /** Translate a label key into the given language, interpolating {var} tokens. */
 export function t(lang: DocLang, key: string, vars?: Record<string, string>): string {

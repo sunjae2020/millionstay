@@ -9,9 +9,10 @@ import {
   renderDocumentShell,
   escapeHtml,
   getCompanyInfo,
+  statusWatermarkColor,
   type CompanyInfo,
 } from "./theme";
-import { t, docLocale, type DocLang } from "./i18n";
+import { t, docLocale, statusLabel, type DocLang } from "./i18n";
 
 /** Card processing surcharge %, added only when the payer selects card. */
 export const CARD_SURCHARGE_PCT = 2;
@@ -174,10 +175,13 @@ export function buildInvoiceBody(inv: InvoiceDocInput, lang: DocLang = "en", ter
 
 /** Build the full standalone HTML document for an invoice. */
 export function buildInvoiceHtml(inv: InvoiceDocInput, company?: CompanyInfo, forPrint = true, lang: DocLang = "en", termsHtml = ""): string {
+  const status = inv.status || "Draft";
   return renderDocumentShell({
     docType: t(lang, "doctype.invoice"),
     bodyHtml: buildInvoiceBody(inv, lang, termsHtml),
     company: company ?? getCompanyInfo(),
     forPrint,
+    watermark: { text: statusLabel(lang, status), color: statusWatermarkColor(status) },
+    compact: (inv.line_items?.length ?? 0) <= 1,
   });
 }

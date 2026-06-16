@@ -76,6 +76,31 @@ export interface RenderShellOptions {
   company?: CompanyInfo;
   /** When true, render print/PDF-optimised CSS (A4 page, no page background). */
   forPrint?: boolean;
+  /** Diagonal status watermark (e.g. PAID / DRAFT / VOID), colour-coded. */
+  watermark?: { text: string; color: string } | null;
+  /** When true, tighten spacing so a short (single-item) document fits one A4 page. */
+  compact?: boolean;
+}
+
+/**
+ * Colour for the diagonal status watermark, shared by invoice/quote/receipt.
+ * Green = settled, red = cancelled/expired, blue = in-flight, amber = attention,
+ * grey = draft/archived. Unknown statuses fall back to neutral grey.
+ */
+const WATERMARK_COLORS: Record<string, string> = {
+  Draft: "#9ca3af",
+  Sent: "#2563eb",
+  Paid: "#16a34a",
+  Accepted: "#16a34a",
+  Void: "#dc2626",
+  Declined: "#dc2626",
+  Overdue: "#dc2626",
+  Expired: "#d97706",
+  Archived: "#9ca3af",
+};
+
+export function statusWatermarkColor(status: string): string {
+  return WATERMARK_COLORS[status] ?? "#9ca3af";
 }
 
 /**
@@ -87,6 +112,8 @@ export function renderDocumentShell(opts: RenderShellOptions): string {
   const company = opts.company ?? getCompanyInfo();
   const year = new Date().getFullYear();
   const print = opts.forPrint ?? false;
+  const watermark = opts.watermark;
+  const compact = opts.compact ?? false;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -229,9 +256,40 @@ export function renderDocumentShell(opts: RenderShellOptions): string {
     font-weight: 700;
     letter-spacing: 0.04em;
   }
+  /* Diagonal status watermark — colour conveys the document state at a glance.
+     position:fixed makes Chromium repeat it on every printed page; the low
+     opacity keeps the body text fully legible underneath. */
+  .watermark {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-32deg);
+    font-size: 150px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    opacity: 0.12;
+    z-index: 2147483000;
+    pointer-events: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  /* Keep cards/rows from splitting awkwardly across a page boundary. */
+  .section, .total-box, .info-box { page-break-inside: avoid; }
+  table.lines tr { page-break-inside: avoid; }
+  /* Compact layout for short (single-item) documents so they fit one A4 page. */
+  body.compact .doc-body { padding: 24px 32px; }
+  body.compact .section { margin-bottom: 10px; padding: 12px 16px; }
+  body.compact .section h3 { margin: 0 0 8px; padding-bottom: 6px; }
+  body.compact .total-box { margin-top: 12px; padding: 12px 20px; }
+  body.compact .info-box { margin-top: 12px; padding: 12px 14px; }
+  body.compact .row { padding: 6px 0; }
+  body.compact table.lines td { padding: 8px 0; }
 </style>
 </head>
-<body>
+<body${compact ? ' class="compact"' : ""}>
+  ${watermark?.text ? `<div class="watermark" style="color:${escapeHtml(watermark.color)};">${escapeHtml(watermark.text)}</div>` : ""}
   <div class="container">
     <div class="doc-header">
       <img src="${escapeHtml(company.logoUrl)}" alt="${escapeHtml(company.tradingName)}" />
