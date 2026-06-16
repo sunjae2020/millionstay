@@ -350,7 +350,9 @@ router.get("/v1/invoices/:id/receipt/pdf", async (req, res): Promise<void> => {
   if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
 
   const asHtml = req.query.format === "html";
-  const html = buildReceiptHtml(docInput, await resolveCompanyInfo(), !asHtml, normalizeLang(req.query.lang as string));
+  const lang = normalizeLang(req.query.lang as string);
+  const terms = await resolveTemplateBody("pdf", "pdf.receipt", lang, { ref: docInput.invoice_ref });
+  const html = buildReceiptHtml(docInput, await resolveCompanyInfo(), !asHtml, lang, terms);
 
   if (asHtml) { res.type("html").send(html); return; }
   await sendPdf(res, html, `${docInput.invoice_ref}-receipt`);
@@ -391,12 +393,12 @@ async function emailInvoiceDocument(req: import("express").Request, res: import(
 
   const lang = normalizeLang(req.body?.lang as string);
   const company = await resolveCompanyInfo();
-  const invoiceTerms = kind === "invoice"
+  const terms = kind === "invoice"
     ? await resolveTemplateBody("pdf", "pdf.invoice", lang, { ref: docInput.invoice_ref, due_date: docInput.due_date ?? "" })
-    : "";
+    : await resolveTemplateBody("pdf", "pdf.receipt", lang, { ref: docInput.invoice_ref });
   const html = kind === "receipt"
-    ? buildReceiptHtml(docInput, company, true, lang)
-    : buildInvoiceHtml(docInput, company, true, lang, invoiceTerms);
+    ? buildReceiptHtml(docInput, company, true, lang, terms)
+    : buildInvoiceHtml(docInput, company, true, lang, terms);
   let pdf: Buffer;
   try {
     pdf = await htmlToPdf(html);
@@ -454,7 +456,10 @@ async function freezeInvoiceDocument(req: import("express").Request, res: import
   if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
   const lang = normalizeLang(req.body?.lang as string);
   const company = await resolveCompanyInfo();
-  const html = kind === "receipt" ? buildReceiptHtml(docInput, company, true, lang) : buildInvoiceHtml(docInput, company, true, lang);
+  const terms = kind === "invoice"
+    ? await resolveTemplateBody("pdf", "pdf.invoice", lang, { ref: docInput.invoice_ref, due_date: docInput.due_date ?? "" })
+    : await resolveTemplateBody("pdf", "pdf.receipt", lang, { ref: docInput.invoice_ref });
+  const html = kind === "receipt" ? buildReceiptHtml(docInput, company, true, lang, terms) : buildInvoiceHtml(docInput, company, true, lang, terms);
   let pdf: Buffer;
   try {
     pdf = await htmlToPdf(html);
