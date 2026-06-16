@@ -158,7 +158,7 @@ export function buildInvoiceBody(inv: InvoiceDocInput, lang: DocLang = "en", ter
 
     ${inv.notes?.trim() ? `<div class="info-box"><strong>${t(lang, "notes")}</strong><br/>${escapeHtml(inv.notes)}</div>` : ""}
 
-    ${termsHtml.trim() ? `<div class="section" style="margin-top:24px;font-size:12px;color:#777;">${termsHtml}</div>` : ""}
+    ${termsHtml.trim() ? `<div class="section" style="margin-top:24px;"><h3>${t(lang, "terms")}</h3><div style="font-size:13px;color:#333;line-height:1.6;">${termsHtml}</div></div>` : ""}
   `;
 }
 
