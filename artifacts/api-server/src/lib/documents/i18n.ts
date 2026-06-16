@@ -89,6 +89,21 @@ const LABELS: Dict = {
   "signatures":       { en: "Signatures",              ko: "서명",              zh: "签名",         ja: "署名",       th: "ลายเซ็น",             vi: "Chữ ký" },
   "signed":           { en: "Signed",                  ko: "서명일",            zh: "签署日期",     ja: "署名日",     th: "ลงนามเมื่อ",          vi: "Đã ký" },
 
+  // ── Tenancy/Accommodation Agreement — section + fee detail ──────────────
+  "name":             { en: "Name",            ko: "이름",        zh: "姓名",     ja: "氏名",         th: "ชื่อ",                vi: "Tên" },
+  "email":            { en: "Email",           ko: "이메일",      zh: "邮箱",     ja: "メール",       th: "อีเมล",               vi: "Email" },
+  "address":          { en: "Address",         ko: "주소",        zh: "地址",     ja: "住所",         th: "ที่อยู่",             vi: "Địa chỉ" },
+  "effectiveDate":    { en: "Effective date",  ko: "발효일",      zh: "生效日期", ja: "発効日",       th: "วันที่มีผล",          vi: "Ngày hiệu lực" },
+  "expiryDate":       { en: "Expiry date",     ko: "만료일",      zh: "到期日期", ja: "満了日",       th: "วันหมดอายุ",          vi: "Ngày hết hạn" },
+  "rent":             { en: "Rent",            ko: "임대료",      zh: "租金",     ja: "賃料",         th: "ค่าเช่า",             vi: "Tiền thuê" },
+  "billingCycle":     { en: "Billing cycle",   ko: "청구 주기",   zh: "账单周期", ja: "請求サイクル", th: "รอบการเรียกเก็บเงิน", vi: "Chu kỳ thanh toán" },
+  "totalDueNow":      { en: "Total due now",   ko: "즉시 납부 합계", zh: "立即应付总额", ja: "今すぐお支払い合計", th: "ยอดที่ต้องชำระทันที", vi: "Tổng phải trả ngay" },
+  "feesInitial":      { en: "Fees — initial payment (due now)", ko: "비용 — 초기 납부(즉시)", zh: "费用 — 首期付款（立即）", ja: "費用 — 初回支払い（即時）", th: "ค่าธรรมเนียม — การชำระครั้งแรก (ทันที)", vi: "Chi phí — thanh toán ban đầu (ngay)" },
+  "feesOngoing":      { en: "Fees — ongoing (rent)", ko: "비용 — 정기 임대료", zh: "费用 — 经常性（租金）", ja: "費用 — 継続（賃料）", th: "ค่าธรรมเนียม — ต่อเนื่อง (ค่าเช่า)", vi: "Chi phí — định kỳ (tiền thuê)" },
+  "freq.monthly":     { en: "Monthly",     ko: "매월",  zh: "每月",   ja: "毎月", th: "รายเดือน",   vi: "Hàng tháng" },
+  "freq.weekly":      { en: "Weekly",      ko: "매주",  zh: "每周",   ja: "毎週", th: "รายสัปดาห์", vi: "Hàng tuần" },
+  "freq.fortnightly": { en: "Fortnightly", ko: "격주",  zh: "每两周", ja: "隔週", th: "รายปักษ์",   vi: "Hai tuần một lần" },
+
   // ── Email cover (when documents are emailed) ──────────────────────────
   "email.subject": {
     en: "{doc} {ref} from MillionStay",

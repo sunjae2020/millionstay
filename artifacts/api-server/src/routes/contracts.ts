@@ -398,18 +398,49 @@ export async function buildContractDocInput(id: number, lang: DocLang = "en"): P
     const tpl = pdfTpl?.bodyHtml?.trim() ? pdfTpl : await resolveTemplate({ kind: "contract", key: "contract.terms", locale: lang });
     if (tpl?.bodyHtml?.trim()) termsText = tpl.bodyHtml;
   }
+
+  // Enrich tenant/landlord contact + the rent billing frequency so the agreement
+  // can show per-party detail and a subdivided fee breakdown.
+  const composeAddr = (a: typeof accountsTable.$inferSelect | undefined): string | null =>
+    a ? ([a.address_suburb, a.address_state, a.address_postcode, a.address_country].filter(Boolean).join(", ") || null) : null;
+  let tenantEmail: string | null = null, tenantAddress: string | null = null;
+  let landlordEmail: string | null = null, landlordAddress: string | null = null;
+  if (row.tenant_account_id) {
+    const [a] = await db.select().from(accountsTable).where(eq(accountsTable.id, row.tenant_account_id));
+    tenantEmail = a?.account_email ?? null; tenantAddress = composeAddr(a);
+  }
+  if (row.landlord_account_id) {
+    const [a] = await db.select().from(accountsTable).where(eq(accountsTable.id, row.landlord_account_id));
+    landlordEmail = a?.account_email ?? null; landlordAddress = composeAddr(a);
+  }
+  let billingFrequency: string | null = null;
+  if (row.product_id) {
+    const [p] = await db.select({ f: accommodationCatalogTable.billing_frequency }).from(accommodationCatalogTable).where(eq(accommodationCatalogTable.id, row.product_id));
+    billingFrequency = p?.f ?? null;
+  } else if (row.contract_product_id) {
+    const [p] = await db.select({ f: contractProductsTable.billing_frequency }).from(contractProductsTable).where(eq(contractProductsTable.id, row.contract_product_id));
+    billingFrequency = p?.f ?? null;
+  }
+
   return {
     tenantAccountId: row.tenant_account_id ?? null,
     doc: {
       contract_ref: c.contract_ref,
       status: c.status,
       tenant_name: (c as any).tenant_name ?? null,
+      tenant_email: tenantEmail,
+      tenant_address: tenantAddress,
       landlord_name: (c as any).landlord_name ?? null,
+      landlord_email: landlordEmail,
+      landlord_address: landlordAddress,
       space_name: (c as any).space_name ?? null,
       product_name: (c as any).product_name ?? null,
       booking_ref: (c as any).booking_ref ?? null,
       start_date: c.start_date,
       end_date: c.end_date,
+      effective_date: row.effective_date ?? null,
+      expiry_date: row.expiry_date ?? null,
+      billing_frequency: billingFrequency,
       weekly_rate: c.weekly_rate,
       total_rent: c.total_rent,
       bond_amount: c.bond_amount,
