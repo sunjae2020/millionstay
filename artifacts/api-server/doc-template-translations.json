@@ -1,0 +1,362 @@
+{
+  "homestay.docs_requested": {
+    "ko": {
+      "subject": "조치 필요: 홈스테이 호스트 신청 서류 ({{ref}})",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">추가 서류 요청</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:0;\">{{name}} 님, 안녕하세요.</p><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;\">홈스테이 호스트 신청 심사를 계속 진행하기 위해 몇 가지 서류가 추가로 필요합니다. 호스트 포털에 로그인하여 서류를 업로드해 주십시오: <a href=\"{{portal_url}}\">{{portal_url}}</a>.</p>"
+    },
+    "ja": {
+      "subject": "ご対応のお願い：ホームステイホスト申請の書類について（{{ref}}）",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">追加書類のお願い</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:0;\">{{name}} 様</p><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;\">ホームステイホスト申請の審査を進めるため、いくつか追加の書類が必要です。ホストポータルにログインし、書類をアップロードしてください：<a href=\"{{portal_url}}\">{{portal_url}}</a>。</p>"
+    },
+    "zh": {
+      "subject": "需要您处理：寄宿家庭主人申请所需文件（{{ref}}）",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">需要补充文件</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:0;\">您好 {{name}}，</p><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;\">为继续审核您的寄宿家庭主人申请，我们还需要一些文件。请登录您的主人门户上传这些文件：<a href=\"{{portal_url}}\">{{portal_url}}</a>。</p>"
+    },
+    "th": {
+      "subject": "ต้องดำเนินการ: เอกสารสำหรับใบสมัครโฮสต์โฮมสเตย์ของคุณ ({{ref}})",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">ขอเอกสารเพิ่มเติม</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:0;\">สวัสดีคุณ {{name}}</p><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;\">เพื่อดำเนินการพิจารณาใบสมัครโฮสต์โฮมสเตย์ของคุณต่อ เราต้องการเอกสารเพิ่มเติมอีกเล็กน้อย กรุณาเข้าสู่ระบบพอร์ทัลโฮสต์เพื่ออัปโหลดเอกสาร: <a href=\"{{portal_url}}\">{{portal_url}}</a></p>"
+    }
+  },
+  "email.receipt": {
+    "ko": { "subject": null, "body_html": "결제해 주셔서 감사합니다. 기록 보관용 영수증을 첨부해 드립니다." },
+    "ja": { "subject": null, "body_html": "お支払いいただきありがとうございます。ご確認用の領収書を添付いたします。" },
+    "zh": { "subject": null, "body_html": "感谢您的付款。随附收据供您留存。" },
+    "th": { "subject": null, "body_html": "ขอบคุณสำหรับการชำระเงิน เราได้แนบใบเสร็จไว้สำหรับเก็บเป็นหลักฐานของคุณ" }
+  },
+  "contract.terms": {
+    "ko": {
+      "subject": null,
+      "body_html": "본 숙소 계약은 MillionStay(또는 위에 기재된 임대인)와 위에 기재된 임차인 간에 체결됩니다.\n\n1. 숙소 및 계약 기간. 임대인은 위에 표시된 숙소를 위에 표시된 기간 동안 임차인에게 임대하기로 합니다. 임차인은 숙소를 양호한 상태로 유지하고 주택 규칙을 준수하기로 합니다.\n\n2. 임대료 및 비용. 임대료는 청구되는 바에 따라 위에 표시된 요율로 선납합니다. 위에 표시된 보증금 및 선납 금액은 계약 시작 전에 납부해야 합니다.\n\n3. 보증금. 보증금은 손상 및 미납 금액에 대한 담보로 보관되며, 계약 종료 시 미납 금액이 없고 통상적인 마모를 넘는 손상이 없는 경우 환급됩니다.\n\n4. 사용 및 행위. 임차인은 숙소를 주거 목적으로만 사용하며, 타인에게 피해를 주지 않고, 사전 통지에 따른 점검 및 수리를 위한 합리적인 출입을 허용합니다.\n\n5. 계약 해지. 양 당사자는 관련 주거 임대차 법률의 통지 요건에 따라 본 계약을 해지할 수 있습니다. 임대료는 퇴거일까지 납부해야 합니다.\n\n6. 개인정보. 개인정보는 MillionStay 개인정보 처리방침 및 호주 개인정보보호원칙(Australian Privacy Principles)에 따라 처리됩니다.\n\n아래에 서명함으로써 각 당사자는 본 약관을 읽고 이해하였으며 이에 동의함을 확인합니다."
+    },
+    "ja": {
+      "subject": null,
+      "body_html": "本宿泊契約は、MillionStay（または上記に記載の貸主）と上記に記載の入居者との間で締結されます。\n\n1. 物件および契約期間。貸主は、上記に示す物件を上記に示す期間にわたり入居者に賃貸することに同意します。入居者は、物件を良好な状態に保ち、ハウスルールを遵守することに同意します。\n\n2. 賃料および費用。賃料は、請求に従い上記に示す料率で前払いとします。上記に示す敷金および前払金は、契約開始前にお支払いいただきます。\n\n3. 敷金。敷金は、損害および未払金に対する担保として保持され、契約終了時に未払金がなく、通常の使用による損耗を超える損害がない場合に返金されます。\n\n4. 使用および行為。入居者は、物件を居住目的のみに使用し、近隣に迷惑をかけず、事前通知のうえ点検および修繕のための合理的な立ち入りを認めるものとします。\n\n5. 解約。いずれの当事者も、適用される住宅賃貸借法の通知要件に従って本契約を終了することができます。賃料は退去日まで支払うものとします。\n\n6. プライバシー。個人情報は、MillionStay のプライバシーポリシーおよびオーストラリア・プライバシー原則（Australian Privacy Principles）に従って取り扱われます。\n\n以下に署名することにより、各当事者は本条項を読み、理解し、同意したことを確認します。"
+    },
+    "zh": {
+      "subject": null,
+      "body_html": "本住宿协议由 MillionStay（或上述署名的房东）与上述署名的租客之间订立。\n\n1. 房屋及租期。房东同意将上述房屋按上述租期出租给租客。租客同意保持房屋状况良好并遵守房屋规定。\n\n2. 租金及费用。租金按上述费率提前支付，以账单为准。上述任何押金及预付款须在租期开始前支付。\n\n3. 押金。押金作为损坏及未付款项的担保，在租期结束时如无未付款项且无超出正常磨损的损坏，将予以退还。\n\n4. 使用及行为。租客仅可将房屋用于居住目的，不得造成滋扰，并应在收到通知后允许合理进入以进行检查和维修。\n\n5. 终止。任何一方均可依照适用住宅租赁法律的通知要求终止本协议。租金须支付至搬出之日。\n\n6. 隐私。个人信息将依照 MillionStay 隐私政策及《澳大利亚隐私原则》（Australian Privacy Principles）处理。\n\n在下方签字即表示各方确认已阅读、理解并同意上述条款。"
+    },
+    "th": {
+      "subject": null,
+      "body_html": "ข้อตกลงที่พักอาศัยฉบับนี้ทำขึ้นระหว่าง MillionStay (หรือเจ้าของที่พักที่ระบุข้างต้น) กับผู้เช่าที่ระบุข้างต้น\n\n1. สถานที่และระยะเวลา เจ้าของที่พักตกลงให้เช่าสถานที่ตามที่แสดงข้างต้นแก่ผู้เช่าตามระยะเวลาที่แสดงข้างต้น ผู้เช่าตกลงที่จะดูแลสถานที่ให้อยู่ในสภาพดีและปฏิบัติตามกฎของบ้าน\n\n2. ค่าเช่าและค่าใช้จ่าย ค่าเช่าชำระล่วงหน้าตามอัตราที่แสดงข้างต้นตามที่เรียกเก็บ เงินประกันและเงินชำระล่วงหน้าใด ๆ ที่แสดงข้างต้นต้องชำระก่อนเริ่มระยะเวลาเช่า\n\n3. เงินประกัน เงินประกันถูกเก็บไว้เป็นหลักประกันความเสียหายและจำนวนเงินที่ค้างชำระ และจะคืนให้เมื่อสิ้นสุดระยะเวลาเช่า โดยมีเงื่อนไขว่าไม่มีจำนวนเงินค้างชำระหรือความเสียหายเกินกว่าการสึกหรอตามปกติ\n\n4. การใช้และความประพฤติ ผู้เช่าจะใช้สถานที่เพื่อการอยู่อาศัยเท่านั้น จะไม่ก่อความเดือดร้อนรำคาญ และจะอนุญาตให้เข้าตรวจสอบและซ่อมแซมได้ตามสมควรเมื่อมีการแจ้งล่วงหน้า\n\n5. การยกเลิก ฝ่ายใดฝ่ายหนึ่งอาจยุติข้อตกลงนี้ได้ตามข้อกำหนดการแจ้งล่วงหน้าของกฎหมายการเช่าที่อยู่อาศัยที่บังคับใช้ ค่าเช่าต้องชำระจนถึงวันที่ย้ายออก\n\n6. ความเป็นส่วนตัว ข้อมูลส่วนบุคคลจะได้รับการจัดการตามนโยบายความเป็นส่วนตัวของ MillionStay และหลักการความเป็นส่วนตัวของออสเตรเลีย (Australian Privacy Principles)\n\nการลงนามด้านล่างนี้ ถือว่าแต่ละฝ่ายยืนยันว่าได้อ่าน เข้าใจ และยอมรับข้อกำหนดเหล่านี้แล้ว"
+    }
+  },
+  "homestay_placement_terms": {
+    "ko": {
+      "subject": null,
+      "body_html": "본 홈스테이 배정 계약은 MillionStay, 호스트 가정, 그리고 학생(학생이 만 18세 미만인 경우 그 보호자 포함) 간에 체결됩니다.\n\n1. 배정. 호스트 가정은 위에 표시된 기간 동안 학생에게 숙소와 합의된 식사 플랜을 제공하기로 합니다. 학생은 호스트 가정의 집과 주택 규칙을 존중하기로 합니다.\n\n2. 비용. 위에 표시된 배정 수수료, 보증금 및 매월 숙박비는 청구되는 바에 따라 선납합니다. 보증금은 배정 종료 시 미납 금액이나 손상이 없는 경우 환급됩니다.\n\n3. 식사 및 시설. 식사는 선택한 패키지에 따라 제공됩니다. 학생은 합의된 방과 공용 시설을 이용할 수 있습니다.\n\n4. 행위 및 안전. 학생은 합리적인 주택 규칙을 따릅니다. 학생이 미성년자인 경우, 호스트 가정은 모든 성인 가구 구성원이 유효한 아동 관련 종사자 확인서(Working with Children Check)를 보유하고 있음을 확인합니다.\n\n5. 변경 및 취소. 양 당사자는 MillionStay를 통해 변경을 요청할 수 있습니다. 입주 전 취소: 배정 수수료는 환불되지 않으며 보증금은 환급됩니다. 입주 후에는 최소 2주 전 서면 통지가 필요하며, 비용은 퇴거일까지 일할 계산됩니다.\n\n6. 개인정보. 개인정보는 MillionStay 개인정보 처리방침 및 호주 개인정보보호원칙(Australian Privacy Principles)에 따라 처리됩니다.\n\n아래에 서명함으로써 각 당사자는 본 약관을 읽고 이해하였으며 이에 동의함을 확인합니다."
+    },
+    "ja": {
+      "subject": null,
+      "body_html": "本ホームステイ受入契約は、MillionStay、ホストファミリー、および学生（学生が18歳未満の場合はその保護者を含む）との間で締結されます。\n\n1. 受入。ホストファミリーは、上記に示す期間にわたり、学生に宿泊および合意したミールプランを提供することに同意します。学生は、ホストファミリーの家庭およびハウスルールを尊重することに同意します。\n\n2. 費用。上記に示す受入手数料、デポジットおよび継続的な宿泊費は、請求に従い前払いとします。デポジットは、受入終了時に未払金や損害がない場合に返金されます。\n\n3. 食事および設備。食事は選択したパッケージに従って提供されます。学生は、合意した部屋および共用設備を利用できます。\n\n4. 行為および安全。学生は合理的なハウスルールに従います。学生が未成年の場合、ホストファミリーは、すべての成人世帯員が有効な Working with Children Check（児童関連業務従事者確認）を保有していることを確認します。\n\n5. 変更およびキャンセル。いずれの当事者も MillionStay を通じて変更を依頼できます。入居前のキャンセル：受入手数料は返金されず、デポジットは返金されます。入居後は少なくとも2週間前の書面による通知が必要で、費用は退去日まで日割り計算されます。\n\n6. プライバシー。個人情報は、MillionStay のプライバシーポリシーおよびオーストラリア・プライバシー原則（Australian Privacy Principles）に従って取り扱われます。\n\n以下に署名することにより、各当事者は本条項を読み、理解し、同意したことを確認します。"
+    },
+    "zh": {
+      "subject": null,
+      "body_html": "本寄宿安置协议由 MillionStay、寄宿家庭以及学生（学生未满18岁时含其监护人）之间订立。\n\n1. 安置。寄宿家庭同意在上述期间内为学生提供住宿及约定的膳食方案。学生同意尊重寄宿家庭的住所及房屋规定。\n\n2. 费用。上述安置费、押金及持续住宿费按账单提前支付。押金在安置结束时如无未付款项或损坏，将予以退还。\n\n3. 膳食及设施。膳食按所选套餐提供。学生可使用约定的房间及共用设施。\n\n4. 行为及安全。学生应遵守合理的房屋规定。学生为未成年人时，寄宿家庭确认所有成年家庭成员均持有有效的儿童工作核查证明（Working with Children Check）。\n\n5. 变更及取消。任何一方均可通过 MillionStay 申请变更。入住前取消：安置费不予退还，押金予以退还。入住后须至少提前两（2）周书面通知；费用按搬出之日按比例计算。\n\n6. 隐私。个人信息将依照 MillionStay 隐私政策及《澳大利亚隐私原则》（Australian Privacy Principles）处理。\n\n在下方签字即表示各方确认已阅读、理解并同意上述条款。"
+    },
+    "th": {
+      "subject": null,
+      "body_html": "ข้อตกลงการจัดที่พักโฮมสเตย์ฉบับนี้ทำขึ้นระหว่าง MillionStay ครอบครัวโฮสต์ และนักเรียน (รวมถึงผู้ปกครองในกรณีที่นักเรียนอายุต่ำกว่า 18 ปี)\n\n1. การจัดที่พัก ครอบครัวโฮสต์ตกลงจัดที่พักและแผนมื้ออาหารตามที่ตกลงให้แก่นักเรียนตามระยะเวลาที่แสดงข้างต้น นักเรียนตกลงที่จะเคารพบ้านและกฎของบ้านของครอบครัวโฮสต์\n\n2. ค่าธรรมเนียม ค่าธรรมเนียมการจัดที่พัก เงินมัดจำ และค่าที่พักรายเดือนตามที่แสดงข้างต้น ชำระล่วงหน้าตามที่เรียกเก็บ เงินมัดจำจะคืนให้เมื่อสิ้นสุดการจัดที่พัก โดยมีเงื่อนไขว่าไม่มีจำนวนเงินค้างชำระหรือความเสียหาย\n\n3. มื้ออาหารและสิ่งอำนวยความสะดวก มื้ออาหารจัดให้ตามแพ็กเกจที่เลือก นักเรียนสามารถใช้ห้องและสิ่งอำนวยความสะดวกส่วนกลางตามที่ตกลง\n\n4. ความประพฤติและความปลอดภัย นักเรียนจะปฏิบัติตามกฎของบ้านตามสมควร ในกรณีที่นักเรียนเป็นผู้เยาว์ ครอบครัวโฮสต์ยืนยันว่าสมาชิกผู้ใหญ่ทุกคนในบ้านมีใบรับรอง Working with Children Check ที่ยังมีผลบังคับใช้\n\n5. การเปลี่ยนแปลงและการยกเลิก ฝ่ายใดฝ่ายหนึ่งสามารถขอเปลี่ยนแปลงผ่าน MillionStay ได้ การยกเลิกก่อนเข้าพัก: ค่าธรรมเนียมการจัดที่พักไม่สามารถขอคืนได้ ส่วนเงินมัดจำจะคืนให้ หลังเข้าพักแล้ว ต้องแจ้งเป็นลายลักษณ์อักษรล่วงหน้าอย่างน้อยสอง (2) สัปดาห์ ค่าธรรมเนียมจะคำนวณตามสัดส่วนจนถึงวันที่ย้ายออก\n\n6. ความเป็นส่วนตัว ข้อมูลส่วนบุคคลจะได้รับการจัดการตามนโยบายความเป็นส่วนตัวของ MillionStay และหลักการความเป็นส่วนตัวของออสเตรเลีย (Australian Privacy Principles)\n\nการลงนามด้านล่างนี้ ถือว่าแต่ละฝ่ายยืนยันว่าได้อ่าน เข้าใจ และยอมรับข้อกำหนดเหล่านี้แล้ว"
+    }
+  },
+  "BOOKING_CANCELLED": {
+    "ko": {
+      "subject": "예약 취소 안내 — {{booking_ref}}",
+      "body_html": "<h1>예약이 취소되었습니다</h1>\n  <p>{{guest_name}} 님께,</p>\n  <p>예약 {{booking_ref}} 이(가) 취소되었습니다.</p>\n  <p>사유: {{cancellation_reason}}</p>"
+    },
+    "ja": {
+      "subject": "予約キャンセルのお知らせ — {{booking_ref}}",
+      "body_html": "<h1>予約がキャンセルされました</h1>\n  <p>{{guest_name}} 様</p>\n  <p>ご予約 {{booking_ref}} はキャンセルされました。</p>\n  <p>理由：{{cancellation_reason}}</p>"
+    },
+    "zh": {
+      "subject": "预订取消通知 — {{booking_ref}}",
+      "body_html": "<h1>预订已取消</h1>\n  <p>尊敬的 {{guest_name}}：</p>\n  <p>您的预订 {{booking_ref}} 已被取消。</p>\n  <p>原因：{{cancellation_reason}}</p>"
+    },
+    "th": {
+      "subject": "แจ้งการยกเลิกการจอง — {{booking_ref}}",
+      "body_html": "<h1>การจองถูกยกเลิกแล้ว</h1>\n  <p>เรียนคุณ {{guest_name}}</p>\n  <p>การจอง {{booking_ref}} ของคุณถูกยกเลิกแล้ว</p>\n  <p>เหตุผล: {{cancellation_reason}}</p>"
+    }
+  },
+  "BOOKING_CONFIRMED": {
+    "ko": {
+      "subject": "예약이 확정되었습니다 — {{booking_ref}}",
+      "body_html": "<h1>예약 확정</h1>\n  <p>{{guest_name}} 님께,</p>\n  <p>예약 <strong>{{booking_ref}}</strong> 이(가) 확정되었습니다.</p>\n  <p>체크인: {{check_in_date}}<br>체크아웃: {{check_out_date}}</p>\n  <p>숙소: {{property_address}}</p>\n  <p>Million Stay를 이용해 주셔서 감사합니다.</p>"
+    },
+    "ja": {
+      "subject": "ご予約が確定しました — {{booking_ref}}",
+      "body_html": "<h1>予約確定</h1>\n  <p>{{guest_name}} 様</p>\n  <p>ご予約 <strong>{{booking_ref}}</strong> が確定しました。</p>\n  <p>チェックイン：{{check_in_date}}<br>チェックアウト：{{check_out_date}}</p>\n  <p>物件：{{property_address}}</p>\n  <p>Million Stay をご利用いただきありがとうございます。</p>"
+    },
+    "zh": {
+      "subject": "您的预订已确认 — {{booking_ref}}",
+      "body_html": "<h1>预订已确认</h1>\n  <p>尊敬的 {{guest_name}}：</p>\n  <p>您的预订 <strong>{{booking_ref}}</strong> 已确认。</p>\n  <p>入住：{{check_in_date}}<br>退房：{{check_out_date}}</p>\n  <p>房源：{{property_address}}</p>\n  <p>感谢您选择 Million Stay。</p>"
+    },
+    "th": {
+      "subject": "การจองของคุณได้รับการยืนยันแล้ว — {{booking_ref}}",
+      "body_html": "<h1>การจองได้รับการยืนยันแล้ว</h1>\n  <p>เรียนคุณ {{guest_name}}</p>\n  <p>การจอง <strong>{{booking_ref}}</strong> ของคุณได้รับการยืนยันแล้ว</p>\n  <p>เช็คอิน: {{check_in_date}}<br>เช็คเอาท์: {{check_out_date}}</p>\n  <p>ที่พัก: {{property_address}}</p>\n  <p>ขอบคุณที่เลือก Million Stay</p>"
+    }
+  },
+  "CHECK_IN_REMINDER": {
+    "ko": {
+      "subject": "체크인 알림 — 내일 {{property_address}}",
+      "body_html": "<h1>체크인 알림</h1>\n  <p>{{guest_name}} 님께,</p>\n  <p>내일 체크인 예정임을 알려드립니다.</p>\n  <p>날짜: {{check_in_date}}<br>주소: {{property_address}}</p>"
+    },
+    "ja": {
+      "subject": "チェックインのリマインダー — 明日 {{property_address}} にて",
+      "body_html": "<h1>チェックインのリマインダー</h1>\n  <p>{{guest_name}} 様</p>\n  <p>明日がチェックイン日であることをお知らせいたします。</p>\n  <p>日付：{{check_in_date}}<br>住所：{{property_address}}</p>"
+    },
+    "zh": {
+      "subject": "入住提醒 — 明天于 {{property_address}}",
+      "body_html": "<h1>入住提醒</h1>\n  <p>尊敬的 {{guest_name}}：</p>\n  <p>提醒您，您的入住时间为明天。</p>\n  <p>日期：{{check_in_date}}<br>地址：{{property_address}}</p>"
+    },
+    "th": {
+      "subject": "แจ้งเตือนการเช็คอิน — พรุ่งนี้ที่ {{property_address}}",
+      "body_html": "<h1>แจ้งเตือนการเช็คอิน</h1>\n  <p>เรียนคุณ {{guest_name}}</p>\n  <p>นี่คือการแจ้งเตือนว่าการเช็คอินของคุณคือพรุ่งนี้</p>\n  <p>วันที่: {{check_in_date}}<br>ที่อยู่: {{property_address}}</p>"
+    }
+  },
+  "DOCUMENT_REJECTED": {
+    "ko": {
+      "subject": "조치 필요: 서류 반려 — {{booking_ref}}",
+      "body_html": "<h1>서류 반려</h1>\n  <p>{{guest_name}} 님께,</p>\n  <p>제출하신 서류 <strong>{{doc_type}}</strong> 이(가) 반려되었습니다.</p>\n  <p>사유: {{rejection_reason}}</p>\n  <p>게스트 포털을 통해 다시 제출해 주십시오.</p>"
+    },
+    "ja": {
+      "subject": "ご対応のお願い：書類が却下されました — {{booking_ref}}",
+      "body_html": "<h1>書類の却下</h1>\n  <p>{{guest_name}} 様</p>\n  <p>ご提出いただいた書類 <strong>{{doc_type}}</strong> は却下されました。</p>\n  <p>理由：{{rejection_reason}}</p>\n  <p>ゲストポータルから再度ご提出ください。</p>"
+    },
+    "zh": {
+      "subject": "需要处理：文件被退回 — {{booking_ref}}",
+      "body_html": "<h1>文件被退回</h1>\n  <p>尊敬的 {{guest_name}}：</p>\n  <p>您的文件 <strong>{{doc_type}}</strong> 已被退回。</p>\n  <p>原因：{{rejection_reason}}</p>\n  <p>请通过您的客户门户重新提交。</p>"
+    },
+    "th": {
+      "subject": "ต้องดำเนินการ: เอกสารถูกปฏิเสธ — {{booking_ref}}",
+      "body_html": "<h1>เอกสารถูกปฏิเสธ</h1>\n  <p>เรียนคุณ {{guest_name}}</p>\n  <p>เอกสาร <strong>{{doc_type}}</strong> ของคุณถูกปฏิเสธ</p>\n  <p>เหตุผล: {{rejection_reason}}</p>\n  <p>กรุณาส่งใหม่อีกครั้งผ่านพอร์ทัลผู้เข้าพักของคุณ</p>"
+    }
+  },
+  "DOCUMENT_VERIFIED": {
+    "ko": {
+      "subject": "서류가 확인되었습니다",
+      "body_html": "<h1>서류 확인 완료</h1>\n  <p>{{guest_name}} 님께,</p>\n  <p>예약 {{booking_ref}} 에 대해 제출하신 서류가 정상적으로 확인되었습니다.</p>"
+    },
+    "ja": {
+      "subject": "書類が確認されました",
+      "body_html": "<h1>書類の確認完了</h1>\n  <p>{{guest_name}} 様</p>\n  <p>ご予約 {{booking_ref}} についてご提出いただいた書類は正常に確認されました。</p>"
+    },
+    "zh": {
+      "subject": "您的文件已通过审核",
+      "body_html": "<h1>文件已通过审核</h1>\n  <p>尊敬的 {{guest_name}}：</p>\n  <p>您为预订 {{booking_ref}} 提交的文件已成功通过审核。</p>"
+    },
+    "th": {
+      "subject": "เอกสารของคุณได้รับการตรวจสอบแล้ว",
+      "body_html": "<h1>ตรวจสอบเอกสารเรียบร้อยแล้ว</h1>\n  <p>เรียนคุณ {{guest_name}}</p>\n  <p>เอกสารที่คุณส่งสำหรับการจอง {{booking_ref}} ได้รับการตรวจสอบเรียบร้อยแล้ว</p>"
+    }
+  },
+  "INVOICE_DUE": {
+    "ko": {
+      "subject": "청구서 납부 기한 3일 전 — {{invoice_ref}}",
+      "body_html": "<h1>결제 안내</h1>\n  <p>{{guest_name}} 님께,</p>\n  <p>청구서 {{invoice_ref}} 의 금액 {{amount}} {{currency}} 의 납부 기한은 {{due_date}} 입니다.</p>"
+    },
+    "ja": {
+      "subject": "請求書のお支払い期限まで3日 — {{invoice_ref}}",
+      "body_html": "<h1>お支払いのご案内</h1>\n  <p>{{guest_name}} 様</p>\n  <p>請求書 {{invoice_ref}}（{{amount}} {{currency}}）のお支払い期限は {{due_date}} です。</p>"
+    },
+    "zh": {
+      "subject": "账单将于3天后到期 — {{invoice_ref}}",
+      "body_html": "<h1>付款提醒</h1>\n  <p>尊敬的 {{guest_name}}：</p>\n  <p>账单 {{invoice_ref}} 金额 {{amount}} {{currency}}，到期日为 {{due_date}}。</p>"
+    },
+    "th": {
+      "subject": "ใบแจ้งหนี้ครบกำหนดใน 3 วัน — {{invoice_ref}}",
+      "body_html": "<h1>แจ้งเตือนการชำระเงิน</h1>\n  <p>เรียนคุณ {{guest_name}}</p>\n  <p>ใบแจ้งหนี้ {{invoice_ref}} จำนวน {{amount}} {{currency}} ครบกำหนดชำระในวันที่ {{due_date}}</p>"
+    }
+  },
+  "INVOICE_OVERDUE": {
+    "ko": {
+      "subject": "연체된 청구서 — {{invoice_ref}} — 조치 필요",
+      "body_html": "<h1>청구서 연체</h1>\n  <p>{{guest_name}} 님께,</p>\n  <p>청구서 {{invoice_ref}} 의 금액 {{amount}} {{currency}} 의 납부 기한 {{due_date}} 이(가) 지났으며 아직 미납 상태입니다.</p>\n  <p>서비스 중단을 방지하기 위해 즉시 결제해 주십시오.</p>"
+    },
+    "ja": {
+      "subject": "お支払い期限を過ぎた請求書 — {{invoice_ref}} — ご対応のお願い",
+      "body_html": "<h1>請求書の支払い遅延</h1>\n  <p>{{guest_name}} 様</p>\n  <p>請求書 {{invoice_ref}}（{{amount}} {{currency}}）はお支払い期限 {{due_date}} を過ぎており、未払いのままとなっています。</p>\n  <p>サービス停止を避けるため、至急お支払いください。</p>"
+    },
+    "zh": {
+      "subject": "逾期账单 — {{invoice_ref}} — 需要处理",
+      "body_html": "<h1>账单逾期</h1>\n  <p>尊敬的 {{guest_name}}：</p>\n  <p>账单 {{invoice_ref}} 金额 {{amount}} {{currency}}，已于 {{due_date}} 到期且仍未付款。</p>\n  <p>请立即付款，以免服务中断。</p>"
+    },
+    "th": {
+      "subject": "ใบแจ้งหนี้เกินกำหนด — {{invoice_ref}} — ต้องดำเนินการ",
+      "body_html": "<h1>ใบแจ้งหนี้เกินกำหนดชำระ</h1>\n  <p>เรียนคุณ {{guest_name}}</p>\n  <p>ใบแจ้งหนี้ {{invoice_ref}} จำนวน {{amount}} {{currency}} ครบกำหนดเมื่อ {{due_date}} และยังไม่ได้ชำระ</p>\n  <p>กรุณาชำระเงินทันทีเพื่อหลีกเลี่ยงการหยุดให้บริการ</p>"
+    }
+  },
+  "LEAD_RECEIVED": {
+    "ko": {
+      "subject": "새 문의 접수 — {{lead_ref}}",
+      "body_html": "<h1>새 문의</h1>\n  <p>새로운 리드가 접수되었습니다.</p>\n  <p>참조: {{lead_ref}}<br>이름: {{lead_name}}<br>이메일: {{lead_email}}<br>메시지: {{message}}</p>"
+    },
+    "ja": {
+      "subject": "新しいお問い合わせを受信 — {{lead_ref}}",
+      "body_html": "<h1>新しいお問い合わせ</h1>\n  <p>新しいリードを受信しました。</p>\n  <p>参照：{{lead_ref}}<br>お名前：{{lead_name}}<br>メール：{{lead_email}}<br>メッセージ：{{message}}</p>"
+    },
+    "zh": {
+      "subject": "收到新咨询 — {{lead_ref}}",
+      "body_html": "<h1>新咨询</h1>\n  <p>已收到一条新的潜在客户咨询。</p>\n  <p>编号：{{lead_ref}}<br>姓名：{{lead_name}}<br>邮箱：{{lead_email}}<br>留言：{{message}}</p>"
+    },
+    "th": {
+      "subject": "ได้รับการสอบถามใหม่ — {{lead_ref}}",
+      "body_html": "<h1>การสอบถามใหม่</h1>\n  <p>ได้รับลูกค้าเป้าหมายรายใหม่</p>\n  <p>อ้างอิง: {{lead_ref}}<br>ชื่อ: {{lead_name}}<br>อีเมล: {{lead_email}}<br>ข้อความ: {{message}}</p>"
+    }
+  },
+  "PASSWORD_RESET": {
+    "ko": {
+      "subject": "Million Stay 비밀번호 재설정",
+      "body_html": "<h1>비밀번호 재설정</h1>\n  <p>{{user_name}} 님께,</p>\n  <p>아래 링크를 클릭하여 비밀번호를 재설정하십시오:</p>\n  <p><a href=\"{{reset_link}}\">비밀번호 재설정</a></p>\n  <p>이 링크는 1시간 후에 만료됩니다.</p>"
+    },
+    "ja": {
+      "subject": "Million Stay のパスワード再設定",
+      "body_html": "<h1>パスワードの再設定</h1>\n  <p>{{user_name}} 様</p>\n  <p>以下のリンクをクリックしてパスワードを再設定してください：</p>\n  <p><a href=\"{{reset_link}}\">パスワードを再設定</a></p>\n  <p>このリンクは1時間後に有効期限が切れます。</p>"
+    },
+    "zh": {
+      "subject": "重置您的 Million Stay 密码",
+      "body_html": "<h1>密码重置</h1>\n  <p>尊敬的 {{user_name}}：</p>\n  <p>请点击以下链接重置您的密码：</p>\n  <p><a href=\"{{reset_link}}\">重置密码</a></p>\n  <p>该链接将在1小时后失效。</p>"
+    },
+    "th": {
+      "subject": "รีเซ็ตรหัสผ่าน Million Stay ของคุณ",
+      "body_html": "<h1>รีเซ็ตรหัสผ่าน</h1>\n  <p>เรียนคุณ {{user_name}}</p>\n  <p>คลิกที่ลิงก์ด้านล่างเพื่อรีเซ็ตรหัสผ่านของคุณ:</p>\n  <p><a href=\"{{reset_link}}\">รีเซ็ตรหัสผ่าน</a></p>\n  <p>ลิงก์นี้จะหมดอายุใน 1 ชั่วโมง</p>"
+    }
+  },
+  "PAYMENT_RECEIVED": {
+    "ko": {
+      "subject": "결제 완료 — {{invoice_ref}}",
+      "body_html": "<h1>결제 완료</h1>\n  <p>{{guest_name}} 님께,</p>\n  <p>청구서 {{invoice_ref}} 에 대한 결제 금액 <strong>{{amount}} {{currency}}</strong> 을(를) 수령하였습니다.</p>\n  <p>감사합니다.</p>"
+    },
+    "ja": {
+      "subject": "お支払いを受領しました — {{invoice_ref}}",
+      "body_html": "<h1>お支払いの受領</h1>\n  <p>{{guest_name}} 様</p>\n  <p>請求書 {{invoice_ref}} に対するお支払い <strong>{{amount}} {{currency}}</strong> を受領しました。</p>\n  <p>ありがとうございます。</p>"
+    },
+    "zh": {
+      "subject": "已收到付款 — {{invoice_ref}}",
+      "body_html": "<h1>已收到付款</h1>\n  <p>尊敬的 {{guest_name}}：</p>\n  <p>我们已收到您针对账单 {{invoice_ref}} 的付款 <strong>{{amount}} {{currency}}</strong>。</p>\n  <p>谢谢。</p>"
+    },
+    "th": {
+      "subject": "ได้รับการชำระเงินแล้ว — {{invoice_ref}}",
+      "body_html": "<h1>ได้รับการชำระเงินแล้ว</h1>\n  <p>เรียนคุณ {{guest_name}}</p>\n  <p>เราได้รับการชำระเงินจำนวน <strong>{{amount}} {{currency}}</strong> สำหรับใบแจ้งหนี้ {{invoice_ref}} แล้ว</p>\n  <p>ขอบคุณค่ะ/ครับ</p>"
+    }
+  },
+  "homestay.host_received": {
+    "ko": {
+      "subject": "홈스테이 호스트 신청이 접수되었습니다 ({{ref}})",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">신청 접수 완료</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:0;\">{{name}} 님, 안녕하세요.</p><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;\">MillionStay 홈스테이 호스트에 신청해 주셔서 감사합니다. 현재 신청서는 검토를 위해 담당 팀에 전달되었습니다. 호스트 포털에 언제든 로그인하여 진행 상태를 확인하고 남은 절차를 완료하실 수 있습니다: <a href=\"{{portal_url}}\">{{portal_url}}</a>.</p>"
+    },
+    "ja": {
+      "subject": "ホームステイホスト申請を受け付けました（{{ref}}）",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">申請受付完了</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:0;\">{{name}} 様</p><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;\">MillionStay のホームステイホストにお申し込みいただきありがとうございます。お申し込みは現在、担当チームが審査しております。ホストポータルにはいつでもログインでき、進捗状況の確認や残りの手続きを完了できます：<a href=\"{{portal_url}}\">{{portal_url}}</a>。</p>"
+    },
+    "zh": {
+      "subject": "我们已收到您的寄宿家庭主人申请（{{ref}}）",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">申请已收到</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:0;\">您好 {{name}}，</p><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;\">感谢您申请成为 MillionStay 寄宿家庭主人。您的申请现已交由我们团队审核。您可随时登录主人门户查看状态并完成尚未办理的步骤：<a href=\"{{portal_url}}\">{{portal_url}}</a>。</p>"
+    },
+    "th": {
+      "subject": "เราได้รับใบสมัครโฮสต์โฮมสเตย์ของคุณแล้ว ({{ref}})",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">ได้รับใบสมัครแล้ว</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:0;\">สวัสดีคุณ {{name}}</p><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;\">ขอบคุณที่สมัครเป็นโฮสต์โฮมสเตย์ของ MillionStay ขณะนี้ใบสมัครของคุณอยู่ระหว่างการพิจารณาโดยทีมงานของเรา คุณสามารถเข้าสู่ระบบพอร์ทัลโฮสต์ได้ตลอดเวลาเพื่อติดตามสถานะและดำเนินขั้นตอนที่ค้างอยู่ให้เสร็จสิ้น: <a href=\"{{portal_url}}\">{{portal_url}}</a></p>"
+    }
+  },
+  "homestay.approved": {
+    "ko": {
+      "subject": "MillionStay 홈스테이 호스트로 승인되었습니다 ({{ref}})",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">환영합니다 — 승인되었습니다!</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:0;\">{{name}} 님, 안녕하세요.</p><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;\">축하합니다! 홈스테이 호스트 신청이 승인되었습니다. 이제 리스팅을 활성화하고 호스팅을 시작하실 수 있습니다. 호스트 포털에 로그인하여 시작하십시오: <a href=\"{{portal_url}}\">{{portal_url}}</a>.</p>"
+    },
+    "ja": {
+      "subject": "MillionStay ホームステイホストとして承認されました（{{ref}}）",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">ようこそ — 承認されました！</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:0;\">{{name}} 様</p><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;\">おめでとうございます！ホームステイホスト申請が承認されました。これでリスティングを有効化し、ホスティングを開始できます。ホストポータルにログインして始めましょう：<a href=\"{{portal_url}}\">{{portal_url}}</a>。</p>"
+    },
+    "zh": {
+      "subject": "您已获批成为 MillionStay 寄宿家庭主人（{{ref}}）",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">欢迎您 — 申请已通过！</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:0;\">您好 {{name}}，</p><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;\">恭喜！您的寄宿家庭主人申请已获批准。您现在可以激活房源并开始接待。请登录主人门户开始使用：<a href=\"{{portal_url}}\">{{portal_url}}</a>。</p>"
+    },
+    "th": {
+      "subject": "คุณได้รับการอนุมัติเป็นโฮสต์โฮมสเตย์ของ MillionStay ({{ref}})",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">ยินดีต้อนรับ — คุณได้รับการอนุมัติแล้ว!</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:0;\">สวัสดีคุณ {{name}}</p><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;\">ขอแสดงความยินดี! ใบสมัครโฮสต์โฮมสเตย์ของคุณได้รับการอนุมัติแล้ว ตอนนี้คุณสามารถเปิดใช้งานประกาศของคุณและเริ่มเป็นโฮสต์ได้ เข้าสู่ระบบพอร์ทัลโฮสต์เพื่อเริ่มต้น: <a href=\"{{portal_url}}\">{{portal_url}}</a></p>"
+    }
+  },
+  "homestay.rejected": {
+    "ko": {
+      "subject": "홈스테이 호스트 신청 결과 안내 ({{ref}})",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">신청 결과 안내</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:0;\">{{name}} 님, 안녕하세요.</p><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;\">MillionStay 호스트에 관심을 가져 주셔서 감사합니다. 검토 결과, 현재로서는 신청을 승인해 드리기 어렵습니다. 착오가 있었다고 생각되시거나 상황이 변경된 경우, 본 이메일에 회신해 주십시오.</p>"
+    },
+    "ja": {
+      "subject": "ホームステイホスト申請に関するお知らせ（{{ref}}）",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">申請結果のお知らせ</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:0;\">{{name}} 様</p><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;\">MillionStay でのホスティングにご関心をお寄せいただきありがとうございます。審査の結果、現時点ではお申し込みを承認することができませんでした。誤りがあるとお考えの場合やご状況が変わった場合は、このメールにご返信ください。</p>"
+    },
+    "zh": {
+      "subject": "关于您的寄宿家庭主人申请的最新情况（{{ref}}）",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">申请结果通知</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:0;\">您好 {{name}}，</p><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;\">感谢您有意成为 MillionStay 主人。经审核，我们目前暂时无法批准您的申请。如您认为存在误判或您的情况有所变化，请回复此邮件。</p>"
+    },
+    "th": {
+      "subject": "อัปเดตเกี่ยวกับใบสมัครโฮสต์โฮมสเตย์ของคุณ ({{ref}})",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">อัปเดตใบสมัคร</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:0;\">สวัสดีคุณ {{name}}</p><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;\">ขอบคุณที่สนใจเป็นโฮสต์กับ MillionStay หลังจากการพิจารณา เราไม่สามารถอนุมัติใบสมัครของคุณได้ในขณะนี้ หากคุณเชื่อว่ามีข้อผิดพลาดหรือสถานการณ์ของคุณเปลี่ยนแปลงไป กรุณาตอบกลับอีเมลฉบับนี้</p>"
+    }
+  },
+  "homestay.placement_proposed": {
+    "ko": {
+      "subject": "홈스테이에 새로운 학생 매칭 안내 ({{ref}})",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">새로운 학생 매칭이 있습니다</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:0;\">{{name}} 님, 안녕하세요.</p><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;\">반가운 소식입니다 — 담당 팀이 귀하의 홈스테이에 학생을 매칭했습니다. 호스트 포털에 로그인하여 배정 세부 정보를 확인하고 매칭을 수락해 주십시오: <a href=\"{{portal_url}}\">{{portal_url}}</a>.</p>"
+    },
+    "ja": {
+      "subject": "あなたのホームステイに新しい学生のマッチング（{{ref}}）",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">新しい学生のマッチングがあります</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:0;\">{{name}} 様</p><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;\">嬉しいお知らせです — 担当チームがあなたのホームステイに学生をマッチングしました。ホストポータルにログインし、受入の詳細を確認してマッチングを承認してください：<a href=\"{{portal_url}}\">{{portal_url}}</a>。</p>"
+    },
+    "zh": {
+      "subject": "为您的寄宿家庭匹配到新学生（{{ref}}）",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">您有一位新匹配的学生</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:0;\">您好 {{name}}，</p><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;\">好消息——我们的团队已为您的寄宿家庭匹配了一位学生。请登录主人门户查看安置详情并接受匹配：<a href=\"{{portal_url}}\">{{portal_url}}</a>。</p>"
+    },
+    "th": {
+      "subject": "มีการจับคู่นักเรียนใหม่สำหรับโฮมสเตย์ของคุณ ({{ref}})",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">คุณมีการจับคู่นักเรียนใหม่</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:0;\">สวัสดีคุณ {{name}}</p><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;\">ข่าวดี — ทีมงานของเราได้จับคู่นักเรียนกับโฮมสเตย์ของคุณแล้ว กรุณาเข้าสู่ระบบพอร์ทัลโฮสต์เพื่อตรวจสอบรายละเอียดการจัดที่พักและยอมรับการจับคู่: <a href=\"{{portal_url}}\">{{portal_url}}</a></p>"
+    }
+  },
+  "homestay.placement_signed": {
+    "ko": {
+      "subject": "홈스테이 배정 계약서 서명이 완료되었습니다 ({{ref}})",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">배정 계약서 서명 완료</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:0;\">{{name}} 님, 안녕하세요.</p><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;\">홈스테이 배정 계약서에 모든 당사자가 서명을 완료했습니다. 서명된 사본은 별도 이메일로 발송됩니다. 호스트 포털에서 배정 내용을 확인하실 수 있습니다: <a href=\"{{portal_url}}\">{{portal_url}}</a>.</p>"
+    },
+    "ja": {
+      "subject": "ホームステイ受入契約への署名が完了しました（{{ref}}）",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">受入契約への署名完了</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:0;\">{{name}} 様</p><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;\">ホームステイ受入契約にすべての当事者が署名を完了しました。署名済みの写しは別途メールでお送りします。ホストポータルで受入内容をご確認いただけます：<a href=\"{{portal_url}}\">{{portal_url}}</a>。</p>"
+    },
+    "zh": {
+      "subject": "您的寄宿安置协议已完成签署（{{ref}}）",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">安置协议已签署</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:0;\">您好 {{name}}，</p><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;\">寄宿安置协议已由各方签署完成。已签署的副本将另行邮件发送。您可在主人门户查看安置详情：<a href=\"{{portal_url}}\">{{portal_url}}</a>。</p>"
+    },
+    "th": {
+      "subject": "ข้อตกลงการจัดที่พักโฮมสเตย์ของคุณได้รับการลงนามแล้ว ({{ref}})",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">ลงนามข้อตกลงการจัดที่พักแล้ว</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:0;\">สวัสดีคุณ {{name}}</p><p style=\"font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;\">ข้อตกลงการจัดที่พักโฮมสเตย์ได้รับการลงนามจากทุกฝ่ายแล้ว สำเนาที่ลงนามแล้วจะถูกส่งทางอีเมลแยกต่างหาก คุณสามารถดูรายละเอียดการจัดที่พักได้ในพอร์ทัลโฮสต์ของคุณ: <a href=\"{{portal_url}}\">{{portal_url}}</a></p>"
+    }
+  },
+  "homestay.payment_due": {
+    "ko": {
+      "subject": "홈스테이 월 이용료 납부 안내 ({{ref}})",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">월 홈스테이 이용료</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;\">{{name}} 님, {{period}} 부터 시작되는 기간의 홈스테이 월 이용료 <strong>{{amount}}</strong> 의 납부 기한이 도래했습니다. 아래에서 안전하게 결제해 주십시오:</p><p style=\"margin:18px 0;\"><a href=\"{{pay_url}}\" style=\"background:#E8621A;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;\">지금 결제하기</a></p><p style=\"font-size:12px;color:#9ca3af;\">카드 처리 수수료 2%가 포함되어 있습니다. 참조: {{ref}}.</p>"
+    },
+    "ja": {
+      "subject": "ホームステイ月額料金のお支払い案内（{{ref}}）",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">月額ホームステイ料金</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;\">{{name}} 様、{{period}} から始まる期間のホームステイ月額料金 <strong>{{amount}}</strong> のお支払い期限となりました。以下から安全にお支払いください：</p><p style=\"margin:18px 0;\"><a href=\"{{pay_url}}\" style=\"background:#E8621A;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;\">今すぐ支払う</a></p><p style=\"font-size:12px;color:#9ca3af;\">カード決済手数料2%が含まれます。参照：{{ref}}。</p>"
+    },
+    "zh": {
+      "subject": "寄宿家庭月费到期通知（{{ref}}）",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">每月寄宿费用</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;\">您好 {{name}}，自 {{period}} 起的寄宿家庭月费 <strong>{{amount}}</strong> 现已到期。请通过以下方式安全付款：</p><p style=\"margin:18px 0;\"><a href=\"{{pay_url}}\" style=\"background:#E8621A;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;\">立即付款</a></p><p style=\"font-size:12px;color:#9ca3af;\">已包含2%的银行卡手续费。参考编号：{{ref}}。</p>"
+    },
+    "th": {
+      "subject": "ครบกำหนดชำระค่าธรรมเนียมโฮมสเตย์รายเดือน ({{ref}})",
+      "body_html": "<h1 style=\"font-size:20px;margin:0 0 12px;color:#1f2937;\">ค่าธรรมเนียมโฮมสเตย์รายเดือน</h1><p style=\"font-size:14px;color:#4b5563;line-height:1.6;\">สวัสดีคุณ {{name}} ค่าธรรมเนียมโฮมสเตย์รายเดือนของคุณจำนวน <strong>{{amount}}</strong> สำหรับงวดที่เริ่มต้น {{period}} ครบกำหนดชำระแล้ว กรุณาชำระเงินอย่างปลอดภัยที่นี่:</p><p style=\"margin:18px 0;\"><a href=\"{{pay_url}}\" style=\"background:#E8621A;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;\">ชำระเงินทันที</a></p><p style=\"font-size:12px;color:#9ca3af;\">รวมค่าธรรมเนียมการดำเนินการบัตร 2% แล้ว อ้างอิง: {{ref}}</p>"
+    }
+  },
+  "email.contract": {
+    "ko": { "subject": null, "body_html": "첨부된 계약서를 검토해 주시기 바랍니다. 모든 내용이 정확하다면 가능한 빠른 시일 내에 서명하여 회신해 주십시오." },
+    "ja": { "subject": null, "body_html": "添付の契約書をご確認ください。内容に問題がなければ、お早めに署名のうえご返送ください。" },
+    "zh": { "subject": null, "body_html": "请查阅随附的协议。如确认无误，请尽早签署并回传。" },
+    "th": { "subject": null, "body_html": "กรุณาตรวจสอบข้อตกลงที่แนบมา หากทุกอย่างถูกต้อง กรุณาลงนามและส่งกลับโดยเร็วที่สุด" }
+  },
+  "email.invoice": {
+    "ko": { "subject": null, "body_html": "청구서를 첨부해 드립니다. 납부 기한은 {{due_date}} 입니다." },
+    "ja": { "subject": null, "body_html": "請求書を添付いたします。お支払い期限は {{due_date}} です。" },
+    "zh": { "subject": null, "body_html": "随附您的账单。付款截止日期为 {{due_date}}。" },
+    "th": { "subject": null, "body_html": "กรุณาดูใบแจ้งหนี้ที่แนบมา กำหนดชำระภายในวันที่ {{due_date}}" }
+  }
+}
