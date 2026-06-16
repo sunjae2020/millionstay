@@ -13,6 +13,9 @@ import {
 } from "./theme";
 import { t, docLocale, type DocLang } from "./i18n";
 
+/** Card processing surcharge %, added only when the payer selects card. */
+export const CARD_SURCHARGE_PCT = 2;
+
 /** Enriched invoice shape as returned by `enrichInvoices()` in routes/invoices.ts. */
 export interface InvoiceDocInput {
   invoice_ref: string;
@@ -155,6 +158,13 @@ export function buildInvoiceBody(inv: InvoiceDocInput, lang: DocLang = "en", ter
       <span>${status === "Paid" ? t(lang, "amountPaid") : t(lang, "amountDue")}</span>
       <span class="amount">${formatMoney(inv.amount, inv.currency)}</span>
     </div>
+
+    ${(status !== "Paid" && Number(inv.amount ?? 0) > 0) ? `<div class="section" style="margin-top:20px;">
+      <h3>${t(lang, "paymentOptions")}</h3>
+      <div class="row"><span class="label">${t(lang, "byBankTransfer")}</span><span class="value">${formatMoney(inv.amount, inv.currency)}</span></div>
+      <div class="row"><span class="label">${t(lang, "byCard", { pct: String(CARD_SURCHARGE_PCT) })}</span><span class="value">${formatMoney(Math.round(Number(inv.amount ?? 0) * (1 + CARD_SURCHARGE_PCT / 100) * 100) / 100, inv.currency)}</span></div>
+      <div style="font-size:12px;color:#999;margin-top:8px;">${t(lang, "cardSurchargeNote", { pct: String(CARD_SURCHARGE_PCT) })}</div>
+    </div>` : ""}
 
     ${inv.notes?.trim() ? `<div class="info-box"><strong>${t(lang, "notes")}</strong><br/>${escapeHtml(inv.notes)}</div>` : ""}
 

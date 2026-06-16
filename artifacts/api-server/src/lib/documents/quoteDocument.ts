@@ -6,6 +6,7 @@
  */
 import { renderDocumentShell, escapeHtml, getCompanyInfo, type CompanyInfo } from "./theme";
 import { t, docLocale, type DocLang } from "./i18n";
+import { CARD_SURCHARGE_PCT } from "./invoiceDocument";
 
 export interface QuoteLine {
   name: string;
@@ -89,6 +90,13 @@ export function buildQuoteBody(q: QuoteDocInput, lang: DocLang = "en", termsHtml
       <span>${t(lang, "total")}${q.valid_until ? ` · ${t(lang, "validUntil")} ${formatDate(q.valid_until, lang)}` : ""}</span>
       <span class="amount">${money(q.total, q.currency)}</span>
     </div>
+
+    ${Number(q.total ?? 0) > 0 ? `<div class="section" style="margin-top:20px;">
+      <h3>${t(lang, "paymentOptions")}</h3>
+      <div class="row"><span class="label">${t(lang, "byBankTransfer")}</span><span class="value">${money(q.total, q.currency)}</span></div>
+      <div class="row"><span class="label">${t(lang, "byCard", { pct: String(CARD_SURCHARGE_PCT) })}</span><span class="value">${money(Math.round(Number(q.total ?? 0) * (1 + CARD_SURCHARGE_PCT / 100) * 100) / 100, q.currency)}</span></div>
+      <div style="font-size:12px;color:#999;margin-top:8px;">${t(lang, "cardSurchargeNote", { pct: String(CARD_SURCHARGE_PCT) })}</div>
+    </div>` : ""}
 
     ${q.notes?.trim() ? `<div class="info-box"><strong>${t(lang, "notes")}</strong><br/>${escapeHtml(q.notes)}</div>` : ""}
 
