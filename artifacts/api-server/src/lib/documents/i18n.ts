@@ -104,6 +104,12 @@ const LABELS: Dict = {
   "freq.weekly":      { en: "Weekly",      ko: "매주",  zh: "每周",   ja: "毎週", th: "รายสัปดาห์", vi: "Hàng tuần" },
   "freq.fortnightly": { en: "Fortnightly", ko: "격주",  zh: "每两周", ja: "隔週", th: "รายปักษ์",   vi: "Hai tuần một lần" },
 
+  // ── Additional services & fees (airport pickup, settlement, prepaid phone…) ──
+  "additionalServices": { en: "Additional Services & Fees", ko: "추가 서비스 및 비용", zh: "附加服务与费用", ja: "追加サービス・料金", th: "บริการและค่าใช้จ่ายเพิ่มเติม", vi: "Dịch vụ & phí bổ sung" },
+  "servicesSubtotal":   { en: "Services subtotal",          ko: "서비스 합계",        zh: "服务小计",        ja: "サービス小計",      th: "ยอดรวมบริการ",            vi: "Tổng phụ dịch vụ" },
+  "recurring":          { en: "Recurring",                  ko: "정기 청구",          zh: "经常性",          ja: "継続",              th: "ต่อเนื่อง",               vi: "Định kỳ" },
+  "oneOff":             { en: "One-off",                    ko: "1회성",              zh: "一次性",          ja: "一回",              th: "ครั้งเดียว",              vi: "Một lần" },
+
   // ── Payment options (card surcharge) ─────────────────────────────────────
   "paymentOptions":   { en: "Payment options", ko: "결제 옵션", zh: "付款方式", ja: "お支払い方法", th: "ตัวเลือกการชำระเงิน", vi: "Tùy chọn thanh toán" },
   "byBankTransfer":   { en: "By bank transfer", ko: "계좌이체", zh: "银行转账", ja: "銀行振込", th: "โอนผ่านธนาคาร", vi: "Chuyển khoản ngân hàng" },
@@ -212,4 +218,43 @@ export function t(lang: DocLang, key: string, vars?: Record<string, string>): st
   let str = entry ? (entry[lang] ?? entry.en) : key;
   if (vars) for (const [k, v] of Object.entries(vars)) str = str.replace(`{${k}}`, v);
   return str;
+}
+
+/**
+ * Localised display names for known add-on service codes / placement
+ * service_types (airport pickup, settlement, prepaid phone…). Mirrors the OPEN
+ * `addon_services` catalogue codes; unknown codes fall back to a title-cased
+ * version of the code (or the supplied human name).
+ */
+const SERVICE_LABELS: Record<string, Record<DocLang, string>> = {
+  airport_pickup:     { en: "Airport pickup",            ko: "공항 픽업",        zh: "机场接送",     ja: "空港送迎",         th: "รับส่งสนามบิน",                         vi: "Đón sân bay" },
+  airport_dropoff:    { en: "Airport drop-off",          ko: "공항 샌딩",        zh: "送机服务",     ja: "空港見送り",       th: "ส่งสนามบิน",                            vi: "Tiễn sân bay" },
+  initial_settlement: { en: "Initial settlement support", ko: "초기 정착 지원",   zh: "初期安顿协助", ja: "初期定着サポート", th: "ความช่วยเหลือในการตั้งถิ่นฐานเริ่มต้น", vi: "Hỗ trợ ổn định ban đầu" },
+  settlement_support: { en: "Initial settlement support", ko: "초기 정착 지원",   zh: "初期安顿协助", ja: "初期定着サポート", th: "ความช่วยเหลือในการตั้งถิ่นฐานเริ่มต้น", vi: "Hỗ trợ ổn định ban đầu" },
+  guardian_service:   { en: "Guardian service",          ko: "가디언 서비스",    zh: "监护服务",     ja: "ガーディアンサービス", th: "บริการผู้ปกครอง",                  vi: "Dịch vụ giám hộ" },
+  prepaid_phone:      { en: "Prepaid phone",             ko: "선불폰",           zh: "预付费手机",   ja: "プリペイド携帯",   th: "โทรศัพท์เติมเงิน",                      vi: "Điện thoại trả trước" },
+  sim_card:           { en: "Prepaid SIM",               ko: "선불 SIM",         zh: "预付 SIM 卡",  ja: "プリペイドSIM",    th: "ซิมเติมเงิน",                           vi: "SIM trả trước" },
+  prepaid_sim:        { en: "Prepaid SIM",               ko: "선불 SIM",         zh: "预付 SIM 卡",  ja: "プリペイドSIM",    th: "ซิมเติมเงิน",                           vi: "SIM trả trước" },
+};
+
+/** Title-case a snake/space-separated code as a last-resort display label. */
+function titleCase(code: string): string {
+  return code
+    .replace(/_/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
+/**
+ * Resolve a human, localised label for an add-on service code / placement
+ * service_type. Falls back to `fallbackName` (a stored human label) when given,
+ * otherwise to a title-cased version of the code.
+ */
+export function serviceLabel(lang: DocLang, code: string, fallbackName?: string | null): string {
+  const entry = SERVICE_LABELS[code];
+  if (entry) return entry[lang] ?? entry.en;
+  if (fallbackName?.trim()) return fallbackName.trim();
+  return titleCase(code);
 }

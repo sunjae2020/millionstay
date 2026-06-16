@@ -18,25 +18,30 @@ import { normalizeLang } from "./i18n.js";
 
 const sampleInvoice: InvoiceDocInput = {
   invoice_ref: "MS-INV-2026-00128", status: "Sent",
-  amount: 1450, currency: "AUD", due_date: "2026-07-01",
-  paid_at: null, payment_method: null, description: "Accommodation services",
+  amount: 1820, currency: "AUD", due_date: "2026-07-01",
+  paid_at: null, payment_method: null, description: "Accommodation & arrival services",
   notes: null, created_at: new Date().toISOString(),
   account_name: "Minjae Kim", account_email: "minjae.kim@example.com",
   account_address: "24 Drummond Street, Carlton VIC 3053",
   booking_ref: "MS-BKG-2026-0042", contract_ref: "MS-C-2026-00017",
   line_items: [
     { label: "Monthly accommodation fee — Jul 2026", quantity: 1, unit_amount: 1450, total_amount: 1450 },
+    { label: "Airport pickup", description: "On arrival — flight QF409", quantity: 1, unit_amount: 90, total_amount: 90 },
+    { label: "Initial settlement support", quantity: 1, unit_amount: 250, total_amount: 250 },
+    { label: "Prepaid SIM", quantity: 1, unit_amount: 30, total_amount: 30 },
   ],
 };
 
 const sampleQuote: QuoteDocInput = {
   quote_ref: "MS-Q-2026-00091", status: "Sent",
-  currency: "AUD", subtotal: 1450, total: 1450, valid_until: "2026-07-10",
-  description: "Homestay accommodation", notes: null, created_at: new Date().toISOString(),
+  currency: "AUD", subtotal: 2120, total: 2120, valid_until: "2026-07-10",
+  description: "Homestay accommodation & arrival services", notes: null, created_at: new Date().toISOString(),
   party_name: "Minjae Kim", party_email: "minjae.kim@example.com", space_name: "Carlton homestay — single room",
   line_items: [
     { name: "Monthly accommodation fee", unit_price: 1450, quantity: 1, total_price: 1450 },
     { name: "Placement fee (one-off)", unit_price: 550, quantity: 1, total_price: 550 },
+    { name: "Airport pickup", unit_price: 90, quantity: 1, total_price: 90 },
+    { name: "Prepaid SIM", unit_price: 30, quantity: 1, total_price: 30 },
   ],
 };
 
@@ -51,7 +56,13 @@ const sampleContract: ContractDocInput = {
   start_date: "2026-07-15", end_date: "2026-12-15",
   effective_date: "2026-07-15", expiry_date: "2026-12-15", billing_frequency: "Monthly",
   weekly_rate: 360, total_rent: 9360, bond_amount: 1200, advance_amount: 1450,
-  currency: "AUD", terms_text: null, notes: null,
+  currency: "AUD",
+  additional_services: [
+    { name: "Airport pickup", quantity: 1, unit_amount: 90, total_amount: 90, recurring: false, frequency: null, notes: "On arrival — flight QF409" },
+    { name: "Initial settlement support", quantity: 1, unit_amount: 250, total_amount: 250, recurring: false, frequency: null, notes: null },
+    { name: "Prepaid SIM", quantity: 1, unit_amount: 30, total_amount: 30, recurring: false, frequency: null, notes: null },
+  ],
+  terms_text: null, notes: null,
   signed_at: null, created_at: new Date().toISOString(),
 };
 
@@ -107,7 +118,14 @@ export async function renderSampleDocumentHtml(key: string, bodyHtml: string, lo
     const doc = placementToDoc(
       samplePlacement as never, sampleHost as never, sampleStudent as never,
       { status: "pending" } as never,
-      { termsText: body || undefined, signed: false, cardSurchargePct: 2, defaultMethod: "card" },
+      {
+        termsText: body || undefined, signed: false, cardSurchargePct: 2, defaultMethod: "card",
+        services: [
+          { service_type: "airport_pickup", price: 90 },
+          { service_type: "initial_settlement", price: 250 },
+          { service_type: "prepaid_phone", price: 30 },
+        ],
+      },
     );
     return buildApplicationHtml(doc, true, company);
   }

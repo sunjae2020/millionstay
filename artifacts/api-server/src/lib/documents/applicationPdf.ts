@@ -10,6 +10,7 @@
  * One body builder + two thin mappers keep the field→row mapping in a single place.
  */
 import { renderDocumentShell, escapeHtml, getCompanyInfo, type CompanyInfo } from "./theme";
+import { serviceLabel } from "./i18n";
 import type { HomestayStudentRequest, HomestayHostApplication, HomestayPlacement } from "@workspace/db";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -440,6 +441,9 @@ export function placementToDoc(
     cardSurchargePct?: number;
     /** Default payment method when the placement has none set (default card). */
     defaultMethod?: "card" | "bank_transfer";
+    /** Priced add-on services billed to the customer (airport pickup,
+     *  initial settlement, prepaid phone, …). Host assignment is NOT included. */
+    services?: Array<{ service_type: string; price: string | number | null }>;
   } = {},
 ): ApplicationDocInput {
   const signed = opts.signed ?? (signing?.status === "signed");
@@ -521,18 +525,30 @@ export function placementToDoc(
   const method = placement.billing_method || opts.defaultMethod || "card";
   const isCard = method === "card";
   const round2 = (n: number) => Math.round(n * 100) / 100;
-  const initialBase = round2(placementFee + depositAmt + monthlyAmt);
+
+  // Priced add-on services (airport pickup, initial settlement, prepaid phone…)
+  // are billed up-front alongside the placement fee — mirrors createPlacementInvoice,
+  // which adds them as invoice line items. Only the service + price is shown;
+  // the assigned service host is intentionally never surfaced here.
+  const servicesList = (opts.services ?? [])
+    .map((s) => ({ label: serviceLabel("en", s.service_type), amount: Number(s.price ?? 0) }))
+    .filter((s) => s.amount > 0);
+  const servicesTotal = round2(servicesList.reduce((sum, s) => sum + s.amount, 0));
+
+  const initialBase = round2(placementFee + depositAmt + monthlyAmt + servicesTotal);
   const initialSurcharge = isCard ? round2(initialBase * surchargePct / 100) : 0;
   const initialTotal = round2(initialBase + initialSurcharge);
   const monthlySurcharge = isCard ? round2(monthlyAmt * surchargePct / 100) : 0;
   const monthlyTotal = round2(monthlyAmt + monthlySurcharge);
+  const showSubtotal = isCard && initialSurcharge > 0;
 
   push(section("Fees — initial payment (due now)", [
     placementFee > 0 ? ["· Placement fee", money(placementFee)] : null,
     depositAmt > 0 ? ["· Security deposit", money(depositAmt)] : null,
     monthlyAmt > 0 ? ["· First month accommodation", money(monthlyAmt)] : null,
-    (isCard && initialSurcharge > 0) ? ["Subtotal", money(initialBase)] : null,
-    (isCard && initialSurcharge > 0) ? [`Card surcharge (${surchargePct}%)`, money(initialSurcharge)] : null,
+    ...servicesList.map((s) => [`· ${s.label}`, money(s.amount)] as [string, string]),
+    showSubtotal ? ["Subtotal", money(initialBase)] : null,
+    showSubtotal ? [`Card surcharge (${surchargePct}%)`, money(initialSurcharge)] : null,
     initialTotal > 0 ? ["Total due now", money(initialTotal)] : null,
     ["Currency", val(placement.currency)],
     ["Payment method", isCard ? `Card (${surchargePct}% surcharge)` : "Bank transfer"],

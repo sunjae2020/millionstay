@@ -95,11 +95,22 @@ export async function buildDocForSigning(
     // Card surcharge % + default method come from the live homestay billing
     // settings, so the agreement's fee figures match what's actually charged.
     const billing = await getHomestayBillingSettings();
+    // Priced add-on services billed to the customer (airport pickup, initial
+    // settlement, prepaid phone, …) — mirrors createPlacementInvoice. Only the
+    // service type + price are passed; the assigned host is never surfaced.
+    const placementServices = await db.select({
+      service_type: homestayPlacementServicesTable.service_type,
+      price: homestayPlacementServicesTable.price,
+    })
+      .from(homestayPlacementServicesTable)
+      .where(eq(homestayPlacementServicesTable.placement_id, placement.id))
+      .orderBy(homestayPlacementServicesTable.id);
     return placementToDoc(placement, host ?? null, student ?? null, view, {
       ...opts,
       termsText: termsTpl?.bodyHtml || undefined,
       cardSurchargePct: billing.surcharge_pct,
       defaultMethod: billing.default_method,
+      services: placementServices,
     });
   }
   // "contract" (regular tenancy/accommodation agreement) is rendered through its

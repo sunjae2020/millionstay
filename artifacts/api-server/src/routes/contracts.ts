@@ -422,6 +422,26 @@ export async function buildContractDocInput(id: number, lang: DocLang = "en"): P
     billingFrequency = p?.f ?? null;
   }
 
+  // Priced add-on services attached to the contract (airport pickup, settlement,
+  // prepaid phone, …) — stored as contract_line_items with item_type=Service.
+  // These are copied from booking_services when a booking becomes a contract.
+  const serviceRows = await db.select().from(contractLineItemsTable)
+    .where(and(
+      eq(contractLineItemsTable.contract_id, id),
+      eq(contractLineItemsTable.item_type, "Service"),
+      eq(contractLineItemsTable.status, "Active"),
+    ))
+    .orderBy(contractLineItemsTable.id);
+  const additionalServices = serviceRows.map((s) => ({
+    name: s.name,
+    quantity: s.quantity ?? 1,
+    unit_amount: Number(s.unit_price ?? 0),
+    total_amount: Number(s.total_price ?? 0),
+    recurring: s.billing_trigger === "recurring",
+    frequency: s.billing_frequency,
+    notes: s.notes,
+  }));
+
   return {
     tenantAccountId: row.tenant_account_id ?? null,
     doc: {
@@ -446,6 +466,7 @@ export async function buildContractDocInput(id: number, lang: DocLang = "en"): P
       bond_amount: c.bond_amount,
       advance_amount: c.advance_amount,
       currency: c.currency,
+      additional_services: additionalServices,
       terms_text: termsText,
       notes: c.notes,
       signed_at: c.signed_at,
