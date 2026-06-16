@@ -6,7 +6,7 @@ import { getRateToAud } from "../lib/rateSnapshot";
 import { buildContractHtml, type ContractDocInput } from "../lib/documents/contractDocument";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
-import { normalizeLang, t } from "../lib/documents/i18n";
+import { normalizeLang, t, type DocLang } from "../lib/documents/i18n";
 import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
 import { sendDocumentEmail, resolveDocEmailCopy } from "../lib/email";
 import { resolveTemplate } from "../lib/documents/templateEngine";
@@ -385,15 +385,17 @@ router.get("/v1/contracts/:id", async (req, res): Promise<void> => {
 });
 
 /** Build the branded-document input for a contract (enriched names + fields). */
-export async function buildContractDocInput(id: number): Promise<{ doc: ContractDocInput; tenantAccountId: number | null } | null> {
+export async function buildContractDocInput(id: number, lang: DocLang = "en"): Promise<{ doc: ContractDocInput; tenantAccountId: number | null } | null> {
   const [row] = await db.select().from(contractsTable).where(eq(contractsTable.id, id));
   if (!row) return null;
   const [c] = await enrichContracts([row]);
   // Terms: per-contract terms_text wins; otherwise fall back to the editable
-  // `contract.terms` template (Templates Studio), then to none.
+  // PDF template (Templates Studio → PDF tab: `pdf.tenancy_agreement`), then the
+  // legacy `contract.terms` (contract kind), then to none — all locale-aware.
   let termsText = c.terms_text;
   if (!termsText?.trim()) {
-    const tpl = await resolveTemplate({ kind: "contract", key: "contract.terms", locale: "en" });
+    const pdfTpl = await resolveTemplate({ kind: "pdf", key: "pdf.tenancy_agreement", locale: lang });
+    const tpl = pdfTpl?.bodyHtml?.trim() ? pdfTpl : await resolveTemplate({ kind: "contract", key: "contract.terms", locale: lang });
     if (tpl?.bodyHtml?.trim()) termsText = tpl.bodyHtml;
   }
   return {
@@ -428,11 +430,12 @@ export async function buildContractDocInput(id: number): Promise<{ doc: Contract
 router.get("/v1/contracts/:id/pdf", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
-  const built = await buildContractDocInput(id);
+  const lang = normalizeLang(req.query.lang as string);
+  const built = await buildContractDocInput(id, lang);
   if (!built) { res.status(404).json({ error: "Not found" }); return; }
 
   const asHtml = req.query.format === "html";
-  const html = buildContractHtml(built.doc, await resolveCompanyInfo(), !asHtml, normalizeLang(req.query.lang as string));
+  const html = buildContractHtml(built.doc, await resolveCompanyInfo(), !asHtml, lang);
   if (asHtml) { res.type("html").send(html); return; }
   try {
     const pdf = await htmlToPdf(html);
@@ -451,7 +454,7 @@ router.get("/v1/contracts/:id/pdf", async (req, res): Promise<void> => {
 router.post("/v1/contracts/:id/email", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
-  const built = await buildContractDocInput(id);
+  const built = await buildContractDocInput(id, normalizeLang(req.body?.lang as string));
   if (!built) { res.status(404).json({ error: "Not found" }); return; }
 
   let to = (req.body?.to as string)?.trim() || null;
@@ -501,9 +504,9 @@ router.post("/v1/contracts/:id/email", async (req, res): Promise<void> => {
 router.post("/v1/contracts/:id/freeze", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
-  const built = await buildContractDocInput(id);
-  if (!built) { res.status(404).json({ error: "Not found" }); return; }
   const lang = normalizeLang(req.body?.lang as string);
+  const built = await buildContractDocInput(id, lang);
+  if (!built) { res.status(404).json({ error: "Not found" }); return; }
   let pdf: Buffer;
   try {
     pdf = await htmlToPdf(buildContractHtml(built.doc, await resolveCompanyInfo(), true, lang));

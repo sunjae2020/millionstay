@@ -7,13 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Save, Send, CheckCircle2, Eye, Code, Type } from "lucide-react";
+import { ArrowLeft, Save, Send, CheckCircle2, Eye, Code, Type, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 const API = "/api/v1/document-templates";
-const LOCALES = ["en", "ko", "ja", "zh", "th"];
+// Guest-facing documents (invoice/quote/agreements) ship six locales.
+const LOCALES = ["en", "ko", "ja", "zh", "th", "vi"];
 
 interface Translation { locale: string; subject?: string | null; body_html?: string | null }
 interface TemplateDetail {
@@ -107,6 +108,18 @@ export default function DocumentTemplateEdit() {
     onError: (e: any) => toast({ title: t("documentTemplate.error"), description: e.message, variant: "destructive" }),
   });
 
+  // Render the current locale's body to a real branded PDF and open it (the
+  // inline preview only shows the body HTML; this shows the final document).
+  const samplePdf = useMutation({
+    mutationFn: async () => {
+      const res = await apiFetch(`${API}/${id}/test-generate`, { method: "POST", body: JSON.stringify({ locale }) });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error ?? "Failed to generate sample PDF");
+      const blob = await res.blob();
+      window.open(URL.createObjectURL(blob), "_blank");
+    },
+    onError: (e: any) => toast({ title: t("documentTemplate.error"), description: e.message, variant: "destructive" }),
+  });
+
   if (isLoading) return <Layout><p className="p-6 text-sm text-muted-foreground">{t("common.loading")}</p></Layout>;
   if (!tpl) return <Layout><p className="p-6 text-sm text-muted-foreground">{t("documentTemplate.not_found")}</p></Layout>;
 
@@ -123,6 +136,7 @@ export default function DocumentTemplateEdit() {
           <div className="flex flex-wrap gap-2">
             <Link href="/settings/document-templates"><Button variant="outline" size="sm" className="gap-1.5"><ArrowLeft className="h-4 w-4" /> {t("common.back")}</Button></Link>
             {isEmail && <Button variant="outline" size="sm" className="gap-1.5" onClick={() => testSend.mutate()} disabled={testSend.isPending}><Send className="h-4 w-4" /> {t("documentTemplate.btn_test")}</Button>}
+            {!isEmail && <Button variant="outline" size="sm" className="gap-1.5" onClick={() => samplePdf.mutate()} disabled={samplePdf.isPending}><FileText className="h-4 w-4" /> {samplePdf.isPending ? t("common.loading") : t("documentTemplate.btn_sample_pdf")}</Button>}
             <Button variant="outline" size="sm" className="gap-1.5" onClick={() => save.mutate()} disabled={save.isPending}><Save className="h-4 w-4" /> {t("documentTemplate.btn_save")}</Button>
             <Button size="sm" className="gap-1.5" onClick={() => publish.mutate()} disabled={publish.isPending}><CheckCircle2 className="h-4 w-4" /> {t("documentTemplate.btn_publish")}</Button>
           </div>

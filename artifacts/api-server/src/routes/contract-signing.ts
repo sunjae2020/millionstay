@@ -27,6 +27,7 @@ import {
   processSignedApplication,
   resolveRecipients,
   emailApplicationPdf,
+  sendServiceBriefs,
   refForSigning,
   type RecipientSelection,
 } from "../services/applicationDocs.js";
@@ -282,10 +283,14 @@ contractSigningPublicRouter.post("/v1/public/contract-signing/:token/send", asyn
       return;
     }
     const body = (req.body ?? {}) as RecipientSelection;
+    // host + serviceHost only apply to homestay placement agreements.
+    const isPlacement = row.context_type === "placement_contract";
     const select: RecipientSelection = {
       applicant: body.applicant ?? true,
       agent: body.agent ?? false,
       ops: body.ops ?? false,
+      host: isPlacement ? (body.host ?? false) : false,
+      serviceHost: isPlacement ? (body.serviceHost ?? false) : false,
     };
     const { pdf } = await generateAndStoreSignedPdf(row);
     if (!pdf) {
@@ -295,6 +300,12 @@ contractSigningPublicRouter.post("/v1/public/contract-signing/:token/send", asyn
     const recipients = await resolveRecipients(row);
     const ref = await refForSigning(row);
     const sent = await emailApplicationPdf(row, pdf, recipients, select, ref);
+    // Service hosts get a separate MASKED brief (their service + fee only), never
+    // the full signed agreement — sent as its own document, not the shared PDF.
+    if (select.serviceHost && isPlacement) {
+      const briefSent = await sendServiceBriefs(row.context_id, ref);
+      sent.push(...briefSent);
+    }
     res.json({ success: true, sent });
   } catch (err) {
     console.error("[ContractSign] send error:", err);

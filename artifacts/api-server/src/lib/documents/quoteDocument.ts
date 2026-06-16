@@ -42,7 +42,9 @@ function formatDate(value: string | Date | null, lang: DocLang): string {
   return d.toLocaleDateString(docLocale(lang), { year: "numeric", month: "short", day: "numeric" });
 }
 
-export function buildQuoteBody(q: QuoteDocInput, lang: DocLang = "en"): string {
+/** `termsHtml` is optional admin-authored standard copy from the editable
+ *  `pdf.quote` template, injected below the notes box. */
+export function buildQuoteBody(q: QuoteDocInput, lang: DocLang = "en", termsHtml = ""): string {
   const billTo = q.party_name
     ? `${escapeHtml(q.party_name)}${q.party_email ? `<br/>${escapeHtml(q.party_email)}` : ""}`
     : "—";
@@ -89,13 +91,15 @@ export function buildQuoteBody(q: QuoteDocInput, lang: DocLang = "en"): string {
     </div>
 
     ${q.notes?.trim() ? `<div class="info-box"><strong>${t(lang, "notes")}</strong><br/>${escapeHtml(q.notes)}</div>` : ""}
+
+    ${termsHtml.trim() ? `<div class="section" style="margin-top:24px;font-size:12px;color:#777;">${termsHtml}</div>` : ""}
   `;
 }
 
-export function buildQuoteHtml(q: QuoteDocInput, company?: CompanyInfo, forPrint = true, lang: DocLang = "en"): string {
+export function buildQuoteHtml(q: QuoteDocInput, company?: CompanyInfo, forPrint = true, lang: DocLang = "en", termsHtml = ""): string {
   return renderDocumentShell({
     docType: t(lang, "doctype.quote"),
-    bodyHtml: buildQuoteBody(q, lang),
+    bodyHtml: buildQuoteBody(q, lang, termsHtml),
     company: company ?? getCompanyInfo(),
     forPrint,
   });

@@ -1,17 +1,18 @@
 /**
  * Document Hub — multi-language labels (follow-up)
  *
- * Static document labels translated for the languages MillionStay serves
- * (English, Korean, Chinese, Japanese). Dynamic data (names, amounts, refs) is
- * untouched. Pass `lang` to the document builders / PDF endpoints (`?lang=ko`);
- * unknown languages fall back to English.
+ * Static document labels translated for every locale MillionStay serves on its
+ * guest-facing documents (English, Korean, Chinese, Japanese, Thai, Vietnamese).
+ * Dynamic data (names, amounts, refs) is untouched. Pass `lang` to the document
+ * builders / PDF endpoints (`?lang=ko`); unknown languages fall back to English.
  *
  * NOTE: transactional *emails* remain English-only per project policy — this
- * i18n applies to the rendered documents (PDF / preview).
+ * i18n applies to the rendered documents (PDF / preview) and the editable
+ * document-template bodies.
  */
-export type DocLang = "en" | "ko" | "zh" | "ja";
+export type DocLang = "en" | "ko" | "zh" | "ja" | "th" | "vi";
 
-const SUPPORTED: DocLang[] = ["en", "ko", "zh", "ja"];
+const SUPPORTED: DocLang[] = ["en", "ko", "zh", "ja", "th", "vi"];
 
 export function normalizeLang(input: string | undefined | null): DocLang {
   const l = (input ?? "").toLowerCase().slice(0, 2);
@@ -20,71 +21,73 @@ export function normalizeLang(input: string | undefined | null): DocLang {
 
 /** Intl locale used for date formatting per document language. */
 export function docLocale(lang: DocLang): string {
-  return { en: "en-AU", ko: "ko-KR", zh: "zh-CN", ja: "ja-JP" }[lang];
+  return { en: "en-AU", ko: "ko-KR", zh: "zh-CN", ja: "ja-JP", th: "th-TH", vi: "vi-VN" }[lang];
 }
 
 type Dict = Record<string, Record<DocLang, string>>;
 
 const LABELS: Dict = {
-  "doctype.invoice":  { en: "Tax Invoice", ko: "청구서",       zh: "发票",       ja: "請求書" },
-  "doctype.receipt":  { en: "Receipt",     ko: "영수증",       zh: "收据",       ja: "領収書" },
-  "doctype.quote":    { en: "Quotation",   ko: "견적서",       zh: "报价单",     ja: "見積書" },
-  "doctype.contract": { en: "Agreement",   ko: "계약서",       zh: "协议",       ja: "契約書" },
+  "doctype.invoice":  { en: "Tax Invoice", ko: "청구서",       zh: "发票",       ja: "請求書",   th: "ใบกำกับภาษี",    vi: "Hóa đơn thuế" },
+  "doctype.receipt":  { en: "Receipt",     ko: "영수증",       zh: "收据",       ja: "領収書",   th: "ใบเสร็จรับเงิน", vi: "Biên nhận" },
+  "doctype.quote":    { en: "Quotation",   ko: "견적서",       zh: "报价单",     ja: "見積書",   th: "ใบเสนอราคา",     vi: "Báo giá" },
+  "doctype.contract": { en: "Agreement",   ko: "계약서",       zh: "协议",       ja: "契約書",   th: "ข้อตกลง",        vi: "Thỏa thuận" },
 
-  "invoice.heading":  { en: "Invoice",     ko: "청구서",       zh: "发票",       ja: "請求書" },
-  "billTo":           { en: "Bill To",     ko: "청구 대상",    zh: "付款方",     ja: "請求先" },
-  "details":          { en: "Details",     ko: "상세 내역",    zh: "明细",       ja: "明細" },
-  "description":      { en: "Description", ko: "내역",         zh: "描述",       ja: "内容" },
-  "amount":           { en: "Amount",      ko: "금액",         zh: "金额",       ja: "金額" },
-  "dueDate":          { en: "Due Date",    ko: "지급 기한",    zh: "到期日",     ja: "支払期限" },
-  "paid":             { en: "Paid",        ko: "결제 완료",    zh: "已付款",     ja: "支払済" },
-  "amountDue":        { en: "Amount Due",  ko: "청구 금액",    zh: "应付金额",   ja: "請求金額" },
-  "amountPaid":       { en: "Amount Paid", ko: "결제 금액",    zh: "已付金额",   ja: "支払金額" },
-  "notes":            { en: "Notes",       ko: "비고",         zh: "备注",       ja: "備考" },
-  "issued":           { en: "Issued",      ko: "발행일",       zh: "开具日期",   ja: "発行日" },
+  "invoice.heading":  { en: "Invoice",     ko: "청구서",       zh: "发票",       ja: "請求書",   th: "ใบแจ้งหนี้",     vi: "Hóa đơn" },
+  "billTo":           { en: "Bill To",     ko: "청구 대상",    zh: "付款方",     ja: "請求先",   th: "เรียกเก็บจาก",   vi: "Bên thanh toán" },
+  "details":          { en: "Details",     ko: "상세 내역",    zh: "明细",       ja: "明細",     th: "รายละเอียด",     vi: "Chi tiết" },
+  "description":      { en: "Description", ko: "내역",         zh: "描述",       ja: "内容",     th: "รายการ",         vi: "Mô tả" },
+  "amount":           { en: "Amount",      ko: "금액",         zh: "金额",       ja: "金額",     th: "จำนวนเงิน",      vi: "Số tiền" },
+  "dueDate":          { en: "Due Date",    ko: "지급 기한",    zh: "到期日",     ja: "支払期限", th: "วันครบกำหนด",    vi: "Ngày đến hạn" },
+  "paid":             { en: "Paid",        ko: "결제 완료",    zh: "已付款",     ja: "支払済",   th: "ชำระแล้ว",       vi: "Đã thanh toán" },
+  "amountDue":        { en: "Amount Due",  ko: "청구 금액",    zh: "应付金额",   ja: "請求金額", th: "ยอดที่ต้องชำระ", vi: "Số tiền phải trả" },
+  "amountPaid":       { en: "Amount Paid", ko: "결제 금액",    zh: "已付金额",   ja: "支払金額", th: "ยอดที่ชำระ",     vi: "Số tiền đã trả" },
+  "notes":            { en: "Notes",       ko: "비고",         zh: "备注",       ja: "備考",     th: "หมายเหตุ",       vi: "Ghi chú" },
+  "issued":           { en: "Issued",      ko: "발행일",       zh: "开具日期",   ja: "発行日",   th: "วันที่ออก",      vi: "Ngày phát hành" },
 
-  "receipt.heading":  { en: "Receipt",          ko: "영수증",      zh: "收据",     ja: "領収書" },
-  "receivedFrom":     { en: "Received From",    ko: "지급인",      zh: "付款人",   ja: "支払者" },
-  "for":              { en: "For",              ko: "항목",        zh: "项目",     ja: "項目" },
-  "paymentMethod":    { en: "Payment Method",   ko: "결제 수단",   zh: "付款方式", ja: "支払方法" },
-  "paymentDate":      { en: "Payment Date",     ko: "결제일",      zh: "付款日期", ja: "支払日" },
-  "amountReceived":   { en: "Amount Received",  ko: "수령 금액",   zh: "收款金额", ja: "受領金額" },
-  "paymentReceived":  { en: "Payment received", ko: "결제 완료일", zh: "已收款",   ja: "受領日" },
-  "paymentPending":   { en: "Payment pending",  ko: "결제 대기",   zh: "待付款",   ja: "支払待ち" },
+  "receipt.heading":  { en: "Receipt",          ko: "영수증",      zh: "收据",     ja: "領収書",   th: "ใบเสร็จรับเงิน", vi: "Biên nhận" },
+  "receivedFrom":     { en: "Received From",    ko: "지급인",      zh: "付款人",   ja: "支払者",   th: "รับเงินจาก",     vi: "Nhận từ" },
+  "for":              { en: "For",              ko: "항목",        zh: "项目",     ja: "項目",     th: "สำหรับ",         vi: "Cho" },
+  "paymentMethod":    { en: "Payment Method",   ko: "결제 수단",   zh: "付款方式", ja: "支払方法", th: "วิธีการชำระเงิน", vi: "Phương thức thanh toán" },
+  "paymentDate":      { en: "Payment Date",     ko: "결제일",      zh: "付款日期", ja: "支払日",   th: "วันที่ชำระเงิน",  vi: "Ngày thanh toán" },
+  "amountReceived":   { en: "Amount Received",  ko: "수령 금액",   zh: "收款金额", ja: "受領金額", th: "จำนวนเงินที่ได้รับ", vi: "Số tiền đã nhận" },
+  "paymentReceived":  { en: "Payment received", ko: "결제 완료일", zh: "已收款",   ja: "受領日",   th: "ได้รับชำระเงินแล้ว", vi: "Đã nhận thanh toán" },
+  "paymentPending":   { en: "Payment pending",  ko: "결제 대기",   zh: "待付款",   ja: "支払待ち", th: "รอการชำระเงิน",  vi: "Chờ thanh toán" },
   "receipt.confirm":  {
     en: "This document confirms receipt of the amount shown above against invoice {ref}. Thank you.",
     ko: "본 문서는 청구서 {ref}에 대한 상기 금액의 수령을 확인합니다. 감사합니다.",
     zh: "本文件确认已收到上述金额，对应发票 {ref}。谢谢。",
     ja: "本書は、請求書 {ref} に対する上記金額の受領を確認するものです。ありがとうございます。",
+    th: "เอกสารนี้ยืนยันการได้รับเงินตามจำนวนข้างต้นสำหรับใบแจ้งหนี้ {ref} ขอบคุณค่ะ",
+    vi: "Tài liệu này xác nhận đã nhận số tiền nêu trên cho hóa đơn {ref}. Xin cảm ơn.",
   },
 
-  "quote.heading":    { en: "Quotation",     ko: "견적서",     zh: "报价单",     ja: "見積書" },
-  "preparedFor":      { en: "Prepared For",  ko: "견적 대상",  zh: "报价对象",   ja: "見積先" },
-  "quoteItems":       { en: "Quote Items",   ko: "견적 항목",  zh: "报价项目",   ja: "見積項目" },
-  "unit":             { en: "Unit",          ko: "단가",       zh: "单价",       ja: "単価" },
-  "qty":              { en: "Qty",           ko: "수량",       zh: "数量",       ja: "数量" },
-  "total":            { en: "Total",         ko: "합계",       zh: "合计",       ja: "合計" },
-  "validUntil":       { en: "Valid until",   ko: "유효 기한",  zh: "有效期至",   ja: "有効期限" },
-  "prepared":         { en: "Prepared",      ko: "작성일",     zh: "制作日期",   ja: "作成日" },
-  "noItems":          { en: "No items",      ko: "항목 없음",  zh: "无项目",     ja: "項目なし" },
+  "quote.heading":    { en: "Quotation",     ko: "견적서",     zh: "报价单",     ja: "見積書",   th: "ใบเสนอราคา",     vi: "Báo giá" },
+  "preparedFor":      { en: "Prepared For",  ko: "견적 대상",  zh: "报价对象",   ja: "見積先",   th: "จัดทำสำหรับ",    vi: "Lập cho" },
+  "quoteItems":       { en: "Quote Items",   ko: "견적 항목",  zh: "报价项目",   ja: "見積項目", th: "รายการเสนอราคา", vi: "Hạng mục báo giá" },
+  "unit":             { en: "Unit",          ko: "단가",       zh: "单价",       ja: "単価",     th: "ราคาต่อหน่วย",   vi: "Đơn giá" },
+  "qty":              { en: "Qty",           ko: "수량",       zh: "数量",       ja: "数量",     th: "จำนวน",          vi: "Số lượng" },
+  "total":            { en: "Total",         ko: "합계",       zh: "合计",       ja: "合計",     th: "รวม",            vi: "Tổng cộng" },
+  "validUntil":       { en: "Valid until",   ko: "유효 기한",  zh: "有效期至",   ja: "有効期限", th: "ใช้ได้ถึง",      vi: "Có hiệu lực đến" },
+  "prepared":         { en: "Prepared",      ko: "작성일",     zh: "制作日期",   ja: "作成日",   th: "วันที่จัดทำ",    vi: "Ngày lập" },
+  "noItems":          { en: "No items",      ko: "항목 없음",  zh: "无项目",     ja: "項目なし", th: "ไม่มีรายการ",    vi: "Không có hạng mục" },
 
-  "contract.heading": { en: "Accommodation Agreement", ko: "숙박 계약서",       zh: "住宿协议",     ja: "宿泊契約書" },
-  "parties":          { en: "Parties",                 ko: "당사자",            zh: "双方",         ja: "当事者" },
-  "landlord":         { en: "Landlord / Provider",     ko: "임대인 / 제공자",   zh: "房东 / 提供方", ja: "貸主 / 提供者" },
-  "tenant":           { en: "Tenant",                  ko: "임차인",            zh: "租客",         ja: "借主" },
-  "premisesTerm":     { en: "Premises & Term",         ko: "임대 대상 및 기간", zh: "房源与租期",   ja: "物件と期間" },
-  "premises":         { en: "Premises",                ko: "임대 대상",         zh: "房源",         ja: "物件" },
-  "product":          { en: "Product",                 ko: "상품",              zh: "产品",         ja: "商品" },
-  "startDate":        { en: "Start Date",              ko: "시작일",            zh: "开始日期",     ja: "開始日" },
-  "endDate":          { en: "End Date",                ko: "종료일",            zh: "结束日期",     ja: "終了日" },
-  "financials":       { en: "Financials",              ko: "비용",              zh: "费用",         ja: "費用" },
-  "weeklyRate":       { en: "Weekly Rate",             ko: "주당 요금",         zh: "每周租金",     ja: "週額料金" },
-  "totalRent":        { en: "Total Rent",              ko: "총 임대료",         zh: "总租金",       ja: "総賃料" },
-  "bond":             { en: "Bond",                    ko: "보증금",            zh: "押金",         ja: "敷金" },
-  "advance":          { en: "Advance",                 ko: "선급금",            zh: "预付款",       ja: "前払金" },
-  "terms":            { en: "Terms & Conditions",      ko: "약관",              zh: "条款与条件",   ja: "利用規約" },
-  "signatures":       { en: "Signatures",              ko: "서명",              zh: "签名",         ja: "署名" },
-  "signed":           { en: "Signed",                  ko: "서명일",            zh: "签署日期",     ja: "署名日" },
+  "contract.heading": { en: "Accommodation Agreement", ko: "숙박 계약서",       zh: "住宿协议",     ja: "宿泊契約書", th: "ข้อตกลงที่พัก",       vi: "Thỏa thuận lưu trú" },
+  "parties":          { en: "Parties",                 ko: "당사자",            zh: "双方",         ja: "当事者",     th: "คู่สัญญา",            vi: "Các bên" },
+  "landlord":         { en: "Landlord / Provider",     ko: "임대인 / 제공자",   zh: "房东 / 提供方", ja: "貸主 / 提供者", th: "ผู้ให้เช่า / ผู้ให้บริการ", vi: "Bên cho thuê / Bên cung cấp" },
+  "tenant":           { en: "Tenant",                  ko: "임차인",            zh: "租客",         ja: "借主",       th: "ผู้เช่า",             vi: "Bên thuê" },
+  "premisesTerm":     { en: "Premises & Term",         ko: "임대 대상 및 기간", zh: "房源与租期",   ja: "物件と期間", th: "สถานที่และระยะเวลา",  vi: "Nơi ở & Thời hạn" },
+  "premises":         { en: "Premises",                ko: "임대 대상",         zh: "房源",         ja: "物件",       th: "สถานที่",             vi: "Nơi ở" },
+  "product":          { en: "Product",                 ko: "상품",              zh: "产品",         ja: "商品",       th: "ผลิตภัณฑ์",           vi: "Sản phẩm" },
+  "startDate":        { en: "Start Date",              ko: "시작일",            zh: "开始日期",     ja: "開始日",     th: "วันที่เริ่ม",         vi: "Ngày bắt đầu" },
+  "endDate":          { en: "End Date",                ko: "종료일",            zh: "结束日期",     ja: "終了日",     th: "วันที่สิ้นสุด",       vi: "Ngày kết thúc" },
+  "financials":       { en: "Financials",              ko: "비용",              zh: "费用",         ja: "費用",       th: "ค่าใช้จ่าย",          vi: "Tài chính" },
+  "weeklyRate":       { en: "Weekly Rate",             ko: "주당 요금",         zh: "每周租金",     ja: "週額料金",   th: "อัตรารายสัปดาห์",     vi: "Giá theo tuần" },
+  "totalRent":        { en: "Total Rent",              ko: "총 임대료",         zh: "总租金",       ja: "総賃料",     th: "ค่าเช่ารวม",          vi: "Tổng tiền thuê" },
+  "bond":             { en: "Bond",                    ko: "보증금",            zh: "押金",         ja: "敷金",       th: "เงินประกัน",          vi: "Tiền đặt cọc" },
+  "advance":          { en: "Advance",                 ko: "선급금",            zh: "预付款",       ja: "前払金",     th: "เงินล่วงหน้า",        vi: "Tiền trả trước" },
+  "terms":            { en: "Terms & Conditions",      ko: "약관",              zh: "条款与条件",   ja: "利用規約",   th: "ข้อกำหนดและเงื่อนไข",  vi: "Điều khoản & Điều kiện" },
+  "signatures":       { en: "Signatures",              ko: "서명",              zh: "签名",         ja: "署名",       th: "ลายเซ็น",             vi: "Chữ ký" },
+  "signed":           { en: "Signed",                  ko: "서명일",            zh: "签署日期",     ja: "署名日",     th: "ลงนามเมื่อ",          vi: "Đã ký" },
 
   // ── Email cover (when documents are emailed) ──────────────────────────
   "email.subject": {
@@ -92,48 +95,62 @@ const LABELS: Dict = {
     ko: "MillionStay {doc} {ref}",
     zh: "MillionStay {doc} {ref}",
     ja: "MillionStay {doc} {ref}",
+    th: "{doc} {ref} จาก MillionStay",
+    vi: "{doc} {ref} từ MillionStay",
   },
   "email.greeting.named": {
-    en: "Hi {name},", ko: "{name}님, 안녕하세요.", zh: "您好 {name}：", ja: "{name} 様",
+    en: "Hi {name},", ko: "{name}님, 안녕하세요.", zh: "您好 {name}：", ja: "{name} 様", th: "เรียน คุณ{name},", vi: "Xin chào {name},",
   },
   "email.greeting.plain": {
-    en: "Hello,", ko: "안녕하세요.", zh: "您好：", ja: "ご担当者様",
+    en: "Hello,", ko: "안녕하세요.", zh: "您好：", ja: "ご担当者様", th: "เรียน ท่านผู้เกี่ยวข้อง,", vi: "Xin chào,",
   },
   "email.body": {
     en: "Please find your {doc} attached as a PDF.",
     ko: "{doc}를 PDF 파일로 첨부합니다.",
     zh: "请查收附件中的{doc}（PDF）。",
     ja: "{doc}をPDFファイルで添付いたします。",
+    th: "โปรดดู{doc}ของท่านที่แนบมาในรูปแบบ PDF",
+    vi: "Vui lòng xem {doc} của bạn được đính kèm dưới dạng PDF.",
   },
   "email.questions": {
     en: "Questions? Contact us at {email}.",
     ko: "문의사항은 {email}로 연락 주세요.",
     zh: "如有疑问，请联系 {email}。",
     ja: "ご不明な点は {email} までお問い合わせください。",
+    th: "มีคำถาม? ติดต่อเราที่ {email}",
+    vi: "Có thắc mắc? Liên hệ với chúng tôi tại {email}.",
   },
   "email.sentTo": {
     en: "This email was sent to {to}",
     ko: "이 이메일은 {to} 주소로 발송되었습니다",
     zh: "本邮件发送至 {to}",
     ja: "このメールは {to} 宛に送信されました",
+    th: "อีเมลนี้ถูกส่งถึง {to}",
+    vi: "Email này được gửi đến {to}",
   },
   "email.note.due": {
     en: "Payment is due by {date}.",
     ko: "지급 기한은 {date}입니다.",
     zh: "付款截止日期为 {date}。",
     ja: "お支払期限は {date} です。",
+    th: "กำหนดชำระเงินภายในวันที่ {date}",
+    vi: "Thanh toán đến hạn trước ngày {date}.",
   },
   "email.note.validUntil": {
     en: "This quote is valid until {date}.",
     ko: "본 견적은 {date}까지 유효합니다.",
     zh: "本报价有效期至 {date}。",
     ja: "本見積の有効期限は {date} です。",
+    th: "ใบเสนอราคานี้ใช้ได้ถึงวันที่ {date}",
+    vi: "Báo giá này có hiệu lực đến ngày {date}.",
   },
   "email.note.reviewAgreement": {
     en: "Please review the attached agreement and reply to confirm.",
     ko: "첨부된 계약서를 검토하신 후 회신하여 확인해 주세요.",
     zh: "请查阅所附协议并回复确认。",
     ja: "添付の契約書をご確認の上、ご返信ください。",
+    th: "โปรดตรวจสอบข้อตกลงที่แนบมาและตอบกลับเพื่อยืนยัน",
+    vi: "Vui lòng xem lại thỏa thuận đính kèm và trả lời để xác nhận.",
   },
 };
 
