@@ -53,15 +53,26 @@ const sampleContract: ContractDocInput = {
 const samplePlacement = {
   placement_ref: "MS-HSP-2026-00042", status: "AwaitingPayment",
   currency: "AUD", move_in_date: "2026-07-15", move_out_date: "2026-12-15",
+  billing_cycle_weeks: 4, billing_method: "card",
   placement_fee: 550, deposit: 1200, monthly_fee: 1450, created_at: new Date().toISOString(),
 };
 const sampleHost = {
   first_name: "Sarah", last_name: "Thompson", email: "sarah.thompson@example.com",
-  suburb: "Carlton", address: "24 Drummond Street, Carlton VIC 3053",
+  phone: "+61 400 123 456", suburb: "Carlton", address: "24 Drummond Street, Carlton VIC 3053",
+  building_type: "House", cultural_background: "Australian",
+  residents: [{ relationship: "Spouse" }, { relationship: "Child" }],
+  has_pets: true, pet_types: "1 dog (friendly)",
+  smoking_in_home: false, drink_in_home: false,
+  packages_offered: ["Full board (3 meals/day)", "Half board (breakfast + dinner)"],
+  dietary: ["Halal", "Vegetarian"], dietary_notes: "No pork in shared meals",
+  home_features: ["Wi-Fi", "Private bathroom", "Study desk", "Heating & cooling"],
 };
 const sampleStudent = {
   student_first_name: "Minjae", student_last_name: "Kim",
-  student_email: "minjae.kim@example.com", is_minor: true, guardian_name: "Soyeon Kim",
+  student_email: "minjae.kim@example.com", student_phone: "+82 10 1234 5678",
+  date_of_birth: "2009-03-12", gender: "Male", nationality: "South Korean",
+  is_minor: true, guardian_name: "Soyeon Kim", guardian_relationship: "Mother",
+  guardian_email: "soyeon.kim@example.com", guardian_phone: "+82 10 8765 4321",
 };
 
 /**

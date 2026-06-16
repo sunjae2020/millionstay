@@ -443,30 +443,66 @@ export function placementToDoc(
   const studentName = student ? `${student.student_first_name} ${student.student_last_name}`.trim() : "—";
   const hostName = host ? `${host.first_name} ${host.last_name}`.trim() : "—";
 
+  // Summarise a jsonb list (array of strings or {name|label|type} objects).
+  const listSummary = (v: unknown): string =>
+    Array.isArray(v)
+      ? v.map((x) => (typeof x === "string" ? x : (x?.name ?? x?.label ?? x?.type ?? ""))).filter(Boolean).join(", ")
+      : "";
+  const residentCount = Array.isArray(host?.residents) ? (host!.residents as unknown[]).length : 0;
+  const petSummary = host?.has_pets ? `Yes${host?.pet_types ? ` — ${host.pet_types}` : ""}` : (host ? "No" : "—");
+  const dietarySummary = [listSummary(host?.dietary), host?.dietary_notes].filter(Boolean).join(" · ");
+
   const sections: ApplicationDocSection[] = [];
   const push = (s: ApplicationDocSection | null) => { if (s) sections.push(s); };
 
-  push(section("Parties", [
-    ["Student", studentName],
-    ["Student email", val(student?.student_email)],
-    ["Guardian", student?.is_minor ? val(student?.guardian_name) : "—"],
-    ["Host family", hostName],
-    ["Host email", val(host?.email)],
-    ["Provider", "MillionStay Pty Ltd"],
+  // ── 1) Student (customer) ──────────────────────────────────────────────────
+  push(section("Student (Customer)", [
+    ["Name", studentName],
+    ["Email", val(student?.student_email)],
+    ["Phone", val(student?.student_phone)],
+    ["Date of birth", val(student?.date_of_birth)],
+    ["Gender", val(student?.gender)],
+    ["Nationality", val(student?.nationality)],
+    ["Minor", student ? yesNo(student.is_minor) : "—"],
+    student?.is_minor ? ["Guardian", val(student?.guardian_name)] : null,
+    student?.is_minor ? ["Guardian relationship", val(student?.guardian_relationship)] : null,
+    student?.is_minor ? ["Guardian email", val(student?.guardian_email)] : null,
+    student?.is_minor ? ["Guardian phone", val(student?.guardian_phone)] : null,
   ]));
 
-  push(section("Placement", [
-    ["Suburb", val(host?.suburb)],
+  // ── 2) Host family ───────────────────────────────────────────────────────
+  push(section("Host Family", [
+    ["Host", hostName],
+    ["Email", val(host?.email)],
+    ["Phone", val(host?.phone)],
     ["Address", val(host?.address)],
+    ["Suburb", val(host?.suburb)],
+    ["Home type", val(host?.building_type)],
+    ["Cultural background", val(host?.cultural_background)],
+    residentCount ? ["Household", `${residentCount} resident${residentCount > 1 ? "s" : ""}`] : null,
+    ["Pets", petSummary],
+    host ? ["Smoking in home", yesNo(host.smoking_in_home)] : null,
+    host ? ["Alcohol in home", yesNo(host.drink_in_home)] : null,
+  ]));
+
+  // ── 3) Homestay (placement arrangement) ─────────────────────────────────────
+  push(section("Homestay", [
+    ["Provider", "MillionStay Pty Ltd"],
     ["Move-in date", val(placement.move_in_date)],
     ["Move-out date", val(placement.move_out_date)],
+    placement.billing_cycle_weeks ? ["Billing cycle", `${placement.billing_cycle_weeks} week${placement.billing_cycle_weeks > 1 ? "s" : ""}`] : null,
+    ["Meal packages", listSummary(host?.packages_offered)],
+    ["Dietary catered", dietarySummary],
+    ["Room features", listSummary(host?.home_features)],
   ]));
 
+  // ── 4) Fees ────────────────────────────────────────────────────────────────
   push(section("Fees", [
     ["Placement fee", money(placement.placement_fee)],
     ["Deposit", money(placement.deposit)],
     ["Accommodation fee (monthly)", money(placement.monthly_fee)],
     ["Currency", val(placement.currency)],
+    placement.billing_method ? ["Billing method", placement.billing_method === "card" ? "Card" : "Bank transfer"] : null,
   ]));
 
   return {
