@@ -82,12 +82,17 @@ export default function HomestayContact() {
 
         <div className="mt-10 grid gap-3 sm:grid-cols-3">
           {SHORTCUTS.map((s) => (
-            <Link key={s.href} href={s.href} className="rounded-xl border border-gray-100 p-4 flex items-center justify-between" style={{ backgroundColor: HS.cream }}>
+            <Link
+              key={s.href}
+              href={s.href}
+              className="group rounded-xl p-4 flex items-center justify-between transition-transform hover:-translate-y-0.5 motion-reduce:transform-none"
+              style={{ backgroundColor: HS.apricot }}
+            >
               <span>
-                <span className="block text-xs text-gray-500">{s.note}</span>
-                <span className="font-semibold" style={{ color: HS.darkBrown }}>{s.label}</span>
+                <span className="block text-xs" style={{ color: HS.inkMuted }}>{s.note}</span>
+                <span className="font-semibold group-hover:underline underline-offset-4 decoration-2" style={{ color: HS.navy, textDecorationColor: HS.teal }}>{s.label}</span>
               </span>
-              <ArrowRight className="w-4 h-4" style={{ color: HS.brand }} />
+              <ArrowRight className="w-4 h-4" style={{ color: HS.orange }} />
             </Link>
           ))}
         </div>
@@ -103,24 +108,24 @@ export default function HomestayContact() {
             <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">{t("homestay.contact.field_name")}</label>
-                <input value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm" />
+                <input value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:border-[#E8621A] focus-visible:ring-2 focus-visible:ring-[#E8621A]/30" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">{t("homestay.contact.field_email")}</label>
-                <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm" />
+                <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:border-[#E8621A] focus-visible:ring-2 focus-visible:ring-[#E8621A]/30" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">{t("homestay.contact.field_i_am_a")}</label>
-                <select value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm bg-white">
+                <select value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#E8621A] focus-visible:ring-2 focus-visible:ring-[#E8621A]/30">
                   {ROLES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">{t("homestay.contact.field_message")}</label>
-                <textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} rows={5} className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm" />
+                <textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} rows={5} className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:border-[#E8621A] focus-visible:ring-2 focus-visible:ring-[#E8621A]/30" />
               </div>
               {error && <p className="text-sm text-red-600">{error}</p>}
-              <button type="submit" disabled={sending} className="w-full py-3 rounded-lg font-semibold text-white inline-flex items-center justify-center gap-2" style={{ backgroundColor: HS.brand }}>
+              <button type="submit" disabled={sending} className="w-full py-3 rounded-full font-semibold text-white inline-flex items-center justify-center gap-2 transition-colors hover:brightness-95 disabled:opacity-70 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#E8621A]" style={{ backgroundColor: HS.brand }}>
                 {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : t("homestay.contact.submit")}
               </button>
               <p className="text-xs text-gray-500">
