@@ -154,13 +154,24 @@ export function renderDocumentShell(opts: RenderShellOptions): string {
     line-height: 1.5;
   }
   h1, h2, h3 { color: ${t.ink}; }
-  .section { margin-bottom: 24px; }
+  /* Each section is a light, rounded card so groups are clearly separated. */
+  .section {
+    margin-bottom: 16px;
+    padding: 18px 20px;
+    background: ${t.cardBg};
+    border: 1px solid ${t.border};
+    border-radius: 12px;
+  }
+  .section:last-child { margin-bottom: 0; }
   .section h3 {
-    font-size: 12px;
+    font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: ${t.inkFaint};
-    margin: 0 0 10px;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: ${t.brand};
+    margin: 0 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid ${t.border};
   }
   .row {
     display: flex;
