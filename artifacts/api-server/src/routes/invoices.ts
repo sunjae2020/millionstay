@@ -9,6 +9,7 @@ import { buildReceiptHtml } from "../lib/documents/receiptDocument";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
 import { normalizeLang, t } from "../lib/documents/i18n";
+import { resolveTemplateBody } from "../lib/documents/templateEngine";
 import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
 import { sendDocumentEmail, resolveDocEmailCopy } from "../lib/email";
 import { getStripe } from "./stripe";
@@ -323,7 +324,11 @@ router.get("/v1/invoices/:id/pdf", async (req, res): Promise<void> => {
   if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
 
   const asHtml = req.query.format === "html";
-  const html = buildInvoiceHtml(docInput, await resolveCompanyInfo(), !asHtml, normalizeLang(req.query.lang as string));
+  const lang = normalizeLang(req.query.lang as string);
+  const terms = await resolveTemplateBody("pdf", "pdf.invoice", lang, {
+    ref: docInput.invoice_ref, due_date: docInput.due_date ?? "",
+  });
+  const html = buildInvoiceHtml(docInput, await resolveCompanyInfo(), !asHtml, lang, terms);
 
   if (asHtml) {
     res.type("html").send(html);
@@ -386,9 +391,12 @@ async function emailInvoiceDocument(req: import("express").Request, res: import(
 
   const lang = normalizeLang(req.body?.lang as string);
   const company = await resolveCompanyInfo();
+  const invoiceTerms = kind === "invoice"
+    ? await resolveTemplateBody("pdf", "pdf.invoice", lang, { ref: docInput.invoice_ref, due_date: docInput.due_date ?? "" })
+    : "";
   const html = kind === "receipt"
     ? buildReceiptHtml(docInput, company, true, lang)
-    : buildInvoiceHtml(docInput, company, true, lang);
+    : buildInvoiceHtml(docInput, company, true, lang, invoiceTerms);
   let pdf: Buffer;
   try {
     pdf = await htmlToPdf(html);

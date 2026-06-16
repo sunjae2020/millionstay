@@ -4,18 +4,22 @@
 // All functions are BEST-EFFORT: they never throw to the caller (the signing
 // response must not be blocked or failed by PDF/email problems). Mirrors the
 // best-effort email pattern already used across the homestay routes.
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import {
   db,
   contractSigningRequestsTable,
   homestayStudentRequestsTable,
   homestayHostApplicationsTable,
   homestayPlacementsTable,
+  homestayPlacementServicesTable,
+  serviceHostsTable,
+  partnerUsersTable,
   contractsTable,
   accountsTable,
   emailLogsTable,
   integrationSettings,
 } from "@workspace/db";
+import { buildServiceBriefHtml } from "../lib/documents/serviceBrief.js";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf.js";
 import {
   buildApplicationHtml,
@@ -39,6 +43,11 @@ export interface RecipientSelection {
   ops?: boolean;
   /** Host family — only meaningful for placement_contract documents. */
   host?: boolean;
+  /**
+   * Assigned service host(s) — only for placement_contract. Receives a MASKED
+   * service brief (service + own fee only), NOT the full signed agreement.
+   */
+  serviceHost?: boolean;
 }
 
 export interface ResolvedRecipients {
@@ -77,8 +86,11 @@ export async function buildDocForSigning(
       .where(eq(homestayHostApplicationsTable.id, placement.host_application_id)).limit(1);
     const [student] = await db.select().from(homestayStudentRequestsTable)
       .where(eq(homestayStudentRequestsTable.id, placement.student_request_id)).limit(1);
-    // Editable terms (falls back to STANDARD_PLACEMENT_TERMS inside placementToDoc).
-    const termsTpl = await resolveTemplate({ kind: "contract", key: "homestay_placement_terms", locale: "en" });
+    // Editable terms: prefer the PDF template (Templates Studio → PDF tab:
+    // `pdf.homestay_placement_agreement`), fall back to the legacy contract-kind
+    // template, then to STANDARD_PLACEMENT_TERMS inside placementToDoc.
+    const pdfTpl = await resolveTemplate({ kind: "pdf", key: "pdf.homestay_placement_agreement", locale: "en" });
+    const termsTpl = pdfTpl?.bodyHtml?.trim() ? pdfTpl : await resolveTemplate({ kind: "contract", key: "homestay_placement_terms", locale: "en" });
     return placementToDoc(placement, host ?? null, student ?? null, view, { ...opts, termsText: termsTpl?.bodyHtml || undefined });
   }
   // "contract" (regular tenancy/accommodation agreement) is rendered through its
@@ -307,6 +319,100 @@ export async function emailApplicationPdf(
     } catch (err) {
       console.error(`[applicationDocs] email to ${t.email} failed:`, err);
     }
+  }
+  return sent;
+}
+
+/** Mask a person to given name + last initial, e.g. "Minjae K." */
+function maskName(first?: string | null, last?: string | null): string {
+  const f = (first ?? "").trim();
+  const l = (last ?? "").trim();
+  if (!f && !l) return "Student";
+  const initial = l ? ` ${l.charAt(0).toUpperCase()}.` : "";
+  return `${f}${initial}`.trim() || "Student";
+}
+
+/**
+ * Build + email a MASKED service brief to each assigned service host for a
+ * placement. Each host receives only the information required to perform and
+ * bill THEIR service (service type, schedule, their own fee, ops instructions)
+ * — never the full agreement, the guardian, or unrelated financials. The
+ * student is shown by given name + last initial only. Best-effort: never throws.
+ * Returns the list of addresses successfully emailed.
+ */
+export async function sendServiceBriefs(placementId: number, ref: string): Promise<string[]> {
+  const sent: string[] = [];
+  try {
+    const services = await db.select().from(homestayPlacementServicesTable)
+      .where(eq(homestayPlacementServicesTable.placement_id, placementId));
+    if (!services.length) return sent;
+
+    // Masked student / host labels (resolved once).
+    const [placement] = await db.select().from(homestayPlacementsTable)
+      .where(eq(homestayPlacementsTable.id, placementId)).limit(1);
+    let studentLabel = "Student";
+    let hostLabel: string | null = null;
+    if (placement) {
+      const [student] = await db.select().from(homestayStudentRequestsTable)
+        .where(eq(homestayStudentRequestsTable.id, placement.student_request_id)).limit(1);
+      if (student) studentLabel = maskName(student.student_first_name, student.student_last_name);
+      const [host] = await db.select().from(homestayHostApplicationsTable)
+        .where(eq(homestayHostApplicationsTable.id, placement.host_application_id)).limit(1);
+      if (host) hostLabel = host.last_name ? `${host.last_name} family` : (host.first_name ?? null);
+    }
+
+    const company = await resolveCompanyInfo();
+    const seen = new Set<string>();
+    for (const svc of services) {
+      if (svc.status === "Cancelled" || !svc.service_id) continue;
+      const dedupe = `${svc.service_id}__${svc.id}`;
+      if (seen.has(dedupe)) continue;
+      seen.add(dedupe);
+
+      // Resolve the assigned service host's email (partner login → account email).
+      const [sh] = await db.select().from(serviceHostsTable).where(eq(serviceHostsTable.id, svc.service_id)).limit(1);
+      if (!sh?.account_id) continue;
+      const [pu] = await db.select().from(partnerUsersTable).where(and(
+        eq(partnerUsersTable.account_id, sh.account_id),
+        eq(partnerUsersTable.portal_type, "service_host"),
+        eq(partnerUsersTable.is_active, true),
+      )).limit(1);
+      let email: string | null = pu?.email ?? null;
+      const name = (pu ? `${pu.first_name ?? ""} ${pu.last_name ?? ""}`.trim() : "") || sh.name;
+      if (!email) {
+        const [acc] = await db.select().from(accountsTable).where(eq(accountsTable.id, sh.account_id)).limit(1);
+        email = acc?.account_email ?? null;
+      }
+      if (!email) continue;
+
+      const html = buildServiceBriefHtml({
+        placement_ref: ref,
+        service_type: svc.service_type,
+        scheduled_at: svc.scheduled_at,
+        amount: svc.price != null ? Number(svc.price) : null,
+        currency: svc.currency,
+        student_label: studentLabel,
+        host_label: hostLabel,
+        notes: svc.notes,
+      }, company);
+      let pdf: Buffer;
+      try { pdf = await htmlToPdf(html); } catch { continue; }
+
+      const result = await sendDocumentEmail({
+        to: email, toName: name, lang: "en",
+        docTypeLabel: "Service Assignment", ref: `${ref}-SVC-${svc.id}`,
+        pdf, filename: `${ref}-service-${svc.id}.pdf`,
+        note: "You've been assigned a service for this placement. The brief is attached. It contains only the information required to perform and bill your service — please keep the student's details confidential.",
+      });
+      if (result.ok) sent.push(email);
+      await db.insert(emailLogsTable).values({
+        template_code: "document.homestay_service_brief", to_email: email, to_name: name ?? null,
+        subject: result.subject, resend_message_id: result.id ?? null, status: result.ok ? "Sent" : "Failed",
+        entity_type: "homestay_placement", entity_id: placementId, error_message: result.error ?? null,
+      }).catch(() => {});
+    }
+  } catch (err) {
+    console.error("[applicationDocs] sendServiceBriefs failed:", err);
   }
   return sent;
 }

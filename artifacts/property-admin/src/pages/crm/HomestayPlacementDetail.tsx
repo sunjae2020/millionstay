@@ -95,7 +95,7 @@ export default function HomestayPlacementDetail() {
   const [statusOpen, setStatusOpen] = useState(false);
   const [nextStatus, setNextStatus] = useState<PlacementStatus>("Active");
   const [sendOpen, setSendOpen] = useState(false);
-  const [sendSel, setSendSel] = useState({ applicant: true, host: true, agent: false, ops: false });
+  const [sendSel, setSendSel] = useState({ applicant: true, host: true, agent: false, ops: false, serviceHost: false });
   const [chargeOpen, setChargeOpen] = useState(false);
   const [chargeKind, setChargeKind] = useState<"upfront" | "monthly">("upfront");
   const [chargeMethod, setChargeMethod] = useState<"card" | "bank_transfer">("card");
@@ -457,12 +457,13 @@ export default function HomestayPlacementDetail() {
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>{t("homestayPlacement.send_title")}</DialogTitle></DialogHeader>
           <div className="grid gap-2 py-2 text-sm">
-            {(["applicant", "host", "agent", "ops"] as const).map((k) => (
+            {(["applicant", "host", "agent", "ops", "serviceHost"] as const).map((k) => (
               <label key={k} className="flex items-center gap-2">
                 <input type="checkbox" checked={sendSel[k]} onChange={(e) => setSendSel((s) => ({ ...s, [k]: e.target.checked }))} className="h-4 w-4" />
                 {t(`homestayPlacement.recipient_${k}`)}
               </label>
             ))}
+            <p className="text-[11px] text-muted-foreground mt-1">{t("homestayPlacement.recipient_serviceHost_hint")}</p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSendOpen(false)}>{t("common.cancel")}</Button>

@@ -7,6 +7,7 @@ import { buildQuoteHtml, type QuoteDocInput } from "../lib/documents/quoteDocume
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
 import { normalizeLang, t } from "../lib/documents/i18n";
+import { resolveTemplateBody } from "../lib/documents/templateEngine";
 import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
 import { sendDocumentEmail } from "../lib/email";
 
@@ -255,7 +256,11 @@ router.get("/v1/quotes/:id/pdf", async (req, res): Promise<void> => {
   if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
 
   const asHtml = req.query.format === "html";
-  const html = buildQuoteHtml(docInput, await resolveCompanyInfo(), !asHtml, normalizeLang(req.query.lang as string));
+  const lang = normalizeLang(req.query.lang as string);
+  const terms = await resolveTemplateBody("pdf", "pdf.quote", lang, {
+    ref: docInput.quote_ref, valid_until: docInput.valid_until ?? "",
+  });
+  const html = buildQuoteHtml(docInput, await resolveCompanyInfo(), !asHtml, lang, terms);
   if (asHtml) { res.type("html").send(html); return; }
   try {
     const pdf = await htmlToPdf(html);
@@ -281,9 +286,10 @@ router.post("/v1/quotes/:id/email", async (req, res): Promise<void> => {
   if (!to) { res.status(400).json({ error: "No recipient email — set one on the account/lead or pass { to }." }); return; }
 
   const lang = normalizeLang(req.body?.lang as string);
+  const quoteTerms = await resolveTemplateBody("pdf", "pdf.quote", lang, { ref: docInput.quote_ref, valid_until: docInput.valid_until ?? "" });
   let pdf: Buffer;
   try {
-    pdf = await htmlToPdf(buildQuoteHtml(docInput, await resolveCompanyInfo(), true, lang));
+    pdf = await htmlToPdf(buildQuoteHtml(docInput, await resolveCompanyInfo(), true, lang, quoteTerms));
   } catch (err) {
     if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
     res.status(500).json({ error: "Failed to generate PDF" }); return;
@@ -317,9 +323,10 @@ router.post("/v1/quotes/:id/freeze", async (req, res): Promise<void> => {
   const docInput = await buildQuoteDocInput(id);
   if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
   const lang = normalizeLang(req.body?.lang as string);
+  const quoteTerms = await resolveTemplateBody("pdf", "pdf.quote", lang, { ref: docInput.quote_ref, valid_until: docInput.valid_until ?? "" });
   let pdf: Buffer;
   try {
-    pdf = await htmlToPdf(buildQuoteHtml(docInput, await resolveCompanyInfo(), true, lang));
+    pdf = await htmlToPdf(buildQuoteHtml(docInput, await resolveCompanyInfo(), true, lang, quoteTerms));
   } catch (err) {
     if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
     res.status(500).json({ error: "Failed to generate PDF" }); return;

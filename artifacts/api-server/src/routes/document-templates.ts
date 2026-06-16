@@ -6,6 +6,8 @@ import { Resend } from "resend";
 import { and, asc, eq } from "drizzle-orm";
 import { db, documentTemplatesTable, documentTemplateTranslationsTable } from "@workspace/db";
 import { resolveTemplate, renderString, sampleVarsFromSchema } from "../lib/documents/templateEngine.js";
+import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf.js";
+import { renderDocumentShell } from "../lib/documents/theme.js";
 import { logAction } from "../utils/auditLog.js";
 
 const router: IRouter = Router();
@@ -132,6 +134,37 @@ router.post("/v1/document-templates/:id/test-send", async (req, res): Promise<vo
   } catch (err) {
     console.error("[document-templates] test-send failed:", err);
     res.status(500).json({ error: "Failed to send test" });
+  }
+});
+
+// POST /v1/document-templates/:id/test-generate — render the template body with
+// sample vars and return a sample PDF. Used by the Studio's PDF/contract preview
+// (the editor only previews HTML inline; this shows the real branded PDF).
+router.post("/v1/document-templates/:id/test-generate", async (req, res): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    const locale = String(req.body?.locale ?? "en");
+    const [tpl] = await db.select().from(documentTemplatesTable).where(eq(documentTemplatesTable.id, id)).limit(1);
+    if (!tpl) { res.status(404).json({ error: "Not found" }); return; }
+    const resolved = await resolveTemplate({ kind: tpl.kind, key: tpl.key, locale, publishedOnly: false });
+    if (!resolved) { res.status(404).json({ error: "No translation to render" }); return; }
+
+    const vars = { ...sampleVarsFromSchema(resolved.variablesSchema), ...(req.body?.vars ?? {}) };
+    const bodyHtml = renderString(resolved.bodyHtml, vars);
+    const html = renderDocumentShell({
+      docType: tpl.name,
+      bodyHtml: `<div class="section">${bodyHtml}</div>`,
+      forPrint: true,
+    });
+    const pdf = await htmlToPdf(html);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `inline; filename="${tpl.key}-${locale}-sample.pdf"`);
+    res.setHeader("Content-Length", String(pdf.length));
+    res.send(pdf);
+  } catch (err) {
+    if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
+    console.error("[document-templates] test-generate failed:", err);
+    res.status(500).json({ error: "Failed to generate sample PDF" });
   }
 });
 

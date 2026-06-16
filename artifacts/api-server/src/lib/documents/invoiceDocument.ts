@@ -108,8 +108,10 @@ function renderDetailsTable(inv: InvoiceDocInput, lang: DocLang): string {
       </table>`;
 }
 
-/** Build the inner body HTML for an invoice (no shell). */
-export function buildInvoiceBody(inv: InvoiceDocInput, lang: DocLang = "en"): string {
+/** Build the inner body HTML for an invoice (no shell).
+ *  `termsHtml` is optional admin-authored standard copy (payment terms / footer)
+ *  from the editable `pdf.invoice` template, injected below the notes box. */
+export function buildInvoiceBody(inv: InvoiceDocInput, lang: DocLang = "en", termsHtml = ""): string {
   const status = inv.status || "Draft";
   const style = STATUS_STYLE[status] ?? STATUS_STYLE.Draft;
   const billTo = inv.account_name
@@ -155,14 +157,16 @@ export function buildInvoiceBody(inv: InvoiceDocInput, lang: DocLang = "en"): st
     </div>
 
     ${inv.notes?.trim() ? `<div class="info-box"><strong>${t(lang, "notes")}</strong><br/>${escapeHtml(inv.notes)}</div>` : ""}
+
+    ${termsHtml.trim() ? `<div class="section" style="margin-top:24px;font-size:12px;color:#777;">${termsHtml}</div>` : ""}
   `;
 }
 
 /** Build the full standalone HTML document for an invoice. */
-export function buildInvoiceHtml(inv: InvoiceDocInput, company?: CompanyInfo, forPrint = true, lang: DocLang = "en"): string {
+export function buildInvoiceHtml(inv: InvoiceDocInput, company?: CompanyInfo, forPrint = true, lang: DocLang = "en", termsHtml = ""): string {
   return renderDocumentShell({
     docType: t(lang, "doctype.invoice"),
-    bodyHtml: buildInvoiceBody(inv, lang),
+    bodyHtml: buildInvoiceBody(inv, lang, termsHtml),
     company: company ?? getCompanyInfo(),
     forPrint,
   });

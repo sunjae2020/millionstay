@@ -60,6 +60,23 @@ export async function resolveTemplate(args: {
   }
 }
 
+/**
+ * Resolve a published template's body and render its {{variables}} for inline
+ * use inside a generated document (e.g. the editable "pdf" terms/notes injected
+ * into invoice/quote/contract PDFs). Best-effort: returns "" when no published
+ * template/translation exists, so callers fall back to their hardcoded copy.
+ */
+export async function resolveTemplateBody(
+  kind: string,
+  key: string,
+  locale: string,
+  vars: Record<string, unknown> = {},
+): Promise<string> {
+  const tpl = await resolveTemplate({ kind, key, locale });
+  if (!tpl?.bodyHtml?.trim()) return "";
+  return renderString(tpl.bodyHtml, vars);
+}
+
 /** Substitute {{ var }} placeholders. Missing variables render as empty strings. */
 export function renderString(tpl: string, vars: Record<string, unknown>): string {
   if (!tpl) return "";
