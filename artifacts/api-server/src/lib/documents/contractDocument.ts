@@ -8,6 +8,19 @@
 import { renderDocumentShell, escapeHtml, getCompanyInfo, type CompanyInfo } from "./theme";
 import { t, docLocale, type DocLang } from "./i18n";
 
+/** A priced add-on service line (from contract_line_items, item_type=Service):
+ *  airport pickup, initial settlement, prepaid phone, etc. */
+export interface ContractServiceLine {
+  name: string;
+  quantity: number;
+  unit_amount: number;
+  total_amount: number;
+  /** true when billed on a recurring schedule rather than once up-front. */
+  recurring: boolean;
+  frequency?: string | null;
+  notes?: string | null;
+}
+
 /** A captured drawn signature (from contract_signing_requests.signatures). */
 export interface ContractSignature {
   role: string;
@@ -42,6 +55,8 @@ export interface ContractDocInput {
   bond_amount: number | null;
   advance_amount: number | null;
   currency: string | null;
+  /** Priced add-on services (airport pickup, settlement, prepaid phone, …). */
+  additional_services?: ContractServiceLine[] | null;
   terms_text: string | null;
   notes: string | null;
   signed_at: string | Date | null;
@@ -114,6 +129,41 @@ function renderTerms(text: string | null, lang: DocLang): string {
   return `<div class="section"><h3>${t(lang, "terms")}</h3>${paragraphs.join("")}</div>`;
 }
 
+/** Render the priced add-on services as an itemised table (qty/unit/total),
+ *  tagging each row as recurring or one-off. Empty string when none. */
+function renderAdditionalServices(c: ContractDocInput, lang: DocLang): string {
+  const svcs = (c.additional_services ?? []).filter((s) => s && (Number(s.total_amount) !== 0 || Number(s.unit_amount) !== 0 || s.name));
+  if (!svcs.length) return "";
+  const subtotal = svcs.reduce((sum, s) => sum + Number(s.total_amount ?? 0), 0);
+  const rows = svcs.map((s) => {
+    const tag = `<span style="display:inline-block;margin-left:8px;padding:1px 8px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:0.04em;background:#FFF7F0;color:#E8621A;">${
+      s.recurring ? `${t(lang, "recurring")}${s.frequency?.trim() ? ` · ${escapeHtml(s.frequency)}` : ""}` : t(lang, "oneOff")
+    }</span>`;
+    return `
+          <tr>
+            <td>${escapeHtml(s.name)}${tag}${s.notes?.trim() ? `<div style="font-size:12px;color:#999;">${escapeHtml(s.notes)}</div>` : ""}</td>
+            <td class="num">${Number(s.quantity ?? 1)}</td>
+            <td class="num">${money(Number(s.unit_amount ?? 0), c.currency)}</td>
+            <td class="num">${money(Number(s.total_amount ?? 0), c.currency)}</td>
+          </tr>`;
+  }).join("");
+  return `
+    <div class="section">
+      <h3>${t(lang, "additionalServices")}</h3>
+      <table class="lines">
+        <thead>
+          <tr><th>${t(lang, "description")}</th><th class="num">${t(lang, "qty")}</th><th class="num">${t(lang, "unit")}</th><th class="num">${t(lang, "amount")}</th></tr>
+        </thead>
+        <tbody>${rows}
+          <tr>
+            <td colspan="3" class="num"><strong>${t(lang, "servicesSubtotal")}</strong></td>
+            <td class="num"><strong>${money(subtotal, c.currency)}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>`;
+}
+
 /** Map a product billing frequency to a localised label. */
 function freqLabel(freq: string | null | undefined, lang: DocLang): string {
   const f = (freq ?? "").toLowerCase();
@@ -182,6 +232,8 @@ export function buildContractBody(c: ContractDocInput, lang: DocLang = "en"): st
       ${cycle ? row(t(lang, "billingCycle"), cycle) : ""}
       ${c.total_rent != null ? row(t(lang, "totalRent"), money(c.total_rent, c.currency)) : ""}
     </div>` : ""}
+
+    ${renderAdditionalServices(c, lang)}
 
     ${renderTerms(c.terms_text, lang)}
 

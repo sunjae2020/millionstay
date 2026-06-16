@@ -20,6 +20,7 @@ import {
   bookingsTable,
 } from "@workspace/db";
 import { getRateToAud } from "../rateSnapshot.js";
+import { serviceLabel } from "../documents/i18n.js";
 
 /** Round to 2 decimal places (cents). */
 function round2(n: number): number {
@@ -35,22 +36,6 @@ async function nextInvoiceRef(): Promise<string> {
     .where(ilike(invoicesTable.invoice_ref, `MS-INV-${year}-%`));
   const count = rows.length + 1;
   return `MS-INV-${year}-${String(count).padStart(5, "0")}`;
-}
-
-/** Map a placement service_type to a human label. */
-function serviceLabel(serviceType: string): string {
-  const known: Record<string, string> = {
-    airport_pickup: "Airport pickup",
-    initial_settlement: "Initial settlement",
-  };
-  if (known[serviceType]) return known[serviceType];
-  // Title-case the snake/space-separated service_type as a fallback.
-  return serviceType
-    .replace(/_/g, " ")
-    .split(" ")
-    .filter(Boolean)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
 }
 
 type LineItemInput = {
@@ -129,7 +114,9 @@ export async function createPlacementInvoice(
   for (const svc of services) {
     const price = Number(svc.price);
     if (price > 0) {
-      lines.push({ label: serviceLabel(svc.service_type), quantity: 1, unit_amount: price });
+      // Invoice line labels are stored at creation time; use English (the
+      // invoice document re-renders the stored label verbatim).
+      lines.push({ label: serviceLabel("en", svc.service_type), quantity: 1, unit_amount: price });
     }
   }
 
