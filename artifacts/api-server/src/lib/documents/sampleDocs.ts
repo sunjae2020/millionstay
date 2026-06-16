@@ -9,6 +9,7 @@
  * Sample data is illustrative only (no real records are read).
  */
 import { buildInvoiceHtml, type InvoiceDocInput } from "./invoiceDocument.js";
+import { buildReceiptHtml } from "./receiptDocument.js";
 import { buildQuoteHtml, type QuoteDocInput } from "./quoteDocument.js";
 import { buildContractHtml, type ContractDocInput } from "./contractDocument.js";
 import { buildApplicationHtml, placementToDoc } from "./applicationPdf.js";
@@ -91,6 +92,10 @@ export async function renderSampleDocumentHtml(key: string, bodyHtml: string, lo
 
   if (key === "pdf.invoice") {
     return buildInvoiceHtml(sampleInvoice, company, true, lang, body ?? "");
+  }
+  if (key === "pdf.receipt") {
+    const paid: InvoiceDocInput = { ...sampleInvoice, status: "Paid", paid_at: "2026-07-01", payment_method: "Card" };
+    return buildReceiptHtml(paid, company, true, lang, body ?? "");
   }
   if (key === "pdf.quote") {
     return buildQuoteHtml(sampleQuote, company, true, lang, body ?? "");

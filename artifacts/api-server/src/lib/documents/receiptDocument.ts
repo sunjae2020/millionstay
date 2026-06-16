@@ -50,7 +50,10 @@ function renderItemsTable(inv: InvoiceDocInput, lang: DocLang): string {
       </table>`;
 }
 
-export function buildReceiptBody(inv: InvoiceDocInput, lang: DocLang = "en"): string {
+/** Build the inner body HTML for a receipt (no shell).
+ *  `termsHtml` is optional admin-authored standard copy (footer note) from the
+ *  editable `pdf.receipt` template, injected below the confirmation box. */
+export function buildReceiptBody(inv: InvoiceDocInput, lang: DocLang = "en", termsHtml = ""): string {
   const isPaid = inv.status === "Paid";
   const billTo = inv.account_name
     ? `${escapeHtml(inv.account_name)}${inv.account_email ? `<br/>${escapeHtml(inv.account_email)}` : ""}`
@@ -89,13 +92,15 @@ export function buildReceiptBody(inv: InvoiceDocInput, lang: DocLang = "en"): st
     </div>
 
     <div class="info-box">${t(lang, "receipt.confirm", { ref: escapeHtml(inv.invoice_ref) })}</div>
+
+    ${termsHtml.trim() ? `<div class="section" style="margin-top:24px;"><h3>${t(lang, "terms")}</h3><div style="font-size:13px;color:#333;line-height:1.6;">${termsHtml}</div></div>` : ""}
   `;
 }
 
-export function buildReceiptHtml(inv: InvoiceDocInput, company?: CompanyInfo, forPrint = true, lang: DocLang = "en"): string {
+export function buildReceiptHtml(inv: InvoiceDocInput, company?: CompanyInfo, forPrint = true, lang: DocLang = "en", termsHtml = ""): string {
   return renderDocumentShell({
     docType: t(lang, "doctype.receipt"),
-    bodyHtml: buildReceiptBody(inv, lang),
+    bodyHtml: buildReceiptBody(inv, lang, termsHtml),
     company: company ?? getCompanyInfo(),
     forPrint,
   });

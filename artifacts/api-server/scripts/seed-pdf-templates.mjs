@@ -1,9 +1,10 @@
 /**
  * seed-pdf-templates.mjs
  *
- * Idempotently upserts the four editable PDF document templates (kind="pdf")
+ * Idempotently upserts the editable PDF document templates (kind="pdf")
  * surfaced under Templates Studio → PDF:
  *   pdf.invoice                       — standard payment-terms footer
+ *   pdf.receipt                       — standard payment-confirmation footer
  *   pdf.quote                         — standard quote/validity footer
  *   pdf.tenancy_agreement             — full tenancy/accommodation terms body
  *   pdf.homestay_placement_agreement  — full homestay placement terms body
@@ -122,6 +123,15 @@ const INVOICE_NOTE = {
   vi: "<p><strong>Điều khoản thanh toán.</strong> Vui lòng thanh toán hóa đơn này trước ngày đến hạn nêu trên, sử dụng mã tham chiếu {{ref}}. Chúng tôi chấp nhận thẻ và chuyển khoản ngân hàng; thanh toán bằng thẻ chịu phụ phí 2%. Mọi thắc mắc về hóa đơn, vui lòng liên hệ qua email bên dưới.</p>",
 };
 
+const RECEIPT_NOTE = {
+  en: "<p><strong>Thank you for your payment.</strong> This receipt confirms payment received in full against reference {{ref}}. Please retain it for your records. No further action is required. For any billing questions, contact us at the email shown below.</p>",
+  ko: "<p><strong>결제해 주셔서 감사합니다.</strong> 본 영수증은 참조번호 {{ref}}에 대한 결제가 전액 완료되었음을 확인합니다. 기록을 위해 보관해 주세요. 추가로 하실 일은 없습니다. 청구 관련 문의는 하단 이메일로 연락 주세요.</p>",
+  ja: "<p><strong>お支払いありがとうございます.</strong> 本領収書は、参照番号 {{ref}} に対するお支払いが全額完了したことを確認するものです。記録としてお手元に保管ください。これ以上のお手続きは必要ありません。ご請求に関するお問い合わせは下記メールまでご連絡ください。</p>",
+  zh: "<p><strong>感谢您的付款。</strong>本收据确认参考号 {{ref}} 的款项已全额收讫。请妥善保存以备存档。您无需采取进一步操作。如有账单疑问，请通过下方邮箱联系我们。</p>",
+  th: "<p><strong>ขอบคุณสำหรับการชำระเงิน</strong> ใบเสร็จนี้ยืนยันว่าได้รับชำระเงินเต็มจำนวนตามหมายเลขอ้างอิง {{ref}} แล้ว กรุณาเก็บไว้เป็นหลักฐาน ไม่จำเป็นต้องดำเนินการใด ๆ เพิ่มเติม หากมีคำถามเกี่ยวกับการเรียกเก็บเงิน โปรดติดต่อเราที่อีเมลด้านล่าง</p>",
+  vi: "<p><strong>Cảm ơn bạn đã thanh toán.</strong> Biên nhận này xác nhận đã nhận đủ khoản thanh toán theo mã tham chiếu {{ref}}. Vui lòng giữ lại để lưu hồ sơ. Bạn không cần thực hiện thêm thao tác nào. Mọi thắc mắc về hóa đơn, vui lòng liên hệ qua email bên dưới.</p>",
+};
+
 const QUOTE_NOTE = {
   en: "<p><strong>About this quote.</strong> This quotation is an estimate and is valid until {{valid_until}}. Prices are shown in the currency above and may change after the validity date. To proceed, reply to this quote or contact us using the details below.</p>",
   ko: "<p><strong>견적 안내.</strong> 본 견적은 예상 금액이며 {{valid_until}}까지 유효합니다. 금액은 상기 통화로 표시되며 유효 기한 이후 변경될 수 있습니다. 진행을 원하시면 본 견적에 회신하시거나 하단 연락처로 문의해 주세요.</p>",
@@ -136,6 +146,11 @@ const TEMPLATES = [
     key: "pdf.invoice", name: "Invoice — PDF document", category: "Documents",
     vars: { ref: { type: "string" }, due_date: { type: "date" } },
     bodies: INVOICE_NOTE,
+  },
+  {
+    key: "pdf.receipt", name: "Receipt — PDF document", category: "Documents",
+    vars: { ref: { type: "string" } },
+    bodies: RECEIPT_NOTE,
   },
   {
     key: "pdf.quote", name: "Quote — PDF document", category: "Documents",
