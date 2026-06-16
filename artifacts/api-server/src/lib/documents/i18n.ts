@@ -104,6 +104,26 @@ const LABELS: Dict = {
   "freq.weekly":      { en: "Weekly",      ko: "매주",  zh: "每周",   ja: "毎週", th: "รายสัปดาห์", vi: "Hàng tuần" },
   "freq.fortnightly": { en: "Fortnightly", ko: "격주",  zh: "每两周", ja: "隔週", th: "รายปักษ์",   vi: "Hai tuần một lần" },
 
+  // ── Payment options (card surcharge) ─────────────────────────────────────
+  "paymentOptions":   { en: "Payment options", ko: "결제 옵션", zh: "付款方式", ja: "お支払い方法", th: "ตัวเลือกการชำระเงิน", vi: "Tùy chọn thanh toán" },
+  "byBankTransfer":   { en: "By bank transfer", ko: "계좌이체", zh: "银行转账", ja: "銀行振込", th: "โอนผ่านธนาคาร", vi: "Chuyển khoản ngân hàng" },
+  "byCard":           {
+    en: "By card (incl. {pct}% surcharge)",
+    ko: "카드 결제 ({pct}% 수수료 포함)",
+    zh: "刷卡（含 {pct}% 手续费）",
+    ja: "カード払い（{pct}% 手数料込み）",
+    th: "ชำระด้วยบัตร (รวมค่าธรรมเนียม {pct}%)",
+    vi: "Thanh toán bằng thẻ (gồm phụ phí {pct}%)",
+  },
+  "cardSurchargeNote": {
+    en: "A {pct}% surcharge applies to card payments and is added at checkout when the card option is selected.",
+    ko: "카드 결제 시 {pct}% 수수료가 적용되며, 결제 단계에서 카드를 선택하면 추가됩니다.",
+    zh: "刷卡支付将收取 {pct}% 手续费，在结账时选择刷卡即会加收。",
+    ja: "カード決済には{pct}%の手数料がかかり、お支払い時にカードを選択すると加算されます。",
+    th: "การชำระด้วยบัตรมีค่าธรรมเนียม {pct}% และจะถูกบวกเพิ่มเมื่อเลือกชำระด้วยบัตรในขั้นตอนชำระเงิน",
+    vi: "Thanh toán bằng thẻ chịu phụ phí {pct}%, được cộng vào khi chọn thẻ ở bước thanh toán.",
+  },
+
   // ── Email cover (when documents are emailed) ──────────────────────────
   "email.subject": {
     en: "{doc} {ref} from MillionStay",
