@@ -224,7 +224,7 @@ router.post("/v1/auth/register", async (req, res): Promise<void> => {
     });
 
     // Notify all super-admin users by email
-    const adminPanelUrl = process.env.CLIENT_URL ?? `https://${process.env.REPLIT_DEV_DOMAIN ?? "localhost:23339"}/admin`;
+    const adminPanelUrl = process.env.CLIENT_URL ?? "https://admin.millionstay.com";
     try {
       const superAdmins = await db
         .select({ email: usersTable.email, first_name: usersTable.first_name })
@@ -271,7 +271,7 @@ router.post("/v1/auth/forgot-password", async (req, res): Promise<void> => {
       .set({ reset_token: rawToken, reset_token_expires_at: expiresAt })
       .where(eq(usersTable.id, user.id));
 
-    const adminBase = process.env.CLIENT_URL ?? `https://${process.env.REPLIT_DEV_DOMAIN ?? "localhost:23339"}/admin`;
+    const adminBase = process.env.CLIENT_URL ?? "https://admin.millionstay.com";
     // Token in URL FRAGMENT (#) so it isn't sent to the server in Referer headers
     // and doesn't end up in access logs of any embedded resource.
     const resetUrl = `${adminBase}/reset-password#token=${rawToken}`;
