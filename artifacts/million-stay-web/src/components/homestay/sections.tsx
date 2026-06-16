@@ -2,66 +2,111 @@ import { type ReactNode } from "react";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Check, ArrowRight, Clock } from "lucide-react";
-import { HS, HS_FONT } from "@/lib/homestay-theme";
+import { HS, HS_FONT, HS_RADIUS, HS_SHADOW } from "@/lib/homestay-theme";
 
-// Reusable presentational primitives for Million Homestay content pages.
-// Keeps each page concise and visually consistent with the brand.
+// Reusable presentational primitives for Million Homestay content pages, styled
+// to Brand Guideline v2.0. Colour roles are enforced here so pages stay on-brand
+// for free: Navy = structure (headings), Orange = action (CTAs/numbers), Teal =
+// trust signature in FIXED slots only (✓ checks, step connectors, 1px dividers).
 
+// Small uppercase eyebrow label — Inter SemiBold, orange, wide tracking.
+function Eyebrow({ children }: { children: ReactNode }) {
+  return (
+    <span
+      className="inline-block text-xs font-semibold uppercase mb-4"
+      style={{ color: HS.orange, fontFamily: HS_FONT.body, letterSpacing: "0.14em" }}
+    >
+      {children}
+    </span>
+  );
+}
+
+// Page hero — warm apricot-tint band, orange eyebrow, navy display title, muted
+// lead. A 1px teal divider closes the band (the signature trust slot).
 export function HsPageHero({ eyebrow, title, lead }: { eyebrow?: string; title: string; lead?: ReactNode }) {
   return (
-    <section style={{ backgroundColor: HS.cream }}>
-      <div className="max-w-4xl mx-auto px-5 py-14 md:py-20">
-        {eyebrow && (
-          <span className="inline-block text-xs font-semibold uppercase tracking-wide px-3 py-1 rounded-full mb-4" style={{ color: HS.brand, backgroundColor: "white" }}>
-            {eyebrow}
-          </span>
-        )}
-        <h1 className="text-3xl md:text-4xl font-bold leading-tight" style={{ fontFamily: HS_FONT.head, color: HS.darkBrown }}>{title}</h1>
-        {lead && <div className="mt-4 text-lg text-gray-700 space-y-4">{lead}</div>}
+    <section style={{ backgroundColor: HS.apricot, borderBottom: `1px solid ${HS.teal}` }}>
+      <div className="max-w-4xl mx-auto px-6 py-16 md:py-24">
+        {eyebrow && <div><Eyebrow>{eyebrow}</Eyebrow></div>}
+        <h1
+          className="text-4xl md:text-5xl font-extrabold leading-[1.08]"
+          style={{ fontFamily: HS_FONT.display, color: HS.navy, letterSpacing: "-0.02em" }}
+        >
+          {title}
+        </h1>
+        {lead && <div className="mt-5 text-lg leading-relaxed space-y-4" style={{ color: HS.inkMuted }}>{lead}</div>}
       </div>
     </section>
   );
 }
 
+// Content band. `tint` paints the subtle warm-cream rhythm background; otherwise
+// white. Heading is navy display type.
 export function HsSection({ id, heading, children, tint }: { id?: string; heading?: string; children: ReactNode; tint?: boolean }) {
   return (
     <section
       id={id}
-      style={{ ...(tint ? { backgroundColor: "#f6efec" } : {}), ...(id ? { scrollMarginTop: "5rem" } : {}) }}
-      className={tint ? "border-y border-gray-100" : ""}
+      style={{
+        backgroundColor: tint ? HS.cream : HS.white,
+        ...(tint ? { borderTop: `1px solid ${HS.line}`, borderBottom: `1px solid ${HS.line}` } : {}),
+        ...(id ? { scrollMarginTop: "5.5rem" } : {}),
+      }}
     >
-      <div className="max-w-4xl mx-auto px-5 py-12 md:py-16">
-        {heading && <h2 className="text-2xl font-bold mb-6" style={{ fontFamily: HS_FONT.head, color: HS.darkBrown }}>{heading}</h2>}
+      <div className="max-w-4xl mx-auto px-6 py-14 md:py-20">
+        {heading && (
+          <h2 className="text-2xl md:text-3xl font-bold mb-7" style={{ fontFamily: HS_FONT.display, color: HS.navy, letterSpacing: "-0.01em" }}>
+            {heading}
+          </h2>
+        )}
         {children}
       </div>
     </section>
   );
 }
 
-// Grid of titled blurbs — advantages, benefits, "why" lists.
+// Grid of titled blurbs — advantages, benefits, "why" lists. Apricot-tint cards
+// with a gentle hover lift; navy titles, muted body.
 export function HsCards({ items }: { items: Array<{ title: string; body: ReactNode }> }) {
   return (
     <div className="grid gap-5 md:grid-cols-2">
       {items.map((it) => (
-        <div key={it.title} className="rounded-2xl p-6" style={{ backgroundColor: HS.cream }}>
-          <h3 className="font-semibold" style={{ fontFamily: HS_FONT.head, color: HS.darkBrown }}>{it.title}</h3>
-          <p className="mt-2 text-sm text-gray-600">{it.body}</p>
+        <div
+          key={it.title}
+          className="p-6 transition-transform duration-200 hover:-translate-y-0.5 motion-reduce:transform-none motion-reduce:transition-none"
+          style={{ backgroundColor: HS.apricot, borderRadius: HS_RADIUS.lg }}
+        >
+          <h3 className="font-semibold text-lg" style={{ fontFamily: HS_FONT.display, color: HS.navy }}>{it.title}</h3>
+          <p className="mt-2 text-sm leading-relaxed" style={{ color: HS.inkMuted }}>{it.body}</p>
         </div>
       ))}
     </div>
   );
 }
 
-// Numbered steps / tips.
+// Numbered steps / tips — orange number chips joined by a teal dotted connector
+// (the "process" trust slot). Navy titles, muted body.
 export function HsNumbered({ items }: { items: Array<{ title?: string; body: ReactNode }> }) {
   return (
-    <ol className="space-y-4">
+    <ol className="relative space-y-6">
       {items.map((it, i) => (
-        <li key={i} className="flex gap-4">
-          <span className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ backgroundColor: HS.brand }}>{i + 1}</span>
+        <li key={i} className="relative flex gap-4">
+          {/* teal dotted connector to the next step */}
+          {i < items.length - 1 && (
+            <span
+              aria-hidden
+              className="absolute left-4 top-9 bottom-[-1.5rem] -translate-x-1/2 border-l-2 border-dashed"
+              style={{ borderColor: HS.teal, opacity: 0.5 }}
+            />
+          )}
+          <span
+            className="relative shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white"
+            style={{ backgroundColor: HS.orange }}
+          >
+            {i + 1}
+          </span>
           <div className="pt-0.5">
-            {it.title && <span className="font-semibold" style={{ color: HS.darkBrown }}>{it.title}{" — "}</span>}
-            <span className="text-gray-600">{it.body}</span>
+            {it.title && <span className="font-semibold" style={{ color: HS.navy }}>{it.title}{" — "}</span>}
+            <span style={{ color: HS.inkMuted }}>{it.body}</span>
           </div>
         </li>
       ))}
@@ -69,16 +114,21 @@ export function HsNumbered({ items }: { items: Array<{ title?: string; body: Rea
   );
 }
 
-// Check-marked bullet list — essential info, commitments.
+// Check-marked bullet list — essential info, commitments. Teal ✓ (trust slot).
 export function HsBullets({ items }: { items: Array<{ title?: string; body: ReactNode }> }) {
   return (
-    <ul className="space-y-3">
+    <ul className="space-y-3.5">
       {items.map((it, i) => (
         <li key={i} className="flex gap-3">
-          <Check className="w-5 h-5 shrink-0 mt-0.5" style={{ color: HS.green }} />
+          <span
+            className="shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: HS.tealSoft }}
+          >
+            <Check className="w-3.5 h-3.5" strokeWidth={3} style={{ color: HS.teal }} />
+          </span>
           <div>
-            {it.title && <span className="font-semibold" style={{ color: HS.darkBrown }}>{it.title}: </span>}
-            <span className="text-gray-600">{it.body}</span>
+            {it.title && <span className="font-semibold" style={{ color: HS.navy }}>{it.title}: </span>}
+            <span style={{ color: HS.inkMuted }}>{it.body}</span>
           </div>
         </li>
       ))}
@@ -86,23 +136,74 @@ export function HsBullets({ items }: { items: Array<{ title?: string; body: Reac
   );
 }
 
-export function HsCTA({ buttons }: { buttons: Array<{ label: string; href: string; variant?: "primary" | "outline"; disabled?: boolean }> }) {
+// Button system. Orange owns "what to press"; teal is reserved for safe/support
+// contexts and used sparingly. All variants share a focus-visible ring.
+const FOCUS = "focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#E8621A]";
+
+export function HsCTA({ buttons }: { buttons: Array<{ label: string; href: string; variant?: "primary" | "outline" | "secondary" | "ghost" | "teal"; disabled?: boolean }> }) {
   const { t } = useTranslation();
   return (
     <div className="flex flex-wrap gap-3">
-      {buttons.map((b) =>
-        b.disabled ? (
-          <span key={b.label} className="px-6 py-3 rounded-lg font-semibold border border-gray-200 text-gray-400 cursor-not-allowed inline-flex items-center gap-2" title={t("homestay.sections.coming_soon")}>
-            {b.label} <span className="text-xs font-normal">{t("homestay.sections.coming_soon_paren")}</span>
-          </span>
-        ) : b.variant === "outline" ? (
-          <Link key={b.label} href={b.href} className="px-6 py-3 rounded-lg font-semibold border border-gray-300 text-gray-800 inline-flex items-center gap-2">{b.label}</Link>
-        ) : (
-          <Link key={b.label} href={b.href} className="px-6 py-3 rounded-lg font-semibold text-white inline-flex items-center gap-2" style={{ backgroundColor: HS.brand }}>
+      {buttons.map((b) => {
+        if (b.disabled) {
+          return (
+            <span
+              key={b.label}
+              className="px-6 py-3 font-semibold border text-gray-400 cursor-not-allowed inline-flex items-center gap-2"
+              style={{ borderColor: HS.line, borderRadius: HS_RADIUS.pill }}
+              title={t("homestay.sections.coming_soon")}
+            >
+              {b.label} <span className="text-xs font-normal">{t("homestay.sections.coming_soon_paren")}</span>
+            </span>
+          );
+        }
+        if (b.variant === "outline" || b.variant === "secondary") {
+          return (
+            <Link
+              key={b.label}
+              href={b.href}
+              className={`px-6 py-3 font-semibold bg-white inline-flex items-center gap-2 border transition-colors ${FOCUS}`}
+              style={{ color: HS.navy, borderColor: HS.navy, borderRadius: HS_RADIUS.pill }}
+            >
+              {b.label}
+            </Link>
+          );
+        }
+        if (b.variant === "ghost") {
+          return (
+            <Link
+              key={b.label}
+              href={b.href}
+              className={`font-semibold inline-flex items-center gap-2 hover:underline underline-offset-4 ${FOCUS}`}
+              style={{ color: HS.orange }}
+            >
+              {b.label} <ArrowRight className="w-4 h-4" />
+            </Link>
+          );
+        }
+        if (b.variant === "teal") {
+          return (
+            <Link
+              key={b.label}
+              href={b.href}
+              className={`px-6 py-3 font-semibold text-white inline-flex items-center gap-2 transition-colors ${FOCUS}`}
+              style={{ backgroundColor: HS.teal, borderRadius: HS_RADIUS.pill }}
+            >
+              {b.label} <ArrowRight className="w-4 h-4" />
+            </Link>
+          );
+        }
+        return (
+          <Link
+            key={b.label}
+            href={b.href}
+            className={`px-6 py-3 font-semibold text-white inline-flex items-center gap-2 transition-colors hover:brightness-95 ${FOCUS}`}
+            style={{ backgroundColor: HS.orange, borderRadius: HS_RADIUS.pill }}
+          >
             {b.label} <ArrowRight className="w-4 h-4" />
           </Link>
-        ),
-      )}
+        );
+      })}
     </div>
   );
 }
@@ -111,11 +212,14 @@ export function HsCTA({ buttons }: { buttons: Array<{ label: string; href: strin
 export function HsComingSoon({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   return (
-    <div className="rounded-2xl border border-dashed p-6 flex gap-4" style={{ borderColor: HS.mocha, backgroundColor: "#f6efec" }}>
-      <Clock className="w-6 h-6 shrink-0" style={{ color: HS.brand }} />
+    <div
+      className="border border-dashed p-6 flex gap-4"
+      style={{ borderColor: HS.line, backgroundColor: HS.cream, borderRadius: HS_RADIUS.lg, boxShadow: HS_SHADOW.card }}
+    >
+      <Clock className="w-6 h-6 shrink-0" style={{ color: HS.orange }} />
       <div>
-        <p className="font-semibold" style={{ color: HS.darkBrown }}>{t("homestay.sections.coming_soon")}</p>
-        <p className="mt-1 text-sm text-gray-600">{children}</p>
+        <p className="font-semibold" style={{ color: HS.navy }}>{t("homestay.sections.coming_soon")}</p>
+        <p className="mt-1 text-sm" style={{ color: HS.inkMuted }}>{children}</p>
       </div>
     </div>
   );

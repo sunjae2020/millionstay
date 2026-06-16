@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { HS, HS_FONT } from "@/lib/homestay-theme";
+import { HomestayWordmark } from "./HomestayWordmark";
 
 // Million Homestay footer — dedicated shell for homestay.millionstay.com.
 // Footer mirrors the single-tier nav: each column heads to a consolidated page,
@@ -46,21 +47,24 @@ const COLUMNS: Array<{ titleKey: string; links: Array<{ labelKey: string; href: 
 export function HomestayFooter() {
   const { t } = useTranslation();
   return (
-    <footer style={{ backgroundColor: HS.darkBrown, fontFamily: HS_FONT.body }} className="text-white/80">
+    <footer
+      style={{ backgroundColor: HS.navy, fontFamily: HS_FONT.body, borderTop: `1px solid ${HS.teal}` }}
+      className="text-white/80"
+    >
       <div className="max-w-6xl mx-auto px-5 py-14 grid gap-10 sm:grid-cols-2 md:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
         <div>
-          <p className="text-2xl text-white" style={{ fontFamily: HS_FONT.script }}>Million Homestay</p>
-          <p className="mt-3 text-sm text-white/70 max-w-xs">
+          <HomestayWordmark knockout markSize={28} />
+          <p className="mt-4 text-sm text-white/70 max-w-xs leading-relaxed">
             {t("homestay.footer.tagline")}
           </p>
         </div>
         {COLUMNS.map((col) => (
           <div key={col.titleKey}>
-            <h3 className="text-sm font-semibold text-white" style={{ fontFamily: HS_FONT.head }}>{t(col.titleKey)}</h3>
-            <ul className="mt-3 space-y-2">
+            <h3 className="text-sm font-semibold text-white" style={{ fontFamily: HS_FONT.display }}>{t(col.titleKey)}</h3>
+            <ul className="mt-3 space-y-2.5">
               {col.links.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="text-sm text-white/70 hover:text-white transition-colors">{t(l.labelKey)}</Link>
+                  <Link href={l.href} className="text-sm text-white/70 hover:text-[#E8621A] transition-colors">{t(l.labelKey)}</Link>
                 </li>
               ))}
             </ul>
@@ -71,8 +75,8 @@ export function HomestayFooter() {
         <div className="max-w-6xl mx-auto px-5 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/50">
           <span>© {new Date().getFullYear()} Million Homestay — homestay.millionstay.com</span>
           <div className="flex items-center gap-4">
-            <Link href="/privacy" className="hover:text-white transition-colors">{t("homestay.footer.privacy")}</Link>
-            <Link href="/terms" className="hover:text-white transition-colors">{t("homestay.footer.terms")}</Link>
+            <Link href="/privacy" className="hover:text-[#E8621A] transition-colors">{t("homestay.footer.privacy")}</Link>
+            <Link href="/terms" className="hover:text-[#E8621A] transition-colors">{t("homestay.footer.terms")}</Link>
           </div>
         </div>
       </div>

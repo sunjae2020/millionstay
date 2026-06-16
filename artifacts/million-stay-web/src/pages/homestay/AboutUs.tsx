@@ -66,15 +66,15 @@ export default function AboutUs() {
         <HsNumbered items={STUDENT_STEPS} />
         <h3 className="mt-10 mb-4 text-lg font-semibold" style={{ color: HS.darkBrown }}>{t("homestay.about.how_it_works_for_host_families")}</h3>
         <HsNumbered items={HOST_STEPS} />
-        <div className="mt-10 rounded-2xl p-6" style={{ backgroundColor: "#f6efec" }}>
-          <h3 className="font-semibold" style={{ color: HS.darkBrown }}>{t("homestay.about.fees_heading")}</h3>
-          <p className="mt-2 text-gray-600">
+        <div className="mt-10 rounded-2xl p-6" style={{ backgroundColor: HS.apricot }}>
+          <h3 className="font-semibold" style={{ color: HS.navy }}>{t("homestay.about.fees_heading")}</h3>
+          <p className="mt-2" style={{ color: HS.inkMuted }}>
             {t("homestay.about.fees_body")}
           </p>
-          <p className="mt-3 text-sm text-gray-500 italic">
+          <p className="mt-3 text-sm italic" style={{ color: HS.inkMuted }}>
             {t("homestay.about.fees_note")}
           </p>
-          <p className="mt-4 text-sm font-medium" style={{ color: HS.darkBrown }}>
+          <p className="mt-4 text-sm font-medium" style={{ color: HS.navy }}>
             {t("homestay.about.fees_disclaimer")}
           </p>
         </div>
