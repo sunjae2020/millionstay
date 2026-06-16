@@ -433,7 +433,14 @@ export function placementToDoc(
   host: HomestayHostApplication | null,
   student: HomestayStudentRequest | null,
   signing?: SigningView,
-  opts: { signed?: boolean; termsText?: string } = {},
+  opts: {
+    signed?: boolean;
+    termsText?: string;
+    /** Card processing surcharge % (homestay billing settings; default 2). */
+    cardSurchargePct?: number;
+    /** Default payment method when the placement has none set (default card). */
+    defaultMethod?: "card" | "bank_transfer";
+  } = {},
 ): ApplicationDocInput {
   const signed = opts.signed ?? (signing?.status === "signed");
   const money = (n: unknown) => {
@@ -502,26 +509,41 @@ export function placementToDoc(
   const placementFee = Number(placement.placement_fee ?? 0);
   const depositAmt = Number(placement.deposit ?? 0);
   const monthlyAmt = Number(placement.monthly_fee ?? 0);
-  const initialTotal = placementFee + depositAmt + monthlyAmt;
   const recurs = monthlyAmt > 0;
   const monthlyDate = placement.next_billing_date || placement.move_in_date;
   const cycleLabel = placement.billing_cycle_weeks
     ? `Every ${placement.billing_cycle_weeks} week${placement.billing_cycle_weeks > 1 ? "s" : ""}`
     : "Monthly";
 
+  // Card payments incur a processing surcharge (homestay billing settings,
+  // default 2%); bank transfer does not. Mirrors POST /homestay-placements/:id/charge.
+  const surchargePct = opts.cardSurchargePct ?? 2;
+  const method = placement.billing_method || opts.defaultMethod || "card";
+  const isCard = method === "card";
+  const round2 = (n: number) => Math.round(n * 100) / 100;
+  const initialBase = round2(placementFee + depositAmt + monthlyAmt);
+  const initialSurcharge = isCard ? round2(initialBase * surchargePct / 100) : 0;
+  const initialTotal = round2(initialBase + initialSurcharge);
+  const monthlySurcharge = isCard ? round2(monthlyAmt * surchargePct / 100) : 0;
+  const monthlyTotal = round2(monthlyAmt + monthlySurcharge);
+
   push(section("Fees — initial payment (due now)", [
-    initialTotal > 0 ? ["Total due now", money(initialTotal)] : null,
     placementFee > 0 ? ["· Placement fee", money(placementFee)] : null,
     depositAmt > 0 ? ["· Security deposit", money(depositAmt)] : null,
     monthlyAmt > 0 ? ["· First month accommodation", money(monthlyAmt)] : null,
+    (isCard && initialSurcharge > 0) ? ["Subtotal", money(initialBase)] : null,
+    (isCard && initialSurcharge > 0) ? [`Card surcharge (${surchargePct}%)`, money(initialSurcharge)] : null,
+    initialTotal > 0 ? ["Total due now", money(initialTotal)] : null,
     ["Currency", val(placement.currency)],
-    placement.billing_method ? ["Payment method", placement.billing_method === "card" ? "Card" : "Bank transfer"] : null,
+    ["Payment method", isCard ? `Card (${surchargePct}% surcharge)` : "Bank transfer"],
   ]));
 
   // Only shown when there is a recurring monthly fee.
   if (recurs) {
     push(section("Fees — ongoing (monthly)", [
       ["Monthly accommodation fee", money(monthlyAmt)],
+      (isCard && monthlySurcharge > 0) ? [`Card surcharge (${surchargePct}%)`, money(monthlySurcharge)] : null,
+      (isCard && monthlySurcharge > 0) ? ["Monthly total", money(monthlyTotal)] : null,
       ["Billing cycle", cycleLabel],
       monthlyDate ? ["Next payment date", fmtDate(monthlyDate)] : null,
     ]));

@@ -97,7 +97,8 @@ export async function renderSampleDocumentHtml(key: string, bodyHtml: string, lo
   if (key === "pdf.homestay_placement_agreement") {
     const doc = placementToDoc(
       samplePlacement as never, sampleHost as never, sampleStudent as never,
-      { status: "pending" } as never, { termsText: body || undefined, signed: false },
+      { status: "pending" } as never,
+      { termsText: body || undefined, signed: false, cardSurchargePct: 2, defaultMethod: "card" },
     );
     return buildApplicationHtml(doc, true, company);
   }

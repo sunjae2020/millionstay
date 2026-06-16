@@ -34,6 +34,7 @@ import { buildContractDocInput } from "../routes/contracts.js";
 import { isCloudinaryConfigured, uploadPrivateToCloudinary } from "../utils/cloudinary.js";
 import { sendDocumentEmail } from "../lib/email.js";
 import { resolveTemplate } from "../lib/documents/templateEngine.js";
+import { getHomestayBillingSettings } from "../lib/homestay/billingSettings.js";
 
 type SigningRow = typeof contractSigningRequestsTable.$inferSelect;
 
@@ -91,7 +92,15 @@ export async function buildDocForSigning(
     // template, then to STANDARD_PLACEMENT_TERMS inside placementToDoc.
     const pdfTpl = await resolveTemplate({ kind: "pdf", key: "pdf.homestay_placement_agreement", locale: "en" });
     const termsTpl = pdfTpl?.bodyHtml?.trim() ? pdfTpl : await resolveTemplate({ kind: "contract", key: "homestay_placement_terms", locale: "en" });
-    return placementToDoc(placement, host ?? null, student ?? null, view, { ...opts, termsText: termsTpl?.bodyHtml || undefined });
+    // Card surcharge % + default method come from the live homestay billing
+    // settings, so the agreement's fee figures match what's actually charged.
+    const billing = await getHomestayBillingSettings();
+    return placementToDoc(placement, host ?? null, student ?? null, view, {
+      ...opts,
+      termsText: termsTpl?.bodyHtml || undefined,
+      cardSurchargePct: billing.surcharge_pct,
+      defaultMethod: billing.default_method,
+    });
   }
   // "contract" (regular tenancy/accommodation agreement) is rendered through its
   // own builder (buildContractHtml), not the ApplicationDocInput shell — see
