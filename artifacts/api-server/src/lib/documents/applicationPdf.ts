@@ -496,14 +496,36 @@ export function placementToDoc(
     ["Room features", listSummary(host?.home_features)],
   ]));
 
-  // ── 4) Fees ────────────────────────────────────────────────────────────────
-  push(section("Fees", [
-    ["Placement fee", money(placement.placement_fee)],
-    ["Deposit", money(placement.deposit)],
-    ["Accommodation fee (monthly)", money(placement.monthly_fee)],
+  // ── 4) Fees — split into the initial (pay-now) amount and the ongoing
+  //    monthly amount/date. Mirrors the billing model: the initial invoice bills
+  //    placement fee + deposit + first month; monthly_fee then recurs per cycle.
+  const placementFee = Number(placement.placement_fee ?? 0);
+  const depositAmt = Number(placement.deposit ?? 0);
+  const monthlyAmt = Number(placement.monthly_fee ?? 0);
+  const initialTotal = placementFee + depositAmt + monthlyAmt;
+  const recurs = monthlyAmt > 0;
+  const monthlyDate = placement.next_billing_date || placement.move_in_date;
+  const cycleLabel = placement.billing_cycle_weeks
+    ? `Every ${placement.billing_cycle_weeks} week${placement.billing_cycle_weeks > 1 ? "s" : ""}`
+    : "Monthly";
+
+  push(section("Fees — initial payment (due now)", [
+    initialTotal > 0 ? ["Total due now", money(initialTotal)] : null,
+    placementFee > 0 ? ["· Placement fee", money(placementFee)] : null,
+    depositAmt > 0 ? ["· Security deposit", money(depositAmt)] : null,
+    monthlyAmt > 0 ? ["· First month accommodation", money(monthlyAmt)] : null,
     ["Currency", val(placement.currency)],
-    placement.billing_method ? ["Billing method", placement.billing_method === "card" ? "Card" : "Bank transfer"] : null,
+    placement.billing_method ? ["Payment method", placement.billing_method === "card" ? "Card" : "Bank transfer"] : null,
   ]));
+
+  // Only shown when there is a recurring monthly fee.
+  if (recurs) {
+    push(section("Fees — ongoing (monthly)", [
+      ["Monthly accommodation fee", money(monthlyAmt)],
+      ["Billing cycle", cycleLabel],
+      monthlyDate ? ["Next payment date", fmtDate(monthlyDate)] : null,
+    ]));
+  }
 
   return {
     docType: "Homestay Placement Agreement",
