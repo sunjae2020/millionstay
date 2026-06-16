@@ -13,9 +13,14 @@ const BRAND = "#E8621A";
 export default function ResetPasswordPage() {
   const { t } = useTranslation();
   const [location] = useLocation();
-  const token = new URLSearchParams(
-    typeof window !== "undefined" ? window.location.search : ""
-  ).get("token") ?? "";
+  // Token arrives in the URL fragment (#token=...) so it's never sent to the
+  // server in Referer headers; fall back to the query string for compatibility.
+  const token = (() => {
+    if (typeof window === "undefined") return "";
+    const fromHash = new URLSearchParams(window.location.hash.replace(/^#/, "")).get("token");
+    if (fromHash) return fromHash;
+    return new URLSearchParams(window.location.search).get("token") ?? "";
+  })();
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
