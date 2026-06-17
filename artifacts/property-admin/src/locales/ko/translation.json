@@ -112,7 +112,8 @@
     "homestay_student_requests": "학생 신청",
     "homestay_placements": "홈스테이 배정",
     "document_templates": "문서 템플릿",
-    "homestay_billing": "홈스테이 청구"
+    "homestay_billing": "홈스테이 청구",
+    "application_emails": "신청 접수 메일"
   },
   "dashboard": {
     "title": "대시보드",
@@ -3034,5 +3035,27 @@
     "note_cron": "매일 실행되는 작업이 주기마다 대기 중인 청구를 생성하며, 운영팀이 배정에서 각 청구를 (카드 링크 / 계좌 정보) 전송합니다.",
     "toast_saved": "청구 설정이 저장되었습니다",
     "error": "문제가 발생했습니다"
+  },
+  "settings_app_emails": {
+    "title": "신청 접수 메일",
+    "subtitle": "신청자가 신청서를 제출하면 발송되는 접수 확인 메일",
+    "intro": "신청자가 아래 신청서 중 하나를 제출하면, MillionStay가 신청이 접수되었다는 확인 메일을 자동으로 발송할 수 있습니다. 신청 유형별로 메일 발송 여부와 신청서 PDF 첨부 여부를 설정하세요.",
+    "col_type": "신청 유형",
+    "col_ack": "확인 메일 발송",
+    "col_pdf": "PDF 첨부",
+    "ack_explain": "제출 즉시 신청자에게 브랜드가 적용된 “신청 접수” 확인 메일을 보냅니다.",
+    "pdf_explain": "제출된 신청서의 PDF 사본을 확인 메일에 첨부합니다.",
+    "note_ops": "이 설정과 관계없이 운영팀에는 항상 별도의 내부 알림이 발송됩니다.",
+    "note_pdf_render": "PDF 첨부는 서버에서 PDF 생성이 가능해야 합니다. 불가능한 경우에도 확인 메일은 첨부 없이 발송됩니다.",
+    "toast_saved": "설정이 저장되었습니다",
+    "error": "저장에 실패했습니다",
+    "type_homestay_student_label": "홈스테이 — 학생 신청서",
+    "type_homestay_student_desc": "홈스테이 배정을 신청하는 학생(또는 보호자)",
+    "type_homestay_host_label": "홈스테이 — 호스트 신청서",
+    "type_homestay_host_desc": "홈스테이 학생을 받는 가정",
+    "type_short_term_label": "단기 숙소 신청서",
+    "type_short_term_desc": "단기 체류 예약을 신청하는 게스트",
+    "type_landlord_label": "랜드로드 / 부동산 소유주 신청서",
+    "type_landlord_desc": "보유 부동산 등록을 신청하는 소유주"
   }
 }

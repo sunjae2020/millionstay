@@ -1327,5 +1327,36 @@
   },
   "cstranslate": {
     "english_label": "英語"
+  },
+  "short_term": {
+    "eyebrow": "短期滞在",
+    "hero_title": "短期宿泊の申請",
+    "hero_lead": "MillionStay で短期滞在の住まいを申請しましょう。希望の日程と条件をお知らせください。送信後に申請内容を電子署名いただき、ご提案をご連絡します。",
+    "breadcrumb_home": "ホーム",
+    "breadcrumb": "短期宿泊の申請",
+    "section_applicant": "お客様情報",
+    "section_stay": "滞在の詳細",
+    "label_first_name": "名",
+    "label_last_name": "姓",
+    "label_email": "メールアドレス",
+    "label_phone": "電話番号",
+    "label_nationality": "国籍",
+    "label_check_in": "チェックイン日",
+    "label_check_out": "チェックアウト日",
+    "label_guests": "宿泊人数",
+    "label_preferred_area": "希望エリア / 地域",
+    "label_property_type": "物件タイプ",
+    "label_budget_weekly": "週あたり予算",
+    "placeholder_budget": "例: 450 AUD/週",
+    "label_move_in_flexible": "入居日は調整可能です",
+    "label_notes": "その他ご要望はありますか？",
+    "placeholder_notes": "特別なご要望、滞在期間、バリアフリーの必要性など",
+    "terms_label": "利用規約およびプライバシーポリシーを読み、同意します。",
+    "submit": "送信して署名へ進む",
+    "submitting": "送信中…",
+    "submit_hint": "送信後、申請内容の電子署名に進みます。",
+    "error_required": "氏名とメールアドレスをご入力ください。",
+    "error_terms": "続行するには利用規約に同意してください。",
+    "error_submit_failed": "送信に失敗しました。もう一度お試しください。"
   }
 }

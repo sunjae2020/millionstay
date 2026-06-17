@@ -27,6 +27,7 @@ import partnerCsRouter from "./routes/partner-cs";
 import { homestayPublicRouter, homestayPortalRouter } from "./routes/homestay";
 import { contractSigningPublicRouter, contractSigningAdminRouter } from "./routes/contract-signing";
 import { homestayStudentPublicRouter } from "./routes/homestay-students";
+import { shortTermPublicRouter } from "./routes/short-term";
 import pageContentsRouter from "./routes/page-contents";
 import privacyRouter from "./routes/privacy";
 import chatRouter from "./routes/chat";
@@ -203,6 +204,7 @@ app.use([
   "/api/v1/public/service-host-applications",
   "/api/v1/public/homestay-host-applications",
   "/api/v1/public/homestay-student-requests",
+  "/api/v1/public/short-term-applications",
 ], applicationLimiter);
 app.use([
   "/api/v1/guest/me/data",
@@ -221,6 +223,8 @@ app.use("/api", homestayPublicRouter);
 app.use("/api", contractSigningPublicRouter);
 // Public homestay student application intake (no auth).
 app.use("/api", homestayStudentPublicRouter);
+// Public short-term accommodation application intake (no auth).
+app.use("/api", shortTermPublicRouter);
 app.use("/api", chatRouter);
 app.use("/api", privacyRouter);
 // External third-party API — authenticates with issued API Key + Secret

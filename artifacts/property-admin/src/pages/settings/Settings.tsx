@@ -22,6 +22,7 @@ import {
   KeyRound,
   Database,
   Package,
+  MailCheck,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -62,6 +63,12 @@ const ADMIN_CARDS: CardDef[] = [
     description: "Rent cycle, payment method, card fee, lead days",
     icon: CreditCard,
     href: "/settings/homestay-billing",
+  },
+  {
+    title: "Application Emails",
+    description: "Acknowledgment email & PDF attachment per application type",
+    icon: MailCheck,
+    href: "/settings/application-emails",
   },
   {
     title: "Integrations",

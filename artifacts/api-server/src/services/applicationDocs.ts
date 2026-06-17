@@ -10,6 +10,7 @@ import {
   contractSigningRequestsTable,
   homestayStudentRequestsTable,
   homestayHostApplicationsTable,
+  shortTermApplicationsTable,
   homestayPlacementsTable,
   homestayPlacementServicesTable,
   serviceHostsTable,
@@ -25,6 +26,7 @@ import {
   buildApplicationHtml,
   studentApplicationToDoc,
   hostApplicationToDoc,
+  shortTermApplicationToDoc,
   placementToDoc,
   type ApplicationDocInput,
 } from "../lib/documents/applicationPdf.js";
@@ -32,9 +34,10 @@ import { buildContractHtml, type ContractSignature } from "../lib/documents/cont
 import { resolveCompanyInfo } from "../lib/documents/companyInfo.js";
 import { buildContractDocInput } from "../routes/contracts.js";
 import { isCloudinaryConfigured, uploadPrivateToCloudinary } from "../utils/cloudinary.js";
-import { sendDocumentEmail } from "../lib/email.js";
+import { sendDocumentEmail, sendApplicationAckEmail } from "../lib/email.js";
 import { resolveTemplate } from "../lib/documents/templateEngine.js";
 import { getHomestayBillingSettings } from "../lib/homestay/billingSettings.js";
+import { getAckRule, type ApplicationType } from "../lib/applicationEmails.js";
 
 type SigningRow = typeof contractSigningRequestsTable.$inferSelect;
 
@@ -58,6 +61,69 @@ export interface ResolvedRecipients {
   host?: { email: string; name?: string };
 }
 
+/**
+ * Render an ApplicationDocInput to a PDF buffer (best-effort, unsigned preview).
+ * Used for the acknowledgment-email attachment. Returns null when PDF rendering
+ * is unavailable (no Chromium) so the email can still be sent without it.
+ */
+export async function renderApplicationPdf(doc: ApplicationDocInput): Promise<Buffer | null> {
+  try {
+    const html = buildApplicationHtml(doc, true, await resolveCompanyInfo());
+    return await htmlToPdf(html);
+  } catch (err) {
+    if (err instanceof PdfUnavailableError) {
+      console.warn("[applicationDocs] ack PDF unavailable — sending email without attachment:", err.message);
+    } else {
+      console.error("[applicationDocs] renderApplicationPdf failed:", err);
+    }
+    return null;
+  }
+}
+
+/**
+ * Send the applicant-facing acknowledgment email for a Student / Landlord /
+ * Short-term application, gated by the per-type application_emails settings.
+ *
+ *   - Returns false (and skips) when send_ack_email is OFF for the type.
+ *   - When attach_pdf is ON, lazily builds + renders the application PDF (best
+ *     effort — the email is still sent without it if rendering is unavailable).
+ *
+ * The Homestay host intake keeps its own richer, template-backed email
+ * (sendHomestayHostEmail kind="received") and gates inline at its call site.
+ * Best-effort: never throws.
+ */
+export async function sendApplicationAck(params: {
+  type: Exclude<ApplicationType, "homestay_host">;
+  to: string;
+  toName?: string | null;
+  appTypeLabel: string;
+  ref: string;
+  intro?: string | null;
+  /** Builds the ApplicationDocInput on demand (only called when attach_pdf is ON). */
+  buildDoc?: () => ApplicationDocInput | null;
+}): Promise<boolean> {
+  try {
+    const rule = await getAckRule(params.type);
+    if (!rule.send_ack_email) return false;
+    let pdf: Buffer | null = null;
+    if (rule.attach_pdf && params.buildDoc) {
+      const doc = params.buildDoc();
+      if (doc) pdf = await renderApplicationPdf(doc);
+    }
+    return await sendApplicationAckEmail({
+      to: params.to,
+      toName: params.toName ?? null,
+      appTypeLabel: params.appTypeLabel,
+      ref: params.ref,
+      intro: params.intro ?? null,
+      pdf,
+    });
+  } catch (err) {
+    console.error("[applicationDocs] sendApplicationAck failed:", err);
+    return false;
+  }
+}
+
 /** Build the ApplicationDocInput for a signing request's underlying record. */
 export async function buildDocForSigning(
   signing: Pick<SigningRow, "context_type" | "context_id" | "status" | "signers" | "signatures" | "signed_at">,
@@ -78,6 +144,11 @@ export async function buildDocForSigning(
     const [row] = await db.select().from(homestayHostApplicationsTable)
       .where(eq(homestayHostApplicationsTable.id, signing.context_id)).limit(1);
     return row ? hostApplicationToDoc(row, view, opts) : null;
+  }
+  if (signing.context_type === "short_term_app") {
+    const [row] = await db.select().from(shortTermApplicationsTable)
+      .where(eq(shortTermApplicationsTable.id, signing.context_id)).limit(1);
+    return row ? shortTermApplicationToDoc(row, view, opts) : null;
   }
   if (signing.context_type === "placement_contract") {
     const [placement] = await db.select().from(homestayPlacementsTable)
@@ -239,6 +310,10 @@ export async function resolveRecipients(signing: SigningRow): Promise<ResolvedRe
       const [row] = await db.select().from(homestayHostApplicationsTable)
         .where(eq(homestayHostApplicationsTable.id, signing.context_id)).limit(1);
       if (row?.email) out.applicant = { email: row.email, name: `${row.first_name} ${row.last_name}`.trim() };
+    } else if (signing.context_type === "short_term_app") {
+      const [row] = await db.select().from(shortTermApplicationsTable)
+        .where(eq(shortTermApplicationsTable.id, signing.context_id)).limit(1);
+      if (row?.email) out.applicant = { email: row.email, name: `${row.first_name} ${row.last_name}`.trim() };
     } else if (signing.context_type === "contract") {
       const [row] = await db.select().from(contractsTable)
         .where(eq(contractsTable.id, signing.context_id)).limit(1);
@@ -278,6 +353,7 @@ export async function resolveRecipients(signing: SigningRow): Promise<ResolvedRe
 /** Map a signing context to the (entity_type, template_code) used in email_log. */
 function logMeta(contextType: string): { entityType: string; templateCode: string } {
   if (contextType === "host_app") return { entityType: "homestay_host_application", templateCode: "document.homestay_host_application" };
+  if (contextType === "short_term_app") return { entityType: "short_term_application", templateCode: "document.short_term_application" };
   if (contextType === "placement_contract") return { entityType: "homestay_placement", templateCode: "document.homestay_placement_contract" };
   if (contextType === "contract") return { entityType: "contract", templateCode: "document.contract" };
   return { entityType: "homestay_student_request", templateCode: "document.homestay_student_application" };
@@ -292,6 +368,7 @@ export async function emailApplicationPdf(
 ): Promise<string[]> {
   const docTypeLabel =
     signing.context_type === "host_app" ? "Host Family Application"
+    : signing.context_type === "short_term_app" ? "Short-term Accommodation Application"
     : signing.context_type === "placement_contract" ? "Homestay Placement Agreement"
     : signing.context_type === "contract" ? "Accommodation Agreement"
     : "Student Application";
@@ -464,6 +541,11 @@ export async function refForSigning(signing: Pick<SigningRow, "context_type" | "
       const [row] = await db.select({ ref: homestayHostApplicationsTable.application_ref })
         .from(homestayHostApplicationsTable)
         .where(eq(homestayHostApplicationsTable.id, signing.context_id)).limit(1);
+      if (row?.ref) return row.ref;
+    } else if (signing.context_type === "short_term_app") {
+      const [row] = await db.select({ ref: shortTermApplicationsTable.request_ref })
+        .from(shortTermApplicationsTable)
+        .where(eq(shortTermApplicationsTable.id, signing.context_id)).limit(1);
       if (row?.ref) return row.ref;
     } else if (signing.context_type === "placement_contract") {
       const [row] = await db.select({ ref: homestayPlacementsTable.placement_ref })

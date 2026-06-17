@@ -30,6 +30,8 @@ import {
 import { ingestReservations } from "../lib/channels/reservations.js";
 import { insertLeadWithGeneratedRef } from "../lib/leadRef.js";
 import { sendLeadNotificationEmail } from "../lib/email.js";
+import { sendApplicationAck } from "../services/applicationDocs.js";
+import type { ApplicationDocInput } from "../lib/documents/applicationPdf.js";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo.js";
 import { buildCalendar } from "../lib/ical.js";
 import { getSpaceCalendarEvents } from "../lib/spaceCalendar.js";
@@ -1092,6 +1094,39 @@ router.post("/v1/public/owner-applications", async (req, res): Promise<void> => 
   });
 
   notifyLead(row, "Owner Application");
+
+  // Applicant acknowledgment — gated by Settings → Application Emails (landlord).
+  // The landlord intake is stored as a lead (no dedicated record), so the PDF is
+  // built from the captured fields when attach_pdf is enabled.
+  void sendApplicationAck({
+    type: "landlord",
+    to: email,
+    toName: `${first_name} ${last_name}`.trim(),
+    appTypeLabel: "Property Owner Application",
+    ref: row.lead_ref,
+    buildDoc: (): ApplicationDocInput => ({
+      docType: "Property Owner Application",
+      ref: row.lead_ref,
+      status: "Submitted",
+      submittedAt: new Date(),
+      sections: [{
+        heading: "Applicant",
+        rows: [
+          { label: "Name", value: `${first_name} ${last_name}`.trim() },
+          { label: "Email", value: email },
+          ...(phone ? [{ label: "Phone", value: phone }] : []),
+          ...(property_address ? [{ label: "Property address", value: property_address }] : []),
+          ...(property_city ? [{ label: "City / Suburb", value: property_city }] : []),
+          ...(property_type ? [{ label: "Property type", value: property_type }] : []),
+          ...(bedrooms != null && !Number.isNaN(bedrooms) ? [{ label: "Bedrooms", value: String(bedrooms) }] : []),
+        ],
+      }],
+      freeText: message ? [{ heading: "Message", body: message }] : [],
+      signatures: [],
+      signed: false,
+    }),
+  }).catch((e) => console.error("[public] owner-application ack failed:", e));
+
   res.status(201).json({ success: true, lead_ref: row.lead_ref, id: row.id });
 });
 

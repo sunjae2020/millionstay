@@ -11,7 +11,7 @@
  */
 import { renderDocumentShell, escapeHtml, getCompanyInfo, type CompanyInfo } from "./theme";
 import { serviceLabel } from "./i18n";
-import type { HomestayStudentRequest, HomestayHostApplication, HomestayPlacement } from "@workspace/db";
+import type { HomestayStudentRequest, HomestayHostApplication, HomestayPlacement, ShortTermApplication } from "@workspace/db";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Input shapes
@@ -401,6 +401,50 @@ export function hostApplicationToDoc(
   return {
     docType: "Host Family Application",
     ref: row.application_ref,
+    status: row.status,
+    submittedAt: row.created_at,
+    sections,
+    freeText,
+    signatures: resolveSignatures(signing, signed),
+    signed,
+  };
+}
+
+export function shortTermApplicationToDoc(
+  row: ShortTermApplication,
+  signing?: SigningView,
+  opts: { signed?: boolean } = {},
+): ApplicationDocInput {
+  const signed = opts.signed ?? (signing?.status === "signed");
+  const p = (row.preferences ?? {}) as Record<string, any>;
+
+  const sections: ApplicationDocSection[] = [];
+  const push = (s: ApplicationDocSection | null) => { if (s) sections.push(s); };
+
+  push(section("Applicant", [
+    ["Name", `${row.first_name} ${row.last_name}`.trim()],
+    ["Email", val(row.email)],
+    ["Phone", val(row.phone)],
+    ["Nationality", val(row.nationality)],
+  ]));
+
+  push(section("Stay details", [
+    ["Check-in", fmtDate(row.check_in)],
+    ["Check-out", fmtDate(row.check_out)],
+    ["Guests", val(row.guests)],
+    ["Preferred area", val(row.preferred_area)],
+    ["Property type", val(row.property_type)],
+    ["Weekly budget", val(p.budget_weekly)],
+    ["Move-in flexible", yesNo(p.move_in_flexible)],
+  ]));
+
+  const freeText = [
+    { heading: "Notes", body: String(p.notes ?? "") },
+  ];
+
+  return {
+    docType: "Short-term Accommodation Application",
+    ref: row.request_ref,
     status: row.status,
     submittedAt: row.created_at,
     sections,

@@ -34,6 +34,7 @@ import StayPlan from "@/pages/stay-plan";
 import ForStudent from "@/pages/for-student";
 import ForAgent from "@/pages/for-agent";
 import ForHomestayHost from "@/pages/for-homestay-host";
+import ForShortTerm from "@/pages/for-short-term";
 import HostLogin from "@/pages/host-login";
 import HostPortal from "@/pages/host-portal";
 import FAQ from "@/pages/faq";
@@ -104,6 +105,7 @@ function Router() {
       <Route path="/for-student" component={ForStudent} />
       <Route path="/for-agent" component={ForAgent} />
       <Route path="/for-homestay-host" component={ForHomestayHost} />
+      <Route path="/for-short-term" component={ForShortTerm} />
       <Route path="/host-login" component={HostLogin} />
       <Route path="/host-portal" component={HostPortal} />
       <Route path="/faq" component={FAQ} />
