@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Layout } from "@/components/Layout";
-import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { apiFetch } from "@/lib/apiFetch";
 
 type GlLine = {
@@ -90,20 +90,19 @@ export default function Journal() {
         <div className="flex flex-wrap items-end gap-3 mb-6">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-muted-foreground">{t("journal.filter_from")}</label>
-            <Input
-              type="date"
+            <DateInput
               value={from}
-              onChange={(e) => setFrom(e.target.value)}
+              onChange={setFrom}
               className="w-44"
             />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-muted-foreground">{t("journal.filter_to")}</label>
-            <Input
-              type="date"
+            <DateInput
               value={to}
-              onChange={(e) => setTo(e.target.value)}
+              onChange={setTo}
               className="w-44"
+              min={from || undefined}
             />
           </div>
         </div>

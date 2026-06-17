@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { formatDate, formatDateTime } from "@/lib/date";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -306,10 +307,10 @@ export default function HomestayPlacementDetail() {
 
         <Section title={t("homestayPlacement.section_term")}>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <Field label={t("homestayPlacement.f_move_in")} value={p.move_in_date} />
-            <Field label={t("homestayPlacement.f_move_out")} value={p.move_out_date} />
-            <Field label={t("homestayPlacement.f_proposed_at")} value={p.proposed_at ? new Date(p.proposed_at).toLocaleDateString() : null} />
-            <Field label={t("homestayPlacement.f_confirmed_at")} value={p.confirmed_at ? new Date(p.confirmed_at).toLocaleDateString() : null} />
+            <Field label={t("homestayPlacement.f_move_in")} value={p.move_in_date ? formatDate(p.move_in_date) : null} />
+            <Field label={t("homestayPlacement.f_move_out")} value={p.move_out_date ? formatDate(p.move_out_date) : null} />
+            <Field label={t("homestayPlacement.f_proposed_at")} value={p.proposed_at ? formatDate(p.proposed_at) : null} />
+            <Field label={t("homestayPlacement.f_confirmed_at")} value={p.confirmed_at ? formatDate(p.confirmed_at) : null} />
           </div>
         </Section>
 
@@ -340,7 +341,7 @@ export default function HomestayPlacementDetail() {
           <div className="mt-4 pt-4 border-t flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
             <span>{t("homestayPlacement.f_cycle")}: <span className="font-medium text-foreground">{(p.billing_cycle_weeks || settings?.cycle_weeks || 4)} {t("homestayPlacement.weeks")}</span>{p.billing_cycle_weeks ? ` (${t("homestayPlacement.override")})` : ""}</span>
             <span>{t("homestayPlacement.f_method")}: <span className="font-medium text-foreground">{t(`homestayPlacement.method_${p.billing_method || settings?.default_method || "card"}`)}</span>{p.billing_method ? ` (${t("homestayPlacement.override")})` : ""}</span>
-            {p.next_billing_date && <span>{t("homestayPlacement.f_next_billing")}: <span className="font-medium text-foreground">{p.next_billing_date}</span></span>}
+            {p.next_billing_date && <span>{t("homestayPlacement.f_next_billing")}: <span className="font-medium text-foreground">{formatDate(p.next_billing_date)}</span></span>}
             <button className="underline hover:text-foreground" onClick={() => { setOvCycle(p.billing_cycle_weeks ? String(p.billing_cycle_weeks) : ""); setOvMethod(p.billing_method || ""); setBillingOpen(true); }}>{t("homestayPlacement.btn_edit_billing")}</button>
           </div>
         </Section>
@@ -361,7 +362,7 @@ export default function HomestayPlacementDetail() {
                       <span className="text-[11px] text-muted-foreground">({t("homestayPlacement.incl_surcharge")} {pay.currency} {Number(pay.surcharge_amount).toLocaleString("en-AU", { minimumFractionDigits: 2 })})</span>
                     )}
                     <span className={`text-xs font-medium ${pay.status === "paid" ? "text-green-700" : pay.status === "pending" ? "text-amber-700" : "text-red-600"}`}>· {t(`homestayPlacement.paystatus_${pay.status}`)}</span>
-                    {pay.paid_at && <span className="text-[11px] text-muted-foreground">{new Date(pay.paid_at).toLocaleDateString()}</span>}
+                    {pay.paid_at && <span className="text-[11px] text-muted-foreground">{formatDate(pay.paid_at)}</span>}
                   </div>
                   {pay.status === "pending" && (
                     <div className="flex gap-1.5">
@@ -402,7 +403,7 @@ export default function HomestayPlacementDetail() {
                 <span className={`font-medium ${contractSigned ? "text-green-700" : "text-amber-700"}`}>
                   {contractSigned ? t("homestayPlacement.contract_signed") : t("homestayPlacement.contract_pending")}
                 </span>
-                {latestSigning.signed_at && <span className="text-xs text-muted-foreground">· {new Date(latestSigning.signed_at).toLocaleString()}</span>}
+                {latestSigning.signed_at && <span className="text-xs text-muted-foreground">· {formatDateTime(latestSigning.signed_at)}</span>}
               </div>
               <div className="flex flex-wrap gap-2">
                 <a href={`${PUBLIC_SIGNING}/${latestSigning.token}/preview`} target="_blank" rel="noopener noreferrer">

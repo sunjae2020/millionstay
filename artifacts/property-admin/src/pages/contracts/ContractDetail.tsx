@@ -948,16 +948,16 @@ export default function ContractDetail() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Start Date *</Label>
-                <Input type="date" value={schedStartDate} onChange={e => setSchedStartDate(e.target.value)} className="mt-1" />
+                <DateInput value={schedStartDate} onChange={setSchedStartDate} className="mt-1" />
               </div>
               <div>
                 <Label>End Date</Label>
-                <Input type="date" value={schedEndDate} onChange={e => setSchedEndDate(e.target.value)} className="mt-1" />
+                <DateInput value={schedEndDate} onChange={setSchedEndDate} className="mt-1" />
               </div>
             </div>
             <div>
               <Label>Next Due Date *</Label>
-              <Input type="date" value={schedNextDue} onChange={e => setSchedNextDue(e.target.value)} className="mt-1" />
+              <DateInput value={schedNextDue} onChange={setSchedNextDue} className="mt-1" />
             </div>
             <div className="flex gap-6">
               <label className="flex items-center gap-2 cursor-pointer text-sm">
