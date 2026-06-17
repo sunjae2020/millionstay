@@ -3015,6 +3015,9 @@
     "surcharge_pct_hint": "Added to card payments (upfront + rent). Bank transfer has no surcharge.",
     "lead_days": "Charge lead days",
     "lead_days_hint": "Generate the pending charge this many days before the due date.",
+    "default_placement_fee": "Default placement fee",
+    "default_deposit": "Default deposit",
+    "default_fees_hint": "Pre-filled into Create placement as the org standard. Each placement can still override them.",
     "note_cron": "A daily job creates a pending charge each cycle; ops send each one (card link / bank details) from the placement.",
     "toast_saved": "Billing settings saved",
     "error": "Something went wrong"

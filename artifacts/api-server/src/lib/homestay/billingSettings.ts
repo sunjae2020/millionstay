@@ -15,6 +15,10 @@ export interface HomestayBillingSettings {
   surcharge_pct: number;
   /** Days before the billing date to generate the pending charge. */
   lead_days: number;
+  /** Default one-time placement (agency) fee pre-filled into Create placement. */
+  default_placement_fee: number;
+  /** Default security deposit pre-filled into Create placement. */
+  default_deposit: number;
 }
 
 export const DEFAULT_BILLING_SETTINGS: HomestayBillingSettings = {
@@ -22,6 +26,8 @@ export const DEFAULT_BILLING_SETTINGS: HomestayBillingSettings = {
   default_method: "card",
   surcharge_pct: 2,
   lead_days: 0,
+  default_placement_fee: 0,
+  default_deposit: 0,
 };
 
 export async function getHomestayBillingSettings(): Promise<HomestayBillingSettings> {
@@ -34,6 +40,8 @@ export async function getHomestayBillingSettings(): Promise<HomestayBillingSetti
       default_method: parsed.default_method === "bank_transfer" ? "bank_transfer" : "card",
       surcharge_pct: clampNum(parsed.surcharge_pct, DEFAULT_BILLING_SETTINGS.surcharge_pct, 0, 20),
       lead_days: clampInt(parsed.lead_days, DEFAULT_BILLING_SETTINGS.lead_days, 0, 30),
+      default_placement_fee: clampNum(parsed.default_placement_fee, DEFAULT_BILLING_SETTINGS.default_placement_fee, 0, 1_000_000),
+      default_deposit: clampNum(parsed.default_deposit, DEFAULT_BILLING_SETTINGS.default_deposit, 0, 1_000_000),
     };
   } catch {
     return { ...DEFAULT_BILLING_SETTINGS };
@@ -46,6 +54,8 @@ export async function saveHomestayBillingSettings(s: HomestayBillingSettings): P
     default_method: s.default_method === "bank_transfer" ? "bank_transfer" : "card",
     surcharge_pct: clampNum(s.surcharge_pct, 2, 0, 20),
     lead_days: clampInt(s.lead_days, 0, 0, 30),
+    default_placement_fee: clampNum(s.default_placement_fee, 0, 0, 1_000_000),
+    default_deposit: clampNum(s.default_deposit, 0, 0, 1_000_000),
   });
   await db.insert(integrationSettings)
     .values({ key: HOMESTAY_BILLING_KEY, value, updated_at: new Date() })

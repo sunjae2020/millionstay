@@ -174,6 +174,16 @@ export default function HomestayStudentRequestDetail() {
   const [placeOpen, setPlaceOpen] = useState(false);
   const [placeHost, setPlaceHost] = useState<{ id: number; name: string } | null>(null);
   const [placeForm, setPlaceForm] = useState({ move_in_date: "", move_out_date: "", placement_fee: "", deposit: "", monthly_fee: "", currency: "AUD" });
+  // Org-standard fee defaults (Settings → Homestay Billing) used to pre-fill the Create placement modal.
+  const { data: billingResp } = useQuery({
+    queryKey: ["homestay-billing-settings"],
+    queryFn: async (): Promise<{ data: { default_placement_fee: number; default_deposit: number } }> => {
+      const res = await apiFetch(`/api/v1/homestay-billing-settings`);
+      if (!res.ok) throw new Error("Failed to load billing settings");
+      return res.json();
+    },
+  });
+  const billing = billingResp?.data;
 
   const { data, isLoading } = useQuery({
     queryKey: ["homestay-student-request", id],
@@ -242,7 +252,12 @@ export default function HomestayStudentRequestDetail() {
   // Pick a host (from search or suggestion) → seed and open the placement dialog.
   function openPlacementFor(host: { id: number; name: string }) {
     setPlaceHost(host);
-    setPlaceForm((f) => ({ ...f, move_in_date: p.homestay_start_date ?? "" }));
+    setPlaceForm((f) => ({
+      ...f,
+      move_in_date: p.homestay_start_date ?? "",
+      placement_fee: billing?.default_placement_fee ? String(billing.default_placement_fee) : f.placement_fee,
+      deposit: billing?.default_deposit ? String(billing.default_deposit) : f.deposit,
+    }));
     setSearchOpen(false);
     setPlaceOpen(true);
   }
@@ -312,8 +327,8 @@ export default function HomestayStudentRequestDetail() {
           host_application_id: placeHost?.id,
           move_in_date: placeForm.move_in_date || undefined,
           move_out_date: placeForm.move_out_date || undefined,
-          placement_fee: placeForm.placement_fee || "0",
-          deposit: placeForm.deposit || "0",
+          placement_fee: placeForm.placement_fee || undefined,
+          deposit: placeForm.deposit || undefined,
           monthly_fee: placeForm.monthly_fee || "0",
           currency: placeForm.currency || "AUD",
         }),

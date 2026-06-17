@@ -162,6 +162,9 @@ homestayPlacementAdminRouter.post("/v1/homestay-placements", async (req, res): P
 
     const now = new Date();
     const placement_ref = await generatePlacementRef();
+    // Fees fall back to the global homestay-billing defaults when the caller
+    // omits them, so the org standard (set once in Settings) is authoritative.
+    const billing = await getHomestayBillingSettings();
     const [row] = await db.insert(homestayPlacementsTable).values({
       placement_ref,
       host_application_id,
@@ -170,8 +173,8 @@ homestayPlacementAdminRouter.post("/v1/homestay-placements", async (req, res): P
       status: "Proposed",
       move_in_date: b.move_in_date ?? null,
       move_out_date: b.move_out_date ?? null,
-      placement_fee: String(b.placement_fee ?? "0"),
-      deposit: String(b.deposit ?? "0"),
+      placement_fee: String(b.placement_fee ?? billing.default_placement_fee),
+      deposit: String(b.deposit ?? billing.default_deposit),
       monthly_fee: String(b.monthly_fee ?? "0"),
       currency: b.currency ?? "AUD",
       proposed_at: now,
@@ -341,6 +344,8 @@ homestayPlacementAdminRouter.put("/v1/homestay-billing-settings", async (req, re
       default_method: b.default_method === "bank_transfer" ? "bank_transfer" : "card",
       surcharge_pct: Number(b.surcharge_pct),
       lead_days: Number(b.lead_days),
+      default_placement_fee: Number(b.default_placement_fee),
+      default_deposit: Number(b.default_deposit),
     });
     void logAction({ entityType: "homestay_billing_settings", entityId: 1, action: "UPDATE", actorId: (req as any).user?.id ?? null, newValue: b });
     res.json({ data: await getHomestayBillingSettings() });
