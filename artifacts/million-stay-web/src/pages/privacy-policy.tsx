@@ -8,7 +8,7 @@ const SECTIONS = [
   {
     number: "01",
     title: "About This Policy (APP 1)",
-    body: `Million Homestay Australia Pty Ltd ("MillionStay", "we", "our", "us") is committed to protecting your privacy in accordance with the Privacy Act 1988 (Cth) and the 13 Australian Privacy Principles (APPs). This Privacy Policy explains the kinds of personal information we collect, how we hold it, the purposes for which we collect, hold, use and disclose it, how you may access or correct it, how to make a complaint, and whether we are likely to disclose information to overseas recipients. This policy is openly available on our website and we encourage you to read it before using our services.`,
+    body: `T/A Million Stay ("MillionStay", "we", "our", "us") is committed to protecting your privacy in accordance with the Privacy Act 1988 (Cth) and the 13 Australian Privacy Principles (APPs). This Privacy Policy explains the kinds of personal information we collect, how we hold it, the purposes for which we collect, hold, use and disclose it, how you may access or correct it, how to make a complaint, and whether we are likely to disclose information to overseas recipients. This policy is openly available on our website and we encourage you to read it before using our services.`,
   },
   {
     number: "02",
@@ -137,7 +137,7 @@ export default function PrivacyPolicy() {
             <motion.div {...fade(0)} className="bg-orange-50 border border-orange-100 rounded-xl px-6 py-4">
               <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">Effective Date</p>
               <p className="text-sm text-gray-700 font-semibold">19 April 2026</p>
-              <p className="text-xs text-gray-500 mt-2">This policy applies to Million Homestay Australia Pty Ltd and complies with the Privacy Act 1988 (Cth), the 13 Australian Privacy Principles, the Notifiable Data Breaches scheme and the Spam Act 2003 (Cth).</p>
+              <p className="text-xs text-gray-500 mt-2">This policy applies to T/A Million Stay and complies with the Privacy Act 1988 (Cth), the 13 Australian Privacy Principles, the Notifiable Data Breaches scheme and the Spam Act 2003 (Cth).</p>
             </motion.div>
 
             {SECTIONS.map((section, i) => (
