@@ -142,7 +142,7 @@ export default function HomestayPrivacy() {
             <p className="text-sm text-gray-600">{t("homestay.privacy.contact_intro")}</p>
             <div className="mt-3 space-y-1 text-sm text-gray-700">
               <p><span className="font-medium">{t("homestay.privacy.contact_email_label")}</span>{" "}
-                <a href="mailto:privacy@millionstay.com" className="hover:underline" style={{ color: HS.brand }}>privacy@millionstay.com</a>
+                <a href="mailto:millionstay.com@gmail.com" className="hover:underline" style={{ color: HS.brand }}>millionstay.com@gmail.com</a>
               </p>
               <p><span className="font-medium">{t("homestay.privacy.contact_website_label")}</span> homestay.millionstay.com</p>
               <p><span className="font-medium">{t("homestay.privacy.contact_address_label")}</span> {t("homestay.privacy.contact_address_value")}</p>
