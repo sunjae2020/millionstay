@@ -3028,6 +3028,9 @@
     "surcharge_pct_hint": "加收于银行卡付款（预付款 + 租金）。银行转账无附加费。",
     "lead_days": "收费提前天数",
     "lead_days_hint": "在到期日之前的这么多天生成待处理收费。",
+    "default_placement_fee": "默认安置费",
+    "default_deposit": "默认押金",
+    "default_fees_hint": "在创建安置时作为机构标准预填充。每项安置仍可覆盖。",
     "note_cron": "每日任务会在每个周期创建一笔待处理收费；运营人员从安置中逐一发送（银行卡链接 / 银行信息）。",
     "toast_saved": "计费设置已保存",
     "error": "出现错误"

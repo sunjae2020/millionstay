@@ -17,13 +17,15 @@ interface BillingSettings {
   default_method: "card" | "bank_transfer";
   surcharge_pct: number;
   lead_days: number;
+  default_placement_fee: number;
+  default_deposit: number;
 }
 
 export default function HomestayBilling() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const qc = useQueryClient();
-  const [form, setForm] = useState<BillingSettings>({ cycle_weeks: 4, default_method: "card", surcharge_pct: 2, lead_days: 0 });
+  const [form, setForm] = useState<BillingSettings>({ cycle_weeks: 4, default_method: "card", surcharge_pct: 2, lead_days: 0, default_placement_fee: 0, default_deposit: 0 });
 
   const { data, isLoading } = useQuery({
     queryKey: ["homestay-billing-settings"],
@@ -83,6 +85,19 @@ export default function HomestayBilling() {
               <Input type="number" inputMode="numeric" min={0} max={30} value={form.lead_days}
                 onChange={(e) => setForm((f) => ({ ...f, lead_days: Number(e.target.value) }))} />
               <p className="text-xs text-muted-foreground">{t("homestayBilling.lead_days_hint")}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-4 border-t pt-5">
+              <div className="grid gap-1.5">
+                <Label>{t("homestayBilling.default_placement_fee")}</Label>
+                <Input type="number" inputMode="decimal" min={0} step={0.01} value={form.default_placement_fee}
+                  onChange={(e) => setForm((f) => ({ ...f, default_placement_fee: Number(e.target.value) }))} />
+              </div>
+              <div className="grid gap-1.5">
+                <Label>{t("homestayBilling.default_deposit")}</Label>
+                <Input type="number" inputMode="decimal" min={0} step={0.01} value={form.default_deposit}
+                  onChange={(e) => setForm((f) => ({ ...f, default_deposit: Number(e.target.value) }))} />
+              </div>
+              <p className="text-xs text-muted-foreground col-span-2">{t("homestayBilling.default_fees_hint")}</p>
             </div>
             <div className="flex justify-end">
               <Button onClick={() => save.mutate()} disabled={save.isPending}>{save.isPending ? t("common.saving") : t("common.save")}</Button>
