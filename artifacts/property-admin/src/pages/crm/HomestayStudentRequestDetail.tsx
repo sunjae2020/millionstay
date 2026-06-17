@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useParams, Link } from "wouter";
 import { formatDateTime } from "@/lib/date";
+import { DateInput } from "@/components/ui/date-input";
 import { formatPersonName } from "@/lib/nameFormat";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
@@ -765,11 +766,11 @@ export default function HomestayStudentRequestDetail() {
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-1.5">
                 <Label>{t("homestayPlacement.f_move_in")}</Label>
-                <Input type="date" value={placeForm.move_in_date} onChange={(e) => setPlaceForm((f) => ({ ...f, move_in_date: e.target.value }))} />
+                <DateInput value={placeForm.move_in_date} onChange={(iso) => setPlaceForm((f) => ({ ...f, move_in_date: iso }))} />
               </div>
               <div className="grid gap-1.5">
                 <Label>{t("homestayPlacement.f_move_out")}</Label>
-                <Input type="date" value={placeForm.move_out_date} onChange={(e) => setPlaceForm((f) => ({ ...f, move_out_date: e.target.value }))} />
+                <DateInput value={placeForm.move_out_date} onChange={(iso) => setPlaceForm((f) => ({ ...f, move_out_date: iso }))} min={placeForm.move_in_date || undefined} />
               </div>
               <div className="grid gap-1.5">
                 <Label>{t("homestayPlacement.f_placement_fee")}</Label>

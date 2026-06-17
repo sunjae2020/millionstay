@@ -30,6 +30,12 @@ export function getDatePattern(): string {
   return (setting && PATTERN_MAP[setting]) || DEFAULT_PATTERN;
 }
 
+/** Human-facing label for the configured pattern (e.g. "DD/MM/YYYY") — used as input placeholders. */
+export function getDatePlaceholder(): string {
+  const setting = loadTheme().date_format;
+  return (setting && PATTERN_MAP[setting] ? setting : "DD/MM/YYYY");
+}
+
 type DateInput = string | number | Date | null | undefined;
 
 function toDate(value: DateInput): Date | null {

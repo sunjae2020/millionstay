@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -451,11 +452,11 @@ export function QuickBookingPanel({ open, onClose }: { open: boolean; onClose: (
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-xs font-medium">{t("dash_reservations.col_checkin")} <span className="text-red-500">*</span></Label>
-              <Input type="date" className="mt-1.5 h-9 text-xs" value={form.check_in_date} onChange={e => setForm(f => ({ ...f, check_in_date: e.target.value }))} />
+              <DateInput className="mt-1.5 h-9 text-xs" value={form.check_in_date} onChange={iso => setForm(f => ({ ...f, check_in_date: iso }))} />
             </div>
             <div>
               <Label className="text-xs font-medium">{t("dash_reservations.col_checkout")} <span className="text-red-500">*</span></Label>
-              <Input type="date" className="mt-1.5 h-9 text-xs" value={form.check_out_date} onChange={e => setForm(f => ({ ...f, check_out_date: e.target.value }))} />
+              <DateInput className="mt-1.5 h-9 text-xs" value={form.check_out_date} onChange={iso => setForm(f => ({ ...f, check_out_date: iso }))} min={form.check_in_date || undefined} />
             </div>
           </div>
 

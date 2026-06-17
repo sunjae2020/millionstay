@@ -3,6 +3,7 @@ import { CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { formatDate, getDatePlaceholder } from "@/lib/date";
 
 interface DateInputProps {
   value: string;
@@ -13,13 +14,6 @@ interface DateInputProps {
   className?: string;
   disabled?: boolean;
   readOnly?: boolean;
-}
-
-function isoToDmy(iso: string): string {
-  if (!iso) return "";
-  const [y, m, d] = iso.split("-");
-  if (!y || !m || !d) return iso;
-  return `${d}/${m}/${y}`;
 }
 
 function isoToDate(iso: string): Date | undefined {
@@ -40,23 +34,23 @@ export function DateInput({
   onChange,
   min,
   max,
-  placeholder = "DD/MM/YYYY",
+  placeholder = getDatePlaceholder(),
   className,
   disabled,
   readOnly,
 }: DateInputProps) {
-  const [display, setDisplay] = useState(isoToDmy(value));
+  const [display, setDisplay] = useState(() => formatDate(value, ""));
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    setDisplay(isoToDmy(value));
+    setDisplay(formatDate(value, ""));
   }, [value]);
 
   const handleCalendarSelect = (date: Date | undefined) => {
     if (!date) return;
     const iso = dateToIso(date);
     onChange?.(iso);
-    setDisplay(isoToDmy(iso));
+    setDisplay(formatDate(iso, ""));
     setOpen(false);
   };
 
