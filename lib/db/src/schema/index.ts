@@ -60,6 +60,7 @@ export * from "./api_credentials";
 export * from "./owner_sites";
 export * from "./homestay_host_applications";
 export * from "./homestay_student_requests";
+export * from "./short_term_applications";
 export * from "./homestay_placements";
 export * from "./homestay_placement_payments";
 export * from "./homestay_commission_plans";

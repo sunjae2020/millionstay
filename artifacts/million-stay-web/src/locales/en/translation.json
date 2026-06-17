@@ -1699,5 +1699,36 @@
   },
   "cstranslate": {
     "english_label": "English"
+  },
+  "short_term": {
+    "eyebrow": "Short-term stay",
+    "hero_title": "Short-term Accommodation Application",
+    "hero_lead": "Apply for a short-stay home with MillionStay. Tell us your dates and preferences — after you submit, you'll e-sign your application and we'll be in touch with options.",
+    "breadcrumb_home": "Home",
+    "breadcrumb": "Short-term Application",
+    "section_applicant": "Your details",
+    "section_stay": "Stay details",
+    "label_first_name": "Given name",
+    "label_last_name": "Family name",
+    "label_email": "Email",
+    "label_phone": "Phone",
+    "label_nationality": "Nationality",
+    "label_check_in": "Check-in date",
+    "label_check_out": "Check-out date",
+    "label_guests": "Number of guests",
+    "label_preferred_area": "Preferred area / suburb",
+    "label_property_type": "Property type",
+    "label_budget_weekly": "Weekly budget",
+    "placeholder_budget": "e.g. 450 AUD/week",
+    "label_move_in_flexible": "My move-in date is flexible",
+    "label_notes": "Anything else we should know?",
+    "placeholder_notes": "Special requests, length of stay, accessibility needs, etc.",
+    "terms_label": "I have read and accept the Terms & Conditions and Privacy Policy.",
+    "submit": "Submit & continue to sign",
+    "submitting": "Submitting…",
+    "submit_hint": "After submitting you'll be taken to e-sign your application.",
+    "error_required": "Please fill in your name and email.",
+    "error_terms": "Please accept the Terms & Conditions to continue.",
+    "error_submit_failed": "Failed to submit. Please try again."
   }
 }

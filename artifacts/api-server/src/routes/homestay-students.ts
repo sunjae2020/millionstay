@@ -10,6 +10,8 @@ import { and, desc, eq, ilike, isNull, or, sql } from "drizzle-orm";
 import { db, homestayStudentRequestsTable, homestayHostApplicationsTable, homestayHostAvailabilityTable, accountsTable, usersTable } from "@workspace/db";
 import { generateStudentRef } from "../lib/homestayRef.js";
 import { createSigningRequest, type SignerSpec } from "../services/contractSigning.js";
+import { sendApplicationAck } from "../services/applicationDocs.js";
+import { studentApplicationToDoc } from "../lib/documents/applicationPdf.js";
 import { sendLeadNotificationEmail } from "../lib/email.js";
 import { logAction } from "../utils/auditLog.js";
 import { rankHosts } from "../lib/homestay/matching.js";
@@ -110,6 +112,22 @@ homestayStudentPublicRouter.post("/v1/public/homestay-student-requests", async (
       signers.push({ role: "guardian", name: guardian_name, email: guardian_email, required: true });
     }
     const signing = await createSigningRequest({ contextType: "student_app", contextId: row!.id, signers });
+
+    // Applicant acknowledgment — gated by Settings → Application Emails
+    // (homestay_student). For minors the guardian's email is used as the
+    // recipient when the student has none. Attaches the application PDF when
+    // attach_pdf is enabled. Best-effort, never blocks the response.
+    const ackTo = student_email ?? guardian_email;
+    if (ackTo) {
+      void sendApplicationAck({
+        type: "homestay_student",
+        to: ackTo,
+        toName: is_minor ? (guardian_name || studentName) : studentName,
+        appTypeLabel: "Student Application",
+        ref: request_ref,
+        buildDoc: () => studentApplicationToDoc(row!, undefined, { signed: false }),
+      }).catch((e) => console.error("[homestay-student] ack email failed:", e));
+    }
 
     // Ops notification — best-effort, never blocks the response.
     const adminTo = process.env.LEAD_NOTIFICATION_EMAIL;

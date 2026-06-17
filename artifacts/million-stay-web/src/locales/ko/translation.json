@@ -1221,5 +1221,36 @@
   },
   "cstranslate": {
     "english_label": "영어"
+  },
+  "short_term": {
+    "eyebrow": "단기 체류",
+    "hero_title": "단기 숙소 신청",
+    "hero_lead": "MillionStay에서 단기 체류 숙소를 신청하세요. 희망 일정과 조건을 알려주시면, 제출 후 신청서에 전자 서명하시고 저희가 옵션을 안내해 드립니다.",
+    "breadcrumb_home": "홈",
+    "breadcrumb": "단기 숙소 신청",
+    "section_applicant": "신청자 정보",
+    "section_stay": "체류 정보",
+    "label_first_name": "이름",
+    "label_last_name": "성",
+    "label_email": "이메일",
+    "label_phone": "전화번호",
+    "label_nationality": "국적",
+    "label_check_in": "체크인 날짜",
+    "label_check_out": "체크아웃 날짜",
+    "label_guests": "투숙 인원",
+    "label_preferred_area": "희망 지역 / 동네",
+    "label_property_type": "숙소 유형",
+    "label_budget_weekly": "주간 예산",
+    "placeholder_budget": "예: 450 AUD/주",
+    "label_move_in_flexible": "입주 날짜는 조정 가능합니다",
+    "label_notes": "추가로 알려주실 내용이 있나요?",
+    "placeholder_notes": "특별 요청, 체류 기간, 편의 시설 필요 사항 등",
+    "terms_label": "이용약관 및 개인정보 처리방침을 읽고 동의합니다.",
+    "submit": "제출하고 서명 진행",
+    "submitting": "제출 중…",
+    "submit_hint": "제출 후 신청서 전자 서명 단계로 이동합니다.",
+    "error_required": "이름과 이메일을 입력해 주세요.",
+    "error_terms": "계속하려면 이용약관에 동의해 주세요.",
+    "error_submit_failed": "제출에 실패했습니다. 다시 시도해 주세요."
   }
 }

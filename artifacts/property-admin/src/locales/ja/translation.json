@@ -112,7 +112,8 @@
     "homestay_student_requests": "学生申請",
     "homestay_placements": "ホームステイ配置",
     "document_templates": "ドキュメントテンプレート",
-    "homestay_billing": "ホームステイ請求"
+    "homestay_billing": "ホームステイ請求",
+    "application_emails": "申請確認メール"
   },
   "dashboard": {
     "title": "ダッシュボード",
@@ -3034,5 +3035,27 @@
     "note_cron": "毎日のジョブがサイクルごとに保留中の請求を作成します。運用チームが配置から各請求（カードリンク / 銀行情報）を送信します。",
     "toast_saved": "請求設定を保存しました",
     "error": "問題が発生しました"
+  },
+  "settings_app_emails": {
+    "title": "申請確認メール",
+    "subtitle": "申請者が申請を送信したときに送られる受付確認メール",
+    "intro": "申請者が以下のいずれかの申請フォームを送信すると、MillionStay は申請を受け付けた旨の確認メールを自動で送信できます。申請種別ごとに、メールを送信するか、申請内容のPDFを添付するかを設定してください。",
+    "col_type": "申請種別",
+    "col_ack": "確認メールを送信",
+    "col_pdf": "PDFを添付",
+    "ack_explain": "送信されると同時に、ブランド付きの「申請を受け付けました」確認メールを申請者に送ります。",
+    "pdf_explain": "送信された申請内容のPDFコピーを確認メールに添付します。",
+    "note_ops": "これらの設定に関わらず、運用チームには常に別途の内部通知が届きます。",
+    "note_pdf_render": "PDF添付にはサーバー側でのPDF生成が必要です。利用できない場合でも、添付なしで確認メールは送信されます。",
+    "toast_saved": "設定を保存しました",
+    "error": "保存に失敗しました",
+    "type_homestay_student_label": "ホームステイ — 学生申請",
+    "type_homestay_student_desc": "ホームステイ先を申請する学生（または保護者）",
+    "type_homestay_host_label": "ホームステイ — ホスト申請",
+    "type_homestay_host_desc": "ホームステイ学生を受け入れる家族",
+    "type_short_term_label": "短期宿泊申請",
+    "type_short_term_desc": "短期滞在の予約を申請するゲスト",
+    "type_landlord_label": "オーナー（家主）申請",
+    "type_landlord_desc": "物件の掲載を申請するオーナー"
   }
 }

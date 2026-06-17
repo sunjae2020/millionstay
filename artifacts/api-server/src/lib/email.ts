@@ -525,6 +525,8 @@ interface HomestayHostEmailOptions {
   note?: string | null;
   /** Portal URL the host can log in to. */
   portalUrl?: string;
+  /** Optional PDF attachments (e.g. the application copy on acknowledgment). */
+  attachments?: Array<{ filename: string; content: Buffer }>;
 }
 
 const HOMESTAY_EMAIL_COPY: Record<HomestayEmailKind, { subject: (ref: string) => string; heading: string; body: (portalUrl: string) => string }> = {
@@ -619,12 +621,84 @@ export async function sendHomestayHostEmail(opts: HomestayHostEmailOptions): Pro
   </div>
 </div>
 </body></html>`;
+  const attachments = (opts.attachments ?? []).map((a) => ({ filename: a.filename, content: a.content.toString("base64") }));
   try {
-    await client.emails.send({ from: FROM, to: [opts.to], subject, html });
-    console.log(`[email] Homestay ${opts.kind} sent for ${opts.applicationRef} → ${opts.to}${tpl ? " (template)" : ""}`);
+    await client.emails.send({ from: FROM, to: [opts.to], subject, html, ...(attachments.length ? { attachments } : {}) });
+    console.log(`[email] Homestay ${opts.kind} sent for ${opts.applicationRef} → ${opts.to}${tpl ? " (template)" : ""}${attachments.length ? " (+pdf)" : ""}`);
     return true;
   } catch (err) {
     console.error(`[email] Failed to send homestay ${opts.kind}:`, err);
+    return false;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Generic application acknowledgment email — sent to the applicant on
+   submission of a Student / Landlord / Short-term application (the Homestay
+   host intake keeps its own richer, template-backed `received` email above).
+   Branded shell, English, best-effort. Optionally attaches the application PDF.
+   Gated per-type by the application_emails settings at each call site.
+   ───────────────────────────────────────────────────────────────────────── */
+export interface ApplicationAckEmailOptions {
+  to: string;
+  toName?: string | null;
+  /** Application type label, e.g. "Student Application". */
+  appTypeLabel: string;
+  /** Reference shown to the applicant, e.g. "HSR-2026-00001". */
+  ref: string;
+  /** Optional intro sentence override; defaults to generic received copy. */
+  intro?: string | null;
+  /** Optional application PDF to attach. */
+  pdf?: Buffer | null;
+  /** Attachment filename; defaults to `${ref}.pdf`. */
+  filename?: string;
+}
+
+export async function sendApplicationAckEmail(opts: ApplicationAckEmailOptions): Promise<boolean> {
+  const client = getResend();
+  if (!client) {
+    console.log(`[email] (skipped — no RESEND_API_KEY) ${opts.appTypeLabel} ack → ${opts.to}`);
+    return false;
+  }
+  const supportEmail = await resolveSupportEmail();
+  const intro = opts.intro
+    ?? `Thank you for submitting your ${opts.appTypeLabel.toLowerCase()} to MillionStay. We've received it and our team will be in touch shortly. Please keep your reference below for any follow-up.`;
+  const pdfNote = opts.pdf
+    ? `<p style="font-size:13px;color:#6b7280;margin:12px 0 0;">A copy of your application is attached as a PDF for your records.</p>`
+    : "";
+
+  const html = `<!DOCTYPE html><html><body style="margin:0;background:#faf9f7;font-family:-apple-system,Segoe UI,Roboto,sans-serif;">
+<div style="max-width:560px;margin:0 auto;padding:24px;">
+  <div style="text-align:center;padding:8px 0 16px;"><img src="${LOGO_URL}" alt="MillionStay" style="height:32px;" /></div>
+  <div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:28px;">
+    <h1 style="font-size:20px;margin:0 0 12px;color:#1f2937;">Application received</h1>
+    <p style="font-size:14px;color:#4b5563;line-height:1.6;margin:0;">Hi ${safeName(opts.toName) || "there"},</p>
+    <p style="font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;">${escapeHtml(intro)}</p>
+    ${pdfNote}
+    <p style="font-size:13px;color:#9ca3af;margin:20px 0 0;">${escapeHtml(opts.appTypeLabel)} reference: <strong>${escapeHtml(opts.ref)}</strong></p>
+  </div>
+  <div style="text-align:center;color:#9ca3af;font-size:12px;padding:16px;">
+    Questions? Contact us at <a href="mailto:${supportEmail}" style="color:#f97316;">${supportEmail}</a><br/>
+    © ${new Date().getFullYear()} MillionStay
+  </div>
+</div>
+</body></html>`;
+
+  const attachments = opts.pdf
+    ? [{ filename: opts.filename ?? `${opts.ref}.pdf`, content: opts.pdf.toString("base64") }]
+    : [];
+  try {
+    await client.emails.send({
+      from: FROM,
+      to: [opts.to],
+      subject: `We received your ${opts.appTypeLabel} (${opts.ref})`,
+      html,
+      ...(attachments.length ? { attachments } : {}),
+    });
+    console.log(`[email] ${opts.appTypeLabel} ack sent for ${opts.ref} → ${opts.to}${attachments.length ? " (+pdf)" : ""}`);
+    return true;
+  } catch (err) {
+    console.error(`[email] Failed to send ${opts.appTypeLabel} ack:`, err);
     return false;
   }
 }

@@ -1180,5 +1180,36 @@
   },
   "cstranslate": {
     "english_label": "英文"
+  },
+  "short_term": {
+    "eyebrow": "短期入住",
+    "hero_title": "短期住宿申请",
+    "hero_lead": "在 MillionStay 申请短期住宿。告诉我们您的日期和偏好——提交后您将电子签署申请，我们会联系您并提供选择。",
+    "breadcrumb_home": "首页",
+    "breadcrumb": "短期住宿申请",
+    "section_applicant": "您的信息",
+    "section_stay": "入住详情",
+    "label_first_name": "名",
+    "label_last_name": "姓",
+    "label_email": "邮箱",
+    "label_phone": "电话",
+    "label_nationality": "国籍",
+    "label_check_in": "入住日期",
+    "label_check_out": "退房日期",
+    "label_guests": "入住人数",
+    "label_preferred_area": "意向区域 / 街区",
+    "label_property_type": "房源类型",
+    "label_budget_weekly": "每周预算",
+    "placeholder_budget": "例如 450 澳元/周",
+    "label_move_in_flexible": "我的入住日期可以灵活调整",
+    "label_notes": "还有什么需要告诉我们的吗？",
+    "placeholder_notes": "特殊要求、入住时长、无障碍需求等",
+    "terms_label": "我已阅读并接受条款与条件以及隐私政策。",
+    "submit": "提交并继续签署",
+    "submitting": "提交中…",
+    "submit_hint": "提交后您将进入申请的电子签署环节。",
+    "error_required": "请填写您的姓名和邮箱。",
+    "error_terms": "请接受条款与条件以继续。",
+    "error_submit_failed": "提交失败，请重试。"
   }
 }

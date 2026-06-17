@@ -112,7 +112,8 @@
     "document_templates": "Document Templates",
     "homestay_billing": "Homestay Billing",
     "page_translations": "Page Translations",
-    "blog_categories": "Blog Categories"
+    "blog_categories": "Blog Categories",
+    "application_emails": "Application Emails"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -3034,5 +3035,27 @@
   "blog_categories": {
     "title": "Blog Categories",
     "subtitle": "Manage the categories available to blog posts and the public blog filter."
+  },
+  "settings_app_emails": {
+    "title": "Application Emails",
+    "subtitle": "Confirmation emails sent to applicants when they submit an application",
+    "intro": "When an applicant submits one of the application forms below, MillionStay can automatically email them a confirmation that their application was received. Configure, per application type, whether that email is sent and whether a copy of the application is attached as a PDF.",
+    "col_type": "Application type",
+    "col_ack": "Send confirmation email",
+    "col_pdf": "Attach PDF",
+    "ack_explain": "Email the applicant a branded “application received” confirmation as soon as they submit.",
+    "pdf_explain": "Attach a PDF copy of the submitted application to that confirmation email.",
+    "note_ops": "Your operations team always receives a separate internal notification regardless of these settings.",
+    "note_pdf_render": "PDF attachment requires PDF rendering to be available on the server; if it isn't, the confirmation email is still sent without the attachment.",
+    "toast_saved": "Settings saved",
+    "error": "Save failed",
+    "type_homestay_student_label": "Homestay — Student application",
+    "type_homestay_student_desc": "Students (or guardians) applying for a homestay placement",
+    "type_homestay_host_label": "Homestay — Host application",
+    "type_homestay_host_desc": "Families applying to host homestay students",
+    "type_short_term_label": "Short-term accommodation application",
+    "type_short_term_desc": "Guests applying for a short-stay booking",
+    "type_landlord_label": "Landlord / property owner application",
+    "type_landlord_desc": "Owners applying to list their property"
   }
 }

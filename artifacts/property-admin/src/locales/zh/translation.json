@@ -112,7 +112,8 @@
     "homestay_student_requests": "学生申请",
     "homestay_placements": "寄宿安置",
     "document_templates": "文档模板",
-    "homestay_billing": "寄宿计费"
+    "homestay_billing": "寄宿计费",
+    "application_emails": "申请确认邮件"
   },
   "dashboard": {
     "title": "仪表板",
@@ -3034,5 +3035,27 @@
     "note_cron": "每日任务会在每个周期创建一笔待处理收费；运营人员从安置中逐一发送（银行卡链接 / 银行信息）。",
     "toast_saved": "计费设置已保存",
     "error": "出现错误"
+  },
+  "settings_app_emails": {
+    "title": "申请确认邮件",
+    "subtitle": "申请人提交申请时发送的受理确认邮件",
+    "intro": "当申请人提交下列任一申请表时，MillionStay 可自动向其发送已收到申请的确认邮件。请按申请类型设置是否发送该邮件，以及是否将申请副本以 PDF 附件形式一并发送。",
+    "col_type": "申请类型",
+    "col_ack": "发送确认邮件",
+    "col_pdf": "附带 PDF",
+    "ack_explain": "提交后立即向申请人发送带品牌样式的“申请已受理”确认邮件。",
+    "pdf_explain": "将所提交申请的 PDF 副本附在该确认邮件中。",
+    "note_ops": "无论此处如何设置，运营团队始终会收到单独的内部通知。",
+    "note_pdf_render": "PDF 附件需要服务器支持 PDF 生成；如不可用，确认邮件仍会发送，只是不含附件。",
+    "toast_saved": "设置已保存",
+    "error": "保存失败",
+    "type_homestay_student_label": "寄宿家庭 — 学生申请",
+    "type_homestay_student_desc": "申请寄宿安置的学生（或监护人）",
+    "type_homestay_host_label": "寄宿家庭 — 寄宿家庭申请",
+    "type_homestay_host_desc": "申请接待寄宿学生的家庭",
+    "type_short_term_label": "短期住宿申请",
+    "type_short_term_desc": "申请短期住宿预订的客人",
+    "type_landlord_label": "房东 / 业主申请",
+    "type_landlord_desc": "申请发布其房源的业主"
   }
 }

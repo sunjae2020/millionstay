@@ -17,6 +17,9 @@ import { generateHomestayRef } from "../lib/homestayRef.js";
 import { formatFirstName, formatLastName } from "../lib/nameFormat.js";
 import { signPartnerJWT, requireHomestayAuth, invalidatePartnerCache, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth.js";
 import { createSigningRequest } from "../services/contractSigning.js";
+import { renderApplicationPdf } from "../services/applicationDocs.js";
+import { hostApplicationToDoc } from "../lib/documents/applicationPdf.js";
+import { getAckRule } from "../lib/applicationEmails.js";
 import { sendHomestayHostEmail, sendLeadNotificationEmail } from "../lib/email.js";
 import { isCloudinaryConfigured, uploadToCloudinary } from "../utils/cloudinary.js";
 import { logAction } from "../utils/auditLog.js";
@@ -241,8 +244,18 @@ homestayPublicRouter.post("/v1/public/homestay-host-applications", async (req, r
 
     // 5) Emails — best-effort, never block. Skipped for Drafts (not yet submitted).
     if (!isDraft) {
-      void sendHomestayHostEmail({ to: email, toName: first_name, applicationRef: application_ref, kind: "received" })
-        .catch((e) => console.error("[homestay] received email failed:", e));
+      // Applicant acknowledgment — gated by Settings → Application Emails
+      // (homestay_host). Attaches the application PDF when attach_pdf is enabled.
+      void (async () => {
+        const rule = await getAckRule("homestay_host");
+        if (!rule.send_ack_email) return;
+        let attachments: Array<{ filename: string; content: Buffer }> | undefined;
+        if (rule.attach_pdf) {
+          const pdf = await renderApplicationPdf(hostApplicationToDoc(appRow!, undefined, { signed: false }));
+          if (pdf) attachments = [{ filename: `${application_ref}.pdf`, content: pdf }];
+        }
+        await sendHomestayHostEmail({ to: email, toName: first_name, applicationRef: application_ref, kind: "received", attachments });
+      })().catch((e) => console.error("[homestay] received email failed:", e));
       const adminTo = process.env.LEAD_NOTIFICATION_EMAIL;
       if (adminTo) {
         void sendLeadNotificationEmail({
