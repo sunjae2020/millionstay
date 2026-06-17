@@ -165,7 +165,7 @@ export default function PrivacyPolicy() {
               </p>
               <div className="mt-3 space-y-1 text-sm">
                 <p className="text-gray-700"><span className="font-medium">Privacy Officer:</span>{" "}
-                  <a href="mailto:privacy@millionstay.com" className="text-primary hover:underline">privacy@millionstay.com</a>
+                  <a href="mailto:millionstay.com@gmail.com" className="text-primary hover:underline">millionstay.com@gmail.com</a>
                 </p>
                 <p className="text-gray-700"><span className="font-medium">Website:</span>{" "}
                   <a href="https://www.millionstay.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">www.millionstay.com</a>
