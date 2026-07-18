@@ -237,7 +237,10 @@ export async function generateAndStoreSignedPdf(
   signing: SigningRow,
 ): Promise<{ pdf: Buffer | null; pdfUrl: string | null }> {
   try {
-    const html = await buildSignedDocumentHtml(signing, { signed: true, forPrint: true });
+    // Prefer the frozen snapshot captured at sign time (H-201) so the stored PDF
+    // is byte-for-byte the signed document; only re-render if no snapshot exists.
+    const snapshotHtml = (signing.signed_snapshot as { html?: string } | null)?.html;
+    const html = snapshotHtml ?? (await buildSignedDocumentHtml(signing, { signed: true, forPrint: true }));
     if (!html) return { pdf: null, pdfUrl: null };
 
     const pdf = await htmlToPdf(html);

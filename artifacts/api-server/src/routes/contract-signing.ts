@@ -9,6 +9,7 @@
 // PDF rendering of the signed document is intentionally NOT included here — the
 // signature images + legal metadata are captured in JSONB; rendering is wired up
 // per concrete document (host application, placement contract) in later phases.
+import crypto from "node:crypto";
 import { Router, type IRouter } from "express";
 import { and, eq, inArray } from "drizzle-orm";
 import { db, contractSigningRequestsTable, homestayPlacementsTable, contractsTable } from "@workspace/db";
@@ -151,9 +152,27 @@ contractSigningPublicRouter.post("/v1/public/contract-signing/:token/sign", asyn
     }));
 
     const now = new Date();
+
+    // ── Tamper-evidence: freeze the exact signed document (H-201) ──
+    // Render the signed doc now and store it + its sha256 so /preview and /pdf
+    // serve this verbatim instead of re-rendering live (which would silently
+    // reflect any later edit to the underlying record).
+    const signedRow = { ...row, status: "signed", signatures: enriched, signed_at: now };
+    let content_hash: string | null = null;
+    let signed_snapshot: { html: string; capturedAt: string } | null = null;
+    try {
+      const snapHtml = await buildSignedDocumentHtml(signedRow, { signed: true, forPrint: true });
+      if (snapHtml) {
+        content_hash = crypto.createHash("sha256").update(snapHtml, "utf8").digest("hex");
+        signed_snapshot = { html: snapHtml, capturedAt: nowIso };
+      }
+    } catch (e) {
+      console.error("[ContractSign] signed-snapshot capture failed:", e);
+    }
+
     await db
       .update(contractSigningRequestsTable)
-      .set({ status: "signed", signatures: enriched, signed_at: now, updated_at: now })
+      .set({ status: "signed", signatures: enriched, signed_at: now, updated_at: now, content_hash, signed_snapshot })
       .where(eq(contractSigningRequestsTable.id, row.id));
 
     void appendAuditEvent(row.id, {
@@ -177,7 +196,7 @@ contractSigningPublicRouter.post("/v1/public/contract-signing/:token/sign", asyn
 
     // Best-effort, fire-and-forget: render the signed PDF, store it privately,
     // and email it (applicant + host + linked agent + ops). Never blocks the response.
-    void processSignedApplication({ ...row, status: "signed", signatures: enriched, signed_at: now })
+    void processSignedApplication({ ...row, status: "signed", signatures: enriched, signed_at: now, content_hash, signed_snapshot })
       .catch((e) => console.error("[ContractSign] post-sign pdf/email failed:", e));
 
     // A signed placement contract advances the placement to AwaitingPayment.
@@ -213,6 +232,14 @@ contractSigningPublicRouter.get("/v1/public/contract-signing/:token/preview", as
       .limit(1);
     if (!row) {
       res.status(404).send("Not found");
+      return;
+    }
+    // Signed documents are served from the frozen snapshot captured at sign time
+    // (H-201) — never re-rendered live, so the preview always matches what was signed.
+    const snapshot = (row.signed_snapshot as { html?: string } | null)?.html;
+    if (row.status === "signed" && snapshot) {
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.send(snapshot);
       return;
     }
     const html = await buildSignedDocumentHtml(row, { signed: row.status === "signed", forPrint: false });

@@ -26,6 +26,12 @@ export const contractSigningRequestsTable = pgTable("contract_signing_requests",
 
   pdf_url: text("pdf_url"),                          // Cloudinary URL of signed PDF
   pdf_generated_at: timestamp("pdf_generated_at", { withTimezone: true }),
+  // Tamper-evidence (H-201): the exact document rendered at sign time is frozen
+  // here so /preview and /pdf serve the signed content verbatim instead of
+  // re-rendering live (which would silently reflect later edits). content_hash is
+  // the sha256 of signed_snapshot.html.
+  content_hash: text("content_hash"),
+  signed_snapshot: jsonb("signed_snapshot"),         // { html, capturedAt }
   // audit_trail: append-only [{ event, at, ip, userAgent, ... }]
   audit_trail: jsonb("audit_trail").notNull().default([]),
   signed_at: timestamp("signed_at", { withTimezone: true }),

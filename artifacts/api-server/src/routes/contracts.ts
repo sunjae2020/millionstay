@@ -574,24 +574,36 @@ router.post("/v1/contracts/:id/freeze", async (req, res): Promise<void> => {
 router.put("/v1/contracts/:id", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
   const data = req.body;
-  const [row] = await db.update(contractsTable).set({
-    booking_id: data.booking_id ?? null,
-    product_id: data.product_id ?? null,
-    contract_product_id: data.contract_product_id ?? null,
-    tenant_account_id: data.tenant_account_id ?? null,
-    landlord_account_id: data.landlord_account_id ?? null,
-    space_id: data.space_id ?? null,
-    start_date: data.start_date ?? null,
-    end_date: data.end_date ?? null,
-    weekly_rate: data.weekly_rate ?? null,
-    total_rent: data.total_rent ?? null,
-    bond_amount: data.bond_amount ?? null,
-    advance_amount: data.advance_amount ?? null,
-    currency: data.currency ?? "AUD",
-    document_url: data.document_url ?? null,
-    terms_text: data.terms_text ?? null,
-    notes: data.notes ?? null,
-  }).where(eq(contractsTable.id, id)).returning();
+  const [existing] = await db.select().from(contractsTable).where(eq(contractsTable.id, id));
+  if (!existing) { res.status(404).json({ error: "NOT_FOUND" }); return; }
+
+  // Signed/Active contracts are immutable except for internal annotations —
+  // editing the terms/amounts would invalidate the captured e-signature (H-201).
+  const locked = existing.status === "Signed" || existing.status === "Active";
+  const updates = locked
+    ? {
+        document_url: data.document_url ?? existing.document_url,
+        notes: data.notes ?? existing.notes,
+      }
+    : {
+        booking_id: data.booking_id ?? null,
+        product_id: data.product_id ?? null,
+        contract_product_id: data.contract_product_id ?? null,
+        tenant_account_id: data.tenant_account_id ?? null,
+        landlord_account_id: data.landlord_account_id ?? null,
+        space_id: data.space_id ?? null,
+        start_date: data.start_date ?? null,
+        end_date: data.end_date ?? null,
+        weekly_rate: data.weekly_rate ?? null,
+        total_rent: data.total_rent ?? null,
+        bond_amount: data.bond_amount ?? null,
+        advance_amount: data.advance_amount ?? null,
+        currency: data.currency ?? "AUD",
+        document_url: data.document_url ?? null,
+        terms_text: data.terms_text ?? null,
+        notes: data.notes ?? null,
+      };
+  const [row] = await db.update(contractsTable).set(updates).where(eq(contractsTable.id, id)).returning();
   if (!row) { res.status(404).json({ error: "NOT_FOUND" }); return; }
   const [result] = await enrichContracts([row]);
   res.json(result);
