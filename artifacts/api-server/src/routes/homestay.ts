@@ -21,7 +21,7 @@ import { renderApplicationPdf } from "../services/applicationDocs.js";
 import { hostApplicationToDoc } from "../lib/documents/applicationPdf.js";
 import { getAckRule } from "../lib/applicationEmails.js";
 import { sendHomestayHostEmail, sendLeadNotificationEmail } from "../lib/email.js";
-import { isCloudinaryConfigured, uploadToCloudinary } from "../utils/cloudinary.js";
+import { isCloudinaryConfigured, uploadPrivateToCloudinary, generateSignedUrl } from "../utils/cloudinary.js";
 import { logAction } from "../utils/auditLog.js";
 import { parsePageParams, pageMeta } from "../utils/pagination.js";
 
@@ -45,6 +45,17 @@ function pickApplication(body: Record<string, unknown>): Record<string, unknown>
   const out: Record<string, unknown> = {};
   for (const k of APPLICATION_FIELDS) if (body[k] !== undefined) out[k] = body[k];
   return out;
+}
+
+// Host identity docs are stored as Cloudinary "authenticated" assets (H-501), so
+// they can only be viewed through a short-lived signed URL. Attach one to each
+// document row for the (already auth-gated) host and admin views.
+function withSignedUrls<T extends { cloudinary_public_id: string | null }>(docs: T[]): (T & { signed_url: string | null })[] {
+  const configured = isCloudinaryConfigured();
+  return docs.map((d) => ({
+    ...d,
+    signed_url: configured && d.cloudinary_public_id ? generateSignedUrl(d.cloudinary_public_id, 900) : null,
+  }));
 }
 
 // Strip sensitive/internal fields before returning an application to a host.
@@ -307,7 +318,7 @@ homestayPortalRouter.get("/v1/homestay/me", async (req, res): Promise<void> => {
       eq(documentsTable.entity_id, app.id),
       isNull(documentsTable.deleted_at),
     ));
-  res.json({ success: true, application: publicView(app), documents: docs });
+  res.json({ success: true, application: publicView(app), documents: withSignedUrls(docs) });
 });
 
 // Update own application (only while not yet approved/rejected)
@@ -335,7 +346,10 @@ homestayPortalRouter.post("/v1/homestay/documents", upload.single("file"), async
   if (!isCloudinaryConfigured()) { res.status(503).json({ success: false, error: "File storage not configured" }); return; }
   const doc_type = String((req.body as any).doc_type ?? "Other").slice(0, 32);
 
-  const uploaded = await uploadToCloudinary(file.buffer, { folder: `homestay/${app.id}` });
+  // Host identity docs (WWCC/ID/proof-of-residence) are PII — store them as
+  // Cloudinary "authenticated" assets so they are only reachable via short-lived
+  // signed URLs, never a public CDN link (H-501).
+  const uploaded = await uploadPrivateToCloudinary(file.buffer, { folder: `millionstay/private/homestay/${app.id}` });
   const [doc] = await db.insert(documentsTable).values({
     entity_type: "HomestayHostApplication",
     entity_id: app.id,
@@ -490,7 +504,7 @@ homestayAdminRouter.get("/v1/homestay-applications/:id", async (req, res): Promi
     eq(documentsTable.entity_id, id),
     isNull(documentsTable.deleted_at),
   ));
-  res.json({ success: true, application: app, documents: docs });
+  res.json({ success: true, application: app, documents: withSignedUrls(docs) });
 });
 
 async function setStatus(id: number, status: string, extra: Record<string, unknown>, reviewerId?: number) {
