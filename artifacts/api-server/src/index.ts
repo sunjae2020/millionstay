@@ -33,7 +33,17 @@ async function ensureAdminExists() {
     const [count] = await db.select({ n: sql<number>`count(*)` }).from(usersTable);
     if (Number(count?.n ?? 0) === 0) {
       const email = process.env["SEED_ADMIN_EMAIL"] ?? "admin@millionstay.com";
-      const password = process.env["SEED_ADMIN_PASSWORD"] ?? "MillionStay@2026!";
+      const password = process.env["SEED_ADMIN_PASSWORD"];
+      // Never bootstrap with a predictable built-in password (H-902). Require an
+      // explicit SEED_ADMIN_PASSWORD; otherwise skip and let an operator run the
+      // seed-admin CLI (which prints a generated password).
+      if (!password) {
+        logger.warn(
+          "No users exist and SEED_ADMIN_PASSWORD is not set — skipping admin auto-creation. " +
+            "Set SEED_ADMIN_EMAIL/SEED_ADMIN_PASSWORD (or run scripts/seed-admin.ts, which prints a generated password) to bootstrap the first Super Admin.",
+        );
+        return;
+      }
       const password_hash = await bcrypt.hash(password, 12);
       await db.insert(usersTable).values({
         email,
@@ -42,9 +52,9 @@ async function ensureAdminExists() {
         first_name: "Million",
         last_name: "Stay",
         is_active: true,
-        force_password_change: false,
+        force_password_change: true,
       });
-      logger.info({ email }, "Default admin user created");
+      logger.info({ email }, "Default admin user created (password change required on first login)");
     }
   } catch (err) {
     logger.error({ err }, "Failed to ensure admin user exists");
