@@ -8,3 +8,4 @@ set -e
 
 REPO=$(git rev-parse --show-toplevel)
 "$REPO/scripts/check-privacy.sh" --staged
+"$REPO/scripts/check-brand-overrides.sh"

@@ -13,8 +13,7 @@ import { Menu, X, LayoutDashboard, LogOut, ChevronDown } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 import { getApiBase } from "@/lib/api-base";
 import { CurrencySelector } from "./currency-selector";
-import logoHorizontal from "@assets/06.OR_NB_horizontal_ver_1775381659303.png";
-import logoMark from "@assets/05.OR_NB_Mark_simple_ver_1775381659302.png";
+import { LOGO_HORIZONTAL as logoHorizontal, LOGO_MARK as logoMark } from "@/lib/brand";
 
 const NAV_HREFS = [
   { key: "links.search", href: "/search" },

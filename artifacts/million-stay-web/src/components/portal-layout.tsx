@@ -17,8 +17,7 @@ import {
   Home,
   Globe,
 } from "lucide-react";
-import logoHorizontal from "@assets/06.OR_NB_horizontal_ver_1775381659303.png";
-import logoMark from "@assets/05.OR_NB_Mark_simple_ver_1775381659302.png";
+import { LOGO_HORIZONTAL as logoHorizontal, LOGO_MARK as logoMark } from "@/lib/brand";
 
 const LANGUAGES = [
   { code: "en", flag: "🇦🇺", label: "EN" },

@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { APP_NAME } from "../lib/appName";
 import { Mail, Facebook, Twitter, Instagram, Youtube, Globe } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import logoHorizontal from "@assets/06.OR_NB_horizontal_ver_1775381659303.png";
+import { LOGO_HORIZONTAL as logoHorizontal } from "@/lib/brand";
 import { useSupportEmail } from "@/lib/guest-api";
 
 export function Footer() {

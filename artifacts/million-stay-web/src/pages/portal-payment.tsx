@@ -20,7 +20,7 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { apiFetch, useSupportEmail, type MyInvoice } from "@/lib/guest-api";
-import { APP_NAME } from "../lib/appName";
+import { COMPANY } from "../lib/company";
 
 const BRAND = "#E8621A";
 const API = getApiBase();
@@ -46,10 +46,10 @@ function BankDetails({ amount, invoiceRef }: { amount: number; invoiceRef: strin
   };
 
   const rows: [string, string, string][] = [
-    ["Bank", "Commonwealth Bank of Australia", "bank"],
-    ["Account Name", `${APP_NAME} Pty Ltd`, "name"],
-    ["BSB", "063-000", "bsb"],
-    ["Account No.", "1234 5678", "acc"],
+    ["Bank", COMPANY.bank.name, "bank"],
+    ["Account Name", COMPANY.bank.accountName, "name"],
+    ["BSB", COMPANY.bank.bsb, "bsb"],
+    ["Account No.", COMPANY.bank.accountNo, "acc"],
     ["Amount", fmtAmt(amount), "amt"],
     ["Reference", invoiceRef, "ref"],
   ];

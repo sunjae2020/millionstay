@@ -20,6 +20,7 @@ import {
   Package, Zap, ConciergeBell,
 } from "lucide-react";
 import { APP_NAME } from "../lib/appName";
+import { COMPANY } from "../lib/company";
 
 /* ────────────────────────────────────────────── */
 /*  Constants                                     */
@@ -206,10 +207,10 @@ function SummaryCard({
 
 function BankTransferDetails({ total, ref_ }: { total: number; ref_: string }) {
   const fields = [
-    { label: "Bank",           value: "Commonwealth Bank of Australia" },
-    { label: "Account Name",   value: `${APP_NAME} Pty Ltd` },
-    { label: "BSB",            value: "063-000" },
-    { label: "Account No.",    value: "1234 5678" },
+    { label: "Bank",           value: COMPANY.bank.name },
+    { label: "Account Name",   value: COMPANY.bank.accountName },
+    { label: "BSB",            value: COMPANY.bank.bsb },
+    { label: "Account No.",    value: COMPANY.bank.accountNo },
     { label: "Amount",         value: `AUD $${total.toLocaleString()}` },
     { label: "Reference",      value: ref_ || "Your Name + Check-in Date" },
   ];

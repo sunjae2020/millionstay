@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
-import logoHorizontal from "@assets/06.OR_NB_horizontal_ver_1775381659303.png";
+import { LOGO_HORIZONTAL as logoHorizontal } from "@/lib/brand";
 import { APP_NAME } from "../lib/appName";
 
 const COUNTRIES = [

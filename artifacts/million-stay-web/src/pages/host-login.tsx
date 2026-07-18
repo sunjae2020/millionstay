@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Lock, Mail, Home } from "lucide-react";
-import logoHorizontal from "@assets/06.OR_NB_horizontal_ver_1775381659303.png";
+import { LOGO_HORIZONTAL as logoHorizontal } from "@/lib/brand";
 import { hostLogin, setHomestayToken } from "@/lib/homestay-api";
 import { APP_NAME } from "../lib/appName";
 

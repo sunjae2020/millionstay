@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Lock, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import logoHorizontal from "@assets/06.OR_NB_horizontal_ver_1775381659303.png";
+import { LOGO_HORIZONTAL as logoHorizontal } from "@/lib/brand";
 import { getApiBase } from "@/lib/api-base";
 import { APP_NAME } from "../lib/appName";
 

@@ -81,9 +81,11 @@ injection at build time (§2.4):
 | Variable | Exists? | Purpose |
 | --- | --- | --- |
 | `VITE_API_URL` | ✅ | API base per app |
-| `VITE_APP_NAME` | **(NEW)** | replaces hardcoded `MillionStay` / `<title>` |
-| `VITE_BRAND_PRIMARY` (+ palette) | **(NEW)** | drives `brand.css` tokens (§2.4) |
-| `VITE_LOGO_URL` / `VITE_FAVICON` | **(NEW)** | per-instance logo & favicon |
+| `VITE_APP_NAME` | ✅ | replaces hardcoded `MillionStay` / `<title>` |
+| `BRAND_*` (palette + fonts) | ✅ | build-time input to `generate-brand.mjs` → `brand.overrides.css` (§2.4). **Not** a `VITE_*` var — consumed by the Node build step, not the client bundle. |
+| `VITE_LOGO_URL` / `VITE_LOGO_MARK_URL` / `VITE_FAVICON` | ✅ | per-instance horizontal logo, square mark, favicon |
+| `VITE_COMPANY_LEGAL_NAME` / `VITE_COMPANY_ABN` / `VITE_COMPANY_CITY` | ✅ | legal entity shown on receipts/policy |
+| `VITE_BANK_NAME` / `VITE_BANK_ACCOUNT_NAME` / `VITE_BANK_BSB` / `VITE_BANK_ACCOUNT_NO` | ✅ | bank-transfer payment details |
 
 ### 1.5 Third-party service keys (per instance OR shared)
 
@@ -127,9 +129,27 @@ emails — not all 175 at once).
 ### 2.4 Brand tokens — `lib/design-tokens/src/brand.css` (single 53-line file)
 One shared CSS file; primary `#E8621A` and the full palette
 (navy/teal/cream/burnt/apricot/ink) + fonts are hardcoded, imported by all 6
-apps. **Fix:** generate the `:root` token block at build time from `VITE_BRAND_*`
-env (keep the same variable names so downstream `hsl(var(--primary))` is
-untouched). This is the highest-value single change for white-labeling.
+apps. **Status: DONE.** `brand.css` holds the primary MillionStay defaults;
+`brand.overrides.css` (imported right after it in every app) carries the
+per-instance overrides and is **committed empty** so the primary instance is
+untouched. `scripts/generate-brand.mjs` regenerates `brand.overrides.css` at
+build time from `BRAND_*` env (bare HSL triplets `"H S% L%"`, matching the
+`hsl(var(--x))` convention — the **same primitive names** as `brand.css`, so
+downstream `hsl(var(--primary))` is untouched):
+
+```bash
+# run BEFORE `vite build` in a white-label instance's deploy env:
+BRAND_ORANGE="256 84% 58%" BRAND_TEAL="173 58% 39%" \
+  BRAND_FONT_DISPLAY='"Sora", sans-serif' \
+  pnpm --filter @workspace/design-tokens generate-brand
+```
+
+With no `BRAND_*` set it re-emits the empty default (idempotent no-op), so it is
+safe to run unconditionally. The generated non-empty output must **never** be
+committed — the tracked file stays empty (guarded by `.githooks/pre-commit`).
+Accepted keys: `BRAND_ORANGE` (=primary slot), `BRAND_NAVY`, `BRAND_TEAL`
+(=accent slot), `BRAND_CREAM`, `BRAND_BURNT`, `BRAND_APRICOT`, `BRAND_INK`,
+`BRAND_WHITE`, `BRAND_FONT_DISPLAY`, `BRAND_FONT_SANS`.
 
 ### 2.5 Landing-site root domain — `lib/vercelDomains.ts:17`
 ```ts

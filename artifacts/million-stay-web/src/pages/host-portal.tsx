@@ -10,7 +10,7 @@ import {
   FileImage, Plus, Upload, Globe, ShieldCheck, Landmark, Trash2, FileEdit, Lock,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import logoHorizontal from "@assets/06.OR_NB_horizontal_ver_1775381659303.png";
+import { LOGO_HORIZONTAL as logoHorizontal } from "@/lib/brand";
 import { APP_NAME } from "../lib/appName";
 import {
   getHomestayToken, clearHomestayToken, fetchHostMe, uploadHostDocument,
