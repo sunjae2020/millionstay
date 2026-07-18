@@ -31,6 +31,9 @@ export const invoiceLineItemsTable = pgTable("invoice_line_items", {
   invoice_id: integer("invoice_id").notNull(), // invoices.id
   label: text("label").notNull(),              // e.g. "Homestay placement fee"
   description: text("description"),
+  // "revenue" (default) posts to GL Revenue; "deposit" posts to the Deposits Held
+  // liability account so refundable security deposits are never booked as revenue (H-402).
+  line_type: text("line_type").notNull().default("revenue"),
   quantity: numeric("quantity", { precision: 10, scale: 2 }).notNull().default("1"),
   unit_amount: numeric("unit_amount", { precision: 10, scale: 2 }).notNull().default("0"),
   total_amount: numeric("total_amount", { precision: 10, scale: 2 }).notNull().default("0"),

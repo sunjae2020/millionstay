@@ -42,6 +42,7 @@ type LineItemInput = {
   label: string;
   quantity: number;
   unit_amount: number;
+  line_type?: string; // "revenue" (default) | "deposit" (H-402)
 };
 
 export type PlacementInvoiceResult = typeof invoicesTable.$inferSelect & {
@@ -98,7 +99,7 @@ export async function createPlacementInvoice(
   }
   const deposit = Number(placement.deposit);
   if (deposit > 0) {
-    lines.push({ label: "Security deposit", quantity: 1, unit_amount: deposit });
+    lines.push({ label: "Security deposit", quantity: 1, unit_amount: deposit, line_type: "deposit" });
   }
   const monthlyFee = Number(placement.monthly_fee);
   if (monthlyFee > 0) {
@@ -160,6 +161,7 @@ export async function createPlacementInvoice(
         lines.map((l, i) => ({
           invoice_id: invoice!.id,
           label: l.label,
+          line_type: l.line_type ?? "revenue",
           quantity: String(l.quantity),
           unit_amount: String(round2(l.unit_amount)),
           total_amount: String(round2(l.quantity * l.unit_amount)),

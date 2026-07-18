@@ -10,7 +10,7 @@
 //
 // Money columns are numeric → strings; wrap reads in Number(), writes in String().
 import { and, desc, eq, gte, lte } from "drizzle-orm";
-import { db, journalEntriesTable, journalLinesTable } from "@workspace/db";
+import { db, journalEntriesTable, journalLinesTable, invoiceLineItemsTable } from "@workspace/db";
 
 // ── Fixed chart of accounts ────────────────────────────────────────────────
 export const ACCOUNTS = {
@@ -18,6 +18,9 @@ export const ACCOUNTS = {
   REVENUE: { code: "4000", name: "Revenue" },
   COMMISSION_EXPENSE: { code: "5000", name: "Agent Commission Expense" },
   COMMISSION_PAYABLE: { code: "2000", name: "Commission Payable" },
+  // Refundable security deposits are a liability, not revenue — held until
+  // refunded/forfeited (H-402).
+  DEPOSIT_HELD: { code: "2100", name: "Deposits Held" },
 } as const;
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
@@ -131,7 +134,12 @@ export async function postEntry(input: PostEntryInput): Promise<typeof journalEn
   }
 }
 
-/** Dr Cash / Cr Revenue when an invoice is paid. */
+/**
+ * Dr Cash / Cr Revenue (+ Cr Deposits Held for the deposit portion) when an
+ * invoice is paid. Refundable security-deposit line items (line_type="deposit")
+ * are credited to the Deposits Held liability account instead of Revenue so they
+ * are never booked as income (H-402).
+ */
 export async function postInvoicePaid(args: {
   id: number;
   amount: number;
@@ -141,6 +149,34 @@ export async function postInvoicePaid(args: {
   const amount = round2(args.amount || 0);
   if (amount <= 0) return null;
   const entryDate = args.paidAt ? args.paidAt.slice(0, 10) : sydneyToday();
+
+  // Sum the refundable-deposit line items for this invoice (clamped to the paid
+  // amount) so the credit split always balances against Dr Cash.
+  let depositAmount = 0;
+  try {
+    const lineItems = await db
+      .select({ line_type: invoiceLineItemsTable.line_type, total_amount: invoiceLineItemsTable.total_amount })
+      .from(invoiceLineItemsTable)
+      .where(eq(invoiceLineItemsTable.invoice_id, args.id));
+    const rawDeposit = lineItems
+      .filter((l) => l.line_type === "deposit")
+      .reduce((s, l) => s + Number(l.total_amount ?? 0), 0);
+    depositAmount = Math.min(round2(rawDeposit), amount);
+    if (depositAmount < 0) depositAmount = 0;
+  } catch (e) {
+    // Best-effort: if line items can't be read, fall back to all-revenue posting.
+    console.error(`[gl] postInvoicePaid: could not read line items for invoice #${args.id}:`, e);
+  }
+  const revenueAmount = round2(amount - depositAmount);
+
+  const creditLines: PostingLine[] = [];
+  if (depositAmount > 0) {
+    creditLines.push({ account_code: ACCOUNTS.DEPOSIT_HELD.code, account_name: ACCOUNTS.DEPOSIT_HELD.name, debit: 0, credit: depositAmount });
+  }
+  if (revenueAmount > 0) {
+    creditLines.push({ account_code: ACCOUNTS.REVENUE.code, account_name: ACCOUNTS.REVENUE.name, debit: 0, credit: revenueAmount });
+  }
+
   return postEntry({
     postingKey: `invoice_paid:${args.id}`,
     entryDate,
@@ -150,7 +186,7 @@ export async function postInvoicePaid(args: {
     currency: args.currency || "AUD",
     lines: [
       { account_code: ACCOUNTS.CASH.code, account_name: ACCOUNTS.CASH.name, debit: amount, credit: 0 },
-      { account_code: ACCOUNTS.REVENUE.code, account_name: ACCOUNTS.REVENUE.name, debit: 0, credit: amount },
+      ...creditLines,
     ],
   });
 }
