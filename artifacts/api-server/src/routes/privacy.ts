@@ -9,6 +9,8 @@ import { Router, type IRouter } from "express";
 import { db, marketingConsentsTable } from "@workspace/db";
 import { and, eq } from "drizzle-orm";
 import { verifyUnsubscribeToken } from "../lib/unsubscribeToken";
+import { getPrivacyContactEmail } from "../lib/companyContact";
+import { getCompanyInfo } from "../lib/documents/theme";
 
 const router: IRouter = Router();
 
@@ -66,7 +68,7 @@ router.get("/v1/privacy/unsubscribe", async (req, res): Promise<void> => {
     res.status(400).type("html").send(
       renderPage(
         "Unsubscribe link is invalid or expired",
-        `<p>This unsubscribe link is no longer valid. Please open the most recent email from us and use the link inside, or contact <a href="mailto:privacy@millionstay.com">privacy@millionstay.com</a>.</p>`,
+        `<p>This unsubscribe link is no longer valid. Please open the most recent email from us and use the link inside, or contact <a href="mailto:${getPrivacyContactEmail()}">${getPrivacyContactEmail()}</a>.</p>`,
         "#dc2626",
       ),
     );
@@ -80,7 +82,7 @@ router.get("/v1/privacy/unsubscribe", async (req, res): Promise<void> => {
       .send(
         renderPage(
           "You have been unsubscribed",
-          `<p><strong>${escapeHtml(payload.email)}</strong> will no longer receive marketing ${escapeHtml(payload.channel)} from MillionStay.</p>
+          `<p><strong>${escapeHtml(payload.email)}</strong> will no longer receive marketing ${escapeHtml(payload.channel)} from ${escapeHtml(getCompanyInfo().tradingName)}.</p>
            <p style="font-size:13px;color:#999;margin-top:24px">You will still receive transactional messages (booking confirmations, receipts, security alerts) as required to operate your account.</p>`,
         ),
       );
@@ -89,7 +91,7 @@ router.get("/v1/privacy/unsubscribe", async (req, res): Promise<void> => {
     res.status(500).type("html").send(
       renderPage(
         "Something went wrong",
-        `<p>We couldn't process your request right now. Please try again later or email <a href="mailto:privacy@millionstay.com">privacy@millionstay.com</a>.</p>`,
+        `<p>We couldn't process your request right now. Please try again later or email <a href="mailto:${getPrivacyContactEmail()}">${getPrivacyContactEmail()}</a>.</p>`,
         "#dc2626",
       ),
     );

@@ -19,6 +19,7 @@ import {
 } from "@workspace/db";
 import { requireGuestAuth } from "../middlewares/requireGuestAuth";
 import { sendBookingConfirmation } from "../lib/email";
+import { getPrivacyContactEmail } from "../lib/companyContact";
 import { logAction } from "../utils/auditLog";
 import { getRateToAud } from "../lib/rateSnapshot";
 import multer from "multer";
@@ -1379,7 +1380,7 @@ router.get("/v1/guest/me/export", requireGuestAuth, async (req, res): Promise<vo
     });
   } catch (err) {
     console.error("[DSAR export]", err);
-    res.status(500).json({ error: "Export failed. Contact privacy@millionstay.com." });
+    res.status(500).json({ error: `Export failed. Contact ${getPrivacyContactEmail()}.` });
   }
 });
 
@@ -1472,11 +1473,11 @@ router.post("/v1/guest/me/deletion-request", requireGuestAuth, async (req, res):
     res.json({
       success: true,
       message: "Deletion request received. Account is now pseudonymised. Records subject to legal retention (tax invoices, contracts) will be removed when the retention period expires.",
-      privacy_contact: "privacy@millionstay.com",
+      privacy_contact: getPrivacyContactEmail(),
     });
   } catch (err) {
     console.error("[DSAR deletion]", err);
-    res.status(500).json({ error: "Deletion request failed. Contact privacy@millionstay.com." });
+    res.status(500).json({ error: `Deletion request failed. Contact ${getPrivacyContactEmail()}.` });
   }
 });
 

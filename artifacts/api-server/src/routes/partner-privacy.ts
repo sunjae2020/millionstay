@@ -14,6 +14,7 @@ import { db, partnerUsersTable, accountsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { requirePartnerAuth, type PartnerAuthPayload, invalidatePartnerCache } from "../middlewares/requirePartnerAuth";
 import { logAction } from "../utils/auditLog";
+import { getPrivacyContactEmail } from "../lib/companyContact";
 
 const router: IRouter = Router();
 
@@ -78,7 +79,7 @@ router.get("/v1/partner/me/export", requirePartnerAuth, async (req, res): Promis
     res.json({ success: true, ...dump });
   } catch (err) {
     console.error("[partner DSAR export]", err);
-    res.status(500).json({ success: false, error: "Export failed. Contact privacy@millionstay.com." });
+    res.status(500).json({ success: false, error: `Export failed. Contact ${getPrivacyContactEmail()}.` });
   }
 });
 
@@ -127,11 +128,11 @@ router.post("/v1/partner/me/deletion-request", requirePartnerAuth, async (req, r
       success: true,
       message:
         "Deletion request received. Your account is now pseudonymised and disabled. Business records subject to legal retention (commissions, contracts, tax records) are kept until the retention period expires.",
-      privacy_contact: "privacy@millionstay.com",
+      privacy_contact: getPrivacyContactEmail(),
     });
   } catch (err) {
     console.error("[partner DSAR deletion]", err);
-    res.status(500).json({ success: false, error: "Deletion request failed. Contact privacy@millionstay.com." });
+    res.status(500).json({ success: false, error: `Deletion request failed. Contact ${getPrivacyContactEmail()}.` });
   }
 });
 

@@ -6,8 +6,10 @@ import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
 async function seedAdmin() {
-  const email = "admin@millionstay.com";
-  const password = "MillionStay@2026!";
+  // Per-instance bootstrap (white-label, spec §2.6). Rotate immediately after
+  // first login. Defaults preserve the primary MillionStay instance.
+  const email = process.env["SEED_ADMIN_EMAIL"] ?? "admin@millionstay.com";
+  const password = process.env["SEED_ADMIN_PASSWORD"] ?? "MillionStay@2026!";
 
   const [existing] = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
   if (existing) {

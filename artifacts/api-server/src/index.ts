@@ -32,8 +32,8 @@ async function ensureAdminExists() {
   try {
     const [count] = await db.select({ n: sql<number>`count(*)` }).from(usersTable);
     if (Number(count?.n ?? 0) === 0) {
-      const email = "admin@millionstay.com";
-      const password = "MillionStay@2026!";
+      const email = process.env["SEED_ADMIN_EMAIL"] ?? "admin@millionstay.com";
+      const password = process.env["SEED_ADMIN_PASSWORD"] ?? "MillionStay@2026!";
       const password_hash = await bcrypt.hash(password, 12);
       await db.insert(usersTable).values({
         email,

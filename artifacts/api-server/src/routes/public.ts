@@ -33,6 +33,7 @@ import { sendLeadNotificationEmail } from "../lib/email.js";
 import { sendApplicationAck } from "../services/applicationDocs.js";
 import type { ApplicationDocInput } from "../lib/documents/applicationPdf.js";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo.js";
+import { getCompanyInfo } from "../lib/documents/theme";
 import { buildCalendar } from "../lib/ical.js";
 import { getSpaceCalendarEvents } from "../lib/spaceCalendar.js";
 import { timingSafeEqual } from "node:crypto";
@@ -83,7 +84,8 @@ router.get("/v1/public/company-contact", async (_req, res): Promise<void> => {
     const c = await resolveCompanyInfo();
     res.json({ success: true, data: { email: c.email, phone: c.phone, tradingName: c.tradingName, website: c.website } });
   } catch {
-    res.json({ success: true, data: { email: "millionstay.com@gmail.com", phone: "", tradingName: "MillionStay", website: "https://www.millionstay.com" } });
+    const c = getCompanyInfo();
+    res.json({ success: true, data: { email: c.email, phone: c.phone, tradingName: c.tradingName, website: c.website } });
   }
 });
 
