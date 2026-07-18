@@ -1,4 +1,4 @@
-import { pgTable, serial, text, boolean, integer, real, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, boolean, integer, real, timestamp, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -51,7 +51,12 @@ export const spaceBlockedDatesTable = pgTable("space_blocked_dates", {
   space_id: integer("space_id").notNull(),
   date: text("date").notNull(),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => [
+  // First-come booking gate: one block row per (space, date). Makes the
+  // onConflictDoNothing insert in blockDatesForBooking an atomic claim so two
+  // concurrent confirms can't double-book the same space/date (H-301).
+  unique("space_blocked_dates_space_id_date_uq").on(table.space_id, table.date),
+]);
 
 export const insertSpaceSchema = createInsertSchema(spacesTable).omit({
   id: true,

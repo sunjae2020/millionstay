@@ -107,12 +107,43 @@ async function checkOverbooking(spaceId: number, checkIn: string, checkOut: stri
   return { blocked: blockedDates.length > 0, dates: blockedDates };
 }
 
-async function blockDatesForBooking(spaceId: number, checkIn: string, checkOut: string) {
+class BlockConflictError extends Error {
+  constructor(public conflictDates: string[]) {
+    super("BLOCK_CONFLICT");
+  }
+}
+
+/**
+ * Atomically claim every night in [checkIn, checkOut) for a space. The
+ * (space_id, date) unique constraint (H-301) turns each insert into a
+ * first-come claim: if any date is already blocked by another booking, the
+ * whole claim is rolled back and { claimedAll:false, conflictDates } is
+ * returned so the caller can reject with 409 instead of double-booking.
+ */
+async function blockDatesForBooking(
+  spaceId: number,
+  checkIn: string,
+  checkOut: string,
+): Promise<{ claimedAll: boolean; conflictDates: string[] }> {
   const dates = getDatesInRange(checkIn, checkOut);
-  if (dates.length === 0) return;
-  await db.insert(spaceBlockedDatesTable).values(
-    dates.map((d) => ({ space_id: spaceId, date: d }))
-  ).onConflictDoNothing();
+  if (dates.length === 0) return { claimedAll: true, conflictDates: [] };
+  try {
+    return await db.transaction(async (tx) => {
+      const inserted = await tx
+        .insert(spaceBlockedDatesTable)
+        .values(dates.map((d) => ({ space_id: spaceId, date: d })))
+        .onConflictDoNothing()
+        .returning({ date: spaceBlockedDatesTable.date });
+      const claimed = new Set(inserted.map((r) => r.date));
+      const conflictDates = dates.filter((d) => !claimed.has(d));
+      // Abort the tx so a partial claim never becomes visible to other bookings.
+      if (conflictDates.length > 0) throw new BlockConflictError(conflictDates);
+      return { claimedAll: true, conflictDates: [] as string[] };
+    });
+  } catch (e) {
+    if (e instanceof BlockConflictError) return { claimedAll: false, conflictDates: e.conflictDates };
+    throw e;
+  }
 }
 
 async function unblockDatesForBooking(spaceId: number, checkIn: string, checkOut: string) {
@@ -378,7 +409,11 @@ router.patch("/v1/bookings/:id/confirm", async (req, res): Promise<void> => {
     return;
   }
   if (existing.space_id && existing.check_in_date && existing.check_out_date) {
-    await blockDatesForBooking(existing.space_id, existing.check_in_date, existing.check_out_date);
+    const claim = await blockDatesForBooking(existing.space_id, existing.check_in_date, existing.check_out_date);
+    if (!claim.claimedAll) {
+      res.status(409).json({ error: "Space is already booked for one or more of these dates", dates: claim.conflictDates });
+      return;
+    }
   }
   const [row] = await db.update(bookingsTable).set({ booking_status: "Confirmed" }).where(eq(bookingsTable.id, parsed.data.id)).returning();
   await logAction({ entityType: "booking", entityId: parsed.data.id, action: "STATUS_CHANGE", oldValue: { status: existing.booking_status }, newValue: { status: "Confirmed" } });
@@ -712,7 +747,13 @@ router.patch("/v1/bookings/:id/extend", async (req, res): Promise<void> => {
   const newCheckOut = bodyParsed.data.new_check_out_date;
   if (existing.space_id && existing.check_in_date && existing.check_out_date) {
     await unblockDatesForBooking(existing.space_id, existing.check_in_date, existing.check_out_date);
-    await blockDatesForBooking(existing.space_id, existing.check_in_date, newCheckOut);
+    const claim = await blockDatesForBooking(existing.space_id, existing.check_in_date, newCheckOut);
+    if (!claim.claimedAll) {
+      // Extension overlaps another booking — restore the original block and reject.
+      await blockDatesForBooking(existing.space_id, existing.check_in_date, existing.check_out_date);
+      res.status(409).json({ error: "Extension overlaps dates already booked for this space", dates: claim.conflictDates });
+      return;
+    }
   }
 
   const stayDetails = existing.check_in_date
