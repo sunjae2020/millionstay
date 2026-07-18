@@ -1,8 +1,7 @@
 import { Link } from "wouter";
-import { APP_NAME } from "../lib/appName";
 import { Mail, Facebook, Twitter, Instagram, Youtube, Globe } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { LOGO_HORIZONTAL as logoHorizontal } from "@/lib/brand";
+import { BrandMark } from "./brand-mark";
 import { useSupportEmail } from "@/lib/guest-api";
 
 export function Footer() {
@@ -31,7 +30,7 @@ export function Footer() {
           {/* Brand */}
           <div className="md:col-span-2">
             <div className="mb-4">
-              <img src={logoHorizontal} alt={APP_NAME} className="h-10 w-auto brightness-0 invert opacity-90" />
+              <BrandMark invert className="h-10 w-auto opacity-90" />
             </div>
             <p className="text-sm text-gray-400 leading-relaxed mb-4 max-w-xs">
               {t("footer.desc")}

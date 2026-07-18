@@ -10,8 +10,7 @@ import {
   FileImage, Plus, Upload, Globe, ShieldCheck, Landmark, Trash2, FileEdit, Lock,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { LOGO_HORIZONTAL as logoHorizontal } from "@/lib/brand";
-import { APP_NAME } from "../lib/appName";
+import { BrandMark } from "../components/brand-mark";
 import {
   getHomestayToken, clearHomestayToken, fetchHostMe, uploadHostDocument,
   setLandingActive, submitDraft, updateCompliance, updateBank, HomestayApiError,
@@ -237,7 +236,7 @@ export default function HostPortal() {
       <header className="bg-white border-b border-gray-100 sticky top-0 z-30">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link href="/">
-            <img src={logoHorizontal} alt={APP_NAME} className="h-8 w-auto" />
+            <BrandMark className="h-8 w-auto" />
           </Link>
           <div className="flex items-center gap-3">
             <span className="hidden sm:flex items-center gap-1.5 text-sm text-gray-500">

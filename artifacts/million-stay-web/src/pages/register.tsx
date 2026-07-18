@@ -13,8 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
-import { LOGO_HORIZONTAL as logoHorizontal } from "@/lib/brand";
-import { APP_NAME } from "../lib/appName";
+import { BrandMark } from "../components/brand-mark";
 
 const COUNTRIES = [
   "Australia","South Korea","China","Japan","Vietnam","India","Philippines",
@@ -101,7 +100,7 @@ export default function Register() {
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-orange-50 via-white to-orange-50/30">
       <div className="p-6">
         <Link href="/">
-          <img src={logoHorizontal} alt={APP_NAME} className="h-8 w-auto" />
+          <BrandMark className="h-8 w-auto" />
         </Link>
       </div>
 

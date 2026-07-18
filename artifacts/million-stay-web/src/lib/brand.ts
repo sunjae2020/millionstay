@@ -20,3 +20,12 @@ export const LOGO_MARK: string =
 
 /** Empty string when unset, so callers can skip overriding the static <link>. */
 export const FAVICON_URL: string = import.meta.env.VITE_FAVICON?.trim() || "";
+
+/**
+ * Brand-mark rendering mode. Instances without a logo image can render a text
+ * wordmark (the app name in the display font) instead by setting
+ * `VITE_LOGO_MODE=text`. Default `image` keeps the primary MillionStay logo.
+ * Consumed by the <BrandMark> component.
+ */
+export const LOGO_MODE: "image" | "text" =
+  import.meta.env.VITE_LOGO_MODE?.trim() === "text" ? "text" : "image";

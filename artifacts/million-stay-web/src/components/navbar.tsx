@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { APP_NAME } from "../lib/appName";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import {
@@ -13,7 +12,7 @@ import { Menu, X, LayoutDashboard, LogOut, ChevronDown } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 import { getApiBase } from "@/lib/api-base";
 import { CurrencySelector } from "./currency-selector";
-import { LOGO_HORIZONTAL as logoHorizontal, LOGO_MARK as logoMark } from "@/lib/brand";
+import { BrandMark } from "./brand-mark";
 
 const NAV_HREFS = [
   { key: "links.search", href: "/search" },
@@ -115,8 +114,8 @@ export function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center shrink-0">
-            <img src={logoHorizontal} alt={APP_NAME} className="h-9 w-auto hidden sm:block" />
-            <img src={logoMark} alt={APP_NAME} className="h-9 w-auto sm:hidden" />
+            <BrandMark className="h-9 w-auto hidden sm:block" />
+            <BrandMark variant="mark" className="h-9 w-auto sm:hidden" />
           </Link>
 
           {/* Desktop Nav */}

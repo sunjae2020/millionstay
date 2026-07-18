@@ -4,9 +4,8 @@ import { motion } from "framer-motion";
 import { Lock, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LOGO_HORIZONTAL as logoHorizontal } from "@/lib/brand";
+import { BrandMark } from "../components/brand-mark";
 import { getApiBase } from "@/lib/api-base";
-import { APP_NAME } from "../lib/appName";
 
 const API_BASE = `${getApiBase()}/api/v1`;
 
@@ -77,7 +76,7 @@ export default function ResetPassword() {
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-orange-50 via-white to-orange-50/30">
       <div className="p-6">
         <Link href="/">
-          <img src={logoHorizontal} alt={APP_NAME} className="h-8 w-auto" />
+          <BrandMark className="h-8 w-auto" />
         </Link>
       </div>
       <div className="flex-1 flex items-center justify-center p-6">

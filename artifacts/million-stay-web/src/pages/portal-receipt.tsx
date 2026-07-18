@@ -7,7 +7,7 @@ import { Printer, ArrowLeft, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { APP_NAME } from "../lib/appName";
-import { LOGO_HORIZONTAL } from "../lib/brand";
+import { BrandMark } from "../components/brand-mark";
 import { COMPANY } from "../lib/company";
 
 const BRAND = "#E8621A";
@@ -107,12 +107,7 @@ export default function PortalReceipt() {
             <div className="px-8 pt-7 pb-5" style={{ backgroundColor: BRAND }}>
               <div className="flex items-start justify-between">
                 <div>
-                  <img
-                    src={LOGO_HORIZONTAL}
-                    alt={APP_NAME}
-                    className="h-8 w-auto brightness-0 invert"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                  />
+                  <BrandMark invert className="h-8 w-auto brightness-0 invert" />
                   <p className="text-orange-100 text-[10px] mt-1.5 font-medium tracking-wide uppercase">
                     Melbourne Student Accommodation
                   </p>
