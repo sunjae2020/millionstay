@@ -30,7 +30,7 @@ The Privacy Officer is the single decision-maker for OAIC notification. All exte
 - Automated alert (application error, auth-failure spike, login lockouts, 5xx spike, audit-log anomaly).
 - Staff report of suspicious activity, lost device, leaked credentials, or misdirected email.
 - External report (customer, security researcher, third-party service provider, regulator, or media).
-- Notification from a sub-processor (Replit, Cloudinary, Resend, Stripe, Neon/PostgreSQL provider).
+- Notification from a sub-processor (Railway, Vercel, Cloudinary, Resend, Stripe, Supabase/PostgreSQL provider).
 
 ### 1.2 First responder actions (within 1 hour)
 1. **Acknowledge** the report and assign an incident ID `INC-YYYYMMDD-NN`.
@@ -191,7 +191,8 @@ For each incident, maintain `docs/incidents/INC-YYYYMMDD-NN.md` with this struct
 
 | Service | Notification address | Contractual SLA |
 |---|---|---|
-| Replit (hosting) | <https://replit.com/legal> / `support@replit.com` | per Replit DPA |
+| Railway (API hosting) | <https://railway.com/legal> / `team@railway.com` | per Railway DPA |
+| Vercel (web hosting) | <https://vercel.com/legal/privacy-policy> / `privacy@vercel.com` | per Vercel DPA |
 | Cloudinary (media) | `privacy@cloudinary.com` | per Cloudinary DPA |
 | Resend (email) | `privacy@resend.com` | per Resend DPA |
 | Stripe (payments) | `dpo@stripe.com` | per Stripe DPA |

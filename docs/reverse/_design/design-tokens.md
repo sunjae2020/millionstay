@@ -1,5 +1,11 @@
 # Design Tokens
 
+> ✅ **RESOLVED 2026-07-18** — Phase 2 처방(§2/§4)의 `packages/design-tokens/` 추출이
+> `lib/design-tokens` (`@workspace/design-tokens`)로 구현됨. 전 6개 아티팩트가
+> `@import "@workspace/design-tokens/brand.css"`로 단일 소스를 소비하며, `--primary` 등
+> brand color 가 `var(--brand-orange)`(#E8621A)로 통일됨(가이드라인 §4·§Implementation).
+> 아래 §2 "5-way drift" 매트릭스는 이 커밋 이전의 스냅샷 기록임. (radius 2-tier는 유지)
+
 > ✅ **T006-REWRITE** 2026-04-27 (T001 시점 83L NEEDS REVISION → 본 90L; T002 5 artifact + T003 _context/domain-logic-portal-{guest,partner}.md + T004 _rules/architecture-rules.md §5 (5-artifact 중복 = DEAD/duplicate cross-ref) 통합).
 > **상위 source**: 5 artifact `src/index.css` (`agent-portal` / `million-stay-web` / `owner-portal` / `property-admin` / `service-host-portal`; mockup-sandbox 제외) + Tailwind v4 inline-theme.
 > **Cross-ref**: component-library.md §1 (shadcn/ui 5 artifact 중복) + admin-layout.md §3 (property-admin theme override) + guest-portal-layout.md §3 (million-stay-web portal theme).

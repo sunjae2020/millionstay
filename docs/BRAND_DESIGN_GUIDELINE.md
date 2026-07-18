@@ -112,7 +112,12 @@ Teal           █                          3%
 
 오렌지는 면적을 넓게 칠하기보다 버튼·아이콘·키워드처럼 시선을 모으는 곳에 강조용으로 사용하세요.
 
-> **⚠️ 토큰 정렬 필요** — 정식 브랜드 컬러는 `#E8621A` (million-stay-web 토큰)입니다. 다만 현재 로고 에셋은 `#EE6B19` 로 렌더링되어 있어 미세한 차이가 있습니다. 로고 SVG/PNG 와 디자인 토큰을 모두 `#E8621A` 로 통일할 것을 권장합니다.
+> **✅ CSS 토큰 정렬 완료** — 전 앱의 `--primary`·`--ring`·`--sidebar-primary`가 공유
+> 패키지 `@workspace/design-tokens`의 `--brand-orange` (`#E8621A`)를 가리키도록 통일되었습니다
+> (아래 §Implementation). favicon.svg 플레이스홀더(`#FF3C00`)도 `#E8621A`로 교체.
+> **남은 과제** — PNG 로고 에셋(`millionstay-logo.png` / `logo-horizontal.png` /
+> `logo-mark.png` / `favicon-symbol.png`)은 여전히 `#EE6B19`로 렌더되어 있어, 이미지 자산을
+> `#E8621A`로 재생성(디자인 작업)해야 완전히 통일됩니다.
 
 ---
 
@@ -178,6 +183,28 @@ Vietnamese 성조 부호(diacritics) 렌더링을 위해 Poppins/Inter 의 Vietn
 > **Warm · Friendly · Welcoming · Safe · Modern · Reliable · Youthful · Airbnb-quality**
 
 낯선 도시에 처음 도착한 게스트와 학생이 "여기라면 안심하고 지낼 수 있겠다"고 느끼게 하는 것. 모든 디자인은 이 한 문장에서 출발합니다.
+
+---
+
+## Implementation — 코드로 연결된 단일 소스
+
+이 가이드라인의 팔레트·타이포그래피는 **문서로만 존재하지 않고** 공유 워크스페이스
+패키지로 추출되어 전 프론트엔드 앱이 실제로 소비합니다.
+
+- **패키지**: `@workspace/design-tokens` (`lib/design-tokens/src/brand.css`)
+- **연결 방식**: 각 앱 `src/index.css` 상단에서 `@import "@workspace/design-tokens/brand.css";`
+  — Tailwind v4가 이 `@import`를 번들 타임에 해석. 별도 빌드 스텝 없음.
+- **색**: `--brand-orange`(#E8621A) 등 §4 팔레트를 HSL 삼중값으로 정의. 각 앱의 `--primary`·
+  `--ring`·`--sidebar-primary`가 `var(--brand-orange)`를 가리켜 전 앱이 동일한 오렌지로 렌더.
+  navy/teal/cream/… 은 `bg-brand-navy` `text-brand-teal` 등 유틸리티로 바로 사용 가능.
+- **폰트**: `--brand-font-display`(Poppins…) / `--brand-font-sans`(Inter·Pretendard·Noto…)
+  스택을 단일 정의. 각 앱 `index.html`이 해당 웹폰트를 로드. 게스트 앱은 제목(h1–h3)에
+  Poppins 디스플레이 적용.
+
+토큰을 바꾸려면 `lib/design-tokens/src/brand.css` 한 곳만 수정하면 전 앱에 반영됩니다.
+
+**적용 범위**: million-stay-web · property-admin · agent-portal · owner-portal ·
+service-host-portal · mockup-sandbox (6개 프론트엔드 전부).
 
 ---
 
