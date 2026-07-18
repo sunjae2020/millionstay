@@ -1,0 +1,53 @@
+/**
+ * Million Stay — Shared Brand Design Tokens
+ * Single source of truth for docs/BRAND_DESIGN_GUIDELINE.md v2.0.
+ *
+ * Consumed by every frontend app via, in each app's `src/index.css`
+ * (right after `@import "tailwindcss";`):
+ *
+ *     @import "@workspace/design-tokens/brand.css";
+ *
+ * Colors are stored as bare HSL triplets (`H S% L%`) to match the existing
+ * shadcn `hsl(var(--x))` convention, so an app token can simply point at a
+ * primitive: `--primary: var(--brand-orange);` → `hsl(var(--primary))`
+ * resolves to Million Orange with zero pipeline change.
+ *
+ * The `@theme inline` block also registers `brand-*` color utilities and the
+ * `font-display` utility, e.g. `bg-brand-teal`, `text-brand-navy`,
+ * `font-display`. Multiple `@theme` blocks across imported files merge in
+ * Tailwind v4, so this composes with each app's own `@theme inline`.
+ */
+
+:root {
+  /* ── Palette (guideline §4) — HSL triplet, hex in trailing comment ── */
+  --brand-orange: 21 82% 51%;   /* #E8621A  Million Orange · Primary (공통) */
+  --brand-navy: 217 48% 17%;    /* #16263F  Deep Navy · 제목·신뢰·다크 UI */
+  --brand-teal: 173 58% 39%;    /* #2A9D8F  Explore Teal · Homestay 액센트 */
+  --brand-cream: 39 58% 95%;    /* #FAF5EC  Warm Cream · 배경 */
+  --brand-burnt: 21 85% 41%;    /* #BF4E10  Burnt Orange · hover/press */
+  --brand-apricot: 26 86% 89%;  /* #FBE0CB  Apricot Tint · 배경/태그 */
+  --brand-ink: 36 14% 15%;      /* #2A2620  Ink · 본문 */
+  --brand-white: 0 0% 100%;     /* #FFFFFF  Pure White · 카드 */
+
+  /* ── Typography (guideline §5) ──
+   * Display = Poppins (headlines/hero); Body = Inter + Pretendard (한글);
+   * Noto Sans JP/SC/Thai as multi-locale fallbacks. Font files are loaded
+   * via <link> tags in each app's index.html; these stacks are the single
+   * source for which families to reference. */
+  --brand-font-display: "Poppins", "Pretendard", "Noto Sans JP", "Noto Sans SC",
+    "Noto Sans Thai", ui-sans-serif, system-ui, sans-serif;
+  --brand-font-sans: "Inter", "Pretendard", "Noto Sans JP", "Noto Sans SC",
+    "Noto Sans Thai", ui-sans-serif, system-ui, sans-serif;
+}
+
+@theme inline {
+  --color-brand-orange: hsl(var(--brand-orange));
+  --color-brand-navy: hsl(var(--brand-navy));
+  --color-brand-teal: hsl(var(--brand-teal));
+  --color-brand-cream: hsl(var(--brand-cream));
+  --color-brand-burnt: hsl(var(--brand-burnt));
+  --color-brand-apricot: hsl(var(--brand-apricot));
+  --color-brand-ink: hsl(var(--brand-ink));
+
+  --font-display: var(--brand-font-display);
+}

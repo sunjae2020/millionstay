@@ -6,24 +6,9 @@ import path from "path";
 const port = Number(process.env.PORT) || 5174;
 const basePath = process.env.BASE_PATH || "/";
 
-const isReplitDev =
-  process.env.NODE_ENV !== "production" && process.env.REPL_ID !== undefined;
-
 export default defineConfig({
   base: basePath,
-  plugins: [
-    react(),
-    tailwindcss(),
-    ...(isReplitDev
-      ? [
-          (await import("@replit/vite-plugin-runtime-error-modal")).default(),
-          (await import("@replit/vite-plugin-cartographer")).cartographer({
-            root: path.resolve(import.meta.dirname, ".."),
-          }),
-          (await import("@replit/vite-plugin-dev-banner")).devBanner(),
-        ]
-      : []),
-  ],
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),

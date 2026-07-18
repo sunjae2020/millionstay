@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 Agent operating guide for the **MillionStay** monorepo. For deep architecture and
-feature history, read [replit.md](replit.md) — this file is the operational digest.
+feature history, read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — this file is the operational digest.
 
 ## What this is
 

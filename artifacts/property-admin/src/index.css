@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "@workspace/design-tokens/brand.css";
+@import "@workspace/design-tokens/brand.overrides.css";
 @import "./dark-overrides.css";
 @plugin "@tailwindcss/typography";
 
@@ -84,7 +86,7 @@
   --sidebar: 210 20% 98%;
   --sidebar-foreground: 222 47% 11%;
   --sidebar-border: 214 32% 91%;
-  --sidebar-primary: 21 82% 51%;
+  --sidebar-primary: var(--brand-orange);
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 210 40% 92%;
   --sidebar-accent-foreground: 222 47% 11%;
@@ -92,7 +94,7 @@
   --popover: 0 0% 100%;
   --popover-foreground: 222 47% 11%;
   --popover-border: 214 32% 91%;
-  --primary: 21 82% 51%;
+  --primary: var(--brand-orange); /* #E8621A Million Orange */
   --primary-foreground: 0 0% 100%;
   --secondary: 210 40% 96%;
   --secondary-foreground: 222 47% 11%;
@@ -103,14 +105,14 @@
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
   --input: 214 32% 91%;
-  --ring: 21 82% 51%;
+  --ring: var(--brand-orange);
   --chart-1: 21 82% 51%;
   --chart-2: 160 84% 39%;
   --chart-3: 30 80% 55%;
   --chart-4: 280 65% 60%;
   --chart-5: 340 75% 55%;
 
-  --app-font-sans: 'Inter', system-ui, sans-serif;
+  --app-font-sans: var(--brand-font-sans);
   --app-font-serif: Georgia, serif;
   --app-font-mono: Menlo, monospace;
   --radius: .375rem;
@@ -159,7 +161,7 @@
   --sidebar: 222 47% 11%;
   --sidebar-foreground: 210 40% 90%;
   --sidebar-border: 222 40% 18%;
-  --sidebar-primary: 21 82% 55%;
+  --sidebar-primary: var(--brand-orange);
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 222 44% 16%;
   --sidebar-accent-foreground: 210 40% 90%;
@@ -167,7 +169,7 @@
   --popover: 222 44% 14%;
   --popover-foreground: 210 40% 98%;
   --popover-border: 222 40% 20%;
-  --primary: 21 82% 55%;
+  --primary: var(--brand-orange); /* #E8621A Million Orange */
   --primary-foreground: 0 0% 100%;
   --secondary: 222 40% 18%;
   --secondary-foreground: 210 40% 98%;
@@ -178,7 +180,7 @@
   --destructive: 0 62% 50%;
   --destructive-foreground: 0 0% 100%;
   --input: 222 40% 22%;
-  --ring: 21 82% 55%;
+  --ring: var(--brand-orange);
   --chart-1: 21 82% 55%;
   --chart-2: 160 84% 39%;
   --chart-3: 30 80% 55%;

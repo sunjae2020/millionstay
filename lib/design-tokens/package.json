@@ -1,0 +1,13 @@
+{
+  "name": "@workspace/design-tokens",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./brand.css": "./src/brand.css",
+    "./brand.overrides.css": "./src/brand.overrides.css"
+  },
+  "scripts": {
+    "generate-brand": "node scripts/generate-brand.mjs"
+  }
+}

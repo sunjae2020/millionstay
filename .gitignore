@@ -44,12 +44,13 @@ Thumbs.db
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
-# Replit
+# Local env / caches
 .cache/
 .local/
 .env
 .env.local
 .env.*
+!.env.example
 .claude/
 
 # Sensitive credential docs (plaintext passwords — never commit/push)
