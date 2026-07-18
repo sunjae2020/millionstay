@@ -6,6 +6,7 @@ import { apiFetch, useSupportEmail, type MyInvoice } from "@/lib/guest-api";
 import { Printer, ArrowLeft, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import { APP_NAME } from "../lib/appName";
 
 const BRAND = "#E8621A";
 
@@ -106,7 +107,7 @@ export default function PortalReceipt() {
                 <div>
                   <img
                     src="/logo-horizontal.png"
-                    alt="MillionStay"
+                    alt={APP_NAME}
                     className="h-8 w-auto brightness-0 invert"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                   />
@@ -155,7 +156,7 @@ export default function PortalReceipt() {
               </div>
               <div>
                 <p className="text-[9px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Issued By</p>
-                <p className="text-sm font-semibold text-gray-900">MillionStay Pty Ltd</p>
+                <p className="text-sm font-semibold text-gray-900">{APP_NAME} Pty Ltd</p>
                 <p className="text-xs text-gray-500">{supportEmail}</p>
                 <p className="text-xs text-gray-500">Melbourne, VIC, Australia</p>
               </div>
@@ -267,7 +268,7 @@ export default function PortalReceipt() {
                   <div>
                     <p className="text-xs font-semibold text-gray-700 mb-0.5">Bank Transfer Details</p>
                     <p className="text-[11px] text-gray-500">Bank: Commonwealth Bank &nbsp;|&nbsp; BSB: 063-000 &nbsp;|&nbsp; Acc: 1234 5678</p>
-                    <p className="text-[11px] text-gray-500">Account Name: MillionStay Pty Ltd &nbsp;|&nbsp; Ref: {inv.invoice_ref ?? `INV-${inv.id}`}</p>
+                    <p className="text-[11px] text-gray-500">Account Name: {APP_NAME} Pty Ltd &nbsp;|&nbsp; Ref: {inv.invoice_ref ?? `INV-${inv.id}`}</p>
                   </div>
                 </div>
               </div>
@@ -276,12 +277,12 @@ export default function PortalReceipt() {
             {/* ── Footer ── */}
             <div className="px-8 py-4 flex items-center justify-between border-t border-gray-100">
               <div>
-                <p className="text-xs font-bold text-gray-700">MillionStay Pty Ltd</p>
+                <p className="text-xs font-bold text-gray-700">{APP_NAME} Pty Ltd</p>
                 <p className="text-[10px] text-gray-400">ABN: 12 345 678 901 &nbsp;|&nbsp; {supportEmail}</p>
               </div>
               <div className="text-right">
                 <p className="text-[10px] text-gray-400">Thank you for choosing</p>
-                <p className="text-xs font-semibold" style={{ color: BRAND }}>MillionStay</p>
+                <p className="text-xs font-semibold" style={{ color: BRAND }}>{APP_NAME}</p>
               </div>
             </div>
           </div>

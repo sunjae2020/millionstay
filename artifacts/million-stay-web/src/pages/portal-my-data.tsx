@@ -8,6 +8,7 @@ import {
   Mail, AlertTriangle, Building2, Phone,
 } from "lucide-react";
 import { getApiBase } from "@/lib/api-base";
+import { APP_NAME } from "../lib/appName";
 
 const API_BASE = getApiBase();
 
@@ -188,7 +189,7 @@ export default function PortalMyData() {
                 <h1 className="text-xl md:text-2xl font-bold text-gray-900">My Data</h1>
                 <p className="text-sm text-gray-600 mt-1 max-w-2xl">
                   Under <span className="font-medium">Australian Privacy Principle 12</span>, you have the right to access
-                  the personal information Million Stay holds about you. Review or download your full data below.
+                  the personal information {APP_NAME} holds about you. Review or download your full data below.
                 </p>
               </div>
             </div>

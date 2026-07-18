@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import logoHorizontal from "@assets/06.OR_NB_horizontal_ver_1775381659303.png";
+import { APP_NAME } from "../lib/appName";
 import {
   getHomestayToken, clearHomestayToken, fetchHostMe, uploadHostDocument,
   setLandingActive, submitDraft, updateCompliance, updateBank, HomestayApiError,
@@ -236,7 +237,7 @@ export default function HostPortal() {
       <header className="bg-white border-b border-gray-100 sticky top-0 z-30">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link href="/">
-            <img src={logoHorizontal} alt="MillionStay" className="h-8 w-auto" />
+            <img src={logoHorizontal} alt={APP_NAME} className="h-8 w-auto" />
           </Link>
           <div className="flex items-center gap-3">
             <span className="hidden sm:flex items-center gap-1.5 text-sm text-gray-500">

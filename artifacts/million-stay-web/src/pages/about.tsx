@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Star, ChevronRight, BookOpen, Calendar, Tag } from "lucide-react";
 import heroBg from "@assets/MS_Homepage_Photo_1920x1080_1775403929888.jpg";
 import { getApiBase } from "@/lib/api-base";
+import { APP_NAME } from "../lib/appName";
 
 const BASE = getApiBase();
 
@@ -60,7 +61,7 @@ const FALLBACK_BLOGS = [
   },
   {
     slug: "millionstay-2026-new-suburbs-features-whats-coming-next",
-    category: "News", title: "What's New at MillionStay: 2026 Updates",
+    category: "News", title: `What's New at ${APP_NAME}: 2026 Updates`,
     excerpt: "We've added new features, expanded our property listings, and launched our partner agent programme.",
     cover_image_url: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80",
     published_at: null,

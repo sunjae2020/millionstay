@@ -24,7 +24,7 @@
       "read": "Đọc bài viết"
     },
     "privacy": {
-      "clause_1_body": "T/A Million Stay (\"Million Homestay\", \"chúng tôi\") cam kết bảo vệ quyền riêng tư của bạn theo Đạo luật Quyền riêng tư 1988 (Cth) và 13 Nguyên tắc Quyền riêng tư của Úc (APPs). Chính sách này giải thích những thông tin cá nhân chúng tôi thu thập, cách chúng tôi lưu trữ, lý do chúng tôi thu thập, sử dụng và tiết lộ thông tin đó, cách bạn có thể truy cập hoặc chỉnh sửa thông tin, cách thức khiếu nại, cũng như trường hợp chúng tôi có thể tiết lộ thông tin ra nước ngoài. Chính sách này được công khai trên trang web này.",
+      "clause_1_body": "T/A {{appName}} (\"Million Homestay\", \"chúng tôi\") cam kết bảo vệ quyền riêng tư của bạn theo Đạo luật Quyền riêng tư 1988 (Cth) và 13 Nguyên tắc Quyền riêng tư của Úc (APPs). Chính sách này giải thích những thông tin cá nhân chúng tôi thu thập, cách chúng tôi lưu trữ, lý do chúng tôi thu thập, sử dụng và tiết lộ thông tin đó, cách bạn có thể truy cập hoặc chỉnh sửa thông tin, cách thức khiếu nại, cũng như trường hợp chúng tôi có thể tiết lộ thông tin ra nước ngoài. Chính sách này được công khai trên trang web này.",
       "clause_1_title": "Về chính sách này (APP 1)",
       "clause_10_body": "Chúng tôi không sử dụng mã định danh do chính phủ cấp (chẳng hạn như Mã số Thuế, số Medicare hoặc số giấy phép lái xe) làm mã định danh của riêng chúng tôi cho bạn. Trường hợp chúng tôi thu thập mã định danh do chính phủ cấp (phổ biến nhất là số hộ chiếu, số thị thực hoặc số WWCC), chúng tôi chỉ sử dụng và tiết lộ thông tin đó cho mục đích thu thập ban đầu hoặc theo yêu cầu hay quy định của pháp luật.",
       "clause_10_title": "Mã định danh của chính phủ (APP 9)",
@@ -67,14 +67,14 @@
       "contact_intro": "Đối với các yêu cầu về quyền riêng tư, yêu cầu truy cập hoặc khiếu nại:",
       "contact_website_label": "Website:",
       "effective_date_label": "Ngày có hiệu lực",
-      "effective_date_note": "Áp dụng cho T/A Million Stay và tuân thủ Privacy Act 1988 (Cth), 13 Nguyên tắc Bảo mật Úc, chương trình Thông báo Vi phạm Dữ liệu và Spam Act 2003 (Cth).",
+      "effective_date_note": "Áp dụng cho T/A {{appName}} và tuân thủ Privacy Act 1988 (Cth), 13 Nguyên tắc Bảo mật Úc, chương trình Thông báo Vi phạm Dữ liệu và Spam Act 2003 (Cth).",
       "eyebrow": "Pháp lý",
       "hero_lead": "Cách Million Homestay thu thập, sử dụng và bảo vệ thông tin cá nhân của bạn theo các Nguyên tắc Bảo mật Úc.",
       "hero_title": "Chính Sách Bảo Mật",
       "page_title": "Chính Sách Bảo Mật"
     },
     "terms": {
-      "clause_1_body": "Các Điều khoản Dịch vụ này (\"Điều khoản\") điều chỉnh việc bạn sử dụng trang web và dịch vụ của Million Homestay do T/A Million Stay vận hành (\"Million Homestay\", \"chúng tôi\", \"của chúng tôi\"). Bằng cách sử dụng trang web, gửi đơn đăng ký, hoặc sử dụng dịch vụ của chúng tôi theo bất kỳ hình thức nào, bạn đồng ý với các Điều khoản này. Nếu bạn không đồng ý, vui lòng không sử dụng dịch vụ.",
+      "clause_1_body": "Các Điều khoản Dịch vụ này (\"Điều khoản\") điều chỉnh việc bạn sử dụng trang web và dịch vụ của Million Homestay do T/A {{appName}} vận hành (\"Million Homestay\", \"chúng tôi\", \"của chúng tôi\"). Bằng cách sử dụng trang web, gửi đơn đăng ký, hoặc sử dụng dịch vụ của chúng tôi theo bất kỳ hình thức nào, bạn đồng ý với các Điều khoản này. Nếu bạn không đồng ý, vui lòng không sử dụng dịch vụ.",
       "clause_1_title": "Về các điều khoản này",
       "clause_10_body": "Bạn đồng ý không lạm dụng dịch vụ — bao gồm việc cung cấp thông tin sai lệch, mạo danh người khác, cố gắng truy cập trái phép, làm gián đoạn dịch vụ, hoặc sử dụng dịch vụ vào bất kỳ mục đích bất hợp pháp nào. Chúng tôi có thể tạm ngưng hoặc chấm dứt quyền truy cập trong trường hợp vi phạm bất kỳ điều khoản nào trong Điều khoản này.",
       "clause_10_title": "Sử dụng hợp lệ",
@@ -107,7 +107,7 @@
       "clause_9_body": "Cả hai bên đều có thể yêu cầu hủy hoặc thay đổi một suất bố trí theo hợp đồng bố trí. Chúng tôi cũng có thể hủy hoặc điều chỉnh một suất bố trí khi cần thiết vì lý do an toàn, pháp lý hoặc điều kiện đủ tiêu chuẩn. Chúng tôi sẽ nỗ lực hợp lý để hỗ trợ tìm kiếm giải pháp thay thế, nhưng không đảm bảo sẽ cung cấp được một suất bố trí thay thế.",
       "clause_9_title": "Hủy & thay đổi",
       "effective_date_label": "Ngày có hiệu lực",
-      "effective_date_note": "Được vận hành bởi T/A Million Stay, Melbourne, Victoria, Australia.",
+      "effective_date_note": "Được vận hành bởi T/A {{appName}}, Melbourne, Victoria, Australia.",
       "eyebrow": "Pháp lý",
       "hero_lead": "Các điều khoản áp dụng cho dịch vụ xét duyệt và kết nối homestay của Million Homestay.",
       "hero_title": "Điều khoản Dịch vụ",
@@ -129,7 +129,7 @@
   "short_term": {
     "eyebrow": "Lưu trú ngắn hạn",
     "hero_title": "Đơn đăng ký chỗ ở ngắn hạn",
-    "hero_lead": "Đăng ký chỗ ở ngắn hạn với MillionStay. Hãy cho chúng tôi biết ngày và mong muốn của bạn — sau khi gửi, bạn sẽ ký điện tử đơn đăng ký và chúng tôi sẽ liên hệ với các lựa chọn.",
+    "hero_lead": "Đăng ký chỗ ở ngắn hạn với {{appName}}. Hãy cho chúng tôi biết ngày và mong muốn của bạn — sau khi gửi, bạn sẽ ký điện tử đơn đăng ký và chúng tôi sẽ liên hệ với các lựa chọn.",
     "breadcrumb_home": "Trang chủ",
     "breadcrumb": "Đơn ngắn hạn",
     "section_applicant": "Thông tin của bạn",

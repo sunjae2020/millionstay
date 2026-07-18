@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import logoHorizontal from "@assets/06.OR_NB_horizontal_ver_1775381659303.png";
 import { getApiBase } from "@/lib/api-base";
+import { APP_NAME } from "../lib/appName";
 
 const API_BASE = `${getApiBase()}/api/v1`;
 
@@ -76,7 +77,7 @@ export default function ResetPassword() {
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-orange-50 via-white to-orange-50/30">
       <div className="p-6">
         <Link href="/">
-          <img src={logoHorizontal} alt="Million Stay" className="h-8 w-auto" />
+          <img src={logoHorizontal} alt={APP_NAME} className="h-8 w-auto" />
         </Link>
       </div>
       <div className="flex-1 flex items-center justify-center p-6">

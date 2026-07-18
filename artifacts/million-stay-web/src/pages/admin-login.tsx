@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Lock, Eye, EyeOff } from "lucide-react";
 
 import { getApiBase } from "@/lib/api-base";
+import { APP_NAME } from "../lib/appName";
 const API = getApiBase();
 const ADMIN_KEY = "ms_admin_key";
 
@@ -46,7 +47,7 @@ export default function AdminLogin() {
             <Lock className="h-7 w-7 text-primary" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Admin Portal</h1>
-          <p className="text-gray-500 text-sm mt-1">MillionStay Management</p>
+          <p className="text-gray-500 text-sm mt-1">{APP_NAME} Management</p>
         </div>
 
         <div className="bg-white rounded-2xl border shadow-sm p-8">
@@ -83,7 +84,7 @@ export default function AdminLogin() {
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-6">
-          MillionStay Admin · Melbourne, AU
+          {APP_NAME} Admin · Melbourne, AU
         </p>
       </div>
     </div>

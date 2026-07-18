@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { useSupportEmail } from "@/lib/guest-api";
 import heroBg from "@assets/MS_Homepage_Photo_1920x1080_1775403929888.jpg";
+import { APP_NAME } from "../lib/appName";
 
 function fade(delay = 0) {
   return { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.45, delay } };
@@ -99,14 +100,14 @@ export default function HouseRules() {
               <motion.div {...fade(0.1)} className="rounded-2xl overflow-hidden shadow-lg">
                 <img
                   src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&q=80"
-                  alt="MillionStay room"
+                  alt={`${APP_NAME} room`}
                   className="w-full h-64 object-cover"
                 />
               </motion.div>
               <motion.div {...fade(0.2)} className="rounded-2xl overflow-hidden shadow-lg">
                 <img
                   src="https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=800&q=80"
-                  alt="MillionStay room interior"
+                  alt={`${APP_NAME} room interior`}
                   className="w-full h-48 object-cover"
                 />
               </motion.div>

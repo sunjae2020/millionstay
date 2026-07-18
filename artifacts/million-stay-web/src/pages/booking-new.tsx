@@ -19,6 +19,7 @@ import {
   AlertCircle, Info, Banknote, Mail, ExternalLink, LayoutDashboard,
   Package, Zap, ConciergeBell,
 } from "lucide-react";
+import { APP_NAME } from "../lib/appName";
 
 /* ────────────────────────────────────────────── */
 /*  Constants                                     */
@@ -206,7 +207,7 @@ function SummaryCard({
 function BankTransferDetails({ total, ref_ }: { total: number; ref_: string }) {
   const fields = [
     { label: "Bank",           value: "Commonwealth Bank of Australia" },
-    { label: "Account Name",   value: "MillionStay Pty Ltd" },
+    { label: "Account Name",   value: `${APP_NAME} Pty Ltd` },
     { label: "BSB",            value: "063-000" },
     { label: "Account No.",    value: "1234 5678" },
     { label: "Amount",         value: `AUD $${total.toLocaleString()}` },
@@ -996,7 +997,7 @@ export default function BookingNew() {
                         data-testid="checkbox-marketing-consent"
                       />
                       <span className="text-xs text-gray-600 leading-relaxed">
-                        <span className="font-medium">Optional:</span> Email me deals & updates from Million Stay.
+                        <span className="font-medium">Optional:</span> Email me deals & updates from {APP_NAME}.
                         <span className="block text-[11px] text-gray-400 mt-0.5">Unsubscribe anytime. Booking emails are not affected.</span>
                       </span>
                     </label>

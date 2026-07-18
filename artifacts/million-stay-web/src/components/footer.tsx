@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { APP_NAME } from "../lib/appName";
 import { Mail, Facebook, Twitter, Instagram, Youtube, Globe } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import logoHorizontal from "@assets/06.OR_NB_horizontal_ver_1775381659303.png";
@@ -30,7 +31,7 @@ export function Footer() {
           {/* Brand */}
           <div className="md:col-span-2">
             <div className="mb-4">
-              <img src={logoHorizontal} alt="Million Stay" className="h-10 w-auto brightness-0 invert opacity-90" />
+              <img src={logoHorizontal} alt={APP_NAME} className="h-10 w-auto brightness-0 invert opacity-90" />
             </div>
             <p className="text-sm text-gray-400 leading-relaxed mb-4 max-w-xs">
               {t("footer.desc")}

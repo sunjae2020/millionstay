@@ -12,6 +12,7 @@ import { FALLBACK_SPACES } from "@/lib/fallback-spaces";
 import { motion } from "framer-motion";
 import { Wifi, ShoppingBag, Shield, DollarSign, Plane, Bed, PlayCircle, MapPin, ChevronRight } from "lucide-react";
 import { useDisplayCurrency, formatCurrencyAmount } from "@/contexts/DisplayCurrencyContext";
+import { APP_NAME } from "../lib/appName";
 
 function SectionTitle({ italic, normal, sub }: { italic: string; normal?: string; sub?: string }) {
   return (
@@ -201,7 +202,7 @@ export default function Home() {
         <div className="relative h-[460px] md:h-[540px] overflow-hidden">
           <img
             src={heroImage}
-            alt="MillionStay Melbourne"
+            alt={`${APP_NAME} Melbourne`}
             className="absolute inset-0 w-full h-full object-cover object-center"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/50" />
@@ -489,7 +490,7 @@ export default function Home() {
             href="https://www.youtube.com/@millionstay"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Watch MillionStay on YouTube"
+            aria-label={`Watch ${APP_NAME} on YouTube`}
             className="w-20 h-20 rounded-full bg-white/20 border-4 border-white flex items-center justify-center mx-auto hover:bg-white/30 transition-colors group"
           >
             <PlayCircle className="h-10 w-10 text-white group-hover:scale-105 transition-transform" />

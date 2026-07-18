@@ -14,6 +14,7 @@ import {
   SigningError,
   type SigningRequest,
 } from "@/lib/signing-api";
+import { APP_NAME } from "../lib/appName";
 
 const CONTEXT_LABEL: Record<string, string> = {
   host_app: "Host Family Application",
@@ -111,7 +112,7 @@ export default function Sign() {
   return (
     <HomestayLayout title={`${contextLabel} — Signature`}>
       <HsPageHero
-        eyebrow={isContract ? "MillionStay" : "Million Homestay"}
+        eyebrow={isContract ? APP_NAME : "Million Homestay"}
         title={`${contextLabel} — Signature`}
         lead={`Review your ${docNoun}, then sign below. Your electronic signature is legally binding.`}
       />
@@ -162,7 +163,7 @@ export default function Sign() {
                   className="inline-flex items-center gap-2 rounded-xl border px-5 py-3 text-sm font-semibold transition"
                   style={{ borderColor: HS.mocha, color: HS.darkBrown, fontFamily: HS_FONT.body }}
                 >
-                  {isHost ? "Go to your host portal" : isContract ? "Back to MillionStay" : "Back to Million Homestay"}
+                  {isHost ? "Go to your host portal" : isContract ? `Back to ${APP_NAME}` : "Back to Million Homestay"}
                   <ArrowRight className="w-4 h-4" />
                 </a>
               </div>

@@ -9,6 +9,7 @@ import {
   submitOwnerInquiry,
 } from "@/lib/owner-site";
 import type { PublicSpacesParams, SpaceSummary } from "@/lib/guest-api";
+import { APP_NAME } from "../lib/appName";
 
 const SPACE_TYPES: Array<{ value: PublicSpacesParams["space_type"]; label: string }> = [
   { value: undefined, label: "All types" },
@@ -38,7 +39,7 @@ export default function OwnerLanding({ slug }: { slug: string }) {
   // Per-site SEO: title / description / OG, applied client-side.
   useEffect(() => {
     if (!site) return;
-    const title = site.seo_title || content.hero_title || `${slug} — MillionStay`;
+    const title = site.seo_title || content.hero_title || `${slug} — ${APP_NAME}`;
     document.title = title;
     setMeta("description", site.seo_description || content.hero_subtitle || "");
     setMetaProp("og:title", title);
@@ -68,7 +69,7 @@ export default function OwnerLanding({ slug }: { slug: string }) {
         <h1 className="text-2xl font-bold text-gray-800">Site not found</h1>
         <p className="text-gray-500 mt-2">This landing page is not available.</p>
         <a href="https://millionstay.com" className="mt-4 text-sm font-medium" style={{ color: accent }}>
-          Go to MillionStay →
+          Go to {APP_NAME} →
         </a>
       </div>
     );
@@ -184,7 +185,7 @@ export default function OwnerLanding({ slug }: { slug: string }) {
       {/* ── Footer ── */}
       <footer className="py-8 text-center text-sm text-gray-400">
         <a href="https://millionstay.com" target="_blank" rel="noreferrer" className="hover:text-gray-600">
-          Powered by MillionStay
+          Powered by {APP_NAME}
         </a>
       </footer>
     </div>

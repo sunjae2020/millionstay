@@ -1,6 +1,7 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import { getApiBase } from "../lib/api-base";
+import { APP_NAME } from "../lib/appName";
 
 import enTranslations from "../locales/en/translation.json";
 import koTranslations from "../locales/ko/translation.json";
@@ -58,6 +59,9 @@ i18n
     fallbackLng: "en",
     interpolation: {
       escapeValue: false,
+      // White-label: translation strings use {{appName}} instead of a hardcoded
+      // brand; filled from VITE_APP_NAME (defaults to MillionStay). Spec §2.3.
+      defaultVariables: { appName: APP_NAME },
     },
   });
 

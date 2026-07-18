@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import { APP_NAME } from "../lib/appName";
 import { useAuthStore } from "@/lib/store";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -110,7 +111,7 @@ export function PortalLayout({ children, active }: PortalLayoutProps) {
         {/* Logo */}
         <div className="px-5 py-4 border-b border-gray-100 shrink-0">
           <Link href="/" className="flex items-center gap-2">
-            <img src={logoHorizontal} alt="MillionStay" className="h-8 w-auto" />
+            <img src={logoHorizontal} alt={APP_NAME} className="h-8 w-auto" />
           </Link>
         </div>
 
@@ -183,7 +184,7 @@ export function PortalLayout({ children, active }: PortalLayoutProps) {
       {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-100 flex items-center justify-between px-4 h-14 shadow-sm">
         <Link href="/">
-          <img src={logoMark} alt="MillionStay" className="h-8 w-auto" />
+          <img src={logoMark} alt={APP_NAME} className="h-8 w-auto" />
         </Link>
         <span className="text-sm font-semibold text-gray-700">{t("portal.my_portal")}</span>
         <button
@@ -200,7 +201,7 @@ export function PortalLayout({ children, active }: PortalLayoutProps) {
           <div className="absolute inset-0 bg-black/30" onClick={() => setMobileOpen(false)} />
           <aside className="relative w-64 bg-white h-full flex flex-col shadow-xl">
             <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-              <img src={logoHorizontal} alt="MillionStay" className="h-7 w-auto" />
+              <img src={logoHorizontal} alt={APP_NAME} className="h-7 w-auto" />
               <button onClick={() => setMobileOpen(false)} className="p-1 text-gray-400 hover:text-gray-700">
                 <X className="h-4 w-4" />
               </button>

@@ -1,5 +1,6 @@
 import { CheckCircle2, XCircle } from "lucide-react";
 import { useSupportEmail } from "@/lib/guest-api";
+import { APP_NAME } from "../lib/appName";
 
 // Stripe redirect target for payments (homestay placements + regular invoices).
 // Reads ?status=success|cancelled&ref=… (HSP-… or MS-INV-…) and shows a confirmation.
@@ -36,7 +37,7 @@ export default function PaymentResult() {
           className="mt-7 inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold text-white"
           style={{ backgroundColor: "#E8621A" }}
         >
-          Back to MillionStay
+          Back to {APP_NAME}
         </a>
         <p className="mt-4 text-xs text-gray-400">
           Questions? <a href={`mailto:${supportEmail}`} className="underline">{supportEmail}</a>

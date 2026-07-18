@@ -5,6 +5,7 @@ import { Calendar, User, Tag, ChevronRight, BookOpen } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { getApiBase } from "@/lib/api-base";
+import { APP_NAME } from "../lib/appName";
 
 const BASE = getApiBase();
 
@@ -66,7 +67,7 @@ export default function Blog() {
         <div className="bg-gradient-to-br from-[#E8621A]/10 via-orange-50 to-white py-16 md:py-24">
           <div className="max-w-7xl mx-auto px-6">
             <div className="max-w-2xl">
-              <span className="inline-block text-[#E8621A] text-sm font-semibold uppercase tracking-widest mb-3">MillionStay Blog</span>
+              <span className="inline-block text-[#E8621A] text-sm font-semibold uppercase tracking-widest mb-3">{APP_NAME} Blog</span>
               <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
                 Tips, guides &amp; insights for international students
               </h1>

@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { ArrowLeft, Send, ImageIcon, X, Loader2, Clock, CheckCircle2, XCircle, AlertCircle, Calendar, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getApiBase } from "@/lib/api-base";
+import { APP_NAME } from "../lib/appName";
 
 const BASE = `${getApiBase()}/api/v1`;
 function authHeaders(): Record<string, string> {
@@ -255,7 +256,7 @@ export default function PortalCsDetail() {
                       </div>
                     )}
                     <span className="text-xs text-gray-400">
-                      {isGuest ? "You" : "MillionStay Support"} · {format(new Date(msg.created_at), "dd/MM/yyyy hh:mm a")}
+                      {isGuest ? "You" : `${APP_NAME} Support`} · {format(new Date(msg.created_at), "dd/MM/yyyy hh:mm a")}
                     </span>
                   </div>
                   <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${

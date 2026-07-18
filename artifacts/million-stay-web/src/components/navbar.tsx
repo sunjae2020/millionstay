@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { APP_NAME } from "../lib/appName";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import {
@@ -115,8 +116,8 @@ export function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center shrink-0">
-            <img src={logoHorizontal} alt="Million Stay" className="h-9 w-auto hidden sm:block" />
-            <img src={logoMark} alt="Million Stay" className="h-9 w-auto sm:hidden" />
+            <img src={logoHorizontal} alt={APP_NAME} className="h-9 w-auto hidden sm:block" />
+            <img src={logoMark} alt={APP_NAME} className="h-9 w-auto sm:hidden" />
           </Link>
 
           {/* Desktop Nav */}
