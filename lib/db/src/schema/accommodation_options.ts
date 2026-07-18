@@ -1,4 +1,4 @@
-import { pgTable, pgEnum, serial, text, integer, real, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, pgEnum, serial, text, integer, numeric, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -63,7 +63,7 @@ export const addonServicesTable = pgTable("addon_services", {
   description: text("description"),
   // Grouping for the UI: transport | living | supplies | telecom | other
   category: text("category").notNull().default("other"),
-  base_price: real("base_price"),
+  base_price: numeric("base_price", { precision: 12, scale: 2, mode: "number" }),
   currency: text("currency").notNull().default("AUD"),
   // Pricing unit: per_booking | per_trip | per_week | per_item | per_month
   unit: text("unit").notNull().default("per_booking"),
@@ -80,7 +80,7 @@ export const accommodationAddonsTable = pgTable("accommodation_addons", {
   id: serial("id").primaryKey(),
   accommodation_id: integer("accommodation_id").notNull(), // → accommodation_catalog.id
   addon_service_id: integer("addon_service_id").notNull(), // → addon_services.id
-  price_override: real("price_override"),
+  price_override: numeric("price_override", { precision: 12, scale: 2, mode: "number" }),
   is_included: boolean("is_included").notNull().default(false), // true = bundled, no extra charge
   sort_order: integer("sort_order").notNull().default(0),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

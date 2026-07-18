@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, real, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, real, numeric, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -11,15 +11,15 @@ export const contractProductsTable = pgTable("contract_products", {
   space_id: integer("space_id"),
   promotion_id: integer("promotion_id"),
   term_type: text("term_type"),
-  weekly_rate: real("weekly_rate"),
-  monthly_rate: real("monthly_rate"),
-  effective_weekly_rate: real("effective_weekly_rate"),
+  weekly_rate: numeric("weekly_rate", { precision: 12, scale: 2, mode: "number" }),
+  monthly_rate: numeric("monthly_rate", { precision: 12, scale: 2, mode: "number" }),
+  effective_weekly_rate: numeric("effective_weekly_rate", { precision: 12, scale: 2, mode: "number" }),
   currency: text("currency").notNull().default("AUD"),
   billing_frequency: text("billing_frequency").default("Biweekly"),
   bond_weeks: real("bond_weeks").default(4),
-  bond_amount: real("bond_amount"),
-  admin_fee: real("admin_fee"),
-  cleaning_fee: real("cleaning_fee"),
+  bond_amount: numeric("bond_amount", { precision: 12, scale: 2, mode: "number" }),
+  admin_fee: numeric("admin_fee", { precision: 12, scale: 2, mode: "number" }),
+  cleaning_fee: numeric("cleaning_fee", { precision: 12, scale: 2, mode: "number" }),
   advance_weeks: real("advance_weeks").default(2),
   min_stay_weeks: integer("min_stay_weeks").default(1),
   max_stay_weeks: integer("max_stay_weeks"),

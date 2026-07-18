@@ -1,4 +1,4 @@
-import { pgTable, serial, text, real, boolean, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, numeric, boolean, integer, timestamp } from "drizzle-orm/pg-core";
 
 export const serviceCatalogTable = pgTable("service_catalog", {
   id: serial("id").primaryKey(),
@@ -6,7 +6,7 @@ export const serviceCatalogTable = pgTable("service_catalog", {
   description: text("description"),
   service_type: text("service_type").notNull().default("one_time"),
   // one_time | scheduled | physical
-  base_price: real("base_price"),
+  base_price: numeric("base_price", { precision: 12, scale: 2, mode: "number" }),
   currency: text("currency").notNull().default("AUD"),
   is_optional: boolean("is_optional").notNull().default(true),
   is_refundable: boolean("is_refundable").notNull().default(false),

@@ -1,4 +1,4 @@
-import { pgTable, serial, text, real, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, real, numeric, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -7,7 +7,7 @@ export const commissionsTable = pgTable("commissions", {
   name: text("name").notNull(),
   commission_type: text("commission_type").notNull().default("Percentage"),
   commission_rate: real("commission_rate"),
-  commission_amount: real("commission_amount"),
+  commission_amount: numeric("commission_amount", { precision: 12, scale: 2, mode: "number" }),
   description: text("description"),
   status: text("status").notNull().default("Active"),
   deleted_at: timestamp("deleted_at", { withTimezone: true }),

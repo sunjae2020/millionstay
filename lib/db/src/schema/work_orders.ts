@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, text, real, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, numeric, timestamp } from "drizzle-orm/pg-core";
 
 export const workOrdersTable = pgTable("work_orders", {
   id: serial("id").primaryKey(),
@@ -14,7 +14,7 @@ export const workOrdersTable = pgTable("work_orders", {
   reported_at: text("reported_at"),
   scheduled_at: text("scheduled_at"),
   completed_at: timestamp("completed_at", { withTimezone: true }),
-  cost: real("cost"),
+  cost: numeric("cost", { precision: 12, scale: 2, mode: "number" }),
   currency: text("currency").notNull().default("AUD"),
   notes: text("notes"),
   deleted_at: timestamp("deleted_at"),

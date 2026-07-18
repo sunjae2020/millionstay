@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, real, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, real, numeric, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -10,7 +10,7 @@ export const beneficiariesTable = pgTable("beneficiaries", {
   commission_id: integer("commission_id"),
   commission_type: text("commission_type").notNull().default("Percentage"),
   split_percentage: real("split_percentage"),
-  fixed_amount: real("fixed_amount"),
+  fixed_amount: numeric("fixed_amount", { precision: 12, scale: 2, mode: "number" }),
   priority: integer("priority").default(1),
   notes: text("notes"),
   status: text("status").notNull().default("Active"),

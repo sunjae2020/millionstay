@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, real, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, real, numeric, boolean, timestamp } from "drizzle-orm/pg-core";
 import { contractTermEnum, roomTypeEnum, mealPlanEnum, guestAgeEnum } from "./accommodation_options";
 
 export const accommodationCatalogTable = pgTable("accommodation_catalog", {
@@ -8,8 +8,8 @@ export const accommodationCatalogTable = pgTable("accommodation_catalog", {
   product_group_id: integer("product_group_id"),
   product_type_id: integer("product_type_id"),
   space_id: integer("space_id"),
-  price: real("price"),
-  weekly_rate: real("weekly_rate"),
+  price: numeric("price", { precision: 12, scale: 2, mode: "number" }),
+  weekly_rate: numeric("weekly_rate", { precision: 12, scale: 2, mode: "number" }),
   currency: text("currency").notNull().default("AUD"),
   product_tag: text("product_tag"),
   gst_included: boolean("gst_included").notNull().default(false),
@@ -27,11 +27,11 @@ export const accommodationCatalogTable = pgTable("accommodation_catalog", {
   room_type: roomTypeEnum("room_type"),
   meal_plan: mealPlanEnum("meal_plan"),   // homestay only
   guest_age: guestAgeEnum("guest_age"),   // homestay only
-  bond_amount: real("bond_amount"),
+  bond_amount: numeric("bond_amount", { precision: 12, scale: 2, mode: "number" }),
   bond_weeks: real("bond_weeks").default(4),
   advance_weeks: real("advance_weeks").default(2),
-  admin_fee: real("admin_fee"),
-  cleaning_fee: real("cleaning_fee"),
+  admin_fee: numeric("admin_fee", { precision: 12, scale: 2, mode: "number" }),
+  cleaning_fee: numeric("cleaning_fee", { precision: 12, scale: 2, mode: "number" }),
   includes_wifi: boolean("includes_wifi").notNull().default(false),
   includes_parking: boolean("includes_parking").notNull().default(false),
   includes_utilities: boolean("includes_utilities").notNull().default(false),

@@ -1,4 +1,4 @@
-import { pgTable, serial, text, boolean, integer, real, timestamp, unique } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, boolean, integer, real, numeric, timestamp, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -10,8 +10,8 @@ export const spacesTable = pgTable("spaces", {
   custom_type_name: text("custom_type_name"),
   max_occupancy: integer("max_occupancy"),
   booking_mode: text("booking_mode"),
-  base_weekly_price: real("base_weekly_price"),
-  base_daily_price: real("base_daily_price"),
+  base_weekly_price: numeric("base_weekly_price", { precision: 12, scale: 2, mode: "number" }),
+  base_daily_price: numeric("base_daily_price", { precision: 12, scale: 2, mode: "number" }),
   base_currency: text("base_currency"),
   floor_number: integer("floor_number"),
   floor_area_sqm: real("floor_area_sqm"),
