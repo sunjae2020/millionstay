@@ -130,8 +130,10 @@ gates it, so keep it green. Two notable classes were fixed:
   retention dates; marketing needs consent. Don't weaken privacy code — CI
   enforces it. See [docs/PRIVACY_COMPLIANCE.md](docs/PRIVACY_COMPLIANCE.md) and
   [docs/NDB_INCIDENT_RUNBOOK.md](docs/NDB_INCIDENT_RUNBOOK.md).
-- **DB migrations:** `db:push` for dev sync; `db:generate` → `db:migrate` for
-  prod-bound changes (SQL in `lib/db/drizzle/`).
+- **DB migrations:** code schema (`lib/db/src/schema/*.ts`) is the SSOT; `db:push`
+  for dev sync; `db:generate` → `db:migrate` for prod-bound changes (SQL in
+  `lib/db/drizzle/`). Follow [docs/DB_MIGRATION_CONVENTION.md](docs/DB_MIGRATION_CONVENTION.md) —
+  additive-only, `0001+` numbering, no new `manual_*.sql`.
 
 ## Secrets
 
