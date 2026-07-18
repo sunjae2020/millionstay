@@ -14,7 +14,9 @@ const VERCEL_TOKEN = process.env["VERCEL_TOKEN"];
 // millionstay-web project + team (overridable via env, sane defaults baked in).
 const VERCEL_PROJECT_ID = process.env["VERCEL_PROJECT_ID"] ?? "prj_54Tw0KL1S5LIvecrUi8IHfvqEEuq";
 const VERCEL_TEAM_ID = process.env["VERCEL_TEAM_ID"] ?? "team_VD0mxpPcMmO0IXw9XPlwhzyw";
-const ROOT_DOMAIN = "millionstay.com";
+// Per-instance apex for landing-site subdomains ({slug}.<ROOT_DOMAIN>).
+// Defaults to millionstay.com; white-label instances override (spec §2.5).
+const ROOT_DOMAIN = (process.env["ROOT_DOMAIN"] ?? "millionstay.com").trim().toLowerCase();
 
 export function isVercelConfigured(): boolean {
   return !!VERCEL_TOKEN;

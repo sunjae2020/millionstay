@@ -65,9 +65,7 @@ export function verifyUnsubscribeToken(token: string): UnsubscribePayload | null
 /** Build the public unsubscribe URL embedded in marketing emails. */
 export function buildUnsubscribeUrl(email: string, channel: "email" | "sms" = "email"): string {
   const base =
-    process.env.PUBLIC_APP_URL ??
-    process.env.CLIENT_URL ??
-    `https://${process.env.REPLIT_DEV_DOMAIN ?? "localhost"}`;
+    process.env.PUBLIC_APP_URL ?? process.env.CLIENT_URL ?? "http://localhost";
   const token = buildUnsubscribeToken(email, channel);
   return `${base.replace(/\/$/, "")}/api/v1/privacy/unsubscribe?token=${encodeURIComponent(token)}`;
 }

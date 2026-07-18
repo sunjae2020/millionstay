@@ -45,7 +45,7 @@ async function loadSettingsFromDb(): Promise<void> {
 }
 
 async function getEnvVar(key: string): Promise<string | undefined> {
-  // Prefer process.env (covers Replit secrets + runtime updates)
+  // Prefer process.env (covers host secrets + runtime updates)
   const envVal = process.env[key];
   if (envVal) return envVal;
   // Fallback: check DB

@@ -4,7 +4,7 @@
  * Run automatically as part of `pnpm run build`.
  *
  * Only runs when DATABASE_URL points to a non-production host
- * (i.e. the local/dev Replit Postgres, not Neon).
+ * (i.e. the local/dev Postgres, not the production DB).
  */
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
