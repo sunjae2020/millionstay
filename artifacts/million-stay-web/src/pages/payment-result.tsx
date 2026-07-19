@@ -35,7 +35,7 @@ export default function PaymentResult() {
         <a
           href="/"
           className="mt-7 inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold text-white"
-          style={{ backgroundColor: "#E8621A" }}
+          style={{ backgroundColor: "hsl(var(--primary))" }}
         >
           Back to {APP_NAME}
         </a>

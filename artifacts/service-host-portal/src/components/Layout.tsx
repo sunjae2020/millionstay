@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/auth";
 import { useDarkMode } from "@/lib/darkMode";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { APP_NAME } from "@/lib/appName";
 import {
   LayoutDashboard, Briefcase, CalendarDays, DollarSign,
   LogOut, User, ChevronRight, Menu, X, Sun, Moon, LifeBuoy,
@@ -50,11 +51,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
       >
         <div className="p-5 border-b border-sidebar-border flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <img
-              src={`${import.meta.env.BASE_URL}millionstay-logo.png`}
-              alt="MillionStay"
-              className="h-7 w-auto object-contain"
-            />
+            {import.meta.env.VITE_LOGO_MODE === "text" ? (
+              <span className="font-display font-extrabold tracking-tight text-white text-xl whitespace-nowrap">{APP_NAME}</span>
+            ) : (
+              <img
+                src={`${import.meta.env.BASE_URL}millionstay-logo.png`}
+                alt={APP_NAME}
+                className="h-7 w-auto object-contain"
+              />
+            )}
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -129,11 +134,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-muted transition-colors">
             <Menu className="w-5 h-5 text-foreground" />
           </button>
-          <img
-            src={`${import.meta.env.BASE_URL}logo-horizontal.png`}
-            alt="MillionStay"
-            className="h-6 w-auto object-contain"
-          />
+          {import.meta.env.VITE_LOGO_MODE === "text" ? (
+            <span className="font-display font-extrabold tracking-tight text-primary text-xl whitespace-nowrap">{APP_NAME}</span>
+          ) : (
+            <img
+              src={`${import.meta.env.BASE_URL}logo-horizontal.png`}
+              alt={APP_NAME}
+              className="h-6 w-auto object-contain"
+            />
+          )}
           <div className="ml-auto flex items-center gap-1">
             <button
               onClick={toggleDarkMode}

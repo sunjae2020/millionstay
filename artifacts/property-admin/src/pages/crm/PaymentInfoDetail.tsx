@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useLocation, useParams } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
+import { APP_NAME } from "@/lib/appName";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -166,7 +167,7 @@ export default function PaymentInfoDetail() {
               </div>
               <div className="grid gap-1.5">
                 <Label>{t("payment_info.label_account_name")}</Label>
-                <Input {...register("account_name")} placeholder="e.g. Million Stay Pty Ltd" />
+                <Input {...register("account_name")} placeholder={`e.g. ${APP_NAME} Pty Ltd`} />
               </div>
               <div className="grid gap-1.5">
                 <Label>SWIFT Code</Label>

@@ -22,7 +22,7 @@ import {
 import { apiFetch, useSupportEmail, type MyInvoice } from "@/lib/guest-api";
 import { COMPANY } from "../lib/company";
 
-const BRAND = "#E8621A";
+const BRAND = "hsl(var(--primary))"; // instance primary (white-label)
 const API = getApiBase();
 
 /* ─── helpers ─── */

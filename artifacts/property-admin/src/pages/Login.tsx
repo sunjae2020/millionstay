@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, ChevronDown, Eye, EyeOff, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logoSrc from "/millionstay-logo.png";
+import { APP_NAME } from "@/lib/appName";
 
 const BRAND = "#E8621A";
 
@@ -111,7 +112,9 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div className="relative z-10">
-          <img src={logoSrc} alt="MillionStay" className="h-9 w-auto" />
+          {import.meta.env.VITE_LOGO_MODE === "text"
+            ? <span className="font-display font-extrabold tracking-tight text-white text-xl whitespace-nowrap">{APP_NAME}</span>
+            : <img src={logoSrc} alt={APP_NAME} className="h-9 w-auto" />}
           <p className="text-white/30 text-[10px] tracking-[0.2em] uppercase mt-2 ml-0.5">
             Admin Portal
           </p>
@@ -146,7 +149,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div className="relative z-10">
-          <p className="text-white/20 text-xs">© 2026 MillionStay · All rights reserved</p>
+          <p className="text-white/20 text-xs">© 2026 {APP_NAME} · All rights reserved</p>
         </div>
       </div>
 
@@ -163,7 +166,9 @@ export default function LoginPage() {
 
             {/* Mobile logo */}
             <div className="lg:hidden flex justify-center mb-10">
-              <img src={logoSrc} alt="MillionStay" className="h-8 w-auto" />
+              {import.meta.env.VITE_LOGO_MODE === "text"
+                ? <span className="font-display font-extrabold tracking-tight text-primary text-xl whitespace-nowrap">{APP_NAME}</span>
+                : <img src={logoSrc} alt={APP_NAME} className="h-8 w-auto" />}
             </div>
 
             {/* Heading */}
@@ -255,7 +260,7 @@ export default function LoginPage() {
                 </Link>
               </p>
               <p className="text-center text-xs text-slate-400">
-                Secure access · MillionStay Admin v2
+                Secure access · {APP_NAME} Admin v2
               </p>
               <p className="text-center text-xs text-slate-400">
                 <a

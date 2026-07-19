@@ -11,6 +11,7 @@ import {
   Eye, EyeOff, Copy, ArrowLeft,
 } from "lucide-react";
 import { Link } from "wouter";
+import { APP_NAME } from "@/lib/appName";
 import { cn } from "@/lib/utils";
 
 interface IntegrationStatus {
@@ -332,7 +333,7 @@ const GoogleSheetsFields = () => (
         <code className="bg-muted px-1 rounded">homestay:write</code> scopes.
       </li>
       <li>In your Google Sheet, add the provided Apps Script and paste the key into Script Properties.</li>
-      <li>Run the install step once, then use the sheet's <strong>MillionStay → Pull latest</strong> menu.</li>
+      <li>Run the install step once, then use the sheet's <strong>{APP_NAME} → Pull latest</strong> menu.</li>
     </ol>
     <div className="flex flex-wrap items-center gap-2 pt-1">
       <Link href="/settings/api-keys">

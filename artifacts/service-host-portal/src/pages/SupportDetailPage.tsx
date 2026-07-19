@@ -198,7 +198,7 @@ export default function SupportDetailPage() {
                       </div>
                     )}
                     <span className="text-xs text-muted-foreground">
-                      {isAdmin ? t("support.sender_admin", "MillionStay Support") : t("support.sender_you", "You")} · {fmt(msg.created_at, i18n.language)}
+                      {isAdmin ? t("support.sender_admin", "{{appName}} Support") : t("support.sender_you", "You")} · {fmt(msg.created_at, i18n.language)}
                     </span>
                   </div>
                   <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${

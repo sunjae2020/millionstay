@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { apiPost } from "@/lib/api";
+import { APP_NAME } from "@/lib/appName";
 import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 
 const BRAND = "#E8621A";
@@ -67,11 +68,15 @@ export default function OwnerApplicationPage() {
 
       <main className="max-w-3xl mx-auto px-6 py-10">
         <div className="text-center mb-8">
-          <img
-            src={`${import.meta.env.BASE_URL}logo-horizontal.png`}
-            alt="MillionStay"
-            className="h-9 w-auto mx-auto mb-6"
-          />
+          {import.meta.env.VITE_LOGO_MODE === "text" ? (
+            <span className="font-display font-extrabold tracking-tight text-primary text-xl whitespace-nowrap block mx-auto mb-6">{APP_NAME}</span>
+          ) : (
+            <img
+              src={`${import.meta.env.BASE_URL}logo-horizontal.png`}
+              alt={APP_NAME}
+              className="h-9 w-auto mx-auto mb-6"
+            />
+          )}
           <h1 className="text-3xl font-bold text-slate-900">{t("apply.title")}</h1>
           <p className="text-slate-500 text-sm mt-2 max-w-xl mx-auto">{t("apply.subtitle")}</p>
         </div>

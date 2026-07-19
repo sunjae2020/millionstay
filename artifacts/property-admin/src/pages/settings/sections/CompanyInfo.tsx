@@ -9,6 +9,7 @@ import { Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
 import { useTranslation } from "react-i18next";
+import { APP_NAME } from "@/lib/appName";
 
 interface CompanyForm {
   company_name: string;
@@ -28,8 +29,8 @@ interface CompanyForm {
 }
 
 const DEFAULTS: CompanyForm = {
-  company_name: "MillionStay Pty Ltd",
-  trading_name: "MillionStay",
+  company_name: `${APP_NAME} Pty Ltd`,
+  trading_name: APP_NAME,
   abn: "",
   phone: "",
   email: "",
@@ -93,11 +94,11 @@ export function CompanyInfo() {
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label>{t("settings_company.company_name_legal_label")}</Label>
-          <Input {...register("company_name")} placeholder="MillionStay Pty Ltd" />
+          <Input {...register("company_name")} placeholder={`${APP_NAME} Pty Ltd`} />
         </div>
         <div className="space-y-1.5">
           <Label>{t("settings_company.trading_name_label")}</Label>
-          <Input {...register("trading_name")} placeholder="MillionStay" />
+          <Input {...register("trading_name")} placeholder={APP_NAME} />
         </div>
         <div className="space-y-1.5">
           <Label>{t("settings_company.abn_label")}</Label>

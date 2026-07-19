@@ -10,6 +10,7 @@ import {
   Loader2, Copy, CheckCircle2, KeyRound, Plus, Trash2, RefreshCw, ArrowLeft, AlertTriangle,
 } from "lucide-react";
 import { Link } from "wouter";
+import { APP_NAME } from "@/lib/appName";
 import { cn } from "@/lib/utils";
 
 interface ApiCredential {
@@ -240,7 +241,7 @@ export default function ApiKeysPage() {
     <Layout>
       <PageHeader
         title={t("nav.api_keys")}
-        subtitle="Issue API keys so external apps can connect to MillionStay"
+        subtitle={`Issue API keys so external apps can connect to ${APP_NAME}`}
         actions={
           <div className="flex gap-2">
             <Link href="/settings">

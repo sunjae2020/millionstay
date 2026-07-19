@@ -13,6 +13,7 @@ import {
   loadTheme,
 } from "@/lib/theme";
 import { useBrand } from "@/contexts/ThemeContext";
+import { APP_NAME } from "@/lib/appName";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -274,7 +275,7 @@ export function Design() {
 
   const { register, handleSubmit, control, watch } = useForm<DesignForm>({
     defaultValues: {
-      brand_name: saved.brand_name ?? "MillionStay",
+      brand_name: saved.brand_name ?? APP_NAME,
       primary_color: saved.primary_color ?? DEFAULTS.primary_color,
       secondary_color: saved.secondary_color ?? DEFAULTS.secondary_color,
       accent_color: saved.accent_color ?? DEFAULTS.accent_color,
@@ -469,7 +470,7 @@ export function Design() {
         <div className="grid md:grid-cols-2 gap-4 pt-2">
           <div className="space-y-1.5">
             <Label>{t("settings_design.brand_name")}</Label>
-            <Input {...register("brand_name")} placeholder="MillionStay" />
+            <Input {...register("brand_name")} placeholder={APP_NAME} />
             <p className="text-xs text-muted-foreground">{t("settings_design.brand_name_hint")}</p>
           </div>
           <div className="space-y-1.5">

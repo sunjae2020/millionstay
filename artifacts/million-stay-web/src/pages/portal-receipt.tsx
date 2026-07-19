@@ -10,7 +10,7 @@ import { APP_NAME } from "../lib/appName";
 import { BrandMark } from "../components/brand-mark";
 import { COMPANY } from "../lib/company";
 
-const BRAND = "#E8621A";
+const BRAND = "hsl(var(--primary))"; // instance primary (white-label)
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   bank_transfer: "Bank Transfer",

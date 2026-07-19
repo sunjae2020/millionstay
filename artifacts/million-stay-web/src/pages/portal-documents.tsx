@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useListMyDocuments, getListMyDocumentsQueryKey } from "@/lib/guest-api";
 import { useAuthStore } from "@/lib/store";
 import { PortalLayout } from "@/components/portal-layout";
+import { StatusBadge } from "@/components/status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { FileImage, CheckCircle2, Clock, AlertCircle, Plus } from "lucide-react";
@@ -131,10 +132,7 @@ export default function PortalDocuments() {
                           )}
                         </div>
                       </div>
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${statusInfo.color}`}>
-                        <StatusIcon className="h-3 w-3" />
-                        {t(`portal.documents.${statusKey}`)}
-                      </span>
+                      <StatusBadge status={doc.status} label={t(`portal.documents.${statusKey}`)} icon={<StatusIcon className="h-3 w-3" />} />
                     </motion.div>
                   );
                 })

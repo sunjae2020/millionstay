@@ -4,6 +4,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useBrand } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import { APP_NAME } from "@/lib/appName";
 import {
   LayoutDashboard,
   Users,
@@ -638,11 +639,13 @@ function SidebarLogo({
     <div className="h-14 flex items-center px-3 border-b border-sidebar-border flex-shrink-0 gap-2">
       {/* MillionStay logo (falls back to brand logo if one is configured) */}
       <div className="flex-1 min-w-0 flex items-center gap-2">
-        <img
-          src={logo ?? `${import.meta.env.BASE_URL}millionstay-logo.png`}
-          alt={brandName}
-          className="max-h-7 max-w-[150px] object-contain"
-        />
+        {import.meta.env.VITE_LOGO_MODE === "text" && !logo
+          ? <span className="font-display font-extrabold tracking-tight text-primary text-xl whitespace-nowrap">{APP_NAME}</span>
+          : <img
+              src={logo ?? `${import.meta.env.BASE_URL}millionstay-logo.png`}
+              alt={brandName}
+              className="max-h-7 max-w-[150px] object-contain"
+            />}
       </div>
       {/* Collapse button — desktop only */}
       <button
@@ -807,11 +810,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </button>
 
           {/* Mobile brand — MillionStay logo */}
-          <img
-            src={effectiveLogo ?? `${import.meta.env.BASE_URL}millionstay-logo.png`}
-            alt={brandName}
-            className="max-h-7 max-w-[140px] object-contain md:hidden"
-          />
+          {import.meta.env.VITE_LOGO_MODE === "text" && !effectiveLogo
+            ? <span className="font-display font-extrabold tracking-tight text-primary text-xl whitespace-nowrap md:hidden">{APP_NAME}</span>
+            : <img
+                src={effectiveLogo ?? `${import.meta.env.BASE_URL}millionstay-logo.png`}
+                alt={brandName}
+                className="max-h-7 max-w-[140px] object-contain md:hidden"
+              />}
 
           {/* Spacer */}
           <div className="flex-1" />

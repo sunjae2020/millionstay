@@ -7,6 +7,7 @@ import { Loader2, Eye, EyeOff, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/apiFetch";
 import logoSrc from "/millionstay-logo.png";
+import { APP_NAME } from "@/lib/appName";
 
 const BRAND = "#E8621A";
 
@@ -104,14 +105,16 @@ export default function RegisterPage() {
           style={{ background: `radial-gradient(circle, #FF9A50, transparent 70%)` }} />
 
         <div className="relative z-10">
-          <img src={logoSrc} alt="MillionStay" className="h-9 w-auto" />
+          {import.meta.env.VITE_LOGO_MODE === "text"
+            ? <span className="font-display font-extrabold tracking-tight text-white text-xl whitespace-nowrap">{APP_NAME}</span>
+            : <img src={logoSrc} alt={APP_NAME} className="h-9 w-auto" />}
           <p className="text-white/30 text-[10px] tracking-[0.2em] uppercase mt-2 ml-0.5">{t("register.admin_portal")}</p>
         </div>
 
         <div className="relative z-10 space-y-5">
           <h2 className="text-[2rem] font-bold text-white leading-[1.2]">
             {t("register.brand_heading_line1")}<br />
-            <span style={{ color: BRAND }}>MillionStay</span><br />
+            <span style={{ color: BRAND }}>{APP_NAME}</span><br />
             {t("register.brand_heading_line3")}
           </h2>
           <p className="text-white/45 text-sm leading-relaxed max-w-[260px]">
@@ -144,7 +147,9 @@ export default function RegisterPage() {
         <div className="w-full max-w-[420px]">
 
           <div className="lg:hidden flex justify-center mb-8">
-            <img src={logoSrc} alt="MillionStay" className="h-8 w-auto" />
+            {import.meta.env.VITE_LOGO_MODE === "text"
+              ? <span className="font-display font-extrabold tracking-tight text-primary text-xl whitespace-nowrap">{APP_NAME}</span>
+              : <img src={logoSrc} alt={APP_NAME} className="h-8 w-auto" />}
           </div>
 
           <div className="mb-7">

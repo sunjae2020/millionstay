@@ -5,6 +5,7 @@ import ko from "@/locales/ko/translation.json";
 import zh from "@/locales/zh/translation.json";
 import ja from "@/locales/ja/translation.json";
 import th from "@/locales/th/translation.json";
+import { APP_NAME } from "@/lib/appName";
 
 const STORAGE_KEY = "ms_owner_language";
 const SUPPORTED = ["en", "ko", "zh", "ja", "th"];
@@ -28,7 +29,12 @@ void i18n.use(initReactI18next).init({
   },
   lng: detectLanguage(),
   fallbackLng: "en",
-  interpolation: { escapeValue: false },
+  interpolation: {
+    escapeValue: false,
+    // White-label: translation strings use {{appName}} instead of a hardcoded
+    // brand so a per-instance VITE_APP_NAME flows through automatically.
+    defaultVariables: { appName: APP_NAME },
+  },
   returnNull: false,
 });
 

@@ -34,7 +34,7 @@
     "stat_properties": "Properties",
     "stat_satisfaction": "Satisfaction",
     "stat_support": "Support",
-    "copyright": "© 2026 MillionStay · All rights reserved",
+    "copyright": "© 2026 {{appName}} · All rights reserved",
     "sign_in": "Sign in",
     "subtitle": "Sign in to manage your listings",
     "email": "Email address",
@@ -44,9 +44,9 @@
     "signing_in": "Signing in...",
     "sign_in_arrow": "Sign in →",
     "invalid": "Invalid credentials",
-    "secure": "Secure access · MillionStay Agent Portal",
+    "secure": "Secure access · {{appName}} Agent Portal",
     "apply_prompt": "Want to partner as an agent?",
-    "apply_cta": "Apply to join MillionStay"
+    "apply_cta": "Apply to join {{appName}}"
   },
   "dashboard": {
     "welcome": "Welcome back",
@@ -134,8 +134,8 @@
   },
   "apply": {
     "apply_prompt": "Want to partner as an agent?",
-    "apply_cta": "Apply to join MillionStay",
-    "title": "Apply to become a MillionStay agent",
+    "apply_cta": "Apply to join {{appName}}",
+    "title": "Apply to become a {{appName}} agent",
     "subtitle": "Tell us a little about your business and we'll be in touch within 1-2 business days.",
     "back_to_login": "Back to sign in",
     "first_name": "First name",
@@ -155,14 +155,14 @@
     "submitting": "Submitting...",
     "submit_error": "Could not submit your application. Please try again.",
     "success_title": "Application received!",
-    "success_message": "Thanks for your interest in partnering with MillionStay. Our partnerships team will review your application and reach out within 1-2 business days.",
+    "success_message": "Thanks for your interest in partnering with {{appName}}. Our partnerships team will review your application and reach out within 1-2 business days.",
     "reference_label": "Your reference:",
-    "privacy_note": "By submitting, you agree to be contacted by MillionStay regarding your application.",
+    "privacy_note": "By submitting, you agree to be contacted by {{appName}} regarding your application.",
     "privacy_policy_link": "Privacy Policy"
   },
   "support": {
     "title": "Support",
-    "subtitle": "Contact the MillionStay admin team. Only you and admin can see these messages.",
+    "subtitle": "Contact the {{appName}} admin team. Only you and admin can see these messages.",
     "new_ticket": "New ticket",
     "category": "Category",
     "subject": "Subject",
@@ -177,7 +177,7 @@
     "back": "Back to Support",
     "not_found": "Ticket not found.",
     "submitted": "Submitted",
-    "sender_admin": "MillionStay Support",
+    "sender_admin": "{{appName}} Support",
     "sender_you": "You",
     "reply_placeholder": "Type your reply…",
     "send": "Send",

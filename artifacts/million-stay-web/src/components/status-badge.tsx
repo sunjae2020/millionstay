@@ -30,6 +30,7 @@ const STATUS_TONE: Record<string, Tone> = {
   cancelled: "danger",
   // invoices
   paid: "success",
+  sent: "info", // "Sent" invoice = awaiting payment, shown as "Unpaid"
   unpaid: "warn",
   overdue: "danger",
   void: "neutral",
@@ -42,6 +43,7 @@ const STATUS_TONE: Record<string, Tone> = {
   under_review: "warn",
   // CS
   open: "info",
+  inprogress: "warn",
   resolved: "success",
   closed: "neutral",
 };
@@ -58,17 +60,19 @@ const SIZE_CLASS = {
 } as const;
 
 export function StatusBadge({
-  status, label, size = "sm",
+  status, label, icon, size = "sm",
 }: {
   status: string;
   label?: ReactNode;
+  /** optional leading icon node; when omitted, pulse-worthy statuses show a dot */
+  icon?: ReactNode;
   size?: "sm" | "md";
 }) {
   const key = normalise(status);
   const tone = STATUS_TONE[key] ?? "neutral";
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full font-semibold ${SIZE_CLASS[size]} ${TONE_CLASS[tone]}`}>
-      {PULSE.has(key) && <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse motion-reduce:animate-none" />}
+      {icon ?? (PULSE.has(key) && <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse motion-reduce:animate-none" />)}
       {label ?? status}
     </span>
   );

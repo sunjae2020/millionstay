@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/lib/store";
 import { PortalLayout } from "@/components/portal-layout";
+import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -67,12 +68,6 @@ interface DirectMessage {
 const STATUS_LABELS: Record<string, string> = {
   Open: "Open", InProgress: "In Progress", Resolved: "Resolved", Closed: "Closed",
 };
-const STATUS_COLORS: Record<string, string> = {
-  Open: "bg-blue-100 text-blue-700 border border-blue-200",
-  InProgress: "bg-amber-100 text-amber-700 border border-amber-200",
-  Resolved: "bg-green-100 text-green-700 border border-green-200",
-  Closed: "bg-gray-100 text-gray-500 border border-gray-200",
-};
 const CATEGORY_COLORS: Record<string, string> = {
   General: "bg-purple-100 text-purple-700",
   Accommodation: "bg-orange-100 text-orange-700",
@@ -104,7 +99,6 @@ function StatusIcon({ status }: { status: string }) {
 /* ── Inquiry Card ── */
 function InquiryCard({ ticket }: { ticket: CsTicket }) {
   const { t } = useTranslation();
-  const stColor = STATUS_COLORS[ticket.status] ?? STATUS_COLORS.Open;
   const stLabel = STATUS_LABELS[ticket.status] ?? ticket.status;
   return (
     <Link href={`/portal/cs/${ticket.id}`}>
@@ -120,9 +114,7 @@ function InquiryCard({ ticket }: { ticket: CsTicket }) {
               <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${CATEGORY_COLORS[ticket.category] ?? "bg-gray-100 text-gray-600"}`}>
                 {ticket.category}
               </span>
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${stColor}`}>
-                <StatusIcon status={ticket.status} />{stLabel}
-              </span>
+              <StatusBadge status={ticket.status} label={stLabel} icon={<StatusIcon status={ticket.status} />} />
             </div>
             <p className="font-semibold text-gray-900 text-sm truncate">{ticket.subject}</p>
             <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-400">

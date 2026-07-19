@@ -117,7 +117,7 @@ export default function SupportPage() {
             <LifeBuoy className="w-6 h-6 text-primary" /> {t("support.title", "Support")}
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {t("support.subtitle", "Contact the MillionStay admin team. Only you and admin can see these messages.")}
+            {t("support.subtitle", "Contact the {{appName}} admin team. Only you and admin can see these messages.")}
           </p>
         </div>
         <Button onClick={() => setShowForm((v) => !v)} className="gap-2">

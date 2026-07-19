@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from "react";
 import { loadTheme, applySidebarTheme, applyDarkMode, applyFavicon, saveTheme } from "@/lib/theme";
+import { APP_NAME } from "@/lib/appName";
 
 interface BrandState {
   logo: string | null;
@@ -17,7 +18,7 @@ interface ThemeContextValue extends BrandState {
 const ThemeContext = createContext<ThemeContextValue>({
   logo: null,
   logoDark: null,
-  brandName: "MillionStay",
+  brandName: APP_NAME,
   sidebarTheme: "dark",
   darkMode: false,
   refresh: () => {},
@@ -29,7 +30,7 @@ function readState(): BrandState {
   return {
     logo: theme.logo ?? null,
     logoDark: theme.logo_dark ?? null,
-    brandName: theme.brand_name ?? "MillionStay",
+    brandName: theme.brand_name ?? APP_NAME,
     sidebarTheme: theme.sidebar_theme ?? "dark",
     darkMode: theme.dark_mode === true,
   };

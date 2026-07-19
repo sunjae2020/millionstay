@@ -34,7 +34,7 @@
     "stat_properties": "物业",
     "stat_satisfaction": "满意度",
     "stat_support": "支持",
-    "copyright": "© 2026 MillionStay · 版权所有",
+    "copyright": "© 2026 {{appName}} · 版权所有",
     "sign_in": "登录",
     "subtitle": "登录以管理您的房源",
     "email": "邮箱地址",
@@ -44,9 +44,9 @@
     "signing_in": "登录中...",
     "sign_in_arrow": "登录 →",
     "invalid": "凭证无效",
-    "secure": "安全访问 · MillionStay 代理门户",
+    "secure": "安全访问 · {{appName}} 代理门户",
     "apply_prompt": "想成为合作经纪人？",
-    "apply_cta": "申请加入 MillionStay"
+    "apply_cta": "申请加入 {{appName}}"
   },
   "dashboard": {
     "welcome": "欢迎回来",
@@ -134,8 +134,8 @@
   },
   "apply": {
     "apply_prompt": "想成为合作经纪人？",
-    "apply_cta": "申请加入 MillionStay",
-    "title": "申请成为 MillionStay 经纪人",
+    "apply_cta": "申请加入 {{appName}}",
+    "title": "申请成为 {{appName}} 经纪人",
     "subtitle": "请简要介绍您的业务，我们将在 1-2 个工作日内与您联系。",
     "back_to_login": "返回登录",
     "first_name": "名",
@@ -155,14 +155,14 @@
     "submitting": "提交中...",
     "submit_error": "无法提交您的申请，请重试。",
     "success_title": "申请已收到！",
-    "success_message": "感谢您有意与 MillionStay 合作。合作团队将审核您的申请，并在 1-2 个工作日内与您联系。",
+    "success_message": "感谢您有意与 {{appName}} 合作。合作团队将审核您的申请，并在 1-2 个工作日内与您联系。",
     "reference_label": "申请编号：",
-    "privacy_note": "提交即表示您同意 MillionStay 就此申请与您联系。",
+    "privacy_note": "提交即表示您同意 {{appName}} 就此申请与您联系。",
     "privacy_policy_link": "Privacy Policy"
   },
   "support": {
     "title": "客户支持",
-    "subtitle": "联系 MillionStay 管理团队。只有您和管理员可以看到这些消息。",
+    "subtitle": "联系 {{appName}} 管理团队。只有您和管理员可以看到这些消息。",
     "new_ticket": "新工单",
     "category": "类别",
     "subject": "主题",
@@ -177,7 +177,7 @@
     "back": "返回客户支持",
     "not_found": "未找到工单。",
     "submitted": "提交时间",
-    "sender_admin": "MillionStay 客服",
+    "sender_admin": "{{appName}} 客服",
     "sender_you": "您",
     "reply_placeholder": "输入回复…",
     "send": "发送",

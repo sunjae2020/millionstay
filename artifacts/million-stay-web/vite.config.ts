@@ -6,9 +6,20 @@ import path from "path";
 const port = Number(process.env.PORT) || 5173;
 const basePath = process.env.BASE_PATH || "/";
 
+// White-label: replace the static index.html <title> at build time so the
+// initial (pre-JS) title matches the instance name too (SEO/first paint).
+// Defaults to "Million Stay" for the primary instance. Spec §2.3.
+const appName = process.env.VITE_APP_NAME?.trim() || "Million Stay";
+const htmlAppName = {
+  name: "html-app-name",
+  transformIndexHtml(html: string) {
+    return html.replace(/<title>[\s\S]*?<\/title>/, `<title>${appName}</title>`);
+  },
+};
+
 export default defineConfig({
   base: basePath,
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), htmlAppName],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),

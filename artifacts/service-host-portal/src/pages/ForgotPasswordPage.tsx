@@ -1,6 +1,7 @@
 import { useState, FormEvent } from "react";
 import { Link } from "wouter";
 import { Mail, ArrowLeft, Loader2 } from "lucide-react";
+import { APP_NAME } from "@/lib/appName";
 
 const BRAND = "#E8621A";
 const API_BASE = "/api/v1";
@@ -28,7 +29,11 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen flex items-center justify-center bg-[#faf9f7] p-6">
       <div className="w-full max-w-[420px] bg-white rounded-2xl shadow-md p-8 space-y-6">
         <div>
-          <img src={`${import.meta.env.BASE_URL}logo-horizontal.png`} alt="MillionStay" className="h-7 mb-6" />
+          {import.meta.env.VITE_LOGO_MODE === "text" ? (
+            <span className="block font-display font-extrabold tracking-tight text-primary text-xl whitespace-nowrap mb-6">{APP_NAME}</span>
+          ) : (
+            <img src={`${import.meta.env.BASE_URL}logo-horizontal.png`} alt={APP_NAME} className="h-7 mb-6" />
+          )}
           <h1 className="text-2xl font-bold text-slate-900">Reset your password</h1>
           <p className="text-slate-500 text-sm mt-1">
             Enter your account email and we'll send you a reset link.

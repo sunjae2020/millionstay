@@ -7,6 +7,7 @@ import { Loader2, Eye, EyeOff, CheckCircle, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/apiFetch";
 import logoSrc from "/millionstay-logo.png";
+import { APP_NAME } from "@/lib/appName";
 
 const BRAND = "#E8621A";
 
@@ -133,7 +134,9 @@ export default function ResetPasswordPage() {
           style={{ background: `radial-gradient(circle, #FF9A50, transparent 70%)` }} />
 
         <div className="relative z-10">
-          <img src={logoSrc} alt="MillionStay" className="h-9 w-auto" />
+          {import.meta.env.VITE_LOGO_MODE === "text"
+            ? <span className="font-display font-extrabold tracking-tight text-white text-xl whitespace-nowrap">{APP_NAME}</span>
+            : <img src={logoSrc} alt={APP_NAME} className="h-9 w-auto" />}
           <p className="text-white/30 text-[10px] tracking-[0.2em] uppercase mt-2 ml-0.5">{t("reset_password.admin_portal")}</p>
         </div>
 
@@ -169,7 +172,9 @@ export default function ResetPasswordPage() {
         <div className="w-full max-w-[400px]">
 
           <div className="lg:hidden flex justify-center mb-8">
-            <img src={logoSrc} alt="MillionStay" className="h-8 w-auto" />
+            {import.meta.env.VITE_LOGO_MODE === "text"
+              ? <span className="font-display font-extrabold tracking-tight text-primary text-xl whitespace-nowrap">{APP_NAME}</span>
+              : <img src={logoSrc} alt={APP_NAME} className="h-8 w-auto" />}
           </div>
 
           <div className="mb-7">

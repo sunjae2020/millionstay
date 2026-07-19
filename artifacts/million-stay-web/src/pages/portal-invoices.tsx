@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useListMyInvoices, getListMyInvoicesQueryKey, type MyInvoice } from "@/lib/guest-api";
 import { useAuthStore } from "@/lib/store";
 import { PortalLayout } from "@/components/portal-layout";
+import { StatusBadge } from "@/components/status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 
-const BRAND = "#E8621A";
+const BRAND = "hsl(var(--primary))"; // instance primary (white-label)
 
 const STATUS_CONFIG: Record<string, { label: string; cls: string; icon: React.ElementType }> = {
   Paid:    { label: "Paid",     cls: "bg-green-100 text-green-700 border border-green-200",  icon: CheckCircle2 },
@@ -72,10 +73,7 @@ function InvoiceCard({ inv }: { inv: MyInvoice }) {
             <span className="font-mono text-sm font-semibold text-gray-800">
               {inv.invoice_ref ?? `INV-${inv.id}`}
             </span>
-            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${cfg.cls}`}>
-              <StatusIcon className="h-3 w-3" />
-              {cfg.label}
-            </span>
+            <StatusBadge status={inv.status ?? "Draft"} label={cfg.label} icon={<StatusIcon className="h-3 w-3" />} />
           </div>
 
           {/* Description (monthly label) — prominent */}

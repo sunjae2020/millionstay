@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { APP_NAME } from "@/lib/appName";
 import {
   ArrowLeft, Save, Globe, Search, Eye, EyeOff,
   Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight,
@@ -39,8 +40,8 @@ const PAGE_FIELDS: Record<string, SectionField[]> = {
     { key: "hero_subtitle", label: "Hero Subtitle", type: "textarea", placeholder: "Tagline below the hero title" },
     { key: "hero_cta_primary", label: "Primary CTA Button Text", type: "text", placeholder: "Browse Rooms" },
     { key: "hero_cta_secondary", label: "Secondary CTA Button Text", type: "text", placeholder: "Learn More" },
-    { key: "why_title", label: '"Why MillionStay" Section Title', type: "text" },
-    { key: "why_body", label: '"Why MillionStay" Body', type: "richtext" },
+    { key: "why_title", label: `"Why ${APP_NAME}" Section Title`, type: "text" },
+    { key: "why_body", label: `"Why ${APP_NAME}" Body`, type: "richtext" },
     { key: "feature_1_title", label: "Feature 1 — Title", type: "text" },
     { key: "feature_1_body", label: "Feature 1 — Description", type: "textarea" },
     { key: "feature_2_title", label: "Feature 2 — Title", type: "text" },

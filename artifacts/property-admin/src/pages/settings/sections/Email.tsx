@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Save, CheckCircle2, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation, Trans } from "react-i18next";
+import { APP_NAME } from "@/lib/appName";
 
 interface EmailForm {
   provider: string;
@@ -41,7 +42,7 @@ export function Email() {
       provider: "resend",
       resend_api_key: "",
       from_email: "noreply@millionstay.com.au",
-      from_name: "MillionStay",
+      from_name: APP_NAME,
       reply_to: "",
       smtp_host: "",
       smtp_port: "587",
@@ -158,7 +159,7 @@ export function Email() {
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label>{t("settings_email.from_name_label")}</Label>
-          <Input {...register("from_name")} placeholder="MillionStay" />
+          <Input {...register("from_name")} placeholder={APP_NAME} />
         </div>
         <div className="space-y-1.5">
           <Label>{t("settings_email.from_email_label")}</Label>
