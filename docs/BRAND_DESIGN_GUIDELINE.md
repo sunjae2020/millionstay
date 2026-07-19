@@ -203,6 +203,10 @@ Vietnamese 성조 부호(diacritics) 렌더링을 위해 Poppins/Inter 의 Vietn
 
 토큰을 바꾸려면 `lib/design-tokens/src/brand.css` 한 곳만 수정하면 전 앱에 반영됩니다.
 
+- **앱 코드 관례**: 시맨틱 토큰 사용법·다크모드·공용 컴포넌트(StatusBadge/StatCard/
+  EmptyState/AuthLayout)·마이그레이션 레시피는 [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) 참조.
+  새 화면/컴포넌트는 그 관례를 기본값으로 적용한다.
+
 **적용 범위**: million-stay-web · property-admin · agent-portal · owner-portal ·
 service-host-portal · mockup-sandbox (6개 프론트엔드 전부).
 
