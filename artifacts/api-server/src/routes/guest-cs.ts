@@ -3,7 +3,7 @@ import multer from "multer";
 import { eq, desc, and, sql, lte } from "drizzle-orm";
 import { db, csTicketsTable, csMessagesTable, bookingsTable, announcementsTable, guestDirectMessagesTable } from "@workspace/db";
 import { requireGuestAuth } from "../middlewares/requireGuestAuth";
-import { isCloudinaryConfigured, uploadToCloudinary } from "../utils/cloudinary";
+import { isCloudinaryConfigured, uploadToCloudinary, cldFolder } from "../utils/cloudinary";
 import { translateAndStoreMessage } from "../lib/chat/translateMessage";
 
 // Languages the guest web app ships — the customer may converse in any of these.
@@ -56,7 +56,7 @@ router.post("/v1/cs/upload-image", requireGuestAuth, upload.single("image"), asy
   try {
     if (!req.file) { res.status(400).json({ success: false, error: { code: "NO_FILE", message: "No file provided" } }); return; }
     if (!isCloudinaryConfigured()) { res.status(503).json({ success: false, error: { code: "NOT_CONFIGURED", message: "Image upload not configured" } }); return; }
-    const result = await uploadToCloudinary(req.file.buffer, { folder: "millionstay/cs" });
+    const result = await uploadToCloudinary(req.file.buffer, { folder: cldFolder("cs") });
     res.json({ success: true, url: result.secure_url, thumbnail_url: result.thumbnail_url });
   } catch (err: any) {
     res.status(500).json({ success: false, error: { code: "UPLOAD_FAILED", message: err.message } });

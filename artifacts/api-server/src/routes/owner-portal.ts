@@ -18,7 +18,7 @@ import {
   validateSlug,
 } from "@workspace/db";
 import { requireOwnerAuth, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth";
-import { isCloudinaryConfigured, uploadToCloudinary } from "../utils/cloudinary";
+import { isCloudinaryConfigured, uploadToCloudinary, cldFolder } from "../utils/cloudinary";
 import { logAction } from "../utils/auditLog";
 import { syncOwnerSubdomain } from "../lib/vercelDomains";
 import { parsePageParams, pageMeta, paginateArray } from "../utils/pagination";
@@ -992,7 +992,7 @@ router.post("/v1/owner/site/upload-image", requireOwnerAuth, upload.single("imag
   try {
     if (!req.file) { res.status(400).json({ error: "No file provided" }); return; }
     if (!isCloudinaryConfigured()) { res.status(503).json({ error: "Image upload not configured" }); return; }
-    const result = await uploadToCloudinary(req.file.buffer, { folder: "millionstay/owner-sites" });
+    const result = await uploadToCloudinary(req.file.buffer, { folder: cldFolder("owner-sites") });
     res.json({ success: true, url: result.secure_url, thumbnail_url: result.thumbnail_url });
   } catch (err: any) {
     console.error("[owner/site/upload-image] upload failed:", err?.message, err);

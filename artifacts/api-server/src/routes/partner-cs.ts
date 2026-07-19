@@ -3,7 +3,7 @@ import multer from "multer";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { db, csTicketsTable, csMessagesTable } from "@workspace/db";
 import { requirePartnerAuth, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth";
-import { isCloudinaryConfigured, uploadToCloudinary } from "../utils/cloudinary";
+import { isCloudinaryConfigured, uploadToCloudinary, cldFolder } from "../utils/cloudinary";
 import { translateAndStoreMessage } from "../lib/chat/translateMessage";
 
 // Languages the partner portals ship (no Vietnamese, unlike the guest web app).
@@ -50,7 +50,7 @@ router.post("/v1/partner/cs/upload-image", upload.single("image"), async (req, r
   try {
     if (!req.file) { res.status(400).json({ success: false, error: { code: "NO_FILE", message: "No file provided" } }); return; }
     if (!isCloudinaryConfigured()) { res.status(503).json({ success: false, error: { code: "NOT_CONFIGURED", message: "Image upload not configured" } }); return; }
-    const result = await uploadToCloudinary(req.file.buffer, { folder: "millionstay/cs" });
+    const result = await uploadToCloudinary(req.file.buffer, { folder: cldFolder("cs") });
     res.json({ success: true, url: result.secure_url, thumbnail_url: result.thumbnail_url });
   } catch (err: any) {
     res.status(500).json({ success: false, error: { code: "UPLOAD_FAILED", message: err.message } });

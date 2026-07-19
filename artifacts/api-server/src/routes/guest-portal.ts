@@ -23,7 +23,7 @@ import { getPrivacyContactEmail } from "../lib/companyContact";
 import { logAction } from "../utils/auditLog";
 import { getRateToAud } from "../lib/rateSnapshot";
 import multer from "multer";
-import { isCloudinaryConfigured, uploadToCloudinary, deleteFromCloudinary } from "../utils/cloudinary";
+import { isCloudinaryConfigured, uploadToCloudinary, deleteFromCloudinary, cldFolder } from "../utils/cloudinary";
 
 const avatarUpload = multer({
   storage: multer.memoryStorage(),
@@ -558,7 +558,7 @@ router.post("/v1/guest/profile/avatar", avatarUpload.single("avatar"), async (re
     }
 
     const result = await uploadToCloudinary(file.buffer, {
-      folder: "millionstay/avatars",
+      folder: cldFolder("avatars"),
       transformation: [
         { width: 400, height: 400, crop: "fill", gravity: "face" },
         { quality: "auto:good", fetch_format: "auto" },

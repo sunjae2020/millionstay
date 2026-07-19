@@ -14,6 +14,13 @@ export function isCloudinaryConfigured(): boolean {
   );
 }
 
+/** Per-instance Cloudinary root folder (white-label). Defaults to "millionstay". */
+export const CLOUDINARY_ROOT_FOLDER = process.env["CLOUDINARY_ROOT_FOLDER"]?.trim() || "millionstay";
+/** Build a Cloudinary folder path under the instance root, e.g. cldFolder("spaces") -> "millionstay/spaces". */
+export function cldFolder(sub: string): string {
+  return `${CLOUDINARY_ROOT_FOLDER}/${sub}`;
+}
+
 /**
  * Upload an image to Cloudinary with automatic optimisation:
  *   - quality: auto   → Cloudinary picks the best quality (typically ~75-85 for web)
@@ -37,7 +44,7 @@ export async function uploadToCloudinary(
   }>((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
-        folder: "millionstay/spaces",
+        folder: cldFolder("spaces"),
         transformation: [
           { quality: "auto:good", fetch_format: "auto" },
           { width: 1920, height: 1440, crop: "limit" },
@@ -106,7 +113,7 @@ export async function uploadPrivateToCloudinary(
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
-        folder: "millionstay/private",
+        folder: cldFolder("private"),
         type: "authenticated",
         access_mode: "authenticated",
         ...options,

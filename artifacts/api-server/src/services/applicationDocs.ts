@@ -33,7 +33,7 @@ import {
 import { buildContractHtml, type ContractSignature } from "../lib/documents/contractDocument.js";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo.js";
 import { buildContractDocInput } from "../routes/contracts.js";
-import { isCloudinaryConfigured, uploadPrivateToCloudinary } from "../utils/cloudinary.js";
+import { isCloudinaryConfigured, uploadPrivateToCloudinary, cldFolder } from "../utils/cloudinary.js";
 import { sendDocumentEmail, sendApplicationAckEmail } from "../lib/email.js";
 import { resolveTemplate } from "../lib/documents/templateEngine.js";
 import { getHomestayBillingSettings } from "../lib/homestay/billingSettings.js";
@@ -250,7 +250,7 @@ export async function generateAndStoreSignedPdf(
       try {
         const up = await uploadPrivateToCloudinary(pdf, {
           format: "pdf",
-          folder: "millionstay/private/applications",
+          folder: cldFolder("private/applications"),
         });
         pdfUrl = up.public_id;
         await db.update(contractSigningRequestsTable)

@@ -3,7 +3,7 @@ import multer from "multer";
 import { eq, desc, and, ilike, or, sql, isNull, inArray } from "drizzle-orm";
 import { db, csTicketsTable, csMessagesTable, guestUsersTable, partnerUsersTable, bookingsTable } from "@workspace/db";
 import { requireAuth } from "../middlewares/requireAuth";
-import { isCloudinaryConfigured, uploadToCloudinary } from "../utils/cloudinary";
+import { isCloudinaryConfigured, uploadToCloudinary, cldFolder } from "../utils/cloudinary";
 import { translateAndStoreMessage } from "../lib/chat/translateMessage";
 
 const router: IRouter = Router();
@@ -19,7 +19,7 @@ router.post("/v1/cs/admin/upload-image", requireAuth, upload.single("image"), as
   try {
     if (!req.file) { res.status(400).json({ success: false, error: { code: "NO_FILE", message: "No file provided" } }); return; }
     if (!isCloudinaryConfigured()) { res.status(503).json({ success: false, error: { code: "NOT_CONFIGURED", message: "Image upload not configured" } }); return; }
-    const result = await uploadToCloudinary(req.file.buffer, { folder: "millionstay/cs" });
+    const result = await uploadToCloudinary(req.file.buffer, { folder: cldFolder("cs") });
     res.json({ success: true, url: result.secure_url, thumbnail_url: result.thumbnail_url });
   } catch (err: any) {
     res.status(500).json({ success: false, error: { code: "UPLOAD_FAILED", message: err.message } });

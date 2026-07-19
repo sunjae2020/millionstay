@@ -21,7 +21,7 @@ import { renderApplicationPdf } from "../services/applicationDocs.js";
 import { hostApplicationToDoc } from "../lib/documents/applicationPdf.js";
 import { getAckRule } from "../lib/applicationEmails.js";
 import { sendHomestayHostEmail, sendLeadNotificationEmail } from "../lib/email.js";
-import { isCloudinaryConfigured, uploadPrivateToCloudinary, generateSignedUrl } from "../utils/cloudinary.js";
+import { isCloudinaryConfigured, uploadPrivateToCloudinary, generateSignedUrl, cldFolder } from "../utils/cloudinary.js";
 import { logAction } from "../utils/auditLog.js";
 import { parsePageParams, pageMeta } from "../utils/pagination.js";
 
@@ -349,7 +349,7 @@ homestayPortalRouter.post("/v1/homestay/documents", upload.single("file"), async
   // Host identity docs (WWCC/ID/proof-of-residence) are PII — store them as
   // Cloudinary "authenticated" assets so they are only reachable via short-lived
   // signed URLs, never a public CDN link (H-501).
-  const uploaded = await uploadPrivateToCloudinary(file.buffer, { folder: `millionstay/private/homestay/${app.id}` });
+  const uploaded = await uploadPrivateToCloudinary(file.buffer, { folder: cldFolder(`private/homestay/${app.id}`) });
   const [doc] = await db.insert(documentsTable).values({
     entity_type: "HomestayHostApplication",
     entity_id: app.id,

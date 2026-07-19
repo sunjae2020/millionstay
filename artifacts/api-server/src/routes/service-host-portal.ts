@@ -14,7 +14,7 @@ import {
   contactsTable,
 } from "@workspace/db";
 import { requireServiceHostAuth, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth";
-import { isCloudinaryConfigured, uploadToCloudinary, deleteFromCloudinary } from "../utils/cloudinary";
+import { isCloudinaryConfigured, uploadToCloudinary, deleteFromCloudinary, cldFolder } from "../utils/cloudinary";
 import { parsePageParams, pageMeta } from "../utils/pagination";
 
 const router: IRouter = Router();
@@ -367,7 +367,7 @@ router.post(
       const uploads: Array<{ secure_url: string; thumbnail_url: string | null; public_id: string }> = [];
       try {
         for (const file of files) {
-          const uploaded = await uploadToCloudinary(file.buffer, { folder: "millionstay/jobs" });
+          const uploaded = await uploadToCloudinary(file.buffer, { folder: cldFolder("jobs") });
           uploads.push(uploaded);
         }
       } catch (uploadErr: any) {
