@@ -276,7 +276,8 @@
       "documents": "Documents",
       "cs": "Communications",
       "profile": "My Profile",
-      "my_data": "My Data"
+      "my_data": "My Data",
+      "home": "Home"
     },
     "bookings": {
       "title": "My Bookings",
@@ -450,6 +451,34 @@
       "related_booking": "Related Booking (optional)",
       "select_booking": "Select booking…",
       "file_hint": "JPG, PNG, GIF up to 10MB each"
+    },
+    "home": {
+      "greeting": "Welcome back, {{name}}",
+      "greeting_plain": "Welcome back",
+      "subtitle": "Your stays & payments at a glance",
+      "kpi_next_stay": "Next stay",
+      "kpi_next_stay_none": "No upcoming stay",
+      "kpi_today": "Today",
+      "kpi_tomorrow": "Tomorrow",
+      "kpi_in_days": "in {{count}} days",
+      "kpi_active": "Active bookings",
+      "kpi_active_sub": "confirmed & active",
+      "kpi_balance": "Balance due",
+      "kpi_balance_pay": "Pay now",
+      "kpi_balance_clear": "All settled",
+      "kpi_docs": "Docs pending",
+      "kpi_docs_sub": "awaiting action",
+      "kpi_docs_clear": "Up to date",
+      "recent_title": "Recent activity",
+      "view_all": "View all",
+      "th_ref": "Ref",
+      "th_stay": "Stay",
+      "th_dates": "Dates",
+      "th_status": "Status",
+      "th_amount": "Amount",
+      "empty_title": "No bookings yet",
+      "empty_sub": "When you book a stay, it'll show up here.",
+      "empty_cta": "Browse stays"
     }
   },
   "stay_plan": {

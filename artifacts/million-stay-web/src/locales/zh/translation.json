@@ -235,7 +235,8 @@
       "documents": "文件",
       "cs": "联系客服",
       "profile": "我的资料",
-      "my_data": "我的数据"
+      "my_data": "我的数据",
+      "home": "首页"
     },
     "bookings": {
       "title": "我的预订",
@@ -409,6 +410,34 @@
       "related_booking": "相关预订（可选）",
       "select_booking": "选择预订…",
       "file_hint": "JPG、PNG、GIF，每个最大10MB"
+    },
+    "home": {
+      "greeting": "{{name}}，欢迎回来",
+      "greeting_plain": "欢迎回来",
+      "subtitle": "一览您的预订与付款",
+      "kpi_next_stay": "下次入住",
+      "kpi_next_stay_none": "暂无行程",
+      "kpi_today": "今天",
+      "kpi_tomorrow": "明天",
+      "kpi_in_days": "{{count}} 天后",
+      "kpi_active": "进行中预订",
+      "kpi_active_sub": "已确认·入住中",
+      "kpi_balance": "待付金额",
+      "kpi_balance_pay": "立即付款",
+      "kpi_balance_clear": "已全部结清",
+      "kpi_docs": "待处理文件",
+      "kpi_docs_sub": "需要处理",
+      "kpi_docs_clear": "已是最新",
+      "recent_title": "最近动态",
+      "view_all": "查看全部",
+      "th_ref": "编号",
+      "th_stay": "住宿",
+      "th_dates": "日期",
+      "th_status": "状态",
+      "th_amount": "金额",
+      "empty_title": "还没有预订",
+      "empty_sub": "预订住宿后将显示在这里。",
+      "empty_cta": "浏览住宿"
     }
   },
   "stay_plan": {

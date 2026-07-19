@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { motion } from "framer-motion";
+import { AuthLayout } from "../components/auth-layout";
 import { Lock, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { BrandMark } from "../components/brand-mark";
 import { getApiBase } from "@/lib/api-base";
 
 const API_BASE = `${getApiBase()}/api/v1`;
@@ -73,19 +72,11 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-orange-50 via-white to-orange-50/30">
-      <div className="p-6">
-        <Link href="/">
-          <BrandMark className="h-8 w-auto" />
-        </Link>
+    <AuthLayout>
+      <div className="text-center space-y-1">
+        <h1 className="text-2xl font-bold text-foreground">Set a new password</h1>
+        <p className="text-sm text-muted-foreground">Choose a strong password you haven't used elsewhere.</p>
       </div>
-      <div className="flex-1 flex items-center justify-center p-6">
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-[480px]">
-          <div className="rounded-2xl border bg-white shadow-lg p-8 space-y-6">
-            <div className="text-center space-y-1">
-              <h1 className="text-2xl font-bold text-gray-900">Set a new password</h1>
-              <p className="text-sm text-gray-500">Choose a strong password you haven't used elsewhere.</p>
-            </div>
 
             {!token && (
               <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
@@ -148,14 +139,11 @@ export default function ResetPassword() {
                 >
                   {loading ? "Updating..." : "Set new password"}
                 </Button>
-                <Link href="/login" className="block text-center text-sm text-gray-500 hover:text-primary">
+                <Link href="/login" className="block text-center text-sm text-muted-foreground hover:text-primary">
                   Back to login
                 </Link>
               </form>
             )}
-          </div>
-        </motion.div>
-      </div>
-    </div>
+    </AuthLayout>
   );
 }

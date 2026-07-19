@@ -11,9 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
-import { motion } from "framer-motion";
+import { AuthLayout } from "../components/auth-layout";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
-import { BrandMark } from "../components/brand-mark";
 
 const COUNTRIES = [
   "Australia","South Korea","China","Japan","Vietnam","India","Philippines",
@@ -97,23 +96,9 @@ export default function Register() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-orange-50 via-white to-orange-50/30">
-      <div className="p-6">
-        <Link href="/">
-          <BrandMark className="h-8 w-auto" />
-        </Link>
-      </div>
-
-      <div className="flex-1 flex items-center justify-center p-6 py-10">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
-          className="w-full max-w-[480px]"
-        >
-          <div className="rounded-2xl border bg-white shadow-lg p-8 space-y-5">
-            <div className="text-center space-y-1">
-              <h1 className="text-2xl font-bold text-gray-900">{t("auth.create_account_title")}</h1>
+    <AuthLayout>
+      <div className="text-center space-y-1">
+        <h1 className="text-2xl font-bold text-foreground">{t("auth.create_account_title")}</h1>
               <p className="text-sm text-gray-500">{t("auth.register_subtitle")}</p>
             </div>
 
@@ -331,21 +316,18 @@ export default function Register() {
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200" />
+                <div className="w-full border-t border-border" />
               </div>
-              <div className="relative flex justify-center text-xs text-gray-400">
-                <span className="bg-white px-3">{t("auth.have_account")}</span>
+              <div className="relative flex justify-center text-xs text-muted-foreground">
+                <span className="bg-card px-3">{t("auth.have_account")}</span>
               </div>
             </div>
 
-            <Link href="/login">
-              <Button variant="outline" className="w-full h-11 font-semibold rounded-xl">
-                {t("auth.log_in")}
-              </Button>
-            </Link>
-          </div>
-        </motion.div>
-      </div>
-    </div>
+      <Link href="/login">
+        <Button variant="outline" className="w-full h-11 font-semibold rounded-xl">
+          {t("auth.log_in")}
+        </Button>
+      </Link>
+    </AuthLayout>
   );
 }

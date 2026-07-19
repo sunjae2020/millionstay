@@ -3,9 +3,8 @@ import { useLocation, Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { motion } from "framer-motion";
+import { AuthLayout } from "../components/auth-layout";
 import { Eye, EyeOff, Lock, Mail, Home } from "lucide-react";
-import { BrandMark } from "../components/brand-mark";
 import { hostLogin, setHomestayToken } from "@/lib/homestay-api";
 
 export default function HostLogin() {
@@ -33,22 +32,8 @@ export default function HostLogin() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-orange-50 via-white to-orange-50/30">
-      <div className="p-6">
-        <Link href="/">
-          <BrandMark className="h-8 w-auto" />
-        </Link>
-      </div>
-
-      <div className="flex-1 flex items-center justify-center p-6">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
-          className="w-full max-w-[480px]"
-        >
-          <div className="rounded-2xl border bg-white shadow-lg p-8 space-y-6">
-            <div className="text-center space-y-1">
+    <AuthLayout>
+      <div className="text-center space-y-1">
               <div className="mx-auto w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
                 <Home className="h-6 w-6 text-primary" />
               </div>
@@ -115,14 +100,11 @@ export default function HostLogin() {
               </div>
             </div>
 
-            <Link href="/for-homestay-host">
-              <Button variant="outline" className="w-full h-11 font-semibold rounded-xl">
-                {t("homestay.login.apply_link")}
-              </Button>
-            </Link>
-          </div>
-        </motion.div>
-      </div>
-    </div>
+      <Link href="/for-homestay-host">
+        <Button variant="outline" className="w-full h-11 font-semibold rounded-xl">
+          {t("homestay.login.apply_link")}
+        </Button>
+      </Link>
+    </AuthLayout>
   );
 }

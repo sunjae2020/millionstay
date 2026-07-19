@@ -360,7 +360,8 @@
       "documents": "書類",
       "cs": "お問い合わせ",
       "profile": "プロフィール",
-      "my_data": "マイデータ"
+      "my_data": "マイデータ",
+      "home": "ホーム"
     },
     "bookings": {
       "title": "予約一覧",
@@ -534,6 +535,34 @@
       "related_booking": "関連予約（任意）",
       "select_booking": "予約を選択…",
       "file_hint": "JPG・PNG・GIF、各10MBまで"
+    },
+    "home": {
+      "greeting": "{{name}}さん、おかえりなさい",
+      "greeting_plain": "おかえりなさい",
+      "subtitle": "予約とお支払いをひと目で",
+      "kpi_next_stay": "次の滞在",
+      "kpi_next_stay_none": "予定なし",
+      "kpi_today": "本日",
+      "kpi_tomorrow": "明日",
+      "kpi_in_days": "{{count}}日後",
+      "kpi_active": "進行中の予約",
+      "kpi_active_sub": "確定・滞在中",
+      "kpi_balance": "未払い残高",
+      "kpi_balance_pay": "支払う",
+      "kpi_balance_clear": "すべて完了",
+      "kpi_docs": "書類の未対応",
+      "kpi_docs_sub": "対応が必要",
+      "kpi_docs_clear": "最新の状態",
+      "recent_title": "最近のアクティビティ",
+      "view_all": "すべて表示",
+      "th_ref": "番号",
+      "th_stay": "滞在先",
+      "th_dates": "日程",
+      "th_status": "状態",
+      "th_amount": "金額",
+      "empty_title": "まだ予約がありません",
+      "empty_sub": "滞在を予約するとここに表示されます。",
+      "empty_cta": "滞在先を見る"
     }
   },
   "auth": {

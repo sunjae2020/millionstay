@@ -156,5 +156,38 @@
     "error_required": "Vui lòng điền tên và email của bạn.",
     "error_terms": "Vui lòng chấp nhận Điều khoản & Điều kiện để tiếp tục.",
     "error_submit_failed": "Gửi không thành công. Vui lòng thử lại."
+  },
+  "portal": {
+    "nav": {
+      "home": "Trang chủ"
+    },
+    "home": {
+      "greeting": "Chào mừng trở lại, {{name}}",
+      "greeting_plain": "Chào mừng trở lại",
+      "subtitle": "Xem nhanh lưu trú & thanh toán của bạn",
+      "kpi_next_stay": "Lưu trú kế tiếp",
+      "kpi_next_stay_none": "Chưa có lịch lưu trú",
+      "kpi_today": "Hôm nay",
+      "kpi_tomorrow": "Ngày mai",
+      "kpi_in_days": "còn {{count}} ngày",
+      "kpi_active": "Đặt phòng đang hoạt động",
+      "kpi_active_sub": "đã xác nhận & đang ở",
+      "kpi_balance": "Số dư cần thanh toán",
+      "kpi_balance_pay": "Thanh toán",
+      "kpi_balance_clear": "Đã thanh toán hết",
+      "kpi_docs": "Tài liệu chờ xử lý",
+      "kpi_docs_sub": "cần xử lý",
+      "kpi_docs_clear": "Đã cập nhật",
+      "recent_title": "Hoạt động gần đây",
+      "view_all": "Xem tất cả",
+      "th_ref": "Mã",
+      "th_stay": "Nơi ở",
+      "th_dates": "Ngày",
+      "th_status": "Trạng thái",
+      "th_amount": "Số tiền",
+      "empty_title": "Chưa có đặt phòng",
+      "empty_sub": "Khi bạn đặt chỗ ở, nó sẽ hiển thị ở đây.",
+      "empty_cta": "Khám phá chỗ ở"
+    }
   }
 }

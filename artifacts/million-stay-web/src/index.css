@@ -177,68 +177,71 @@
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
 
-  --background: red; /*replace with H S L */
+  /* Warm-neutral dark palette (Brand Guideline v2.0 dark variant).
+   * Hue kept warm (20–40°) to match Million Orange; primary lifted to 56% L
+   * for AA contrast on dark surfaces. Verified: fg 4.5:1, muted-fg 3:1+. */
+  --background: 20 14% 8%;
 
-  --foreground: red; /*replace with H S L */
+  --foreground: 40 20% 96%;
 
-  --border: red; /*replace with H S L */
+  --border: 20 8% 22%;
 
-  --card: red; /*replace with H S L */
+  --card: 24 12% 12%;
 
-  --card-foreground: red; /*replace with H S L */
+  --card-foreground: 40 20% 96%;
 
-  --card-border: red; /*replace with H S L */
+  --card-border: 20 8% 24%;
 
-  --sidebar: red; /*replace with H S L */
+  --sidebar: 24 14% 10%;
 
-  --sidebar-foreground: red; /*replace with H S L */
+  --sidebar-foreground: 40 15% 90%;
 
-  --sidebar-border: red; /*replace with H S L */
+  --sidebar-border: 20 8% 20%;
 
-  --sidebar-primary: red; /*replace with H S L */
+  --sidebar-primary: 21 82% 56%;
 
-  --sidebar-primary-foreground: red; /*replace with H S L */
+  --sidebar-primary-foreground: 0 0% 100%;
 
-  --sidebar-accent: red; /*replace with H S L */
+  --sidebar-accent: 20 10% 18%;
 
-  --sidebar-accent-foreground: red; /*replace with H S L */
+  --sidebar-accent-foreground: 40 20% 96%;
 
-  --sidebar-ring: red; /*replace with H S L */
+  --sidebar-ring: 21 82% 56%;
 
-  --popover: red; /*replace with H S L */
+  --popover: 24 12% 12%;
 
-  --popover-foreground: red; /*replace with H S L */
+  --popover-foreground: 40 20% 96%;
 
-  --popover-border: red; /*replace with H S L */
+  --popover-border: 20 8% 24%;
 
-  --primary: red; /*replace with H S L */
+  --primary: 21 82% 56%;
 
-  --primary-foreground: red; /*replace with H S L */
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: red; /*replace with H S L */
+  --secondary: 20 10% 18%;
 
-  --secondary-foreground: red; /*replace with H S L */
+  --secondary-foreground: 40 20% 96%;
 
-  --muted: red; /*replace with H S L */
+  --muted: 20 8% 18%;
 
-  --muted-foreground: red; /*replace with H S L */
+  --muted-foreground: 30 8% 66%;
 
-  --accent: red; /*replace with H S L */
+  --accent: 20 10% 18%;
 
-  --accent-foreground: red; /*replace with H S L */
+  --accent-foreground: 40 20% 96%;
 
-  --destructive: red; /*replace with H S L */
+  --destructive: 0 72% 55%;
 
-  --destructive-foreground: red; /*replace with H S L */
+  --destructive-foreground: 0 0% 100%;
 
   /* Used as the border around inputs. Dark mode: Should be a border that is light enough to have high contrast when rendered on a --card background. More contrast than standard --border */
-  --input: red; /*replace with H S L */
-  --ring: red; /*replace with H S L */
-  --chart-1: red; /*replace with H S L */
-  --chart-2: red; /*replace with H S L */
-  --chart-3: red; /*replace with H S L */
-  --chart-4: red; /*replace with H S L */
-  --chart-5: red; /*replace with H S L */
+  --input: 20 8% 30%;
+  --ring: 21 82% 56%;
+  --chart-1: 21 82% 56%;
+  --chart-2: 173 58% 45%;
+  --chart-3: 45 90% 60%;
+  --chart-4: 217 40% 55%;
+  --chart-5: 300 30% 60%;
 
   --shadow-2xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
   --shadow-xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);

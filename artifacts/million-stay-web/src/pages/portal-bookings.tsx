@@ -5,38 +5,13 @@ import { useTranslation } from "react-i18next";
 import { useListMyBookings, getListMyBookingsQueryKey } from "@/lib/guest-api";
 import { useAuthStore } from "@/lib/store";
 import { PortalLayout } from "@/components/portal-layout";
+import { StatusBadge } from "@/components/status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import { Calendar, MapPin, Home, ExternalLink, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-
-type BookingStatus = string;
-
-const STATUS_COLORS: Record<BookingStatus, string> = {
-  Draft: "bg-gray-100 text-gray-700",
-  PendingPayment: "bg-yellow-100 text-yellow-700",
-  PendingApproval: "bg-amber-100 text-amber-700",
-  Confirmed: "bg-blue-100 text-blue-700",
-  Active: "bg-green-100 text-green-700",
-  CheckedOut: "bg-indigo-100 text-indigo-700",
-  Cancelled: "bg-red-100 text-red-700",
-  Completed: "bg-blue-100 text-blue-700",
-};
-
-const PULSE_STATUSES = ["PendingApproval", "Active"];
-
-function StatusBadge({ status }: { status: string }) {
-  const color = STATUS_COLORS[status] ?? "bg-gray-100 text-gray-700";
-  const pulse = PULSE_STATUSES.includes(status);
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${color}`}>
-      {pulse && <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />}
-      {status}
-    </span>
-  );
-}
 
 function formatDate(d: string | null) {
   if (!d) return "—";

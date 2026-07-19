@@ -276,7 +276,8 @@
       "documents": "서류",
       "cs": "고객 지원",
       "profile": "내 프로필",
-      "my_data": "내 데이터"
+      "my_data": "내 데이터",
+      "home": "홈"
     },
     "bookings": {
       "title": "내 예약",
@@ -450,6 +451,34 @@
       "related_booking": "관련 예약 (선택)",
       "select_booking": "예약 선택…",
       "file_hint": "JPG, PNG, GIF 각 최대 10MB"
+    },
+    "home": {
+      "greeting": "{{name}}님, 다시 오셨네요",
+      "greeting_plain": "다시 오셨어요",
+      "subtitle": "예약과 결제를 한눈에",
+      "kpi_next_stay": "다음 숙박",
+      "kpi_next_stay_none": "예정된 숙박 없음",
+      "kpi_today": "오늘",
+      "kpi_tomorrow": "내일",
+      "kpi_in_days": "{{count}}일 후",
+      "kpi_active": "진행 중 예약",
+      "kpi_active_sub": "확정·이용 중",
+      "kpi_balance": "미결제 금액",
+      "kpi_balance_pay": "결제하기",
+      "kpi_balance_clear": "모두 결제됨",
+      "kpi_docs": "대기 서류",
+      "kpi_docs_sub": "처리 필요",
+      "kpi_docs_clear": "최신 상태",
+      "recent_title": "최근 활동",
+      "view_all": "전체 보기",
+      "th_ref": "번호",
+      "th_stay": "숙소",
+      "th_dates": "날짜",
+      "th_status": "상태",
+      "th_amount": "금액",
+      "empty_title": "아직 예약이 없어요",
+      "empty_sub": "숙소를 예약하면 여기에 표시됩니다.",
+      "empty_cta": "숙소 둘러보기"
     }
   },
   "stay_plan": {

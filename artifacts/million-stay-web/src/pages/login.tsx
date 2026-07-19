@@ -10,9 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Link } from "wouter";
-import { motion } from "framer-motion";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
-import { BrandMark } from "../components/brand-mark";
+import { AuthLayout } from "../components/auth-layout";
 
 export default function Login() {
   const { t } = useTranslation();
@@ -57,25 +56,11 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-orange-50 via-white to-orange-50/30">
-      <div className="p-6">
-        <Link href="/">
-          <BrandMark className="h-8 w-auto" />
-        </Link>
+    <AuthLayout>
+      <div className="text-center space-y-1">
+        <h1 className="text-2xl font-bold text-foreground">{t("auth.welcome_back")}</h1>
+        <p className="text-sm text-muted-foreground">{t("auth.login_subtitle")}</p>
       </div>
-
-      <div className="flex-1 flex items-center justify-center p-6">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
-          className="w-full max-w-[480px]"
-        >
-          <div className="rounded-2xl border bg-white shadow-lg p-8 space-y-6">
-            <div className="text-center space-y-1">
-              <h1 className="text-2xl font-bold text-gray-900">{t("auth.welcome_back")}</h1>
-              <p className="text-sm text-gray-500">{t("auth.login_subtitle")}</p>
-            </div>
 
             {sessionExpired && (
               <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800 flex items-center gap-2">
@@ -159,23 +144,20 @@ export default function Login() {
               </form>
             </Form>
 
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200" />
-              </div>
-              <div className="relative flex justify-center text-xs text-gray-400">
-                <span className="bg-white px-3">{t("auth.no_account")}</span>
-              </div>
-            </div>
-
-            <Link href="/register">
-              <Button variant="outline" className="w-full h-11 font-semibold rounded-xl">
-                {t("auth.create_account")}
-              </Button>
-            </Link>
-          </div>
-        </motion.div>
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-border" />
+        </div>
+        <div className="relative flex justify-center text-xs text-muted-foreground">
+          <span className="bg-card px-3">{t("auth.no_account")}</span>
+        </div>
       </div>
-    </div>
+
+      <Link href="/register">
+        <Button variant="outline" className="w-full h-11 font-semibold rounded-xl">
+          {t("auth.create_account")}
+        </Button>
+      </Link>
+    </AuthLayout>
   );
 }

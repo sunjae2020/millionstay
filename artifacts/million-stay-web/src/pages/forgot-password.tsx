@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { motion } from "framer-motion";
+import { AuthLayout } from "../components/auth-layout";
 import { Mail, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { BrandMark } from "../components/brand-mark";
 import { getApiBase } from "@/lib/api-base";
 
 const API_BASE = `${getApiBase()}/api/v1`;
@@ -30,18 +29,10 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-orange-50 via-white to-orange-50/30">
-      <div className="p-6">
-        <Link href="/">
-          <BrandMark className="h-8 w-auto" />
-        </Link>
-      </div>
-      <div className="flex-1 flex items-center justify-center p-6">
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-[480px]">
-          <div className="rounded-2xl border bg-white shadow-lg p-8 space-y-6">
-            <div className="text-center space-y-1">
-              <h1 className="text-2xl font-bold text-gray-900">Reset your password</h1>
-              <p className="text-sm text-gray-500">
+    <AuthLayout>
+      <div className="text-center space-y-1">
+        <h1 className="text-2xl font-bold text-foreground">Reset your password</h1>
+        <p className="text-sm text-muted-foreground">
                 Enter your email and we'll send you a link to set a new password.
               </p>
             </div>
@@ -83,14 +74,11 @@ export default function ForgotPassword() {
                 >
                   {loading ? "Sending..." : "Send reset link"}
                 </Button>
-                <Link href="/login" className="block text-center text-sm text-gray-500 hover:text-primary">
+                <Link href="/login" className="block text-center text-sm text-muted-foreground hover:text-primary">
                   Back to login
                 </Link>
               </form>
             )}
-          </div>
-        </motion.div>
-      </div>
-    </div>
+    </AuthLayout>
   );
 }
