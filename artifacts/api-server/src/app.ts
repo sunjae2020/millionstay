@@ -207,6 +207,10 @@ app.use([
   "/api/v1/public/homestay-host-applications",
   "/api/v1/public/homestay-student-requests",
   "/api/v1/public/short-term-applications",
+  // Public e-signature endpoints (sign/preview/pdf/send) — token-gated but
+  // otherwise anonymous; cap them like other public application routes so a
+  // leaked token can't be used to hammer PDF rendering/email (H-203).
+  "/api/v1/public/contract-signing",
 ], applicationLimiter);
 app.use([
   "/api/v1/guest/me/data",
