@@ -51,6 +51,9 @@ Thumbs.db
 .env.local
 .env.*
 !.env.example
+
+# Per-tenant config: config.env is committed (non-secret); secrets are NOT.
+tenants/*/secrets.env
 .claude/
 
 # Sensitive credential docs (plaintext passwords — never commit/push)

@@ -18,6 +18,27 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+# ── Optional: load a tenant's config from tenants/<name>/ ────────────────────
+# Usage: TENANT=metheim scripts/provision-instance.sh
+# Sources config.env (committed, non-secret) + secrets.env (gitignored). Any
+# vars already set in the environment take precedence (they are not overwritten).
+if [[ -n "${TENANT:-}" ]]; then
+  TDIR="$ROOT/tenants/$TENANT"
+  [[ -d "$TDIR" ]] || { echo "✖ Unknown tenant: tenants/$TENANT not found." >&2; exit 1; }
+  for f in config.env secrets.env; do
+    if [[ -f "$TDIR/$f" ]]; then
+      # export non-empty KEY=VALUE lines, without clobbering already-set vars
+      while IFS='=' read -r k v; do
+        [[ "$k" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
+        [[ -z "$v" ]] && continue
+        [[ -n "${!k:-}" ]] && continue
+        export "$k=$v"
+      done < <(grep -vE '^\s*#' "$TDIR/$f")
+    fi
+  done
+  echo "→ Loaded tenant config: tenants/$TENANT (config.env$([[ -f "$TDIR/secrets.env" ]] && echo ' + secrets.env'))"
+fi
+
 # ── Safety: refuse to run against the primary/production DB ──────────────────
 PROD_REF="rdwzpbxrkjlmtwcoiniq"   # primary MillionStay Supabase project ref
 : "${DATABASE_URL:?Set DATABASE_URL to the NEW instance database (session pooler URL).}"
