@@ -150,7 +150,7 @@ font-family: "Poppins", "Pretendard", "Noto Sans JP",
              "Noto Sans SC", "Noto Sans Thai", sans-serif;
 ```
 
-Vietnamese 성조 부호(diacritics) 렌더링을 위해 Poppins/Inter 의 Vietnamese subset 을 반드시 포함하세요.
+Vietnamese 성조 부호(diacritics)는 별도 조치가 필요 없습니다. `index.html`이 Poppins/Inter/Montserrat를 Google Fonts CSS2로 불러오는데, CSS2는 `unicode-range` 기반으로 `vietnamese` subset을 글리프 단위로 자동 서빙하므로 이미 커버됩니다. (별도 `subset=vietnamese` 파라미터를 붙일 필요 없음 — 자체 호스팅 폰트로 전환할 때만 subset 포함 여부를 확인하세요.)
 
 ---
 

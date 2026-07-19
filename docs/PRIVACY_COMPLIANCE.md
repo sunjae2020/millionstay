@@ -96,6 +96,39 @@ The public privacy policy must list these vendors and disclose Standard Contract
 
 ---
 
+## Electronic signatures — Electronic Transactions Act 1999 (Cth)
+
+Contract and application signing is a **self-built e-signature flow**
+(`routes/contract-signing.ts`, `services/contractSigning.ts`) — there is no
+external provider (DocuSign etc.), so the reliability/consent/integrity
+requirements of the ETA 1999 must be satisfied in-house. How the implementation
+maps to ETA 1999 §10 (requirements for a valid electronic signature):
+
+- **Identify the signer & indicate intention (s10(1)(a)):** signing happens via a
+  per-request capability token (256-bit `crypto.randomBytes`) delivered to the
+  named signer; the signer draws their signature and must tick an explicit
+  consent checkbox (`DEFAULT_CONSENT_TEXT`) before the request is accepted.
+- **Reliability appropriate to purpose (s10(1)(b)):** the server captures
+  authoritative legal metadata at sign time — `serverSignedAt`, client `ip`,
+  `userAgent`, and the accepted consent text — independent of client-reported
+  values. The signing link is single-use (state-guarded), expires (default 14
+  days), and is scoped to exactly one document by token.
+- **Integrity / tamper-evidence (H-201):** the exact rendered document is frozen
+  at sign time (`signed_snapshot`) together with its SHA-256 (`content_hash`).
+  `/preview` and the stored PDF are served from that snapshot verbatim — never
+  re-rendered live — and signed placement/regular contracts are immutable
+  against terms/amount edits thereafter. This lets us prove *what* was signed.
+- **Consent to electronic form (s10(1)(c) / s11):** recorded per-signature in the
+  `consent` block persisted on the signing request.
+
+**Retention:** signed PDFs are stored as Cloudinary *authenticated* assets
+(signed URLs only) under the contract 7-year retention class (see APP 11).
+
+**Backlog:** publish a signer-facing e-signature disclosure/consent notice; add
+deposit/refund GL reversal on signature withdrawal (tracked separately).
+
+---
+
 ## NDB scheme
 
 See `docs/NDB_INCIDENT_RUNBOOK.md` for the full procedure.
