@@ -64,10 +64,10 @@ export default function Blog() {
       <Navbar />
 
       <main className="flex-1">
-        <div className="bg-gradient-to-br from-[#E8621A]/10 via-orange-50 to-white py-16 md:py-24">
+        <div className="bg-gradient-to-br from-primary/10 via-orange-50 to-white py-16 md:py-24">
           <div className="max-w-7xl mx-auto px-6">
             <div className="max-w-2xl">
-              <span className="inline-block text-[#E8621A] text-sm font-semibold uppercase tracking-widest mb-3">{APP_NAME} Blog</span>
+              <span className="inline-block text-primary text-sm font-semibold uppercase tracking-widest mb-3">{APP_NAME} Blog</span>
               <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
                 Tips, guides &amp; insights for international students
               </h1>
@@ -86,8 +86,8 @@ export default function Blog() {
                 onClick={() => setActiveCategory(cat)}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all border ${
                   activeCategory === cat
-                    ? "bg-[#E8621A] text-white border-[#E8621A]"
-                    : "border-gray-200 text-gray-600 hover:border-[#E8621A] hover:text-[#E8621A]"
+                    ? "bg-primary text-white border-primary"
+                    : "border-gray-200 text-gray-600 hover:border-primary hover:text-primary"
                 }`}
               >
                 {cat}
@@ -130,17 +130,17 @@ export default function Blog() {
                           />
                         </div>
                       ) : (
-                        <div className="md:w-1/2 h-64 md:h-auto bg-gradient-to-br from-[#E8621A]/20 to-orange-100 flex items-center justify-center">
-                          <BookOpen className="h-16 w-16 text-[#E8621A]/40" />
+                        <div className="md:w-1/2 h-64 md:h-auto bg-gradient-to-br from-primary/20 to-orange-100 flex items-center justify-center">
+                          <BookOpen className="h-16 w-16 text-primary/40" />
                         </div>
                       )}
                       <div className="md:w-1/2 p-8 flex flex-col justify-center">
                         {posts[0].category && (
-                          <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#E8621A] uppercase tracking-widest mb-3">
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary uppercase tracking-widest mb-3">
                             <Tag className="h-3 w-3" />{posts[0].category}
                           </span>
                         )}
-                        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3 group-hover:text-[#E8621A] transition-colors leading-tight">
+                        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3 group-hover:text-primary transition-colors leading-tight">
                           {posts[0].title}
                         </h2>
                         {posts[0].excerpt && (
@@ -151,7 +151,7 @@ export default function Blog() {
                           {posts[0].published_at && <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />{formatDate(posts[0].published_at)}</span>}
                         </div>
                         <div className="mt-5">
-                          <span className="inline-flex items-center gap-1 text-[#E8621A] font-semibold text-sm group-hover:gap-2 transition-all">
+                          <span className="inline-flex items-center gap-1 text-primary font-semibold text-sm group-hover:gap-2 transition-all">
                             Read article <ChevronRight className="h-4 w-4" />
                           </span>
                         </div>
@@ -175,17 +175,17 @@ export default function Blog() {
                             />
                           </div>
                         ) : (
-                          <div className="h-52 bg-gradient-to-br from-[#E8621A]/10 to-orange-50 flex items-center justify-center">
-                            <BookOpen className="h-10 w-10 text-[#E8621A]/30" />
+                          <div className="h-52 bg-gradient-to-br from-primary/10 to-orange-50 flex items-center justify-center">
+                            <BookOpen className="h-10 w-10 text-primary/30" />
                           </div>
                         )}
                         <div className="p-5 flex flex-col flex-1">
                           {post.category && (
-                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#E8621A] uppercase tracking-widest mb-2">
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary uppercase tracking-widest mb-2">
                               <Tag className="h-3 w-3" />{post.category}
                             </span>
                           )}
-                          <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-[#E8621A] transition-colors line-clamp-2 leading-snug">
+                          <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-primary transition-colors line-clamp-2 leading-snug">
                             {post.title}
                           </h3>
                           {post.excerpt && (

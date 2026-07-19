@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, Link } from "wouter";
 import AdminLayout from "@/components/admin-layout";
+import { StatusBadge } from "@/components/status-badge";
 import { format } from "date-fns";
 import { CalendarCheck, Users, Home, FileWarning } from "lucide-react";
 
@@ -17,22 +18,6 @@ type Booking = {
   contractStatus: string; guestFirstName: string; guestLastName: string;
   guestEmail: string; spaceName: string; createdAt: string;
 };
-
-function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, string> = {
-    Draft: "bg-gray-100 text-gray-600",
-    PendingPayment: "bg-amber-100 text-amber-700",
-    Confirmed: "bg-blue-100 text-blue-700",
-    Active: "bg-green-100 text-green-700",
-    Cancelled: "bg-red-100 text-red-600",
-    Completed: "bg-purple-100 text-purple-700",
-  };
-  return (
-    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${map[status] ?? "bg-gray-100 text-gray-600"}`}>
-      {status}
-    </span>
-  );
-}
 
 function fmtDate(d: string | null) {
   if (!d) return "—";

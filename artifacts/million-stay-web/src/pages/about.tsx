@@ -84,11 +84,11 @@ function BlogCard({ post, index, clickable = true }: { post: any; index: number;
         {post.cover_image_url ? (
           <img src={post.cover_image_url} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-[#E8621A]/10 to-orange-50 flex items-center justify-center">
-            <BookOpen className="h-10 w-10 text-[#E8621A]/30" />
+          <div className="w-full h-full bg-gradient-to-br from-primary/10 to-orange-50 flex items-center justify-center">
+            <BookOpen className="h-10 w-10 text-primary/30" />
           </div>
         )}
-        <span className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/90 shadow text-xs font-bold text-[#E8621A] flex items-center justify-center">
+        <span className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/90 shadow text-xs font-bold text-primary flex items-center justify-center">
           {String(index + 1).padStart(2, "0")}
         </span>
         {post.category && (

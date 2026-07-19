@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, Link } from "wouter";
 import AdminLayout from "@/components/admin-layout";
+import { StatusBadge } from "@/components/status-badge";
 import { format } from "date-fns";
 import { ChevronLeft, CheckCircle, XCircle, FileText, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,28 +23,6 @@ type BookingDetail = {
   spaceName: string; spaceId: number;
   invoices: Invoice[]; documents: Doc[];
 };
-
-function StatusBadge({ status, size = "sm" }: { status: string; size?: "sm" | "md" }) {
-  const map: Record<string, string> = {
-    Draft: "bg-gray-100 text-gray-600",
-    PendingPayment: "bg-amber-100 text-amber-700",
-    Confirmed: "bg-blue-100 text-blue-700",
-    Active: "bg-green-100 text-green-700",
-    Cancelled: "bg-red-100 text-red-600",
-    Completed: "bg-purple-100 text-purple-700",
-    Pending: "bg-amber-100 text-amber-700",
-    Approved: "bg-green-100 text-green-700",
-    Rejected: "bg-red-100 text-red-600",
-    Paid: "bg-green-100 text-green-700",
-    Overdue: "bg-red-100 text-red-600",
-  };
-  const sz = size === "md" ? "px-3 py-1 text-sm" : "px-2 py-0.5 text-xs";
-  return (
-    <span className={`inline-flex rounded-full font-semibold ${sz} ${map[status] ?? "bg-gray-100 text-gray-600"}`}>
-      {status}
-    </span>
-  );
-}
 
 function fmtDate(d: string | null) {
   if (!d) return "—";

@@ -71,7 +71,7 @@ export default function BlogPost() {
             {t("blog_post.not_found_text")}
           </p>
           <Link href="/blog">
-            <span className="inline-flex items-center gap-2 text-[#E8621A] font-semibold hover:gap-3 transition-all">
+            <span className="inline-flex items-center gap-2 text-primary font-semibold hover:gap-3 transition-all">
               <ArrowLeft className="h-4 w-4" /> {t("blog_post.back")}
             </span>
           </Link>
@@ -88,7 +88,7 @@ export default function BlogPost() {
       <main className="flex-1">
         <div className="max-w-4xl mx-auto px-6 py-12">
           <Link href="/blog">
-            <span className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#E8621A] transition-colors mb-8 group cursor-pointer">
+            <span className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary transition-colors mb-8 group cursor-pointer">
               <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
               {t("blog_post.back")}
             </span>
@@ -96,7 +96,7 @@ export default function BlogPost() {
 
           <article>
             {post.category && (
-              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#E8621A] uppercase tracking-widest mb-4">
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary uppercase tracking-widest mb-4">
                 <Tag className="h-3 w-3" />{post.category}
               </span>
             )}
@@ -108,8 +108,8 @@ export default function BlogPost() {
             <div className="flex flex-wrap items-center gap-5 text-sm text-gray-500 mb-8 pb-8 border-b border-gray-100">
               {post.author && (
                 <span className="flex items-center gap-1.5">
-                  <span className="w-7 h-7 rounded-full bg-[#E8621A]/10 flex items-center justify-center">
-                    <User className="h-3.5 w-3.5 text-[#E8621A]" />
+                  <span className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
+                    <User className="h-3.5 w-3.5 text-primary" />
                   </span>
                   <span className="font-medium text-gray-700">{post.author}</span>
                 </span>
@@ -122,7 +122,7 @@ export default function BlogPost() {
               )}
               <button
                 onClick={handleShare}
-                className="ml-auto flex items-center gap-1.5 text-gray-400 hover:text-[#E8621A] transition-colors"
+                className="ml-auto flex items-center gap-1.5 text-gray-400 hover:text-primary transition-colors"
                 title={t("blog_post.share_title")}
               >
                 <Share2 className="h-4 w-4" /> {t("blog_post.share")}
@@ -147,7 +147,7 @@ export default function BlogPost() {
 
             {post.content ? (
               <div
-                className="prose prose-lg max-w-none text-gray-700 prose-headings:text-gray-900 prose-headings:font-bold prose-h2:text-2xl prose-h3:text-xl prose-a:text-[#E8621A] prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-img:shadow-sm prose-strong:text-gray-900 prose-ul:list-disc prose-ol:list-decimal"
+                className="prose prose-lg max-w-none text-gray-700 prose-headings:text-gray-900 prose-headings:font-bold prose-h2:text-2xl prose-h3:text-xl prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-img:shadow-sm prose-strong:text-gray-900 prose-ul:list-disc prose-ol:list-decimal"
                 dangerouslySetInnerHTML={{ __html: post.content }}
               />
             ) : (
@@ -156,7 +156,7 @@ export default function BlogPost() {
 
             <div className="mt-12 pt-8 border-t border-gray-100">
               <Link href="/blog">
-                <span className="inline-flex items-center gap-2 text-[#E8621A] font-semibold hover:gap-3 transition-all cursor-pointer">
+                <span className="inline-flex items-center gap-2 text-primary font-semibold hover:gap-3 transition-all cursor-pointer">
                   <ArrowLeft className="h-4 w-4" /> {t("blog_post.more_articles")}
                 </span>
               </Link>

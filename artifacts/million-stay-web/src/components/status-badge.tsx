@@ -52,11 +52,22 @@ function normalise(status: string) {
   return status.toLowerCase().replace(/[\s-]/g, "");
 }
 
-export function StatusBadge({ status, label }: { status: string; label?: ReactNode }) {
+const SIZE_CLASS = {
+  sm: "px-2.5 py-1 text-xs",
+  md: "px-3 py-1 text-sm",
+} as const;
+
+export function StatusBadge({
+  status, label, size = "sm",
+}: {
+  status: string;
+  label?: ReactNode;
+  size?: "sm" | "md";
+}) {
   const key = normalise(status);
   const tone = STATUS_TONE[key] ?? "neutral";
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${TONE_CLASS[tone]}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full font-semibold ${SIZE_CLASS[size]} ${TONE_CLASS[tone]}`}>
       {PULSE.has(key) && <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse motion-reduce:animate-none" />}
       {label ?? status}
     </span>
