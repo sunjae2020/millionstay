@@ -22,6 +22,7 @@ import partnerAuthRouter from "./routes/partner-auth";
 import partnerPrivacyRouter from "./routes/partner-privacy";
 import agentPortalRouter from "./routes/agent-portal";
 import ownerPortalRouter from "./routes/owner-portal";
+import brandingRouter from "./routes/branding";
 import serviceHostPortalRouter from "./routes/service-host-portal";
 import partnerCsRouter from "./routes/partner-cs";
 import { homestayPublicRouter, homestayPortalRouter } from "./routes/homestay";
@@ -259,6 +260,11 @@ app.use("/api", partnerCsRouter);
 // Homestay host portal — partner JWT (portal_type='homestay'); login works
 // regardless of approval. Mounted before requireAuth like the other portals.
 app.use("/api", homestayPortalRouter);
+
+// Branding settings — GET /v1/branding is PUBLIC (login screen themes itself);
+// PUT + upload apply requireAuth inline. Mounted BEFORE the global guard so the
+// public GET is never caught by admin authentication.
+app.use("/api", brandingRouter);
 
 app.use("/api", adminUsersRouter);
 app.use("/api/v1", requireAuth);

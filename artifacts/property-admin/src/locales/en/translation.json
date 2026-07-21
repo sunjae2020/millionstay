@@ -2057,7 +2057,13 @@
     "currency_prefix": "Prefix ($100)",
     "currency_suffix": "Suffix (100$)",
     "advanced_custom_css": "Advanced: Custom CSS",
-    "custom_css_hint": "Inject custom CSS rules. Applied globally on every page. Use carefully — invalid CSS may break layout."
+    "custom_css_hint": "Inject custom CSS rules. Applied globally on every page. Use carefully — invalid CSS may break layout.",
+    "uploading": "Uploading…",
+    "toast_upload_failed_title": "Upload failed",
+    "toast_upload_failed_desc": "Could not upload the image. Please try again.",
+    "toast_save_failed_title": "Save failed",
+    "toast_save_failed_desc": "Could not save your branding. Please try again.",
+    "preset_teal": "Teal"
   },
   "settings_email": {
     "current_status_title": "Current Status",

@@ -2057,7 +2057,13 @@
     "currency_prefix": "접두사 ($100)",
     "currency_suffix": "접미사 (100$)",
     "advanced_custom_css": "고급: 사용자 지정 CSS",
-    "custom_css_hint": "사용자 지정 CSS 규칙을 삽입합니다. 모든 페이지에 전역적으로 적용됩니다. 신중하게 사용하세요 — 잘못된 CSS는 레이아웃을 손상시킬 수 있습니다."
+    "custom_css_hint": "사용자 지정 CSS 규칙을 삽입합니다. 모든 페이지에 전역적으로 적용됩니다. 신중하게 사용하세요 — 잘못된 CSS는 레이아웃을 손상시킬 수 있습니다.",
+    "uploading": "업로드 중…",
+    "toast_upload_failed_title": "업로드 실패",
+    "toast_upload_failed_desc": "이미지를 업로드하지 못했습니다. 다시 시도해 주세요.",
+    "toast_save_failed_title": "저장 실패",
+    "toast_save_failed_desc": "브랜딩을 저장하지 못했습니다. 다시 시도해 주세요.",
+    "preset_teal": "틸"
   },
   "settings_email": {
     "current_status_title": "현재 상태",

@@ -2057,7 +2057,13 @@
     "currency_prefix": "前缀（$100）",
     "currency_suffix": "后缀（100$）",
     "advanced_custom_css": "高级：自定义 CSS",
-    "custom_css_hint": "注入自定义 CSS 规则。在每个页面上全局应用。请谨慎使用 — 无效的 CSS 可能会破坏布局。"
+    "custom_css_hint": "注入自定义 CSS 规则。在每个页面上全局应用。请谨慎使用 — 无效的 CSS 可能会破坏布局。",
+    "uploading": "上传中…",
+    "toast_upload_failed_title": "上传失败",
+    "toast_upload_failed_desc": "无法上传图片，请重试。",
+    "toast_save_failed_title": "保存失败",
+    "toast_save_failed_desc": "无法保存您的品牌设置，请重试。",
+    "preset_teal": "青色"
   },
   "settings_email": {
     "current_status_title": "当前状态",

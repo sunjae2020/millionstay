@@ -11,6 +11,8 @@ import {
   applyFavicon,
   saveTheme,
   loadTheme,
+  saveBrandingToApi,
+  uploadBrandingImage,
 } from "@/lib/theme";
 import { useBrand } from "@/contexts/ThemeContext";
 import { APP_NAME } from "@/lib/appName";
@@ -37,6 +39,7 @@ import {
   Moon,
   Code2,
   Image as ImageIcon,
+  Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -53,19 +56,19 @@ interface DesignForm {
 }
 
 const DEFAULTS = {
-  primary_color: "#F5821F",
-  secondary_color: "#1C1917",
-  accent_color: "#FEF0E3",
+  primary_color: "#E8621A", // Million Orange
+  secondary_color: "#16263F", // Deep Navy
+  accent_color: "#FAF5EC", // Warm Cream
 };
 
 const PRESET_COLORS = [
-  { label: "Orange", value: "#F5821F" },
+  { label: "Orange", value: "#E8621A" },
+  { label: "Teal", value: "#2A9D8F" },
   { label: "Indigo", value: "#6366f1" },
   { label: "Blue", value: "#3b82f6" },
   { label: "Violet", value: "#8b5cf6" },
   { label: "Rose", value: "#f43f5e" },
   { label: "Emerald", value: "#10b981" },
-  { label: "Amber", value: "#f59e0b" },
   { label: "Slate", value: "#64748b" },
 ];
 
@@ -80,6 +83,7 @@ function AssetCard({
   onRemove,
   variant,
   dark,
+  busy,
 }: {
   label: string;
   hint: string;
@@ -89,6 +93,7 @@ function AssetCard({
   onRemove: () => void;
   variant: "logo" | "favicon";
   dark?: boolean;
+  busy?: boolean;
 }) {
   const { t } = useTranslation();
   return (
@@ -102,7 +107,12 @@ function AssetCard({
         {label}
       </p>
       <div className="h-24 w-full max-w-[180px] rounded-xl border-2 border-dashed border-border flex items-center justify-center bg-background overflow-hidden">
-        {preview ? (
+        {busy ? (
+          <div className="flex flex-col items-center gap-1 text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <span className="text-xs">{t("settings_design.uploading")}</span>
+          </div>
+        ) : preview ? (
           variant === "logo" ? (
             <img src={preview} alt={label} className="h-full w-full object-contain p-2" />
           ) : (
@@ -115,8 +125,8 @@ function AssetCard({
           </div>
         )}
       </div>
-      <label className="cursor-pointer">
-        <input type="file" accept={accept} className="hidden" onChange={onUpload} />
+      <label className={busy ? "opacity-50 pointer-events-none" : "cursor-pointer"}>
+        <input type="file" accept={accept} className="hidden" onChange={onUpload} disabled={busy} />
         <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors border rounded-md px-3 py-1.5 bg-background">
           <Upload className="h-3 w-3" />
           {preview ? t("settings_design.replace") : t("common.upload")}
@@ -272,6 +282,8 @@ export function Design() {
   const [faviconDarkPreview, setFaviconDarkPreview] = useState<string | null>(
     saved.favicon_dark ?? null
   );
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState<AssetSlot | null>(null);
 
   const { register, handleSubmit, control, watch } = useForm<DesignForm>({
     defaultValues: {
@@ -307,8 +319,8 @@ export function Design() {
     applySidebarTheme(sidebarTheme);
   }, [sidebarTheme]);
 
-  function onSubmit(data: DesignForm) {
-    saveTheme({
+  async function onSubmit(data: DesignForm) {
+    const settings = {
       brand_name: data.brand_name,
       primary_color: data.primary_color,
       secondary_color: data.secondary_color,
@@ -322,7 +334,9 @@ export function Design() {
       logo_dark: logoDarkPreview,
       favicon_dark: faviconDarkPreview,
       custom_css: data.custom_css || null,
-    });
+    };
+    // Apply + cache locally right away for instant feedback.
+    saveTheme(settings);
     applyPrimaryColor(data.primary_color);
     applySecondaryColor(data.secondary_color);
     applyAccentColor(data.accent_color);
@@ -331,30 +345,52 @@ export function Design() {
     const useDark = darkMode && faviconDarkPreview ? faviconDarkPreview : faviconPreview;
     applyFavicon(useDark);
     refresh();
-    toast({
-      title: t("settings_design.toast_saved_title"),
-      description: t("settings_design.toast_saved_desc"),
-    });
+    // Persist to the server so every admin/device sees it.
+    setSaving(true);
+    try {
+      await saveBrandingToApi(settings);
+      toast({
+        title: t("settings_design.toast_saved_title"),
+        description: t("settings_design.toast_saved_desc"),
+      });
+    } catch {
+      toast({
+        variant: "destructive",
+        title: t("settings_design.toast_save_failed_title"),
+        description: t("settings_design.toast_save_failed_desc"),
+      });
+    } finally {
+      setSaving(false);
+    }
   }
 
   function makeUploadHandler(
     setter: (v: string | null) => void,
     themeKey: AssetSlot
   ) {
-    return (e: React.ChangeEvent<HTMLInputElement>) => {
+    return async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const dataUrl = ev.target?.result as string;
-        setter(dataUrl);
-        saveTheme({ [themeKey]: dataUrl } as Record<string, string>);
+      // Allow re-selecting the same file later.
+      e.target.value = "";
+      setUploading(themeKey);
+      try {
+        const url = await uploadBrandingImage(file);
+        setter(url);
+        saveTheme({ [themeKey]: url } as Record<string, string>);
         if (themeKey === "favicon" || themeKey === "favicon_dark") {
-          applyFavicon(dataUrl);
+          applyFavicon(url);
         }
         refresh();
-      };
-      reader.readAsDataURL(file);
+      } catch {
+        toast({
+          variant: "destructive",
+          title: t("settings_design.toast_upload_failed_title"),
+          description: t("settings_design.toast_upload_failed_desc"),
+        });
+      } finally {
+        setUploading(null);
+      }
     };
   }
 
@@ -396,8 +432,12 @@ export function Design() {
               </>
             )}
           </Button>
-          <Button type="submit">
-            <Save className="h-4 w-4 mr-2" />
+          <Button type="submit" disabled={saving}>
+            {saving ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
+            )}
             {t("settings_design.save_branding")}
           </Button>
         </div>
@@ -425,6 +465,7 @@ export function Design() {
               onUpload={makeUploadHandler(setLogoPreview, "logo")}
               onRemove={makeRemoveHandler(setLogoPreview, "logo")}
               variant="logo"
+              busy={uploading === "logo"}
             />
             <AssetCard
               label={t("settings_design.favicon")}
@@ -434,6 +475,7 @@ export function Design() {
               onUpload={makeUploadHandler(setFaviconPreview, "favicon")}
               onRemove={makeRemoveHandler(setFaviconPreview, "favicon")}
               variant="favicon"
+              busy={uploading === "favicon"}
             />
           </div>
         </div>
@@ -453,6 +495,7 @@ export function Design() {
               onRemove={makeRemoveHandler(setLogoDarkPreview, "logo_dark")}
               variant="logo"
               dark
+              busy={uploading === "logo_dark"}
             />
             <AssetCard
               label={t("settings_design.dark_favicon")}
@@ -463,6 +506,7 @@ export function Design() {
               onRemove={makeRemoveHandler(setFaviconDarkPreview, "favicon_dark")}
               variant="favicon"
               dark
+              busy={uploading === "favicon_dark"}
             />
           </div>
         </div>
@@ -663,8 +707,12 @@ export function Design() {
       </Card>
 
       <div className="flex justify-end pt-2">
-        <Button type="submit">
-          <Save className="h-4 w-4 mr-2" />
+        <Button type="submit" disabled={saving}>
+          {saving ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4 mr-2" />
+          )}
           {t("settings_design.save_branding")}
         </Button>
       </div>

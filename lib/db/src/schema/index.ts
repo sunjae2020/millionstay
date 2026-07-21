@@ -58,6 +58,7 @@ export * from "./knowledge_documents";
 export * from "./accommodation_options";
 export * from "./api_credentials";
 export * from "./owner_sites";
+export * from "./branding_settings";
 export * from "./homestay_host_applications";
 export * from "./homestay_student_requests";
 export * from "./short_term_applications";
