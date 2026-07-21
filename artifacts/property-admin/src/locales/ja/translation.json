@@ -2057,7 +2057,13 @@
     "currency_prefix": "前置（$100）",
     "currency_suffix": "後置（100$）",
     "advanced_custom_css": "詳細設定: カスタムCSS",
-    "custom_css_hint": "カスタムCSSルールを挿入します。すべてのページにグローバルに適用されます。慎重に使用してください — 無効なCSSはレイアウトを崩す可能性があります。"
+    "custom_css_hint": "カスタムCSSルールを挿入します。すべてのページにグローバルに適用されます。慎重に使用してください — 無効なCSSはレイアウトを崩す可能性があります。",
+    "uploading": "アップロード中…",
+    "toast_upload_failed_title": "アップロード失敗",
+    "toast_upload_failed_desc": "画像をアップロードできませんでした。もう一度お試しください。",
+    "toast_save_failed_title": "保存に失敗しました",
+    "toast_save_failed_desc": "ブランディングを保存できませんでした。もう一度お試しください。",
+    "preset_teal": "ティール"
   },
   "settings_email": {
     "current_status_title": "現在のステータス",

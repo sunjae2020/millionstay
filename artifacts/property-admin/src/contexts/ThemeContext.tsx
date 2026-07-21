@@ -1,5 +1,12 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
-import { loadTheme, applySidebarTheme, applyDarkMode, applyFavicon, saveTheme } from "@/lib/theme";
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
+import {
+  loadTheme,
+  applySidebarTheme,
+  applyDarkMode,
+  applyFavicon,
+  saveTheme,
+  hydrateBrandingFromApi,
+} from "@/lib/theme";
 import { APP_NAME } from "@/lib/appName";
 
 interface BrandState {
@@ -38,6 +45,19 @@ function readState(): BrandState {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<BrandState>(readState);
+
+  // On mount, pull the server-persisted branding (shared across admins/devices)
+  // and apply it over the instant localStorage paint. Public endpoint → also
+  // themes the login screen before authentication.
+  useEffect(() => {
+    let alive = true;
+    hydrateBrandingFromApi().then((theme) => {
+      if (alive && theme) setState(readState());
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const refresh = useCallback(() => {
     const theme = loadTheme();
