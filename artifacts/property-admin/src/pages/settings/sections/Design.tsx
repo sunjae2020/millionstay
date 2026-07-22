@@ -655,6 +655,7 @@ export function Design() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="KRW">KRW (₩)</SelectItem>
                     <SelectItem value="AUD">AUD (A$)</SelectItem>
                     <SelectItem value="USD">USD ($)</SelectItem>
                     <SelectItem value="NZD">NZD (NZ$)</SelectItem>

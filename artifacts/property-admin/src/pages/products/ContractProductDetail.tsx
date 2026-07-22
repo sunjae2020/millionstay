@@ -20,11 +20,12 @@ import {
   useGetPromotion, getGetPromotionQueryKey,
 } from "@workspace/api-client-react";
 import { LookupSelect } from "@/components/LookupSelect";
+import { useBrand } from "@/contexts/ThemeContext";
 import { ArrowLeft, Save, Trash2, Tag } from "lucide-react";
 import { Link } from "wouter";
 
 const PRODUCT_TYPES = ["Room", "Suite", "Apartment", "House", "Studio", "Service"];
-const CURRENCIES = ["AUD", "USD", "SGD", "MYR", "GBP"];
+const CURRENCIES = ["KRW", "AUD", "USD", "SGD", "MYR", "GBP"];
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-700",
   Active: "bg-green-100 text-green-700",
@@ -74,6 +75,7 @@ export default function ContractProductDetail() {
   const [, navigate] = useLocation();
   const qc = useQueryClient();
   const isNew = id === "new";
+  const { currency: brandCurrency } = useBrand();
 
   const { data: product, refetch } = useGetContractProduct(Number(id), {
     query: { enabled: !isNew, queryKey: getGetContractProductQueryKey(Number(id)) },
@@ -84,7 +86,7 @@ export default function ContractProductDetail() {
       name: "", description: "", product_type: "Room",
       space_id: null, promotion_id: null, term_type: "",
       weekly_rate: "", monthly_rate: "", effective_weekly_rate: "",
-      currency: "AUD", billing_frequency: "Biweekly",
+      currency: brandCurrency, billing_frequency: "Biweekly",
       bond_weeks: "4", advance_weeks: "2", min_stay_weeks: "1", max_stay_weeks: "",
       includes_wifi: false, includes_parking: false, includes_utilities: false,
       includes_meals: false, includes_laundry: false, includes_cleaning: false,

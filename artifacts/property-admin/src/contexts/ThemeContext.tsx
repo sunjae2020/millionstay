@@ -15,6 +15,8 @@ interface BrandState {
   brandName: string;
   sidebarTheme: string;
   darkMode: boolean;
+  currency: string;
+  currencyPosition: string;
 }
 
 interface ThemeContextValue extends BrandState {
@@ -28,6 +30,8 @@ const ThemeContext = createContext<ThemeContextValue>({
   brandName: APP_NAME,
   sidebarTheme: "dark",
   darkMode: false,
+  currency: "AUD",
+  currencyPosition: "prefix",
   refresh: () => {},
   toggleDarkMode: () => {},
 });
@@ -40,6 +44,8 @@ function readState(): BrandState {
     brandName: theme.brand_name ?? APP_NAME,
     sidebarTheme: theme.sidebar_theme ?? "dark",
     darkMode: theme.dark_mode === true,
+    currency: theme.currency ?? "AUD",
+    currencyPosition: theme.currency_position ?? "prefix",
   };
 }
 

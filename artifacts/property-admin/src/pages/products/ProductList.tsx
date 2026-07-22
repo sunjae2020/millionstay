@@ -21,6 +21,8 @@ import {
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/date";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
 
 const PROMO_PERIOD: Record<number, string> = {
   1: "Weekly",
@@ -73,6 +75,7 @@ async function fetchPromotions(): Promise<Promotion[]> {
 
 export default function ProductList() {
   const { t } = useTranslation();
+  const { currencyPosition } = useBrand();
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("_all");
   const [promotionFilter, setPromotionFilter] = useState("_all");
@@ -208,7 +211,7 @@ export default function ProductList() {
                         {p.promotion_id === 4 ? "1 Day" : "1 Week"}
                       </td>
                       <td className="px-4 py-3 text-right text-xs tabular-nums font-medium text-[#E8621A]">
-                        {p.price != null ? `${p.currency} ${Number(p.price).toFixed(0)}` : "—"}
+                        {p.price != null ? formatMoney(p.price, p.currency, currencyPosition) : "—"}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1">
