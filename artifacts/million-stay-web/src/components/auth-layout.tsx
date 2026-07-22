@@ -18,7 +18,7 @@ export function AuthLayout({
   maxWidth?: number;
 }) {
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-orange-50 via-white to-orange-50/30">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-primary/5 via-white to-primary/5">
       <div className="p-6">
         <Link href="/">
           <BrandMark className="h-8 w-auto" />

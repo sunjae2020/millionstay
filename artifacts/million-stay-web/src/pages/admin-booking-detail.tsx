@@ -232,9 +232,9 @@ export default function AdminBookingDetail({ params }: { params: { id: string } 
               </div>
             </div>
 
-            <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4 text-sm text-orange-700">
+            <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 text-sm text-primary">
               <p className="font-semibold mb-1">Quick Guide</p>
-              <ul className="space-y-1 text-xs text-orange-600">
+              <ul className="space-y-1 text-xs text-primary">
                 <li><strong>Draft</strong> — Initial booking</li>
                 <li><strong>PendingPayment</strong> — Awaiting payment & docs</li>
                 <li><strong>Confirmed</strong> — Docs verified, ready</li>

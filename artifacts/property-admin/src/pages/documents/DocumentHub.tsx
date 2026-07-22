@@ -194,7 +194,7 @@ export default function DocumentHub() {
                         <Badge className={`text-xs gap-1 ${meta.badge}`}><Icon className="h-3 w-3" />{doc.doc_type}</Badge>
                       </td>
                       <td className="px-4 py-3">
-                        <Link href={doc.detail_url} className="text-[#E8621A] hover:underline font-mono text-xs font-semibold">
+                        <Link href={doc.detail_url} className="text-primary hover:underline font-mono text-xs font-semibold">
                           {doc.ref}
                         </Link>
                       </td>

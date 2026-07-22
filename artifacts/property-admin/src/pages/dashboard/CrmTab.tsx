@@ -105,7 +105,7 @@ export default function CrmTab() {
           </Button>
         </Link>
         <Link href="/account/leads/new">
-          <Button size="sm" className="gap-1.5 bg-[#E8621A] hover:bg-[#d4541a] text-white">
+          <Button size="sm" className="gap-1.5 bg-primary hover:bg-[#d4541a] text-white">
             <Plus className="h-4 w-4" /> {t("dash_crm.new_lead")}
           </Button>
         </Link>
@@ -171,7 +171,7 @@ export default function CrmTab() {
           title={t("dash_crm.recent_leads")}
           icon={TrendingUp}
           bodyClass="p-0"
-          action={<Link href="/account/leads" className="text-xs text-[#E8621A] hover:underline">{t("dash_crm.view_all_arrow")}</Link>}
+          action={<Link href="/account/leads" className="text-xs text-primary hover:underline">{t("dash_crm.view_all_arrow")}</Link>}
         >
           <div className="overflow-auto">
             <table className="w-full text-xs">
@@ -188,7 +188,7 @@ export default function CrmTab() {
                 ) : recentLeads.map(l => (
                   <tr key={l.id} className="hover:bg-muted/30">
                     <td className="px-3 py-2 font-mono font-medium">
-                      <Link href={`/account/leads/${l.id}`} className="hover:text-[#E8621A]">{l.lead_ref}</Link>
+                      <Link href={`/account/leads/${l.id}`} className="hover:text-primary">{l.lead_ref}</Link>
                     </td>
                     <td className="px-3 py-2">{[l.first_name, l.last_name].filter(Boolean).join(" ") || "—"}</td>
                     <td className="px-3 py-2">{l.lead_source ?? "—"}</td>
@@ -207,7 +207,7 @@ export default function CrmTab() {
           title={t("dash_crm.open_tasks")}
           icon={CheckSquare}
           bodyClass="p-0"
-          action={<Link href="/account/tasks" className="text-xs text-[#E8621A] hover:underline">{t("dash_crm.all_arrow")}</Link>}
+          action={<Link href="/account/tasks" className="text-xs text-primary hover:underline">{t("dash_crm.all_arrow")}</Link>}
         >
           <div className="divide-y max-h-[340px] overflow-auto">
             {openTaskList.length === 0 ? (

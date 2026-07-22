@@ -243,7 +243,7 @@ function RichTextEditor({ value, onChange }: { value: string; onChange: (v: stri
           ref={editorRef}
           contentEditable
           suppressContentEditableWarning
-          className="min-h-[200px] p-4 text-sm focus:outline-none [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mb-2 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:mb-2 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-[#E8621A] [&_a]:underline [&_img]:max-w-full [&_img]:rounded"
+          className="min-h-[200px] p-4 text-sm focus:outline-none [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mb-2 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:mb-2 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-primary [&_a]:underline [&_img]:max-w-full [&_img]:rounded"
           onInput={() => { if (editorRef.current) onChange(editorRef.current.innerHTML); }}
         />
       )}
@@ -411,7 +411,7 @@ function LanguageTab({
         <Button
           onClick={() => onSave(lang.code, form)}
           disabled={isSaving}
-          className="bg-[#E8621A] hover:bg-[#E8621A]/90 text-white gap-2"
+          className="bg-primary hover:bg-primary/90 text-white gap-2"
         >
           {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           {t("website_content.save_language", { language: t(`website_content.lang_${lang.code}`, { defaultValue: lang.label }) })}

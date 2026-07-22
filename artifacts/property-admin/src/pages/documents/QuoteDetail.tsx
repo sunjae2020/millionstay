@@ -213,7 +213,7 @@ export default function QuoteDetail() {
                   <FileTextIcon className="h-4 w-4 mr-1" /> {t("quote.view_invoice", "View Invoice")}
                 </Button>
               ) : (status === "Sent" || status === "Accepted") && (
-                <Button className="bg-[#E8621A] hover:bg-[#d4561a] text-white" onClick={convertToInvoice}>
+                <Button className="bg-primary hover:bg-[#d4561a] text-white" onClick={convertToInvoice}>
                   <FileTextIcon className="h-4 w-4 mr-1" /> {t("quote.convert_to_invoice", "Convert to Invoice")}
                 </Button>
               )}
@@ -223,7 +223,7 @@ export default function QuoteDetail() {
 
         <div className="space-y-4">
           <div className="border rounded-lg bg-white p-4 sm:p-6">
-            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">{t("quote.recipient", "Recipient")}</h2>
+            <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">{t("quote.recipient", "Recipient")}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <Label>{t("quote.account", "Account")}</Label>
@@ -244,7 +244,7 @@ export default function QuoteDetail() {
 
           <div className="border rounded-lg bg-white p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide">{t("quote.line_items", "Line Items")}</h2>
+              <h2 className="text-sm font-semibold uppercase text-primary tracking-wide">{t("quote.line_items", "Line Items")}</h2>
               <Button type="button" size="sm" variant="outline" onClick={addItem}><Plus className="h-3.5 w-3.5 mr-1" /> {t("quote.add_item", "Add Item")}</Button>
             </div>
             <div className="space-y-2">
@@ -271,7 +271,7 @@ export default function QuoteDetail() {
           </div>
 
           <div className="border rounded-lg bg-white p-4 sm:p-6">
-            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">{t("quote.details", "Details")}</h2>
+            <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">{t("quote.details", "Details")}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>{t("quote.currency", "Currency")}</Label>

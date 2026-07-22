@@ -191,7 +191,7 @@ export default function ProductList() {
                       <td className="px-4 py-3 font-medium max-w-[220px]">
                         <Link
                           href={`/products/products/${p.id}`}
-                          className="text-[#E8621A] hover:underline line-clamp-2"
+                          className="text-primary hover:underline line-clamp-2"
                         >
                           {p.name}
                         </Link>
@@ -210,7 +210,7 @@ export default function ProductList() {
                       <td className="px-4 py-3 text-right text-xs tabular-nums text-muted-foreground">
                         {p.promotion_id === 4 ? "1 Day" : "1 Week"}
                       </td>
-                      <td className="px-4 py-3 text-right text-xs tabular-nums font-medium text-[#E8621A]">
+                      <td className="px-4 py-3 text-right text-xs tabular-nums font-medium text-primary">
                         {p.price != null ? formatMoney(p.price, p.currency, currencyPosition) : "—"}
                       </td>
                       <td className="px-4 py-3">

@@ -147,7 +147,7 @@ export default function ForStudent() {
       </div>
 
       {/* ── Benefits ── */}
-      <section className="bg-orange-50 py-16 px-6">
+      <section className="bg-primary/5 py-16 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <p className="font-cursive text-primary text-xl italic mb-1">{t("student.benefits_label")}</p>
@@ -158,7 +158,7 @@ export default function ForStudent() {
               const Icon = BENEFITS_ICONS[i];
               return (
                 <motion.div key={key} {...fade(i * 0.07)}
-                  className="bg-white rounded-2xl p-6 border border-orange-100 shadow-sm hover:shadow-md transition-shadow">
+                  className="bg-white rounded-2xl p-6 border border-primary/20 shadow-sm hover:shadow-md transition-shadow">
                   <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                     <Icon className="h-5 w-5 text-primary" />
                   </div>
@@ -179,7 +179,7 @@ export default function ForStudent() {
             <h2 className="text-2xl font-bold text-gray-900">{t("student.steps_title")}</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-            <div className="hidden md:block absolute top-8 left-1/3 right-1/3 h-0.5 bg-orange-200 z-0" />
+            <div className="hidden md:block absolute top-8 left-1/3 right-1/3 h-0.5 bg-primary/20 z-0" />
             {STEPS_KEYS.map((key, i) => (
               <motion.div key={key} {...fade(i * 0.1)} className="relative z-10 flex flex-col items-center text-center">
                 <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 text-white font-bold text-lg shadow-md"
@@ -203,7 +203,7 @@ export default function ForStudent() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {TESTIMONIALS_DATA.map((testimonial, i) => (
               <motion.div key={testimonial.name} {...fade(i * 0.08)}
-                className="bg-white rounded-2xl p-6 border border-orange-100 shadow-sm flex flex-col">
+                className="bg-white rounded-2xl p-6 border border-primary/20 shadow-sm flex flex-col">
                 <div className="flex gap-0.5 mb-3">
                   {Array.from({ length: 5 }).map((_, j) => (
                     <Star key={j} className={`h-4 w-4 ${j < testimonial.rating ? "fill-primary text-primary" : "text-gray-200"}`} />
@@ -251,7 +251,7 @@ export default function ForStudent() {
       </section>
 
       {/* ── FAQ ── */}
-      <section className="bg-orange-50 py-14 px-6">
+      <section className="bg-primary/5 py-14 px-6">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-10">
             <p className="font-cursive text-primary text-xl italic mb-1">{t("student.faq_label")}</p>
@@ -259,7 +259,7 @@ export default function ForStudent() {
           </div>
           <div className="space-y-3">
             {FAQS_KEYS.map((key, i) => (
-              <div key={key} className="bg-white rounded-2xl border border-orange-100 overflow-hidden shadow-sm">
+              <div key={key} className="bg-white rounded-2xl border border-primary/20 overflow-hidden shadow-sm">
                 <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
                   className="w-full flex items-center justify-between px-6 py-4 text-left">
                   <span className="font-semibold text-gray-800 text-sm">{t(`student.${key}_q`)}</span>

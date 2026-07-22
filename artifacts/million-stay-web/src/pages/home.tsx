@@ -71,11 +71,11 @@ function ListingCard({ space, index = 0, checkIn = "", checkOut = "" }: { space:
       className="bg-white rounded-lg overflow-hidden shadow hover:shadow-md transition-shadow cursor-pointer group"
       onClick={() => setLocation(buildSpaceUrl(space.id, checkIn, checkOut))}
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-orange-50">
+      <div className="relative aspect-[4/3] overflow-hidden bg-primary/5">
         {space.primary_image ? (
           <img src={space.primary_image} alt={space.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center">
+          <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center">
             <Bed className="h-10 w-10 text-primary/40" />
           </div>
         )}
@@ -92,7 +92,7 @@ function ListingCard({ space, index = 0, checkIn = "", checkOut = "" }: { space:
         )}
         <div className="flex flex-wrap gap-1.5 mb-3">
           {features.map((f) => (
-            <span key={f.label} className="inline-flex items-center gap-1 text-[11px] text-gray-600 bg-orange-50 border border-orange-100 px-2 py-0.5 rounded-full">
+            <span key={f.label} className="inline-flex items-center gap-1 text-[11px] text-gray-600 bg-primary/5 border border-primary/20 px-2 py-0.5 rounded-full">
               {f.icon} {f.label}
             </span>
           ))}
@@ -360,7 +360,7 @@ export default function Home() {
                 {spotlightSpace.primary_image ? (
                   <img src={spotlightSpace.primary_image} alt={spotlightSpace.name} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center">
+                  <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center">
                     <Bed className="h-16 w-16 text-primary/30" />
                   </div>
                 )}

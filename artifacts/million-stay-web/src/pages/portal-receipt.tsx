@@ -108,7 +108,7 @@ export default function PortalReceipt() {
               <div className="flex items-start justify-between">
                 <div>
                   <BrandMark invert className="h-8 w-auto brightness-0 invert" />
-                  <p className="text-orange-100 text-[10px] mt-1.5 font-medium tracking-wide uppercase">
+                  <p className="text-white/80 text-[10px] mt-1.5 font-medium tracking-wide uppercase">
                     Melbourne Student Accommodation
                   </p>
                 </div>
@@ -260,7 +260,7 @@ export default function PortalReceipt() {
             {/* ── Bank transfer notice (for unpaid) ── */}
             {!isPaid && (
               <div className="px-8 py-4 border-b border-gray-100">
-                <div className="flex items-start gap-3 p-3 rounded-xl" style={{ backgroundColor: "#fff7f3", border: `1px solid ${BRAND}20` }}>
+                <div className="flex items-start gap-3 p-3 rounded-xl" style={{ backgroundColor: "color-mix(in srgb, hsl(var(--primary)) 5%, white)", border: `1px solid ${BRAND}20` }}>
                   <div className="w-1 h-10 rounded-full shrink-0" style={{ backgroundColor: BRAND }} />
                   <div>
                     <p className="text-xs font-semibold text-gray-700 mb-0.5">Bank Transfer Details</p>

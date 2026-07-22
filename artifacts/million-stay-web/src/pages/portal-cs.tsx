@@ -366,7 +366,7 @@ export default function PortalCs() {
             {[
               { label: t("portal.cs.open_inquiries"),  count: openTickets,  color: "text-blue-600",  bg: "bg-blue-50 border-blue-100" },
               { label: t("portal.cs.announcements"), count: announcements.length, color: "text-purple-600", bg: "bg-purple-50 border-purple-100" },
-              { label: t("portal.cs.unread_messages"), count: unreadCount,  color: "text-primary",   bg: "bg-orange-50 border-orange-100" },
+              { label: t("portal.cs.unread_messages"), count: unreadCount,  color: "text-primary",   bg: "bg-primary/5 border-primary/20" },
             ].map(({ label, count, color, bg }) => (
               <div key={label} className={`rounded-xl border px-4 py-3 ${bg}`}>
                 <p className={`text-2xl font-bold ${color}`}>{count}</p>

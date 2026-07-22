@@ -174,8 +174,8 @@ export default function DbSync() {
       <div className="p-6 max-w-4xl space-y-6">
         <div>
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-orange-50 flex items-center justify-center">
-              <Database className="h-5 w-5 text-orange-500" />
+            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Database className="h-5 w-5 text-primary" />
             </div>
             <h1 className="text-2xl font-semibold text-foreground">{t("settings_dbsync.heading")}</h1>
           </div>
@@ -288,7 +288,7 @@ export default function DbSync() {
           <Button
             onClick={handleExport}
             disabled={exporting || importing || info?.isProductionDb}
-            className="bg-[#E8621A] hover:bg-[#d2551a] text-white"
+            className="bg-primary hover:bg-[#d2551a] text-white"
             data-testid="button-export-snapshot"
           >
             {exporting ? (

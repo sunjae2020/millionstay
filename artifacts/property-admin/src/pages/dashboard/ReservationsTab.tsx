@@ -104,7 +104,7 @@ function GanttCalendar({
         <div className="flex border-b bg-muted/30">
           <div className="w-44 shrink-0 px-3 py-2 text-xs font-semibold text-muted-foreground border-r">{t("dash_reservations.col_space")}</div>
           {days.map(d => (
-            <div key={d} className={`w-24 shrink-0 border-r text-center py-2 text-xs ${d === today ? "bg-[#E8621A]/10 text-[#E8621A] font-bold" : "text-muted-foreground"}`}>
+            <div key={d} className={`w-24 shrink-0 border-r text-center py-2 text-xs ${d === today ? "bg-primary/10 text-primary font-bold" : "text-muted-foreground"}`}>
               <div className="font-medium">{new Date(d + "T12:00:00").getDate()}</div>
               <div className="text-[10px]">{new Date(d + "T12:00:00").toLocaleDateString("en", { weekday: "short" })}</div>
             </div>
@@ -118,7 +118,7 @@ function GanttCalendar({
             </div>
             <div className="relative flex" style={{ minWidth: 7 * 96 }}>
               {days.map(d => (
-                <div key={d} className={`w-24 shrink-0 border-r h-full ${d === today ? "bg-[#E8621A]/5" : ""}`} />
+                <div key={d} className={`w-24 shrink-0 border-r h-full ${d === today ? "bg-primary/5" : ""}`} />
               ))}
               {space.bookings.map(bk => {
                 const clampedStart = bk.check_in_date < weekStart ? weekStart : bk.check_in_date;
@@ -524,7 +524,7 @@ export function QuickBookingPanel({ open, onClose }: { open: boolean; onClose: (
 
         <div className="border-t px-5 py-4 flex gap-3">
           <Button variant="outline" onClick={onClose} className="flex-1" disabled={submitting}>{t("common.cancel")}</Button>
-          <Button onClick={handleSubmit} className="flex-1 bg-[#E8621A] hover:bg-[#d4541a] text-white" disabled={submitting}>
+          <Button onClick={handleSubmit} className="flex-1 bg-primary hover:bg-[#d4541a] text-white" disabled={submitting}>
             {submitting ? t("dash_reservations.creating") : t("dash_reservations.create_booking")}
           </Button>
         </div>
@@ -590,7 +590,7 @@ export default function ReservationsTab() {
         <Button variant="outline" size="sm" onClick={() => navigate("/booking/bookings/new")} className="gap-1.5">
           <Plus className="h-4 w-4" /> {t("dash_reservations.full_form")}
         </Button>
-        <Button size="sm" className="gap-1.5 bg-[#E8621A] hover:bg-[#d4541a] text-white" onClick={() => setQuickBookingOpen(true)}>
+        <Button size="sm" className="gap-1.5 bg-primary hover:bg-[#d4541a] text-white" onClick={() => setQuickBookingOpen(true)}>
           <Plus className="h-4 w-4" /> {t("dash_reservations.quick_booking")}
         </Button>
       </div>
@@ -630,7 +630,7 @@ export default function ReservationsTab() {
       <DashCard
         title={t("dash_reservations.all_bookings")}
         bodyClass="p-0"
-        action={<Link href="/booking/bookings" className="text-xs text-[#E8621A] hover:underline">{t("dash_reservations.open_full_list")}</Link>}
+        action={<Link href="/booking/bookings" className="text-xs text-primary hover:underline">{t("dash_reservations.open_full_list")}</Link>}
       >
         <div className="px-4 py-3 border-b flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-[180px]">
@@ -688,7 +688,7 @@ export default function ReservationsTab() {
                     <Pill className={STATUS_BADGE[b.booking_status] ?? "bg-gray-100 text-gray-600"}>{b.booking_status}</Pill>
                   </td>
                   <td className="px-3 py-2">
-                    <Link href={`/booking/bookings/${b.id}`} className="text-[#E8621A] hover:underline">{t("common.view")}</Link>
+                    <Link href={`/booking/bookings/${b.id}`} className="text-primary hover:underline">{t("common.view")}</Link>
                   </td>
                 </tr>
               ))}

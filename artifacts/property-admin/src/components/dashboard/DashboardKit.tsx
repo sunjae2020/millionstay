@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
  * so they automatically respect light/dark mode.
  */
 
-export const BRAND = "#E8621A";
-export const BRAND_SOFT = "rgba(232, 98, 26, 0.12)";
+export const BRAND = "hsl(var(--primary))";
+export const BRAND_SOFT = "color-mix(in srgb, hsl(var(--primary)) 12%, transparent)";
 
 /** Palette for accent strips / icon tiles — keep semantic + on-brand. */
 export const ACCENT = {

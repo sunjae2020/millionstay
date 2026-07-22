@@ -269,7 +269,7 @@ export default function PromotionDetail() {
                 </AlertDialogContent>
               </AlertDialog>
             )}
-            <Button onClick={handleSubmit(onSubmit)} disabled={isSaving} className="bg-[#E8621A] hover:bg-[#d4561a] text-white">
+            <Button onClick={handleSubmit(onSubmit)} disabled={isSaving} className="bg-primary hover:bg-[#d4561a] text-white">
               <Save className="h-4 w-4 mr-1" /> {isSaving ? t('common.saving') : t('common.save')}
             </Button>
           </div>
@@ -278,7 +278,7 @@ export default function PromotionDetail() {
         <div className="space-y-5">
           {/* Term Type — most important, shown first */}
           <div className="bg-white border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t('promotion.section_term_type')}</div>
+            <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">{t('promotion.section_term_type')}</div>
             <div className="p-5 grid grid-cols-3 gap-4">
               <div>
                 <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_term_type')} *</Label>
@@ -324,7 +324,7 @@ export default function PromotionDetail() {
 
           {/* General */}
           <div className="bg-white border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t('promotion.section_general')}</div>
+            <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">{t('promotion.section_general')}</div>
             <div className="p-5 grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_name')} *</Label>
@@ -354,7 +354,7 @@ export default function PromotionDetail() {
 
           {/* Discount */}
           <div className="bg-white border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t('promotion.section_discount')}</div>
+            <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">{t('promotion.section_discount')}</div>
             <div className="p-5 grid grid-cols-3 gap-4">
               <div>
                 <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_type')}</Label>
@@ -393,7 +393,7 @@ export default function PromotionDetail() {
 
           {/* Validity & Limits */}
           <div className="bg-white border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t('promotion.section_validity')}</div>
+            <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">{t('promotion.section_validity')}</div>
             <div className="p-5 grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_valid_from')}</Label>
@@ -432,7 +432,7 @@ export default function PromotionDetail() {
 
           {/* Description & Terms */}
           <div className="bg-white border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t('promotion.section_description')}</div>
+            <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">{t('promotion.section_description')}</div>
             <div className="p-5 space-y-4">
               <div>
                 <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_description')}</Label>
@@ -448,7 +448,7 @@ export default function PromotionDetail() {
           {/* Associated Products — shown only for existing promotions */}
           {!isNew && (
             <div className="bg-white border rounded-lg overflow-hidden">
-              <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Associated Products</div>
+              <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">Associated Products</div>
               {assocLoading ? (
                 <div className="p-8 text-center text-sm text-muted-foreground">Loading associated products…</div>
               ) : (assocAccommodations.length === 0 && assocServices.length === 0) ? (
@@ -462,16 +462,16 @@ export default function PromotionDetail() {
                   {assocAccommodations.length > 0 && (
                     <div className="p-5">
                       <div className="flex items-center gap-2 mb-3">
-                        <Package className="h-4 w-4 text-[#E8621A]" />
+                        <Package className="h-4 w-4 text-primary" />
                         <span className="text-sm font-semibold">Accommodation Products</span>
                         <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full font-medium">{assocAccommodations.length}</span>
                       </div>
                       <div className="space-y-2">
                         {assocAccommodations.map(a => (
                           <WouterLink key={a.id} href={`/products/products/${a.id}`}>
-                            <div className="flex items-center justify-between p-3 rounded-lg border hover:border-[#E8621A]/40 hover:bg-orange-50/40 transition-colors cursor-pointer group">
+                            <div className="flex items-center justify-between p-3 rounded-lg border hover:border-primary/40 hover:bg-primary/5 transition-colors cursor-pointer group">
                               <div className="flex items-center gap-3">
-                                <span className="text-sm font-medium group-hover:text-[#E8621A] transition-colors">{a.name}</span>
+                                <span className="text-sm font-medium group-hover:text-primary transition-colors">{a.name}</span>
                                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[a.status] ?? "bg-gray-100 text-gray-600"}`}>{a.status}</span>
                                 {a.min_contract_period && (
                                   <span className="text-xs text-muted-foreground">Min {a.min_contract_period} {a.min_contract_period_unit}</span>
@@ -494,16 +494,16 @@ export default function PromotionDetail() {
                   {assocServices.length > 0 && (
                     <div className="p-5">
                       <div className="flex items-center gap-2 mb-3">
-                        <Wrench className="h-4 w-4 text-[#E8621A]" />
+                        <Wrench className="h-4 w-4 text-primary" />
                         <span className="text-sm font-semibold">Service Products</span>
                         <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full font-medium">{assocServices.length}</span>
                       </div>
                       <div className="space-y-2">
                         {assocServices.map(s => (
                           <WouterLink key={s.id} href={`/services/${s.id}`}>
-                            <div className="flex items-center justify-between p-3 rounded-lg border hover:border-[#E8621A]/40 hover:bg-orange-50/40 transition-colors cursor-pointer group">
+                            <div className="flex items-center justify-between p-3 rounded-lg border hover:border-primary/40 hover:bg-primary/5 transition-colors cursor-pointer group">
                               <div className="flex items-center gap-3">
-                                <span className="text-sm font-medium group-hover:text-[#E8621A] transition-colors">{s.name}</span>
+                                <span className="text-sm font-medium group-hover:text-primary transition-colors">{s.name}</span>
                                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[s.status] ?? "bg-gray-100 text-gray-600"}`}>{s.status}</span>
                                 <span className="text-xs text-muted-foreground capitalize">{s.service_type.replace("_", " ")}</span>
                               </div>

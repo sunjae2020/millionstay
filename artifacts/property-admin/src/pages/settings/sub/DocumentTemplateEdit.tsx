@@ -146,7 +146,7 @@ export default function DocumentTemplateEdit() {
         {/* Locale tabs */}
         <div className="flex flex-wrap gap-2 mb-4">
           {localeTabs.map((l) => (
-            <button key={l} onClick={() => setLocale(l)} className={`px-3 py-1 rounded-full text-xs font-medium border ${locale === l ? "bg-orange-100 text-orange-700 border-orange-200" : "bg-white text-muted-foreground border-border hover:bg-muted/50"}`}>{l}</button>
+            <button key={l} onClick={() => setLocale(l)} className={`px-3 py-1 rounded-full text-xs font-medium border ${locale === l ? "bg-primary/15 text-primary border-primary/20" : "bg-white text-muted-foreground border-border hover:bg-muted/50"}`}>{l}</button>
           ))}
           <select className="text-xs border rounded-full px-2 py-1 text-muted-foreground" value="" onChange={(e) => { if (e.target.value) setLocale(e.target.value); }}>
             <option value="">+ {t("documentTemplate.add_locale")}</option>

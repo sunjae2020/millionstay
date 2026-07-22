@@ -49,7 +49,7 @@ export default function QuoteList() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input className="pl-9" placeholder={t("quote.search_placeholder", "Search by reference…")} value={q} onChange={(e) => setQ(e.target.value)} />
           </div>
-          <Button className="bg-[#E8621A] hover:bg-[#d4561a] text-white" onClick={() => navigate("/documents/quotes/new")}>
+          <Button className="bg-primary hover:bg-[#d4561a] text-white" onClick={() => navigate("/documents/quotes/new")}>
             <Plus className="h-4 w-4 mr-1" /> {t("quote.new_quote", "New Quote")}
           </Button>
         </div>
@@ -79,7 +79,7 @@ export default function QuoteList() {
                 ) : pagination.paginatedItems.map((r: any) => (
                   <tr key={r.id} className="hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3">
-                      <Link href={`/documents/quotes/${r.id}`} className="text-[#E8621A] hover:underline font-mono text-xs font-semibold">
+                      <Link href={`/documents/quotes/${r.id}`} className="text-primary hover:underline font-mono text-xs font-semibold">
                         {r.quote_ref}
                       </Link>
                     </td>

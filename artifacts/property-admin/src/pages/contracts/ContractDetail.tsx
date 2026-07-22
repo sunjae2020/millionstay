@@ -360,7 +360,7 @@ export default function ContractDetail() {
     return (
       <div className="flex gap-2">
         {status === "Draft" && (
-          <Button type="button" size="sm" className="bg-[#E8621A] hover:bg-[#d4561a] text-white"
+          <Button type="button" size="sm" className="bg-primary hover:bg-[#d4561a] text-white"
             onClick={() => sendMutation.mutate({ id: Number(id) })}>
             {t('contract.btn_send')}
           </Button>
@@ -459,7 +459,7 @@ export default function ContractDetail() {
 
             {/* General */}
             <div className="border rounded-lg bg-white p-4 sm:p-6">
-              <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">{t('contract.section_general')}</h2>
+              <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">{t('contract.section_general')}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>{t('invoice.label_booking')}</Label>
@@ -502,7 +502,7 @@ export default function ContractDetail() {
 
             {/* Parties */}
             <div className="border rounded-lg bg-white p-4 sm:p-6">
-              <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">{t('contract.section_parties')}</h2>
+              <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">{t('contract.section_parties')}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>{t('contract.label_tenant')} *</Label>
@@ -533,7 +533,7 @@ export default function ContractDetail() {
 
             {/* Terms */}
             <div className="border rounded-lg bg-white p-4 sm:p-6">
-              <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">{t('contract.section_financial')}</h2>
+              <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">{t('contract.section_financial')}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>{t('contract.label_start')}</Label>
@@ -579,7 +579,7 @@ export default function ContractDetail() {
 
             {/* Document */}
             <div className="border rounded-lg bg-white p-4 sm:p-6">
-              <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Document & Terms</h2>
+              <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">Document & Terms</h2>
               <div className="space-y-4">
                 <div>
                   <Label>Document URL (Signed Copy)</Label>
@@ -610,7 +610,7 @@ export default function ContractDetail() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id ? "border-[#E8621A] text-[#E8621A]" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
               >
                 {tab.icon}{tab.label}
               </button>
@@ -887,7 +887,7 @@ export default function ContractDetail() {
           <DialogFooter>
             <Button variant="outline" onClick={() => { setLineDialogOpen(false); resetLineForm(); }}>Cancel</Button>
             <Button
-              className="bg-[#E8621A] hover:bg-[#d4561a] text-white"
+              className="bg-primary hover:bg-[#d4561a] text-white"
               disabled={!lineName || !lineUnitPrice || addLineMutation.isPending || updateLineMutation.isPending}
               onClick={submitLineForm}
             >
@@ -973,7 +973,7 @@ export default function ContractDetail() {
           <DialogFooter>
             <Button variant="outline" onClick={() => { setSchedDialogOpen(false); resetSchedForm(); }}>Cancel</Button>
             <Button
-              className="bg-[#E8621A] hover:bg-[#d4561a] text-white"
+              className="bg-primary hover:bg-[#d4561a] text-white"
               disabled={!schedAmount || !schedStartDate || addSchedMutation.isPending || updateSchedMutation.isPending}
               onClick={submitSchedForm}
             >

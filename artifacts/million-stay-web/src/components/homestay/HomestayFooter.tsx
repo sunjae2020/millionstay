@@ -64,7 +64,7 @@ export function HomestayFooter() {
             <ul className="mt-3 space-y-2.5">
               {col.links.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="text-sm text-white/70 hover:text-[#E8621A] transition-colors">{t(l.labelKey)}</Link>
+                  <Link href={l.href} className="text-sm text-white/70 hover:text-primary transition-colors">{t(l.labelKey)}</Link>
                 </li>
               ))}
             </ul>
@@ -75,8 +75,8 @@ export function HomestayFooter() {
         <div className="max-w-6xl mx-auto px-5 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/50">
           <span>© {new Date().getFullYear()} Million Homestay — homestay.millionstay.com</span>
           <div className="flex items-center gap-4">
-            <Link href="/privacy" className="hover:text-[#E8621A] transition-colors">{t("homestay.footer.privacy")}</Link>
-            <Link href="/terms" className="hover:text-[#E8621A] transition-colors">{t("homestay.footer.terms")}</Link>
+            <Link href="/privacy" className="hover:text-primary transition-colors">{t("homestay.footer.privacy")}</Link>
+            <Link href="/terms" className="hover:text-primary transition-colors">{t("homestay.footer.terms")}</Link>
           </div>
         </div>
       </div>

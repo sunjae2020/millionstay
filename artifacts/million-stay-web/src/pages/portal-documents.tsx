@@ -82,7 +82,7 @@ export default function PortalDocuments() {
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {["passport", "visa", "enrollment", "bank_statement", "other"].map((type) => (
-                  <label key={type} className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-primary hover:bg-orange-50 transition-all text-center">
+                  <label key={type} className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-primary hover:bg-primary/10 transition-all text-center">
                     <Plus className="h-5 w-5 text-gray-400" />
                     <span className="text-xs font-medium text-gray-600 capitalize">{type.replace("_", " ")}</span>
                     <input
@@ -120,7 +120,7 @@ export default function PortalDocuments() {
                       className="bg-white rounded-xl border p-4 flex items-center justify-between gap-4"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center shrink-0">
+                        <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
                           <FileImage className="h-5 w-5 text-primary" />
                         </div>
                         <div>

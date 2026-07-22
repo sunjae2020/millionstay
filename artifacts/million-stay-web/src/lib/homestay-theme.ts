@@ -13,12 +13,12 @@
 // existing pages retheme instantly; new code should prefer the semantic names
 // (navy / teal / orange / ink / line …).
 export const HS = {
-  // — Action: Orange —
-  orange: "#E8621A",
-  orangeDark: "#BF4E10",
-  orangeSoft: "#FBE0CB",
-  brand: "#E8621A",      // alias → orange (primary action)
-  brandDark: "#BF4E10",  // alias → orangeDark (hover)
+  // — Action: Orange (instance primary token → white-label themeable) —
+  orange: "hsl(var(--brand-orange))",
+  orangeDark: "hsl(var(--brand-burnt))",
+  orangeSoft: "hsl(var(--brand-apricot))",
+  brand: "hsl(var(--brand-orange))",      // alias → orange (primary action)
+  brandDark: "hsl(var(--brand-burnt))",   // alias → orangeDark (hover)
 
   // — Structure: Navy —
   navy: "#16263F",
@@ -32,7 +32,7 @@ export const HS = {
 
   // — Surfaces —
   cream: "#FAF5EC",      // warm page background
-  apricot: "#FBE0CB",    // apricot tint (= orange-soft) for hero/card fills
+  apricot: "hsl(var(--brand-apricot))",  // apricot tint (= orange-soft) for hero/card fills
   white: "#FFFFFF",      // cards
 
   // — Text —
@@ -46,10 +46,10 @@ export const HS = {
 
 // Soft tints for section backgrounds / chips.
 export const HS_TINT = {
-  brand: "rgba(232,98,26,0.10)",
-  orange: "rgba(232,98,26,0.10)",
+  brand: "hsl(var(--brand-orange) / 0.10)",
+  orange: "hsl(var(--brand-orange) / 0.10)",
   cream: "#F6EFEC",      // subtle warm section tint (rhythm between white sections)
-  apricot: "#FBE0CB",
+  apricot: "hsl(var(--brand-apricot))",
   teal: "#E0F0EE",
 } as const;
 

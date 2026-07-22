@@ -69,7 +69,7 @@ export function LookupField({
           onClick={() => !disabled && setOpen(true)}
         >
           {value ? (
-            <span className="flex-1 text-orange-600 font-medium truncate">{displayText}</span>
+            <span className="flex-1 text-primary font-medium truncate">{displayText}</span>
           ) : (
             <span className="flex-1 text-muted-foreground">Select {label}...</span>
           )}
@@ -191,7 +191,7 @@ export function MultiLookupField({
             displayTexts.map((text, i) => (
               <span
                 key={values[i]}
-                className="inline-flex items-center gap-1 bg-orange-50 text-orange-700 border border-orange-200 rounded px-1.5 py-0.5 text-xs font-medium"
+                className="inline-flex items-center gap-1 bg-primary/10 text-primary border border-primary/20 rounded px-1.5 py-0.5 text-xs font-medium"
               >
                 {text}
                 <button
@@ -200,7 +200,7 @@ export function MultiLookupField({
                     e.stopPropagation();
                     onRemove(values[i]);
                   }}
-                  className="hover:text-orange-900"
+                  className="hover:text-primary"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -236,7 +236,7 @@ export function MultiLookupField({
                         type="button"
                         className={cn(
                           "flex flex-col items-start px-3 py-2 rounded-md text-left transition-colors",
-                          selected ? "bg-orange-50 text-orange-700" : "hover:bg-muted"
+                          selected ? "bg-primary/10 text-primary" : "hover:bg-muted"
                         )}
                         onClick={() => handleSelect(opt)}
                       >

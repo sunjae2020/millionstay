@@ -20,7 +20,7 @@ function ToolButton({ active, onClick, children, title }: { active?: boolean; on
       type="button"
       title={title}
       onMouseDown={(e) => { e.preventDefault(); onClick(); }}
-      className={`h-7 w-7 inline-flex items-center justify-center rounded border text-xs ${active ? "bg-orange-100 border-orange-200 text-orange-700" : "bg-white border-border hover:bg-muted/50"}`}
+      className={`h-7 w-7 inline-flex items-center justify-center rounded border text-xs ${active ? "bg-primary/15 border-primary/20 text-primary" : "bg-white border-border hover:bg-muted/50"}`}
     >
       {children}
     </button>

@@ -138,7 +138,7 @@ export function HsBullets({ items }: { items: Array<{ title?: string; body: Reac
 
 // Button system. Orange owns "what to press"; teal is reserved for safe/support
 // contexts and used sparingly. All variants share a focus-visible ring.
-const FOCUS = "focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#E8621A]";
+const FOCUS = "focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary";
 
 export function HsCTA({ buttons }: { buttons: Array<{ label: string; href: string; variant?: "primary" | "outline" | "secondary" | "ghost" | "teal"; disabled?: boolean }> }) {
   const { t } = useTranslation();

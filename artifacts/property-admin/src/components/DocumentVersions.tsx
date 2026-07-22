@@ -87,7 +87,7 @@ export function DocumentVersions({
               ) : snapshots.map((s) => (
                 <div key={s.id} className="flex items-center justify-between px-3 py-2.5 text-sm">
                   <div>
-                    <span className="font-mono font-semibold text-[#E8621A]">v{s.version ?? "?"}</span>
+                    <span className="font-mono font-semibold text-primary">v{s.version ?? "?"}</span>
                     <span className="text-muted-foreground ml-2">{s.file_name}</span>
                     <div className="text-xs text-muted-foreground">
                       {s.created_at ? formatDateTime(s.created_at) : "—"}

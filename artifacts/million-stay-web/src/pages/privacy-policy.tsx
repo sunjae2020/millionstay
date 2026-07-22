@@ -135,7 +135,7 @@ export default function PrivacyPolicy() {
 
           {/* Sections list */}
           <div className="lg:col-span-3 space-y-8">
-            <motion.div {...fade(0)} className="bg-orange-50 border border-orange-100 rounded-xl px-6 py-4">
+            <motion.div {...fade(0)} className="bg-primary/5 border border-primary/20 rounded-xl px-6 py-4">
               <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">Effective Date</p>
               <p className="text-sm text-gray-700 font-semibold">19 April 2026</p>
               <p className="text-xs text-gray-500 mt-2">This policy applies to T/A {APP_NAME} and complies with the Privacy Act 1988 (Cth), the 13 Australian Privacy Principles, the Notifiable Data Breaches scheme and the Spam Act 2003 (Cth).</p>
@@ -146,7 +146,7 @@ export default function PrivacyPolicy() {
                 <div className="flex flex-col items-center pt-1">
                   <span className="text-primary font-black text-lg leading-none">{section.number}</span>
                   {i < SECTIONS.length - 1 && (
-                    <div className="w-px flex-1 mt-2 bg-orange-100" />
+                    <div className="w-px flex-1 mt-2 bg-primary/10" />
                   )}
                 </div>
                 <div className="pb-8">
@@ -159,7 +159,7 @@ export default function PrivacyPolicy() {
             ))}
 
             {/* Contact note */}
-            <motion.div {...fade(0.6)} className="bg-orange-50 border border-orange-100 rounded-xl px-6 py-5">
+            <motion.div {...fade(0.6)} className="bg-primary/5 border border-primary/20 rounded-xl px-6 py-5">
               <h4 className="text-sm font-bold text-gray-800 mb-2">Contact Our Privacy Officer</h4>
               <p className="text-sm text-gray-600 leading-relaxed">
                 For any privacy-related enquiries, access requests, or complaints, please contact us at:
@@ -216,7 +216,7 @@ export default function PrivacyPolicy() {
               </motion.div>
 
               {/* OAIC reference */}
-              <motion.div {...fade(0.3)} className="rounded-xl overflow-hidden border border-orange-100">
+              <motion.div {...fade(0.3)} className="rounded-xl overflow-hidden border border-primary/20">
                 <div className="bg-primary px-5 py-4 text-white">
                   <h4 className="font-bold text-sm mb-1">Australian Privacy Regulator</h4>
                   <p className="text-xs text-white/80 mb-3">
@@ -226,7 +226,7 @@ export default function PrivacyPolicy() {
                     href="https://www.oaic.gov.au"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-block bg-white text-primary text-xs font-bold px-4 py-2 rounded-lg hover:bg-orange-50 transition-colors"
+                    className="inline-block bg-white text-primary text-xs font-bold px-4 py-2 rounded-lg hover:bg-primary/10 transition-colors"
                   >
                     Visit oaic.gov.au →
                   </a>

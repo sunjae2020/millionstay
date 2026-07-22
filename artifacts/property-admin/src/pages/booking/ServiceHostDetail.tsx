@@ -94,13 +94,13 @@ export default function ServiceHostDetail() {
         actions={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setLocation("/booking/service-hosts")}><ArrowLeft className="w-4 h-4 mr-1" /> {t("common.back")}</Button>
-            <Button onClick={handleSubmit(onSubmit)} className="bg-[#E8621A] hover:bg-[#d4561a] text-white"><Save className="w-4 h-4 mr-1" /> {t("common.save")}</Button>
+            <Button onClick={handleSubmit(onSubmit)} className="bg-primary hover:bg-[#d4561a] text-white"><Save className="w-4 h-4 mr-1" /> {t("common.save")}</Button>
           </div>
         }
       />
       <div className="p-6 max-w-3xl space-y-6">
         <div className="rounded-lg border bg-white p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">{t("service_host.section_general")}</h3>
+          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">{t("service_host.section_general")}</h3>
           <div>
             <Label>{t("common.name")} *</Label>
             <Input {...register("name")} className="mt-1" />
@@ -108,7 +108,7 @@ export default function ServiceHostDetail() {
         </div>
 
         <div className="rounded-lg border bg-white p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">MAIN</h3>
+          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">MAIN</h3>
           <div>
             <Label>{t("service_host.label_account")}</Label>
             <Controller
@@ -144,7 +144,7 @@ export default function ServiceHostDetail() {
         </div>
 
         <div className="rounded-lg border bg-white p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">{t("service_host.section_schedule")}</h3>
+          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">{t("service_host.section_schedule")}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>{t("service_host.label_from_date")}</Label>
@@ -162,7 +162,7 @@ export default function ServiceHostDetail() {
         </div>
 
         <div className="rounded-lg border bg-white p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">OPTIONS</h3>
+          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">OPTIONS</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <Label>{t("service_host.label_in_call")}</Label>
@@ -200,12 +200,12 @@ export default function ServiceHostDetail() {
         </div>
 
         <div className="rounded-lg border bg-white p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">{t("service_host.label_notes")}</h3>
+          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">{t("service_host.label_notes")}</h3>
           <Textarea {...register("description")} rows={4} placeholder="Enter description..." />
         </div>
 
         <div className="rounded-lg border bg-white p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">ADMIN</h3>
+          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">ADMIN</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>{t("service_host.label_status")}</Label>

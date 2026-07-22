@@ -263,7 +263,7 @@ export default function InvoiceDetail() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Links */}
           <div className="border rounded-lg bg-white p-4 sm:p-6">
-            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Links</h2>
+            <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">Links</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <Label>{t('invoice.label_booking')}</Label>
@@ -306,7 +306,7 @@ export default function InvoiceDetail() {
 
           {/* Financials */}
           <div className="border rounded-lg bg-white p-4 sm:p-6">
-            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">{t('invoice.section_general')}</h2>
+            <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">{t('invoice.section_general')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <Label>{t('common.amount')} *</Label>
@@ -354,7 +354,7 @@ export default function InvoiceDetail() {
 
           {/* Description + Notes */}
           <div className="border rounded-lg bg-white p-4 sm:p-6">
-            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">Details</h2>
+            <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">Details</h2>
             <div className="space-y-4">
               <div>
                 <Label>{t('invoice.label_item_desc')}</Label>

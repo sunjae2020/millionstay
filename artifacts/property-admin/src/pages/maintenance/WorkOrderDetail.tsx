@@ -187,7 +187,7 @@ export default function WorkOrderDetail() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Details */}
           <div className="border rounded-lg bg-white p-4 sm:p-6">
-            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">{t('workorder.section_details')}</h2>
+            <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">{t('workorder.section_details')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="col-span-2">
                 <Label>{t('workorder.label_title')} *</Label>
@@ -237,7 +237,7 @@ export default function WorkOrderDetail() {
 
           {/* Location */}
           <div className="border rounded-lg bg-white p-4 sm:p-6">
-            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">{t('workorder.section_location', 'Location')}</h2>
+            <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">{t('workorder.section_location', 'Location')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>{t('workorder.label_property')}</Label>
@@ -268,7 +268,7 @@ export default function WorkOrderDetail() {
 
           {/* Schedule */}
           <div className="border rounded-lg bg-white p-4 sm:p-6">
-            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">{t('workorder.section_schedule', 'Schedule & Assignment')}</h2>
+            <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">{t('workorder.section_schedule', 'Schedule & Assignment')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>{t('workorder.label_reported_date', 'Reported Date')}</Label>
@@ -314,7 +314,7 @@ export default function WorkOrderDetail() {
 
           {/* Notes */}
           <div className="border rounded-lg bg-white p-4 sm:p-6">
-            <h2 className="text-sm font-semibold uppercase text-[#E8621A] tracking-wide mb-4">{t('common.notes')}</h2>
+            <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">{t('common.notes')}</h2>
             <Textarea rows={3} placeholder="Internal notes..." {...register("notes")} />
           </div>
         </form>

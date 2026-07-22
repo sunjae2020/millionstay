@@ -336,7 +336,7 @@ export default function BulkPhotoUpload() {
                           <span className="text-muted-foreground text-xs">{t("bulk_photo.status_pending")}</span>
                         )}
                         {st?.status === "uploading" && (
-                          <span className="inline-flex items-center gap-1 text-[#E8621A] text-xs">
+                          <span className="inline-flex items-center gap-1 text-primary text-xs">
                             <Loader2 className="h-3 w-3 animate-spin" />
                             {t("bulk_photo.status_uploading")}
                           </span>

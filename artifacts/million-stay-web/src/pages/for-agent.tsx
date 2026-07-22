@@ -188,7 +188,7 @@ export default function ForAgent() {
       </div>
 
       {/* ── Agent Benefits ── */}
-      <section className="bg-orange-50 py-16 px-6">
+      <section className="bg-primary/5 py-16 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <p className="font-cursive text-primary text-xl italic mb-1">{t("agent.benefits_label")}</p>
@@ -199,7 +199,7 @@ export default function ForAgent() {
               const Icon = BENEFITS_ICONS[i];
               return (
                 <motion.div key={key} {...fade(i * 0.07)}
-                  className="bg-white rounded-2xl p-6 border border-orange-100 shadow-sm hover:shadow-md transition-shadow">
+                  className="bg-white rounded-2xl p-6 border border-primary/20 shadow-sm hover:shadow-md transition-shadow">
                   <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                     <Icon className="h-5 w-5 text-primary" />
                   </div>
@@ -243,7 +243,7 @@ export default function ForAgent() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {TESTIMONIALS_DATA.map((testimonial, i) => (
               <motion.div key={testimonial.name} {...fade(i * 0.08)}
-                className="bg-white rounded-2xl p-6 border border-orange-100 shadow-sm flex flex-col">
+                className="bg-white rounded-2xl p-6 border border-primary/20 shadow-sm flex flex-col">
                 <div className="flex gap-0.5 mb-3">
                   {Array.from({ length: 5 }).map((_, j) => (
                     <Star key={j} className={`h-4 w-4 ${j < testimonial.rating ? "fill-primary text-primary" : "text-gray-200"}`} />
@@ -264,7 +264,7 @@ export default function ForAgent() {
       </section>
 
       {/* ── Agent Registration Form ── */}
-      <section id="agent-register" className="py-16 px-6 bg-orange-50">
+      <section id="agent-register" className="py-16 px-6 bg-primary/5">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-10">
             <p className="font-cursive text-primary text-xl italic mb-1">{t("agent.reg_label")}</p>
@@ -288,7 +288,7 @@ export default function ForAgent() {
               </button>
             </motion.div>
           ) : (
-            <form onSubmit={handleRegister} className="bg-white rounded-2xl border border-orange-100 shadow-sm p-8 space-y-5">
+            <form onSubmit={handleRegister} className="bg-white rounded-2xl border border-primary/20 shadow-sm p-8 space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">{t("agent.form_company")}</label>

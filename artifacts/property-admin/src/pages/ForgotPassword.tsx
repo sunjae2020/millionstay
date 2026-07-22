@@ -8,7 +8,7 @@ import { apiFetch } from "@/lib/apiFetch";
 import logoSrc from "/millionstay-logo.png";
 import { APP_NAME } from "@/lib/appName";
 
-const BRAND = "#E8621A";
+const BRAND = "hsl(var(--primary))";
 
 export default function ForgotPasswordPage() {
   const { t } = useTranslation();
@@ -50,7 +50,7 @@ export default function ForgotPasswordPage() {
         <div className="absolute -top-40 -left-40 w-[480px] h-[480px] rounded-full opacity-25 pointer-events-none"
           style={{ background: `radial-gradient(circle, ${BRAND}, transparent 70%)` }} />
         <div className="absolute -bottom-32 right-[-80px] w-[400px] h-[400px] rounded-full opacity-15 pointer-events-none"
-          style={{ background: `radial-gradient(circle, #FF9A50, transparent 70%)` }} />
+          style={{ background: `radial-gradient(circle, color-mix(in srgb, hsl(var(--primary)) 72%, white), transparent 70%)` }} />
 
         <div className="relative z-10">
           {import.meta.env.VITE_LOGO_MODE === "text"
@@ -110,7 +110,7 @@ export default function ForgotPasswordPage() {
               <Link
                 href="/login"
                 className="inline-flex items-center justify-center w-full h-11 rounded-lg text-sm font-semibold text-white shadow-md"
-                style={{ background: `linear-gradient(135deg, ${BRAND} 0%, #FF8C3A 100%)` }}
+                style={{ background: `linear-gradient(135deg, ${BRAND} 0%, color-mix(in srgb, hsl(var(--primary)) 72%, white) 100%)` }}
               >
                 {t("forgot_password.back_to_sign_in")}
               </Link>
@@ -151,7 +151,7 @@ export default function ForgotPasswordPage() {
                   type="submit"
                   disabled={loading}
                   className="w-full h-11 rounded-lg text-sm font-semibold text-white transition-opacity disabled:opacity-60 flex items-center justify-center gap-2 shadow-md"
-                  style={{ background: `linear-gradient(135deg, ${BRAND} 0%, #FF8C3A 100%)` }}
+                  style={{ background: `linear-gradient(135deg, ${BRAND} 0%, color-mix(in srgb, hsl(var(--primary)) 72%, white) 100%)` }}
                 >
                   {loading
                     ? <><Loader2 className="h-4 w-4 animate-spin" /> {t("forgot_password.sending")}</>

@@ -234,7 +234,7 @@ export default function Register() {
                                   <button
                                     key={c}
                                     type="button"
-                                    className="w-full text-left px-3 py-2 text-sm hover:bg-orange-50 hover:text-primary transition-colors"
+                                    className="w-full text-left px-3 py-2 text-sm hover:bg-primary/10 hover:text-primary transition-colors"
                                     onClick={() => {
                                       field.onChange(c);
                                       setCountryOpen(false);

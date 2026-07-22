@@ -155,7 +155,7 @@ export function Navbar() {
                       onClick={() => handleLanguageChange(lang.code)}
                       className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm transition-colors text-left ${
                         isActive
-                          ? "bg-orange-50 text-primary font-semibold border-l-2 border-primary"
+                          ? "bg-primary/5 text-primary font-semibold border-l-2 border-primary"
                           : "text-gray-700 hover:bg-gray-50"
                       }`}
                     >
@@ -173,7 +173,7 @@ export function Navbar() {
             {/* Auth */}
             {token && guest ? (
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-orange-50 transition-colors group">
+                <DropdownMenuTrigger className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-primary/10 transition-colors group">
                   {guest.avatar_url ? (
                     <img src={guest.avatar_url} alt={displayName} className="w-8 h-8 rounded-full object-cover shrink-0 border border-gray-200" />
                   ) : (
@@ -239,7 +239,7 @@ export function Navbar() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
-                className="block px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary hover:bg-orange-50 rounded transition-colors"
+                className="block px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary hover:bg-primary/10 rounded transition-colors"
               >
                 {t(`nav.${link.key}`)}
               </Link>
@@ -259,7 +259,7 @@ export function Navbar() {
                       key={lang.code}
                       onClick={() => { handleLanguageChange(lang.code); setMobileOpen(false); }}
                       className={`flex flex-col items-center gap-0.5 py-1.5 px-1 rounded-lg text-xs transition-colors ${
-                        isActive ? "bg-orange-50 text-primary font-bold border border-primary/20" : "text-gray-500 hover:bg-gray-50"
+                        isActive ? "bg-primary/5 text-primary font-bold border border-primary/20" : "text-gray-500 hover:bg-gray-50"
                       }`}
                     >
                       <FlagIcon iso={lang.iso} size={24} />
@@ -285,7 +285,7 @@ export function Navbar() {
                     <p className="text-xs text-gray-400 truncate">{guest.email}</p>
                   </div>
                 </div>
-                <button onClick={() => { setMobileOpen(false); setLocation("/portal/bookings"); }} className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:text-primary hover:bg-orange-50 rounded flex items-center gap-2">
+                <button onClick={() => { setMobileOpen(false); setLocation("/portal/bookings"); }} className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:text-primary hover:bg-primary/10 rounded flex items-center gap-2">
                   <LayoutDashboard className="h-4 w-4" /> {t("nav.myPortal")}
                 </button>
                 <button onClick={() => { setMobileOpen(false); handleLogout(); }} className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded flex items-center gap-2">

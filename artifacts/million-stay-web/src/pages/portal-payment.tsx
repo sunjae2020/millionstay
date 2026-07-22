@@ -400,7 +400,7 @@ export default function PortalPayment() {
                     onClick={() => setPaymentMethod(m)}
                     className={`flex flex-col items-center justify-center gap-2 py-4 rounded-xl border-2 font-semibold text-sm transition-all ${
                       paymentMethod === m
-                        ? "border-primary bg-orange-50 text-primary"
+                        ? "border-primary bg-primary/5 text-primary"
                         : "border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50"
                     }`}
                   >

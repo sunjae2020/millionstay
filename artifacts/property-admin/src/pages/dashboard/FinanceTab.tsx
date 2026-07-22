@@ -143,7 +143,7 @@ export default function FinanceTab() {
     <div className="space-y-6">
       <div className="flex justify-end">
         <Link href="/finance/invoices/new">
-          <Button size="sm" className="gap-1.5 bg-[#E8621A] hover:bg-[#d4541a] text-white">
+          <Button size="sm" className="gap-1.5 bg-primary hover:bg-[#d4541a] text-white">
             <Plus className="h-4 w-4" /> {t("dash_finance.create_invoice")}
           </Button>
         </Link>
@@ -183,7 +183,7 @@ export default function FinanceTab() {
             </ResponsiveContainer>
           )}
           <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground">
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#E8621A] inline-block" /> {t("dash_finance.current_month")}</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-primary inline-block" /> {t("dash_finance.current_month")}</span>
             <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-[#fcd9c4] inline-block" /> {t("dash_finance.historical")}</span>
           </div>
         </DashCard>
@@ -210,7 +210,7 @@ export default function FinanceTab() {
       <DashCard
         title={t("dash_finance.invoice_list")}
         bodyClass="p-0"
-        action={<Link href="/finance/invoices" className="text-xs text-[#E8621A] hover:underline">{t("dash_finance.full_list")}</Link>}
+        action={<Link href="/finance/invoices" className="text-xs text-primary hover:underline">{t("dash_finance.full_list")}</Link>}
       >
         <div className="px-4 py-3 border-b flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-[180px]">

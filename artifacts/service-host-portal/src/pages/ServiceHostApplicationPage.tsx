@@ -6,7 +6,7 @@ import { apiPost } from "@/lib/api";
 import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 import { APP_NAME } from "@/lib/appName";
 
-const BRAND = "#E8621A";
+const BRAND = "hsl(var(--brand-orange))";
 
 const SERVICE_OPTIONS = ["Cleaning", "Maintenance", "Linen", "Inspection", "Other"];
 
@@ -109,7 +109,7 @@ export default function ServiceHostApplicationPage() {
             <Link href="/">
               <a
                 className="inline-block mt-6 h-11 px-6 leading-[44px] rounded-lg text-sm font-semibold text-white shadow-md"
-                style={{ background: `linear-gradient(135deg, ${BRAND} 0%, #FF8C3A 100%)` }}
+                style={{ background: `linear-gradient(135deg, ${BRAND} 0%, color-mix(in srgb, hsl(var(--brand-orange)) 72%, white) 100%)` }}
               >
                 {t("apply.back_to_login")}
               </a>
@@ -205,7 +205,7 @@ export default function ServiceHostApplicationPage() {
               type="submit"
               disabled={loading}
               className="w-full h-11 rounded-lg text-sm font-semibold text-white transition-opacity disabled:opacity-60 flex items-center justify-center gap-2 shadow-md"
-              style={{ background: `linear-gradient(135deg, ${BRAND} 0%, #FF8C3A 100%)` }}
+              style={{ background: `linear-gradient(135deg, ${BRAND} 0%, color-mix(in srgb, hsl(var(--brand-orange)) 72%, white) 100%)` }}
             >
               {loading ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /> {t("apply.submitting")}</>
@@ -233,7 +233,7 @@ export default function ServiceHostApplicationPage() {
 }
 
 const inputCls =
-  "w-full h-11 px-3 rounded-lg border border-slate-200 bg-white text-slate-900 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#E8621A] focus:border-transparent";
+  "w-full h-11 px-3 rounded-lg border border-slate-200 bg-white text-slate-900 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent";
 
 function Field({
   label,

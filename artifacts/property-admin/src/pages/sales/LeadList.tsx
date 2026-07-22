@@ -57,7 +57,7 @@ function KanbanCard({ lead, onMove, onDelete }: {
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="flex-1 min-w-0">
           <Link href={`/sales/leads/${lead.id}`}>
-            <p className="text-sm font-semibold hover:text-[#E8621A] truncate">{lead.first_name} {lead.last_name}</p>
+            <p className="text-sm font-semibold hover:text-primary truncate">{lead.first_name} {lead.last_name}</p>
           </Link>
           <p className="text-[10px] text-muted-foreground font-mono">{lead.lead_ref}</p>
         </div>

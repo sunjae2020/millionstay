@@ -172,8 +172,8 @@ function HubCard({ card }: { card: CardDef }) {
       onClick={() => navigate(card.href)}
       className="group flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-accent/40 hover:border-primary/40 transition-all text-left"
     >
-      <div className="mt-0.5 h-10 w-10 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0 group-hover:bg-orange-100 transition-colors">
-        <card.icon className="h-5 w-5 text-orange-500" />
+      <div className="mt-0.5 h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/15 transition-colors">
+        <card.icon className="h-5 w-5 text-primary" />
       </div>
       <div>
         <p className="text-sm font-medium text-foreground">{card.title}</p>
@@ -253,8 +253,8 @@ export default function Settings() {
                 className="group flex flex-col items-center gap-3 p-6 rounded-lg border bg-card hover:bg-accent/40 hover:border-primary/40 transition-all text-center"
                 onClick={() => navigate(c.href)}
               >
-                <div className="h-12 w-12 rounded-xl bg-orange-50 flex items-center justify-center group-hover:bg-orange-100 transition-colors">
-                  <BarChart3 className="h-6 w-6 text-orange-500" />
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
+                  <BarChart3 className="h-6 w-6 text-primary" />
                 </div>
                 <div>
                   <p className="text-sm font-medium text-foreground">{c.title}</p>

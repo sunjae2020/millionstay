@@ -110,7 +110,7 @@ function TenantCard({ tenant, compact }: { tenant: TenantRecord; compact?: boole
         <div className="flex items-start justify-between gap-2 mb-2">
           <div>
             <Link href={`/booking/bookings/${tenant.bookingId}`}>
-              <p className="font-semibold text-sm hover:text-[#E8621A]">{tenant.contactName}</p>
+              <p className="font-semibold text-sm hover:text-primary">{tenant.contactName}</p>
             </Link>
             {tenant.spaceName && (
               <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">

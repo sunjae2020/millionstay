@@ -84,7 +84,7 @@ function BlogCard({ post, index, clickable = true }: { post: any; index: number;
         {post.cover_image_url ? (
           <img src={post.cover_image_url} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-primary/10 to-orange-50 flex items-center justify-center">
+          <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
             <BookOpen className="h-10 w-10 text-primary/30" />
           </div>
         )}
@@ -179,7 +179,7 @@ export default function About() {
       </section>
 
       {/* Our Team */}
-      <section className="bg-orange-50 py-14 px-6">
+      <section className="bg-primary/5 py-14 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-10">
             <p className="font-cursive text-primary text-xl italic mb-1">{t("about.team_label")}</p>
@@ -188,7 +188,7 @@ export default function About() {
             {TEAM_DATA.map((member, i) => (
               <motion.div key={member.name} {...fade(i * 0.08)}
                 className="bg-white rounded-2xl p-6 flex flex-col items-center text-center shadow-sm border">
-                <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center mb-4 border-4 border-orange-100">
+                <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center mb-4 border-4 border-primary/20">
                   <span className="text-2xl font-bold text-gray-500">{member.initials}</span>
                 </div>
                 <p className="font-semibold text-gray-800">{member.name}</p>
@@ -208,7 +208,7 @@ export default function About() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {TESTIMONIALS_DATA.map((testimonial, i) => (
               <motion.div key={testimonial.name} {...fade(i * 0.08)}
-                className="bg-orange-50 rounded-2xl p-6 border border-orange-100 flex flex-col">
+                className="bg-primary/5 rounded-2xl p-6 border border-primary/20 flex flex-col">
                 <div className="flex gap-0.5 mb-4">
                   {Array.from({ length: 5 }).map((_, j) => (
                     <Star key={j} className={`h-4 w-4 ${j < testimonial.rating ? "fill-primary text-primary" : "text-gray-300"}`} />

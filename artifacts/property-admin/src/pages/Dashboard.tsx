@@ -42,7 +42,7 @@ export default function Dashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="min-w-0">
             <h1 className="text-base sm:text-lg font-semibold text-foreground flex items-center gap-2">
-              <LayoutDashboard className="h-5 w-5 text-[#E8621A]" />
+              <LayoutDashboard className="h-5 w-5 text-primary" />
               {t("dashboard.title", "Dashboard")}
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">

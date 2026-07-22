@@ -354,7 +354,7 @@ export default function HostPortal() {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {GENERAL_DOC_TYPES.map((type) => (
                   <label key={type}
-                    className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-primary hover:bg-orange-50 transition-all text-center">
+                    className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-primary hover:bg-primary/10 transition-all text-center">
                     <Plus className="h-5 w-5 text-gray-400" />
                     <span className="text-xs font-medium text-gray-600">{t(`homestay.portal.doc_type.${type}`)}</span>
                     <input type="file" className="hidden" accept=".jpg,.jpeg,.png,.pdf"
@@ -368,7 +368,7 @@ export default function HostPortal() {
                 <div className="mt-5 space-y-2">
                   {docs.map((d) => (
                     <div key={d.id} className="flex items-center gap-3 border border-gray-100 rounded-xl px-4 py-2.5">
-                      <div className="w-9 h-9 rounded-lg bg-orange-50 flex items-center justify-center shrink-0">
+                      <div className="w-9 h-9 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
                         <FileImage className="h-4 w-4 text-primary" />
                       </div>
                       <div className="min-w-0 flex-1">

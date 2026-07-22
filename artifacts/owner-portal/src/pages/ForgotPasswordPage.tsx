@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Mail, ArrowLeft, Loader2 } from "lucide-react";
 import { APP_NAME } from "@/lib/appName";
 
-const BRAND = "#E8621A";
+const BRAND = "hsl(var(--brand-orange))";
 const API_BASE = "/api/v1";
 
 export default function ForgotPasswordPage() {
@@ -73,7 +73,7 @@ export default function ForgotPasswordPage() {
               type="submit"
               disabled={loading || !email.trim()}
               className="w-full h-11 rounded-lg text-sm font-semibold text-white transition-opacity disabled:opacity-60 flex items-center justify-center gap-2 shadow-md"
-              style={{ background: `linear-gradient(135deg, ${BRAND} 0%, #FF8C3A 100%)` }}
+              style={{ background: `linear-gradient(135deg, ${BRAND} 0%, color-mix(in srgb, hsl(var(--brand-orange)) 72%, white) 100%)` }}
             >
               {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Sending...</> : "Send reset link"}
             </button>

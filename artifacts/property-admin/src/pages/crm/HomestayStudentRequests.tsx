@@ -143,7 +143,7 @@ export default function HomestayStudentRequests() {
             <button
               onClick={() => setStatusFilter("")}
               className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                status === "" ? "bg-orange-100 text-orange-700 border-orange-200" : "bg-white text-muted-foreground border-border hover:bg-muted/50"
+                status === "" ? "bg-primary/15 text-primary border-primary/20" : "bg-white text-muted-foreground border-border hover:bg-muted/50"
               }`}
             >
               {t("homestayStudent.filter_all")}

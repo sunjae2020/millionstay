@@ -45,7 +45,7 @@ export default function AdminDashboard() {
   const STAT_CARDS = stats ? [
     { label: "Total Bookings", value: stats.totalBookings, icon: CalendarCheck, color: "text-blue-600 bg-blue-50" },
     { label: "Total Guests", value: stats.totalGuests, icon: Users, color: "text-green-600 bg-green-50" },
-    { label: "Active Spaces", value: stats.activeSpaces, icon: Home, color: "text-primary bg-orange-50" },
+    { label: "Active Spaces", value: stats.activeSpaces, icon: Home, color: "text-primary bg-primary/10" },
     { label: "Pending Docs", value: stats.pendingDocuments, icon: FileWarning, color: "text-amber-600 bg-amber-50" },
   ] : [];
 

@@ -121,7 +121,7 @@ function MaskedKeyInput({ value, envKey, onSaved }: { value: string; envKey: str
           </button>
         </>
       )}
-      <button className="text-xs text-[#E8621A] hover:underline ml-1" onClick={() => setEditing(true)}>
+      <button className="text-xs text-primary hover:underline ml-1" onClick={() => setEditing(true)}>
         {value ? "Change" : "Set"}
       </button>
     </div>
@@ -279,7 +279,7 @@ const AiFields = ({ status, onRefresh }: { status: IntegrationStatus | null; onR
     </div>
     <p className="text-xs text-muted-foreground">
       Powers the landing-page chat assistant. Get a key at{" "}
-      <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer" className="text-[#E8621A] hover:underline">
+      <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
         console.anthropic.com
       </a>
       {status?.ai.model && <> · Model: <strong>{status.ai.model}</strong></>}.
@@ -492,7 +492,7 @@ function IntegrationCard({
   return (
     <div className={cn(
       "rounded-xl border bg-card transition-all",
-      expanded && "ring-1 ring-orange-200",
+      expanded && "ring-1 ring-primary/20",
       card.isComingSoon && "opacity-60",
     )}>
       <button

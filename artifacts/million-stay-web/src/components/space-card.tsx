@@ -78,9 +78,9 @@ export function SpaceCard({ space, index = 0, highlighted = false, checkIn = "",
             onError={() => setImgError(true)}
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-orange-100 to-orange-50 flex flex-col items-center justify-center gap-1">
+          <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex flex-col items-center justify-center gap-1">
             <span className="text-4xl">🏠</span>
-            <span className="text-xs text-orange-400">Photos coming soon</span>
+            <span className="text-xs text-primary">Photos coming soon</span>
           </div>
         )}
         <Button
