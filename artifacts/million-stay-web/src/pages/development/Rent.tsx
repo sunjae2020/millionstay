@@ -1,11 +1,12 @@
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
-import { CalendarDays, ArrowRight, FileSignature, Home as HomeIcon } from "lucide-react";
+import { CalendarDays, ArrowRight, FileSignature } from "lucide-react";
 import { DevLayout } from "@/components/development/DevLayout";
 import { usePageContent } from "@/lib/usePageContent";
 import { InquiryForm } from "@/components/development/InquiryForm";
 import { submitLongTermInquiry } from "@/lib/development-api";
 import { useListFeaturedSpaces } from "@/lib/guest-api";
+import { SpaceCard } from "@/components/space-card";
 
 // RENT / STAY — two tracks:
 //   · Short-term (단기): the existing calendar booking engine (search →
@@ -57,23 +58,22 @@ export default function DevRent() {
         </div>
 
         {spaces.length > 0 && (
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {spaces.map((s: any) => {
-              const img = s.primary_thumbnail || s.primary_image || (s.images?.[0]?.thumbnail_url) || (s.images?.[0]?.file_url) || "";
-              const city = [s.suburb_name, s.property_city].filter(Boolean).join(", ");
-              return (
-                <Link key={s.id} href={`/spaces/${s.id}`} className="group rounded-2xl bg-white overflow-hidden border border-gray-100 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-                  {img
-                    ? <img src={img} alt={s.name} className="w-full aspect-[4/3] object-cover bg-gray-50" />
-                    : <div className="w-full aspect-[4/3] bg-gray-100 flex items-center justify-center text-gray-300"><HomeIcon className="w-10 h-10" /></div>}
-                  <div className="p-4">
-                    <h3 className="font-semibold text-[hsl(var(--brand-navy))] truncate">{s.name}</h3>
-                    {city && <p className="mt-1 text-sm text-gray-500 truncate">{city}</p>}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+          <>
+            {/* Curated "featured" preview — a highlight, not the full search listing */}
+            <div className="mt-10 flex items-end justify-between gap-4">
+              <p className="text-sm font-semibold tracking-widest uppercase text-primary">
+                {t("dev.rent.short_featured")}
+              </p>
+              <Link href="/search" className="shrink-0 inline-flex items-center gap-1.5 text-sm font-semibold text-[hsl(var(--brand-navy))] hover:text-primary transition">
+                {t("dev.rent.short_view_all")} <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+            <div className="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {spaces.map((s: any, i: number) => (
+                <SpaceCard key={s.id} space={s} index={i} />
+              ))}
+            </div>
+          </>
         )}
 
         <div className="mt-8">
