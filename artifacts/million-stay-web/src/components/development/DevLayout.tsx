@@ -206,7 +206,7 @@ function DevFooter() {
     <footer className="bg-[hsl(var(--brand-navy))] text-white/80 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
         <div className="sm:col-span-2 lg:col-span-1">
-          <BrandMark invert textClassName="text-2xl" className="h-9 w-auto" />
+          <BrandMark invert textClassName="text-3xl" className="h-[54px] w-auto brightness-0 invert" />
           <p className="mt-4 text-sm leading-relaxed max-w-xs">{t("dev.footer.desc")}</p>
           <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1">
             <Link href="/about" className="text-sm hover:text-white">{t("dev.nav.about")}</Link>
