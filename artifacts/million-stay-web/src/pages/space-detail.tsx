@@ -15,8 +15,14 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { Footer } from "@/components/footer";
 import { useDisplayCurrency } from "@/contexts/DisplayCurrencyContext";
+import { isDevelopmentSite } from "@/lib/site-mode";
 import { addWeeks, format, parseISO } from "date-fns";
 import "leaflet/dist/leaflet.css";
+
+// On single-building white-label instances (e.g. MetHeim), the standard site's
+// hardcoded "Melbourne" location fallbacks are wrong — suppress them in dev mode
+// so nothing shows a foreign city. MillionStay (standard) is left untouched.
+const DEV_SITE = isDevelopmentSite();
 
 /* ─── Emoji-icon map ─── */
 const optionEmojis: Record<string, string> = {
@@ -250,7 +256,7 @@ function RelatedCard({ space }: { space: Record<string, unknown> }) {
         <img src={img} alt={space.name as string} className="w-full h-full object-cover" />
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
           <p className="text-white text-xs font-semibold truncate">{space.room_type as string ?? "Private Room"} · Queen Bed</p>
-          <p className="text-white/80 text-xs">{space.suburb as string ?? "Melbourne"} · {space.property_type as string ?? "Apartment"}</p>
+          <p className="text-white/80 text-xs">{(space.suburb as string) ?? (DEV_SITE ? "" : "Melbourne")} · {space.property_type as string ?? "Apartment"}</p>
         </div>
         <div className="absolute top-2 left-2 bg-primary text-white text-xs font-bold px-2 py-0.5 rounded">
           {(space.room_type as string ?? "Room")}
@@ -453,7 +459,7 @@ export default function SpaceDetail() {
               {addressParts.length > 0 && (
                 <p className="text-sm text-gray-500 flex items-center gap-1">
                   <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
-                  {space.suburb_name ?? ""}, Melbourne
+                  {DEV_SITE ? (space.suburb_name ?? "") : `${space.suburb_name ?? ""}, Melbourne`}
                 </p>
               )}
             </div>
@@ -589,7 +595,7 @@ export default function SpaceDetail() {
                     <div className="flex items-center gap-1 mb-3">
                       <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
                       <span className="text-xs font-medium">5.0</span>
-                      <span className="text-xs text-gray-400">· {space.suburb_name ?? "Melbourne"}</span>
+                      <span className="text-xs text-gray-400">· {space.suburb_name ?? (DEV_SITE ? "" : "Melbourne")}</span>
                     </div>
                     <p className="text-xs text-gray-500 leading-relaxed">
                       Secure your room today with a simple deposit. Our team will contact you within 24 hours to confirm availability and guide you through the move-in process.
@@ -687,7 +693,7 @@ export default function SpaceDetail() {
                       <div className="h-44 rounded-xl overflow-hidden border border-gray-200 mb-3 bg-gray-100 flex items-center justify-center">
                         <div className="text-center text-gray-400">
                           <MapPin className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                          <p className="text-xs">{addressStr || "Melbourne, VIC"}</p>
+                          <p className="text-xs">{addressStr || (DEV_SITE ? "" : "Melbourne, VIC")}</p>
                         </div>
                       </div>
                       <Button variant="outline" disabled className="w-full border-gray-300 text-gray-400 gap-2 rounded-xl">

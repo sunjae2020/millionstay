@@ -13,6 +13,7 @@ import { useAuthStore } from "@/lib/store";
 import { getApiBase } from "@/lib/api-base";
 import { CurrencySelector } from "./currency-selector";
 import { BrandMark } from "./brand-mark";
+import { isDevelopmentSite } from "@/lib/site-mode";
 
 const NAV_HREFS = [
   { key: "links.search", href: "/search" },
@@ -107,15 +108,24 @@ export function Navbar() {
   const displayName = [guest?.first_name, guest?.last_name].filter(Boolean).join(" ") || guest?.email || "Guest";
   const initials = getInitials(displayName);
   const currentLang = languages.find((l) => l.code === i18n.language) ?? languages[0] ?? FALLBACK_LANGUAGES[0]!;
+  const devSite = isDevelopmentSite();
 
   return (
     <header ref={navRef} className="w-full bg-white shadow-sm z-50 sticky top-0">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
+        <div className={`flex items-center justify-between ${devSite ? "h-20 lg:h-24" : "h-16"}`}>
+          {/* Logo — on the MetHeim (development) site, match the landing header's
+              larger logo so /search & /spaces detail read as the same site. */}
           <Link href="/" className="flex items-center shrink-0">
-            <BrandMark className="h-9 w-auto hidden sm:block" />
-            <BrandMark variant="mark" className="h-9 w-auto sm:hidden" />
+            <BrandMark
+              className={`${devSite ? "h-14 lg:h-[72px]" : "h-9"} w-auto hidden sm:block`}
+              textClassName={devSite ? "text-4xl" : undefined}
+            />
+            <BrandMark
+              variant="mark"
+              className={`${devSite ? "h-14" : "h-9"} w-auto sm:hidden`}
+              textClassName={devSite ? "text-2xl" : undefined}
+            />
           </Link>
 
           {/* Desktop Nav */}

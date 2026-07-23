@@ -5,6 +5,10 @@ import DevBuy from "./Buy";
 import DevRent from "./Rent";
 import DevManagement from "./Management";
 import DevDirections from "./Directions";
+import DevStayPlan from "./StayPlan";
+import DevForResident from "./ForResident";
+import DevForOwner from "./ForOwner";
+import DevForPartner from "./ForPartner";
 // Shared flows reused underneath the development site so the short-term Rent
 // engine (search → space detail → booking → portal) works end to end.
 import Search from "@/pages/search";
@@ -45,6 +49,14 @@ export default function DevRouter() {
       <Route path="/rent" component={DevRent} />
       <Route path="/management" component={DevManagement} />
       <Route path="/directions" component={DevDirections} />
+
+      {/* MetHeim-specific versions of the standard site's marketing pages.
+          Same URLs as MillionStay so existing links resolve, but tenant/owner/
+          partner personas instead of student-homestay/education-agent content. */}
+      <Route path="/stay-plan" component={DevStayPlan} />
+      <Route path="/for-student" component={DevForResident} />
+      <Route path="/for-homestay-host" component={DevForOwner} />
+      <Route path="/for-agent" component={DevForPartner} />
 
       {/* Shared short-term booking engine */}
       <Route path="/search" component={Search} />
