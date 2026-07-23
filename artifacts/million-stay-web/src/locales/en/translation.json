@@ -1765,7 +1765,9 @@
       "home": "Home",
       "buy": "Buy",
       "rent": "Rent",
-      "management": "Management"
+      "management": "Management",
+      "about": "About",
+      "directions": "Directions"
     },
     "footer": {
       "desc": "One building, three ways to make it yours — buy a unit, stay short or long term, or entrust it to us to manage.",
@@ -1890,6 +1892,42 @@
       "email": "Email",
       "message": "Message",
       "privacy_note": "By submitting, you agree to be contacted about your inquiry."
+    },
+    "about": {
+      "eyebrow": "About MetHeim",
+      "hero_title": "Compact urban living, done right.",
+      "hero_subtitle": "MetHeim is a premium compact residence in central Yeosu — built for 1–2 person households who want a home that's safe, comfortable and their own.",
+      "story_title": "Our story",
+      "story_p1": "MetHeim started from a simple idea: make compact living in central Yeosu feel open and warm. We know how hard it is to find a home that's safe, comfortable and fairly priced when you live alone.",
+      "story_p2": "So we built one — fully furnished rooms in Yeondeung-dong, transparent terms, and support that lasts your whole stay. Buy, rent or entrust it to us; it's one building, looked after by one team.",
+      "vision_title": "Our vision",
+      "vision_body": "A city where living on your own never means settling for less — a place of your own that catches the lights of Yeosu's night sea.",
+      "value_1_title": "Built to last",
+      "value_1_body": "Quality design and finishes, kept in dependable condition.",
+      "value_2_title": "Central & walkable",
+      "value_2_body": "A location where daily life, transit and the market are all close by.",
+      "value_3_title": "One trusted team",
+      "value_3_body": "Sales, stays and management handled by people who answer fast.",
+      "cta_title": "Come see it for yourself.",
+      "cta_subtitle": "Explore the units, or find your way to us."
+    },
+    "directions": {
+      "eyebrow": "Directions",
+      "hero_title": "Find your way to MetHeim.",
+      "hero_subtitle": "We're in Yeondeung-dong, central Yeosu — walkable, well-connected and easy to reach.",
+      "address_label": "Address",
+      "address": "Yeondeung-dong, Yeosu-si, Jeollanam-do, South Korea",
+      "phone_label": "Phone",
+      "phone": "",
+      "email_label": "Email",
+      "email": "metheim.yeosu@gmail.com",
+      "hours_label": "Hours",
+      "hours": "Mon–Sat 10:00–19:00 (by appointment on Sundays)",
+      "transit_title": "By public transport",
+      "transit_body": "A short walk from Yeosu's central bus terminal and local bus stops. We'll send detailed directions when you book a visit.",
+      "parking_title": "By car / parking",
+      "parking_body": "On-site and nearby parking available. Contact us ahead of your visit and we'll reserve a spot.",
+      "map_title": "MetHeim location map"
     }
   }
 }

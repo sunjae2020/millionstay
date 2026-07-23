@@ -195,7 +195,9 @@
       "home": "Trang chủ",
       "buy": "Bán căn hộ",
       "rent": "Cho thuê",
-      "management": "Ủy thác quản lý"
+      "management": "Ủy thác quản lý",
+      "about": "Về MetHeim",
+      "directions": "Đường đến"
     },
     "footer": {
       "desc": "Một tòa nhà, ba lựa chọn — mua căn hộ, ở ngắn hay dài hạn, hoặc giao cho chúng tôi vận hành.",
@@ -320,6 +322,42 @@
       "email": "Email",
       "message": "Nội dung",
       "privacy_note": "Khi gửi, bạn đồng ý được liên hệ về yêu cầu của mình."
+    },
+    "about": {
+      "eyebrow": "Về MetHeim",
+      "hero_title": "Sống một mình, vẫn trọn vẹn.",
+      "hero_subtitle": "MetHeim là khu căn hộ nhỏ gọn cao cấp tại trung tâm Yeosu — dành cho hộ 1–2 người muốn một mái nhà an toàn, thoải mái và của riêng mình.",
+      "story_title": "Câu chuyện của chúng tôi",
+      "story_p1": "MetHeim khởi nguồn từ một ý tưởng giản dị: khiến không gian sống nhỏ gọn ở trung tâm Yeosu trở nên thoáng đãng và ấm áp. Chúng tôi hiểu việc tìm một chỗ ở an toàn, thoải mái và hợp lý khi sống một mình khó đến nhường nào.",
+      "story_p2": "Vì vậy chúng tôi đã dựng nên nó: những căn phòng đầy đủ nội thất ở Yeondeung-dong, điều khoản minh bạch và sự hỗ trợ suốt thời gian lưu trú. Mua, thuê hay ủy thác — một tòa nhà, một đội ngũ lo trọn.",
+      "vision_title": "Tầm nhìn của chúng tôi",
+      "vision_body": "Một thành phố nơi sống một mình không bao giờ là chịu thiệt — một không gian của riêng bạn, soi bóng ánh đèn biển đêm Yeosu.",
+      "value_1_title": "Bền theo thời gian",
+      "value_1_body": "Thiết kế và hoàn thiện chất lượng, luôn giữ trong tình trạng tốt.",
+      "value_2_title": "Trung tâm, đi bộ được",
+      "value_2_body": "Vị trí có đời sống thường nhật, giao thông và chợ đều gần kề.",
+      "value_3_title": "Một đội ngũ đáng tin",
+      "value_3_body": "Bán, cho thuê và quản lý bởi những người phản hồi nhanh.",
+      "cta_title": "Hãy đến tận nơi.",
+      "cta_subtitle": "Khám phá các căn hộ, hoặc xem đường đến với chúng tôi."
+    },
+    "directions": {
+      "eyebrow": "Đường đến",
+      "hero_title": "Đường đến MetHeim.",
+      "hero_subtitle": "Chúng tôi ở Yeondeung-dong, trung tâm Yeosu — đi bộ được, kết nối thuận tiện, dễ tìm.",
+      "address_label": "Địa chỉ",
+      "address": "Yeondeung-dong, TP. Yeosu, tỉnh Jeollanam-do, Hàn Quốc",
+      "phone_label": "Điện thoại",
+      "phone": "",
+      "email_label": "Email",
+      "email": "metheim.yeosu@gmail.com",
+      "hours_label": "Giờ làm việc",
+      "hours": "Thứ 2–Thứ 7 10:00–19:00 (Chủ nhật theo hẹn)",
+      "transit_title": "Phương tiện công cộng",
+      "transit_body": "Đi bộ vài phút từ bến xe trung tâm Yeosu và các trạm xe buýt. Chúng tôi sẽ gửi chỉ đường chi tiết khi bạn đặt lịch tham quan.",
+      "parking_title": "Ô tô / đỗ xe",
+      "parking_body": "Có chỗ đỗ xe tại chỗ và lân cận. Liên hệ trước khi đến, chúng tôi sẽ giữ chỗ cho bạn.",
+      "map_title": "Bản đồ vị trí MetHeim"
     }
   }
 }

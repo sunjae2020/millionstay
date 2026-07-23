@@ -1246,7 +1246,9 @@
       "home": "首页",
       "buy": "销售",
       "rent": "租赁",
-      "management": "委托管理"
+      "management": "委托管理",
+      "about": "关于 MetHeim",
+      "directions": "交通位置"
     },
     "footer": {
       "desc": "一栋建筑，三种选择 — 购买单元、短期或长期入住，或委托我们运营。",
@@ -1371,6 +1373,42 @@
       "email": "邮箱",
       "message": "咨询内容",
       "privacy_note": "提交即表示您同意就此咨询接受联系。"
+    },
+    "about": {
+      "eyebrow": "关于 MetHeim",
+      "hero_title": "一个人，也能好好生活。",
+      "hero_subtitle": "MetHeim 是丽水市中心的高端紧凑型住宅，为想要一个安全、舒适、专属自己的家的 1–2 人家庭而建。",
+      "story_title": "我们的故事",
+      "story_p1": "MetHeim 始于一个简单的想法 —— 让丽水市中心的紧凑居所也能开阔而温暖。我们深知，独自生活时要找到安全、舒适又价格合理的家有多难。",
+      "story_p2": "于是我们亲手打造：莲灯洞的全配套房间、透明的条款，以及贯穿整个入住期的支持。购买、租赁或委托，一栋楼由一支团队全程负责。",
+      "vision_title": "我们的愿景",
+      "vision_body": "让独居不再意味着将就的城市 —— 一处映照丽水夜海灯火的专属空间。",
+      "value_1_title": "经久耐用",
+      "value_1_body": "高完成度的设计与装修，维持在可靠状态。",
+      "value_2_title": "市中心步行可达",
+      "value_2_body": "日常、交通与市场皆近在身边的地段。",
+      "value_3_title": "值得信赖的一支团队",
+      "value_3_body": "购买、租赁与管理，由响应迅速的团队负责。",
+      "cta_title": "欢迎亲自来看。",
+      "cta_subtitle": "浏览房源，或查看前来路线。"
+    },
+    "directions": {
+      "eyebrow": "交通位置",
+      "hero_title": "如何抵达 MetHeim。",
+      "hero_subtitle": "位于丽水市中心莲灯洞 —— 步行可达、交通便利，轻松抵达。",
+      "address_label": "地址",
+      "address": "全罗南道 丽水市 莲灯洞（丽水市中心）",
+      "phone_label": "电话",
+      "phone": "",
+      "email_label": "邮箱",
+      "email": "metheim.yeosu@gmail.com",
+      "hours_label": "营业时间",
+      "hours": "周一至周六 10:00–19:00（周日需预约）",
+      "transit_title": "公共交通",
+      "transit_body": "距丽水长途客运站及市内公交站步行可达。预约参观时，我们会发送详细路线。",
+      "parking_title": "自驾 / 停车",
+      "parking_body": "楼内及周边均可停车。到访前联系我们，即为您预留车位。",
+      "map_title": "MetHeim 位置地图"
     }
   }
 }

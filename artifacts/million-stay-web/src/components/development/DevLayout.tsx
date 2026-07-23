@@ -17,9 +17,11 @@ import { getApiBase } from "@/lib/api-base";
 
 const NAV = [
   { key: "dev.nav.home", href: "/" },
+  { key: "dev.nav.about", href: "/about" },
   { key: "dev.nav.buy", href: "/buy" },
   { key: "dev.nav.rent", href: "/rent" },
   { key: "dev.nav.management", href: "/management" },
+  { key: "dev.nav.directions", href: "/directions" },
 ];
 
 type LangOption = { code: string; iso: string; name: string; label: string };
@@ -170,6 +172,10 @@ function DevFooter() {
         <div className="sm:col-span-2 lg:col-span-1">
           <BrandMark invert textClassName="text-2xl" className="h-9 w-auto" />
           <p className="mt-4 text-sm leading-relaxed max-w-xs">{t("dev.footer.desc")}</p>
+          <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1">
+            <Link href="/about" className="text-sm hover:text-white">{t("dev.nav.about")}</Link>
+            <Link href="/directions" className="text-sm hover:text-white">{t("dev.nav.directions")}</Link>
+          </div>
         </div>
         <div>
           <h4 className="text-white font-semibold text-sm mb-3">{t("dev.nav.buy")}</h4>
