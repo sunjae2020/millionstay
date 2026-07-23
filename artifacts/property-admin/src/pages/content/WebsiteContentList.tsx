@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Home, GraduationCap, Handshake, Info, HelpCircle, Phone, Users,
-  ChevronRight, Globe,
+  ChevronRight, Globe, Building2, KeyRound, LineChart,
 } from "lucide-react";
 
 // Each website page is content-managed per language via the page_contents table
@@ -74,6 +74,17 @@ const HS_PAGES: Omit<WebsitePageDef, "site" | "previewBase">[] = [
   { key: "homestay-contact", label: "Contact", description: "Contact heading, subheading and location", icon: Phone, path: "/contact" },
 ];
 
+// Development site — single-building white-label instances (VITE_SITE_MODE=
+// development, e.g. MetHeim Yeosu). "dev-" prefixed page keys. Six locales.
+const DEV_PREVIEW = "https://metheim.com";
+const DEV_LANGS = [LANG.ko, LANG.en, LANG.ja, LANG.zh, LANG.vi, LANG.th];
+const DEV_PAGES: Omit<WebsitePageDef, "site" | "previewBase">[] = [
+  { key: "dev-home", label: "Home", description: "Building identity — hero/vision, three pillars, why-us and CTA", icon: Home, path: "/" },
+  { key: "dev-buy", label: "Buy / Sales", description: "Pricing intro, floor plans, remaining units and sales inquiry", icon: Building2, path: "/buy" },
+  { key: "dev-rent", label: "Rent / Stay", description: "Short-term booking intro and long-term lease consultation", icon: KeyRound, path: "/rent" },
+  { key: "dev-manage", label: "Management", description: "Entrusted-management benefits, yield simulator and application", icon: LineChart, path: "/management" },
+];
+
 export const SITES: WebsiteSiteDef[] = [
   {
     id: "www",
@@ -90,6 +101,14 @@ export const SITES: WebsiteSiteDef[] = [
     previewBase: HS_PREVIEW,
     languages: HS_LANGS,
     pages: HS_PAGES.map((p) => ({ ...p, site: "homestay", previewBase: HS_PREVIEW })),
+  },
+  {
+    id: "development",
+    label: "Building Site",
+    host: "metheim.com",
+    previewBase: DEV_PREVIEW,
+    languages: DEV_LANGS,
+    pages: DEV_PAGES.map((p) => ({ ...p, site: "development", previewBase: DEV_PREVIEW })),
   },
 ];
 

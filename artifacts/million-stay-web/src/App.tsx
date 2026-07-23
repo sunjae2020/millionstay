@@ -49,11 +49,13 @@ import AdminSpaces from "@/pages/admin-spaces";
 import ChatWidget from "@/components/chat/ChatWidget";
 import OwnerLanding from "@/pages/owner-landing";
 import HomestayRouter from "@/pages/homestay/HomestayRouter";
+import DevRouter from "@/pages/development/DevRouter";
 import Sign from "@/pages/sign";
 import PaymentResult from "@/pages/payment-result";
 import { getApiBase } from "@/lib/api-base";
 import { getOwnerSiteSlug } from "@/lib/owner-site";
 import { isHomestaySubdomain } from "@/lib/homestay-site";
+import { isDevelopmentSite } from "@/lib/site-mode";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -65,6 +67,11 @@ const queryClient = new QueryClient({
 });
 
 function Router() {
+  // A single-building "development" instance (VITE_SITE_MODE=development, e.g.
+  // MetHeim) serves the 4-part Buy/Rent/Management site instead of the standard
+  // marketplace. Its router mounts the shared booking/portal routes underneath.
+  if (isDevelopmentSite()) return <DevRouter />;
+
   // homestay.millionstay.com is a dedicated site with its own shell + routes.
   if (isHomestaySubdomain()) return <HomestayRouter />;
 

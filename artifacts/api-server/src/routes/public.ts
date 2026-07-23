@@ -1277,6 +1277,70 @@ router.post("/v1/public/contact-inquiries", async (req, res): Promise<void> => {
 });
 
 /* ───────────────────────────────────────────────────────
+   Development-site intake (single-building instances, e.g. MetHeim).
+   Three funnels — Buy / long-term Rent / Management — all land as leads,
+   tagged by inquiry_type, with the structured fields packed into the lead
+   description so they surface in the admin Leads pipeline. No separate table.
+──────────────────────────────────────────────────────── */
+function readContact(b: Record<string, unknown>) {
+  const first_name = String(b.first_name ?? "").trim();
+  const last_name = b.last_name ? String(b.last_name).trim() : "";
+  const email = String(b.email ?? "").trim();
+  const phone = b.phone ? String(b.phone).trim() : null;
+  const message = b.message ? String(b.message).trim() : "";
+  return { first_name, last_name, email, phone, message };
+}
+function buildDescription(pairs: Array<[string, unknown]>): string | null {
+  const lines = pairs
+    .map(([k, v]) => [k, v == null ? "" : String(v).trim()] as const)
+    .filter(([, v]) => v !== "")
+    .map(([k, v]) => `${k}: ${v}`);
+  return lines.length ? lines.join("\n") : null;
+}
+async function handleDevInquiry(
+  req: import("express").Request,
+  res: import("express").Response,
+  opts: { inquiryType: string; label: string; fields: string[] },
+): Promise<void> {
+  const b = (req.body ?? {}) as Record<string, unknown>;
+  const c = readContact(b);
+  if (!c.first_name) { res.status(400).json({ error: "first_name is required" }); return; }
+  if (!c.email || !/^\S+@\S+\.\S+$/.test(c.email)) { res.status(400).json({ error: "valid email is required" }); return; }
+
+  const description = buildDescription(opts.fields.map((f) => [f, b[f]] as [string, unknown]));
+  const row = await insertLeadWithGeneratedRef({
+    first_name: c.first_name,
+    last_name: c.last_name || "—",
+    email: c.email,
+    phone: c.phone,
+    lead_source: "Website",
+    inquiry_type: opts.inquiryType,
+    lead_status: "New",
+    message: c.message || null,
+    description,
+    manual_input: false,
+    status: "Active",
+  });
+  notifyLead(row, opts.label);
+  res.status(201).json({ success: true, lead_ref: row.lead_ref, id: row.id });
+}
+
+// BUY / 분양·매매 inquiry.
+router.post("/v1/public/sales-inquiries", (req, res) =>
+  handleDevInquiry(req, res, { inquiryType: "SalesInquiry", label: "Unit Sale Inquiry", fields: ["unit_type", "budget", "purpose"] }),
+);
+
+// RENT / 장기 임대 상담.
+router.post("/v1/public/long-term-inquiries", (req, res) =>
+  handleDevInquiry(req, res, { inquiryType: "LongTermRental", label: "Long-term Lease Inquiry", fields: ["unit_type", "move_in", "duration_months"] }),
+);
+
+// MANAGEMENT / 위탁관리 신청.
+router.post("/v1/public/management-inquiries", (req, res) =>
+  handleDevInquiry(req, res, { inquiryType: "ManagementApplication", label: "Entrusted Management Application", fields: ["unit_type", "ownership"] }),
+);
+
+/* ───────────────────────────────────────────────────────
    POST /api/v1/public/student-inquiries
    For Students enquiry form on the marketing website.
 ──────────────────────────────────────────────────────── */
