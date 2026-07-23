@@ -102,7 +102,7 @@ export default function LoginPage() {
       {/* ── Left brand panel ── */}
       <div
         className="hidden lg:flex lg:w-[48%] flex-col justify-between p-12 relative overflow-hidden"
-        style={{ background: "linear-gradient(150deg, #1c1008 0%, #2e1a06 55%, #1c1008 100%)" }}
+        style={{ background: "linear-gradient(150deg, color-mix(in srgb, hsl(var(--brand-orange)) 10%, #0a0a0a) 0%, color-mix(in srgb, hsl(var(--brand-orange)) 18%, #0a0a0a) 55%, color-mix(in srgb, hsl(var(--brand-orange)) 10%, #0a0a0a) 100%)" }}
       >
         {/* Ambient glow blobs */}
         <div className="absolute -top-40 -left-40 w-[480px] h-[480px] rounded-full opacity-25 pointer-events-none"
