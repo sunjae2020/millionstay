@@ -11,9 +11,14 @@ import { APP_NAME } from "@/lib/appName";
 import { getApiBase } from "@/lib/api-base";
 
 // Dedicated shell for the single-building "development" site (MetHeim). Four top
-// menus — Home / Buy / Rent / Management — plus currency + language controls.
-// Uses the instance brand tokens (--primary etc.), so a white-label palette
-// (MetHeim teal) flows in without any per-page colour code.
+// menus — Home / About / Buy / Rent / Management / Directions — plus currency +
+// language controls. Uses the instance brand tokens (--primary etc.).
+//
+// On the HOME page the header is a transparent overlay so the hero background
+// image bleeds full-width behind the menu, language and currency controls; the
+// logo + labels render white for contrast. Once the user scrolls past the hero
+// the header turns solid white with dark labels. Every other page keeps the
+// standard solid-white sticky header.
 
 const NAV = [
   { key: "dev.nav.home", href: "/" },
@@ -52,8 +57,22 @@ function DevNavbar() {
   const { t, i18n } = useTranslation();
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const [languages, setLanguages] = useState<LangOption[]>(FALLBACK_LANGS);
   const ref = useRef<HTMLElement>(null);
+
+  const isHome = location === "/";
+  // Transparent overlay only at the top of the home page (and not while the
+  // mobile menu is open, so the white dropdown reads cleanly).
+  const dark = isHome && !scrolled && !mobileOpen;
+
+  useEffect(() => {
+    if (!isHome) { setScrolled(false); return; }
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [isHome]);
 
   useEffect(() => {
     let cancelled = false;
@@ -78,25 +97,30 @@ function DevNavbar() {
 
   const currentLang = languages.find((l) => l.code === i18n.language) ?? languages[0]!;
 
+  const headerCls = isHome
+    ? `fixed top-0 inset-x-0 z-50 transition-colors duration-300 ${dark ? "bg-gradient-to-b from-black/45 to-transparent" : "bg-white shadow-sm"}`
+    : "sticky top-0 z-50 bg-white shadow-sm";
+
   return (
-    <header ref={ref} className="w-full bg-white shadow-sm z-50 sticky top-0">
+    <header ref={ref} className={headerCls}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center shrink-0">
-            <BrandMark className="h-9 w-auto hidden sm:block" textClassName="text-2xl" />
-            <BrandMark variant="mark" className="h-9 w-auto sm:hidden" textClassName="text-xl" />
+            <BrandMark invert={dark} className={`h-9 w-auto hidden sm:block ${dark ? "brightness-0 invert" : ""}`} textClassName="text-2xl" />
+            <BrandMark variant="mark" invert={dark} className={`h-9 w-auto sm:hidden ${dark ? "brightness-0 invert" : ""}`} textClassName="text-xl" />
           </Link>
 
-          <nav className="hidden min-[760px]:flex items-center gap-1">
+          <nav className="hidden min-[860px]:flex items-center gap-1">
             {NAV.map((link) => {
               const active = link.href === "/" ? location === "/" : location.startsWith(link.href);
+              const cls = dark
+                ? active ? "text-white" : "text-white/80 hover:text-white"
+                : active ? "text-primary" : "text-gray-700 hover:text-primary";
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`px-3.5 py-2 text-sm font-semibold transition-colors whitespace-nowrap hover:text-primary ${
-                    active ? "text-primary" : "text-gray-700"
-                  }`}
+                  className={`px-3 py-2 text-sm font-semibold transition-colors whitespace-nowrap ${cls}`}
                 >
                   {t(link.key)}
                 </Link>
@@ -105,10 +129,20 @@ function DevNavbar() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <CurrencySelector />
+            {/* Currency — white-forced when over the hero */}
+            <div className={dark ? "[&_button]:!text-white [&_button]:!border-white/40 [&_button]:hover:!border-white/70" : ""}>
+              <CurrencySelector />
+            </div>
+            {/* Language */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:text-primary border border-gray-200 rounded-lg hover:border-primary/40 transition-colors">
+                <button
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium border rounded-lg transition-colors ${
+                    dark
+                      ? "text-white/90 border-white/40 hover:text-white hover:border-white/70"
+                      : "text-gray-600 border-gray-200 hover:text-primary hover:border-primary/40"
+                  }`}
+                >
                   <FlagIcon iso={currentLang.iso} size={18} />
                   <span className="hidden sm:inline">{currentLang.label}</span>
                   <ChevronDown className="h-3 w-3 opacity-60" />
@@ -135,7 +169,7 @@ function DevNavbar() {
             </DropdownMenu>
 
             <button
-              className="min-[760px]:hidden p-2 text-gray-700 hover:text-primary"
+              className={`min-[860px]:hidden p-2 ${dark ? "text-white" : "text-gray-700 hover:text-primary"}`}
               onClick={() => setMobileOpen((v) => !v)}
               aria-label="Menu"
             >
@@ -146,7 +180,7 @@ function DevNavbar() {
       </div>
 
       {mobileOpen && (
-        <nav className="min-[760px]:hidden border-t border-gray-100 bg-white px-4 py-2">
+        <nav className="min-[860px]:hidden border-t border-gray-100 bg-white px-4 py-2">
           {NAV.map((link) => (
             <Link
               key={link.href}
