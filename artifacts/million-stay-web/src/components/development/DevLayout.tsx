@@ -104,10 +104,12 @@ function DevNavbar() {
   return (
     <header ref={ref} className={headerCls}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        {/* Logo scaled ~2× (h-9 → h-[72px]); header height grows responsively to
+            keep it framed without overflowing. */}
+        <div className="flex items-center justify-between h-20 lg:h-24">
           <Link href="/" className="flex items-center shrink-0">
-            <BrandMark invert={dark} className={`h-9 w-auto hidden sm:block ${dark ? "brightness-0 invert" : ""}`} textClassName="text-2xl" />
-            <BrandMark variant="mark" invert={dark} className={`h-9 w-auto sm:hidden ${dark ? "brightness-0 invert" : ""}`} textClassName="text-xl" />
+            <BrandMark invert={dark} className={`h-14 lg:h-[72px] w-auto hidden sm:block ${dark ? "brightness-0 invert" : ""}`} textClassName="text-4xl" />
+            <BrandMark variant="mark" invert={dark} className={`h-14 w-auto sm:hidden ${dark ? "brightness-0 invert" : ""}`} textClassName="text-2xl" />
           </Link>
 
           <nav className="hidden min-[860px]:flex items-center gap-1">
