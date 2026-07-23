@@ -1374,6 +1374,7 @@
     "form": {
       "submit": "提交",
       "invalid": "请填写姓名和有效的邮箱。",
+      "message_required": "请填写您的咨询内容。",
       "error": "出现问题，请重试。",
       "thanks_title": "已收到您的咨询，谢谢。",
       "thanks_body": "我们的团队将尽快与您联系。",
@@ -1418,7 +1419,9 @@
       "transit_body": "距丽水长途客运站及市内公交站步行可达。预约参观时，我们会发送详细路线。",
       "parking_title": "自驾 / 停车",
       "parking_body": "楼内及周边均可停车。到访前联系我们，即为您预留车位。",
-      "map_title": "MetHeim 位置地图"
+      "map_title": "MetHeim 位置地图",
+      "form_title": "有任何疑问吗？欢迎联系我们。",
+      "form_subtitle": "给我们留言，我们的团队会尽快回复您。"
     }
   }
 }

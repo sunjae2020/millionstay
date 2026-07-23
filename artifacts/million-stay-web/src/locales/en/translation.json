@@ -1893,6 +1893,7 @@
     "form": {
       "submit": "Submit",
       "invalid": "Please enter your name and a valid email.",
+      "message_required": "Please enter your inquiry message.",
       "error": "Something went wrong. Please try again.",
       "thanks_title": "Thank you — we've got your inquiry.",
       "thanks_body": "Our team will be in touch shortly.",
@@ -1937,7 +1938,9 @@
       "transit_body": "A short walk from Yeosu's central bus terminal and local bus stops. We'll send detailed directions when you book a visit.",
       "parking_title": "By car / parking",
       "parking_body": "On-site and nearby parking available. Contact us ahead of your visit and we'll reserve a spot.",
-      "map_title": "MetHeim location map"
+      "map_title": "MetHeim location map",
+      "form_title": "Have a question? Get in touch.",
+      "form_subtitle": "Send us a message and our team will reply shortly."
     }
   }
 }

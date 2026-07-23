@@ -323,6 +323,7 @@
     "form": {
       "submit": "Gửi",
       "invalid": "Vui lòng nhập tên và email hợp lệ.",
+      "message_required": "Vui lòng nhập nội dung câu hỏi của bạn.",
       "error": "Đã xảy ra lỗi. Vui lòng thử lại.",
       "thanks_title": "Cảm ơn — chúng tôi đã nhận yêu cầu của bạn.",
       "thanks_body": "Đội ngũ của chúng tôi sẽ liên hệ sớm.",
@@ -367,7 +368,9 @@
       "transit_body": "Đi bộ vài phút từ bến xe trung tâm Yeosu và các trạm xe buýt. Chúng tôi sẽ gửi chỉ đường chi tiết khi bạn đặt lịch tham quan.",
       "parking_title": "Ô tô / đỗ xe",
       "parking_body": "Có chỗ đỗ xe tại chỗ và lân cận. Liên hệ trước khi đến, chúng tôi sẽ giữ chỗ cho bạn.",
-      "map_title": "Bản đồ vị trí MetHeim"
+      "map_title": "Bản đồ vị trí MetHeim",
+      "form_title": "Bạn có câu hỏi? Hãy liên hệ với chúng tôi.",
+      "form_subtitle": "Gửi tin nhắn cho chúng tôi và đội ngũ của chúng tôi sẽ phản hồi sớm."
     }
   }
 }

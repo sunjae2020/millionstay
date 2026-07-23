@@ -30,10 +30,12 @@ export interface InquiryFormValues {
 export function InquiryForm({
   extraFields = [],
   submitLabelKey = "dev.form.submit",
+  requireMessage = false,
   onSubmit,
 }: {
   extraFields?: InquiryExtraField[];
   submitLabelKey?: string;
+  requireMessage?: boolean;
   onSubmit: (values: InquiryFormValues) => Promise<{ lead_ref: string }>;
 }) {
   const { t } = useTranslation();
@@ -48,6 +50,10 @@ export function InquiryForm({
     e.preventDefault();
     if (!values.first_name.trim() || !/^\S+@\S+\.\S+$/.test(values.email)) {
       toast({ title: t("dev.form.invalid"), variant: "destructive" });
+      return;
+    }
+    if (requireMessage && !values.message?.trim()) {
+      toast({ title: t("dev.form.message_required"), variant: "destructive" });
       return;
     }
     setSubmitting(true);
@@ -112,8 +118,8 @@ export function InquiryForm({
       ))}
 
       <div className="space-y-1.5">
-        <Label>{t("dev.form.message")}</Label>
-        <Textarea rows={4} value={values.message ?? ""} onChange={(e) => set("message", e.target.value)} />
+        <Label>{t("dev.form.message")}{requireMessage ? " *" : ""}</Label>
+        <Textarea rows={4} value={values.message ?? ""} onChange={(e) => set("message", e.target.value)} required={requireMessage} />
       </div>
 
       <button

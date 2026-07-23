@@ -1,6 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { MapPin, Phone, Mail, Clock, Train, Car } from "lucide-react";
 import { DevLayout } from "@/components/development/DevLayout";
+import { InquiryForm } from "@/components/development/InquiryForm";
+import { submitContactInquiry } from "@/lib/development-api";
 import { usePageContent } from "@/lib/usePageContent";
 
 // 찾아오기 (Directions) — address, map, transit/parking and contact. Content-only,
@@ -87,6 +89,34 @@ export default function DevDirections() {
             </div>
             <h3 className="mt-4 font-semibold text-lg text-[hsl(var(--brand-navy))]">{pc("parking_title", t("dev.directions.parking_title"))}</h3>
             <p className="mt-2 text-sm leading-relaxed text-gray-600 whitespace-pre-line">{pc("parking_body", t("dev.directions.parking_body"))}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* General inquiry — lands as a ContactUs lead in the admin Leads pipeline */}
+      <section className="border-t border-gray-100">
+        <div className="max-w-2xl mx-auto px-6 py-14 md:py-20">
+          <div className="text-center">
+            <h2 className="font-display text-3xl md:text-4xl font-extrabold tracking-tight text-[hsl(var(--brand-navy))]">
+              {pc("form_title", t("dev.directions.form_title"))}
+            </h2>
+            <p className="mt-3 text-gray-600 leading-relaxed">
+              {pc("form_subtitle", t("dev.directions.form_subtitle"))}
+            </p>
+          </div>
+          <div className="mt-8">
+            <InquiryForm
+              requireMessage
+              onSubmit={(v) =>
+                submitContactInquiry({
+                  first_name: v.first_name,
+                  last_name: v.last_name,
+                  email: v.email,
+                  phone: v.phone,
+                  message: v.message ?? "",
+                })
+              }
+            />
           </div>
         </div>
       </section>

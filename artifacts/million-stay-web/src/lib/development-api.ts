@@ -68,6 +68,22 @@ export function submitManagementInquiry(input: ManagementInquiryInput): Promise<
   return postInquiry("/api/v1/public/management-inquiries", input);
 }
 
+// ── 4. GENERAL / contact — 일반 문의 (Directions / contact page) ───────────────
+// A catch-all inquiry that isn't Buy/Rent/Management. Lands as a lead tagged
+// inquiry_type "ContactUs" (lead_source "Website"). message is required server-
+// side, so the form is rendered with requireMessage.
+export interface ContactInquiryInput {
+  first_name: string;
+  last_name?: string;
+  email: string;
+  phone?: string;
+  subject?: string;       // optional — packed into the lead description
+  message: string;
+}
+export function submitContactInquiry(input: ContactInquiryInput): Promise<LeadResult> {
+  return postInquiry("/api/v1/public/contact-inquiries", input);
+}
+
 // ── Yield simulator (client-side estimate) ────────────────────────────────────
 // A transparent, purely front-end projection for the Management page. Inputs are
 // the buyer's numbers; assumptions (management fee %, default occupancy) are
