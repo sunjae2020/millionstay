@@ -7,12 +7,15 @@ White `#FFFFFF` (reverse). See [../config.env](../config.env).
 | File | Use |
 | --- | --- |
 | `favicon.svg` | Teal rounded-square app/browser icon (512×512), champagne symbol. |
-| `metheim-symbol-teal.svg` | Symbol mark only, teal — on light backgrounds. |
-| `metheim-symbol-champagne.svg` | Symbol mark only, champagne — on teal/dark backgrounds. |
-| `metheim-logo-horizontal-teal.svg` | Horizontal lockup (symbol + METHEIM / YEOSU / tagline), teal — on light. |
+| `metheim-symbol-teal.svg` | Lighthouse symbol mark only, teal — on light backgrounds. |
+| `metheim-symbol-champagne.svg` | Lighthouse symbol mark only, champagne — on teal/dark backgrounds. |
+| `metheim-logo-horizontal-teal.svg` | Horizontal lockup (lighthouse symbol + METHEIM / YEOSU), teal — on light. |
 | `metheim-logo-horizontal-white.svg` | Horizontal lockup, all-white — on teal/photo backgrounds. |
 
-Wordmark: **METHEIM** / **YEOSU** / _PREMIUM URBAN SMALL APARTMENT_.
+Wordmark: **METHEIM** / **YEOSU** (lighthouse-over-harbour symbol; no descriptor line).
+The symbol marks + favicon are carved from the horizontal lockup's icon, so all
+five stay in visual lockstep — re-export by re-running the extraction if the
+lockup art changes.
 
 > The vertical stacked lockup was supplied only as a rendered raster preview
 > (no SVG source), so it is not committed here — re-export it as SVG to add it.
