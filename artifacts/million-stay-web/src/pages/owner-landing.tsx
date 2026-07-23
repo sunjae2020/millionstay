@@ -10,6 +10,7 @@ import {
 } from "@/lib/owner-site";
 import type { PublicSpacesParams, SpaceSummary } from "@/lib/guest-api";
 import { APP_NAME } from "../lib/appName";
+import { useDisplayCurrency } from "@/contexts/DisplayCurrencyContext";
 
 const SPACE_TYPES: Array<{ value: PublicSpacesParams["space_type"]; label: string }> = [
   { value: undefined, label: "All types" },
@@ -193,6 +194,7 @@ export default function OwnerLanding({ slug }: { slug: string }) {
 }
 
 function SpaceCard({ space, accent }: { space: SpaceSummary; accent: string }) {
+  const { formatDisplayPrice } = useDisplayCurrency();
   const img = space.primary_thumbnail || space.primary_image || space.images?.[0]?.file_url;
   const price = space.base_weekly_price ? Number(space.base_weekly_price) : null;
   const currency = space.base_currency || "AUD";
@@ -214,7 +216,7 @@ function SpaceCard({ space, accent }: { space: SpaceSummary; accent: string }) {
           <div className="flex items-center justify-between mt-3">
             {price != null ? (
               <span className="font-semibold" style={{ color: accent }}>
-                {currency} ${price.toLocaleString()}<span className="text-xs font-normal text-gray-400">/wk</span>
+                {formatDisplayPrice(price, currency).primary}<span className="text-xs font-normal text-gray-400">/wk</span>
               </span>
             ) : <span />}
             {space.max_occupancy != null && (

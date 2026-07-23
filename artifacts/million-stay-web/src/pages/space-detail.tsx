@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Footer } from "@/components/footer";
-import { useDisplayCurrency, formatCurrencyAmount } from "@/contexts/DisplayCurrencyContext";
+import { useDisplayCurrency } from "@/contexts/DisplayCurrencyContext";
 import { addWeeks, format, parseISO } from "date-fns";
 import "leaflet/dist/leaflet.css";
 
@@ -240,6 +240,7 @@ function SpaceMiniMap({
 /* ─── Related space card ─── */
 function RelatedCard({ space }: { space: Record<string, unknown> }) {
   const [, setLocation] = useLocation();
+  const { formatDisplayPrice } = useDisplayCurrency();
   const img = (space.primary_thumbnail as string | null)
     ?? `https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=600&q=75`;
   return (
@@ -261,7 +262,7 @@ function RelatedCard({ space }: { space: Record<string, unknown> }) {
             <Star key={i} className={`h-3 w-3 ${i < 4 ? "fill-primary text-primary" : "text-gray-200"}`} />
           ))}
         </div>
-        <p className="text-primary font-bold text-sm">${space.price_per_week as number ?? 440}<span className="text-gray-400 font-normal text-xs">/wk</span></p>
+        <p className="text-primary font-bold text-sm">{formatDisplayPrice(Number(space.price_per_week ?? 440), ((space.base_currency as string) || "AUD").toUpperCase()).primary}<span className="text-gray-400 font-normal text-xs">/wk</span></p>
       </div>
     </div>
   );
@@ -328,8 +329,12 @@ export default function SpaceDetail() {
   const selectedPriceProduct = space?.products?.find((p) => p.id === selectedProduct);
   const weeklyRate = Number(selectedPriceProduct?.price ?? space?.base_weekly_price ?? 0);
   const priceCurrency: string = (space?.base_currency || selectedPriceProduct?.currency || "AUD").toString().toUpperCase();
-  const { formatReference } = useDisplayCurrency();
-  const weeklyRateRef = Number(weeklyRate) > 0 ? formatReference(Number(weeklyRate), priceCurrency) : null;
+  const { formatDisplayPrice } = useDisplayCurrency();
+  const weeklyRateDisplay = formatDisplayPrice(Number(weeklyRate), priceCurrency);
+  const weeklyRateRef = Number(weeklyRate) > 0 ? weeklyRateDisplay.reference : null;
+  // Format any amount in the listing's currency, honouring the instance's
+  // single-currency pin (e.g. MetHeim → ₩, converted from the AUD base).
+  const money = (n: number) => formatDisplayPrice(Number(n) || 0, priceCurrency).primary;
   // Pro-rata: weekly_rate / 7 × days
   const rentTotal = stayDays && weeklyRate ? Math.round((weeklyRate / 7) * stayDays * 100) / 100 : null;
 
@@ -439,7 +444,7 @@ export default function SpaceDetail() {
             {/* Price + distance */}
             <div className="flex flex-wrap items-center gap-4">
               <div>
-                <span className="text-3xl font-bold text-primary">{formatCurrencyAmount(Number(weeklyRate), priceCurrency)}</span>
+                <span className="text-3xl font-bold text-primary">{weeklyRateDisplay.primary}</span>
                 <span className="text-sm text-gray-500 ml-1">/Per Week</span>
                 {weeklyRateRef && (
                   <div className="text-xs text-muted-foreground mt-0.5">{weeklyRateRef}</div>
@@ -519,10 +524,10 @@ export default function SpaceDetail() {
                                 <span className="text-xs bg-green-100 text-green-700 font-semibold px-1.5 py-0.5 rounded">Best Value</span>
                               )}
                               {saving && saving > 0 && (
-                                <span className="text-xs bg-primary/10 text-primary font-semibold px-1.5 py-0.5 rounded">Save ${saving}/wk</span>
+                                <span className="text-xs bg-primary/10 text-primary font-semibold px-1.5 py-0.5 rounded">Save {formatDisplayPrice(saving, priceCurrency).primary}/wk</span>
                               )}
                             </div>
-                            <span className="font-bold text-primary text-base">${p.price}<span className="text-xs font-normal text-gray-400">/wk</span></span>
+                            <span className="font-bold text-primary text-base">{formatDisplayPrice(Number(p.price ?? 0), priceCurrency).primary}<span className="text-xs font-normal text-gray-400">/wk</span></span>
                           </div>
                         </button>
                       );
@@ -539,27 +544,27 @@ export default function SpaceDetail() {
               <div className="rounded-xl border bg-white p-4 space-y-2.5 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Weekly rent</span>
-                  <span className="font-semibold">${weeklyRate}</span>
+                  <span className="font-semibold">{money(weeklyRate)}</span>
                 </div>
                 {productAdminFee != null && productAdminFee > 0 && (
                   <div className="flex justify-between">
                     <span className="text-gray-500">Admission Fee (one-time)</span>
-                    <span>${productAdminFee}</span>
+                    <span>{money(productAdminFee)}</span>
                   </div>
                 )}
                 {productCleaningFee != null && productCleaningFee > 0 && (
                   <div className="flex justify-between">
                     <span className="text-gray-500">Cleaning Fee (one-time)</span>
-                    <span>${productCleaningFee}</span>
+                    <span>{money(productCleaningFee)}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
                   <span className="text-gray-500">Security Bond</span>
-                  <span>{productBond != null ? `$${productBond.toLocaleString()}` : `$${(weeklyRate * 4).toLocaleString()} (4 wk)`}</span>
+                  <span>{productBond != null ? money(productBond) : `${money(weeklyRate * 4)} (4 wk)`}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Initial Rent (2 wk)</span>
-                  <span>${(weeklyRate * 2).toLocaleString()}</span>
+                  <span>{money(weeklyRate * 2)}</span>
                 </div>
               </div>
             </div>
@@ -578,7 +583,7 @@ export default function SpaceDetail() {
                 <div className="p-5 space-y-4">
                   <div>
                     <div className="flex items-end gap-1 mb-1">
-                      <span className="text-2xl font-bold text-gray-900">${weeklyRate}</span>
+                      <span className="text-2xl font-bold text-gray-900">{money(weeklyRate)}</span>
                       <span className="text-sm text-gray-500 mb-0.5">/week</span>
                     </div>
                     <div className="flex items-center gap-1 mb-3">
@@ -612,34 +617,34 @@ export default function SpaceDetail() {
                     <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
                       className="rounded-xl bg-primary/5 border border-primary/20 p-3 space-y-1.5 text-xs">
                       <div className="flex justify-between text-gray-400">
-                        <span>${weeklyRate}/wk ÷ 7 × {stayDays} days</span>
-                        <span>${rentTotal?.toLocaleString()}</span>
+                        <span>{money(weeklyRate)}/wk ÷ 7 × {stayDays} days</span>
+                        <span>{money(Number(rentTotal ?? 0))}</span>
                       </div>
                       <div className="border-t border-primary/30 pt-1.5 space-y-1">
                         <p className="text-gray-400 font-medium">Initial payment (once-off):</p>
                         <div className="flex justify-between text-gray-500">
                           <span>Security Bond{productBond == null ? " (4 wk)" : " (refundable)"}</span>
-                          <span>${deposit.toLocaleString()}</span>
+                          <span>{money(deposit)}</span>
                         </div>
                         {adminFee > 0 && (
                           <div className="flex justify-between text-gray-500">
                             <span>Admin Fee</span>
-                            <span>${adminFee.toLocaleString()}</span>
+                            <span>{money(adminFee)}</span>
                           </div>
                         )}
                         {cleaningFee > 0 && (
                           <div className="flex justify-between text-gray-500">
                             <span>Cleaning Fee</span>
-                            <span>${cleaningFee.toLocaleString()}</span>
+                            <span>{money(cleaningFee)}</span>
                           </div>
                         )}
                         <div className="flex justify-between text-gray-500">
                           <span>Initial Rent (2 wk)</span>
-                          <span>${initialRent.toLocaleString()}</span>
+                          <span>{money(initialRent)}</span>
                         </div>
                         <div className="flex justify-between font-bold text-gray-800 border-t border-primary/30 pt-1">
                           <span>Est. Due Today</span>
-                          <span className="text-primary">${totalToday.toLocaleString()}</span>
+                          <span className="text-primary">{money(totalToday)}</span>
                         </div>
                       </div>
                     </motion.div>

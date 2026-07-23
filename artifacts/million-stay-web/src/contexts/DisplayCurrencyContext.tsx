@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { getApiBase } from "@/lib/api-base";
+import { DEFAULT_CURRENCY, FORCE_DISPLAY_CURRENCY } from "@/lib/defaultCurrency";
 
 export type RateInfo = { rate: number; inverse: number; source: string; effective_date: string };
 export type RatesMap = Record<string, RateInfo>;
@@ -29,6 +30,10 @@ const DEFAULT_BY_LANG: Record<string, string> = {
 };
 
 function detectDefaultCurrency(): string {
+  // A per-instance pin (VITE_DEFAULT_CURRENCY) always wins over the browser
+  // heuristic so a single-currency white-label (e.g. MetHeim → KRW) is stable
+  // regardless of the visitor's locale.
+  if (DEFAULT_CURRENCY) return DEFAULT_CURRENCY;
   if (typeof navigator === "undefined") return "AUD";
   const lang = navigator.language || "en";
   if (DEFAULT_BY_LANG[lang]) return DEFAULT_BY_LANG[lang];
@@ -74,10 +79,19 @@ type Ctx = {
   isLoading: boolean;
   displayCurrency: string;
   setDisplayCurrency: (c: string) => void;
+  /** True when this instance is pinned to a single display currency (VITE_DEFAULT_CURRENCY). */
+  forceDisplayCurrency: boolean;
   /** Convert `amount` from `from` ccy to `to` ccy via AUD. Returns null if rates unavailable. */
   convertPrice: (amount: number, from: string, to: string) => number | null;
   /** Returns "≈ ₩123,456" for the user-selected display currency, or null if same as `from` or no rate. */
   formatReference: (amount: number, from: string) => string | null;
+  /**
+   * Format a price for display. On a single-currency instance the amount is
+   * converted into the display currency and shown as the primary price (no
+   * reference line). Otherwise the primary price stays in the listing's own
+   * currency, with a converted "≈" reference for the visitor's display currency.
+   */
+  formatDisplayPrice: (amount: number, from: string) => { primary: string; reference: string | null };
   refresh: () => Promise<void>;
 };
 
@@ -88,7 +102,7 @@ export function DisplayCurrencyProvider({ children }: { children: ReactNode }) {
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [isLoading, setLoading] = useState(false);
   const [displayCurrency, setDisplayCurrencyState] = useState<string>(() => {
-    if (typeof window === "undefined") return "AUD";
+    if (typeof window === "undefined") return DEFAULT_CURRENCY || "AUD";
     return localStorage.getItem(LS_DISPLAY) || detectDefaultCurrency();
   });
 
@@ -162,6 +176,22 @@ export function DisplayCurrencyProvider({ children }: { children: ReactNode }) {
     [convertPrice, displayCurrency],
   );
 
+  const formatDisplayPrice = useCallback(
+    (amount: number, from: string): { primary: string; reference: string | null } => {
+      const src = (from || "AUD").toUpperCase();
+      if (FORCE_DISPLAY_CURRENCY) {
+        const conv = convertPrice(amount, src, displayCurrency);
+        // Rates may not be loaded on first paint — fall back to the source
+        // amount (never show another instance's currency as the primary once
+        // rates arrive, though: convertPrice returns identity when src == display).
+        if (conv != null) return { primary: formatCurrencyAmount(conv, displayCurrency), reference: null };
+        return { primary: formatCurrencyAmount(amount, src), reference: null };
+      }
+      return { primary: formatCurrencyAmount(amount, src), reference: formatReference(amount, src) };
+    },
+    [convertPrice, displayCurrency, formatReference],
+  );
+
   const value = useMemo<Ctx>(
     () => ({
       rates,
@@ -169,11 +199,13 @@ export function DisplayCurrencyProvider({ children }: { children: ReactNode }) {
       isLoading,
       displayCurrency,
       setDisplayCurrency,
+      forceDisplayCurrency: FORCE_DISPLAY_CURRENCY,
       convertPrice,
       formatReference,
+      formatDisplayPrice,
       refresh: fetchRates,
     }),
-    [rates, updatedAt, isLoading, displayCurrency, setDisplayCurrency, convertPrice, formatReference, fetchRates],
+    [rates, updatedAt, isLoading, displayCurrency, setDisplayCurrency, convertPrice, formatReference, formatDisplayPrice, fetchRates],
   );
 
   return <DisplayCurrencyContext.Provider value={value}>{children}</DisplayCurrencyContext.Provider>;
