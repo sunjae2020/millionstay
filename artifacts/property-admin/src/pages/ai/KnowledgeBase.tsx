@@ -26,7 +26,7 @@ interface KnowledgeDoc {
   updated_at: string;
 }
 
-const ACCENT = "#E8621A";
+const ACCENT = "hsl(var(--primary))";
 
 export default function KnowledgeBase() {
   const { t } = useTranslation();
@@ -84,7 +84,7 @@ export default function KnowledgeBase() {
           <div className="space-y-2">
             {docs.map((d) => (
               <Card key={d.id} className="flex items-center gap-4 p-4">
-                <div className="rounded-lg p-2" style={{ backgroundColor: `${ACCENT}1a` }}>
+                <div className="rounded-lg p-2" style={{ backgroundColor: `color-mix(in srgb, hsl(var(--primary)) 10%, transparent)` }}>
                   <FileText className="h-5 w-5" style={{ color: ACCENT }} />
                 </div>
                 <div className="min-w-0 flex-1">

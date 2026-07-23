@@ -119,7 +119,7 @@ function CreateForm({ onCreated, onCancel }: { onCreated: (keyId: string, secret
               <div className="flex gap-3">
                 {g.scopes.map((s) => (
                   <label key={s.value} className="flex items-center gap-1.5 text-xs cursor-pointer">
-                    <input type="checkbox" checked={selected.has(s.value)} onChange={() => toggle(s.value)} className="accent-[#E8621A]" />
+                    <input type="checkbox" checked={selected.has(s.value)} onChange={() => toggle(s.value)} className="accent-primary" />
                     {s.action}
                   </label>
                 ))}

@@ -10,7 +10,7 @@ import { apiFetch, apiJson } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { MessageCircle, Send, Loader2, ExternalLink, Bot, AlertCircle, CheckCircle2 } from "lucide-react";
 
-const ACCENT = "#E8621A";
+const ACCENT = "hsl(var(--primary))";
 
 interface IntegrationStatus {
   ai: { configured: boolean; masked_key: string; model: string | null; cs_translate_model?: string | null; widget_enabled: boolean; error: string | null };

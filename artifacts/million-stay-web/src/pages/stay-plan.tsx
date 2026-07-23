@@ -62,7 +62,7 @@ function SpaceCard({ space }: { space: Space }) {
             <span className="text-primary font-bold text-base">${space.price_per_week ?? 440}</span>
             <span className="text-gray-400 text-xs">{t("stay_plan.space_per_week")}</span>
           </div>
-          <Button size="sm" variant="ghost" className="h-7 text-xs text-primary hover:bg-orange-50 px-2">
+          <Button size="sm" variant="ghost" className="h-7 text-xs text-primary hover:bg-primary/10 px-2">
             {t("stay_plan.space_view")}
           </Button>
         </div>
@@ -143,7 +143,7 @@ export default function StayPlan() {
               onClick={() => setActivePlan(activePlan === plan.id ? null : plan.id)}
               className={`relative rounded-2xl border-2 p-7 cursor-pointer transition-all ${
                 activePlan === plan.id
-                  ? "border-primary bg-orange-50 shadow-lg"
+                  ? "border-primary bg-primary/5 shadow-lg"
                   : plan.highlight
                   ? "border-primary/40 bg-white shadow-md"
                   : "border-gray-200 bg-white hover:border-primary/30 hover:shadow-sm"

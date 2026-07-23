@@ -136,7 +136,7 @@ export default function BookingReportPage() {
                 <TableRow><TableCell colSpan={9} className="text-center py-10 text-muted-foreground">No bookings found. Adjust filters and run the report.</TableCell></TableRow>
               ) : rows.map((r: any) => (
                 <TableRow key={r.id}>
-                  <TableCell className="font-mono text-sm text-[#E8621A]">{r.booking_ref}</TableCell>
+                  <TableCell className="font-mono text-sm text-primary">{r.booking_ref}</TableCell>
                   <TableCell className="text-sm">{r.guest_name}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{r.space_name}</TableCell>
                   <TableCell className="text-sm">{r.check_in_date}</TableCell>

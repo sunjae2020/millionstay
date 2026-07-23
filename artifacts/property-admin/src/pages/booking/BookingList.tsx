@@ -82,7 +82,7 @@ function CalendarView({ bookings }: { bookings: any[] }) {
         <div className="flex border-b sticky top-0 bg-white z-10">
           <div className="w-40 shrink-0 px-3 py-2 text-xs font-semibold text-muted-foreground border-r">{t('booking.col_space')}</div>
           {dates.map((d) => (
-            <div key={d.toISOString()} className={`w-8 shrink-0 text-center py-2 border-r text-xs ${d.toDateString() === today.toDateString() ? "bg-orange-50 font-bold text-[#E8621A]" : "text-muted-foreground"}`}>
+            <div key={d.toISOString()} className={`w-8 shrink-0 text-center py-2 border-r text-xs ${d.toDateString() === today.toDateString() ? "bg-primary/10 font-bold text-primary" : "text-muted-foreground"}`}>
               <div>{d.getDate()}</div>
               <div className="text-[10px]">{d.toLocaleDateString("en", { weekday: "short" })}</div>
             </div>
@@ -238,11 +238,11 @@ export default function BookingList() {
         ) : (
           <>
           {isSuperAdmin && selectedIds.size > 0 && (
-            <div className="flex items-center gap-3 mb-3 px-4 py-2.5 rounded-lg bg-orange-50 border border-orange-200">
-              <span className="text-sm font-medium text-orange-800">{selectedIds.size} item{selectedIds.size > 1 ? "s" : ""} selected</span>
-              <button onClick={clearSelection} className="text-orange-500 hover:text-orange-700"><X className="h-3.5 w-3.5" /></button>
+            <div className="flex items-center gap-3 mb-3 px-4 py-2.5 rounded-lg bg-primary/10 border border-primary/20">
+              <span className="text-sm font-medium text-primary">{selectedIds.size} item{selectedIds.size > 1 ? "s" : ""} selected</span>
+              <button onClick={clearSelection} className="text-primary hover:text-primary"><X className="h-3.5 w-3.5" /></button>
               <div className="ml-auto flex items-center gap-2">
-                {isBulkLoading && <Loader2 className="h-4 w-4 animate-spin text-orange-500" />}
+                {isBulkLoading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
                 <Button size="sm" variant="outline" className="h-7 border-amber-300 text-amber-700 hover:bg-amber-50 gap-1.5" onClick={() => setBulkAction("archive")} disabled={isBulkLoading}>
                   <Archive className="h-3.5 w-3.5" /> Archive Selected
                 </Button>
@@ -269,10 +269,10 @@ export default function BookingList() {
                 ) : !bookings?.length ? (
                   <tr><td colSpan={isSuperAdmin ? 11 : 10} className="text-center py-12 text-muted-foreground">{t("booking.no_bookings")}</td></tr>
                 ) : bookings.map((b) => (
-                  <tr key={b.id} className={`border-b hover:bg-gray-50 transition-colors ${selectedIds.has(b.id) ? "bg-orange-50/50" : ""}`}>
+                  <tr key={b.id} className={`border-b hover:bg-gray-50 transition-colors ${selectedIds.has(b.id) ? "bg-primary/5" : ""}`}>
                     {isSuperAdmin && <td className="px-3 py-3"><Checkbox checked={selectedIds.has(b.id)} onCheckedChange={() => toggleSelect(b.id)} onClick={(e) => e.stopPropagation()} /></td>}
                     <td className="px-4 py-3">
-                      <Link href={`/booking/bookings/${b.id}`} className="font-mono text-xs text-[#E8621A] hover:underline">{b.booking_ref}</Link>
+                      <Link href={`/booking/bookings/${b.id}`} className="font-mono text-xs text-primary hover:underline">{b.booking_ref}</Link>
                     </td>
                     <td className="px-4 py-3">{b.account_name ?? b.contact_name ?? "—"}</td>
                     <td className="px-4 py-3 text-muted-foreground">{b.space_name ?? "—"}</td>
@@ -290,7 +290,7 @@ export default function BookingList() {
                           </Button>
                         )}
                         {b.booking_status === "Confirmed" && (
-                          <Button size="sm" variant="outline" className="h-7 text-xs text-[#E8621A] border-orange-300" onClick={() => checkInMutation.mutate({ id: b.id })}>
+                          <Button size="sm" variant="outline" className="h-7 text-xs text-primary border-primary/30" onClick={() => checkInMutation.mutate({ id: b.id })}>
                             {t("booking.btn_checkin")}
                           </Button>
                         )}

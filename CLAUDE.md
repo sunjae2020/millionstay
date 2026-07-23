@@ -94,14 +94,20 @@ gates it, so keep it green. Two notable classes were fixed:
   static checks on staged files. Bypass only when justified: `git commit --no-verify`.
 - Deploy model: commit locally, **push 2–3×/day**, not per change. Don't fix-by-deploy.
 - **Auto-deploy on merge to `main`:**
-  - `api-server` → Railway
-  - `million-stay-web` → Vercel
-- **MANUAL deploy required** for `property-admin` (no auto-deploy wired up):
+  - `api-server` → Railway (platform Git integration)
+  - `million-stay-web` → Vercel (platform Git integration)
+  - `property-admin` → Vercel, via the `deploy-admin` job in
+    [.github/workflows/ci.yml](.github/workflows/ci.yml). It runs only on push to
+    `main`, **gated behind `verify`** (a red build never ships), builds the app,
+    and runs `vercel deploy --prod`. Requires the `VERCEL_TOKEN` repo secret
+    (org/project IDs are inlined, non-secret).
+- **Manual deploy** for `property-admin` (fallback / out-of-band redeploy):
   ```bash
   pnpm --filter @workspace/property-admin build
   vercel --prod --yes --cwd artifacts/property-admin
   ```
-  (Railway CLI auth has expired — redeploys via merge to main or Railway dashboard.)
+  (Railway CLI auth has expired — `api-server` redeploys via merge to main or the
+  Railway dashboard.)
 
 ## Conventions
 

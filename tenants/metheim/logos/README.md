@@ -19,7 +19,12 @@ Wordmark: **METHEIM** / **YEOSU** / _PREMIUM URBAN SMALL APARTMENT_.
 
 ## Wiring into the tenant
 
-`tenants/metheim/config.env` currently ships `VITE_LOGO_MODE=text`. To switch the
-apps to these assets, host them (or reference their raw paths) and set
-`VITE_LOGO_URL` / `VITE_LOGO_MARK_URL` / `VITE_FAVICON` accordingly, then flip
-`VITE_LOGO_MODE` off `text`.
+`tenants/metheim/config.env` ships `VITE_LOGO_MODE=image` with these assets
+hosted on Cloudinary (`metheim/logos/`): `VITE_LOGO_URL` → horizontal-teal,
+`VITE_LOGO_MARK_URL` → symbol-teal, `VITE_FAVICON` → favicon. Re-upload to a
+MetHeim-owned Cloudinary once provisioned and update the URLs. For the dark admin
+sidebar, upload `metheim-logo-horizontal-white.svg` and set the branding row's
+`logo_dark_url` (see [../branding-settings.seed.sql](../branding-settings.seed.sql)).
+
+See [../brand-guidelines.md](../brand-guidelines.md) for the full brand spec
+(palette, type, components).

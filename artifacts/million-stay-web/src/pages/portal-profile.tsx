@@ -42,7 +42,7 @@ const GENDERS = ["Male", "Female", "Non-binary", "Prefer not to say"];
 const inputCls = "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white";
 const labelCls = "block text-xs font-medium text-gray-500 mb-1.5";
 
-function SectionHeader({ icon: Icon, title, color = "bg-orange-100", iconColor = "text-primary" }: {
+function SectionHeader({ icon: Icon, title, color = "bg-primary/10", iconColor = "text-primary" }: {
   icon: React.ElementType; title: string; color?: string; iconColor?: string;
 }) {
   return (
@@ -355,7 +355,7 @@ export default function PortalProfile() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}
           className="bg-white rounded-2xl border p-6">
           <div className="flex items-center gap-2 mb-5">
-            <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
               <Camera className="h-4 w-4 text-primary" />
             </div>
             <h2 className="font-semibold text-gray-800">Profile Photo</h2>

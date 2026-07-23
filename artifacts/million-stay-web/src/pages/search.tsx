@@ -236,7 +236,7 @@ export default function Search() {
                     >
                       <button
                         onClick={() => { setSuburbId(""); setSuburbOpen(null); }}
-                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50 flex items-center gap-2 ${!suburbId ? "text-primary font-semibold" : "text-gray-700"}`}
+                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-primary/10 flex items-center gap-2 ${!suburbId ? "text-primary font-semibold" : "text-gray-700"}`}
                       >
                         <MapPin className="h-3.5 w-3.5 opacity-50" />{t("search.all_suburbs")}
                       </button>
@@ -244,7 +244,7 @@ export default function Search() {
                         <button
                           key={s.id}
                           onClick={() => { setSuburbId(String(s.id)); setSuburbOpen(null); }}
-                          className={`w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50 flex items-center gap-2 ${suburbId === String(s.id) ? "text-primary font-semibold" : "text-gray-700"}`}
+                          className={`w-full text-left px-4 py-2.5 text-sm hover:bg-primary/10 flex items-center gap-2 ${suburbId === String(s.id) ? "text-primary font-semibold" : "text-gray-700"}`}
                         >
                           <MapPin className="h-3.5 w-3.5 opacity-50" />{s.name}
                         </button>
@@ -259,7 +259,7 @@ export default function Search() {
 
               {/* Check In */}
               <div className={`flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-full border transition-all shrink-0 ${
-                checkIn ? "border-primary bg-orange-50" : "border-gray-200 bg-white hover:border-primary/50"
+                checkIn ? "border-primary bg-primary/5" : "border-gray-200 bg-white hover:border-primary/50"
               }`}>
                 <Calendar className={`h-3.5 w-3.5 shrink-0 ${checkIn ? "text-primary" : "text-gray-400"}`} />
                 <div className="flex flex-col leading-none min-w-[88px]">
@@ -289,7 +289,7 @@ export default function Search() {
 
               {/* Check Out */}
               <div className={`flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-full border transition-all shrink-0 ${
-                checkOut ? "border-primary bg-orange-50" : "border-gray-200 bg-white hover:border-primary/50"
+                checkOut ? "border-primary bg-primary/5" : "border-gray-200 bg-white hover:border-primary/50"
               }`}>
                 <Calendar className={`h-3.5 w-3.5 shrink-0 ${checkOut ? "text-primary" : "text-gray-400"}`} />
                 <div className="flex flex-col leading-none min-w-[88px]">
@@ -468,7 +468,7 @@ export default function Search() {
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
-                  className="flex items-center gap-3 bg-orange-50 border border-orange-100 rounded-xl px-4 py-3 mb-5"
+                  className="flex items-center gap-3 bg-primary/5 border border-primary/20 rounded-xl px-4 py-3 mb-5"
                 >
                   <Calendar className="h-4 w-4 text-primary shrink-0" />
                   <div className="flex-1 text-sm text-gray-700">
@@ -547,7 +547,7 @@ export default function Search() {
                       setApplied((p) => ({ ...p, suburb_id: sid }));
                       setPage(1);
                     }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-600 hover:border-primary hover:text-primary hover:bg-orange-50 transition-all"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-600 hover:border-primary hover:text-primary hover:bg-primary/10 transition-all"
                   >
                     <MapPin className="h-3 w-3" />{s.name}
                   </button>
@@ -572,7 +572,7 @@ export default function Search() {
               </div>
             ) : allSpaces.length === 0 ? (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-24">
-                <div className="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4">
+                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                   <MapPin className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-700 mb-2">{t("search.no_rooms_title")}</h3>

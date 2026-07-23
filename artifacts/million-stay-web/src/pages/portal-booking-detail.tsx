@@ -183,7 +183,7 @@ export default function PortalBookingDetail() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="gap-1.5 border-primary/30 text-primary hover:bg-orange-50"
+                    className="gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
                     onClick={() => setLocation(`/portal/invoices/${firstPaidInvoice.id}/receipt`)}
                   >
                     <Receipt className="h-4 w-4" /> Receipt
@@ -446,7 +446,7 @@ export default function PortalBookingDetail() {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-7 text-xs gap-1 border-primary/30 text-primary hover:bg-orange-50"
+                              className="h-7 text-xs gap-1 border-primary/30 text-primary hover:bg-primary/10"
                               onClick={() => setLocation(`/portal/invoices/${inv.id}/receipt`)}
                             >
                               <Receipt className="h-3 w-3" /> Receipt

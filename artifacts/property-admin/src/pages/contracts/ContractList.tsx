@@ -123,11 +123,11 @@ export default function ContractList() {
         </div>
 
         {isSuperAdmin && selectedIds.size > 0 && (
-          <div className="flex items-center gap-3 mb-3 px-4 py-2.5 rounded-lg bg-orange-50 border border-orange-200">
-            <span className="text-sm font-medium text-orange-800">{selectedIds.size} item{selectedIds.size > 1 ? "s" : ""} selected</span>
-            <button onClick={clearSelection} className="text-orange-500 hover:text-orange-700"><X className="h-3.5 w-3.5" /></button>
+          <div className="flex items-center gap-3 mb-3 px-4 py-2.5 rounded-lg bg-primary/10 border border-primary/20">
+            <span className="text-sm font-medium text-primary">{selectedIds.size} item{selectedIds.size > 1 ? "s" : ""} selected</span>
+            <button onClick={clearSelection} className="text-primary hover:text-primary"><X className="h-3.5 w-3.5" /></button>
             <div className="ml-auto flex items-center gap-2">
-              {isBulkLoading && <Loader2 className="h-4 w-4 animate-spin text-orange-500" />}
+              {isBulkLoading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
               <Button size="sm" variant="outline" className="h-7 border-amber-300 text-amber-700 hover:bg-amber-50 gap-1.5" onClick={() => setBulkAction("archive")} disabled={isBulkLoading}>
                 <Archive className="h-3.5 w-3.5" /> Archive Selected
               </Button>
@@ -162,10 +162,10 @@ export default function ContractList() {
                   </TableCell>
                 </TableRow>
               ) : pagination.paginatedItems.map(c => (
-                <TableRow key={c.id} className={selectedIds.has(c.id) ? "bg-orange-50/50" : ""}>
+                <TableRow key={c.id} className={selectedIds.has(c.id) ? "bg-primary/5" : ""}>
                   {isSuperAdmin && <TableCell><Checkbox checked={selectedIds.has(c.id)} onCheckedChange={() => toggleSelect(c.id)} onClick={(e) => e.stopPropagation()} /></TableCell>}
                   <TableCell>
-                    <Link href={`/contracts/contracts/${c.id}`} className="text-[#E8621A] hover:underline font-medium font-mono">
+                    <Link href={`/contracts/contracts/${c.id}`} className="text-primary hover:underline font-medium font-mono">
                       {c.contract_ref}
                     </Link>
                   </TableCell>

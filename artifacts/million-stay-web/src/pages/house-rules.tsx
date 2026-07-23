@@ -69,7 +69,7 @@ export default function HouseRules() {
                 <div className="flex flex-col items-center pt-1">
                   <span className="text-primary font-black text-lg leading-none">{rule.number}</span>
                   {i < rules.length - 1 && (
-                    <div className="w-px flex-1 mt-2 bg-orange-100" />
+                    <div className="w-px flex-1 mt-2 bg-primary/10" />
                   )}
                 </div>
 
@@ -84,7 +84,7 @@ export default function HouseRules() {
             ))}
 
             {/* Agreement note */}
-            <motion.div {...fade(0.5)} className="bg-orange-50 border border-orange-100 rounded-xl px-6 py-5">
+            <motion.div {...fade(0.5)} className="bg-primary/5 border border-primary/20 rounded-xl px-6 py-5">
               <p className="text-sm text-gray-600 leading-relaxed">
                 {t("house_rules.agreement")}{" "}
                 <a href={`mailto:${supportEmail}`} className="text-primary hover:underline font-medium">

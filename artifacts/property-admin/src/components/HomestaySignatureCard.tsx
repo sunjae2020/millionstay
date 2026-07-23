@@ -96,8 +96,8 @@ export function HomestaySignatureCard({
 
   return (
     <div className="border rounded-lg overflow-hidden">
-      <div className="bg-orange-50 border-b px-4 py-2 flex items-center justify-between gap-2">
-        <span className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider inline-flex items-center gap-1.5">
+      <div className="bg-primary/10 border-b px-4 py-2 flex items-center justify-between gap-2">
+        <span className="text-xs font-semibold text-primary uppercase tracking-wider inline-flex items-center gap-1.5">
           <FileSignature className="h-3.5 w-3.5" /> {t("homestayDoc.title")}
         </span>
       </div>

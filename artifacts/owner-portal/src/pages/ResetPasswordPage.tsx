@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Lock, Eye, EyeOff, CheckCircle2, Loader2 } from "lucide-react";
 import { APP_NAME } from "@/lib/appName";
 
-const BRAND = "#E8621A";
+const BRAND = "hsl(var(--brand-orange))";
 const API_BASE = "/api/v1";
 const POLICY_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,}$/;
 
@@ -77,7 +77,7 @@ export default function ResetPasswordPage() {
             <button
               onClick={() => setLocation("/")}
               className="w-full h-11 rounded-lg text-sm font-semibold text-white shadow-md"
-              style={{ background: `linear-gradient(135deg, ${BRAND} 0%, #FF8C3A 100%)` }}
+              style={{ background: `linear-gradient(135deg, ${BRAND} 0%, color-mix(in srgb, hsl(var(--brand-orange)) 72%, white) 100%)` }}
             >
               Continue to login
             </button>
@@ -121,7 +121,7 @@ export default function ResetPasswordPage() {
               type="submit"
               disabled={loading || !token || !policyOk || !pwMatches}
               className="w-full h-11 rounded-lg text-sm font-semibold text-white transition-opacity disabled:opacity-60 flex items-center justify-center gap-2 shadow-md"
-              style={{ background: `linear-gradient(135deg, ${BRAND} 0%, #FF8C3A 100%)` }}
+              style={{ background: `linear-gradient(135deg, ${BRAND} 0%, color-mix(in srgb, hsl(var(--brand-orange)) 72%, white) 100%)` }}
             >
               {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Updating...</> : "Set new password"}
             </button>

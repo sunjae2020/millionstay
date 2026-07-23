@@ -37,7 +37,7 @@ export function CurrencySelector({ variant = "default" }: { variant?: "default" 
                 key={c.code}
                 onClick={() => setDisplayCurrency(c.code)}
                 className={`flex flex-col items-center gap-0.5 py-1.5 px-1 rounded-lg text-xs transition-colors ${
-                  isActive ? "bg-orange-50 text-primary font-bold border border-primary/20" : "text-gray-500 hover:bg-gray-50"
+                  isActive ? "bg-primary/5 text-primary font-bold border border-primary/20" : "text-gray-500 hover:bg-gray-50"
                 }`}
               >
                 <span className="text-lg leading-none">{c.flag}</span>
@@ -68,7 +68,7 @@ export function CurrencySelector({ variant = "default" }: { variant?: "default" 
               onClick={() => setDisplayCurrency(c.code)}
               className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm transition-colors text-left ${
                 isActive
-                  ? "bg-orange-50 text-primary font-semibold border-l-2 border-primary"
+                  ? "bg-primary/5 text-primary font-semibold border-l-2 border-primary"
                   : "text-gray-700 hover:bg-gray-50"
               }`}
             >

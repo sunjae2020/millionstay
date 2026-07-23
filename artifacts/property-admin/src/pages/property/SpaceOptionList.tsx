@@ -119,11 +119,11 @@ export default function SpaceOptionList() {
         </div>
 
         {isSuperAdmin && selectedIds.size > 0 && (
-          <div className="flex items-center gap-3 mb-3 px-4 py-2.5 rounded-lg bg-orange-50 border border-orange-200">
-            <span className="text-sm font-medium text-orange-800">{selectedIds.size} item{selectedIds.size > 1 ? "s" : ""} selected</span>
-            <button onClick={clearSelection} className="text-orange-500 hover:text-orange-700"><X className="h-3.5 w-3.5" /></button>
+          <div className="flex items-center gap-3 mb-3 px-4 py-2.5 rounded-lg bg-primary/10 border border-primary/20">
+            <span className="text-sm font-medium text-primary">{selectedIds.size} item{selectedIds.size > 1 ? "s" : ""} selected</span>
+            <button onClick={clearSelection} className="text-primary hover:text-primary"><X className="h-3.5 w-3.5" /></button>
             <div className="ml-auto flex items-center gap-2">
-              {isBulkLoading && <Loader2 className="h-4 w-4 animate-spin text-orange-500" />}
+              {isBulkLoading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
               <Button size="sm" variant="outline" className="h-7 border-amber-300 text-amber-700 hover:bg-amber-50 gap-1.5" onClick={() => setBulkAction("archive")} disabled={isBulkLoading}>
                 <Archive className="h-3.5 w-3.5" /> Archive Selected
               </Button>
@@ -159,14 +159,14 @@ export default function SpaceOptionList() {
                 <tr><td colSpan={isSuperAdmin ? 7 : 6} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("space_option.no_records") || "No space options found"}</td></tr>
               ) : (
                 pagination.paginatedItems.map((opt) => (
-                  <tr key={opt.id} className={`hover:bg-muted/30 transition-colors ${selectedIds.has(opt.id) ? "bg-orange-50/50" : ""}`}>
+                  <tr key={opt.id} className={`hover:bg-muted/30 transition-colors ${selectedIds.has(opt.id) ? "bg-primary/5" : ""}`}>
                     {isSuperAdmin && (
                       <td className="px-3 py-3">
                         <Checkbox checked={selectedIds.has(opt.id)} onCheckedChange={() => toggleSelect(opt.id)} aria-label="Select option" onClick={(e) => e.stopPropagation()} />
                       </td>
                     )}
                     <td className="px-4 py-3 font-medium">
-                      <Link href={`/property/space-options/${opt.id}`} className="hover:underline text-[#E8621A]">{opt.name}</Link>
+                      <Link href={`/property/space-options/${opt.id}`} className="hover:underline text-primary">{opt.name}</Link>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">{opt.display_name ?? "—"}</td>
                     <td className="px-4 py-3 text-muted-foreground">{opt.category ?? "—"}</td>

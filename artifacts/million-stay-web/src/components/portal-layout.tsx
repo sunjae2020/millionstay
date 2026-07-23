@@ -49,8 +49,8 @@ function LanguageSwitcher() {
             <button
               key={lang.code}
               onClick={() => { i18n.changeLanguage(lang.code); localStorage.setItem("ms_language", lang.code); setOpen(false); }}
-              className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-orange-50 hover:text-primary dark:hover:bg-primary/15 transition-colors ${
-                lang.code === i18n.language ? "bg-orange-50 text-primary font-semibold dark:bg-primary/15" : "text-gray-600 dark:text-muted-foreground"
+              className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/15 transition-colors ${
+                lang.code === i18n.language ? "bg-primary/5 text-primary font-semibold dark:bg-primary/15" : "text-gray-600 dark:text-muted-foreground"
               }`}
             >
               <span className="text-sm">{lang.flag}</span>
@@ -128,7 +128,7 @@ export function PortalLayout({ children, active }: PortalLayoutProps) {
                 <a
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     active_
-                      ? "bg-orange-50 text-primary dark:bg-primary/15"
+                      ? "bg-primary/5 text-primary dark:bg-primary/15"
                       : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-muted-foreground dark:hover:bg-white/5 dark:hover:text-foreground"
                   }`}
                 >
@@ -189,7 +189,7 @@ export function PortalLayout({ children, active }: PortalLayoutProps) {
         <span className="text-sm font-semibold text-gray-700 dark:text-foreground">{t("portal.my_portal")}</span>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="p-2 rounded-lg text-gray-500 hover:text-primary hover:bg-orange-50 dark:text-muted-foreground dark:hover:bg-primary/15 transition-colors"
+          className="p-2 rounded-lg text-gray-500 hover:text-primary hover:bg-primary/10 dark:text-muted-foreground dark:hover:bg-primary/15 transition-colors"
         >
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
@@ -219,7 +219,7 @@ export function PortalLayout({ children, active }: PortalLayoutProps) {
                     onClick={() => { setLocation(item.href); setMobileOpen(false); }}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                       active_
-                        ? "bg-orange-50 text-primary dark:bg-primary/15"
+                        ? "bg-primary/5 text-primary dark:bg-primary/15"
                         : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-muted-foreground dark:hover:bg-white/5 dark:hover:text-foreground"
                     }`}
                   >

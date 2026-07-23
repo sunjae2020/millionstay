@@ -109,7 +109,7 @@ export default function CommissionDetail() {
         }
       />
       <div className="p-6 max-w-2xl">
-        <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2 mb-4">{t("commission.section_general")}</h3>
+        <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2 mb-4">{t("commission.section_general")}</h3>
         <div className="grid gap-5">
           <div className="grid gap-1.5">
             <Label>{t("common.name")} *</Label>

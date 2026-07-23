@@ -66,8 +66,8 @@ interface BankInfo { name?: string; bank_name?: string; bsb_number?: string; acc
 function Section({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
     <div className="border rounded-lg overflow-hidden">
-      <div className="bg-orange-50 border-b px-4 py-2 flex items-center justify-between gap-2">
-        <span className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{title}</span>
+      <div className="bg-primary/10 border-b px-4 py-2 flex items-center justify-between gap-2">
+        <span className="text-xs font-semibold text-primary uppercase tracking-wider">{title}</span>
         {action}
       </div>
       <div className="p-4">{children}</div>

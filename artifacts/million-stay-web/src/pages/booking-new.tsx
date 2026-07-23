@@ -552,7 +552,7 @@ export default function BookingNew() {
 
               {/* Stay type badge */}
               <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${
-                isLong ? "bg-blue-50 text-blue-700 border border-blue-100" : "bg-orange-50 text-primary border border-orange-100"
+                isLong ? "bg-blue-50 text-blue-700 border border-blue-100" : "bg-primary/5 text-primary border border-primary/20"
               }`}>
                 <Calendar className="h-3.5 w-3.5" />
                 {isLong
@@ -565,7 +565,7 @@ export default function BookingNew() {
                 <h2 className="font-semibold text-lg text-gray-800">Your Stay</h2>
                 {isLoading ? <div className="h-14 bg-gray-100 animate-pulse rounded-xl" /> :
                   space ? (
-                    <div className="bg-orange-50 border border-orange-100 rounded-xl p-4">
+                    <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
                       <p className="font-semibold text-gray-800">{space.name}</p>
                       <p className="text-sm text-gray-500">{space.property_address ?? space.suburb_name ?? "Melbourne"}</p>
                       {weeklyRate > 0 && <p className="text-sm font-bold text-primary mt-1">${weeklyRate}/week</p>}
@@ -693,8 +693,8 @@ export default function BookingNew() {
                         disabled={mandatory}
                         className={`w-full flex items-start gap-4 p-4 rounded-xl border-2 text-left transition-all ${
                           mandatory
-                            ? "border-orange-300 bg-orange-50 cursor-default"
-                            : selected ? "border-primary bg-orange-50" : "border-gray-100 hover:border-orange-200 bg-white"
+                            ? "border-primary/40 bg-primary/5 cursor-default"
+                            : selected ? "border-primary bg-primary/5" : "border-gray-100 hover:border-primary/30 bg-white"
                         }`}>
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${selected || mandatory ? "bg-primary text-white" : "bg-gray-100 text-gray-500"}`}>
                           <Icon className="h-5 w-5" />
@@ -704,7 +704,7 @@ export default function BookingNew() {
                             <div className="flex items-center gap-2">
                               <p className={`font-semibold text-sm ${selected || mandatory ? "text-primary" : "text-gray-800"}`}>{svc.name}</p>
                               {mandatory && (
-                                <span className="text-xs bg-orange-100 text-orange-700 font-semibold px-1.5 py-0.5 rounded">Included</span>
+                                <span className="text-xs bg-primary/10 text-primary font-semibold px-1.5 py-0.5 rounded">Included</span>
                               )}
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
@@ -748,7 +748,7 @@ export default function BookingNew() {
                 <h2 className="font-semibold text-lg text-gray-800">Payment</h2>
 
                 {/* Amount breakdown */}
-                <div className="bg-orange-50 border border-orange-100 rounded-xl px-5 py-4 space-y-2 text-sm">
+                <div className="bg-primary/5 border border-primary/20 rounded-xl px-5 py-4 space-y-2 text-sm">
                   {proRataRent > 0 && (
                     <div className="flex justify-between text-gray-600">
                       <span>
@@ -838,7 +838,7 @@ export default function BookingNew() {
                     color === "blue"   ? "border-blue-100 bg-blue-50" :
                     color === "green"  ? "border-green-100 bg-green-50" :
                     color === "purple" ? "border-purple-100 bg-purple-50" :
-                                         "border-orange-100 bg-orange-50"
+                                         "border-primary/20 bg-primary/5"
                   }`}>
                     <div>
                       <p className="font-semibold text-sm text-gray-800">{label}</p>
@@ -909,7 +909,7 @@ export default function BookingNew() {
                   ) : null)}
                 </div>
 
-                <div className="bg-orange-50 border border-orange-100 rounded-xl px-5 py-4">
+                <div className="bg-primary/5 border border-primary/20 rounded-xl px-5 py-4">
                   <div className="flex justify-between font-bold"><span>Est. Total Due at Confirmation</span><span className="text-primary">${totalLong.toLocaleString()}</span></div>
                 </div>
 
@@ -946,7 +946,7 @@ export default function BookingNew() {
                 <p className="text-sm text-gray-500 mt-1">An account lets you access your Guest Portal to pay, upload documents, and track your booking.</p>
               </div>
 
-              <div className="flex items-start gap-2.5 bg-orange-50 border border-orange-100 rounded-xl px-4 py-3">
+              <div className="flex items-start gap-2.5 bg-primary/5 border border-primary/20 rounded-xl px-4 py-3">
                 <LayoutDashboard className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                 <p className="text-xs text-gray-700">
                   After signing in, your <strong>Guest Portal</strong> will be available — view your invoice, pay by card or bank transfer, and upload required documents all in one place.

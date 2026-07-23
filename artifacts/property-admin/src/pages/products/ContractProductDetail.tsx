@@ -20,11 +20,12 @@ import {
   useGetPromotion, getGetPromotionQueryKey,
 } from "@workspace/api-client-react";
 import { LookupSelect } from "@/components/LookupSelect";
+import { useBrand } from "@/contexts/ThemeContext";
 import { ArrowLeft, Save, Trash2, Tag } from "lucide-react";
 import { Link } from "wouter";
 
 const PRODUCT_TYPES = ["Room", "Suite", "Apartment", "House", "Studio", "Service"];
-const CURRENCIES = ["AUD", "USD", "SGD", "MYR", "GBP"];
+const CURRENCIES = ["KRW", "AUD", "USD", "SGD", "MYR", "GBP"];
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-700",
   Active: "bg-green-100 text-green-700",
@@ -74,6 +75,7 @@ export default function ContractProductDetail() {
   const [, navigate] = useLocation();
   const qc = useQueryClient();
   const isNew = id === "new";
+  const { currency: brandCurrency } = useBrand();
 
   const { data: product, refetch } = useGetContractProduct(Number(id), {
     query: { enabled: !isNew, queryKey: getGetContractProductQueryKey(Number(id)) },
@@ -84,7 +86,7 @@ export default function ContractProductDetail() {
       name: "", description: "", product_type: "Room",
       space_id: null, promotion_id: null, term_type: "",
       weekly_rate: "", monthly_rate: "", effective_weekly_rate: "",
-      currency: "AUD", billing_frequency: "Biweekly",
+      currency: brandCurrency, billing_frequency: "Biweekly",
       bond_weeks: "4", advance_weeks: "2", min_stay_weeks: "1", max_stay_weeks: "",
       includes_wifi: false, includes_parking: false, includes_utilities: false,
       includes_meals: false, includes_laundry: false, includes_cleaning: false,
@@ -225,7 +227,7 @@ export default function ContractProductDetail() {
                   <Trash2 className="h-4 w-4 mr-1" />{t('common.delete')}
                 </Button>
               )}
-              <Button type="submit" className="bg-[#E8621A] hover:bg-[#d4561a] text-white">
+              <Button type="submit" className="bg-primary hover:bg-[#d4561a] text-white">
                 <Save className="h-4 w-4 mr-1" />{t('common.save')}
               </Button>
             </div>
@@ -233,7 +235,7 @@ export default function ContractProductDetail() {
 
           {/* Status bar */}
           {!isNew && product && (
-            <div className="border rounded-lg p-4 mb-5 flex items-center justify-between bg-orange-50/40">
+            <div className="border rounded-lg p-4 mb-5 flex items-center justify-between bg-primary/5">
               <div className="flex items-center gap-3">
                 <span className="text-sm font-medium text-muted-foreground">{t('common.status')}:</span>
                 <Badge className={statusColors[status] ?? ""}>{status}</Badge>
@@ -267,7 +269,7 @@ export default function ContractProductDetail() {
           <div className="space-y-5">
             {/* Space × Promotion */}
             <div className="border rounded-lg bg-white overflow-hidden">
-              <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t('contract_product.section_space_promo')}</div>
+              <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">{t('contract_product.section_space_promo')}</div>
               <div className="p-5 grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_space')} *</Label>
@@ -296,7 +298,7 @@ export default function ContractProductDetail() {
 
             {/* General */}
             <div className="border rounded-lg bg-white overflow-hidden">
-              <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t('contract_product.section_general')}</div>
+              <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">{t('contract_product.section_general')}</div>
               <div className="p-5 grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_name')} *</Label>
@@ -322,7 +324,7 @@ export default function ContractProductDetail() {
 
             {/* Pricing */}
             <div className="border rounded-lg bg-white overflow-hidden">
-              <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t('contract_product.section_pricing')}</div>
+              <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">{t('contract_product.section_pricing')}</div>
               <div className="p-5 grid grid-cols-3 gap-4">
                 <div>
                   <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_currency')}</Label>
@@ -386,7 +388,7 @@ export default function ContractProductDetail() {
 
             {/* Inclusions */}
             <div className="border rounded-lg bg-white overflow-hidden">
-              <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t('contract_product.section_inclusions')}</div>
+              <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">{t('contract_product.section_inclusions')}</div>
               <div className="p-5">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
                   {(["includes_wifi", "includes_parking", "includes_utilities", "includes_meals", "includes_laundry", "includes_cleaning"] as const).map(inclusionField => {
@@ -417,7 +419,7 @@ export default function ContractProductDetail() {
 
             {/* Notes */}
             <div className="border rounded-lg bg-white overflow-hidden">
-              <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t('contract_product.section_notes')}</div>
+              <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">{t('contract_product.section_notes')}</div>
               <div className="p-5">
                 <Textarea {...register("notes")} placeholder="Internal notes..." rows={4} />
               </div>

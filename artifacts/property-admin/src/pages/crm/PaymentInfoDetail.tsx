@@ -126,7 +126,7 @@ export default function PaymentInfoDetail() {
       />
       <div className="p-6 max-w-2xl">
         <div className="grid gap-5">
-          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">{t("payment_info.section_general")}</h3>
+          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">{t("payment_info.section_general")}</h3>
           <div className="grid gap-1.5">
             <Label>{t("common.name")} *</Label>
             <Input {...register("name", { required: true })} placeholder="e.g. NAB Bank Transfer" />
@@ -150,7 +150,7 @@ export default function PaymentInfoDetail() {
 
           {paymentType === "BankTransfer" && (
             <>
-              <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2 mt-4">{t("payment_info.section_bank")}</h3>
+              <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2 mt-4">{t("payment_info.section_bank")}</h3>
               <div className="grid gap-1.5">
                 <Label>{t("payment_info.label_bank_name")}</Label>
                 <Input {...register("bank_name")} placeholder="e.g. NAB" />
@@ -178,7 +178,7 @@ export default function PaymentInfoDetail() {
 
           {paymentType === "Stripe" && (
             <>
-              <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2 mt-4">{t("payment_info.section_stripe")}</h3>
+              <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2 mt-4">{t("payment_info.section_stripe")}</h3>
               <div className="grid gap-1.5">
                 <Label>{t("payment_info.label_stripe_id")}</Label>
                 <Input {...register("stripe_account_id")} placeholder="acct_..." />

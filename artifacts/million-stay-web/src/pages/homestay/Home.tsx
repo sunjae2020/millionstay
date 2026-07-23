@@ -69,7 +69,7 @@ export default function HomestayHome() {
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 href="/students/apply"
-                className="px-7 py-3.5 font-semibold text-white inline-flex items-center gap-2 transition-colors hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#E8621A]"
+                className="px-7 py-3.5 font-semibold text-white inline-flex items-center gap-2 transition-colors hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
                 style={{ backgroundColor: HS.orange, borderRadius: HS_RADIUS.pill }}
               >
                 {pc("hero_cta_find", t("homestay.home.hero_cta_find"))} <ArrowRight className="w-4 h-4" />
@@ -171,7 +171,7 @@ export default function HomestayHome() {
         </p>
         <Link
           href="/how-it-works"
-          className="mt-8 inline-flex items-center gap-2 px-7 py-3.5 font-semibold text-white transition-colors hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#E8621A]"
+          className="mt-8 inline-flex items-center gap-2 px-7 py-3.5 font-semibold text-white transition-colors hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
           style={{ backgroundColor: HS.orange, borderRadius: HS_RADIUS.pill }}
         >
           {pc("how_cta", t("homestay.home.how_cta"))} <ArrowRight className="w-4 h-4" />

@@ -137,7 +137,7 @@ export default function OperationsTab() {
           <RefreshCw className="h-3.5 w-3.5" /> {t("common.refresh")}
         </Button>
         <Link href="/maintenance/work-orders/new">
-          <Button size="sm" className="gap-1.5 bg-[#E8621A] hover:bg-[#d4541a] text-white">
+          <Button size="sm" className="gap-1.5 bg-primary hover:bg-[#d4541a] text-white">
             <Plus className="h-4 w-4" /> {t("dash_operations.new_work_order")}
           </Button>
         </Link>
@@ -207,7 +207,7 @@ export default function OperationsTab() {
             ))}
           </div>
           <div className="px-4 py-2 border-t">
-            <Link href="/maintenance/work-orders" className="text-xs text-[#E8621A] hover:underline">{t("dash_operations.view_all_work_orders")} →</Link>
+            <Link href="/maintenance/work-orders" className="text-xs text-primary hover:underline">{t("dash_operations.view_all_work_orders")} →</Link>
           </div>
         </DashCard>
 
@@ -282,7 +282,7 @@ export default function OperationsTab() {
         icon={Activity}
         bodyClass="p-0"
         action={
-          <button onClick={loadKpis} className="text-xs text-[#E8621A] hover:underline flex items-center gap-1">
+          <button onClick={loadKpis} className="text-xs text-primary hover:underline flex items-center gap-1">
             <RefreshCw className="h-3 w-3" /> {t("common.refresh")}
           </button>
         }

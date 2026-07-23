@@ -258,7 +258,7 @@ export default function ForHomestayHost() {
         </div>
 
         <motion.div key={step} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3 }}
-          className="bg-white rounded-2xl border border-orange-100 shadow-sm p-6 sm:p-8 space-y-5">
+          className="bg-white rounded-2xl border border-primary/20 shadow-sm p-6 sm:p-8 space-y-5">
 
           {/* ── Step 1: Host Information ── */}
           {step === 1 && (
@@ -503,7 +503,7 @@ export default function ForHomestayHost() {
                     const on = f.packages_offered.includes(p);
                     return (
                       <button key={p} type="button" onClick={() => toggleArr("packages_offered", p)}
-                        className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${on ? "border-primary bg-orange-50" : "border-gray-200 hover:border-primary/40"}`}>
+                        className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${on ? "border-primary bg-primary/5" : "border-gray-200 hover:border-primary/40"}`}>
                         <div className="flex items-center gap-2">
                           <span className={`h-4 w-4 rounded border flex items-center justify-center text-[10px] ${on ? "bg-primary border-primary text-white" : "border-gray-300"}`}>{on ? "✓" : ""}</span>
                           <span className="font-medium text-sm text-gray-800">{t(`homestay.opt.package.${p}`)}</span>
@@ -626,7 +626,7 @@ export default function ForHomestayHost() {
               {/* Save as Draft — visible from step 2 onward */}
               {step >= 2 && (
                 <Button type="button" variant="outline" onClick={handleSaveDraft} disabled={savingDraft || submitting}
-                  className="border-primary/40 text-primary hover:bg-orange-50">
+                  className="border-primary/40 text-primary hover:bg-primary/10">
                   <Save className="h-4 w-4 mr-1.5" />
                   {savingDraft ? t("homestay.apply.saving_draft") : t("homestay.apply.save_draft")}
                 </Button>

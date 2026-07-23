@@ -41,7 +41,7 @@ function BookingCard({ booking }: { booking: Booking }) {
       className="bg-white rounded-2xl border hover:shadow-md transition-shadow overflow-hidden"
     >
       <div className="flex flex-col sm:flex-row">
-        <div className="w-full sm:w-20 h-20 bg-gradient-to-br from-orange-200 to-orange-100 flex items-center justify-center shrink-0">
+        <div className="w-full sm:w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center shrink-0">
           <Home className="h-8 w-8 text-primary/40" />
         </div>
         <div className="flex-1 p-4 space-y-2">

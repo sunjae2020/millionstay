@@ -60,7 +60,7 @@ function MiniCalendar({ bookings }: { bookings: any[] }) {
         <div className="flex border-b">
           <div className="w-32 shrink-0 px-2 py-1.5 text-[11px] font-semibold text-muted-foreground">{t("dash_overview.col_space")}</div>
           {dates.map((d) => (
-            <div key={d.toISOString()} className={`w-14 shrink-0 text-center py-1.5 text-[11px] ${d.toDateString() === today.toDateString() ? "text-[#E8621A] font-bold" : "text-muted-foreground"}`}>
+            <div key={d.toISOString()} className={`w-14 shrink-0 text-center py-1.5 text-[11px] ${d.toDateString() === today.toDateString() ? "text-primary font-bold" : "text-muted-foreground"}`}>
               <div>{d.getDate()}</div>
               <div className="text-[9px]">{d.toLocaleDateString("en", { weekday: "short" })}</div>
             </div>
@@ -118,7 +118,7 @@ function MiniStat({ icon: Icon, label, value, href }: {
   icon: React.ComponentType<{ className?: string }>; label: string; value: React.ReactNode; href: string;
 }) {
   return (
-    <Link href={href} className="bg-card rounded-xl border p-3 flex items-center gap-3 hover:shadow-sm hover:border-[#E8621A]/40 transition-all">
+    <Link href={href} className="bg-card rounded-xl border p-3 flex items-center gap-3 hover:shadow-sm hover:border-primary/40 transition-all">
       <div className="h-9 w-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: BRAND_SOFT, color: BRAND }}>
         <Icon className="h-4 w-4" />
       </div>
@@ -227,7 +227,7 @@ export default function OverviewTab() {
           className="lg:col-span-2"
           title={t("dash_overview.calendar_title")}
           icon={CalendarDays}
-          action={<Link href="/dashboard?tab=reservations" className="text-xs text-[#E8621A] hover:underline">{t("dash_overview.open_reservations")} →</Link>}
+          action={<Link href="/dashboard?tab=reservations" className="text-xs text-primary hover:underline">{t("dash_overview.open_reservations")} →</Link>}
         >
           <MiniCalendar bookings={bookings ?? []} />
         </DashCard>
@@ -235,16 +235,16 @@ export default function OverviewTab() {
         <div className="space-y-4">
           <DashCard title={t("dash_overview.quick_actions")}>
             <div className="grid grid-cols-2 gap-2">
-              <Link href="/booking/bookings/new" className="flex items-center gap-2 rounded-lg border p-2.5 text-xs font-semibold text-muted-foreground hover:border-[#E8621A]/50 hover:text-[#E8621A] hover:bg-[#E8621A]/5 transition-all">
+              <Link href="/booking/bookings/new" className="flex items-center gap-2 rounded-lg border p-2.5 text-xs font-semibold text-muted-foreground hover:border-primary/50 hover:text-primary hover:bg-primary/5 transition-all">
                 <Plus className="h-4 w-4" /> {t("dash_overview.action_new_booking")}
               </Link>
-              <Link href="/finance/invoices/new" className="flex items-center gap-2 rounded-lg border p-2.5 text-xs font-semibold text-muted-foreground hover:border-[#E8621A]/50 hover:text-[#E8621A] hover:bg-[#E8621A]/5 transition-all">
+              <Link href="/finance/invoices/new" className="flex items-center gap-2 rounded-lg border p-2.5 text-xs font-semibold text-muted-foreground hover:border-primary/50 hover:text-primary hover:bg-primary/5 transition-all">
                 <Receipt className="h-4 w-4" /> {t("dash_overview.action_invoice")}
               </Link>
-              <Link href="/property/properties/new" className="flex items-center gap-2 rounded-lg border p-2.5 text-xs font-semibold text-muted-foreground hover:border-[#E8621A]/50 hover:text-[#E8621A] hover:bg-[#E8621A]/5 transition-all">
+              <Link href="/property/properties/new" className="flex items-center gap-2 rounded-lg border p-2.5 text-xs font-semibold text-muted-foreground hover:border-primary/50 hover:text-primary hover:bg-primary/5 transition-all">
                 <Building2 className="h-4 w-4" /> {t("dash_overview.action_property")}
               </Link>
-              <Link href="/maintenance/work-orders/new" className="flex items-center gap-2 rounded-lg border p-2.5 text-xs font-semibold text-muted-foreground hover:border-[#E8621A]/50 hover:text-[#E8621A] hover:bg-[#E8621A]/5 transition-all">
+              <Link href="/maintenance/work-orders/new" className="flex items-center gap-2 rounded-lg border p-2.5 text-xs font-semibold text-muted-foreground hover:border-primary/50 hover:text-primary hover:bg-primary/5 transition-all">
                 <Wrench className="h-4 w-4" /> {t("dash_overview.action_work_order")}
               </Link>
             </div>
@@ -283,7 +283,7 @@ export default function OverviewTab() {
           title={t("dash_overview.recent_bookings")}
           icon={CalendarDays}
           bodyClass="p-0"
-          action={<Link href="/booking/bookings" className="text-xs text-[#E8621A] hover:underline">{t("dash_overview.view_all")} →</Link>}
+          action={<Link href="/booking/bookings" className="text-xs text-primary hover:underline">{t("dash_overview.view_all")} →</Link>}
         >
           <div className="overflow-auto">
             <table className="w-full text-xs">
@@ -307,7 +307,7 @@ export default function OverviewTab() {
                 ) : recentBookings.map(b => (
                   <tr key={b.id} className="hover:bg-muted/30">
                     <td className="px-3 py-2 font-mono font-medium">
-                      <Link href={`/booking/bookings/${b.id}`} className="hover:text-[#E8621A]">{b.booking_ref}</Link>
+                      <Link href={`/booking/bookings/${b.id}`} className="hover:text-primary">{b.booking_ref}</Link>
                     </td>
                     <td className="px-3 py-2">{(b as any).contact_name ?? "—"}</td>
                     <td className="px-3 py-2">{(b as any).space_name ?? "—"}</td>

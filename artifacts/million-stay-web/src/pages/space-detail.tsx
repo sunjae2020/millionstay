@@ -119,7 +119,7 @@ function PhotoGallery({
 
   if (images.length === 0) {
     return (
-      <div className="h-56 md:h-72 rounded-xl bg-gradient-to-br from-orange-400 to-amber-300 flex flex-col items-center justify-center gap-3">
+      <div className="h-56 md:h-72 rounded-xl bg-gradient-to-br from-primary to-amber-300 flex flex-col items-center justify-center gap-3">
         <span className="text-5xl">📸</span>
         <p className="text-white font-semibold">{spaceName}</p>
         <p className="text-white/70 text-sm">Photos coming soon</p>
@@ -201,19 +201,22 @@ function SpaceMiniMap({
       if (!containerRef.current) return;
       map = L.map(containerRef.current, { center: [lat, lng], zoom: 14, scrollWheelZoom: false, zoomControl: true });
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap", maxZoom: 19 }).addTo(map);
+      // Resolve the instance primary token to a concrete color: Leaflet writes
+      // path colors as SVG attributes, which don't evaluate CSS var().
+      const brandColor = `hsl(${getComputedStyle(document.documentElement).getPropertyValue("--brand-orange").trim() || "21 82% 51%"})`;
       if (blurred) {
         // Show approximate area circle instead of exact pin
         L.circle([lat, lng], {
           radius: 200,
-          color: "#F97316",
-          fillColor: "#F97316",
+          color: brandColor,
+          fillColor: brandColor,
           fillOpacity: 0.12,
           weight: 2,
           opacity: 0.6,
         }).addTo(map);
         const icon = L.divIcon({
           className: "",
-          html: `<div style="background:#F97316;width:20px;height:20px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,.3);opacity:0.7"></div>`,
+          html: `<div style="background:${brandColor};width:20px;height:20px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,.3);opacity:0.7"></div>`,
           iconAnchor: [10, 10],
         });
         L.marker([lat, lng], { icon }).addTo(map)
@@ -221,7 +224,7 @@ function SpaceMiniMap({
       } else {
         const icon = L.divIcon({
           className: "",
-          html: `<div style="background:#F97316;width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,.3)"></div>`,
+          html: `<div style="background:${brandColor};width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,.3)"></div>`,
           iconAnchor: [7, 7],
         });
         L.marker([lat, lng], { icon }).addTo(map)
@@ -454,11 +457,11 @@ export default function SpaceDetail() {
             <div>
               <h1 className="text-2xl font-bold text-gray-900 mb-3">{space.name}</h1>
               <div className="flex flex-wrap gap-2">
-                <span className="bg-orange-50 text-primary text-xs font-semibold px-3 py-1 rounded-full border border-orange-200">
+                <span className="bg-primary/5 text-primary text-xs font-semibold px-3 py-1 rounded-full border border-primary/30">
                   📅 {space.min_stay_weeks ?? 4} Weeks min.
                 </span>
                 {space.max_occupancy && (
-                  <span className="bg-orange-50 text-primary text-xs font-semibold px-3 py-1 rounded-full border border-orange-200">
+                  <span className="bg-primary/5 text-primary text-xs font-semibold px-3 py-1 rounded-full border border-primary/30">
                     👤 {space.max_occupancy} Guest{space.max_occupancy > 1 ? "s" : ""}
                   </span>
                 )}
@@ -516,7 +519,7 @@ export default function SpaceDetail() {
                                 <span className="text-xs bg-green-100 text-green-700 font-semibold px-1.5 py-0.5 rounded">Best Value</span>
                               )}
                               {saving && saving > 0 && (
-                                <span className="text-xs bg-orange-100 text-primary font-semibold px-1.5 py-0.5 rounded">Save ${saving}/wk</span>
+                                <span className="text-xs bg-primary/10 text-primary font-semibold px-1.5 py-0.5 rounded">Save ${saving}/wk</span>
                               )}
                             </div>
                             <span className="font-bold text-primary text-base">${p.price}<span className="text-xs font-normal text-gray-400">/wk</span></span>
@@ -607,12 +610,12 @@ export default function SpaceDetail() {
                   {/* Fee summary when dates picked */}
                   {stayDays && stayDays > 0 && (
                     <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
-                      className="rounded-xl bg-orange-50 border border-orange-100 p-3 space-y-1.5 text-xs">
+                      className="rounded-xl bg-primary/5 border border-primary/20 p-3 space-y-1.5 text-xs">
                       <div className="flex justify-between text-gray-400">
                         <span>${weeklyRate}/wk ÷ 7 × {stayDays} days</span>
                         <span>${rentTotal?.toLocaleString()}</span>
                       </div>
-                      <div className="border-t border-orange-200 pt-1.5 space-y-1">
+                      <div className="border-t border-primary/30 pt-1.5 space-y-1">
                         <p className="text-gray-400 font-medium">Initial payment (once-off):</p>
                         <div className="flex justify-between text-gray-500">
                           <span>Security Bond{productBond == null ? " (4 wk)" : " (refundable)"}</span>
@@ -634,7 +637,7 @@ export default function SpaceDetail() {
                           <span>Initial Rent (2 wk)</span>
                           <span>${initialRent.toLocaleString()}</span>
                         </div>
-                        <div className="flex justify-between font-bold text-gray-800 border-t border-orange-200 pt-1">
+                        <div className="flex justify-between font-bold text-gray-800 border-t border-primary/30 pt-1">
                           <span>Est. Due Today</span>
                           <span className="text-primary">${totalToday.toLocaleString()}</span>
                         </div>
@@ -667,7 +670,7 @@ export default function SpaceDetail() {
                           target="_blank"
                           rel="noopener noreferrer"
                         >
-                          <Button variant="outline" className="w-full border-primary text-primary hover:bg-orange-50 gap-2 rounded-xl">
+                          <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary/10 gap-2 rounded-xl">
                             <MapPinned className="h-4 w-4" />
                             VIEW LOCATION
                           </Button>

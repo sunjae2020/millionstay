@@ -27,7 +27,7 @@ interface Message {
   created_at: string;
 }
 
-const ACCENT = "#E8621A";
+const ACCENT = "hsl(var(--primary))";
 
 export default function Conversations() {
   const { t } = useTranslation();

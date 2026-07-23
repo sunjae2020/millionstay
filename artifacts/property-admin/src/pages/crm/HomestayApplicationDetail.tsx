@@ -105,7 +105,7 @@ const DOC_PRESETS = [
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="border rounded-lg overflow-hidden">
-      <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{title}</div>
+      <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">{title}</div>
       <div className="p-4">{children}</div>
     </div>
   );

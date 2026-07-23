@@ -38,9 +38,9 @@ export function SpaceMap({
   const getMarkerHtml = useCallback(
     (price: number, isActive: boolean) => `
     <div style="
-      background: ${isActive ? "#F97316" : "#ffffff"};
+      background: ${isActive ? "hsl(var(--brand-orange))" : "#ffffff"};
       color: ${isActive ? "#ffffff" : "#1a1a1a"};
-      border: 2px solid ${isActive ? "#ea6600" : "#F97316"};
+      border: 2px solid ${isActive ? "hsl(var(--brand-burnt))" : "hsl(var(--brand-orange))"};
       border-radius: 20px;
       padding: 4px 10px;
       font-size: 12px;
@@ -118,7 +118,7 @@ export function SpaceMap({
               <span style="font-weight:700;font-size:14px;color:#111">$${space.base_weekly_price}<span style="font-size:11px;font-weight:400;color:#888">/wk</span></span>
               ${space.min_contract_period ? `<span style="font-size:11px;color:#888">Min ${space.min_contract_period}wks</span>` : ""}
             </div>
-            <a href="/spaces/${space.id}" style="display:block;text-align:center;background:#F97316;color:#fff;border-radius:7px;padding:7px 0;font-size:12px;font-weight:700;text-decoration:none">View Details →</a>
+            <a href="/spaces/${space.id}" style="display:block;text-align:center;background:hsl(var(--brand-orange));color:#fff;border-radius:7px;padding:7px 0;font-size:12px;font-weight:700;text-decoration:none">View Details →</a>
           </div>
         </div>
       `;

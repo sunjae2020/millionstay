@@ -63,7 +63,7 @@ export function HomestayNavbar() {
                 key={l.href}
                 href={l.href}
                 aria-current={active ? "page" : undefined}
-                className="relative px-3 py-2 text-sm font-medium transition-colors rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#E8621A]"
+                className="relative px-3 py-2 text-sm font-medium transition-colors rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
                 style={{ color: active ? HS.orange : HS.navy }}
               >
                 {t(l.labelKey)}
@@ -83,7 +83,7 @@ export function HomestayNavbar() {
           <HomestayLanguageSwitcher />
           <Link
             href="/for-homestay-host"
-            className="px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#E8621A]"
+            className="px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
             style={{ backgroundColor: HS.orange, borderRadius: HS_RADIUS.pill }}
           >
             {t("homestay.nav.become_host")}

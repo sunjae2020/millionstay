@@ -138,7 +138,7 @@ export default function ChannelsTab() {
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <p className="text-xs text-muted-foreground">
           {t("dash_channels.intro_prefix")}
-          {" "}<Link href="/property/spaces" className="text-[#E8621A] hover:underline">{t("dash_channels.space")}</Link>{t("dash_channels.intro_suffix")}
+          {" "}<Link href="/property/spaces" className="text-primary hover:underline">{t("dash_channels.space")}</Link>{t("dash_channels.intro_suffix")}
         </p>
         <Button variant="outline" size="sm" className="gap-1.5" onClick={() => load()} disabled={loading}>
           <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> {t("common.refresh")}
@@ -195,7 +195,7 @@ export default function ChannelsTab() {
             <Radio className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
             <p className="text-sm text-muted-foreground">{t("dash_channels.empty_title")}</p>
             <p className="text-xs text-muted-foreground/70 mt-1">
-              {t("dash_channels.empty_desc_prefix")}<Link href="/property/spaces" className="text-[#E8621A] hover:underline">{t("dash_channels.space")}</Link>{t("dash_channels.empty_desc_suffix")}
+              {t("dash_channels.empty_desc_prefix")}<Link href="/property/spaces" className="text-primary hover:underline">{t("dash_channels.space")}</Link>{t("dash_channels.empty_desc_suffix")}
             </p>
           </div>
         ) : (
@@ -220,7 +220,7 @@ export default function ChannelsTab() {
                 {listings.map(l => (
                   <tr key={l.id} className="hover:bg-muted/30">
                     <td className="px-3 py-2 whitespace-nowrap">
-                      <Link href={`/property/spaces/${l.space_id}`} className="font-medium hover:text-[#E8621A] flex items-center gap-1.5">
+                      <Link href={`/property/spaces/${l.space_id}`} className="font-medium hover:text-primary flex items-center gap-1.5">
                         <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
                         {l.space_name ?? t("dash_channels.space_numbered", { id: l.space_id })}
                       </Link>

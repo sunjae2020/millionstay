@@ -237,7 +237,7 @@ export default function BookingDetail() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {status === "Draft" && (
-            <Button className="bg-[#E8621A] hover:bg-[#d4561a] text-white" onClick={() => submitMutation.mutate({ id: Number(id) })}>
+            <Button className="bg-primary hover:bg-[#d4561a] text-white" onClick={() => submitMutation.mutate({ id: Number(id) })}>
               {t("booking.btn_submit")}
             </Button>
           )}
@@ -299,7 +299,7 @@ export default function BookingDetail() {
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setLocation("/booking/bookings")}><ArrowLeft className="w-4 h-4 mr-1" /> {t("common.back")}</Button>
             {!isReadOnly && (
-              <Button onClick={handleSubmit(onSubmit)} className="bg-[#E8621A] hover:bg-[#d4561a] text-white"><Save className="w-4 h-4 mr-1" /> {t("common.save")}</Button>
+              <Button onClick={handleSubmit(onSubmit)} className="bg-primary hover:bg-[#d4561a] text-white"><Save className="w-4 h-4 mr-1" /> {t("common.save")}</Button>
             )}
           </div>
         }
@@ -308,7 +308,7 @@ export default function BookingDetail() {
         {!isNew && <FSMActionBar />}
 
         <div className="rounded-lg border bg-white p-4 sm:p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">{t("booking.section_general")}</h3>
+          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">{t("booking.section_general")}</h3>
           {!isNew && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -324,7 +324,7 @@ export default function BookingDetail() {
         </div>
 
         <div className="rounded-lg border bg-white p-4 sm:p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">{t("booking.section_main")}</h3>
+          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">{t("booking.section_main")}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>{t("booking.label_account")} *</Label>
@@ -371,7 +371,7 @@ export default function BookingDetail() {
         </div>
 
         <div className="rounded-lg border bg-white p-4 sm:p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">{t("booking.section_space_product")}</h3>
+          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">{t("booking.section_space_product")}</h3>
           <div>
             <Label>{t("booking.label_space")} *</Label>
             <Controller name="space_id" control={control} render={({ field }) => (
@@ -409,7 +409,7 @@ export default function BookingDetail() {
         </div>
 
         <div className="rounded-lg border bg-white p-4 sm:p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">{t("booking.section_period")}</h3>
+          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">{t("booking.section_period")}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>{t("booking.label_checkin_date")} *</Label>
@@ -432,7 +432,7 @@ export default function BookingDetail() {
         </div>
 
         <div className="rounded-lg border bg-white p-4 sm:p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-[#E8621A] uppercase tracking-wider border-b pb-2">{t("booking.section_rate")}</h3>
+          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">{t("booking.section_rate")}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <Label>{t("booking.label_weekly_rate")} *</Label>
@@ -469,7 +469,7 @@ export default function BookingDetail() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id ? "border-[#E8621A] text-[#E8621A]" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                  className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
                 >
                   {tab.label}{tab.id === "invoices" && invoices?.length ? ` (${invoices.length})` : ""}
                 </button>
@@ -506,7 +506,7 @@ export default function BookingDetail() {
                       ) : documents.map((doc) => (
                         <tr key={doc.id} className="border-b hover:bg-gray-50">
                           <td className="px-4 py-3">{doc.doc_type ?? "—"}</td>
-                          <td className="px-4 py-3 text-[#E8621A]">
+                          <td className="px-4 py-3 text-primary">
                             {doc.file_url ? <a href={doc.file_url} target="_blank" rel="noreferrer" className="hover:underline">{doc.file_name ?? doc.file_url}</a> : doc.file_name ?? "—"}
                           </td>
                           <td className="px-4 py-3">
@@ -601,7 +601,7 @@ export default function BookingDetail() {
                 <div className="flex justify-between items-center">
                   <h4 className="font-medium text-sm">{t("booking.tab_invoices")}</h4>
                   <Link href={`/finance/invoices/new`}>
-                    <button className="text-xs text-[#E8621A] hover:underline">+ {t("invoice.new")}</button>
+                    <button className="text-xs text-primary hover:underline">+ {t("invoice.new")}</button>
                   </Link>
                 </div>
                 <div className="rounded-lg border bg-white overflow-x-auto">
@@ -626,7 +626,7 @@ export default function BookingDetail() {
                         <tr key={inv.id} className="border-b hover:bg-gray-50">
                           <td className="px-4 py-3">
                             <Link href={`/finance/invoices/${inv.id}`}>
-                              <span className="text-[#E8621A] hover:underline cursor-pointer">{inv.invoice_ref ?? `#${inv.id}`}</span>
+                              <span className="text-primary hover:underline cursor-pointer">{inv.invoice_ref ?? `#${inv.id}`}</span>
                             </Link>
                           </td>
                           <td className="px-4 py-3">{inv.amount != null ? Number(inv.amount).toFixed(2) : "—"}</td>
@@ -692,7 +692,7 @@ export default function BookingDetail() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setExtendDialogOpen(false)}>{t("common.cancel")}</Button>
-            <Button className="bg-[#E8621A] hover:bg-[#d4561a] text-white" onClick={() => {
+            <Button className="bg-primary hover:bg-[#d4561a] text-white" onClick={() => {
               if (!extendDate) return;
               extendMutation.mutate({ id: Number(id), data: { new_check_out_date: extendDate } });
             }}>{t("common.confirm")}</Button>
@@ -727,7 +727,7 @@ export default function BookingDetail() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setUploadDocOpen(false)}>{t("common.cancel")}</Button>
-            <Button className="bg-[#E8621A] hover:bg-[#d4561a] text-white" onClick={() => {
+            <Button className="bg-primary hover:bg-[#d4561a] text-white" onClick={() => {
               createDocMutation.mutate({
                 id: Number(id),
                 data: { doc_type: docType || undefined, file_url: docUrl || undefined, file_name: docUrl?.split("/").pop() || undefined, expiry_date: docExpiry || undefined },
@@ -788,7 +788,7 @@ export default function BookingDetail() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => { setAddServiceOpen(false); resetServiceForm(); }}>{t("common.cancel")}</Button>
-            <Button className="bg-[#E8621A] hover:bg-[#d4561a] text-white" disabled={!svcName.trim()} onClick={() => {
+            <Button className="bg-primary hover:bg-[#d4561a] text-white" disabled={!svcName.trim()} onClick={() => {
               const qty = Number(svcQty) || 1;
               const price = Number(svcPrice) || 0;
               addServiceMutation.mutate({
@@ -828,7 +828,7 @@ export default function BookingDetail() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditSvc(null)}>{t("common.cancel")}</Button>
             <Button
-              className="bg-[#E8621A] hover:bg-[#d4561a] text-white"
+              className="bg-primary hover:bg-[#d4561a] text-white"
               disabled={updateServiceMutation.isPending}
               onClick={() => editSvc && updateServiceMutation.mutate({ svcId: editSvc.id, payload: { status: editSvcStatus, notes: editSvcNotes || null } })}
             >

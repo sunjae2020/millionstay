@@ -62,7 +62,7 @@ export function AccommodationOptionFields({ value, onChange }: Props) {
       </div>
 
       {isHomestay && (
-        <div className="grid grid-cols-2 gap-4 rounded-lg border border-orange-200 bg-orange-50/50 p-3">
+        <div className="grid grid-cols-2 gap-4 rounded-lg border border-primary/20 bg-primary/5 p-3">
           {renderSelect(t("accommodation_options.field.meal_plan"), "meal_plan", MEAL_PLAN_OPTIONS)}
           {renderSelect(t("accommodation_options.field.guest_age"), "guest_age", GUEST_AGE_OPTIONS)}
         </div>

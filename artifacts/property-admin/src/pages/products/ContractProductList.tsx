@@ -109,7 +109,7 @@ export default function ContractProductList() {
             </div>
           </div>
           <Link href="/products/contract-products/new">
-            <Button className="bg-[#E8621A] hover:bg-[#d4561a] text-white"><Plus className="h-4 w-4 mr-2" />{t("common.new")} {t("nav.products")}</Button>
+            <Button className="bg-primary hover:bg-[#d4561a] text-white"><Plus className="h-4 w-4 mr-2" />{t("common.new")} {t("nav.products")}</Button>
           </Link>
         </div>
 
@@ -147,11 +147,11 @@ export default function ContractProductList() {
         </div>
 
         {isSuperAdmin && selectedIds.size > 0 && (
-          <div className="flex items-center gap-3 mb-3 px-4 py-2.5 rounded-lg bg-orange-50 border border-orange-200">
-            <span className="text-sm font-medium text-orange-800">{selectedIds.size} item{selectedIds.size > 1 ? "s" : ""} selected</span>
-            <button onClick={clearSelection} className="text-orange-500 hover:text-orange-700"><X className="h-3.5 w-3.5" /></button>
+          <div className="flex items-center gap-3 mb-3 px-4 py-2.5 rounded-lg bg-primary/10 border border-primary/20">
+            <span className="text-sm font-medium text-primary">{selectedIds.size} item{selectedIds.size > 1 ? "s" : ""} selected</span>
+            <button onClick={clearSelection} className="text-primary hover:text-primary"><X className="h-3.5 w-3.5" /></button>
             <div className="ml-auto flex items-center gap-2">
-              {isBulkLoading && <Loader2 className="h-4 w-4 animate-spin text-orange-500" />}
+              {isBulkLoading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
               <Button size="sm" variant="outline" className="h-7 border-amber-300 text-amber-700 hover:bg-amber-50 gap-1.5" onClick={() => setBulkAction("archive")} disabled={isBulkLoading}>
                 <Archive className="h-3.5 w-3.5" /> Archive Selected
               </Button>
@@ -183,10 +183,10 @@ export default function ContractProductList() {
                     <TableCell colSpan={isSuperAdmin ? 9 : 8} className="text-center text-muted-foreground py-12">{t("contract_product.no_products")}</TableCell>
                   </TableRow>
                 ) : pagination.paginatedItems.map(p => (
-                  <TableRow key={p.id} className={`hover:bg-muted/30 ${selectedIds.has(p.id) ? "bg-orange-50/50" : ""}`}>
+                  <TableRow key={p.id} className={`hover:bg-muted/30 ${selectedIds.has(p.id) ? "bg-primary/5" : ""}`}>
                     {isSuperAdmin && <TableCell><Checkbox checked={selectedIds.has(p.id)} onCheckedChange={() => toggleSelect(p.id)} onClick={(e) => e.stopPropagation()} /></TableCell>}
                     <TableCell className="font-medium">
-                      <Link href={`/products/contract-products/${p.id}`} className="text-[#E8621A] hover:underline">
+                      <Link href={`/products/contract-products/${p.id}`} className="text-primary hover:underline">
                         {p.name}
                       </Link>
                       <div className="text-xs text-muted-foreground">{p.product_type}</div>
@@ -209,7 +209,7 @@ export default function ContractProductList() {
                     <TableCell className="text-sm font-mono">
                       {p.weekly_rate != null ? `$${p.weekly_rate.toFixed(0)}/wk` : "—"}
                     </TableCell>
-                    <TableCell className="text-sm font-mono font-semibold text-[#E8621A]">
+                    <TableCell className="text-sm font-mono font-semibold text-primary">
                       {p.effective_weekly_rate != null && p.effective_weekly_rate !== p.weekly_rate
                         ? `$${p.effective_weekly_rate.toFixed(0)}/wk`
                         : (p.weekly_rate != null ? `$${p.weekly_rate.toFixed(0)}/wk` : "—")}

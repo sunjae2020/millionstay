@@ -163,7 +163,7 @@ export default function ServiceDetail() {
 
         {/* Basic Info */}
         <div className="border rounded-lg bg-white overflow-hidden">
-          <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">
+          <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">
             {t('service.section_general')}
           </div>
           <div className="p-5 space-y-4">
@@ -204,7 +204,7 @@ export default function ServiceDetail() {
 
         {/* Pricing */}
         <div className="border rounded-lg bg-white overflow-hidden">
-          <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">
+          <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">
             {t('service.section_pricing')}
           </div>
           <div className="p-5 grid grid-cols-2 gap-4">
@@ -315,7 +315,7 @@ export default function ServiceDetail() {
 
         {/* Display & Status */}
         <div className="border rounded-lg bg-white overflow-hidden">
-          <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">
+          <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">
             {t('service.section_display')}
           </div>
           <div className="p-5 space-y-4">

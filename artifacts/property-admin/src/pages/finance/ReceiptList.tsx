@@ -152,7 +152,7 @@ export default function ReceiptList() {
                   <tr key={r.id} className="hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3">
                       <Link href={`/finance/invoices/${r.id}`}
-                        className="text-[#E8621A] hover:underline font-mono text-xs font-semibold">
+                        className="text-primary hover:underline font-mono text-xs font-semibold">
                         {r.invoice_ref}
                       </Link>
                     </td>

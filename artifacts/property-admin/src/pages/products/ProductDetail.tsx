@@ -19,6 +19,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { cn } from "@/lib/utils";
 import { AccommodationOptionFields } from "@/components/AccommodationOptionFields";
 import { HOMESTAY_ROOM_TYPE } from "@/lib/accommodationOptions";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
 
 const STATUS_COLORS: Record<string, string> = {
   Active: "bg-green-100 text-green-700",
@@ -115,6 +117,8 @@ export default function ProductDetail() {
     if (res.ok) { toast({ title: "Service removed" }); setAccSvcs(prev => prev.filter(s => s.id !== mapId)); }
   };
 
+  const { currency: brandCurrency, currencyPosition } = useBrand();
+
   const { data: product } = useQuery({
     queryKey: ["product", id],
     queryFn: () => fetchProduct(id!),
@@ -161,7 +165,7 @@ export default function ProductDetail() {
       display_on_booking_page: product.display_on_booking_page ?? true,
       display_on_invoice: product.display_on_invoice ?? true,
     } : {
-      name: "", item_description: "", price: "", weekly_rate: "", currency: "AUD",
+      name: "", item_description: "", price: "", weekly_rate: "", currency: brandCurrency,
       product_group_id: "", product_type_id: "", promotion_id: "", gst_included: false,
       min_contract_period: "", min_contract_period_unit: "weeks",
       max_stay_weeks: "", billing_frequency: "Biweekly", term_type: "",
@@ -303,6 +307,7 @@ export default function ProductDetail() {
                 <Select value={watch("currency")} onValueChange={v => setValue("currency", v)}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="KRW">KRW (₩)</SelectItem>
                     <SelectItem value="AUD">AUD</SelectItem>
                     <SelectItem value="USD">USD</SelectItem>
                   </SelectContent>
@@ -485,9 +490,9 @@ export default function ProductDetail() {
                       <p className="text-xs text-muted-foreground">
                         {s.service_type} ·{" "}
                         {s.custom_price != null
-                          ? `${s.currency} $${s.custom_price.toFixed(2)} (custom)`
+                          ? `${formatMoney(s.custom_price, s.currency, currencyPosition)} (custom)`
                           : s.base_price != null
-                          ? `${s.currency} $${s.base_price.toFixed(2)}`
+                          ? formatMoney(s.base_price, s.currency, currencyPosition)
                           : "No price"}
                       </p>
                     </div>
@@ -527,7 +532,7 @@ export default function ProductDetail() {
                 <SelectContent>
                   {availableToAdd.map(c => (
                     <SelectItem key={c.id} value={String(c.id)}>
-                      {c.name}{c.base_price != null ? ` — ${c.currency} $${c.base_price.toFixed(2)}` : ""}
+                      {c.name}{c.base_price != null ? ` — ${formatMoney(c.base_price, c.currency, currencyPosition)}` : ""}
                     </SelectItem>
                   ))}
                   {availableToAdd.length === 0 && <SelectItem value="_none" disabled>All services already added</SelectItem>}

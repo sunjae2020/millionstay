@@ -53,12 +53,12 @@ export default function FAQ() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
-                className="rounded-lg overflow-hidden border border-orange-100"
+                className="rounded-lg overflow-hidden border border-primary/20"
               >
                 <button
                   onClick={() => setOpenIndex(isOpen ? null : i)}
                   className={`w-full flex items-center justify-between gap-3 px-5 py-4 text-left transition-colors ${
-                    isOpen ? "bg-primary text-white" : "bg-orange-50 text-gray-800 hover:bg-orange-100"
+                    isOpen ? "bg-primary text-white" : "bg-primary/5 text-gray-800 hover:bg-primary/10"
                   }`}
                 >
                   <span className="text-sm font-medium leading-snug">{t(`faq.${key}`)}</span>
@@ -78,7 +78,7 @@ export default function FAQ() {
                       transition={{ duration: 0.25, ease: "easeInOut" }}
                       className="overflow-hidden"
                     >
-                      <div className="px-5 py-4 bg-white text-sm text-gray-600 leading-relaxed border-t border-orange-100">
+                      <div className="px-5 py-4 bg-white text-sm text-gray-600 leading-relaxed border-t border-primary/20">
                         {t(`faq.${key.replace("q", "a")}`)}
                       </div>
                     </motion.div>
@@ -101,7 +101,7 @@ export default function FAQ() {
                     className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
                       i === 0
                         ? "bg-primary text-white font-semibold"
-                        : "text-gray-600 hover:bg-orange-50 hover:text-primary"
+                        : "text-gray-600 hover:bg-primary/10 hover:text-primary"
                     }`}
                   >
                     {t(`faq.${key}`)}
@@ -117,7 +117,7 @@ export default function FAQ() {
               <h4 className="font-bold text-base mb-1">{t("faq.cta_title")}</h4>
               <p className="text-sm text-white/80 mb-4">{t("faq.cta_desc")}</p>
               <Link href="/contact">
-                <button className="w-full bg-white text-primary font-bold text-sm py-2.5 rounded-lg hover:bg-orange-50 transition-colors">
+                <button className="w-full bg-white text-primary font-bold text-sm py-2.5 rounded-lg hover:bg-primary/10 transition-colors">
                   {t("faq.cta_btn")}
                 </button>
               </Link>

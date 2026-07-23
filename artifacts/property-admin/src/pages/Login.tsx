@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import logoSrc from "/millionstay-logo.png";
 import { APP_NAME } from "@/lib/appName";
 
-const BRAND = "#E8621A";
+const BRAND = "hsl(var(--primary))";
 
 const LANGUAGES = [
   { code: "en", label: "English" },
@@ -59,9 +59,9 @@ function LoginLanguageSwitcher() {
               type="button"
               onClick={() => changeLang(l.code)}
               className={cn(
-                "w-full text-left px-4 py-2 text-xs hover:bg-orange-50 transition-colors",
+                "w-full text-left px-4 py-2 text-xs hover:bg-primary/10 transition-colors",
                 l.code === i18n.language
-                  ? "font-semibold text-[#E8621A]"
+                  ? "font-semibold text-primary"
                   : "text-slate-700"
               )}
             >
@@ -102,13 +102,13 @@ export default function LoginPage() {
       {/* ── Left brand panel ── */}
       <div
         className="hidden lg:flex lg:w-[48%] flex-col justify-between p-12 relative overflow-hidden"
-        style={{ background: "linear-gradient(150deg, #1c1008 0%, #2e1a06 55%, #1c1008 100%)" }}
+        style={{ background: "linear-gradient(150deg, color-mix(in srgb, hsl(var(--brand-orange)) 10%, #0a0a0a) 0%, color-mix(in srgb, hsl(var(--brand-orange)) 18%, #0a0a0a) 55%, color-mix(in srgb, hsl(var(--brand-orange)) 10%, #0a0a0a) 100%)" }}
       >
         {/* Ambient glow blobs */}
         <div className="absolute -top-40 -left-40 w-[480px] h-[480px] rounded-full opacity-25 pointer-events-none"
           style={{ background: `radial-gradient(circle, ${BRAND}, transparent 70%)` }} />
         <div className="absolute -bottom-32 right-[-80px] w-[400px] h-[400px] rounded-full opacity-15 pointer-events-none"
-          style={{ background: `radial-gradient(circle, #FF9A50, transparent 70%)` }} />
+          style={{ background: `radial-gradient(circle, color-mix(in srgb, hsl(var(--primary)) 72%, white), transparent 70%)` }} />
 
         {/* Logo */}
         <div className="relative z-10">
@@ -243,7 +243,7 @@ export default function LoginPage() {
                 type="submit"
                 disabled={loading}
                 className="w-full h-11 rounded-lg text-sm font-semibold text-white transition-opacity disabled:opacity-60 flex items-center justify-center gap-2 shadow-md"
-                style={{ background: `linear-gradient(135deg, ${BRAND} 0%, #FF8C3A 100%)` }}
+                style={{ background: `linear-gradient(135deg, ${BRAND} 0%, color-mix(in srgb, hsl(var(--primary)) 72%, white) 100%)` }}
               >
                 {loading
                   ? <><Loader2 className="h-4 w-4 animate-spin" /> {t("login.signing_in")}</>

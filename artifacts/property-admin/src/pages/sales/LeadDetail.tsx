@@ -235,7 +235,7 @@ export default function LeadDetail() {
         <div className="grid gap-5">
           {/* General */}
           <div className="border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t("lead.section_general")}</div>
+            <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">{t("lead.section_general")}</div>
             <div className="p-4 grid gap-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
@@ -279,7 +279,7 @@ export default function LeadDetail() {
 
           {/* Inquiry */}
           <div className="border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t("lead.section_contact")}</div>
+            <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">{t("lead.section_contact")}</div>
             <div className="p-4 grid gap-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
@@ -329,7 +329,7 @@ export default function LeadDetail() {
 
           {/* Preferences */}
           <div className="border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t("lead.section_property")}</div>
+            <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">{t("lead.section_property")}</div>
             <div className="p-4 grid gap-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
@@ -410,7 +410,7 @@ export default function LeadDetail() {
 
           {/* Assignment */}
           <div className="border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t("lead.section_details")}</div>
+            <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">{t("lead.section_details")}</div>
             <div className="p-4">
               <div className="grid gap-4">
                 <div className="grid gap-1.5">
@@ -423,7 +423,7 @@ export default function LeadDetail() {
 
           {/* Description */}
           <div className="border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">{t("lead.label_notes")}</div>
+            <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">{t("lead.label_notes")}</div>
             <div className="p-4">
               <Textarea {...register("description")} placeholder="Internal notes…" rows={3} />
             </div>
@@ -431,7 +431,7 @@ export default function LeadDetail() {
 
           {/* Admin */}
           <div className="border rounded-lg overflow-hidden">
-            <div className="bg-orange-50 border-b px-4 py-2 text-xs font-semibold text-[#E8621A] uppercase tracking-wider">Admin</div>
+            <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">Admin</div>
             <div className="p-4 grid gap-4">
               <div className="grid gap-1.5">
                 <Label>Record Status</Label>

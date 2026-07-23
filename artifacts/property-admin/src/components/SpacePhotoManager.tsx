@@ -194,10 +194,10 @@ export function SpacePhotoManager({ spaceId }: SpacePhotoManagerProps) {
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-blue-800">{pendingFiles.length} photo(s) ready to upload</p>
-            <p className="text-xs text-[#E8621A] mt-0.5">{pendingFiles.map((f) => f.name).join(", ")}</p>
+            <p className="text-xs text-primary mt-0.5">{pendingFiles.map((f) => f.name).join(", ")}</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="text-[#E8621A]" onClick={() => setPendingFiles([])}>
+            <Button variant="ghost" size="sm" className="text-primary" onClick={() => setPendingFiles([])}>
               Clear
             </Button>
             <Button size="sm" className="gap-1.5" onClick={handleUpload} disabled={uploading}>
@@ -228,7 +228,7 @@ export function SpacePhotoManager({ spaceId }: SpacePhotoManagerProps) {
               key={image.id}
               className={cn(
                 "rounded-xl border overflow-hidden bg-card shadow-sm transition-all",
-                image.is_primary && "ring-2 ring-orange-400",
+                image.is_primary && "ring-2 ring-primary",
               )}
             >
               <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
@@ -239,7 +239,7 @@ export function SpacePhotoManager({ spaceId }: SpacePhotoManagerProps) {
                   onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                 />
                 {image.is_primary && (
-                  <div className="absolute top-2 left-2 flex items-center gap-1 bg-orange-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">
+                  <div className="absolute top-2 left-2 flex items-center gap-1 bg-primary text-white text-xs font-medium px-2 py-0.5 rounded-full">
                     <Star className="h-3 w-3 fill-white" /> Primary
                   </div>
                 )}

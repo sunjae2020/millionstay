@@ -64,7 +64,7 @@ export default function Blog() {
       <Navbar />
 
       <main className="flex-1">
-        <div className="bg-gradient-to-br from-primary/10 via-orange-50 to-white py-16 md:py-24">
+        <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-white py-16 md:py-24">
           <div className="max-w-7xl mx-auto px-6">
             <div className="max-w-2xl">
               <span className="inline-block text-primary text-sm font-semibold uppercase tracking-widest mb-3">{APP_NAME} Blog</span>
@@ -130,7 +130,7 @@ export default function Blog() {
                           />
                         </div>
                       ) : (
-                        <div className="md:w-1/2 h-64 md:h-auto bg-gradient-to-br from-primary/20 to-orange-100 flex items-center justify-center">
+                        <div className="md:w-1/2 h-64 md:h-auto bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
                           <BookOpen className="h-16 w-16 text-primary/40" />
                         </div>
                       )}
@@ -175,7 +175,7 @@ export default function Blog() {
                             />
                           </div>
                         ) : (
-                          <div className="h-52 bg-gradient-to-br from-primary/10 to-orange-50 flex items-center justify-center">
+                          <div className="h-52 bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
                             <BookOpen className="h-10 w-10 text-primary/30" />
                           </div>
                         )}

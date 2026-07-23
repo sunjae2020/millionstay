@@ -147,10 +147,10 @@ export default function WebsiteContentList() {
             const labelKey = page.key.replace(/-/g, "_");
             return (
               <Link key={page.key} href={`/content/pages/${page.key}`}>
-                <Card className="p-5 hover:border-[#E8621A]/40 hover:shadow-md transition-all cursor-pointer group">
+                <Card className="p-5 hover:border-primary/40 hover:shadow-md transition-all cursor-pointer group">
                   <div className="flex items-start gap-4">
-                    <div className="rounded-lg bg-[#E8621A]/10 p-2.5 shrink-0 group-hover:bg-[#E8621A]/20 transition-colors">
-                      <Icon className="h-5 w-5 text-[#E8621A]" />
+                    <div className="rounded-lg bg-primary/10 p-2.5 shrink-0 group-hover:bg-primary/20 transition-colors">
+                      <Icon className="h-5 w-5 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">

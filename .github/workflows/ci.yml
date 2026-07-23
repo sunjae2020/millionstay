@@ -45,3 +45,50 @@ jobs:
           --filter "./artifacts/**"
           --filter "!@workspace/mockup-sandbox"
           --if-present run build
+
+  # Auto-deploy property-admin to Vercel on merge to main.
+  #
+  # api-server (→ Railway) and million-stay-web (→ Vercel) auto-deploy via their
+  # own platform Git integrations. property-admin is a *pre-built* Vercel project
+  # (vercel.json buildCommand is a no-op echo — see artifacts/property-admin/
+  # vercel.json), so there's nothing for Vercel's Git integration to build. This
+  # job reproduces the documented manual deploy (pnpm build → vercel deploy) and
+  # only runs after `verify` passes, so a red build never ships.
+  #
+  # Requires one repo secret: VERCEL_TOKEN (a Vercel access token). The org/
+  # project IDs below are non-secret identifiers (mirror of the gitignored
+  # artifacts/property-admin/.vercel/project.json).
+  deploy-admin:
+    name: Deploy property-admin
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: team_VD0mxpPcMmO0IXw9XPlwhzyw
+      VERCEL_PROJECT_ID: prj_yWV9Drabnu190eUDbXyleRIhbcQp
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Mirrors the documented manual deploy: build locally, then hand the
+      # pre-built dist/public to Vercel (whose remote buildCommand is a no-op).
+      - name: Build property-admin
+        run: pnpm --filter @workspace/property-admin build
+
+      - name: Deploy to Vercel (production)
+        working-directory: artifacts/property-admin
+        run: npx vercel@latest deploy --prod --yes --token="$VERCEL_TOKEN"
