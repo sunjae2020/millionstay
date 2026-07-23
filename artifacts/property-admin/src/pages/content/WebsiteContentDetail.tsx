@@ -181,10 +181,25 @@ const PAGE_FIELDS: Record<string, SectionField[]> = {
   //    prefixed. Fields overlay the built-in i18n copy; an empty field falls
   //    back to the default. Floor-plan/hero images use image URL fields.
   "dev-home": [
-    { key: "hero_image_url", label: "Hero Background Image URL", type: "image" },
-    { key: "hero_eyebrow", label: "Hero Eyebrow", type: "text" },
-    { key: "hero_title", label: "Hero Title", type: "text" },
-    { key: "hero_subtitle", label: "Hero Subtitle", type: "textarea" },
+    { key: "hero_eyebrow", label: "Hero Eyebrow (shown on every slide)", type: "text" },
+    // Hero background slideshow — 3–5 slides, each with its own image + title +
+    // subtitle. A slide appears when it has an image or a title. Slides 1–4 ship
+    // with default free stock images; clear/replace them here. Slide 5 is opt-in.
+    { key: "hero_slide_1_image", label: "Slide 1 — Image URL", type: "image" },
+    { key: "hero_slide_1_title", label: "Slide 1 — Title", type: "text" },
+    { key: "hero_slide_1_subtitle", label: "Slide 1 — Subtitle", type: "textarea" },
+    { key: "hero_slide_2_image", label: "Slide 2 — Image URL", type: "image" },
+    { key: "hero_slide_2_title", label: "Slide 2 — Title", type: "text" },
+    { key: "hero_slide_2_subtitle", label: "Slide 2 — Subtitle", type: "textarea" },
+    { key: "hero_slide_3_image", label: "Slide 3 — Image URL", type: "image" },
+    { key: "hero_slide_3_title", label: "Slide 3 — Title", type: "text" },
+    { key: "hero_slide_3_subtitle", label: "Slide 3 — Subtitle", type: "textarea" },
+    { key: "hero_slide_4_image", label: "Slide 4 — Image URL", type: "image" },
+    { key: "hero_slide_4_title", label: "Slide 4 — Title", type: "text" },
+    { key: "hero_slide_4_subtitle", label: "Slide 4 — Subtitle", type: "textarea" },
+    { key: "hero_slide_5_image", label: "Slide 5 — Image URL (optional)", type: "image" },
+    { key: "hero_slide_5_title", label: "Slide 5 — Title (optional)", type: "text" },
+    { key: "hero_slide_5_subtitle", label: "Slide 5 — Subtitle (optional)", type: "textarea" },
     { key: "pillar_buy_title", label: "Pillar — Buy Title", type: "text" },
     { key: "pillar_buy_body", label: "Pillar — Buy Body", type: "textarea" },
     { key: "pillar_rent_title", label: "Pillar — Rent Title", type: "text" },
