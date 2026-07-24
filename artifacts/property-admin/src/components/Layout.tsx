@@ -173,6 +173,7 @@ function getNav(t: (k: string) => string): NavSection[] {
       items: [
         { href: "/content/blog", label: t("nav.blog_posts"), icon: Newspaper },
         { href: "/content/blog-categories", label: t("nav.blog_categories"), icon: Tag },
+        { href: "/content/listings", label: t("nav.sale_listings"), icon: Building2 },
         { href: "/content/pages", label: t("nav.website_pages"), icon: Globe },
         { href: "/content/page-translations", label: t("nav.page_translations"), icon: Languages },
       ],

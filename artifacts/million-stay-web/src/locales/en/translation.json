@@ -1946,7 +1946,19 @@
       "field_unit_type_ph": "e.g. 1-bed, 24㎡",
       "field_budget": "Budget",
       "field_purpose": "Purpose",
-      "field_purpose_ph": "Own use / investment"
+      "field_purpose_ph": "Own use / investment",
+      "untitled": "Untitled",
+      "board_title": "Available units",
+      "board_subtitle": "Browse our pre-sale and resale listings.",
+      "board_empty": "No listings available right now. Please check back soon.",
+      "filter_all": "All",
+      "filter_presale": "Pre-sale",
+      "filter_sale": "Sale",
+      "badge_presale": "Pre-sale",
+      "badge_sale": "Sale",
+      "status_available": "Available",
+      "status_reserved": "Reserved",
+      "status_sold": "Sold"
     },
     "rent": {
       "eyebrow": "Rent / Stay",
@@ -2055,6 +2067,17 @@
       "map_title": "MetHeim location map",
       "form_title": "Have a question? Get in touch.",
       "form_subtitle": "Send us a message and our team will reply shortly."
+    },
+    "listing": {
+      "back_to_list": "Back to listings",
+      "not_found": "This listing is no longer available.",
+      "about": "About this unit",
+      "spec_area": "Area",
+      "spec_bedrooms": "Bedrooms",
+      "spec_bathrooms": "Bathrooms",
+      "inquiry_title": "Inquire about this unit",
+      "inquiry_subtitle": "Leave your details and our team will get back to you.",
+      "inquiry_submit": "Send inquiry"
     }
   }
 }

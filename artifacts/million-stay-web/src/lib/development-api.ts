@@ -84,6 +84,58 @@ export function submitContactInquiry(input: ContactInquiryInput): Promise<LeadRe
   return postInquiry("/api/v1/public/contact-inquiries", input);
 }
 
+// ── BUY board — 분양/판매 listings (admin-managed) ────────────────────────────
+// Public read of the sale-listings board. The server resolves per-locale copy
+// (title/subtitle/location/price_label/description) for `lang` with a
+// lang → ko → en fallback and returns flat fields.
+export interface SaleListing {
+  id: number;
+  category: "presale" | "sale";
+  status: "available" | "reserved" | "sold" | string;
+  cover_image: string | null;
+  gallery: string[];
+  area_m2: number | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  price_amount: number | null;
+  title: string;
+  subtitle: string;
+  location: string;
+  price_label: string;
+  description: string;
+}
+
+export async function fetchSaleListings(lang: string, category?: string): Promise<SaleListing[]> {
+  const qs = new URLSearchParams({ lang });
+  if (category) qs.set("category", category);
+  const res = await fetch(`${BASE}/api/v1/public/sale-listings?${qs.toString()}`);
+  if (!res.ok) return [];
+  const body = await res.json().catch(() => ({}));
+  return (body?.data ?? []) as SaleListing[];
+}
+
+export async function fetchSaleListing(id: number, lang: string): Promise<SaleListing | null> {
+  const res = await fetch(`${BASE}/api/v1/public/sale-listings/${id}?lang=${encodeURIComponent(lang)}`);
+  if (!res.ok) return null;
+  const body = await res.json().catch(() => ({}));
+  return (body?.data ?? null) as SaleListing | null;
+}
+
+// Inquiry about a specific listing → lands as a SalesInquiry lead tagged with
+// the listing title/id (packed into the lead description server-side).
+export interface ListingInquiryInput {
+  first_name: string;
+  last_name?: string;
+  email: string;
+  phone?: string;
+  listing_id?: string;
+  listing_title?: string;
+  message?: string;
+}
+export function submitListingInquiry(input: ListingInquiryInput): Promise<LeadResult> {
+  return postInquiry("/api/v1/public/listing-inquiries", input);
+}
+
 // ── Yield simulator (client-side estimate) ────────────────────────────────────
 // A transparent, purely front-end projection for the Management page. Inputs are
 // the buyer's numbers; assumptions (management fee %, default occupancy) are

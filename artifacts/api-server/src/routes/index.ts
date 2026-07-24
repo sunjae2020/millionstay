@@ -51,6 +51,7 @@ import { homestayStudentAdminRouter } from "./homestay-students";
 import { shortTermAdminRouter } from "./short-term";
 import { homestayPlacementAdminRouter } from "./homestay-placements";
 import { documentTemplatesAdminRouter } from "./document-templates";
+import saleListingsRouter from "./sale-listings";
 const router: IRouter = Router();
 
 router.use(healthRouter);
@@ -105,6 +106,7 @@ router.use(homestayStudentAdminRouter);
 router.use(shortTermAdminRouter);
 router.use(homestayPlacementAdminRouter);
 router.use(documentTemplatesAdminRouter);
+router.use(saleListingsRouter);
 // Note: partnerAuthRouter, agentPortalRouter, ownerPortalRouter are registered in app.ts
 // BEFORE the requireAuth middleware to allow partner JWT auth to bypass the admin auth guard.
 

@@ -376,7 +376,19 @@
       "field_unit_type_ph": "vd: 1 phòng ngủ, 24㎡",
       "field_budget": "Ngân sách",
       "field_purpose": "Mục đích",
-      "field_purpose_ph": "Để ở / Đầu tư"
+      "field_purpose_ph": "Để ở / Đầu tư",
+      "untitled": "Chưa có tiêu đề",
+      "board_title": "Các căn đang bán",
+      "board_subtitle": "Xem các căn mở bán và bán lại của chúng tôi.",
+      "board_empty": "Hiện chưa có căn nào. Vui lòng quay lại sau.",
+      "filter_all": "Tất cả",
+      "filter_presale": "Mở bán",
+      "filter_sale": "Bán lại",
+      "badge_presale": "Mở bán",
+      "badge_sale": "Bán lại",
+      "status_available": "Còn hàng",
+      "status_reserved": "Đã đặt chỗ",
+      "status_sold": "Đã bán"
     },
     "rent": {
       "eyebrow": "Cho thuê",
@@ -485,6 +497,17 @@
       "map_title": "Bản đồ vị trí MetHeim",
       "form_title": "Bạn có câu hỏi? Hãy liên hệ với chúng tôi.",
       "form_subtitle": "Gửi tin nhắn cho chúng tôi và đội ngũ của chúng tôi sẽ phản hồi sớm."
+    },
+    "listing": {
+      "back_to_list": "Về danh sách",
+      "not_found": "Căn này không còn khả dụng.",
+      "about": "Về căn hộ này",
+      "spec_area": "Diện tích",
+      "spec_bedrooms": "Phòng ngủ",
+      "spec_bathrooms": "Phòng tắm",
+      "inquiry_title": "Hỏi về căn này",
+      "inquiry_subtitle": "Để lại thông tin liên hệ, đội ngũ của chúng tôi sẽ phản hồi bạn.",
+      "inquiry_submit": "Gửi yêu cầu"
     }
   }
 }

@@ -1427,7 +1427,19 @@
       "field_unit_type_ph": "例：一居室，24㎡",
       "field_budget": "预算",
       "field_purpose": "用途",
-      "field_purpose_ph": "自住 / 投资"
+      "field_purpose_ph": "自住 / 投资",
+      "untitled": "无标题",
+      "board_title": "在售房源",
+      "board_subtitle": "浏览我们的预售与转售房源。",
+      "board_empty": "目前暂无房源，请稍后再来查看。",
+      "filter_all": "全部",
+      "filter_presale": "预售",
+      "filter_sale": "出售",
+      "badge_presale": "预售",
+      "badge_sale": "出售",
+      "status_available": "在售",
+      "status_reserved": "已预订",
+      "status_sold": "已售出"
     },
     "rent": {
       "eyebrow": "租赁",
@@ -1536,6 +1548,17 @@
       "map_title": "MetHeim 位置地图",
       "form_title": "有任何疑问吗？欢迎联系我们。",
       "form_subtitle": "给我们留言，我们的团队会尽快回复您。"
+    },
+    "listing": {
+      "back_to_list": "返回列表",
+      "not_found": "该房源已不再提供。",
+      "about": "房源介绍",
+      "spec_area": "面积",
+      "spec_bedrooms": "卧室",
+      "spec_bathrooms": "卫生间",
+      "inquiry_title": "咨询该房源",
+      "inquiry_subtitle": "留下您的联系方式，我们的团队会与您联系。",
+      "inquiry_submit": "发送咨询"
     }
   }
 }

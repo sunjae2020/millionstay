@@ -26,6 +26,7 @@ import {
   ownerSitesTable,
   pageContentsTable,
   blogCategoriesTable,
+  saleListingsTable,
 } from "@workspace/db";
 import { ingestReservations } from "../lib/channels/reservations.js";
 import { insertLeadWithGeneratedRef } from "../lib/leadRef.js";
@@ -1027,6 +1028,70 @@ router.get("/v1/public/page-contents/:pageKey/:language", async (req, res): Prom
   res.json({ page_key: pageKey, language, ...row });
 });
 
+/* ───────────────────────────────────────────────────────
+   Public read of 분양/판매 listings for the development ("MetHeim") /buy board.
+   Published rows only. Per-locale copy in `translations` is resolved server-side
+   with a lang → ko → en → first-available fallback and returned flat, so the
+   client renders one language without shipping every locale.
+──────────────────────────────────────────────────────── */
+function resolveListingTranslation(
+  translations: unknown,
+  lang: string,
+): { title: string; subtitle: string; location: string; price_label: string; description: string } {
+  const t = (translations ?? {}) as Record<string, Record<string, string> | undefined>;
+  const order = [lang, "ko", "en", ...Object.keys(t)];
+  const pick = (field: string): string => {
+    for (const l of order) {
+      const v = t[l]?.[field];
+      if (v != null && String(v).trim() !== "") return String(v);
+    }
+    return "";
+  };
+  return {
+    title: pick("title"),
+    subtitle: pick("subtitle"),
+    location: pick("location"),
+    price_label: pick("price_label"),
+    description: pick("description"),
+  };
+}
+
+function shapePublicListing(row: typeof saleListingsTable.$inferSelect, lang: string) {
+  return {
+    id: row.id,
+    category: row.category,
+    status: row.status,
+    cover_image: row.cover_image,
+    gallery: Array.isArray(row.gallery) ? row.gallery : [],
+    area_m2: row.area_m2 != null ? Number(row.area_m2) : null,
+    bedrooms: row.bedrooms,
+    bathrooms: row.bathrooms,
+    price_amount: row.price_amount != null ? Number(row.price_amount) : null,
+    ...resolveListingTranslation(row.translations, lang),
+  };
+}
+
+router.get("/v1/public/sale-listings", async (req, res): Promise<void> => {
+  const lang = String(req.query.lang ?? "en").split("-")[0];
+  const category = req.query.category ? String(req.query.category) : null;
+  const conditions: SQL[] = [isNull(saleListingsTable.deleted_at), eq(saleListingsTable.published, true)];
+  if (category === "presale" || category === "sale") conditions.push(eq(saleListingsTable.category, category));
+  const rows = await db.select().from(saleListingsTable)
+    .where(and(...conditions))
+    .orderBy(asc(saleListingsTable.sort_order), desc(saleListingsTable.created_at));
+  res.json({ data: rows.map((r) => shapePublicListing(r, lang)) });
+});
+
+router.get("/v1/public/sale-listings/:id", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const lang = String(req.query.lang ?? "en").split("-")[0];
+  const [row] = await db.select().from(saleListingsTable)
+    .where(and(eq(saleListingsTable.id, id), isNull(saleListingsTable.deleted_at), eq(saleListingsTable.published, true)));
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  res.json({ data: shapePublicListing(row, lang) });
+});
+
 // Active blog categories for the public blog filter (homestay-only categories
 // are filtered out client-side per site).
 router.get("/v1/public/blog-categories", async (_req, res): Promise<void> => {
@@ -1328,6 +1393,13 @@ async function handleDevInquiry(
 // BUY / 분양·매매 inquiry.
 router.post("/v1/public/sales-inquiries", (req, res) =>
   handleDevInquiry(req, res, { inquiryType: "SalesInquiry", label: "Unit Sale Inquiry", fields: ["unit_type", "budget", "purpose"] }),
+);
+
+// BUY board — inquiry about a specific listing. Lands as a SalesInquiry lead
+// with the listing title/id packed into the description so staff know which
+// property the enquiry is about.
+router.post("/v1/public/listing-inquiries", (req, res) =>
+  handleDevInquiry(req, res, { inquiryType: "SalesInquiry", label: "Listing Inquiry", fields: ["listing_title", "listing_id"] }),
 );
 
 // RENT / 장기 임대 상담.

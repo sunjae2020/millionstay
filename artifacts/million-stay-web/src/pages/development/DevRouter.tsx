@@ -2,6 +2,7 @@ import { Switch, Route } from "wouter";
 import DevHome from "./Home";
 import DevAbout from "./About";
 import DevBuy from "./Buy";
+import DevBuyDetail from "./BuyDetail";
 import DevRent from "./Rent";
 import DevManagement from "./Management";
 import DevDirections from "./Directions";
@@ -46,6 +47,7 @@ export default function DevRouter() {
       <Route path="/" component={DevHome} />
       <Route path="/about" component={DevAbout} />
       <Route path="/buy" component={DevBuy} />
+      <Route path="/buy/:id" component={DevBuyDetail} />
       <Route path="/rent" component={DevRent} />
       <Route path="/management" component={DevManagement} />
       <Route path="/directions" component={DevDirections} />
