@@ -2077,7 +2077,8 @@
       "spec_bathrooms": "Bathrooms",
       "inquiry_title": "Inquire about this unit",
       "inquiry_subtitle": "Leave your details and our team will get back to you.",
-      "inquiry_submit": "Send inquiry"
+      "inquiry_submit": "Send inquiry",
+      "fx_note": "Prices are payable in the base amount (KRW); the exchange rates above are shown for your reference only."
     }
   }
 }

@@ -1705,7 +1705,8 @@
       "spec_bathrooms": "浴室",
       "inquiry_title": "この物件について問い合わせる",
       "inquiry_subtitle": "ご連絡先をご記入いただければ、担当者よりご連絡いたします。",
-      "inquiry_submit": "問い合わせを送信"
+      "inquiry_submit": "問い合わせを送信",
+      "fx_note": "お支払いは基準額（韓国ウォン）で行われます。上記の為替レートはご参考用の表示です。"
     }
   }
 }

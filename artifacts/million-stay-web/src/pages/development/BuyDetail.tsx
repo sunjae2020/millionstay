@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, MapPin, Maximize, BedDouble, Bath, ImageOff, Loader2 } from "lucide-react";
 import { DevLayout } from "@/components/development/DevLayout";
 import { InquiryForm } from "@/components/development/InquiryForm";
+import { PriceFxBreakdown } from "@/components/development/PriceFxBreakdown";
 import { fetchSaleListing, submitListingInquiry } from "@/lib/development-api";
 
 // Detail page for one 분양/판매 listing. Renders gallery + specs + description
@@ -115,6 +116,7 @@ export default function DevBuyDetail() {
                   </p>
                 )}
                 {listing.price_label && <p className="mt-4 text-2xl font-extrabold text-primary">{listing.price_label}</p>}
+                <PriceFxBreakdown amount={listing.price_amount} className="mt-2" />
 
                 <div className="mt-5 grid grid-cols-3 gap-3 border-t border-gray-100 pt-5 text-center">
                   <div>

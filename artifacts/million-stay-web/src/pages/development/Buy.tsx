@@ -6,6 +6,7 @@ import { Building2, MapPin, Maximize, BedDouble, Bath, ImageOff } from "lucide-r
 import { DevLayout } from "@/components/development/DevLayout";
 import { usePageContent } from "@/lib/usePageContent";
 import { InquiryForm } from "@/components/development/InquiryForm";
+import { PriceFxBreakdown } from "@/components/development/PriceFxBreakdown";
 import { fetchSaleListings, submitSalesInquiry, type SaleListing } from "@/lib/development-api";
 
 // BUY / SALES — a board of admin-managed 분양(pre-sale) / 판매(sale) listings.
@@ -50,6 +51,7 @@ function ListingCard({ listing }: { listing: SaleListing }) {
             </p>
           )}
           {listing.price_label && <p className="mt-3 font-semibold text-primary">{listing.price_label}</p>}
+          <PriceFxBreakdown amount={listing.price_amount} showNote={false} className="mt-1.5" />
           <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
             {listing.area_m2 != null && <span className="flex items-center gap-1"><Maximize className="w-3.5 h-3.5" />{listing.area_m2}㎡</span>}
             {listing.bedrooms != null && <span className="flex items-center gap-1"><BedDouble className="w-3.5 h-3.5" />{listing.bedrooms}</span>}

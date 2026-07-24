@@ -507,7 +507,8 @@
       "spec_bathrooms": "Phòng tắm",
       "inquiry_title": "Hỏi về căn này",
       "inquiry_subtitle": "Để lại thông tin liên hệ, đội ngũ của chúng tôi sẽ phản hồi bạn.",
-      "inquiry_submit": "Gửi yêu cầu"
+      "inquiry_submit": "Gửi yêu cầu",
+      "fx_note": "Thanh toán theo số tiền cơ sở (KRW); tỷ giá phía trên chỉ mang tính tham khảo."
     }
   }
 }

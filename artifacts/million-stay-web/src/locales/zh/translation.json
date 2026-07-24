@@ -1558,7 +1558,8 @@
       "spec_bathrooms": "卫生间",
       "inquiry_title": "咨询该房源",
       "inquiry_subtitle": "留下您的联系方式，我们的团队会与您联系。",
-      "inquiry_submit": "发送咨询"
+      "inquiry_submit": "发送咨询",
+      "fx_note": "以基准金额（韩元）付款，上述汇率仅供参考。"
     }
   }
 }
