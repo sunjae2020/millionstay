@@ -30,6 +30,7 @@ const SUPPORTED = [
   { code: "JPY", label: "JPY — Japanese Yen" },
   { code: "CNY", label: "CNY — Chinese Yuan" },
   { code: "THB", label: "THB — Thai Baht" },
+  { code: "VND", label: "VND — Vietnamese Dong" },
   { code: "PHP", label: "PHP — Philippine Peso" },
   { code: "SGD", label: "SGD — Singapore Dollar" },
   { code: "EUR", label: "EUR — Euro" },
