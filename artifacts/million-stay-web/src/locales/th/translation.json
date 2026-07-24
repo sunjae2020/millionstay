@@ -1573,7 +1573,19 @@
       "field_unit_type_ph": "เช่น สตูดิโอ 24㎡",
       "field_budget": "งบประมาณ",
       "field_purpose": "วัตถุประสงค์",
-      "field_purpose_ph": "อยู่เอง / ลงทุน"
+      "field_purpose_ph": "อยู่เอง / ลงทุน",
+      "untitled": "ไม่มีชื่อ",
+      "board_title": "รายการที่ขาย",
+      "board_subtitle": "เลือกดูรายการพรีเซลและขายต่อของเรา",
+      "board_empty": "ขณะนี้ยังไม่มีรายการ โปรดกลับมาตรวจสอบอีกครั้ง",
+      "filter_all": "ทั้งหมด",
+      "filter_presale": "พรีเซล",
+      "filter_sale": "ขาย",
+      "badge_presale": "พรีเซล",
+      "badge_sale": "ขาย",
+      "status_available": "พร้อมขาย",
+      "status_reserved": "จองแล้ว",
+      "status_sold": "ขายแล้ว"
     },
     "rent": {
       "eyebrow": "เช่า",
@@ -1682,6 +1694,17 @@
       "map_title": "แผนที่ตำแหน่ง MetHeim",
       "form_title": "มีคำถามหรือไม่? ติดต่อเราได้เลย",
       "form_subtitle": "ส่งข้อความถึงเรา แล้วทีมงานจะติดต่อกลับโดยเร็ว"
+    },
+    "listing": {
+      "back_to_list": "กลับไปที่รายการ",
+      "not_found": "รายการนี้ไม่พร้อมให้บริการแล้ว",
+      "about": "เกี่ยวกับยูนิตนี้",
+      "spec_area": "พื้นที่",
+      "spec_bedrooms": "ห้องนอน",
+      "spec_bathrooms": "ห้องน้ำ",
+      "inquiry_title": "สอบถามเกี่ยวกับยูนิตนี้",
+      "inquiry_subtitle": "ทิ้งข้อมูลติดต่อไว้ แล้วทีมงานของเราจะติดต่อกลับ",
+      "inquiry_submit": "ส่งคำสอบถาม"
     }
   }
 }

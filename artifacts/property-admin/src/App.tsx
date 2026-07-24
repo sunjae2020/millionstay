@@ -89,6 +89,8 @@ import QuoteDetail from "@/pages/documents/QuoteDetail";
 import BlogList from "@/pages/blog/BlogList";
 import BlogDetail from "@/pages/blog/BlogDetail";
 import BlogCategories from "@/pages/blog/BlogCategories";
+import SaleListingsList from "@/pages/listings/SaleListingsList";
+import SaleListingDetail from "@/pages/listings/SaleListingDetail";
 import WebsiteContentList from "@/pages/content/WebsiteContentList";
 import WebsiteContentDetail from "@/pages/content/WebsiteContentDetail";
 import PageTranslations from "@/pages/content/PageTranslations";
@@ -264,6 +266,9 @@ function Router() {
       <Route path="/content/blog-categories" component={BlogCategories} />
       <Route path="/content/blog/new" component={BlogDetail} />
       <Route path="/content/blog/:id" component={BlogDetail} />
+      <Route path="/content/listings" component={SaleListingsList} />
+      <Route path="/content/listings/new" component={SaleListingDetail} />
+      <Route path="/content/listings/:id" component={SaleListingDetail} />
       <Route path="/content/pages" component={WebsiteContentList} />
       <Route path="/content/pages/:pageKey" component={WebsiteContentDetail} />
       <Route path="/content/page-translations" component={PageTranslations} />

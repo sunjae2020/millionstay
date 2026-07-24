@@ -72,3 +72,4 @@ export * from "./homestay_host_availability";
 export * from "./document_templates";
 export * from "./document_template_translations";
 export * from "./journal";
+export * from "./sale_listings";

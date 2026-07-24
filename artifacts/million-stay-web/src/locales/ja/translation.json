@@ -1574,7 +1574,19 @@
       "field_unit_type_ph": "例：ワンルーム、24㎡",
       "field_budget": "ご予算",
       "field_purpose": "目的",
-      "field_purpose_ph": "実住 / 投資"
+      "field_purpose_ph": "実住 / 投資",
+      "untitled": "タイトルなし",
+      "board_title": "分譲・販売物件",
+      "board_subtitle": "分譲・販売中の物件をご覧ください。",
+      "board_empty": "現在ご案内できる物件はありません。しばらくしてから再度ご確認ください。",
+      "filter_all": "すべて",
+      "filter_presale": "分譲",
+      "filter_sale": "販売",
+      "badge_presale": "分譲",
+      "badge_sale": "販売",
+      "status_available": "販売中",
+      "status_reserved": "予約済み",
+      "status_sold": "販売済み"
     },
     "rent": {
       "eyebrow": "賃貸",
@@ -1683,6 +1695,17 @@
       "map_title": "MetHeim 位置マップ",
       "form_title": "ご質問がありますか？",
       "form_subtitle": "メッセージをお送りいただければ、担当者より折り返しご連絡いたします。"
+    },
+    "listing": {
+      "back_to_list": "一覧に戻る",
+      "not_found": "この物件は現在ご利用いただけません。",
+      "about": "物件について",
+      "spec_area": "専有面積",
+      "spec_bedrooms": "寝室",
+      "spec_bathrooms": "浴室",
+      "inquiry_title": "この物件について問い合わせる",
+      "inquiry_subtitle": "ご連絡先をご記入いただければ、担当者よりご連絡いたします。",
+      "inquiry_submit": "問い合わせを送信"
     }
   }
 }
