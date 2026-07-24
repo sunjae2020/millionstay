@@ -6,6 +6,7 @@
   "scripts": {
     "hello": "tsx ./src/hello.ts",
     "seed-real-data": "tsx ./src/seed-real-data.ts",
+    "seed-metheim": "tsx ./src/seed-metheim-samples.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
