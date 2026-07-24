@@ -125,7 +125,7 @@ function PhotoGallery({
 
   if (images.length === 0) {
     return (
-      <div className="h-56 md:h-72 rounded-xl bg-gradient-to-br from-primary to-amber-300 flex flex-col items-center justify-center gap-3">
+      <div className="h-56 md:h-72 rounded-xl bg-gradient-to-br from-primary to-brand-navy flex flex-col items-center justify-center gap-3">
         <span className="text-5xl">📸</span>
         <p className="text-white font-semibold">{spaceName}</p>
         <p className="text-white/70 text-sm">Photos coming soon</p>
@@ -419,11 +419,12 @@ export default function SpaceDetail() {
   const hasMap = !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#faf9f7]">
+    <div className="min-h-screen flex flex-col bg-brand-cream">
       <Navbar />
 
-      {/* Banner */}
-      <div className="h-20 flex items-center px-6" style={{ background: "linear-gradient(135deg, #c05010 0%, #e07828 60%, #c86820 100%)" }}>
+      {/* Banner — theme-driven hero gradient (MetHeim: deep-teal → urban-teal
+          "night harbor"; standard: deep-navy → brand orange). */}
+      <div className="h-20 flex items-center px-6" style={{ background: "linear-gradient(135deg, hsl(var(--brand-navy)) 0%, hsl(var(--primary)) 100%)" }}>
         <div className="max-w-6xl mx-auto w-full flex items-center gap-2">
           <button onClick={() => setLocation("/search")} className="text-white/70 hover:text-white transition-colors">
             <ChevronLeft className="h-5 w-5" />
