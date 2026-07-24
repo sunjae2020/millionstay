@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ChevronDown } from "lucide-react";
 import { getApiBase } from "@/lib/api-base";
 import { HS } from "@/lib/homestay-theme";
+import { flagIsoFor } from "@/lib/flagOverrides";
 
 // Language switcher for the Million Homestay site. Mirrors the main-site switcher
 // (components/navbar.tsx): it fetches the admin-managed language list from
@@ -18,7 +19,7 @@ const FALLBACK_LANGUAGES: LangOption[] = [
   { code: "ja", label: "JA", iso: "jp", name: "日本語" },
   { code: "th", label: "TH", iso: "th", name: "ภาษาไทย" },
   { code: "vi", label: "VI", iso: "vn", name: "Tiếng Việt" },
-];
+].map((l) => ({ ...l, iso: flagIsoFor(l.code, l.iso) }));
 
 function FlagIcon({ iso, size = 18 }: { iso: string; size?: number }) {
   return (
@@ -51,7 +52,7 @@ export function HomestayLanguageSwitcher({ className = "" }: { className?: strin
           rows.map((l: any) => ({
             code: l.code,
             label: String(l.code).toUpperCase(),
-            iso: l.flag_iso || l.code,
+            iso: flagIsoFor(l.code, l.flag_iso || l.code),
             name: l.name || l.english_name || l.code,
           })),
         );

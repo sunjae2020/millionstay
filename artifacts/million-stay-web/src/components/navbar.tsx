@@ -14,6 +14,7 @@ import { getApiBase } from "@/lib/api-base";
 import { CurrencySelector } from "./currency-selector";
 import { BrandMark } from "./brand-mark";
 import { isDevelopmentSite } from "@/lib/site-mode";
+import { flagIsoFor } from "@/lib/flagOverrides";
 
 const NAV_HREFS = [
   { key: "links.search", href: "/search" },
@@ -34,7 +35,7 @@ const FALLBACK_LANGUAGES: LangOption[] = [
   { code: "zh", label: "ZH", iso: "cn", name: "中文" },
   { code: "ja", label: "JA", iso: "jp", name: "日本語" },
   { code: "th", label: "TH", iso: "th", name: "ภาษาไทย" },
-];
+].map((l) => ({ ...l, iso: flagIsoFor(l.code, l.iso) }));
 
 function FlagIcon({ iso, size = 20 }: { iso: string; size?: number }) {
   return (
@@ -75,7 +76,7 @@ export function Navbar() {
           rows.map((l: any) => ({
             code: l.code,
             label: String(l.code).toUpperCase(),
-            iso: l.flag_iso || l.code,
+            iso: flagIsoFor(l.code, l.flag_iso || l.code),
             name: l.name || l.english_name || l.code,
           })),
         );

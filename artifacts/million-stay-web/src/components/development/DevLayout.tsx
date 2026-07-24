@@ -9,6 +9,7 @@ import { BrandMark } from "@/components/brand-mark";
 import { CurrencySelector } from "@/components/currency-selector";
 import { APP_NAME } from "@/lib/appName";
 import { getApiBase } from "@/lib/api-base";
+import { flagIsoFor } from "@/lib/flagOverrides";
 
 // Dedicated shell for the single-building "development" site (MetHeim). Four top
 // menus — Home / About / Buy / Rent / Management / Directions — plus currency +
@@ -37,7 +38,7 @@ const FALLBACK_LANGS: LangOption[] = [
   { code: "zh", iso: "cn", name: "中文", label: "ZH" },
   { code: "th", iso: "th", name: "ภาษาไทย", label: "TH" },
   { code: "vi", iso: "vn", name: "Tiếng Việt", label: "VI" },
-];
+].map((l) => ({ ...l, iso: flagIsoFor(l.code, l.iso) }));
 
 function FlagIcon({ iso, size = 20 }: { iso: string; size?: number }) {
   return (
@@ -82,7 +83,7 @@ function DevNavbar() {
         const rows = json?.data;
         if (cancelled || !Array.isArray(rows) || rows.length === 0) return;
         setLanguages(rows.map((l: any) => ({
-          code: l.code, iso: l.flag_iso || l.code,
+          code: l.code, iso: flagIsoFor(l.code, l.flag_iso || l.code),
           name: l.name || l.english_name || l.code, label: String(l.code).toUpperCase(),
         })));
       })

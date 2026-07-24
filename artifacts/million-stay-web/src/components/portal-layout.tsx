@@ -18,6 +18,7 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 import { BrandMark } from "./brand-mark";
+import { flagOverride, flagEmoji } from "@/lib/flagOverrides";
 
 const LANGUAGES = [
   { code: "en", flag: "🇦🇺", label: "EN" },
@@ -25,7 +26,10 @@ const LANGUAGES = [
   { code: "zh", flag: "🇨🇳", label: "ZH" },
   { code: "ja", flag: "🇯🇵", label: "JA" },
   { code: "th", flag: "🇹🇭", label: "TH" },
-];
+].map((l) => {
+  const override = flagOverride(l.code);
+  return override ? { ...l, flag: flagEmoji(override) } : l;
+});
 
 function LanguageSwitcher() {
   const { i18n } = useTranslation();
