@@ -40,6 +40,9 @@ const LineItemInput = z.object({
   description: z.string().nullish(),
   quantity: z.number().positive().optional(),
   unit_amount: z.number(),
+  // "revenue" (default) posts to GL Revenue; "deposit" posts to the Deposits Held
+  // (2100) liability on payment so refundable deposits are never booked as income.
+  line_type: z.enum(["revenue", "deposit"]).optional(),
 });
 type LineItemInput = z.infer<typeof LineItemInput>;
 const LineItemsBody = z.object({ line_items: z.array(LineItemInput).optional() });
@@ -57,6 +60,7 @@ function buildLineItemRows(invoiceId: number, items: LineItemInput[]) {
       quantity: String(qty),
       unit_amount: String(it.unit_amount),
       total_amount: String(round2(qty * it.unit_amount)),
+      line_type: it.line_type ?? "revenue",
       sort_order: idx,
     };
   });
