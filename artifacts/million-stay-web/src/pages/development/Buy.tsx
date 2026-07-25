@@ -2,11 +2,12 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Building2, MapPin, Maximize, BedDouble, Bath, ImageOff } from "lucide-react";
+import { Building2, MapPin, Maximize, BedDouble, Bath, ImageOff, Award, ShieldCheck, TrendingUp } from "lucide-react";
 import { DevLayout } from "@/components/development/DevLayout";
 import { usePageContent } from "@/lib/usePageContent";
 import { InquiryForm } from "@/components/development/InquiryForm";
 import { PriceFxBreakdown } from "@/components/development/PriceFxBreakdown";
+import { SectionHeading, WhyGrid, ProcessTimeline } from "@/components/development/marketing";
 import { fetchSaleListings, submitSalesInquiry, type SaleListing } from "@/lib/development-api";
 
 // BUY / SALES — a board of admin-managed 분양(pre-sale) / 판매(sale) listings.
@@ -77,6 +78,16 @@ export default function DevBuy() {
   const filtered = filter === "all" ? listings : listings.filter((l) => l.category === filter);
   const FILTERS: Array<"all" | "presale" | "sale"> = ["all", "presale", "sale"];
 
+  const WHY = [
+    { icon: Award, title: pc("why_1_title", t("dev.buy.why_1_title")), body: pc("why_1_body", t("dev.buy.why_1_body")) },
+    { icon: ShieldCheck, title: pc("why_2_title", t("dev.buy.why_2_title")), body: pc("why_2_body", t("dev.buy.why_2_body")) },
+    { icon: TrendingUp, title: pc("why_3_title", t("dev.buy.why_3_title")), body: pc("why_3_body", t("dev.buy.why_3_body")) },
+  ];
+  const STEPS = [1, 2, 3, 4].map((n) => ({
+    title: pc(`step_${n}_title`, t(`dev.buy.step_${n}_title`)),
+    body: pc(`step_${n}_body`, t(`dev.buy.step_${n}_body`)),
+  }));
+
   return (
     <DevLayout title={t("dev.buy.hero_title")}>
       {/* Hero */}
@@ -140,13 +151,35 @@ export default function DevBuy() {
         </div>
       </section>
 
+      {/* Why MetHeim — 분양 */}
+      <section className="bg-[hsl(var(--brand-cream))] border-y border-gray-100">
+        <div className="max-w-7xl mx-auto px-6 py-14 md:py-20">
+          <SectionHeading
+            eyebrow={pc("why_eyebrow", t("dev.buy.why_eyebrow"))}
+            title={pc("why_heading", t("dev.buy.why_heading"))}
+            subtitle={pc("why_subtitle", t("dev.buy.why_subtitle"))}
+          />
+          <WhyGrid items={WHY} />
+        </div>
+      </section>
+
+      {/* 분양 절차 — gold vertical timeline */}
+      <section className="max-w-7xl mx-auto px-6 py-14 md:py-20">
+        <SectionHeading
+          eyebrow={pc("process_eyebrow", t("dev.buy.process_eyebrow"))}
+          title={pc("process_heading", t("dev.buy.process_heading"))}
+          subtitle={pc("process_subtitle", t("dev.buy.process_subtitle"))}
+        />
+        <ProcessTimeline steps={STEPS} />
+      </section>
+
       {/* General inquiry (not tied to a specific listing) */}
-      <section id="inquiry" className="bg-[hsl(var(--brand-cream))] border-t border-gray-100">
-        <div className="max-w-3xl mx-auto px-6 py-14 md:py-20">
-          <h2 className="text-center font-display text-2xl md:text-3xl font-bold text-[hsl(var(--brand-navy))] tracking-tight">
+      <section id="inquiry" className="bg-[hsl(var(--brand-navy))] border-t border-gray-100 text-white">
+        <div className="max-w-3xl mx-auto px-6 py-14 md:py-20 [&_h2]:text-white">
+          <h2 className="text-center font-display text-2xl md:text-3xl font-bold tracking-tight">
             {pc("inquiry_title", t("dev.buy.inquiry_title"))}
           </h2>
-          <p className="mt-3 text-center text-gray-600">{pc("inquiry_subtitle", t("dev.buy.inquiry_subtitle"))}</p>
+          <p className="mt-3 text-center text-white/80">{pc("inquiry_subtitle", t("dev.buy.inquiry_subtitle"))}</p>
           <div className="mt-8">
             <InquiryForm
               submitLabelKey="dev.buy.inquiry_submit"
@@ -163,6 +196,7 @@ export default function DevBuy() {
           </div>
         </div>
       </section>
+
     </DevLayout>
   );
 }

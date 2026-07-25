@@ -1,9 +1,18 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, Building2, KeyRound, LineChart, ShieldCheck, MapPin, Sparkles } from "lucide-react";
+import { ArrowRight, Building2, KeyRound, LineChart, ShieldCheck, MapPin, Sparkles, Quote, Star, Newspaper } from "lucide-react";
 import { DevLayout } from "@/components/development/DevLayout";
 import { usePageContent } from "@/lib/usePageContent";
+
+// Default free stock images for the building-intro + news cards (Unsplash CDN).
+const DEFAULT_INTRO_IMAGE =
+  "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1400&q=80";
+const DEFAULT_NEWS_IMAGES = [
+  "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1449844908441-8829872d2607?auto=format&fit=crop&w=800&q=80",
+];
 
 // Home — single-building brand identity. Hero is a crossfading background
 // slideshow (3–5 slides, each with its own title/subtitle), then the three
@@ -180,6 +189,30 @@ export default function DevHome() {
     { icon: ShieldCheck, title: pc("why_3_title", t("dev.home.why_3_title")), body: pc("why_3_body", t("dev.home.why_3_body")) },
   ];
 
+  // Building intro — image + short pitch + three headline stats.
+  const introImage = pc("intro_image", DEFAULT_INTRO_IMAGE);
+  const STATS = [1, 2, 3].map((n) => ({
+    value: pc(`intro_stat_${n}_value`, t(`dev.home.intro_stat_${n}_value`)),
+    label: pc(`intro_stat_${n}_label`, t(`dev.home.intro_stat_${n}_label`)),
+  }));
+
+  // Resident reviews — three CMS slots (quote/name/role per locale, optional avatar).
+  const REVIEWS = [1, 2, 3].map((n) => ({
+    quote: pc(`review_${n}_quote`, t(`dev.home.review_${n}_quote`)),
+    name: pc(`review_${n}_name`, t(`dev.home.review_${n}_name`)),
+    role: pc(`review_${n}_role`, t(`dev.home.review_${n}_role`)),
+    avatar: pc(`review_${n}_avatar`, ""),
+  })).filter((r) => r.quote);
+
+  // News — three CMS slots (title/date/summary per locale, optional image + link).
+  const NEWS = [1, 2, 3].map((n) => ({
+    title: pc(`news_${n}_title`, t(`dev.home.news_${n}_title`)),
+    date: pc(`news_${n}_date`, t(`dev.home.news_${n}_date`)),
+    summary: pc(`news_${n}_summary`, t(`dev.home.news_${n}_summary`)),
+    image: pc(`news_${n}_image`, DEFAULT_NEWS_IMAGES[n - 1] ?? ""),
+    link: pc(`news_${n}_link`, ""),
+  })).filter((n) => n.title);
+
   return (
     <DevLayout>
       <HeroSlider
@@ -188,6 +221,33 @@ export default function DevHome() {
         ctaBuy={t("dev.home.hero_cta_buy")}
         ctaRent={t("dev.home.hero_cta_rent")}
       />
+
+      {/* Building intro — image + pitch + headline stats */}
+      <section className="max-w-7xl mx-auto px-6 pt-16 md:pt-24">
+        <div className="grid gap-10 lg:grid-cols-2 items-center">
+          <div className="relative">
+            <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-lg">
+              <img src={introImage} alt="" className="w-full h-full object-cover" />
+            </div>
+            <div className="absolute -bottom-6 -right-4 hidden sm:block w-28 h-28 rounded-2xl bg-[hsl(var(--brand-teal))]/90" aria-hidden />
+          </div>
+          <div>
+            <p className="text-sm font-semibold tracking-widest uppercase text-primary">{pc("intro_eyebrow", t("dev.home.intro_eyebrow"))}</p>
+            <h2 className="mt-3 font-display text-3xl md:text-4xl font-bold text-[hsl(var(--brand-navy))] tracking-tight">
+              {pc("intro_title", t("dev.home.intro_title"))}
+            </h2>
+            <p className="mt-5 text-gray-600 leading-relaxed">{pc("intro_body", t("dev.home.intro_body"))}</p>
+            <div className="mt-8 grid grid-cols-3 gap-4">
+              {STATS.map(({ value, label }) => (
+                <div key={label} className="rounded-2xl bg-[hsl(var(--brand-cream))] px-3 py-5 text-center">
+                  <p className="font-display text-2xl md:text-3xl font-extrabold text-primary">{value}</p>
+                  <p className="mt-1 text-xs text-gray-600 leading-snug">{label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Three pillars */}
       <section className="max-w-7xl mx-auto px-6 py-16 md:py-24">
@@ -226,6 +286,78 @@ export default function DevHome() {
           </div>
         </div>
       </section>
+
+      {/* Resident reviews */}
+      {REVIEWS.length > 0 && (
+        <section className="max-w-7xl mx-auto px-6 py-16 md:py-24">
+          <div className="text-center max-w-2xl mx-auto">
+            <p className="text-sm font-semibold tracking-widest uppercase text-primary">{pc("reviews_eyebrow", t("dev.home.reviews_eyebrow"))}</p>
+            <h2 className="mt-3 font-display text-3xl md:text-4xl font-bold text-[hsl(var(--brand-navy))] tracking-tight">
+              {pc("reviews_heading", t("dev.home.reviews_heading"))}
+            </h2>
+            <p className="mt-3 text-gray-600 leading-relaxed">{pc("reviews_subtitle", t("dev.home.reviews_subtitle"))}</p>
+          </div>
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {REVIEWS.map((r, idx) => (
+              <figure key={idx} className="rounded-2xl border border-gray-200 bg-white p-7 flex flex-col">
+                <Quote className="w-8 h-8 text-[hsl(var(--brand-teal))]" aria-hidden />
+                <div className="mt-3 flex gap-0.5 text-[hsl(var(--brand-teal))]">
+                  {[0, 1, 2, 3, 4].map((s) => <Star key={s} className="w-4 h-4 fill-current" />)}
+                </div>
+                <blockquote className="mt-4 text-gray-700 leading-relaxed flex-1">“{r.quote}”</blockquote>
+                <figcaption className="mt-6 flex items-center gap-3">
+                  {r.avatar
+                    ? <img src={r.avatar} alt="" className="w-10 h-10 rounded-full object-cover" />
+                    : <span className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-semibold text-primary">{r.name.slice(0, 1)}</span>}
+                  <span>
+                    <span className="block font-semibold text-sm text-[hsl(var(--brand-navy))]">{r.name}</span>
+                    <span className="block text-xs text-gray-500">{r.role}</span>
+                  </span>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* News */}
+      {NEWS.length > 0 && (
+        <section className="bg-[hsl(var(--brand-cream))] border-y border-gray-100">
+          <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+              <div className="max-w-2xl">
+                <p className="text-sm font-semibold tracking-widest uppercase text-primary inline-flex items-center gap-2">
+                  <Newspaper className="w-4 h-4" /> {pc("news_eyebrow", t("dev.home.news_eyebrow"))}
+                </p>
+                <h2 className="mt-3 font-display text-3xl md:text-4xl font-bold text-[hsl(var(--brand-navy))] tracking-tight">
+                  {pc("news_heading", t("dev.home.news_heading"))}
+                </h2>
+                <p className="mt-3 text-gray-600 leading-relaxed">{pc("news_subtitle", t("dev.home.news_subtitle"))}</p>
+              </div>
+            </div>
+            <div className="mt-12 grid gap-6 md:grid-cols-3">
+              {NEWS.map((n, idx) => {
+                const Card = (
+                  <>
+                    <div className="aspect-[16/10] overflow-hidden bg-gray-100">
+                      {n.image && <img src={n.image} alt="" className="w-full h-full object-cover transition group-hover:scale-105" />}
+                    </div>
+                    <div className="p-6">
+                      <p className="text-xs font-medium text-primary">{n.date}</p>
+                      <h3 className="mt-2 font-semibold text-[hsl(var(--brand-navy))] leading-snug line-clamp-2">{n.title}</h3>
+                      <p className="mt-2 text-sm text-gray-600 leading-relaxed line-clamp-3">{n.summary}</p>
+                    </div>
+                  </>
+                );
+                const cls = "group block rounded-2xl bg-white overflow-hidden border border-gray-100 shadow-sm transition hover:shadow-md hover:-translate-y-0.5";
+                return n.link
+                  ? <a key={idx} href={n.link} target="_blank" rel="noopener noreferrer" className={cls}>{Card}</a>
+                  : <div key={idx} className={cls}>{Card}</div>;
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CTA band */}
       <section className="bg-[hsl(var(--brand-navy))]">

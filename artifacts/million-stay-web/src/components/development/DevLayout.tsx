@@ -10,6 +10,7 @@ import { CurrencySelector } from "@/components/currency-selector";
 import { APP_NAME } from "@/lib/appName";
 import { getApiBase } from "@/lib/api-base";
 import { flagIsoFor } from "@/lib/flagOverrides";
+import { usePageContent } from "@/lib/usePageContent";
 
 // Dedicated shell for the single-building "development" site (MetHeim). Four top
 // menus — Home / About / Buy / Rent / Management / Directions — plus currency +
@@ -202,7 +203,20 @@ function DevNavbar() {
 
 function DevFooter() {
   const { t } = useTranslation();
+  const company = usePageContent("dev-footer");
   const year = new Date().getFullYear();
+
+  // CMS-editable operator info (MetHeim Korea) shown as a compact meta line.
+  const metaAll: Array<[string, string]> = [
+    [t("dev.footer.ceo_label"), company("ceo", t("dev.footer.ceo"))],
+    [t("dev.footer.biz_no_label"), company("biz_no", t("dev.footer.biz_no"))],
+    [t("dev.footer.address_label"), company("address", t("dev.footer.address"))],
+    [t("dev.footer.phone_label"), company("phone", t("dev.footer.phone"))],
+    [t("dev.footer.email_label"), company("email", t("dev.footer.email"))],
+  ];
+  const meta = metaAll.filter(([, v]) => v);
+  const companyName = company("company_name", t("dev.footer.company_name"));
+
   return (
     <footer className="bg-[hsl(var(--brand-navy))] text-white/80 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
@@ -228,9 +242,29 @@ function DevFooter() {
           <Link href="/management" className="block text-sm py-1 hover:text-white">{t("dev.footer.mgmt_link")}</Link>
         </div>
       </div>
+
+      {/* Company / operator info (MetHeim Korea) */}
+      {meta.length > 0 && (
+        <div className="border-t border-white/10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <p className="text-sm font-semibold text-white/90">{companyName}</p>
+            <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-white/60">
+              {meta.map(([label, value]) => (
+                <span key={label}><span className="text-white/40">{label}</span> {value}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 text-xs text-white/60">
-          © {year} {APP_NAME}. {t("dev.footer.rights")}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-white/60">
+          <span>© {year} {APP_NAME}. {t("dev.footer.rights")}</span>
+          <nav className="flex items-center gap-4">
+            <Link href="/privacy-policy" className="hover:text-white font-medium">{t("dev.footer.privacy")}</Link>
+            <span className="text-white/20">·</span>
+            <Link href="/terms" className="hover:text-white font-medium">{t("dev.footer.terms")}</Link>
+          </nav>
         </div>
       </div>
     </footer>

@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { LineChart, ShieldCheck, Wrench, Wallet, Calculator } from "lucide-react";
+import { LineChart, ShieldCheck, Wrench, Wallet, Calculator, PiggyBank, BarChart3, Users } from "lucide-react";
 import { DevLayout } from "@/components/development/DevLayout";
 import { usePageContent } from "@/lib/usePageContent";
 import { InquiryForm } from "@/components/development/InquiryForm";
+import { SectionHeading, WhyGrid, ProcessZigzag } from "@/components/development/marketing";
 import { submitManagementInquiry, computeYield } from "@/lib/development-api";
 import { DEFAULT_CURRENCY } from "@/lib/defaultCurrency";
 
@@ -87,6 +88,16 @@ export default function DevManagement() {
     { icon: Wallet, title: pc("benefit_3_title", t("dev.mgmt.benefit_3_title")), body: pc("benefit_3_body", t("dev.mgmt.benefit_3_body")) },
   ];
 
+  const WHY = [
+    { icon: PiggyBank, title: pc("why_1_title", t("dev.mgmt.why_1_title")), body: pc("why_1_body", t("dev.mgmt.why_1_body")) },
+    { icon: BarChart3, title: pc("why_2_title", t("dev.mgmt.why_2_title")), body: pc("why_2_body", t("dev.mgmt.why_2_body")) },
+    { icon: Users, title: pc("why_3_title", t("dev.mgmt.why_3_title")), body: pc("why_3_body", t("dev.mgmt.why_3_body")) },
+  ];
+  const STEPS = [1, 2, 3, 4].map((n) => ({
+    title: pc(`step_${n}_title`, t(`dev.mgmt.step_${n}_title`)),
+    body: pc(`step_${n}_body`, t(`dev.mgmt.step_${n}_body`)),
+  }));
+
   return (
     <DevLayout title={t("dev.mgmt.hero_title")}>
       {/* Hero */}
@@ -120,8 +131,20 @@ export default function DevManagement() {
         </div>
       </section>
 
+      {/* Why MetHeim — 위탁관리 */}
+      <section className="bg-[hsl(var(--brand-cream))] border-y border-gray-100">
+        <div className="max-w-7xl mx-auto px-6 py-14 md:py-20">
+          <SectionHeading
+            eyebrow={pc("why_eyebrow", t("dev.mgmt.why_eyebrow"))}
+            title={pc("why_heading", t("dev.mgmt.why_heading"))}
+            subtitle={pc("why_subtitle", t("dev.mgmt.why_subtitle"))}
+          />
+          <WhyGrid items={WHY} />
+        </div>
+      </section>
+
       {/* Yield simulator */}
-      <section id="simulator" className="bg-[hsl(var(--brand-cream))] border-y border-gray-100">
+      <section id="simulator" className="bg-white">
         <div className="max-w-4xl mx-auto px-6 py-14 md:py-20">
           <div className="text-center">
             <div className="inline-flex items-center gap-2 text-primary font-semibold">
@@ -135,6 +158,18 @@ export default function DevManagement() {
           <div className="mt-8">
             <YieldSimulator />
           </div>
+        </div>
+      </section>
+
+      {/* 위탁 절차 — alternating zig-zag */}
+      <section className="bg-[hsl(var(--brand-cream))] border-y border-gray-100">
+        <div className="max-w-7xl mx-auto px-6 py-14 md:py-20">
+          <SectionHeading
+            eyebrow={pc("process_eyebrow", t("dev.mgmt.process_eyebrow"))}
+            title={pc("process_heading", t("dev.mgmt.process_heading"))}
+            subtitle={pc("process_subtitle", t("dev.mgmt.process_subtitle"))}
+          />
+          <ProcessZigzag steps={STEPS} />
         </div>
       </section>
 

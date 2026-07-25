@@ -1,9 +1,10 @@
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
-import { CalendarDays, ArrowRight, FileSignature } from "lucide-react";
+import { CalendarDays, ArrowRight, FileSignature, KeyRound, CalendarCheck, Headphones } from "lucide-react";
 import { DevLayout } from "@/components/development/DevLayout";
 import { usePageContent } from "@/lib/usePageContent";
 import { InquiryForm } from "@/components/development/InquiryForm";
+import { SectionHeading, WhyGrid } from "@/components/development/marketing";
 import { submitLongTermInquiry } from "@/lib/development-api";
 import { useListFeaturedSpaces } from "@/lib/guest-api";
 import { SpaceCard } from "@/components/space-card";
@@ -21,6 +22,16 @@ export default function DevRent() {
   const { data } = useListFeaturedSpaces();
   const spaces = (data?.data ?? []).slice(0, 4);
   const { forceDisplayCurrency } = useDisplayCurrency();
+
+  const WHY = [
+    { icon: KeyRound, title: pc("why_1_title", t("dev.rent.why_1_title")), body: pc("why_1_body", t("dev.rent.why_1_body")) },
+    { icon: CalendarCheck, title: pc("why_2_title", t("dev.rent.why_2_title")), body: pc("why_2_body", t("dev.rent.why_2_body")) },
+    { icon: Headphones, title: pc("why_3_title", t("dev.rent.why_3_title")), body: pc("why_3_body", t("dev.rent.why_3_body")) },
+  ];
+  const STEPS = [1, 2, 3, 4].map((n) => ({
+    title: pc(`step_${n}_title`, t(`dev.rent.step_${n}_title`)),
+    body: pc(`step_${n}_body`, t(`dev.rent.step_${n}_body`)),
+  }));
 
   return (
     <DevLayout title={t("dev.rent.hero_title")}>
@@ -41,6 +52,39 @@ export default function DevRent() {
             <a href="#long-term" className="px-6 py-3 rounded-full font-semibold border border-white/60 bg-white/10 text-white inline-flex items-center gap-2 transition hover:bg-white/20">
               {t("dev.rent.long_title")}
             </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Why MetHeim — 임대 */}
+      <section className="max-w-7xl mx-auto px-6 py-14 md:py-20">
+        <SectionHeading
+          eyebrow={pc("why_eyebrow", t("dev.rent.why_eyebrow"))}
+          title={pc("why_heading", t("dev.rent.why_heading"))}
+          subtitle={pc("why_subtitle", t("dev.rent.why_subtitle"))}
+        />
+        <WhyGrid items={WHY} />
+      </section>
+
+      {/* 임대 절차 — horizontal step row */}
+      <section className="bg-[hsl(var(--brand-navy))] text-white">
+        <div className="max-w-7xl mx-auto px-6 py-14 md:py-20">
+          <div className="text-center max-w-2xl mx-auto">
+            <p className="text-sm font-semibold tracking-widest uppercase text-white/70">{pc("process_eyebrow", t("dev.rent.process_eyebrow"))}</p>
+            <h2 className="mt-3 font-display text-2xl md:text-3xl font-bold tracking-tight">{pc("process_heading", t("dev.rent.process_heading"))}</h2>
+            <p className="mt-3 text-white/80 leading-relaxed">{pc("process_subtitle", t("dev.rent.process_subtitle"))}</p>
+          </div>
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {STEPS.map((s, i) => (
+              <div key={i} className="relative rounded-2xl bg-white/5 border border-white/10 p-6">
+                {i < STEPS.length - 1 && (
+                  <span aria-hidden className="hidden lg:block absolute top-10 -right-3 w-6 h-px bg-white/30" />
+                )}
+                <div className="w-10 h-10 rounded-lg bg-primary text-white flex items-center justify-center font-display font-bold">{i + 1}</div>
+                <h3 className="mt-4 font-semibold">{s.title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-white/75">{s.body}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

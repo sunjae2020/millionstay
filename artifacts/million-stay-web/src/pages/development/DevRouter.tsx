@@ -10,6 +10,8 @@ import DevStayPlan from "./StayPlan";
 import DevForResident from "./ForResident";
 import DevForOwner from "./ForOwner";
 import DevForPartner from "./ForPartner";
+import DevPrivacy from "./Privacy";
+import DevTerms from "./Terms";
 // Shared flows reused underneath the development site so the short-term Rent
 // engine (search → space detail → booking → portal) works end to end.
 import Search from "@/pages/search";
@@ -32,7 +34,6 @@ import PortalPayment from "@/pages/portal-payment";
 import PortalCs from "@/pages/portal-cs";
 import PortalCsNew from "@/pages/portal-cs-new";
 import PortalCsDetail from "@/pages/portal-cs-detail";
-import PrivacyPolicy from "@/pages/privacy-policy";
 import Sign from "@/pages/sign";
 import PaymentResult from "@/pages/payment-result";
 import NotFound from "@/pages/not-found";
@@ -84,8 +85,13 @@ export default function DevRouter() {
       <Route path="/portal/cs/:id" component={PortalCsDetail} />
       <Route path="/portal/cs" component={PortalCs} />
 
+      {/* MetHeim (Korea) legal pages — override the shared privacy policy with the
+          tenant's own 개인정보처리방침, plus a dedicated 이용약관. */}
+      <Route path="/privacy-policy" component={DevPrivacy} />
+      <Route path="/privacy" component={DevPrivacy} />
+      <Route path="/terms" component={DevTerms} />
+
       {/* Misc shared */}
-      <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/sign/:token" component={Sign} />
       <Route path="/payment-result" component={PaymentResult} />
 
