@@ -106,7 +106,10 @@ export async function resolvePublicCompanyContact(): Promise<PublicCompanyContac
     ceo: s.ceo?.trim() || "",
     // `abn` is the same concept as a KR business-registration number — accept either.
     bizNo: s.biz_no?.trim() || s.abn?.trim() || "",
-    address: composeAddress(s) || "",
+    // Free-text address line(s) only — NOT composeAddress(), whose AU state/
+    // country parts would pollute a KR footer (e.g. "…, VIC, AU"). Empty when
+    // unset so the web falls back to its localized i18n address.
+    address: [s.address1, s.address2].map((x) => x?.trim()).filter(Boolean).join(", "),
     phone: s.phone?.trim() || "",
     website: s.website?.trim() || "",
     privacyOfficer: s.privacy_officer?.trim() || "",
