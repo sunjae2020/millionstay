@@ -39,6 +39,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { apiFetch } from "@/lib/apiFetch";
+import { spaceStatusValuesWith, DEFAULT_SPACE_STATUS } from "@/lib/spaceStatus";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
@@ -467,7 +468,7 @@ export default function SpaceDetail() {
       name: "", manual_input: false, space_type: "", custom_type_name: "",
       max_occupancy: "", booking_mode: "", base_weekly_price: "", base_daily_price: "", base_currency: "AUD",
       floor_number: "", floor_area_sqm: "", description: "",
-      ical_import_url: "", status: "Active", landlord_account_id: "",
+      ical_import_url: "", status: DEFAULT_SPACE_STATUS, landlord_account_id: "",
     },
   });
 
@@ -489,7 +490,7 @@ export default function SpaceDetail() {
         floor_area_sqm: space.floor_area_sqm?.toString() ?? "",
         description: space.description ?? "",
         ical_import_url: space.ical_import_url ?? "",
-        status: space.status ?? "Active",
+        status: space.status ?? DEFAULT_SPACE_STATUS,
         landlord_account_id: space.landlord_account_id?.toString() ?? "",
       });
       setPropertyId(space.property_id ?? null);
@@ -652,9 +653,9 @@ export default function SpaceDetail() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Active">Active</SelectItem>
-                            <SelectItem value="Inactive">Inactive</SelectItem>
-                            <SelectItem value="Suspended">Suspended</SelectItem>
+                            {spaceStatusValuesWith(field.value).map((s) => (
+                              <SelectItem key={s} value={s}>{s}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       )}
