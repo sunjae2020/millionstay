@@ -372,7 +372,8 @@
     "confirm_checkin": "チェックインを確認",
     "confirm_checkout": "チェックアウトを確認",
     "instant_booking": "即時予約",
-    "request_booking": "申請予約"
+    "request_booking": "申請予約",
+    "tab_condition": "現況"
   },
   "contact": {
     "new": "新規連絡先",
@@ -3466,5 +3467,33 @@
     "field_description": "説明",
     "field_custom_type_name": "カスタムタイプ",
     "field_display_name": "表示名"
+  },
+  "settings_roles": {
+    "title": "ロールと権限",
+    "subtitle": "各ロールが閲覧・編集できる範囲を定義します。編集は閲覧を含みます。",
+    "read_only_notice": "権限マトリクスを編集できるのは SuperAdmin のみです。",
+    "system": "システム",
+    "confirm_delete": "このロールを削除しますか？",
+    "add_role": "ロールを追加",
+    "new_role_name": "新しいロール名",
+    "level_none": "なし",
+    "level_read": "閲覧",
+    "level_write": "編集",
+    "res_dashboard": "ダッシュボード",
+    "res_bookings": "予約",
+    "res_contracts": "契約",
+    "res_finance": "会計",
+    "res_crm": "CRM",
+    "res_properties": "物件",
+    "res_cs": "サポート",
+    "res_maintenance": "メンテナンス",
+    "res_products": "商品",
+    "res_promotions": "プロモーション",
+    "res_services": "サービス",
+    "res_documents": "書類",
+    "res_content": "コンテンツ",
+    "res_operations": "運用",
+    "res_users": "ユーザー",
+    "res_settings": "設定"
   }
 }

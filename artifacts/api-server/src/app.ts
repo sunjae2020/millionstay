@@ -34,6 +34,7 @@ import privacyRouter from "./routes/privacy";
 import chatRouter from "./routes/chat";
 import knowledgeRouter from "./routes/knowledge";
 import externalApiRouter from "./routes/external-api";
+import rolesRouter from "./routes/roles";
 import { conditionReportsAdminRouter, conditionReportsGuestRouter } from "./routes/condition-reports";
 import { depositSettlementsAdminRouter, depositSettlementsGuestRouter } from "./routes/deposit-settlements";
 import { logger } from "./lib/logger";
@@ -283,6 +284,8 @@ app.use("/api", knowledgeRouter);
 app.use("/api", pageContentsRouter);
 // Admin e-signature management (create / list / cancel) — behind requireAuth.
 app.use("/api", contractSigningAdminRouter);
+// Roles & permission matrix (RBAC) — admin; writes SuperAdmin-only inside.
+app.use("/api", rolesRouter);
 // Condition reports — admin side (self-guards with requireAuth on /v1).
 app.use("/api", conditionReportsAdminRouter);
 app.use("/api", depositSettlementsAdminRouter);

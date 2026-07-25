@@ -372,7 +372,8 @@
     "confirm_checkin": "ยืนยันการเช็คอิน",
     "confirm_checkout": "ยืนยันการเช็คเอาท์",
     "instant_booking": "จองทันที",
-    "request_booking": "ขอจอง"
+    "request_booking": "ขอจอง",
+    "tab_condition": "สภาพห้อง"
   },
   "contact": {
     "new": "ผู้ติดต่อใหม่",
@@ -3466,5 +3467,33 @@
     "field_description": "คำอธิบาย",
     "field_custom_type_name": "ประเภทที่กำหนดเอง",
     "field_display_name": "ชื่อที่แสดง"
+  },
+  "settings_roles": {
+    "title": "บทบาทและสิทธิ์",
+    "subtitle": "กำหนดสิ่งที่แต่ละบทบาทอ่านหรือแก้ไขได้ สิทธิ์เขียนรวมถึงอ่าน",
+    "read_only_notice": "เฉพาะ SuperAdmin เท่านั้นที่แก้ไขเมทริกซ์สิทธิ์ได้",
+    "system": "ระบบ",
+    "confirm_delete": "ลบบทบาทนี้หรือไม่?",
+    "add_role": "เพิ่มบทบาท",
+    "new_role_name": "ชื่อบทบาทใหม่",
+    "level_none": "ไม่มี",
+    "level_read": "อ่าน",
+    "level_write": "เขียน",
+    "res_dashboard": "แดชบอร์ด",
+    "res_bookings": "การจอง",
+    "res_contracts": "สัญญา",
+    "res_finance": "การเงิน",
+    "res_crm": "CRM",
+    "res_properties": "อสังหาฯ",
+    "res_cs": "ช่วยเหลือ",
+    "res_maintenance": "ซ่อมบำรุง",
+    "res_products": "สินค้า",
+    "res_promotions": "โปรโมชัน",
+    "res_services": "บริการ",
+    "res_documents": "เอกสาร",
+    "res_content": "เนื้อหา",
+    "res_operations": "ปฏิบัติการ",
+    "res_users": "ผู้ใช้",
+    "res_settings": "ตั้งค่า"
   }
 }
