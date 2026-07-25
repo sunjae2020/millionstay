@@ -3440,6 +3440,18 @@ components:
           type: ["integer", "null"]
         floor_area_sqm:
           type: ["number", "null"]
+        exclusive_area_m2:
+          type: ["number", "null"]
+        residential_common_area_m2:
+          type: ["number", "null"]
+        supply_area_m2:
+          type: ["number", "null"]
+        other_common_area_m2:
+          type: ["number", "null"]
+        contract_area_m2:
+          type: ["number", "null"]
+        land_share_m2:
+          type: ["number", "null"]
         description:
           type: ["string", "null"]
         ical_import_url:
@@ -3505,6 +3517,18 @@ components:
           type: ["integer", "null"]
         floor_area_sqm:
           type: ["number", "null"]
+        exclusive_area_m2:
+          type: ["number", "null"]
+        residential_common_area_m2:
+          type: ["number", "null"]
+        supply_area_m2:
+          type: ["number", "null"]
+        other_common_area_m2:
+          type: ["number", "null"]
+        contract_area_m2:
+          type: ["number", "null"]
+        land_share_m2:
+          type: ["number", "null"]
         description:
           type: ["string", "null"]
         ical_import_url:
@@ -3551,6 +3575,18 @@ components:
         floor_number:
           type: ["integer", "null"]
         floor_area_sqm:
+          type: ["number", "null"]
+        exclusive_area_m2:
+          type: ["number", "null"]
+        residential_common_area_m2:
+          type: ["number", "null"]
+        supply_area_m2:
+          type: ["number", "null"]
+        other_common_area_m2:
+          type: ["number", "null"]
+        contract_area_m2:
+          type: ["number", "null"]
+        land_share_m2:
           type: ["number", "null"]
         description:
           type: ["string", "null"]

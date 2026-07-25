@@ -29,6 +29,18 @@ export interface Space {
   /** @nullable */
   floor_area_sqm?: number | null;
   /** @nullable */
+  exclusive_area_m2?: number | null;
+  /** @nullable */
+  residential_common_area_m2?: number | null;
+  /** @nullable */
+  supply_area_m2?: number | null;
+  /** @nullable */
+  other_common_area_m2?: number | null;
+  /** @nullable */
+  contract_area_m2?: number | null;
+  /** @nullable */
+  land_share_m2?: number | null;
+  /** @nullable */
   description?: string | null;
   /** @nullable */
   ical_import_url?: string | null;

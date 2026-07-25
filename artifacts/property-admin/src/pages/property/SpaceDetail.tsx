@@ -65,6 +65,12 @@ interface SpaceForm {
   base_currency: string;
   floor_number: string;
   floor_area_sqm: string;
+  exclusive_area_m2: string;
+  residential_common_area_m2: string;
+  supply_area_m2: string;
+  other_common_area_m2: string;
+  contract_area_m2: string;
+  land_share_m2: string;
   description: string;
   ical_import_url: string;
   status: string;
@@ -467,7 +473,10 @@ export default function SpaceDetail() {
     defaultValues: {
       name: "", manual_input: false, space_type: "", custom_type_name: "",
       max_occupancy: "", booking_mode: "", base_weekly_price: "", base_daily_price: "", base_currency: "AUD",
-      floor_number: "", floor_area_sqm: "", description: "",
+      floor_number: "", floor_area_sqm: "",
+      exclusive_area_m2: "", residential_common_area_m2: "", supply_area_m2: "",
+      other_common_area_m2: "", contract_area_m2: "", land_share_m2: "",
+      description: "",
       ical_import_url: "", status: DEFAULT_SPACE_STATUS, landlord_account_id: "",
     },
   });
@@ -488,6 +497,12 @@ export default function SpaceDetail() {
         base_currency: space.base_currency ?? "AUD",
         floor_number: space.floor_number?.toString() ?? "",
         floor_area_sqm: space.floor_area_sqm?.toString() ?? "",
+        exclusive_area_m2: space.exclusive_area_m2?.toString() ?? "",
+        residential_common_area_m2: space.residential_common_area_m2?.toString() ?? "",
+        supply_area_m2: space.supply_area_m2?.toString() ?? "",
+        other_common_area_m2: space.other_common_area_m2?.toString() ?? "",
+        contract_area_m2: space.contract_area_m2?.toString() ?? "",
+        land_share_m2: space.land_share_m2?.toString() ?? "",
         description: space.description ?? "",
         ical_import_url: space.ical_import_url ?? "",
         status: space.status ?? DEFAULT_SPACE_STATUS,
@@ -553,6 +568,12 @@ export default function SpaceDetail() {
       base_currency: data.base_currency || null,
       floor_number: data.floor_number ? parseInt(data.floor_number, 10) : null,
       floor_area_sqm: data.floor_area_sqm ? parseFloat(data.floor_area_sqm) : null,
+      exclusive_area_m2: data.exclusive_area_m2 ? parseFloat(data.exclusive_area_m2) : null,
+      residential_common_area_m2: data.residential_common_area_m2 ? parseFloat(data.residential_common_area_m2) : null,
+      supply_area_m2: data.supply_area_m2 ? parseFloat(data.supply_area_m2) : null,
+      other_common_area_m2: data.other_common_area_m2 ? parseFloat(data.other_common_area_m2) : null,
+      contract_area_m2: data.contract_area_m2 ? parseFloat(data.contract_area_m2) : null,
+      land_share_m2: data.land_share_m2 ? parseFloat(data.land_share_m2) : null,
       description: data.description || null,
       ical_import_url: data.ical_import_url || null,
       status: data.status,
@@ -842,6 +863,40 @@ export default function SpaceDetail() {
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_landlord_account")}</Label>
                   <Input {...register("landlord_account_id")} type="number" placeholder="Account ID" />
+                </div>
+              </div>
+
+              {/* ⑤-b AREA BREAKDOWN — 면적 상세 (전용/공용/공급/계약/대지지분) */}
+              <div className="col-span-2 bg-card rounded-lg border p-5 flex flex-col gap-3">
+                <div className="border-b pb-2">
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("space.section_area")}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">{t("space.desc_area")}</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-1">
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_exclusive_area")}</Label>
+                    <Input {...register("exclusive_area_m2")} type="number" step="0.001" min={0} placeholder="0.000" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_residential_common_area")}</Label>
+                    <Input {...register("residential_common_area_m2")} type="number" step="0.001" min={0} placeholder="0.000" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_supply_area")}</Label>
+                    <Input {...register("supply_area_m2")} type="number" step="0.001" min={0} placeholder="0.000" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_other_common_area")}</Label>
+                    <Input {...register("other_common_area_m2")} type="number" step="0.001" min={0} placeholder="0.000" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_contract_area")}</Label>
+                    <Input {...register("contract_area_m2")} type="number" step="0.001" min={0} placeholder="0.000" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_land_share")}</Label>
+                    <Input {...register("land_share_m2")} type="number" step="0.001" min={0} placeholder="0.000" />
+                  </div>
                 </div>
               </div>
 
