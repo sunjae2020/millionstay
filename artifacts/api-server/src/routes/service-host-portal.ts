@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
-import { eq, ne, and, or, ilike, desc, asc, inArray, sql } from "drizzle-orm";
+import { eq, ne, and, or, ilike, desc, asc, inArray, isNull, sql } from "drizzle-orm";
 import {
   db,
   bookingsTable,
@@ -12,6 +12,7 @@ import {
   accountsTable,
   invoicesTable,
   contactsTable,
+  workOrdersTable,
 } from "@workspace/db";
 import { requireServiceHostAuth, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth";
 import { isCloudinaryConfigured, uploadToCloudinary, deleteFromCloudinary, cldFolder } from "../utils/cloudinary";
@@ -39,6 +40,74 @@ async function getHostServiceIds(accountId: number): Promise<number[]> {
     .where(and(eq(serviceHostsTable.account_id, accountId), eq(serviceHostsTable.status, "Active")));
   return hosts.map((h) => h.id);
 }
+
+/* ─────────────────────────────────────────────
+   WORK ORDERS — partner-dispatched maintenance jobs (Phase 3)
+   The partner sees ONLY work orders dispatched to one of their service hosts.
+───────────────────────────────────────────── */
+
+// Load a work order and verify it is dispatched to the calling partner.
+async function loadOwnedWorkOrder(accountId: number, workOrderId: number) {
+  const hostIds = await getHostServiceIds(accountId);
+  if (!hostIds.length) return null;
+  const [wo] = await db.select().from(workOrdersTable).where(eq(workOrdersTable.id, workOrderId)).limit(1);
+  if (!wo || wo.service_host_id == null || !hostIds.includes(wo.service_host_id)) return null;
+  return wo;
+}
+
+// GET /api/v1/service-host/work-orders — my dispatched jobs.
+router.get("/v1/service-host/work-orders", async (req, res): Promise<void> => {
+  try {
+    const partner = (req as any).partner as PartnerAuthPayload;
+    const hostIds = await getHostServiceIds(partner.account_id);
+    if (!hostIds.length) { res.json({ success: true, data: [] }); return; }
+    const rows = await db
+      .select()
+      .from(workOrdersTable)
+      .where(and(inArray(workOrdersTable.service_host_id, hostIds), isNull(workOrdersTable.deleted_at)))
+      .orderBy(desc(workOrdersTable.dispatched_at));
+    res.json({ success: true, data: rows });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
+  }
+});
+
+// POST /acknowledge — partner accepts the dispatch (stops the SLA clock).
+router.post("/v1/service-host/work-orders/:id/acknowledge", async (req, res): Promise<void> => {
+  try {
+    const partner = (req as any).partner as PartnerAuthPayload;
+    const wo = await loadOwnedWorkOrder(partner.account_id, Number(req.params.id));
+    if (!wo) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Work order not found" } }); return; }
+    if (wo.acknowledged_at) { res.json({ success: true, data: wo }); return; }
+    const now = new Date();
+    const onTime = wo.sla_ack_due_at ? now <= new Date(wo.sla_ack_due_at) : true;
+    const [updated] = await db.update(workOrdersTable)
+      .set({ acknowledged_at: now, sla_status: onTime ? "met" : "acknowledged", updated_at: now })
+      .where(eq(workOrdersTable.id, wo.id))
+      .returning();
+    res.json({ success: true, data: updated });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
+  }
+});
+
+// POST /start and /complete — partner progresses the job.
+async function partnerTransition(req: any, res: any, from: string[] | null, to: string, stamp?: "completed") {
+  try {
+    const partner = req.partner as PartnerAuthPayload;
+    const wo = await loadOwnedWorkOrder(partner.account_id, Number(req.params.id));
+    if (!wo) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Work order not found" } }); return; }
+    if (from && !from.includes(wo.status)) { res.status(409).json({ success: false, error: { code: "BAD_STATE", message: `Cannot move from ${wo.status}` } }); return; }
+    const set: any = { status: to, updated_at: new Date() };
+    if (stamp === "completed") set.completed_at = new Date();
+    const [updated] = await db.update(workOrdersTable).set(set).where(eq(workOrdersTable.id, wo.id)).returning();
+    res.json({ success: true, data: updated });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
+  }
+}
+router.post("/v1/service-host/work-orders/:id/start", (req, res) => partnerTransition(req, res, ["Open"], "InProgress"));
+router.post("/v1/service-host/work-orders/:id/complete", (req, res) => partnerTransition(req, res, ["InProgress", "Open"], "Completed", "completed"));
 
 /* GET /api/v1/service-host/dashboard */
 router.get("/v1/service-host/dashboard", requireServiceHostAuth, async (req, res): Promise<void> => {

@@ -13,6 +13,7 @@ import { syncAllChannelImports } from "./lib/icalImport";
 import { purgeExpiredDocuments } from "./lib/retentionPurge";
 import { generateRentCharges } from "./lib/homestay/monthlyBilling";
 import { generateRecurringInvoices } from "./lib/billing/recurringInvoices";
+import { checkWorkOrderSla } from "./lib/dispatch/workOrderDispatch";
 
 const rawPort = process.env["PORT"];
 
@@ -216,6 +217,15 @@ cron.schedule(
   },
   { timezone: "Australia/Sydney" },
 );
+
+// Work-order SLA watchdog (Phase 3): every 10 minutes, flag dispatched work
+// orders the partner has not acknowledged past their SLA deadline as breached and
+// escalate to admin. Idempotent (only touches sla_status='pending_ack' rows).
+cron.schedule("*/10 * * * *", () => {
+  checkWorkOrderSla()
+    .then((r) => { if (r.breached) logger.warn({ ...r }, "Cron work-order SLA breaches"); })
+    .catch((err) => logger.error({ err }, "Cron work-order SLA check failed"));
+});
 
 const server = app.listen(port, (err) => {
   if (err) {

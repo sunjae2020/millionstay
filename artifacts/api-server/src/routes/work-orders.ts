@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { db, workOrdersTable, propertiesTable, spacesTable, contactsTable } from "@workspace/db";
 import { eq, ilike, and, isNull, inArray } from "drizzle-orm";
+import { dispatchWorkOrder } from "../lib/dispatch/workOrderDispatch";
+import { logAction } from "../utils/auditLog";
 import {
   CreateWorkOrderBody,
   UpdateWorkOrderBody,
@@ -81,8 +83,32 @@ router.post("/v1/work-orders", async (req, res): Promise<void> => {
     cost: parsed.data.cost ?? null,
     notes: parsed.data.notes ?? null,
   }).returning();
-  const [result] = await enrichWorkOrders([row]);
+
+  // Auto-dispatch to a matching partner when a category is set (unless the caller
+  // opted out with auto_dispatch:false). Best-effort — a no-match leaves it
+  // unassigned for manual handling.
+  if (row.category && req.body?.auto_dispatch !== false) {
+    try { await dispatchWorkOrder(row.id); } catch (e) { console.error("[work-orders] auto-dispatch failed:", e); }
+  }
+
+  const fresh = await db.select().from(workOrdersTable).where(eq(workOrdersTable.id, row.id)).then((r) => r[0]);
+  const [result] = await enrichWorkOrders([fresh ?? row]);
   res.status(201).json(result);
+});
+
+// Manually (re)dispatch a work order to a matching partner.
+router.post("/v1/work-orders/:id/dispatch", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const result = await dispatchWorkOrder(id, { force: req.body?.force === true });
+  if (!result.ok) {
+    const code = result.reason === "not_found" ? 404 : 409;
+    res.status(code).json({ success: false, error: { code: result.reason.toUpperCase(), message: `Dispatch failed: ${result.reason}` } });
+    return;
+  }
+  void logAction({ entityType: "work_order", entityId: id, action: "UPDATE", actorId: (req as any).user?.id ?? null, newValue: { dispatched_to: result.service_host_id, sla_ack_due_at: result.sla_ack_due_at } });
+  const fresh = await db.select().from(workOrdersTable).where(eq(workOrdersTable.id, id)).then((r) => r[0]);
+  const [enriched] = await enrichWorkOrders(fresh ? [fresh] : []);
+  res.json({ success: true, data: enriched, dispatch: result });
 });
 
 router.get("/v1/work-orders/:id", async (req, res): Promise<void> => {
