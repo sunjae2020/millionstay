@@ -21,6 +21,7 @@ import {
   homestayHostAvailabilityTable,
   paymentInfoTable,
   agentCommissionLedgerTable,
+  homestayCommissionPlansTable,
   accountsTable,
 } from "@workspace/db";
 import { Resend } from "resend";
@@ -630,6 +631,89 @@ homestayPlacementAdminRouter.post("/v1/homestay-commissions/:id/mark-paid", asyn
   if (!row) { res.status(409).json({ error: "Commission not found or not Approved" }); return; }
   void logAction({ entityType: "homestay_commission", entityId: row.id, action: "UPDATE", actorId: (req as any).user?.id ?? null, newValue: { status: "Paid" } });
   res.json({ success: true, commission: row });
+});
+
+// ── Agent commission PLANS (per-agent rate/base config) ──────────────────────
+const BASE_TYPES = ["upfront", "monthly", "converted"];
+
+homestayPlacementAdminRouter.get("/v1/homestay-commission-plans", async (_req, res): Promise<void> => {
+  try {
+    const rows = await db
+      .select({
+        id: homestayCommissionPlansTable.id,
+        account_id: homestayCommissionPlansTable.account_id,
+        agent_name: accountsTable.name,
+        name: homestayCommissionPlansTable.name,
+        fixed_referral_fee: homestayCommissionPlansTable.fixed_referral_fee,
+        percentage_rate: homestayCommissionPlansTable.percentage_rate,
+        stack: homestayCommissionPlansTable.stack,
+        base_type: homestayCommissionPlansTable.base_type,
+        status: homestayCommissionPlansTable.status,
+      })
+      .from(homestayCommissionPlansTable)
+      .leftJoin(accountsTable, eq(accountsTable.id, homestayCommissionPlansTable.account_id))
+      .where(isNull(homestayCommissionPlansTable.deleted_at))
+      .orderBy(desc(homestayCommissionPlansTable.id));
+    res.json({ data: rows });
+  } catch (err) {
+    console.error("[homestay-placements] list commission plans failed:", err);
+    res.status(500).json({ error: "Failed to list commission plans" });
+  }
+});
+
+function planPayload(body: any) {
+  const base_type = BASE_TYPES.includes(body?.base_type) ? body.base_type : "upfront";
+  return {
+    account_id: Number(body?.account_id),
+    name: typeof body?.name === "string" ? body.name : null,
+    fixed_referral_fee: String(Number(body?.fixed_referral_fee) || 0),
+    percentage_rate: String(Number(body?.percentage_rate) || 0),
+    stack: body?.stack !== false,
+    base_type,
+    status: body?.status === "Archived" ? "Archived" : "Active",
+  };
+}
+
+homestayPlacementAdminRouter.post("/v1/homestay-commission-plans", async (req, res): Promise<void> => {
+  try {
+    if (!Number(req.body?.account_id)) { res.status(400).json({ error: "account_id required" }); return; }
+    const [row] = await db.insert(homestayCommissionPlansTable).values(planPayload(req.body)).returning();
+    void logAction({ entityType: "homestay_commission_plan", entityId: row!.id, action: "CREATE", actorId: (req as any).user?.id ?? null, newValue: { base_type: row!.base_type, rate: row!.percentage_rate } });
+    res.status(201).json({ success: true, data: row });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+homestayPlacementAdminRouter.patch("/v1/homestay-commission-plans/:id", async (req, res): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    const patch: any = { updated_at: new Date() };
+    if (req.body?.name !== undefined) patch.name = req.body.name;
+    if (req.body?.fixed_referral_fee !== undefined) patch.fixed_referral_fee = String(Number(req.body.fixed_referral_fee) || 0);
+    if (req.body?.percentage_rate !== undefined) patch.percentage_rate = String(Number(req.body.percentage_rate) || 0);
+    if (req.body?.stack !== undefined) patch.stack = req.body.stack !== false;
+    if (BASE_TYPES.includes(req.body?.base_type)) patch.base_type = req.body.base_type;
+    if (req.body?.status === "Active" || req.body?.status === "Archived") patch.status = req.body.status;
+    const [row] = await db.update(homestayCommissionPlansTable).set(patch).where(eq(homestayCommissionPlansTable.id, id)).returning();
+    if (!row) { res.status(404).json({ error: "Not found" }); return; }
+    void logAction({ entityType: "homestay_commission_plan", entityId: id, action: "UPDATE", actorId: (req as any).user?.id ?? null, newValue: patch });
+    res.json({ success: true, data: row });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+homestayPlacementAdminRouter.delete("/v1/homestay-commission-plans/:id", async (req, res): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    const [row] = await db.update(homestayCommissionPlansTable).set({ deleted_at: new Date(), status: "Archived" }).where(eq(homestayCommissionPlansTable.id, id)).returning();
+    if (!row) { res.status(404).json({ error: "Not found" }); return; }
+    void logAction({ entityType: "homestay_commission_plan", entityId: id, action: "DELETE", actorId: (req as any).user?.id ?? null });
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ── Cancel (soft) ────────────────────────────────────────────────────────────

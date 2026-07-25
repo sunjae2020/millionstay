@@ -3520,5 +3520,24 @@
     "res_operations": "Operations",
     "res_users": "Users",
     "res_settings": "Settings"
+  },
+  "commission_plans": {
+    "title": "Commission Plans",
+    "subtitle": "Per-agent referral fee & rate. The base sets what the percentage applies to.",
+    "add": "New plan",
+    "col_agent": "Agent",
+    "col_base": "Base",
+    "col_rate": "Rate",
+    "col_fixed": "Fixed fee",
+    "col_stack": "Stack",
+    "col_status": "Status",
+    "pick_agent": "Search agent…",
+    "stack_label": "Apply fixed + percentage together (stack)",
+    "base_upfront": "Upfront (fee + deposit)",
+    "base_monthly": "One month's rent",
+    "base_converted": "Converted (deposit + rent×100)",
+    "hint_upfront": "% applies to placement fee + deposit.",
+    "hint_monthly": "% applies to one month's rent.",
+    "hint_converted": "% applies to deposit + monthly rent × 100 (Korean 환산보증금)."
   }
 }

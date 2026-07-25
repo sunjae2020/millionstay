@@ -3520,5 +3520,24 @@
     "res_operations": "运营",
     "res_users": "用户",
     "res_settings": "设置"
+  },
+  "commission_plans": {
+    "title": "佣金方案",
+    "subtitle": "按代理的介绍费与费率。base 决定百分比的计算基数。",
+    "add": "新方案",
+    "col_agent": "代理",
+    "col_base": "基数",
+    "col_rate": "费率",
+    "col_fixed": "固定费",
+    "col_stack": "叠加",
+    "col_status": "状态",
+    "pick_agent": "搜索代理…",
+    "stack_label": "固定+百分比叠加(stack)",
+    "base_upfront": "预付(费用+押金)",
+    "base_monthly": "一个月租金",
+    "base_converted": "折算押金(押金+租金×100)",
+    "hint_upfront": "% 计算基数为安置费+押金。",
+    "hint_monthly": "% 计算基数为一个月租金。",
+    "hint_converted": "% 计算基数为押金+租金×100。"
   }
 }

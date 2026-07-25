@@ -103,6 +103,7 @@ import Settings from "@/pages/settings/Settings";
 import OrganisationPage from "@/pages/settings/sub/Organisation";
 import UsersPage from "@/pages/settings/sub/Users";
 import RolesPage from "@/pages/settings/sub/Roles";
+import CommissionPlansPage from "@/pages/settings/sub/CommissionPlans";
 import EmailTemplatesPage from "@/pages/settings/sub/EmailTemplates";
 import DocumentTemplatesPage from "@/pages/settings/sub/DocumentTemplates";
 import DocumentTemplateEditPage from "@/pages/settings/sub/DocumentTemplateEdit";
@@ -314,6 +315,7 @@ function Router() {
       <Route path="/settings/organisation" component={OrganisationPage} />
       <Route path="/settings/users" component={UsersPage} />
       <Route path="/settings/roles" component={RolesPage} />
+      <Route path="/settings/commission-plans" component={CommissionPlansPage} />
       <Route path="/settings/email-templates" component={EmailTemplatesPage} />
       <Route path="/settings/document-templates" component={DocumentTemplatesPage} />
       <Route path="/settings/document-templates/:id" component={DocumentTemplateEditPage} />
