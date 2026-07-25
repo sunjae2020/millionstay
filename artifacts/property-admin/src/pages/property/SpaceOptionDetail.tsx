@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ContentTranslationsPanel } from "@/components/ContentTranslationsPanel";
 import { useForm, Controller } from "react-hook-form";
 import {
   useGetSpaceOption,
@@ -148,6 +149,12 @@ export default function SpaceOptionDetail() {
               />
             </div>
           </form>
+
+          {!isNew && id && (
+            <div className="mt-6">
+              <ContentTranslationsPanel entity="space-options" id={id} sourceLang="ko" />
+            </div>
+          )}
         </div>
       </div>
     </Layout>

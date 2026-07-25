@@ -1,5 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getApiBase } from "./api-base";
+import i18n from "../i18n";
+
+// Current guest UI language as a bare code ("ko-KR" → "ko"), sent as ?lang so the
+// public API returns per-locale content (space/property/amenity copy). Included
+// in query keys so switching language refetches translated content.
+function currentLang(): string {
+  return (i18n.language || "en").split("-")[0].toLowerCase();
+}
 
 const BASE = `${getApiBase()}/api/v1`;
 const GUEST_TOKEN_KEY = "ms_guest_token";
@@ -162,10 +170,12 @@ export function useListPublicSpaces(
   options?: { query?: { queryKey?: readonly unknown[]; enabled?: boolean } }
 ) {
   const query = options?.query ?? {};
+  const lang = currentLang();
   return useQuery({
-    queryKey: query.queryKey ?? getListPublicSpacesQueryKey(params),
+    queryKey: query.queryKey ?? [...getListPublicSpacesQueryKey(params), lang],
     queryFn: async () => {
       const qs = new URLSearchParams();
+      qs.set("lang", lang);
       if (params?.suburb_id) qs.set("suburb_id", String(params.suburb_id));
       if (params?.space_type) qs.set("space_type", params.space_type);
       if (params?.gender_policy) qs.set("gender_policy", params.gender_policy);
@@ -188,10 +198,11 @@ export function getListFeaturedSpacesQueryKey() {
 }
 
 export function useListFeaturedSpaces() {
+  const lang = currentLang();
   return useQuery({
-    queryKey: getListFeaturedSpacesQueryKey(),
+    queryKey: [...getListFeaturedSpacesQueryKey(), lang],
     queryFn: () =>
-      apiFetch<{ success: boolean; data: SpaceSummary[]; meta?: { total: number } }>(`/public/spaces?limit=8`),
+      apiFetch<{ success: boolean; data: SpaceSummary[]; meta?: { total: number } }>(`/public/spaces?limit=8&lang=${lang}`),
   });
 }
 
@@ -206,9 +217,10 @@ export function useGetPublicSpace(
   options?: { query?: { enabled?: boolean; queryKey?: readonly unknown[] } }
 ) {
   const query = options?.query ?? {};
+  const lang = currentLang();
   return useQuery({
-    queryKey: query.queryKey ?? getGetPublicSpaceQueryKey(id),
-    queryFn: () => apiFetch<{ success: boolean; data: SpaceSummary }>(`/public/spaces/${id}`),
+    queryKey: query.queryKey ?? [...getGetPublicSpaceQueryKey(id), lang],
+    queryFn: () => apiFetch<{ success: boolean; data: SpaceSummary }>(`/public/spaces/${id}?lang=${lang}`),
     enabled: query.enabled ?? true,
   });
 }

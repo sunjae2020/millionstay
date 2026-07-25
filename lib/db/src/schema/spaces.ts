@@ -1,4 +1,4 @@
-import { pgTable, serial, text, boolean, integer, real, numeric, timestamp, unique } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, boolean, integer, real, numeric, timestamp, unique, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -31,6 +31,11 @@ export const spacesTable = pgTable("spaces", {
   privacy_hide_unit_no: boolean("privacy_hide_unit_no").notNull().default(true),
   privacy_hide_street_no: boolean("privacy_hide_street_no").notNull().default(true),
   privacy_map_blur: boolean("privacy_map_blur").notNull().default(true),
+  // Per-locale copy for the guest site. Source columns (name/description/
+  // custom_type_name) hold the authored original; this jsonb holds translations
+  // keyed by language: { [lang]: { name, description, custom_type_name, _source } }
+  // where _source is "machine" (AI, unreviewed) or "human" (admin-reviewed).
+  translations: jsonb("translations").default({}),
   deleted_at: timestamp("deleted_at"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),

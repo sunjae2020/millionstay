@@ -372,8 +372,7 @@
     "confirm_checkin": "체크인 확인",
     "confirm_checkout": "체크아웃 확인",
     "instant_booking": "즉시 예약",
-    "request_booking": "요청 예약",
-    "tab_condition": "상태점검"
+    "request_booking": "요청 예약"
   },
   "contact": {
     "new": "새 연락처",
@@ -908,7 +907,8 @@
     "tab_overview": "개요",
     "tab_spaces": "공간",
     "tab_photos": "사진",
-    "tab_documents": "서류"
+    "tab_documents": "서류",
+    "tab_translations": "번역"
   },
   "space": {
     "new": "새 공간",
@@ -1117,7 +1117,8 @@
     "svc_added_toast": "서비스가 추가되었습니다",
     "svc_removed_toast": "서비스가 삭제되었습니다",
     "svc_remove_confirm": "이 서비스를 공간에서 삭제할까요?",
-    "svc_add_failed": "서비스 추가에 실패했습니다"
+    "svc_add_failed": "서비스 추가에 실패했습니다",
+    "tab_translations": "번역"
   },
   "space_option": {
     "new": "새 공간 옵션",
@@ -3449,5 +3450,21 @@
     "error": "문제가 발생했습니다",
     "delete_this": "이 물건을 삭제할까요?",
     "delete_confirm": "Buy 페이지에서 제거됩니다. 되돌릴 수 없습니다."
+  },
+  "content_translations": {
+    "title": "번역",
+    "desc": "이 항목의 게스트 사이트용 번역을 생성·검수합니다.",
+    "ai_button": "AI 번역",
+    "ai_running": "번역 중…",
+    "ai_done": "번역이 생성되었습니다",
+    "ai_failed": "AI 번역에 실패했습니다",
+    "saved": "번역이 저장되었습니다",
+    "source_label": "원문 ({{lang}})",
+    "no_targets": "활성화된 대상 언어가 없습니다.",
+    "machine_hint": "AI 초안 — 게시 전 검수하세요.",
+    "field_name": "이름",
+    "field_description": "설명",
+    "field_custom_type_name": "직접 입력 유형",
+    "field_display_name": "표시 이름"
   }
 }

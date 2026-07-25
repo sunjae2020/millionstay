@@ -1,4 +1,4 @@
-import { pgTable, serial, text, real, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, real, integer, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -17,6 +17,9 @@ export const propertiesTable = pgTable("properties", {
   owner_account_id: integer("owner_account_id"),
   suburb_id: integer("suburb_id"),
   description: text("description"),
+  // Per-locale copy for the guest site: { [lang]: { name, description, _source } }
+  // where _source is "machine" (AI, unreviewed) or "human" (admin-reviewed).
+  translations: jsonb("translations").default({}),
   deleted_at: timestamp("deleted_at"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),

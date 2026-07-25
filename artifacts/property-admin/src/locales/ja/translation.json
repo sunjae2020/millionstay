@@ -372,8 +372,7 @@
     "confirm_checkin": "チェックインを確認",
     "confirm_checkout": "チェックアウトを確認",
     "instant_booking": "即時予約",
-    "request_booking": "申請予約",
-    "tab_condition": "現況"
+    "request_booking": "申請予約"
   },
   "contact": {
     "new": "新規連絡先",
@@ -908,7 +907,8 @@
     "tab_overview": "概要",
     "tab_spaces": "スペース",
     "tab_photos": "写真",
-    "tab_documents": "書類"
+    "tab_documents": "書類",
+    "tab_translations": "翻訳"
   },
   "space": {
     "new": "新規スペース",
@@ -1117,7 +1117,8 @@
     "svc_added_toast": "サービスを追加しました",
     "svc_removed_toast": "サービスを削除しました",
     "svc_remove_confirm": "このサービスをスペースから削除しますか？",
-    "svc_add_failed": "サービスの追加に失敗しました"
+    "svc_add_failed": "サービスの追加に失敗しました",
+    "tab_translations": "翻訳"
   },
   "space_option": {
     "new": "新規スペースオプション",
@@ -3449,5 +3450,21 @@
     "error": "問題が発生しました",
     "delete_this": "この物件を削除しますか？",
     "delete_confirm": "Buy ページから削除されます。元に戻せません。"
+  },
+  "content_translations": {
+    "title": "翻訳",
+    "desc": "このレコードのゲストサイト用翻訳を生成・確認します。",
+    "ai_button": "AI翻訳",
+    "ai_running": "翻訳中…",
+    "ai_done": "翻訳を生成しました",
+    "ai_failed": "AI翻訳に失敗しました",
+    "saved": "翻訳を保存しました",
+    "source_label": "原文 ({{lang}})",
+    "no_targets": "有効な対象言語がありません。",
+    "machine_hint": "AI下書き — 公開前に確認してください。",
+    "field_name": "名称",
+    "field_description": "説明",
+    "field_custom_type_name": "カスタムタイプ",
+    "field_display_name": "表示名"
   }
 }

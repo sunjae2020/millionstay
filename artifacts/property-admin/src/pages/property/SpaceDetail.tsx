@@ -27,7 +27,7 @@ import {
   getGetSpaceAvailabilityQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Save, CalendarDays, Images, Plus, Trash2, PackagePlus, Copy, Check, RefreshCw, CalendarClock } from "lucide-react";
+import { ArrowLeft, Save, CalendarDays, Images, Plus, Trash2, PackagePlus, Copy, Check, RefreshCw, CalendarClock, Languages } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,6 +45,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { SpacePhotoManager } from "@/components/SpacePhotoManager";
 import { ChannelSyncPanel } from "@/components/ChannelSyncPanel";
+import { ContentTranslationsPanel } from "@/components/ContentTranslationsPanel";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { format, parseISO, startOfMonth, endOfMonth, addMonths, getDay } from "date-fns";
@@ -614,6 +615,11 @@ export default function SpaceDetail() {
             {!isNew && (
               <TabsTrigger value="services" className="gap-1.5">
                 <PackagePlus className="h-3.5 w-3.5" /> {t("space.tab_services")}
+              </TabsTrigger>
+            )}
+            {!isNew && (
+              <TabsTrigger value="translations" className="gap-1.5">
+                <Languages className="h-3.5 w-3.5" /> {t("space.tab_translations")}
               </TabsTrigger>
             )}
           </TabsList>
@@ -1349,6 +1355,12 @@ export default function SpaceDetail() {
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
+            </TabsContent>
+          )}
+
+          {!isNew && id && (
+            <TabsContent value="translations">
+              <ContentTranslationsPanel entity="spaces" id={id} sourceLang="ko" />
             </TabsContent>
           )}
         </Tabs>

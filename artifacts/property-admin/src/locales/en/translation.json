@@ -372,8 +372,7 @@
     "confirm_checkin": "Confirm Check-In",
     "confirm_checkout": "Confirm Check-Out",
     "instant_booking": "Instant Booking",
-    "request_booking": "Request Booking",
-    "tab_condition": "Condition"
+    "request_booking": "Request Booking"
   },
   "contact": {
     "new": "New Contact",
@@ -908,7 +907,8 @@
     "tab_overview": "Overview",
     "tab_spaces": "Spaces",
     "tab_photos": "Photos",
-    "tab_documents": "Documents"
+    "tab_documents": "Documents",
+    "tab_translations": "Translations"
   },
   "space": {
     "new": "New Space",
@@ -1117,7 +1117,8 @@
     "svc_added_toast": "Service added",
     "svc_removed_toast": "Service removed",
     "svc_remove_confirm": "Remove this service from the space?",
-    "svc_add_failed": "Failed to add service"
+    "svc_add_failed": "Failed to add service",
+    "tab_translations": "Translations"
   },
   "space_option": {
     "new": "New Space Option",
@@ -3449,5 +3450,21 @@
     "error": "Something went wrong",
     "delete_this": "Delete this listing?",
     "delete_confirm": "This removes it from the Buy page. This can't be undone."
+  },
+  "content_translations": {
+    "title": "Translations",
+    "desc": "Generate and review guest-site translations for this record.",
+    "ai_button": "AI Translate",
+    "ai_running": "Translating…",
+    "ai_done": "Translations generated",
+    "ai_failed": "AI translation failed",
+    "saved": "Translations saved",
+    "source_label": "Original ({{lang}})",
+    "no_targets": "No target languages enabled.",
+    "machine_hint": "AI draft — review before publishing.",
+    "field_name": "Name",
+    "field_description": "Description",
+    "field_custom_type_name": "Custom type",
+    "field_display_name": "Display name"
   }
 }
