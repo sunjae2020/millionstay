@@ -178,6 +178,7 @@
   },
   "space": {
     "per_week": "/ 주",
+    "fx_payment_note": "결제는 기준금액(한화)으로 이루어지며, 환산 금액은 참고용입니다.",
     "min_stay": "최소 {{weeks}}주",
     "book_now": "지금 예약",
     "female_only": "여성 전용",

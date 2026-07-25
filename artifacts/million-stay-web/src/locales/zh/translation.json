@@ -137,6 +137,7 @@
   },
   "space": {
     "per_week": "/ 周",
+    "fx_payment_note": "以基准金额（韩元）付款，换算金额仅供参考。",
     "min_stay": "最短 {{weeks}} 周",
     "book_now": "立即预订",
     "female_only": "仅限女性",

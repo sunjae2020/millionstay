@@ -335,7 +335,7 @@ export default function SpaceDetail() {
   const selectedPriceProduct = space?.products?.find((p) => p.id === selectedProduct);
   const weeklyRate = Number(selectedPriceProduct?.price ?? space?.base_weekly_price ?? 0);
   const priceCurrency: string = (space?.base_currency || selectedPriceProduct?.currency || "AUD").toString().toUpperCase();
-  const { formatDisplayPrice } = useDisplayCurrency();
+  const { formatDisplayPrice, forceDisplayCurrency } = useDisplayCurrency();
   const weeklyRateDisplay = formatDisplayPrice(Number(weeklyRate), priceCurrency);
   const weeklyRateRef = Number(weeklyRate) > 0 ? weeklyRateDisplay.reference : null;
   // Format any amount in the listing's currency, honouring the instance's
@@ -455,6 +455,9 @@ export default function SpaceDetail() {
                 <span className="text-sm text-gray-500 ml-1">/Per Week</span>
                 {weeklyRateRef && (
                   <div className="text-xs text-muted-foreground mt-0.5">{weeklyRateRef}</div>
+                )}
+                {forceDisplayCurrency && (
+                  <p className="text-xs text-gray-400 mt-1 max-w-xs leading-relaxed">{t("space.fx_payment_note")}</p>
                 )}
               </div>
               {addressParts.length > 0 && (
