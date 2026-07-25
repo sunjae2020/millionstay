@@ -32,9 +32,9 @@
 #        (property-admin's apiFetch has NO configurable base at all), so the
 #        deploy vercel.json MUST rewrite /api/* -> the tenant API host. Build
 #        with VITE_API_URL empty so the relative path is used.
-#        Logo: portals need VITE_LOGO_MODE=text (they don't read VITE_LOGO_URL,
-#        so image mode would show MillionStay's bundled PNG); admin uses image
-#        (its live logo comes from runtime branding_settings anyway).
+#        Logo: all four login pages now honor VITE_LOGO_URL (fall back to the
+#        bundled PNG). So use image mode when the tenant sets VITE_LOGO_URL,
+#        else text mode (avoids showing MillionStay's bundled PNG).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -104,10 +104,13 @@ deploy_one() {
 
   # Per-app env: web bakes absolute API + image logo; others use relative /api
   # (empty API) + proxy vercel.json; portals force text logo.
+  # image mode when the tenant supplies a logo URL, else fall back to text so a
+  # logo-less tenant never shows MillionStay's bundled PNG.
+  local logo_default="text"; [[ -n "${VITE_LOGO_URL:-}" ]] && logo_default="image"
   case "$app" in
     web)          api_for_build="$API_URL"; logo_mode="${VITE_LOGO_MODE:-image}" ;;
     admin)        api_for_build="";         logo_mode="${VITE_LOGO_MODE:-image}" ;;
-    agent|owner|host) api_for_build="";     logo_mode="text" ;;
+    agent|owner|host) api_for_build="";     logo_mode="${VITE_LOGO_MODE:-$logo_default}" ;;
   esac
 
   echo "── [$app] build ($pkg) ──"
