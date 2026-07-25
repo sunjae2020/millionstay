@@ -27,6 +27,9 @@ if (!JWT_SECRET) {
 
 const ADMIN_SECRET: string = JWT_SECRET ?? SESSION_SECRET!;
 
+// Non-mutating HTTP methods a read-only (Viewer) admin may use.
+const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+
 export interface AuthPayload {
   id: number;
   email: string;
@@ -127,6 +130,20 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     }
   } catch {
     reject(); return;
+  }
+
+  // SECURITY (RBAC): the Viewer role is read-only. The admin UI hides write
+  // actions for Viewers, but that is presentation, not a control — so enforce it
+  // here, at the single choke point every admin route passes through. Viewers may
+  // only issue safe (non-mutating) HTTP methods; any create/update/delete is 403.
+  // SuperAdmin/Admin are unaffected. (Token role is authoritative for ≤1h TTL;
+  // a just-demoted Viewer loses write access at the next token refresh.)
+  if (payload.role === "Viewer" && !SAFE_METHODS.has(req.method.toUpperCase())) {
+    res.status(403).json({
+      success: false,
+      error: { code: "READ_ONLY", message: "Viewer role is read-only and cannot modify data." },
+    });
+    return;
   }
 
   (req as any).user = payload;
