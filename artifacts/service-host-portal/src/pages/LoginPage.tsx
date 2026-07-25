@@ -44,7 +44,7 @@ export default function LoginPage() {
           {import.meta.env.VITE_LOGO_MODE === "text" ? (
             <span className="font-display font-extrabold tracking-tight text-white text-xl whitespace-nowrap">{APP_NAME}</span>
           ) : (
-            <img src={`${import.meta.env.BASE_URL}logo-horizontal.png`} alt={APP_NAME} className="h-9 w-auto brightness-110" />
+            <img src={import.meta.env.VITE_LOGO_URL || `${import.meta.env.BASE_URL}logo-horizontal.png`} alt={APP_NAME} className="h-9 w-auto brightness-110" />
           )}
           <p className="text-white/30 text-[10px] tracking-[0.2em] uppercase mt-2 ml-0.5">
             {t("portal_label")}
@@ -93,7 +93,7 @@ export default function LoginPage() {
               {import.meta.env.VITE_LOGO_MODE === "text" ? (
                 <span className="font-display font-extrabold tracking-tight text-primary text-xl whitespace-nowrap">{APP_NAME}</span>
               ) : (
-                <img src={`${import.meta.env.BASE_URL}logo-horizontal.png`} alt={APP_NAME} className="h-8 w-auto" />
+                <img src={import.meta.env.VITE_LOGO_URL || `${import.meta.env.BASE_URL}logo-horizontal.png`} alt={APP_NAME} className="h-8 w-auto" />
               )}
             </div>
 
