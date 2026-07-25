@@ -37,6 +37,7 @@ import { parsePageParams, pageMeta } from "../utils/pagination.js";
 import { createBookingForPlacement } from "../lib/homestay/placementBooking.js";
 import { createPlacementInvoice, createExtensionInvoice } from "../lib/homestay/placementInvoice.js";
 import { createCommissionForPlacement, approveCommission, markCommissionPaid } from "../lib/homestay/commission.js";
+import { postPlacementPaymentPaid } from "../lib/billing/gl";
 import { createRentScheduleForPlacement } from "../lib/homestay/rentSchedule.js";
 
 const ENTITY = "homestay_placement";
@@ -530,6 +531,16 @@ homestayPlacementAdminRouter.post("/v1/homestay-placement-payments/:paymentId/ma
           }
         } catch (e) { console.error("[homestay-placements] activation notify load failed:", e); }
       }
+    }
+    // Book the payment to the GL (best-effort, idempotent). Deposit portion of an
+    // upfront payment → Deposits Held (2100); remainder → revenue.
+    {
+      let deposit = 0;
+      if (pay.kind === "upfront") {
+        const [plDep] = await db.select({ deposit: homestayPlacementsTable.deposit }).from(homestayPlacementsTable).where(eq(homestayPlacementsTable.id, pay.placement_id)).limit(1);
+        deposit = Number(plDep?.deposit ?? 0);
+      }
+      void postPlacementPaymentPaid({ paymentId: pay.id, kind: pay.kind, amount: Number(pay.amount), deposit, currency: pay.currency, paidAt: now.toISOString() });
     }
     void logAction({ entityType: ENTITY, entityId: pay.placement_id, action: "PAYMENT", actorId: (req as any).user?.id ?? null, newValue: { payment_id: paymentId, method: "bank_transfer", status: "paid" } });
     res.json({ success: true, payment: pay });
