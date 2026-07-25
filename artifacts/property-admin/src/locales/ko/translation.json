@@ -3501,7 +3501,8 @@
     "deleted": "물건이 삭제되었습니다",
     "error": "문제가 발생했습니다",
     "delete_this": "이 물건을 삭제할까요?",
-    "delete_confirm": "Buy 페이지에서 제거됩니다. 되돌릴 수 없습니다."
+    "delete_confirm": "Buy 페이지에서 제거됩니다. 되돌릴 수 없습니다.",
+    "inquiries": "문의"
   },
   "content_translations": {
     "title": "번역",
@@ -3565,5 +3566,21 @@
     "hint_upfront": "%가 배치비 + 보증금에 적용됩니다.",
     "hint_monthly": "%가 월세 1개월분에 적용됩니다.",
     "hint_converted": "%가 보증금 + 월세×100(환산보증금)에 적용됩니다."
+  },
+  "sale_inquiries": {
+    "title": "판매 문의",
+    "subtitle": "문의자 신상은 공개 전까지 비공개입니다. 공개 후 전달 여부를 결정하세요.",
+    "back_to_listings": "리스팅",
+    "filter_all": "전체",
+    "status_new": "신규",
+    "status_reviewed": "검토됨",
+    "status_forwarded": "전달됨",
+    "status_closed": "종료",
+    "general": "일반 문의",
+    "withheld": "신상 비공개",
+    "btn_reveal": "신상 공개",
+    "btn_forward": "전달",
+    "btn_close": "종료",
+    "forwarded_on": "전달"
   }
 }

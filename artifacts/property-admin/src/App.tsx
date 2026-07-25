@@ -91,6 +91,7 @@ import BlogDetail from "@/pages/blog/BlogDetail";
 import BlogCategories from "@/pages/blog/BlogCategories";
 import SaleListingsList from "@/pages/listings/SaleListingsList";
 import SaleListingDetail from "@/pages/listings/SaleListingDetail";
+import SaleInquiries from "@/pages/listings/SaleInquiries";
 import WebsiteContentList from "@/pages/content/WebsiteContentList";
 import WebsiteContentDetail from "@/pages/content/WebsiteContentDetail";
 import PageTranslations from "@/pages/content/PageTranslations";
@@ -270,6 +271,7 @@ function Router() {
       <Route path="/content/blog/new" component={BlogDetail} />
       <Route path="/content/blog/:id" component={BlogDetail} />
       <Route path="/content/listings" component={SaleListingsList} />
+      <Route path="/content/sale-inquiries" component={SaleInquiries} />
       <Route path="/content/listings/new" component={SaleListingDetail} />
       <Route path="/content/listings/:id" component={SaleListingDetail} />
       <Route path="/content/media" component={MediaLibrary} />
