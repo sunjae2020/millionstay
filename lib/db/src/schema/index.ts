@@ -38,6 +38,7 @@ export * from "./space_service_catalog";
 export * from "./accommodation_service_catalog";
 export * from "./booking_service_photos";
 export * from "./condition_reports";
+export * from "./deposit_settlements";
 export * from "./cs_tickets";
 export * from "./announcements";
 export * from "./contract_line_items";

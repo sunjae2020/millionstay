@@ -2,7 +2,7 @@ import React from "react";
 import { getApiBase } from "@/lib/api-base";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle2, AlertTriangle, ShieldCheck, Camera, Loader2 } from "lucide-react";
+import { CheckCircle2, AlertTriangle, ShieldCheck, Camera, Loader2, Wallet } from "lucide-react";
 
 // Tenant-facing move-in/move-out condition report: read the admin-published
 // property condition, then agree or dispute each item. A dispute lets the
@@ -83,6 +83,81 @@ export function ConditionReports({ bookingId, token }: { bookingId: string | num
     <div className="space-y-6">
       {reports.map((report) => (
         <ReportCard key={report.id} report={report} token={token} onChanged={load} />
+      ))}
+      <DepositSettlements bookingId={bookingId} token={token} />
+    </div>
+  );
+}
+
+type Deduction = { id: number; description: string; amount: string };
+type Settlement = {
+  id: number; settlement_ref: string; status: string;
+  deposit_held: string; total_deducted: string; refund_amount: string; currency: string;
+  deductions: Deduction[];
+};
+
+function money(n: string | number, ccy: string) {
+  return `${ccy} ${Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function DepositSettlements({ bookingId, token }: { bookingId: string | number; token: string }) {
+  const [rows, setRows] = React.useState<Settlement[] | null>(null);
+
+  const load = React.useCallback(async () => {
+    try {
+      const res = await fetch(`${getApiBase()}/api/v1/guest/bookings/${bookingId}/deposit-settlements`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).then((r) => r.json());
+      setRows(res?.data ?? []);
+    } catch {
+      setRows([]);
+    }
+  }, [bookingId, token]);
+  React.useEffect(() => { void load(); }, [load]);
+
+  async function acknowledge(id: number) {
+    await fetch(`${getApiBase()}/api/v1/guest/deposit-settlements/${id}/acknowledge`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    });
+    load();
+  }
+
+  if (!rows || rows.length === 0) return null;
+
+  return (
+    <div className="space-y-4">
+      {rows.map((s) => (
+        <div key={s.id} className="bg-white rounded-2xl border overflow-hidden">
+          <div className="px-6 py-4 border-b bg-gray-50 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Wallet className="h-4 w-4 text-primary" />
+              <span className="text-sm font-bold text-gray-800">Deposit settlement</span>
+              <span className="text-xs font-mono text-gray-400">{s.settlement_ref}</span>
+            </div>
+            <span className="text-xs font-semibold text-gray-500">{s.status === "proposed" ? "Awaiting your acknowledgement" : s.status === "tenant_ack" ? "Acknowledged" : s.status === "finalized" ? "Finalized" : s.status}</span>
+          </div>
+          <div className="p-6 space-y-4">
+            <div className="grid grid-cols-3 gap-3 text-sm">
+              <div className="rounded-xl border p-3"><p className="text-xs text-gray-500">Deposit held</p><p className="font-semibold">{money(s.deposit_held, s.currency)}</p></div>
+              <div className="rounded-xl border p-3"><p className="text-xs text-gray-500">Deductions</p><p className="font-semibold text-red-600">−{money(s.total_deducted, s.currency)}</p></div>
+              <div className="rounded-xl border p-3 bg-green-50/50"><p className="text-xs text-gray-500">Refund to you</p><p className="font-semibold text-green-700">{money(s.refund_amount, s.currency)}</p></div>
+            </div>
+            {s.deductions.length > 0 && (
+              <div className="space-y-1.5">
+                {s.deductions.map((d) => (
+                  <div key={d.id} className="flex items-center justify-between text-sm border rounded-lg px-3 py-2">
+                    <span className="text-gray-700">{d.description}</span>
+                    <span className="font-medium text-red-600">−{money(d.amount, s.currency)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {s.status === "proposed" && (
+              <Button size="sm" onClick={() => acknowledge(s.id)} className="gap-1.5"><CheckCircle2 className="h-3.5 w-3.5" /> Acknowledge settlement</Button>
+            )}
+          </div>
+        </div>
       ))}
     </div>
   );
