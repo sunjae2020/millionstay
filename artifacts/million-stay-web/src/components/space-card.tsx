@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import type { SpaceSummary } from "@/lib/guest-api";
 import { useDisplayCurrency } from "@/contexts/DisplayCurrencyContext";
+import { PRICE_UNIT_KEY } from "@/lib/priceUnit";
 
 interface SpaceCardProps {
   space: SpaceSummary;
@@ -150,7 +151,7 @@ export function SpaceCard({ space, index = 0, highlighted = false, checkIn = "",
             ) : null}
             <div className="font-bold text-lg">
               {price.primary}{" "}
-              <span className="text-sm font-normal text-muted-foreground">{t('space.per_week')}</span>
+              <span className="text-sm font-normal text-muted-foreground">{t(PRICE_UNIT_KEY)}</span>
             </div>
             {priceRef && (
               <div className="text-xs text-muted-foreground mt-0.5">{priceRef}</div>

@@ -1,5 +1,6 @@
 {
   "space": {
+    "per_month": "/ tháng",
     "fx_payment_note": "Thanh toán theo số tiền cơ sở (KRW); số tiền quy đổi chỉ mang tính tham khảo."
   },
   "homestay": {
@@ -470,11 +471,13 @@
     },
     "rent": {
       "eyebrow": "Cho thuê",
-      "hero_title": "Ở một đêm, hay nhiều năm.",
+      "hero_title": "Ở một tháng, hay nhiều năm.",
       "hero_subtitle": "Đặt lưu trú ngắn hạn kiểu khách sạn trực tuyến, hoặc thu xếp thuê dài hạn cùng đội ngũ của chúng tôi.",
       "short_title": "Ngắn hạn",
       "long_title": "Dài hạn",
-      "short_heading": "Ngắn hạn — đặt theo ngày",
+      "short_heading": "Ngắn hạn — đặt theo tháng",
+      "term_label": "Kỳ hạn thuê",
+      "terms": "1 tháng · 3 tháng · 1 năm",
       "short_body": "Chọn ngày và đặt phòng đầy đủ nội thất như khách sạn.",
       "short_cta": "Xem phòng & ngày",
       "short_featured": "Phòng nổi bật",
