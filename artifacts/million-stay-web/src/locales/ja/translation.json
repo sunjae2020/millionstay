@@ -194,6 +194,7 @@
   },
   "space": {
     "per_week": "/ 週",
+    "per_month": "/ 月",
     "fx_payment_note": "お支払いは基準額（韓国ウォン）で行われます。換算額はご参考用の表示です。",
     "from": "最低",
     "min_stay": "最低{{weeks}}週間",
@@ -1666,11 +1667,13 @@
     },
     "rent": {
       "eyebrow": "賃貸",
-      "hero_title": "一泊も、数年も。",
+      "hero_title": "一ヶ月も、数年も。",
       "hero_subtitle": "ホテル式の短期予約をオンラインで、長期賃貸はご相談のうえ契約いただけます。",
       "short_title": "短期",
       "long_title": "長期",
       "short_heading": "短期 — 月単位で予約",
+      "term_label": "契約期間",
+      "terms": "1ヶ月 · 3ヶ月 · 1年",
       "short_body": "日程を選んで、家具付きの部屋をホテルのように予約できます。",
       "short_cta": "部屋・日程を見る",
       "short_featured": "おすすめの部屋",

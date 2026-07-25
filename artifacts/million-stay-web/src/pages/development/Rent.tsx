@@ -101,6 +101,15 @@ export default function DevRent() {
               {pc("short_title", t("dev.rent.short_heading"))}
             </h2>
             <p className="mt-2 text-gray-600 max-w-2xl leading-relaxed">{pc("short_body", t("dev.rent.short_body"))}</p>
+            {/* 랜트 옵션: 월 · 3개월 · 1년 등 임대 기간 안내 */}
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t("dev.rent.term_label")}</span>
+              {t("dev.rent.terms").split("·").map((term, i) => (
+                <span key={i} className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
+                  {term.trim()}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 

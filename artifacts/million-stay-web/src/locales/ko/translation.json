@@ -178,6 +178,7 @@
   },
   "space": {
     "per_week": "/ 주",
+    "per_month": "/ 월",
     "fx_payment_note": "결제는 기준금액(한화)으로 이루어지며, 환산 금액은 참고용입니다.",
     "min_stay": "최소 {{weeks}}주",
     "book_now": "지금 예약",
@@ -1560,11 +1561,13 @@
     },
     "rent": {
       "eyebrow": "임대",
-      "hero_title": "하루도, 몇 년도 머무를 수 있습니다.",
+      "hero_title": "한 달도, 몇 년도 머무를 수 있습니다.",
       "hero_subtitle": "호텔식 단기 예약을 온라인으로, 장기 임대는 상담을 거쳐 계약하세요.",
       "short_title": "단기",
       "long_title": "장기",
       "short_heading": "단기 — 월 단위 예약",
+      "term_label": "임대 옵션",
+      "terms": "월 · 3개월 · 1년",
       "short_body": "날짜를 선택해 완비된 객실을 호텔처럼 예약하세요.",
       "short_cta": "객실·날짜 둘러보기",
       "short_featured": "추천 객실",

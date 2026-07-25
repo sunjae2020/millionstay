@@ -137,6 +137,7 @@
   },
   "space": {
     "per_week": "/ 周",
+    "per_month": "/ 月",
     "fx_payment_note": "以基准金额（韩元）付款，换算金额仅供参考。",
     "min_stay": "最短 {{weeks}} 周",
     "book_now": "立即预订",
@@ -1519,11 +1520,13 @@
     },
     "rent": {
       "eyebrow": "租赁",
-      "hero_title": "住一晚，也能住数年。",
+      "hero_title": "住一个月，也能住数年。",
       "hero_subtitle": "在线预订酒店式短期入住，长期租赁可与我们的团队洽谈签约。",
       "short_title": "短期",
       "long_title": "长期",
       "short_heading": "短期 — 按月预订",
+      "term_label": "租期选项",
+      "terms": "1个月 · 3个月 · 1年",
       "short_body": "选择日期，像预订酒店一样预订配置齐全的房间。",
       "short_cta": "浏览房间与日期",
       "short_featured": "精选房间",

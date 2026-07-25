@@ -179,7 +179,11 @@ async function listPublicSpaces(
   };
   const dbSpaceType = space_type ? (SPACE_TYPE_MAP[space_type] ?? space_type) : null;
 
-  const conditions: SQL[] = [eq(spacesTable.status, "Active")];
+  // Publicly listed = available to rent. "Active" is the standard flag; some
+  // white-label instances (e.g. MetHeim) mark the unit lifecycle in Korean on
+  // this column — "공실" (vacant) is the rentable state, while 임대/분양/임대불가
+  // (leased / for-sale / not-rentable) stay hidden.
+  const conditions: SQL[] = [inArray(spacesTable.status, ["Active", "공실"])];
   // Homestay listings are matched by the ops team, never browsed publicly.
   conditions.push(or(ne(spacesTable.space_type, "Homestay"), isNull(spacesTable.space_type)) as SQL);
   if (opts?.propertyIds) conditions.push(inArray(spacesTable.property_id, opts.propertyIds));

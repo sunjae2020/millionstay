@@ -178,6 +178,7 @@
   },
   "space": {
     "per_week": "/ week",
+    "per_month": "/ month",
     "fx_payment_note": "Prices are payable in the base amount (KRW); converted amounts are shown for reference only.",
     "min_stay": "Min {{weeks}} weeks",
     "book_now": "Book Now",
@@ -2038,11 +2039,13 @@
     },
     "rent": {
       "eyebrow": "Rent / Stay",
-      "hero_title": "Stay a night or settle in for years.",
+      "hero_title": "Stay a month or settle in for years.",
       "hero_subtitle": "Book a hotel-style short stay online, or arrange a long-term lease with our team.",
       "short_title": "Short-term",
       "long_title": "Long-term",
       "short_heading": "Short-term — book by the month",
+      "term_label": "Lease terms",
+      "terms": "1 month · 3 months · 1 year",
       "short_body": "Pick your dates and reserve a fully furnished room, hotel-style.",
       "short_cta": "Browse rooms & dates",
       "short_featured": "Featured rooms",
