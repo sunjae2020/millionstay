@@ -2029,7 +2029,12 @@
       "step_3_title": "Contract & payment",
       "step_3_body": "Confirm the contract and schedule, then pay the deposit, interim, and balance in order.",
       "step_4_title": "Move in & aftercare",
-      "step_4_body": "From move-in inspection and defect repairs to life after moving in, our team supports you."
+      "step_4_body": "From move-in inspection and defect repairs to life after moving in, our team supports you.",
+      "view_all": "View all",
+      "list_title": "All listings",
+      "list_subtitle": "Browse every pre-sale and resale unit.",
+      "back_to_buy": "Back to Buy",
+      "result_count": "{{count}} listings"
     },
     "rent": {
       "eyebrow": "Rent / Stay",

@@ -461,7 +461,12 @@
       "step_3_title": "Ký hợp đồng · Thanh toán",
       "step_3_body": "Sau khi xác nhận rõ hợp đồng và lịch thanh toán, thanh toán tiền đặt cọc, tiền giữa kỳ và tiền còn lại theo thứ tự.",
       "step_4_title": "Dọn vào ở · Hậu mãi",
-      "step_4_body": "Từ nghiệm thu, sửa chữa lỗi đến cuộc sống sau khi dọn vào, đội ngũ quản lý luôn hỗ trợ bạn."
+      "step_4_body": "Từ nghiệm thu, sửa chữa lỗi đến cuộc sống sau khi dọn vào, đội ngũ quản lý luôn hỗ trợ bạn.",
+      "view_all": "Xem tất cả",
+      "list_title": "Tất cả căn",
+      "list_subtitle": "Xem tất cả các căn mở bán và bán lại.",
+      "back_to_buy": "Quay lại",
+      "result_count": "{{count}} căn"
     },
     "rent": {
       "eyebrow": "Cho thuê",

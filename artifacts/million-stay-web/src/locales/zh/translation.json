@@ -1510,7 +1510,12 @@
       "step_3_title": "签约·付款",
       "step_3_body": "明确核对合同与付款安排后，依次支付定金、中期款与尾款。",
       "step_4_title": "入住·售后",
-      "step_4_body": "从入住验房、瑕疵维修，到入住后的生活，管理团队全程支持。"
+      "step_4_body": "从入住验房、瑕疵维修，到入住后的生活，管理团队全程支持。",
+      "view_all": "查看全部",
+      "list_title": "全部房源",
+      "list_subtitle": "浏览所有预售与转售房源。",
+      "back_to_buy": "返回",
+      "result_count": "{{count}} 个房源"
     },
     "rent": {
       "eyebrow": "租赁",

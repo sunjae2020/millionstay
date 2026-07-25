@@ -1,73 +1,25 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Building2, MapPin, Maximize, BedDouble, Bath, ImageOff, Award, ShieldCheck, TrendingUp } from "lucide-react";
+import { Building2, ArrowRight } from "lucide-react";
 import { DevLayout } from "@/components/development/DevLayout";
 import { usePageContent } from "@/lib/usePageContent";
 import { InquiryForm } from "@/components/development/InquiryForm";
-import { PriceFxBreakdown } from "@/components/development/PriceFxBreakdown";
-import { SectionHeading, WhyGrid, ProcessTimeline } from "@/components/development/marketing";
-import { fetchSaleListings, submitSalesInquiry, type SaleListing } from "@/lib/development-api";
+import { ListingCard } from "@/components/development/ListingCard";
+import { fetchSaleListings, submitSalesInquiry } from "@/lib/development-api";
 
-// BUY / SALES — a board of admin-managed 분양(pre-sale) / 판매(sale) listings.
-// Each card opens a detail page (/buy/:id) carrying its own inquiry form. The
-// hero copy is CMS-managed (dev-buy page); a general sales inquiry stays at the
-// bottom for visitors who haven't picked a specific unit.
+// BUY / SALES — the main page shows a preview of the newest 분양(pre-sale) /
+// 판매(sale) listings (3), with a link to the full board (/buy/list). Each card
+// opens a detail page (/buy/:id) carrying its own inquiry form. The hero copy is
+// CMS-managed; a general sales inquiry stays at the bottom for visitors who
+// haven't picked a specific unit.
 
-const CATEGORY_BADGE: Record<string, string> = {
-  presale: "bg-primary/10 text-primary",
-  sale: "bg-emerald-500/10 text-emerald-700",
-};
-const STATUS_BADGE: Record<string, string> = {
-  available: "bg-green-500/10 text-green-700",
-  reserved: "bg-amber-500/10 text-amber-700",
-  sold: "bg-gray-200 text-gray-500",
-};
-
-function ListingCard({ listing }: { listing: SaleListing }) {
-  const { t } = useTranslation();
-  return (
-    <Link href={`/buy/${listing.id}`} className="group block rounded-2xl bg-white overflow-hidden shadow-sm border border-gray-100 transition hover:shadow-md hover:-translate-y-0.5">
-        <div className="relative aspect-[4/3] bg-gray-50 overflow-hidden">
-          {listing.cover_image
-            ? <img src={listing.cover_image} alt={listing.title} className="w-full h-full object-cover transition group-hover:scale-105" />
-            : <div className="w-full h-full flex items-center justify-center text-gray-300"><ImageOff className="w-10 h-10" /></div>}
-          <div className="absolute top-3 left-3 flex gap-2">
-            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${CATEGORY_BADGE[listing.category] ?? "bg-gray-100 text-gray-600"}`}>
-              {t(`dev.buy.badge_${listing.category}`, { defaultValue: listing.category })}
-            </span>
-            {listing.status && listing.status !== "available" && (
-              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${STATUS_BADGE[listing.status] ?? "bg-gray-100 text-gray-600"}`}>
-                {t(`dev.buy.status_${listing.status}`, { defaultValue: listing.status })}
-              </span>
-            )}
-          </div>
-        </div>
-        <div className="p-5">
-          <h3 className="font-bold text-[hsl(var(--brand-navy))] line-clamp-1">{listing.title || t("dev.buy.untitled")}</h3>
-          {listing.location && (
-            <p className="mt-1 flex items-center gap-1 text-sm text-gray-500 line-clamp-1">
-              <MapPin className="w-3.5 h-3.5 flex-shrink-0" /> {listing.location}
-            </p>
-          )}
-          {listing.price_label && <p className="mt-3 font-semibold text-primary">{listing.price_label}</p>}
-          <PriceFxBreakdown amount={listing.price_amount} showNote={false} className="mt-1.5" />
-          <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
-            {listing.area_m2 != null && <span className="flex items-center gap-1"><Maximize className="w-3.5 h-3.5" />{listing.area_m2}㎡</span>}
-            {listing.bedrooms != null && <span className="flex items-center gap-1"><BedDouble className="w-3.5 h-3.5" />{listing.bedrooms}</span>}
-            {listing.bathrooms != null && <span className="flex items-center gap-1"><Bath className="w-3.5 h-3.5" />{listing.bathrooms}</span>}
-          </div>
-        </div>
-    </Link>
-  );
-}
+const PREVIEW_COUNT = 3;
 
 export default function DevBuy() {
   const { t, i18n } = useTranslation();
   const pc = usePageContent("dev-buy");
   const lang = (i18n.language || "en").split("-")[0];
-  const [filter, setFilter] = useState<"all" | "presale" | "sale">("all");
 
   const { data: listings = [], isLoading } = useQuery({
     queryKey: ["public-sale-listings", lang],
@@ -75,18 +27,7 @@ export default function DevBuy() {
     staleTime: 2 * 60 * 1000,
   });
 
-  const filtered = filter === "all" ? listings : listings.filter((l) => l.category === filter);
-  const FILTERS: Array<"all" | "presale" | "sale"> = ["all", "presale", "sale"];
-
-  const WHY = [
-    { icon: Award, title: pc("why_1_title", t("dev.buy.why_1_title")), body: pc("why_1_body", t("dev.buy.why_1_body")) },
-    { icon: ShieldCheck, title: pc("why_2_title", t("dev.buy.why_2_title")), body: pc("why_2_body", t("dev.buy.why_2_body")) },
-    { icon: TrendingUp, title: pc("why_3_title", t("dev.buy.why_3_title")), body: pc("why_3_body", t("dev.buy.why_3_body")) },
-  ];
-  const STEPS = [1, 2, 3, 4].map((n) => ({
-    title: pc(`step_${n}_title`, t(`dev.buy.step_${n}_title`)),
-    body: pc(`step_${n}_body`, t(`dev.buy.step_${n}_body`)),
-  }));
+  const preview = listings.slice(0, PREVIEW_COUNT);
 
   return (
     <DevLayout title={t("dev.buy.hero_title")}>
@@ -103,7 +44,7 @@ export default function DevBuy() {
         </div>
       </section>
 
-      {/* Listings board */}
+      {/* Listings preview (newest 3) */}
       <section className="max-w-7xl mx-auto px-6 py-14 md:py-20">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
@@ -112,20 +53,9 @@ export default function DevBuy() {
             </h2>
             <p className="mt-2 text-gray-600">{pc("board_subtitle", t("dev.buy.board_subtitle"))}</p>
           </div>
-          {/* Category filter */}
-          <div className="inline-flex rounded-full border border-gray-200 bg-white p-1 self-start">
-            {FILTERS.map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-4 py-1.5 text-sm font-medium rounded-full transition ${
-                  filter === f ? "bg-primary text-white" : "text-gray-500 hover:text-gray-800"
-                }`}
-              >
-                {t(`dev.buy.filter_${f}`)}
-              </button>
-            ))}
-          </div>
+          <Link href="/buy/list" className="inline-flex items-center gap-1.5 self-start text-sm font-semibold text-primary hover:gap-2.5 transition-all">
+            {t("dev.buy.view_all")} <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
 
         <div className="mt-10">
@@ -138,48 +68,35 @@ export default function DevBuy() {
                 </div>
               ))}
             </div>
-          ) : filtered.length === 0 ? (
+          ) : preview.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-gray-200 py-20 text-center text-gray-400">
               <Building2 className="w-10 h-10 mx-auto mb-3 opacity-50" />
               {t("dev.buy.board_empty")}
             </div>
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {filtered.map((l) => <ListingCard key={l.id} listing={l} />)}
-            </div>
+            <>
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {preview.map((l) => <ListingCard key={l.id} listing={l} />)}
+              </div>
+              {listings.length > PREVIEW_COUNT && (
+                <div className="mt-10 text-center">
+                  <Link href="/buy/list" className="inline-flex items-center gap-2 rounded-full border border-primary/30 px-6 py-3 font-semibold text-primary transition hover:bg-primary/5">
+                    {t("dev.buy.view_all")} <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>
 
-      {/* Why MetHeim — 분양 */}
-      <section className="bg-[hsl(var(--brand-cream))] border-y border-gray-100">
-        <div className="max-w-7xl mx-auto px-6 py-14 md:py-20">
-          <SectionHeading
-            eyebrow={pc("why_eyebrow", t("dev.buy.why_eyebrow"))}
-            title={pc("why_heading", t("dev.buy.why_heading"))}
-            subtitle={pc("why_subtitle", t("dev.buy.why_subtitle"))}
-          />
-          <WhyGrid items={WHY} />
-        </div>
-      </section>
-
-      {/* 분양 절차 — gold vertical timeline */}
-      <section className="max-w-7xl mx-auto px-6 py-14 md:py-20">
-        <SectionHeading
-          eyebrow={pc("process_eyebrow", t("dev.buy.process_eyebrow"))}
-          title={pc("process_heading", t("dev.buy.process_heading"))}
-          subtitle={pc("process_subtitle", t("dev.buy.process_subtitle"))}
-        />
-        <ProcessTimeline steps={STEPS} />
-      </section>
-
       {/* General inquiry (not tied to a specific listing) */}
-      <section id="inquiry" className="bg-[hsl(var(--brand-navy))] border-t border-gray-100 text-white">
-        <div className="max-w-3xl mx-auto px-6 py-14 md:py-20 [&_h2]:text-white">
-          <h2 className="text-center font-display text-2xl md:text-3xl font-bold tracking-tight">
+      <section id="inquiry" className="bg-[hsl(var(--brand-cream))] border-t border-gray-100">
+        <div className="max-w-3xl mx-auto px-6 py-14 md:py-20">
+          <h2 className="text-center font-display text-2xl md:text-3xl font-bold text-[hsl(var(--brand-navy))] tracking-tight">
             {pc("inquiry_title", t("dev.buy.inquiry_title"))}
           </h2>
-          <p className="mt-3 text-center text-white/80">{pc("inquiry_subtitle", t("dev.buy.inquiry_subtitle"))}</p>
+          <p className="mt-3 text-center text-gray-600">{pc("inquiry_subtitle", t("dev.buy.inquiry_subtitle"))}</p>
           <div className="mt-8">
             <InquiryForm
               submitLabelKey="dev.buy.inquiry_submit"
@@ -196,7 +113,6 @@ export default function DevBuy() {
           </div>
         </div>
       </section>
-
     </DevLayout>
   );
 }
