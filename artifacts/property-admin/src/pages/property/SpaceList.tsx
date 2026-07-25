@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
 import { StatusBadge } from "@/components/StatusBadge";
+import { isLedgerStatusSet, LEDGER_STATUS_VALUES } from "@/lib/spaceStatus";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -16,6 +17,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2, Archive, X, AlertTriangle, Loader2 } from "lucide-react";
 import { formatDate } from "@/lib/date";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,7 +58,8 @@ export default function SpaceList() {
     query: { queryKey: getListSpacesQueryKey(params) },
   });
 
-  const pagination = usePagination(spaces ?? []);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(spaces ?? []);
+  const pagination = usePagination(sorted);
 
   const deleteMutation = useDeleteSpace({
     mutation: {
@@ -141,9 +144,17 @@ export default function SpaceList() {
             <SelectTrigger className="w-32 h-8 text-sm"><SelectValue placeholder={t("common.status")} /></SelectTrigger>
             <SelectContent>
               <SelectItem value="_all">{t("space.all_statuses")}</SelectItem>
-              <SelectItem value="Active">{t("common.active")}</SelectItem>
-              <SelectItem value="Inactive">{t("common.inactive")}</SelectItem>
-              <SelectItem value="Suspended">{t("common.suspended") || "Suspended"}</SelectItem>
+              {isLedgerStatusSet ? (
+                LEDGER_STATUS_VALUES.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))
+              ) : (
+                <>
+                  <SelectItem value="Active">{t("common.active")}</SelectItem>
+                  <SelectItem value="Inactive">{t("common.inactive")}</SelectItem>
+                  <SelectItem value="Suspended">{t("common.suspended") || "Suspended"}</SelectItem>
+                </>
+              )}
             </SelectContent>
           </Select>
           <Select value={bookingMode || "_all"} onValueChange={(v) => setBookingMode(v === "_all" ? "" : v)}>
@@ -183,13 +194,19 @@ export default function SpaceList() {
                     <Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} aria-label="Select all" />
                   </th>
                 )}
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space.col_name")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space.col_property")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space.col_type")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space.col_status")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space.col_policy")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space.col_parent")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space.col_created")}</th>
+                {[
+                  ["name", "space.col_name"],
+                  ["property_name", "space.col_property"],
+                  ["space_type", "space.col_type"],
+                  ["status", "space.col_status"],
+                  ["policy_name", "space.col_policy"],
+                  ["parent_space_name", "space.col_parent"],
+                  ["created_at", "space.col_created"],
+                ].map(([key, label]) => (
+                  <SortableTh key={key} sortKey={key} activeKey={sortKey} dir={sortDir} onSort={toggleSort}>
+                    {t(label)}
+                  </SortableTh>
+                ))}
                 <th className="px-4 py-3 w-20"></th>
               </tr>
             </thead>
