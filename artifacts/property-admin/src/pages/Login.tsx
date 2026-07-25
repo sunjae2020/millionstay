@@ -117,7 +117,7 @@ export default function LoginPage() {
         <div className="relative z-10">
           {import.meta.env.VITE_LOGO_MODE === "text"
             ? <span className="font-display font-extrabold tracking-tight text-white text-xl whitespace-nowrap">{APP_NAME}</span>
-            : <img src={LOGO_URL} alt={APP_NAME} className="h-9 w-auto" />}
+            : <img src={LOGO_URL} alt={APP_NAME} className="h-[4.5rem] w-auto" style={{ filter: "brightness(0) invert(1)" }} />}
           <p className="text-white/30 text-[10px] tracking-[0.2em] uppercase mt-2 ml-0.5">
             Admin Portal
           </p>
