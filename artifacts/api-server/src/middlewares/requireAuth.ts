@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { db, usersTable } from "@workspace/db";
 import { eq, isNull, and } from "drizzle-orm";
+import { isAllowed } from "../lib/rbac";
 
 // SECURITY: distinct secret per token scope (admin / guest / partner). Refuse
 // to fall back across scopes — sharing the session-cookie HMAC key with the
@@ -144,6 +145,26 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       error: { code: "READ_ONLY", message: "Viewer role is read-only and cannot modify data." },
     });
     return;
+  }
+
+  // RBAC (data-driven): enforce the role → permission matrix. Fail-open by design
+  // (SuperAdmin bypass; unknown role / unmapped route / unset resource → allowed),
+  // so it can only add restrictions an admin explicitly configured — never lock
+  // someone out by omission. See lib/rbac.ts.
+  try {
+    // Use originalUrl (stable regardless of mount point) normalised to /v1/…,
+    // since req.path is stripped differently depending on how requireAuth is
+    // mounted across routers.
+    const apiPath = (req.originalUrl.split("?")[0] || "").replace(/^\/api/, "");
+    if (!(await isAllowed(payload.role, req.method.toUpperCase(), apiPath))) {
+      res.status(403).json({
+        success: false,
+        error: { code: "FORBIDDEN", message: "Your role does not have permission for this action." },
+      });
+      return;
+    }
+  } catch {
+    // Never block a request on an RBAC lookup failure.
   }
 
   (req as any).user = payload;

@@ -372,7 +372,8 @@
     "confirm_checkin": "체크인 확인",
     "confirm_checkout": "체크아웃 확인",
     "instant_booking": "즉시 예약",
-    "request_booking": "요청 예약"
+    "request_booking": "요청 예약",
+    "tab_condition": "상태점검"
   },
   "contact": {
     "new": "새 연락처",
@@ -3466,5 +3467,33 @@
     "field_description": "설명",
     "field_custom_type_name": "직접 입력 유형",
     "field_display_name": "표시 이름"
+  },
+  "settings_roles": {
+    "title": "역할 및 권한",
+    "subtitle": "각 역할이 읽기/수정할 수 있는 범위를 정의합니다. 쓰기는 읽기를 포함합니다.",
+    "read_only_notice": "권한 매트릭스는 SuperAdmin만 편집할 수 있습니다.",
+    "system": "시스템",
+    "confirm_delete": "이 역할을 삭제할까요?",
+    "add_role": "역할 추가",
+    "new_role_name": "새 역할 이름",
+    "level_none": "없음",
+    "level_read": "읽기",
+    "level_write": "쓰기",
+    "res_dashboard": "대시보드",
+    "res_bookings": "예약",
+    "res_contracts": "계약",
+    "res_finance": "회계",
+    "res_crm": "CRM",
+    "res_properties": "자산",
+    "res_cs": "고객지원",
+    "res_maintenance": "유지보수",
+    "res_products": "상품",
+    "res_promotions": "프로모션",
+    "res_services": "서비스",
+    "res_documents": "문서",
+    "res_content": "콘텐츠",
+    "res_operations": "운영",
+    "res_users": "사용자",
+    "res_settings": "설정"
   }
 }

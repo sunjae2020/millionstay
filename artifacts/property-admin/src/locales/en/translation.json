@@ -372,7 +372,8 @@
     "confirm_checkin": "Confirm Check-In",
     "confirm_checkout": "Confirm Check-Out",
     "instant_booking": "Instant Booking",
-    "request_booking": "Request Booking"
+    "request_booking": "Request Booking",
+    "tab_condition": "Condition"
   },
   "contact": {
     "new": "New Contact",
@@ -3466,5 +3467,33 @@
     "field_description": "Description",
     "field_custom_type_name": "Custom type",
     "field_display_name": "Display name"
+  },
+  "settings_roles": {
+    "title": "Roles & Permissions",
+    "subtitle": "Define what each role can read or modify. Write includes read.",
+    "read_only_notice": "Only a SuperAdmin can edit the permission matrix.",
+    "system": "system",
+    "confirm_delete": "Delete this role?",
+    "add_role": "Add role",
+    "new_role_name": "New role name",
+    "level_none": "None",
+    "level_read": "Read",
+    "level_write": "Write",
+    "res_dashboard": "Dashboard",
+    "res_bookings": "Bookings",
+    "res_contracts": "Contracts",
+    "res_finance": "Finance",
+    "res_crm": "CRM",
+    "res_properties": "Properties",
+    "res_cs": "Support",
+    "res_maintenance": "Maintenance",
+    "res_products": "Products",
+    "res_promotions": "Promotions",
+    "res_services": "Services",
+    "res_documents": "Documents",
+    "res_content": "Content",
+    "res_operations": "Operations",
+    "res_users": "Users",
+    "res_settings": "Settings"
   }
 }

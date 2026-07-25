@@ -13,6 +13,7 @@ import {
   MapPin,
   Mail,
   ScrollText,
+  ShieldCheck,
   BarChart3,
   CalendarDays,
   TrendingUp,
@@ -45,6 +46,12 @@ const ADMIN_CARDS: CardDef[] = [
     description: "Manage admin users and roles",
     icon: UserCog,
     href: "/settings/users",
+  },
+  {
+    title: "Roles & Permissions",
+    description: "Role-based access matrix for each area",
+    icon: ShieldCheck,
+    href: "/settings/roles",
   },
   {
     title: "Design & Branding",
