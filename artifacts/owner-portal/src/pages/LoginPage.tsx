@@ -93,7 +93,7 @@ export default function LoginPage() {
               {import.meta.env.VITE_LOGO_MODE === "text" ? (
                 <span className="font-display font-extrabold tracking-tight text-primary text-xl whitespace-nowrap">{APP_NAME}</span>
               ) : (
-                <img src={import.meta.env.VITE_LOGO_URL || `${import.meta.env.BASE_URL}logo-horizontal.png`} alt={APP_NAME} className="h-8 w-auto" />
+                <img src={import.meta.env.VITE_LOGO_URL || `${import.meta.env.BASE_URL}logo-horizontal.png`} alt={APP_NAME} className="h-16 w-auto" />
               )}
             </div>
 

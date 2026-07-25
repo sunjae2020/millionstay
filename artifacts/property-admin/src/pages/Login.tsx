@@ -171,7 +171,7 @@ export default function LoginPage() {
             <div className="lg:hidden flex justify-center mb-10">
               {import.meta.env.VITE_LOGO_MODE === "text"
                 ? <span className="font-display font-extrabold tracking-tight text-primary text-xl whitespace-nowrap">{APP_NAME}</span>
-                : <img src={LOGO_URL} alt={APP_NAME} className="h-8 w-auto" />}
+                : <img src={LOGO_URL} alt={APP_NAME} className="h-16 w-auto" />}
             </div>
 
             {/* Heading */}
