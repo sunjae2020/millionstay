@@ -94,6 +94,7 @@ import SaleListingDetail from "@/pages/listings/SaleListingDetail";
 import WebsiteContentList from "@/pages/content/WebsiteContentList";
 import WebsiteContentDetail from "@/pages/content/WebsiteContentDetail";
 import PageTranslations from "@/pages/content/PageTranslations";
+import MediaLibrary from "@/pages/content/MediaLibrary";
 import KnowledgeBase from "@/pages/ai/KnowledgeBase";
 import Conversations from "@/pages/ai/Conversations";
 import ChatWidgetSettings from "@/pages/ai/ChatWidgetSettings";
@@ -271,6 +272,7 @@ function Router() {
       <Route path="/content/listings" component={SaleListingsList} />
       <Route path="/content/listings/new" component={SaleListingDetail} />
       <Route path="/content/listings/:id" component={SaleListingDetail} />
+      <Route path="/content/media" component={MediaLibrary} />
       <Route path="/content/pages" component={WebsiteContentList} />
       <Route path="/content/pages/:pageKey" component={WebsiteContentDetail} />
       <Route path="/content/page-translations" component={PageTranslations} />

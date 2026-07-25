@@ -132,6 +132,56 @@ export async function uploadPrivateToCloudinary(
   });
 }
 
+export interface MediaResource {
+  public_id: string;
+  secure_url: string;
+  thumbnail_url: string;
+  format: string;
+  bytes: number;
+  width: number;
+  height: number;
+  created_at: string;
+}
+
+/**
+ * List public ("upload"-type) images in a sub-folder under the instance root,
+ * newest first. Used by the admin Media Library. Authenticated/private assets
+ * (type: "authenticated") are never returned because we query type: "upload".
+ */
+export async function listCloudinaryResources(
+  subFolder: string,
+  opts: { max?: number; nextCursor?: string } = {},
+): Promise<{ resources: MediaResource[]; next_cursor: string | null }> {
+  const res = await cloudinary.api.resources({
+    type: "upload",
+    prefix: cldFolder(subFolder),
+    max_results: opts.max ?? 60,
+    direction: "desc",
+    ...(opts.nextCursor ? { next_cursor: opts.nextCursor } : {}),
+  });
+  const resources: MediaResource[] = ((res.resources as unknown[]) ?? []).map((raw) => {
+    const r = raw as { public_id: string; secure_url: string; version: number; format: string; bytes: number; width: number; height: number; created_at: string };
+    return {
+      public_id: r.public_id,
+      secure_url: r.secure_url,
+      thumbnail_url: cloudinary.url(r.public_id, {
+        secure: true,
+        version: r.version,
+        transformation: [
+          { width: 400, height: 300, crop: "fill", gravity: "auto" },
+          { quality: "auto:eco", fetch_format: "auto" },
+        ],
+      }),
+      format: r.format,
+      bytes: r.bytes,
+      width: r.width,
+      height: r.height,
+      created_at: r.created_at,
+    };
+  });
+  return { resources, next_cursor: (res.next_cursor as string | undefined) ?? null };
+}
+
 export async function deleteFromCloudinary(publicId: string): Promise<void> {
   if (!publicId) return;
   try {

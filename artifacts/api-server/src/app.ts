@@ -30,6 +30,7 @@ import { contractSigningPublicRouter, contractSigningAdminRouter } from "./route
 import { homestayStudentPublicRouter } from "./routes/homestay-students";
 import { shortTermPublicRouter } from "./routes/short-term";
 import pageContentsRouter from "./routes/page-contents";
+import mediaRouter from "./routes/media";
 import privacyRouter from "./routes/privacy";
 import chatRouter from "./routes/chat";
 import knowledgeRouter from "./routes/knowledge";
@@ -282,6 +283,7 @@ app.use("/api/v1/admin", dbSyncRouter);
 app.use("/api", spaceImagesRouter);
 app.use("/api", knowledgeRouter);
 app.use("/api", pageContentsRouter);
+app.use("/api", mediaRouter);
 // Admin e-signature management (create / list / cancel) — behind requireAuth.
 app.use("/api", contractSigningAdminRouter);
 // Roles & permission matrix (RBAC) — admin; writes SuperAdmin-only inside.
