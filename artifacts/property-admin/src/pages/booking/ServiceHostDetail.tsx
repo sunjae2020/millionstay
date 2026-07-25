@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { formatDateTime } from "@/lib/date";
 import { useForm, Controller } from "react-hook-form";
@@ -74,11 +74,16 @@ export default function ServiceHostDetail() {
     mutation: { onSuccess: () => { qc.invalidateQueries({ queryKey: getListServiceHostsQueryKey({}) }); setLocation("/booking/service-hosts"); } },
   });
 
+  const [specialties, setSpecialties] = useState<string[]>([]);
+  useEffect(() => { if (host) setSpecialties(Array.isArray((host as any).specialties) ? (host as any).specialties : []); }, [host]);
+  const toggleSpecialty = (s: string) => setSpecialties((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
+
   const onSubmit = (data: FormData) => {
-    const payload = {
+    const payload: any = {
       ...data,
       business_start_hour: data.business_start_hour ? Number(data.business_start_hour) : null,
       business_end_hour: data.business_end_hour ? Number(data.business_end_hour) : null,
+      specialties, // Phase 3 auto-dispatch — passed through to the backend.
     };
     if (isNew) createMutation.mutate({ data: payload });
     else updateMutation.mutate({ id: Number(id), data: payload });
@@ -202,6 +207,23 @@ export default function ServiceHostDetail() {
         <div className="rounded-lg border bg-white p-6 space-y-4">
           <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">{t("service_host.label_notes")}</h3>
           <Textarea {...register("description")} rows={4} placeholder="Enter description..." />
+        </div>
+
+        <div className="rounded-lg border bg-white p-6 space-y-3">
+          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">{t("service_host.label_specialties", "Specialties (auto-dispatch)")}</h3>
+          <p className="text-xs text-muted-foreground">{t("service_host.specialties_hint", "Trades this partner handles. Work orders with a matching category are auto-dispatched here.")}</p>
+          <div className="flex flex-wrap gap-2">
+            {["plumbing", "electrical", "cleaning", "general", "inspection", "linen", "hvac", "gardening", "pest"].map((s) => (
+              <button
+                type="button"
+                key={s}
+                onClick={() => toggleSpecialty(s)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${specialties.includes(s) ? "bg-primary/10 text-primary border-primary/30" : "bg-transparent text-muted-foreground border-gray-200 hover:bg-gray-50"}`}
+              >
+                {t(`service_host.specialty_${s}`, s)}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="rounded-lg border bg-white p-6 space-y-4">

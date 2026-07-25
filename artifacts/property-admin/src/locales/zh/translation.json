@@ -810,7 +810,15 @@
     "label_cost": "预估费用 (AUD)",
     "section_completed": "已完成",
     "completed_on": "完成于",
-    "final_cost": "最终费用"
+    "final_cost": "最终费用",
+    "section_dispatch": "合作方派单 & SLA",
+    "btn_dispatch": "派给合作方",
+    "btn_redispatch": "重新派单",
+    "label_partner": "合作方",
+    "label_ack_due": "确认截止",
+    "label_acknowledged": "已确认",
+    "not_dispatched": "未派给合作方。设置与合作方专长匹配的类别后派单。",
+    "dispatch_failed": "派单失败 — 无匹配合作方"
   },
   "csticket": {
     "search_placeholder": "搜索工单...",
@@ -1423,7 +1431,18 @@
     "label_from_date": "开始日期",
     "label_to_date": "结束日期",
     "label_status": "状态",
-    "label_notes": "备注"
+    "label_notes": "备注",
+    "label_specialties": "专长（自动派单）",
+    "specialties_hint": "该合作方处理的工种。匹配类别的工单会自动派给此处。",
+    "specialty_plumbing": "管道",
+    "specialty_electrical": "电气",
+    "specialty_cleaning": "清洁",
+    "specialty_general": "通用",
+    "specialty_inspection": "检查",
+    "specialty_linen": "布草",
+    "specialty_hvac": "暖通",
+    "specialty_gardening": "园艺",
+    "specialty_pest": "消杀"
   },
   "receipt": {
     "no_receipts": "没有收据",

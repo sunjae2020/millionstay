@@ -810,7 +810,15 @@
     "label_cost": "見積費用 (AUD)",
     "section_completed": "完了",
     "completed_on": "完了日",
-    "final_cost": "最終費用"
+    "final_cost": "最終費用",
+    "section_dispatch": "パートナー割当 & SLA",
+    "btn_dispatch": "パートナーに割当",
+    "btn_redispatch": "再割当",
+    "label_partner": "パートナー",
+    "label_ack_due": "確認期限",
+    "label_acknowledged": "確認済み",
+    "not_dispatched": "パートナー未割当。専門分野に合うカテゴリを設定して割り当ててください。",
+    "dispatch_failed": "割当失敗 — 一致するパートナーなし"
   },
   "csticket": {
     "search_placeholder": "チケットを検索...",
@@ -1423,7 +1431,18 @@
     "label_from_date": "開始日",
     "label_to_date": "終了日",
     "label_status": "ステータス",
-    "label_notes": "メモ"
+    "label_notes": "メモ",
+    "label_specialties": "専門分野（自動割当）",
+    "specialties_hint": "このパートナーが対応する分野。一致するカテゴリの作業指示が自動割当されます。",
+    "specialty_plumbing": "配管",
+    "specialty_electrical": "電気",
+    "specialty_cleaning": "清掃",
+    "specialty_general": "一般",
+    "specialty_inspection": "点検",
+    "specialty_linen": "リネン",
+    "specialty_hvac": "空調",
+    "specialty_gardening": "造園",
+    "specialty_pest": "害虫駆除"
   },
   "receipt": {
     "no_receipts": "領収書が見つかりません",

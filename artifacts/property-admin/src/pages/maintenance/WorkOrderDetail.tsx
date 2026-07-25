@@ -24,7 +24,9 @@ import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Trash2, Save } from "lucide-react";
+import { ArrowLeft, Trash2, Save, Send, ShieldAlert, CheckCircle2, Clock } from "lucide-react";
+import { useState } from "react";
+import { apiJson } from "@/lib/apiFetch";
 
 const statusColors: Record<string, string> = {
   Open: "bg-blue-100 text-blue-700",
@@ -117,6 +119,20 @@ export default function WorkOrderDetail() {
     else updateMutation.mutate({ id: Number(id), data: buildPayload(data) });
   };
 
+  const [dispatching, setDispatching] = useState(false);
+  const [dispatchError, setDispatchError] = useState<string | null>(null);
+  const dispatch = async (force = false) => {
+    setDispatching(true); setDispatchError(null);
+    try {
+      await apiJson(`/api/v1/work-orders/${id}/dispatch`, { method: "POST", body: JSON.stringify({ force }) });
+      invalidate(); refetch();
+    } catch (e: any) {
+      setDispatchError(e?.message ?? t('workorder.dispatch_failed', 'Dispatch failed — no matching partner'));
+    } finally {
+      setDispatching(false);
+    }
+  };
+
   const status = wo?.status ?? "Open";
 
   const statusLabel = (s: string) => {
@@ -188,6 +204,47 @@ export default function WorkOrderDetail() {
             </div>
           </div>
         )}
+
+        {/* Partner Dispatch & SLA */}
+        {!isNew && (() => {
+          const w = wo as any;
+          const slaStyle: Record<string, string> = {
+            pending_ack: "bg-blue-100 text-blue-700",
+            acknowledged: "bg-amber-100 text-amber-700",
+            met: "bg-green-100 text-green-700",
+            breached: "bg-red-100 text-red-700",
+            escalated: "bg-red-100 text-red-700",
+          };
+          const canDispatch = status === "Open" || status === "InProgress";
+          return (
+            <div className="border rounded-lg bg-white p-4 mb-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <h2 className="text-sm font-semibold uppercase text-primary tracking-wide flex items-center gap-1.5">
+                  <Send className="h-4 w-4" /> {t('workorder.section_dispatch', 'Partner Dispatch & SLA')}
+                </h2>
+                {canDispatch && (
+                  <Button size="sm" variant={w?.service_host_id ? "outline" : "default"} disabled={dispatching} onClick={() => dispatch(!!w?.service_host_id)}>
+                    <Send className="h-3.5 w-3.5 mr-1" />
+                    {w?.service_host_id ? t('workorder.btn_redispatch', 'Re-dispatch') : t('workorder.btn_dispatch', 'Dispatch to partner')}
+                  </Button>
+                )}
+              </div>
+              {dispatchError && <p className="text-xs text-red-600 mt-2 flex items-center gap-1"><ShieldAlert className="h-3.5 w-3.5" />{dispatchError}</p>}
+              {w?.service_host_id ? (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3 text-sm">
+                  <div><p className="text-xs text-muted-foreground">{t('workorder.label_partner', 'Partner')}</p><p className="font-medium">{w.service_host_name ?? `#${w.service_host_id}`}</p></div>
+                  <div><p className="text-xs text-muted-foreground">SLA</p>
+                    {w.sla_status ? <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${slaStyle[w.sla_status] ?? "bg-gray-100 text-gray-600"}`}>{w.sla_status}</span> : <span className="text-muted-foreground">—</span>}
+                  </div>
+                  <div><p className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" />{t('workorder.label_ack_due', 'Ack due')}</p><p className="font-medium">{w.sla_ack_due_at ? formatDate(w.sla_ack_due_at) : "—"}</p></div>
+                  <div><p className="text-xs text-muted-foreground flex items-center gap-1"><CheckCircle2 className="h-3 w-3" />{t('workorder.label_acknowledged', 'Acknowledged')}</p><p className="font-medium">{w.acknowledged_at ? formatDate(w.acknowledged_at) : "—"}</p></div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground mt-2">{t('workorder.not_dispatched', 'Not dispatched to a partner. Set a category matching a partner specialty and dispatch.')}</p>
+              )}
+            </div>
+          );
+        })()}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Details */}

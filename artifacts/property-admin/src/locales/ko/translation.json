@@ -810,7 +810,15 @@
     "label_cost": "예상 비용 (AUD)",
     "section_completed": "완료",
     "completed_on": "완료일",
-    "final_cost": "최종 비용"
+    "final_cost": "최종 비용",
+    "section_dispatch": "파트너 배정 & SLA",
+    "btn_dispatch": "파트너에 배정",
+    "btn_redispatch": "재배정",
+    "label_partner": "파트너",
+    "label_ack_due": "확인 기한",
+    "label_acknowledged": "확인됨",
+    "not_dispatched": "파트너에 미배정. 파트너 전문분야와 일치하는 카테고리를 설정하고 배정하세요.",
+    "dispatch_failed": "배정 실패 — 일치하는 파트너 없음"
   },
   "csticket": {
     "search_placeholder": "티켓 검색...",
@@ -1423,7 +1431,18 @@
     "label_from_date": "시작일",
     "label_to_date": "종료일",
     "label_status": "상태",
-    "label_notes": "메모"
+    "label_notes": "메모",
+    "label_specialties": "전문분야 (자동배정)",
+    "specialties_hint": "이 파트너가 처리하는 분야. 일치하는 카테고리의 작업지시가 자동 배정됩니다.",
+    "specialty_plumbing": "배관",
+    "specialty_electrical": "전기",
+    "specialty_cleaning": "청소",
+    "specialty_general": "일반",
+    "specialty_inspection": "점검",
+    "specialty_linen": "린넨",
+    "specialty_hvac": "냉난방",
+    "specialty_gardening": "조경",
+    "specialty_pest": "방역"
   },
   "receipt": {
     "no_receipts": "영수증이 없습니다",
