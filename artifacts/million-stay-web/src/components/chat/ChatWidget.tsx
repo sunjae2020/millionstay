@@ -2,9 +2,10 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { MessageCircle, X, Send, Loader2, ExternalLink } from "lucide-react";
 import { getApiBase } from "@/lib/api-base";
+import { BrandMark } from "@/components/brand-mark";
 
-/** Brand accent — matches the site's primary orange. */
-const ACCENT = "#e07020";
+/** Brand accent — Million Orange (design guideline v2.0 primary). */
+const ACCENT = "#E8621A";
 
 interface RoomCard {
   space_id: number;
@@ -45,12 +46,35 @@ export default function ChatWidget() {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [toolHint, setToolHint] = useState<string | null>(null);
+  // Bottom offset (px) for the launcher so it rests above the footer instead of
+  // covering its copyright / legal links.
+  const [btnBottom, setBtnBottom] = useState(20);
 
   const sessionId = useRef<string>("");
   const conversationId = useRef<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { sessionId.current = getSessionId(); }, []);
+
+  // Track the page footer: once it scrolls into view, lift the launcher so it
+  // sits just above the footer's top edge and never overlaps its content.
+  useEffect(() => {
+    const footer = document.querySelector("footer");
+    if (!footer) return;
+    const update = () => {
+      const rect = footer.getBoundingClientRect();
+      const overlap = window.innerHeight - rect.top; // footer height within viewport
+      const max = window.innerHeight - 96;
+      setBtnBottom(Math.min(max, Math.max(20, overlap + 16)));
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, toolHint, open]);
@@ -147,8 +171,8 @@ export default function ChatWidget() {
       <button
         aria-label={open ? t("chat.close") : t("chat.open")}
         onClick={() => setOpen((o) => !o)}
-        className="fixed bottom-5 right-5 z-[60] flex h-14 w-14 items-center justify-center rounded-full text-white shadow-lg transition-transform hover:scale-105 focus:outline-none"
-        style={{ backgroundColor: ACCENT }}
+        className="fixed right-5 z-[60] flex h-14 w-14 items-center justify-center rounded-full text-white shadow-lg transition-[transform,bottom] duration-200 hover:scale-105 focus:outline-none"
+        style={{ backgroundColor: ACCENT, bottom: open ? 20 : btnBottom }}
       >
         {open ? <X className="h-6 w-6" /> : <MessageCircle className="h-7 w-7" />}
       </button>
@@ -157,7 +181,9 @@ export default function ChatWidget() {
       {open && (
         <div className="fixed bottom-24 right-5 z-[60] flex h-[min(70vh,560px)] w-[min(92vw,384px)] flex-col overflow-hidden rounded-2xl border border-black/10 bg-white shadow-2xl">
           <div className="flex items-center gap-3 px-4 py-3 text-white" style={{ backgroundColor: ACCENT }}>
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 font-semibold">M</div>
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-sm">
+              <BrandMark variant="mark" className="h-6 w-6 object-contain" />
+            </div>
             <div className="leading-tight">
               <div className="text-sm font-semibold">{t("chat.title")}</div>
               <div className="text-xs text-white/80">{t("chat.subtitle")}</div>
