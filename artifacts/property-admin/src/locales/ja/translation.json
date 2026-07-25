@@ -3520,5 +3520,24 @@
     "res_operations": "運用",
     "res_users": "ユーザー",
     "res_settings": "設定"
+  },
+  "commission_plans": {
+    "title": "コミッションプラン",
+    "subtitle": "エージェント別の紹介料・料率。baseが%の適用対象を決めます。",
+    "add": "新規プラン",
+    "col_agent": "エージェント",
+    "col_base": "基準(base)",
+    "col_rate": "料率",
+    "col_fixed": "固定料",
+    "col_stack": "合算",
+    "col_status": "状態",
+    "pick_agent": "エージェント検索…",
+    "stack_label": "固定+割合を合算(stack)",
+    "base_upfront": "前払い(手数料+保証金)",
+    "base_monthly": "家賃1ヶ月",
+    "base_converted": "換算保証金(保証金+家賃×100)",
+    "hint_upfront": "%は配置料+保証金に適用。",
+    "hint_monthly": "%は家賃1ヶ月に適用。",
+    "hint_converted": "%は保証金+家賃×100に適用。"
   }
 }

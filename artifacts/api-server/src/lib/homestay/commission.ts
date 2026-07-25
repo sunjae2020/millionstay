@@ -5,7 +5,8 @@
 // one-time commission based on their active commission plan. One ledger row per
 // placement (Pending → Approved → Paid). Idempotent: re-running never duplicates.
 //
-//   base       = upfront payment = placement_fee + deposit
+//   base       = per plan.base_type: upfront (placement_fee + deposit, default) |
+//                monthly (monthly_fee) | converted (deposit + monthly_fee × 100)
 //   fixed      = plan.fixed_referral_fee
 //   percentage = base × plan.percentage_rate%
 //   amount     = stack ? fixed + percentage : (fixed > 0 ? fixed : percentage)
@@ -58,7 +59,19 @@ export async function createCommissionForPlacement(placementId: number): Promise
     .limit(1);
   if (!plan) return null;
 
-  const base = round2(Number(placement.placement_fee) + Number(placement.deposit));
+  // Commission base depends on the plan's base_type:
+  //   upfront   = placement_fee + deposit (legacy default)
+  //   monthly   = one month's rent
+  //   converted = deposit + monthly_fee × 100 (Korean 환산보증금 for 월세 brokerage)
+  const monthly = Number(placement.monthly_fee);
+  const deposit = Number(placement.deposit);
+  const upfront = Number(placement.placement_fee) + deposit;
+  let base: number;
+  switch (plan.base_type) {
+    case "monthly": base = round2(monthly); break;
+    case "converted": base = round2(deposit + monthly * 100); break;
+    default: base = round2(upfront); break; // "upfront"
+  }
   const fixed = round2(Number(plan.fixed_referral_fee));
   const percentage = round2((base * Number(plan.percentage_rate)) / 100);
 

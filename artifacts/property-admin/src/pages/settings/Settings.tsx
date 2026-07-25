@@ -14,6 +14,7 @@ import {
   Mail,
   ScrollText,
   ShieldCheck,
+  Percent,
   BarChart3,
   CalendarDays,
   TrendingUp,
@@ -70,6 +71,12 @@ const ADMIN_CARDS: CardDef[] = [
     description: "Rent cycle, payment method, card fee, lead days",
     icon: CreditCard,
     href: "/settings/homestay-billing",
+  },
+  {
+    title: "Commission Plans",
+    description: "Per-agent referral fee, rate and base (upfront / rent / converted)",
+    icon: Percent,
+    href: "/settings/commission-plans",
   },
   {
     title: "Application Emails",

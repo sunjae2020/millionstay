@@ -3520,5 +3520,24 @@
     "res_operations": "운영",
     "res_users": "사용자",
     "res_settings": "설정"
+  },
+  "commission_plans": {
+    "title": "커미션 플랜",
+    "subtitle": "에이전트별 소개비·요율. base가 %의 적용 대상을 결정합니다.",
+    "add": "새 플랜",
+    "col_agent": "에이전트",
+    "col_base": "기준(base)",
+    "col_rate": "요율",
+    "col_fixed": "고정비",
+    "col_stack": "합산",
+    "col_status": "상태",
+    "pick_agent": "에이전트 검색…",
+    "stack_label": "고정 + 퍼센트 합산 적용(stack)",
+    "base_upfront": "선불금 (수수료+보증금)",
+    "base_monthly": "월세 1개월",
+    "base_converted": "환산보증금 (보증금+월세×100)",
+    "hint_upfront": "%가 배치비 + 보증금에 적용됩니다.",
+    "hint_monthly": "%가 월세 1개월분에 적용됩니다.",
+    "hint_converted": "%가 보증금 + 월세×100(환산보증금)에 적용됩니다."
   }
 }
