@@ -110,8 +110,8 @@ function DevNavbar() {
             keep it framed without overflowing. */}
         <div className="flex items-center justify-between h-20 lg:h-24">
           <Link href="/" className="flex items-center shrink-0">
-            <BrandMark invert={dark} className={`h-14 lg:h-[72px] w-auto hidden sm:block ${dark ? "brightness-0 invert" : ""}`} textClassName="text-4xl" />
-            <BrandMark variant="mark" invert={dark} className={`h-14 w-auto sm:hidden ${dark ? "brightness-0 invert" : ""}`} textClassName="text-2xl" />
+            {/* Full horizontal wordmark everywhere; smaller on mobile so it still frames cleanly. */}
+            <BrandMark invert={dark} className={`h-11 sm:h-14 lg:h-[72px] w-auto ${dark ? "brightness-0 invert" : ""}`} textClassName="text-2xl sm:text-4xl" />
           </Link>
 
           <nav className="hidden min-[860px]:flex items-center gap-1">
@@ -219,27 +219,30 @@ function DevFooter() {
 
   return (
     <footer className="bg-[hsl(var(--brand-navy))] text-white/80 mt-auto">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="sm:col-span-2 lg:col-span-1">
-          <BrandMark invert textClassName="text-3xl" className="h-[54px] w-auto brightness-0 invert" />
-          <p className="mt-4 text-sm leading-relaxed max-w-xs">{t("dev.footer.desc")}</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid gap-8 lg:grid-cols-[1.4fr_2fr] lg:gap-16">
+        <div>
+          <BrandMark invert textClassName="text-3xl" className="h-12 w-auto brightness-0 invert" />
+          <p className="mt-4 text-sm leading-relaxed max-w-sm">{t("dev.footer.desc")}</p>
           <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1">
             <Link href="/about" className="text-sm hover:text-white">{t("dev.nav.about")}</Link>
             <Link href="/directions" className="text-sm hover:text-white">{t("dev.nav.directions")}</Link>
           </div>
         </div>
-        <div>
-          <h4 className="text-white font-semibold text-sm mb-3">{t("dev.nav.buy")}</h4>
-          <Link href="/buy" className="block text-sm py-1 hover:text-white">{t("dev.footer.buy_link")}</Link>
-        </div>
-        <div>
-          <h4 className="text-white font-semibold text-sm mb-3">{t("dev.nav.rent")}</h4>
-          <Link href="/rent" className="block text-sm py-1 hover:text-white">{t("dev.rent.short_title")}</Link>
-          <Link href="/rent#long-term" className="block text-sm py-1 hover:text-white">{t("dev.rent.long_title")}</Link>
-        </div>
-        <div>
-          <h4 className="text-white font-semibold text-sm mb-3">{t("dev.nav.management")}</h4>
-          <Link href="/management" className="block text-sm py-1 hover:text-white">{t("dev.footer.mgmt_link")}</Link>
+        {/* Buy / Rent / Management combined into one compact 3-column group. */}
+        <div className="grid grid-cols-3 gap-x-6 gap-y-2">
+          <div>
+            <h4 className="text-white font-semibold text-sm mb-3">{t("dev.nav.buy")}</h4>
+            <Link href="/buy" className="block text-sm py-1 hover:text-white">{t("dev.footer.buy_link")}</Link>
+          </div>
+          <div>
+            <h4 className="text-white font-semibold text-sm mb-3">{t("dev.nav.rent")}</h4>
+            <Link href="/rent" className="block text-sm py-1 hover:text-white">{t("dev.rent.short_title")}</Link>
+            <Link href="/rent#long-term" className="block text-sm py-1 hover:text-white">{t("dev.rent.long_title")}</Link>
+          </div>
+          <div>
+            <h4 className="text-white font-semibold text-sm mb-3">{t("dev.nav.management")}</h4>
+            <Link href="/management" className="block text-sm py-1 hover:text-white">{t("dev.footer.mgmt_link")}</Link>
+          </div>
         </div>
       </div>
 
@@ -259,7 +262,7 @@ function DevFooter() {
 
       <div className="border-t border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-white/60">
-          <span>© {year} {APP_NAME}. {t("dev.footer.rights")}</span>
+          <span>© {year} {companyName}. {t("dev.footer.rights")}</span>
           <nav className="flex items-center gap-4">
             <Link href="/privacy-policy" className="hover:text-white font-medium">{t("dev.footer.privacy")}</Link>
             <span className="text-white/20">·</span>
