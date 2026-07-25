@@ -4,7 +4,7 @@ import { db, invoicesTable, homestayPlacementsTable, homestayStudentRequestsTabl
 import { and, eq } from "drizzle-orm";
 import { logAction } from "../utils/auditLog";
 import { createCommissionForPlacement } from "../lib/homestay/commission";
-import { postInvoicePaid } from "../lib/billing/gl";
+import { postInvoicePaid, postPlacementPaymentPaid } from "../lib/billing/gl";
 import { createRentScheduleForPlacement } from "../lib/homestay/rentSchedule";
 import { notifyPlacementActivated } from "../lib/homestay/notify";
 import { formatPersonName } from "../lib/nameFormat";
@@ -121,6 +121,17 @@ router.post("/v1/stripe/webhook", async (req, res): Promise<void> => {
                 }
               } catch (e) { console.error("[Stripe] activation notify load failed:", e); }
             }
+          }
+          // Book the payment to the GL (best-effort, idempotent). The deposit
+          // portion of an upfront payment lands in Deposits Held (2100); the rest
+          // is revenue. The placement-payment path otherwise never touched the GL.
+          if (pay) {
+            let deposit = 0;
+            if (pay.kind === "upfront") {
+              const [plForDep] = await db.select({ deposit: homestayPlacementsTable.deposit }).from(homestayPlacementsTable).where(eq(homestayPlacementsTable.id, pay.placement_id)).limit(1);
+              deposit = Number(plForDep?.deposit ?? 0);
+            }
+            void postPlacementPaymentPaid({ paymentId: pay.id, kind: pay.kind, amount: Number(pay.amount), deposit, currency: pay.currency, paidAt: now.toISOString() });
           }
           await logAction({ entityType: "homestay_placement", entityId: pay?.placement_id ?? 0, action: "PAYMENT", newValue: { placement_payment_id: placementPaymentId, kind: pay?.kind, stripe_session: session.id } }).catch(() => {});
           console.log(`[Stripe] checkout.session.completed → placement_payment ${placementPaymentId} paid`);

@@ -191,6 +191,56 @@ export async function postInvoicePaid(args: {
   });
 }
 
+/**
+ * Dr Cash / Cr Deposits Held (deposit portion) + Cr Revenue (remainder) when a
+ * homestay placement payment is received. Homestay upfront payments bundle
+ * placement_fee + deposit + card surcharge and are collected via a separate
+ * placement-payment path that (unlike invoices) never posted to the GL — so the
+ * refundable deposit was never booked to Deposits Held (2100). This books the
+ * whole payment: the deposit portion (upfront only) lands in the liability so
+ * move-out settlement can release it (H-402); the rest is revenue. Idempotent
+ * via posting_key.
+ */
+export async function postPlacementPaymentPaid(args: {
+  paymentId: number;
+  kind: string;        // "upfront" | "monthly"
+  amount: number;      // total received (base + surcharge)
+  deposit: number;     // refundable deposit portion (0 for monthly)
+  currency: string;
+  paidAt?: string | null;
+}): Promise<typeof journalEntriesTable.$inferSelect | null> {
+  const amount = round2(args.amount || 0);
+  if (amount <= 0) return null;
+  const entryDate = args.paidAt ? args.paidAt.slice(0, 10) : sydneyToday();
+
+  // Only the upfront payment carries a refundable deposit; clamp to the amount
+  // so the credit split always balances against Dr Cash.
+  const rawDeposit = args.kind === "upfront" ? round2(args.deposit || 0) : 0;
+  const depositAmount = Math.max(0, Math.min(rawDeposit, amount));
+  const revenueAmount = round2(amount - depositAmount);
+
+  const creditLines: PostingLine[] = [];
+  if (depositAmount > 0) {
+    creditLines.push({ account_code: ACCOUNTS.DEPOSIT_HELD.code, account_name: ACCOUNTS.DEPOSIT_HELD.name, debit: 0, credit: depositAmount });
+  }
+  if (revenueAmount > 0) {
+    creditLines.push({ account_code: ACCOUNTS.REVENUE.code, account_name: ACCOUNTS.REVENUE.name, debit: 0, credit: revenueAmount });
+  }
+
+  return postEntry({
+    postingKey: `placement_payment:${args.paymentId}`,
+    entryDate,
+    description: `Homestay placement payment #${args.paymentId} (${args.kind})`,
+    sourceType: "homestay_placement_payment",
+    sourceId: args.paymentId,
+    currency: args.currency || "AUD",
+    lines: [
+      { account_code: ACCOUNTS.CASH.code, account_name: ACCOUNTS.CASH.name, debit: amount, credit: 0 },
+      ...creditLines,
+    ],
+  });
+}
+
 /** Dr Agent Commission Expense / Cr Commission Payable when a commission is accrued. */
 export async function postCommissionAccrued(args: {
   id: number;

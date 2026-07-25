@@ -7,6 +7,7 @@ import {
   invoiceLineItemsTable,
   contractsTable,
   homestayPlacementsTable,
+  homestayPlacementPaymentsTable,
   conditionReportsTable,
   depositSettlementsTable,
   depositDeductionItemsTable,
@@ -46,7 +47,32 @@ async function resolveDeposit(bookingId: number): Promise<{ total: number; glBac
       eq(invoicesTable.status, "Paid"),
       eq(invoiceLineItemsTable.line_type, "deposit"),
     ));
-  const glBacked = round2(lines.reduce((s, r) => s + Number(r.total ?? 0), 0));
+  const invoiceDeposit = lines.reduce((s, r) => s + Number(r.total ?? 0), 0);
+
+  // Homestay deposits are booked to Deposits Held (2100) via a PAID upfront
+  // placement payment (not an invoice line), so count that as GL-backed too —
+  // otherwise the settlement would never release the liability it created.
+  let placementBacked = 0;
+  const [placement] = await db
+    .select({ id: homestayPlacementsTable.id, deposit: homestayPlacementsTable.deposit })
+    .from(homestayPlacementsTable)
+    .where(eq(homestayPlacementsTable.booking_id, bookingId))
+    .orderBy(desc(homestayPlacementsTable.id))
+    .limit(1);
+  if (placement) {
+    const [paidUpfront] = await db
+      .select({ id: homestayPlacementPaymentsTable.id })
+      .from(homestayPlacementPaymentsTable)
+      .where(and(
+        eq(homestayPlacementPaymentsTable.placement_id, placement.id),
+        eq(homestayPlacementPaymentsTable.kind, "upfront"),
+        eq(homestayPlacementPaymentsTable.status, "paid"),
+      ))
+      .limit(1);
+    if (paidUpfront) placementBacked = Number(placement.deposit ?? 0);
+  }
+
+  const glBacked = round2(invoiceDeposit + placementBacked);
   if (glBacked > 0) return { total: glBacked, glBacked };
 
   // Fallback: contract bond (latest non-zero for this booking).
