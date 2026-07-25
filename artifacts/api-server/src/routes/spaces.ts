@@ -94,9 +94,15 @@ router.get("/v1/spaces", async (req, res): Promise<void> => {
     ? await db.select().from(spaceOptionMapsTable).where(inArray(spaceOptionMapsTable.space_id, spaceIds))
     : [];
 
+  const parentIds = [...new Set(rows.map((r) => r.parent_space_id).filter((id): id is number => id != null))];
+  const parentRows = parentIds.length > 0
+    ? await db.select({ id: spacesTable.id, name: spacesTable.name }).from(spacesTable).where(inArray(spacesTable.id, parentIds))
+    : [];
+  const parentNameById = new Map(parentRows.map((p) => [p.id, p.name]));
+
   const result = rows.map((row) => ({
     ...row,
-    parent_space_name: null as string | null,
+    parent_space_name: row.parent_space_id != null ? parentNameById.get(row.parent_space_id) ?? null : null,
     space_option_ids: allMaps.filter((m) => m.space_id === row.id).map((m) => m.space_option_id),
   }));
 
