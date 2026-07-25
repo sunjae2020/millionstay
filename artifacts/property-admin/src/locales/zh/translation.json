@@ -3475,7 +3475,8 @@
     "deleted": "房源已删除",
     "error": "出现错误",
     "delete_this": "删除该房源？",
-    "delete_confirm": "将从 Buy 页面移除，且无法撤销。"
+    "delete_confirm": "将从 Buy 页面移除，且无法撤销。",
+    "inquiries": "咨询"
   },
   "content_translations": {
     "title": "翻译",
@@ -3539,5 +3540,21 @@
     "hint_upfront": "% 计算基数为安置费+押金。",
     "hint_monthly": "% 计算基数为一个月租金。",
     "hint_converted": "% 计算基数为押金+租金×100。"
+  },
+  "sale_inquiries": {
+    "title": "销售咨询",
+    "subtitle": "咨询者身份在您揭示前保密。之后再决定是否转发。",
+    "back_to_listings": "房源",
+    "filter_all": "全部",
+    "status_new": "新",
+    "status_reviewed": "已审核",
+    "status_forwarded": "已转发",
+    "status_closed": "已关闭",
+    "general": "一般咨询",
+    "withheld": "身份保密",
+    "btn_reveal": "揭示身份",
+    "btn_forward": "转发",
+    "btn_close": "关闭",
+    "forwarded_on": "已转发"
   }
 }

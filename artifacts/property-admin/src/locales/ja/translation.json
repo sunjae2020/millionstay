@@ -3475,7 +3475,8 @@
     "deleted": "物件を削除しました",
     "error": "問題が発生しました",
     "delete_this": "この物件を削除しますか？",
-    "delete_confirm": "Buy ページから削除されます。元に戻せません。"
+    "delete_confirm": "Buy ページから削除されます。元に戻せません。",
+    "inquiries": "問い合わせ"
   },
   "content_translations": {
     "title": "翻訳",
@@ -3539,5 +3540,21 @@
     "hint_upfront": "%は配置料+保証金に適用。",
     "hint_monthly": "%は家賃1ヶ月に適用。",
     "hint_converted": "%は保証金+家賃×100に適用。"
+  },
+  "sale_inquiries": {
+    "title": "販売問い合わせ",
+    "subtitle": "問い合わせ者の身元は公開するまで非公開です。公開後に転送を判断します。",
+    "back_to_listings": "リスティング",
+    "filter_all": "すべて",
+    "status_new": "新規",
+    "status_reviewed": "確認済み",
+    "status_forwarded": "転送済み",
+    "status_closed": "終了",
+    "general": "一般問い合わせ",
+    "withheld": "身元非公開",
+    "btn_reveal": "身元を公開",
+    "btn_forward": "転送",
+    "btn_close": "終了",
+    "forwarded_on": "転送"
   }
 }

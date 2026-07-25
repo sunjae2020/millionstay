@@ -3475,7 +3475,8 @@
     "deleted": "ลบรายการแล้ว",
     "error": "เกิดข้อผิดพลาด",
     "delete_this": "ลบรายการนี้หรือไม่?",
-    "delete_confirm": "จะถูกลบออกจากหน้า Buy และไม่สามารถกู้คืนได้"
+    "delete_confirm": "จะถูกลบออกจากหน้า Buy และไม่สามารถกู้คืนได้",
+    "inquiries": "คำถาม"
   },
   "content_translations": {
     "title": "การแปล",
@@ -3539,5 +3540,21 @@
     "hint_upfront": "% คำนวณจากค่าจัดหา+เงินมัดจำ",
     "hint_monthly": "% คำนวณจากค่าเช่าหนึ่งเดือน",
     "hint_converted": "% คำนวณจากมัดจำ+ค่าเช่า×100"
+  },
+  "sale_inquiries": {
+    "title": "คำถามการขาย",
+    "subtitle": "ตัวตนผู้สอบถามถูกปิดไว้จนกว่าคุณจะเปิดเผย จากนั้นจึงตัดสินใจส่งต่อ",
+    "back_to_listings": "รายการ",
+    "filter_all": "ทั้งหมด",
+    "status_new": "ใหม่",
+    "status_reviewed": "ตรวจแล้ว",
+    "status_forwarded": "ส่งต่อแล้ว",
+    "status_closed": "ปิด",
+    "general": "คำถามทั่วไป",
+    "withheld": "ปิดตัวตน",
+    "btn_reveal": "เปิดเผยตัวตน",
+    "btn_forward": "ส่งต่อ",
+    "btn_close": "ปิด",
+    "forwarded_on": "ส่งต่อ"
   }
 }

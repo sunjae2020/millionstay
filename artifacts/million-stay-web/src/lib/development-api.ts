@@ -132,7 +132,20 @@ export interface ListingInquiryInput {
   listing_title?: string;
   message?: string;
 }
-export function submitListingInquiry(input: ListingInquiryInput): Promise<LeadResult> {
+// A listing inquiry now lands in the privacy-gated sale_inquiries queue (the
+// enquirer's identity is withheld from the admin list until revealed). Falls
+// back to the legacy lead endpoint if no listing id is present.
+export async function submitListingInquiry(input: ListingInquiryInput): Promise<LeadResult> {
+  if (input.listing_id) {
+    const name = [input.first_name, input.last_name].filter(Boolean).join(" ").trim();
+    const res = await fetch(`${BASE}/api/v1/public/sale-listings/${input.listing_id}/inquiry`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email: input.email, phone: input.phone, message: input.message }),
+    });
+    if (!res.ok) throw new Error("Failed to submit inquiry");
+    return { lead_ref: "" } as LeadResult;
+  }
   return postInquiry("/api/v1/public/listing-inquiries", input);
 }
 
