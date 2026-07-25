@@ -63,6 +63,7 @@ import {
   Sparkles,
   GraduationCap,
   Handshake,
+  Images,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
@@ -175,6 +176,7 @@ function getNav(t: (k: string) => string): NavSection[] {
         { href: "/content/blog-categories", label: t("nav.blog_categories"), icon: Tag },
         { href: "/content/listings", label: t("nav.sale_listings"), icon: Building2 },
         { href: "/content/pages", label: t("nav.website_pages"), icon: Globe },
+        { href: "/content/media", label: t("nav.media_library"), icon: Images },
         { href: "/content/page-translations", label: t("nav.page_translations"), icon: Languages },
       ],
     },

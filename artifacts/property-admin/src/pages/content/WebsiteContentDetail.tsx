@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
+import { MediaPickerDialog } from "@/components/MediaLibrary";
+import { Images } from "lucide-react";
 import { WEBSITE_PAGES, getSiteForPage, SITES } from "./WebsiteContentList";
 
 // ─── Page Section Definitions ───────────────────────────────────────────────
@@ -628,6 +630,7 @@ function LanguageTab({
   const [form, setForm] = useState<LangContent>(initial);
   const [activeTab, setActiveTab] = useState<"content" | "seo">("content");
   const [uploadingKey, setUploadingKey] = useState<string | null>(null);
+  const [pickerKey, setPickerKey] = useState<string | null>(null);
   const fieldKeyPrefix = pageKey.replace(/-/g, "_");
 
   useEffect(() => {
@@ -728,6 +731,14 @@ function LanguageTab({
                         }}
                       />
                     </label>
+                    <button
+                      type="button"
+                      onClick={() => setPickerKey(field.key)}
+                      className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-3 text-sm font-medium cursor-pointer hover:bg-accent"
+                    >
+                      <Images className="h-4 w-4" />
+                      {t("media.select_from_library")}
+                    </button>
                   </div>
                   {form.content[field.key] && (
                     <img
@@ -747,6 +758,13 @@ function LanguageTab({
             </div>
             );
           })}
+          {pickerKey && (
+            <MediaPickerDialog
+              open
+              onOpenChange={(o) => { if (!o) setPickerKey(null); }}
+              onPick={(url) => { setField(pickerKey, url); setPickerKey(null); }}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="seo" className="space-y-5 mt-4">
