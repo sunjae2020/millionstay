@@ -25,6 +25,9 @@ const CompanyInfoBody = z.object({
   country: z.string().optional(),
   timezone: z.string().optional(),
   logo_url: z.string().optional(),
+  ceo: z.string().optional(),
+  biz_no: z.string().optional(),
+  privacy_officer: z.string().optional(),
 }).strip();
 
 router.get("/v1/company-info", async (_req, res): Promise<void> => {

@@ -2325,7 +2325,14 @@
     "country_gb": "イギリス",
     "regional_title": "地域設定",
     "regional_subtitle": "タイムゾーンと表示設定",
-    "timezone_label": "タイムゾーン"
+    "timezone_label": "タイムゾーン",
+    "operator_title": "事業者情報（ランディングフッター）",
+    "operator_subtitle": "公開サイトのフッターおよび個人情報取扱方針・利用規約ページに表示されます。",
+    "ceo_label": "代表者",
+    "ceo_placeholder": "氏名",
+    "biz_no_label": "事業者登録番号",
+    "privacy_officer_label": "個人情報保護責任者",
+    "privacy_officer_placeholder": "氏名（メール）"
   },
   "settings_dbsync": {
     "page_title": "DB 同期",

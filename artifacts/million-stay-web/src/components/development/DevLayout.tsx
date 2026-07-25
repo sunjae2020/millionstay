@@ -11,6 +11,7 @@ import { APP_NAME } from "@/lib/appName";
 import { getApiBase } from "@/lib/api-base";
 import { flagIsoFor } from "@/lib/flagOverrides";
 import { usePageContent } from "@/lib/usePageContent";
+import { useCompanyContact } from "@/lib/guest-api";
 
 // Dedicated shell for the single-building "development" site (MetHeim). Four top
 // menus — Home / About / Buy / Rent / Management / Directions — plus currency +
@@ -204,18 +205,21 @@ function DevNavbar() {
 function DevFooter() {
   const { t } = useTranslation();
   const company = usePageContent("dev-footer");
+  const org = useCompanyContact();
   const year = new Date().getFullYear();
 
-  // CMS-editable operator info (MetHeim Korea) shown as a compact meta line.
+  // Operator info (MetHeim Korea). Precedence: Settings → Organisation value if
+  // set, else the CMS "dev-footer" overlay, else the localized i18n default.
   const metaAll: Array<[string, string]> = [
-    [t("dev.footer.ceo_label"), company("ceo", t("dev.footer.ceo"))],
-    [t("dev.footer.biz_no_label"), company("biz_no", t("dev.footer.biz_no"))],
-    [t("dev.footer.address_label"), company("address", t("dev.footer.address"))],
-    [t("dev.footer.phone_label"), company("phone", t("dev.footer.phone"))],
-    [t("dev.footer.email_label"), company("email", t("dev.footer.email"))],
+    [t("dev.footer.ceo_label"), org.ceo || company("ceo", t("dev.footer.ceo"))],
+    [t("dev.footer.biz_no_label"), org.bizNo || company("biz_no", t("dev.footer.biz_no"))],
+    [t("dev.footer.address_label"), org.address || company("address", t("dev.footer.address"))],
+    [t("dev.footer.phone_label"), org.phone || company("phone", t("dev.footer.phone"))],
+    [t("dev.footer.email_label"), org.email || company("email", t("dev.footer.email"))],
+    [t("dev.footer.homepage_label"), org.website || company("homepage", t("dev.footer.homepage"))],
   ];
   const meta = metaAll.filter(([, v]) => v);
-  const companyName = company("company_name", t("dev.footer.company_name"));
+  const companyName = org.companyName || company("company_name", t("dev.footer.company_name"));
 
   return (
     <footer className="bg-[hsl(var(--brand-navy))] text-white/80 mt-auto">

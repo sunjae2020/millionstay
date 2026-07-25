@@ -455,14 +455,40 @@ export function useUpdateMyProfile() {
   });
 }
 
-/** Public-safe company contact email (single source = Settings → Organisation).
- *  Falls back to the representative address so pages always render. */
-export const SUPPORT_EMAIL_FALLBACK = "millionstay.com@gmail.com";
-export function useSupportEmail(): string {
+/** Public-safe company / operator info (single source = Settings → Organisation).
+ *  Footer/legal fields come back empty when unset so callers can fall back to
+ *  their localized i18n defaults. */
+export interface PublicCompanyContact {
+  email: string;
+  tradingName: string;
+  companyName: string;
+  ceo: string;
+  bizNo: string;
+  address: string;
+  phone: string;
+  website: string;
+  privacyOfficer: string;
+}
+
+const EMPTY_COMPANY_CONTACT: PublicCompanyContact = {
+  email: "", tradingName: "", companyName: "", ceo: "", bizNo: "",
+  address: "", phone: "", website: "", privacyOfficer: "",
+};
+
+/** Fetch the full public company block. Returns empty strings while loading /
+ *  for any unset field, so consumers overlay it above their i18n fallbacks. */
+export function useCompanyContact(): PublicCompanyContact {
   const { data } = useQuery({
     queryKey: ["public-company-contact"],
-    queryFn: () => apiFetch<{ success: boolean; data: { email?: string } }>("/public/company-contact"),
+    queryFn: () => apiFetch<{ success: boolean; data: Partial<PublicCompanyContact> }>("/public/company-contact"),
     staleTime: 1000 * 60 * 60,
   });
-  return data?.data?.email || SUPPORT_EMAIL_FALLBACK;
+  return { ...EMPTY_COMPANY_CONTACT, ...(data?.data ?? {}) };
+}
+
+/** Public-safe company contact email. Falls back to the representative address
+ *  so pages always render. */
+export const SUPPORT_EMAIL_FALLBACK = "millionstay.com@gmail.com";
+export function useSupportEmail(): string {
+  return useCompanyContact().email || SUPPORT_EMAIL_FALLBACK;
 }
