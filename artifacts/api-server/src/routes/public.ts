@@ -91,6 +91,32 @@ router.get("/v1/public/company-contact", async (_req, res): Promise<void> => {
 });
 
 /* ───────────────────────────────────────────────────────
+   Per-locale content resolution for guest-facing entities.
+   Admins author the original in the base columns (name/description/…); the
+   `translations` jsonb holds { [lang]: { field: value, _source } }. Guest reads
+   resolve ONE language per request with fallback [lang → ko → en → base column],
+   so a Korean-authored space still shows its original when no translation exists.
+──────────────────────────────────────────────────────── */
+function pickTranslated(
+  translations: unknown,
+  lang: string,
+  field: string,
+  base: string | null | undefined,
+): string {
+  const t = (translations ?? {}) as Record<string, Record<string, unknown> | undefined>;
+  for (const l of [lang, "ko", "en"]) {
+    const v = t[l]?.[field];
+    if (v != null && String(v).trim() !== "") return String(v);
+  }
+  return base != null ? String(base) : "";
+}
+
+// Normalise a ?lang query value: "ko-KR" → "ko", missing → "en".
+function normLang(v: unknown): string {
+  return String(v ?? "en").split("-")[0].toLowerCase();
+}
+
+/* ───────────────────────────────────────────────────────
    listPublicSpaces — shared search used by the global landing
    (GET /v1/public/spaces) and per-owner landing sites
    (GET /v1/public/sites/:slug/spaces). Pass opts.propertyIds to
@@ -106,6 +132,7 @@ async function listPublicSpaces(
     limit: limitStr = "20", offset: offsetStr = "0",
   } = q;
 
+  const lang = normLang(q.lang);
   const limit  = Math.min(Number(limitStr)  || 20, 100);
   const offset = Number(offsetStr) || 0;
   const today  = new Date().toISOString().split("T")[0];
@@ -178,6 +205,7 @@ async function listPublicSpaces(
       base_daily_price: spacesTable.base_daily_price,
       base_currency: spacesTable.base_currency,
       description: spacesTable.description,
+      translations: spacesTable.translations,
       status: spacesTable.status,
       property_id: spacesTable.property_id,
       parent_space_id: spacesTable.parent_space_id,
@@ -310,6 +338,7 @@ async function listPublicSpaces(
             space_id: spaceOptionMapsTable.space_id,
             name: spaceOptionsTable.name,
             display_name: spaceOptionsTable.display_name,
+            translations: spaceOptionsTable.translations,
           })
           .from(spaceOptionMapsTable)
           .leftJoin(spaceOptionsTable, eq(spaceOptionMapsTable.space_option_id, spaceOptionsTable.id))
@@ -344,7 +373,12 @@ async function listPublicSpaces(
   const optionsBySpace = new Map<number, string[]>();
   for (const row of allOptionMaps) {
     const arr = optionsBySpace.get(row.space_id) ?? [];
-    const label = row.display_name ?? row.name;
+    // Prefer a translated display_name/name for the requested language; fall back
+    // to the catalog display_name, then the raw name.
+    const label =
+      pickTranslated(row.translations, lang, "display_name", null) ||
+      pickTranslated(row.translations, lang, "name", null) ||
+      row.display_name || row.name;
     if (label) arr.push(label);
     optionsBySpace.set(row.space_id, arr);
   }
@@ -365,8 +399,11 @@ async function listPublicSpaces(
       primary = primaryBySpace.get(s.parent_space_id);
       if (primary) imageFromParent = true;
     }
+    const { translations, ...rest } = s;
     return {
-      ...s,
+      ...rest,
+      name: pickTranslated(translations, lang, "name", s.name),
+      description: pickTranslated(translations, lang, "description", s.description),
       primary_image: primary?.file_url ?? null,
       primary_thumbnail: primary?.thumbnail_url ?? null,
       image_from_parent: imageFromParent,
@@ -503,24 +540,28 @@ router.post("/v1/public/sites/:slug/inquiry", async (req, res): Promise<void> =>
 router.get("/v1/public/spaces/:id", async (req, res): Promise<void> => {
   const spaceId = Number(req.params.id);
   if (!spaceId) { res.status(400).json({ error: "Invalid space id" }); return; }
+  const lang = normLang(req.query.lang);
 
   const [space] = await db
     .select({
       id: spacesTable.id,
       name: spacesTable.name,
       space_type: spacesTable.space_type,
+      custom_type_name: spacesTable.custom_type_name,
       booking_mode: spacesTable.booking_mode,
       max_occupancy: spacesTable.max_occupancy,
       base_weekly_price: spacesTable.base_weekly_price,
       base_daily_price: spacesTable.base_daily_price,
       base_currency: spacesTable.base_currency,
       description: spacesTable.description,
+      translations: spacesTable.translations,
       status: spacesTable.status,
       floor_number: spacesTable.floor_number,
       floor_area_sqm: spacesTable.floor_area_sqm,
       property_id: spacesTable.property_id,
       parent_space_id: spacesTable.parent_space_id,
       property_name: propertiesTable.name,
+      property_translations: propertiesTable.translations,
       property_address: propertiesTable.address,
       property_address2: propertiesTable.address2,
       property_city: propertiesTable.city,
@@ -588,6 +629,7 @@ router.get("/v1/public/spaces/:id", async (req, res): Promise<void> => {
         name: spaceOptionsTable.name,
         display_name: spaceOptionsTable.display_name,
         option_category: spaceOptionsTable.category,
+        translations: spaceOptionsTable.translations,
       })
       .from(spaceOptionMapsTable)
       .leftJoin(spaceOptionsTable, eq(spaceOptionMapsTable.space_option_id, spaceOptionsTable.id))
@@ -624,10 +666,25 @@ router.get("/v1/public/spaces/:id", async (req, res): Promise<void> => {
     }
   }
 
+  // Resolve per-locale content: space's own copy, the property (building) name,
+  // and amenity labels — each falling back [lang → ko → en → authored base].
+  const { translations: _spTr, property_translations: _propTr, ...spaceRest } = space;
+  const resolvedOptions = optionMaps
+    .filter((o) => o.name)
+    .map((o) => ({
+      name: pickTranslated(o.translations, lang, "name", null) || o.name,
+      display_name: pickTranslated(o.translations, lang, "display_name", null) || o.display_name,
+      option_category: o.option_category,
+    }));
+
   res.json({
     success: true,
     data: {
-      ...space,
+      ...spaceRest,
+      name: pickTranslated(space.translations, lang, "name", space.name),
+      description: pickTranslated(space.translations, lang, "description", space.description),
+      custom_type_name: pickTranslated(space.translations, lang, "custom_type_name", space.custom_type_name),
+      property_name: pickTranslated(space.property_translations, lang, "name", space.property_name),
       property_address: publicAddress,
       property_address2: undefined,           // never expose raw address2
       latitude: publicLat,
@@ -635,7 +692,7 @@ router.get("/v1/public/spaces/:id", async (req, res): Promise<void> => {
       privacy_map_blur: space.privacy_map_blur ?? false,
       images,
       images_from_parent: imagesFromParent,
-      space_options: optionMaps.filter((o) => o.name),
+      space_options: resolvedOptions,
       products: pricingTiers,
     },
   });
@@ -788,7 +845,8 @@ router.post("/v1/channels/:code/reservations", async (req, res): Promise<void> =
 /* ───────────────────────────────────────────────────────
    GET /api/v1/public/properties
 ──────────────────────────────────────────────────────── */
-router.get("/v1/public/properties", async (_req, res): Promise<void> => {
+router.get("/v1/public/properties", async (req, res): Promise<void> => {
+  const lang = normLang(req.query.lang);
   const properties = await db
     .select({
       id: propertiesTable.id,
@@ -801,6 +859,7 @@ router.get("/v1/public/properties", async (_req, res): Promise<void> => {
       lat: propertiesTable.lat,
       lng: propertiesTable.lng,
       description: propertiesTable.description,
+      translations: propertiesTable.translations,
       approval_status: propertiesTable.approval_status,
     })
     .from(propertiesTable)
@@ -820,10 +879,15 @@ router.get("/v1/public/properties", async (_req, res): Promise<void> => {
 
   const data = properties
     .filter((p) => p.approval_status === "Approved" || true) // show all; landing page can filter
-    .map((p) => ({
-      ...p,
-      active_spaces: spacesCountByProperty.get(p.id) ?? 0,
-    }));
+    .map((p) => {
+      const { translations, ...rest } = p;
+      return {
+        ...rest,
+        name: pickTranslated(translations, lang, "name", p.name),
+        description: pickTranslated(translations, lang, "description", p.description),
+        active_spaces: spacesCountByProperty.get(p.id) ?? 0,
+      };
+    });
 
   res.json({ success: true, data, meta: { total: data.length } });
 });

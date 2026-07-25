@@ -372,8 +372,7 @@
     "confirm_checkin": "ยืนยันการเช็คอิน",
     "confirm_checkout": "ยืนยันการเช็คเอาท์",
     "instant_booking": "จองทันที",
-    "request_booking": "ขอจอง",
-    "tab_condition": "สภาพห้อง"
+    "request_booking": "ขอจอง"
   },
   "contact": {
     "new": "ผู้ติดต่อใหม่",
@@ -908,7 +907,8 @@
     "tab_overview": "ภาพรวม",
     "tab_spaces": "พื้นที่",
     "tab_photos": "รูปภาพ",
-    "tab_documents": "เอกสาร"
+    "tab_documents": "เอกสาร",
+    "tab_translations": "การแปล"
   },
   "space": {
     "new": "พื้นที่ใหม่",
@@ -1117,7 +1117,8 @@
     "svc_added_toast": "เพิ่มบริการแล้ว",
     "svc_removed_toast": "ลบบริการแล้ว",
     "svc_remove_confirm": "ลบบริการนี้ออกจากพื้นที่หรือไม่?",
-    "svc_add_failed": "เพิ่มบริการไม่สำเร็จ"
+    "svc_add_failed": "เพิ่มบริการไม่สำเร็จ",
+    "tab_translations": "การแปล"
   },
   "space_option": {
     "new": "ตัวเลือกพื้นที่ใหม่",
@@ -3449,5 +3450,21 @@
     "error": "เกิดข้อผิดพลาด",
     "delete_this": "ลบรายการนี้หรือไม่?",
     "delete_confirm": "จะถูกลบออกจากหน้า Buy และไม่สามารถกู้คืนได้"
+  },
+  "content_translations": {
+    "title": "การแปล",
+    "desc": "สร้างและตรวจทานคำแปลสำหรับเว็บไซต์ผู้เข้าพักของรายการนี้",
+    "ai_button": "แปลด้วย AI",
+    "ai_running": "กำลังแปล…",
+    "ai_done": "สร้างคำแปลแล้ว",
+    "ai_failed": "การแปลด้วย AI ล้มเหลว",
+    "saved": "บันทึกคำแปลแล้ว",
+    "source_label": "ต้นฉบับ ({{lang}})",
+    "no_targets": "ไม่มีภาษาเป้าหมายที่เปิดใช้งาน",
+    "machine_hint": "ฉบับร่าง AI — โปรดตรวจทานก่อนเผยแพร่",
+    "field_name": "ชื่อ",
+    "field_description": "คำอธิบาย",
+    "field_custom_type_name": "ประเภทที่กำหนดเอง",
+    "field_display_name": "ชื่อที่แสดง"
   }
 }
