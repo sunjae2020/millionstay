@@ -884,7 +884,10 @@
     "requester_guest": "Guest",
     "requester_agent": "Agent",
     "requester_owner": "Owner",
-    "requester_service_host": "Service Host"
+    "requester_service_host": "Service Host",
+    "create_work_order": "Create work order",
+    "work_order_linked": "Work order created",
+    "dispatch_to_partner": "Create & dispatch"
   },
   "property": {
     "new": "New Property",
@@ -1974,6 +1977,9 @@
     "page_title_placeholder": "Page Title",
     "page_description_placeholder": "Page description will appear here…",
     "url_placeholder": "https://…",
+    "upload_button": "Upload",
+    "toast_upload_failed_title": "Upload failed",
+    "toast_upload_failed_desc": "Could not upload the image. Please try again.",
     "enter_url": "Enter URL:",
     "enter_image_url": "Enter Image URL:",
     "no_content_yet": "No content yet",

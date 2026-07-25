@@ -884,7 +884,10 @@
     "requester_guest": "客人",
     "requester_agent": "代理",
     "requester_owner": "业主",
-    "requester_service_host": "服务人员"
+    "requester_service_host": "服务人员",
+    "create_work_order": "创建工单",
+    "work_order_linked": "已创建工单",
+    "dispatch_to_partner": "创建并派单"
   },
   "property": {
     "new": "新建房源",

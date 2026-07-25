@@ -884,7 +884,10 @@
     "requester_guest": "게스트",
     "requester_agent": "에이전트",
     "requester_owner": "오너",
-    "requester_service_host": "서비스 호스트"
+    "requester_service_host": "서비스 호스트",
+    "create_work_order": "작업지시 생성",
+    "work_order_linked": "작업지시 생성됨",
+    "dispatch_to_partner": "생성 & 배정"
   },
   "property": {
     "new": "새 매물",
@@ -1974,6 +1977,9 @@
     "page_title_placeholder": "페이지 제목",
     "page_description_placeholder": "페이지 설명이 여기에 표시됩니다…",
     "url_placeholder": "https://…",
+    "upload_button": "업로드",
+    "toast_upload_failed_title": "업로드 실패",
+    "toast_upload_failed_desc": "이미지를 업로드하지 못했습니다. 다시 시도해 주세요.",
     "enter_url": "URL 입력:",
     "enter_image_url": "이미지 URL 입력:",
     "no_content_yet": "아직 콘텐츠가 없습니다",

@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatDate, formatDateTime } from "@/lib/date";
 import {
   ArrowLeft, Send, ImageIcon, X, Loader2, Clock, CheckCircle2, XCircle,
-  AlertCircle, User, Calendar, Tag, Flag, RefreshCw, Shield, Eye, EyeOff
+  AlertCircle, User, Calendar, Tag, Flag, RefreshCw, Shield, Eye, EyeOff, Wrench
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -80,6 +80,7 @@ interface TicketDetail {
   booking_id: number | null;
   booking_ref: string | null;
   booking_status: string | null;
+  work_order_id?: number | null;
   check_in_date: string | null;
   check_out_date: string | null;
   requester_type?: string | null;
@@ -176,6 +177,18 @@ export default function CsTicketDetail() {
       qc.invalidateQueries({ queryKey: ["admin-cs-tickets"] });
     },
     onError: () => toast({ title: t('csticket.toast_error', 'Error'), description: t('csticket.toast_send_failed', 'Failed to send message.'), variant: "destructive" }),
+  });
+
+  const [showWoPicker, setShowWoPicker] = useState(false);
+  const [woCategory, setWoCategory] = useState("cleaning");
+  const createWorkOrderMutation = useMutation({
+    mutationFn: async (category: string) => {
+      const res = await apiFetch(`/api/v1/cs-tickets/${id}/create-work-order`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ category }),
+      });
+      return res.json();
+    },
+    onSuccess: () => { setShowWoPicker(false); qc.invalidateQueries({ queryKey: ["admin-cs-ticket", id] }); },
   });
 
   const retranslateMutation = useMutation({
@@ -278,6 +291,33 @@ export default function CsTicketDetail() {
                   {t('common.created_at')}: {formatDateTime(ticket.created_at)} · {t('common.updated_at')}: {formatDateTime(ticket.updated_at)}
                 </p>
               </div>
+            </div>
+
+            {/* Maintenance → work order bridge (Phase 3) */}
+            <div className="mt-3 pt-3 border-t border-gray-100">
+              {ticket.work_order_id ? (
+                <div className="text-sm text-gray-600 flex items-center gap-1.5">
+                  <Wrench className="h-4 w-4 text-primary" />
+                  {t('csticket.work_order_linked', 'Work order created')} ·
+                  <button className="text-primary hover:underline" onClick={() => navigate(`/maintenance/work-orders/${ticket.work_order_id}`)}>#{ticket.work_order_id}</button>
+                </div>
+              ) : !showWoPicker ? (
+                <Button size="sm" variant="outline" onClick={() => setShowWoPicker(true)} className="gap-1.5">
+                  <Wrench className="h-3.5 w-3.5" /> {t('csticket.create_work_order', 'Create work order')}
+                </Button>
+              ) : (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <select value={woCategory} onChange={(e) => setWoCategory(e.target.value)} className="border rounded px-2 py-1.5 text-sm">
+                    {["cleaning", "plumbing", "electrical", "general", "inspection", "hvac", "gardening", "pest"].map((c) => (
+                      <option key={c} value={c}>{t(`service_host.specialty_${c}` as any, c)}</option>
+                    ))}
+                  </select>
+                  <Button size="sm" disabled={createWorkOrderMutation.isPending} onClick={() => createWorkOrderMutation.mutate(woCategory)}>
+                    {t('csticket.dispatch_to_partner', 'Create & dispatch')}
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setShowWoPicker(false)}>{t('common.cancel', 'Cancel')}</Button>
+                </div>
+              )}
             </div>
           </div>
 
