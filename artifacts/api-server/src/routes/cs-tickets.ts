@@ -1,12 +1,75 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
 import { eq, desc, and, ilike, or, sql, isNull, inArray } from "drizzle-orm";
-import { db, csTicketsTable, csMessagesTable, guestUsersTable, partnerUsersTable, bookingsTable } from "@workspace/db";
+import { db, csTicketsTable, csMessagesTable, guestUsersTable, partnerUsersTable, bookingsTable, workOrdersTable, spacesTable } from "@workspace/db";
 import { requireAuth } from "../middlewares/requireAuth";
 import { isCloudinaryConfigured, uploadToCloudinary, cldFolder } from "../utils/cloudinary";
 import { translateAndStoreMessage } from "../lib/chat/translateMessage";
+import { dispatchWorkOrder } from "../lib/dispatch/workOrderDispatch";
+import { logAction } from "../utils/auditLog";
 
 const router: IRouter = Router();
+
+async function nextWorkOrderRef(): Promise<string> {
+  const year = new Date().getFullYear();
+  const rows = await db.select({ id: workOrdersTable.id }).from(workOrdersTable)
+    .where(ilike(workOrdersTable.order_ref, `MS-WO-${year}-%`));
+  return `MS-WO-${year}-${String(rows.length + 1).padStart(5, "0")}`;
+}
+
+// Convert a CS ticket into a dispatched maintenance work order (Phase 3 bridge).
+// Admin-mediated ("관리자 경유 수리"): the admin supplies the dispatch category
+// (ticket categories are coarse) and the new work order auto-dispatches to a
+// matching partner. Idempotent — re-calling returns the already-linked order.
+router.post("/v1/cs-tickets/:id/create-work-order", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    const [ticket] = await db.select().from(csTicketsTable).where(eq(csTicketsTable.id, id)).limit(1);
+    if (!ticket) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Ticket not found" } }); return; }
+    if (ticket.work_order_id) {
+      const [existing] = await db.select().from(workOrdersTable).where(eq(workOrdersTable.id, ticket.work_order_id)).limit(1);
+      res.json({ success: true, data: existing, alreadyLinked: true });
+      return;
+    }
+
+    // Derive property/space from the ticket's booking, when present.
+    let spaceId: number | null = null;
+    let propertyId: number | null = null;
+    if (ticket.booking_id) {
+      const [bk] = await db.select({ space_id: bookingsTable.space_id }).from(bookingsTable).where(eq(bookingsTable.id, ticket.booking_id)).limit(1);
+      spaceId = bk?.space_id ?? null;
+      if (spaceId) {
+        const [sp] = await db.select({ property_id: spacesTable.property_id }).from(spacesTable).where(eq(spacesTable.id, spaceId)).limit(1);
+        propertyId = sp?.property_id ?? null;
+      }
+    }
+
+    const category = typeof req.body?.category === "string" && req.body.category.trim() ? req.body.category.trim().toLowerCase() : null;
+    const order_ref = await nextWorkOrderRef();
+    const [wo] = await db.insert(workOrdersTable).values({
+      order_ref,
+      property_id: propertyId,
+      space_id: spaceId,
+      title: ticket.subject,
+      description: ticket.description,
+      priority: ticket.priority ?? "Normal",
+      category,
+    }).returning();
+
+    await db.update(csTicketsTable).set({ work_order_id: wo!.id }).where(eq(csTicketsTable.id, id));
+
+    let dispatch: any = null;
+    if (category) {
+      try { dispatch = await dispatchWorkOrder(wo!.id); } catch (e) { console.error("[cs-tickets] bridge dispatch failed:", e); }
+    }
+    void logAction({ entityType: "cs_ticket", entityId: id, action: "CREATE", actorId: (req as any).user?.id ?? null, newValue: { work_order_id: wo!.id, order_ref, dispatched: dispatch?.ok ?? false } });
+
+    const [fresh] = await db.select().from(workOrdersTable).where(eq(workOrdersTable.id, wo!.id)).limit(1);
+    res.status(201).json({ success: true, data: fresh, dispatch });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
+  }
+});
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 const CS_STATUSES = ["Open", "InProgress", "Resolved", "Closed"] as const;

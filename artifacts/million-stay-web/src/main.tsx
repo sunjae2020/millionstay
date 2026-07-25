@@ -4,6 +4,7 @@ import "./index.css";
 import "./i18n";
 import { APP_NAME } from "./lib/appName";
 import { FAVICON_URL } from "./lib/brand";
+import { setupPwa } from "./lib/pwa";
 
 // White-label: browser-tab title + favicon follow the per-instance brand (spec §2.3/§2.4).
 document.title = APP_NAME;
@@ -16,5 +17,7 @@ if (FAVICON_URL) {
   }
   link.href = FAVICON_URL;
 }
+
+setupPwa();
 
 createRoot(document.getElementById("root")!).render(<App />);

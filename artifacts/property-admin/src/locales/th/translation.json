@@ -884,7 +884,10 @@
     "requester_guest": "ผู้เข้าพัก",
     "requester_agent": "เอเจนต์",
     "requester_owner": "เจ้าของ",
-    "requester_service_host": "เซอร์วิสโฮสต์"
+    "requester_service_host": "เซอร์วิสโฮสต์",
+    "create_work_order": "สร้างใบสั่งงาน",
+    "work_order_linked": "สร้างใบสั่งงานแล้ว",
+    "dispatch_to_partner": "สร้างและมอบหมาย"
   },
   "property": {
     "new": "อสังหาริมทรัพย์ใหม่",
@@ -1974,6 +1977,9 @@
     "page_title_placeholder": "ชื่อหน้า",
     "page_description_placeholder": "คำอธิบายหน้าจะแสดงที่นี่…",
     "url_placeholder": "https://…",
+    "upload_button": "อัปโหลด",
+    "toast_upload_failed_title": "อัปโหลดไม่สำเร็จ",
+    "toast_upload_failed_desc": "ไม่สามารถอัปโหลดรูปภาพได้ กรุณาลองอีกครั้ง",
     "enter_url": "ป้อน URL:",
     "enter_image_url": "ป้อน URL รูปภาพ:",
     "no_content_yet": "ยังไม่มีเนื้อหา",

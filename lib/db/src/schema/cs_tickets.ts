@@ -15,6 +15,9 @@ export const csTicketsTable = pgTable("cs_tickets", {
   status: text("status").notNull().default("Open"),
   priority: text("priority").notNull().default("Normal"),
   assigned_admin_id: integer("assigned_admin_id"),
+  // Linked maintenance work order (Phase 3 bridge): an admin can convert a
+  // Maintenance ticket into a dispatched work order; this records the link.
+  work_order_id: integer("work_order_id"),
   // CS auto-translation: language the requester chose to converse in. Every
   // message is stored in its original language plus translations into the set
   // { customer_language, en } so the customer reads their own language and the

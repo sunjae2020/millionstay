@@ -884,7 +884,10 @@
     "requester_guest": "ゲスト",
     "requester_agent": "エージェント",
     "requester_owner": "オーナー",
-    "requester_service_host": "サービスホスト"
+    "requester_service_host": "サービスホスト",
+    "create_work_order": "作業指示を作成",
+    "work_order_linked": "作業指示を作成済み",
+    "dispatch_to_partner": "作成して割当"
   },
   "property": {
     "new": "新規物件",
@@ -1974,6 +1977,9 @@
     "page_title_placeholder": "ページタイトル",
     "page_description_placeholder": "ページの説明がここに表示されます…",
     "url_placeholder": "https://…",
+    "upload_button": "アップロード",
+    "toast_upload_failed_title": "アップロード失敗",
+    "toast_upload_failed_desc": "画像をアップロードできませんでした。もう一度お試しください。",
     "enter_url": "URLを入力：",
     "enter_image_url": "画像URLを入力：",
     "no_content_yet": "まだコンテンツがありません",
