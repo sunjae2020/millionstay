@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
@@ -38,6 +38,7 @@ export default function SpaceList() {
   const isSuperAdmin = user?.role === "SuperAdmin";
   const [search, setSearch] = useState("");
   const [spaceType, setSpaceType] = useState("");
+  const [parentSpaceId, setParentSpaceId] = useState("");
   const [status, setStatus] = useState("");
   const [bookingMode, setBookingMode] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -58,7 +59,31 @@ export default function SpaceList() {
     query: { queryKey: getListSpacesQueryKey(params) },
   });
 
-  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(spaces ?? []);
+  // Parent-space filter options, derived from the loaded rows. Instances that
+  // group units under a container space (e.g. a per-unit-type "타입" parent) get
+  // a meaningful filter here; instances with no parents keep the type filter.
+  const parentOptions = useMemo(() => {
+    const byId = new Map<number, string>();
+    for (const s of spaces ?? []) {
+      if (s.parent_space_id != null && s.parent_space_name) {
+        byId.set(s.parent_space_id, s.parent_space_name);
+      }
+    }
+    return [...byId.entries()]
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [spaces]);
+  const hasParents = parentOptions.length > 0;
+
+  // Parent filtering is client-side: the list already loads every row, so this
+  // avoids a new backend query param (and api-client regeneration).
+  const filtered = useMemo(() => {
+    const list = spaces ?? [];
+    if (!parentSpaceId) return list;
+    return list.filter((s) => String(s.parent_space_id ?? "") === parentSpaceId);
+  }, [spaces, parentSpaceId]);
+
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(filtered);
   const pagination = usePagination(sorted);
 
   const deleteMutation = useDeleteSpace({
@@ -109,7 +134,7 @@ export default function SpaceList() {
     <Layout>
       <PageHeader
         title={t("nav.space")}
-        subtitle={`${spaces?.length ?? 0} ${t("common.total")}`}
+        subtitle={`${filtered.length} ${t("common.total")}`}
         actions={
           <Link href="/property/spaces/new">
             <Button size="sm" className="gap-1.5">
@@ -129,17 +154,29 @@ export default function SpaceList() {
               className="pl-8 h-8 text-sm"
             />
           </div>
-          <Select value={spaceType || "_all"} onValueChange={(v) => setSpaceType(v === "_all" ? "" : v)}>
-            <SelectTrigger className="w-40 h-8 text-sm"><SelectValue placeholder={t("space.label_type")} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("space.all_types")}</SelectItem>
-              <SelectItem value="Private Room">{t("space.type_private") || "Private Room"}</SelectItem>
-              <SelectItem value="Shared Room">{t("space.type_shared") || "Shared Room"}</SelectItem>
-              <SelectItem value="Whole Property">{t("space.type_whole") || "Whole Property"}</SelectItem>
-              <SelectItem value="Desk">{t("space.type_desk") || "Desk"}</SelectItem>
-              <SelectItem value="Other">{t("space.type_other") || "Other"}</SelectItem>
-            </SelectContent>
-          </Select>
+          {hasParents ? (
+            <Select value={parentSpaceId || "_all"} onValueChange={(v) => setParentSpaceId(v === "_all" ? "" : v)}>
+              <SelectTrigger className="w-44 h-8 text-sm"><SelectValue placeholder={t("space.col_parent")} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_all">{t("space.all_parents")}</SelectItem>
+                {parentOptions.map((p) => (
+                  <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <Select value={spaceType || "_all"} onValueChange={(v) => setSpaceType(v === "_all" ? "" : v)}>
+              <SelectTrigger className="w-40 h-8 text-sm"><SelectValue placeholder={t("space.label_type")} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_all">{t("space.all_types")}</SelectItem>
+                <SelectItem value="Private Room">{t("space.type_private") || "Private Room"}</SelectItem>
+                <SelectItem value="Shared Room">{t("space.type_shared") || "Shared Room"}</SelectItem>
+                <SelectItem value="Whole Property">{t("space.type_whole") || "Whole Property"}</SelectItem>
+                <SelectItem value="Desk">{t("space.type_desk") || "Desk"}</SelectItem>
+                <SelectItem value="Other">{t("space.type_other") || "Other"}</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
           <Select value={status || "_all"} onValueChange={(v) => setStatus(v === "_all" ? "" : v)}>
             <SelectTrigger className="w-32 h-8 text-sm"><SelectValue placeholder={t("common.status")} /></SelectTrigger>
             <SelectContent>
@@ -213,7 +250,7 @@ export default function SpaceList() {
             <tbody className="divide-y">
               {isLoading ? (
                 <tr><td colSpan={isSuperAdmin ? 9 : 8} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("common.loading")}</td></tr>
-              ) : spaces?.length === 0 ? (
+              ) : filtered.length === 0 ? (
                 <tr><td colSpan={isSuperAdmin ? 9 : 8} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("space.no_spaces")}</td></tr>
               ) : (
                 pagination.paginatedItems.map((space) => (
