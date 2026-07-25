@@ -10,6 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 
 type LifecycleStage = "MovingIn" | "Residing" | "MovingOut" | "Completed" | "All";
 
@@ -246,6 +247,8 @@ export default function TenantLifecycle() {
     return (order[a.stage] ?? 4) - (order[b.stage] ?? 4);
   });
 
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(sortedFiltered);
+
   const urgentCount = tenants.filter(t => t.stage === "MovingOut" && (t.daysUntilCheckout ?? 99) <= 7).length;
 
   return (
@@ -324,24 +327,26 @@ export default function TenantLifecycle() {
                 <thead className="bg-muted/50">
                   <tr>
                     {[
-                      { key: "stage", label: t("tenant_lifecycle.col_stage") },
-                      { key: "tenant", label: t("tenant_lifecycle.col_tenant") },
-                      { key: "space", label: t("tenant_lifecycle.col_space") },
-                      { key: "checkin", label: t("tenant_lifecycle.col_check_in") },
-                      { key: "checkout", label: t("tenant_lifecycle.col_check_out") },
-                      { key: "nights", label: t("tenant_lifecycle.col_nights") },
-                      { key: "rent", label: t("tenant_lifecycle.col_rent") },
-                      { key: "status", label: t("common.status") },
-                      { key: "actions", label: "" },
+                      { key: "stage", sortKey: "stage", label: t("tenant_lifecycle.col_stage") },
+                      { key: "tenant", sortKey: "contactName", label: t("tenant_lifecycle.col_tenant") },
+                      { key: "space", sortKey: "spaceName", label: t("tenant_lifecycle.col_space") },
+                      { key: "checkin", sortKey: "checkIn", label: t("tenant_lifecycle.col_check_in") },
+                      { key: "checkout", sortKey: "checkOut", label: t("tenant_lifecycle.col_check_out") },
+                      { key: "nights", sortKey: "stayNights", label: t("tenant_lifecycle.col_nights") },
+                      { key: "rent", sortKey: "totalRent", label: t("tenant_lifecycle.col_rent") },
+                      { key: "status", sortKey: "bookingStatus", label: t("common.status") },
+                      { key: "actions", sortKey: null as string | null, label: "" },
                     ].map(h => (
-                      <th key={h.key} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{h.label}</th>
+                      h.sortKey
+                        ? <SortableTh key={h.key} sortKey={h.sortKey} activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{h.label}</SortableTh>
+                        : <th key={h.key} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{h.label}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {sortedFiltered.length === 0 ? (
+                  {sorted.length === 0 ? (
                     <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">{t("tenant_lifecycle.no_tenants_found")}</td></tr>
-                  ) : sortedFiltered.map(tenant => {
+                  ) : sorted.map(tenant => {
                     const cfg = STAGE_CONFIG[tenant.stage];
                     const Icon = cfg.icon;
                     return (

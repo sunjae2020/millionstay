@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Plus, FileText } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 import { formatDate } from "@/lib/date";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -38,7 +39,8 @@ export default function QuoteList() {
   const [q, setQ] = useState("");
   const { data, isLoading } = useQuery({ queryKey: ["quotes", q], queryFn: () => fetchQuotes(q) });
   const rows: any[] = Array.isArray(data) ? data : [];
-  const pagination = usePagination(rows);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(rows, { accessors: { total: (r: any) => Number(r.total) } });
+  const pagination = usePagination(sorted);
 
   return (
     <Layout>
@@ -59,11 +61,11 @@ export default function QuoteList() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("quote.reference", "Reference")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("quote.party", "Party")}</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.total", "Total")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("quote.valid_until", "Valid Until")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.status", "Status")}</th>
+                  <SortableTh sortKey="quote_ref" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("quote.reference", "Reference")}</SortableTh>
+                  <SortableTh sortKey="account_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("quote.party", "Party")}</SortableTh>
+                  <SortableTh sortKey="total" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} align="right" className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.total", "Total")}</SortableTh>
+                  <SortableTh sortKey="valid_until" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("quote.valid_until", "Valid Until")}</SortableTh>
+                  <SortableTh sortKey="status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.status", "Status")}</SortableTh>
                 </tr>
               </thead>
               <tbody className="divide-y">

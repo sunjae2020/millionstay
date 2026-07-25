@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData } from "@/components/ui/SortableTable";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { GraduationCap, Search, Eye, ShieldCheck } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
@@ -117,6 +118,15 @@ export default function HomestayStudentRequests() {
     placeholderData: keepPreviousData,
   });
   const requests = data?.items ?? [];
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(requests, {
+    accessors: {
+      student: (r: StudentRequest) => formatPersonName(r.student_first_name, r.student_last_name),
+      school: (r: StudentRequest) => r.preferences?.school ?? "",
+      agent: (r: StudentRequest) => agentDisplayName(r.preferences?.agent),
+      start: (r: StudentRequest) => r.preferences?.homestay_start_date ?? "",
+      submitted: (r: StudentRequest) => r.preferences?.import?.ref || r.created_at,
+    },
+  });
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -171,14 +181,14 @@ export default function HomestayStudentRequests() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t("homestayStudent.col_ref")}</TableHead>
-                <TableHead>{t("homestayStudent.col_student")}</TableHead>
-                <TableHead>{t("homestayStudent.col_email")}</TableHead>
-                <TableHead>{t("homestayStudent.col_school")}</TableHead>
-                <TableHead>{t("homestayStudent.col_agent")}</TableHead>
-                <TableHead>{t("homestayStudent.col_start")}</TableHead>
-                <TableHead>{t("homestayStudent.col_status")}</TableHead>
-                <TableHead>{t("homestayStudent.col_submitted")}</TableHead>
+                <TableHead sortKey="request_ref" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("homestayStudent.col_ref")}</TableHead>
+                <TableHead sortKey="student" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("homestayStudent.col_student")}</TableHead>
+                <TableHead sortKey="student_email" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("homestayStudent.col_email")}</TableHead>
+                <TableHead sortKey="school" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("homestayStudent.col_school")}</TableHead>
+                <TableHead sortKey="agent" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("homestayStudent.col_agent")}</TableHead>
+                <TableHead sortKey="start" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("homestayStudent.col_start")}</TableHead>
+                <TableHead sortKey="status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("homestayStudent.col_status")}</TableHead>
+                <TableHead sortKey="submitted" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("homestayStudent.col_submitted")}</TableHead>
                 <TableHead className="w-20"></TableHead>
               </TableRow>
             </TableHeader>
@@ -187,7 +197,7 @@ export default function HomestayStudentRequests() {
                 <TableRow><TableCell colSpan={9} className="text-center py-10 text-muted-foreground">{t("common.loading")}</TableCell></TableRow>
               ) : requests.length === 0 ? (
                 <TableRow><TableCell colSpan={9} className="text-center py-10 text-muted-foreground">{t("homestayStudent.empty")}</TableCell></TableRow>
-              ) : requests.map((r) => (
+              ) : sorted.map((r) => (
                 <TableRow key={r.id}>
                   <TableCell>
                     <Link href={`/account/homestay-student-requests/${r.id}`} className="font-mono text-xs font-medium text-primary hover:underline">

@@ -10,6 +10,7 @@ import { Search, Eye, FileDown, FileText, Receipt, FileSignature, ExternalLink, 
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 import { formatDate } from "@/lib/date";
 
 interface HubDocument {
@@ -69,7 +70,10 @@ export default function DocumentHub() {
   });
 
   const rows: HubDocument[] = Array.isArray(data) ? data : [];
-  const pagination = usePagination(rows);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(rows, {
+    accessors: { linked: (r) => r.links.join(" · ") },
+  });
+  const pagination = usePagination(sorted);
 
   // Render the document's PDF, then download it or open an HTML preview tab.
   const handlePdf = async (doc: HubDocument, mode: "download" | "preview") => {
@@ -170,13 +174,13 @@ export default function DocumentHub() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.type", "Type")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("document_hub.reference", "Reference")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("document_hub.party", "Party")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("document_hub.linked_to", "Linked To")}</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.amount", "Amount")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.status", "Status")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.date", "Date")}</th>
+                  <SortableTh sortKey="doc_type" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.type", "Type")}</SortableTh>
+                  <SortableTh sortKey="ref" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("document_hub.reference", "Reference")}</SortableTh>
+                  <SortableTh sortKey="party" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("document_hub.party", "Party")}</SortableTh>
+                  <SortableTh sortKey="linked" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("document_hub.linked_to", "Linked To")}</SortableTh>
+                  <SortableTh sortKey="amount" align="right" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.amount", "Amount")}</SortableTh>
+                  <SortableTh sortKey="status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.status", "Status")}</SortableTh>
+                  <SortableTh sortKey="date" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.date", "Date")}</SortableTh>
                   <th className="px-4 py-3 w-32"></th>
                 </tr>
               </thead>

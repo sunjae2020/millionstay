@@ -15,6 +15,7 @@ import { Search, RefreshCw, ToggleLeft, ToggleRight, Calendar, Plus, Archive, X,
 import { Checkbox } from "@/components/ui/checkbox";
 import { apiFetch } from "@/lib/apiFetch";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/date";
@@ -134,7 +135,8 @@ export default function RecurringScheduleList() {
   };
 
   const rows: any[] = Array.isArray(data) ? data : (data?.data ?? []);
-  const pagination = usePagination(rows);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(rows);
+  const pagination = usePagination(sorted);
 
   const pageIds = pagination.paginatedItems.map((s: any) => s.id);
   const allPageSelected = pageIds.length > 0 && pageIds.every((id: number) => selectedIds.has(id));
@@ -226,15 +228,15 @@ export default function RecurringScheduleList() {
               <thead className="bg-muted/50 border-b">
                 <tr>
                   {isSuperAdmin && <th className="px-3 py-3 w-8"><Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} /></th>}
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_booking")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_account")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_type")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_frequency")}</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_amount")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_start_date")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_next_due_date")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.approval_status")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_status")}</th>
+                  <SortableTh sortKey="booking_ref" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_booking")}</SortableTh>
+                  <SortableTh sortKey="account_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_account")}</SortableTh>
+                  <SortableTh sortKey="schedule_type" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_type")}</SortableTh>
+                  <SortableTh sortKey="frequency" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_frequency")}</SortableTh>
+                  <SortableTh sortKey="amount" align="right" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_amount")}</SortableTh>
+                  <SortableTh sortKey="start_date" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_start_date")}</SortableTh>
+                  <SortableTh sortKey="next_due_date" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_next_due_date")}</SortableTh>
+                  <SortableTh sortKey="approval_status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.approval_status")}</SortableTh>
+                  <SortableTh sortKey="is_active" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_status")}</SortableTh>
                   <th className="px-4 py-3 w-16"></th>
                 </tr>
               </thead>

@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useSortableData } from "@/components/ui/SortableTable";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -57,6 +58,8 @@ export default function AddonServicesPage() {
 
   const filtered = services.filter((s) =>
     !q || s.name.toLowerCase().includes(q.toLowerCase()) || s.code.toLowerCase().includes(q.toLowerCase()));
+
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(filtered);
 
   const save = useMutation({
     mutationFn: async () => {
@@ -128,10 +131,10 @@ export default function AddonServicesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t("accommodation_options.col_name", "Name")}</TableHead>
-                <TableHead>{t("accommodation_options.col_category", "Category")}</TableHead>
-                <TableHead>{t("accommodation_options.col_price", "Price")}</TableHead>
-                <TableHead>{t("accommodation_options.col_unit", "Unit")}</TableHead>
+                <TableHead sortKey="name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("accommodation_options.col_name", "Name")}</TableHead>
+                <TableHead sortKey="category" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("accommodation_options.col_category", "Category")}</TableHead>
+                <TableHead sortKey="base_price" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("accommodation_options.col_price", "Price")}</TableHead>
+                <TableHead sortKey="unit" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("accommodation_options.col_unit", "Unit")}</TableHead>
                 <TableHead className="w-24"></TableHead>
               </TableRow>
             </TableHeader>
@@ -140,7 +143,7 @@ export default function AddonServicesPage() {
                 <TableRow><TableCell colSpan={5} className="text-center py-10 text-muted-foreground">Loading…</TableCell></TableRow>
               ) : filtered.length === 0 ? (
                 <TableRow><TableCell colSpan={5} className="text-center py-10 text-muted-foreground">{t("accommodation_options.empty", "No add-on services")}</TableCell></TableRow>
-              ) : filtered.map((item) => (
+              ) : sorted.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell>
                     <div className="font-medium">{item.name}</div>

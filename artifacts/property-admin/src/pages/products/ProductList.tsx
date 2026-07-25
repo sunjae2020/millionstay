@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -111,7 +112,8 @@ export default function ProductList() {
     return true;
   });
 
-  const pagination = usePagination(filtered);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(filtered);
+  const pagination = usePagination(sorted);
   const deleteTarget = products.find(p => p.id === deleteId);
 
   return (
@@ -169,10 +171,10 @@ export default function ProductList() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("product.col_name")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("product.col_promotion")}</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("product.col_unit")}</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("product.col_price")}</th>
+                  <SortableTh sortKey="name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("product.col_name")}</SortableTh>
+                  <SortableTh sortKey="promotion_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("product.col_promotion")}</SortableTh>
+                  <SortableTh sortKey="promotion_id" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} align="right" className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("product.col_unit")}</SortableTh>
+                  <SortableTh sortKey="price" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} align="right" className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("product.col_price")}</SortableTh>
                   <th className="px-4 py-3 w-20"></th>
                 </tr>
               </thead>

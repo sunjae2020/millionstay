@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Archive, X, AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/apiFetch";
@@ -43,7 +44,8 @@ export default function InvoiceList() {
     status: status === "_all" ? undefined : status,
   });
 
-  const pagination = usePagination(invoicesRaw);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(invoicesRaw);
+  const pagination = usePagination(sorted);
 
   const pageIds = pagination.paginatedItems.map((inv) => inv.id);
   const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
@@ -138,13 +140,13 @@ export default function InvoiceList() {
             <thead className="border-b bg-muted/30">
               <tr>
                 {isSuperAdmin && <th className="px-3 py-3 w-8"><Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} /></th>}
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("invoice.col_ref")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("invoice.col_booking")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("invoice.col_contract")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("invoice.col_account")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("invoice.col_amount")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("invoice.col_due_date")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("invoice.col_status")}</th>
+                <SortableTh sortKey="invoice_ref" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-3 font-medium text-muted-foreground">{t("invoice.col_ref")}</SortableTh>
+                <SortableTh sortKey="booking_ref" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-3 font-medium text-muted-foreground">{t("invoice.col_booking")}</SortableTh>
+                <SortableTh sortKey="contract_ref" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-3 font-medium text-muted-foreground">{t("invoice.col_contract")}</SortableTh>
+                <SortableTh sortKey="account_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-3 font-medium text-muted-foreground">{t("invoice.col_account")}</SortableTh>
+                <SortableTh sortKey="amount" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-3 font-medium text-muted-foreground">{t("invoice.col_amount")}</SortableTh>
+                <SortableTh sortKey="due_date" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-3 font-medium text-muted-foreground">{t("invoice.col_due_date")}</SortableTh>
+                <SortableTh sortKey="status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-3 font-medium text-muted-foreground">{t("invoice.col_status")}</SortableTh>
               </tr>
             </thead>
             <tbody>

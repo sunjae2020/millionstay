@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAuth } from "@/contexts/AuthContext";
 import { TablePagination, usePagination } from "@/components/ui/TablePagination";
+import { useSortableData } from "@/components/ui/SortableTable";
 
 const STATUS_COLORS: Record<string, string> = {
   Published: "bg-green-100 text-green-700",
@@ -71,7 +72,8 @@ export default function BlogList() {
   const sitePosts = posts.filter((p: any) =>
     site === "homestay" ? p.category === HOMESTAY_CATEGORY : p.category !== HOMESTAY_CATEGORY,
   );
-  const pagination = usePagination(sitePosts);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(sitePosts);
+  const pagination = usePagination(sorted);
   const pageIds = pagination.paginatedItems.map((p: any) => p.id);
   const allPageSelected = pageIds.length > 0 && pageIds.every((id: number) => selectedIds.has(id));
   const somePageSelected = pageIds.some((id: number) => selectedIds.has(id));
@@ -182,12 +184,12 @@ export default function BlogList() {
             <TableHeader>
               <TableRow>
                 {isSuperAdmin && <TableHead className="w-10"><Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} /></TableHead>}
-                <TableHead>{t("blog.col_title")}</TableHead>
-                <TableHead>{t("blog.col_category")}</TableHead>
-                <TableHead>{t("blog.col_author")}</TableHead>
-                <TableHead>{t("common.status")}</TableHead>
-                <TableHead>{t("blog.col_published")}</TableHead>
-                <TableHead>{t("blog.col_created")}</TableHead>
+                <TableHead sortKey="title" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("blog.col_title")}</TableHead>
+                <TableHead sortKey="category" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("blog.col_category")}</TableHead>
+                <TableHead sortKey="author" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("blog.col_author")}</TableHead>
+                <TableHead sortKey="status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("common.status")}</TableHead>
+                <TableHead sortKey="published_at" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("blog.col_published")}</TableHead>
+                <TableHead sortKey="created_at" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("blog.col_created")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

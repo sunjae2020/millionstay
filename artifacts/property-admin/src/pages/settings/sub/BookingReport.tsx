@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useSortableData } from "@/components/ui/SortableTable";
 import { useQuery } from "@tanstack/react-query";
 import { BarChart2, Download, Search } from "lucide-react";
 
@@ -58,6 +59,7 @@ export default function BookingReportPage() {
 
   const rows: any[] = data?.data ?? [];
   const meta = data?.meta ?? {};
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(rows);
 
   return (
     <Layout>
@@ -118,15 +120,15 @@ export default function BookingReportPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Booking Ref</TableHead>
-                <TableHead>Guest</TableHead>
-                <TableHead>Space</TableHead>
-                <TableHead>Check-In</TableHead>
-                <TableHead>Check-Out</TableHead>
-                <TableHead className="text-right">Weeks</TableHead>
-                <TableHead className="text-right">Rate</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead sortKey="booking_ref" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>Booking Ref</TableHead>
+                <TableHead sortKey="guest_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>Guest</TableHead>
+                <TableHead sortKey="space_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>Space</TableHead>
+                <TableHead sortKey="check_in_date" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>Check-In</TableHead>
+                <TableHead sortKey="check_out_date" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>Check-Out</TableHead>
+                <TableHead sortKey="weeks" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-right">Weeks</TableHead>
+                <TableHead sortKey="agreed_weekly_rate" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-right">Rate</TableHead>
+                <TableHead sortKey="total_rent" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-right">Total</TableHead>
+                <TableHead sortKey="booking_status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -134,7 +136,7 @@ export default function BookingReportPage() {
                 <TableRow><TableCell colSpan={9} className="text-center py-10 text-muted-foreground">Loading...</TableCell></TableRow>
               ) : rows.length === 0 ? (
                 <TableRow><TableCell colSpan={9} className="text-center py-10 text-muted-foreground">No bookings found. Adjust filters and run the report.</TableCell></TableRow>
-              ) : rows.map((r: any) => (
+              ) : sorted.map((r: any) => (
                 <TableRow key={r.id}>
                   <TableCell className="font-mono text-sm text-primary">{r.booking_ref}</TableCell>
                   <TableCell className="text-sm">{r.guest_name}</TableCell>

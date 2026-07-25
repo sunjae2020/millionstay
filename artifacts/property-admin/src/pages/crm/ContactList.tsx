@@ -12,6 +12,7 @@ import { useListContacts, useDeleteContact, getListContactsQueryKey } from "@wor
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2, Globe, AlertTriangle, X, Archive, Loader2 } from "lucide-react";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 import {
   AlertDialog, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -39,7 +40,10 @@ export default function ContactList() {
     query: { queryKey: getListContactsQueryKey(params) },
   });
 
-  const pagination = usePagination(contacts ?? []);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(contacts ?? [], {
+    accessors: { name: (r: any) => `${r.first_name ?? ""} ${r.last_name ?? ""}`.trim() },
+  });
+  const pagination = usePagination(sorted);
 
   const archiveMutation = useDeleteContact({
     mutation: {
@@ -167,12 +171,12 @@ export default function ContactList() {
                       />
                     </th>
                   )}
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("contact.col_name")}</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("contact.col_email")}</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("contact.col_mobile")}</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("contact.col_nationality")}</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("contact.col_portal")}</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("contact.col_status")}</th>
+                  <SortableTh sortKey="name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-2.5 font-medium text-muted-foreground">{t("contact.col_name")}</SortableTh>
+                  <SortableTh sortKey="email" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-2.5 font-medium text-muted-foreground">{t("contact.col_email")}</SortableTh>
+                  <SortableTh sortKey="mobile_number" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-2.5 font-medium text-muted-foreground">{t("contact.col_mobile")}</SortableTh>
+                  <SortableTh sortKey="nationality" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-2.5 font-medium text-muted-foreground">{t("contact.col_nationality")}</SortableTh>
+                  <SortableTh sortKey="portal_enabled" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-2.5 font-medium text-muted-foreground">{t("contact.col_portal")}</SortableTh>
+                  <SortableTh sortKey="status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-2.5 font-medium text-muted-foreground">{t("contact.col_status")}</SortableTh>
                   <th className="px-4 py-2.5"></th>
                 </tr>
               </thead>

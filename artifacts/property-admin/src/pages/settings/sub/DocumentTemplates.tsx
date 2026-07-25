@@ -11,6 +11,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileText, Mail, FileCheck, FileType, Eye, Globe, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
+import { useSortableData } from "@/components/ui/SortableTable";
 
 const API = "/api/v1/document-templates";
 
@@ -120,6 +121,10 @@ export default function DocumentTemplates() {
     },
   });
 
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(rows ?? [], {
+    accessors: { locales: (r) => r.locales.join(", ") },
+  });
+
   return (
     <Layout>
       <PageHeader
@@ -154,10 +159,10 @@ export default function DocumentTemplates() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t("documentTemplate.col_name")}</TableHead>
-                <TableHead>{t("documentTemplate.col_key")}</TableHead>
-                <TableHead>{t("documentTemplate.col_locales")}</TableHead>
-                <TableHead>{t("documentTemplate.col_status")}</TableHead>
+                <TableHead sortKey="name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("documentTemplate.col_name")}</TableHead>
+                <TableHead sortKey="key" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("documentTemplate.col_key")}</TableHead>
+                <TableHead sortKey="locales" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("documentTemplate.col_locales")}</TableHead>
+                <TableHead sortKey="status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("documentTemplate.col_status")}</TableHead>
                 <TableHead className="w-20"></TableHead>
               </TableRow>
             </TableHeader>
@@ -166,7 +171,7 @@ export default function DocumentTemplates() {
                 <TableRow><TableCell colSpan={5} className="text-center py-10 text-muted-foreground">{t("common.loading")}</TableCell></TableRow>
               ) : rows.length === 0 ? (
                 <TableRow><TableCell colSpan={5} className="text-center py-10 text-muted-foreground">{t("documentTemplate.empty")}</TableCell></TableRow>
-              ) : rows.map((r) => (
+              ) : sorted.map((r) => (
                 <TableRow key={r.id}>
                   <TableCell>
                     <Link href={`/settings/document-templates/${r.id}`} className="font-medium hover:underline">{r.name}</Link>

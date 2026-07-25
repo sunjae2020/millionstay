@@ -13,6 +13,7 @@ import { Layers, Plus, Search, Pencil, Trash2, GripVertical, Archive, X, AlertTr
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSortableData } from "@/components/ui/SortableTable";
 
 const API = "/api/v1/product-groups";
 
@@ -43,6 +44,8 @@ export default function ProductGroupsPage() {
   const { data: groups = [], isLoading } = useQuery({ queryKey: ["product-groups"], queryFn: fetchGroups });
 
   const filtered = groups.filter((g) => !q || g.name.toLowerCase().includes(q.toLowerCase()));
+
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(filtered);
 
   const pageIds = filtered.map((g) => g.id);
   const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
@@ -158,8 +161,8 @@ export default function ProductGroupsPage() {
               <TableRow>
                 {isSuperAdmin && <TableHead className="w-8"><Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} /></TableHead>}
                 <TableHead className="w-8"></TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead className="text-right">Display Order</TableHead>
+                <TableHead sortKey="name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>Name</TableHead>
+                <TableHead className="text-right" sortKey="display_order" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>Display Order</TableHead>
                 <TableHead className="w-24"></TableHead>
               </TableRow>
             </TableHeader>
@@ -168,7 +171,7 @@ export default function ProductGroupsPage() {
                 <TableRow><TableCell colSpan={isSuperAdmin ? 5 : 4} className="text-center py-10 text-muted-foreground">Loading…</TableCell></TableRow>
               ) : filtered.length === 0 ? (
                 <TableRow><TableCell colSpan={isSuperAdmin ? 5 : 4} className="text-center py-10 text-muted-foreground">No product groups found</TableCell></TableRow>
-              ) : filtered.map((g) => (
+              ) : sorted.map((g) => (
                 <TableRow key={g.id} className={selectedIds.has(g.id) ? "bg-primary/5" : ""}>
                   {isSuperAdmin && <TableCell><Checkbox checked={selectedIds.has(g.id)} onCheckedChange={() => toggleSelect(g.id)} /></TableCell>}
                   <TableCell>

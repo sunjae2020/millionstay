@@ -12,6 +12,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Archive, X, AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData } from "@/components/ui/SortableTable";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
@@ -46,7 +47,8 @@ export default function ContractList() {
     status: status === "_all" ? undefined : status,
   });
 
-  const pagination = usePagination(contracts ?? []);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(contracts ?? []);
+  const pagination = usePagination(sorted);
 
   const pageIds = pagination.paginatedItems.map((c) => c.id);
   const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
@@ -143,15 +145,15 @@ export default function ContractList() {
             <TableHeader>
               <TableRow>
                 {isSuperAdmin && <TableHead className="w-10"><Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} /></TableHead>}
-                <TableHead>{t("contract.col_ref")}</TableHead>
-                <TableHead>{t("contract.col_tenant")}</TableHead>
-                <TableHead>{t("contract.col_space")}</TableHead>
-                <TableHead>{t("contract.col_product")}</TableHead>
-                <TableHead>{t("contract.col_start")}</TableHead>
-                <TableHead>{t("contract.col_end")}</TableHead>
-                <TableHead>{t("contract.col_weekly_rate")}</TableHead>
-                <TableHead>{t("contract.col_total_rent")}</TableHead>
-                <TableHead>{t("contract.col_status")}</TableHead>
+                <TableHead sortKey="contract_ref" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("contract.col_ref")}</TableHead>
+                <TableHead sortKey="tenant_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("contract.col_tenant")}</TableHead>
+                <TableHead sortKey="space_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("contract.col_space")}</TableHead>
+                <TableHead sortKey="contract_product_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("contract.col_product")}</TableHead>
+                <TableHead sortKey="start_date" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("contract.col_start")}</TableHead>
+                <TableHead sortKey="end_date" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("contract.col_end")}</TableHead>
+                <TableHead sortKey="weekly_rate" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("contract.col_weekly_rate")}</TableHead>
+                <TableHead sortKey="total_rent" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("contract.col_total_rent")}</TableHead>
+                <TableHead sortKey="status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("contract.col_status")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

@@ -11,6 +11,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, List, Calendar, Archive, X, AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
@@ -146,6 +147,10 @@ export default function BookingList() {
     query: { queryKey: getListBookingsQueryKey(params) },
   });
 
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(bookings ?? [], {
+    accessors: { guest: (b: any) => b.account_name ?? b.contact_name ?? "" },
+  });
+
   const pageIds = (bookings ?? []).map((b) => b.id);
   const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
   const somePageSelected = pageIds.some((id) => selectedIds.has(id));
@@ -258,8 +263,21 @@ export default function BookingList() {
               <thead className="bg-gray-50 border-b">
                 <tr>
                   {isSuperAdmin && <th className="px-3 py-3 w-8"><Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} /></th>}
-                  {[t("booking.col_ref"), t("booking.col_guest"), t("booking.col_space"), t("booking.col_checkin"), t("booking.col_checkout"), t("booking.col_nights"), t("booking.col_rate"), t("booking.col_status"), t("booking.col_source"), t("common.actions")].map((h) => (
-                    <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">{h}</th>
+                  {[
+                    { label: t("booking.col_ref"), key: "booking_ref" },
+                    { label: t("booking.col_guest"), key: "guest" },
+                    { label: t("booking.col_space"), key: "space_name" },
+                    { label: t("booking.col_checkin"), key: "check_in_date" },
+                    { label: t("booking.col_checkout"), key: "check_out_date" },
+                    { label: t("booking.col_nights"), key: "stay_nights" },
+                    { label: t("booking.col_rate"), key: "agreed_weekly_rate" },
+                    { label: t("booking.col_status"), key: "booking_status" },
+                    { label: t("booking.col_source"), key: "booking_source" },
+                    { label: t("common.actions"), key: null },
+                  ].map((h) => (
+                    h.key
+                      ? <SortableTh key={h.label} sortKey={h.key} activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">{h.label}</SortableTh>
+                      : <th key={h.label} className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">{h.label}</th>
                   ))}
                 </tr>
               </thead>
@@ -268,7 +286,7 @@ export default function BookingList() {
                   <tr><td colSpan={isSuperAdmin ? 11 : 10} className="text-center py-12 text-muted-foreground">{t("common.loading")}</td></tr>
                 ) : !bookings?.length ? (
                   <tr><td colSpan={isSuperAdmin ? 11 : 10} className="text-center py-12 text-muted-foreground">{t("booking.no_bookings")}</td></tr>
-                ) : bookings.map((b) => (
+                ) : sorted.map((b) => (
                   <tr key={b.id} className={`border-b hover:bg-gray-50 transition-colors ${selectedIds.has(b.id) ? "bg-primary/5" : ""}`}>
                     {isSuperAdmin && <td className="px-3 py-3"><Checkbox checked={selectedIds.has(b.id)} onCheckedChange={() => toggleSelect(b.id)} onClick={(e) => e.stopPropagation()} /></td>}
                     <td className="px-4 py-3">

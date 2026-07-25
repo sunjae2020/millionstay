@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData } from "@/components/ui/SortableTable";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Home, Search, Eye, CheckCircle2 } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
@@ -89,6 +90,9 @@ export default function HomestayApplications() {
     placeholderData: keepPreviousData,
   });
   const applications = data?.items ?? [];
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(applications, {
+    accessors: { host: (r) => `${r.first_name} ${r.last_name}` },
+  });
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -144,13 +148,13 @@ export default function HomestayApplications() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t("homestay.col_ref")}</TableHead>
-                <TableHead>{t("homestay.col_host")}</TableHead>
-                <TableHead>{t("homestay.col_email")}</TableHead>
-                <TableHead>{t("homestay.col_suburb")}</TableHead>
-                <TableHead>{t("homestay.col_status")}</TableHead>
-                <TableHead>{t("homestay.col_submitted")}</TableHead>
-                <TableHead>{t("homestay.col_landing")}</TableHead>
+                <TableHead sortKey="application_ref" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("homestay.col_ref")}</TableHead>
+                <TableHead sortKey="host" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("homestay.col_host")}</TableHead>
+                <TableHead sortKey="email" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("homestay.col_email")}</TableHead>
+                <TableHead sortKey="suburb" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("homestay.col_suburb")}</TableHead>
+                <TableHead sortKey="status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("homestay.col_status")}</TableHead>
+                <TableHead sortKey="created_at" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("homestay.col_submitted")}</TableHead>
+                <TableHead sortKey="landing_active" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("homestay.col_landing")}</TableHead>
                 <TableHead className="w-20"></TableHead>
               </TableRow>
             </TableHeader>
@@ -159,7 +163,7 @@ export default function HomestayApplications() {
                 <TableRow><TableCell colSpan={8} className="text-center py-10 text-muted-foreground">{t("common.loading")}</TableCell></TableRow>
               ) : applications.length === 0 ? (
                 <TableRow><TableCell colSpan={8} className="text-center py-10 text-muted-foreground">{t("homestay.empty")}</TableCell></TableRow>
-              ) : applications.map((a) => (
+              ) : sorted.map((a) => (
                 <TableRow key={a.id}>
                   <TableCell>
                     <Link href={`/account/homestay-applications/${a.id}`} className="font-mono text-xs font-medium text-primary hover:underline">

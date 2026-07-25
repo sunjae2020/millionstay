@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 import { formatDateTime } from "@/lib/date";
 import { Search, HeadphonesIcon, ChevronRight, Clock, AlertCircle, CheckCircle2, XCircle, RefreshCw, Archive, X, AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -102,7 +103,10 @@ export default function CsTicketList() {
   });
 
   const tickets: CsTicket[] = data?.data ?? [];
-  const pagination = usePagination(tickets, 25);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(tickets, {
+    accessors: { requester_display: (r) => r.requester_name ?? r.guest_name },
+  });
+  const pagination = usePagination(sorted, 25);
 
   const pageIds = pagination.paginatedItems.map((t) => t.id);
   const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
@@ -257,14 +261,14 @@ export default function CsTicketList() {
                 <thead className="sticky top-0 z-10">
                   <tr className="border-b border-gray-100 bg-gray-50">
                     {isSuperAdmin && <th className="px-3 py-3 w-8"><Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} /></th>}
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap">{t("csticket.col_ref")}</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">{t("csticket.col_subject")}</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden sm:table-cell whitespace-nowrap">{t("csticket.col_type", "Type")}</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden sm:table-cell whitespace-nowrap">{t("csticket.col_requester", "Requester")}</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden md:table-cell whitespace-nowrap">{t("csticket.col_category")}</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap">{t("csticket.col_status")}</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden lg:table-cell whitespace-nowrap">{t("csticket.col_priority")}</th>
-                    <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden md:table-cell whitespace-nowrap">{t("csticket.col_created")}</th>
+                    <SortableTh sortKey="ticket_ref" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap">{t("csticket.col_ref")}</SortableTh>
+                    <SortableTh sortKey="subject" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">{t("csticket.col_subject")}</SortableTh>
+                    <SortableTh sortKey="requester_type" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden sm:table-cell whitespace-nowrap">{t("csticket.col_type", "Type")}</SortableTh>
+                    <SortableTh sortKey="requester_display" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden sm:table-cell whitespace-nowrap">{t("csticket.col_requester", "Requester")}</SortableTh>
+                    <SortableTh sortKey="category" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden md:table-cell whitespace-nowrap">{t("csticket.col_category")}</SortableTh>
+                    <SortableTh sortKey="status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide whitespace-nowrap">{t("csticket.col_status")}</SortableTh>
+                    <SortableTh sortKey="priority" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden lg:table-cell whitespace-nowrap">{t("csticket.col_priority")}</SortableTh>
+                    <SortableTh sortKey="updated_at" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide hidden md:table-cell whitespace-nowrap">{t("csticket.col_created")}</SortableTh>
                     <th className="px-4 py-3 w-10" />
                   </tr>
                 </thead>

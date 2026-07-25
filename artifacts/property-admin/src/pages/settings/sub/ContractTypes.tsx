@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { FileText, Plus, Search, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useSortableData } from "@/components/ui/SortableTable";
 
 async function fetchContractTypes() {
   const res = await fetch("/api/v1/contract-types");
@@ -39,6 +40,8 @@ export default function ContractTypesPage() {
   const filtered = (types as any[]).filter((t: any) =>
     !q || t.name.toLowerCase().includes(q.toLowerCase())
   );
+
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(filtered);
 
   const save = useMutation({
     mutationFn: async () => {
@@ -98,12 +101,12 @@ export default function ContractTypesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Security</TableHead>
-                <TableHead>Passport</TableHead>
-                <TableHead>Visa</TableHead>
-                <TableHead>Enrollment</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead sortKey="name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>Name</TableHead>
+                <TableHead sortKey="contract_security" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>Security</TableHead>
+                <TableHead sortKey="require_passport" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>Passport</TableHead>
+                <TableHead sortKey="require_visa" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>Visa</TableHead>
+                <TableHead sortKey="require_enrollment" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>Enrollment</TableHead>
+                <TableHead sortKey="is_active" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>Status</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
@@ -112,7 +115,7 @@ export default function ContractTypesPage() {
                 <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Loading...</TableCell></TableRow>
               ) : filtered.length === 0 ? (
                 <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">No contract types found</TableCell></TableRow>
-              ) : filtered.map((t: any) => (
+              ) : sorted.map((t: any) => (
                 <TableRow key={t.id}>
                   <TableCell>
                     <div className="font-medium">{t.name}</div>

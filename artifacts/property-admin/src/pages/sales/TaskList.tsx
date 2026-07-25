@@ -9,6 +9,7 @@ import { useListTasks, useUpdateTask, useCompleteTask, useDeleteTask, getListTas
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2, CheckCircle2, AlertCircle, Clock, Play, Archive, X, AlertTriangle, Loader2 } from "lucide-react";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -79,7 +80,8 @@ export default function TaskList() {
     query: { queryKey: getListTasksQueryKey(params) },
   });
 
-  const pagination = usePagination(tasks ?? []);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(tasks ?? []);
+  const pagination = usePagination(sorted);
 
   const deleteMutation = useDeleteTask({
     mutation: {
@@ -248,13 +250,13 @@ export default function TaskList() {
                         <Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} aria-label="Select all" />
                       </th>
                     )}
-                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("common.name")}</th>
-                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("csticket.col_subject")}</th>
-                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("task.col_status")}</th>
-                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("task.col_priority")}</th>
-                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("task.col_category")}</th>
-                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("task.col_related")}</th>
-                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("task.col_due_date")}</th>
+                    <SortableTh sortKey="name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("common.name")}</SortableTh>
+                    <SortableTh sortKey="subject" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("csticket.col_subject")}</SortableTh>
+                    <SortableTh sortKey="task_status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("task.col_status")}</SortableTh>
+                    <SortableTh sortKey="priority" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("task.col_priority")}</SortableTh>
+                    <SortableTh sortKey="task_category" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("task.col_category")}</SortableTh>
+                    <SortableTh sortKey="primary_contact_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("task.col_related")}</SortableTh>
+                    <SortableTh sortKey="due_date" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("task.col_due_date")}</SortableTh>
                     <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Quick Action</th>
                     <th className="px-4 py-2.5"></th>
                   </tr>

@@ -12,6 +12,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2, Archive, X, AlertTriangle, Loader2 } from "lucide-react";
 import { formatDate } from "@/lib/date";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,7 +46,8 @@ export default function SuburbList() {
     { query: { queryKey: getListSuburbsQueryKey({ search: search || undefined, country_code: countryCode || undefined, state: state || undefined }) } }
   );
 
-  const pagination = usePagination(suburbs ?? []);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(suburbs ?? []);
+  const pagination = usePagination(sorted);
 
   const deleteMutation = useDeleteSuburb({
     mutation: {
@@ -161,12 +163,12 @@ export default function SuburbList() {
                     <Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} aria-label="Select all" />
                   </th>
                 )}
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("suburb.col_name")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("suburb.col_area")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("suburb.col_state")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("suburb.col_country")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("suburb.col_status")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("suburb.col_created")}</th>
+                <SortableTh sortKey="name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("suburb.col_name")}</SortableTh>
+                <SortableTh sortKey="area_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("suburb.col_area")}</SortableTh>
+                <SortableTh sortKey="state" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("suburb.col_state")}</SortableTh>
+                <SortableTh sortKey="country_code" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("suburb.col_country")}</SortableTh>
+                <SortableTh sortKey="status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("suburb.col_status")}</SortableTh>
+                <SortableTh sortKey="created_at" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("suburb.col_created")}</SortableTh>
                 <th className="px-4 py-3 w-20"></th>
               </tr>
             </thead>

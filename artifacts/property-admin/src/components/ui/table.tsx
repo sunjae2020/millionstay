@@ -1,4 +1,5 @@
 import * as React from "react"
+import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -66,19 +67,60 @@ const TableRow = React.forwardRef<
 ))
 TableRow.displayName = "TableRow"
 
+interface TableHeadSortProps {
+  /** Field key this header sorts by. Presence (with onSort) makes it clickable. */
+  sortKey?: string
+  /** Currently active sort key (from useSortableData). */
+  activeKey?: string | null
+  /** Current sort direction (from useSortableData). */
+  sortDir?: "asc" | "desc"
+  /** Toggle callback (from useSortableData). */
+  onSort?: (key: string) => void
+}
+
 const TableHead = React.forwardRef<
   HTMLTableCellElement,
-  React.ThHTMLAttributes<HTMLTableCellElement>
->(({ className, ...props }, ref) => (
-  <th
-    ref={ref}
-    className={cn(
-      "h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
-      className
-    )}
-    {...props}
-  />
-))
+  React.ThHTMLAttributes<HTMLTableCellElement> & TableHeadSortProps
+>(({ className, sortKey, activeKey, sortDir, onSort, children, ...props }, ref) => {
+  const sortable = sortKey != null && typeof onSort === "function"
+  const active = sortable && activeKey === sortKey
+  return (
+    <th
+      ref={ref}
+      className={cn(
+        "h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        sortable && "select-none",
+        className
+      )}
+      aria-sort={active ? (sortDir === "asc" ? "ascending" : "descending") : undefined}
+      {...props}
+    >
+      {sortable ? (
+        <button
+          type="button"
+          onClick={() => onSort!(sortKey!)}
+          className={cn(
+            "inline-flex items-center gap-1 hover:text-foreground transition-colors group",
+            active && "text-foreground"
+          )}
+        >
+          <span>{children}</span>
+          {active ? (
+            sortDir === "asc" ? (
+              <ArrowUp className="h-3 w-3" />
+            ) : (
+              <ArrowDown className="h-3 w-3" />
+            )
+          ) : (
+            <ChevronsUpDown className="h-3 w-3 opacity-0 group-hover:opacity-50 transition-opacity" />
+          )}
+        </button>
+      ) : (
+        children
+      )}
+    </th>
+  )
+})
 TableHead.displayName = "TableHead"
 
 const TableCell = React.forwardRef<

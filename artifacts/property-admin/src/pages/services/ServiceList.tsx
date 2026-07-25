@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Plus, Search, Pencil, Archive, Calendar, Package, Zap, X, AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 import { Checkbox } from "@/components/ui/checkbox";
 import { apiFetch } from "@/lib/apiFetch";
 import { useAuth } from "@/contexts/AuthContext";
@@ -78,7 +79,8 @@ export default function ServiceList() {
   });
 
   const rows: any[] = data?.data ?? [];
-  const pagination = usePagination(rows);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(rows);
+  const pagination = usePagination(sorted);
 
   const pageIds = pagination.paginatedItems.map((s: any) => s.id);
   const allPageSelected = pageIds.length > 0 && pageIds.every((id: number) => selectedIds.has(id));
@@ -180,13 +182,13 @@ export default function ServiceList() {
                       <Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} aria-label="Select all" />
                     </th>
                   )}
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("service.col_name")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("service.col_type")}</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("service.col_price")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("service.col_billing")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("service.col_optional")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("service.col_refundable")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("service.col_status")}</th>
+                  <SortableTh sortKey="name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("service.col_name")}</SortableTh>
+                  <SortableTh sortKey="service_type" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("service.col_type")}</SortableTh>
+                  <SortableTh sortKey="base_price" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} align="right" className="px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("service.col_price")}</SortableTh>
+                  <SortableTh sortKey="billing_trigger" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("service.col_billing")}</SortableTh>
+                  <SortableTh sortKey="is_optional" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("service.col_optional")}</SortableTh>
+                  <SortableTh sortKey="is_refundable" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("service.col_refundable")}</SortableTh>
+                  <SortableTh sortKey="status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("service.col_status")}</SortableTh>
                   <th className="px-4 py-3 w-20"></th>
                 </tr>
               </thead>

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Layout } from "@/components/Layout";
 import { DateInput } from "@/components/ui/date-input";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 import { apiFetch } from "@/lib/apiFetch";
 
 type GlLine = {
@@ -77,6 +78,7 @@ export default function Journal() {
   const entries = entriesResp?.data ?? [];
   const trialBalance = tbResp?.data ?? [];
   const totals = tbResp?.totals ?? { debit: "0", credit: "0" };
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(trialBalance);
 
   return (
     <Layout>
@@ -115,11 +117,11 @@ export default function Journal() {
               <table className="w-full min-w-max text-sm">
                 <thead className="border-b bg-muted/30">
                   <tr>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("journal.col_account")}</th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("journal.col_description")}</th>
-                    <th className="text-right px-4 py-3 font-medium text-muted-foreground">{t("journal.col_debit")}</th>
-                    <th className="text-right px-4 py-3 font-medium text-muted-foreground">{t("journal.col_credit")}</th>
-                    <th className="text-right px-4 py-3 font-medium text-muted-foreground">{t("journal.col_balance")}</th>
+                    <SortableTh sortKey="account_code" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-3 font-medium text-muted-foreground">{t("journal.col_account")}</SortableTh>
+                    <SortableTh sortKey="account_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-3 font-medium text-muted-foreground">{t("journal.col_description")}</SortableTh>
+                    <SortableTh sortKey="debit_total" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} align="right" className="px-4 py-3 font-medium text-muted-foreground">{t("journal.col_debit")}</SortableTh>
+                    <SortableTh sortKey="credit_total" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} align="right" className="px-4 py-3 font-medium text-muted-foreground">{t("journal.col_credit")}</SortableTh>
+                    <SortableTh sortKey="balance" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} align="right" className="px-4 py-3 font-medium text-muted-foreground">{t("journal.col_balance")}</SortableTh>
                   </tr>
                 </thead>
                 <tbody>
@@ -128,7 +130,7 @@ export default function Journal() {
                       <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">{t("journal.empty")}</td>
                     </tr>
                   )}
-                  {trialBalance.map((row) => (
+                  {sorted.map((row) => (
                     <tr key={row.account_code} className="border-b last:border-0 hover:bg-muted/20">
                       <td className="px-4 py-3 font-medium">{row.account_code}</td>
                       <td className="px-4 py-3 text-muted-foreground">{row.account_name}</td>

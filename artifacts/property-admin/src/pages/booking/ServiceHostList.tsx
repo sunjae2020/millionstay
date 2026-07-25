@@ -8,6 +8,7 @@ import { useListServiceHosts, useDeleteServiceHost, getListServiceHostsQueryKey 
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -24,7 +25,10 @@ export default function ServiceHostList() {
     query: { queryKey: getListServiceHostsQueryKey(params) },
   });
 
-  const pagination = usePagination(hosts ?? []);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(hosts ?? [], {
+    accessors: { type: (h: any) => (h.in_call ? "in" : "") + (h.out_call ? "out" : "") },
+  });
+  const pagination = usePagination(sorted);
 
   const deleteMutation = useDeleteServiceHost({
     mutation: {
@@ -58,9 +62,12 @@ export default function ServiceHostList() {
           <table className="w-full min-w-max text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
-                {[t("service_host.col_name"), t("service_host.col_account"), t("service_host.col_type"), t("service_host.col_period"), t("service_host.col_status"), ""].map((h) => (
-                  <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>
-                ))}
+                <SortableTh sortKey="name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("service_host.col_name")}</SortableTh>
+                <SortableTh sortKey="account_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("service_host.col_account")}</SortableTh>
+                <SortableTh sortKey="type" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("service_host.col_type")}</SortableTh>
+                <SortableTh sortKey="from_date" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("service_host.col_period")}</SortableTh>
+                <SortableTh sortKey="status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("service_host.col_status")}</SortableTh>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground"></th>
               </tr>
             </thead>
             <tbody>

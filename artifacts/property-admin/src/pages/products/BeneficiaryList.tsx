@@ -18,6 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -67,7 +68,20 @@ export default function BeneficiaryList() {
     return true;
   });
 
-  const pagination = usePagination(filtered);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(filtered, {
+    accessors: {
+      rate: (b) =>
+        b.commission_type === "Percentage"
+          ? b.split_percentage != null
+            ? Number(b.split_percentage)
+            : null
+          : b.fixed_amount != null
+            ? Number(b.fixed_amount)
+            : null,
+    },
+  });
+
+  const pagination = usePagination(sorted);
 
   const pageIds = pagination.paginatedItems.map((b) => b.id);
   const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
@@ -174,14 +188,14 @@ export default function BeneficiaryList() {
               <thead className="bg-muted/50 border-b">
                 <tr>
                   {isSuperAdmin && <th className="px-3 py-3 w-8"><Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} /></th>}
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("beneficiary.col_name")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("beneficiary.col_account")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("beneficiary.col_product")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("beneficiary.col_commission")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("beneficiary.col_type")}</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("beneficiary.col_rate")}</th>
-                  <th className="text-center px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide w-20">{t("beneficiary.col_priority")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("beneficiary.col_status")}</th>
+                  <SortableTh sortKey="name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("beneficiary.col_name")}</SortableTh>
+                  <SortableTh sortKey="account_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("beneficiary.col_account")}</SortableTh>
+                  <SortableTh sortKey="contract_product_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("beneficiary.col_product")}</SortableTh>
+                  <SortableTh sortKey="commission_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("beneficiary.col_commission")}</SortableTh>
+                  <SortableTh sortKey="commission_type" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("beneficiary.col_type")}</SortableTh>
+                  <SortableTh sortKey="rate" align="right" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("beneficiary.col_rate")}</SortableTh>
+                  <SortableTh sortKey="priority" align="center" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-center px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide w-20">{t("beneficiary.col_priority")}</SortableTh>
+                  <SortableTh sortKey="status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("beneficiary.col_status")}</SortableTh>
                   <th className="px-4 py-3 w-20"></th>
                 </tr>
               </thead>

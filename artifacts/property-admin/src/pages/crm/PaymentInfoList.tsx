@@ -11,6 +11,7 @@ import { useListPaymentInfo, useDeletePaymentInfo, getListPaymentInfoQueryKey } 
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2, AlertTriangle, X, Archive, Loader2 } from "lucide-react";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 import {
   AlertDialog, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -38,7 +39,8 @@ export default function PaymentInfoList() {
     query: { queryKey: getListPaymentInfoQueryKey(params) },
   });
 
-  const pagination = usePagination(records ?? []);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(records ?? []);
+  const pagination = usePagination(sorted);
 
   const archiveMutation = useDeletePaymentInfo({
     mutation: {
@@ -168,10 +170,10 @@ export default function PaymentInfoList() {
                       />
                     </th>
                   )}
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("payment_info.col_name")}</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("payment_info.col_type")}</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("payment_info.col_bank_account")}</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("payment_info.col_status")}</th>
+                  <SortableTh sortKey="name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-2.5 font-medium text-muted-foreground">{t("payment_info.col_name")}</SortableTh>
+                  <SortableTh sortKey="payment_type" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-2.5 font-medium text-muted-foreground">{t("payment_info.col_type")}</SortableTh>
+                  <SortableTh sortKey="bank_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-2.5 font-medium text-muted-foreground">{t("payment_info.col_bank_account")}</SortableTh>
+                  <SortableTh sortKey="status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-2.5 font-medium text-muted-foreground">{t("payment_info.col_status")}</SortableTh>
                   <th className="px-4 py-2.5"></th>
                 </tr>
               </thead>

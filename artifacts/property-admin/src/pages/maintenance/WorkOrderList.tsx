@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Archive, X, AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/apiFetch";
@@ -53,7 +54,8 @@ export default function WorkOrderList() {
     priority: priority === "_all" ? undefined : priority,
   });
 
-  const pagination = usePagination(workOrdersRaw);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(workOrdersRaw);
+  const pagination = usePagination(sorted);
 
   const pageIds = pagination.paginatedItems.map((wo) => wo.id);
   const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
@@ -161,14 +163,14 @@ export default function WorkOrderList() {
             <thead className="border-b bg-muted/30">
               <tr>
                 {isSuperAdmin && <th className="px-3 py-3 w-8"><Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} /></th>}
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("workorder.col_ref")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("workorder.col_title")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("workorder.col_property")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("workorder.col_space")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("workorder.col_category")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("workorder.col_assigned")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("workorder.col_priority")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("workorder.col_status")}</th>
+                <SortableTh sortKey="order_ref" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground">{t("workorder.col_ref")}</SortableTh>
+                <SortableTh sortKey="title" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground">{t("workorder.col_title")}</SortableTh>
+                <SortableTh sortKey="property_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground">{t("workorder.col_property")}</SortableTh>
+                <SortableTh sortKey="space_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground">{t("workorder.col_space")}</SortableTh>
+                <SortableTh sortKey="category" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground">{t("workorder.col_category")}</SortableTh>
+                <SortableTh sortKey="assigned_contact_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground">{t("workorder.col_assigned")}</SortableTh>
+                <SortableTh sortKey="priority" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground">{t("workorder.col_priority")}</SortableTh>
+                <SortableTh sortKey="status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground">{t("workorder.col_status")}</SortableTh>
               </tr>
             </thead>
             <tbody>

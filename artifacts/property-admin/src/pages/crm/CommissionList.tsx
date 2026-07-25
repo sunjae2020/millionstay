@@ -11,6 +11,7 @@ import { useListCommissions, useDeleteCommission, getListCommissionsQueryKey } f
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2, AlertTriangle, X, Archive, Loader2 } from "lucide-react";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 import {
   AlertDialog, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -38,7 +39,12 @@ export default function CommissionList() {
     query: { queryKey: getListCommissionsQueryKey(params) },
   });
 
-  const pagination = usePagination(commissions ?? []);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(commissions ?? [], {
+    accessors: {
+      rate: (r) => Number(r.commission_type === "Percentage" ? r.commission_rate : r.commission_amount),
+    },
+  });
+  const pagination = usePagination(sorted);
 
   const archiveMutation = useDeleteCommission({
     mutation: {
@@ -166,10 +172,10 @@ export default function CommissionList() {
                       />
                     </th>
                   )}
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("commission.col_name")}</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("commission.col_type")}</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("commission.col_rate")}</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("commission.col_status")}</th>
+                  <SortableTh sortKey="name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("commission.col_name")}</SortableTh>
+                  <SortableTh sortKey="commission_type" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("commission.col_type")}</SortableTh>
+                  <SortableTh sortKey="rate" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("commission.col_rate")}</SortableTh>
+                  <SortableTh sortKey="status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("commission.col_status")}</SortableTh>
                   <th className="px-4 py-2.5"></th>
                 </tr>
               </thead>

@@ -5,6 +5,7 @@ import { Layout, PageHeader } from "@/components/Layout";
 import { apiJson } from "@/lib/apiFetch";
 import { LookupSelect } from "@/components/LookupSelect";
 import { Button } from "@/components/ui/button";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 import { Percent, Plus, Trash2 } from "lucide-react";
 
 // Admin management of agent commission plans (per-agent rate + base). The base
@@ -21,6 +22,7 @@ export default function CommissionPlansPage() {
   const qc = useQueryClient();
   const { data } = useQuery<{ data: Plan[] }>({ queryKey: ["commission-plans"], queryFn: () => apiJson("/api/v1/homestay-commission-plans") });
   const plans = data?.data ?? [];
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(plans);
   const invalidate = () => qc.invalidateQueries({ queryKey: ["commission-plans"] });
 
   const [creating, setCreating] = useState(false);
@@ -44,15 +46,27 @@ export default function CommissionPlansPage() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
-                {["agent", "base", "rate", "fixed", "stack", "status", ""].map((h) => (
-                  <th key={h} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{h ? t(`commission_plans.col_${h}`, h) : ""}</th>
+                {([
+                  { h: "agent", field: "agent_name" },
+                  { h: "base", field: "base_type" },
+                  { h: "rate", field: "percentage_rate" },
+                  { h: "fixed", field: "fixed_referral_fee" },
+                  { h: "stack", field: "stack" },
+                  { h: "status", field: "status" },
+                  { h: "", field: "" },
+                ]).map(({ h, field }) => (
+                  h ? (
+                    <SortableTh key={h} sortKey={field} activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t(`commission_plans.col_${h}`, h)}</SortableTh>
+                  ) : (
+                    <th key="actions" className="text-left px-4 py-2.5 font-medium text-muted-foreground"></th>
+                  )
                 ))}
               </tr>
             </thead>
             <tbody>
-              {plans.length === 0 ? (
+              {sorted.length === 0 ? (
                 <tr><td colSpan={7} className="text-center py-8 text-muted-foreground">{t("common.no_data", "No plans yet")}</td></tr>
-              ) : plans.map((p) => (
+              ) : sorted.map((p) => (
                 <PlanRow key={p.id} plan={p} onChanged={invalidate} onDelete={() => del.mutate(p.id)} t={t} />
               ))}
             </tbody>

@@ -13,6 +13,7 @@ import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescript
 import { Languages, Plus, Search, Trash2, Save, Globe, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
+import { useSortableData } from "@/components/ui/SortableTable";
 
 type Lang = {
   code: string;
@@ -70,6 +71,8 @@ export default function TranslationsPage() {
       (r) => r.key.toLowerCase().includes(needle) || r.en.toLowerCase().includes(needle) || r.value.toLowerCase().includes(needle),
     );
   }, [rows, q]);
+
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(filtered);
 
   const dirtyCount = Object.keys(edits).length;
 
@@ -207,9 +210,9 @@ export default function TranslationsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[28%]">{t("settings_translations.col_key")}</TableHead>
-                {!isEn && <TableHead className="w-[30%]">{t("settings_translations.col_english_reference")}</TableHead>}
-                <TableHead>{isEn ? t("settings_translations.col_english_value") : t("settings_translations.col_translation")}</TableHead>
+                <TableHead className="w-[28%]" sortKey="key" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("settings_translations.col_key")}</TableHead>
+                {!isEn && <TableHead className="w-[30%]" sortKey="en" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("settings_translations.col_english_reference")}</TableHead>}
+                <TableHead sortKey="value" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{isEn ? t("settings_translations.col_english_value") : t("settings_translations.col_translation")}</TableHead>
                 <TableHead className="w-20"></TableHead>
               </TableRow>
             </TableHeader>
@@ -218,7 +221,7 @@ export default function TranslationsPage() {
                 <TableRow><TableCell colSpan={isEn ? 3 : 4} className="text-center py-10 text-muted-foreground">{t("common.loading")}</TableCell></TableRow>
               ) : filtered.length === 0 ? (
                 <TableRow><TableCell colSpan={isEn ? 3 : 4} className="text-center py-10 text-muted-foreground">{t("settings_translations.no_keys_found")}</TableCell></TableRow>
-              ) : filtered.map((r) => {
+              ) : sorted.map((r) => {
                 const current = edits[r.key] ?? r.value;
                 const dirty = edits[r.key] !== undefined && edits[r.key] !== r.value;
                 return (

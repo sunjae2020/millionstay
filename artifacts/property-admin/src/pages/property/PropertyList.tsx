@@ -15,6 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2, Archive, X, AlertTriangle, Loader2 } from "lucide-react";
 import { formatDate } from "@/lib/date";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,7 +53,8 @@ export default function PropertyList() {
     query: { queryKey: getListPropertiesQueryKey(params) },
   });
 
-  const pagination = usePagination(properties ?? []);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(properties ?? []);
+  const pagination = usePagination(sorted);
 
   const deleteMutation = useDeleteProperty({
     mutation: {
@@ -161,12 +163,12 @@ export default function PropertyList() {
                     <Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} aria-label="Select all" />
                   </th>
                 )}
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("property.col_name")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("property.col_address")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("property.col_owner")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("property.col_suburb")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("property.col_status")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("property.col_created")}</th>
+                <SortableTh sortKey="name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("property.col_name")}</SortableTh>
+                <SortableTh sortKey="address" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("property.col_address")}</SortableTh>
+                <SortableTh sortKey="owner_account_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("property.col_owner")}</SortableTh>
+                <SortableTh sortKey="suburb_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("property.col_suburb")}</SortableTh>
+                <SortableTh sortKey="approval_status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("property.col_status")}</SortableTh>
+                <SortableTh sortKey="created_at" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("property.col_created")}</SortableTh>
                 <th className="px-4 py-3 w-20"></th>
               </tr>
             </thead>

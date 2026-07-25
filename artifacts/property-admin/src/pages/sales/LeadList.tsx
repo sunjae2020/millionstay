@@ -9,6 +9,7 @@ import { useListLeads, useUpdateLead, useDeleteLead, getListLeadsQueryKey } from
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2, LayoutList, Kanban, GripVertical, ArrowRight } from "lucide-react";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -153,7 +154,13 @@ export default function LeadList() {
     query: { queryKey: getListLeadsQueryKey(params) },
   });
 
-  const pagination = usePagination(leads ?? []);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(leads ?? [], {
+    accessors: {
+      name: (r: any) => `${r.first_name ?? ""} ${r.last_name ?? ""}`.trim(),
+      budget: (r: any) => Number(r.budget_min),
+    },
+  });
+  const pagination = usePagination(sorted);
 
   const deleteMutation = useDeleteLead({
     mutation: {
@@ -252,13 +259,13 @@ export default function LeadList() {
                 <table className="w-full min-w-max text-sm">
                   <thead className="bg-muted/50">
                     <tr>
-                      <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("lead.col_ref")}</th>
-                      <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("lead.col_name")}</th>
-                      <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("lead.col_email")}</th>
-                      <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("lead.col_source")}</th>
-                      <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("lead.col_status")}</th>
-                      <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("booking.col_checkin")}</th>
-                      <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("lead.col_budget")}</th>
+                      <SortableTh sortKey="lead_ref" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("lead.col_ref")}</SortableTh>
+                      <SortableTh sortKey="name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("lead.col_name")}</SortableTh>
+                      <SortableTh sortKey="email" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("lead.col_email")}</SortableTh>
+                      <SortableTh sortKey="lead_source" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("lead.col_source")}</SortableTh>
+                      <SortableTh sortKey="lead_status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("lead.col_status")}</SortableTh>
+                      <SortableTh sortKey="preferred_check_in_date" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("booking.col_checkin")}</SortableTh>
+                      <SortableTh sortKey="budget" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("lead.col_budget")}</SortableTh>
                       <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("lead.col_next")}</th>
                       <th className="px-4 py-2.5"></th>
                     </tr>

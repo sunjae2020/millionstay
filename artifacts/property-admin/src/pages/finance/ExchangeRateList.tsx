@@ -10,6 +10,7 @@ import { RefreshCw, Trash2, Plus, Loader2, Zap } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 
 type ExchangeRate = {
   id: number;
@@ -146,6 +147,21 @@ export default function ExchangeRateList() {
     setRate(v.toFixed(8));
   }
 
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(rows, {
+    accessors: {
+      inverse: (r) => {
+        const n = Number(r.rate);
+        return n > 0 ? 1 / n : 0;
+      },
+      live: (r) => (r.to_currency === "AUD" ? liveOf(r.from_currency) : null),
+      diff: (r) => {
+        const n = Number(r.rate);
+        const liveRate = r.to_currency === "AUD" ? liveOf(r.from_currency) : null;
+        return liveRate != null && n > 0 ? ((n - liveRate) / liveRate) * 100 : null;
+      },
+    },
+  });
+
   return (
     <Layout>
       <PageHeader
@@ -238,15 +254,15 @@ export default function ExchangeRateList() {
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b">
             <tr>
-              <th className="px-4 py-2 text-left">{t("exchange_rate.from")}</th>
-              <th className="px-4 py-2 text-left">{t("exchange_rate.to")}</th>
-              <th className="px-4 py-2 text-right">{t("exchange_rate.col_rate")}</th>
-              <th className="px-4 py-2 text-right">{t("exchange_rate.col_inverse")}</th>
-              <th className="px-4 py-2 text-right">{t("exchange_rate.col_live")}</th>
-              <th className="px-4 py-2 text-right">{t("exchange_rate.col_diff")}</th>
-              <th className="px-4 py-2 text-left">{t("exchange_rate.source")}</th>
-              <th className="px-4 py-2 text-left">{t("exchange_rate.effective_date")}</th>
-              <th className="px-4 py-2 text-left">{t("common.updated_at")}</th>
+              <SortableTh sortKey="from_currency" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-2">{t("exchange_rate.from")}</SortableTh>
+              <SortableTh sortKey="to_currency" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-2">{t("exchange_rate.to")}</SortableTh>
+              <SortableTh sortKey="rate" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} align="right" className="px-4 py-2">{t("exchange_rate.col_rate")}</SortableTh>
+              <SortableTh sortKey="inverse" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} align="right" className="px-4 py-2">{t("exchange_rate.col_inverse")}</SortableTh>
+              <SortableTh sortKey="live" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} align="right" className="px-4 py-2">{t("exchange_rate.col_live")}</SortableTh>
+              <SortableTh sortKey="diff" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} align="right" className="px-4 py-2">{t("exchange_rate.col_diff")}</SortableTh>
+              <SortableTh sortKey="source" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-2">{t("exchange_rate.source")}</SortableTh>
+              <SortableTh sortKey="effective_date" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-2">{t("exchange_rate.effective_date")}</SortableTh>
+              <SortableTh sortKey="updated_at" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="px-4 py-2">{t("common.updated_at")}</SortableTh>
               <th className="px-4 py-2"></th>
             </tr>
           </thead>
@@ -254,7 +270,7 @@ export default function ExchangeRateList() {
             {rows.length === 0 && (
               <tr><td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">{t("exchange_rate.empty_state")}</td></tr>
             )}
-            {rows.map((r) => {
+            {sorted.map((r) => {
               const n = Number(r.rate);
               const inv = n > 0 ? 1 / n : 0;
               // Live comparison only meaningful for pairs vs AUD (how stored rates are kept).

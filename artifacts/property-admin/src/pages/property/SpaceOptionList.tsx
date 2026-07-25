@@ -15,6 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2, Archive, X, AlertTriangle, Loader2 } from "lucide-react";
 import { formatDate } from "@/lib/date";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,7 +47,8 @@ export default function SpaceOptionList() {
     { query: { queryKey: getListSpaceOptionsQueryKey({ search: search || undefined }) } }
   );
 
-  const pagination = usePagination(options ?? []);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(options ?? []);
+  const pagination = usePagination(sorted);
 
   const deleteMutation = useDeleteSpaceOption({
     mutation: {
@@ -144,11 +146,11 @@ export default function SpaceOptionList() {
                     <Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} aria-label="Select all" />
                   </th>
                 )}
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_option.col_name")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_option.col_display_name")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_option.col_category")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_option.col_status")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_option.col_created")}</th>
+                <SortableTh sortKey="name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_option.col_name")}</SortableTh>
+                <SortableTh sortKey="display_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_option.col_display_name")}</SortableTh>
+                <SortableTh sortKey="category" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_option.col_category")}</SortableTh>
+                <SortableTh sortKey="status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_option.col_status")}</SortableTh>
+                <SortableTh sortKey="created_at" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_option.col_created")}</SortableTh>
                 <th className="px-4 py-3 w-20"></th>
               </tr>
             </thead>

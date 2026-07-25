@@ -15,6 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2, Check, X, Archive, AlertTriangle, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,7 +56,8 @@ export default function SpacePolicyList() {
     { query: { queryKey: getListSpacePoliciesQueryKey({ search: search || undefined }) } }
   );
 
-  const pagination = usePagination(policies ?? []);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(policies ?? []);
+  const pagination = usePagination(sorted);
 
   const deleteMutation = useDeleteSpacePolicy({
     mutation: {
@@ -153,13 +155,13 @@ export default function SpacePolicyList() {
                     <Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} aria-label="Select all" />
                   </th>
                 )}
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_policy.col_name")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_policy.col_same_gender")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_policy.col_lady_only")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_policy.col_no_pet")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_policy.col_no_smoking")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_policy.col_min_age")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_policy.col_status")}</th>
+                <SortableTh sortKey="name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_policy.col_name")}</SortableTh>
+                <SortableTh sortKey="same_gender" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_policy.col_same_gender")}</SortableTh>
+                <SortableTh sortKey="lady_only" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_policy.col_lady_only")}</SortableTh>
+                <SortableTh sortKey="no_pet" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_policy.col_no_pet")}</SortableTh>
+                <SortableTh sortKey="no_smoking" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_policy.col_no_smoking")}</SortableTh>
+                <SortableTh sortKey="minimum_age" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_policy.col_min_age")}</SortableTh>
+                <SortableTh sortKey="status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_policy.col_status")}</SortableTh>
                 <th className="px-4 py-3 w-20"></th>
               </tr>
             </thead>

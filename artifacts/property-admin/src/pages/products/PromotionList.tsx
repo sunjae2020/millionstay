@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tag, Plus, Search, Pencil, Copy, Archive, X, AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData } from "@/components/ui/SortableTable";
 import { useListPromotions } from "@workspace/api-client-react";
 import { useLocation } from "wouter";
 import { apiFetch } from "@/lib/apiFetch";
@@ -100,7 +101,8 @@ export default function PromotionList() {
   });
 
   const filtered = termType !== "_all" ? promotions.filter(p => p.term_type === termType) : promotions;
-  const pagination = usePagination(filtered);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(filtered);
+  const pagination = usePagination(sorted);
 
   const pageIds = pagination.paginatedItems.map((p) => p.id);
   const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
@@ -207,13 +209,13 @@ export default function PromotionList() {
               <TableHeader>
                 <TableRow>
                   {isSuperAdmin && <TableHead className="w-10"><Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} /></TableHead>}
-                  <TableHead>{t("promotion.col_name")}</TableHead>
-                  <TableHead>{t("promotion.col_term")}</TableHead>
+                  <TableHead sortKey="name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("promotion.col_name")}</TableHead>
+                  <TableHead sortKey="term_type" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("promotion.col_term")}</TableHead>
                   <TableHead>{t("promotion.col_discount")}</TableHead>
-                  <TableHead>{t("promotion.col_stay")}</TableHead>
-                  <TableHead>{t("promotion.col_billing")}</TableHead>
-                  <TableHead>{t("promotion.col_code")}</TableHead>
-                  <TableHead>{t("promotion.col_status")}</TableHead>
+                  <TableHead sortKey="min_stay_weeks" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("promotion.col_stay")}</TableHead>
+                  <TableHead sortKey="billing_frequency" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("promotion.col_billing")}</TableHead>
+                  <TableHead sortKey="code" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("promotion.col_code")}</TableHead>
+                  <TableHead sortKey="status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("promotion.col_status")}</TableHead>
                   <TableHead className="w-24"></TableHead>
                 </TableRow>
               </TableHeader>

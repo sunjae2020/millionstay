@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Building2, Plus, ImageOff, Lock } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { TablePagination, usePagination } from "@/components/ui/TablePagination";
+import { useSortableData } from "@/components/ui/SortableTable";
 
 const CATEGORY_COLORS: Record<string, string> = {
   presale: "bg-indigo-100 text-indigo-700",
@@ -54,7 +55,13 @@ export default function SaleListingsList() {
     }),
   });
 
-  const pagination = usePagination(listings);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(listings, {
+    accessors: {
+      title: (r: any) => pickCopy(r.translations, "title"),
+      price_label: (r: any) => pickCopy(r.translations, "price_label"),
+    },
+  });
+  const pagination = usePagination(sorted);
 
   return (
     <Layout>
@@ -99,12 +106,12 @@ export default function SaleListingsList() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-20">{t("listings.col_image")}</TableHead>
-                <TableHead>{t("listings.col_title")}</TableHead>
-                <TableHead>{t("listings.col_category")}</TableHead>
-                <TableHead>{t("common.status")}</TableHead>
-                <TableHead>{t("listings.col_price")}</TableHead>
-                <TableHead>{t("listings.col_published")}</TableHead>
-                <TableHead>{t("listings.col_created")}</TableHead>
+                <TableHead sortKey="title" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("listings.col_title")}</TableHead>
+                <TableHead sortKey="category" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("listings.col_category")}</TableHead>
+                <TableHead sortKey="status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("common.status")}</TableHead>
+                <TableHead sortKey="price_label" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("listings.col_price")}</TableHead>
+                <TableHead sortKey="published" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("listings.col_published")}</TableHead>
+                <TableHead sortKey="created_at" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("listings.col_created")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

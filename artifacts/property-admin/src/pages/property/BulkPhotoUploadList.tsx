@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, CheckCircle2, AlertCircle, Trash2 } from "lucide-react";
 import { formatDateTime } from "@/lib/date";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,6 +48,7 @@ export default function BulkPhotoUploadList() {
   const [, navigate] = useLocation();
   const [sessions, setSessions] = useState<UploadSession[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(sessions ?? []);
 
   useEffect(() => {
     setSessions(loadSessions());
@@ -78,10 +80,10 @@ export default function BulkPhotoUploadList() {
           <table className="w-full min-w-max text-sm">
             <thead className="bg-muted/50 border-b">
               <tr>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Date</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Spaces</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Photos</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
+                <SortableTh sortKey="date" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Date</SortableTh>
+                <SortableTh sortKey="spacesCount" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Spaces</SortableTh>
+                <SortableTh sortKey="photosCount" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Photos</SortableTh>
+                <SortableTh sortKey="failedCount" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</SortableTh>
                 <th className="px-4 py-3 w-16"></th>
               </tr>
             </thead>
@@ -105,7 +107,7 @@ export default function BulkPhotoUploadList() {
                   </td>
                 </tr>
               ) : (
-                sessions.map((session) => (
+                sorted.map((session) => (
                   <tr key={session.id} className="hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3 font-medium">
                       {formatDateTime(session.date)}

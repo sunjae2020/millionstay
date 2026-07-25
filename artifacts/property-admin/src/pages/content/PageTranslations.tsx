@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useSortableData } from "@/components/ui/SortableTable";
 import { Languages, Save, Sparkles, Loader2, ExternalLink, CheckCheck } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
@@ -114,6 +115,8 @@ export default function PageTranslations() {
       .filter((r) => r.key === prefix || r.key.startsWith(prefix + "."))
       .sort((a, b) => a.key.localeCompare(b.key));
   }, [rowsQ.data, prefix]);
+
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(pageRows);
 
   const dirtyCount = Object.keys(edits).length;
   const missingCount = pageRows.filter((r) => !(r.value ?? "").trim()).length;
@@ -280,9 +283,9 @@ export default function PageTranslations() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[24%]">{t("page_translations.col_key", { defaultValue: "Key" })}</TableHead>
-                {!isEn && <TableHead className="w-[34%]">{t("page_translations.col_english", { defaultValue: "English (source)" })}</TableHead>}
-                <TableHead>{isEn ? t("page_translations.col_english_value", { defaultValue: "English value" }) : t("page_translations.col_translation", { defaultValue: "Translation" })}</TableHead>
+                <TableHead className="w-[24%]" sortKey="key" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("page_translations.col_key", { defaultValue: "Key" })}</TableHead>
+                {!isEn && <TableHead className="w-[34%]" sortKey="en" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("page_translations.col_english", { defaultValue: "English (source)" })}</TableHead>}
+                <TableHead sortKey="value" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{isEn ? t("page_translations.col_english_value", { defaultValue: "English value" }) : t("page_translations.col_translation", { defaultValue: "Translation" })}</TableHead>
                 <TableHead className="w-10"></TableHead>
               </TableRow>
             </TableHeader>
@@ -291,7 +294,7 @@ export default function PageTranslations() {
                 <TableRow><TableCell colSpan={isEn ? 3 : 4} className="text-center py-10 text-muted-foreground">{t("common.loading")}</TableCell></TableRow>
               ) : pageRows.length === 0 ? (
                 <TableRow><TableCell colSpan={isEn ? 3 : 4} className="text-center py-10 text-muted-foreground">{t("page_translations.no_keys", { defaultValue: "No keys for this page yet. Seed the English source first." })}</TableCell></TableRow>
-              ) : pageRows.map((r) => {
+              ) : sorted.map((r) => {
                 const current = edits[r.key] ?? r.value;
                 const dirty = edits[r.key] !== undefined && edits[r.key] !== r.value;
                 const long = isLong(r.en);

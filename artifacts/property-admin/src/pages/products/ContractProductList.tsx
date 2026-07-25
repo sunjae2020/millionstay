@@ -12,6 +12,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Package, Tag, Archive, X, AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData } from "@/components/ui/SortableTable";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
@@ -60,7 +61,8 @@ export default function ContractProductList() {
   });
 
   const filtered = termType !== "_all" ? (products ?? []).filter(p => p.term_type === termType) : (products ?? []);
-  const pagination = usePagination(filtered);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(filtered);
+  const pagination = usePagination(sorted);
 
   const pageIds = pagination.paginatedItems.map((p) => p.id);
   const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
@@ -167,14 +169,14 @@ export default function ContractProductList() {
               <TableHeader>
                 <TableRow>
                   {isSuperAdmin && <TableHead className="w-10"><Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} /></TableHead>}
-                  <TableHead>{t("contract_product.col_name")}</TableHead>
-                  <TableHead>{t("contract_product.col_term")}</TableHead>
-                  <TableHead>{t("contract_product.col_space")}</TableHead>
-                  <TableHead>{t("contract_product.col_promotion")}</TableHead>
-                  <TableHead>{t("contract_product.col_weekly_rate")}</TableHead>
-                  <TableHead>{t("contract_product.col_eff_rate")}</TableHead>
-                  <TableHead>{t("contract_product.col_billing")}</TableHead>
-                  <TableHead>{t("contract_product.col_status")}</TableHead>
+                  <TableHead sortKey="name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("contract_product.col_name")}</TableHead>
+                  <TableHead sortKey="term_type" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("contract_product.col_term")}</TableHead>
+                  <TableHead sortKey="space_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("contract_product.col_space")}</TableHead>
+                  <TableHead sortKey="promotion_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("contract_product.col_promotion")}</TableHead>
+                  <TableHead sortKey="weekly_rate" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("contract_product.col_weekly_rate")}</TableHead>
+                  <TableHead sortKey="effective_weekly_rate" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("contract_product.col_eff_rate")}</TableHead>
+                  <TableHead sortKey="billing_frequency" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("contract_product.col_billing")}</TableHead>
+                  <TableHead sortKey="status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("contract_product.col_status")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

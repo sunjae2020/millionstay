@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData } from "@/components/ui/SortableTable";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Handshake, Eye, Search } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
@@ -94,6 +95,7 @@ export default function HomestayPlacements() {
     placeholderData: keepPreviousData,
   });
   const rows = data?.items ?? [];
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(rows);
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -145,12 +147,12 @@ export default function HomestayPlacements() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t("homestayPlacement.col_ref")}</TableHead>
-                <TableHead>{t("homestayPlacement.col_student")}</TableHead>
-                <TableHead>{t("homestayPlacement.col_host")}</TableHead>
-                <TableHead>{t("homestayPlacement.col_move_in")}</TableHead>
-                <TableHead>{t("homestayPlacement.col_status")}</TableHead>
-                <TableHead>{t("homestayPlacement.col_created")}</TableHead>
+                <TableHead sortKey="placement_ref" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("homestayPlacement.col_ref")}</TableHead>
+                <TableHead sortKey="student_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("homestayPlacement.col_student")}</TableHead>
+                <TableHead sortKey="host_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("homestayPlacement.col_host")}</TableHead>
+                <TableHead sortKey="move_in_date" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("homestayPlacement.col_move_in")}</TableHead>
+                <TableHead sortKey="status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("homestayPlacement.col_status")}</TableHead>
+                <TableHead sortKey="created_at" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>{t("homestayPlacement.col_created")}</TableHead>
                 <TableHead className="w-20"></TableHead>
               </TableRow>
             </TableHeader>
@@ -159,7 +161,7 @@ export default function HomestayPlacements() {
                 <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">{t("common.loading")}</TableCell></TableRow>
               ) : rows.length === 0 ? (
                 <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">{t("homestayPlacement.empty")}</TableCell></TableRow>
-              ) : rows.map((r) => (
+              ) : sorted.map((r) => (
                 <TableRow key={r.id}>
                   <TableCell>
                     <Link href={`/account/homestay-placements/${r.id}`} className="font-mono text-xs font-medium text-primary hover:underline">

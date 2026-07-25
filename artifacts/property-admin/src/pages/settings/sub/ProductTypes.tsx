@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useSortableData } from "@/components/ui/SortableTable";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -44,6 +45,8 @@ export default function ProductTypesPage() {
   const { data: types = [], isLoading } = useQuery({ queryKey: ["product-types"], queryFn: fetchTypes });
 
   const filtered = types.filter((t) => !q || t.name.toLowerCase().includes(q.toLowerCase()) || t.description?.toLowerCase().includes(q.toLowerCase()));
+
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(filtered);
 
   const pageIds = filtered.map((t) => t.id);
   const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
@@ -158,8 +161,8 @@ export default function ProductTypesPage() {
             <TableHeader>
               <TableRow>
                 {isSuperAdmin && <TableHead className="w-8"><Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} /></TableHead>}
-                <TableHead>Name</TableHead>
-                <TableHead>Description</TableHead>
+                <TableHead sortKey="name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>Name</TableHead>
+                <TableHead sortKey="description" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>Description</TableHead>
                 <TableHead className="w-24"></TableHead>
               </TableRow>
             </TableHeader>
@@ -168,7 +171,7 @@ export default function ProductTypesPage() {
                 <TableRow><TableCell colSpan={isSuperAdmin ? 4 : 3} className="text-center py-10 text-muted-foreground">Loading…</TableCell></TableRow>
               ) : filtered.length === 0 ? (
                 <TableRow><TableCell colSpan={isSuperAdmin ? 4 : 3} className="text-center py-10 text-muted-foreground">No product types found</TableCell></TableRow>
-              ) : filtered.map((item) => (
+              ) : sorted.map((item) => (
                 <TableRow key={item.id} className={selectedIds.has(item.id) ? "bg-primary/5" : ""}>
                   {isSuperAdmin && <TableCell><Checkbox checked={selectedIds.has(item.id)} onCheckedChange={() => toggleSelect(item.id)} /></TableCell>}
                   <TableCell>

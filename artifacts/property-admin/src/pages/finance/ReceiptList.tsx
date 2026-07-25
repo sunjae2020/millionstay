@@ -10,6 +10,7 @@ import { Search, Download, CheckCircle2 } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { useSortableData, SortableTh } from "@/components/ui/SortableTable";
 import { formatDate, formatDateTime } from "@/lib/date";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -60,7 +61,13 @@ export default function ReceiptList() {
 
   const rows: any[] = Array.isArray(data) ? data : [];
   const totalPaid = rows.reduce((sum, r) => sum + (r.amount ?? 0), 0);
-  const pagination = usePagination(rows);
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(rows, {
+    accessors: {
+      amount: (r) => Number(r.amount),
+      booking: (r) => r.booking_ref ?? r.contract_ref ?? null,
+    },
+  });
+  const pagination = usePagination(sorted);
 
   // Download the branded receipt PDF for a paid invoice.
   const downloadReceipt = async (r: any) => {
@@ -125,14 +132,14 @@ export default function ReceiptList() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("invoice.col_ref")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("invoice.col_booking")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("invoice.col_account")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.description")}</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("invoice.col_amount")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("invoice.col_payment_method")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("invoice.col_payment_date")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("invoice.col_status")}</th>
+                  <SortableTh sortKey="invoice_ref" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("invoice.col_ref")}</SortableTh>
+                  <SortableTh sortKey="booking" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("invoice.col_booking")}</SortableTh>
+                  <SortableTh sortKey="account_name" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("invoice.col_account")}</SortableTh>
+                  <SortableTh sortKey="description" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.description")}</SortableTh>
+                  <SortableTh sortKey="amount" align="right" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("invoice.col_amount")}</SortableTh>
+                  <SortableTh sortKey="payment_method" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("invoice.col_payment_method")}</SortableTh>
+                  <SortableTh sortKey="paid_at" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("invoice.col_payment_date")}</SortableTh>
+                  <SortableTh sortKey="status" activeKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("invoice.col_status")}</SortableTh>
                   <th className="px-4 py-3 w-12"></th>
                 </tr>
               </thead>
