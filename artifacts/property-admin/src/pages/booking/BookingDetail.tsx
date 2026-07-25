@@ -27,6 +27,7 @@ import { ArrowLeft, Save, FileText, CheckCircle2, XCircle, Upload, ExternalLink,
 import { LookupSelect } from "@/components/LookupSelect";
 import { apiFetch } from "@/lib/apiFetch";
 import { BookingConditionReports } from "./BookingConditionReports";
+import { BookingDepositSettlement } from "./BookingDepositSettlement";
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -541,7 +542,10 @@ export default function BookingDetail() {
             )}
 
             {activeTab === "condition" && (
-              <BookingConditionReports bookingId={String(id)} />
+              <>
+                <BookingConditionReports bookingId={String(id)} />
+                <BookingDepositSettlement bookingId={String(id)} />
+              </>
             )}
 
             {activeTab === "services" && (
