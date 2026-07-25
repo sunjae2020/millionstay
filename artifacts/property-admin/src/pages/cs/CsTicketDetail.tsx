@@ -151,9 +151,9 @@ export default function CsTicketDetail() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-cs-ticket", id] });
       qc.invalidateQueries({ queryKey: ["admin-cs-tickets"] });
-      toast({ title: "Ticket updated" });
+      toast({ title: t('csticket.toast_ticket_updated', 'Ticket updated') });
     },
-    onError: () => toast({ title: "Error", description: "Failed to update ticket.", variant: "destructive" }),
+    onError: () => toast({ title: t('csticket.toast_error', 'Error'), description: t('csticket.toast_update_failed', 'Failed to update ticket.'), variant: "destructive" }),
   });
 
   const sendMutation = useMutation({
@@ -175,7 +175,7 @@ export default function CsTicketDetail() {
       qc.invalidateQueries({ queryKey: ["admin-cs-ticket", id] });
       qc.invalidateQueries({ queryKey: ["admin-cs-tickets"] });
     },
-    onError: () => toast({ title: "Error", description: "Failed to send message.", variant: "destructive" }),
+    onError: () => toast({ title: t('csticket.toast_error', 'Error'), description: t('csticket.toast_send_failed', 'Failed to send message.'), variant: "destructive" }),
   });
 
   const retranslateMutation = useMutation({
@@ -186,7 +186,7 @@ export default function CsTicketDetail() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-cs-ticket", id] });
     },
-    onError: () => toast({ title: "Error", description: "Failed to retranslate.", variant: "destructive" }),
+    onError: () => toast({ title: t('csticket.toast_error', 'Error'), description: t('csticket.toast_retranslate_failed', 'Failed to retranslate.'), variant: "destructive" }),
   });
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -207,7 +207,7 @@ export default function CsTicketDetail() {
         if (j.success) setImages(prev => [...prev, { url: j.url }]);
       }
     } catch {
-      toast({ title: "Upload failed", variant: "destructive" });
+      toast({ title: t('csticket.toast_upload_failed', 'Upload failed'), variant: "destructive" });
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -230,8 +230,8 @@ export default function CsTicketDetail() {
     return (
       <Layout>
         <div className="p-6 text-center">
-          <p className="text-gray-500">Ticket not found.</p>
-          <Button onClick={() => navigate("/cs/tickets")} className="mt-4">Back to CS Tickets</Button>
+          <p className="text-gray-500">{t('csticket.not_found', 'Ticket not found.')}</p>
+          <Button onClick={() => navigate("/cs/tickets")} className="mt-4">{t('csticket.back_to_tickets', 'Back to CS Tickets')}</Button>
         </div>
       </Layout>
     );
@@ -256,8 +256,9 @@ export default function CsTicketDetail() {
                 <div className="flex items-center gap-2 flex-wrap mb-2">
                   <span className="text-xs font-mono text-gray-400">{ticket.ticket_ref}</span>
                   {(() => {
-                    const rc = REQUESTER_CONFIG[ticket.requester_type ?? "guest"] ?? REQUESTER_CONFIG.guest;
-                    return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${rc.color}`}>{rc.label}</span>;
+                    const rkey = REQUESTER_CONFIG[ticket.requester_type ?? "guest"] ? (ticket.requester_type ?? "guest") : "guest";
+                    const rc = REQUESTER_CONFIG[rkey];
+                    return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${rc.color}`}>{t(`csticket.requester_${rkey}` as any, rc.label)}</span>;
                   })()}
                   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${CATEGORY_COLORS[ticket.category] ?? "bg-gray-100 text-gray-600"}`}>
                     {ticket.category}
@@ -429,7 +430,10 @@ export default function CsTicketDetail() {
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
             <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3 flex items-center gap-1.5">
               <User className="h-3.5 w-3.5" />
-              {(REQUESTER_CONFIG[ticket.requester_type ?? "guest"] ?? REQUESTER_CONFIG.guest).label}
+              {(() => {
+                const rkey = REQUESTER_CONFIG[ticket.requester_type ?? "guest"] ? (ticket.requester_type ?? "guest") : "guest";
+                return t(`csticket.requester_${rkey}` as any, REQUESTER_CONFIG[rkey].label);
+              })()}
             </h3>
             <p className="font-semibold text-gray-900 text-sm">{ticket.requester_name ?? ticket.guest_name ?? "—"}</p>
             <p className="text-gray-500 text-xs mt-0.5">{ticket.requester_email ?? ticket.guest_email ?? "—"}</p>

@@ -37,11 +37,6 @@ const TERM_COLORS: Record<string, string> = {
   MidTerm: "bg-violet-100 text-violet-700 border-violet-200",
   LongTerm: "bg-amber-100 text-amber-700 border-amber-200",
 };
-const TERM_LABELS: Record<string, string> = {
-  ShortTerm: "Short-term (under 4 weeks)",
-  MidTerm: "Mid-term (4–25 weeks)",
-  LongTerm: "Long-term (26+ weeks)",
-};
 
 interface FormData {
   name: string;
@@ -201,6 +196,26 @@ export default function ContractProductDetail() {
 
   const status = product?.status ?? "Draft";
 
+  const termLabels: Record<string, string> = {
+    ShortTerm: t('contract_product.term_short'),
+    MidTerm: t('contract_product.term_mid'),
+    LongTerm: t('contract_product.term_long'),
+  };
+  const productTypeLabels: Record<string, string> = {
+    Room: t('contract_product.type_room'),
+    Suite: t('contract_product.type_suite'),
+    Apartment: t('contract_product.type_apartment'),
+    House: t('contract_product.type_house'),
+    Studio: t('contract_product.type_studio'),
+    Service: t('contract_product.type_service'),
+  };
+  const statusLabels: Record<string, string> = {
+    Draft: t('contract_product.status_draft'),
+    Active: t('common.active'),
+    Inactive: t('common.inactive'),
+    Archived: t('contract_product.status_archived'),
+  };
+
   return (
     <Layout>
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -215,7 +230,7 @@ export default function ContractProductDetail() {
                 <h1 className="text-xl font-bold">{isNew ? `${t('common.new')} ${t('nav.contract_product')}` : (product?.name ?? t('nav.contract_product'))}</h1>
                 {!isNew && product && watchedTermType && (
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded border inline-block mt-0.5 ${TERM_COLORS[watchedTermType] ?? "bg-gray-100 text-gray-600"}`}>
-                    {TERM_LABELS[watchedTermType] ?? watchedTermType}
+                    {termLabels[watchedTermType] ?? watchedTermType}
                   </span>
                 )}
               </div>
@@ -238,7 +253,7 @@ export default function ContractProductDetail() {
             <div className="border rounded-lg p-4 mb-5 flex items-center justify-between bg-primary/5">
               <div className="flex items-center gap-3">
                 <span className="text-sm font-medium text-muted-foreground">{t('common.status')}:</span>
-                <Badge className={statusColors[status] ?? ""}>{status}</Badge>
+                <Badge className={statusColors[status] ?? ""}>{statusLabels[status] ?? status}</Badge>
                 {product.promotion_name && (
                   <span className="flex items-center gap-1 text-sm text-muted-foreground">
                     <Tag className="h-3.5 w-3.5" />{product.promotion_name}
@@ -248,19 +263,19 @@ export default function ContractProductDetail() {
               <div className="flex gap-2">
                 {status === "Draft" && (
                   <Button type="button" size="sm" className="bg-green-600 hover:bg-green-700 text-white"
-                    onClick={() => activateMutation.mutate({ id: Number(id) })}>{t('common.activate')}</Button>
+                    onClick={() => activateMutation.mutate({ id: Number(id) })}>{t('contract_product.activate')}</Button>
                 )}
                 {status === "Active" && (
                   <Button type="button" size="sm" variant="outline"
-                    onClick={() => deactivateMutation.mutate({ id: Number(id) })}>{t('common.deactivate')}</Button>
+                    onClick={() => deactivateMutation.mutate({ id: Number(id) })}>{t('contract_product.deactivate')}</Button>
                 )}
                 {(status === "Draft" || status === "Inactive") && (
                   <Button type="button" size="sm" variant="outline" className="text-red-600"
-                    onClick={() => archiveMutation.mutate({ id: Number(id) })}>{t('common.archive')}</Button>
+                    onClick={() => archiveMutation.mutate({ id: Number(id) })}>{t('contract_product.archive')}</Button>
                 )}
                 {status === "Archived" && (
                   <Button type="button" size="sm" variant="outline"
-                    onClick={() => activateMutation.mutate({ id: Number(id) })}>{t('common.restore')}</Button>
+                    onClick={() => activateMutation.mutate({ id: Number(id) })}>{t('contract_product.restore')}</Button>
                 )}
               </div>
             </div>
@@ -287,9 +302,9 @@ export default function ContractProductDetail() {
                   <div className="col-span-2">
                     <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded border text-sm font-medium ${TERM_COLORS[watchedTermType] ?? "bg-gray-100 text-gray-600"}`}>
                       <Tag className="h-3.5 w-3.5" />
-                      {TERM_LABELS[watchedTermType] ?? watchedTermType}
-                      {selectedPromotion?.discount_percentage ? ` — ${selectedPromotion.discount_percentage}% discount` : ""}
-                      {selectedPromotion?.billing_frequency ? ` · ${selectedPromotion.billing_frequency} billing` : ""}
+                      {termLabels[watchedTermType] ?? watchedTermType}
+                      {selectedPromotion?.discount_percentage ? ` ${t('contract_product.discount_suffix', { percent: selectedPromotion.discount_percentage })}` : ""}
+                      {selectedPromotion?.billing_frequency ? ` ${t('contract_product.billing_suffix', { freq: selectedPromotion.billing_frequency })}` : ""}
                     </div>
                   </div>
                 )}
@@ -302,7 +317,7 @@ export default function ContractProductDetail() {
               <div className="p-5 grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_name')} *</Label>
-                  <Input {...register("name", { required: true })} placeholder="e.g. Room 101 — Mid-term Package" />
+                  <Input {...register("name", { required: true })} placeholder={t('contract_product.ph_name')} />
                 </div>
                 <div>
                   <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_type')}</Label>
@@ -310,14 +325,14 @@ export default function ContractProductDetail() {
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {PRODUCT_TYPES.map(itemType => <SelectItem key={itemType} value={itemType}>{itemType}</SelectItem>)}
+                        {PRODUCT_TYPES.map(itemType => <SelectItem key={itemType} value={itemType}>{productTypeLabels[itemType] ?? itemType}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   )} />
                 </div>
                 <div className="col-span-2">
                   <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_description')}</Label>
-                  <Textarea {...register("description")} placeholder="Product description..." rows={3} />
+                  <Textarea {...register("description")} placeholder={t('contract_product.ph_description')} rows={3} />
                 </div>
               </div>
             </div>
@@ -336,7 +351,7 @@ export default function ContractProductDetail() {
                   )} />
                 </div>
                 <div>
-                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_weekly_rate')}</Label>
+                  <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_rate')}</Label>
                   <Input {...register("weekly_rate")} type="number" step="0.01" min="0" placeholder="e.g. 430" />
                 </div>
                 <div>
@@ -345,7 +360,7 @@ export default function ContractProductDetail() {
                     {selectedPromotion?.discount_percentage ? ` (−${selectedPromotion.discount_percentage}%)` : ""}
                   </Label>
                   <Input {...register("effective_weekly_rate")} type="number" step="0.01" min="0"
-                    className="bg-muted/50" placeholder="Auto-calculated" readOnly />
+                    className="bg-muted/50" placeholder={t('contract_product.ph_auto_calculated')} readOnly />
                 </div>
                 <div>
                   <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_monthly_rate')}</Label>
@@ -357,9 +372,9 @@ export default function ContractProductDetail() {
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Weekly">{t('common.weekly')}</SelectItem>
-                        <SelectItem value="Biweekly">{t('common.biweekly')}</SelectItem>
-                        <SelectItem value="Monthly">{t('common.monthly')}</SelectItem>
+                        <SelectItem value="Weekly">{t('contract_product.freq_weekly')}</SelectItem>
+                        <SelectItem value="Biweekly">{t('contract_product.freq_biweekly')}</SelectItem>
+                        <SelectItem value="Monthly">{t('contract_product.freq_monthly')}</SelectItem>
                       </SelectContent>
                     </Select>
                   )} />
@@ -381,7 +396,7 @@ export default function ContractProductDetail() {
                 </div>
                 <div>
                   <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_max_stay')}</Label>
-                  <Input {...register("max_stay_weeks")} type="number" min="1" placeholder={t('common.unlimited')} />
+                  <Input {...register("max_stay_weeks")} type="number" min="1" placeholder={t('contract_product.unlimited')} />
                 </div>
               </div>
             </div>
@@ -412,7 +427,7 @@ export default function ContractProductDetail() {
                 </div>
                 <div>
                   <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_extra_inclusions')}</Label>
-                  <Input {...register("extra_inclusions")} placeholder="e.g. Pool access, Gym, Concierge" />
+                  <Input {...register("extra_inclusions")} placeholder={t('contract_product.ph_extra_inclusions')} />
                 </div>
               </div>
             </div>
@@ -421,7 +436,7 @@ export default function ContractProductDetail() {
             <div className="border rounded-lg bg-white overflow-hidden">
               <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">{t('contract_product.section_notes')}</div>
               <div className="p-5">
-                <Textarea {...register("notes")} placeholder="Internal notes..." rows={4} />
+                <Textarea {...register("notes")} placeholder={t('contract_product.ph_notes')} rows={4} />
               </div>
             </div>
           </div>

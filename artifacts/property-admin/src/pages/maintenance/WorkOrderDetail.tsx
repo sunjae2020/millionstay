@@ -120,9 +120,14 @@ export default function WorkOrderDetail() {
   const status = wo?.status ?? "Open";
 
   const statusLabel = (s: string) => {
-    if (s === "InProgress") return "In Progress";
-    if (s === "PendingReview") return "Pending Review";
-    return s;
+    const map: Record<string, string> = {
+      Open: t('workorder.status_open'),
+      InProgress: t('workorder.status_in_progress'),
+      PendingReview: t('workorder.status_pending_review'),
+      Completed: t('workorder.status_completed'),
+      Cancelled: t('workorder.status_cancelled'),
+    };
+    return map[s] ?? s;
   };
 
   return (
@@ -191,7 +196,7 @@ export default function WorkOrderDetail() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="col-span-2">
                 <Label>{t('workorder.label_title')} *</Label>
-                <Input placeholder="Describe the work required..." {...register("title")} />
+                <Input placeholder={t('workorder.ph_title')} {...register("title")} />
               </div>
               <div>
                 <Label>{t('workorder.label_priority')}</Label>
@@ -211,26 +216,26 @@ export default function WorkOrderDetail() {
                 <Label>{t('workorder.label_category')}</Label>
                 <Controller name="category" control={control} render={({ field }) => (
                   <Select value={field.value || "_none"} onValueChange={(v) => field.onChange(v === "_none" ? "" : v)}>
-                    <SelectTrigger><SelectValue placeholder="Select category..." /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t('workorder.category_placeholder')} /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="_none">— {t('common.none')} —</SelectItem>
-                      <SelectItem value="Plumbing">Plumbing</SelectItem>
-                      <SelectItem value="Electrical">Electrical</SelectItem>
-                      <SelectItem value="HVAC">HVAC</SelectItem>
-                      <SelectItem value="Cleaning">Cleaning</SelectItem>
-                      <SelectItem value="Painting">Painting</SelectItem>
-                      <SelectItem value="Carpentry">Carpentry</SelectItem>
-                      <SelectItem value="Pest Control">Pest Control</SelectItem>
-                      <SelectItem value="Landscaping">Landscaping</SelectItem>
-                      <SelectItem value="Security">Security</SelectItem>
-                      <SelectItem value="General">General</SelectItem>
+                      <SelectItem value="Plumbing">{t('workorder.category_plumbing')}</SelectItem>
+                      <SelectItem value="Electrical">{t('workorder.category_electrical')}</SelectItem>
+                      <SelectItem value="HVAC">{t('workorder.category_hvac')}</SelectItem>
+                      <SelectItem value="Cleaning">{t('workorder.category_cleaning')}</SelectItem>
+                      <SelectItem value="Painting">{t('workorder.category_painting')}</SelectItem>
+                      <SelectItem value="Carpentry">{t('workorder.category_carpentry')}</SelectItem>
+                      <SelectItem value="Pest Control">{t('workorder.category_pest_control')}</SelectItem>
+                      <SelectItem value="Landscaping">{t('workorder.category_landscaping')}</SelectItem>
+                      <SelectItem value="Security">{t('workorder.category_security')}</SelectItem>
+                      <SelectItem value="General">{t('workorder.category_general')}</SelectItem>
                     </SelectContent>
                   </Select>
                 )} />
               </div>
               <div className="col-span-2">
                 <Label>{t('workorder.label_description')}</Label>
-                <Textarea rows={3} placeholder="Detailed description of the issue..." {...register("description")} />
+                <Textarea rows={3} placeholder={t('workorder.ph_description')} {...register("description")} />
               </div>
             </div>
           </div>
@@ -246,7 +251,7 @@ export default function WorkOrderDetail() {
                     lookupUrl="/api/v1/lookup/properties"
                     value={field.value}
                     onChange={field.onChange}
-                    placeholder="Search properties..."
+                    placeholder={t('workorder.ph_property_search')}
                     displayValue={(wo as any)?.property_name ?? null}
                   />
                 )} />
@@ -258,7 +263,7 @@ export default function WorkOrderDetail() {
                     lookupUrl="/api/v1/lookup/spaces"
                     value={field.value}
                     onChange={field.onChange}
-                    placeholder="Search spaces..."
+                    placeholder={t('workorder.ph_space_search')}
                     displayValue={(wo as any)?.space_name ?? null}
                   />
                 )} />
@@ -289,7 +294,7 @@ export default function WorkOrderDetail() {
                     lookupUrl="/api/v1/lookup/contacts"
                     value={field.value}
                     onChange={field.onChange}
-                    placeholder="Search contacts..."
+                    placeholder={t('workorder.ph_contact_search')}
                     displayValue={(wo as any)?.assigned_contact_name ?? null}
                   />
                 )} />
@@ -315,7 +320,7 @@ export default function WorkOrderDetail() {
           {/* Notes */}
           <div className="border rounded-lg bg-white p-4 sm:p-6">
             <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">{t('common.notes')}</h2>
-            <Textarea rows={3} placeholder="Internal notes..." {...register("notes")} />
+            <Textarea rows={3} placeholder={t('workorder.ph_notes')} {...register("notes")} />
           </div>
         </form>
       </div>
