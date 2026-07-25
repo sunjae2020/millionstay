@@ -7,6 +7,8 @@ import { APP_NAME } from "@/lib/appName";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 const BRAND = "hsl(var(--brand-orange))";
+// White + enlarged logo only for white-label tenants (VITE_LOGO_URL set).
+const HAS_TENANT_LOGO = Boolean(import.meta.env.VITE_LOGO_URL);
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -44,7 +46,7 @@ export default function LoginPage() {
           {import.meta.env.VITE_LOGO_MODE === "text" ? (
             <span className="font-display font-extrabold tracking-tight text-white text-xl whitespace-nowrap">{APP_NAME}</span>
           ) : (
-            <img src={import.meta.env.VITE_LOGO_URL || `${import.meta.env.BASE_URL}logo-horizontal.png`} alt={APP_NAME} className="h-[4.5rem] w-auto" style={{ filter: "brightness(0) invert(1)" }} />
+            <img src={import.meta.env.VITE_LOGO_URL || `${import.meta.env.BASE_URL}logo-horizontal.png`} alt={APP_NAME} className={HAS_TENANT_LOGO ? "h-[4.5rem] w-auto" : "h-9 w-auto brightness-110"} style={HAS_TENANT_LOGO ? { filter: "brightness(0) invert(1)" } : undefined} />
           )}
           <p className="text-white/30 text-[10px] tracking-[0.2em] uppercase mt-2 ml-0.5">
             {t("portal_label")}
@@ -93,7 +95,7 @@ export default function LoginPage() {
               {import.meta.env.VITE_LOGO_MODE === "text" ? (
                 <span className="font-display font-extrabold tracking-tight text-primary text-xl whitespace-nowrap">{APP_NAME}</span>
               ) : (
-                <img src={import.meta.env.VITE_LOGO_URL || `${import.meta.env.BASE_URL}logo-horizontal.png`} alt={APP_NAME} className="h-16 w-auto" />
+                <img src={import.meta.env.VITE_LOGO_URL || `${import.meta.env.BASE_URL}logo-horizontal.png`} alt={APP_NAME} className={HAS_TENANT_LOGO ? "h-16 w-auto" : "h-8 w-auto"} />
               )}
             </div>
 
