@@ -1,6 +1,6 @@
 -- =============================================================================
 -- tenants/metheim/sale-listings.seed.sql
--- MetHeim Yeosu — 4 SAMPLE 분양(pre-sale) / 판매(sale) listings for the /buy board.
+-- MetHeim Yeosu — 6 SAMPLE 분양(pre-sale) / 판매(sale) listings for the /buy board.
 --
 -- These are demo units for the single-building "development" site so the /buy
 -- board isn't empty. Structural fields are locale-independent; per-locale copy
@@ -87,6 +87,38 @@ VALUES
     "zh": {"title": "复式开间 D户型 · 40㎡", "subtitle": "层高出众的复式住宅", "location": "丽水老城 · 莲登洞", "price_label": "出售价 1亿9,800万韩元", "description": "40㎡复式开间，充分利用层高。下层为生活区、上层为卧室，划分之后毫不局促。"},
     "th": {"title": "สตูดิโอลอฟท์ Type D · 40㎡", "subtitle": "ที่พักแบบลอฟท์เพดานสูง", "location": "ยอนดึงดง เมืองเก่ายอซู", "price_label": "ราคาขาย 198,000,000 วอน", "description": "สตูดิโอลอฟท์ ขนาด 40㎡ ใช้ประโยชน์จากความสูงเพดาน ชั้นล่างเป็นพื้นที่ใช้สอย ชั้นบนเป็นห้องนอน ใช้งานได้ไม่อึดอัด"},
     "vi": {"title": "Studio gác lửng Type D · 40㎡", "subtitle": "Không gian gác lửng trần cao", "location": "Yeondeung-dong, Yeosu", "price_label": "Giá bán 198.000.000 won", "description": "Studio gác lửng 40㎡ tận dụng chiều cao trần. Tầng dưới là khu sinh hoạt, tầng trên là phòng ngủ, phân chia rồi vẫn rộng rãi."}
+  }'::jsonb
+),
+-- 5) 테라스 1.5룸 E타입 — 분양 / 입주가능
+(
+  'presale', 'available',
+  'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80',
+  '["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80","https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80"]'::jsonb,
+  36.00, 1, 1, 178000000, 5, true,
+  '{
+    "_seed": "metheim-sample",
+    "ko": {"title": "테라스 1.5룸 E타입 · 36㎡", "subtitle": "작은 테라스가 있는 1.5룸", "location": "여수 원도심 · 연등동", "price_label": "분양가 1억 7,800만원", "description": "전용 테라스를 갖춘 36㎡ 1.5룸입니다. 바깥 공기를 집 안으로 들이며, 화분을 놓거나 간단한 티타임을 즐기기 좋습니다."},
+    "en": {"title": "1.5-Room Type E · 36㎡", "subtitle": "A 1.5-room with a small terrace", "location": "Yeondeung-dong, Yeosu", "price_label": "₩178,000,000", "description": "A 36㎡ 1.5-room with a private terrace — bring the outdoors in, with room for plants or a quiet cup of tea."},
+    "ja": {"title": "テラス付き1.5ルーム Eタイプ · 36㎡", "subtitle": "小さなテラスのある1.5ルーム", "location": "麗水 旧都心 · 蓮登洞", "price_label": "分譲価格 1億7,800万ウォン", "description": "専用テラスを備えた36㎡の1.5ルームです。外の空気を室内に取り込み、植木やちょっとしたティータイムにも最適です。"},
+    "zh": {"title": "露台1.5居室 E户型 · 36㎡", "subtitle": "带小露台的1.5居室", "location": "丽水老城 · 莲登洞", "price_label": "销售价 1亿7,800万韩元", "description": "36㎡的1.5居室，配私家露台，将户外空气引入室内，摆放绿植或享受片刻茶歇都很惬意。"},
+    "th": {"title": "1.5 ห้องมีระเบียง Type E · 36㎡", "subtitle": "1.5 ห้องพร้อมระเบียงเล็ก", "location": "ยอนดึงดง เมืองเก่ายอซู", "price_label": "ราคาขาย 178,000,000 วอน", "description": "1.5 ห้อง ขนาด 36㎡ พร้อมระเบียงส่วนตัว รับอากาศภายนอกเข้าบ้าน วางกระถางต้นไม้หรือจิบชาเบา ๆ ได้สบาย"},
+    "vi": {"title": "Căn 1.5 phòng có ban công Type E · 36㎡", "subtitle": "Căn 1.5 phòng với ban công nhỏ", "location": "Yeondeung-dong, Yeosu", "price_label": "Giá bán 178.000.000 won", "description": "Căn 1.5 phòng 36㎡ có ban công riêng — đưa không khí bên ngoài vào nhà, đủ chỗ đặt cây hay nhâm nhi tách trà."}
+  }'::jsonb
+),
+-- 6) 펜트 스튜디오 F타입 — 판매 / 판매완료(sold)
+(
+  'sale', 'sold',
+  'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1200&q=80',
+  '["https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=1200&q=80","https://images.unsplash.com/photo-1502005229762-cf1b2da7c5d6?auto=format&fit=crop&w=1200&q=80"]'::jsonb,
+  52.00, 1, 1, 260000000, 6, true,
+  '{
+    "_seed": "metheim-sample",
+    "ko": {"title": "펜트 스튜디오 F타입 · 52㎡", "subtitle": "최상층 전망의 펜트 스튜디오", "location": "여수 원도심 · 연등동", "price_label": "매매가 2억 6,000만원", "description": "건물 최상층에 자리한 52㎡ 스튜디오입니다. 탁 트인 전망과 넉넉한 층고로 여유로운 1~2인 생활을 완성합니다. (현재 판매가 완료된 세대입니다.)"},
+    "en": {"title": "Penthouse Studio Type F · 52㎡", "subtitle": "A top-floor penthouse studio", "location": "Yeondeung-dong, Yeosu", "price_label": "₩260,000,000", "description": "A 52㎡ studio on the top floor. Open views and generous ceiling height for relaxed one-to-two-person living. (This unit has been sold.)"},
+    "ja": {"title": "ペントハウス スタジオ Fタイプ · 52㎡", "subtitle": "最上階の眺望を備えたペントスタジオ", "location": "麗水 旧都心 · 蓮登洞", "price_label": "販売価格 2億6,000万ウォン", "description": "建物最上階に位置する52㎡のスタジオです。開けた眺望とゆとりある天井高で、1〜2人の余裕ある暮らしを叶えます。（本住戸は販売終了です。）"},
+    "zh": {"title": "顶层开间 F户型 · 52㎡", "subtitle": "享顶层视野的顶层开间", "location": "丽水老城 · 莲登洞", "price_label": "出售价 2亿6,000万韩元", "description": "位于建筑顶层的52㎡开间。开阔视野与充裕层高，成就1~2人从容生活。（本户已售出。）"},
+    "th": {"title": "สตูดิโอเพนต์เฮาส์ Type F · 52㎡", "subtitle": "สตูดิโอเพนต์เฮาส์ชั้นบนสุดพร้อมวิว", "location": "ยอนดึงดง เมืองเก่ายอซู", "price_label": "ราคาขาย 260,000,000 วอน", "description": "สตูดิโอ 52㎡ บนชั้นบนสุดของอาคาร วิวโล่งและเพดานสูง ตอบโจทย์การอยู่อาศัย 1-2 คนอย่างสบาย (ยูนิตนี้ขายแล้ว)"},
+    "vi": {"title": "Studio penthouse Type F · 52㎡", "subtitle": "Studio penthouse tầng cao nhất có tầm nhìn", "location": "Yeondeung-dong, Yeosu", "price_label": "Giá bán 260.000.000 won", "description": "Studio 52㎡ ở tầng cao nhất tòa nhà. Tầm nhìn thoáng và trần cao rộng rãi cho cuộc sống 1-2 người thư thái. (Căn này đã được bán.)"}
   }'::jsonb
 );
 

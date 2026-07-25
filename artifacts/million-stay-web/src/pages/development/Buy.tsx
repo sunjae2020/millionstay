@@ -9,12 +9,12 @@ import { ListingCard } from "@/components/development/ListingCard";
 import { fetchSaleListings, submitSalesInquiry } from "@/lib/development-api";
 
 // BUY / SALES — the main page shows a preview of the newest 분양(pre-sale) /
-// 판매(sale) listings (3), with a link to the full board (/buy/list). Each card
+// 판매(sale) listings (6), with a link to the full board (/buy/list). Each card
 // opens a detail page (/buy/:id) carrying its own inquiry form. The hero copy is
 // CMS-managed; a general sales inquiry stays at the bottom for visitors who
 // haven't picked a specific unit.
 
-const PREVIEW_COUNT = 3;
+const PREVIEW_COUNT = 6;
 
 export default function DevBuy() {
   const { t, i18n } = useTranslation();
