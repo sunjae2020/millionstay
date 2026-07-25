@@ -178,6 +178,7 @@
   },
   "space": {
     "per_week": "/ week",
+    "fx_payment_note": "Prices are payable in the base amount (KRW); converted amounts are shown for reference only.",
     "min_stay": "Min {{weeks}} weeks",
     "book_now": "Book Now",
     "female_only": "Female Only",

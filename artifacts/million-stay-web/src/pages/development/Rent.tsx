@@ -7,6 +7,7 @@ import { InquiryForm } from "@/components/development/InquiryForm";
 import { submitLongTermInquiry } from "@/lib/development-api";
 import { useListFeaturedSpaces } from "@/lib/guest-api";
 import { SpaceCard } from "@/components/space-card";
+import { useDisplayCurrency } from "@/contexts/DisplayCurrencyContext";
 
 // RENT / STAY — two tracks:
 //   · Short-term (단기): the existing calendar booking engine (search →
@@ -19,6 +20,7 @@ export default function DevRent() {
   const pc = usePageContent("dev-rent");
   const { data } = useListFeaturedSpaces();
   const spaces = (data?.data ?? []).slice(0, 4);
+  const { forceDisplayCurrency } = useDisplayCurrency();
 
   return (
     <DevLayout title={t("dev.rent.hero_title")}>
@@ -73,6 +75,9 @@ export default function DevRent() {
                 <SpaceCard key={s.id} space={s} index={i} />
               ))}
             </div>
+            {forceDisplayCurrency && (
+              <p className="mt-4 text-xs text-gray-400 leading-relaxed">{t("space.fx_payment_note")}</p>
+            )}
           </>
         )}
 

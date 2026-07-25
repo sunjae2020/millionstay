@@ -194,6 +194,7 @@
   },
   "space": {
     "per_week": "/ 週",
+    "fx_payment_note": "お支払いは基準額（韓国ウォン）で行われます。換算額はご参考用の表示です。",
     "from": "最低",
     "min_stay": "最低{{weeks}}週間",
     "available": "予約可能",

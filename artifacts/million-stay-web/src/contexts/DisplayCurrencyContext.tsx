@@ -86,10 +86,12 @@ type Ctx = {
   /** Returns "≈ ₩123,456" for the user-selected display currency, or null if same as `from` or no rate. */
   formatReference: (amount: number, from: string) => string | null;
   /**
-   * Format a price for display. On a single-currency instance the amount is
-   * converted into the display currency and shown as the primary price (no
-   * reference line). Otherwise the primary price stays in the listing's own
-   * currency, with a converted "≈" reference for the visitor's display currency.
+   * Format a price for display. On a single-currency instance the primary price
+   * is always the instance's standard/base currency (기준금액, e.g. MetHeim → KRW —
+   * the amount quoted and settled at payment); the visitor's selected currency,
+   * when different, is demoted to a smaller "≈" reference line. Otherwise the
+   * primary price stays in the listing's own currency, with a converted "≈"
+   * reference for the visitor's display currency.
    */
   formatDisplayPrice: (amount: number, from: string) => { primary: string; reference: string | null };
   refresh: () => Promise<void>;
@@ -180,12 +182,19 @@ export function DisplayCurrencyProvider({ children }: { children: ReactNode }) {
     (amount: number, from: string): { primary: string; reference: string | null } => {
       const src = (from || "AUD").toUpperCase();
       if (FORCE_DISPLAY_CURRENCY) {
-        const conv = convertPrice(amount, src, displayCurrency);
-        // Rates may not be loaded on first paint — fall back to the source
-        // amount (never show another instance's currency as the primary once
-        // rates arrive, though: convertPrice returns identity when src == display).
-        if (conv != null) return { primary: formatCurrencyAmount(conv, displayCurrency), reference: null };
-        return { primary: formatCurrencyAmount(amount, src), reference: null };
+        // The instance's standard/base currency (기준금액) is always the primary —
+        // e.g. MetHeim quotes and settles in KRW regardless of what the visitor
+        // selects. The selected currency is a reference-only line below it.
+        const base = DEFAULT_CURRENCY;
+        const primaryConv = convertPrice(amount, src, base);
+        // Rates may not be loaded on first paint — fall back to the source amount.
+        const primary = primaryConv != null
+          ? formatCurrencyAmount(primaryConv, base)
+          : formatCurrencyAmount(amount, src);
+        // No reference when the visitor's selection is the base currency (would
+        // just duplicate the primary). formatReference targets displayCurrency.
+        const reference = displayCurrency.toUpperCase() === base ? null : formatReference(amount, src);
+        return { primary, reference };
       }
       return { primary: formatCurrencyAmount(amount, src), reference: formatReference(amount, src) };
     },

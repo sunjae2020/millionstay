@@ -1,4 +1,7 @@
 {
+  "space": {
+    "fx_payment_note": "Thanh toán theo số tiền cơ sở (KRW); số tiền quy đổi chỉ mang tính tham khảo."
+  },
   "homestay": {
     "home": {
       "why_heading": "Vì sao chọn Million Homestay",
