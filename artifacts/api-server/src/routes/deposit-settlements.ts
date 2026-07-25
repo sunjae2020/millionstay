@@ -5,6 +5,8 @@ import {
   bookingsTable,
   invoicesTable,
   invoiceLineItemsTable,
+  contractsTable,
+  homestayPlacementsTable,
   conditionReportsTable,
   depositSettlementsTable,
   depositDeductionItemsTable,
@@ -26,10 +28,16 @@ async function generateSettlementRef(): Promise<string> {
   return `DS-${year}-${seq}`;
 }
 
-// Deposits Held for a booking = sum of PAID deposit line items (line_type='deposit').
-// This equals the booking's Deposits Held (2100) liability balance.
-async function depositHeldForBooking(bookingId: number): Promise<number> {
-  const rows = await db
+// Resolve the deposit a booking is holding.
+//  - glBacked: sum of PAID deposit line items (line_type='deposit') — the ONLY
+//    portion actually posted to the Deposits Held (2100) liability, so the only
+//    portion whose release we may auto-post on finalize.
+//  - total (deposit_held): the contractual deposit for refund math. Prefers the
+//    GL-backed amount; else falls back to the contract bond / placement deposit,
+//    because in practice deposits are recorded on contracts.bond_amount /
+//    homestay_placements.deposit and are NOT yet invoiced as deposit lines.
+async function resolveDeposit(bookingId: number): Promise<{ total: number; glBacked: number }> {
+  const lines = await db
     .select({ total: invoiceLineItemsTable.total_amount })
     .from(invoiceLineItemsTable)
     .innerJoin(invoicesTable, eq(invoiceLineItemsTable.invoice_id, invoicesTable.id))
@@ -38,7 +46,26 @@ async function depositHeldForBooking(bookingId: number): Promise<number> {
       eq(invoicesTable.status, "Paid"),
       eq(invoiceLineItemsTable.line_type, "deposit"),
     ));
-  return rows.reduce((s, r) => s + Number(r.total ?? 0), 0);
+  const glBacked = round2(lines.reduce((s, r) => s + Number(r.total ?? 0), 0));
+  if (glBacked > 0) return { total: glBacked, glBacked };
+
+  // Fallback: contract bond (latest non-zero for this booking).
+  const contracts = await db
+    .select({ bond: contractsTable.bond_amount })
+    .from(contractsTable)
+    .where(eq(contractsTable.booking_id, bookingId))
+    .orderBy(desc(contractsTable.id));
+  const bond = contracts.map((c) => Number(c.bond ?? 0)).find((n) => n > 0) ?? 0;
+  if (bond > 0) return { total: round2(bond), glBacked: 0 };
+
+  // Fallback: homestay placement deposit.
+  const placements = await db
+    .select({ deposit: homestayPlacementsTable.deposit })
+    .from(homestayPlacementsTable)
+    .where(eq(homestayPlacementsTable.booking_id, bookingId))
+    .orderBy(desc(homestayPlacementsTable.id));
+  const dep = placements.map((p) => Number(p.deposit ?? 0)).find((n) => n > 0) ?? 0;
+  return { total: round2(dep), glBacked: 0 };
 }
 
 function round2(n: number): number { return Math.round((n + Number.EPSILON) * 100) / 100; }
@@ -96,7 +123,7 @@ adminRouter.post("/v1/bookings/:bookingId/deposit-settlements", async (req, res)
     const [booking] = await db.select().from(bookingsTable).where(eq(bookingsTable.id, bookingId)).limit(1);
     if (!booking) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Booking not found" } }); return; }
 
-    const depositHeld = await depositHeldForBooking(bookingId);
+    const { total: depositHeld } = await resolveDeposit(bookingId);
     const [moveOut] = await db
       .select({ id: conditionReportsTable.id })
       .from(conditionReportsTable)
@@ -201,9 +228,17 @@ adminRouter.post("/v1/deposit-settlements/:id/finalize", async (req, res): Promi
 
     const totals = await recomputeTotals(id);
     const postingKey = `deposit_settlement:${id}`;
-    // Dr Deposits Held (release liability) = Cr Cash (refund) + Cr Revenue (forfeited).
-    if (totals.deposit_held > 0) {
-      await postEntry({
+    // Only the GL-backed portion is actually sitting in Deposits Held (2100), so
+    // only that release may be posted — otherwise we'd create a phantom negative
+    // liability. In this system deposits are usually recorded on contracts.bond_amount
+    // and never posted to 2100, so glBacked is 0 and we SKIP the GL entry (the
+    // refund is handled operationally). When a deposit WAS invoiced (line_type=
+    // 'deposit'), deposit_held == glBacked and the release balances:
+    // Dr Deposits Held = Cr Cash (refund) + Cr Revenue (forfeited).
+    const { glBacked } = await resolveDeposit(s.booking_id);
+    let glPosted = false;
+    if (glBacked > 0) {
+      const entry = await postEntry({
         postingKey,
         entryDate: new Date().toISOString().slice(0, 10),
         description: `Deposit settlement ${s.settlement_ref}`,
@@ -216,15 +251,16 @@ adminRouter.post("/v1/deposit-settlements/:id/finalize", async (req, res): Promi
           { account_code: ACCOUNTS.REVENUE.code, account_name: ACCOUNTS.REVENUE.name, debit: 0, credit: totals.total_deducted },
         ],
       });
+      glPosted = !!entry;
     }
     const audit = Array.isArray(s.audit_trail) ? s.audit_trail : [];
     await db.update(depositSettlementsTable).set({
       status: "finalized",
       finalized_at: new Date(),
-      posting_key: postingKey,
-      audit_trail: [...audit, { event: "finalized", at: new Date().toISOString(), actor: (req as any).user?.id ?? null, refund: totals.refund_amount, deducted: totals.total_deducted }],
+      posting_key: glPosted ? postingKey : null,
+      audit_trail: [...audit, { event: "finalized", at: new Date().toISOString(), actor: (req as any).user?.id ?? null, refund: totals.refund_amount, deducted: totals.total_deducted, gl_posted: glPosted, gl_backed: glBacked }],
     }).where(eq(depositSettlementsTable.id, id));
-    void logAction({ entityType: ENTITY, entityId: id, action: "PAYMENT", actorId: (req as any).user?.id ?? null, newValue: { status: "finalized", refund: totals.refund_amount, deducted: totals.total_deducted } });
+    void logAction({ entityType: ENTITY, entityId: id, action: "PAYMENT", actorId: (req as any).user?.id ?? null, newValue: { status: "finalized", refund: totals.refund_amount, deducted: totals.total_deducted, gl_posted: glPosted } });
     res.json({ success: true, data: await loadSettlementDetail(id) });
   } catch (err: any) {
     res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
