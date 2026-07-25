@@ -624,8 +624,10 @@ function LanguageTab({
   previewHost: string;
 }) {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [form, setForm] = useState<LangContent>(initial);
   const [activeTab, setActiveTab] = useState<"content" | "seo">("content");
+  const [uploadingKey, setUploadingKey] = useState<string | null>(null);
   const fieldKeyPrefix = pageKey.replace(/-/g, "_");
 
   useEffect(() => {
@@ -634,6 +636,29 @@ function LanguageTab({
 
   const setField = (key: string, val: string) => {
     setForm((f) => ({ ...f, content: { ...f.content, [key]: val } }));
+  };
+
+  // Upload an image file for an image-type field; stores the returned URL in the
+  // field. apiFetch attaches auth and skips the JSON content-type for FormData.
+  const handleImageUpload = async (key: string, file: File) => {
+    setUploadingKey(key);
+    try {
+      const fd = new FormData();
+      fd.append("image", file);
+      const res = await apiFetch("/api/v1/page-contents/upload-image", { method: "POST", body: fd });
+      if (!res.ok) throw new Error("upload failed");
+      const data = (await res.json()) as { url?: string };
+      if (!data.url) throw new Error("no url returned");
+      setField(key, data.url);
+    } catch {
+      toast({
+        variant: "destructive",
+        title: t("website_content.toast_upload_failed_title"),
+        description: t("website_content.toast_upload_failed_desc"),
+      });
+    } finally {
+      setUploadingKey(null);
+    }
   };
 
   return (
@@ -672,11 +697,38 @@ function LanguageTab({
                 />
               ) : field.type === "image" ? (
                 <div className="space-y-2">
-                  <Input
-                    value={form.content[field.key] ?? ""}
-                    onChange={(e) => setField(field.key, e.target.value)}
-                    placeholder={t("website_content.url_placeholder")}
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      value={form.content[field.key] ?? ""}
+                      onChange={(e) => setField(field.key, e.target.value)}
+                      placeholder={t("website_content.url_placeholder")}
+                    />
+                    <label
+                      className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-3 text-sm font-medium ${
+                        uploadingKey === field.key
+                          ? "pointer-events-none opacity-60"
+                          : "cursor-pointer hover:bg-accent"
+                      }`}
+                    >
+                      {uploadingKey === field.key ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Image className="h-4 w-4" />
+                      )}
+                      {t("website_content.upload_button")}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={uploadingKey === field.key}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          e.target.value = "";
+                          if (f) handleImageUpload(field.key, f);
+                        }}
+                      />
+                    </label>
+                  </div>
                   {form.content[field.key] && (
                     <img
                       src={form.content[field.key]}
