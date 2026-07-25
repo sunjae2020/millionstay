@@ -27,6 +27,7 @@ import {
   pageContentsTable,
   blogCategoriesTable,
   saleListingsTable,
+  saleInquiriesTable,
 } from "@workspace/db";
 import { ingestReservations } from "../lib/channels/reservations.js";
 import { insertLeadWithGeneratedRef } from "../lib/leadRef.js";
@@ -1154,6 +1155,29 @@ router.get("/v1/public/sale-listings/:id", async (req, res): Promise<void> => {
     .where(and(eq(saleListingsTable.id, id), isNull(saleListingsTable.deleted_at), eq(saleListingsTable.published, true)));
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
   res.json({ data: shapePublicListing(row, lang) });
+});
+
+// Public sale-listing inquiry. Lands in sale_inquiries with the enquirer's
+// identity WITHHELD in the admin review list by default (privacy gate — vision
+// "1차 문의 비공개"). No PII is echoed back to the public caller.
+router.post("/v1/public/sale-listings/:id/inquiry", async (req, res): Promise<void> => {
+  try {
+    const listingId = Number.isInteger(Number(req.params.id)) ? Number(req.params.id) : null;
+    const name = typeof req.body?.name === "string" ? req.body.name.trim().slice(0, 200) : null;
+    const email = typeof req.body?.email === "string" ? req.body.email.trim().slice(0, 200) : null;
+    const phone = typeof req.body?.phone === "string" ? req.body.phone.trim().slice(0, 60) : null;
+    const message = typeof req.body?.message === "string" ? req.body.message.trim().slice(0, 4000) : null;
+    if (!name || (!email && !phone)) { res.status(400).json({ error: "name and a contact (email or phone) are required" }); return; }
+    await db.insert(saleInquiriesTable).values({
+      listing_id: listingId,
+      name, email, phone, message,
+      locale: typeof req.body?.locale === "string" ? req.body.locale.slice(0, 8) : null,
+      status: "new",
+    });
+    res.status(201).json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: "Failed to submit inquiry" });
+  }
 });
 
 // Active blog categories for the public blog filter (homestay-only categories

@@ -3501,7 +3501,8 @@
     "deleted": "Listing deleted",
     "error": "Something went wrong",
     "delete_this": "Delete this listing?",
-    "delete_confirm": "This removes it from the Buy page. This can't be undone."
+    "delete_confirm": "This removes it from the Buy page. This can't be undone.",
+    "inquiries": "Inquiries"
   },
   "content_translations": {
     "title": "Translations",
@@ -3565,5 +3566,21 @@
     "hint_upfront": "% applies to placement fee + deposit.",
     "hint_monthly": "% applies to one month's rent.",
     "hint_converted": "% applies to deposit + monthly rent × 100 (Korean 환산보증금)."
+  },
+  "sale_inquiries": {
+    "title": "Sale Inquiries",
+    "subtitle": "Enquirer identity is withheld until you reveal it. Then decide whether to forward.",
+    "back_to_listings": "Listings",
+    "filter_all": "All",
+    "status_new": "New",
+    "status_reviewed": "Reviewed",
+    "status_forwarded": "Forwarded",
+    "status_closed": "Closed",
+    "general": "General inquiry",
+    "withheld": "identity withheld",
+    "btn_reveal": "Reveal identity",
+    "btn_forward": "Forward",
+    "btn_close": "Close",
+    "forwarded_on": "forwarded"
   }
 }

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Building2, Plus, ImageOff } from "lucide-react";
+import { Building2, Plus, ImageOff, Lock } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { TablePagination, usePagination } from "@/components/ui/TablePagination";
 
@@ -62,9 +62,14 @@ export default function SaleListingsList() {
         title={<><Building2 className="h-5 w-5" />{t("listings.title")}</>}
         subtitle={t("listings.total", { count: listings.length })}
         actions={
-          <Link href="/content/listings/new">
-            <Button><Plus className="h-4 w-4 mr-2" />{t("listings.new")}</Button>
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/content/sale-inquiries">
+              <Button variant="outline"><Lock className="h-4 w-4 mr-2" />{t("listings.inquiries", "Inquiries")}</Button>
+            </Link>
+            <Link href="/content/listings/new">
+              <Button><Plus className="h-4 w-4 mr-2" />{t("listings.new")}</Button>
+            </Link>
+          </div>
         }
       />
 

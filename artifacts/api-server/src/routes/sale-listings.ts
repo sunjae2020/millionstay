@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
 import { eq, and, isNull, desc, asc, SQL } from "drizzle-orm";
-import { db, saleListingsTable } from "@workspace/db";
+import { db, saleListingsTable, saleInquiriesTable } from "@workspace/db";
 import * as z from "zod/v4";
 import { isCloudinaryConfigured, uploadToCloudinary, cldFolder } from "../utils/cloudinary";
 
@@ -153,6 +153,108 @@ router.post("/v1/sale-listings/images", (req, res, next) => {
     }
   }
   res.status(201).json({ success: true, urls, url: urls[0] });
+});
+
+/* ═══════════════════════════════════════════════════════════
+   SALE INQUIRIES — privacy-gated review queue (vision "1차 문의 비공개")
+   Enquirer identity is masked in the list until an admin reveals it, then the
+   admin decides whether to forward it on (집주인/판매팀 전달 결정).
+═══════════════════════════════════════════════════════════ */
+function maskName(name: string | null): string {
+  const n = (name ?? "").trim();
+  if (!n) return "—";
+  return n[0] + "***";
+}
+
+// Review queue — identity WITHHELD unless the inquiry has been revealed.
+router.get("/v1/sale-inquiries", async (req, res): Promise<void> => {
+  try {
+    const status = typeof req.query.status === "string" ? req.query.status : null;
+    const rows = await db
+      .select({
+        id: saleInquiriesTable.id,
+        listing_id: saleInquiriesTable.listing_id,
+        listing_title: saleListingsTable.translations,
+        message: saleInquiriesTable.message,
+        status: saleInquiriesTable.status,
+        name: saleInquiriesTable.name,
+        email: saleInquiriesTable.email,
+        phone: saleInquiriesTable.phone,
+        revealed_at: saleInquiriesTable.revealed_at,
+        forwarded_at: saleInquiriesTable.forwarded_at,
+        forward_note: saleInquiriesTable.forward_note,
+        admin_notes: saleInquiriesTable.admin_notes,
+        created_at: saleInquiriesTable.created_at,
+      })
+      .from(saleInquiriesTable)
+      .leftJoin(saleListingsTable, eq(saleListingsTable.id, saleInquiriesTable.listing_id))
+      .where(status ? eq(saleInquiriesTable.status, status) : undefined)
+      .orderBy(desc(saleInquiriesTable.created_at));
+
+    const data = rows.map((r) => {
+      const revealed = r.revealed_at != null;
+      const tr = (r.listing_title as Record<string, { title?: string }> | null) ?? {};
+      const listing_title = tr.ko?.title ?? tr.en?.title ?? Object.values(tr)[0]?.title ?? (r.listing_id ? `#${r.listing_id}` : null);
+      return {
+        id: r.id, listing_id: r.listing_id, listing_title,
+        message: r.message, status: r.status, revealed,
+        forwarded_at: r.forwarded_at, forward_note: r.forward_note,
+        admin_notes: r.admin_notes, created_at: r.created_at,
+        // PII only when revealed.
+        name: revealed ? r.name : maskName(r.name),
+        email: revealed ? r.email : null,
+        phone: revealed ? r.phone : null,
+      };
+    });
+    res.json({ data });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Reveal the enquirer's identity (audit-logged via revealed_at/by).
+router.post("/v1/sale-inquiries/:id/reveal", async (req, res): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    const [row] = await db.update(saleInquiriesTable)
+      .set({ revealed_at: new Date(), revealed_by: (req as any).user?.id ?? null, status: "reviewed", updated_at: new Date() })
+      .where(eq(saleInquiriesTable.id, id))
+      .returning();
+    if (!row) { res.status(404).json({ error: "Not found" }); return; }
+    res.json({ success: true, data: { id: row.id, name: row.name, email: row.email, phone: row.phone } });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Forwarding decision — the admin chooses to pass the inquiry on.
+router.post("/v1/sale-inquiries/:id/forward", async (req, res): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    const [row] = await db.update(saleInquiriesTable)
+      .set({ status: "forwarded", forwarded_at: new Date(), forward_note: typeof req.body?.note === "string" ? req.body.note : null, updated_at: new Date() })
+      .where(eq(saleInquiriesTable.id, id))
+      .returning();
+    if (!row) { res.status(404).json({ error: "Not found" }); return; }
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update status / admin notes (reviewed | closed).
+router.patch("/v1/sale-inquiries/:id", async (req, res): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    const patch: any = { updated_at: new Date() };
+    if (["new", "reviewed", "forwarded", "closed"].includes(req.body?.status)) patch.status = req.body.status;
+    if (typeof req.body?.admin_notes === "string") patch.admin_notes = req.body.admin_notes;
+    const [row] = await db.update(saleInquiriesTable).set(patch).where(eq(saleInquiriesTable.id, id)).returning();
+    if (!row) { res.status(404).json({ error: "Not found" }); return; }
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 export default router;
