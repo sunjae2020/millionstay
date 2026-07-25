@@ -372,7 +372,8 @@
     "confirm_checkin": "チェックインを確認",
     "confirm_checkout": "チェックアウトを確認",
     "instant_booking": "即時予約",
-    "request_booking": "申請予約"
+    "request_booking": "申請予約",
+    "tab_condition": "現況"
   },
   "contact": {
     "new": "新規連絡先",

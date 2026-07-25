@@ -372,7 +372,8 @@
     "confirm_checkin": "체크인 확인",
     "confirm_checkout": "체크아웃 확인",
     "instant_booking": "즉시 예약",
-    "request_booking": "요청 예약"
+    "request_booking": "요청 예약",
+    "tab_condition": "상태점검"
   },
   "contact": {
     "new": "새 연락처",

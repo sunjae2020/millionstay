@@ -372,7 +372,8 @@
     "confirm_checkin": "确认入住",
     "confirm_checkout": "确认退房",
     "instant_booking": "即时预订",
-    "request_booking": "申请预订"
+    "request_booking": "申请预订",
+    "tab_condition": "房况"
   },
   "contact": {
     "new": "新建联系人",

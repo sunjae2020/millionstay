@@ -372,7 +372,8 @@
     "confirm_checkin": "ยืนยันการเช็คอิน",
     "confirm_checkout": "ยืนยันการเช็คเอาท์",
     "instant_booking": "จองทันที",
-    "request_booking": "ขอจอง"
+    "request_booking": "ขอจอง",
+    "tab_condition": "สภาพห้อง"
   },
   "contact": {
     "new": "ผู้ติดต่อใหม่",

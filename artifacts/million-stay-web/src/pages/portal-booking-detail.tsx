@@ -10,8 +10,9 @@ import { motion } from "framer-motion";
 import {
   MapPin, Home, Calendar, Users, FileText, FileImage,
   CheckCircle2, Clock, AlertCircle, ChevronLeft,
-  CreditCard, Receipt, ScrollText, Wrench, CalendarDays,
+  CreditCard, Receipt, ScrollText, Wrench, CalendarDays, ShieldCheck,
 } from "lucide-react";
+import { ConditionReports } from "@/components/condition-reports";
 import { format } from "date-fns";
 import { getApiBase } from "@/lib/api-base";
 
@@ -207,6 +208,7 @@ export default function PortalBookingDetail() {
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 {contract && <TabsTrigger value="contract" className="gap-1.5"><ScrollText className="h-3.5 w-3.5" />Contract</TabsTrigger>}
                 <TabsTrigger value="documents">Documents</TabsTrigger>
+                <TabsTrigger value="condition" className="gap-1.5"><ShieldCheck className="h-3.5 w-3.5" />Condition</TabsTrigger>
                 <TabsTrigger value="invoice">Invoices</TabsTrigger>
                 <TabsTrigger value="timeline">Timeline</TabsTrigger>
               </TabsList>
@@ -417,6 +419,11 @@ export default function PortalBookingDetail() {
                     })
                   )}
                 </div>
+              </TabsContent>
+
+              {/* CONDITION REPORTS */}
+              <TabsContent value="condition">
+                <ConditionReports bookingId={id} token={token} />
               </TabsContent>
 
               {/* INVOICES */}

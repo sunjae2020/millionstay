@@ -26,6 +26,7 @@ import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
 import { ArrowLeft, Save, FileText, CheckCircle2, XCircle, Upload, ExternalLink, Plus, Trash2, Camera } from "lucide-react";
 import { LookupSelect } from "@/components/LookupSelect";
 import { apiFetch } from "@/lib/apiFetch";
+import { BookingConditionReports } from "./BookingConditionReports";
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -461,6 +462,7 @@ export default function BookingDetail() {
             <div className="flex border-b gap-1">
               {[
                 { id: "documents", label: t("booking.tab_documents") },
+                { id: "condition", label: t("booking.tab_condition") },
                 { id: "services", label: `Services${bookingServices.length ? ` (${bookingServices.length})` : ""}` },
                 { id: "invoices", label: t("booking.tab_invoices") },
                 { id: "notes", label: t("booking.tab_notes") },
@@ -536,6 +538,10 @@ export default function BookingDetail() {
                   </table>
                 </div>
               </div>
+            )}
+
+            {activeTab === "condition" && (
+              <BookingConditionReports bookingId={String(id)} />
             )}
 
             {activeTab === "services" && (

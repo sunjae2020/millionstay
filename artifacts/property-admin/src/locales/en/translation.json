@@ -372,7 +372,8 @@
     "confirm_checkin": "Confirm Check-In",
     "confirm_checkout": "Confirm Check-Out",
     "instant_booking": "Instant Booking",
-    "request_booking": "Request Booking"
+    "request_booking": "Request Booking",
+    "tab_condition": "Condition"
   },
   "contact": {
     "new": "New Contact",
