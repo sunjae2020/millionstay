@@ -4,8 +4,10 @@ import { MessageCircle, X, Send, Loader2, ExternalLink } from "lucide-react";
 import { getApiBase } from "@/lib/api-base";
 import { BrandMark } from "@/components/brand-mark";
 
-/** Brand accent — Million Orange (design guideline v2.0 primary). */
-const ACCENT = "#E8621A";
+/** Brand accent — the instance primary (white-label): Million Orange on the
+ *  primary site, Urban Teal on MetHeim, etc. Resolves via the CSS token so each
+ *  tenant's chat widget matches its own brand. */
+const ACCENT = "hsl(var(--primary))";
 
 interface RoomCard {
   space_id: number;
