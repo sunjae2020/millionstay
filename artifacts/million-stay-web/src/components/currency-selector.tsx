@@ -6,18 +6,21 @@ import {
 } from "./ui/dropdown-menu";
 import { useDisplayCurrency } from "@/contexts/DisplayCurrencyContext";
 
+// Currency selector shows the currency SYMBOL (not a flag) so it stays visually
+// distinct from the language switcher, which uses country flags. Important on
+// mobile, where both controls sit close together.
 const CURRENCIES = [
-  { code: "AUD", label: "AUD", flag: "🇦🇺", name: "Australian Dollar" },
-  { code: "USD", label: "USD", flag: "🇺🇸", name: "US Dollar" },
-  { code: "KRW", label: "KRW", flag: "🇰🇷", name: "Korean Won" },
-  { code: "JPY", label: "JPY", flag: "🇯🇵", name: "Japanese Yen" },
-  { code: "CNY", label: "CNY", flag: "🇨🇳", name: "Chinese Yuan" },
-  { code: "MYR", label: "MYR", flag: "🇲🇾", name: "Malaysian Ringgit" },
-  { code: "SGD", label: "SGD", flag: "🇸🇬", name: "Singapore Dollar" },
-  { code: "THB", label: "THB", flag: "🇹🇭", name: "Thai Baht" },
-  { code: "PHP", label: "PHP", flag: "🇵🇭", name: "Philippine Peso" },
-  { code: "EUR", label: "EUR", flag: "🇪🇺", name: "Euro" },
-  { code: "GBP", label: "GBP", flag: "🇬🇧", name: "British Pound" },
+  { code: "AUD", label: "AUD", symbol: "A$", name: "Australian Dollar" },
+  { code: "USD", label: "USD", symbol: "US$", name: "US Dollar" },
+  { code: "KRW", label: "KRW", symbol: "₩", name: "Korean Won" },
+  { code: "JPY", label: "JPY", symbol: "¥", name: "Japanese Yen" },
+  { code: "CNY", label: "CNY", symbol: "元", name: "Chinese Yuan" },
+  { code: "MYR", label: "MYR", symbol: "RM", name: "Malaysian Ringgit" },
+  { code: "SGD", label: "SGD", symbol: "S$", name: "Singapore Dollar" },
+  { code: "THB", label: "THB", symbol: "฿", name: "Thai Baht" },
+  { code: "PHP", label: "PHP", symbol: "₱", name: "Philippine Peso" },
+  { code: "EUR", label: "EUR", symbol: "€", name: "Euro" },
+  { code: "GBP", label: "GBP", symbol: "£", name: "British Pound" },
 ];
 
 export function CurrencySelector({ variant = "default" }: { variant?: "default" | "mobile" }) {
@@ -40,7 +43,7 @@ export function CurrencySelector({ variant = "default" }: { variant?: "default" 
                   isActive ? "bg-primary/5 text-primary font-bold border border-primary/20" : "text-gray-500 hover:bg-gray-50"
                 }`}
               >
-                <span className="text-lg leading-none">{c.flag}</span>
+                <span className="text-lg font-semibold leading-none tabular-nums">{c.symbol}</span>
                 <span className="font-mono leading-none">{c.label}</span>
               </button>
             );
@@ -54,7 +57,7 @@ export function CurrencySelector({ variant = "default" }: { variant?: "default" 
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:text-primary border border-gray-200 rounded-lg hover:border-primary/40 transition-colors">
-          <span className="text-base leading-none">{current.flag}</span>
+          <span className="text-base font-semibold leading-none tabular-nums">{current.symbol}</span>
           <span className="hidden sm:inline">{current.label}</span>
           <ChevronDown className="h-3 w-3 opacity-60" />
         </button>
@@ -72,7 +75,7 @@ export function CurrencySelector({ variant = "default" }: { variant?: "default" 
                   : "text-gray-700 hover:bg-gray-50"
               }`}
             >
-              <span className="text-lg leading-none">{c.flag}</span>
+              <span className="w-7 text-center text-base font-semibold leading-none tabular-nums">{c.symbol}</span>
               <span className="flex-1">{c.name}</span>
               <span className={`text-xs font-mono ${isActive ? "text-primary" : "text-gray-400"}`}>
                 {c.label}
