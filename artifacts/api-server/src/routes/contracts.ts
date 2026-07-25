@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, contractsTable, accountsTable, spacesTable, propertiesTable, contractProductsTable, accommodationCatalogTable, bookingsTable, recurringSchedulesTable, bookingServicesTable, invoicesTable, contractLineItemsTable } from "@workspace/db";
+import { db, contractsTable, accountsTable, spacesTable, propertiesTable, contractProductsTable, accommodationCatalogTable, bookingsTable, recurringSchedulesTable, bookingServicesTable, invoicesTable, invoiceLineItemsTable, contractLineItemsTable } from "@workspace/db";
 import { eq, ilike, and, like, desc, isNull, inArray } from "drizzle-orm";
 import { logAction } from "../utils/auditLog";
 import { getRateToAud } from "../lib/rateSnapshot";
@@ -268,6 +268,49 @@ async function generateContractInvoicesAndSchedules(
         is_active: true,
       }).returning({ id: recurringSchedulesTable.id });
       schedulesCreated.push(sched.id);
+    }
+  }
+
+  // ── Security deposit (bond) invoice ─────────────────────────────────────────
+  // The refundable bond is invoiced once, as a line_type='deposit' line, so that
+  // on payment postInvoicePaid credits it to Deposits Held (2100) instead of
+  // revenue (H-402) — which is what move-out settlement later releases.
+  //
+  // Guarded to FRESH contracts (no invoices existed before this generation) so we
+  // never retroactively bond-invoice a contract already running whose bond may
+  // have been collected off-system. Also idempotent on the deposit line.
+  const bond = Number(contract.bond_amount ?? 0);
+  if (bond > 0 && existingInvoices.length === 0) {
+    const existingDeposit = await db
+      .select({ id: invoiceLineItemsTable.id })
+      .from(invoiceLineItemsTable)
+      .innerJoin(invoicesTable, eq(invoiceLineItemsTable.invoice_id, invoicesTable.id))
+      .where(and(eq(invoicesTable.contract_id, contractId), eq(invoiceLineItemsTable.line_type, "deposit")))
+      .limit(1);
+    if (existingDeposit.length === 0) {
+      const [bondInv] = await db.insert(invoicesTable).values({
+        invoice_ref: nextInvoiceRef(),
+        booking_id: contract.booking_id ?? null,
+        contract_id: contractId,
+        account_id: contract.tenant_account_id ?? null,
+        amount: String(Math.round(bond * 100) / 100),
+        currency,
+        exchange_rate_to_aud: await getRateToAud(currency),
+        status: "Sent",
+        due_date: start,
+        description: `Security Deposit (Bond)${locationLabel ? ` | ${locationLabel}` : ""}`,
+      }).returning({ id: invoicesTable.id });
+      await db.insert(invoiceLineItemsTable).values({
+        invoice_id: bondInv.id,
+        label: "Security Deposit (Bond)",
+        description: "Refundable security deposit",
+        quantity: "1",
+        unit_amount: String(Math.round(bond * 100) / 100),
+        total_amount: String(Math.round(bond * 100) / 100),
+        line_type: "deposit",
+        sort_order: 0,
+      });
+      invoicesCreated.push(bondInv.id);
     }
   }
 
