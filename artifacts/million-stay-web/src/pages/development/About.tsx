@@ -4,8 +4,17 @@ import { ArrowRight, Building2, Compass, HeartHandshake } from "lucide-react";
 import { DevLayout } from "@/components/development/DevLayout";
 import { usePageContent } from "@/lib/usePageContent";
 
-// 메트하임 소개 (About MetHeim) — brand story, vision and values. Content-only,
-// CMS-editable per-locale via usePageContent("dev-about"); falls back to i18n.
+// 메트하임 소개 (About MetHeim) — brand story, logo meaning, image gallery, vision,
+// values and headline numbers. Content-only, CMS-editable per-locale via
+// usePageContent("dev-about"); every string falls back to i18n.
+
+// Default free stock images (Unsplash CDN) for the brand image gallery.
+const DEFAULT_GALLERY = [
+  "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=800&q=80",
+];
 
 export default function DevAbout() {
   const { t } = useTranslation();
@@ -18,6 +27,15 @@ export default function DevAbout() {
   ];
 
   const heroImage = pc("hero_image_url", "");
+  const logoImage = pc("logo_image", "");
+  const GALLERY = [1, 2, 3, 4].map((n) => ({
+    image: pc(`gallery_${n}_image`, DEFAULT_GALLERY[n - 1] ?? ""),
+    caption: pc(`gallery_${n}_caption`, t(`dev.about.gallery_${n}_caption`)),
+  })).filter((g) => g.image);
+  const STATS = [1, 2, 3, 4].map((n) => ({
+    value: pc(`stat_${n}_value`, t(`dev.about.stat_${n}_value`)),
+    label: pc(`stat_${n}_label`, t(`dev.about.stat_${n}_label`)),
+  }));
 
   return (
     <DevLayout title={t("dev.about.hero_title")}>
@@ -46,6 +64,52 @@ export default function DevAbout() {
         </div>
       </section>
 
+      {/* Logo meaning */}
+      <section className="bg-[hsl(var(--brand-navy))] text-white">
+        <div className="max-w-7xl mx-auto px-6 py-14 md:py-20 grid gap-10 lg:grid-cols-2 items-center">
+          <div className="flex justify-center">
+            <div className="w-56 h-56 md:w-64 md:h-64 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center p-8">
+              {logoImage
+                ? <img src={logoImage} alt="MetHeim" className="max-w-full max-h-full object-contain" />
+                : <img src="/logo.svg" alt="MetHeim" className="max-w-full max-h-full object-contain brightness-0 invert opacity-90" />}
+            </div>
+          </div>
+          <div>
+            <p className="text-sm font-semibold tracking-widest uppercase text-white/70">{pc("logo_eyebrow", t("dev.about.logo_eyebrow"))}</p>
+            <h2 className="mt-3 font-display text-2xl md:text-3xl font-bold tracking-tight">{pc("logo_title", t("dev.about.logo_title"))}</h2>
+            <div className="mt-5 space-y-4 text-white/85 leading-relaxed">
+              <p>{pc("logo_body_1", t("dev.about.logo_body_1"))}</p>
+              <p>{pc("logo_body_2", t("dev.about.logo_body_2"))}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Image gallery */}
+      {GALLERY.length > 0 && (
+        <section className="max-w-7xl mx-auto px-6 py-14 md:py-20">
+          <div className="text-center max-w-2xl mx-auto">
+            <p className="text-sm font-semibold tracking-widest uppercase text-primary">{pc("gallery_eyebrow", t("dev.about.gallery_eyebrow"))}</p>
+            <h2 className="mt-3 font-display text-2xl md:text-3xl font-bold text-[hsl(var(--brand-navy))] tracking-tight">
+              {pc("gallery_heading", t("dev.about.gallery_heading"))}
+            </h2>
+            <p className="mt-3 text-gray-600 leading-relaxed">{pc("gallery_subtitle", t("dev.about.gallery_subtitle"))}</p>
+          </div>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {GALLERY.map((g, idx) => (
+              <figure key={idx} className="group relative aspect-[3/4] rounded-2xl overflow-hidden">
+                <img src={g.image} alt="" className="w-full h-full object-cover transition duration-500 group-hover:scale-105" />
+                {g.caption && (
+                  <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4 text-sm font-medium text-white">
+                    {g.caption}
+                  </figcaption>
+                )}
+              </figure>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Vision */}
       <section className="bg-[hsl(var(--brand-cream))] border-y border-gray-100">
         <div className="max-w-3xl mx-auto px-6 py-14 md:py-20 text-center">
@@ -66,6 +130,18 @@ export default function DevAbout() {
               </div>
               <h3 className="mt-4 font-semibold text-lg text-[hsl(var(--brand-navy))]">{title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-gray-600">{body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Numbers band */}
+      <section className="max-w-7xl mx-auto px-6 py-12 md:py-16">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {STATS.map(({ value, label }) => (
+            <div key={label} className="text-center">
+              <p className="font-display text-3xl md:text-4xl font-extrabold text-primary">{value}</p>
+              <p className="mt-1.5 text-sm text-gray-600">{label}</p>
             </div>
           ))}
         </div>
