@@ -70,7 +70,13 @@ router.put("/v1/service-hosts/:id", async (req, res): Promise<void> => {
   if (!paramParsed.success) { res.status(400).json({ error: paramParsed.error.message }); return; }
   const bodyParsed = CreateServiceHostBody.safeParse(req.body);
   if (!bodyParsed.success) { res.status(400).json({ error: bodyParsed.error.message }); return; }
-  const [row] = await db.update(serviceHostsTable).set(bodyParsed.data).where(eq(serviceHostsTable.id, paramParsed.data.id)).returning();
+  const updateSet: Record<string, unknown> = { ...bodyParsed.data };
+  // specialties (Phase 3 auto-dispatch) — not in the shared zod schema, so read
+  // it directly. Normalised to a lowercase string array.
+  if (Array.isArray(req.body?.specialties)) {
+    updateSet.specialties = req.body.specialties.map((s: unknown) => String(s).trim().toLowerCase()).filter(Boolean);
+  }
+  const [row] = await db.update(serviceHostsTable).set(updateSet).where(eq(serviceHostsTable.id, paramParsed.data.id)).returning();
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
   const [account] = row.account_id
     ? await db.select().from(accountsTable).where(eq(accountsTable.id, row.account_id))
