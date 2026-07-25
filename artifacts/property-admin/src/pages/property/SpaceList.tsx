@@ -203,7 +203,7 @@ export default function SpaceList() {
                   ["parent_space_name", "space.col_parent"],
                   ["created_at", "space.col_created"],
                 ].map(([key, label]) => (
-                  <SortableTh key={key} sortKey={key} activeKey={sortKey} dir={sortDir} onSort={toggleSort}>
+                  <SortableTh key={key} sortKey={key} activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>
                     {t(label)}
                   </SortableTh>
                 ))}
