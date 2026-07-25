@@ -16,7 +16,8 @@
     "sign_out": "退出登录",
     "support": "客户支持",
     "dark_mode": "深色模式",
-    "light_mode": "浅色模式"
+    "light_mode": "浅色模式",
+    "work_orders": "工单"
   },
   "common": {
     "loading": "加载中...",
@@ -235,5 +236,15 @@
     "last_reply": "最近回复",
     "no_reply_yet": "暂无回复",
     "english_label": "英语"
+  },
+  "workorders": {
+    "title": "工单",
+    "empty": "暂无分配给您的工单。",
+    "ack_due": "确认截止",
+    "acknowledged": "已确认",
+    "btn_acknowledge": "确认",
+    "btn_start": "开始作业",
+    "btn_complete": "标记完成",
+    "overdue": "已逾期 — 请确认"
   }
 }

@@ -16,7 +16,8 @@
     "sign_out": "ログアウト",
     "support": "サポート",
     "dark_mode": "ダークモード",
-    "light_mode": "ライトモード"
+    "light_mode": "ライトモード",
+    "work_orders": "作業指示"
   },
   "common": {
     "loading": "読み込み中...",
@@ -235,5 +236,15 @@
     "last_reply": "最新の返信",
     "no_reply_yet": "返信はまだありません",
     "english_label": "英語"
+  },
+  "workorders": {
+    "title": "作業指示",
+    "empty": "割り当てられた作業指示はまだありません。",
+    "ack_due": "確認期限",
+    "acknowledged": "確認済み",
+    "btn_acknowledge": "確認",
+    "btn_start": "作業開始",
+    "btn_complete": "完了にする",
+    "overdue": "期限超過 — 確認してください"
   }
 }

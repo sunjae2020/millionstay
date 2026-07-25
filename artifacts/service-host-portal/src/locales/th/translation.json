@@ -16,7 +16,8 @@
     "sign_out": "ออกจากระบบ",
     "support": "ฝ่ายสนับสนุน",
     "dark_mode": "โหมดมืด",
-    "light_mode": "โหมดสว่าง"
+    "light_mode": "โหมดสว่าง",
+    "work_orders": "ใบสั่งงาน"
   },
   "common": {
     "loading": "กำลังโหลด...",
@@ -235,5 +236,15 @@
     "last_reply": "ตอบล่าสุด",
     "no_reply_yet": "ยังไม่มีการตอบกลับ",
     "english_label": "ภาษาอังกฤษ"
+  },
+  "workorders": {
+    "title": "ใบสั่งงาน",
+    "empty": "ยังไม่มีใบสั่งงานที่มอบหมายให้คุณ",
+    "ack_due": "ยืนยันภายใน",
+    "acknowledged": "ยืนยันแล้ว",
+    "btn_acknowledge": "ยืนยัน",
+    "btn_start": "เริ่มงาน",
+    "btn_complete": "ทำเครื่องหมายเสร็จ",
+    "overdue": "เกินกำหนด — โปรดยืนยัน"
   }
 }

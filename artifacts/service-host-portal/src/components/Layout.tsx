@@ -7,7 +7,7 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { APP_NAME } from "@/lib/appName";
 import {
   LayoutDashboard, Briefcase, CalendarDays, DollarSign,
-  LogOut, User, ChevronRight, Menu, X, Sun, Moon, LifeBuoy,
+  LogOut, User, ChevronRight, Menu, X, Sun, Moon, LifeBuoy, Wrench,
 } from "lucide-react";
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -20,6 +20,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const navItems = [
     { href: "/", icon: LayoutDashboard, label: t("nav.dashboard") },
     { href: "/jobs", icon: Briefcase, label: t("nav.my_jobs") },
+    { href: "/work-orders", icon: Wrench, label: t("nav.work_orders", "Work Orders") },
     { href: "/schedule", icon: CalendarDays, label: t("nav.schedule") },
     { href: "/earnings", icon: DollarSign, label: t("nav.earnings") },
     { href: "/support", icon: LifeBuoy, label: t("nav.support", "Support") },

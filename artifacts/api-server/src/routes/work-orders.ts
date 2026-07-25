@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, workOrdersTable, propertiesTable, spacesTable, contactsTable } from "@workspace/db";
+import { db, workOrdersTable, propertiesTable, spacesTable, contactsTable, serviceHostsTable } from "@workspace/db";
 import { eq, ilike, and, isNull, inArray } from "drizzle-orm";
 import { dispatchWorkOrder } from "../lib/dispatch/workOrderDispatch";
 import { logAction } from "../utils/auditLog";
@@ -25,10 +25,12 @@ async function enrichWorkOrders(rows: (typeof workOrdersTable.$inferSelect)[]) {
   const propertyIds = [...new Set(rows.map(r => r.property_id).filter(Boolean))] as number[];
   const spaceIds = [...new Set(rows.map(r => r.space_id).filter(Boolean))] as number[];
   const contactIds = [...new Set(rows.map(r => r.assigned_contact_id).filter(Boolean))] as number[];
+  const hostIds = [...new Set(rows.map(r => r.service_host_id).filter(Boolean))] as number[];
 
   const propertyMap: Record<number, string> = {};
   const spaceMap: Record<number, string> = {};
   const contactMap: Record<number, string> = {};
+  const hostMap: Record<number, string> = {};
 
   for (const id of propertyIds) {
     const [p] = await db.select({ id: propertiesTable.id, name: propertiesTable.name }).from(propertiesTable).where(eq(propertiesTable.id, id));
@@ -42,12 +44,17 @@ async function enrichWorkOrders(rows: (typeof workOrdersTable.$inferSelect)[]) {
     const [c] = await db.select({ id: contactsTable.id, first_name: contactsTable.first_name, last_name: contactsTable.last_name }).from(contactsTable).where(eq(contactsTable.id, id));
     if (c) contactMap[c.id] = `${c.first_name} ${c.last_name}`.trim();
   }
+  for (const id of hostIds) {
+    const [h] = await db.select({ id: serviceHostsTable.id, name: serviceHostsTable.name }).from(serviceHostsTable).where(eq(serviceHostsTable.id, id));
+    if (h) hostMap[h.id] = h.name;
+  }
 
   return rows.map(r => ({
     ...r,
     property_name: r.property_id ? (propertyMap[r.property_id] ?? null) : null,
     space_name: r.space_id ? (spaceMap[r.space_id] ?? null) : null,
     assigned_contact_name: r.assigned_contact_id ? (contactMap[r.assigned_contact_id] ?? null) : null,
+    service_host_name: r.service_host_id ? (hostMap[r.service_host_id] ?? null) : null,
   }));
 }
 

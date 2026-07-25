@@ -16,7 +16,8 @@
     "sign_out": "로그아웃",
     "support": "고객지원",
     "dark_mode": "다크 모드",
-    "light_mode": "라이트 모드"
+    "light_mode": "라이트 모드",
+    "work_orders": "작업지시"
   },
   "common": {
     "loading": "로딩 중...",
@@ -235,5 +236,15 @@
     "last_reply": "최근 답변",
     "no_reply_yet": "아직 답변 없음",
     "english_label": "영어"
+  },
+  "workorders": {
+    "title": "작업지시",
+    "empty": "아직 배정된 작업지시가 없습니다.",
+    "ack_due": "확인 기한",
+    "acknowledged": "확인함",
+    "btn_acknowledge": "확인",
+    "btn_start": "작업 시작",
+    "btn_complete": "완료 처리",
+    "overdue": "기한 초과 — 확인해 주세요"
   }
 }

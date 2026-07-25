@@ -810,7 +810,15 @@
     "label_cost": "Estimated Cost (AUD)",
     "section_completed": "Completed",
     "completed_on": "Completed on",
-    "final_cost": "Final cost"
+    "final_cost": "Final cost",
+    "section_dispatch": "Partner Dispatch & SLA",
+    "btn_dispatch": "Dispatch to partner",
+    "btn_redispatch": "Re-dispatch",
+    "label_partner": "Partner",
+    "label_ack_due": "Ack due",
+    "label_acknowledged": "Acknowledged",
+    "not_dispatched": "Not dispatched to a partner. Set a category matching a partner specialty and dispatch.",
+    "dispatch_failed": "Dispatch failed — no matching partner"
   },
   "csticket": {
     "search_placeholder": "Search tickets...",
@@ -1423,7 +1431,18 @@
     "label_from_date": "From Date",
     "label_to_date": "To Date",
     "label_status": "Status",
-    "label_notes": "Notes"
+    "label_notes": "Notes",
+    "label_specialties": "Specialties (auto-dispatch)",
+    "specialties_hint": "Trades this partner handles. Work orders with a matching category are auto-dispatched here.",
+    "specialty_plumbing": "Plumbing",
+    "specialty_electrical": "Electrical",
+    "specialty_cleaning": "Cleaning",
+    "specialty_general": "General",
+    "specialty_inspection": "Inspection",
+    "specialty_linen": "Linen",
+    "specialty_hvac": "HVAC",
+    "specialty_gardening": "Gardening",
+    "specialty_pest": "Pest control"
   },
   "receipt": {
     "no_receipts": "No receipts found",

@@ -810,7 +810,15 @@
     "label_cost": "ค่าใช้จ่ายโดยประมาณ (AUD)",
     "section_completed": "เสร็จสิ้น",
     "completed_on": "เสร็จเมื่อ",
-    "final_cost": "ค่าใช้จ่ายสุดท้าย"
+    "final_cost": "ค่าใช้จ่ายสุดท้าย",
+    "section_dispatch": "มอบหมายพาร์ทเนอร์ & SLA",
+    "btn_dispatch": "มอบหมายให้พาร์ทเนอร์",
+    "btn_redispatch": "มอบหมายใหม่",
+    "label_partner": "พาร์ทเนอร์",
+    "label_ack_due": "ยืนยันภายใน",
+    "label_acknowledged": "ยืนยันแล้ว",
+    "not_dispatched": "ยังไม่ได้มอบหมาย ตั้งหมวดหมู่ให้ตรงกับความชำนาญของพาร์ทเนอร์แล้วมอบหมาย",
+    "dispatch_failed": "มอบหมายไม่สำเร็จ — ไม่มีพาร์ทเนอร์ที่ตรงกัน"
   },
   "csticket": {
     "search_placeholder": "ค้นหาตั๋ว...",
@@ -1423,7 +1431,18 @@
     "label_from_date": "วันเริ่มต้น",
     "label_to_date": "วันสิ้นสุด",
     "label_status": "สถานะ",
-    "label_notes": "หมายเหตุ"
+    "label_notes": "หมายเหตุ",
+    "label_specialties": "ความชำนาญ (มอบหมายอัตโนมัติ)",
+    "specialties_hint": "งานที่พาร์ทเนอร์นี้รับผิดชอบ ใบสั่งงานที่หมวดหมู่ตรงกันจะถูกมอบหมายมาที่นี่",
+    "specialty_plumbing": "ประปา",
+    "specialty_electrical": "ไฟฟ้า",
+    "specialty_cleaning": "ทำความสะอาด",
+    "specialty_general": "ทั่วไป",
+    "specialty_inspection": "ตรวจสอบ",
+    "specialty_linen": "ผ้า",
+    "specialty_hvac": "ปรับอากาศ",
+    "specialty_gardening": "สวน",
+    "specialty_pest": "กำจัดแมลง"
   },
   "receipt": {
     "no_receipts": "ไม่พบใบเสร็จ",

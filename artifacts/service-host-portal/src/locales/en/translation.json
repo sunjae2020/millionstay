@@ -16,7 +16,8 @@
     "sign_out": "Sign out",
     "support": "Support",
     "dark_mode": "Dark mode",
-    "light_mode": "Light mode"
+    "light_mode": "Light mode",
+    "work_orders": "Work Orders"
   },
   "common": {
     "loading": "Loading...",
@@ -235,5 +236,15 @@
     "last_reply": "Last reply",
     "no_reply_yet": "No replies yet",
     "english_label": "English"
+  },
+  "workorders": {
+    "title": "Work Orders",
+    "empty": "No work orders assigned to you yet.",
+    "ack_due": "Ack by",
+    "acknowledged": "Acknowledged",
+    "btn_acknowledge": "Acknowledge",
+    "btn_start": "Start job",
+    "btn_complete": "Mark complete",
+    "overdue": "Overdue — please acknowledge"
   }
 }
