@@ -330,8 +330,8 @@ export default function ContractDetail() {
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch (err) {
       toast({
-        title: "PDF unavailable",
-        description: err instanceof Error ? err.message : "Failed to generate document.",
+        title: t('contract.toast_pdf_unavailable'),
+        description: err instanceof Error ? err.message : t('contract.toast_pdf_failed'),
         variant: "destructive",
       });
     } finally {
@@ -340,16 +340,16 @@ export default function ContractDetail() {
   };
 
   const handleEmail = async () => {
-    if (!window.confirm("Email this agreement (PDF) to the tenant?")) return;
+    if (!window.confirm(t('contract.confirm_email'))) return;
     setPdfBusy(true);
     try {
       const res = await apiFetch(`/api/v1/contracts/${id}/email`, { method: "POST" });
       const body = await res.json().catch(() => null);
       if (!res.ok) throw new Error(body?.error ?? `HTTP ${res.status}`);
-      toast({ title: "Email sent", description: `Agreement emailed to ${body?.to ?? "recipient"}.` });
+      toast({ title: t('contract.toast_email_sent'), description: t('contract.toast_email_sent_desc', { to: body?.to ?? t('contract.recipient') }) });
       refetch();
     } catch (err) {
-      toast({ title: "Email failed", description: err instanceof Error ? err.message : "Error", variant: "destructive" });
+      toast({ title: t('contract.toast_email_failed'), description: err instanceof Error ? err.message : t('contract.error'), variant: "destructive" });
     } finally {
       setPdfBusy(false);
     }
@@ -380,7 +380,7 @@ export default function ContractDetail() {
         {status === "Active" && (
           <Button type="button" size="sm" variant="outline" className="text-orange-600"
             onClick={() => expireMutation.mutate({ id: Number(id) })}>
-            Mark Expired
+            {t('contract.btn_mark_expired')}
           </Button>
         )}
         {(status === "Draft" || status === "Sent" || status === "Signed" || status === "Active") && (
@@ -403,7 +403,7 @@ export default function ContractDetail() {
               <h1 className="text-xl sm:text-2xl font-bold font-mono">
                 {isNew ? t('contract.new') : contract?.contract_ref}
               </h1>
-              {!isNew && <p className="text-sm text-muted-foreground">Contract #{id}</p>}
+              {!isNew && <p className="text-sm text-muted-foreground">{t('contract.contract_number', { id })}</p>}
             </div>
             <div className="flex gap-2 flex-wrap">
               <Button type="button" variant="outline" onClick={() => navigate("/contracts/contracts")}>
@@ -412,20 +412,20 @@ export default function ContractDetail() {
               {!isNew && (
                 <>
                   <Button type="button" variant="outline" disabled={pdfBusy} onClick={() => handlePdf("preview")}>
-                    <Eye className="h-4 w-4 mr-2" />Preview
+                    <Eye className="h-4 w-4 mr-2" />{t('contract.btn_preview')}
                   </Button>
                   <Button type="button" variant="outline" disabled={pdfBusy} onClick={() => handlePdf("download")}>
                     <FileDown className="h-4 w-4 mr-2" />PDF
                   </Button>
                   <Button type="button" variant="outline" disabled={pdfBusy} onClick={handleEmail}>
-                    <Mail className="h-4 w-4 mr-2" />Email
+                    <Mail className="h-4 w-4 mr-2" />{t('contract.btn_email')}
                   </Button>
                   <DocumentVersions entityType="contract" entityId={Number(id)} freezeUrl={`/api/v1/contracts/${id}/freeze`} />
                 </>
               )}
               {!isNew && (
                 <Button type="button" variant="outline" className="text-red-600"
-                  onClick={() => { if (confirm("Delete this contract?")) deleteMutation.mutate({ id: Number(id) }); }}>
+                  onClick={() => { if (confirm(t('contract.confirm_delete'))) deleteMutation.mutate({ id: Number(id) }); }}>
                   <Trash2 className="h-4 w-4 mr-2" />{t('common.delete')}
                 </Button>
               )}
@@ -437,10 +437,10 @@ export default function ContractDetail() {
           {!isNew && contract && (
             <div className="border rounded-lg p-4 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-blue-50/50">
               <div className="flex items-center gap-3 flex-wrap">
-                <span className="text-sm font-medium text-muted-foreground">Status:</span>
+                <span className="text-sm font-medium text-muted-foreground">{t('contract.status_label')}</span>
                 <Badge className={statusColors[status] ?? ""}>{status}</Badge>
-                {contract.sent_at && <span className="text-xs text-muted-foreground">Sent: {formatDate(contract.sent_at)}</span>}
-                {contract.signed_at && <span className="text-xs text-muted-foreground">Signed: {formatDate(contract.signed_at)}</span>}
+                {contract.sent_at && <span className="text-xs text-muted-foreground">{t('contract.sent_at_label', { date: formatDate(contract.sent_at) })}</span>}
+                {contract.signed_at && <span className="text-xs text-muted-foreground">{t('contract.signed_at_label', { date: formatDate(contract.signed_at) })}</span>}
               </div>
               {fsmActions()}
             </div>
@@ -468,19 +468,19 @@ export default function ContractDetail() {
                       lookupUrl="/api/v1/lookup/bookings"
                       value={field.value}
                       onChange={field.onChange}
-                      placeholder="Search bookings..."
+                      placeholder={t('contract.ph_search_bookings')}
                       displayValue={(contract as any)?.booking_ref ?? null}
                     />
                   )} />
                 </div>
                 <div>
-                  <Label>Product / Accommodation Package</Label>
+                  <Label>{t('contract.label_product_package')}</Label>
                   <Controller name="product_id" control={control} render={({ field }) => (
                     <LookupSelect
                       lookupUrl="/api/v1/lookup/products"
                       value={field.value}
                       onChange={field.onChange}
-                      placeholder="Search products..."
+                      placeholder={t('contract.ph_search_products')}
                       displayValue={(contract as any)?.product_name ?? (contract as any)?.contract_product_name ?? null}
                     />
                   )} />
@@ -492,7 +492,7 @@ export default function ContractDetail() {
                       lookupUrl="/api/v1/lookup/spaces"
                       value={field.value}
                       onChange={field.onChange}
-                      placeholder="Search spaces..."
+                      placeholder={t('booking.placeholder_space')}
                       displayValue={(contract as any)?.space_name ?? null}
                     />
                   )} />
@@ -511,19 +511,19 @@ export default function ContractDetail() {
                       lookupUrl="/api/v1/lookup/accounts"
                       value={field.value}
                       onChange={field.onChange}
-                      placeholder="Search accounts..."
+                      placeholder={t('contract.ph_search_accounts')}
                       displayValue={(contract as any)?.tenant_name ?? null}
                     />
                   )} />
                 </div>
                 <div>
-                  <Label>Landlord Account</Label>
+                  <Label>{t('contract.label_landlord')}</Label>
                   <Controller name="landlord_account_id" control={control} render={({ field }) => (
                     <LookupSelect
                       lookupUrl="/api/v1/lookup/accounts"
                       value={field.value}
                       onChange={field.onChange}
-                      placeholder="Search accounts..."
+                      placeholder={t('contract.ph_search_accounts')}
                       displayValue={(contract as any)?.landlord_name ?? null}
                     />
                   )} />
@@ -567,11 +567,11 @@ export default function ContractDetail() {
                   <Input {...register("total_rent")} type="number" step="0.01" min="0" />
                 </div>
                 <div>
-                  <Label>Bond Amount</Label>
+                  <Label>{t('contract.label_bond')}</Label>
                   <Input {...register("bond_amount")} type="number" step="0.01" min="0" />
                 </div>
                 <div>
-                  <Label>Advance Amount</Label>
+                  <Label>{t('contract.label_advance')}</Label>
                   <Input {...register("advance_amount")} type="number" step="0.01" min="0" />
                 </div>
               </div>
@@ -579,19 +579,19 @@ export default function ContractDetail() {
 
             {/* Document */}
             <div className="border rounded-lg bg-white p-4 sm:p-6">
-              <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">Document & Terms</h2>
+              <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">{t('contract.section_document')}</h2>
               <div className="space-y-4">
                 <div>
-                  <Label>Document URL (Signed Copy)</Label>
+                  <Label>{t('contract.label_document_url')}</Label>
                   <Input {...register("document_url")} placeholder="https://..." />
                 </div>
                 <div>
-                  <Label>Contract Terms</Label>
-                  <Textarea {...register("terms_text")} placeholder="Enter contract terms and conditions..." rows={6} />
+                  <Label>{t('contract.label_terms')}</Label>
+                  <Textarea {...register("terms_text")} placeholder={t('contract.ph_terms')} rows={6} />
                 </div>
                 <div>
                   <Label>{t('contract.label_notes')}</Label>
-                  <Textarea {...register("notes")} placeholder="Internal notes..." rows={3} />
+                  <Textarea {...register("notes")} placeholder={t('contract.ph_notes')} rows={3} />
                 </div>
               </div>
             </div>
@@ -604,8 +604,8 @@ export default function ContractDetail() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-8 space-y-4">
           <div className="flex border-b gap-1">
             {[
-              { id: "line-items", label: `Contract Lines${lineItems.length ? ` (${lineItems.length})` : ""}`, icon: <List className="w-3.5 h-3.5" /> },
-              { id: "schedule", label: `Payment Schedule${schedules.length ? ` (${schedules.length})` : ""}`, icon: <CalendarDays className="w-3.5 h-3.5" /> },
+              { id: "line-items", label: `${t('contract.tab_line_items')}${lineItems.length ? ` (${lineItems.length})` : ""}`, icon: <List className="w-3.5 h-3.5" /> },
+              { id: "schedule", label: `${t('contract.tab_schedule')}${schedules.length ? ` (${schedules.length})` : ""}`, icon: <CalendarDays className="w-3.5 h-3.5" /> },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -621,25 +621,25 @@ export default function ContractDetail() {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <div>
-                  <h4 className="font-medium text-sm">Contract Line Items</h4>
-                  <p className="text-xs text-muted-foreground mt-0.5">All billing lines — rent and services. Used to generate invoices on activation.</p>
+                  <h4 className="font-medium text-sm">{t('contract.line_items_title')}</h4>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t('contract.line_items_desc')}</p>
                 </div>
                 <Button size="sm" variant="outline" onClick={openAddLine}>
-                  <Plus className="w-3.5 h-3.5 mr-1" /> Add Line
+                  <Plus className="w-3.5 h-3.5 mr-1" /> {t('contract.btn_add_line')}
                 </Button>
               </div>
               <div className="rounded-lg border bg-white overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50 border-b">
                     <tr>
-                      {["Type", "Name", "Billing", "Frequency", "Unit Price", "Qty", "Total", "GST", ""].map((h) => (
-                        <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">{h}</th>
+                      {[t('common.type'), t('common.name'), t('contract.col_billing'), t('contract.col_frequency'), t('contract.col_unit_price'), t('contract.col_qty'), t('common.total'), t('contract.col_gst'), ""].map((h, hi) => (
+                        <th key={hi} className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {!lineItems.length ? (
-                      <tr><td colSpan={9} className="text-center py-10 text-muted-foreground">No line items yet. Activate contract to auto-generate from booking services.</td></tr>
+                      <tr><td colSpan={9} className="text-center py-10 text-muted-foreground">{t('contract.no_line_items')}</td></tr>
                     ) : lineItems.map((item: any) => (
                       <tr key={item.id} className="border-b hover:bg-gray-50">
                         <td className="px-4 py-3">
@@ -649,7 +649,7 @@ export default function ContractDetail() {
                         </td>
                         <td className="px-4 py-3 font-medium">{item.name}</td>
                         <td className="px-4 py-3 text-muted-foreground">
-                          {item.billing_trigger === "recurring" ? "Recurring" : item.billing_trigger === "at_activation" ? "One-time" : item.billing_trigger}
+                          {item.billing_trigger === "recurring" ? t('contract.billing_recurring') : item.billing_trigger === "at_activation" ? t('contract.billing_onetime') : item.billing_trigger}
                         </td>
                         <td className="px-4 py-3 text-muted-foreground">{item.billing_frequency ?? "—"}</td>
                         <td className="px-4 py-3 font-mono">{item.unit_price != null ? `$${Number(item.unit_price).toFixed(2)}` : "—"}</td>
@@ -657,7 +657,7 @@ export default function ContractDetail() {
                         <td className="px-4 py-3 font-mono font-medium">{item.total_price != null ? `$${Number(item.total_price).toFixed(2)}` : "—"}</td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${item.gst_included ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"}`}>
-                            {item.gst_included ? "GST incl." : "Ex GST"}
+                            {item.gst_included ? t('contract.gst_incl') : t('contract.gst_ex')}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -676,7 +676,7 @@ export default function ContractDetail() {
                   {lineItems.length > 0 && (
                     <tfoot className="bg-gray-50 border-t">
                       <tr>
-                        <td colSpan={6} className="px-4 py-3 text-right font-medium text-sm text-muted-foreground">Total Contract Value</td>
+                        <td colSpan={6} className="px-4 py-3 text-right font-medium text-sm text-muted-foreground">{t('contract.total_contract_value')}</td>
                         <td className="px-4 py-3 font-mono font-bold text-sm">
                           ${lineItems.reduce((sum: number, i: any) => sum + Number(i.total_price ?? 0), 0).toFixed(2)}
                         </td>
@@ -692,23 +692,23 @@ export default function ContractDetail() {
           {activeTab === "schedule" && (
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <h4 className="font-medium text-sm">Payment Schedule</h4>
+                <h4 className="font-medium text-sm">{t('contract.tab_schedule')}</h4>
                 <Button size="sm" variant="outline" onClick={openAddSched}>
-                  <Plus className="w-3.5 h-3.5 mr-1" /> Add Entry
+                  <Plus className="w-3.5 h-3.5 mr-1" /> {t('contract.btn_add_entry')}
                 </Button>
               </div>
               <div className="rounded-lg border bg-white overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50 border-b">
                     <tr>
-                      {["Type", "Amount", "Currency", "Start Date", "End Date", "Next Due Date", "Frequency", "GST", "Active", ""].map((h) => (
-                        <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>
+                      {[t('common.type'), t('common.amount'), t('contract.label_currency'), t('contract.label_start'), t('contract.label_end'), t('contract.col_next_due'), t('contract.col_frequency'), t('contract.col_gst'), t('common.active'), ""].map((h, hi) => (
+                        <th key={hi} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {!schedules.length ? (
-                      <tr><td colSpan={10} className="text-center py-10 text-muted-foreground">No payment schedule entries yet</td></tr>
+                      <tr><td colSpan={10} className="text-center py-10 text-muted-foreground">{t('contract.no_schedule')}</td></tr>
                     ) : schedules.map((s: any) => (
                       <tr key={s.id} className="border-b hover:bg-gray-50">
                         <td className="px-4 py-3 font-medium">{s.schedule_type ?? "Rent"}</td>
@@ -720,12 +720,12 @@ export default function ContractDetail() {
                         <td className="px-4 py-3 text-muted-foreground">{s.frequency ?? "—"}</td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s.gst_included ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"}`}>
-                            {s.gst_included ? "GST incl." : "Ex GST"}
+                            {s.gst_included ? t('contract.gst_incl') : t('contract.gst_ex')}
                           </span>
                         </td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}`}>
-                            {s.is_active ? "Active" : "Inactive"}
+                            {s.is_active ? t('common.active') : t('common.inactive')}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -756,11 +756,11 @@ export default function ContractDetail() {
             <DialogTitle>{t('contract.btn_terminate')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <Label>Termination Reason *</Label>
+            <Label>{t('contract.label_termination_reason')} *</Label>
             <Textarea
               value={terminateReason}
               onChange={e => setTerminateReason(e.target.value)}
-              placeholder="Reason for termination..."
+              placeholder={t('contract.ph_termination_reason')}
               rows={3}
             />
           </div>
@@ -781,7 +781,7 @@ export default function ContractDetail() {
             <DialogTitle>{t('contract.btn_sign')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <Label>Signed Document URL (Optional)</Label>
+            <Label>{t('contract.label_signed_doc_url')}</Label>
             <Input
               value={signDocUrl}
               onChange={e => setSignDocUrl(e.target.value)}
@@ -792,7 +792,7 @@ export default function ContractDetail() {
             <Button variant="outline" onClick={() => setSignOpen(false)}>{t('common.cancel')}</Button>
             <Button className="bg-purple-600 hover:bg-purple-700 text-white"
               onClick={() => signMutation.mutate({ id: Number(id), data: { document_url: signDocUrl || null } })}>
-              Confirm Signed
+              {t('contract.btn_confirm_signed')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -802,62 +802,68 @@ export default function ContractDetail() {
       <Dialog open={lineDialogOpen} onOpenChange={(open) => { if (!open) { setLineDialogOpen(false); resetLineForm(); } }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{lineEditItem ? "Edit Line Item" : "Add Line Item"}</DialogTitle>
+            <DialogTitle>{lineEditItem ? t('contract.dlg_edit_line') : t('contract.dlg_add_line')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Type</Label>
+                <Label>{t('common.type')}</Label>
                 <Select value={lineItemType} onValueChange={setLineItemType}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {["Rent", "Service", "Bond", "Admin Fee", "Other"].map(v => (
-                      <SelectItem key={v} value={v}>{v}</SelectItem>
+                    {[
+                      { v: "Rent", l: t('contract.item_type_rent') },
+                      { v: "Service", l: t('contract.item_type_service') },
+                      { v: "Bond", l: t('contract.item_type_bond') },
+                      { v: "Admin Fee", l: t('contract.item_type_admin_fee') },
+                      { v: "Other", l: t('contract.item_type_other') },
+                    ].map(o => (
+                      <SelectItem key={o.v} value={o.v}>{o.l}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>Billing</Label>
+                <Label>{t('contract.col_billing')}</Label>
                 <Select value={lineTrigger} onValueChange={v => { setLineTrigger(v); if (v !== "recurring") setLineFreq(""); }}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="recurring">Recurring</SelectItem>
-                    <SelectItem value="at_activation">One-time (at activation)</SelectItem>
+                    <SelectItem value="recurring">{t('contract.billing_recurring')}</SelectItem>
+                    <SelectItem value="at_activation">{t('contract.billing_onetime_full')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div>
-              <Label>Name *</Label>
-              <Input value={lineName} onChange={e => setLineName(e.target.value)} placeholder="e.g. Cleaning Fee, Airport Pickup..." className="mt-1" />
+              <Label>{t('common.name')} *</Label>
+              <Input value={lineName} onChange={e => setLineName(e.target.value)} placeholder={t('contract.ph_line_name')} className="mt-1" />
             </div>
             {lineTrigger === "recurring" && (
               <div>
-                <Label>Frequency</Label>
+                <Label>{t('contract.col_frequency')}</Label>
                 <Select value={lineFreq} onValueChange={setLineFreq}>
-                  <SelectTrigger className="mt-1"><SelectValue placeholder="Select frequency" /></SelectTrigger>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder={t('contract.ph_select_frequency')} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Weekly">Weekly</SelectItem>
-                    <SelectItem value="Biweekly">Fortnightly</SelectItem>
-                    <SelectItem value="Monthly">Monthly</SelectItem>
+                    <SelectItem value="Weekly">{t('contract.freq_weekly')}</SelectItem>
+                    <SelectItem value="Biweekly">{t('contract.freq_fortnightly')}</SelectItem>
+                    <SelectItem value="Monthly">{t('contract.freq_monthly')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             )}
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-2">
-                <Label>Unit Price *</Label>
+                <Label>{t('contract.col_unit_price')} *</Label>
                 <Input type="number" step="0.01" min="0" value={lineUnitPrice} onChange={e => setLineUnitPrice(e.target.value)} placeholder="0.00" className="mt-1" />
               </div>
               <div>
-                <Label>Qty</Label>
+                <Label>{t('contract.col_qty')}</Label>
                 <Input type="number" min="1" value={lineQty} onChange={e => setLineQty(e.target.value)} className="mt-1" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Currency</Label>
+                <Label>{t('contract.label_currency')}</Label>
                 <Select value={lineCurrency} onValueChange={setLineCurrency}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -868,30 +874,30 @@ export default function ContractDetail() {
               <div className="flex items-end pb-2">
                 <label className="flex items-center gap-2 cursor-pointer text-sm">
                   <input type="checkbox" checked={lineGst} onChange={e => setLineGst(e.target.checked)} className="rounded" />
-                  GST Included
+                  {t('contract.gst_included')}
                 </label>
               </div>
             </div>
             <div>
-              <Label>Notes</Label>
-              <Input value={lineNotes} onChange={e => setLineNotes(e.target.value)} placeholder="Optional notes..." className="mt-1" />
+              <Label>{t('common.notes')}</Label>
+              <Input value={lineNotes} onChange={e => setLineNotes(e.target.value)} placeholder={t('contract.ph_optional_notes')} className="mt-1" />
             </div>
             {lineUnitPrice && lineQty && (
               <div className="bg-gray-50 rounded p-3 text-sm">
-                <span className="text-muted-foreground">Total: </span>
+                <span className="text-muted-foreground">{t('common.total')}: </span>
                 <span className="font-mono font-bold">${(Number(lineUnitPrice) * Number(lineQty)).toFixed(2)} {lineCurrency}</span>
-                {lineTrigger === "recurring" && lineFreq && <span className="text-muted-foreground ml-2">per {lineFreq.toLowerCase()} period</span>}
+                {lineTrigger === "recurring" && lineFreq && <span className="text-muted-foreground ml-2">{t('contract.per_period', { period: lineFreq.toLowerCase() })}</span>}
               </div>
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setLineDialogOpen(false); resetLineForm(); }}>Cancel</Button>
+            <Button variant="outline" onClick={() => { setLineDialogOpen(false); resetLineForm(); }}>{t('common.cancel')}</Button>
             <Button
               className="bg-primary hover:bg-[#d4561a] text-white"
               disabled={!lineName || !lineUnitPrice || addLineMutation.isPending || updateLineMutation.isPending}
               onClick={submitLineForm}
             >
-              {lineEditItem ? "Save Changes" : "Add Line Item"}
+              {lineEditItem ? t('contract.btn_save_changes') : t('contract.dlg_add_line')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -901,42 +907,52 @@ export default function ContractDetail() {
       <Dialog open={schedDialogOpen} onOpenChange={(open) => { if (!open) { setSchedDialogOpen(false); resetSchedForm(); } }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{schedEditItem ? "Edit Payment Schedule Entry" : "Add Payment Schedule Entry"}</DialogTitle>
+            <DialogTitle>{schedEditItem ? t('contract.dlg_edit_sched') : t('contract.dlg_add_sched')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Type</Label>
+                <Label>{t('common.type')}</Label>
                 <Select value={schedType} onValueChange={setSchedType}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {["Rent", "Bond", "Advance", "Water", "Electricity", "Gas", "Internet", "Parking", "Other"].map(v => (
-                      <SelectItem key={v} value={v}>{v}</SelectItem>
+                    {[
+                      { v: "Rent", l: t('contract.item_type_rent') },
+                      { v: "Bond", l: t('contract.item_type_bond') },
+                      { v: "Advance", l: t('contract.sched_type_advance') },
+                      { v: "Water", l: t('contract.sched_type_water') },
+                      { v: "Electricity", l: t('contract.sched_type_electricity') },
+                      { v: "Gas", l: t('contract.sched_type_gas') },
+                      { v: "Internet", l: t('contract.sched_type_internet') },
+                      { v: "Parking", l: t('contract.sched_type_parking') },
+                      { v: "Other", l: t('contract.item_type_other') },
+                    ].map(o => (
+                      <SelectItem key={o.v} value={o.v}>{o.l}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>Frequency</Label>
+                <Label>{t('contract.col_frequency')}</Label>
                 <Select value={schedFreq} onValueChange={setSchedFreq}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Weekly">Weekly</SelectItem>
-                    <SelectItem value="Biweekly">Fortnightly</SelectItem>
-                    <SelectItem value="Monthly">Monthly</SelectItem>
-                    <SelectItem value="Quarterly">Quarterly</SelectItem>
-                    <SelectItem value="Once">Once</SelectItem>
+                    <SelectItem value="Weekly">{t('contract.freq_weekly')}</SelectItem>
+                    <SelectItem value="Biweekly">{t('contract.freq_fortnightly')}</SelectItem>
+                    <SelectItem value="Monthly">{t('contract.freq_monthly')}</SelectItem>
+                    <SelectItem value="Quarterly">{t('contract.freq_quarterly')}</SelectItem>
+                    <SelectItem value="Once">{t('contract.freq_once')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Amount *</Label>
+                <Label>{t('common.amount')} *</Label>
                 <Input type="number" step="0.01" min="0" value={schedAmount} onChange={e => setSchedAmount(e.target.value)} placeholder="0.00" className="mt-1" />
               </div>
               <div>
-                <Label>Currency</Label>
+                <Label>{t('contract.label_currency')}</Label>
                 <Select value={schedCurrency} onValueChange={setSchedCurrency}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -947,37 +963,37 @@ export default function ContractDetail() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Start Date *</Label>
+                <Label>{t('contract.label_start')} *</Label>
                 <DateInput value={schedStartDate} onChange={setSchedStartDate} className="mt-1" />
               </div>
               <div>
-                <Label>End Date</Label>
+                <Label>{t('contract.label_end')}</Label>
                 <DateInput value={schedEndDate} onChange={setSchedEndDate} className="mt-1" />
               </div>
             </div>
             <div>
-              <Label>Next Due Date *</Label>
+              <Label>{t('contract.col_next_due')} *</Label>
               <DateInput value={schedNextDue} onChange={setSchedNextDue} className="mt-1" />
             </div>
             <div className="flex gap-6">
               <label className="flex items-center gap-2 cursor-pointer text-sm">
                 <input type="checkbox" checked={schedGst} onChange={e => setSchedGst(e.target.checked)} className="rounded" />
-                GST Included
+                {t('contract.gst_included')}
               </label>
               <label className="flex items-center gap-2 cursor-pointer text-sm">
                 <input type="checkbox" checked={schedActive} onChange={e => setSchedActive(e.target.checked)} className="rounded" />
-                Active
+                {t('common.active')}
               </label>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setSchedDialogOpen(false); resetSchedForm(); }}>Cancel</Button>
+            <Button variant="outline" onClick={() => { setSchedDialogOpen(false); resetSchedForm(); }}>{t('common.cancel')}</Button>
             <Button
               className="bg-primary hover:bg-[#d4561a] text-white"
               disabled={!schedAmount || !schedStartDate || addSchedMutation.isPending || updateSchedMutation.isPending}
               onClick={submitSchedForm}
             >
-              {schedEditItem ? "Save Changes" : "Add Entry"}
+              {schedEditItem ? t('contract.btn_save_changes') : t('contract.btn_add_entry')}
             </Button>
           </DialogFooter>
         </DialogContent>

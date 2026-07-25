@@ -86,8 +86,8 @@ export default function InvoiceDetail() {
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch (err) {
       toast({
-        title: "PDF unavailable",
-        description: err instanceof Error ? err.message : "Failed to generate document.",
+        title: t('invoice.pdf_unavailable'),
+        description: err instanceof Error ? err.message : t('invoice.pdf_failed_desc'),
         variant: "destructive",
       });
     } finally {
@@ -97,16 +97,16 @@ export default function InvoiceDetail() {
 
   // Email the branded invoice PDF to the billing account.
   const handleEmail = async () => {
-    if (!window.confirm("Email this invoice (PDF) to the linked account?")) return;
+    if (!window.confirm(t('invoice.email_confirm'))) return;
     setPdfBusy(true);
     try {
       const res = await apiFetch(`/api/v1/invoices/${id}/email`, { method: "POST" });
       const body = await res.json().catch(() => null);
       if (!res.ok) throw new Error(body?.error ?? `HTTP ${res.status}`);
-      toast({ title: "Email sent", description: `Invoice emailed to ${body?.to ?? "recipient"}.` });
+      toast({ title: t('invoice.email_sent'), description: t('invoice.email_sent_desc', { to: body?.to ?? t('invoice.recipient') }) });
       refetch();
     } catch (err) {
-      toast({ title: "Email failed", description: err instanceof Error ? err.message : "Error", variant: "destructive" });
+      toast({ title: t('invoice.email_failed'), description: err instanceof Error ? err.message : t('invoice.error'), variant: "destructive" });
     } finally {
       setPdfBusy(false);
     }
@@ -121,11 +121,11 @@ export default function InvoiceDetail() {
       if (body?.url) {
         await navigator.clipboard?.writeText(body.url).catch(() => {});
         window.open(body.url, "_blank", "noopener,noreferrer");
-        toast({ title: "Payment link created", description: "Stripe Checkout opened; link copied to clipboard." });
+        toast({ title: t('invoice.pay_link_created'), description: t('invoice.pay_link_created_desc') });
       }
       refetch();
     } catch (err) {
-      toast({ title: "Could not create payment link", description: err instanceof Error ? err.message : "Error", variant: "destructive" });
+      toast({ title: t('invoice.pay_link_failed'), description: err instanceof Error ? err.message : t('invoice.error'), variant: "destructive" });
     } finally {
       setPdfBusy(false);
     }
@@ -193,9 +193,9 @@ export default function InvoiceDetail() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
-              {isNew ? t('invoice.new') : invoice?.invoice_ref ?? "Invoice"}
+              {isNew ? t('invoice.new') : invoice?.invoice_ref ?? t('invoice.title')}
             </h1>
-            {!isNew && <p className="text-sm text-muted-foreground">Invoice #{id}</p>}
+            {!isNew && <p className="text-sm text-muted-foreground">{t('invoice.number', { id })}</p>}
           </div>
           <div className="flex gap-2 flex-wrap">
             <Button variant="outline" onClick={() => navigate("/finance/invoices")}>
@@ -204,13 +204,13 @@ export default function InvoiceDetail() {
             {!isNew && (
               <>
                 <Button variant="outline" disabled={pdfBusy} onClick={() => handlePdf("preview")}>
-                  <Eye className="h-4 w-4 mr-1" /> Preview
+                  <Eye className="h-4 w-4 mr-1" /> {t('invoice.btn_preview')}
                 </Button>
                 <Button variant="outline" disabled={pdfBusy} onClick={() => handlePdf("download")}>
-                  <FileDown className="h-4 w-4 mr-1" /> PDF
+                  <FileDown className="h-4 w-4 mr-1" /> {t('invoice.btn_pdf')}
                 </Button>
                 <Button variant="outline" disabled={pdfBusy} onClick={handleEmail}>
-                  <Mail className="h-4 w-4 mr-1" /> Email
+                  <Mail className="h-4 w-4 mr-1" /> {t('invoice.btn_email')}
                 </Button>
                 <DocumentVersions entityType="invoice" entityId={Number(id)} freezeUrl={`/api/v1/invoices/${id}/freeze`} />
               </>
@@ -230,7 +230,7 @@ export default function InvoiceDetail() {
         {!isNew && (
           <div className="border rounded-lg bg-white p-4 mb-4 flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">Status:</span>
+              <span className="text-sm font-medium text-muted-foreground">{t('common.status')}:</span>
               <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusColors[status] ?? "bg-gray-100 text-gray-600"}`}>
                 {status}
               </span>
@@ -248,7 +248,7 @@ export default function InvoiceDetail() {
               )}
               {(status === "Draft" || status === "Sent") && (
                 <Button variant="outline" disabled={pdfBusy} onClick={handleCheckout}>
-                  {t('invoice.btn_collect_payment', 'Collect payment')}
+                  {t('invoice.btn_collect_payment')}
                 </Button>
               )}
               {(status === "Draft" || status === "Sent") && (
@@ -263,7 +263,7 @@ export default function InvoiceDetail() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Links */}
           <div className="border rounded-lg bg-white p-4 sm:p-6">
-            <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">Links</h2>
+            <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">{t('invoice.section_links')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <Label>{t('invoice.label_booking')}</Label>
@@ -272,7 +272,7 @@ export default function InvoiceDetail() {
                     lookupUrl="/api/v1/lookup/bookings"
                     value={field.value}
                     onChange={field.onChange}
-                    placeholder="Search bookings..."
+                    placeholder={t('invoice.placeholder_booking')}
                     displayValue={(invoice as any)?.booking_ref ?? null}
                   />
                 )} />
@@ -284,7 +284,7 @@ export default function InvoiceDetail() {
                     lookupUrl="/api/v1/lookup/contracts"
                     value={field.value}
                     onChange={field.onChange}
-                    placeholder="Search contracts..."
+                    placeholder={t('invoice.placeholder_contract')}
                     displayValue={(invoice as any)?.contract_ref ?? null}
                   />
                 )} />
@@ -296,7 +296,7 @@ export default function InvoiceDetail() {
                     lookupUrl="/api/v1/lookup/accounts"
                     value={field.value}
                     onChange={field.onChange}
-                    placeholder="Search accounts..."
+                    placeholder={t('invoice.placeholder_account')}
                     displayValue={(invoice as any)?.account_name ?? null}
                   />
                 )} />
@@ -354,15 +354,15 @@ export default function InvoiceDetail() {
 
           {/* Description + Notes */}
           <div className="border rounded-lg bg-white p-4 sm:p-6">
-            <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">Details</h2>
+            <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">{t('invoice.section_details')}</h2>
             <div className="space-y-4">
               <div>
                 <Label>{t('invoice.label_item_desc')}</Label>
-                <Input placeholder="Invoice description..." {...register("description")} />
+                <Input placeholder={t('invoice.placeholder_description')} {...register("description")} />
               </div>
               <div>
                 <Label>{t('invoice.label_notes')}</Label>
-                <Textarea rows={3} placeholder="Internal notes..." {...register("notes")} />
+                <Textarea rows={3} placeholder={t('invoice.placeholder_notes')} {...register("notes")} />
               </div>
             </div>
           </div>
@@ -380,11 +380,11 @@ export default function InvoiceDetail() {
                 <Select value={payMethod} onValueChange={setPayMethod}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="BankTransfer">Bank Transfer</SelectItem>
-                    <SelectItem value="Cash">Cash</SelectItem>
-                    <SelectItem value="CreditCard">Credit Card</SelectItem>
-                    <SelectItem value="Stripe">Stripe</SelectItem>
-                    <SelectItem value="Cheque">Cheque</SelectItem>
+                    <SelectItem value="BankTransfer">{t('invoice.method_bank_transfer')}</SelectItem>
+                    <SelectItem value="Cash">{t('invoice.method_cash')}</SelectItem>
+                    <SelectItem value="CreditCard">{t('invoice.method_credit_card')}</SelectItem>
+                    <SelectItem value="Stripe">{t('invoice.method_stripe')}</SelectItem>
+                    <SelectItem value="Cheque">{t('invoice.method_cheque')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -395,7 +395,7 @@ export default function InvoiceDetail() {
                 className="bg-green-600 hover:bg-green-700"
                 onClick={() => payMutation.mutate({ id: Number(id), data: { payment_method: payMethod } })}
               >
-                Confirm Payment
+                {t('invoice.btn_confirm_payment')}
               </Button>
             </DialogFooter>
           </DialogContent>

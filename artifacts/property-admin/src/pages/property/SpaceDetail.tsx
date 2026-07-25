@@ -188,13 +188,13 @@ export default function SpaceDetail() {
         }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Failed to add service");
-      toast({ title: "Service added" });
+      if (!res.ok) throw new Error(json.error ?? t("space.svc_add_failed"));
+      toast({ title: t("space.svc_added_toast") });
       setAddSvcOpen(false);
       setAddSvcId(""); setAddSvcMandatory(false); setAddSvcPrice("");
       await loadSpaceServices();
     } catch (e: unknown) {
-      toast({ title: "Error", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
+      toast({ title: t("common.error"), description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
     } finally {
       setAddSvcSaving(false);
     }
@@ -210,10 +210,10 @@ export default function SpaceDetail() {
   };
 
   const handleRemoveService = async (mapId: number) => {
-    if (!id || !confirm("Remove this service from the space?")) return;
+    if (!id || !confirm(t("space.svc_remove_confirm"))) return;
     const res = await apiFetch(`/api/v1/spaces/${id}/services/${mapId}`, { method: "DELETE" });
     if (res.ok) {
-      toast({ title: "Service removed" });
+      toast({ title: t("space.svc_removed_toast") });
       setSpaceServices(prev => prev.filter(s => s.id !== mapId));
     }
   };
@@ -1045,8 +1045,8 @@ export default function SpaceDetail() {
                 <div className="bg-card rounded-lg border p-5">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h3 className="font-medium text-sm">30-Day Availability</h3>
-                      <p className="text-xs text-muted-foreground mt-0.5">Click dates to select, then block or unblock them</p>
+                      <h3 className="font-medium text-sm">{t("space.avail_title")}</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">{t("space.avail_hint")}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       {selectedDates.length > 0 && (
@@ -1058,7 +1058,7 @@ export default function SpaceDetail() {
                             onClick={() => id && blockMutation.mutate({ id, data: { dates: selectedDates, action: "unblock" } })}
                             disabled={blockMutation.isPending}
                           >
-                            Unblock ({selectedDates.length})
+                            {t("space.avail_unblock", { count: selectedDates.length })}
                           </Button>
                           <Button
                             size="sm"
@@ -1066,16 +1066,16 @@ export default function SpaceDetail() {
                             onClick={() => id && blockMutation.mutate({ id, data: { dates: selectedDates, action: "block" } })}
                             disabled={blockMutation.isPending}
                           >
-                            Block ({selectedDates.length})
+                            {t("space.avail_block", { count: selectedDates.length })}
                           </Button>
                         </>
                       )}
                     </div>
                   </div>
                   <div className="flex items-center gap-3 mb-4 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-green-100 border border-green-300 inline-block"></span>Available</span>
-                    <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-rose-100 border border-rose-300 inline-block"></span>Blocked</span>
-                    <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-primary/20 border border-primary/50 inline-block"></span>Selected</span>
+                    <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-green-100 border border-green-300 inline-block"></span>{t("space.cal_available")}</span>
+                    <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-rose-100 border border-rose-300 inline-block"></span>{t("space.avail_blocked")}</span>
+                    <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-primary/20 border border-primary/50 inline-block"></span>{t("space.avail_selected")}</span>
                   </div>
                   <div className="grid grid-cols-7 gap-1.5">
                     {Array.isArray(availability) ? availability.map((day: any) => {
@@ -1218,35 +1218,35 @@ export default function SpaceDetail() {
               <div className="max-w-3xl space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-semibold text-base">Service Packages</h3>
+                    <h3 className="font-semibold text-base">{t("space.svc_title")}</h3>
                     <p className="text-sm text-muted-foreground mt-0.5">
-                      Services assigned to this space. Guests see only these services during booking.
+                      {t("space.svc_desc")}
                       {spaceServices.length === 0 && !svcLoading && (
-                        <span className="text-amber-600"> (None assigned — all active services will be shown to guests)</span>
+                        <span className="text-amber-600">{t("space.svc_desc_none")}</span>
                       )}
                     </p>
                   </div>
                   <Button size="sm" className="gap-1.5" onClick={() => setAddSvcOpen(true)}>
-                    <Plus className="h-4 w-4" /> Add Service
+                    <Plus className="h-4 w-4" /> {t("space.svc_add")}
                   </Button>
                 </div>
 
                 {svcLoading ? (
-                  <p className="text-sm text-muted-foreground py-8 text-center">Loading…</p>
+                  <p className="text-sm text-muted-foreground py-8 text-center">{t("common.loading")}</p>
                 ) : spaceServices.length === 0 ? (
                   <div className="border border-dashed rounded-lg py-12 text-center text-muted-foreground text-sm">
-                    No services assigned yet. Click "Add Service" to get started.
+                    {t("space.svc_empty")}
                   </div>
                 ) : (
                   <div className="border rounded-lg overflow-hidden">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b bg-muted/40 text-xs text-muted-foreground uppercase tracking-wider">
-                          <th className="px-4 py-2.5 text-left font-medium">Service</th>
-                          <th className="px-4 py-2.5 text-left font-medium">Type</th>
-                          <th className="px-4 py-2.5 text-right font-medium">Price</th>
-                          <th className="px-4 py-2.5 text-center font-medium">Mandatory</th>
-                          <th className="px-4 py-2.5 text-center font-medium">Action</th>
+                          <th className="px-4 py-2.5 text-left font-medium">{t("space.svc_col_service")}</th>
+                          <th className="px-4 py-2.5 text-left font-medium">{t("space.svc_col_type")}</th>
+                          <th className="px-4 py-2.5 text-right font-medium">{t("space.svc_col_price")}</th>
+                          <th className="px-4 py-2.5 text-center font-medium">{t("space.svc_col_mandatory")}</th>
+                          <th className="px-4 py-2.5 text-center font-medium">{t("space.svc_col_action")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1255,7 +1255,7 @@ export default function SpaceDetail() {
                             <td className="px-4 py-3 font-medium">
                               {svc.service_name}
                               {!svc.is_optional && (
-                                <Badge variant="secondary" className="ml-2 text-xs">Required</Badge>
+                                <Badge variant="secondary" className="ml-2 text-xs">{t("space.svc_required")}</Badge>
                               )}
                             </td>
                             <td className="px-4 py-3 text-muted-foreground capitalize">
@@ -1265,7 +1265,7 @@ export default function SpaceDetail() {
                               {svc.custom_price != null ? (
                                 <span className="font-semibold text-orange-600">
                                   {svc.currency} {svc.custom_price.toFixed(2)}
-                                  <span className="ml-1 text-xs text-muted-foreground font-normal">(custom)</span>
+                                  <span className="ml-1 text-xs text-muted-foreground font-normal">({t("space.svc_custom")})</span>
                                 </span>
                               ) : svc.base_price != null ? (
                                 <span>{svc.currency} {svc.base_price.toFixed(2)}</span>
@@ -1300,14 +1300,14 @@ export default function SpaceDetail() {
               <Dialog open={addSvcOpen} onOpenChange={setAddSvcOpen}>
                 <DialogContent className="max-w-md">
                   <DialogHeader>
-                    <DialogTitle>Add Service to Space</DialogTitle>
+                    <DialogTitle>{t("space.svc_dialog_title")}</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4 py-2">
                     <div className="flex flex-col gap-1.5">
-                      <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Service *</Label>
+                      <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("space.svc_field_service")} *</Label>
                       <Select value={addSvcId} onValueChange={setAddSvcId}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a service…" />
+                          <SelectValue placeholder={t("space.svc_field_service_ph")} />
                         </SelectTrigger>
                         <SelectContent>
                           {catalogServices
@@ -1325,11 +1325,11 @@ export default function SpaceDetail() {
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                        Custom Price (AUD) — leave blank to use catalog price
+                        {t("space.svc_field_price")}
                       </Label>
                       <Input
                         type="number" min="0" step="0.01"
-                        placeholder="e.g. 50.00"
+                        placeholder={t("space.svc_field_price_ph")}
                         value={addSvcPrice}
                         onChange={e => setAddSvcPrice(e.target.value)}
                       />
@@ -1337,14 +1337,14 @@ export default function SpaceDetail() {
                     <div className="flex items-center gap-3">
                       <Switch checked={addSvcMandatory} onCheckedChange={setAddSvcMandatory} id="mandatory-sw" />
                       <Label htmlFor="mandatory-sw" className="cursor-pointer text-sm font-normal">
-                        Mandatory (auto-included in every booking)
+                        {t("space.svc_mandatory_label")}
                       </Label>
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setAddSvcOpen(false)}>Cancel</Button>
+                    <Button variant="outline" onClick={() => setAddSvcOpen(false)}>{t("common.cancel")}</Button>
                     <Button disabled={!addSvcId || addSvcSaving} onClick={handleAddService}>
-                      {addSvcSaving ? "Adding…" : "Add Service"}
+                      {addSvcSaving ? t("space.svc_adding") : t("space.svc_add")}
                     </Button>
                   </DialogFooter>
                 </DialogContent>

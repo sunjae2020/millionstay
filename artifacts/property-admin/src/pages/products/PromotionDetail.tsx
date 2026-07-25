@@ -219,7 +219,7 @@ export default function PromotionDetail() {
   const termMeta = TERM_TYPE_META[termType];
 
   if (!isNew && isLoading) {
-    return <Layout><div className="p-8 text-center text-muted-foreground">Loading...</div></Layout>;
+    return <Layout><div className="p-8 text-center text-muted-foreground">{t('common.loading')}</div></Layout>;
   }
 
   return (
@@ -235,7 +235,7 @@ export default function PromotionDetail() {
               <h1 className="text-xl font-bold">{isNew ? `${t('common.new')} ${t('nav.promotion')}` : (promotion?.name ?? t('nav.promotion'))}</h1>
             </div>
             {termMeta && (
-              <span className={`text-xs font-semibold px-2 py-0.5 rounded border ${termMeta.color}`}>{termMeta.label}</span>
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded border ${termMeta.color}`}>{t(`promotion.term_${termType === "ShortTerm" ? "short" : termType === "MidTerm" ? "mid" : "long"}`)}</span>
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -328,7 +328,7 @@ export default function PromotionDetail() {
             <div className="p-5 grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_name')} *</Label>
-                <Input {...register("name", { required: true })} placeholder="e.g. Mid-term 5% Discount" className={errors.name ? "border-destructive" : ""} />
+                <Input {...register("name", { required: true })} placeholder={t('promotion.placeholder_name')} className={errors.name ? "border-destructive" : ""} />
               </div>
               <div>
                 <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_code')}</Label>
@@ -436,11 +436,11 @@ export default function PromotionDetail() {
             <div className="p-5 space-y-4">
               <div>
                 <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_description')}</Label>
-                <Textarea {...register("description")} rows={3} placeholder="Brief description..." />
+                <Textarea {...register("description")} rows={3} placeholder={t('promotion.placeholder_description')} />
               </div>
               <div>
                 <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_terms')}</Label>
-                <Textarea {...register("terms")} rows={4} placeholder="Terms and conditions..." />
+                <Textarea {...register("terms")} rows={4} placeholder={t('promotion.placeholder_terms')} />
               </div>
             </div>
           </div>
@@ -448,13 +448,13 @@ export default function PromotionDetail() {
           {/* Associated Products — shown only for existing promotions */}
           {!isNew && (
             <div className="bg-white border rounded-lg overflow-hidden">
-              <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">Associated Products</div>
+              <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">{t('promotion.section_associated')}</div>
               {assocLoading ? (
-                <div className="p-8 text-center text-sm text-muted-foreground">Loading associated products…</div>
+                <div className="p-8 text-center text-sm text-muted-foreground">{t('promotion.assoc_loading')}</div>
               ) : (assocAccommodations.length === 0 && assocServices.length === 0) ? (
                 <div className="p-8 text-center text-sm text-muted-foreground">
-                  No products are currently linked to this promotion.
-                  <p className="text-xs mt-1">Assign this promotion to an Accommodation or Service product to see it here.</p>
+                  {t('promotion.assoc_empty')}
+                  <p className="text-xs mt-1">{t('promotion.assoc_empty_hint')}</p>
                 </div>
               ) : (
                 <div className="divide-y">
@@ -463,7 +463,7 @@ export default function PromotionDetail() {
                     <div className="p-5">
                       <div className="flex items-center gap-2 mb-3">
                         <Package className="h-4 w-4 text-primary" />
-                        <span className="text-sm font-semibold">Accommodation Products</span>
+                        <span className="text-sm font-semibold">{t('nav.accommodation')}</span>
                         <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full font-medium">{assocAccommodations.length}</span>
                       </div>
                       <div className="space-y-2">
@@ -474,7 +474,7 @@ export default function PromotionDetail() {
                                 <span className="text-sm font-medium group-hover:text-primary transition-colors">{a.name}</span>
                                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[a.status] ?? "bg-gray-100 text-gray-600"}`}>{a.status}</span>
                                 {a.min_contract_period && (
-                                  <span className="text-xs text-muted-foreground">Min {a.min_contract_period} {a.min_contract_period_unit}</span>
+                                  <span className="text-xs text-muted-foreground">{t('promotion.min_contract', { count: a.min_contract_period, unit: a.min_contract_period_unit })}</span>
                                 )}
                               </div>
                               <div className="flex items-center gap-2 text-muted-foreground">
@@ -495,7 +495,7 @@ export default function PromotionDetail() {
                     <div className="p-5">
                       <div className="flex items-center gap-2 mb-3">
                         <Wrench className="h-4 w-4 text-primary" />
-                        <span className="text-sm font-semibold">Service Products</span>
+                        <span className="text-sm font-semibold">{t('promotion.service_products')}</span>
                         <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full font-medium">{assocServices.length}</span>
                       </div>
                       <div className="space-y-2">

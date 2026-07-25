@@ -34,6 +34,7 @@ import privacyRouter from "./routes/privacy";
 import chatRouter from "./routes/chat";
 import knowledgeRouter from "./routes/knowledge";
 import externalApiRouter from "./routes/external-api";
+import { conditionReportsAdminRouter, conditionReportsGuestRouter } from "./routes/condition-reports";
 import { logger } from "./lib/logger";
 import { requireAuth } from "./middlewares/requireAuth";
 import { loginLimiter, applicationLimiter, generalLimiter, privacyExportLimiter, chatLimiter } from "./middlewares/rateLimit";
@@ -241,6 +242,8 @@ app.use("/api/ext", externalApiRouter);
 app.use("/api", guestAuthRouter);
 app.use("/api", guestPortalRouter);
 app.use("/api", guestCsRouter);
+// Condition reports — tenant side (self-guards with requireGuestAuth on /v1/guest).
+app.use("/api", conditionReportsGuestRouter);
 app.use("/api", stripeRouter);
 // dev-migration: NEVER mount in production. CF-004 hard block.
 if (process.env["NODE_ENV"] !== "production") {
@@ -278,6 +281,8 @@ app.use("/api", knowledgeRouter);
 app.use("/api", pageContentsRouter);
 // Admin e-signature management (create / list / cancel) — behind requireAuth.
 app.use("/api", contractSigningAdminRouter);
+// Condition reports — admin side (self-guards with requireAuth on /v1).
+app.use("/api", conditionReportsAdminRouter);
 app.use("/api", router);
 
 // In production, serve the built SPAs so a single Cloud Run process handles everything.
