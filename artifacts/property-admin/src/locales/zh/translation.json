@@ -1143,7 +1143,9 @@
     "svc_removed_toast": "已删除服务",
     "svc_remove_confirm": "从此空间中移除该服务？",
     "svc_add_failed": "添加服务失败",
-    "tab_translations": "翻译"
+    "tab_translations": "翻译",
+    "col_owner": "业主",
+    "col_updated": "更新时间"
   },
   "space_option": {
     "new": "新建空间选项",

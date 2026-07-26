@@ -259,6 +259,12 @@ export interface SpaceListItem {
   space_policy_id?: number | null;
   /** @nullable */
   policy_name?: string | null;
+  /** @nullable */
+  landlord_account_id?: number | null;
+  /** @nullable */
+  owner_name?: string | null;
+  /** @nullable */
+  exclusive_area_m2?: number | null;
   created_at: string;
   updated_at: string;
 }

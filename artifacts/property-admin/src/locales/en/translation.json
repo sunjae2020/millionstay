@@ -1143,7 +1143,9 @@
     "svc_removed_toast": "Service removed",
     "svc_remove_confirm": "Remove this service from the space?",
     "svc_add_failed": "Failed to add service",
-    "tab_translations": "Translations"
+    "tab_translations": "Translations",
+    "col_owner": "Owner",
+    "col_updated": "Updated"
   },
   "space_option": {
     "new": "New Space Option",

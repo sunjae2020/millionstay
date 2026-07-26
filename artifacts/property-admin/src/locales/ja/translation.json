@@ -1143,7 +1143,9 @@
     "svc_removed_toast": "サービスを削除しました",
     "svc_remove_confirm": "このサービスをスペースから削除しますか？",
     "svc_add_failed": "サービスの追加に失敗しました",
-    "tab_translations": "翻訳"
+    "tab_translations": "翻訳",
+    "col_owner": "所有者",
+    "col_updated": "更新日"
   },
   "space_option": {
     "new": "新規スペースオプション",

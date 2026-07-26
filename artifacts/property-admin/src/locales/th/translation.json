@@ -1143,7 +1143,9 @@
     "svc_removed_toast": "ลบบริการแล้ว",
     "svc_remove_confirm": "ลบบริการนี้ออกจากพื้นที่หรือไม่?",
     "svc_add_failed": "เพิ่มบริการไม่สำเร็จ",
-    "tab_translations": "การแปล"
+    "tab_translations": "การแปล",
+    "col_owner": "เจ้าของ",
+    "col_updated": "วันที่แก้ไข"
   },
   "space_option": {
     "new": "ตัวเลือกพื้นที่ใหม่",
