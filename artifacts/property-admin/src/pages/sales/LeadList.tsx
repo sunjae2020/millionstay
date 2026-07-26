@@ -296,36 +296,6 @@ export default function LeadList() {
         }
       />
       <div className="p-6">
-        <div className="flex items-center gap-3 mb-5 flex-wrap">
-          <div className="relative flex-1 min-w-[180px] max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input placeholder={t("lead.search_placeholder")} className="pl-8 h-8 text-sm" value={search}
-              onChange={(e) => setSearch(e.target.value)} />
-          </div>
-          {view === "list" && (
-            <>
-              <Select value={statusFilter || "__all"} onValueChange={(v) => setStatusFilter(v === "__all" ? "" : v)}>
-                <SelectTrigger className="h-8 w-40 text-sm"><SelectValue placeholder={t("common.status")} /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__all">{t("lead.all_statuses")}</SelectItem>
-                  {LEAD_STATUSES.map(s => (
-                    <SelectItem key={s} value={s}>{STATUS_CONFIG[s]?.label ?? s}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={sourceFilter || "__all"} onValueChange={(v) => setSourceFilter(v === "__all" ? "" : v)}>
-                <SelectTrigger className="h-8 w-36 text-sm"><SelectValue placeholder={t("common.source")} /></SelectTrigger>
-                <SelectContent>
-          <SelectItem value="__all">{t("common.all")} {t("common.source")}s</SelectItem>
-          {["Website", "Agent", "Referral", "WalkIn", "OTA", "Social", "Other"].map(s => (
-            <SelectItem key={s} value={s}>{s}</SelectItem>
-          ))}
-                </SelectContent>
-              </Select>
-            </>
-          )}
-        </div>
-
         {view === "pipeline" ? (
           isLoading ? (
             <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
@@ -344,6 +314,33 @@ export default function LeadList() {
             isLoading={isLoading}
             rowKey={(l) => l.id}
             emptyText={t("lead.no_leads")}
+            toolbarExtra={
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative w-56">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input placeholder={t("lead.search_placeholder")} className="pl-8 h-8 text-sm" value={search}
+                    onChange={(e) => setSearch(e.target.value)} />
+                </div>
+                <Select value={statusFilter || "__all"} onValueChange={(v) => setStatusFilter(v === "__all" ? "" : v)}>
+                  <SelectTrigger className="h-8 w-40 text-sm"><SelectValue placeholder={t("common.status")} /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__all">{t("lead.all_statuses")}</SelectItem>
+                    {LEAD_STATUSES.map(s => (
+                      <SelectItem key={s} value={s}>{STATUS_CONFIG[s]?.label ?? s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={sourceFilter || "__all"} onValueChange={(v) => setSourceFilter(v === "__all" ? "" : v)}>
+                  <SelectTrigger className="h-8 w-36 text-sm"><SelectValue placeholder={t("common.source")} /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__all">{t("common.all")} {t("common.source")}s</SelectItem>
+                    {["Website", "Agent", "Referral", "WalkIn", "OTA", "Social", "Other"].map(s => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            }
           />
         )}
       </div>

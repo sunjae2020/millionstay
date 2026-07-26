@@ -223,32 +223,6 @@ export default function DocumentHub() {
       />
 
       <div className="p-6">
-        <div className="flex gap-3 mb-4 flex-wrap">
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder={t("document_hub.search_placeholder", "Search by reference…")} value={q} onChange={(e) => setQ(e.target.value)} />
-          </div>
-          <Select value={type} onValueChange={setType}>
-            <SelectTrigger className="w-44"><SelectValue placeholder={t("common.type", "Type")} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("document_hub.all_types", "All Types")}</SelectItem>
-              <SelectItem value="Invoice">{t("document_hub.invoices", "Invoices")}</SelectItem>
-              <SelectItem value="Receipt">{t("document_hub.receipts", "Receipts")}</SelectItem>
-              <SelectItem value="Quote">{t("document_hub.quotes", "Quotes")}</SelectItem>
-              <SelectItem value="Contract">{t("document_hub.contracts", "Contracts")}</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={docLang} onValueChange={setDocLang}>
-            <SelectTrigger className="w-36"><SelectValue placeholder={t("document_hub.language", "Language")} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="en">English</SelectItem>
-              <SelectItem value="ko">한국어</SelectItem>
-              <SelectItem value="zh">中文</SelectItem>
-              <SelectItem value="ja">日本語</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         <DataTable
           tableKey="document-hub"
           columns={columns}
@@ -256,6 +230,33 @@ export default function DocumentHub() {
           isLoading={isLoading}
           rowKey={(doc) => `${doc.doc_type}-${doc.source_id}`}
           emptyText={t("document_hub.no_documents", "No documents found")}
+          toolbarExtra={
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-56">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input className="pl-9" placeholder={t("document_hub.search_placeholder", "Search by reference…")} value={q} onChange={(e) => setQ(e.target.value)} />
+              </div>
+              <Select value={type} onValueChange={setType}>
+                <SelectTrigger className="w-44"><SelectValue placeholder={t("common.type", "Type")} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("document_hub.all_types", "All Types")}</SelectItem>
+                  <SelectItem value="Invoice">{t("document_hub.invoices", "Invoices")}</SelectItem>
+                  <SelectItem value="Receipt">{t("document_hub.receipts", "Receipts")}</SelectItem>
+                  <SelectItem value="Quote">{t("document_hub.quotes", "Quotes")}</SelectItem>
+                  <SelectItem value="Contract">{t("document_hub.contracts", "Contracts")}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={docLang} onValueChange={setDocLang}>
+                <SelectTrigger className="w-36"><SelectValue placeholder={t("document_hub.language", "Language")} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="ko">한국어</SelectItem>
+                  <SelectItem value="zh">中文</SelectItem>
+                  <SelectItem value="ja">日本語</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          }
         />
       </div>
     </Layout>

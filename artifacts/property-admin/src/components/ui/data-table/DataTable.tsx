@@ -77,7 +77,13 @@ export function DataTable<T>({
 }: DataTableProps<T>) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const isSuperAdmin = user?.role === "SuperAdmin";
+  // SuperAdmin (accept a few casings some tenants stored) can permanently delete.
+  const role = user?.role ?? "";
+  const isSuperAdmin = ["SuperAdmin", "Super Admin", "superadmin", "super_admin"].includes(role);
+  // Any write-capable admin (everyone except the read-only Viewer role) can use
+  // selection + bulk archive/restore + the archived view. Permanent delete stays
+  // SuperAdmin-only. Viewers are read-only, matching the server-side gate.
+  const canWrite = !!user && role !== "Viewer";
   const { toast } = useToast();
 
   const prefs = useTablePrefs(tableKey, columns);
@@ -95,7 +101,7 @@ export function DataTable<T>({
   });
   const pagination = usePagination(sorted, defaultPageSize);
 
-  const selectionEnabled = !!selection?.enable && isSuperAdmin;
+  const selectionEnabled = !!selection?.enable && canWrite;
   const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
   const [bulkAction, setBulkAction] = useState<BulkAction>(null);
   const [isBulkLoading, setIsBulkLoading] = useState(false);
@@ -184,7 +190,7 @@ export function DataTable<T>({
       <div className="flex flex-wrap items-center gap-2 mb-3">
         {toolbarExtra}
         <div className="ml-auto flex items-center gap-2">
-          {isSuperAdmin && onToggleShowDeleted && (
+          {canWrite && onToggleShowDeleted && (
             <Button
               variant={showDeleted ? "default" : "outline"}
               size="sm"
@@ -233,15 +239,17 @@ export function DataTable<T>({
                 >
                   <ArchiveRestore className="h-3.5 w-3.5" /> {t("common.restore")}
                 </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  className="h-7 gap-1.5"
-                  onClick={() => setBulkAction("permanent")}
-                  disabled={isBulkLoading}
-                >
-                  <Trash2 className="h-3.5 w-3.5" /> {t("common.purge")}
-                </Button>
+                {isSuperAdmin && (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="h-7 gap-1.5"
+                    onClick={() => setBulkAction("permanent")}
+                    disabled={isBulkLoading}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" /> {t("common.purge")}
+                  </Button>
+                )}
               </>
             ) : (
               <>
@@ -254,15 +262,17 @@ export function DataTable<T>({
                 >
                   <Archive className="h-3.5 w-3.5" /> {t("common.archive")}
                 </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  className="h-7 gap-1.5"
-                  onClick={() => setBulkAction("permanent")}
-                  disabled={isBulkLoading}
-                >
-                  <Trash2 className="h-3.5 w-3.5" /> {t("common.delete_forever")}
-                </Button>
+                {isSuperAdmin && (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="h-7 gap-1.5"
+                    onClick={() => setBulkAction("permanent")}
+                    disabled={isBulkLoading}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" /> {t("common.delete_forever")}
+                  </Button>
+                )}
               </>
             )}
           </div>

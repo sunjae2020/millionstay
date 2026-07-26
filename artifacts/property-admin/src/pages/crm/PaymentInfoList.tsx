@@ -133,24 +133,6 @@ export default function PaymentInfoList() {
         }
       />
       <div className="p-6">
-        <div className="flex items-center gap-3 mb-5">
-          <div className="relative flex-1 max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input placeholder={t("payment_info.search_placeholder")} className="pl-8 h-8 text-sm" value={search}
-              onChange={(e) => setSearch(e.target.value)} />
-          </div>
-          <Select value={typeFilter || "__all"} onValueChange={(v) => setTypeFilter(v === "__all" ? "" : v)}>
-            <SelectTrigger className="h-8 w-44 text-sm"><SelectValue placeholder={t("payment_info.payment_type")} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__all">{t("payment_info.all_types")}</SelectItem>
-              <SelectItem value="BankTransfer">Bank Transfer</SelectItem>
-              <SelectItem value="Stripe">Stripe</SelectItem>
-              <SelectItem value="Cash">Cash</SelectItem>
-              <SelectItem value="Other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         <DataTable
           tableKey="payment-info"
           columns={columns}
@@ -166,6 +148,25 @@ export default function PaymentInfoList() {
           }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
+          toolbarExtra={
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-56">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input placeholder={t("payment_info.search_placeholder")} className="pl-8 h-8 text-sm" value={search}
+                  onChange={(e) => setSearch(e.target.value)} />
+              </div>
+              <Select value={typeFilter || "__all"} onValueChange={(v) => setTypeFilter(v === "__all" ? "" : v)}>
+                <SelectTrigger className="h-8 w-44 text-sm"><SelectValue placeholder={t("payment_info.payment_type")} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all">{t("payment_info.all_types")}</SelectItem>
+                  <SelectItem value="BankTransfer">Bank Transfer</SelectItem>
+                  <SelectItem value="Stripe">Stripe</SelectItem>
+                  <SelectItem value="Cash">Cash</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          }
         />
       </div>
 

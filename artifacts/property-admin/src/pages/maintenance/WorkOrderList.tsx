@@ -132,42 +132,6 @@ export default function WorkOrderList() {
           </Button>
         </div>
 
-        <div className="flex gap-3 mb-4">
-          <div className="relative flex-1 max-w-sm">
-            <Input
-              placeholder={t("workorder.search_placeholder")}
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              className="pl-4"
-            />
-          </div>
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="w-44">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("workorder.all_statuses")}</SelectItem>
-              <SelectItem value="Open">{t("workorder.status_open")}</SelectItem>
-              <SelectItem value="InProgress">{t("workorder.status_in_progress")}</SelectItem>
-              <SelectItem value="PendingReview">{t("workorder.status_pending_review")}</SelectItem>
-              <SelectItem value="Completed">{t("workorder.status_completed")}</SelectItem>
-              <SelectItem value="Cancelled">{t("workorder.status_closed")}</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={priority} onValueChange={setPriority}>
-            <SelectTrigger className="w-36">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("workorder.all_priorities")}</SelectItem>
-              <SelectItem value="Low">{t("workorder.priority_low")}</SelectItem>
-              <SelectItem value="Normal">{t("workorder.priority_normal")}</SelectItem>
-              <SelectItem value="High">{t("workorder.priority_high")}</SelectItem>
-              <SelectItem value="Urgent">{t("workorder.priority_urgent")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         <DataTable
           tableKey="work-orders"
           columns={columns}
@@ -182,6 +146,43 @@ export default function WorkOrderList() {
           }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
+          toolbarExtra={
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-56">
+                <Input
+                  placeholder={t("workorder.search_placeholder")}
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  className="pl-4"
+                />
+              </div>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger className="w-44">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("workorder.all_statuses")}</SelectItem>
+                  <SelectItem value="Open">{t("workorder.status_open")}</SelectItem>
+                  <SelectItem value="InProgress">{t("workorder.status_in_progress")}</SelectItem>
+                  <SelectItem value="PendingReview">{t("workorder.status_pending_review")}</SelectItem>
+                  <SelectItem value="Completed">{t("workorder.status_completed")}</SelectItem>
+                  <SelectItem value="Cancelled">{t("workorder.status_closed")}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={priority} onValueChange={setPriority}>
+                <SelectTrigger className="w-36">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("workorder.all_priorities")}</SelectItem>
+                  <SelectItem value="Low">{t("workorder.priority_low")}</SelectItem>
+                  <SelectItem value="Normal">{t("workorder.priority_normal")}</SelectItem>
+                  <SelectItem value="High">{t("workorder.priority_high")}</SelectItem>
+                  <SelectItem value="Urgent">{t("workorder.priority_urgent")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          }
         />
       </div>
     </Layout>

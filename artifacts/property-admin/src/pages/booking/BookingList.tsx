@@ -245,29 +245,6 @@ export default function BookingList() {
         }
       />
       <div className="p-6 space-y-4">
-        <div className="flex gap-3 flex-wrap">
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder={t("booking.search_placeholder")} value={search} onChange={(e) => setSearch(e.target.value)} />
-          </div>
-          <Select value={statusFilter || "_all"} onValueChange={(v) => setStatusFilter(v === "_all" ? "" : v)}>
-            <SelectTrigger className="w-[160px]"><SelectValue placeholder={t("booking.all_statuses")} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("booking.all_statuses")}</SelectItem>
-              {["Draft", "PendingPayment", "PendingApproval", "Confirmed", "Active", "CheckedOut", "Cancelled", "NoShow"].map((s) => (
-                <SelectItem key={s} value={s}>{s}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={sourceFilter || "_all"} onValueChange={(v) => setSourceFilter(v === "_all" ? "" : v)}>
-            <SelectTrigger className="w-[140px]"><SelectValue placeholder={t("booking.all_sources")} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("booking.all_sources")}</SelectItem>
-              {["Direct", "Agent", "Website", "Referral"].map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-
         {view === "calendar" ? (
           <CalendarView bookings={bookings ?? []} />
         ) : (
@@ -285,6 +262,30 @@ export default function BookingList() {
             }}
             showDeleted={showDeleted}
             onToggleShowDeleted={setShowDeleted}
+            toolbarExtra={
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative w-56">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input className="pl-9" placeholder={t("booking.search_placeholder")} value={search} onChange={(e) => setSearch(e.target.value)} />
+                </div>
+                <Select value={statusFilter || "_all"} onValueChange={(v) => setStatusFilter(v === "_all" ? "" : v)}>
+                  <SelectTrigger className="w-[160px]"><SelectValue placeholder={t("booking.all_statuses")} /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all">{t("booking.all_statuses")}</SelectItem>
+                    {["Draft", "PendingPayment", "PendingApproval", "Confirmed", "Active", "CheckedOut", "Cancelled", "NoShow"].map((s) => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={sourceFilter || "_all"} onValueChange={(v) => setSourceFilter(v === "_all" ? "" : v)}>
+                  <SelectTrigger className="w-[140px]"><SelectValue placeholder={t("booking.all_sources")} /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all">{t("booking.all_sources")}</SelectItem>
+                    {["Direct", "Agent", "Website", "Referral"].map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            }
           />
         )}
       </div>

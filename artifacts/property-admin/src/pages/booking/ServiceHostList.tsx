@@ -110,13 +110,6 @@ export default function ServiceHostList() {
         }
       />
       <div className="p-6 space-y-4">
-        <div className="flex gap-3">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder={t("service_host.search_placeholder")} value={search} onChange={(e) => setSearch(e.target.value)} />
-          </div>
-        </div>
-
         <DataTable
           tableKey="service-hosts"
           columns={columns}
@@ -124,6 +117,14 @@ export default function ServiceHostList() {
           isLoading={isLoading}
           rowKey={(host) => host.id}
           emptyText={t("service_host.no_hosts")}
+          toolbarExtra={
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-56">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input className="pl-9" placeholder={t("service_host.search_placeholder")} value={search} onChange={(e) => setSearch(e.target.value)} />
+              </div>
+            </div>
+          }
         />
       </div>
       <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>

@@ -281,21 +281,6 @@ export default function RecurringScheduleList() {
       />
 
       <div className="p-6">
-        <div className="flex gap-3 mb-4 flex-wrap">
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder={t("booking.search_placeholder")} value={q} onChange={(e) => setQ(e.target.value)} />
-          </div>
-          <Select value={activeFilter} onValueChange={setActiveFilter}>
-            <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("common.all")}</SelectItem>
-              <SelectItem value="true">{t("common.active")}</SelectItem>
-              <SelectItem value="false">{t("common.inactive")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         <DataTable
           tableKey="recurring-schedules"
           columns={columns}
@@ -310,6 +295,22 @@ export default function RecurringScheduleList() {
           }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
+          toolbarExtra={
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-56">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input className="pl-9" placeholder={t("booking.search_placeholder")} value={q} onChange={(e) => setQ(e.target.value)} />
+              </div>
+              <Select value={activeFilter} onValueChange={setActiveFilter}>
+                <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("common.all")}</SelectItem>
+                  <SelectItem value="true">{t("common.active")}</SelectItem>
+                  <SelectItem value="false">{t("common.inactive")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          }
         />
       </div>
 

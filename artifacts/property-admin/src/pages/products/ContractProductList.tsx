@@ -145,39 +145,6 @@ export default function ContractProductList() {
           </Link>
         </div>
 
-        <div className="flex gap-3 mb-4 flex-wrap">
-          <div className="relative flex-1 min-w-48 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder={t("contract_product.search_placeholder")} value={q} onChange={e => setQ(e.target.value)} />
-          </div>
-          <Select value={termType} onValueChange={setTermType}>
-            <SelectTrigger className="w-44"><SelectValue placeholder={t("contract_product.all_terms")} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("contract_product.all_terms")}</SelectItem>
-              <SelectItem value="ShortTerm">{t("contract_product.term_short")}</SelectItem>
-              <SelectItem value="MidTerm">{t("contract_product.term_mid")}</SelectItem>
-              <SelectItem value="LongTerm">{t("contract_product.term_long")}</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="w-40"><SelectValue placeholder={t("contract_product.all_statuses")} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("contract_product.all_statuses")}</SelectItem>
-              <SelectItem value="Draft">{t("contract_product.status_draft")}</SelectItem>
-              <SelectItem value="Active">{t("common.active")}</SelectItem>
-              <SelectItem value="Inactive">{t("common.inactive")}</SelectItem>
-              <SelectItem value="Archived">{t("contract_product.status_archived")}</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={productType} onValueChange={setProductType}>
-            <SelectTrigger className="w-40"><SelectValue placeholder={t("contract_product.all_types")} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("contract_product.all_types")}</SelectItem>
-              {PRODUCT_TYPES.map(t_val => <SelectItem key={t_val} value={t_val}>{t_val}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-
         <DataTable
           tableKey="contract-products"
           columns={columns}
@@ -192,6 +159,40 @@ export default function ContractProductList() {
           }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
+          toolbarExtra={
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-56">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input className="pl-9" placeholder={t("contract_product.search_placeholder")} value={q} onChange={e => setQ(e.target.value)} />
+              </div>
+              <Select value={termType} onValueChange={setTermType}>
+                <SelectTrigger className="w-44"><SelectValue placeholder={t("contract_product.all_terms")} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("contract_product.all_terms")}</SelectItem>
+                  <SelectItem value="ShortTerm">{t("contract_product.term_short")}</SelectItem>
+                  <SelectItem value="MidTerm">{t("contract_product.term_mid")}</SelectItem>
+                  <SelectItem value="LongTerm">{t("contract_product.term_long")}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger className="w-40"><SelectValue placeholder={t("contract_product.all_statuses")} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("contract_product.all_statuses")}</SelectItem>
+                  <SelectItem value="Draft">{t("contract_product.status_draft")}</SelectItem>
+                  <SelectItem value="Active">{t("common.active")}</SelectItem>
+                  <SelectItem value="Inactive">{t("common.inactive")}</SelectItem>
+                  <SelectItem value="Archived">{t("contract_product.status_archived")}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={productType} onValueChange={setProductType}>
+                <SelectTrigger className="w-40"><SelectValue placeholder={t("contract_product.all_types")} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("contract_product.all_types")}</SelectItem>
+                  {PRODUCT_TYPES.map(t_val => <SelectItem key={t_val} value={t_val}>{t_val}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          }
         />
       </div>
     </Layout>

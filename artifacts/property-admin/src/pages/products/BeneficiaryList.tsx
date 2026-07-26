@@ -192,45 +192,46 @@ export default function BeneficiaryList() {
       />
 
       <div className="p-6">
-        <div className="flex gap-3 mb-4 flex-wrap">
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              className="pl-9"
-              placeholder={t("beneficiary.search_placeholder")}
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-            />
-          </div>
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-44">
-              <SelectValue placeholder={t("beneficiary.all_types")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("beneficiary.all_types")}</SelectItem>
-              <SelectItem value="Percentage">{t("beneficiary.type_percentage")}</SelectItem>
-              <SelectItem value="Fixed">{t("beneficiary.type_fixed")}</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-36">
-              <SelectValue placeholder={t("beneficiary.all_statuses")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("beneficiary.all_statuses")}</SelectItem>
-              <SelectItem value="Active">{t("common.active")}</SelectItem>
-              <SelectItem value="Inactive">{t("common.inactive")}</SelectItem>
-              <SelectItem value="Archived">{t("beneficiary.status_archived")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         <DataTable
           tableKey="beneficiaries"
           columns={columns}
           data={filtered}
           isLoading={isLoading}
           rowKey={(b) => b.id}
+          toolbarExtra={
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-56">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  className="pl-9"
+                  placeholder={t("beneficiary.search_placeholder")}
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                />
+              </div>
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-44">
+                  <SelectValue placeholder={t("beneficiary.all_types")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("beneficiary.all_types")}</SelectItem>
+                  <SelectItem value="Percentage">{t("beneficiary.type_percentage")}</SelectItem>
+                  <SelectItem value="Fixed">{t("beneficiary.type_fixed")}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-36">
+                  <SelectValue placeholder={t("beneficiary.all_statuses")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("beneficiary.all_statuses")}</SelectItem>
+                  <SelectItem value="Active">{t("common.active")}</SelectItem>
+                  <SelectItem value="Inactive">{t("common.inactive")}</SelectItem>
+                  <SelectItem value="Archived">{t("beneficiary.status_archived")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          }
           emptyText={
             <div className="flex flex-col items-center gap-3 text-muted-foreground py-8">
               <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">

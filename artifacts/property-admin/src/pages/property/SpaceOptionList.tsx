@@ -124,18 +124,6 @@ export default function SpaceOptionList() {
         }
       />
       <div className="p-6">
-        <div className="flex items-center gap-3 mb-5">
-          <div className="relative flex-1 max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              placeholder={t("space_option.search_placeholder") || t("common.search")}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 h-8 text-sm"
-            />
-          </div>
-        </div>
-
         <DataTable
           tableKey="space-options"
           columns={columns}
@@ -151,6 +139,19 @@ export default function SpaceOptionList() {
           }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
+          toolbarExtra={
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-56">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder={t("space_option.search_placeholder") || t("common.search")}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-8 h-8 text-sm"
+                />
+              </div>
+            </div>
+          }
         />
       </div>
 

@@ -147,24 +147,6 @@ export default function BlogList() {
           ))}
         </div>
 
-        <div className="flex items-center gap-3 mb-4">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder={t("blog.search_posts")} value={search} onChange={(e) => setSearch(e.target.value)} />
-          </div>
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="w-36">
-              <SelectValue placeholder={t("common.status")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("blog.all_status")}</SelectItem>
-              <SelectItem value="Draft">{t("blog.status_draft")}</SelectItem>
-              <SelectItem value="Published">{t("blog.status_published")}</SelectItem>
-              <SelectItem value="Archived">{t("blog.status_archived")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         <DataTable
           tableKey="blog-posts"
           columns={columns}
@@ -184,6 +166,25 @@ export default function BlogList() {
           }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
+          toolbarExtra={
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-56">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input className="pl-9" placeholder={t("blog.search_posts")} value={search} onChange={(e) => setSearch(e.target.value)} />
+              </div>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger className="w-36">
+                  <SelectValue placeholder={t("common.status")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("blog.all_status")}</SelectItem>
+                  <SelectItem value="Draft">{t("blog.status_draft")}</SelectItem>
+                  <SelectItem value="Published">{t("blog.status_published")}</SelectItem>
+                  <SelectItem value="Archived">{t("blog.status_archived")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          }
         />
       </div>
     </Layout>

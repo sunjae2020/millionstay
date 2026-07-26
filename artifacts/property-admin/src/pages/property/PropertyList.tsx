@@ -139,30 +139,6 @@ export default function PropertyList() {
         }
       />
       <div className="p-6">
-        <div className="flex items-center gap-3 mb-5">
-          <div className="relative flex-1 max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              placeholder={t("property.search_placeholder")}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 h-8 text-sm"
-            />
-          </div>
-          <Select value={approvalStatus || "_all"} onValueChange={(v) => setApprovalStatus(v === "_all" ? "" : v)}>
-            <SelectTrigger className="w-36 h-8 text-sm">
-              <SelectValue placeholder={t("common.status")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("property.all_statuses")}</SelectItem>
-              <SelectItem value="Pending">{t("common.pending") || "Pending"}</SelectItem>
-              <SelectItem value="Active">{t("common.active")}</SelectItem>
-              <SelectItem value="Suspended">{t("common.suspended") || "Suspended"}</SelectItem>
-              <SelectItem value="Rejected">{t("common.rejected") || "Rejected"}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         <DataTable
           tableKey="properties"
           columns={columns}
@@ -178,6 +154,31 @@ export default function PropertyList() {
           }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
+          toolbarExtra={
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-56">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder={t("property.search_placeholder")}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-8 h-8 text-sm"
+                />
+              </div>
+              <Select value={approvalStatus || "_all"} onValueChange={(v) => setApprovalStatus(v === "_all" ? "" : v)}>
+                <SelectTrigger className="w-36 h-8 text-sm">
+                  <SelectValue placeholder={t("common.status")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("property.all_statuses")}</SelectItem>
+                  <SelectItem value="Pending">{t("common.pending") || "Pending"}</SelectItem>
+                  <SelectItem value="Active">{t("common.active")}</SelectItem>
+                  <SelectItem value="Suspended">{t("common.suspended") || "Suspended"}</SelectItem>
+                  <SelectItem value="Rejected">{t("common.rejected") || "Rejected"}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          }
         />
       </div>
 

@@ -185,37 +185,6 @@ export default function PromotionList() {
           </Link>
         </div>
 
-        <div className="flex gap-3 mb-4 flex-wrap">
-          <div className="relative flex-1 min-w-48 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder={t("promotion.search_placeholder")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-          </div>
-          <Select value={termType} onValueChange={setTermType}>
-            <SelectTrigger className="w-44">
-              <SelectValue placeholder={t("promotion.all_terms")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("promotion.all_terms")}</SelectItem>
-              <SelectItem value="ShortTerm">{t("promotion.term_short")}</SelectItem>
-              <SelectItem value="MidTerm">{t("promotion.term_mid")}</SelectItem>
-              <SelectItem value="LongTerm">{t("promotion.term_long")}</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="w-36">
-              <SelectValue placeholder={t("promotion.all_statuses")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("promotion.all_statuses")}</SelectItem>
-              <SelectItem value="Draft">{t("promotion.status_draft")}</SelectItem>
-              <SelectItem value="Scheduled">{t("promotion.status_scheduled")}</SelectItem>
-              <SelectItem value="Active">{t("common.active")}</SelectItem>
-              <SelectItem value="Expired">{t("promotion.status_expired")}</SelectItem>
-              <SelectItem value="Disabled">{t("promotion.status_disabled")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         <DataTable
           tableKey="promotions"
           columns={columns}
@@ -230,6 +199,38 @@ export default function PromotionList() {
           }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
+          toolbarExtra={
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-56">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder={t("promotion.search_placeholder")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+              </div>
+              <Select value={termType} onValueChange={setTermType}>
+                <SelectTrigger className="w-44">
+                  <SelectValue placeholder={t("promotion.all_terms")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("promotion.all_terms")}</SelectItem>
+                  <SelectItem value="ShortTerm">{t("promotion.term_short")}</SelectItem>
+                  <SelectItem value="MidTerm">{t("promotion.term_mid")}</SelectItem>
+                  <SelectItem value="LongTerm">{t("promotion.term_long")}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger className="w-36">
+                  <SelectValue placeholder={t("promotion.all_statuses")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("promotion.all_statuses")}</SelectItem>
+                  <SelectItem value="Draft">{t("promotion.status_draft")}</SelectItem>
+                  <SelectItem value="Scheduled">{t("promotion.status_scheduled")}</SelectItem>
+                  <SelectItem value="Active">{t("common.active")}</SelectItem>
+                  <SelectItem value="Expired">{t("promotion.status_expired")}</SelectItem>
+                  <SelectItem value="Disabled">{t("promotion.status_disabled")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          }
         />
       </div>
     </Layout>

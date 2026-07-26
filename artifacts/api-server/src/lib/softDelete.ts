@@ -17,15 +17,15 @@ export function isSuperAdmin(req: Request): boolean {
 /**
  * Build the `deleted_at` filter for a list endpoint from `?deleted`:
  *   absent / "0"   → isNull    (non-deleted; current default behavior)
- *   "only" / "1"   → isNotNull (soft-deleted rows) — SuperAdmin ONLY
- * Non-SuperAdmins always get the non-deleted filter (the deleted view is gated).
- * Reads `req.query.deleted` directly — the generated Zod query schemas strip
- * unknown keys, so the param never survives `safeParse`.
+ *   "only" / "1"   → isNotNull (soft-deleted / archived rows)
+ * Available to any authenticated admin user (the whole admin app is behind
+ * requireAuth). Reads `req.query.deleted` directly — the generated Zod query
+ * schemas strip unknown keys, so the param never survives `safeParse`.
  */
 export function deletedFilter(deletedAtCol: any, req: Request): SQL {
   const raw = String((req.query as Record<string, unknown>)?.deleted ?? "").toLowerCase();
   const wantsDeleted = raw === "only" || raw === "1" || raw === "true";
-  return wantsDeleted && isSuperAdmin(req)
+  return wantsDeleted
     ? (isNotNull(deletedAtCol) as SQL)
     : (isNull(deletedAtCol) as SQL);
 }
@@ -51,19 +51,24 @@ function parseIds(body: unknown): number[] {
   return ids.map(Number).filter((n) => Number.isFinite(n) && n > 0);
 }
 
-/** POST /v1/<resource>/bulk-delete — SuperAdmin only. Body: { ids, permanent? }. */
+/**
+ * POST /v1/<resource>/bulk-delete. Body: { ids, permanent? }.
+ * Soft-delete (archive) is allowed for any write-capable admin — the Viewer
+ * read-only role is already blocked from non-GET methods at the requireAuth
+ * choke point. PERMANENT (hard) delete stays SuperAdmin-only.
+ */
 export function makeBulkDelete(cfg: SoftDeleteConfig) {
   return async (req: Request, res: Response): Promise<void> => {
-    if (!isSuperAdmin(req)) {
-      res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" });
-      return;
-    }
     const numIds = parseIds(req.body);
     if (numIds.length === 0) {
       res.status(400).json({ error: "ids must be a non-empty array" });
       return;
     }
     if ((req.body as { permanent?: unknown })?.permanent) {
+      if (!isSuperAdmin(req)) {
+        res.status(403).json({ error: "Only SuperAdmin can permanently delete records" });
+        return;
+      }
       if (cfg.onPurge) await cfg.onPurge(numIds);
       await db.delete(cfg.table).where(inArray(cfg.idColumn, numIds));
     } else {
@@ -75,13 +80,13 @@ export function makeBulkDelete(cfg: SoftDeleteConfig) {
   };
 }
 
-/** POST /v1/<resource>/bulk-restore — SuperAdmin only. Body: { ids }. */
+/**
+ * POST /v1/<resource>/bulk-restore. Body: { ids }.
+ * Restore (un-archive) is non-destructive — allowed for any write-capable
+ * admin; Viewers are already blocked from non-GET at requireAuth.
+ */
 export function makeBulkRestore(cfg: SoftDeleteConfig) {
   return async (req: Request, res: Response): Promise<void> => {
-    if (!isSuperAdmin(req)) {
-      res.status(403).json({ error: "Only SuperAdmin can restore" });
-      return;
-    }
     const numIds = parseIds(req.body);
     if (numIds.length === 0) {
       res.status(400).json({ error: "ids must be a non-empty array" });
