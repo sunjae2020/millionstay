@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, and, or, isNull, inArray, SQL } from "drizzle-orm";
 import { db, contactsTable } from "@workspace/db";
+import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import {
   ListContactsQueryParams,
   CreateContactBody,
@@ -16,7 +17,7 @@ router.get("/v1/contacts", async (req, res): Promise<void> => {
   const parsed = ListContactsQueryParams.safeParse(req.query);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const { search, nationality, gender, portal_enabled, status } = parsed.data;
-  const conditions: SQL[] = [isNull(contactsTable.deleted_at)];
+  const conditions: SQL[] = [deletedFilter(contactsTable.deleted_at, req)];
   if (nationality) conditions.push(eq(contactsTable.nationality, nationality));
   if (gender) conditions.push(eq(contactsTable.gender, gender));
   if (portal_enabled !== undefined) conditions.push(eq(contactsTable.portal_enabled, portal_enabled));
@@ -63,23 +64,16 @@ router.put("/v1/contacts/:id", async (req, res): Promise<void> => {
   res.json(row);
 });
 
-router.post("/v1/contacts/bulk-delete", async (req, res): Promise<void> => {
-  const currentUser = (req as any).user;
-  if (currentUser?.role !== "SuperAdmin") {
-    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
-  }
-  const { ids, permanent } = req.body;
-  if (!Array.isArray(ids) || ids.length === 0) {
-    res.status(400).json({ error: "ids must be a non-empty array" }); return;
-  }
-  const numIds = ids.map(Number).filter(Boolean);
-  if (permanent) {
-    await db.delete(contactsTable).where(inArray(contactsTable.id, numIds));
-  } else {
-    await db.update(contactsTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(contactsTable.id, numIds));
-  }
-  res.json({ success: true, affected: numIds.length });
-});
+const contactsSoftDelete = {
+  table: contactsTable,
+  idColumn: contactsTable.id,
+  statusKey: "status",
+  archivedStatus: "Archived",
+  restoredStatus: "Active",
+};
+
+router.post("/v1/contacts/bulk-delete", makeBulkDelete(contactsSoftDelete));
+router.post("/v1/contacts/bulk-restore", makeBulkRestore(contactsSoftDelete));
 
 router.delete("/v1/contacts/:id", async (req, res): Promise<void> => {
   const parsed = DeleteContactParams.safeParse(req.params);

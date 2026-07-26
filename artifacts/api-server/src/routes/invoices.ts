@@ -14,6 +14,7 @@ import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
 import { sendDocumentEmail, resolveDocEmailCopy } from "../lib/email";
 import { getStripe } from "./stripe";
 import { postInvoicePaid } from "../lib/billing/gl";
+import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import {
   CreateInvoiceBody,
   UpdateInvoiceBody,
@@ -112,7 +113,7 @@ async function enrichInvoices(rows: (typeof invoicesTable.$inferSelect)[]) {
 
 router.get("/v1/invoices", async (req, res): Promise<void> => {
   const { q, status, booking_id, contract_id, account_id } = req.query as Record<string, string>;
-  const conditions: any[] = [isNull(invoicesTable.deleted_at)];
+  const conditions: any[] = [deletedFilter(invoicesTable.deleted_at, req)];
   if (q) conditions.push(ilike(invoicesTable.invoice_ref, `%${q}%`));
   if (status) conditions.push(eq(invoicesTable.status, status));
   if (booking_id) conditions.push(eq(invoicesTable.booking_id, Number(booking_id)));
@@ -193,23 +194,13 @@ router.put("/v1/invoices/:id", async (req, res): Promise<void> => {
   res.json({ ...result, line_items: await getLineItems(id) });
 });
 
-router.post("/v1/invoices/bulk-delete", async (req, res): Promise<void> => {
-  const currentUser = (req as any).user;
-  if (currentUser?.role !== "SuperAdmin") {
-    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
-  }
-  const { ids, permanent } = req.body;
-  if (!Array.isArray(ids) || ids.length === 0) {
-    res.status(400).json({ error: "ids must be a non-empty array" }); return;
-  }
-  const numIds = ids.map(Number).filter(Boolean);
-  if (permanent) {
-    await db.delete(invoicesTable).where(inArray(invoicesTable.id, numIds));
-  } else {
-    await db.update(invoicesTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(invoicesTable.id, numIds));
-  }
-  res.json({ success: true, affected: numIds.length });
-});
+const invoicesSoftDelete = {
+  table: invoicesTable,
+  idColumn: invoicesTable.id,
+};
+
+router.post("/v1/invoices/bulk-delete", makeBulkDelete(invoicesSoftDelete));
+router.post("/v1/invoices/bulk-restore", makeBulkRestore(invoicesSoftDelete));
 
 router.delete("/v1/invoices/:id", async (req, res): Promise<void> => {
   const id = Number(req.params.id);

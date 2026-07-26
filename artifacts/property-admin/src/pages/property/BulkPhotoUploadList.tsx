@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, CheckCircle2, AlertCircle, Trash2 } from "lucide-react";
 import { formatDateTime } from "@/lib/date";
+import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,6 +60,72 @@ export default function BulkPhotoUploadList() {
     setDeleteId(null);
   }
 
+  const columns: ColumnDef<UploadSession>[] = useMemo(
+    () => [
+      {
+        key: "date",
+        header: "Date",
+        hideable: false,
+        defaultWidth: 200,
+        sortAccessor: (session) => session.date,
+        cell: (session) => <span className="font-medium">{formatDateTime(session.date)}</span>,
+      },
+      {
+        key: "spacesCount",
+        header: "Spaces",
+        cell: (session) => (
+          <span className="text-muted-foreground text-xs">
+            {session.spacesCount} space{session.spacesCount !== 1 ? "s" : ""}
+          </span>
+        ),
+      },
+      {
+        key: "photosCount",
+        header: "Photos",
+        cell: (session) => (
+          <span className="text-muted-foreground text-xs">
+            {session.photosCount} photo{session.photosCount !== 1 ? "s" : ""}
+          </span>
+        ),
+      },
+      {
+        key: "failedCount",
+        header: "Status",
+        cell: (session) =>
+          session.failedCount === 0 ? (
+            <Badge className="bg-green-100 text-green-800 hover:bg-green-100 gap-1">
+              <CheckCircle2 className="h-3 w-3" />
+              Completed
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="border-amber-300 text-amber-700 gap-1">
+              <AlertCircle className="h-3 w-3" />
+              Partial ({session.failedCount} failed)
+            </Badge>
+          ),
+      },
+      {
+        key: ACTIONS_KEY,
+        header: "",
+        hideable: false,
+        sortable: false,
+        align: "right",
+        defaultWidth: 70,
+        cell: (session) => (
+          <div className="flex items-center justify-end">
+            <button
+              className="p-1.5 rounded hover:bg-destructive/10 transition-colors"
+              onClick={() => setDeleteId(session.id)}
+            >
+              <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+            </button>
+          </div>
+        ),
+      },
+    ],
+    [t],
+  );
+
   return (
     <Layout>
       <PageHeader
@@ -73,77 +140,27 @@ export default function BulkPhotoUploadList() {
       />
 
       <div className="p-6">
-        <div className="border rounded-lg overflow-hidden bg-card">
-          <div className="overflow-x-auto">
-          <table className="w-full min-w-max text-sm">
-            <thead className="bg-muted/50 border-b">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Date</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Spaces</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Photos</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Status</th>
-                <th className="px-4 py-3 w-16"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {sessions.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-16 text-center">
-                    <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                      <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
-                        <Plus className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">No upload sessions yet</p>
-                        <p className="text-sm mt-1">Start a new bulk upload to assign photos to multiple spaces at once.</p>
-                      </div>
-                      <Button onClick={() => navigate("/property/bulk-photo-upload/new")}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Start New Upload
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                sessions.map((session) => (
-                  <tr key={session.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3 font-medium">
-                      {formatDateTime(session.date)}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs">
-                      {session.spacesCount} space{session.spacesCount !== 1 ? "s" : ""}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs">
-                      {session.photosCount} photo{session.photosCount !== 1 ? "s" : ""}
-                    </td>
-                    <td className="px-4 py-3">
-                      {session.failedCount === 0 ? (
-                        <Badge className="bg-green-100 text-green-800 hover:bg-green-100 gap-1">
-                          <CheckCircle2 className="h-3 w-3" />
-                          Completed
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="border-amber-300 text-amber-700 gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          Partial ({session.failedCount} failed)
-                        </Badge>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        className="p-1.5 rounded hover:bg-destructive/10 transition-colors"
-                        onClick={() => setDeleteId(session.id)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-          </div>
-        </div>
+        <DataTable
+          tableKey="bulk-photo-upload"
+          columns={columns}
+          data={sessions}
+          rowKey={(session) => session.id}
+          emptyText={
+            <div className="flex flex-col items-center gap-3 text-muted-foreground py-10">
+              <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                <Plus className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="font-medium text-foreground">No upload sessions yet</p>
+                <p className="text-sm mt-1">Start a new bulk upload to assign photos to multiple spaces at once.</p>
+              </div>
+              <Button onClick={() => navigate("/property/bulk-photo-upload/new")}>
+                <Plus className="h-4 w-4 mr-2" />
+                Start New Upload
+              </Button>
+            </div>
+          }
+        />
       </div>
 
       <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>

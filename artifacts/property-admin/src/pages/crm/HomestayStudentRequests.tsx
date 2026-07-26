@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { formatDate } from "@/lib/date";
@@ -6,14 +6,13 @@ import { formatPersonName } from "@/lib/nameFormat";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { TablePagination } from "@/components/ui/TablePagination";
+import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { GraduationCap, Search, Eye, ShieldCheck } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 
 const API = "/api/v1/homestay-student-requests";
-const PAGE_SIZE = 25;
+const FETCH_LIMIT = 1000;
 
 export type StudentStatus =
   | "Draft" | "Submitted" | "UnderReview" | "Matching" | "Proposed"
@@ -86,14 +85,12 @@ export function StudentStatusBadge({ status }: { status: string }) {
 async function fetchRequests(
   q: string,
   status: string,
-  page: number,
-  pageSize: number,
 ): Promise<{ items: StudentRequest[]; total: number }> {
   const params = new URLSearchParams();
   if (q) params.set("q", q);
   if (status) params.set("status", status);
-  params.set("limit", String(pageSize));
-  params.set("offset", String((page - 1) * pageSize));
+  params.set("limit", String(FETCH_LIMIT));
+  params.set("offset", "0");
   const res = await apiFetch(`${API}?${params.toString()}`);
   if (!res.ok) throw new Error("Failed to load student requests");
   const json = await res.json();
@@ -105,20 +102,96 @@ export default function HomestayStudentRequests() {
   const { t } = useTranslation();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"" | StudentStatus>("");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGE_SIZE);
 
-  const setSearch = (v: string) => { setQ(v); setPage(1); };
-  const setStatusFilter = (v: "" | StudentStatus) => { setStatus(v); setPage(1); };
+  const setSearch = (v: string) => setQ(v);
+  const setStatusFilter = (v: "" | StudentStatus) => setStatus(v);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["homestay-student-requests", q, status, page, pageSize],
-    queryFn: () => fetchRequests(q, status, page, pageSize),
+    queryKey: ["homestay-student-requests", q, status],
+    queryFn: () => fetchRequests(q, status),
     placeholderData: keepPreviousData,
   });
   const requests = data?.items ?? [];
-  const total = data?.total ?? 0;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const total = data?.total ?? requests.length;
+
+  const columns: ColumnDef<StudentRequest>[] = useMemo(
+    () => [
+      {
+        key: "request_ref",
+        header: "homestayStudent.col_ref",
+        hideable: false,
+        defaultWidth: 150,
+        cell: (r) => (
+          <Link href={`/account/homestay-student-requests/${r.id}`} className="font-mono text-xs font-medium text-primary hover:underline">
+            {r.request_ref}
+          </Link>
+        ),
+      },
+      {
+        key: "student",
+        header: "homestayStudent.col_student",
+        sortAccessor: (r) => formatPersonName(r.student_first_name, r.student_last_name),
+        cell: (r) => (
+          <Link href={`/account/homestay-student-requests/${r.id}`} className="font-medium hover:underline inline-flex items-center gap-1.5">
+            {formatPersonName(r.student_first_name, r.student_last_name)}
+            {r.is_minor && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1 py-0.5" title={t("homestayStudent.minor")}>
+                <ShieldCheck className="h-3 w-3" /> {t("homestayStudent.minor_short")}
+              </span>
+            )}
+          </Link>
+        ),
+      },
+      {
+        key: "student_email",
+        header: "homestayStudent.col_email",
+        cell: (r) => <span className="text-sm text-muted-foreground">{r.student_email || <span className="text-muted-foreground/40">—</span>}</span>,
+      },
+      {
+        key: "school",
+        header: "homestayStudent.col_school",
+        sortAccessor: (r) => r.preferences?.school ?? "",
+        cell: (r) => <span className="text-sm text-muted-foreground">{r.preferences?.school || <span className="text-muted-foreground/40">—</span>}</span>,
+      },
+      {
+        key: "agent",
+        header: "homestayStudent.col_agent",
+        sortAccessor: (r) => agentDisplayName(r.preferences?.agent),
+        cell: (r) => <span className="text-sm text-muted-foreground">{agentDisplayName(r.preferences?.agent) || <span className="text-muted-foreground/40">—</span>}</span>,
+      },
+      {
+        key: "start",
+        header: "homestayStudent.col_start",
+        sortAccessor: (r) => r.preferences?.homestay_start_date ?? "",
+        cell: (r) => <span className="text-sm text-muted-foreground">{r.preferences?.homestay_start_date || <span className="text-muted-foreground/40">—</span>}</span>,
+      },
+      {
+        key: "status",
+        header: "homestayStudent.col_status",
+        cell: (r) => <StudentStatusBadge status={r.status} />,
+      },
+      {
+        key: "submitted",
+        header: "homestayStudent.col_submitted",
+        sortAccessor: (r) => r.preferences?.import?.ref || r.created_at,
+        cell: (r) => <span className="text-sm text-muted-foreground">{formatDate(r.preferences?.import?.ref || r.created_at)}</span>,
+      },
+      {
+        key: ACTIONS_KEY,
+        header: "",
+        hideable: false,
+        sortable: false,
+        align: "right",
+        defaultWidth: 90,
+        cell: (r) => (
+          <Link href={`/account/homestay-student-requests/${r.id}`}>
+            <Button size="sm" variant="ghost" className="gap-1.5"><Eye className="h-3.5 w-3.5" /> {t("common.view")}</Button>
+          </Link>
+        ),
+      },
+    ],
+    [t],
+  );
 
   return (
     <Layout>
@@ -167,67 +240,14 @@ export default function HomestayStudentRequests() {
           </div>
         </div>
 
-        <div className="border rounded-lg bg-white mt-4 overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("homestayStudent.col_ref")}</TableHead>
-                <TableHead>{t("homestayStudent.col_student")}</TableHead>
-                <TableHead>{t("homestayStudent.col_email")}</TableHead>
-                <TableHead>{t("homestayStudent.col_school")}</TableHead>
-                <TableHead>{t("homestayStudent.col_agent")}</TableHead>
-                <TableHead>{t("homestayStudent.col_start")}</TableHead>
-                <TableHead>{t("homestayStudent.col_status")}</TableHead>
-                <TableHead>{t("homestayStudent.col_submitted")}</TableHead>
-                <TableHead className="w-20"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow><TableCell colSpan={9} className="text-center py-10 text-muted-foreground">{t("common.loading")}</TableCell></TableRow>
-              ) : requests.length === 0 ? (
-                <TableRow><TableCell colSpan={9} className="text-center py-10 text-muted-foreground">{t("homestayStudent.empty")}</TableCell></TableRow>
-              ) : requests.map((r) => (
-                <TableRow key={r.id}>
-                  <TableCell>
-                    <Link href={`/account/homestay-student-requests/${r.id}`} className="font-mono text-xs font-medium text-primary hover:underline">
-                      {r.request_ref}
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    <Link href={`/account/homestay-student-requests/${r.id}`} className="font-medium hover:underline inline-flex items-center gap-1.5">
-                      {formatPersonName(r.student_first_name, r.student_last_name)}
-                      {r.is_minor && (
-                        <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1 py-0.5" title={t("homestayStudent.minor")}>
-                          <ShieldCheck className="h-3 w-3" /> {t("homestayStudent.minor_short")}
-                        </span>
-                      )}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{r.student_email || <span className="text-muted-foreground/40">—</span>}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{r.preferences?.school || <span className="text-muted-foreground/40">—</span>}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{agentDisplayName(r.preferences?.agent) || <span className="text-muted-foreground/40">—</span>}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{r.preferences?.homestay_start_date || <span className="text-muted-foreground/40">—</span>}</TableCell>
-                  <TableCell><StudentStatusBadge status={r.status} /></TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{formatDate(r.preferences?.import?.ref || r.created_at)}</TableCell>
-                  <TableCell>
-                    <Link href={`/account/homestay-student-requests/${r.id}`}>
-                      <Button size="sm" variant="ghost" className="gap-1.5"><Eye className="h-3.5 w-3.5" /> {t("common.view")}</Button>
-                    </Link>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <TablePagination
-            page={page}
-            pageSize={pageSize}
-            total={total}
-            totalPages={totalPages}
-            hasNext={page < totalPages}
-            hasPrev={page > 1}
-            onPage={setPage}
-            onPageSize={(n) => { setPageSize(n); setPage(1); }}
+        <div className="mt-4">
+          <DataTable
+            tableKey="homestay-student-requests"
+            columns={columns}
+            data={requests}
+            isLoading={isLoading}
+            rowKey={(r) => r.id}
+            emptyText={t("homestayStudent.empty")}
           />
         </div>
 

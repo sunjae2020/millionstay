@@ -3,6 +3,7 @@ import { db, quotesTable, quoteLineItemsTable, accountsTable, leadsTable, spaces
 import { eq, ilike, and, isNull, inArray, asc, desc } from "drizzle-orm";
 import { z } from "zod";
 import { logAction } from "../utils/auditLog";
+import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import { buildQuoteHtml, type QuoteDocInput } from "../lib/documents/quoteDocument";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
@@ -73,7 +74,7 @@ async function recomputeTotals(quoteId: number): Promise<void> {
 
 router.get("/v1/quotes", async (req, res): Promise<void> => {
   const { q, status, account_id, lead_id } = req.query as Record<string, string>;
-  const conditions: any[] = [isNull(quotesTable.deleted_at)];
+  const conditions: any[] = [deletedFilter(quotesTable.deleted_at, req)];
   if (q) conditions.push(ilike(quotesTable.quote_ref, `%${q}%`));
   if (status) conditions.push(eq(quotesTable.status, status));
   if (account_id) conditions.push(eq(quotesTable.account_id, Number(account_id)));
@@ -372,15 +373,12 @@ router.post("/v1/quotes/:id/convert", async (req, res): Promise<void> => {
   res.status(201).json({ ok: true, invoice });
 });
 
-router.post("/v1/quotes/bulk-delete", async (req, res): Promise<void> => {
-  const currentUser = (req as any).user;
-  if (currentUser?.role !== "SuperAdmin") { res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return; }
-  const { ids } = req.body;
-  if (!Array.isArray(ids) || ids.length === 0) { res.status(400).json({ error: "ids must be a non-empty array" }); return; }
-  const numIds = ids.map(Number).filter(Boolean);
-  await db.update(quotesTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(quotesTable.id, numIds));
-  res.json({ success: true, affected: numIds.length });
-});
+const quotesSoftDelete = {
+  table: quotesTable,
+  idColumn: quotesTable.id,
+};
+router.post("/v1/quotes/bulk-delete", makeBulkDelete(quotesSoftDelete));
+router.post("/v1/quotes/bulk-restore", makeBulkRestore(quotesSoftDelete));
 
 router.get("/v1/lookup/quotes", async (req, res): Promise<void> => {
   const { q } = req.query as Record<string, string>;

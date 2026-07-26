@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
@@ -7,17 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   useListBookings, useConfirmBooking, useCheckInBooking, getListBookingsQueryKey,
+  type ListBookingsParams, type BookingListItem,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, List, Calendar, Archive, X, AlertTriangle, Loader2, Trash2 } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useAuth } from "@/contexts/AuthContext";
-import { apiFetch } from "@/lib/apiFetch";
-import { useToast } from "@/hooks/use-toast";
-import {
-  AlertDialog, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Plus, Search, List, Calendar } from "lucide-react";
+import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 
 const BOOKING_STATUS_COLORS: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-700 border-gray-200",
@@ -125,61 +119,22 @@ function CalendarView({ bookings }: { bookings: any[] }) {
 
 export default function BookingList() {
   const { t } = useTranslation();
-  const { user } = useAuth();
-  const isSuperAdmin = user?.role === "SuperAdmin";
   const [view, setView] = useState<"list" | "calendar">("list");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [sourceFilter, setSourceFilter] = useState("");
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [bulkAction, setBulkAction] = useState<"archive" | "permanent" | null>(null);
-  const [isBulkLoading, setIsBulkLoading] = useState(false);
+  const [showDeleted, setShowDeleted] = useState(false);
   const qc = useQueryClient();
-  const { toast } = useToast();
 
-  const params = {
+  const params: ListBookingsParams & { deleted?: string } = {
     search: search || undefined,
     booking_status: statusFilter || undefined,
     booking_source: sourceFilter || undefined,
+    ...(showDeleted ? { deleted: "only" } : {}),
   };
   const { data: bookings, isLoading } = useListBookings(params, {
     query: { queryKey: getListBookingsQueryKey(params) },
   });
-
-  const pageIds = (bookings ?? []).map((b) => b.id);
-  const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
-  const somePageSelected = pageIds.some((id) => selectedIds.has(id));
-  const toggleSelectAll = () => {
-    if (allPageSelected) {
-      setSelectedIds((prev) => { const n = new Set(prev); pageIds.forEach((id) => n.delete(id)); return n; });
-    } else {
-      setSelectedIds((prev) => { const n = new Set(prev); pageIds.forEach((id) => n.add(id)); return n; });
-    }
-  };
-  const toggleSelect = (id: number) => {
-    setSelectedIds((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  };
-  const clearSelection = () => setSelectedIds(new Set());
-  const handleBulkDelete = async (permanent: boolean) => {
-    setIsBulkLoading(true);
-    setBulkAction(null);
-    try {
-      const res = await apiFetch("/api/v1/bookings/bulk-delete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids: Array.from(selectedIds), permanent }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Bulk delete failed");
-      qc.invalidateQueries({ queryKey: getListBookingsQueryKey({}) });
-      toast({ title: permanent ? `${data.affected} bookings permanently deleted` : `${data.affected} bookings archived` });
-      clearSelection();
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    } finally {
-      setIsBulkLoading(false);
-    }
-  };
 
   const confirmMutation = useConfirmBooking({
     mutation: { onSuccess: () => qc.invalidateQueries({ queryKey: getListBookingsQueryKey({}) }) },
@@ -187,6 +142,86 @@ export default function BookingList() {
   const checkInMutation = useCheckInBooking({
     mutation: { onSuccess: () => qc.invalidateQueries({ queryKey: getListBookingsQueryKey({}) }) },
   });
+
+  const columns: ColumnDef<BookingListItem>[] = useMemo(
+    () => [
+      {
+        key: "booking_ref",
+        header: "booking.col_ref",
+        hideable: false,
+        cell: (b) => (
+          <Link href={`/booking/bookings/${b.id}`} className="font-mono text-xs text-primary hover:underline">{b.booking_ref}</Link>
+        ),
+      },
+      {
+        key: "guest",
+        header: "booking.col_guest",
+        sortAccessor: (b) => b.account_name ?? b.contact_name ?? "",
+        cell: (b) => b.account_name ?? b.contact_name ?? "—",
+      },
+      {
+        key: "space_name",
+        header: "booking.col_space",
+        cell: (b) => <span className="text-muted-foreground">{b.space_name ?? "—"}</span>,
+      },
+      {
+        key: "check_in_date",
+        header: "booking.col_checkin",
+        cell: (b) => <span className="text-muted-foreground whitespace-nowrap">{b.check_in_date ?? "—"}</span>,
+      },
+      {
+        key: "check_out_date",
+        header: "booking.col_checkout",
+        cell: (b) => <span className="text-muted-foreground whitespace-nowrap">{b.check_out_date ?? "—"}</span>,
+      },
+      {
+        key: "stay_nights",
+        header: "booking.col_nights",
+        align: "center",
+        cell: (b) => b.stay_nights ?? "—",
+      },
+      {
+        key: "agreed_weekly_rate",
+        header: "booking.col_rate",
+        cell: (b) => <span className="whitespace-nowrap">{b.agreed_weekly_rate ? `$${parseFloat(b.agreed_weekly_rate).toFixed(0)}/wk` : "—"}</span>,
+      },
+      {
+        key: "booking_status",
+        header: "booking.col_status",
+        cell: (b) => <BookingStatusBadge status={b.booking_status} />,
+      },
+      {
+        key: "booking_source",
+        header: "booking.col_source",
+        cell: (b) => <span className="text-muted-foreground">{b.booking_source ?? "—"}</span>,
+      },
+      {
+        key: ACTIONS_KEY,
+        header: "",
+        hideable: false,
+        sortable: false,
+        align: "right",
+        cell: (b) => (
+          <div className="flex items-center gap-1 justify-end">
+            {b.booking_status === "PendingApproval" && (
+              <Button size="sm" variant="outline" className="h-7 text-xs text-green-700 border-green-300" onClick={() => confirmMutation.mutate({ id: b.id })}>
+                {t("booking.btn_confirm")}
+              </Button>
+            )}
+            {b.booking_status === "Confirmed" && (
+              <Button size="sm" variant="outline" className="h-7 text-xs text-primary border-primary/30" onClick={() => checkInMutation.mutate({ id: b.id })}>
+                {t("booking.btn_checkin")}
+              </Button>
+            )}
+            <Link href={`/booking/bookings/${b.id}`}>
+              <Button size="sm" variant="ghost" className="h-7 text-xs">{t("common.open")}</Button>
+            </Link>
+          </div>
+        ),
+      },
+    ],
+    [t, confirmMutation, checkInMutation],
+  );
 
   return (
     <Layout>
@@ -236,102 +271,23 @@ export default function BookingList() {
         {view === "calendar" ? (
           <CalendarView bookings={bookings ?? []} />
         ) : (
-          <>
-          {isSuperAdmin && selectedIds.size > 0 && (
-            <div className="flex items-center gap-3 mb-3 px-4 py-2.5 rounded-lg bg-primary/10 border border-primary/20">
-              <span className="text-sm font-medium text-primary">{selectedIds.size} item{selectedIds.size > 1 ? "s" : ""} selected</span>
-              <button onClick={clearSelection} className="text-primary hover:text-primary"><X className="h-3.5 w-3.5" /></button>
-              <div className="ml-auto flex items-center gap-2">
-                {isBulkLoading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
-                <Button size="sm" variant="outline" className="h-7 border-amber-300 text-amber-700 hover:bg-amber-50 gap-1.5" onClick={() => setBulkAction("archive")} disabled={isBulkLoading}>
-                  <Archive className="h-3.5 w-3.5" /> Archive Selected
-                </Button>
-                <Button size="sm" variant="destructive" className="h-7 gap-1.5" onClick={() => setBulkAction("permanent")} disabled={isBulkLoading}>
-                  <Trash2 className="h-3.5 w-3.5" /> Delete Forever
-                </Button>
-              </div>
-            </div>
-          )}
-          <div className="rounded-lg border bg-white overflow-hidden">
-            <div className="overflow-x-auto">
-            <table className="w-full min-w-max text-sm">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  {isSuperAdmin && <th className="px-3 py-3 w-8"><Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} /></th>}
-                  {[t("booking.col_ref"), t("booking.col_guest"), t("booking.col_space"), t("booking.col_checkin"), t("booking.col_checkout"), t("booking.col_nights"), t("booking.col_rate"), t("booking.col_status"), t("booking.col_source"), t("common.actions")].map((h) => (
-                    <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading ? (
-                  <tr><td colSpan={isSuperAdmin ? 11 : 10} className="text-center py-12 text-muted-foreground">{t("common.loading")}</td></tr>
-                ) : !bookings?.length ? (
-                  <tr><td colSpan={isSuperAdmin ? 11 : 10} className="text-center py-12 text-muted-foreground">{t("booking.no_bookings")}</td></tr>
-                ) : bookings.map((b) => (
-                  <tr key={b.id} className={`border-b hover:bg-gray-50 transition-colors ${selectedIds.has(b.id) ? "bg-primary/5" : ""}`}>
-                    {isSuperAdmin && <td className="px-3 py-3"><Checkbox checked={selectedIds.has(b.id)} onCheckedChange={() => toggleSelect(b.id)} onClick={(e) => e.stopPropagation()} /></td>}
-                    <td className="px-4 py-3">
-                      <Link href={`/booking/bookings/${b.id}`} className="font-mono text-xs text-primary hover:underline">{b.booking_ref}</Link>
-                    </td>
-                    <td className="px-4 py-3">{b.account_name ?? b.contact_name ?? "—"}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{b.space_name ?? "—"}</td>
-                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{b.check_in_date ?? "—"}</td>
-                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{b.check_out_date ?? "—"}</td>
-                    <td className="px-4 py-3 text-center">{b.stay_nights ?? "—"}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">{b.agreed_weekly_rate ? `$${parseFloat(b.agreed_weekly_rate).toFixed(0)}/wk` : "—"}</td>
-                    <td className="px-4 py-3"><BookingStatusBadge status={b.booking_status} /></td>
-                    <td className="px-4 py-3 text-muted-foreground">{b.booking_source ?? "—"}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1">
-                        {b.booking_status === "PendingApproval" && (
-                          <Button size="sm" variant="outline" className="h-7 text-xs text-green-700 border-green-300" onClick={() => confirmMutation.mutate({ id: b.id })}>
-                            {t("booking.btn_confirm")}
-                          </Button>
-                        )}
-                        {b.booking_status === "Confirmed" && (
-                          <Button size="sm" variant="outline" className="h-7 text-xs text-primary border-primary/30" onClick={() => checkInMutation.mutate({ id: b.id })}>
-                            {t("booking.btn_checkin")}
-                          </Button>
-                        )}
-                        <Link href={`/booking/bookings/${b.id}`}>
-                          <Button size="sm" variant="ghost" className="h-7 text-xs">{t("common.open")}</Button>
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            </div>
-          </div>
-          </>
+          <DataTable
+            tableKey="bookings"
+            columns={columns}
+            data={bookings}
+            isLoading={isLoading}
+            rowKey={(b) => b.id}
+            emptyText={t("booking.no_bookings")}
+            selection={{
+              enable: true,
+              resource: "bookings",
+              onChanged: () => qc.invalidateQueries({ queryKey: getListBookingsQueryKey({}) }),
+            }}
+            showDeleted={showDeleted}
+            onToggleShowDeleted={setShowDeleted}
+          />
         )}
       </div>
-
-      <AlertDialog open={bulkAction !== null} onOpenChange={(o) => !o && setBulkAction(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-destructive" />
-              {bulkAction === "permanent" ? "Permanently Delete Bookings" : "Archive Bookings"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {bulkAction === "permanent"
-                ? `You are about to permanently delete ${selectedIds.size} booking(s). This cannot be undone.`
-                : `You are about to archive ${selectedIds.size} booking(s). They will be hidden from view.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <Button variant={bulkAction === "permanent" ? "destructive" : "outline"}
-              className={bulkAction !== "permanent" ? "border-amber-300 text-amber-700 hover:bg-amber-50" : ""}
-              onClick={() => handleBulkDelete(bulkAction === "permanent")}>
-              {bulkAction === "permanent" ? "Delete Forever" : "Archive All"}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Layout>
   );
 }

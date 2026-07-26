@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -6,15 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { FileText, Plus, Search, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-async function fetchContractTypes() {
-  const res = await fetch("/api/v1/contract-types");
+async function fetchContractTypes(showDeleted: boolean) {
+  const res = await fetch(showDeleted ? "/api/v1/contract-types?deleted=only" : "/api/v1/contract-types");
   if (!res.ok) throw new Error("Failed");
   const json = await res.json();
   return json.data ?? [];
@@ -29,16 +29,72 @@ export default function ContractTypesPage() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
+  const [showDeleted, setShowDeleted] = useState(false);
   const [form, setForm] = useState({
     name: "", description: "", contract_security: "Public",
     require_passport: false, require_visa: false, require_enrollment: false, is_active: true,
   });
 
-  const { data: types = [], isLoading } = useQuery({ queryKey: ["contract-types"], queryFn: fetchContractTypes });
+  const { data: types = [], isLoading } = useQuery({ queryKey: ["contract-types", showDeleted], queryFn: () => fetchContractTypes(showDeleted) });
 
-  const filtered = (types as any[]).filter((t: any) =>
-    !q || t.name.toLowerCase().includes(q.toLowerCase())
+  const filtered = (types as any[]).filter((ct: any) =>
+    !q || ct.name.toLowerCase().includes(q.toLowerCase())
   );
+
+  const columns: ColumnDef<any>[] = useMemo(() => [
+    {
+      key: "name",
+      header: "Name",
+      hideable: false,
+      cell: (ct) => (
+        <>
+          <div className="font-medium">{ct.name}</div>
+          {ct.description && <div className="text-xs text-muted-foreground">{ct.description}</div>}
+        </>
+      ),
+    },
+    {
+      key: "contract_security",
+      header: "Security",
+      cell: (ct) => <Badge variant="outline">{ct.contract_security}</Badge>,
+    },
+    {
+      key: "require_passport",
+      header: "Passport",
+      cell: (ct) => <span className="text-sm">{ct.require_passport ? "✓" : "—"}</span>,
+    },
+    {
+      key: "require_visa",
+      header: "Visa",
+      cell: (ct) => <span className="text-sm">{ct.require_visa ? "✓" : "—"}</span>,
+    },
+    {
+      key: "require_enrollment",
+      header: "Enrollment",
+      cell: (ct) => <span className="text-sm">{ct.require_enrollment ? "✓" : "—"}</span>,
+    },
+    {
+      key: "is_active",
+      header: "Status",
+      cell: (ct) => (
+        <Badge className={ct.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}>
+          {ct.is_active ? "Active" : "Inactive"}
+        </Badge>
+      ),
+    },
+    {
+      key: ACTIONS_KEY,
+      header: "",
+      hideable: false,
+      sortable: false,
+      align: "right",
+      cell: (ct) => (
+        <Button size="icon" variant="ghost" onClick={() => openEdit(ct)}>
+          <Pencil className="h-3.5 w-3.5" />
+        </Button>
+      ),
+    },
+  ], []);
 
   const save = useMutation({
     mutationFn: async () => {
@@ -94,49 +150,17 @@ export default function ContractTypesPage() {
           <Button onClick={openNew}><Plus className="h-4 w-4 mr-2" />New Type</Button>
         </div>
 
-        <div className="border rounded-lg bg-white">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Security</TableHead>
-                <TableHead>Passport</TableHead>
-                <TableHead>Visa</TableHead>
-                <TableHead>Enrollment</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Loading...</TableCell></TableRow>
-              ) : filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">No contract types found</TableCell></TableRow>
-              ) : filtered.map((t: any) => (
-                <TableRow key={t.id}>
-                  <TableCell>
-                    <div className="font-medium">{t.name}</div>
-                    {t.description && <div className="text-xs text-muted-foreground">{t.description}</div>}
-                  </TableCell>
-                  <TableCell><Badge variant="outline">{t.contract_security}</Badge></TableCell>
-                  <TableCell className="text-sm">{t.require_passport ? "✓" : "—"}</TableCell>
-                  <TableCell className="text-sm">{t.require_visa ? "✓" : "—"}</TableCell>
-                  <TableCell className="text-sm">{t.require_enrollment ? "✓" : "—"}</TableCell>
-                  <TableCell>
-                    <Badge className={t.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}>
-                      {t.is_active ? "Active" : "Inactive"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Button size="icon" variant="ghost" onClick={() => openEdit(t)}>
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <DataTable
+          tableKey="contract-types"
+          columns={columns}
+          data={filtered}
+          isLoading={isLoading}
+          rowKey={(ct) => ct.id}
+          emptyText="No contract types found"
+          selection={{ enable: true, resource: "contract-types", onChanged: () => qc.invalidateQueries({ queryKey: ["contract-types"] }) }}
+          showDeleted={showDeleted}
+          onToggleShowDeleted={setShowDeleted}
+        />
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>

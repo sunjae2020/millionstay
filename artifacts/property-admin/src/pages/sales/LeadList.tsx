@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useListLeads, useUpdateLead, useDeleteLead, getListLeadsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Pencil, Trash2, LayoutList, Kanban, GripVertical, ArrowRight } from "lucide-react";
-import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { Plus, Search, Pencil, Trash2, LayoutList, Kanban, ArrowRight } from "lucide-react";
+import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -153,8 +153,6 @@ export default function LeadList() {
     query: { queryKey: getListLeadsQueryKey(params) },
   });
 
-  const pagination = usePagination(leads ?? []);
-
   const deleteMutation = useDeleteLead({
     mutation: {
       onSuccess: () => {
@@ -178,6 +176,97 @@ export default function LeadList() {
       onError: () => toast({ title: t("common.error"), variant: "destructive" }),
     });
   }
+
+  const columns: ColumnDef<any>[] = useMemo(
+    () => [
+      {
+        key: "lead_ref",
+        header: "lead.col_ref",
+        cell: (l) => (
+          <Link href={`/sales/leads/${l.id}`} className="font-mono text-xs font-medium hover:underline text-primary">{l.lead_ref}</Link>
+        ),
+      },
+      {
+        key: "name",
+        header: "lead.col_name",
+        hideable: false,
+        sortAccessor: (l) => `${l.first_name ?? ""} ${l.last_name ?? ""}`.trim(),
+        cell: (l) => (
+          <Link href={`/sales/leads/${l.id}`} className="font-medium hover:underline">
+            {l.first_name} {l.last_name}
+          </Link>
+        ),
+      },
+      {
+        key: "email",
+        header: "lead.col_email",
+        cell: (l) => <span className="text-muted-foreground">{l.email}</span>,
+      },
+      {
+        key: "lead_source",
+        header: "lead.col_source",
+        cell: (l) => <span className="text-muted-foreground">{l.lead_source ?? "—"}</span>,
+      },
+      {
+        key: "lead_status",
+        header: "lead.col_status",
+        cell: (l) => <LeadStatusBadge status={l.lead_status} />,
+      },
+      {
+        key: "preferred_check_in_date",
+        header: "booking.col_checkin",
+        cell: (l) => <span className="text-muted-foreground">{l.preferred_check_in_date ?? "—"}</span>,
+      },
+      {
+        key: "budget",
+        header: "lead.col_budget",
+        sortAccessor: (l) => Number(l.budget_min),
+        cell: (l) => (
+          <span className="text-muted-foreground">
+            {l.budget_min || l.budget_max ? `$${l.budget_min ?? "?"} – $${l.budget_max ?? "?"}` : "—"}
+          </span>
+        ),
+      },
+      {
+        key: "next",
+        header: "lead.col_next",
+        sortable: false,
+        cell: (l) => {
+          const nextStatus = NEXT_STATUS[l.lead_status];
+          const nextCfg = nextStatus ? STATUS_CONFIG[nextStatus] : null;
+          return nextStatus && nextCfg ? (
+            <button
+              className={`text-[10px] px-2 py-0.5 rounded border font-medium flex items-center gap-1 ${nextCfg.badge} hover:opacity-80`}
+              onClick={() => handleMove(l.id, nextStatus)}
+            >
+              {t("lead.move_to", { stage: nextCfg.label })}
+            </button>
+          ) : (
+            <span className="text-[10px] text-muted-foreground">—</span>
+          );
+        },
+      },
+      {
+        key: ACTIONS_KEY,
+        header: "",
+        hideable: false,
+        sortable: false,
+        align: "right",
+        defaultWidth: 90,
+        cell: (l) => (
+          <div className="flex items-center justify-end gap-1">
+            <Link href={`/sales/leads/${l.id}`}>
+              <Button variant="ghost" size="icon" className="h-7 w-7"><Pencil className="h-3.5 w-3.5" /></Button>
+            </Link>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => setDeleteId(l.id)}>
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [t, handleMove],
+  );
 
   return (
     <Layout>
@@ -237,88 +326,25 @@ export default function LeadList() {
           )}
         </div>
 
-        {isLoading ? (
-          <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
-        ) : view === "pipeline" ? (
-          <KanbanView
-            leads={leads ?? []}
-            onMove={handleMove}
-            onDelete={(id) => setDeleteId(id)}
-          />
+        {view === "pipeline" ? (
+          isLoading ? (
+            <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+          ) : (
+            <KanbanView
+              leads={leads ?? []}
+              onMove={handleMove}
+              onDelete={(id) => setDeleteId(id)}
+            />
+          )
         ) : (
-          <>
-            <div className="rounded-lg border overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-max text-sm">
-                  <thead className="bg-muted/50">
-                    <tr>
-                      <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("lead.col_ref")}</th>
-                      <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("lead.col_name")}</th>
-                      <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("lead.col_email")}</th>
-                      <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("lead.col_source")}</th>
-                      <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("lead.col_status")}</th>
-                      <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("booking.col_checkin")}</th>
-                      <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("lead.col_budget")}</th>
-                      <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">{t("lead.col_next")}</th>
-                      <th className="px-4 py-2.5"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {pagination.paginatedItems.map((l) => {
-                      const nextStatus = NEXT_STATUS[l.lead_status];
-                      const nextCfg = nextStatus ? STATUS_CONFIG[nextStatus] : null;
-                      return (
-                        <tr key={l.id} className="hover:bg-muted/30 transition-colors">
-                          <td className="px-4 py-2.5">
-                            <Link href={`/sales/leads/${l.id}`} className="font-mono text-xs font-medium hover:underline text-primary">{l.lead_ref}</Link>
-                          </td>
-                          <td className="px-4 py-2.5">
-                            <Link href={`/sales/leads/${l.id}`} className="font-medium hover:underline">
-                              {l.first_name} {l.last_name}
-                            </Link>
-                          </td>
-                          <td className="px-4 py-2.5 text-muted-foreground">{l.email}</td>
-                          <td className="px-4 py-2.5 text-muted-foreground">{l.lead_source ?? "—"}</td>
-                          <td className="px-4 py-2.5"><LeadStatusBadge status={l.lead_status} /></td>
-                          <td className="px-4 py-2.5 text-muted-foreground">{l.preferred_check_in_date ?? "—"}</td>
-                          <td className="px-4 py-2.5 text-muted-foreground">
-                            {l.budget_min || l.budget_max ? `$${l.budget_min ?? "?"} – $${l.budget_max ?? "?"}` : "—"}
-                          </td>
-                          <td className="px-4 py-2.5">
-                            {nextStatus && nextCfg ? (
-                              <button
-                                className={`text-[10px] px-2 py-0.5 rounded border font-medium flex items-center gap-1 ${nextCfg.badge} hover:opacity-80`}
-                                onClick={() => handleMove(l.id, nextStatus)}
-                              >
-                                {t("lead.move_to", { stage: nextCfg.label })}
-                              </button>
-                            ) : (
-                              <span className="text-[10px] text-muted-foreground">—</span>
-                            )}
-                          </td>
-                          <td className="px-4 py-2.5">
-                            <div className="flex items-center justify-end gap-1">
-                              <Link href={`/sales/leads/${l.id}`}>
-                                <Button variant="ghost" size="icon" className="h-7 w-7"><Pencil className="h-3.5 w-3.5" /></Button>
-                              </Link>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"
-                                onClick={() => setDeleteId(l.id)}>
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                    {(!leads || leads.length === 0) && (
-                      <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">{t("lead.no_leads")}</td></tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <TablePagination {...pagination} />
-          </>
+          <DataTable
+            tableKey="leads"
+            columns={columns}
+            data={leads ?? []}
+            isLoading={isLoading}
+            rowKey={(l) => l.id}
+            emptyText={t("lead.no_leads")}
+          />
         )}
       </div>
 

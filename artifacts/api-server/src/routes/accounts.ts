@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, and, or, isNull, inArray, SQL } from "drizzle-orm";
 import { db, accountsTable, contactsTable, commissionsTable, paymentInfoTable } from "@workspace/db";
+import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import {
   ListAccountsQueryParams,
   CreateAccountBody,
@@ -48,7 +49,7 @@ router.get("/v1/accounts", async (req, res): Promise<void> => {
   const parsed = ListAccountsQueryParams.safeParse(req.query);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const { search, account_type, status } = parsed.data;
-  const conditions: SQL[] = [isNull(accountsTable.deleted_at)];
+  const conditions: SQL[] = [deletedFilter(accountsTable.deleted_at, req)];
   if (account_type) conditions.push(eq(accountsTable.account_type, account_type));
   if (status) conditions.push(eq(accountsTable.status, status));
   if (search) {
@@ -92,23 +93,16 @@ router.put("/v1/accounts/:id", async (req, res): Promise<void> => {
   res.json(await enrichAccount(row));
 });
 
-router.post("/v1/accounts/bulk-delete", async (req, res): Promise<void> => {
-  const currentUser = (req as any).user;
-  if (currentUser?.role !== "SuperAdmin") {
-    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
-  }
-  const { ids, permanent } = req.body;
-  if (!Array.isArray(ids) || ids.length === 0) {
-    res.status(400).json({ error: "ids must be a non-empty array" }); return;
-  }
-  const numIds = ids.map(Number).filter(Boolean);
-  if (permanent) {
-    await db.delete(accountsTable).where(inArray(accountsTable.id, numIds));
-  } else {
-    await db.update(accountsTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(accountsTable.id, numIds));
-  }
-  res.json({ success: true, affected: numIds.length });
-});
+const accountsSoftDelete = {
+  table: accountsTable,
+  idColumn: accountsTable.id,
+  statusKey: "status",
+  archivedStatus: "Archived",
+  restoredStatus: "Active",
+};
+
+router.post("/v1/accounts/bulk-delete", makeBulkDelete(accountsSoftDelete));
+router.post("/v1/accounts/bulk-restore", makeBulkRestore(accountsSoftDelete));
 
 router.delete("/v1/accounts/:id", async (req, res): Promise<void> => {
   const parsed = DeleteAccountParams.safeParse(req.params);

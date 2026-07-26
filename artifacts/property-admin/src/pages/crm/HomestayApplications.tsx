@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { formatDate } from "@/lib/date";
@@ -6,14 +6,13 @@ import { formatPersonName } from "@/lib/nameFormat";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { TablePagination } from "@/components/ui/TablePagination";
+import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Home, Search, Eye, CheckCircle2 } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 
 const API = "/api/v1/homestay-applications";
-const PAGE_SIZE = 25;
+const FETCH_LIMIT = 1000;
 
 export type HomestayStatus = "Submitted" | "UnderReview" | "DocsRequested" | "Approved" | "Rejected";
 
@@ -57,14 +56,12 @@ export function HomestayStatusBadge({ status }: { status: string }) {
 async function fetchApplications(
   q: string,
   status: string,
-  page: number,
-  pageSize: number,
 ): Promise<{ items: HomestayApplication[]; total: number }> {
   const params = new URLSearchParams();
   if (q) params.set("q", q);
   if (status) params.set("status", status);
-  params.set("limit", String(pageSize));
-  params.set("offset", String((page - 1) * pageSize));
+  params.set("limit", String(FETCH_LIMIT));
+  params.set("offset", "0");
   const res = await apiFetch(`${API}?${params.toString()}`);
   if (!res.ok) throw new Error("Failed to load applications");
   const json = await res.json();
@@ -76,21 +73,90 @@ export default function HomestayApplications() {
   const { t } = useTranslation();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"" | HomestayStatus>("");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGE_SIZE);
 
-  // Reset to first page whenever the search or status filter changes.
-  const setSearch = (v: string) => { setQ(v); setPage(1); };
-  const setStatusFilter = (v: "" | HomestayStatus) => { setStatus(v); setPage(1); };
+  const setSearch = (v: string) => setQ(v);
+  const setStatusFilter = (v: "" | HomestayStatus) => setStatus(v);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["homestay-applications", q, status, page, pageSize],
-    queryFn: () => fetchApplications(q, status, page, pageSize),
+    queryKey: ["homestay-applications", q, status],
+    queryFn: () => fetchApplications(q, status),
     placeholderData: keepPreviousData,
   });
   const applications = data?.items ?? [];
-  const total = data?.total ?? 0;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const total = data?.total ?? applications.length;
+
+  const columns: ColumnDef<HomestayApplication>[] = useMemo(
+    () => [
+      {
+        key: "application_ref",
+        header: "homestay.col_ref",
+        hideable: false,
+        defaultWidth: 150,
+        cell: (a) => (
+          <Link href={`/account/homestay-applications/${a.id}`} className="font-mono text-xs font-medium text-primary hover:underline">
+            {a.application_ref}
+          </Link>
+        ),
+      },
+      {
+        key: "host",
+        header: "homestay.col_host",
+        sortAccessor: (a) => `${a.first_name} ${a.last_name}`,
+        cell: (a) => (
+          <Link href={`/account/homestay-applications/${a.id}`} className="font-medium hover:underline">
+            {formatPersonName(a.first_name, a.last_name)}
+          </Link>
+        ),
+      },
+      {
+        key: "email",
+        header: "homestay.col_email",
+        cell: (a) => <span className="text-sm text-muted-foreground">{a.email}</span>,
+      },
+      {
+        key: "suburb",
+        header: "homestay.col_suburb",
+        cell: (a) => <span className="text-sm text-muted-foreground">{a.suburb || <span className="text-muted-foreground/40">—</span>}</span>,
+      },
+      {
+        key: "status",
+        header: "homestay.col_status",
+        cell: (a) => <HomestayStatusBadge status={a.status} />,
+      },
+      {
+        key: "created_at",
+        header: "homestay.col_submitted",
+        sortAccessor: (a) => a.created_at,
+        cell: (a) => <span className="text-sm text-muted-foreground">{a.created_at ? formatDate(a.created_at) : "—"}</span>,
+      },
+      {
+        key: "landing_active",
+        header: "homestay.col_landing",
+        cell: (a) =>
+          a.landing_active ? (
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700">
+              <CheckCircle2 className="h-3.5 w-3.5" /> {t("homestay.landing_live")}
+            </span>
+          ) : (
+            <span className="text-xs text-muted-foreground/50">{t("homestay.landing_off")}</span>
+          ),
+      },
+      {
+        key: ACTIONS_KEY,
+        header: "",
+        hideable: false,
+        sortable: false,
+        align: "right",
+        defaultWidth: 90,
+        cell: (a) => (
+          <Link href={`/account/homestay-applications/${a.id}`}>
+            <Button size="sm" variant="ghost" className="gap-1.5"><Eye className="h-3.5 w-3.5" /> {t("common.view")}</Button>
+          </Link>
+        ),
+      },
+    ],
+    [t],
+  );
 
   return (
     <Layout>
@@ -140,68 +206,14 @@ export default function HomestayApplications() {
           </div>
         </div>
 
-        <div className="border rounded-lg bg-white mt-4 overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("homestay.col_ref")}</TableHead>
-                <TableHead>{t("homestay.col_host")}</TableHead>
-                <TableHead>{t("homestay.col_email")}</TableHead>
-                <TableHead>{t("homestay.col_suburb")}</TableHead>
-                <TableHead>{t("homestay.col_status")}</TableHead>
-                <TableHead>{t("homestay.col_submitted")}</TableHead>
-                <TableHead>{t("homestay.col_landing")}</TableHead>
-                <TableHead className="w-20"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-10 text-muted-foreground">{t("common.loading")}</TableCell></TableRow>
-              ) : applications.length === 0 ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-10 text-muted-foreground">{t("homestay.empty")}</TableCell></TableRow>
-              ) : applications.map((a) => (
-                <TableRow key={a.id}>
-                  <TableCell>
-                    <Link href={`/account/homestay-applications/${a.id}`} className="font-mono text-xs font-medium text-primary hover:underline">
-                      {a.application_ref}
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    <Link href={`/account/homestay-applications/${a.id}`} className="font-medium hover:underline">
-                      {formatPersonName(a.first_name, a.last_name)}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{a.email}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{a.suburb || <span className="text-muted-foreground/40">—</span>}</TableCell>
-                  <TableCell><HomestayStatusBadge status={a.status} /></TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{a.created_at ? formatDate(a.created_at) : "—"}</TableCell>
-                  <TableCell>
-                    {a.landing_active ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700">
-                        <CheckCircle2 className="h-3.5 w-3.5" /> {t("homestay.landing_live")}
-                      </span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground/50">{t("homestay.landing_off")}</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Link href={`/account/homestay-applications/${a.id}`}>
-                      <Button size="sm" variant="ghost" className="gap-1.5"><Eye className="h-3.5 w-3.5" /> {t("common.view")}</Button>
-                    </Link>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <TablePagination
-            page={page}
-            pageSize={pageSize}
-            total={total}
-            totalPages={totalPages}
-            hasNext={page < totalPages}
-            hasPrev={page > 1}
-            onPage={setPage}
-            onPageSize={(n) => { setPageSize(n); setPage(1); }}
+        <div className="mt-4">
+          <DataTable
+            tableKey="homestay-applications"
+            columns={columns}
+            data={applications}
+            isLoading={isLoading}
+            rowKey={(a) => a.id}
+            emptyText={t("homestay.empty")}
           />
         </div>
 

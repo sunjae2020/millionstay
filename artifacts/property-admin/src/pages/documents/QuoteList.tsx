@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Plus, FileText } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
-import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import { formatDate } from "@/lib/date";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -38,7 +38,48 @@ export default function QuoteList() {
   const [q, setQ] = useState("");
   const { data, isLoading } = useQuery({ queryKey: ["quotes", q], queryFn: () => fetchQuotes(q) });
   const rows: any[] = Array.isArray(data) ? data : [];
-  const pagination = usePagination(rows);
+
+  const columns: ColumnDef<any>[] = useMemo(
+    () => [
+      {
+        key: "quote_ref",
+        header: "quote.reference",
+        hideable: false,
+        cell: (r) => (
+          <Link href={`/documents/quotes/${r.id}`} className="text-primary hover:underline font-mono text-xs font-semibold">
+            {r.quote_ref}
+          </Link>
+        ),
+      },
+      {
+        key: "account_name",
+        header: "quote.party",
+        cell: (r) => <span className="text-sm">{r.account_name ?? "—"}</span>,
+      },
+      {
+        key: "total",
+        header: "common.total",
+        align: "right",
+        sortAccessor: (r) => Number(r.total),
+        cell: (r) => (
+          <span className="tabular-nums">
+            {Number(r.total).toLocaleString("en-AU", { minimumFractionDigits: 2 })} {r.currency}
+          </span>
+        ),
+      },
+      {
+        key: "valid_until",
+        header: "quote.valid_until",
+        cell: (r) => <span className="text-xs text-muted-foreground">{fmtDate(r.valid_until)}</span>,
+      },
+      {
+        key: "status",
+        header: "common.status",
+        cell: (r) => <Badge className={`text-xs ${STATUS_COLORS[r.status] ?? ""}`}>{r.status}</Badge>,
+      },
+    ],
+    [t],
+  );
 
   return (
     <Layout>
@@ -54,48 +95,19 @@ export default function QuoteList() {
           </Button>
         </div>
 
-        <div className="border rounded-lg overflow-hidden bg-card">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 border-b">
-                <tr>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("quote.reference", "Reference")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("quote.party", "Party")}</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.total", "Total")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("quote.valid_until", "Valid Until")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.status", "Status")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {isLoading ? (
-                  <tr><td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">{t("common.loading", "Loading…")}</td></tr>
-                ) : rows.length === 0 ? (
-                  <tr><td colSpan={5} className="px-4 py-12 text-center">
-                    <div className="flex flex-col items-center gap-2">
-                      <FileText className="h-8 w-8 text-muted-foreground/40" />
-                      <p className="text-muted-foreground">{t("quote.empty", "No quotes yet")}</p>
-                    </div>
-                  </td></tr>
-                ) : pagination.paginatedItems.map((r: any) => (
-                  <tr key={r.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3">
-                      <Link href={`/documents/quotes/${r.id}`} className="text-primary hover:underline font-mono text-xs font-semibold">
-                        {r.quote_ref}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 text-sm">{r.account_name ?? "—"}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">
-                      {Number(r.total).toLocaleString("en-AU", { minimumFractionDigits: 2 })} {r.currency}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground">{fmtDate(r.valid_until)}</td>
-                    <td className="px-4 py-3"><Badge className={`text-xs ${STATUS_COLORS[r.status] ?? ""}`}>{r.status}</Badge></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <TablePagination {...pagination} />
+        <DataTable
+          tableKey="quotes"
+          columns={columns}
+          data={rows}
+          isLoading={isLoading}
+          rowKey={(r) => r.id}
+          emptyText={
+            <div className="flex flex-col items-center gap-2 py-6">
+              <FileText className="h-8 w-8 text-muted-foreground/40" />
+              <p className="text-muted-foreground">{t("quote.empty", "No quotes yet")}</p>
+            </div>
+          }
+        />
       </div>
     </Layout>
   );

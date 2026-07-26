@@ -1,18 +1,17 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { formatDate } from "@/lib/date";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { TablePagination } from "@/components/ui/TablePagination";
+import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Handshake, Eye, Search } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 
 const API = "/api/v1/homestay-placements";
-const PAGE_SIZE = 25;
+const FETCH_LIMIT = 1000;
 
 export type PlacementStatus =
   | "Proposed" | "HostAccepted" | "AwaitingPayment" | "Active"
@@ -63,14 +62,12 @@ export function PlacementStatusBadge({ status }: { status: string }) {
 async function fetchPlacements(
   q: string,
   status: string,
-  page: number,
-  pageSize: number,
 ): Promise<{ items: Placement[]; total: number }> {
   const params = new URLSearchParams();
   if (q) params.set("q", q);
   if (status) params.set("status", status);
-  params.set("limit", String(pageSize));
-  params.set("offset", String((page - 1) * pageSize));
+  params.set("limit", String(FETCH_LIMIT));
+  params.set("offset", "0");
   const res = await apiFetch(`${API}?${params.toString()}`);
   if (!res.ok) throw new Error("Failed to load placements");
   const json = await res.json();
@@ -82,20 +79,77 @@ export default function HomestayPlacements() {
   const { t } = useTranslation();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"" | PlacementStatus>("");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGE_SIZE);
 
-  const setSearch = (v: string) => { setQ(v); setPage(1); };
-  const setStatusFilter = (v: "" | PlacementStatus) => { setStatus(v); setPage(1); };
+  const setSearch = (v: string) => setQ(v);
+  const setStatusFilter = (v: "" | PlacementStatus) => setStatus(v);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["homestay-placements", q, status, page, pageSize],
-    queryFn: () => fetchPlacements(q, status, page, pageSize),
+    queryKey: ["homestay-placements", q, status],
+    queryFn: () => fetchPlacements(q, status),
     placeholderData: keepPreviousData,
   });
   const rows = data?.items ?? [];
-  const total = data?.total ?? 0;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const total = data?.total ?? rows.length;
+
+  const columns: ColumnDef<Placement>[] = useMemo(
+    () => [
+      {
+        key: "placement_ref",
+        header: "homestayPlacement.col_ref",
+        hideable: false,
+        defaultWidth: 150,
+        cell: (r) => (
+          <Link href={`/account/homestay-placements/${r.id}`} className="font-mono text-xs font-medium text-primary hover:underline">
+            {r.placement_ref}
+          </Link>
+        ),
+      },
+      {
+        key: "student_name",
+        header: "homestayPlacement.col_student",
+        cell: (r) => (
+          <Link href={`/account/homestay-placements/${r.id}`} className="font-medium hover:underline">
+            {r.student_name || "—"}
+          </Link>
+        ),
+      },
+      {
+        key: "host_name",
+        header: "homestayPlacement.col_host",
+        cell: (r) => <span className="text-sm text-muted-foreground">{r.host_name || "—"}{r.host_suburb ? ` · ${r.host_suburb}` : ""}</span>,
+      },
+      {
+        key: "move_in_date",
+        header: "homestayPlacement.col_move_in",
+        cell: (r) => <span className="text-sm text-muted-foreground">{r.move_in_date || <span className="text-muted-foreground/40">—</span>}</span>,
+      },
+      {
+        key: "status",
+        header: "homestayPlacement.col_status",
+        cell: (r) => <PlacementStatusBadge status={r.status} />,
+      },
+      {
+        key: "created_at",
+        header: "homestayPlacement.col_created",
+        sortAccessor: (r) => r.created_at,
+        cell: (r) => <span className="text-sm text-muted-foreground">{r.created_at ? formatDate(r.created_at) : "—"}</span>,
+      },
+      {
+        key: ACTIONS_KEY,
+        header: "",
+        hideable: false,
+        sortable: false,
+        align: "right",
+        defaultWidth: 90,
+        cell: (r) => (
+          <Link href={`/account/homestay-placements/${r.id}`}>
+            <Button size="sm" variant="ghost" className="gap-1.5"><Eye className="h-3.5 w-3.5" /> {t("common.view")}</Button>
+          </Link>
+        ),
+      },
+    ],
+    [t],
+  );
 
   return (
     <Layout>
@@ -141,58 +195,14 @@ export default function HomestayPlacements() {
           })}
         </div>
 
-        <div className="border rounded-lg bg-white mt-4 overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("homestayPlacement.col_ref")}</TableHead>
-                <TableHead>{t("homestayPlacement.col_student")}</TableHead>
-                <TableHead>{t("homestayPlacement.col_host")}</TableHead>
-                <TableHead>{t("homestayPlacement.col_move_in")}</TableHead>
-                <TableHead>{t("homestayPlacement.col_status")}</TableHead>
-                <TableHead>{t("homestayPlacement.col_created")}</TableHead>
-                <TableHead className="w-20"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">{t("common.loading")}</TableCell></TableRow>
-              ) : rows.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">{t("homestayPlacement.empty")}</TableCell></TableRow>
-              ) : rows.map((r) => (
-                <TableRow key={r.id}>
-                  <TableCell>
-                    <Link href={`/account/homestay-placements/${r.id}`} className="font-mono text-xs font-medium text-primary hover:underline">
-                      {r.placement_ref}
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    <Link href={`/account/homestay-placements/${r.id}`} className="font-medium hover:underline">
-                      {r.student_name || "—"}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{r.host_name || "—"}{r.host_suburb ? ` · ${r.host_suburb}` : ""}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{r.move_in_date || <span className="text-muted-foreground/40">—</span>}</TableCell>
-                  <TableCell><PlacementStatusBadge status={r.status} /></TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{r.created_at ? formatDate(r.created_at) : "—"}</TableCell>
-                  <TableCell>
-                    <Link href={`/account/homestay-placements/${r.id}`}>
-                      <Button size="sm" variant="ghost" className="gap-1.5"><Eye className="h-3.5 w-3.5" /> {t("common.view")}</Button>
-                    </Link>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <TablePagination
-            page={page}
-            pageSize={pageSize}
-            total={total}
-            totalPages={totalPages}
-            hasNext={page < totalPages}
-            hasPrev={page > 1}
-            onPage={setPage}
-            onPageSize={(n) => { setPageSize(n); setPage(1); }}
+        <div className="mt-4">
+          <DataTable
+            tableKey="homestay-placements"
+            columns={columns}
+            data={rows}
+            isLoading={isLoading}
+            rowKey={(r) => r.id}
+            emptyText={t("homestayPlacement.empty")}
           />
         </div>
 

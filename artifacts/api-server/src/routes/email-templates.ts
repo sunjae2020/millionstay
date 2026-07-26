@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, emailTemplatesTable, emailLogsTable } from "@workspace/db";
 import { eq, isNull, inArray } from "drizzle-orm";
 import { z } from "zod";
+import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 
 const router = Router();
 
@@ -16,9 +17,9 @@ const TestEmailBody = z.object({
   to_email: z.string().email(),
 });
 
-router.get("/v1/email-templates", async (_req, res): Promise<void> => {
+router.get("/v1/email-templates", async (req, res): Promise<void> => {
   const rows = await db.select().from(emailTemplatesTable)
-    .where(isNull(emailTemplatesTable.deleted_at))
+    .where(deletedFilter(emailTemplatesTable.deleted_at, req))
     .orderBy(emailTemplatesTable.id);
   res.json(rows);
 });
@@ -74,23 +75,13 @@ router.post("/v1/email-templates/:id/test", async (req, res): Promise<void> => {
   res.json({ success: true, resend_message_id: mockMessageId, note: "Test email logged (no actual send — configure Resend API to enable delivery)" });
 });
 
-router.post("/v1/email-templates/bulk-delete", async (req, res): Promise<void> => {
-  const currentUser = (req as any).user;
-  if (currentUser?.role !== "SuperAdmin") {
-    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
-  }
-  const { ids, permanent } = req.body;
-  if (!Array.isArray(ids) || ids.length === 0) {
-    res.status(400).json({ error: "ids must be a non-empty array" }); return;
-  }
-  const numIds = ids.map(Number).filter(Boolean);
-  if (permanent) {
-    await db.delete(emailTemplatesTable).where(inArray(emailTemplatesTable.id, numIds));
-  } else {
-    await db.update(emailTemplatesTable).set({ deleted_at: new Date() }).where(inArray(emailTemplatesTable.id, numIds));
-  }
-  res.json({ success: true, affected: numIds.length });
-});
+const emailTemplatesSoftDelete = {
+  table: emailTemplatesTable,
+  idColumn: emailTemplatesTable.id,
+};
+
+router.post("/v1/email-templates/bulk-delete", makeBulkDelete(emailTemplatesSoftDelete));
+router.post("/v1/email-templates/bulk-restore", makeBulkRestore(emailTemplatesSoftDelete));
 
 router.delete("/v1/email-templates/:id", async (req, res): Promise<void> => {
   const id = Number(req.params.id);

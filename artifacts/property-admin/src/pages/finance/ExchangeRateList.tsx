@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatDateTime } from "@/lib/date";
 import { Layout, PageHeader } from "@/components/Layout";
@@ -10,6 +10,7 @@ import { RefreshCw, Trash2, Plus, Loader2, Zap } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 
 type ExchangeRate = {
   id: number;
@@ -146,6 +147,137 @@ export default function ExchangeRateList() {
     setRate(v.toFixed(8));
   }
 
+  const columns: ColumnDef<ExchangeRate>[] = useMemo(
+    () => [
+      {
+        key: "from_currency",
+        header: "exchange_rate.from",
+        hideable: false,
+        cell: (r) => <span className="font-medium">{r.from_currency}</span>,
+      },
+      {
+        key: "to_currency",
+        header: "exchange_rate.to",
+        cell: (r) => <span>{r.to_currency}</span>,
+      },
+      {
+        key: "rate",
+        header: "exchange_rate.col_rate",
+        align: "right",
+        sortAccessor: (r) => Number(r.rate),
+        cell: (r) => {
+          const n = Number(r.rate);
+          return <span className="font-mono">{n.toFixed(8)}</span>;
+        },
+      },
+      {
+        key: "inverse",
+        header: "exchange_rate.col_inverse",
+        align: "right",
+        sortAccessor: (r) => {
+          const n = Number(r.rate);
+          return n > 0 ? 1 / n : 0;
+        },
+        cell: (r) => {
+          const n = Number(r.rate);
+          const inv = n > 0 ? 1 / n : 0;
+          return <span className="font-mono">{inv.toFixed(4)}</span>;
+        },
+      },
+      {
+        key: "live",
+        header: "exchange_rate.col_live",
+        align: "right",
+        sortAccessor: (r) => (r.to_currency === "AUD" ? liveOf(r.from_currency) : null),
+        cell: (r) => {
+          const liveRate = r.to_currency === "AUD" ? liveOf(r.from_currency) : null;
+          return (
+            <span className="font-mono text-muted-foreground">
+              {liveRate != null ? liveRate.toFixed(8) : "—"}
+            </span>
+          );
+        },
+      },
+      {
+        key: "diff",
+        header: "exchange_rate.col_diff",
+        align: "right",
+        sortAccessor: (r) => {
+          const n = Number(r.rate);
+          const liveRate = r.to_currency === "AUD" ? liveOf(r.from_currency) : null;
+          return liveRate != null && n > 0 ? ((n - liveRate) / liveRate) * 100 : null;
+        },
+        cell: (r) => {
+          const n = Number(r.rate);
+          const liveRate = r.to_currency === "AUD" ? liveOf(r.from_currency) : null;
+          const diffPct = liveRate != null && n > 0 ? ((n - liveRate) / liveRate) * 100 : null;
+          const stale = diffPct != null && Math.abs(diffPct) >= 1;
+          return diffPct == null ? (
+            <span className="text-muted-foreground">—</span>
+          ) : (
+            <span className={stale ? "text-amber-600 font-medium" : "text-green-600"}>
+              {diffPct > 0 ? "+" : ""}{diffPct.toFixed(2)}%
+            </span>
+          );
+        },
+      },
+      {
+        key: "source",
+        header: "exchange_rate.source",
+        cell: (r) => <Badge variant={r.source === "auto" ? "default" : "secondary"}>{r.source}</Badge>,
+      },
+      {
+        key: "effective_date",
+        header: "exchange_rate.effective_date",
+        cell: (r) => <span>{r.effective_date}</span>,
+      },
+      {
+        key: "updated_at",
+        header: "common.updated_at",
+        sortAccessor: (r) => r.updated_at,
+        cell: (r) => <span className="text-xs text-muted-foreground">{fmt(r.updated_at)}</span>,
+      },
+      {
+        key: ACTIONS_KEY,
+        header: "",
+        hideable: false,
+        sortable: false,
+        align: "right",
+        cell: (r) => {
+          const n = Number(r.rate);
+          const liveRate = r.to_currency === "AUD" ? liveOf(r.from_currency) : null;
+          void n;
+          return (
+            <span className="whitespace-nowrap">
+              {liveRate != null && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  title={t("exchange_rate.update_to_live_tooltip")}
+                  disabled={createMut.isPending}
+                  onClick={() =>
+                    createMut.mutate({ from_currency: r.from_currency, to_currency: "AUD", rate: liveRate.toFixed(8) })
+                  }
+                >
+                  <Zap className="h-4 w-4" />
+                </Button>
+              )}
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => { if (confirm(t("exchange_rate.confirm_delete_rate"))) deleteMut.mutate(r.id); }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </span>
+          );
+        },
+      },
+    ],
+    // liveRates drives liveOf; createMut.isPending gates the update-to-live button.
+    [t, liveRates, createMut.isPending],
+  );
+
   return (
     <Layout>
       <PageHeader
@@ -234,84 +366,14 @@ export default function ExchangeRateList() {
         </div>
       </div>
 
-      <div className="rounded-lg border bg-white overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="px-4 py-2 text-left">{t("exchange_rate.from")}</th>
-              <th className="px-4 py-2 text-left">{t("exchange_rate.to")}</th>
-              <th className="px-4 py-2 text-right">{t("exchange_rate.col_rate")}</th>
-              <th className="px-4 py-2 text-right">{t("exchange_rate.col_inverse")}</th>
-              <th className="px-4 py-2 text-right">{t("exchange_rate.col_live")}</th>
-              <th className="px-4 py-2 text-right">{t("exchange_rate.col_diff")}</th>
-              <th className="px-4 py-2 text-left">{t("exchange_rate.source")}</th>
-              <th className="px-4 py-2 text-left">{t("exchange_rate.effective_date")}</th>
-              <th className="px-4 py-2 text-left">{t("common.updated_at")}</th>
-              <th className="px-4 py-2"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 && (
-              <tr><td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">{t("exchange_rate.empty_state")}</td></tr>
-            )}
-            {rows.map((r) => {
-              const n = Number(r.rate);
-              const inv = n > 0 ? 1 / n : 0;
-              // Live comparison only meaningful for pairs vs AUD (how stored rates are kept).
-              const liveRate = r.to_currency === "AUD" ? liveOf(r.from_currency) : null;
-              const diffPct = liveRate != null && n > 0 ? ((n - liveRate) / liveRate) * 100 : null;
-              const stale = diffPct != null && Math.abs(diffPct) >= 1;
-              return (
-                <tr key={r.id} className="border-b hover:bg-gray-50">
-                  <td className="px-4 py-2 font-medium">{r.from_currency}</td>
-                  <td className="px-4 py-2">{r.to_currency}</td>
-                  <td className="px-4 py-2 text-right font-mono">{n.toFixed(8)}</td>
-                  <td className="px-4 py-2 text-right font-mono">{inv.toFixed(4)}</td>
-                  <td className="px-4 py-2 text-right font-mono text-muted-foreground">
-                    {liveRate != null ? liveRate.toFixed(8) : "—"}
-                  </td>
-                  <td className="px-4 py-2 text-right">
-                    {diffPct == null ? (
-                      <span className="text-muted-foreground">—</span>
-                    ) : (
-                      <span className={stale ? "text-amber-600 font-medium" : "text-green-600"}>
-                        {diffPct > 0 ? "+" : ""}{diffPct.toFixed(2)}%
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-2">
-                    <Badge variant={r.source === "auto" ? "default" : "secondary"}>{r.source}</Badge>
-                  </td>
-                  <td className="px-4 py-2">{r.effective_date}</td>
-                  <td className="px-4 py-2 text-xs text-muted-foreground">{fmt(r.updated_at)}</td>
-                  <td className="px-4 py-2 text-right whitespace-nowrap">
-                    {liveRate != null && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        title={t("exchange_rate.update_to_live_tooltip")}
-                        disabled={createMut.isPending}
-                        onClick={() =>
-                          createMut.mutate({ from_currency: r.from_currency, to_currency: "AUD", rate: liveRate.toFixed(8) })
-                        }
-                      >
-                        <Zap className="h-4 w-4" />
-                      </Button>
-                    )}
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => { if (confirm(t("exchange_rate.confirm_delete_rate"))) deleteMut.mutate(r.id); }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        tableKey="exchange-rates"
+        columns={columns}
+        data={rows}
+        isLoading={ratesQ.isLoading}
+        rowKey={(r) => r.id}
+        emptyText={t("exchange_rate.empty_state")}
+      />
     </Layout>
   );
 }

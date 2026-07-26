@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, asc, isNull, inArray, and } from "drizzle-orm";
 import { db, productTypesTable } from "@workspace/db";
+import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 
 const router: IRouter = Router();
 
@@ -10,7 +11,7 @@ router.get("/v1/product-types", async (req, res): Promise<void> => {
     const rows = await db
       .select()
       .from(productTypesTable)
-      .where(and(isNull(productTypesTable.deleted_at), q ? ilike(productTypesTable.name, `%${q}%`) : undefined))
+      .where(and(deletedFilter(productTypesTable.deleted_at, req), q ? ilike(productTypesTable.name, `%${q}%`) : undefined))
       .orderBy(asc(productTypesTable.name));
     res.json({ success: true, data: rows, meta: { total: rows.length } });
   } catch {
@@ -53,23 +54,13 @@ router.put("/v1/product-types/:id", async (req, res): Promise<void> => {
   }
 });
 
-router.post("/v1/product-types/bulk-delete", async (req, res): Promise<void> => {
-  const currentUser = (req as any).user;
-  if (currentUser?.role !== "SuperAdmin") {
-    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
-  }
-  const { ids, permanent } = req.body;
-  if (!Array.isArray(ids) || ids.length === 0) {
-    res.status(400).json({ error: "ids must be a non-empty array" }); return;
-  }
-  const numIds = ids.map(Number).filter(Boolean);
-  if (permanent) {
-    await db.delete(productTypesTable).where(inArray(productTypesTable.id, numIds));
-  } else {
-    await db.update(productTypesTable).set({ deleted_at: new Date() }).where(inArray(productTypesTable.id, numIds));
-  }
-  res.json({ success: true, affected: numIds.length });
-});
+const productTypesSoftDelete = {
+  table: productTypesTable,
+  idColumn: productTypesTable.id,
+};
+
+router.post("/v1/product-types/bulk-delete", makeBulkDelete(productTypesSoftDelete));
+router.post("/v1/product-types/bulk-restore", makeBulkRestore(productTypesSoftDelete));
 
 router.delete("/v1/product-types/:id", async (req, res): Promise<void> => {
   try {

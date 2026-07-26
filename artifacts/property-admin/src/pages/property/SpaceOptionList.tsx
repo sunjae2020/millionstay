@@ -1,20 +1,21 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   useListSpaceOptions,
   useDeleteSpaceOption,
   getListSpaceOptionsQueryKey,
+  type ListSpaceOptionsParams,
+  type SpaceOption,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Pencil, Trash2, Archive, X, AlertTriangle, Loader2 } from "lucide-react";
+import { Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { formatDate } from "@/lib/date";
-import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,28 +26,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useAuth } from "@/contexts/AuthContext";
-import { apiFetch } from "@/lib/apiFetch";
-import { useToast } from "@/hooks/use-toast";
 
 export default function SpaceOptionList() {
   const { t } = useTranslation();
-  const { user } = useAuth();
-  const isSuperAdmin = user?.role === "SuperAdmin";
   const [search, setSearch] = useState("");
+  const [showDeleted, setShowDeleted] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [bulkAction, setBulkAction] = useState<"archive" | "permanent" | null>(null);
-  const [isBulkLoading, setIsBulkLoading] = useState(false);
   const qc = useQueryClient();
-  const { toast } = useToast();
 
-  const { data: options, isLoading } = useListSpaceOptions(
-    { search: search || undefined },
-    { query: { queryKey: getListSpaceOptionsQueryKey({ search: search || undefined }) } }
-  );
+  const params: ListSpaceOptionsParams & { deleted?: string } = {
+    search: search || undefined,
+    ...(showDeleted ? { deleted: "only" } : {}),
+  };
 
-  const pagination = usePagination(options ?? []);
+  const { data: options, isLoading } = useListSpaceOptions(params, {
+    query: { queryKey: getListSpaceOptionsQueryKey(params) },
+  });
 
   const deleteMutation = useDeleteSpaceOption({
     mutation: {
@@ -57,40 +52,63 @@ export default function SpaceOptionList() {
     },
   });
 
-  const pageIds = pagination.paginatedItems.map((o) => o.id);
-  const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
-  const somePageSelected = pageIds.some((id) => selectedIds.has(id));
-  const toggleSelectAll = () => {
-    if (allPageSelected) {
-      setSelectedIds((prev) => { const n = new Set(prev); pageIds.forEach((id) => n.delete(id)); return n; });
-    } else {
-      setSelectedIds((prev) => { const n = new Set(prev); pageIds.forEach((id) => n.add(id)); return n; });
-    }
-  };
-  const toggleSelect = (id: number) => {
-    setSelectedIds((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  };
-  const clearSelection = () => setSelectedIds(new Set());
-  const handleBulkDelete = async (permanent: boolean) => {
-    setIsBulkLoading(true);
-    setBulkAction(null);
-    try {
-      const res = await apiFetch("/api/v1/space-options/bulk-delete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids: Array.from(selectedIds), permanent }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Bulk delete failed");
-      qc.invalidateQueries({ queryKey: getListSpaceOptionsQueryKey() });
-      toast({ title: permanent ? `${data.affected} space options permanently deleted` : `${data.affected} space options archived` });
-      clearSelection();
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    } finally {
-      setIsBulkLoading(false);
-    }
-  };
+  const columns: ColumnDef<SpaceOption>[] = useMemo(
+    () => [
+      {
+        key: "name",
+        header: "space_option.col_name",
+        hideable: false,
+        defaultWidth: 200,
+        cell: (opt) => (
+          <Link href={`/property/space-options/${opt.id}`} className="hover:underline text-primary font-medium">
+            {opt.name}
+          </Link>
+        ),
+      },
+      {
+        key: "display_name",
+        header: "space_option.col_display_name",
+        cell: (opt) => <span className="text-muted-foreground">{opt.display_name ?? "—"}</span>,
+      },
+      {
+        key: "category",
+        header: "space_option.col_category",
+        cell: (opt) => <span className="text-muted-foreground">{opt.category ?? "—"}</span>,
+      },
+      {
+        key: "status",
+        header: "space_option.col_status",
+        cell: (opt) => <StatusBadge status={opt.status} />,
+      },
+      {
+        key: "created_at",
+        header: "space_option.col_created",
+        sortAccessor: (opt) => opt.created_at,
+        cell: (opt) => <span className="text-muted-foreground text-xs">{formatDate(opt.created_at)}</span>,
+      },
+      {
+        key: ACTIONS_KEY,
+        header: "",
+        hideable: false,
+        sortable: false,
+        align: "right",
+        defaultWidth: 90,
+        cell: (opt) => (
+          <div className="flex items-center gap-1 justify-end">
+            <Link href={`/property/space-options/${opt.id}`}>
+              <button className="p-1.5 rounded hover:bg-muted transition-colors">
+                <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+              </button>
+            </Link>
+            <button className="p-1.5 rounded hover:bg-destructive/10 transition-colors" onClick={() => setDeleteId(opt.id)}>
+              <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+            </button>
+          </div>
+        ),
+      },
+    ],
+    [t],
+  );
 
   return (
     <Layout>
@@ -118,82 +136,22 @@ export default function SpaceOptionList() {
           </div>
         </div>
 
-        {isSuperAdmin && selectedIds.size > 0 && (
-          <div className="flex items-center gap-3 mb-3 px-4 py-2.5 rounded-lg bg-primary/10 border border-primary/20">
-            <span className="text-sm font-medium text-primary">{selectedIds.size} item{selectedIds.size > 1 ? "s" : ""} selected</span>
-            <button onClick={clearSelection} className="text-primary hover:text-primary"><X className="h-3.5 w-3.5" /></button>
-            <div className="ml-auto flex items-center gap-2">
-              {isBulkLoading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
-              <Button size="sm" variant="outline" className="h-7 border-amber-300 text-amber-700 hover:bg-amber-50 gap-1.5" onClick={() => setBulkAction("archive")} disabled={isBulkLoading}>
-                <Archive className="h-3.5 w-3.5" /> Archive Selected
-              </Button>
-              <Button size="sm" variant="destructive" className="h-7 gap-1.5" onClick={() => setBulkAction("permanent")} disabled={isBulkLoading}>
-                <Trash2 className="h-3.5 w-3.5" /> Delete Forever
-              </Button>
-            </div>
-          </div>
-        )}
-
-        <div className="rounded-md border bg-card overflow-hidden">
-          <div className="overflow-x-auto">
-          <table className="w-full min-w-max text-sm">
-            <thead className="bg-muted/50 border-b">
-              <tr>
-                {isSuperAdmin && (
-                  <th className="px-3 py-3 w-8">
-                    <Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} aria-label="Select all" />
-                  </th>
-                )}
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_option.col_name")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_option.col_display_name")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_option.col_category")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_option.col_status")}</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("space_option.col_created")}</th>
-                <th className="px-4 py-3 w-20"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {isLoading ? (
-                <tr><td colSpan={isSuperAdmin ? 7 : 6} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("common.loading")}</td></tr>
-              ) : options?.length === 0 ? (
-                <tr><td colSpan={isSuperAdmin ? 7 : 6} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("space_option.no_records") || "No space options found"}</td></tr>
-              ) : (
-                pagination.paginatedItems.map((opt) => (
-                  <tr key={opt.id} className={`hover:bg-muted/30 transition-colors ${selectedIds.has(opt.id) ? "bg-primary/5" : ""}`}>
-                    {isSuperAdmin && (
-                      <td className="px-3 py-3">
-                        <Checkbox checked={selectedIds.has(opt.id)} onCheckedChange={() => toggleSelect(opt.id)} aria-label="Select option" onClick={(e) => e.stopPropagation()} />
-                      </td>
-                    )}
-                    <td className="px-4 py-3 font-medium">
-                      <Link href={`/property/space-options/${opt.id}`} className="hover:underline text-primary">{opt.name}</Link>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">{opt.display_name ?? "—"}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{opt.category ?? "—"}</td>
-                    <td className="px-4 py-3"><StatusBadge status={opt.status} /></td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs">
-                      {formatDate(opt.created_at)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1">
-                        <Link href={`/property/space-options/${opt.id}`}>
-                          <button className="p-1.5 rounded hover:bg-muted transition-colors">
-                            <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                          </button>
-                        </Link>
-                        <button className="p-1.5 rounded hover:bg-destructive/10 transition-colors" onClick={() => setDeleteId(opt.id)}>
-                          <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-          </div>
-        </div>
-        <TablePagination {...pagination} />
+        <DataTable
+          tableKey="space-options"
+          columns={columns}
+          data={options ?? []}
+          isLoading={isLoading}
+          rowKey={(opt) => opt.id}
+          defaultSort={{ key: "name", dir: "asc" }}
+          emptyText={t("space_option.no_records") || "No space options found"}
+          selection={{
+            enable: true,
+            resource: "space-options",
+            onChanged: () => qc.invalidateQueries({ queryKey: getListSpaceOptionsQueryKey() }),
+          }}
+          showDeleted={showDeleted}
+          onToggleShowDeleted={setShowDeleted}
+        />
       </div>
 
       <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
@@ -207,30 +165,6 @@ export default function SpaceOptionList() {
             <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => deleteId && deleteMutation.mutate({ id: deleteId })}
             >{t("common.delete")}</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={bulkAction !== null} onOpenChange={(o) => !o && setBulkAction(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-destructive" />
-              {bulkAction === "permanent" ? "Permanently Delete Space Options" : "Archive Space Options"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {bulkAction === "permanent"
-                ? `You are about to permanently delete ${selectedIds.size} space option(s). This cannot be undone.`
-                : `You are about to archive ${selectedIds.size} space option(s). They will be hidden from view.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <Button variant={bulkAction === "permanent" ? "destructive" : "outline"}
-              className={bulkAction !== "permanent" ? "border-amber-300 text-amber-700 hover:bg-amber-50" : ""}
-              onClick={() => handleBulkDelete(bulkAction === "permanent")}>
-              {bulkAction === "permanent" ? "Delete Forever" : "Archive All"}
-            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

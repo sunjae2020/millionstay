@@ -3,6 +3,7 @@ import { db, workOrdersTable, propertiesTable, spacesTable, contactsTable, servi
 import { eq, ilike, and, isNull, inArray } from "drizzle-orm";
 import { dispatchWorkOrder } from "../lib/dispatch/workOrderDispatch";
 import { logAction } from "../utils/auditLog";
+import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import {
   CreateWorkOrderBody,
   UpdateWorkOrderBody,
@@ -60,7 +61,7 @@ async function enrichWorkOrders(rows: (typeof workOrdersTable.$inferSelect)[]) {
 
 router.get("/v1/work-orders", async (req, res): Promise<void> => {
   const { q, status, priority, property_id } = req.query as Record<string, string>;
-  const conditions: any[] = [isNull(workOrdersTable.deleted_at)];
+  const conditions: any[] = [deletedFilter(workOrdersTable.deleted_at, req)];
   if (q) conditions.push(ilike(workOrdersTable.title, `%${q}%`));
   if (status) conditions.push(eq(workOrdersTable.status, status));
   if (priority) conditions.push(eq(workOrdersTable.priority, priority));
@@ -146,23 +147,16 @@ router.put("/v1/work-orders/:id", async (req, res): Promise<void> => {
   res.json(result);
 });
 
-router.post("/v1/work-orders/bulk-delete", async (req, res): Promise<void> => {
-  const currentUser = (req as any).user;
-  if (currentUser?.role !== "SuperAdmin") {
-    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
-  }
-  const { ids, permanent } = req.body;
-  if (!Array.isArray(ids) || ids.length === 0) {
-    res.status(400).json({ error: "ids must be a non-empty array" }); return;
-  }
-  const numIds = ids.map(Number).filter(Boolean);
-  if (permanent) {
-    await db.delete(workOrdersTable).where(inArray(workOrdersTable.id, numIds));
-  } else {
-    await db.update(workOrdersTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(workOrdersTable.id, numIds));
-  }
-  res.json({ success: true, affected: numIds.length });
-});
+const workOrdersSoftDelete = {
+  table: workOrdersTable,
+  idColumn: workOrdersTable.id,
+  statusKey: "status",
+  archivedStatus: "Archived",
+  restoredStatus: "Active",
+};
+
+router.post("/v1/work-orders/bulk-delete", makeBulkDelete(workOrdersSoftDelete));
+router.post("/v1/work-orders/bulk-restore", makeBulkRestore(workOrdersSoftDelete));
 
 router.delete("/v1/work-orders/:id", async (req, res): Promise<void> => {
   const id = Number(req.params.id);

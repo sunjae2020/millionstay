@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, and, isNull, inArray, SQL } from "drizzle-orm";
 import { db, spaceOptionsTable } from "@workspace/db";
+import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import {
   ListSpaceOptionsQueryParams,
   CreateSpaceOptionBody,
@@ -23,7 +24,7 @@ router.get("/v1/space-options", async (req, res): Promise<void> => {
   }
   const { search, category } = parsed.data;
 
-  const conditions: SQL[] = [isNull(spaceOptionsTable.deleted_at)];
+  const conditions: SQL[] = [deletedFilter(spaceOptionsTable.deleted_at, req)];
   if (search) conditions.push(ilike(spaceOptionsTable.name, `%${search}%`));
   if (category) conditions.push(eq(spaceOptionsTable.category, category));
 
@@ -94,23 +95,16 @@ router.put("/v1/space-options/:id", async (req, res): Promise<void> => {
   res.json(UpdateSpaceOptionResponse.parse(option));
 });
 
-router.post("/v1/space-options/bulk-delete", async (req, res): Promise<void> => {
-  const currentUser = (req as any).user;
-  if (currentUser?.role !== "SuperAdmin") {
-    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
-  }
-  const { ids, permanent } = req.body;
-  if (!Array.isArray(ids) || ids.length === 0) {
-    res.status(400).json({ error: "ids must be a non-empty array" }); return;
-  }
-  const numIds = ids.map(Number).filter(Boolean);
-  if (permanent) {
-    await db.delete(spaceOptionsTable).where(inArray(spaceOptionsTable.id, numIds));
-  } else {
-    await db.update(spaceOptionsTable).set({ deleted_at: new Date(), status: "Archived", updated_at: new Date() }).where(inArray(spaceOptionsTable.id, numIds));
-  }
-  res.json({ success: true, affected: numIds.length });
-});
+const spaceOptionsSoftDelete = {
+  table: spaceOptionsTable,
+  idColumn: spaceOptionsTable.id,
+  statusKey: "status",
+  archivedStatus: "Archived",
+  restoredStatus: "Active",
+};
+
+router.post("/v1/space-options/bulk-delete", makeBulkDelete(spaceOptionsSoftDelete));
+router.post("/v1/space-options/bulk-restore", makeBulkRestore(spaceOptionsSoftDelete));
 
 router.delete("/v1/space-options/:id", async (req, res): Promise<void> => {
   const params = DeleteSpaceOptionParams.safeParse(req.params);

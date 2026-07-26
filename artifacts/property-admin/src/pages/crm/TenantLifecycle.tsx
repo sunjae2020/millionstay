@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
@@ -10,6 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 
 type LifecycleStage = "MovingIn" | "Residing" | "MovingOut" | "Completed" | "All";
 
@@ -201,7 +202,7 @@ export default function TenantLifecycle() {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const { data: bookings } = useListBookings({});
+  const { data: bookings, isLoading } = useListBookings({});
 
   const tenants: TenantRecord[] = (bookings ?? [])
     .filter(b => !["Draft", "Cancelled"].includes(b.booking_status))
@@ -247,6 +248,93 @@ export default function TenantLifecycle() {
   });
 
   const urgentCount = tenants.filter(t => t.stage === "MovingOut" && (t.daysUntilCheckout ?? 99) <= 7).length;
+
+  const columns: ColumnDef<TenantRecord>[] = useMemo(
+    () => [
+      {
+        key: "stage",
+        header: "tenant_lifecycle.col_stage",
+        cell: (tenant) => {
+          const cfg = STAGE_CONFIG[tenant.stage];
+          const Icon = cfg.icon;
+          return (
+            <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border ${cfg.bg} ${cfg.text} ${cfg.border}`}>
+              <Icon className="h-3 w-3" /> {t(cfg.labelKey)}
+            </span>
+          );
+        },
+      },
+      {
+        key: "contactName",
+        header: "tenant_lifecycle.col_tenant",
+        hideable: false,
+        defaultWidth: 200,
+        cell: (tenant) => (
+          <>
+            <Link href={`/booking/bookings/${tenant.bookingId}`} className="font-medium hover:underline">{tenant.contactName}</Link>
+            <p className="text-[10px] font-mono text-muted-foreground">{tenant.bookingRef}</p>
+          </>
+        ),
+      },
+      {
+        key: "spaceName",
+        header: "tenant_lifecycle.col_space",
+        cell: (tenant) => <span className="text-muted-foreground">{tenant.spaceName ?? "—"}</span>,
+      },
+      {
+        key: "checkIn",
+        header: "tenant_lifecycle.col_check_in",
+        cell: (tenant) => <span className="text-muted-foreground">{tenant.checkIn ?? "—"}</span>,
+      },
+      {
+        key: "checkOut",
+        header: "tenant_lifecycle.col_check_out",
+        cell: (tenant) => <span className="text-muted-foreground">{tenant.checkOut ?? "—"}</span>,
+      },
+      {
+        key: "stayNights",
+        header: "tenant_lifecycle.col_nights",
+        cell: (tenant) => <span className="text-muted-foreground">{tenant.stayNights ?? "—"}</span>,
+      },
+      {
+        key: "totalRent",
+        header: "tenant_lifecycle.col_rent",
+        cell: (tenant) => (
+          <span className="text-muted-foreground">
+            {tenant.totalRent ? `${tenant.currency} ${parseFloat(tenant.totalRent).toLocaleString()}` : "—"}
+          </span>
+        ),
+      },
+      {
+        key: "bookingStatus",
+        header: "common.status",
+        cell: (tenant) => {
+          const cfg = STAGE_CONFIG[tenant.stage];
+          return (
+            <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${cfg.bg} ${cfg.text} border ${cfg.border}`}>
+              {tenant.bookingStatus}
+            </span>
+          );
+        },
+      },
+      {
+        key: ACTIONS_KEY,
+        header: "",
+        hideable: false,
+        sortable: false,
+        align: "right",
+        defaultWidth: 90,
+        cell: (tenant) => (
+          <Link href={`/booking/bookings/${tenant.bookingId}`}>
+            <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1">
+              {t("common.view")} <ChevronRight className="h-3 w-3" />
+            </Button>
+          </Link>
+        ),
+      },
+    ],
+    [t],
+  );
 
   return (
     <Layout>
@@ -318,69 +406,14 @@ export default function TenantLifecycle() {
             ))}
           </div>
         ) : (
-          <div className="rounded-lg border overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-max text-sm">
-                <thead className="bg-muted/50">
-                  <tr>
-                    {[
-                      { key: "stage", label: t("tenant_lifecycle.col_stage") },
-                      { key: "tenant", label: t("tenant_lifecycle.col_tenant") },
-                      { key: "space", label: t("tenant_lifecycle.col_space") },
-                      { key: "checkin", label: t("tenant_lifecycle.col_check_in") },
-                      { key: "checkout", label: t("tenant_lifecycle.col_check_out") },
-                      { key: "nights", label: t("tenant_lifecycle.col_nights") },
-                      { key: "rent", label: t("tenant_lifecycle.col_rent") },
-                      { key: "status", label: t("common.status") },
-                      { key: "actions", label: "" },
-                    ].map(h => (
-                      <th key={h.key} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{h.label}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {sortedFiltered.length === 0 ? (
-                    <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">{t("tenant_lifecycle.no_tenants_found")}</td></tr>
-                  ) : sortedFiltered.map(tenant => {
-                    const cfg = STAGE_CONFIG[tenant.stage];
-                    const Icon = cfg.icon;
-                    return (
-                      <tr key={tenant.bookingId} className="hover:bg-muted/30 transition-colors">
-                        <td className="px-4 py-2.5">
-                          <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border ${cfg.bg} ${cfg.text} ${cfg.border}`}>
-                            <Icon className="h-3 w-3" /> {t(cfg.labelKey)}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2.5">
-                          <Link href={`/booking/bookings/${tenant.bookingId}`} className="font-medium hover:underline">{tenant.contactName}</Link>
-                          <p className="text-[10px] font-mono text-muted-foreground">{tenant.bookingRef}</p>
-                        </td>
-                        <td className="px-4 py-2.5 text-muted-foreground">{tenant.spaceName ?? "—"}</td>
-                        <td className="px-4 py-2.5 text-muted-foreground">{tenant.checkIn ?? "—"}</td>
-                        <td className="px-4 py-2.5 text-muted-foreground">{tenant.checkOut ?? "—"}</td>
-                        <td className="px-4 py-2.5 text-muted-foreground">{tenant.stayNights ?? "—"}</td>
-                        <td className="px-4 py-2.5 text-muted-foreground">
-                          {tenant.totalRent ? `${tenant.currency} ${parseFloat(tenant.totalRent).toLocaleString()}` : "—"}
-                        </td>
-                        <td className="px-4 py-2.5">
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${cfg.bg} ${cfg.text} border ${cfg.border}`}>
-                            {tenant.bookingStatus}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2.5">
-                          <Link href={`/booking/bookings/${tenant.bookingId}`}>
-                            <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1">
-                              {t("common.view")} <ChevronRight className="h-3 w-3" />
-                            </Button>
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <DataTable
+            tableKey="tenant-lifecycle"
+            columns={columns}
+            data={sortedFiltered}
+            isLoading={isLoading}
+            rowKey={(tenant) => tenant.bookingId}
+            emptyText={t("tenant_lifecycle.no_tenants_found")}
+          />
         )}
       </div>
     </Layout>

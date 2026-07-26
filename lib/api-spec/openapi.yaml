@@ -3400,6 +3400,12 @@ components:
           type: ["integer", "null"]
         policy_name:
           type: ["string", "null"]
+        landlord_account_id:
+          type: ["integer", "null"]
+        owner_name:
+          type: ["string", "null"]
+        exclusive_area_m2:
+          type: ["number", "null"]
         created_at:
           type: string
           format: date-time
@@ -3434,6 +3440,14 @@ components:
           type: ["number", "null"]
         base_currency:
           type: ["string", "null"]
+        monthly_rent:
+          type: ["number", "null"]
+        deposit_amount:
+          type: ["number", "null"]
+        purchase_price:
+          type: ["number", "null"]
+        estimated_sale_price:
+          type: ["number", "null"]
         min_stay_weeks:
           type: ["integer", "null"]
         floor_number:
@@ -3511,6 +3525,14 @@ components:
           type: ["number", "null"]
         base_currency:
           type: ["string", "null"]
+        monthly_rent:
+          type: ["number", "null"]
+        deposit_amount:
+          type: ["number", "null"]
+        purchase_price:
+          type: ["number", "null"]
+        estimated_sale_price:
+          type: ["number", "null"]
         min_stay_weeks:
           type: ["integer", "null"]
         floor_number:
@@ -3570,6 +3592,14 @@ components:
           type: ["number", "null"]
         base_currency:
           type: ["string", "null"]
+        monthly_rent:
+          type: ["number", "null"]
+        deposit_amount:
+          type: ["number", "null"]
+        purchase_price:
+          type: ["number", "null"]
+        estimated_sale_price:
+          type: ["number", "null"]
         min_stay_weeks:
           type: ["integer", "null"]
         floor_number:

@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, asc, isNull, inArray, and } from "drizzle-orm";
 import { db, addonServicesTable } from "@workspace/db";
+import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 
 const router: IRouter = Router();
 
@@ -19,7 +20,7 @@ router.get("/v1/addon-services", async (req, res): Promise<void> => {
     const rows = await db
       .select()
       .from(addonServicesTable)
-      .where(and(isNull(addonServicesTable.deleted_at), q ? ilike(addonServicesTable.name, `%${q}%`) : undefined))
+      .where(and(deletedFilter(addonServicesTable.deleted_at, req), q ? ilike(addonServicesTable.name, `%${q}%`) : undefined))
       .orderBy(asc(addonServicesTable.sort_order), asc(addonServicesTable.name));
     res.json({ success: true, data: rows, meta: { total: rows.length } });
   } catch {
@@ -63,23 +64,13 @@ router.put("/v1/addon-services/:id", async (req, res): Promise<void> => {
   }
 });
 
-router.post("/v1/addon-services/bulk-delete", async (req, res): Promise<void> => {
-  const currentUser = (req as any).user;
-  if (currentUser?.role !== "SuperAdmin") {
-    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
-  }
-  const { ids, permanent } = req.body;
-  if (!Array.isArray(ids) || ids.length === 0) {
-    res.status(400).json({ error: "ids must be a non-empty array" }); return;
-  }
-  const numIds = ids.map(Number).filter(Boolean);
-  if (permanent) {
-    await db.delete(addonServicesTable).where(inArray(addonServicesTable.id, numIds));
-  } else {
-    await db.update(addonServicesTable).set({ deleted_at: new Date() }).where(inArray(addonServicesTable.id, numIds));
-  }
-  res.json({ success: true, affected: numIds.length });
-});
+const addonServicesSoftDelete = {
+  table: addonServicesTable,
+  idColumn: addonServicesTable.id,
+};
+
+router.post("/v1/addon-services/bulk-delete", makeBulkDelete(addonServicesSoftDelete));
+router.post("/v1/addon-services/bulk-restore", makeBulkRestore(addonServicesSoftDelete));
 
 router.delete("/v1/addon-services/:id", async (req, res): Promise<void> => {
   try {

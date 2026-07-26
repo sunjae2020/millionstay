@@ -3,6 +3,7 @@ import { db, recurringSchedulesTable, invoicesTable, bookingsTable, accountsTabl
 import { eq, and, lte, ilike, isNull, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { getRateToAud } from "../lib/rateSnapshot";
+import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 
 const router = Router();
 
@@ -68,7 +69,7 @@ function nextDueDateFromFrequency(current: string, frequency: string): string {
 
 router.get("/v1/recurring-schedules", async (req, res): Promise<void> => {
   const { booking_id, is_active, next_due_date_from, next_due_date_to } = req.query as Record<string, string>;
-  const conditions: any[] = [isNull(recurringSchedulesTable.deleted_at)];
+  const conditions: any[] = [deletedFilter(recurringSchedulesTable.deleted_at, req)];
   if (booking_id) conditions.push(eq(recurringSchedulesTable.booking_id, Number(booking_id)));
   if (is_active !== undefined) conditions.push(eq(recurringSchedulesTable.is_active, is_active === "true"));
   if (next_due_date_from) conditions.push(lte(recurringSchedulesTable.next_due_date, next_due_date_to ?? next_due_date_from));
@@ -206,23 +207,13 @@ router.post("/v1/recurring-schedules/generate-due", async (req, res): Promise<vo
   res.json({ generated_count: invoiceRefs.length, invoice_refs: invoiceRefs, errors });
 });
 
-router.post("/v1/recurring-schedules/bulk-delete", async (req, res): Promise<void> => {
-  const currentUser = (req as any).user;
-  if (currentUser?.role !== "SuperAdmin") {
-    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
-  }
-  const { ids, permanent } = req.body;
-  if (!Array.isArray(ids) || ids.length === 0) {
-    res.status(400).json({ error: "ids must be a non-empty array" }); return;
-  }
-  const numIds = ids.map(Number).filter(Boolean);
-  if (permanent) {
-    await db.delete(recurringSchedulesTable).where(inArray(recurringSchedulesTable.id, numIds));
-  } else {
-    await db.update(recurringSchedulesTable).set({ deleted_at: new Date() }).where(inArray(recurringSchedulesTable.id, numIds));
-  }
-  res.json({ success: true, affected: numIds.length });
-});
+const recurringSchedulesSoftDelete = {
+  table: recurringSchedulesTable,
+  idColumn: recurringSchedulesTable.id,
+};
+
+router.post("/v1/recurring-schedules/bulk-delete", makeBulkDelete(recurringSchedulesSoftDelete));
+router.post("/v1/recurring-schedules/bulk-restore", makeBulkRestore(recurringSchedulesSoftDelete));
 
 router.delete("/v1/recurring-schedules/:id", async (req, res): Promise<void> => {
   const id = Number(req.params.id);

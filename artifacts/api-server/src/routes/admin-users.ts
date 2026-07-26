@@ -6,6 +6,7 @@ import { requireAuth, invalidateUserCache } from "../middlewares/requireAuth";
 import { validatePassword } from "../utils/passwordPolicy";
 import { logAction } from "../utils/auditLog";
 import { revokeAllForUser } from "../lib/refreshTokens";
+import { deletedFilter } from "../lib/softDelete";
 
 const router: IRouter = Router();
 
@@ -30,7 +31,7 @@ router.get("/v1/admin/users", async (req, res): Promise<void> => {
         created_at: usersTable.created_at,
       })
       .from(usersTable)
-      .where(isNull(usersTable.deleted_at))
+      .where(deletedFilter(usersTable.deleted_at, req))
       .orderBy(usersTable.created_at);
 
     res.json({ success: true, users });
@@ -290,6 +291,29 @@ router.post("/v1/admin/users/bulk-delete", async (req, res): Promise<void> => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, error: "Failed to bulk delete users" });
+  }
+});
+
+/* ─── Bulk restore users (SuperAdmin only) ────────────────── */
+router.post("/v1/admin/users/bulk-restore", async (req, res): Promise<void> => {
+  try {
+    const currentUser = (req as any).user;
+    if (currentUser?.role !== SUPER_ADMIN) {
+      res.status(403).json({ success: false, error: "Only SuperAdmin can restore" }); return;
+    }
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      res.status(400).json({ success: false, error: "ids must be a non-empty array" }); return;
+    }
+    const numIds = ids.map(Number).filter((id: number) => !isNaN(id));
+    if (numIds.length === 0) {
+      res.status(400).json({ success: false, error: "No valid IDs" }); return;
+    }
+    await db.update(usersTable).set({ deleted_at: null, is_active: true, status: "active" }).where(inArray(usersTable.id, numIds));
+    res.json({ success: true, affected: numIds.length });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: "Failed to bulk restore users" });
   }
 });
 

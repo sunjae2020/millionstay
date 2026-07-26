@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, Eye, FileDown, FileText, Receipt, FileSignature, ExternalLink, Mail } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
-import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import { formatDate } from "@/lib/date";
 
 interface HubDocument {
@@ -69,7 +69,6 @@ export default function DocumentHub() {
   });
 
   const rows: HubDocument[] = Array.isArray(data) ? data : [];
-  const pagination = usePagination(rows);
 
   // Render the document's PDF, then download it or open an HTML preview tab.
   const handlePdf = async (doc: HubDocument, mode: "download" | "preview") => {
@@ -131,6 +130,91 @@ export default function DocumentHub() {
     }
   };
 
+  const columns: ColumnDef<HubDocument>[] = useMemo(
+    () => [
+      {
+        key: "doc_type",
+        header: "common.type",
+        cell: (doc) => {
+          const meta = TYPE_META[doc.doc_type] ?? TYPE_META.Invoice;
+          const Icon = meta.icon;
+          return <Badge className={`text-xs gap-1 ${meta.badge}`}><Icon className="h-3 w-3" />{doc.doc_type}</Badge>;
+        },
+      },
+      {
+        key: "ref",
+        header: "document_hub.reference",
+        hideable: false,
+        cell: (doc) => (
+          <Link href={doc.detail_url} className="text-primary hover:underline font-mono text-xs font-semibold">
+            {doc.ref}
+          </Link>
+        ),
+      },
+      {
+        key: "party",
+        header: "document_hub.party",
+        cell: (doc) => <span className="text-sm">{doc.party ?? "—"}</span>,
+      },
+      {
+        key: "linked",
+        header: "document_hub.linked_to",
+        sortAccessor: (doc) => doc.links.join(" · "),
+        cell: (doc) => <span className="text-xs text-muted-foreground">{doc.links.length ? doc.links.join(" · ") : "—"}</span>,
+      },
+      {
+        key: "amount",
+        header: "common.amount",
+        align: "right",
+        cell: (doc) => (
+          <span className="tabular-nums">
+            {doc.amount != null ? `${doc.amount.toLocaleString("en-AU", { minimumFractionDigits: 2 })} ${doc.currency ?? ""}` : "—"}
+          </span>
+        ),
+      },
+      {
+        key: "status",
+        header: "common.status",
+        cell: (doc) => <Badge className={`text-xs ${STATUS_COLORS[doc.status] ?? ""}`}>{doc.status}</Badge>,
+      },
+      {
+        key: "date",
+        header: "common.date",
+        cell: (doc) => <span className="text-xs text-muted-foreground">{fmtDate(doc.date)}</span>,
+      },
+      {
+        key: ACTIONS_KEY,
+        header: "",
+        hideable: false,
+        sortable: false,
+        align: "right",
+        defaultWidth: 140,
+        cell: (doc) => (
+          <div className="flex items-center gap-1 justify-end">
+            <button className="p-1.5 rounded hover:bg-muted transition-colors disabled:opacity-40"
+              title={t("document_hub.preview", "Preview")} disabled={!!busy} onClick={() => handlePdf(doc, "preview")}>
+              <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+            <button className="p-1.5 rounded hover:bg-muted transition-colors disabled:opacity-40"
+              title={t("document_hub.download_pdf", "Download PDF")} disabled={!!busy} onClick={() => handlePdf(doc, "download")}>
+              <FileDown className="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+            <button className="p-1.5 rounded hover:bg-muted transition-colors disabled:opacity-40"
+              title={t("document_hub.email_lang", "Email ({{lang}})", { lang: docLang.toUpperCase() })} disabled={!!busy} onClick={() => handleEmail(doc)}>
+              <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+            <Link href={doc.detail_url}>
+              <button className="p-1.5 rounded hover:bg-muted transition-colors" title={t("document_hub.open_record", "Open record")}>
+                <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+              </button>
+            </Link>
+          </div>
+        ),
+      },
+    ],
+    [t, busy, docLang],
+  );
+
   return (
     <Layout>
       <PageHeader
@@ -165,75 +249,14 @@ export default function DocumentHub() {
           </Select>
         </div>
 
-        <div className="border rounded-lg overflow-hidden bg-card">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 border-b">
-                <tr>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.type", "Type")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("document_hub.reference", "Reference")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("document_hub.party", "Party")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("document_hub.linked_to", "Linked To")}</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.amount", "Amount")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.status", "Status")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("common.date", "Date")}</th>
-                  <th className="px-4 py-3 w-32"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {isLoading ? (
-                  <tr><td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">{t("common.loading", "Loading…")}</td></tr>
-                ) : rows.length === 0 ? (
-                  <tr><td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">{t("document_hub.no_documents", "No documents found")}</td></tr>
-                ) : pagination.paginatedItems.map((doc: HubDocument) => {
-                  const meta = TYPE_META[doc.doc_type] ?? TYPE_META.Invoice;
-                  const Icon = meta.icon;
-                  return (
-                    <tr key={`${doc.doc_type}-${doc.source_id}`} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3">
-                        <Badge className={`text-xs gap-1 ${meta.badge}`}><Icon className="h-3 w-3" />{doc.doc_type}</Badge>
-                      </td>
-                      <td className="px-4 py-3">
-                        <Link href={doc.detail_url} className="text-primary hover:underline font-mono text-xs font-semibold">
-                          {doc.ref}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3 text-sm">{doc.party ?? "—"}</td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">{doc.links.length ? doc.links.join(" · ") : "—"}</td>
-                      <td className="px-4 py-3 text-right tabular-nums">
-                        {doc.amount != null ? `${doc.amount.toLocaleString("en-AU", { minimumFractionDigits: 2 })} ${doc.currency ?? ""}` : "—"}
-                      </td>
-                      <td className="px-4 py-3"><Badge className={`text-xs ${STATUS_COLORS[doc.status] ?? ""}`}>{doc.status}</Badge></td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">{fmtDate(doc.date)}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1 justify-end">
-                          <button className="p-1.5 rounded hover:bg-muted transition-colors disabled:opacity-40"
-                            title={t("document_hub.preview", "Preview")} disabled={!!busy} onClick={() => handlePdf(doc, "preview")}>
-                            <Eye className="h-3.5 w-3.5 text-muted-foreground" />
-                          </button>
-                          <button className="p-1.5 rounded hover:bg-muted transition-colors disabled:opacity-40"
-                            title={t("document_hub.download_pdf", "Download PDF")} disabled={!!busy} onClick={() => handlePdf(doc, "download")}>
-                            <FileDown className="h-3.5 w-3.5 text-muted-foreground" />
-                          </button>
-                          <button className="p-1.5 rounded hover:bg-muted transition-colors disabled:opacity-40"
-                            title={t("document_hub.email_lang", "Email ({{lang}})", { lang: docLang.toUpperCase() })} disabled={!!busy} onClick={() => handleEmail(doc)}>
-                            <Mail className="h-3.5 w-3.5 text-muted-foreground" />
-                          </button>
-                          <Link href={doc.detail_url}>
-                            <button className="p-1.5 rounded hover:bg-muted transition-colors" title={t("document_hub.open_record", "Open record")}>
-                              <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
-                            </button>
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <TablePagination {...pagination} />
+        <DataTable
+          tableKey="document-hub"
+          columns={columns}
+          data={rows}
+          isLoading={isLoading}
+          rowKey={(doc) => `${doc.doc_type}-${doc.source_id}`}
+          emptyText={t("document_hub.no_documents", "No documents found")}
+        />
       </div>
     </Layout>
   );

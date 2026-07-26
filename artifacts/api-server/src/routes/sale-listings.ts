@@ -4,6 +4,7 @@ import { eq, and, isNull, desc, asc, SQL } from "drizzle-orm";
 import { db, saleListingsTable, saleInquiriesTable } from "@workspace/db";
 import * as z from "zod/v4";
 import { isCloudinaryConfigured, uploadToCloudinary, cldFolder } from "../utils/cloudinary";
+import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 
 // Admin CRUD for 분양/판매 listings shown on the development ("MetHeim") /buy
 // board. Mounted under /api/v1 behind requireAuth (see app.ts), so every route
@@ -68,7 +69,7 @@ router.get("/v1/sale-listings", async (req, res): Promise<void> => {
   const parsed = ListQuery.safeParse(req.query);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const { category, status, published } = parsed.data;
-  const conditions: SQL[] = [isNull(saleListingsTable.deleted_at)];
+  const conditions: SQL[] = [deletedFilter(saleListingsTable.deleted_at, req)];
   if (category) conditions.push(eq(saleListingsTable.category, category));
   if (status) conditions.push(eq(saleListingsTable.status, status));
   if (published === "true") conditions.push(eq(saleListingsTable.published, true));
@@ -77,6 +78,16 @@ router.get("/v1/sale-listings", async (req, res): Promise<void> => {
     .orderBy(asc(saleListingsTable.sort_order), desc(saleListingsTable.created_at));
   res.json({ data: rows });
 });
+
+// Soft-delete lifecycle (SuperAdmin-gated). status is available|reserved|sold —
+// not an Active/Archived model — so restore/archive only touch deleted_at.
+const saleListingsSoftDelete = {
+  table: saleListingsTable,
+  idColumn: saleListingsTable.id,
+};
+
+router.post("/v1/sale-listings/bulk-delete", makeBulkDelete(saleListingsSoftDelete));
+router.post("/v1/sale-listings/bulk-restore", makeBulkRestore(saleListingsSoftDelete));
 
 router.get("/v1/sale-listings/:id", async (req, res): Promise<void> => {
   const parsed = IdParams.safeParse(req.params);
