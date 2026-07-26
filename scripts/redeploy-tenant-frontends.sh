@@ -91,6 +91,15 @@ VERCEL_AUTH=""
 [[ -n "${VERCEL_TOKEN:-}" ]] && VERCEL_AUTH="--token=$VERCEL_TOKEN"
 [[ -n "${VERCEL_SCOPE:-}" ]] && VERCEL_AUTH="$VERCEL_AUTH --scope=$VERCEL_SCOPE"
 
+# Resolve the Vercel CLI: prefer a local install, else fall back to npx (CI
+# runners have no global `vercel` — the old bare `vercel` silently no-op'd there
+# while still printing success). Keep as an array so word-splitting is correct.
+if command -v vercel >/dev/null 2>&1; then
+  VERCEL=(vercel)
+else
+  VERCEL=(npx --yes vercel@latest)
+fi
+
 # ── Brand overrides (build-time): generate teal/etc. brand.overrides.css from
 #    BRAND_* so every app's bundle themes correctly. Reverted at the end. ────
 echo "── generate brand.overrides.css from BRAND_* ──"
@@ -175,10 +184,15 @@ JSON
   echo "── [$app] deploy → $TENANT-$app ──"
   # Link by project NAME (no hardcoded ids). Separate call from deploy — the
   # deploy classifier blocks link+deploy compound lines.
-  vercel link --yes $VERCEL_AUTH --project "$TENANT-$app" --cwd "$stage" >/dev/null
+  if ! "${VERCEL[@]}" link --yes $VERCEL_AUTH --project "$TENANT-$app" --cwd "$stage" >/dev/null; then
+    echo "  ✗ [$app] vercel link failed"; return 1
+  fi
   local url
-  url="$(vercel deploy --prod --yes $VERCEL_AUTH --cwd "$stage" 2>/dev/null | tail -1)"
-  echo "  ✓ [$app] deployed: ${url:-<see vercel dashboard>}"
+  # Fail hard on deploy error (don't swallow with 2>/dev/null → false success).
+  if ! url="$("${VERCEL[@]}" deploy --prod --yes $VERCEL_AUTH --cwd "$stage" | tail -1)" || [[ -z "$url" ]]; then
+    echo "  ✗ [$app] vercel deploy failed"; return 1
+  fi
+  echo "  ✓ [$app] deployed: $url"
 }
 
 FAILED=()
