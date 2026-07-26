@@ -9,6 +9,7 @@ import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
 import { normalizeLang, t, type DocLang } from "../lib/documents/i18n";
 import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
+import { formatDocMoney } from "../lib/documents/theme";
 import { sendDocumentEmail, resolveDocEmailCopy } from "../lib/email";
 import { resolveTemplate } from "../lib/documents/templateEngine";
 import { createSigningRequest, type SignerSpec } from "../services/contractSigning";
@@ -572,7 +573,7 @@ router.post("/v1/contracts/:id/email", async (req, res): Promise<void> => {
     res.status(500).json({ error: "Failed to generate PDF" }); return;
   }
 
-  const amountLabel = built.doc.total_rent != null ? `${Number(built.doc.total_rent).toLocaleString("en-AU", { minimumFractionDigits: 2 })} ${built.doc.currency || "AUD"}` : null;
+  const amountLabel = built.doc.total_rent != null ? formatDocMoney(built.doc.total_rent, built.doc.currency) : null;
   // Editable email copy (Templates Studio); falls back to the hardcoded note.
   const copy = await resolveDocEmailCopy("email.contract", lang, {
     ref: built.doc.contract_ref, name: built.doc.tenant_name ?? "", amount: amountLabel ?? "",

@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import { APP_NAME } from "../lib/appName";
 import { BrandMark } from "../components/brand-mark";
 import { COMPANY } from "../lib/company";
+import { formatCurrencyAmount } from "@/contexts/DisplayCurrencyContext";
 
 const BRAND = "hsl(var(--primary))"; // instance primary (white-label)
 
@@ -29,7 +30,7 @@ function fmt(d: string | null | undefined, pattern = "dd MMM yyyy") {
 
 function fmtAmt(n: number | null | undefined, currency = "AUD") {
   if (n == null) return "—";
-  return `$${Number(n).toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
+  return formatCurrencyAmount(Number(n), currency);
 }
 
 export default function PortalReceipt() {

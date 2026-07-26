@@ -57,6 +57,34 @@ export function getCompanyInfo(): CompanyInfo {
   };
 }
 
+// Currency formatting for documents. Mirrors the guest web's
+// `formatCurrencyAmount` (DisplayCurrencyContext) so invoices/receipts/quotes/
+// contracts render the correct symbol per currency — e.g. ₩450,000 for a Korean
+// (Metheim) KRW invoice instead of the old hard-coded "450,000.00 AUD".
+const CURRENCY_SYMBOL: Record<string, string> = {
+  AUD: "A$", USD: "US$", KRW: "₩", JPY: "¥", CNY: "¥", THB: "฿",
+  PHP: "₱", MYR: "RM ", SGD: "S$", EUR: "€", GBP: "£", VND: "₫", IDR: "Rp ",
+};
+const ZERO_DECIMAL_CURRENCIES = new Set(["KRW", "JPY", "THB", "PHP", "VND", "IDR"]);
+
+/** Format a monetary amount in its own currency: `₩450,000`, `A$1,234.56`. */
+export function formatDocMoney(
+  amount: string | number | null | undefined,
+  currency: string | null | undefined,
+): string {
+  const n = Number(amount);
+  if (!Number.isFinite(n)) return "—";
+  const code = (currency || "AUD").toUpperCase();
+  const sym = CURRENCY_SYMBOL[code] ?? "";
+  const decimals = ZERO_DECIMAL_CURRENCIES.has(code) ? 0 : 2;
+  const rounded = Number(n.toFixed(decimals));
+  const formatted = rounded.toLocaleString("en-US", {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
+  return sym ? `${sym}${formatted}` : `${formatted} ${code}`;
+}
+
 /** HTML-escape user-supplied text before interpolating into templates. */
 export function escapeHtml(input: string | null | undefined): string {
   if (input == null) return "";

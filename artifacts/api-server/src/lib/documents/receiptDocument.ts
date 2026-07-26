@@ -4,14 +4,12 @@
  * A receipt is a paid invoice rendered as a payment confirmation. It reuses the
  * same enriched invoice data and shared brand shell as the invoice document.
  */
-import { renderDocumentShell, escapeHtml, getCompanyInfo, statusWatermarkColor, type CompanyInfo } from "./theme";
+import { renderDocumentShell, escapeHtml, getCompanyInfo, statusWatermarkColor, formatDocMoney, type CompanyInfo } from "./theme";
 import { t, docLocale, statusLabel, type DocLang } from "./i18n";
 import type { InvoiceDocInput } from "./invoiceDocument";
 
 function formatMoney(amount: string | number | null, currency: string | null): string {
-  const n = Number(amount ?? 0);
-  const ccy = currency || "AUD";
-  return `${n.toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${ccy}`;
+  return formatDocMoney(amount, currency);
 }
 
 function formatDate(value: string | Date | null, lang: DocLang): string {

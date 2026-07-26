@@ -11,6 +11,7 @@ import { resolveCompanyInfo } from "../lib/documents/companyInfo";
 import { normalizeLang, t } from "../lib/documents/i18n";
 import { resolveTemplateBody } from "../lib/documents/templateEngine";
 import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
+import { formatDocMoney } from "../lib/documents/theme";
 import { sendDocumentEmail, resolveDocEmailCopy } from "../lib/email";
 import { getStripe } from "./stripe";
 import { postInvoicePaid } from "../lib/billing/gl";
@@ -369,7 +370,7 @@ async function sendPdf(res: import("express").Response, html: string, refBase: s
 }
 
 function moneyLabel(amount: string | number | null, currency: string | null): string {
-  return `${Number(amount ?? 0).toLocaleString("en-AU", { minimumFractionDigits: 2 })} ${currency || "AUD"}`;
+  return formatDocMoney(amount, currency);
 }
 
 /**
