@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, useParams, Link } from "wouter";
 import { useAuthStore } from "@/lib/store";
 import { PortalLayout } from "@/components/portal-layout";
@@ -100,6 +101,7 @@ const DOC_STATUS: Record<string, { color: string; icon: typeof CheckCircle2 }> =
 };
 
 export default function PortalBookingDetail() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { token } = useAuthStore();
@@ -132,11 +134,11 @@ export default function PortalBookingDetail() {
   const firstPaidInvoice = invoices.find((inv) => inv.status === "Paid");
 
   const TIMELINE_EVENTS = b ? [
-    { label: "Booking created", date: b.created_at as string, done: true },
-    { label: "Payment received", date: firstPaidInvoice?.paid_at ?? null, done: !!firstPaidInvoice },
-    { label: "Booking confirmed", date: null, done: b.contract_status === "Confirmed" || b.contract_status === "Active" },
-    { label: "Check-in", date: b.check_in_date as string, done: false },
-    { label: "Check-out", date: b.check_out_date as string, done: false },
+    { label: t("portal.booking_detail.timeline_booking_created", "Booking created"), date: b.created_at as string, done: true },
+    { label: t("portal.booking_detail.timeline_payment_received", "Payment received"), date: firstPaidInvoice?.paid_at ?? null, done: !!firstPaidInvoice },
+    { label: t("portal.booking_detail.timeline_booking_confirmed", "Booking confirmed"), date: null, done: b.contract_status === "Confirmed" || b.contract_status === "Active" },
+    { label: t("portal.booking_detail.timeline_check_in", "Check-in"), date: b.check_in_date as string, done: false },
+    { label: t("portal.booking_detail.timeline_check_out", "Check-out"), date: b.check_out_date as string, done: false },
   ] : [];
 
   return (
@@ -147,12 +149,12 @@ export default function PortalBookingDetail() {
         <div className="max-w-4xl mx-auto">
           <Link href="/portal/bookings">
             <button className="flex items-center gap-1 text-white/70 hover:text-white text-sm mb-2 transition-colors">
-              <ChevronLeft className="h-4 w-4" /> Back to bookings
+              <ChevronLeft className="h-4 w-4" /> {t("portal.booking_detail.back_to_bookings", "Back to bookings")}
             </button>
           </Link>
-          <p className="font-cursive text-white/80 text-sm italic mb-1">Your account</p>
+          <p className="font-cursive text-white/80 text-sm italic mb-1">{t("portal.booking_detail.your_account", "Your account")}</p>
           <h1 className="text-2xl font-bold uppercase text-white tracking-wide">
-            {b ? (b.space_name as string) : "Booking Details"}
+            {b ? (b.space_name as string) : t("portal.booking_detail.booking_details", "Booking Details")}
           </h1>
         </div>
       </div>
@@ -164,8 +166,8 @@ export default function PortalBookingDetail() {
           </div>
         ) : !b ? (
           <div className="text-center py-16 text-gray-400">
-            <p>Booking not found</p>
-            <Link href="/portal/bookings"><p className="text-primary mt-2 hover:underline">Return to bookings</p></Link>
+            <p>{t("portal.booking_detail.booking_not_found", "Booking not found")}</p>
+            <Link href="/portal/bookings"><p className="text-primary mt-2 hover:underline">{t("portal.booking_detail.return_to_bookings", "Return to bookings")}</p></Link>
           </div>
         ) : (
           <div className="space-y-6">
@@ -177,7 +179,7 @@ export default function PortalBookingDetail() {
                     {b.contract_status as string}
                   </span>
                 </div>
-                <p className="text-sm text-gray-500">Ref: <span className="font-mono font-semibold text-gray-700">{b.booking_ref as string}</span></p>
+                <p className="text-sm text-gray-500">{t("portal.booking_detail.ref", "Ref:")} <span className="font-mono font-semibold text-gray-700">{b.booking_ref as string}</span></p>
               </div>
               <div className="flex gap-3">
                 {firstPaidInvoice ? (
@@ -187,7 +189,7 @@ export default function PortalBookingDetail() {
                     className="gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
                     onClick={() => setLocation(`/portal/invoices/${firstPaidInvoice.id}/receipt`)}
                   >
-                    <Receipt className="h-4 w-4" /> Receipt
+                    <Receipt className="h-4 w-4" /> {t("portal.booking_detail.receipt", "Receipt")}
                   </Button>
                 ) : (
                   <Button
@@ -196,7 +198,7 @@ export default function PortalBookingDetail() {
                     className="gap-1.5"
                     onClick={() => setLocation("/portal/invoices")}
                   >
-                    <FileText className="h-4 w-4" /> Invoices
+                    <FileText className="h-4 w-4" /> {t("portal.booking_detail.invoices", "Invoices")}
                   </Button>
                 )}
               </div>
@@ -205,12 +207,12 @@ export default function PortalBookingDetail() {
             {/* Tabs */}
             <Tabs defaultValue="overview">
               <TabsList className="bg-white border mb-4 flex-wrap h-auto">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                {contract && <TabsTrigger value="contract" className="gap-1.5"><ScrollText className="h-3.5 w-3.5" />Contract</TabsTrigger>}
-                <TabsTrigger value="documents">Documents</TabsTrigger>
-                <TabsTrigger value="condition" className="gap-1.5"><ShieldCheck className="h-3.5 w-3.5" />Condition</TabsTrigger>
-                <TabsTrigger value="invoice">Invoices</TabsTrigger>
-                <TabsTrigger value="timeline">Timeline</TabsTrigger>
+                <TabsTrigger value="overview">{t("portal.booking_detail.tab_overview", "Overview")}</TabsTrigger>
+                {contract && <TabsTrigger value="contract" className="gap-1.5"><ScrollText className="h-3.5 w-3.5" />{t("portal.booking_detail.tab_contract", "Contract")}</TabsTrigger>}
+                <TabsTrigger value="documents">{t("portal.booking_detail.tab_documents", "Documents")}</TabsTrigger>
+                <TabsTrigger value="condition" className="gap-1.5"><ShieldCheck className="h-3.5 w-3.5" />{t("portal.booking_detail.tab_condition", "Condition")}</TabsTrigger>
+                <TabsTrigger value="invoice">{t("portal.booking_detail.tab_invoices", "Invoices")}</TabsTrigger>
+                <TabsTrigger value="timeline">{t("portal.booking_detail.tab_timeline", "Timeline")}</TabsTrigger>
               </TabsList>
 
               {/* OVERVIEW */}
@@ -218,12 +220,12 @@ export default function PortalBookingDetail() {
                 <div className="bg-white rounded-2xl border p-6 space-y-4">
                   <div className="grid sm:grid-cols-2 gap-4 text-sm">
                     {[
-                      { icon: Home, label: "Room", value: b.space_name as string },
-                      { icon: MapPin, label: "Address", value: b.property_address as string },
-                      { icon: Calendar, label: "Check-in", value: formatDate(b.check_in_date as string) },
-                      { icon: Calendar, label: "Check-out", value: formatDate(b.check_out_date as string) },
-                      { icon: Users, label: "Guests", value: String(b.num_guests) },
-                      { icon: CreditCard, label: "Total Amount", value: b.total_rent ? `$${Number(b.total_rent).toLocaleString()} AUD` : "—" },
+                      { icon: Home, label: t("portal.booking_detail.field_room", "Room"), value: b.space_name as string },
+                      { icon: MapPin, label: t("portal.booking_detail.field_address", "Address"), value: b.property_address as string },
+                      { icon: Calendar, label: t("portal.booking_detail.field_check_in", "Check-in"), value: formatDate(b.check_in_date as string) },
+                      { icon: Calendar, label: t("portal.booking_detail.field_check_out", "Check-out"), value: formatDate(b.check_out_date as string) },
+                      { icon: Users, label: t("portal.booking_detail.field_guests", "Guests"), value: String(b.num_guests) },
+                      { icon: CreditCard, label: t("portal.booking_detail.field_total_amount", "Total Amount"), value: b.total_rent ? `$${Number(b.total_rent).toLocaleString()} AUD` : "—" },
                     ].map(({ icon: Icon, label, value }) => (
                       <div key={label} className="flex items-start gap-3">
                         <Icon className="h-4 w-4 text-primary mt-0.5 shrink-0" />
@@ -238,7 +240,7 @@ export default function PortalBookingDetail() {
                     <>
                       <Separator />
                       <div>
-                        <p className="text-xs text-gray-500 mb-1">Special Requests</p>
+                        <p className="text-xs text-gray-500 mb-1">{t("portal.booking_detail.special_requests", "Special Requests")}</p>
                         <p className="text-sm text-gray-700">{b.special_requests as string}</p>
                       </div>
                     </>
@@ -251,8 +253,8 @@ export default function PortalBookingDetail() {
                 {!contract ? (
                   <div className="bg-white rounded-2xl border text-center py-12 text-gray-400">
                     <ScrollText className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    <p className="text-sm">No contract available for this booking yet.</p>
-                    <p className="text-xs mt-1">Your contract will appear here once your booking is confirmed.</p>
+                    <p className="text-sm">{t("portal.booking_detail.contract_empty_title", "No contract available for this booking yet.")}</p>
+                    <p className="text-xs mt-1">{t("portal.booking_detail.contract_empty_desc", "Your contract will appear here once your booking is confirmed.")}</p>
                   </div>
                 ) : (
                   <div className="space-y-5">
@@ -260,7 +262,7 @@ export default function PortalBookingDetail() {
                     <div className="bg-white rounded-2xl border p-6 space-y-4">
                       <div className="flex items-center justify-between">
                         <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                          <ScrollText className="h-4 w-4 text-primary" /> Contract Details
+                          <ScrollText className="h-4 w-4 text-primary" /> {t("portal.booking_detail.contract_details", "Contract Details")}
                         </h3>
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${CONTRACT_STATUS_COLORS[contract.status] ?? "bg-gray-100 text-gray-600"}`}>
                           {contract.status}
@@ -268,16 +270,16 @@ export default function PortalBookingDetail() {
                       </div>
                       <div className="grid sm:grid-cols-2 gap-4 text-sm">
                         {[
-                          { label: "Contract Ref", value: contract.contract_ref },
-                          { label: "Status", value: contract.status },
-                          { label: "Start Date", value: formatDate(contract.start_date) },
-                          { label: "End Date", value: formatDate(contract.end_date) },
-                          { label: "Weekly Rate", value: contract.weekly_rate ? `$${Number(contract.weekly_rate).toLocaleString()} ${contract.currency}` : "—" },
-                          { label: "Total Rent", value: contract.total_rent ? `$${Number(contract.total_rent).toLocaleString()} ${contract.currency}` : "—" },
-                          { label: "Bond", value: contract.bond_amount ? `$${Number(contract.bond_amount).toLocaleString()} ${contract.currency}` : "—" },
-                          { label: "Advance", value: contract.advance_amount ? `$${Number(contract.advance_amount).toLocaleString()} ${contract.currency}` : "—" },
-                          { label: "Signed Date", value: contract.signed_at ? formatDate(contract.signed_at) : "Pending" },
-                          { label: "Effective Date", value: formatDate(contract.effective_date) },
+                          { label: t("portal.booking_detail.contract_ref", "Contract Ref"), value: contract.contract_ref },
+                          { label: t("portal.booking_detail.contract_status", "Status"), value: contract.status },
+                          { label: t("portal.booking_detail.contract_start_date", "Start Date"), value: formatDate(contract.start_date) },
+                          { label: t("portal.booking_detail.contract_end_date", "End Date"), value: formatDate(contract.end_date) },
+                          { label: t("portal.booking_detail.contract_weekly_rate", "Weekly Rate"), value: contract.weekly_rate ? `$${Number(contract.weekly_rate).toLocaleString()} ${contract.currency}` : "—" },
+                          { label: t("portal.booking_detail.contract_total_rent", "Total Rent"), value: contract.total_rent ? `$${Number(contract.total_rent).toLocaleString()} ${contract.currency}` : "—" },
+                          { label: t("portal.booking_detail.contract_bond", "Bond"), value: contract.bond_amount ? `$${Number(contract.bond_amount).toLocaleString()} ${contract.currency}` : "—" },
+                          { label: t("portal.booking_detail.contract_advance", "Advance"), value: contract.advance_amount ? `$${Number(contract.advance_amount).toLocaleString()} ${contract.currency}` : "—" },
+                          { label: t("portal.booking_detail.contract_signed_date", "Signed Date"), value: contract.signed_at ? formatDate(contract.signed_at) : t("portal.booking_detail.pending", "Pending") },
+                          { label: t("portal.booking_detail.contract_effective_date", "Effective Date"), value: formatDate(contract.effective_date) },
                         ].map(({ label, value }) => (
                           <div key={label}>
                             <p className="text-xs text-gray-500">{label}</p>
@@ -289,7 +291,7 @@ export default function PortalBookingDetail() {
                         <div className="pt-2">
                           <a href={contract.document_url} target="_blank" rel="noreferrer"
                             className="inline-flex items-center gap-1.5 text-primary text-sm font-medium hover:underline">
-                            <FileText className="h-4 w-4" /> View Signed Document
+                            <FileText className="h-4 w-4" /> {t("portal.booking_detail.view_signed_document", "View Signed Document")}
                           </a>
                         </div>
                       )}
@@ -300,14 +302,21 @@ export default function PortalBookingDetail() {
                       <div className="bg-white rounded-2xl border overflow-hidden">
                         <div className="px-6 py-4 border-b flex items-center gap-2">
                           <CalendarDays className="h-4 w-4 text-primary" />
-                          <h3 className="font-semibold text-gray-900">Payment Schedule</h3>
-                          <span className="text-xs text-gray-400 ml-auto">{paymentSchedule.length} schedule(s)</span>
+                          <h3 className="font-semibold text-gray-900">{t("portal.booking_detail.payment_schedule", "Payment Schedule")}</h3>
+                          <span className="text-xs text-gray-400 ml-auto">{t("portal.booking_detail.schedule_count", "{{count}} schedule(s)", { count: paymentSchedule.length })}</span>
                         </div>
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm">
                             <thead className="bg-gray-50 border-b">
                               <tr>
-                                {["Type", "Amount", "Frequency", "Start Date", "End Date", "Next Due"].map((h) => (
+                                {[
+                                  t("portal.booking_detail.ps_type", "Type"),
+                                  t("portal.booking_detail.ps_amount", "Amount"),
+                                  t("portal.booking_detail.ps_frequency", "Frequency"),
+                                  t("portal.booking_detail.ps_start_date", "Start Date"),
+                                  t("portal.booking_detail.ps_end_date", "End Date"),
+                                  t("portal.booking_detail.ps_next_due", "Next Due"),
+                                ].map((h) => (
                                   <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500">{h}</th>
                                 ))}
                               </tr>
@@ -336,14 +345,21 @@ export default function PortalBookingDetail() {
                       <div className="bg-white rounded-2xl border overflow-hidden">
                         <div className="px-6 py-4 border-b flex items-center gap-2">
                           <Wrench className="h-4 w-4 text-primary" />
-                          <h3 className="font-semibold text-gray-900">Included Services</h3>
-                          <span className="text-xs text-gray-400 ml-auto">{services.length} service(s)</span>
+                          <h3 className="font-semibold text-gray-900">{t("portal.booking_detail.included_services", "Included Services")}</h3>
+                          <span className="text-xs text-gray-400 ml-auto">{t("portal.booking_detail.service_count", "{{count}} service(s)", { count: services.length })}</span>
                         </div>
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm">
                             <thead className="bg-gray-50 border-b">
                               <tr>
-                                {["Service", "Type", "Qty", "Unit Price", "Total", "Billing"].map((h) => (
+                                {[
+                                  t("portal.booking_detail.svc_service", "Service"),
+                                  t("portal.booking_detail.svc_type", "Type"),
+                                  t("portal.booking_detail.svc_qty", "Qty"),
+                                  t("portal.booking_detail.svc_unit_price", "Unit Price"),
+                                  t("portal.booking_detail.svc_total", "Total"),
+                                  t("portal.booking_detail.svc_billing", "Billing"),
+                                ].map((h) => (
                                   <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500">{h}</th>
                                 ))}
                               </tr>
@@ -370,8 +386,8 @@ export default function PortalBookingDetail() {
                       <div className="bg-white rounded-2xl border overflow-hidden">
                         <div className="px-6 py-4 border-b flex items-center gap-2">
                           <FileText className="h-4 w-4 text-primary" />
-                          <h3 className="font-semibold text-gray-900">Contract Terms</h3>
-                          <span className="ml-auto text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Read Only</span>
+                          <h3 className="font-semibold text-gray-900">{t("portal.booking_detail.contract_terms", "Contract Terms")}</h3>
+                          <span className="ml-auto text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{t("portal.booking_detail.read_only", "Read Only")}</span>
                         </div>
                         <div className="p-6">
                           <pre className="text-xs text-gray-700 whitespace-pre-wrap leading-relaxed font-sans max-h-96 overflow-y-auto bg-gray-50 rounded-xl p-4 border">
@@ -390,10 +406,10 @@ export default function PortalBookingDetail() {
                   {((b.documents as Array<{id: number; document_type: string; status: string; uploaded_at: string | null}>) ?? []).length === 0 ? (
                     <div className="bg-white rounded-2xl border text-center py-12 text-gray-400">
                       <FileImage className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                      <p className="text-sm">No documents uploaded for this booking</p>
+                      <p className="text-sm">{t("portal.booking_detail.documents_empty", "No documents uploaded for this booking")}</p>
                       <Link href="/portal/documents">
                         <Button variant="outline" size="sm" className="mt-3 gap-1.5">
-                          <FileImage className="h-3.5 w-3.5" /> Upload documents
+                          <FileImage className="h-3.5 w-3.5" /> {t("portal.booking_detail.upload_documents", "Upload documents")}
                         </Button>
                       </Link>
                     </div>
@@ -407,7 +423,7 @@ export default function PortalBookingDetail() {
                             <FileImage className="h-5 w-5 text-primary" />
                             <div>
                               <p className="text-sm font-medium text-gray-800 capitalize">{doc.document_type.replace("_", " ")}</p>
-                              {doc.uploaded_at && <p className="text-xs text-gray-400">Uploaded {formatDate(doc.uploaded_at)}</p>}
+                              {doc.uploaded_at && <p className="text-xs text-gray-400">{t("portal.booking_detail.uploaded", "Uploaded {{date}}", { date: formatDate(doc.uploaded_at) })}</p>}
                             </div>
                           </div>
                           <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border ${info.color}`}>
@@ -432,15 +448,15 @@ export default function PortalBookingDetail() {
                   {invoices.length === 0 ? (
                     <div className="bg-white rounded-2xl border text-center py-12 text-gray-400">
                       <FileText className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                      <p className="text-sm">No invoices yet</p>
+                      <p className="text-sm">{t("portal.booking_detail.invoices_empty", "No invoices yet")}</p>
                     </div>
                   ) : (
                     invoices.map((inv) => (
                       <div key={inv.id} className="bg-white rounded-xl border p-4 flex items-center justify-between gap-3">
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-semibold text-gray-800">{inv.invoice_ref ?? `INV-${inv.id}`}</p>
-                          <p className="text-xs text-gray-500 truncate">{inv.description ?? `Due ${formatDate(inv.due_date)}`}</p>
-                          {inv.paid_at && <p className="text-xs text-green-600 mt-0.5">Paid {formatDate(inv.paid_at)}</p>}
+                          <p className="text-xs text-gray-500 truncate">{inv.description ?? t("portal.booking_detail.invoice_due", "Due {{date}}", { date: formatDate(inv.due_date) })}</p>
+                          {inv.paid_at && <p className="text-xs text-green-600 mt-0.5">{t("portal.booking_detail.invoice_paid", "Paid {{date}}", { date: formatDate(inv.paid_at) })}</p>}
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
@@ -456,7 +472,7 @@ export default function PortalBookingDetail() {
                               className="h-7 text-xs gap-1 border-primary/30 text-primary hover:bg-primary/10"
                               onClick={() => setLocation(`/portal/invoices/${inv.id}/receipt`)}
                             >
-                              <Receipt className="h-3 w-3" /> Receipt
+                              <Receipt className="h-3 w-3" /> {t("portal.booking_detail.receipt", "Receipt")}
                             </Button>
                           ) : (
                             <Button
@@ -465,7 +481,7 @@ export default function PortalBookingDetail() {
                               className="h-7 text-xs gap-1"
                               onClick={() => setLocation("/portal/invoices")}
                             >
-                              <FileText className="h-3 w-3" /> View
+                              <FileText className="h-3 w-3" /> {t("portal.booking_detail.view", "View")}
                             </Button>
                           )}
                         </div>
@@ -489,7 +505,7 @@ export default function PortalBookingDetail() {
                           <div>
                             <p className={`text-sm font-medium ${done ? "text-gray-900" : "text-gray-400"}`}>{label}</p>
                             {date && <p className="text-xs text-gray-400 mt-0.5">{formatDate(date)}</p>}
-                            {!date && !done && <p className="text-xs text-gray-300 mt-0.5">Upcoming</p>}
+                            {!date && !done && <p className="text-xs text-gray-300 mt-0.5">{t("portal.booking_detail.upcoming", "Upcoming")}</p>}
                           </div>
                         </div>
                       ))}

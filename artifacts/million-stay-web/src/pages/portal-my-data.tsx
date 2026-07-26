@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { PortalLayout } from "@/components/portal-layout";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -116,6 +117,7 @@ function KvRow({ k, v }: { k: string; v: React.ReactNode }) {
 }
 
 export default function PortalMyData() {
+  const { t } = useTranslation();
   const { token } = useAuthStore();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -133,9 +135,9 @@ export default function PortalMyData() {
       const json = (await res.json()) as MyDataResponse;
       setData(json);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to load your data";
+      const msg = err instanceof Error ? err.message : t("portal.my_data.load_failed_fallback", "Failed to load your data");
       setError(msg);
-      toast({ title: "Could not load your data", description: msg, variant: "destructive" });
+      toast({ title: t("portal.my_data.toast_load_failed_title", "Could not load your data"), description: msg, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -164,10 +166,10 @@ export default function PortalMyData() {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      toast({ title: "Download started", description: "Your personal data file has been saved." });
+      toast({ title: t("portal.my_data.toast_download_started_title", "Download started"), description: t("portal.my_data.toast_download_started_desc", "Your personal data file has been saved.") });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Download failed";
-      toast({ title: "Download failed", description: msg, variant: "destructive" });
+      const msg = err instanceof Error ? err.message : t("portal.my_data.download_failed_fallback", "Download failed");
+      toast({ title: t("portal.my_data.toast_download_failed_title", "Download failed"), description: msg, variant: "destructive" });
     } finally {
       setDownloading(false);
     }
@@ -186,10 +188,11 @@ export default function PortalMyData() {
                 <Shield className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl md:text-2xl font-bold text-gray-900">My Data</h1>
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900">{t("portal.my_data.title", "My Data")}</h1>
                 <p className="text-sm text-gray-600 mt-1 max-w-2xl">
-                  Under <span className="font-medium">Australian Privacy Principle 12</span>, you have the right to access
-                  the personal information {APP_NAME} holds about you. Review or download your full data below.
+                  {t("portal.my_data.intro_prefix", "Under ")}
+                  <span className="font-medium">{t("portal.my_data.app12", "Australian Privacy Principle 12")}</span>
+                  {t("portal.my_data.intro_suffix", ", you have the right to access the personal information {{app}} holds about you. Review or download your full data below.", { app: APP_NAME })}
                 </p>
               </div>
             </div>
@@ -202,7 +205,7 @@ export default function PortalMyData() {
                 data-testid="button-refresh-data"
               >
                 <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? "animate-spin" : ""}`} />
-                Refresh
+                {t("portal.my_data.refresh", "Refresh")}
               </Button>
               <Button
                 onClick={handleDownload}
@@ -211,7 +214,7 @@ export default function PortalMyData() {
                 data-testid="button-download-data"
               >
                 <Download className="h-4 w-4 mr-1.5" />
-                {downloading ? "Preparing…" : "Download (JSON)"}
+                {downloading ? t("portal.my_data.preparing", "Preparing…") : t("portal.my_data.download_json", "Download (JSON)")}
               </Button>
             </div>
           </div>
@@ -239,42 +242,42 @@ export default function PortalMyData() {
           <>
             {/* Counts */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <StatCard icon={FileText} label="Bookings" value={data.counts["bookings"] ?? 0} color="bg-orange-400" />
-              <StatCard icon={Receipt} label="Invoices" value={data.counts["invoices"] ?? 0} color="bg-blue-400" />
-              <StatCard icon={Building2} label="Documents" value={data.counts["documents"] ?? 0} color="bg-purple-400" />
-              <StatCard icon={Mail} label="Marketing" value={data.counts["marketing_consents"] ?? 0} color="bg-green-400" />
+              <StatCard icon={FileText} label={t("portal.my_data.stat_bookings", "Bookings")} value={data.counts["bookings"] ?? 0} color="bg-orange-400" />
+              <StatCard icon={Receipt} label={t("portal.my_data.stat_invoices", "Invoices")} value={data.counts["invoices"] ?? 0} color="bg-blue-400" />
+              <StatCard icon={Building2} label={t("portal.my_data.stat_documents", "Documents")} value={data.counts["documents"] ?? 0} color="bg-purple-400" />
+              <StatCard icon={Mail} label={t("portal.my_data.stat_marketing", "Marketing")} value={data.counts["marketing_consents"] ?? 0} color="bg-green-400" />
             </div>
 
             {/* Profile */}
-            <Section icon={User} title="Profile">
+            <Section icon={User} title={t("portal.my_data.section_profile", "Profile")}>
               <div className="divide-y divide-gray-50">
-                <KvRow k="Email" v={profile?.["email"]} />
-                <KvRow k="First name" v={profile?.["first_name"]} />
-                <KvRow k="Last name" v={profile?.["last_name"]} />
-                <KvRow k="Phone" v={profile?.["phone"]} />
-                <KvRow k="Nationality" v={profile?.["nationality"]} />
-                <KvRow k="Date of birth" v={profile?.["date_of_birth"]} />
-                <KvRow k="Gender" v={profile?.["gender"]} />
-                <KvRow k="Company / Affiliation" v={profile?.["company"]} />
-                <KvRow k="Job title" v={profile?.["job_title"]} />
-                <KvRow k="Stay purpose" v={profile?.["stay_purpose"]} />
-                <KvRow k="Vehicle plate" v={profile?.["vehicle_plate"]} />
-                <KvRow k="Account created" v={fmtDate(profile?.["created_at"])} />
+                <KvRow k={t("portal.my_data.field_email", "Email")} v={profile?.["email"]} />
+                <KvRow k={t("portal.my_data.field_first_name", "First name")} v={profile?.["first_name"]} />
+                <KvRow k={t("portal.my_data.field_last_name", "Last name")} v={profile?.["last_name"]} />
+                <KvRow k={t("portal.my_data.field_phone", "Phone")} v={profile?.["phone"]} />
+                <KvRow k={t("portal.my_data.field_nationality", "Nationality")} v={profile?.["nationality"]} />
+                <KvRow k={t("portal.my_data.field_date_of_birth", "Date of birth")} v={profile?.["date_of_birth"]} />
+                <KvRow k={t("portal.my_data.field_gender", "Gender")} v={profile?.["gender"]} />
+                <KvRow k={t("portal.my_data.field_company", "Company / Affiliation")} v={profile?.["company"]} />
+                <KvRow k={t("portal.my_data.field_job_title", "Job title")} v={profile?.["job_title"]} />
+                <KvRow k={t("portal.my_data.field_stay_purpose", "Stay purpose")} v={profile?.["stay_purpose"]} />
+                <KvRow k={t("portal.my_data.field_vehicle_plate", "Vehicle plate")} v={profile?.["vehicle_plate"]} />
+                <KvRow k={t("portal.my_data.field_account_created", "Account created")} v={fmtDate(profile?.["created_at"])} />
               </div>
             </Section>
 
             {/* Banking — sensitive, masked notice */}
             {(profile?.["bank_account_number"] || profile?.["bank_name"]) && (
-              <Section icon={Building2} title="Banking details">
+              <Section icon={Building2} title={t("portal.my_data.section_banking", "Banking details")}>
                 <div className="rounded-lg bg-amber-50 border border-amber-100 px-3 py-2 text-xs text-amber-800 mb-3 flex items-start gap-2">
                   <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                  This information is stored encrypted at rest. The full record is included in the JSON download.
+                  {t("portal.my_data.banking_notice", "This information is stored encrypted at rest. The full record is included in the JSON download.")}
                 </div>
                 <div className="divide-y divide-gray-50">
-                  <KvRow k="Bank" v={profile?.["bank_name"]} />
-                  <KvRow k="Account name" v={profile?.["bank_account_name"]} />
+                  <KvRow k={t("portal.my_data.field_bank", "Bank")} v={profile?.["bank_name"]} />
+                  <KvRow k={t("portal.my_data.field_account_name", "Account name")} v={profile?.["bank_account_name"]} />
                   <KvRow
-                    k="BSB"
+                    k={t("portal.my_data.field_bsb", "BSB")}
                     v={
                       profile?.["bank_bsb"]
                         ? `***-${String(profile["bank_bsb"]).slice(-3)}`
@@ -282,7 +285,7 @@ export default function PortalMyData() {
                     }
                   />
                   <KvRow
-                    k="Account number"
+                    k={t("portal.my_data.field_account_number", "Account number")}
                     v={
                       profile?.["bank_account_number"]
                         ? `••••${String(profile["bank_account_number"]).slice(-4)}`
@@ -296,11 +299,11 @@ export default function PortalMyData() {
             {/* Emergency contacts */}
             <Section
               icon={Phone}
-              title="Emergency contacts"
+              title={t("portal.my_data.section_emergency_contacts", "Emergency contacts")}
               count={data.data.emergency_contacts.length}
             >
               {data.data.emergency_contacts.length === 0 ? (
-                <p className="text-sm text-gray-400">No emergency contacts on record.</p>
+                <p className="text-sm text-gray-400">{t("portal.my_data.empty_emergency_contacts", "No emergency contacts on record.")}</p>
               ) : (
                 <div className="space-y-2">
                   {data.data.emergency_contacts.map((c, i) => (
@@ -309,7 +312,7 @@ export default function PortalMyData() {
                         {String(c["name"] ?? "—")}
                         {c["is_primary"] ? (
                           <span className="ml-2 text-[10px] uppercase tracking-wide bg-primary/10 text-primary px-1.5 py-0.5 rounded">
-                            Primary
+                            {t("portal.my_data.primary_badge", "Primary")}
                           </span>
                         ) : null}
                       </p>
@@ -323,19 +326,19 @@ export default function PortalMyData() {
             </Section>
 
             {/* Bookings */}
-            <Section icon={FileText} title="Bookings" count={data.data.bookings.length}>
+            <Section icon={FileText} title={t("portal.my_data.section_bookings", "Bookings")} count={data.data.bookings.length}>
               {data.data.bookings.length === 0 ? (
-                <p className="text-sm text-gray-400">No bookings on record.</p>
+                <p className="text-sm text-gray-400">{t("portal.my_data.empty_bookings", "No bookings on record.")}</p>
               ) : (
                 <div className="overflow-x-auto -mx-2">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-xs text-gray-400 uppercase tracking-wide">
-                        <th className="px-2 py-2 font-medium">Ref</th>
-                        <th className="px-2 py-2 font-medium">Space</th>
-                        <th className="px-2 py-2 font-medium">Dates</th>
-                        <th className="px-2 py-2 font-medium">Status</th>
-                        <th className="px-2 py-2 font-medium text-right">Total</th>
+                        <th className="px-2 py-2 font-medium">{t("portal.my_data.col_ref", "Ref")}</th>
+                        <th className="px-2 py-2 font-medium">{t("portal.my_data.col_space", "Space")}</th>
+                        <th className="px-2 py-2 font-medium">{t("portal.my_data.col_dates", "Dates")}</th>
+                        <th className="px-2 py-2 font-medium">{t("portal.my_data.col_status", "Status")}</th>
+                        <th className="px-2 py-2 font-medium text-right">{t("portal.my_data.col_total", "Total")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
@@ -363,19 +366,19 @@ export default function PortalMyData() {
             </Section>
 
             {/* Invoices */}
-            <Section icon={Receipt} title="Invoices" count={data.data.invoices.length}>
+            <Section icon={Receipt} title={t("portal.my_data.section_invoices", "Invoices")} count={data.data.invoices.length}>
               {data.data.invoices.length === 0 ? (
-                <p className="text-sm text-gray-400">No invoices on record.</p>
+                <p className="text-sm text-gray-400">{t("portal.my_data.empty_invoices", "No invoices on record.")}</p>
               ) : (
                 <div className="overflow-x-auto -mx-2">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-xs text-gray-400 uppercase tracking-wide">
-                        <th className="px-2 py-2 font-medium">Ref</th>
-                        <th className="px-2 py-2 font-medium">Status</th>
-                        <th className="px-2 py-2 font-medium">Due</th>
-                        <th className="px-2 py-2 font-medium">Paid</th>
-                        <th className="px-2 py-2 font-medium text-right">Amount</th>
+                        <th className="px-2 py-2 font-medium">{t("portal.my_data.col_ref", "Ref")}</th>
+                        <th className="px-2 py-2 font-medium">{t("portal.my_data.col_status", "Status")}</th>
+                        <th className="px-2 py-2 font-medium">{t("portal.my_data.col_due", "Due")}</th>
+                        <th className="px-2 py-2 font-medium">{t("portal.my_data.col_paid", "Paid")}</th>
+                        <th className="px-2 py-2 font-medium text-right">{t("portal.my_data.col_amount", "Amount")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
@@ -401,9 +404,9 @@ export default function PortalMyData() {
             </Section>
 
             {/* Documents */}
-            <Section icon={Building2} title="Uploaded documents" count={data.data.documents.length}>
+            <Section icon={Building2} title={t("portal.my_data.section_documents", "Uploaded documents")} count={data.data.documents.length}>
               {data.data.documents.length === 0 ? (
-                <p className="text-sm text-gray-400">No documents on record.</p>
+                <p className="text-sm text-gray-400">{t("portal.my_data.empty_documents", "No documents on record.")}</p>
               ) : (
                 <div className="space-y-2">
                   {data.data.documents.map((d) => (
@@ -412,11 +415,11 @@ export default function PortalMyData() {
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-gray-800 truncate">{d.file_name}</p>
                         <p className="text-xs text-gray-500">
-                          {d.doc_type} · {fmtBytes(d.file_size)} · uploaded {fmtDate(d.created_at)}
+                          {d.doc_type} · {fmtBytes(d.file_size)} · {t("portal.my_data.uploaded_at", "uploaded {{date}}", { date: fmtDate(d.created_at) })}
                         </p>
                       </div>
                       <span className="text-[11px] text-gray-400 shrink-0">
-                        Retained until {new Date(d.retention_until).toLocaleDateString()}
+                        {t("portal.my_data.retained_until", "Retained until {{date}}", { date: new Date(d.retention_until).toLocaleDateString() })}
                       </span>
                     </div>
                   ))}
@@ -425,11 +428,10 @@ export default function PortalMyData() {
             </Section>
 
             {/* Marketing consents */}
-            <Section icon={Mail} title="Marketing consents" count={data.data.marketing_consents.length}>
+            <Section icon={Mail} title={t("portal.my_data.section_marketing", "Marketing consents")} count={data.data.marketing_consents.length}>
               {data.data.marketing_consents.length === 0 ? (
                 <p className="text-sm text-gray-400">
-                  You have not opted in to any marketing communications. Booking confirmations and receipts
-                  are sent regardless and are not marketing.
+                  {t("portal.my_data.empty_marketing", "You have not opted in to any marketing communications. Booking confirmations and receipts are sent regardless and are not marketing.")}
                 </p>
               ) : (
                 <div className="space-y-2">
@@ -443,7 +445,7 @@ export default function PortalMyData() {
                         <div>
                           <p className="font-medium text-gray-800 capitalize">{c.channel}</p>
                           <p className="text-xs text-gray-500">
-                            Source: {c.source ?? "—"} · Last update {fmtDate(c.opted_out_at ?? c.opted_in_at)}
+                            {t("portal.my_data.source_label", "Source:")} {c.source ?? "—"} · {t("portal.my_data.last_update", "Last update")} {fmtDate(c.opted_out_at ?? c.opted_in_at)}
                           </p>
                         </div>
                         <span
@@ -451,7 +453,7 @@ export default function PortalMyData() {
                             subscribed ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
                           }`}
                         >
-                          {subscribed ? "Subscribed" : "Unsubscribed"}
+                          {subscribed ? t("portal.my_data.subscribed", "Subscribed") : t("portal.my_data.unsubscribed", "Unsubscribed")}
                         </span>
                       </div>
                     );
@@ -462,16 +464,16 @@ export default function PortalMyData() {
 
             {/* Footer / rights */}
             <div className="rounded-2xl border border-gray-100 bg-white p-5 text-sm text-gray-600">
-              <h3 className="font-semibold text-gray-800 mb-2">Need to correct or delete your data?</h3>
+              <h3 className="font-semibold text-gray-800 mb-2">{t("portal.my_data.footer_heading", "Need to correct or delete your data?")}</h3>
               <p>
-                You may request a correction or full erasure at any time. Please email{" "}
+                {t("portal.my_data.footer_body_prefix", "You may request a correction or full erasure at any time. Please email")}{" "}
                 <a href="mailto:millionstay.com@gmail.com" className="text-primary hover:underline">
                   millionstay.com@gmail.com
                 </a>{" "}
-                from the address on file ({profile?.["email"] ?? "—"}). We respond within 30 days.
+                {t("portal.my_data.footer_body_suffix", "from the address on file ({{email}}). We respond within 30 days.", { email: profile?.["email"] ?? "—" })}
               </p>
               <p className="text-xs text-gray-400 mt-2">
-                Data generated at {fmtDate(data.generated_at)}.
+                {t("portal.my_data.generated_at", "Data generated at {{date}}.", { date: fmtDate(data.generated_at) })}
               </p>
             </div>
           </>

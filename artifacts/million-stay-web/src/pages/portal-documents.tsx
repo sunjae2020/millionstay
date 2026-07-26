@@ -58,11 +58,14 @@ export default function PortalDocuments() {
           body: JSON.stringify({ doc_type: docType, file_name: file.name }),
         }
       );
-      if (!res.ok) throw new Error("Upload failed");
-      toast({ title: "Document uploaded", description: `${docType} uploaded successfully` });
+      if (!res.ok) throw new Error(t("portal.documents.upload_failed", "Upload failed"));
+      toast({
+        title: t("portal.documents.upload_success_title", "Document uploaded"),
+        description: t("portal.documents.upload_success_desc", "{{type}} uploaded successfully", { type: docType }),
+      });
       refetch();
     } catch {
-      toast({ title: "Upload failed", variant: "destructive" });
+      toast({ title: t("portal.documents.upload_failed", "Upload failed"), variant: "destructive" });
     } finally {
       setUploading(false);
     }

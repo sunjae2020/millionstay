@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/lib/store";
 import { PortalLayout } from "@/components/portal-layout";
@@ -65,9 +66,17 @@ interface DirectMessage {
 }
 
 /* ── Config maps ── */
-const STATUS_LABELS: Record<string, string> = {
-  Open: "Open", InProgress: "In Progress", Resolved: "Resolved", Closed: "Closed",
+const STATUS_KEYS: Record<string, string> = {
+  Open: "status_open", InProgress: "status_in_progress", Resolved: "status_resolved", Closed: "status_closed",
 };
+/* Render-time label helpers (never call t() at module scope) */
+function statusLabel(t: TFunction, status: string): string {
+  const k = STATUS_KEYS[status];
+  return k ? t(`portal.cs.${k}`, status) : status;
+}
+function catLabel(t: TFunction, value: string): string {
+  return t(`portal.cs.cat_${String(value).toLowerCase()}`, value);
+}
 const CATEGORY_COLORS: Record<string, string> = {
   General: "bg-purple-100 text-purple-700",
   Accommodation: "bg-orange-100 text-orange-700",
@@ -99,7 +108,7 @@ function StatusIcon({ status }: { status: string }) {
 /* ── Inquiry Card ── */
 function InquiryCard({ ticket }: { ticket: CsTicket }) {
   const { t } = useTranslation();
-  const stLabel = STATUS_LABELS[ticket.status] ?? ticket.status;
+  const stLabel = statusLabel(t, ticket.status);
   return (
     <Link href={`/portal/cs/${ticket.id}`}>
       <motion.div
@@ -112,7 +121,7 @@ function InquiryCard({ ticket }: { ticket: CsTicket }) {
             <div className="flex items-center gap-2 flex-wrap mb-1.5">
               <span className="text-xs font-mono text-gray-400">{ticket.ticket_ref}</span>
               <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${CATEGORY_COLORS[ticket.category] ?? "bg-gray-100 text-gray-600"}`}>
-                {ticket.category}
+                {catLabel(t, ticket.category)}
               </span>
               <StatusBadge status={ticket.status} label={stLabel} icon={<StatusIcon status={ticket.status} />} />
             </div>

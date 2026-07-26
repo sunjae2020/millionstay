@@ -72,10 +72,10 @@ export default function PortalCsNew() {
         });
         const j = await res.json();
         if (j.success) setImages(prev => [...prev, { url: j.url, name: file.name }]);
-        else toast({ title: "Upload failed", description: j?.error?.message || "Could not upload image.", variant: "destructive" });
+        else toast({ title: t("portal.cs.upload_failed", "Upload failed"), description: j?.error?.message || t("portal.cs.upload_failed_desc", "Could not upload image."), variant: "destructive" });
       }
     } catch {
-      toast({ title: "Upload failed", description: "Could not upload image. Please try again.", variant: "destructive" });
+      toast({ title: t("portal.cs.upload_failed", "Upload failed"), description: t("portal.cs.upload_failed_retry", "Could not upload image. Please try again."), variant: "destructive" });
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -85,7 +85,7 @@ export default function PortalCsNew() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.subject.trim() || !form.description.trim()) {
-      toast({ title: "Required fields", description: "Please fill in subject and description.", variant: "destructive" });
+      toast({ title: t("portal.cs.required_fields", "Required fields"), description: t("portal.cs.required_fields_desc", "Please fill in subject and description."), variant: "destructive" });
       return;
     }
     setSubmitting(true);
@@ -104,10 +104,10 @@ export default function PortalCsNew() {
         method: "POST",
         body: JSON.stringify(body),
       });
-      toast({ title: "Inquiry submitted!", description: "We'll get back to you as soon as possible." });
+      toast({ title: t("portal.cs.submitted_title", "Inquiry submitted!"), description: t("portal.cs.submitted_desc", "We'll get back to you as soon as possible.") });
       setLocation(`/portal/cs/${res.data.id}`);
     } catch (err: any) {
-      toast({ title: "Error", description: err?.error?.message || err?.message || "Failed to submit. Please try again.", variant: "destructive" });
+      toast({ title: t("portal.cs.error", "Error"), description: err?.error?.message || err?.message || t("portal.cs.submit_failed", "Failed to submit. Please try again."), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -131,7 +131,7 @@ export default function PortalCsNew() {
                 <Select value={form.category} onValueChange={v => setForm(p => ({ ...p, category: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    {CATEGORIES.map(c => <SelectItem key={c} value={c}>{t(`portal.cs.cat_${c.toLowerCase()}`, c)}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
