@@ -188,7 +188,7 @@ export default function SpacePolicyDetail() {
                     type="number"
                     min={0}
                     max={99}
-                    placeholder="e.g. 18"
+                    placeholder={t("space_policy.placeholder_minimum_age")}
                     className="w-32"
                   />
                 </div>

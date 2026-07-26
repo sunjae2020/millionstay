@@ -37,68 +37,68 @@ type CardDef = {
 
 const ADMIN_CARDS: CardDef[] = [
   {
-    title: "Organisation",
-    description: "Company profile and contact details",
+    title: "settings_hub.organisation_title",
+    description: "settings_hub.organisation_desc",
     icon: Building,
     href: "/settings/organisation",
   },
   {
-    title: "Users",
-    description: "Manage admin users and roles",
+    title: "settings_hub.users_title",
+    description: "settings_hub.users_desc",
     icon: UserCog,
     href: "/settings/users",
   },
   {
-    title: "Roles & Permissions",
-    description: "Role-based access matrix for each area",
+    title: "settings_hub.roles_title",
+    description: "settings_hub.roles_desc",
     icon: ShieldCheck,
     href: "/settings/roles",
   },
   {
-    title: "Design & Branding",
-    description: "Logo, favicon, colours and fonts",
+    title: "settings_hub.design_title",
+    description: "settings_hub.design_desc",
     icon: Palette,
     href: "/settings/design",
   },
   {
-    title: "Document Templates",
-    description: "Editable email + contract + PDF templates",
+    title: "settings_hub.doc_templates_title",
+    description: "settings_hub.doc_templates_desc",
     icon: FileText,
     href: "/settings/document-templates",
   },
   {
-    title: "Homestay Billing",
-    description: "Rent cycle, payment method, card fee, lead days",
+    title: "settings_hub.homestay_billing_title",
+    description: "settings_hub.homestay_billing_desc",
     icon: CreditCard,
     href: "/settings/homestay-billing",
   },
   {
-    title: "Commission Plans",
-    description: "Per-agent referral fee, rate and base (upfront / rent / converted)",
+    title: "settings_hub.commission_plans_title",
+    description: "settings_hub.commission_plans_desc",
     icon: Percent,
     href: "/settings/commission-plans",
   },
   {
-    title: "Application Emails",
-    description: "Acknowledgment email & PDF attachment per application type",
+    title: "settings_hub.application_emails_title",
+    description: "settings_hub.application_emails_desc",
     icon: MailCheck,
     href: "/settings/application-emails",
   },
   {
-    title: "Integrations",
-    description: "Stripe, Cloudinary, Resend and more",
+    title: "settings_hub.integrations_title",
+    description: "settings_hub.integrations_desc",
     icon: Plug,
     href: "/settings/integrations",
   },
   {
-    title: "API Keys",
-    description: "Issue API keys for external app integration",
+    title: "settings_hub.api_keys_title",
+    description: "settings_hub.api_keys_desc",
     icon: KeyRound,
     href: "/settings/api-keys",
   },
   {
-    title: "System Log",
-    description: "Audit trail of system activity",
+    title: "settings_hub.system_log_title",
+    description: "settings_hub.system_log_desc",
     icon: ScrollText,
     href: "/settings/system-log",
   },
@@ -106,8 +106,8 @@ const ADMIN_CARDS: CardDef[] = [
 
 const SUPER_ADMIN_CARDS: CardDef[] = [
   {
-    title: "DB Sync",
-    description: "Snapshot dev DB and apply to production",
+    title: "settings_hub.db_sync_title",
+    description: "settings_hub.db_sync_desc",
     icon: Database,
     href: "/settings/db-sync",
   },
@@ -115,44 +115,44 @@ const SUPER_ADMIN_CARDS: CardDef[] = [
 
 const REF_CARDS: CardDef[] = [
   {
-    title: "Contract Types",
-    description: "Define contract type categories",
+    title: "settings_hub.contract_types_title",
+    description: "settings_hub.contract_types_desc",
     icon: FileText,
     href: "/settings/contract-types",
   },
   {
-    title: "Product Groups",
-    description: "Organise products into groups",
+    title: "settings_hub.product_groups_title",
+    description: "settings_hub.product_groups_desc",
     icon: Layers,
     href: "/settings/product-groups",
   },
   {
-    title: "Product Types",
-    description: "Manage product type definitions",
+    title: "settings_hub.product_types_title",
+    description: "settings_hub.product_types_desc",
     icon: Tag,
     href: "/settings/product-types",
   },
   {
-    title: "Add-on Services",
-    description: "Airport pickup, SIM, settlement and more",
+    title: "settings_hub.addon_services_title",
+    description: "settings_hub.addon_services_desc",
     icon: Package,
     href: "/settings/addon-services",
   },
   {
-    title: "Payment Info",
-    description: "Payment account reference data",
+    title: "settings_hub.payment_info_title",
+    description: "settings_hub.payment_info_desc",
     icon: Landmark,
     href: "/settings/payment-info",
   },
   {
-    title: "Cost Center",
-    description: "Cost centre configuration",
+    title: "settings_hub.cost_center_title",
+    description: "settings_hub.cost_center_desc",
     icon: Wallet,
     href: "/settings/cost-center",
   },
   {
-    title: "Suburb",
-    description: "Suburb and location data",
+    title: "settings_hub.suburb_title",
+    description: "settings_hub.suburb_desc",
     icon: MapPin,
     href: "/settings/suburbs",
   },
@@ -160,26 +160,27 @@ const REF_CARDS: CardDef[] = [
 
 const REPORT_CARDS: CardDef[] = [
   {
-    title: "Booking Report",
-    description: "Occupancy and booking analytics",
+    title: "settings_hub.booking_report_title",
+    description: "settings_hub.booking_report_desc",
     icon: CalendarDays,
     href: "/settings/reports/bookings",
   },
   {
-    title: "Revenue Report",
-    description: "Revenue breakdown and trends",
+    title: "settings_hub.revenue_report_title",
+    description: "settings_hub.revenue_report_desc",
     icon: TrendingUp,
     href: "/settings/reports/revenue",
   },
   {
-    title: "Occupancy Report",
-    description: "Space occupancy over time",
+    title: "settings_hub.occupancy_report_title",
+    description: "settings_hub.occupancy_report_desc",
     icon: BarChart3,
     href: "/settings/reports/occupancy",
   },
 ];
 
 function HubCard({ card }: { card: CardDef }) {
+  const { t } = useTranslation();
   const [, navigate] = useLocation();
   return (
     <button
@@ -190,8 +191,8 @@ function HubCard({ card }: { card: CardDef }) {
         <card.icon className="h-5 w-5 text-primary" />
       </div>
       <div>
-        <p className="text-sm font-medium text-foreground">{card.title}</p>
-        <p className="text-xs text-muted-foreground mt-0.5">{card.description}</p>
+        <p className="text-sm font-medium text-foreground">{t(card.title)}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{t(card.description)}</p>
       </div>
     </button>
   );
@@ -212,16 +213,16 @@ export default function Settings() {
             {t("nav.settings")}
           </>
         }
-        subtitle="Administration, reference data and reports"
+        subtitle={t("settings_hub.page_subtitle")}
       />
 
       <div className="p-6 max-w-5xl space-y-8">
         {/* Section A — Administration */}
         <section>
           <div className="mb-4">
-            <h2 className="text-base font-semibold text-foreground">Administration</h2>
+            <h2 className="text-base font-semibold text-foreground">{t("settings_hub.section_admin_title")}</h2>
             <p className="text-sm text-muted-foreground mt-0.5">
-              Manage users, templates and system activity
+              {t("settings_hub.section_admin_desc")}
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -238,9 +239,9 @@ export default function Settings() {
         {/* Section B — Reference Data */}
         <section>
           <div className="mb-4">
-            <h2 className="text-base font-semibold text-foreground">Reference Data</h2>
+            <h2 className="text-base font-semibold text-foreground">{t("settings_hub.section_ref_title")}</h2>
             <p className="text-sm text-muted-foreground mt-0.5">
-              Configure lookup tables and reference lists
+              {t("settings_hub.section_ref_desc")}
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -255,9 +256,9 @@ export default function Settings() {
         {/* Section C — Reports */}
         <section>
           <div className="mb-4">
-            <h2 className="text-base font-semibold text-foreground">Reports</h2>
+            <h2 className="text-base font-semibold text-foreground">{t("settings_hub.section_reports_title")}</h2>
             <p className="text-sm text-muted-foreground mt-0.5">
-              Analytics and operational reports
+              {t("settings_hub.section_reports_desc")}
             </p>
           </div>
           <div className="grid grid-cols-3 gap-3">
@@ -271,10 +272,10 @@ export default function Settings() {
                   <BarChart3 className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-foreground">{c.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{c.description}</p>
+                  <p className="text-sm font-medium text-foreground">{t(c.title)}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t(c.description)}</p>
                 </div>
-                <span className="text-xs font-medium text-primary">View Report →</span>
+                <span className="text-xs font-medium text-primary">{t("settings_hub.view_report")}</span>
               </button>
             ))}
           </div>

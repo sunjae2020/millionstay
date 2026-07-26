@@ -139,7 +139,7 @@ export default function PropertyDetail() {
   async function handleAutoDetect() {
     const parts = [watchedAddress, watchedCity, watchedState, watchedPostcode, "Australia"].filter(Boolean);
     const q = parts.join(", ");
-    if (!q.trim()) { setCoordsMsg("Enter an address first."); return; }
+    if (!q.trim()) { setCoordsMsg(t("property.coords_enter_address")); return; }
     setDetectingCoords(true);
     setCoordsMsg("");
     try {
@@ -149,12 +149,12 @@ export default function PropertyDetail() {
       if (data.length > 0) {
         setValue("lat", parseFloat(data[0].lat).toFixed(6));
         setValue("lng", parseFloat(data[0].lon).toFixed(6));
-        setCoordsMsg(`Detected: ${data[0].display_name.slice(0, 60)}...`);
+        setCoordsMsg(t("property.coords_detected", { location: data[0].display_name.slice(0, 60) }));
       } else {
-        setCoordsMsg("Location not found. Enter coordinates manually.");
+        setCoordsMsg(t("property.coords_not_found"));
       }
     } catch {
-      setCoordsMsg("Auto-detect failed. Enter coordinates manually.");
+      setCoordsMsg(t("property.coords_failed"));
     } finally {
       setDetectingCoords(false);
     }
@@ -308,8 +308,8 @@ export default function PropertyDetail() {
                       </Button>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <Input {...register("lat")} type="number" step="any" placeholder="Lat e.g. -37.8102" />
-                      <Input {...register("lng")} type="number" step="any" placeholder="Lng e.g. 144.9628" />
+                      <Input {...register("lat")} type="number" step="any" placeholder={t("property.placeholder_lat")} />
+                      <Input {...register("lng")} type="number" step="any" placeholder={t("property.placeholder_lng")} />
                     </div>
                     {coordsMsg && (
                       <p className="text-xs text-muted-foreground">{coordsMsg}</p>

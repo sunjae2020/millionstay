@@ -352,7 +352,7 @@ export default function ContractProductDetail() {
                 </div>
                 <div>
                   <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_rate')}</Label>
-                  <Input {...register("weekly_rate")} type="number" step="0.01" min="0" placeholder="e.g. 430" />
+                  <Input {...register("weekly_rate")} type="number" step="0.01" min="0" placeholder={t('contract_product.ph_weekly_rate')} />
                 </div>
                 <div>
                   <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">
@@ -364,7 +364,7 @@ export default function ContractProductDetail() {
                 </div>
                 <div>
                   <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_monthly_rate')}</Label>
-                  <Input {...register("monthly_rate")} type="number" step="0.01" min="0" placeholder="e.g. 1720" />
+                  <Input {...register("monthly_rate")} type="number" step="0.01" min="0" placeholder={t('contract_product.ph_monthly_rate')} />
                 </div>
                 <div>
                   <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('contract_product.label_billing_frequency')}</Label>

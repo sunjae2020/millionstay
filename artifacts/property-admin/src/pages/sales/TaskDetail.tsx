@@ -128,7 +128,7 @@ export default function TaskDetail() {
   const taskStatus = watch("task_status");
   const isOverdue = dueDate && dueDate < today && taskStatus !== "Done";
 
-  if (!isNew && isLoading) return <Layout><p className="p-6 text-sm text-muted-foreground">Loading…</p></Layout>;
+  if (!isNew && isLoading) return <Layout><p className="p-6 text-sm text-muted-foreground">{t("common.loading")}</p></Layout>;
 
   return (
     <Layout>
@@ -161,12 +161,12 @@ export default function TaskDetail() {
             <div className="p-4 grid gap-4">
               <div className="grid gap-1.5">
                 <Label>{t("task.label_title")} *</Label>
-                <Input {...register("name", { required: true })} placeholder="Task name" />
-                {errors.name && <p className="text-xs text-destructive">Name is required</p>}
+                <Input {...register("name", { required: true })} placeholder={t("task.ph_name")} />
+                {errors.name && <p className="text-xs text-destructive">{t("task.err_name_required")}</p>}
               </div>
               <div className="grid gap-1.5">
-                <Label>Subject</Label>
-                <Input {...register("subject")} placeholder="Brief description" />
+                <Label>{t("task.label_subject")}</Label>
+                <Input {...register("subject")} placeholder={t("task.ph_subject")} />
               </div>
             </div>
           </div>
@@ -209,14 +209,14 @@ export default function TaskDetail() {
                 <Label>{t("task.label_category")}</Label>
                 <Controller name="task_category" control={control} render={({ field }) => (
                   <Select value={field.value || "__none"} onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}>
-                    <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t("task.ph_category")} /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="__none">— None —</SelectItem>
-                      <SelectItem value="CS">CS</SelectItem>
-                      <SelectItem value="Maintenance">Maintenance</SelectItem>
-                      <SelectItem value="Follow-up">Follow-up</SelectItem>
-                      <SelectItem value="Admin">Admin</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
+                      <SelectItem value="__none">{t("task.opt_none")}</SelectItem>
+                      <SelectItem value="CS">{t("task.cat_cs")}</SelectItem>
+                      <SelectItem value="Maintenance">{t("task.cat_maintenance")}</SelectItem>
+                      <SelectItem value="Follow-up">{t("task.cat_followup")}</SelectItem>
+                      <SelectItem value="Admin">{t("task.cat_admin")}</SelectItem>
+                      <SelectItem value="Other">{t("task.cat_other")}</SelectItem>
                     </SelectContent>
                   </Select>
                 )} />
@@ -224,7 +224,7 @@ export default function TaskDetail() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
-                  <Label>Start Date</Label>
+                  <Label>{t("task.label_start_date")}</Label>
                   <Controller name="start_date" control={control} render={({ field }) => (
                     <DateInput value={field.value ?? ""} onChange={field.onChange} />
                   )} />
@@ -232,7 +232,7 @@ export default function TaskDetail() {
                 <div className="grid gap-1.5">
                   <Label>
                     {t("task.label_due_date")}
-                    {isOverdue && <span className="ml-2 text-xs text-red-600 font-medium">⚠ Overdue</span>}
+                    {isOverdue && <span className="ml-2 text-xs text-red-600 font-medium">⚠ {t("task.overdue")}</span>}
                   </Label>
                   <Controller name="due_date" control={control} render={({ field }) => (
                     <DateInput value={field.value ?? ""} onChange={field.onChange}
@@ -245,7 +245,7 @@ export default function TaskDetail() {
 
           {/* Links */}
           <div className="border rounded-lg overflow-hidden">
-            <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">Links</div>
+            <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">{t("task.section_links")}</div>
             <div className="p-4 grid gap-4">
               <div className="grid gap-1.5">
                 <Label>{t("task.label_related_contact")}</Label>
@@ -254,18 +254,18 @@ export default function TaskDetail() {
                     value={field.value}
                     onChange={field.onChange}
                     lookupUrl="/api/v1/lookup/contacts"
-                    placeholder="Search contacts…"
+                    placeholder={t("task.ph_search_contacts")}
                   />
                 )} />
               </div>
               <div className="grid gap-1.5">
-                <Label>{t("task.label_related_contact")} (Secondary)</Label>
+                <Label>{t("task.label_related_contact")} ({t("task.secondary")})</Label>
                 <Controller name="secondary_contact_id" control={control} render={({ field }) => (
                   <LookupSelect
                     value={field.value}
                     onChange={field.onChange}
                     lookupUrl="/api/v1/lookup/contacts"
-                    placeholder="Search contacts…"
+                    placeholder={t("task.ph_search_contacts")}
                   />
                 )} />
               </div>
@@ -276,7 +276,7 @@ export default function TaskDetail() {
                     value={field.value}
                     onChange={field.onChange}
                     lookupUrl="/api/v1/lookup/accounts"
-                    placeholder="Search accounts…"
+                    placeholder={t("task.ph_search_accounts")}
                   />
                 )} />
               </div>
@@ -287,32 +287,32 @@ export default function TaskDetail() {
           <div className="border rounded-lg overflow-hidden">
             <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">{t("task.label_notes")}</div>
             <div className="p-4">
-              <Textarea {...register("description")} placeholder="Task notes…" rows={4} />
+              <Textarea {...register("description")} placeholder={t("task.ph_notes")} rows={4} />
             </div>
           </div>
 
           {/* Admin */}
           <div className="border rounded-lg overflow-hidden">
-            <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">Admin</div>
+            <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">{t("task.section_admin")}</div>
             <div className="p-4 grid gap-4">
               <div className="grid gap-1.5">
-                <Label>Record Status</Label>
+                <Label>{t("task.label_record_status")}</Label>
                 <Controller name="status" control={control} render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="Inactive">Inactive</SelectItem>
+                      <SelectItem value="Active">{t("common.active")}</SelectItem>
+                      <SelectItem value="Inactive">{t("common.inactive")}</SelectItem>
                     </SelectContent>
                   </Select>
                 )} />
               </div>
               {!isNew && task && (
                 <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
-                  <div><span className="font-medium text-foreground">Created:</span> {formatDateTime(task.created_at)}</div>
-                  <div><span className="font-medium text-foreground">Updated:</span> {formatDateTime(task.updated_at)}</div>
+                  <div><span className="font-medium text-foreground">{t("common.created")}:</span> {formatDateTime(task.created_at)}</div>
+                  <div><span className="font-medium text-foreground">{t("common.updated")}:</span> {formatDateTime(task.updated_at)}</div>
                   {task.completed_at && (
-                    <div><span className="font-medium text-foreground">Completed:</span> {formatDateTime(task.completed_at)}</div>
+                    <div><span className="font-medium text-foreground">{t("task.label_completed")}</span> {formatDateTime(task.completed_at)}</div>
                   )}
                 </div>
               )}

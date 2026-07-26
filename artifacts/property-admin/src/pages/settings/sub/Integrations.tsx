@@ -42,6 +42,7 @@ function StatusBadge({ variant, label }: { variant: BadgeVariant; label: string 
 }
 
 function MaskedKeyInput({ value, envKey, onSaved }: { value: string; envKey: string; onSaved: () => void }) {
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
   const [editing, setEditing] = useState(false);
   const [newVal, setNewVal] = useState("");
@@ -61,7 +62,7 @@ function MaskedKeyInput({ value, envKey, onSaved }: { value: string; envKey: str
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         const err = (data as any).error;
-        setSaveError(typeof err === "string" ? err : err?.message ?? `Save failed (${res.status})`);
+        setSaveError(typeof err === "string" ? err : err?.message ?? t("integrations.save_failed", { status: res.status }));
         return;
       }
       setEditing(false);
@@ -69,7 +70,7 @@ function MaskedKeyInput({ value, envKey, onSaved }: { value: string; envKey: str
       setSaveError(null);
       onSaved();
     } catch {
-      setSaveError("Network error — please try again");
+      setSaveError(t("common.network_error"));
     } finally {
       setSaving(false);
     }
@@ -91,15 +92,15 @@ function MaskedKeyInput({ value, envKey, onSaved }: { value: string; envKey: str
             type="text"
             value={newVal}
             onChange={(e) => { setNewVal(e.target.value); setSaveError(null); }}
-            placeholder={`Enter ${envKey}`}
+            placeholder={t("integrations.enter_key", { key: envKey })}
             className="h-8 text-xs font-mono flex-1"
             autoFocus
             onKeyDown={(e) => e.key === "Enter" && handleSave()}
           />
           <Button size="sm" className="h-8 text-xs" onClick={handleSave} disabled={saving || !newVal.trim()}>
-            {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : "Save"}
+            {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : t("common.save")}
           </Button>
-          <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => { setEditing(false); setSaveError(null); }}>Cancel</Button>
+          <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => { setEditing(false); setSaveError(null); }}>{t("common.cancel")}</Button>
         </div>
         {saveError && <p className="text-xs text-red-600">{saveError}</p>}
       </div>
@@ -109,7 +110,7 @@ function MaskedKeyInput({ value, envKey, onSaved }: { value: string; envKey: str
   return (
     <div className="flex items-center gap-1.5">
       <code className="text-xs bg-muted px-2 py-0.5 rounded font-mono">
-        {value || "Not set"}
+        {value || t("integrations.not_set")}
       </code>
       {value && (
         <>
@@ -122,21 +123,22 @@ function MaskedKeyInput({ value, envKey, onSaved }: { value: string; envKey: str
         </>
       )}
       <button className="text-xs text-primary hover:underline ml-1" onClick={() => setEditing(true)}>
-        {value ? "Change" : "Set"}
+        {value ? t("integrations.change") : t("integrations.set")}
       </button>
     </div>
   );
 }
 
 function StripeFields({ status, onRefresh }: { status: IntegrationStatus | null; onRefresh: () => void }) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-3">
       <div className="flex flex-col gap-1">
-        <Label className="text-xs text-muted-foreground">Secret Key (STRIPE_SECRET_KEY)</Label>
+        <Label className="text-xs text-muted-foreground">{t("integrations.stripe_secret_key")}</Label>
         <MaskedKeyInput value={status?.stripe.masked_key ?? ""} envKey="STRIPE_SECRET_KEY" onSaved={onRefresh} />
       </div>
       {status?.stripe.mode && (
-        <p className="text-xs text-muted-foreground">Mode: <strong>{status.stripe.mode}</strong></p>
+        <p className="text-xs text-muted-foreground">{t("integrations.mode")} <strong>{status.stripe.mode}</strong></p>
       )}
       {status?.stripe.error && <p className="text-xs text-red-600">{status.stripe.error}</p>}
     </div>
@@ -144,18 +146,19 @@ function StripeFields({ status, onRefresh }: { status: IntegrationStatus | null;
 }
 
 function CloudinaryFields({ status, onRefresh }: { status: IntegrationStatus | null; onRefresh: () => void }) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-3">
       <div className="flex flex-col gap-1">
-        <Label className="text-xs text-muted-foreground">Cloud Name (CLOUDINARY_CLOUD_NAME)</Label>
+        <Label className="text-xs text-muted-foreground">{t("integrations.cloudinary_cloud_name")}</Label>
         <MaskedKeyInput value={status?.cloudinary.cloud_name ?? ""} envKey="CLOUDINARY_CLOUD_NAME" onSaved={onRefresh} />
       </div>
       <div className="flex flex-col gap-1">
-        <Label className="text-xs text-muted-foreground">API Key (CLOUDINARY_API_KEY)</Label>
+        <Label className="text-xs text-muted-foreground">{t("integrations.cloudinary_api_key")}</Label>
         <MaskedKeyInput value={status?.cloudinary.masked_api_key ?? ""} envKey="CLOUDINARY_API_KEY" onSaved={onRefresh} />
       </div>
       <div className="flex flex-col gap-1">
-        <Label className="text-xs text-muted-foreground">API Secret (CLOUDINARY_API_SECRET)</Label>
+        <Label className="text-xs text-muted-foreground">{t("integrations.cloudinary_api_secret")}</Label>
         <MaskedKeyInput value={status?.cloudinary.masked_api_secret ?? ""} envKey="CLOUDINARY_API_SECRET" onSaved={onRefresh} />
       </div>
       {status?.cloudinary.plan && (
@@ -169,6 +172,7 @@ function CloudinaryFields({ status, onRefresh }: { status: IntegrationStatus | n
 }
 
 function ResendFields({ status, onRefresh }: { status: IntegrationStatus | null; onRefresh: () => void }) {
+  const { t } = useTranslation();
   const [testEmail, setTestEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [sendResult, setSendResult] = useState<string | null>(null);
@@ -182,10 +186,10 @@ function ResendFields({ status, onRefresh }: { status: IntegrationStatus | null;
         body: JSON.stringify({ to_email: testEmail }),
       });
       const data = await res.json() as { success: boolean; message_id?: string; error?: string | { code?: string; message?: string } };
-      const errMsg = typeof data.error === "string" ? data.error : data.error?.message ?? "Unknown error";
-      setSendResult(data.success ? `✓ Sent! Message ID: ${data.message_id}` : `✗ Error: ${errMsg}`);
+      const errMsg = typeof data.error === "string" ? data.error : data.error?.message ?? t("integrations.unknown_error");
+      setSendResult(data.success ? t("integrations.send_success", { id: data.message_id }) : t("integrations.send_error", { msg: errMsg }));
     } catch {
-      setSendResult("✗ Network error — check API server");
+      setSendResult(t("integrations.send_network_error"));
     } finally {
       setSending(false);
     }
@@ -196,26 +200,25 @@ function ResendFields({ status, onRefresh }: { status: IntegrationStatus | null;
   return (
     <div className="space-y-3">
       <div className="flex flex-col gap-1">
-        <Label className="text-xs text-muted-foreground">API Key (RESEND_API_KEY)</Label>
+        <Label className="text-xs text-muted-foreground">{t("integrations.resend_api_key")}</Label>
         <MaskedKeyInput value={status?.resend.masked_key ?? ""} envKey="RESEND_API_KEY" onSaved={onRefresh} />
       </div>
       <div className="flex flex-col gap-1">
-        <Label className="text-xs text-muted-foreground">From Email (EMAIL_FROM)</Label>
+        <Label className="text-xs text-muted-foreground">{t("integrations.from_email")}</Label>
         <MaskedKeyInput value={status?.resend.from_email ?? ""} envKey="EMAIL_FROM" onSaved={onRefresh} />
       </div>
       <div className="flex flex-col gap-1">
-        <Label className="text-xs text-muted-foreground">Operations notification email (LEAD_NOTIFICATION_EMAIL)</Label>
+        <Label className="text-xs text-muted-foreground">{t("integrations.ops_email")}</Label>
         <MaskedKeyInput value={status?.resend.ops_email ?? ""} envKey="LEAD_NOTIFICATION_EMAIL" onSaved={onRefresh} />
         <p className="text-xs text-muted-foreground">
-          Receives the “Operations team” copy of signed applications/contracts and new lead &amp; application alerts.
-          If empty, selecting “Operations team” sends to no one.
+          {t("integrations.ops_email_hint")}
         </p>
       </div>
       <div className="space-y-1">
         <div className="flex gap-2">
           <Input
             type="email"
-            placeholder="Test recipient: you@example.com"
+            placeholder={t("integrations.test_recipient_ph")}
             className="h-8 text-xs flex-1"
             value={testEmail}
             onChange={(e) => setTestEmail(e.target.value)}
@@ -227,12 +230,12 @@ function ResendFields({ status, onRefresh }: { status: IntegrationStatus | null;
             onClick={sendTest}
             disabled={sending || !testEmail || notConfigured}
           >
-            {sending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Send Test"}
+            {sending ? <Loader2 className="h-3 w-3 animate-spin" /> : t("integrations.send_test")}
           </Button>
         </div>
         {notConfigured && (
           <p className="text-xs text-amber-600">
-            ↑ Save the RESEND_API_KEY first, then you can send a test email.
+            {t("integrations.send_test_hint")}
           </p>
         )}
       </div>
@@ -271,10 +274,12 @@ const ICalFields = () => (
   </p>
 );
 
-const AiFields = ({ status, onRefresh }: { status: IntegrationStatus | null; onRefresh: () => void }) => (
+const AiFields = ({ status, onRefresh }: { status: IntegrationStatus | null; onRefresh: () => void }) => {
+  const { t } = useTranslation();
+  return (
   <div className="space-y-3">
     <div className="flex flex-col gap-1">
-      <Label className="text-xs text-muted-foreground">Anthropic API Key (ANTHROPIC_API_KEY)</Label>
+      <Label className="text-xs text-muted-foreground">{t("integrations.anthropic_api_key")}</Label>
       <MaskedKeyInput value={status?.ai.masked_key ?? ""} envKey="ANTHROPIC_API_KEY" onSaved={onRefresh} />
     </div>
     <p className="text-xs text-muted-foreground">
@@ -286,9 +291,11 @@ const AiFields = ({ status, onRefresh }: { status: IntegrationStatus | null; onR
     </p>
     {status?.ai.error && <p className="text-xs text-red-600">{status.ai.error}</p>}
   </div>
-);
+  );
+};
 
 const BillingFields = ({ status, onRefresh }: { status: IntegrationStatus | null; onRefresh: () => void }) => {
+  const { t } = useTranslation();
   const [saving, setSaving] = useState(false);
   const enabled = status?.billing?.recurring_invoices_enabled ?? false;
   async function toggle() {
@@ -307,9 +314,9 @@ const BillingFields = ({ status, onRefresh }: { status: IntegrationStatus | null
     <div className="space-y-3">
       <div className="flex items-center gap-3">
         <Button size="sm" variant={enabled ? "outline" : "default"} className="h-8 text-xs" onClick={toggle} disabled={saving}>
-          {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : enabled ? "Disable" : "Enable"}
+          {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : enabled ? t("common.disable") : t("common.enable")}
         </Button>
-        <span className="text-sm">{enabled ? "Enabled" : "Disabled"}</span>
+        <span className="text-sm">{enabled ? t("common.enabled") : t("common.disabled")}</span>
       </div>
       <p className="text-xs text-muted-foreground">
         When enabled, a daily job (02:30 Sydney) auto-generates the next due invoice for any
@@ -320,7 +327,9 @@ const BillingFields = ({ status, onRefresh }: { status: IntegrationStatus | null
   );
 };
 
-const GoogleSheetsFields = () => (
+const GoogleSheetsFields = () => {
+  const { t } = useTranslation();
+  return (
   <div className="space-y-3 text-sm">
     <p className="text-muted-foreground">
       Sync the <strong>Homestay Student Applications</strong> ops queue with a Google Sheet.
@@ -337,18 +346,19 @@ const GoogleSheetsFields = () => (
     </ol>
     <div className="flex flex-wrap items-center gap-2 pt-1">
       <Link href="/settings/api-keys">
-        <Button size="sm" className="h-8 text-xs">Issue API Key</Button>
+        <Button size="sm" className="h-8 text-xs">{t("integrations.issue_api_key")}</Button>
       </Link>
       <a
         href="https://github.com/sunjae2020/millionstay/blob/main/docs/integrations/google-sheets-homestay.md"
         target="_blank"
         rel="noopener noreferrer"
       >
-        <Button size="sm" variant="outline" className="h-8 text-xs">Setup Guide</Button>
+        <Button size="sm" variant="outline" className="h-8 text-xs">{t("integrations.setup_guide")}</Button>
       </a>
     </div>
   </div>
-);
+  );
+};
 
 const CARDS: CardDef[] = [
   {
@@ -464,6 +474,7 @@ function IntegrationCard({
   status: IntegrationStatus | null;
   onRefresh: () => void;
 }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ ok: boolean; msg: string } | null>(null);
@@ -478,12 +489,12 @@ function IntegrationCard({
       const data = await res.json();
       if (data.success) {
         const details = data.mode ? ` · ${data.mode} mode` : data.storage_mb ? ` · ${data.storage_mb}MB` : "";
-        setTestResult({ ok: true, msg: `Connected${details}` });
+        setTestResult({ ok: true, msg: `${t("integrations.connected")}${details}` });
       } else {
-        setTestResult({ ok: false, msg: data.error ?? "Test failed" });
+        setTestResult({ ok: false, msg: data.error ?? t("integrations.test_failed") });
       }
     } catch {
-      setTestResult({ ok: false, msg: "Request failed" });
+      setTestResult({ ok: false, msg: t("integrations.request_failed") });
     } finally {
       setTesting(false);
     }
@@ -544,7 +555,7 @@ function IntegrationCard({
                 disabled={testing}
               >
                 {testing && <Loader2 className="h-3 w-3 animate-spin" />}
-                {card.testLabel ?? "Test Connection"}
+                {card.testLabel ?? t("integrations.test_connection")}
               </Button>
             </div>
           )}
@@ -578,11 +589,11 @@ export default function IntegrationsPage() {
     <Layout>
       <PageHeader
         title={t("nav.integrations")}
-        subtitle="Manage all external service connections"
+        subtitle={t("integrations.subtitle")}
         actions={
           <Link href="/settings">
             <Button variant="outline" size="sm" className="gap-1.5">
-              <ArrowLeft className="h-4 w-4" /> Back to Settings
+              <ArrowLeft className="h-4 w-4" /> {t("common.back_to_settings")}
             </Button>
           </Link>
         }
@@ -590,7 +601,7 @@ export default function IntegrationsPage() {
       <div className="p-6 max-w-3xl">
         {loading ? (
           <div className="flex items-center gap-2 text-muted-foreground text-sm py-8">
-            <Loader2 className="h-4 w-4 animate-spin" /> Loading integration status...
+            <Loader2 className="h-4 w-4 animate-spin" /> {t("integrations.loading_status")}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -606,7 +617,7 @@ export default function IntegrationsPage() {
         )}
         {!isSuperAdmin && status && (
           <p className="text-xs text-muted-foreground mt-6">
-            Super Admin role required to update API keys.
+            {t("integrations.super_admin_required")}
           </p>
         )}
       </div>

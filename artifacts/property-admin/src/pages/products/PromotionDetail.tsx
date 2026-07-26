@@ -332,7 +332,7 @@ export default function PromotionDetail() {
               </div>
               <div>
                 <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_code')}</Label>
-                <Input {...register("code")} placeholder="e.g. MID5" className="font-mono uppercase" />
+                <Input {...register("code")} placeholder={t('promotion.ph_code')} className="font-mono uppercase" />
               </div>
               <div>
                 <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_status')}</Label>
@@ -373,19 +373,19 @@ export default function PromotionDetail() {
               {promotionType === "Percentage" && (
                 <div>
                   <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_value')}</Label>
-                  <Input {...register("discount_percentage")} type="number" step="0.5" min="0" max="100" placeholder="e.g. 5" />
+                  <Input {...register("discount_percentage")} type="number" step="0.5" min="0" max="100" placeholder={t('promotion.ph_percentage')} />
                 </div>
               )}
               {promotionType === "Fixed" && (
                 <div>
                   <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_value')}</Label>
-                  <Input {...register("discount_amount")} type="number" step="0.01" min="0" placeholder="e.g. 50" />
+                  <Input {...register("discount_amount")} type="number" step="0.01" min="0" placeholder={t('promotion.ph_amount')} />
                 </div>
               )}
               {promotionType === "FreeNights" && (
                 <div>
                   <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('promotion.label_value')}</Label>
-                  <Input {...register("free_nights")} type="number" min="1" placeholder="e.g. 7" />
+                  <Input {...register("free_nights")} type="number" min="1" placeholder={t('promotion.ph_free_nights')} />
                 </div>
               )}
             </div>

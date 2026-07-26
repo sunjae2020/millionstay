@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch, apiJson } from "@/lib/apiFetch";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ const STATUS_STYLE: Record<string, string> = {
 };
 
 export function BookingConditionReports({ bookingId }: { bookingId: string }) {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [creating, setCreating] = useState(false);
   const [phase, setPhase] = useState("move_in");
@@ -52,33 +54,33 @@ export function BookingConditionReports({ bookingId }: { bookingId: string }) {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h4 className="font-medium text-sm flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-primary" /> Condition Reports</h4>
-        {!creating && <Button size="sm" variant="outline" onClick={() => setCreating(true)}><Plus className="w-3.5 h-3.5 mr-1" /> New Report</Button>}
+        <h4 className="font-medium text-sm flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-primary" /> {t("condition_report.title")}</h4>
+        {!creating && <Button size="sm" variant="outline" onClick={() => setCreating(true)}><Plus className="w-3.5 h-3.5 mr-1" /> {t("condition_report.new_report")}</Button>}
       </div>
 
       {creating && (
         <div className="rounded-lg border bg-white p-4 space-y-3">
           <div className="flex gap-3 flex-wrap">
             <label className="text-sm">
-              <span className="block text-xs text-muted-foreground mb-1">Phase</span>
+              <span className="block text-xs text-muted-foreground mb-1">{t("condition_report.phase")}</span>
               <select value={phase} onChange={(e) => setPhase(e.target.value)} className="border rounded px-2 py-1.5 text-sm">
                 {PHASES.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
             </label>
             <label className="text-sm flex-1 min-w-[200px]">
-              <span className="block text-xs text-muted-foreground mb-1">Title (optional)</span>
-              <input value={title} onChange={(e) => setTitle(e.target.value)} className="border rounded px-2 py-1.5 text-sm w-full" placeholder="Move-in inspection" />
+              <span className="block text-xs text-muted-foreground mb-1">{t("condition_report.title_optional")}</span>
+              <input value={title} onChange={(e) => setTitle(e.target.value)} className="border rounded px-2 py-1.5 text-sm w-full" placeholder={t("condition_report.placeholder_title")} />
             </label>
           </div>
           <div className="flex gap-2">
-            <Button size="sm" disabled={createMut.isPending} onClick={() => createMut.mutate()}>Create draft</Button>
-            <Button size="sm" variant="ghost" onClick={() => setCreating(false)}>Cancel</Button>
+            <Button size="sm" disabled={createMut.isPending} onClick={() => createMut.mutate()}>{t("condition_report.create_draft")}</Button>
+            <Button size="sm" variant="ghost" onClick={() => setCreating(false)}>{t("common.cancel")}</Button>
           </div>
         </div>
       )}
 
       {!reports?.length ? (
-        <div className="text-center py-8 text-muted-foreground text-sm rounded-lg border bg-white">No condition reports yet</div>
+        <div className="text-center py-8 text-muted-foreground text-sm rounded-lg border bg-white">{t("condition_report.empty")}</div>
       ) : (
         reports.map((r) => <ReportEditor key={r.id} report={r} onChanged={() => qc.invalidateQueries({ queryKey: listKey })} />)
       )}
@@ -87,6 +89,7 @@ export function BookingConditionReports({ bookingId }: { bookingId: string }) {
 }
 
 function ReportEditor({ report, onChanged }: { report: Report; onChanged: () => void }) {
+  const { t } = useTranslation();
   const isDraft = report.status === "draft";
   const isFinal = report.status === "finalized";
   const [showAdd, setShowAdd] = useState(false);
@@ -118,14 +121,14 @@ function ReportEditor({ report, onChanged }: { report: Report; onChanged: () => 
           {report.items.length > 0 && <span className="text-xs text-muted-foreground">{agreed} agreed · {disputes} disputed</span>}
         </div>
         <div className="flex gap-2">
-          {isDraft && <Button size="sm" onClick={publish} disabled={!report.items.length}>Publish</Button>}
-          {(report.status === "tenant_agreed" || report.status === "disputed") && <Button size="sm" variant="outline" onClick={finalize}><Lock className="w-3.5 h-3.5 mr-1" /> Finalize</Button>}
+          {isDraft && <Button size="sm" onClick={publish} disabled={!report.items.length}>{t("condition_report.publish")}</Button>}
+          {(report.status === "tenant_agreed" || report.status === "disputed") && <Button size="sm" variant="outline" onClick={finalize}><Lock className="w-3.5 h-3.5 mr-1" /> {t("condition_report.finalize")}</Button>}
         </div>
       </div>
 
       {report.content_hash && (
         <div className="px-4 pt-2 text-[11px] text-muted-foreground flex items-center gap-1.5" title={report.content_hash}>
-          <ShieldCheck className="w-3.5 h-3.5" /> Tamper-evident · SHA-256 {report.content_hash.slice(0, 16)}…
+          <ShieldCheck className="w-3.5 h-3.5" /> {t("condition_report.tamper_evident")} {report.content_hash.slice(0, 16)}…
         </div>
       )}
 
@@ -137,17 +140,18 @@ function ReportEditor({ report, onChanged }: { report: Report; onChanged: () => 
         {isDraft && (showAdd ? (
           <AddItemForm onAdd={addItem} onCancel={() => setShowAdd(false)} />
         ) : (
-          <Button size="sm" variant="outline" onClick={() => setShowAdd(true)}><Plus className="w-3.5 h-3.5 mr-1" /> Add item</Button>
+          <Button size="sm" variant="outline" onClick={() => setShowAdd(true)}><Plus className="w-3.5 h-3.5 mr-1" /> {t("condition_report.add_item")}</Button>
         ))}
-        {!report.items.length && !isDraft && <p className="text-sm text-muted-foreground">No items.</p>}
+        {!report.items.length && !isDraft && <p className="text-sm text-muted-foreground">{t("condition_report.no_items")}</p>}
       </div>
 
-      {isFinal && <div className="px-4 py-2 border-t bg-gray-50 text-xs text-muted-foreground flex items-center gap-1.5"><Lock className="w-3.5 h-3.5" /> Finalized — locked for evidence.</div>}
+      {isFinal && <div className="px-4 py-2 border-t bg-gray-50 text-xs text-muted-foreground flex items-center gap-1.5"><Lock className="w-3.5 h-3.5" /> {t("condition_report.finalized_locked")}</div>}
     </div>
   );
 }
 
 function ItemEditor({ item, reportId, editable, onChanged }: { item: Item; reportId: number; editable: boolean; onChanged: () => void }) {
+  const { t } = useTranslation();
   const [uploading, setUploading] = useState(false);
   const decision = item.responses[0]?.decision ?? null;
 
@@ -186,7 +190,7 @@ function ItemEditor({ item, reportId, editable, onChanged }: { item: Item; repor
       {(adminPhotos.length > 0 || tenantPhotos.length > 0) && (
         <div className="flex gap-2 mt-2 flex-wrap">
           {adminPhotos.map((p) => <a key={p.id} href={p.file_url} target="_blank" rel="noreferrer"><img src={p.thumbnail_url ?? p.file_url} className="h-14 w-14 object-cover rounded border" alt="" /></a>)}
-          {tenantPhotos.map((p) => <a key={p.id} href={p.file_url} target="_blank" rel="noreferrer"><img src={p.thumbnail_url ?? p.file_url} className="h-14 w-14 object-cover rounded border border-red-300" alt="" title="tenant evidence" /></a>)}
+          {tenantPhotos.map((p) => <a key={p.id} href={p.file_url} target="_blank" rel="noreferrer"><img src={p.thumbnail_url ?? p.file_url} className="h-14 w-14 object-cover rounded border border-red-300" alt="" title={t("condition_report.tenant_evidence")} /></a>)}
         </div>
       )}
 
@@ -194,7 +198,7 @@ function ItemEditor({ item, reportId, editable, onChanged }: { item: Item; repor
 
       {editable && (
         <label className="inline-flex items-center gap-1.5 mt-2 text-xs text-primary cursor-pointer">
-          <Upload className="w-3.5 h-3.5" /> {uploading ? "Uploading…" : "Add photo"}
+          <Upload className="w-3.5 h-3.5" /> {uploading ? t("condition_report.uploading") : t("condition_report.add_photo")}
           <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadPhoto(f); }} />
         </label>
       )}
@@ -203,6 +207,7 @@ function ItemEditor({ item, reportId, editable, onChanged }: { item: Item; repor
 }
 
 function AddItemForm({ onAdd, onCancel }: { onAdd: (p: { area_key: string; label: string; description: string; condition_rating: string }) => void; onCancel: () => void }) {
+  const { t } = useTranslation();
   const [area_key, setArea] = useState("living");
   const [label, setLabel] = useState("");
   const [description, setDescription] = useState("");
@@ -213,15 +218,15 @@ function AddItemForm({ onAdd, onCancel }: { onAdd: (p: { area_key: string; label
         <select value={area_key} onChange={(e) => setArea(e.target.value)} className="border rounded px-2 py-1.5 text-sm">
           {AREA_KEYS.map((a) => <option key={a} value={a}>{a}</option>)}
         </select>
-        <input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Label (e.g. Living room floor)" className="border rounded px-2 py-1.5 text-sm flex-1 min-w-[160px]" />
+        <input value={label} onChange={(e) => setLabel(e.target.value)} placeholder={t("condition_report.placeholder_label")} className="border rounded px-2 py-1.5 text-sm flex-1 min-w-[160px]" />
         <select value={condition_rating} onChange={(e) => setRating(e.target.value)} className="border rounded px-2 py-1.5 text-sm">
           {RATINGS.map((r) => <option key={r} value={r}>{r}</option>)}
         </select>
       </div>
-      <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Notes / 특이사항" className="w-full border rounded px-2 py-1.5 text-sm min-h-[56px]" />
+      <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("condition_report.placeholder_item_notes")} className="w-full border rounded px-2 py-1.5 text-sm min-h-[56px]" />
       <div className="flex gap-2">
-        <Button size="sm" disabled={!label.trim()} onClick={() => onAdd({ area_key, label: label.trim(), description, condition_rating })}>Add</Button>
-        <Button size="sm" variant="ghost" onClick={onCancel}>Cancel</Button>
+        <Button size="sm" disabled={!label.trim()} onClick={() => onAdd({ area_key, label: label.trim(), description, condition_rating })}>{t("common.add")}</Button>
+        <Button size="sm" variant="ghost" onClick={onCancel}>{t("common.cancel")}</Button>
       </div>
     </div>
   );

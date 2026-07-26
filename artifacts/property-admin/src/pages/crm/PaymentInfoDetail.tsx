@@ -106,7 +106,7 @@ export default function PaymentInfoDetail() {
     }
   };
 
-  if (!isNew && isLoading) return <Layout><p className="p-6 text-sm text-muted-foreground">Loading…</p></Layout>;
+  if (!isNew && isLoading) return <Layout><p className="p-6 text-sm text-muted-foreground">{t("common.loading")}</p></Layout>;
 
   return (
     <Layout>
@@ -129,8 +129,8 @@ export default function PaymentInfoDetail() {
           <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">{t("payment_info.section_general")}</h3>
           <div className="grid gap-1.5">
             <Label>{t("common.name")} *</Label>
-            <Input {...register("name", { required: true })} placeholder="e.g. NAB Bank Transfer" />
-            {errors.name && <p className="text-xs text-destructive">Name is required</p>}
+            <Input {...register("name", { required: true })} placeholder={t("payment_info.ph_name")} />
+            {errors.name && <p className="text-xs text-destructive">{t("payment_info.name_required")}</p>}
           </div>
 
           <div className="grid gap-1.5">
@@ -139,10 +139,10 @@ export default function PaymentInfoDetail() {
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="BankTransfer">Bank Transfer</SelectItem>
+                  <SelectItem value="BankTransfer">{t("payment_info.type_bank_transfer")}</SelectItem>
                   <SelectItem value="Stripe">Stripe</SelectItem>
-                  <SelectItem value="Cash">Cash</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
+                  <SelectItem value="Cash">{t("payment_info.type_cash")}</SelectItem>
+                  <SelectItem value="Other">{t("payment_info.type_other")}</SelectItem>
                 </SelectContent>
               </Select>
             )} />
@@ -153,25 +153,25 @@ export default function PaymentInfoDetail() {
               <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2 mt-4">{t("payment_info.section_bank")}</h3>
               <div className="grid gap-1.5">
                 <Label>{t("payment_info.label_bank_name")}</Label>
-                <Input {...register("bank_name")} placeholder="e.g. NAB" />
+                <Input {...register("bank_name")} placeholder={t("payment_info.ph_bank_name")} />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
                   <Label>{t("payment_info.label_bsb")}</Label>
-                  <Input {...register("bsb_number")} placeholder="e.g. 083-004" />
+                  <Input {...register("bsb_number")} placeholder={t("payment_info.ph_bsb")} />
                 </div>
                 <div className="grid gap-1.5">
                   <Label>{t("payment_info.label_account_number")}</Label>
-                  <Input {...register("account_number")} placeholder="e.g. 12345678" />
+                  <Input {...register("account_number")} placeholder={t("payment_info.ph_account_number")} />
                 </div>
               </div>
               <div className="grid gap-1.5">
                 <Label>{t("payment_info.label_account_name")}</Label>
-                <Input {...register("account_name")} placeholder={`e.g. ${APP_NAME} Pty Ltd`} />
+                <Input {...register("account_name")} placeholder={t("payment_info.ph_account_name", { name: APP_NAME })} />
               </div>
               <div className="grid gap-1.5">
-                <Label>SWIFT Code</Label>
-                <Input {...register("swift_code")} placeholder="e.g. NATAAU33" />
+                <Label>{t("payment_info.label_swift")}</Label>
+                <Input {...register("swift_code")} placeholder={t("payment_info.ph_swift")} />
               </div>
             </>
           )}
@@ -188,7 +188,7 @@ export default function PaymentInfoDetail() {
 
           <div className="grid gap-1.5">
             <Label>{t("common.description")}</Label>
-            <Input {...register("description")} placeholder="Optional notes" />
+            <Input {...register("description")} placeholder={t("payment_info.ph_notes")} />
           </div>
 
           <div className="grid gap-1.5">
@@ -197,8 +197,8 @@ export default function PaymentInfoDetail() {
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
+                  <SelectItem value="Active">{t("common.active")}</SelectItem>
+                  <SelectItem value="Inactive">{t("common.inactive")}</SelectItem>
                 </SelectContent>
               </Select>
             )} />

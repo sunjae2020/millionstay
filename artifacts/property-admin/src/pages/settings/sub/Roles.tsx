@@ -119,7 +119,7 @@ export default function RolesPage() {
             <div className="rounded-lg border bg-white p-4 flex gap-2 items-end">
               <label className="text-sm flex-1 max-w-xs">
                 <span className="block text-xs text-muted-foreground mb-1">{t("settings_roles.new_role_name", "New role name")}</span>
-                <input value={newName} onChange={(e) => setNewName(e.target.value)} className="border rounded px-2 py-1.5 text-sm w-full" placeholder="e.g. Finance" />
+                <input value={newName} onChange={(e) => setNewName(e.target.value)} className="border rounded px-2 py-1.5 text-sm w-full" placeholder={t("settings_roles.new_role_name_placeholder", "e.g. Finance")} />
               </label>
               <Button size="sm" disabled={!newName.trim() || createMut.isPending} onClick={() => createMut.mutate({ name: newName.trim(), permissions: Object.fromEntries(resources.map((r) => [r, "read"])) as Record<string, Level> })}>
                 {t("common.create", "Create")}

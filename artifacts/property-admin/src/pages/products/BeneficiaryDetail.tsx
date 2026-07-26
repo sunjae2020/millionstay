@@ -131,7 +131,7 @@ export default function BeneficiaryDetail() {
   if (!isNew && isLoading) {
     return (
       <Layout>
-        <div className="p-8 text-center text-muted-foreground">Loading...</div>
+        <div className="p-8 text-center text-muted-foreground">{t('common.loading')}</div>
       </Layout>
     );
   }
@@ -165,7 +165,7 @@ export default function BeneficiaryDetail() {
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
                 <Label>{t('beneficiary.label_name')} <span className="text-destructive">*</span></Label>
-                <Input {...register("name", { required: true })} placeholder="e.g. ABC Realty Commission" />
+                <Input {...register("name", { required: true })} placeholder={t('beneficiary.ph_name')} />
               </div>
 
               <div>
@@ -300,7 +300,7 @@ export default function BeneficiaryDetail() {
                     min={0}
                     max={100}
                     {...register("split_percentage", { valueAsNumber: true })}
-                    placeholder="e.g. 10"
+                    placeholder={t('beneficiary.ph_percentage')}
                   />
                   <p className="text-xs text-muted-foreground mt-1">{t('beneficiary.split_percentage_desc')}</p>
                 </div>
@@ -312,7 +312,7 @@ export default function BeneficiaryDetail() {
                     step="0.01"
                     min={0}
                     {...register("fixed_amount", { valueAsNumber: true })}
-                    placeholder="e.g. 80.00"
+                    placeholder={t('beneficiary.ph_fixed_amount')}
                   />
                   <p className="text-xs text-muted-foreground mt-1">{t('beneficiary.fixed_amount_desc')}</p>
                 </div>

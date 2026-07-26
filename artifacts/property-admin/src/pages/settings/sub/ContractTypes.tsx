@@ -44,7 +44,7 @@ export default function ContractTypesPage() {
   const columns: ColumnDef<any>[] = useMemo(() => [
     {
       key: "name",
-      header: "Name",
+      header: t("common.name"),
       hideable: false,
       cell: (ct) => (
         <>
@@ -55,30 +55,30 @@ export default function ContractTypesPage() {
     },
     {
       key: "contract_security",
-      header: "Security",
+      header: t("contractTypes.col_security"),
       cell: (ct) => <Badge variant="outline">{ct.contract_security}</Badge>,
     },
     {
       key: "require_passport",
-      header: "Passport",
+      header: t("contractTypes.col_passport"),
       cell: (ct) => <span className="text-sm">{ct.require_passport ? "✓" : "—"}</span>,
     },
     {
       key: "require_visa",
-      header: "Visa",
+      header: t("contractTypes.col_visa"),
       cell: (ct) => <span className="text-sm">{ct.require_visa ? "✓" : "—"}</span>,
     },
     {
       key: "require_enrollment",
-      header: "Enrollment",
+      header: t("contractTypes.col_enrollment"),
       cell: (ct) => <span className="text-sm">{ct.require_enrollment ? "✓" : "—"}</span>,
     },
     {
       key: "is_active",
-      header: "Status",
+      header: t("common.status"),
       cell: (ct) => (
         <Badge className={ct.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}>
-          {ct.is_active ? "Active" : "Inactive"}
+          {ct.is_active ? t("common.active") : t("common.inactive")}
         </Badge>
       ),
     },
@@ -94,7 +94,7 @@ export default function ContractTypesPage() {
         </Button>
       ),
     },
-  ], []);
+  ], [t]);
 
   const save = useMutation({
     mutationFn: async () => {
@@ -109,13 +109,13 @@ export default function ContractTypesPage() {
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: editing ? "Updated" : "Created", description: "Contract type saved." });
+      toast({ title: editing ? t("common.updated") : t("common.created"), description: t("contractTypes.toast_saved") });
       qc.invalidateQueries({ queryKey: ["contract-types"] });
       setOpen(false);
       setEditing(null);
       setForm({ name: "", description: "", contract_security: "Public", require_passport: false, require_visa: false, require_enrollment: false, is_active: true });
     },
-    onError: () => toast({ title: "Error", description: "Failed to save.", variant: "destructive" }),
+    onError: () => toast({ title: t("common.error"), description: t("contractTypes.toast_save_failed"), variant: "destructive" }),
   });
 
   function openEdit(t: any) {
@@ -139,11 +139,11 @@ export default function ContractTypesPage() {
     <Layout>
       <PageHeader
         title={<><FileText className="h-5 w-5" />{t("nav.contract_types")}</>}
-        subtitle="Define contract type categories and requirements"
+        subtitle={t("contractTypes.subtitle")}
       />
       <div className="px-8 py-6">
         <div className="flex gap-3 mb-4">
-          <Button onClick={openNew}><Plus className="h-4 w-4 mr-2" />New Type</Button>
+          <Button onClick={openNew}><Plus className="h-4 w-4 mr-2" />{t("contractTypes.new_type")}</Button>
         </div>
 
         <DataTable
@@ -152,7 +152,7 @@ export default function ContractTypesPage() {
           data={filtered}
           isLoading={isLoading}
           rowKey={(ct) => ct.id}
-          emptyText="No contract types found"
+          emptyText={t("contractTypes.empty")}
           selection={{ enable: true, resource: "contract-types", onChanged: () => qc.invalidateQueries({ queryKey: ["contract-types"] }) }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
@@ -160,7 +160,7 @@ export default function ContractTypesPage() {
             <div className="flex flex-wrap items-center gap-2">
               <div className="relative w-56">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input className="pl-9" placeholder="Search types..." value={q} onChange={e => setQ(e.target.value)} />
+                <Input className="pl-9" placeholder={t("contractTypes.search_ph")} value={q} onChange={e => setQ(e.target.value)} />
               </div>
             </div>
           }
@@ -170,19 +170,19 @@ export default function ContractTypesPage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{editing ? "Edit Contract Type" : "New Contract Type"}</DialogTitle>
+            <DialogTitle>{editing ? t("contractTypes.edit_title") : t("contractTypes.new_title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
-              <Label>Name *</Label>
-              <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="mt-1" placeholder="e.g. Standard Residential" />
+              <Label>{t("common.name")} *</Label>
+              <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="mt-1" placeholder={t("contractTypes.name_ph")} />
             </div>
             <div>
-              <Label>Description</Label>
+              <Label>{t("common.description")}</Label>
               <Input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="mt-1" />
             </div>
             <div>
-              <Label>Security Level</Label>
+              <Label>{t("contractTypes.label_security_level")}</Label>
               <Select value={form.contract_security} onValueChange={v => setForm(f => ({ ...f, contract_security: v }))}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -191,23 +191,23 @@ export default function ContractTypesPage() {
               </Select>
             </div>
             <div className="space-y-2 pt-2">
-              <Label className="text-sm font-medium">Requirements</Label>
-              {([["require_passport", "Passport"], ["require_visa", "Visa"], ["require_enrollment", "Enrollment"]] as const).map(([field, label]) => (
+              <Label className="text-sm font-medium">{t("contractTypes.label_requirements")}</Label>
+              {(["require_passport", "require_visa", "require_enrollment"] as const).map((field) => (
                 <div key={field} className="flex items-center gap-2">
                   <Switch checked={form[field]} onCheckedChange={v => setForm(f => ({ ...f, [field]: v }))} />
-                  <Label className="font-normal">Require {label}</Label>
+                  <Label className="font-normal">{t(`contractTypes.${field}`)}</Label>
                 </div>
               ))}
               <div className="flex items-center gap-2">
                 <Switch checked={form.is_active} onCheckedChange={v => setForm(f => ({ ...f, is_active: v }))} />
-                <Label className="font-normal">Active</Label>
+                <Label className="font-normal">{t("common.active")}</Label>
               </div>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>{t("common.cancel")}</Button>
             <Button onClick={() => save.mutate()} disabled={!form.name || save.isPending}>
-              {save.isPending ? "Saving..." : "Save"}
+              {save.isPending ? t("common.saving") : t("common.save")}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -60,73 +60,73 @@ export default function BookingReportPage() {
   const meta = data?.meta ?? {};
 
   const columns: ColumnDef<any>[] = useMemo(() => [
-    { key: "booking_ref", header: "Booking Ref", cell: (r) => <span className="font-mono text-sm text-primary">{r.booking_ref}</span> },
-    { key: "guest_name", header: "Guest", cell: (r) => <span className="text-sm">{r.guest_name}</span> },
-    { key: "space_name", header: "Space", cell: (r) => <span className="text-sm text-muted-foreground">{r.space_name}</span> },
-    { key: "check_in_date", header: "Check-In", cell: (r) => <span className="text-sm">{r.check_in_date}</span> },
-    { key: "check_out_date", header: "Check-Out", cell: (r) => <span className="text-sm">{r.check_out_date}</span> },
-    { key: "weeks", header: "Weeks", align: "right", cell: (r) => <span className="text-sm">{r.weeks}</span> },
-    { key: "agreed_weekly_rate", header: "Rate", align: "right", cell: (r) => <span className="text-sm">${r.agreed_weekly_rate}/wk</span> },
-    { key: "total_rent", header: "Total", align: "right", cell: (r) => <span className="text-sm font-medium">${Number(r.total_rent ?? 0).toFixed(2)}</span> },
+    { key: "booking_ref", header: t("bookingReport.col_booking_ref"), cell: (r) => <span className="font-mono text-sm text-primary">{r.booking_ref}</span> },
+    { key: "guest_name", header: t("bookingReport.col_guest"), cell: (r) => <span className="text-sm">{r.guest_name}</span> },
+    { key: "space_name", header: t("bookingReport.col_space"), cell: (r) => <span className="text-sm text-muted-foreground">{r.space_name}</span> },
+    { key: "check_in_date", header: t("bookingReport.col_check_in"), cell: (r) => <span className="text-sm">{r.check_in_date}</span> },
+    { key: "check_out_date", header: t("bookingReport.col_check_out"), cell: (r) => <span className="text-sm">{r.check_out_date}</span> },
+    { key: "weeks", header: t("bookingReport.col_weeks"), align: "right", cell: (r) => <span className="text-sm">{r.weeks}</span> },
+    { key: "agreed_weekly_rate", header: t("bookingReport.col_rate"), align: "right", cell: (r) => <span className="text-sm">${r.agreed_weekly_rate}/wk</span> },
+    { key: "total_rent", header: t("common.total"), align: "right", cell: (r) => <span className="text-sm font-medium">${Number(r.total_rent ?? 0).toFixed(2)}</span> },
     {
       key: "booking_status",
-      header: "Status",
+      header: t("common.status"),
       cell: (r) => (
         <Badge className={STATUS_COLORS[r.booking_status] ?? "bg-gray-100 text-gray-700"}>
           {r.booking_status}
         </Badge>
       ),
     },
-  ], []);
+  ], [t]);
 
   return (
     <Layout>
       <PageHeader
         title={<><BarChart2 className="h-5 w-5" />{t("nav.booking_report")}</>}
-        subtitle="Occupancy and booking analytics"
+        subtitle={t("bookingReport.subtitle")}
       />
       <div className="px-8 py-6">
         <div className="bg-white border rounded-lg p-4 mb-4 flex flex-wrap gap-4 items-end">
           <div>
-            <Label className="text-xs">From Date</Label>
+            <Label className="text-xs">{t("bookingReport.label_from_date")}</Label>
             <DateInput value={from} onChange={setFrom} className="mt-1 w-40" />
           </div>
           <div>
-            <Label className="text-xs">To Date</Label>
+            <Label className="text-xs">{t("bookingReport.label_to_date")}</Label>
             <DateInput value={to} onChange={setTo} className="mt-1 w-40" />
           </div>
           <div>
-            <Label className="text-xs">Status</Label>
+            <Label className="text-xs">{t("common.status")}</Label>
             <Select value={status} onValueChange={setStatus}>
               <SelectTrigger className="mt-1 w-44"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="_all">All statuses</SelectItem>
+                <SelectItem value="_all">{t("bookingReport.all_statuses")}</SelectItem>
                 {BOOKING_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <Button onClick={() => refetch()} variant="outline">
-            <Search className="h-4 w-4 mr-2" />Run Report
+            <Search className="h-4 w-4 mr-2" />{t("bookingReport.run_report")}
           </Button>
           <Button variant="outline" onClick={() => exportCsv(rows)} disabled={!rows.length}>
-            <Download className="h-4 w-4 mr-2" />Export CSV
+            <Download className="h-4 w-4 mr-2" />{t("bookingReport.export_csv")}
           </Button>
         </div>
 
         {rows.length > 0 && (
           <div className="grid grid-cols-3 gap-4 mb-4">
             <div className="bg-white border rounded-lg p-4">
-              <p className="text-sm text-muted-foreground">Total Bookings</p>
+              <p className="text-sm text-muted-foreground">{t("bookingReport.total_bookings")}</p>
               <p className="text-2xl font-bold mt-1">{meta.total}</p>
             </div>
             <div className="bg-white border rounded-lg p-4">
-              <p className="text-sm text-muted-foreground">Total Revenue</p>
+              <p className="text-sm text-muted-foreground">{t("bookingReport.total_revenue")}</p>
               <p className="text-2xl font-bold mt-1">
                 ${Number(meta.total_revenue ?? 0).toLocaleString("en-AU", { minimumFractionDigits: 2 })} AUD
               </p>
             </div>
             <div className="bg-white border rounded-lg p-4">
-              <p className="text-sm text-muted-foreground">Avg per Booking</p>
+              <p className="text-sm text-muted-foreground">{t("bookingReport.avg_per_booking")}</p>
               <p className="text-2xl font-bold mt-1">
                 ${meta.total > 0 ? Number(meta.total_revenue / meta.total).toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"} AUD
               </p>
@@ -140,12 +140,12 @@ export default function BookingReportPage() {
           data={rows}
           isLoading={isLoading}
           rowKey={(r) => r.id}
-          emptyText="No bookings found. Adjust filters and run the report."
+          emptyText={t("bookingReport.empty")}
         />
 
         {rows.length > 0 && (
           <div className="mt-3 flex justify-end gap-6 text-sm font-medium text-muted-foreground">
-            <span>Total: {meta.total} bookings</span>
+            <span>{t("bookingReport.summary_total", { count: meta.total })}</span>
             <span>${Number(meta.total_revenue ?? 0).toLocaleString("en-AU", { minimumFractionDigits: 2 })}</span>
           </div>
         )}

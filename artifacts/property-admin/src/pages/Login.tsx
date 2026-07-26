@@ -122,7 +122,7 @@ export default function LoginPage() {
             ? <span className="font-display font-extrabold tracking-tight text-white text-xl whitespace-nowrap">{APP_NAME}</span>
             : <img src={LOGO_URL} alt={APP_NAME} className={HAS_TENANT_LOGO ? "h-[4.5rem] w-auto" : "h-9 w-auto"} style={HAS_TENANT_LOGO ? { filter: "brightness(0) invert(1)" } : undefined} />}
           <p className="text-white/30 text-[10px] tracking-[0.2em] uppercase mt-2 ml-0.5">
-            Admin Portal
+            {t("login.admin_portal")}
           </p>
         </div>
 
@@ -130,20 +130,20 @@ export default function LoginPage() {
         <div className="relative z-10 space-y-7">
           <div>
             <h2 className="text-[2.4rem] font-bold text-white leading-[1.2]">
-              Manage your<br />
-              <span style={{ color: BRAND }}>properties</span><br />
-              with confidence.
+              {t("login.hero_line1")}<br />
+              <span style={{ color: BRAND }}>{t("login.hero_line2")}</span><br />
+              {t("login.hero_line3")}
             </h2>
             <p className="text-white/45 text-sm mt-4 leading-relaxed max-w-[280px]">
-              A unified platform for listings, bookings, contracts, and tenant relationships — all in one place.
+              {t("login.hero_subtitle")}
             </p>
           </div>
 
           <div className="flex gap-10">
             {[
-              { num: "500+", label: "Properties" },
-              { num: "12k+", label: "Bookings" },
-              { num: "99.9%", label: "Uptime" },
+              { num: "500+", label: t("login.stat_properties") },
+              { num: "12k+", label: t("login.stat_bookings") },
+              { num: "99.9%", label: t("login.stat_uptime") },
             ].map(({ num, label }) => (
               <div key={label}>
                 <p className="text-white text-2xl font-bold">{num}</p>
@@ -155,7 +155,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div className="relative z-10">
-          <p className="text-white/20 text-xs">© 2026 {APP_NAME} · All rights reserved</p>
+          <p className="text-white/20 text-xs">{t("login.copyright", { year: 2026 })}</p>
         </div>
       </div>
 
@@ -214,7 +214,7 @@ export default function LoginPage() {
                     className="text-xs font-medium hover:underline"
                     style={{ color: BRAND }}
                   >
-                    Forgot password?
+                    {t("login.forgot_password")}
                   </Link>
                 </div>
                 <div className="relative">
@@ -260,13 +260,13 @@ export default function LoginPage() {
 
             <div className="mt-6 pt-5 border-t border-slate-200 text-center space-y-2">
               <p className="text-xs text-slate-500">
-                Don't have an account?{" "}
+                {t("login.no_account")}{" "}
                 <Link href="/register" className="font-semibold hover:underline" style={{ color: BRAND }}>
-                  Request Access
+                  {t("login.request_access")}
                 </Link>
               </p>
               <p className="text-center text-xs text-slate-400">
-                Secure access · {APP_NAME} Admin v2
+                {t("login.secure_footer")}
               </p>
               <p className="text-center text-xs text-slate-400">
                 <a
@@ -275,7 +275,7 @@ export default function LoginPage() {
                   rel="noopener noreferrer"
                   className="hover:text-slate-600 hover:underline"
                 >
-                  Privacy Policy
+                  {t("login.privacy_policy")}
                 </a>
               </p>
             </div>

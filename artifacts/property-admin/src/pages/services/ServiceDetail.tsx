@@ -21,10 +21,10 @@ const STATUS_COLORS: Record<string, string> = {
   Archived: "bg-red-100 text-red-600",
 };
 
-const TYPE_CONFIG: Record<string, { label: string; icon: React.ElementType; description: string }> = {
-  one_time:  { label: "One-time Fee",      icon: Zap,      description: "Flat fee charged once. e.g. Admission, Cleaning, Deposit." },
-  scheduled: { label: "Scheduled Service", icon: Calendar, description: "Service that requires date/time scheduling. e.g. Airport Pickup." },
-  physical:  { label: "Physical Product",  icon: Package,  description: "Tangible item delivered to the guest. e.g. SIM Card, Linen Pack." },
+const TYPE_CONFIG: Record<string, { labelKey: string; icon: React.ElementType; descKey: string }> = {
+  one_time:  { labelKey: "service.type_one_time",  icon: Zap,      descKey: "service.type_one_time_desc" },
+  scheduled: { labelKey: "service.type_scheduled", icon: Calendar, descKey: "service.type_scheduled_desc" },
+  physical:  { labelKey: "service.type_physical",  icon: Package,  descKey: "service.type_physical_desc" },
 };
 
 async function fetchService(id: string) {
@@ -125,13 +125,13 @@ export default function ServiceDetail() {
       return res.json();
     },
     onSuccess: (data) => {
-      toast({ title: "Saved", description: "Service saved successfully." });
+      toast({ title: t("service.toast_saved"), description: t("service.toast_saved_desc") });
       qc.invalidateQueries({ queryKey: ["services"] });
       if (isNew) navigate(`/services/${data.id}`);
       else qc.invalidateQueries({ queryKey: ["service", id] });
     },
     onError: (err: Error) => {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: t("common.error"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -169,7 +169,7 @@ export default function ServiceDetail() {
           <div className="p-5 space-y-4">
             <div>
               <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('service.label_name')} *</Label>
-              <Input {...register("name")} placeholder="e.g. Airport Pickup — Melbourne" />
+              <Input {...register("name")} placeholder={t("service.name_placeholder")} />
             </div>
             <div>
               <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('service.label_description')}</Label>
@@ -185,8 +185,8 @@ export default function ServiceDetail() {
                       <SelectItem key={key} value={key}>
                         <div className="flex items-center gap-2">
                           <conf.icon className="h-3.5 w-3.5" />
-                          <span>{conf.label}</span>
-                          <span className="text-xs text-muted-foreground hidden sm:inline">— {conf.description}</span>
+                          <span>{t(conf.labelKey)}</span>
+                          <span className="text-xs text-muted-foreground hidden sm:inline">— {t(conf.descKey)}</span>
                         </div>
                       </SelectItem>
                     ))}
@@ -195,7 +195,7 @@ export default function ServiceDetail() {
               )} />
               {typeConf && (
                 <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1.5">
-                  <Icon className="h-3 w-3" />{typeConf.description}
+                  <Icon className="h-3 w-3" />{t(typeConf.descKey)}
                 </p>
               )}
             </div>
@@ -263,7 +263,7 @@ export default function ServiceDetail() {
                 <div>
                   <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('service.label_scheduling_notes')}</Label>
                   <Textarea {...register("scheduling_notes")} rows={3}
-                    placeholder="e.g. Please provide: arrival date, flight number, airline, number of passengers." />
+                    placeholder={t("service.scheduling_notes_placeholder")} />
                 </div>
               )}
             </div>
@@ -305,7 +305,7 @@ export default function ServiceDetail() {
               {watchedHasVariants && (
                 <div>
                   <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t('service.label_variant_options')}</Label>
-                  <Input {...register("variant_options")} placeholder="e.g. Small, Medium, Large" />
+                  <Input {...register("variant_options")} placeholder={t("service.variant_options_placeholder")} />
                   <p className="text-xs text-muted-foreground mt-1">{t('service.variant_options_desc')}</p>
                 </div>
               )}

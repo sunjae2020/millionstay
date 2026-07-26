@@ -14,7 +14,7 @@ export default function DesignPage() {
             {t("nav.design")}
           </>
         }
-        subtitle="Logo, favicon, colours, dark mode and display preferences"
+        subtitle={t("settings_design.page_subtitle")}
       />
       <div className="max-w-5xl px-8 py-6">
         <Design />

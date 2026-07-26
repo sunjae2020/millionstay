@@ -14,7 +14,7 @@ export default function EmailTemplatesPage() {
             {t("nav.email_templates")}
           </>
         }
-        subtitle="Customise automated email notifications"
+        subtitle={t("settings_email_templates.page_subtitle")}
       />
       <div className="max-w-2xl px-8 py-6">
         <Email />

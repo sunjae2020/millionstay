@@ -43,13 +43,13 @@ export default function ProductGroupsPage() {
   const columns: ColumnDef<ProductGroup>[] = useMemo(() => [
     {
       key: "name",
-      header: "Name",
+      header: t("common.name"),
       hideable: false,
       cell: (g) => <div className="font-medium">{g.name}</div>,
     },
     {
       key: "display_order",
-      header: "Display Order",
+      header: t("productGroups.display_order"),
       align: "right",
       cell: (g) => <span className="text-muted-foreground text-sm">{g.display_order}</span>,
     },
@@ -70,7 +70,7 @@ export default function ProductGroupsPage() {
         </div>
       ),
     },
-  ], []);
+  ], [t]);
 
   const save = useMutation({
     mutationFn: async () => {
@@ -81,11 +81,11 @@ export default function ProductGroupsPage() {
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: editing ? "Updated" : "Created", description: "Product group saved." });
+      toast({ title: editing ? t("common.updated") : t("common.created"), description: t("productGroups.toast_saved") });
       qc.invalidateQueries({ queryKey: ["product-groups"] });
       setOpen(false); setEditing(null); setForm(EMPTY);
     },
-    onError: (e: any) => toast({ title: "Error", description: e.message || "Failed to save.", variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("common.error"), description: e.message || t("productGroups.toast_save_failed"), variant: "destructive" }),
   });
 
   const remove = useMutation({
@@ -94,11 +94,11 @@ export default function ProductGroupsPage() {
       if (!res.ok) throw new Error(await res.text());
     },
     onSuccess: () => {
-      toast({ title: "Deleted", description: "Product group removed." });
+      toast({ title: t("common.deleted"), description: t("productGroups.toast_deleted") });
       qc.invalidateQueries({ queryKey: ["product-groups"] });
       setDeleteId(null);
     },
-    onError: () => toast({ title: "Error", description: "Failed to delete.", variant: "destructive" }),
+    onError: () => toast({ title: t("common.error"), description: t("productGroups.toast_delete_failed"), variant: "destructive" }),
   });
 
   function openEdit(g: any) {
@@ -117,12 +117,12 @@ export default function ProductGroupsPage() {
     <Layout>
       <PageHeader
         title={<><Layers className="h-5 w-5" />{t("nav.product_groups")}</>}
-        subtitle="Organise products into logical groups"
+        subtitle={t("productGroups.subtitle")}
       />
 
       <div className="px-8 py-6">
         <div className="flex gap-3 mb-4">
-          <Button onClick={openNew}><Plus className="h-4 w-4 mr-2" />New Group</Button>
+          <Button onClick={openNew}><Plus className="h-4 w-4 mr-2" />{t("productGroups.new_group")}</Button>
         </div>
 
         <DataTable
@@ -131,7 +131,7 @@ export default function ProductGroupsPage() {
           data={filtered}
           isLoading={isLoading}
           rowKey={(g) => g.id}
-          emptyText="No product groups found"
+          emptyText={t("productGroups.empty")}
           selection={{ enable: true, resource: "product-groups", onChanged: () => qc.invalidateQueries({ queryKey: ["product-groups"] }) }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
@@ -139,7 +139,7 @@ export default function ProductGroupsPage() {
             <div className="flex flex-wrap items-center gap-2">
               <div className="relative w-56">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input className="pl-9" placeholder="Search groups…" value={q} onChange={(e) => setQ(e.target.value)} />
+                <Input className="pl-9" placeholder={t("productGroups.search_ph")} value={q} onChange={(e) => setQ(e.target.value)} />
               </div>
             </div>
           }
@@ -151,21 +151,21 @@ export default function ProductGroupsPage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>{editing ? "Edit Product Group" : "New Product Group"}</DialogTitle>
+            <DialogTitle>{editing ? t("productGroups.edit_title") : t("productGroups.new_title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
-              <Label>Name *</Label>
+              <Label>{t("common.name")} *</Label>
               <Input
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                 className="mt-1"
-                placeholder="e.g. Accommodation"
+                placeholder={t("productGroups.name_ph")}
                 autoFocus
               />
             </div>
             <div>
-              <Label>Display Order</Label>
+              <Label>{t("productGroups.display_order")}</Label>
               <Input
                 type="number"
                 value={form.display_order}
@@ -173,13 +173,13 @@ export default function ProductGroupsPage() {
                 className="mt-1 w-28"
                 min={0}
               />
-              <p className="text-xs text-muted-foreground mt-1">Lower numbers appear first</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("productGroups.display_order_hint")}</p>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>{t("common.cancel")}</Button>
             <Button onClick={() => save.mutate()} disabled={!form.name.trim() || save.isPending}>
-              {save.isPending ? "Saving…" : "Save"}
+              {save.isPending ? t("common.saving") : t("common.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -188,15 +188,15 @@ export default function ProductGroupsPage() {
       <AlertDialog open={deleteId !== null} onOpenChange={(o) => !o && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Product Group</AlertDialogTitle>
+            <AlertDialogTitle>{t("productGroups.delete_title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the group. Products using this group will lose their group assignment.
+              {t("productGroups.delete_desc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <Button variant="destructive" onClick={() => deleteId !== null && remove.mutate(deleteId)}>
-              Delete
+              {t("common.delete")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

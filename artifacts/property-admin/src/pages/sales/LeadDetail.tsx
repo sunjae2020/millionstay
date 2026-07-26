@@ -31,8 +31,9 @@ const LEAD_STATUS_COLORS: Record<string, string> = {
 };
 
 function LeadStatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation();
   const cls = LEAD_STATUS_COLORS[status] ?? "bg-gray-100 text-gray-700";
-  const label = status === "ConvertedToBooking" ? "Converted to Booking" : status;
+  const label = status === "ConvertedToBooking" ? t("lead.status_converted_booking") : status;
   return <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${cls}`}>{label}</span>;
 }
 
@@ -144,7 +145,7 @@ export default function LeadDetail() {
         qc.invalidateQueries({ queryKey: getListLeadsQueryKey() });
         if (id) qc.invalidateQueries({ queryKey: getGetLeadQueryKey(id) });
         setConvertOpen(false);
-        alert(`Converted! Booking Ref: ${data.booking_ref}`);
+        alert(t("lead.convert_success", { ref: data.booking_ref }));
       },
     },
   });
@@ -190,7 +191,7 @@ export default function LeadDetail() {
   const canConvert = !isNew && lead?.lead_status !== "ConvertedToBooking" && lead?.lead_status !== "Lost";
   const canMarkLost = !isNew && lead?.lead_status !== "Lost" && lead?.lead_status !== "ConvertedToBooking";
 
-  if (!isNew && isLoading) return <Layout><p className="p-6 text-sm text-muted-foreground">Loading…</p></Layout>;
+  if (!isNew && isLoading) return <Layout><p className="p-6 text-sm text-muted-foreground">{t("common.loading")}</p></Layout>;
 
   return (
     <Layout>
@@ -215,7 +216,7 @@ export default function LeadDetail() {
               <Button size="sm" variant="outline" className="gap-1.5 text-red-600 border-red-300 hover:bg-red-50"
                 onClick={() => markLostMutation.mutate({ id: id! })}
                 disabled={markLostMutation.isPending}>
-                <TrendingDown className="h-4 w-4" /> Mark as Lost
+                <TrendingDown className="h-4 w-4" /> {t("lead.btn_mark_lost")}
               </Button>
             )}
             {canConvert && (
@@ -240,33 +241,33 @@ export default function LeadDetail() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
                   <Label>{t("lead.label_first_name")} *</Label>
-                  <Input {...register("first_name", { required: true })} placeholder="First name" />
-                  {errors.first_name && <p className="text-xs text-destructive">Required</p>}
+                  <Input {...register("first_name", { required: true })} placeholder={t("lead.ph_first_name")} />
+                  {errors.first_name && <p className="text-xs text-destructive">{t("lead.err_required")}</p>}
                 </div>
                 <div className="grid gap-1.5">
                   <Label>{t("lead.label_last_name")} *</Label>
-                  <Input {...register("last_name", { required: true })} placeholder="Last name" />
-                  {errors.last_name && <p className="text-xs text-destructive">Required</p>}
+                  <Input {...register("last_name", { required: true })} placeholder={t("lead.ph_last_name")} />
+                  {errors.last_name && <p className="text-xs text-destructive">{t("lead.err_required")}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
                   <Label>{t("lead.label_email")} *</Label>
-                  <Input {...register("email", { required: true })} type="email" placeholder="email@example.com" />
-                  {errors.email && <p className="text-xs text-destructive">Required</p>}
+                  <Input {...register("email", { required: true })} type="email" placeholder={t("lead.ph_email")} />
+                  {errors.email && <p className="text-xs text-destructive">{t("lead.err_required")}</p>}
                 </div>
                 <div className="grid gap-1.5">
                   <Label>{t("lead.label_phone")}</Label>
-                  <Input {...register("phone")} placeholder="+61 4xx xxx xxx" />
+                  <Input {...register("phone")} placeholder={t("lead.ph_phone")} />
                 </div>
               </div>
               <div className="grid gap-1.5">
-                <Label>Nationality</Label>
+                <Label>{t("lead.label_nationality")}</Label>
                 <Controller name="nationality" control={control} render={({ field }) => (
                   <Select value={field.value || "__none"} onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}>
-                    <SelectTrigger><SelectValue placeholder="Select nationality" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t("lead.ph_nationality")} /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="__none">— None —</SelectItem>
+                      <SelectItem value="__none">{t("lead.opt_none")}</SelectItem>
                       {COUNTRY_OPTIONS.map((c) => (
                         <SelectItem key={c.code} value={c.code}>{c.label}</SelectItem>
                       ))}
@@ -286,16 +287,16 @@ export default function LeadDetail() {
                   <Label>{t("lead.label_source")}</Label>
                   <Controller name="lead_source" control={control} render={({ field }) => (
                     <Select value={field.value || "__none"} onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}>
-                      <SelectTrigger><SelectValue placeholder="Select source" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder={t("lead.ph_source")} /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="__none">— None —</SelectItem>
-                        <SelectItem value="Website">Website</SelectItem>
-                        <SelectItem value="Agent">Agent</SelectItem>
-                        <SelectItem value="Referral">Referral</SelectItem>
-                        <SelectItem value="WalkIn">Walk-In</SelectItem>
-                        <SelectItem value="OTA">OTA</SelectItem>
-                        <SelectItem value="Social">Social</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
+                        <SelectItem value="__none">{t("lead.opt_none")}</SelectItem>
+                        <SelectItem value="Website">{t("lead.source_website")}</SelectItem>
+                        <SelectItem value="Agent">{t("lead.source_agent")}</SelectItem>
+                        <SelectItem value="Referral">{t("lead.source_referral")}</SelectItem>
+                        <SelectItem value="WalkIn">{t("lead.source_walkin")}</SelectItem>
+                        <SelectItem value="OTA">{t("lead.source_ota")}</SelectItem>
+                        <SelectItem value="Social">{t("lead.source_social")}</SelectItem>
+                        <SelectItem value="Other">{t("lead.source_other")}</SelectItem>
                       </SelectContent>
                     </Select>
                   )} />
@@ -306,23 +307,23 @@ export default function LeadDetail() {
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="New">New</SelectItem>
-                        <SelectItem value="Contacted">Contacted</SelectItem>
-                        <SelectItem value="Qualified">Qualified</SelectItem>
-                        <SelectItem value="ConvertedToBooking">Converted to Booking</SelectItem>
-                        <SelectItem value="Lost">Lost</SelectItem>
+                        <SelectItem value="New">{t("lead.status_new")}</SelectItem>
+                        <SelectItem value="Contacted">{t("lead.status_contacted")}</SelectItem>
+                        <SelectItem value="Qualified">{t("lead.status_qualified")}</SelectItem>
+                        <SelectItem value="ConvertedToBooking">{t("lead.status_converted_booking")}</SelectItem>
+                        <SelectItem value="Lost">{t("lead.status_lost")}</SelectItem>
                       </SelectContent>
                     </Select>
                   )} />
                 </div>
               </div>
               <div className="grid gap-1.5">
-                <Label>Inquiry Type</Label>
-                <Input {...register("inquiry_type")} placeholder="e.g. Room rental enquiry" />
+                <Label>{t("lead.label_inquiry_type")}</Label>
+                <Input {...register("inquiry_type")} placeholder={t("lead.ph_inquiry_type")} />
               </div>
               <div className="grid gap-1.5">
-                <Label>Message</Label>
-                <Textarea {...register("message")} placeholder="Enquiry message from lead…" rows={4} />
+                <Label>{t("lead.label_message")}</Label>
+                <Textarea {...register("message")} placeholder={t("lead.ph_message")} rows={4} />
               </div>
             </div>
           </div>
@@ -336,12 +337,12 @@ export default function LeadDetail() {
                   <Label>{t("lead.label_property")}</Label>
                   <Controller name="preferred_space_type" control={control} render={({ field }) => (
                     <Select value={field.value || "__none"} onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}>
-                      <SelectTrigger><SelectValue placeholder="Any type" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder={t("lead.ph_space_type")} /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="__none">— Any —</SelectItem>
-                        <SelectItem value="EntireSpace">Entire Space</SelectItem>
-                        <SelectItem value="RoomSpace">Room Space</SelectItem>
-                        <SelectItem value="BedSpace">Bed Space</SelectItem>
+                        <SelectItem value="__none">{t("lead.opt_any")}</SelectItem>
+                        <SelectItem value="EntireSpace">{t("lead.space_entire")}</SelectItem>
+                        <SelectItem value="RoomSpace">{t("lead.space_room")}</SelectItem>
+                        <SelectItem value="BedSpace">{t("lead.space_bed")}</SelectItem>
                       </SelectContent>
                     </Select>
                   )} />
@@ -357,16 +358,16 @@ export default function LeadDetail() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
                   <Label>{t("lead.label_duration")}</Label>
-                  <Input {...register("preferred_duration_weeks")} type="number" min={1} placeholder="e.g. 12" />
+                  <Input {...register("preferred_duration_weeks")} type="number" min={1} placeholder={t("lead.ph_duration")} />
                 </div>
                 <div className="grid gap-1.5">
-                  <Label>Preferred Suburb</Label>
+                  <Label>{t("lead.label_suburb")}</Label>
                   <Controller name="preferred_suburb_id" control={control} render={({ field }) => (
                     <LookupSelect
                       value={field.value}
                       onChange={field.onChange}
                       lookupUrl="/api/v1/lookup/suburbs"
-                      placeholder="Search suburbs…"
+                      placeholder={t("lead.ph_search_suburbs")}
                     />
                   )} />
                 </div>
@@ -385,9 +386,9 @@ export default function LeadDetail() {
                       </SelectContent>
                     </Select>
                   )} />
-                  <Input {...register("budget_min")} type="number" step="50" placeholder="Min" className="flex-1" />
+                  <Input {...register("budget_min")} type="number" step="50" placeholder={t("lead.ph_min")} className="flex-1" />
                   <span className="text-muted-foreground text-sm">–</span>
-                  <Input {...register("budget_max")} type="number" step="50" placeholder="Max" className="flex-1" />
+                  <Input {...register("budget_max")} type="number" step="50" placeholder={t("lead.ph_max")} className="flex-1" />
                 </div>
               </div>
             </div>
@@ -396,13 +397,13 @@ export default function LeadDetail() {
           {/* Conversion info */}
           {!isNew && lead?.lead_status === "ConvertedToBooking" && (
             <div className="border rounded-lg overflow-hidden">
-              <div className="bg-green-50 border-b px-4 py-2 text-xs font-semibold text-green-700 uppercase tracking-wider">Conversion</div>
+              <div className="bg-green-50 border-b px-4 py-2 text-xs font-semibold text-green-700 uppercase tracking-wider">{t("lead.section_conversion")}</div>
               <div className="p-4 grid gap-2 text-sm">
                 {lead.converted_booking_id && (
-                  <div><span className="text-muted-foreground">Booking ID:</span> <span className="font-medium">{lead.converted_booking_id}</span></div>
+                  <div><span className="text-muted-foreground">{t("lead.label_booking_id")}</span> <span className="font-medium">{lead.converted_booking_id}</span></div>
                 )}
                 {lead.converted_at && (
-                  <div><span className="text-muted-foreground">Converted At:</span> <span className="font-medium">{formatDateTime(lead.converted_at)}</span></div>
+                  <div><span className="text-muted-foreground">{t("lead.label_converted_at")}</span> <span className="font-medium">{formatDateTime(lead.converted_at)}</span></div>
                 )}
               </div>
             </div>
@@ -415,7 +416,7 @@ export default function LeadDetail() {
               <div className="grid gap-4">
                 <div className="grid gap-1.5">
                   <Label>{t("lead.label_assigned")}</Label>
-                  <Input {...register("assigned_to")} placeholder="Staff member name or ID" />
+                  <Input {...register("assigned_to")} placeholder={t("lead.ph_assigned")} />
                 </div>
               </div>
             </div>
@@ -425,30 +426,30 @@ export default function LeadDetail() {
           <div className="border rounded-lg overflow-hidden">
             <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">{t("lead.label_notes")}</div>
             <div className="p-4">
-              <Textarea {...register("description")} placeholder="Internal notes…" rows={3} />
+              <Textarea {...register("description")} placeholder={t("lead.ph_notes")} rows={3} />
             </div>
           </div>
 
           {/* Admin */}
           <div className="border rounded-lg overflow-hidden">
-            <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">Admin</div>
+            <div className="bg-primary/10 border-b px-4 py-2 text-xs font-semibold text-primary uppercase tracking-wider">{t("lead.section_admin")}</div>
             <div className="p-4 grid gap-4">
               <div className="grid gap-1.5">
-                <Label>Record Status</Label>
+                <Label>{t("lead.label_record_status")}</Label>
                 <Controller name="status" control={control} render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="Inactive">Inactive</SelectItem>
+                      <SelectItem value="Active">{t("common.active")}</SelectItem>
+                      <SelectItem value="Inactive">{t("common.inactive")}</SelectItem>
                     </SelectContent>
                   </Select>
                 )} />
               </div>
               {!isNew && lead && (
                 <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
-                  <div><span className="font-medium text-foreground">Created:</span> {formatDateTime(lead.created_at)}</div>
-                  <div><span className="font-medium text-foreground">Updated:</span> {formatDateTime(lead.updated_at)}</div>
+                  <div><span className="font-medium text-foreground">{t("common.created")}:</span> {formatDateTime(lead.created_at)}</div>
+                  <div><span className="font-medium text-foreground">{t("common.updated")}:</span> {formatDateTime(lead.updated_at)}</div>
                 </div>
               )}
             </div>
@@ -465,34 +466,34 @@ export default function LeadDetail() {
           <div className="grid gap-4 py-2">
             <p className="text-sm text-muted-foreground">{t("lead.convert_desc")}</p>
             <div className="grid gap-1.5">
-              <Label>Space *</Label>
+              <Label>{t("lead.label_space")} *</Label>
               <LookupSelect
                 value={convertForm.space_id}
                 onChange={(val) => setConvertForm((f) => ({ ...f, space_id: val }))}
                 lookupUrl="/api/v1/lookup/spaces"
-                placeholder="Search spaces…"
+                placeholder={t("lead.ph_search_spaces")}
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="grid gap-1.5">
-                <Label>Check-In Date *</Label>
+                <Label>{t("lead.label_check_in")} *</Label>
                 <DateInput value={convertForm.check_in_date}
                   onChange={(v) => setConvertForm((f) => ({ ...f, check_in_date: v }))} />
               </div>
               <div className="grid gap-1.5">
-                <Label>Check-Out Date *</Label>
+                <Label>{t("lead.label_check_out")} *</Label>
                 <DateInput value={convertForm.check_out_date}
                   onChange={(v) => setConvertForm((f) => ({ ...f, check_out_date: v }))} />
               </div>
             </div>
             <div className="grid gap-1.5">
-              <Label>Agreed Weekly Rate</Label>
-              <Input type="number" step="0.01" placeholder="Auto-filled from space" value={convertForm.agreed_weekly_rate}
+              <Label>{t("lead.label_weekly_rate")}</Label>
+              <Input type="number" step="0.01" placeholder={t("lead.ph_weekly_rate")} value={convertForm.agreed_weekly_rate}
                 onChange={(e) => setConvertForm((f) => ({ ...f, agreed_weekly_rate: e.target.value }))} />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setConvertOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setConvertOpen(false)}>{t("common.cancel")}</Button>
             <Button
               className="bg-green-600 hover:bg-green-700 text-white"
               disabled={!convertForm.space_id || !convertForm.check_in_date || !convertForm.check_out_date || convertMutation.isPending}
@@ -508,7 +509,7 @@ export default function LeadDetail() {
                   },
                 });
               }}>
-              Confirm Conversion
+              {t("lead.btn_confirm_conversion")}
             </Button>
           </DialogFooter>
         </DialogContent>
