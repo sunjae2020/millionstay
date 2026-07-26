@@ -6,6 +6,8 @@ import { useGetPublicSpace, useCreateGuestBooking } from "@/lib/guest-api";
 import { useAuthStore } from "@/lib/store";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { DevNavbar, DevFooter } from "@/components/development/DevLayout";
+import { isDevelopmentSite } from "@/lib/site-mode";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/ui/date-input";
@@ -242,6 +244,10 @@ function BankTransferDetails({ total, ref_ }: { total: number; ref_: string }) {
 /* ────────────────────────────────────────────── */
 /*  Main Component                                */
 /* ────────────────────────────────────────────── */
+
+// MetHeim (development instance) wears the shared DevLayout header/footer so the
+// booking flow reads as the same site as the landing page. See docs convention.
+const DEV_SITE = isDevelopmentSite();
 
 export default function BookingNew() {
   const [location, setLocation] = useLocation();
@@ -1033,7 +1039,7 @@ export default function BookingNew() {
   /* ────────────────────────── render ─────────────────────────── */
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <Navbar />
+      {DEV_SITE ? <DevNavbar /> : <Navbar />}
 
       <div className="bg-gradient-to-r from-[#c05010] via-[#e07828] to-[#c86820] py-8 px-4">
         <div className="max-w-5xl mx-auto">
@@ -1127,7 +1133,7 @@ export default function BookingNew() {
         ) : stepContent}
       </div>
 
-      <Footer />
+      {DEV_SITE ? <DevFooter /> : <Footer />}
     </div>
   );
 }

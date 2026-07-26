@@ -58,7 +58,7 @@ function FlagIcon({ iso, size = 20 }: { iso: string; size?: number }) {
   );
 }
 
-function DevNavbar() {
+export function DevNavbar() {
   const { t, i18n } = useTranslation();
   const [location, setLocation] = useLocation();
   const { token, guest, logout } = useAuthStore();
@@ -290,7 +290,7 @@ function DevNavbar() {
   );
 }
 
-function DevFooter() {
+export function DevFooter() {
   const { t } = useTranslation();
   const company = usePageContent("dev-footer");
   const org = useCompanyContact();

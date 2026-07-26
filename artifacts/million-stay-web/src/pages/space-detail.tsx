@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useGetPublicSpace, getGetPublicSpaceQueryKey, useListPublicSpaces } from "@/lib/guest-api";
 import { useAuthStore } from "@/lib/store";
 import { Navbar } from "@/components/navbar";
+import { DevNavbar, DevFooter } from "@/components/development/DevLayout";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
@@ -381,7 +382,7 @@ export default function SpaceDetail() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Navbar />
+        {DEV_SITE ? <DevNavbar /> : <Navbar />}
         <div className="max-w-6xl mx-auto w-full px-6 py-8 space-y-6">
           <Skeleton className="h-[280px] w-full rounded-xl" />
           <div className="grid grid-cols-3 gap-8">
@@ -400,7 +401,7 @@ export default function SpaceDetail() {
   if (!space) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Navbar />
+        {DEV_SITE ? <DevNavbar /> : <Navbar />}
         <div className="max-w-6xl mx-auto py-16 text-center">
           <h1 className="text-2xl font-bold">Space not found</h1>
           <Button onClick={() => setLocation("/search")} className="mt-4">Browse spaces</Button>
@@ -420,7 +421,7 @@ export default function SpaceDetail() {
 
   return (
     <div className="min-h-screen flex flex-col bg-brand-cream">
-      <Navbar />
+      {DEV_SITE ? <DevNavbar /> : <Navbar />}
 
       {/* Banner — theme-driven hero gradient (MetHeim: deep-teal → urban-teal
           "night harbor"; standard: deep-navy → brand orange). */}
@@ -725,7 +726,7 @@ export default function SpaceDetail() {
         )}
       </div>
 
-      <Footer />
+      {DEV_SITE ? <DevFooter /> : <Footer />}
     </div>
   );
 }
