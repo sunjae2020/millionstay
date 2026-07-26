@@ -86,7 +86,7 @@ export default function PortalLogin() {
     <div className="min-h-screen bg-[#faf9f7] flex flex-col">
       <div className="flex items-center justify-between px-4 sm:px-6 h-16 border-b border-gray-100 bg-white">
         <Link href="/" className="flex items-center">
-          <BrandMark className="h-8 w-auto" />
+          <BrandMark className="h-12 w-auto" />
         </Link>
         <Link href="/" className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-primary transition-colors">
           <ArrowLeft className="h-4 w-4" /> {t("portalLogin.back_home")}

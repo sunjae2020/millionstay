@@ -275,7 +275,7 @@
     "back_to_site": "Back to Site",
     "log_out": "Log out",
     "nav": {
-      "bookings": "My Bookings",
+      "bookings": "My Contracts",
       "invoices": "My Invoices",
       "documents": "Documents",
       "cs": "Communications",
@@ -284,7 +284,7 @@
       "home": "Home"
     },
     "bookings": {
-      "title": "My Bookings",
+      "title": "My Contracts",
       "action_required": "Action Required",
       "payment_pending": "payment and documents are pending.",
       "pay_upload": "Pay & Upload Docs",

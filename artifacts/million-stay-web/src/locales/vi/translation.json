@@ -163,7 +163,8 @@
   },
   "portal": {
     "nav": {
-      "home": "Trang chủ"
+      "home": "Trang chủ",
+      "bookings": "Hợp đồng của tôi"
     },
     "home": {
       "greeting": "Chào mừng trở lại, {{name}}",
@@ -225,6 +226,9 @@
       "type_deposit": "Liên quan đặt cọc",
       "type_other": "Khác",
       "empty_sub": "Tải lên giấy tờ tùy thân để bắt đầu"
+    },
+    "bookings": {
+      "title": "Hợp đồng của tôi"
     }
   },
   "dev": {

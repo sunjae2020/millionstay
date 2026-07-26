@@ -234,7 +234,7 @@
     "back_to_site": "返回网站",
     "log_out": "退出登录",
     "nav": {
-      "bookings": "我的预订",
+      "bookings": "我的合同",
       "invoices": "账单",
       "documents": "文件",
       "cs": "联系客服",
@@ -243,7 +243,7 @@
       "home": "首页"
     },
     "bookings": {
-      "title": "我的预订",
+      "title": "我的合同",
       "action_required": "需要操作",
       "payment_pending": "需要完成付款和文件上传。",
       "pay_upload": "立即付款并上传文件",

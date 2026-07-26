@@ -275,7 +275,7 @@
     "back_to_site": "사이트로 돌아가기",
     "log_out": "로그아웃",
     "nav": {
-      "bookings": "내 예약",
+      "bookings": "내 계약",
       "invoices": "청구서",
       "documents": "서류",
       "cs": "고객 지원",
@@ -284,7 +284,7 @@
       "home": "홈"
     },
     "bookings": {
-      "title": "내 예약",
+      "title": "내 계약",
       "action_required": "조치 필요",
       "payment_pending": "결제 및 서류 제출이 필요합니다.",
       "pay_upload": "결제 및 서류 업로드",

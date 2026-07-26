@@ -21,7 +21,7 @@ export function AuthLayout({
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-primary/5 via-white to-primary/5">
       <div className="p-6">
         <Link href="/">
-          <BrandMark className="h-8 w-auto" />
+          <BrandMark className="h-12 w-auto" />
         </Link>
       </div>
 

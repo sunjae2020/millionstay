@@ -359,7 +359,7 @@
     "back_to_site": "サイトに戻る",
     "log_out": "ログアウト",
     "nav": {
-      "bookings": "予約一覧",
+      "bookings": "契約一覧",
       "invoices": "請求書",
       "documents": "書類",
       "cs": "お問い合わせ",
@@ -368,7 +368,7 @@
       "home": "ホーム"
     },
     "bookings": {
-      "title": "予約一覧",
+      "title": "契約一覧",
       "action_required": "対応が必要です",
       "payment_pending": "支払いと書類の提出が必要です。",
       "pay_upload": "支払い & 書類アップロード",
