@@ -115,32 +115,6 @@ export default function ContractList() {
           </Link>
         </div>
 
-        <div className="flex gap-3 mb-4">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              className="pl-9"
-              placeholder={t("contract.search_placeholder")}
-              value={q}
-              onChange={e => setQ(e.target.value)}
-            />
-          </div>
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder={t("contract.all_statuses")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("contract.all_statuses")}</SelectItem>
-              <SelectItem value="Draft">{t("contract.status_draft")}</SelectItem>
-              <SelectItem value="Sent">{t("contract.status_sent")}</SelectItem>
-              <SelectItem value="Signed">{t("contract.status_signed")}</SelectItem>
-              <SelectItem value="Active">{t("contract.status_active")}</SelectItem>
-              <SelectItem value="Expired">{t("contract.status_expired")}</SelectItem>
-              <SelectItem value="Terminated">{t("contract.status_terminated")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         <DataTable
           tableKey="contracts"
           columns={columns}
@@ -155,6 +129,33 @@ export default function ContractList() {
           }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
+          toolbarExtra={
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-56">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  className="pl-9"
+                  placeholder={t("contract.search_placeholder")}
+                  value={q}
+                  onChange={e => setQ(e.target.value)}
+                />
+              </div>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder={t("contract.all_statuses")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("contract.all_statuses")}</SelectItem>
+                  <SelectItem value="Draft">{t("contract.status_draft")}</SelectItem>
+                  <SelectItem value="Sent">{t("contract.status_sent")}</SelectItem>
+                  <SelectItem value="Signed">{t("contract.status_signed")}</SelectItem>
+                  <SelectItem value="Active">{t("contract.status_active")}</SelectItem>
+                  <SelectItem value="Expired">{t("contract.status_expired")}</SelectItem>
+                  <SelectItem value="Terminated">{t("contract.status_terminated")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          }
         />
       </div>
     </Layout>

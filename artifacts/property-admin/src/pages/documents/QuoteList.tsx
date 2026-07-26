@@ -85,11 +85,7 @@ export default function QuoteList() {
     <Layout>
       <PageHeader title={t("quote.title", "Quotes")} subtitle={t("quote.count_quotations", "{{count}} quotations", { count: rows.length })} />
       <div className="p-6">
-        <div className="flex gap-3 mb-4 flex-wrap">
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder={t("quote.search_placeholder", "Search by reference…")} value={q} onChange={(e) => setQ(e.target.value)} />
-          </div>
+        <div className="flex gap-3 mb-4 flex-wrap justify-end">
           <Button className="bg-primary hover:bg-[#d4561a] text-white" onClick={() => navigate("/documents/quotes/new")}>
             <Plus className="h-4 w-4 mr-1" /> {t("quote.new_quote", "New Quote")}
           </Button>
@@ -105,6 +101,14 @@ export default function QuoteList() {
             <div className="flex flex-col items-center gap-2 py-6">
               <FileText className="h-8 w-8 text-muted-foreground/40" />
               <p className="text-muted-foreground">{t("quote.empty", "No quotes yet")}</p>
+            </div>
+          }
+          toolbarExtra={
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-56">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input className="pl-9" placeholder={t("quote.search_placeholder", "Search by reference…")} value={q} onChange={(e) => setQ(e.target.value)} />
+              </div>
             </div>
           }
         />

@@ -149,28 +149,6 @@ export default function ReceiptList() {
       />
 
       <div className="p-6">
-        <div className="flex gap-3 mb-4 flex-wrap">
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              className="pl-9"
-              placeholder={t("invoice.search_placeholder")}
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-            />
-          </div>
-          <Select value={methodFilter} onValueChange={setMethodFilter}>
-            <SelectTrigger className="w-44"><SelectValue placeholder={t("invoice.label_payment_method")} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("common.all")}</SelectItem>
-              <SelectItem value="bank_transfer">{t("invoice.status_paid")}</SelectItem>
-              <SelectItem value="card">{t("invoice.status_paid")}</SelectItem>
-              <SelectItem value="cash">{t("invoice.status_paid")}</SelectItem>
-              <SelectItem value="stripe">{t("invoice.status_paid")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         <DataTable
           tableKey="receipts"
           columns={columns}
@@ -178,6 +156,29 @@ export default function ReceiptList() {
           isLoading={isLoading}
           rowKey={(r) => r.id}
           emptyText={t("finance.no_receipts") || "No receipts found"}
+          toolbarExtra={
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-56">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  className="pl-9"
+                  placeholder={t("invoice.search_placeholder")}
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                />
+              </div>
+              <Select value={methodFilter} onValueChange={setMethodFilter}>
+                <SelectTrigger className="w-44"><SelectValue placeholder={t("invoice.label_payment_method")} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("common.all")}</SelectItem>
+                  <SelectItem value="bank_transfer">{t("invoice.status_paid")}</SelectItem>
+                  <SelectItem value="card">{t("invoice.status_paid")}</SelectItem>
+                  <SelectItem value="cash">{t("invoice.status_paid")}</SelectItem>
+                  <SelectItem value="stripe">{t("invoice.status_paid")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          }
         />
       </div>
     </Layout>

@@ -229,43 +229,6 @@ export default function CsTicketList() {
           })}
         </div>
 
-        {/* Filters */}
-        <div className="flex gap-3 mb-4 flex-wrap">
-          <div className="relative flex-1 min-w-48">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder={t("csticket.search_placeholder")}
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {STATUSES.map(s => (
-                <SelectItem key={s} value={s}>
-                  {s === "All" ? t("csticket.all_statuses") : t(`csticket.status_${s.toLowerCase() === "inprogress" ? "in_progress" : s.toLowerCase()}` as any)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c === "All" ? t("csticket.all_categories") : c}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={requesterType} onValueChange={setRequesterType}>
-            <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {REQUESTER_TYPES.map(rt => (
-                <SelectItem key={rt} value={rt}>{rt === "All" ? t("csticket.all_types", "All types") : (REQUESTER_CONFIG[rt]?.label ?? rt)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
         <DataTable
           tableKey="cs-tickets"
           columns={columns}
@@ -281,6 +244,43 @@ export default function CsTicketList() {
           }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
+          toolbarExtra={
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-56">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder={t("csticket.search_placeholder")}
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {STATUSES.map(s => (
+                    <SelectItem key={s} value={s}>
+                      {s === "All" ? t("csticket.all_statuses") : t(`csticket.status_${s.toLowerCase() === "inprogress" ? "in_progress" : s.toLowerCase()}` as any)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c === "All" ? t("csticket.all_categories") : c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={requesterType} onValueChange={setRequesterType}>
+                <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {REQUESTER_TYPES.map(rt => (
+                    <SelectItem key={rt} value={rt}>{rt === "All" ? t("csticket.all_types", "All types") : (REQUESTER_CONFIG[rt]?.label ?? rt)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          }
         />
       </div>
     </Layout>

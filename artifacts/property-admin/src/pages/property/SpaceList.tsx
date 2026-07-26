@@ -174,67 +174,6 @@ export default function SpaceList() {
         }
       />
       <div className="p-6">
-        <div className="flex flex-wrap items-center gap-3 mb-5">
-          <div className="relative flex-1 min-w-[200px] max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              placeholder={t("space.search_placeholder")}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 h-8 text-sm"
-            />
-          </div>
-          {hasParents ? (
-            <Select value={parentSpaceId || "_all"} onValueChange={(v) => setParentSpaceId(v === "_all" ? "" : v)}>
-              <SelectTrigger className="w-44 h-8 text-sm"><SelectValue placeholder={t("space.col_parent")} /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">{t("space.all_parents")}</SelectItem>
-                {parentOptions.map((p) => (
-                  <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <Select value={spaceType || "_all"} onValueChange={(v) => setSpaceType(v === "_all" ? "" : v)}>
-              <SelectTrigger className="w-40 h-8 text-sm"><SelectValue placeholder={t("space.label_type")} /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">{t("space.all_types")}</SelectItem>
-                <SelectItem value="Private Room">{t("space.type_private") || "Private Room"}</SelectItem>
-                <SelectItem value="Shared Room">{t("space.type_shared") || "Shared Room"}</SelectItem>
-                <SelectItem value="Whole Property">{t("space.type_whole") || "Whole Property"}</SelectItem>
-                <SelectItem value="Desk">{t("space.type_desk") || "Desk"}</SelectItem>
-                <SelectItem value="Other">{t("space.type_other") || "Other"}</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
-          <Select value={status || "_all"} onValueChange={(v) => setStatus(v === "_all" ? "" : v)}>
-            <SelectTrigger className="w-32 h-8 text-sm"><SelectValue placeholder={t("common.status")} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("space.all_statuses")}</SelectItem>
-              {isLedgerStatusSet ? (
-                LEDGER_STATUS_VALUES.map((s) => (
-                  <SelectItem key={s} value={s}>{s}</SelectItem>
-                ))
-              ) : (
-                <>
-                  <SelectItem value="Active">{t("common.active")}</SelectItem>
-                  <SelectItem value="Inactive">{t("common.inactive")}</SelectItem>
-                  <SelectItem value="Suspended">{t("common.suspended") || "Suspended"}</SelectItem>
-                </>
-              )}
-            </SelectContent>
-          </Select>
-          <Select value={bookingMode || "_all"} onValueChange={(v) => setBookingMode(v === "_all" ? "" : v)}>
-            <SelectTrigger className="w-36 h-8 text-sm"><SelectValue placeholder={t("space.label_mode")} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("space.all_modes")}</SelectItem>
-              <SelectItem value="Instant">{t("space.mode_instant") || "Instant"}</SelectItem>
-              <SelectItem value="Request">{t("space.mode_request") || "Request"}</SelectItem>
-              <SelectItem value="Manual">{t("space.mode_manual") || "Manual"}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         <DataTable
           tableKey="spaces"
           columns={columns}
@@ -250,6 +189,68 @@ export default function SpaceList() {
           }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
+          toolbarExtra={
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-56">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder={t("space.search_placeholder")}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-8 h-8 text-sm"
+                />
+              </div>
+              {hasParents ? (
+                <Select value={parentSpaceId || "_all"} onValueChange={(v) => setParentSpaceId(v === "_all" ? "" : v)}>
+                  <SelectTrigger className="w-44 h-8 text-sm"><SelectValue placeholder={t("space.col_parent")} /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all">{t("space.all_parents")}</SelectItem>
+                    {parentOptions.map((p) => (
+                      <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Select value={spaceType || "_all"} onValueChange={(v) => setSpaceType(v === "_all" ? "" : v)}>
+                  <SelectTrigger className="w-40 h-8 text-sm"><SelectValue placeholder={t("space.label_type")} /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all">{t("space.all_types")}</SelectItem>
+                    <SelectItem value="Private Room">{t("space.type_private") || "Private Room"}</SelectItem>
+                    <SelectItem value="Shared Room">{t("space.type_shared") || "Shared Room"}</SelectItem>
+                    <SelectItem value="Whole Property">{t("space.type_whole") || "Whole Property"}</SelectItem>
+                    <SelectItem value="Desk">{t("space.type_desk") || "Desk"}</SelectItem>
+                    <SelectItem value="Other">{t("space.type_other") || "Other"}</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+              <Select value={status || "_all"} onValueChange={(v) => setStatus(v === "_all" ? "" : v)}>
+                <SelectTrigger className="w-32 h-8 text-sm"><SelectValue placeholder={t("common.status")} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("space.all_statuses")}</SelectItem>
+                  {isLedgerStatusSet ? (
+                    LEDGER_STATUS_VALUES.map((s) => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))
+                  ) : (
+                    <>
+                      <SelectItem value="Active">{t("common.active")}</SelectItem>
+                      <SelectItem value="Inactive">{t("common.inactive")}</SelectItem>
+                      <SelectItem value="Suspended">{t("common.suspended") || "Suspended"}</SelectItem>
+                    </>
+                  )}
+                </SelectContent>
+              </Select>
+              <Select value={bookingMode || "_all"} onValueChange={(v) => setBookingMode(v === "_all" ? "" : v)}>
+                <SelectTrigger className="w-36 h-8 text-sm"><SelectValue placeholder={t("space.label_mode")} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("space.all_modes")}</SelectItem>
+                  <SelectItem value="Instant">{t("space.mode_instant") || "Instant"}</SelectItem>
+                  <SelectItem value="Request">{t("space.mode_request") || "Request"}</SelectItem>
+                  <SelectItem value="Manual">{t("space.mode_manual") || "Manual"}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          }
         />
       </div>
 

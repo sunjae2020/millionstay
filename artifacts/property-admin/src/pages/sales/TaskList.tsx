@@ -246,42 +246,6 @@ export default function TaskList() {
           ))}
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="relative flex-1 min-w-[180px] max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input placeholder={t("task.search_placeholder")} className="pl-8 h-8 text-sm" value={search}
-              onChange={(e) => setSearch(e.target.value)} />
-          </div>
-          <Select value={statusFilter || "__all"} onValueChange={(v) => setStatusFilter(v === "__all" ? "" : v)}>
-            <SelectTrigger className="h-8 w-36 text-sm"><SelectValue placeholder={t("common.status")} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__all">{t("task.all_statuses")}</SelectItem>
-              <SelectItem value="Todo">{t("task.status_todo")}</SelectItem>
-              <SelectItem value="InProgress">{t("task.status_in_progress")}</SelectItem>
-              <SelectItem value="Done">{t("task.status_done")}</SelectItem>
-              <SelectItem value="Cancelled">{t("task.status_cancelled")}</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={priorityFilter || "__all"} onValueChange={(v) => setPriorityFilter(v === "__all" ? "" : v)}>
-            <SelectTrigger className="h-8 w-32 text-sm"><SelectValue placeholder={t("task.col_priority")} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__all">{t("task.all_priorities")}</SelectItem>
-              <SelectItem value="High">{t("task.priority_high")}</SelectItem>
-              <SelectItem value="Medium">{t("task.priority_medium")}</SelectItem>
-              <SelectItem value="Low">{t("task.priority_low")}</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={categoryFilter || "__all"} onValueChange={(v) => setCategoryFilter(v === "__all" ? "" : v)}>
-            <SelectTrigger className="h-8 w-36 text-sm"><SelectValue placeholder={t("task.col_category")} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__all">{t("task.all_categories")}</SelectItem>
-              {["CS", "Maintenance", "Follow-up", "Admin", "Other"].map(c => (
-                <SelectItem key={c} value={c}>{c}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
         <DataTable
           tableKey="tasks"
           columns={columns}
@@ -296,6 +260,43 @@ export default function TaskList() {
           }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
+          toolbarExtra={
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-56">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input placeholder={t("task.search_placeholder")} className="pl-8 h-8 text-sm" value={search}
+                  onChange={(e) => setSearch(e.target.value)} />
+              </div>
+              <Select value={statusFilter || "__all"} onValueChange={(v) => setStatusFilter(v === "__all" ? "" : v)}>
+                <SelectTrigger className="h-8 w-36 text-sm"><SelectValue placeholder={t("common.status")} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all">{t("task.all_statuses")}</SelectItem>
+                  <SelectItem value="Todo">{t("task.status_todo")}</SelectItem>
+                  <SelectItem value="InProgress">{t("task.status_in_progress")}</SelectItem>
+                  <SelectItem value="Done">{t("task.status_done")}</SelectItem>
+                  <SelectItem value="Cancelled">{t("task.status_cancelled")}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={priorityFilter || "__all"} onValueChange={(v) => setPriorityFilter(v === "__all" ? "" : v)}>
+                <SelectTrigger className="h-8 w-32 text-sm"><SelectValue placeholder={t("task.col_priority")} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all">{t("task.all_priorities")}</SelectItem>
+                  <SelectItem value="High">{t("task.priority_high")}</SelectItem>
+                  <SelectItem value="Medium">{t("task.priority_medium")}</SelectItem>
+                  <SelectItem value="Low">{t("task.priority_low")}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={categoryFilter || "__all"} onValueChange={(v) => setCategoryFilter(v === "__all" ? "" : v)}>
+                <SelectTrigger className="h-8 w-36 text-sm"><SelectValue placeholder={t("task.col_category")} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all">{t("task.all_categories")}</SelectItem>
+                  {["CS", "Maintenance", "Follow-up", "Admin", "Other"].map(c => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          }
         />
       </div>
 

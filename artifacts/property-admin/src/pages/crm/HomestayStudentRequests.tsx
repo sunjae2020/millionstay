@@ -202,16 +202,6 @@ export default function HomestayStudentRequests() {
 
       <div className="px-6 py-6">
         <div className="flex flex-col gap-4">
-          <div className="relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              className="pl-9"
-              placeholder={t("homestayStudent.search_placeholder")}
-              value={q}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setStatusFilter("")}
@@ -248,6 +238,19 @@ export default function HomestayStudentRequests() {
             isLoading={isLoading}
             rowKey={(r) => r.id}
             emptyText={t("homestayStudent.empty")}
+            toolbarExtra={
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative w-56">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    className="pl-9"
+                    placeholder={t("homestayStudent.search_placeholder")}
+                    value={q}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
+              </div>
+            }
           />
         </div>
 

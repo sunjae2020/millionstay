@@ -157,32 +157,33 @@ export default function SaleListingsList() {
       />
 
       <div className="p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="w-40"><SelectValue placeholder={t("listings.col_category")} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("listings.all_categories")}</SelectItem>
-              <SelectItem value="presale">{t("listings.category_presale")}</SelectItem>
-              <SelectItem value="sale">{t("listings.category_sale")}</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="w-40"><SelectValue placeholder={t("common.status")} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("listings.all_status")}</SelectItem>
-              <SelectItem value="available">{t("listings.status_available")}</SelectItem>
-              <SelectItem value="reserved">{t("listings.status_reserved")}</SelectItem>
-              <SelectItem value="sold">{t("listings.status_sold")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         <DataTable
           tableKey="sale-listings"
           columns={columns}
           data={listings}
           isLoading={isLoading}
           rowKey={(row) => row.id}
+          toolbarExtra={
+            <div className="flex flex-wrap items-center gap-2">
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger className="w-40"><SelectValue placeholder={t("listings.col_category")} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("listings.all_categories")}</SelectItem>
+                  <SelectItem value="presale">{t("listings.category_presale")}</SelectItem>
+                  <SelectItem value="sale">{t("listings.category_sale")}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger className="w-40"><SelectValue placeholder={t("common.status")} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("listings.all_status")}</SelectItem>
+                  <SelectItem value="available">{t("listings.status_available")}</SelectItem>
+                  <SelectItem value="reserved">{t("listings.status_reserved")}</SelectItem>
+                  <SelectItem value="sold">{t("listings.status_sold")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          }
           emptyText={
             <div className="flex flex-col items-center gap-3">
               <Building2 className="h-8 w-8 text-muted-foreground/40" />

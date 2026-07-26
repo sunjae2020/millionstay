@@ -247,10 +247,6 @@ export default function TranslationsPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="relative flex-1 max-w-sm self-end">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder={t("settings_translations.search_placeholder")} value={q} onChange={(e) => setQ(e.target.value)} />
-          </div>
           <div className="self-end ml-auto flex gap-2">
             <Button variant="outline" onClick={() => setLangDialog(true)}><Globe className="h-4 w-4 mr-2" />{t("settings_translations.languages")}</Button>
             <Button variant="outline" onClick={() => setAddKeyOpen(true)}><Plus className="h-4 w-4 mr-2" />{t("settings_translations.add_key")}</Button>
@@ -267,6 +263,14 @@ export default function TranslationsPage() {
           isLoading={rowsQ.isLoading}
           rowKey={(r) => r.key}
           emptyText={t("settings_translations.no_keys_found")}
+          toolbarExtra={
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-56">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input className="pl-9" placeholder={t("settings_translations.search_placeholder")} value={q} onChange={(e) => setQ(e.target.value)} />
+              </div>
+            </div>
+          }
         />
         <p className="text-xs text-muted-foreground mt-3">{t("settings_translations.keys_count", { shown: filtered.length, total: rows.length })}{dirtyCount > 0 ? ` · ${t("settings_translations.unsaved_count", { count: dirtyCount })}` : ""}</p>
       </div>

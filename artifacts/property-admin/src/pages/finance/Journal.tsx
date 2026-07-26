@@ -125,27 +125,6 @@ export default function Journal() {
           <p className="text-sm text-muted-foreground">{t("journal.subtitle")}</p>
         </div>
 
-        {/* Date range filter */}
-        <div className="flex flex-wrap items-end gap-3 mb-6">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-muted-foreground">{t("journal.filter_from")}</label>
-            <DateInput
-              value={from}
-              onChange={setFrom}
-              className="w-44"
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-muted-foreground">{t("journal.filter_to")}</label>
-            <DateInput
-              value={to}
-              onChange={setTo}
-              className="w-44"
-              min={from || undefined}
-            />
-          </div>
-        </div>
-
         {/* Trial balance card */}
         <div className="mb-8">
           <h2 className="text-lg font-semibold mb-3">{t("journal.trial_balance")}</h2>
@@ -156,6 +135,27 @@ export default function Journal() {
             isLoading={tbLoading}
             rowKey={(row) => row.account_code}
             emptyText={t("journal.empty")}
+            toolbarExtra={
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">{t("journal.filter_from")}</label>
+                  <DateInput
+                    value={from}
+                    onChange={setFrom}
+                    className="w-44"
+                  />
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">{t("journal.filter_to")}</label>
+                  <DateInput
+                    value={to}
+                    onChange={setTo}
+                    className="w-44"
+                    min={from || undefined}
+                  />
+                </div>
+              </div>
+            }
           />
           {trialBalance.length > 0 && (
             <div className="flex items-center justify-end gap-8 mt-2 px-4 text-sm font-semibold">

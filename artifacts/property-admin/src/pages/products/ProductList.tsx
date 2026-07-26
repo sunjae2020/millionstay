@@ -206,40 +206,6 @@ export default function ProductList() {
       />
 
       <div className="p-6">
-        <div className="flex gap-3 mb-4 flex-wrap">
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              className="pl-9"
-              placeholder={t("product.search_placeholder")}
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-            />
-          </div>
-          <Select value={promotionFilter} onValueChange={setPromotionFilter}>
-            <SelectTrigger className="w-52">
-              <SelectValue placeholder={t("product.all_promotions")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("product.all_promotions")}</SelectItem>
-              {promotions.map((p) => (
-                <SelectItem key={p.id} value={String(p.id)}>{p.display}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-36">
-              <SelectValue placeholder={t("product.all_statuses")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("product.all_statuses")}</SelectItem>
-              <SelectItem value="Active">{t("common.active")}</SelectItem>
-              <SelectItem value="Inactive">{t("common.inactive")}</SelectItem>
-              <SelectItem value="Archived">{t("product.status_archived")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         <DataTable
           tableKey="accommodation-products"
           columns={columns}
@@ -248,6 +214,41 @@ export default function ProductList() {
           rowKey={(p) => p.id}
           defaultSort={{ key: "name", dir: "asc" }}
           emptyText={t("product.no_products")}
+          toolbarExtra={
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-56">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  className="pl-9"
+                  placeholder={t("product.search_placeholder")}
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                />
+              </div>
+              <Select value={promotionFilter} onValueChange={setPromotionFilter}>
+                <SelectTrigger className="w-52">
+                  <SelectValue placeholder={t("product.all_promotions")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("product.all_promotions")}</SelectItem>
+                  {promotions.map((p) => (
+                    <SelectItem key={p.id} value={String(p.id)}>{p.display}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-36">
+                  <SelectValue placeholder={t("product.all_statuses")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("product.all_statuses")}</SelectItem>
+                  <SelectItem value="Active">{t("common.active")}</SelectItem>
+                  <SelectItem value="Inactive">{t("common.inactive")}</SelectItem>
+                  <SelectItem value="Archived">{t("product.status_archived")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          }
         />
       </div>
 

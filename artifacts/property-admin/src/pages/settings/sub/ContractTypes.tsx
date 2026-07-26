@@ -143,10 +143,6 @@ export default function ContractTypesPage() {
       />
       <div className="px-8 py-6">
         <div className="flex gap-3 mb-4">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder="Search types..." value={q} onChange={e => setQ(e.target.value)} />
-          </div>
           <Button onClick={openNew}><Plus className="h-4 w-4 mr-2" />New Type</Button>
         </div>
 
@@ -160,6 +156,14 @@ export default function ContractTypesPage() {
           selection={{ enable: true, resource: "contract-types", onChanged: () => qc.invalidateQueries({ queryKey: ["contract-types"] }) }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
+          toolbarExtra={
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-56">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input className="pl-9" placeholder="Search types..." value={q} onChange={e => setQ(e.target.value)} />
+              </div>
+            </div>
+          }
         />
       </div>
 

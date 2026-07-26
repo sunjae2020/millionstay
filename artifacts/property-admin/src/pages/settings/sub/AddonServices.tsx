@@ -164,10 +164,6 @@ export default function AddonServicesPage() {
 
       <div className="px-8 py-6">
         <div className="flex gap-3 mb-4">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder={t("common.search", "Search…")} value={q} onChange={(e) => setQ(e.target.value)} />
-          </div>
           <Button onClick={openNew}><Plus className="h-4 w-4 mr-2" />{t("common.new", "New")}</Button>
         </div>
 
@@ -181,6 +177,14 @@ export default function AddonServicesPage() {
           selection={{ enable: true, resource: "addon-services", onChanged: () => qc.invalidateQueries({ queryKey: ["addon-services"] }) }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
+          toolbarExtra={
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-56">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input className="pl-9" placeholder={t("common.search", "Search…")} value={q} onChange={(e) => setQ(e.target.value)} />
+              </div>
+            </div>
+          }
         />
 
         <p className="text-xs text-muted-foreground mt-3">{filtered.length} {t("nav.addon_services", "Add-on Services")}</p>

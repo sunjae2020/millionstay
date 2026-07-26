@@ -63,6 +63,10 @@ interface SpaceForm {
   base_weekly_price: string;
   base_daily_price: string;
   base_currency: string;
+  monthly_rent: string;
+  deposit_amount: string;
+  purchase_price: string;
+  estimated_sale_price: string;
   floor_number: string;
   floor_area_sqm: string;
   exclusive_area_m2: string;
@@ -473,6 +477,7 @@ export default function SpaceDetail() {
     defaultValues: {
       name: "", manual_input: false, space_type: "", custom_type_name: "",
       max_occupancy: "", booking_mode: "", base_weekly_price: "", base_daily_price: "", base_currency: "AUD",
+      monthly_rent: "", deposit_amount: "", purchase_price: "", estimated_sale_price: "",
       floor_number: "", floor_area_sqm: "",
       exclusive_area_m2: "", residential_common_area_m2: "", supply_area_m2: "",
       other_common_area_m2: "", contract_area_m2: "", land_share_m2: "",
@@ -495,6 +500,10 @@ export default function SpaceDetail() {
         base_weekly_price: space.base_weekly_price?.toString() ?? "",
         base_daily_price: space.base_daily_price?.toString() ?? "",
         base_currency: space.base_currency ?? "AUD",
+        monthly_rent: space.monthly_rent?.toString() ?? "",
+        deposit_amount: space.deposit_amount?.toString() ?? "",
+        purchase_price: space.purchase_price?.toString() ?? "",
+        estimated_sale_price: space.estimated_sale_price?.toString() ?? "",
         floor_number: space.floor_number?.toString() ?? "",
         floor_area_sqm: space.floor_area_sqm?.toString() ?? "",
         exclusive_area_m2: space.exclusive_area_m2?.toString() ?? "",
@@ -566,6 +575,10 @@ export default function SpaceDetail() {
       base_weekly_price: data.base_weekly_price ? parseFloat(data.base_weekly_price) : null,
       base_daily_price: data.base_daily_price ? parseFloat(data.base_daily_price) : null,
       base_currency: data.base_currency || null,
+      monthly_rent: data.monthly_rent ? parseFloat(data.monthly_rent) : null,
+      deposit_amount: data.deposit_amount ? parseFloat(data.deposit_amount) : null,
+      purchase_price: data.purchase_price ? parseFloat(data.purchase_price) : null,
+      estimated_sale_price: data.estimated_sale_price ? parseFloat(data.estimated_sale_price) : null,
       floor_number: data.floor_number ? parseInt(data.floor_number, 10) : null,
       floor_area_sqm: data.floor_area_sqm ? parseFloat(data.floor_area_sqm) : null,
       exclusive_area_m2: data.exclusive_area_m2 ? parseFloat(data.exclusive_area_m2) : null,
@@ -811,20 +824,38 @@ export default function SpaceDetail() {
 
               {/* ④ PRICING & POLICY — 나란히 */}
               <div className="bg-card rounded-lg border p-5 flex flex-col gap-4">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">{t("space.section_pricing")}</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_weekly_price")}</Label>
-                    <Input {...register("base_weekly_price")} type="number" step="0.01" min={0} placeholder="0.00" />
+                <div className="flex items-end justify-between gap-3 border-b pb-2">
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("space.section_pricing")}</h3>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide whitespace-nowrap">{t("space.label_currency")}</Label>
+                    <Input {...register("base_currency")} placeholder="AUD" maxLength={3} className="w-20 h-8 text-sm uppercase" />
                   </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_daily_price")}</Label>
                     <Input {...register("base_daily_price")} type="number" step="5" min={0} placeholder="0.00" />
                     <p className="text-xs text-muted-foreground">{t("space.desc_daily_price")}</p>
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_currency")}</Label>
-                    <Input {...register("base_currency")} placeholder="AUD" maxLength={3} />
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_weekly_price")}</Label>
+                    <Input {...register("base_weekly_price")} type="number" step="0.01" min={0} placeholder="0.00" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_monthly_rent")}</Label>
+                    <Input {...register("monthly_rent")} type="number" step="0.01" min={0} placeholder="0.00" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_deposit_amount")}</Label>
+                    <Input {...register("deposit_amount")} type="number" step="0.01" min={0} placeholder="0.00" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_purchase_price")}</Label>
+                    <Input {...register("purchase_price")} type="number" step="0.01" min={0} placeholder="0.00" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_estimated_sale_price")}</Label>
+                    <Input {...register("estimated_sale_price")} type="number" step="0.01" min={0} placeholder="0.00" />
                   </div>
                 </div>
               </div>

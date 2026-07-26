@@ -181,32 +181,6 @@ export default function ServiceList() {
       />
 
       <div className="p-6">
-        {/* Filters */}
-        <div className="flex gap-3 mb-4 flex-wrap">
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder={t("service.search_placeholder")} value={q} onChange={(e) => setQ(e.target.value)} />
-          </div>
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-40"><SelectValue placeholder={t("service.all_types")} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("service.all_types")}</SelectItem>
-              <SelectItem value="one_time">{t("service.type_one_time")}</SelectItem>
-              <SelectItem value="scheduled">{t("service.type_scheduled")}</SelectItem>
-              <SelectItem value="physical">{t("service.type_physical")}</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-36"><SelectValue placeholder={t("service.all_statuses")} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("service.all_statuses")}</SelectItem>
-              <SelectItem value="Active">{t("common.active")}</SelectItem>
-              <SelectItem value="Inactive">{t("common.inactive")}</SelectItem>
-              <SelectItem value="Archived">{t("service.status_archived")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         <DataTable
           tableKey="service-catalog"
           columns={columns}
@@ -221,6 +195,32 @@ export default function ServiceList() {
           }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
+          toolbarExtra={
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-56">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input className="pl-9" placeholder={t("service.search_placeholder")} value={q} onChange={(e) => setQ(e.target.value)} />
+              </div>
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-40"><SelectValue placeholder={t("service.all_types")} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("service.all_types")}</SelectItem>
+                  <SelectItem value="one_time">{t("service.type_one_time")}</SelectItem>
+                  <SelectItem value="scheduled">{t("service.type_scheduled")}</SelectItem>
+                  <SelectItem value="physical">{t("service.type_physical")}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-36"><SelectValue placeholder={t("service.all_statuses")} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("service.all_statuses")}</SelectItem>
+                  <SelectItem value="Active">{t("common.active")}</SelectItem>
+                  <SelectItem value="Inactive">{t("common.inactive")}</SelectItem>
+                  <SelectItem value="Archived">{t("service.status_archived")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          }
         />
       </div>
 

@@ -110,29 +110,6 @@ export default function InvoiceList() {
           </Button>
         </div>
 
-        <div className="flex gap-3 mb-4">
-          <div className="relative flex-1 max-w-sm">
-            <Input
-              placeholder={t("invoice.search_placeholder")}
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              className="pl-4"
-            />
-          </div>
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="w-44">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_all">{t("invoice.all_statuses")}</SelectItem>
-              <SelectItem value="Draft">{t("invoice.status_draft")}</SelectItem>
-              <SelectItem value="Sent">{t("invoice.status_sent")}</SelectItem>
-              <SelectItem value="Paid">{t("invoice.status_paid")}</SelectItem>
-              <SelectItem value="Void">{t("invoice.status_void")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         <DataTable
           tableKey="invoices"
           columns={columns}
@@ -147,6 +124,30 @@ export default function InvoiceList() {
           }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
+          toolbarExtra={
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-56">
+                <Input
+                  placeholder={t("invoice.search_placeholder")}
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  className="pl-4"
+                />
+              </div>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger className="w-44">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">{t("invoice.all_statuses")}</SelectItem>
+                  <SelectItem value="Draft">{t("invoice.status_draft")}</SelectItem>
+                  <SelectItem value="Sent">{t("invoice.status_sent")}</SelectItem>
+                  <SelectItem value="Paid">{t("invoice.status_paid")}</SelectItem>
+                  <SelectItem value="Void">{t("invoice.status_void")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          }
         />
       </div>
     </Layout>
