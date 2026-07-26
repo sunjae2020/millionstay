@@ -119,7 +119,7 @@ function getNav(t: (k: string) => string): NavSection[] {
       ],
     },
     {
-      label: t("nav.booking"),
+      label: t("nav.booking_contract"),
       icon: CalendarCheck,
       defaultOpen: false,
       items: [

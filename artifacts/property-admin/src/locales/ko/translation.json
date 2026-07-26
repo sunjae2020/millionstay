@@ -54,7 +54,7 @@
     "contract": "계약",
     "contract_product": "계약 상품",
     "service": "서비스",
-    "service_host": "서비스 호스트",
+    "service_host": "서비스 & 건물관리",
     "products": "상품 관리",
     "accommodation": "숙박 상품",
     "service_product": "서비스 상품",
@@ -115,7 +115,8 @@
     "document_templates": "문서 템플릿",
     "homestay_billing": "홈스테이 청구",
     "application_emails": "신청 접수 메일",
-    "sale_listings": "분양·판매 물건"
+    "sale_listings": "분양·판매 물건",
+    "booking_contract": "예약 & 계약"
   },
   "dashboard": {
     "title": "대시보드",
@@ -145,7 +146,7 @@
     "guests": "게스트",
     "guests_sub": "게스트 계정",
     "space_owners": "공간 소유자",
-    "space_owners_sub": "Landlord / SpaceOwner",
+    "space_owners_sub": "집주인 / 공간 소유자",
     "active_tasks": "활성 업무",
     "active_tasks_sub": "할 일 + 진행 중",
     "new_leads": "이번 주 신규 리드",
@@ -188,7 +189,17 @@
     "not_configured": "미설정",
     "connected": "연결됨",
     "error": "오류",
-    "space_col": "공간"
+    "space_col": "공간",
+    "tabs": {
+      "overview": "개요",
+      "reservations": "예약",
+      "channels": "채널",
+      "crm": "CRM",
+      "finance": "재무",
+      "operations": "운영",
+      "homestay_ops": "홈스테이 운영",
+      "floor_board": "층별 현황"
+    }
   },
   "login": {
     "title": "관리자 로그인",
@@ -976,7 +987,7 @@
     "ch_last_pushed": "마지막 푸시",
     "ch_push_ok": "채널로 푸시됨",
     "ch_push_failed": "푸시 실패",
-    "cs_no_connected": "먼저 채널을 연결하세요 (Details 탭의 채널 연결 섹션).",
+    "cs_no_connected": "먼저 채널을 연결하세요 (상세 탭의 채널 연결 섹션).",
     "cs_accounts_title": "계정 & 웹훅",
     "cs_accounts_desc": "각 OTA가 예약을 보낼 때 사용하는 웹훅 시크릿을 등록하고, 아래 웹훅 URL을 OTA에 등록하세요.",
     "cs_webhook_url": "웹훅 URL",
@@ -1478,11 +1489,7 @@
     "specialty_linen": "린넨",
     "specialty_hvac": "냉난방",
     "specialty_gardening": "조경",
-    "specialty_pest": "방역",
-    "tab_overview": "개요",
-    "tab_accounting": "잡 & 정산",
-    "tab_photos": "사진",
-    "tab_cs": "CS 티켓"
+    "specialty_pest": "방역"
   },
   "receipt": {
     "no_receipts": "영수증이 없습니다",
@@ -2065,13 +2072,13 @@
     "toast_error_title": "오류",
     "toast_save_failed_description": "콘텐츠 저장에 실패했습니다. 다시 시도해 주세요.",
     "field_home_hero_title": "히어로 제목",
-    "ph_home_hero_title": "Find Your Home Away From Home",
+    "ph_home_hero_title": "제2의 집을 찾아보세요",
     "field_home_hero_subtitle": "히어로 부제목",
     "ph_home_hero_subtitle": "히어로 제목 아래 태그라인",
     "field_home_hero_cta_primary": "기본 CTA 버튼 텍스트",
-    "ph_home_hero_cta_primary": "Browse Rooms",
+    "ph_home_hero_cta_primary": "객실 둘러보기",
     "field_home_hero_cta_secondary": "보조 CTA 버튼 텍스트",
-    "ph_home_hero_cta_secondary": "Learn More",
+    "ph_home_hero_cta_secondary": "더 알아보기",
     "field_home_why_title": "\"Why {{appName}}\" 섹션 제목",
     "field_home_why_body": "\"Why {{appName}}\" 본문",
     "field_home_feature_1_title": "특징 1 — 제목",
@@ -3593,7 +3600,7 @@
   },
   "commission_plans": {
     "title": "커미션 플랜",
-    "subtitle": "에이전트별 소개비·요율. base가 %의 적용 대상을 결정합니다.",
+    "subtitle": "에이전트별 소개비·요율. 기준(base)이 %의 적용 대상을 결정합니다.",
     "add": "새 플랜",
     "col_agent": "에이전트",
     "col_base": "기준(base)",
@@ -3626,33 +3633,23 @@
     "btn_close": "종료",
     "forwarded_on": "전달"
   },
-  "service_host_acct": {
-    "revenue": "발생 매출",
-    "outstanding": "미지급 정산",
-    "approved": "승인됨",
-    "paid": "지급완료",
-    "payouts": "파트너 정산",
-    "add_payout": "정산 등록",
-    "amount": "금액",
-    "ref": "번호",
-    "no_payouts": "정산 내역 없음",
-    "gl_note": "적립: 차변 외주비 / 대변 파트너 미지급금. 지급: 차변 미지급금 / 대변 현금.",
-    "jobs": "서비스 잡",
-    "no_jobs": "잡 없음",
-    "booking": "예약",
-    "price": "금액",
-    "work_orders": "작업지시",
-    "cost": "원가",
-    "approve": "승인",
-    "mark_paid": "지급완료 처리"
-  },
-  "service_host_photos": {
-    "empty": "업로드된 잡 사진이 없습니다"
-  },
-  "service_host_cs": {
-    "empty": "이 파트너의 문의 티켓이 없습니다",
-    "ref": "번호",
-    "subject": "제목",
-    "category": "분류"
+  "dash_floorboard": {
+    "title": "층별·타입별 현황",
+    "subtitle": "층·타입별 전체 세대 현황",
+    "by_status": "상태별",
+    "by_owner": "소유주별",
+    "kpi_total": "전체 세대",
+    "floor": "층",
+    "sum": "합계",
+    "loading": "불러오는 중…",
+    "empty": "이 매물에는 층 정보가 있는 세대가 없습니다.",
+    "hint": "세대를 클릭하면 상세로 이동하고, 범례를 클릭하면 해당 항목이 강조됩니다.",
+    "status_vacant": "공실",
+    "status_leased": "임대",
+    "status_sold": "분양",
+    "status_rented_out": "대여",
+    "status_unavailable": "임대불가",
+    "status_active": "활성",
+    "status_inactive": "비활성"
   }
 }

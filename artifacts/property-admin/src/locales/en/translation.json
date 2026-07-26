@@ -54,7 +54,7 @@
     "contract": "Contract",
     "contract_product": "Contract Product",
     "service": "Service",
-    "service_host": "Service Host",
+    "service_host": "Services & Facilities",
     "products": "Products",
     "accommodation": "Accommodation Products",
     "service_product": "Service Product",
@@ -115,7 +115,8 @@
     "page_translations": "Page Translations",
     "blog_categories": "Blog Categories",
     "application_emails": "Application Emails",
-    "sale_listings": "Sale Listings"
+    "sale_listings": "Sale Listings",
+    "booking_contract": "Bookings & Contracts"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -188,7 +189,17 @@
     "not_configured": "Not configured",
     "connected": "Connected",
     "error": "Error",
-    "space_col": "Space"
+    "space_col": "Space",
+    "tabs": {
+      "overview": "Overview",
+      "reservations": "Reservations",
+      "channels": "Channels",
+      "crm": "CRM",
+      "finance": "Finance",
+      "operations": "Operations",
+      "homestay_ops": "Homestay Ops",
+      "floor_board": "Floor Board"
+    }
   },
   "login": {
     "title": "Admin Login",
@@ -1478,11 +1489,7 @@
     "specialty_linen": "Linen",
     "specialty_hvac": "HVAC",
     "specialty_gardening": "Gardening",
-    "specialty_pest": "Pest control",
-    "tab_overview": "Overview",
-    "tab_accounting": "Jobs & Payouts",
-    "tab_photos": "Photos",
-    "tab_cs": "CS Tickets"
+    "specialty_pest": "Pest control"
   },
   "receipt": {
     "no_receipts": "No receipts found",
@@ -3626,33 +3633,23 @@
     "btn_close": "Close",
     "forwarded_on": "forwarded"
   },
-  "service_host_acct": {
-    "revenue": "Revenue generated",
-    "outstanding": "Outstanding payout",
-    "approved": "Approved",
-    "paid": "Paid",
-    "payouts": "Partner payouts",
-    "add_payout": "Record payout",
-    "amount": "Amount",
-    "ref": "Ref",
-    "no_payouts": "No payouts yet",
-    "gl_note": "Accrual posts Dr Contractor Expense / Cr Contractor Payable; payment posts Dr Payable / Cr Cash.",
-    "jobs": "Service jobs",
-    "no_jobs": "No jobs",
-    "booking": "Booking",
-    "price": "Price",
-    "work_orders": "Work orders",
-    "cost": "Cost",
-    "approve": "Approve",
-    "mark_paid": "Mark paid"
-  },
-  "service_host_photos": {
-    "empty": "No job photos yet"
-  },
-  "service_host_cs": {
-    "empty": "No support tickets from this partner",
-    "ref": "Ref",
-    "subject": "Subject",
-    "category": "Category"
+  "dash_floorboard": {
+    "title": "Floor board",
+    "subtitle": "Every unit by floor and type",
+    "by_status": "By status",
+    "by_owner": "By owner",
+    "kpi_total": "Total units",
+    "floor": "Floor",
+    "sum": "Sum",
+    "loading": "Loading…",
+    "empty": "No floor-numbered units for this property.",
+    "hint": "Click a unit to open its detail. Click a legend chip to highlight.",
+    "status_vacant": "Vacant",
+    "status_leased": "Leased",
+    "status_sold": "Sold",
+    "status_rented_out": "Rented out",
+    "status_unavailable": "Unavailable",
+    "status_active": "Active",
+    "status_inactive": "Inactive"
   }
 }

@@ -1,7 +1,7 @@
 import { useSearch, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
-import { LayoutDashboard, CalendarDays, DollarSign, Wrench, Users, Radio, Handshake } from "lucide-react";
+import { LayoutDashboard, CalendarDays, DollarSign, Wrench, Users, Radio, Handshake, Building2 } from "lucide-react";
 import { DashTabs, type TabDef } from "@/components/dashboard/DashboardKit";
 import OverviewTab from "@/pages/dashboard/OverviewTab";
 import ReservationsTab from "@/pages/dashboard/ReservationsTab";
@@ -10,23 +10,27 @@ import OperationsTab from "@/pages/dashboard/OperationsTab";
 import CrmTab from "@/pages/dashboard/CrmTab";
 import ChannelsTab from "@/pages/dashboard/ChannelsTab";
 import HomestayOpsTab from "@/pages/dashboard/HomestayOpsTab";
+import FloorBoardTab from "@/pages/dashboard/FloorBoardTab";
 
-const TABS: TabDef[] = [
-  { id: "overview",     label: "Overview",     icon: LayoutDashboard },
-  { id: "reservations", label: "Reservations", icon: CalendarDays },
-  { id: "channels",     label: "Channels",     icon: Radio },
-  { id: "crm",          label: "CRM",          icon: Users },
-  { id: "finance",      label: "Finance",      icon: DollarSign },
-  { id: "operations",   label: "Operations",   icon: Wrench },
-  { id: "homestay_ops", label: "Homestay Ops", icon: Handshake },
-];
+const TAB_IDS = ["overview", "reservations", "channels", "crm", "finance", "operations", "homestay_ops", "floor_board"] as const;
 
-const VALID = new Set(TABS.map(t => t.id));
+const VALID = new Set<string>(TAB_IDS);
 
 export default function Dashboard() {
   const { t } = useTranslation();
   const search = useSearch();
   const [, navigate] = useLocation();
+
+  const TABS: TabDef[] = [
+    { id: "overview",     label: t("dashboard.tabs.overview", "Overview"),     icon: LayoutDashboard },
+    { id: "reservations", label: t("dashboard.tabs.reservations", "Reservations"), icon: CalendarDays },
+    { id: "channels",     label: t("dashboard.tabs.channels", "Channels"),     icon: Radio },
+    { id: "crm",          label: t("dashboard.tabs.crm", "CRM"),          icon: Users },
+    { id: "finance",      label: t("dashboard.tabs.finance", "Finance"),      icon: DollarSign },
+    { id: "operations",   label: t("dashboard.tabs.operations", "Operations"),   icon: Wrench },
+    { id: "homestay_ops", label: t("dashboard.tabs.homestay_ops", "Homestay Ops"), icon: Handshake },
+    { id: "floor_board",  label: t("dashboard.tabs.floor_board", "Floor Board"), icon: Building2 },
+  ];
 
   const requested = new URLSearchParams(search).get("tab") ?? "overview";
   const active = VALID.has(requested) ? requested : "overview";
@@ -68,6 +72,7 @@ export default function Dashboard() {
         {active === "finance" && <FinanceTab />}
         {active === "operations" && <OperationsTab />}
         {active === "homestay_ops" && <HomestayOpsTab />}
+        {active === "floor_board" && <FloorBoardTab />}
       </div>
     </Layout>
   );
