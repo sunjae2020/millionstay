@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "wouter";
 import { formatDate as fmtDate } from "@/lib/date";
 import { useTranslation } from "react-i18next";
@@ -7,10 +7,9 @@ import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Building2, Plus, ImageOff, Lock } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
-import { TablePagination, usePagination } from "@/components/ui/TablePagination";
+import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 
 const CATEGORY_COLORS: Record<string, string> = {
   presale: "bg-indigo-100 text-indigo-700",
@@ -54,7 +53,91 @@ export default function SaleListingsList() {
     }),
   });
 
-  const pagination = usePagination(listings);
+  const columns: ColumnDef<any>[] = useMemo(
+    () => [
+      {
+        key: "cover_image",
+        header: "listings.col_image",
+        sortable: false,
+        hideable: false,
+        defaultWidth: 80,
+        cell: (row) => (
+          <Link href={`/content/listings/${row.id}`}>
+            {row.cover_image ? (
+              <img src={row.cover_image} alt="" className="w-16 h-12 rounded object-cover border" />
+            ) : (
+              <div className="w-16 h-12 rounded border bg-muted flex items-center justify-center text-muted-foreground/40">
+                <ImageOff className="h-4 w-4" />
+              </div>
+            )}
+          </Link>
+        ),
+      },
+      {
+        key: "title",
+        header: "listings.col_title",
+        hideable: false,
+        defaultWidth: 260,
+        sortAccessor: (r) => pickCopy(r.translations, "title"),
+        cell: (row) => (
+          <div className="font-medium">
+            <Link href={`/content/listings/${row.id}`} className="text-primary hover:underline line-clamp-1">
+              {pickCopy(row.translations, "title") || t("listings.untitled")}
+            </Link>
+            {pickCopy(row.translations, "location") && (
+              <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{pickCopy(row.translations, "location")}</p>
+            )}
+          </div>
+        ),
+      },
+      {
+        key: "category",
+        header: "listings.col_category",
+        sortAccessor: (r) => r.category,
+        cell: (row) => (
+          <Badge className={`${CATEGORY_COLORS[row.category] ?? "bg-gray-100 text-gray-600"} text-[10px] px-1.5 py-0`}>
+            {t(`listings.category_${row.category}`, { defaultValue: row.category })}
+          </Badge>
+        ),
+      },
+      {
+        key: "status",
+        header: "common.status",
+        sortAccessor: (r) => r.status,
+        cell: (row) => (
+          <Badge className={`${STATUS_COLORS[row.status] ?? "bg-gray-100 text-gray-600"} text-[10px] px-1.5 py-0`}>
+            {t(`listings.status_${row.status}`, { defaultValue: row.status })}
+          </Badge>
+        ),
+      },
+      {
+        key: "price_label",
+        header: "listings.col_price",
+        sortAccessor: (r) => pickCopy(r.translations, "price_label"),
+        cell: (row) => (
+          <span className="text-sm text-muted-foreground">{pickCopy(row.translations, "price_label") || "—"}</span>
+        ),
+      },
+      {
+        key: "published",
+        header: "listings.col_published",
+        sortAccessor: (r) => (r.published ? 1 : 0),
+        cell: (row) =>
+          row.published ? (
+            <Badge className="bg-green-100 text-green-700 text-[10px] px-1.5 py-0">{t("listings.published")}</Badge>
+          ) : (
+            <Badge className="bg-gray-100 text-gray-500 text-[10px] px-1.5 py-0">{t("listings.draft")}</Badge>
+          ),
+      },
+      {
+        key: "created_at",
+        header: "listings.col_created",
+        sortAccessor: (r) => r.created_at,
+        cell: (row) => <span className="text-sm text-muted-foreground">{fmtDate(row.created_at)}</span>,
+      },
+    ],
+    [t],
+  );
 
   return (
     <Layout>
@@ -94,67 +177,24 @@ export default function SaleListingsList() {
           </Select>
         </div>
 
-        <div className="border rounded-lg bg-white overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-20">{t("listings.col_image")}</TableHead>
-                <TableHead>{t("listings.col_title")}</TableHead>
-                <TableHead>{t("listings.col_category")}</TableHead>
-                <TableHead>{t("common.status")}</TableHead>
-                <TableHead>{t("listings.col_price")}</TableHead>
-                <TableHead>{t("listings.col_published")}</TableHead>
-                <TableHead>{t("listings.col_created")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">{t("common.loading")}</TableCell></TableRow>
-              ) : listings.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
-                  <div className="flex flex-col items-center gap-3">
-                    <Building2 className="h-8 w-8 text-muted-foreground/40" />
-                    <span>{t("listings.empty")} <Link href="/content/listings/new" className="text-primary hover:underline">{t("listings.create_first")}</Link></span>
-                  </div>
-                </TableCell></TableRow>
-              ) : pagination.paginatedItems.map((row: any) => (
-                <TableRow key={row.id} className="hover:bg-muted/30">
-                  <TableCell>
-                    <Link href={`/content/listings/${row.id}`}>
-                      {row.cover_image
-                        ? <img src={row.cover_image} alt="" className="w-16 h-12 rounded object-cover border" />
-                        : <div className="w-16 h-12 rounded border bg-muted flex items-center justify-center text-muted-foreground/40"><ImageOff className="h-4 w-4" /></div>}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    <Link href={`/content/listings/${row.id}`} className="text-primary hover:underline line-clamp-1">
-                      {pickCopy(row.translations, "title") || t("listings.untitled")}
-                    </Link>
-                    {pickCopy(row.translations, "location") && <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{pickCopy(row.translations, "location")}</p>}
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={`${CATEGORY_COLORS[row.category] ?? "bg-gray-100 text-gray-600"} text-[10px] px-1.5 py-0`}>
-                      {t(`listings.category_${row.category}`, { defaultValue: row.category })}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={`${STATUS_COLORS[row.status] ?? "bg-gray-100 text-gray-600"} text-[10px] px-1.5 py-0`}>
-                      {t(`listings.status_${row.status}`, { defaultValue: row.status })}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{pickCopy(row.translations, "price_label") || "—"}</TableCell>
-                  <TableCell>
-                    {row.published
-                      ? <Badge className="bg-green-100 text-green-700 text-[10px] px-1.5 py-0">{t("listings.published")}</Badge>
-                      : <Badge className="bg-gray-100 text-gray-500 text-[10px] px-1.5 py-0">{t("listings.draft")}</Badge>}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{fmtDate(row.created_at)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-        <TablePagination {...pagination} />
+        <DataTable
+          tableKey="sale-listings"
+          columns={columns}
+          data={listings}
+          isLoading={isLoading}
+          rowKey={(row) => row.id}
+          emptyText={
+            <div className="flex flex-col items-center gap-3">
+              <Building2 className="h-8 w-8 text-muted-foreground/40" />
+              <span>
+                {t("listings.empty")}{" "}
+                <Link href="/content/listings/new" className="text-primary hover:underline">
+                  {t("listings.create_first")}
+                </Link>
+              </span>
+            </div>
+          }
+        />
       </div>
     </Layout>
   );
