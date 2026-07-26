@@ -54,7 +54,7 @@
     "contract": "契約",
     "contract_product": "契約商品",
     "service": "サービス",
-    "service_host": "サービスホスト",
+    "service_host": "サービス・施設管理",
     "products": "商品管理",
     "accommodation": "宿泊商品",
     "service_product": "サービス商品",
@@ -115,7 +115,8 @@
     "document_templates": "ドキュメントテンプレート",
     "homestay_billing": "ホームステイ請求",
     "application_emails": "申請確認メール",
-    "sale_listings": "分譲・販売物件"
+    "sale_listings": "分譲・販売物件",
+    "booking_contract": "予約・契約"
   },
   "dashboard": {
     "title": "ダッシュボード",
@@ -145,7 +146,7 @@
     "guests": "ゲスト",
     "guests_sub": "ゲストアカウント",
     "space_owners": "スペースオーナー",
-    "space_owners_sub": "Landlord / SpaceOwner",
+    "space_owners_sub": "オーナー / スペース所有者",
     "active_tasks": "稼働中のタスク",
     "active_tasks_sub": "Todo + 進行中",
     "new_leads": "今週の新規リード",
@@ -188,7 +189,17 @@
     "not_configured": "未設定",
     "connected": "接続済み",
     "error": "エラー",
-    "space_col": "スペース"
+    "space_col": "スペース",
+    "tabs": {
+      "overview": "概要",
+      "reservations": "予約",
+      "channels": "チャネル",
+      "crm": "CRM",
+      "finance": "財務",
+      "operations": "運用",
+      "homestay_ops": "ホームステイ運用",
+      "floor_board": "フロア一覧"
+    }
   },
   "login": {
     "title": "管理者ログイン",
@@ -1099,6 +1110,10 @@
     "label_parent_space": "親スペース",
     "label_weekly_price": "週額料金",
     "label_daily_price": "日額料金",
+    "label_monthly_rent": "月額料金",
+    "label_deposit_amount": "保証金",
+    "label_purchase_price": "購入金額",
+    "label_estimated_sale_price": "想定売却価格",
     "label_policy": "ポリシー",
     "label_floor_number": "階数",
     "label_floor_area": "面積 (㎡)",
@@ -2057,13 +2072,13 @@
     "toast_error_title": "エラー",
     "toast_save_failed_description": "コンテンツの保存に失敗しました。もう一度お試しください。",
     "field_home_hero_title": "ヒーロータイトル",
-    "ph_home_hero_title": "Find Your Home Away From Home",
+    "ph_home_hero_title": "第二の我が家を見つけよう",
     "field_home_hero_subtitle": "ヒーローサブタイトル",
     "ph_home_hero_subtitle": "ヒーロータイトルの下のタグライン",
     "field_home_hero_cta_primary": "プライマリCTAボタンテキスト",
-    "ph_home_hero_cta_primary": "Browse Rooms",
+    "ph_home_hero_cta_primary": "客室を見る",
     "field_home_hero_cta_secondary": "セカンダリCTAボタンテキスト",
-    "ph_home_hero_cta_secondary": "Learn More",
+    "ph_home_hero_cta_secondary": "詳しく見る",
     "field_home_why_title": "「Why {{appName}}」セクションタイトル",
     "field_home_why_body": "「Why {{appName}}」本文",
     "field_home_feature_1_title": "機能1 — タイトル",
@@ -3617,5 +3632,24 @@
     "btn_forward": "転送",
     "btn_close": "終了",
     "forwarded_on": "転送"
+  },
+  "dash_floorboard": {
+    "title": "フロア・タイプ別状況",
+    "subtitle": "階・タイプ別の全戸状況",
+    "by_status": "ステータス別",
+    "by_owner": "所有者別",
+    "kpi_total": "総戸数",
+    "floor": "階",
+    "sum": "合計",
+    "loading": "読み込み中…",
+    "empty": "この物件には階数付きの住戸がありません。",
+    "hint": "住戸をクリックすると詳細へ、凡例をクリックすると強調表示します。",
+    "status_vacant": "空室",
+    "status_leased": "賃貸",
+    "status_sold": "分譲",
+    "status_rented_out": "貸出",
+    "status_unavailable": "賃貸不可",
+    "status_active": "有効",
+    "status_inactive": "無効"
   }
 }

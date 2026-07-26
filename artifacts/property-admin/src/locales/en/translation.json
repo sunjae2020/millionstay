@@ -54,7 +54,7 @@
     "contract": "Contract",
     "contract_product": "Contract Product",
     "service": "Service",
-    "service_host": "Service Host",
+    "service_host": "Services & Facilities",
     "products": "Products",
     "accommodation": "Accommodation Products",
     "service_product": "Service Product",
@@ -115,7 +115,8 @@
     "page_translations": "Page Translations",
     "blog_categories": "Blog Categories",
     "application_emails": "Application Emails",
-    "sale_listings": "Sale Listings"
+    "sale_listings": "Sale Listings",
+    "booking_contract": "Bookings & Contracts"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -188,7 +189,17 @@
     "not_configured": "Not configured",
     "connected": "Connected",
     "error": "Error",
-    "space_col": "Space"
+    "space_col": "Space",
+    "tabs": {
+      "overview": "Overview",
+      "reservations": "Reservations",
+      "channels": "Channels",
+      "crm": "CRM",
+      "finance": "Finance",
+      "operations": "Operations",
+      "homestay_ops": "Homestay Ops",
+      "floor_board": "Floor Board"
+    }
   },
   "login": {
     "title": "Admin Login",
@@ -1099,6 +1110,10 @@
     "label_parent_space": "Parent Space",
     "label_weekly_price": "Weekly Price",
     "label_daily_price": "Daily Price",
+    "label_monthly_rent": "Monthly Rent",
+    "label_deposit_amount": "Deposit",
+    "label_purchase_price": "Purchase Price",
+    "label_estimated_sale_price": "Estimated Sale Price",
     "label_policy": "Policy",
     "label_floor_number": "Floor Number",
     "label_floor_area": "Floor Area (sqm)",
@@ -3617,5 +3632,24 @@
     "btn_forward": "Forward",
     "btn_close": "Close",
     "forwarded_on": "forwarded"
+  },
+  "dash_floorboard": {
+    "title": "Floor board",
+    "subtitle": "Every unit by floor and type",
+    "by_status": "By status",
+    "by_owner": "By owner",
+    "kpi_total": "Total units",
+    "floor": "Floor",
+    "sum": "Sum",
+    "loading": "Loading…",
+    "empty": "No floor-numbered units for this property.",
+    "hint": "Click a unit to open its detail. Click a legend chip to highlight.",
+    "status_vacant": "Vacant",
+    "status_leased": "Leased",
+    "status_sold": "Sold",
+    "status_rented_out": "Rented out",
+    "status_unavailable": "Unavailable",
+    "status_active": "Active",
+    "status_inactive": "Inactive"
   }
 }

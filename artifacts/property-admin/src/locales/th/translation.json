@@ -54,7 +54,7 @@
     "contract": "สัญญา",
     "contract_product": "สินค้าในสัญญา",
     "service": "บริการ",
-    "service_host": "เจ้าบ้านบริการ",
+    "service_host": "บริการ & การจัดการอาคาร",
     "products": "จัดการสินค้า",
     "accommodation": "สินค้าที่พัก",
     "service_product": "สินค้าบริการ",
@@ -115,7 +115,8 @@
     "document_templates": "แม่แบบเอกสาร",
     "homestay_billing": "การเรียกเก็บเงินโฮมสเตย์",
     "application_emails": "อีเมลยืนยันใบสมัคร",
-    "sale_listings": "รายการขาย"
+    "sale_listings": "รายการขาย",
+    "booking_contract": "การจอง & สัญญา"
   },
   "dashboard": {
     "title": "แดชบอร์ด",
@@ -145,7 +146,7 @@
     "guests": "ผู้เข้าพัก",
     "guests_sub": "บัญชีผู้เข้าพัก",
     "space_owners": "เจ้าของพื้นที่",
-    "space_owners_sub": "Landlord / SpaceOwner",
+    "space_owners_sub": "เจ้าของบ้าน / เจ้าของพื้นที่",
     "active_tasks": "งานที่ใช้งาน",
     "active_tasks_sub": "ที่ต้องทำ + กำลังดำเนินการ",
     "new_leads": "ลีดใหม่สัปดาห์นี้",
@@ -188,7 +189,17 @@
     "not_configured": "ยังไม่ได้ตั้งค่า",
     "connected": "เชื่อมต่อแล้ว",
     "error": "ข้อผิดพลาด",
-    "space_col": "พื้นที่"
+    "space_col": "พื้นที่",
+    "tabs": {
+      "overview": "ภาพรวม",
+      "reservations": "การจอง",
+      "channels": "ช่องทาง",
+      "crm": "CRM",
+      "finance": "การเงิน",
+      "operations": "การดำเนินงาน",
+      "homestay_ops": "โฮมสเตย์",
+      "floor_board": "ผังชั้น"
+    }
   },
   "login": {
     "title": "เข้าสู่ระบบผู้ดูแล",
@@ -1099,6 +1110,10 @@
     "label_parent_space": "พื้นที่หลัก",
     "label_weekly_price": "ราคารายสัปดาห์",
     "label_daily_price": "ราคารายวัน",
+    "label_monthly_rent": "ค่าเช่ารายเดือน",
+    "label_deposit_amount": "เงินมัดจำ",
+    "label_purchase_price": "ราคาซื้อ",
+    "label_estimated_sale_price": "ราคาขายโดยประมาณ",
     "label_policy": "นโยบาย",
     "label_floor_number": "ชั้น",
     "label_floor_area": "พื้นที่ (ตร.ม.)",
@@ -2057,13 +2072,13 @@
     "toast_error_title": "ข้อผิดพลาด",
     "toast_save_failed_description": "บันทึกเนื้อหาไม่สำเร็จ กรุณาลองอีกครั้ง",
     "field_home_hero_title": "ชื่อฮีโร่",
-    "ph_home_hero_title": "Find Your Home Away From Home",
+    "ph_home_hero_title": "ค้นหาบ้านหลังที่สองของคุณ",
     "field_home_hero_subtitle": "ชื่อรองฮีโร่",
     "ph_home_hero_subtitle": "สโลแกนใต้ชื่อฮีโร่",
     "field_home_hero_cta_primary": "ข้อความปุ่ม CTA หลัก",
-    "ph_home_hero_cta_primary": "Browse Rooms",
+    "ph_home_hero_cta_primary": "ดูห้องพัก",
     "field_home_hero_cta_secondary": "ข้อความปุ่ม CTA รอง",
-    "ph_home_hero_cta_secondary": "Learn More",
+    "ph_home_hero_cta_secondary": "เรียนรู้เพิ่มเติม",
     "field_home_why_title": "ชื่อส่วน \"Why {{appName}}\"",
     "field_home_why_body": "เนื้อหา \"Why {{appName}}\"",
     "field_home_feature_1_title": "จุดเด่น 1 — ชื่อ",
@@ -3617,5 +3632,24 @@
     "btn_forward": "ส่งต่อ",
     "btn_close": "ปิด",
     "forwarded_on": "ส่งต่อ"
+  },
+  "dash_floorboard": {
+    "title": "สถานะตามชั้นและประเภท",
+    "subtitle": "ทุกยูนิตแยกตามชั้นและประเภท",
+    "by_status": "ตามสถานะ",
+    "by_owner": "ตามเจ้าของ",
+    "kpi_total": "ยูนิตทั้งหมด",
+    "floor": "ชั้น",
+    "sum": "รวม",
+    "loading": "กำลังโหลด…",
+    "empty": "ไม่มียูนิตที่ระบุชั้นสำหรับอสังหาริมทรัพย์นี้",
+    "hint": "คลิกยูนิตเพื่อดูรายละเอียด คลิกป้ายกำกับเพื่อไฮไลต์",
+    "status_vacant": "ว่าง",
+    "status_leased": "ให้เช่าแล้ว",
+    "status_sold": "ขายแล้ว",
+    "status_rented_out": "ปล่อยเช่า",
+    "status_unavailable": "ไม่พร้อมให้เช่า",
+    "status_active": "ใช้งาน",
+    "status_inactive": "ปิดใช้งาน"
   }
 }
