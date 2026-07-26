@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, and, isNull, inArray, SQL } from "drizzle-orm";
 import { db, spacePoliciesTable } from "@workspace/db";
+import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import {
   ListSpacePoliciesQueryParams,
   CreateSpacePolicyBody,
@@ -26,7 +27,7 @@ router.get("/v1/space-policies", async (req, res): Promise<void> => {
   const policies = await db
     .select()
     .from(spacePoliciesTable)
-    .where(and(isNull(spacePoliciesTable.deleted_at), search ? ilike(spacePoliciesTable.name, `%${search}%`) : undefined))
+    .where(and(deletedFilter(spacePoliciesTable.deleted_at, req), search ? ilike(spacePoliciesTable.name, `%${search}%`) : undefined))
     .orderBy(spacePoliciesTable.created_at);
 
   res.json(ListSpacePoliciesResponse.parse(policies));
@@ -117,22 +118,15 @@ router.delete("/v1/space-policies/:id", async (req, res): Promise<void> => {
   res.sendStatus(204);
 });
 
-router.post("/v1/space-policies/bulk-delete", async (req, res): Promise<void> => {
-  const currentUser = (req as any).user;
-  if (currentUser?.role !== "SuperAdmin") {
-    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
-  }
-  const { ids, permanent } = req.body;
-  if (!Array.isArray(ids) || ids.length === 0) {
-    res.status(400).json({ error: "ids must be a non-empty array" }); return;
-  }
-  const numIds = ids.map(Number).filter(Boolean);
-  if (permanent) {
-    await db.delete(spacePoliciesTable).where(inArray(spacePoliciesTable.id, numIds));
-  } else {
-    await db.update(spacePoliciesTable).set({ deleted_at: new Date(), status: "Archived", updated_at: new Date() }).where(inArray(spacePoliciesTable.id, numIds));
-  }
-  res.json({ success: true, affected: numIds.length });
-});
+const spacePoliciesSoftDelete = {
+  table: spacePoliciesTable,
+  idColumn: spacePoliciesTable.id,
+  statusKey: "status",
+  archivedStatus: "Archived",
+  restoredStatus: "Active",
+};
+
+router.post("/v1/space-policies/bulk-delete", makeBulkDelete(spacePoliciesSoftDelete));
+router.post("/v1/space-policies/bulk-restore", makeBulkRestore(spacePoliciesSoftDelete));
 
 export default router;

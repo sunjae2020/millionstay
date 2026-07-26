@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, and, isNull, inArray, desc, SQL } from "drizzle-orm";
 import { db, blogPostsTable } from "@workspace/db";
+import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import * as z from "zod/v4";
 
 const ListBlogPostsQuery = z.object({
@@ -47,7 +48,7 @@ router.get("/v1/blog-posts", async (req, res): Promise<void> => {
   const parsed = ListBlogPostsQuery.safeParse(req.query);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const { search, status, category } = parsed.data;
-  const conditions: SQL[] = [isNull(blogPostsTable.deleted_at)];
+  const conditions: SQL[] = [deletedFilter(blogPostsTable.deleted_at, req)];
   if (status) conditions.push(eq(blogPostsTable.status, status));
   if (category) conditions.push(eq(blogPostsTable.category, category));
   if (search) conditions.push(ilike(blogPostsTable.title, `%${search}%`));
@@ -107,23 +108,16 @@ router.put("/v1/blog-posts/:id", async (req, res): Promise<void> => {
   }
 });
 
-router.post("/v1/blog-posts/bulk-delete", async (req, res): Promise<void> => {
-  const currentUser = (req as any).user;
-  if (currentUser?.role !== "SuperAdmin") {
-    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
-  }
-  const { ids, permanent } = req.body;
-  if (!Array.isArray(ids) || ids.length === 0) {
-    res.status(400).json({ error: "ids must be a non-empty array" }); return;
-  }
-  const numIds = ids.map(Number).filter(Boolean);
-  if (permanent) {
-    await db.delete(blogPostsTable).where(inArray(blogPostsTable.id, numIds));
-  } else {
-    await db.update(blogPostsTable).set({ deleted_at: new Date(), status: "Archived", updated_at: new Date() }).where(inArray(blogPostsTable.id, numIds));
-  }
-  res.json({ success: true, affected: numIds.length });
-});
+const blogPostsSoftDelete = {
+  table: blogPostsTable,
+  idColumn: blogPostsTable.id,
+  statusKey: "status",
+  archivedStatus: "Archived",
+  restoredStatus: "Active",
+};
+
+router.post("/v1/blog-posts/bulk-delete", makeBulkDelete(blogPostsSoftDelete));
+router.post("/v1/blog-posts/bulk-restore", makeBulkRestore(blogPostsSoftDelete));
 
 router.delete("/v1/blog-posts/:id", async (req, res): Promise<void> => {
   const parsed = IdParams.safeParse(req.params);

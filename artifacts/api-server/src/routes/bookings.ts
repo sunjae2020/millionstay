@@ -20,6 +20,7 @@ import {
 import { logAction } from "../utils/auditLog";
 import { getRateToAud } from "../lib/rateSnapshot";
 import { createBookingRecurringSchedule } from "../lib/billing/bookingSchedule";
+import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import {
   ListBookingsQueryParams,
   CreateBookingBody,
@@ -160,7 +161,7 @@ router.get("/v1/bookings", async (req, res): Promise<void> => {
   const parsed = ListBookingsQueryParams.safeParse(req.query);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const { booking_status, booking_source, space_id, account_id, check_in_from, check_in_to, search, status } = parsed.data;
-  const conditions: SQL[] = [isNull(bookingsTable.deleted_at)];
+  const conditions: SQL[] = [deletedFilter(bookingsTable.deleted_at, req)];
   if (booking_status) conditions.push(eq(bookingsTable.booking_status, booking_status));
   if (booking_source) conditions.push(eq(bookingsTable.booking_source, booking_source));
   if (space_id) conditions.push(eq(bookingsTable.space_id, space_id));
@@ -352,23 +353,13 @@ router.put("/v1/bookings/:id", async (req, res): Promise<void> => {
   res.json(await buildBookingResponse(row));
 });
 
-router.post("/v1/bookings/bulk-delete", async (req, res): Promise<void> => {
-  const currentUser = (req as any).user;
-  if (currentUser?.role !== "SuperAdmin") {
-    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
-  }
-  const { ids, permanent } = req.body;
-  if (!Array.isArray(ids) || ids.length === 0) {
-    res.status(400).json({ error: "ids must be a non-empty array" }); return;
-  }
-  const numIds = ids.map(Number).filter(Boolean);
-  if (permanent) {
-    await db.delete(bookingsTable).where(inArray(bookingsTable.id, numIds));
-  } else {
-    await db.update(bookingsTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(bookingsTable.id, numIds));
-  }
-  res.json({ success: true, affected: numIds.length });
-});
+const bookingsSoftDelete = {
+  table: bookingsTable,
+  idColumn: bookingsTable.id,
+};
+
+router.post("/v1/bookings/bulk-delete", makeBulkDelete(bookingsSoftDelete));
+router.post("/v1/bookings/bulk-restore", makeBulkRestore(bookingsSoftDelete));
 
 router.delete("/v1/bookings/:id", async (req, res): Promise<void> => {
   const parsed = DeleteBookingParams.safeParse({ id: Number(req.params.id) });

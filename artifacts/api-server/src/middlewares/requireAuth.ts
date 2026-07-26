@@ -139,7 +139,15 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   // only issue safe (non-mutating) HTTP methods; any create/update/delete is 403.
   // SuperAdmin/Admin are unaffected. (Token role is authoritative for ≤1h TTL;
   // a just-demoted Viewer loses write access at the next token refresh.)
-  if (payload.role === "Viewer" && !SAFE_METHODS.has(req.method.toUpperCase())) {
+  // Exempt each user's OWN table-view preferences (column order/visibility/width):
+  // it's personalization keyed to the user, not data mutation, so a read-only
+  // Viewer must still be able to persist their own list layouts.
+  const isOwnPrefs = (req.originalUrl.split("?")[0] || "").includes("/v1/table-prefs");
+  if (
+    payload.role === "Viewer" &&
+    !SAFE_METHODS.has(req.method.toUpperCase()) &&
+    !isOwnPrefs
+  ) {
     res.status(403).json({
       success: false,
       error: { code: "READ_ONLY", message: "Viewer role is read-only and cannot modify data." },

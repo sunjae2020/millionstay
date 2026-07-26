@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout } from "@/components/Layout";
@@ -6,20 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tag, Plus, Search, Pencil, Copy, Archive, X, AlertTriangle, Loader2, Trash2 } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { usePagination, TablePagination } from "@/components/ui/TablePagination";
-import { useListPromotions } from "@workspace/api-client-react";
+import { Tag, Plus, Search, Pencil, Copy } from "lucide-react";
+import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import {
+  useListPromotions,
+  getListPromotionsQueryKey,
+  type ListPromotionsParams,
+  type PromotionResponse,
+} from "@workspace/api-client-react";
 import { useLocation } from "wouter";
 import { apiFetch } from "@/lib/apiFetch";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
-import {
-  AlertDialog, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 const STATUS_COLORS: Record<string, string> = {
   Active: "bg-green-100 text-green-700",
@@ -63,18 +60,13 @@ function stayRange(promo: { min_stay_weeks?: number | null; max_stay_weeks?: num
 
 export default function PromotionList() {
   const { t } = useTranslation();
-  const { user } = useAuth();
-  const isSuperAdmin = user?.role === "SuperAdmin";
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("_all");
   const [termType, setTermType] = useState("_all");
   const [cloningId, setCloningId] = useState<number | null>(null);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [bulkAction, setBulkAction] = useState<"archive" | "permanent" | null>(null);
-  const [isBulkLoading, setIsBulkLoading] = useState(false);
+  const [showDeleted, setShowDeleted] = useState(false);
   const [, navigate] = useLocation();
   const qc = useQueryClient();
-  const { toast } = useToast();
 
   async function handleClone(p: any) {
     setCloningId(p.id);
@@ -93,49 +85,87 @@ export default function PromotionList() {
     }
   }
 
-  const { data: promotions = [], isLoading } = useListPromotions({
+  const params: ListPromotionsParams & { deleted?: string } = {
     search: search || undefined,
     status: status !== "_all" ? status : undefined,
-    promotion_type: termType !== "_all" ? undefined : undefined,
+    ...(showDeleted ? { deleted: "only" } : {}),
+  };
+
+  const { data: promotions = [], isLoading } = useListPromotions(params, {
+    query: { queryKey: getListPromotionsQueryKey(params) },
   });
 
   const filtered = termType !== "_all" ? promotions.filter(p => p.term_type === termType) : promotions;
-  const pagination = usePagination(filtered);
 
-  const pageIds = pagination.paginatedItems.map((p) => p.id);
-  const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
-  const somePageSelected = pageIds.some((id) => selectedIds.has(id));
-  const toggleSelectAll = () => {
-    if (allPageSelected) {
-      setSelectedIds((prev) => { const n = new Set(prev); pageIds.forEach((id) => n.delete(id)); return n; });
-    } else {
-      setSelectedIds((prev) => { const n = new Set(prev); pageIds.forEach((id) => n.add(id)); return n; });
-    }
-  };
-  const toggleSelect = (id: number) => {
-    setSelectedIds((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  };
-  const clearSelection = () => setSelectedIds(new Set());
-  const handleBulkDelete = async (permanent: boolean) => {
-    setIsBulkLoading(true);
-    setBulkAction(null);
-    try {
-      const res = await apiFetch("/api/v1/promotions/bulk-delete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids: Array.from(selectedIds), permanent }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Bulk delete failed");
-      qc.invalidateQueries({ queryKey: ["promotions"] });
-      toast({ title: permanent ? `${data.affected} promotions permanently deleted` : `${data.affected} promotions archived` });
-      clearSelection();
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    } finally {
-      setIsBulkLoading(false);
-    }
-  };
+  const columns: ColumnDef<PromotionResponse>[] = useMemo(
+    () => [
+      {
+        key: "name",
+        header: "promotion.col_name",
+        hideable: false,
+        cell: (p) => (
+          <Link href={`/products/promotions/${p.id}`} className="text-primary hover:underline font-medium">{p.name}</Link>
+        ),
+      },
+      {
+        key: "term_type",
+        header: "promotion.col_term",
+        cell: (p) => (
+          <Badge className={TERM_COLORS[p.term_type ?? ""] ?? "bg-gray-100 text-gray-600"}>{TERM_LABELS[p.term_type ?? ""] ?? p.term_type}</Badge>
+        ),
+      },
+      {
+        key: "discount",
+        header: "promotion.col_discount",
+        sortable: false,
+        cell: (p) => <span className="text-sm font-mono font-semibold">{formatDiscount(p)}</span>,
+      },
+      {
+        key: "min_stay_weeks",
+        header: "promotion.col_stay",
+        cell: (p) => <span className="text-sm text-muted-foreground">{stayRange(p)}</span>,
+      },
+      {
+        key: "billing_frequency",
+        header: "promotion.col_billing",
+        cell: (p) => <span className="text-sm text-muted-foreground">{FREQ_LABELS[p.billing_frequency ?? ""] ?? (p.billing_frequency ?? "—")}</span>,
+      },
+      {
+        key: "code",
+        header: "promotion.col_code",
+        cell: (p) => (p.code ? <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">{p.code}</code> : "—"),
+      },
+      {
+        key: "status",
+        header: "promotion.col_status",
+        cell: (p) => <Badge className={STATUS_COLORS[p.status ?? ""] ?? "bg-gray-100 text-gray-700"}>{p.status}</Badge>,
+      },
+      {
+        key: ACTIONS_KEY,
+        header: "",
+        hideable: false,
+        sortable: false,
+        align: "right",
+        defaultWidth: 90,
+        cell: (p) => (
+          <div className="flex items-center gap-1 justify-end">
+            <Link href={`/products/promotions/${p.id}`}>
+              <Button variant="ghost" size="icon" className="h-7 w-7"><Pencil className="h-3.5 w-3.5" /></Button>
+            </Link>
+            <Button
+              variant="ghost" size="icon" className="h-7 w-7"
+              disabled={cloningId === p.id}
+              onClick={() => handleClone(p)}
+              title="Clone promotion"
+            >
+              <Copy className={`h-3.5 w-3.5 ${cloningId === p.id ? "animate-pulse" : ""}`} />
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [t, cloningId],
+  );
 
   return (
     <Layout>
@@ -186,107 +216,22 @@ export default function PromotionList() {
           </Select>
         </div>
 
-        {isSuperAdmin && selectedIds.size > 0 && (
-          <div className="flex items-center gap-3 mb-3 px-4 py-2.5 rounded-lg bg-primary/10 border border-primary/20">
-            <span className="text-sm font-medium text-primary">{selectedIds.size} item{selectedIds.size > 1 ? "s" : ""} selected</span>
-            <button onClick={clearSelection} className="text-primary hover:text-primary"><X className="h-3.5 w-3.5" /></button>
-            <div className="ml-auto flex items-center gap-2">
-              {isBulkLoading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
-              <Button size="sm" variant="outline" className="h-7 border-amber-300 text-amber-700 hover:bg-amber-50 gap-1.5" onClick={() => setBulkAction("archive")} disabled={isBulkLoading}>
-                <Archive className="h-3.5 w-3.5" /> Archive Selected
-              </Button>
-              <Button size="sm" variant="destructive" className="h-7 gap-1.5" onClick={() => setBulkAction("permanent")} disabled={isBulkLoading}>
-                <Trash2 className="h-3.5 w-3.5" /> Delete Forever
-              </Button>
-            </div>
-          </div>
-        )}
-        <div className="border rounded-lg bg-white overflow-hidden">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {isSuperAdmin && <TableHead className="w-10"><Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} /></TableHead>}
-                  <TableHead>{t("promotion.col_name")}</TableHead>
-                  <TableHead>{t("promotion.col_term")}</TableHead>
-                  <TableHead>{t("promotion.col_discount")}</TableHead>
-                  <TableHead>{t("promotion.col_stay")}</TableHead>
-                  <TableHead>{t("promotion.col_billing")}</TableHead>
-                  <TableHead>{t("promotion.col_code")}</TableHead>
-                  <TableHead>{t("promotion.col_status")}</TableHead>
-                  <TableHead className="w-24"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow><TableCell colSpan={isSuperAdmin ? 9 : 8} className="text-center text-muted-foreground py-12">{t("common.loading")}</TableCell></TableRow>
-                ) : pagination.paginatedItems.length === 0 ? (
-                  <TableRow><TableCell colSpan={isSuperAdmin ? 9 : 8} className="text-center text-muted-foreground py-12">{t("promotion.no_promotions")}</TableCell></TableRow>
-                ) : pagination.paginatedItems.map((p) => (
-                  <TableRow key={p.id} className={`hover:bg-muted/30 ${selectedIds.has(p.id) ? "bg-primary/5" : ""}`}>
-                    {isSuperAdmin && <TableCell><Checkbox checked={selectedIds.has(p.id)} onCheckedChange={() => toggleSelect(p.id)} onClick={(e) => e.stopPropagation()} /></TableCell>}
-                    <TableCell className="font-medium">
-                      <Link href={`/products/promotions/${p.id}`} className="text-primary hover:underline">{p.name}</Link>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={TERM_COLORS[p.term_type ?? ""] ?? "bg-gray-100 text-gray-600"}>{TERM_LABELS[p.term_type ?? ""] ?? p.term_type}</Badge>
-                    </TableCell>
-                    <TableCell className="text-sm font-mono font-semibold">{formatDiscount(p)}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{stayRange(p)}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{FREQ_LABELS[p.billing_frequency ?? ""] ?? (p.billing_frequency ?? "—")}</TableCell>
-                    <TableCell>
-                      {p.code ? <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">{p.code}</code> : "—"}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={STATUS_COLORS[p.status ?? ""] ?? "bg-gray-100 text-gray-700"}>{p.status}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Link href={`/products/promotions/${p.id}`}>
-                          <Button variant="ghost" size="icon" className="h-7 w-7"><Pencil className="h-3.5 w-3.5" /></Button>
-                        </Link>
-                        <Button
-                          variant="ghost" size="icon" className="h-7 w-7"
-                          disabled={cloningId === p.id}
-                          onClick={() => handleClone(p)}
-                          title="Clone promotion"
-                        >
-                          <Copy className={`h-3.5 w-3.5 ${cloningId === p.id ? "animate-pulse" : ""}`} />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-        <TablePagination {...pagination} />
+        <DataTable
+          tableKey="promotions"
+          columns={columns}
+          data={filtered}
+          isLoading={isLoading}
+          rowKey={(p) => p.id}
+          emptyText={t("promotion.no_promotions")}
+          selection={{
+            enable: true,
+            resource: "promotions",
+            onChanged: () => qc.invalidateQueries({ queryKey: getListPromotionsQueryKey() }),
+          }}
+          showDeleted={showDeleted}
+          onToggleShowDeleted={setShowDeleted}
+        />
       </div>
-
-      <AlertDialog open={bulkAction !== null} onOpenChange={(o) => !o && setBulkAction(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-destructive" />
-              {bulkAction === "permanent" ? "Permanently Delete Promotions" : "Archive Promotions"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {bulkAction === "permanent"
-                ? `You are about to permanently delete ${selectedIds.size} promotion(s). This cannot be undone.`
-                : `You are about to archive ${selectedIds.size} promotion(s). They will be hidden from view.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <Button variant={bulkAction === "permanent" ? "destructive" : "outline"}
-              className={bulkAction !== "permanent" ? "border-amber-300 text-amber-700 hover:bg-amber-50" : ""}
-              onClick={() => handleBulkDelete(bulkAction === "permanent")}>
-              {bulkAction === "permanent" ? "Delete Forever" : "Archive All"}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Layout>
   );
 }

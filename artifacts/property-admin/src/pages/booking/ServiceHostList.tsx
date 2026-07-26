@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useListServiceHosts, useDeleteServiceHost, getListServiceHostsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
-import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -24,8 +24,6 @@ export default function ServiceHostList() {
     query: { queryKey: getListServiceHostsQueryKey(params) },
   });
 
-  const pagination = usePagination(hosts ?? []);
-
   const deleteMutation = useDeleteServiceHost({
     mutation: {
       onSuccess: () => {
@@ -34,6 +32,71 @@ export default function ServiceHostList() {
       },
     },
   });
+
+  const columns: ColumnDef<any>[] = useMemo(
+    () => [
+      {
+        key: "name",
+        header: "service_host.col_name",
+        hideable: false,
+        cell: (host) => <Link href={`/booking/service-hosts/${host.id}`} className="font-medium text-primary hover:underline">{host.name}</Link>,
+      },
+      {
+        key: "account_name",
+        header: "service_host.col_account",
+        cell: (host) => <span className="text-muted-foreground">{host.account_name ?? "—"}</span>,
+      },
+      {
+        key: "type",
+        header: "service_host.col_type",
+        sortAccessor: (host) => (host.in_call ? "in" : "") + (host.out_call ? "out" : ""),
+        cell: (host) => (
+          <span className="flex gap-1 text-muted-foreground">
+            {host.in_call && <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">{t("service_host.in_call")}</span>}
+            {host.out_call && <span className="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded-full">{t("service_host.out_call")}</span>}
+            {!host.in_call && !host.out_call && "—"}
+          </span>
+        ),
+      },
+      {
+        key: "from_date",
+        header: "service_host.col_period",
+        cell: (host) => (
+          <span className="text-muted-foreground">
+            {host.from_date && host.to_date ? `${host.from_date} → ${host.to_date}` : "—"}
+          </span>
+        ),
+      },
+      {
+        key: "status",
+        header: "service_host.col_status",
+        cell: (host) => (
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${host.status === "Active" ? "bg-green-100 text-green-700 border-green-200" : "bg-gray-100 text-gray-600 border-gray-200"}`}>
+            {t(`common.${host.status.toLowerCase()}`)}
+          </span>
+        ),
+      },
+      {
+        key: ACTIONS_KEY,
+        header: "",
+        hideable: false,
+        sortable: false,
+        align: "right",
+        defaultWidth: 90,
+        cell: (host) => (
+          <div className="flex items-center gap-1 justify-end">
+            <Link href={`/booking/service-hosts/${host.id}`}>
+              <Button variant="ghost" size="icon" className="h-8 w-8"><Pencil className="w-3.5 h-3.5" /></Button>
+            </Link>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteId(host.id)}>
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [t],
+  );
 
   return (
     <Layout>
@@ -53,59 +116,15 @@ export default function ServiceHostList() {
             <Input className="pl-9" placeholder={t("service_host.search_placeholder")} value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
         </div>
-        <div className="rounded-lg border bg-white overflow-hidden">
-          <div className="overflow-x-auto">
-          <table className="w-full min-w-max text-sm">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                {[t("service_host.col_name"), t("service_host.col_account"), t("service_host.col_type"), t("service_host.col_period"), t("service_host.col_status"), ""].map((h) => (
-                  <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr><td colSpan={6} className="text-center py-12 text-muted-foreground">{t("common.loading")}</td></tr>
-              ) : !hosts?.length ? (
-                <tr><td colSpan={6} className="text-center py-12 text-muted-foreground">{t("service_host.no_hosts")}</td></tr>
-              ) : pagination.paginatedItems.map((host) => (
-                <tr key={host.id} className="border-b hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 font-medium">
-                    <Link href={`/booking/service-hosts/${host.id}`} className="text-primary hover:underline">{host.name}</Link>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{(host as any).account_name ?? "—"}</td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    <span className="flex gap-1">
-                      {host.in_call && <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">{t("service_host.in_call")}</span>}
-                      {host.out_call && <span className="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded-full">{t("service_host.out_call")}</span>}
-                      {!host.in_call && !host.out_call && "—"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {host.from_date && host.to_date ? `${host.from_date} → ${host.to_date}` : "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${host.status === "Active" ? "bg-green-100 text-green-700 border-green-200" : "bg-gray-100 text-gray-600 border-gray-200"}`}>
-                      {t(`common.${host.status.toLowerCase()}`)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1 justify-end">
-                      <Link href={`/booking/service-hosts/${host.id}`}>
-                        <Button variant="ghost" size="icon" className="h-8 w-8"><Pencil className="w-3.5 h-3.5" /></Button>
-                      </Link>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteId(host.id)}>
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          </div>
-        </div>
-        <TablePagination {...pagination} />
+
+        <DataTable
+          tableKey="service-hosts"
+          columns={columns}
+          data={hosts ?? []}
+          isLoading={isLoading}
+          rowKey={(host) => host.id}
+          emptyText={t("service_host.no_hosts")}
+        />
       </div>
       <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>

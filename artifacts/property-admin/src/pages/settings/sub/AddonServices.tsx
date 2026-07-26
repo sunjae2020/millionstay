@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -31,8 +31,8 @@ type AddonService = {
   sort_order: number;
 };
 
-async function fetchServices() {
-  const res = await apiFetch(API);
+async function fetchServices(showDeleted: boolean) {
+  const res = await apiFetch(showDeleted ? `${API}?deleted=only` : API);
   if (!res.ok) throw new Error("Failed");
   const json = await res.json();
   return (json.data ?? []) as AddonService[];
@@ -52,11 +52,58 @@ export default function AddonServicesPage() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [editing, setEditing] = useState<AddonService | null>(null);
   const [form, setForm] = useState<typeof EMPTY>(EMPTY);
+  const [showDeleted, setShowDeleted] = useState(false);
 
-  const { data: services = [], isLoading } = useQuery({ queryKey: ["addon-services"], queryFn: fetchServices });
+  const { data: services = [], isLoading } = useQuery({ queryKey: ["addon-services", showDeleted], queryFn: () => fetchServices(showDeleted) });
 
   const filtered = services.filter((s) =>
     !q || s.name.toLowerCase().includes(q.toLowerCase()) || s.code.toLowerCase().includes(q.toLowerCase()));
+
+  const columns: ColumnDef<AddonService>[] = useMemo(() => [
+    {
+      key: "name",
+      header: t("accommodation_options.col_name", "Name"),
+      hideable: false,
+      cell: (item) => (
+        <>
+          <div className="font-medium">{item.name}</div>
+          <div className="text-xs text-muted-foreground font-mono">{item.code}</div>
+        </>
+      ),
+    },
+    {
+      key: "category",
+      header: t("accommodation_options.col_category", "Category"),
+      cell: (item) => <Badge variant="secondary">{t(`accommodation_options.addon_category.${item.category}`, item.category)}</Badge>,
+    },
+    {
+      key: "base_price",
+      header: t("accommodation_options.col_price", "Price"),
+      cell: (item) => (
+        <span className="text-sm">
+          {item.base_price != null ? `${item.currency} ${item.base_price.toFixed(2)}` : <span className="text-muted-foreground/40 italic">—</span>}
+        </span>
+      ),
+    },
+    {
+      key: "unit",
+      header: t("accommodation_options.col_unit", "Unit"),
+      cell: (item) => <span className="text-sm text-muted-foreground">{t(`accommodation_options.addon_unit.${item.unit}`, item.unit)}</span>,
+    },
+    {
+      key: ACTIONS_KEY,
+      header: "",
+      hideable: false,
+      sortable: false,
+      align: "right",
+      cell: (item) => (
+        <div className="flex gap-1 justify-end">
+          <Button size="icon" variant="ghost" onClick={() => openEdit(item)}><Pencil className="h-3.5 w-3.5" /></Button>
+          <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setDeleteId(item.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+        </div>
+      ),
+    },
+  ], [t]);
 
   const save = useMutation({
     mutationFn: async () => {
@@ -124,48 +171,17 @@ export default function AddonServicesPage() {
           <Button onClick={openNew}><Plus className="h-4 w-4 mr-2" />{t("common.new", "New")}</Button>
         </div>
 
-        <div className="border rounded-lg bg-white">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("accommodation_options.col_name", "Name")}</TableHead>
-                <TableHead>{t("accommodation_options.col_category", "Category")}</TableHead>
-                <TableHead>{t("accommodation_options.col_price", "Price")}</TableHead>
-                <TableHead>{t("accommodation_options.col_unit", "Unit")}</TableHead>
-                <TableHead className="w-24"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-10 text-muted-foreground">Loading…</TableCell></TableRow>
-              ) : filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-10 text-muted-foreground">{t("accommodation_options.empty", "No add-on services")}</TableCell></TableRow>
-              ) : filtered.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>
-                    <div className="font-medium">{item.name}</div>
-                    <div className="text-xs text-muted-foreground font-mono">{item.code}</div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{t(`accommodation_options.addon_category.${item.category}`, item.category)}</Badge>
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {item.base_price != null ? `${item.currency} ${item.base_price.toFixed(2)}` : <span className="text-muted-foreground/40 italic">—</span>}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {t(`accommodation_options.addon_unit.${item.unit}`, item.unit)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-1 justify-end">
-                      <Button size="icon" variant="ghost" onClick={() => openEdit(item)}><Pencil className="h-3.5 w-3.5" /></Button>
-                      <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setDeleteId(item.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <DataTable
+          tableKey="addon-services"
+          columns={columns}
+          data={filtered}
+          isLoading={isLoading}
+          rowKey={(s) => s.id}
+          emptyText={t("accommodation_options.empty", "No add-on services")}
+          selection={{ enable: true, resource: "addon-services", onChanged: () => qc.invalidateQueries({ queryKey: ["addon-services"] }) }}
+          showDeleted={showDeleted}
+          onToggleShowDeleted={setShowDeleted}
+        />
 
         <p className="text-xs text-muted-foreground mt-3">{filtered.length} {t("nav.addon_services", "Add-on Services")}</p>
       </div>

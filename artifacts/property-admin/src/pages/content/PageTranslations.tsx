@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import { Languages, Save, Sparkles, Loader2, ExternalLink, CheckCheck } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
@@ -190,6 +190,75 @@ export default function PageTranslations() {
   const aiBusy = aiTranslate.isPending || aiReview.isPending;
   const previewUrl = page.path ? `${siteDef.previewBase}${page.path}` : null;
 
+  const columns: ColumnDef<Row>[] = useMemo(() => {
+    const cols: ColumnDef<Row>[] = [
+      {
+        key: "key",
+        header: <>{t("page_translations.col_key", { defaultValue: "Key" })}</>,
+        hideable: false,
+        defaultWidth: 260,
+        sortAccessor: (r) => r.key,
+        cellClassName: "font-mono text-xs align-top pt-3.5 break-all",
+        cell: (r) => {
+          const shortKey = r.key.startsWith(prefix + ".") ? r.key.slice(prefix.length + 1) : r.key;
+          return (
+            <>
+              {shortKey}
+              {!isEn && r.needs_review && (
+                <Badge className="ml-1 bg-amber-100 text-amber-800 hover:bg-amber-100 text-[10px] px-1 py-0">AI</Badge>
+              )}
+            </>
+          );
+        },
+      },
+    ];
+    if (!isEn) {
+      cols.push({
+        key: "en",
+        header: <>{t("page_translations.col_english", { defaultValue: "English (source)" })}</>,
+        defaultWidth: 340,
+        sortAccessor: (r) => r.en,
+        cellClassName: "text-sm text-muted-foreground align-top pt-3.5 whitespace-pre-wrap",
+        cell: (r) => (r.en ? r.en : <span className="italic opacity-40">—</span>),
+      });
+    }
+    cols.push({
+      key: "value",
+      header: <>{isEn ? t("page_translations.col_english_value", { defaultValue: "English value" }) : t("page_translations.col_translation", { defaultValue: "Translation" })}</>,
+      sortAccessor: (r) => r.value,
+      cellClassName: "align-top",
+      cell: (r) => {
+        const current = edits[r.key] ?? r.value;
+        const long = isLong(r.en);
+        return long ? (
+          <Textarea value={current} onChange={(e) => setEdits((p) => ({ ...p, [r.key]: e.target.value }))} placeholder={isEn ? "" : r.en} rows={3} />
+        ) : (
+          <Input value={current} onChange={(e) => setEdits((p) => ({ ...p, [r.key]: e.target.value }))} className="h-9" placeholder={isEn ? "" : r.en} />
+        );
+      },
+    });
+    cols.push({
+      key: ACTIONS_KEY,
+      header: "",
+      hideable: false,
+      sortable: false,
+      align: "right",
+      minWidth: 44,
+      defaultWidth: 56,
+      cellClassName: "align-top pt-2.5",
+      cell: (r) => {
+        const current = edits[r.key] ?? r.value;
+        const dirty = edits[r.key] !== undefined && edits[r.key] !== r.value;
+        return (
+          <Button size="icon" variant="ghost" disabled={!dirty || saveOne.isPending} onClick={() => saveOne.mutate({ key: r.key, value: current })} title={t("common.save")}>
+            <Save className="h-3.5 w-3.5" />
+          </Button>
+        );
+      },
+    });
+    return cols;
+  }, [t, isEn, prefix, edits, saveOne]);
+
   return (
     <Layout>
       <PageHeader
@@ -276,53 +345,14 @@ export default function PageTranslations() {
           )}
         </div>
 
-        <div className="border rounded-lg bg-white">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[24%]">{t("page_translations.col_key", { defaultValue: "Key" })}</TableHead>
-                {!isEn && <TableHead className="w-[34%]">{t("page_translations.col_english", { defaultValue: "English (source)" })}</TableHead>}
-                <TableHead>{isEn ? t("page_translations.col_english_value", { defaultValue: "English value" }) : t("page_translations.col_translation", { defaultValue: "Translation" })}</TableHead>
-                <TableHead className="w-10"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rowsQ.isLoading ? (
-                <TableRow><TableCell colSpan={isEn ? 3 : 4} className="text-center py-10 text-muted-foreground">{t("common.loading")}</TableCell></TableRow>
-              ) : pageRows.length === 0 ? (
-                <TableRow><TableCell colSpan={isEn ? 3 : 4} className="text-center py-10 text-muted-foreground">{t("page_translations.no_keys", { defaultValue: "No keys for this page yet. Seed the English source first." })}</TableCell></TableRow>
-              ) : pageRows.map((r) => {
-                const current = edits[r.key] ?? r.value;
-                const dirty = edits[r.key] !== undefined && edits[r.key] !== r.value;
-                const long = isLong(r.en);
-                const shortKey = r.key.startsWith(prefix + ".") ? r.key.slice(prefix.length + 1) : r.key;
-                return (
-                  <TableRow key={r.key} className={dirty ? "bg-amber-50/50" : ""}>
-                    <TableCell className="font-mono text-xs align-top pt-3.5 break-all">
-                      {shortKey}
-                      {!isEn && r.needs_review && (
-                        <Badge className="ml-1 bg-amber-100 text-amber-800 hover:bg-amber-100 text-[10px] px-1 py-0">AI</Badge>
-                      )}
-                    </TableCell>
-                    {!isEn && <TableCell className="text-sm text-muted-foreground align-top pt-3.5 whitespace-pre-wrap">{r.en || <span className="italic opacity-40">—</span>}</TableCell>}
-                    <TableCell className="align-top">
-                      {long ? (
-                        <Textarea value={current} onChange={(e) => setEdits((p) => ({ ...p, [r.key]: e.target.value }))} placeholder={isEn ? "" : r.en} rows={3} />
-                      ) : (
-                        <Input value={current} onChange={(e) => setEdits((p) => ({ ...p, [r.key]: e.target.value }))} className="h-9" placeholder={isEn ? "" : r.en} />
-                      )}
-                    </TableCell>
-                    <TableCell className="align-top pt-2.5">
-                      <Button size="icon" variant="ghost" disabled={!dirty || saveOne.isPending} onClick={() => saveOne.mutate({ key: r.key, value: current })} title={t("common.save")}>
-                        <Save className="h-3.5 w-3.5" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+        <DataTable
+          tableKey="page-translations"
+          columns={columns}
+          data={pageRows}
+          isLoading={rowsQ.isLoading}
+          rowKey={(r) => r.key}
+          emptyText={t("page_translations.no_keys", { defaultValue: "No keys for this page yet. Seed the English source first." })}
+        />
       </div>
     </Layout>
   );

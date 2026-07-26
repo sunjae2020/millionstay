@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import { useQuery } from "@tanstack/react-query";
 import { BarChart2, Download, Search } from "lucide-react";
 
@@ -58,6 +58,26 @@ export default function BookingReportPage() {
 
   const rows: any[] = data?.data ?? [];
   const meta = data?.meta ?? {};
+
+  const columns: ColumnDef<any>[] = useMemo(() => [
+    { key: "booking_ref", header: "Booking Ref", cell: (r) => <span className="font-mono text-sm text-primary">{r.booking_ref}</span> },
+    { key: "guest_name", header: "Guest", cell: (r) => <span className="text-sm">{r.guest_name}</span> },
+    { key: "space_name", header: "Space", cell: (r) => <span className="text-sm text-muted-foreground">{r.space_name}</span> },
+    { key: "check_in_date", header: "Check-In", cell: (r) => <span className="text-sm">{r.check_in_date}</span> },
+    { key: "check_out_date", header: "Check-Out", cell: (r) => <span className="text-sm">{r.check_out_date}</span> },
+    { key: "weeks", header: "Weeks", align: "right", cell: (r) => <span className="text-sm">{r.weeks}</span> },
+    { key: "agreed_weekly_rate", header: "Rate", align: "right", cell: (r) => <span className="text-sm">${r.agreed_weekly_rate}/wk</span> },
+    { key: "total_rent", header: "Total", align: "right", cell: (r) => <span className="text-sm font-medium">${Number(r.total_rent ?? 0).toFixed(2)}</span> },
+    {
+      key: "booking_status",
+      header: "Status",
+      cell: (r) => (
+        <Badge className={STATUS_COLORS[r.booking_status] ?? "bg-gray-100 text-gray-700"}>
+          {r.booking_status}
+        </Badge>
+      ),
+    },
+  ], []);
 
   return (
     <Layout>
@@ -114,55 +134,21 @@ export default function BookingReportPage() {
           </div>
         )}
 
-        <div className="border rounded-lg bg-white">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Booking Ref</TableHead>
-                <TableHead>Guest</TableHead>
-                <TableHead>Space</TableHead>
-                <TableHead>Check-In</TableHead>
-                <TableHead>Check-Out</TableHead>
-                <TableHead className="text-right">Weeks</TableHead>
-                <TableHead className="text-right">Rate</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow><TableCell colSpan={9} className="text-center py-10 text-muted-foreground">Loading...</TableCell></TableRow>
-              ) : rows.length === 0 ? (
-                <TableRow><TableCell colSpan={9} className="text-center py-10 text-muted-foreground">No bookings found. Adjust filters and run the report.</TableCell></TableRow>
-              ) : rows.map((r: any) => (
-                <TableRow key={r.id}>
-                  <TableCell className="font-mono text-sm text-primary">{r.booking_ref}</TableCell>
-                  <TableCell className="text-sm">{r.guest_name}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{r.space_name}</TableCell>
-                  <TableCell className="text-sm">{r.check_in_date}</TableCell>
-                  <TableCell className="text-sm">{r.check_out_date}</TableCell>
-                  <TableCell className="text-sm text-right">{r.weeks}</TableCell>
-                  <TableCell className="text-sm text-right">${r.agreed_weekly_rate}/wk</TableCell>
-                  <TableCell className="text-sm text-right font-medium">${Number(r.total_rent ?? 0).toFixed(2)}</TableCell>
-                  <TableCell>
-                    <Badge className={STATUS_COLORS[r.booking_status] ?? "bg-gray-100 text-gray-700"}>
-                      {r.booking_status}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {rows.length > 0 && (
-                <TableRow className="bg-muted/40 font-medium">
-                  <TableCell colSpan={7} className="text-right">Total: {meta.total} bookings</TableCell>
-                  <TableCell className="text-right">
-                    ${Number(meta.total_revenue ?? 0).toLocaleString("en-AU", { minimumFractionDigits: 2 })}
-                  </TableCell>
-                  <TableCell />
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+        <DataTable
+          tableKey="booking-report"
+          columns={columns}
+          data={rows}
+          isLoading={isLoading}
+          rowKey={(r) => r.id}
+          emptyText="No bookings found. Adjust filters and run the report."
+        />
+
+        {rows.length > 0 && (
+          <div className="mt-3 flex justify-end gap-6 text-sm font-medium text-muted-foreground">
+            <span>Total: {meta.total} bookings</span>
+            <span>${Number(meta.total_revenue ?? 0).toLocaleString("en-AU", { minimumFractionDigits: 2 })}</span>
+          </div>
+        )}
       </div>
     </Layout>
   );

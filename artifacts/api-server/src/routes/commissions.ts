@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, and, isNull, inArray, SQL } from "drizzle-orm";
 import { db, commissionsTable } from "@workspace/db";
+import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import {
   ListCommissionsQueryParams,
   CreateCommissionBody,
@@ -16,7 +17,7 @@ router.get("/v1/commissions", async (req, res): Promise<void> => {
   const parsed = ListCommissionsQueryParams.safeParse(req.query);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const { search, status } = parsed.data;
-  const conditions: SQL[] = [isNull(commissionsTable.deleted_at)];
+  const conditions: SQL[] = [deletedFilter(commissionsTable.deleted_at, req)];
   if (status) conditions.push(eq(commissionsTable.status, status));
   if (search) conditions.push(ilike(commissionsTable.name, `%${search}%`));
   const rows = await db.select().from(commissionsTable)
@@ -53,23 +54,16 @@ router.put("/v1/commissions/:id", async (req, res): Promise<void> => {
   res.json(row);
 });
 
-router.post("/v1/commissions/bulk-delete", async (req, res): Promise<void> => {
-  const currentUser = (req as any).user;
-  if (currentUser?.role !== "SuperAdmin") {
-    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
-  }
-  const { ids, permanent } = req.body;
-  if (!Array.isArray(ids) || ids.length === 0) {
-    res.status(400).json({ error: "ids must be a non-empty array" }); return;
-  }
-  const numIds = ids.map(Number).filter(Boolean);
-  if (permanent) {
-    await db.delete(commissionsTable).where(inArray(commissionsTable.id, numIds));
-  } else {
-    await db.update(commissionsTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(commissionsTable.id, numIds));
-  }
-  res.json({ success: true, affected: numIds.length });
-});
+const commissionsSoftDelete = {
+  table: commissionsTable,
+  idColumn: commissionsTable.id,
+  statusKey: "status",
+  archivedStatus: "Archived",
+  restoredStatus: "Active",
+};
+
+router.post("/v1/commissions/bulk-delete", makeBulkDelete(commissionsSoftDelete));
+router.post("/v1/commissions/bulk-restore", makeBulkRestore(commissionsSoftDelete));
 
 router.delete("/v1/commissions/:id", async (req, res): Promise<void> => {
   const parsed = DeleteCommissionParams.safeParse(req.params);

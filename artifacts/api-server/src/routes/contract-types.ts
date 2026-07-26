@@ -1,13 +1,14 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, and, sql, isNull, inArray, SQL } from "drizzle-orm";
 import { db, contractTypesTable } from "@workspace/db";
+import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 
 const router: IRouter = Router();
 
 router.get("/v1/contract-types", async (req, res): Promise<void> => {
   try {
     const { q, is_active } = req.query as Record<string, string>;
-    const conditions: SQL[] = [isNull(contractTypesTable.deleted_at)];
+    const conditions: SQL[] = [deletedFilter(contractTypesTable.deleted_at, req)];
     if (q) conditions.push(ilike(contractTypesTable.name, `%${q}%`));
     if (is_active === "true") conditions.push(eq(contractTypesTable.is_active, true));
     if (is_active === "false") conditions.push(eq(contractTypesTable.is_active, false));
@@ -70,23 +71,13 @@ router.patch("/v1/contract-types/:id/deactivate", async (req, res): Promise<void
   }
 });
 
-router.post("/v1/contract-types/bulk-delete", async (req, res): Promise<void> => {
-  const currentUser = (req as any).user;
-  if (currentUser?.role !== "SuperAdmin") {
-    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
-  }
-  const { ids, permanent } = req.body;
-  if (!Array.isArray(ids) || ids.length === 0) {
-    res.status(400).json({ error: "ids must be a non-empty array" }); return;
-  }
-  const numIds = ids.map(Number).filter(Boolean);
-  if (permanent) {
-    await db.delete(contractTypesTable).where(inArray(contractTypesTable.id, numIds));
-  } else {
-    await db.update(contractTypesTable).set({ deleted_at: new Date() }).where(inArray(contractTypesTable.id, numIds));
-  }
-  res.json({ success: true, affected: numIds.length });
-});
+const contractTypesSoftDelete = {
+  table: contractTypesTable,
+  idColumn: contractTypesTable.id,
+};
+
+router.post("/v1/contract-types/bulk-delete", makeBulkDelete(contractTypesSoftDelete));
+router.post("/v1/contract-types/bulk-restore", makeBulkRestore(contractTypesSoftDelete));
 
 router.delete("/v1/contract-types/:id", async (req, res): Promise<void> => {
   const id = Number(req.params.id);

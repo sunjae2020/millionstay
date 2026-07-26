@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Layout } from "@/components/Layout";
 import { DateInput } from "@/components/ui/date-input";
 import { apiFetch } from "@/lib/apiFetch";
+import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 
 type GlLine = {
   account_code: string;
@@ -69,7 +70,7 @@ export default function Journal() {
     queryKey: ["gl-entries", from, to],
     queryFn: () => fetchEntries(from, to),
   });
-  const { data: tbResp } = useQuery({
+  const { data: tbResp, isLoading: tbLoading } = useQuery({
     queryKey: ["gl-trial-balance", from, to],
     queryFn: () => fetchTrialBalance(from, to),
   });
@@ -77,6 +78,44 @@ export default function Journal() {
   const entries = entriesResp?.data ?? [];
   const trialBalance = tbResp?.data ?? [];
   const totals = tbResp?.totals ?? { debit: "0", credit: "0" };
+
+  const columns: ColumnDef<TrialBalanceRow>[] = useMemo(
+    () => [
+      {
+        key: "account_code",
+        header: "journal.col_account",
+        hideable: false,
+        cell: (row) => <span className="font-medium">{row.account_code}</span>,
+      },
+      {
+        key: "account_name",
+        header: "journal.col_description",
+        cell: (row) => <span className="text-muted-foreground">{row.account_name}</span>,
+      },
+      {
+        key: "debit_total",
+        header: "journal.col_debit",
+        align: "right",
+        sortAccessor: (row) => Number(row.debit_total),
+        cell: (row) => <span className="tabular-nums">{fmt(row.debit_total)}</span>,
+      },
+      {
+        key: "credit_total",
+        header: "journal.col_credit",
+        align: "right",
+        sortAccessor: (row) => Number(row.credit_total),
+        cell: (row) => <span className="tabular-nums">{fmt(row.credit_total)}</span>,
+      },
+      {
+        key: "balance",
+        header: "journal.col_balance",
+        align: "right",
+        sortAccessor: (row) => Number(row.balance),
+        cell: (row) => <span className="tabular-nums font-medium">{fmt(row.balance)}</span>,
+      },
+    ],
+    [],
+  );
 
   return (
     <Layout>
@@ -110,47 +149,21 @@ export default function Journal() {
         {/* Trial balance card */}
         <div className="mb-8">
           <h2 className="text-lg font-semibold mb-3">{t("journal.trial_balance")}</h2>
-          <div className="border rounded-lg overflow-hidden bg-white">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-max text-sm">
-                <thead className="border-b bg-muted/30">
-                  <tr>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("journal.col_account")}</th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">{t("journal.col_description")}</th>
-                    <th className="text-right px-4 py-3 font-medium text-muted-foreground">{t("journal.col_debit")}</th>
-                    <th className="text-right px-4 py-3 font-medium text-muted-foreground">{t("journal.col_credit")}</th>
-                    <th className="text-right px-4 py-3 font-medium text-muted-foreground">{t("journal.col_balance")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {trialBalance.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">{t("journal.empty")}</td>
-                    </tr>
-                  )}
-                  {trialBalance.map((row) => (
-                    <tr key={row.account_code} className="border-b last:border-0 hover:bg-muted/20">
-                      <td className="px-4 py-3 font-medium">{row.account_code}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{row.account_name}</td>
-                      <td className="px-4 py-3 text-right tabular-nums">{fmt(row.debit_total)}</td>
-                      <td className="px-4 py-3 text-right tabular-nums">{fmt(row.credit_total)}</td>
-                      <td className="px-4 py-3 text-right tabular-nums font-medium">{fmt(row.balance)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-                {trialBalance.length > 0 && (
-                  <tfoot className="border-t bg-muted/30">
-                    <tr>
-                      <td className="px-4 py-3 font-semibold" colSpan={2}>{t("journal.col_total")}</td>
-                      <td className="px-4 py-3 text-right tabular-nums font-semibold">{fmt(totals.debit)}</td>
-                      <td className="px-4 py-3 text-right tabular-nums font-semibold">{fmt(totals.credit)}</td>
-                      <td className="px-4 py-3"></td>
-                    </tr>
-                  </tfoot>
-                )}
-              </table>
+          <DataTable
+            tableKey="gl-trial-balance"
+            columns={columns}
+            data={trialBalance}
+            isLoading={tbLoading}
+            rowKey={(row) => row.account_code}
+            emptyText={t("journal.empty")}
+          />
+          {trialBalance.length > 0 && (
+            <div className="flex items-center justify-end gap-8 mt-2 px-4 text-sm font-semibold">
+              <span>{t("journal.col_total")}</span>
+              <span className="tabular-nums">{t("journal.col_debit")}: {fmt(totals.debit)}</span>
+              <span className="tabular-nums">{t("journal.col_credit")}: {fmt(totals.credit)}</span>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Journal entries list */}

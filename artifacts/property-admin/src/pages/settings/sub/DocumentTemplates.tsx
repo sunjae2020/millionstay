@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileText, Mail, FileCheck, FileType, Eye, Globe, Plus } from "lucide-react";
@@ -120,6 +120,54 @@ export default function DocumentTemplates() {
     },
   });
 
+  const columns: ColumnDef<TemplateRow>[] = useMemo(() => [
+    {
+      key: "name",
+      header: t("documentTemplate.col_name"),
+      hideable: false,
+      cell: (r) => (
+        <>
+          <Link href={`/settings/document-templates/${r.id}`} className="font-medium hover:underline">{r.name}</Link>
+          {r.description && <div className="text-xs text-muted-foreground">{r.description}</div>}
+        </>
+      ),
+    },
+    {
+      key: "key",
+      header: t("documentTemplate.col_key"),
+      cell: (r) => <span className="font-mono text-xs text-muted-foreground">{r.key}</span>,
+    },
+    {
+      key: "locales",
+      header: t("documentTemplate.col_locales"),
+      sortAccessor: (r) => r.locales.join(", "),
+      cell: (r) => (
+        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Globe className="h-3 w-3" /> {r.locales.join(", ") || "—"}</span>
+      ),
+    },
+    {
+      key: "status",
+      header: t("documentTemplate.col_status"),
+      cell: (r) => (
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${statusBadge(r.status)}`}>
+          {t(`documentTemplate.status_${r.status}`)}
+        </span>
+      ),
+    },
+    {
+      key: ACTIONS_KEY,
+      header: "",
+      hideable: false,
+      sortable: false,
+      align: "right",
+      cell: (r) => (
+        <Link href={`/settings/document-templates/${r.id}`}>
+          <Button size="sm" variant="ghost" className="gap-1.5"><Eye className="h-3.5 w-3.5" /> {t("common.edit")}</Button>
+        </Link>
+      ),
+    },
+  ], [t]);
+
   return (
     <Layout>
       <PageHeader
@@ -150,47 +198,14 @@ export default function DocumentTemplates() {
           })}
         </div>
 
-        <div className="border rounded-lg bg-white overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("documentTemplate.col_name")}</TableHead>
-                <TableHead>{t("documentTemplate.col_key")}</TableHead>
-                <TableHead>{t("documentTemplate.col_locales")}</TableHead>
-                <TableHead>{t("documentTemplate.col_status")}</TableHead>
-                <TableHead className="w-20"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-10 text-muted-foreground">{t("common.loading")}</TableCell></TableRow>
-              ) : rows.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-10 text-muted-foreground">{t("documentTemplate.empty")}</TableCell></TableRow>
-              ) : rows.map((r) => (
-                <TableRow key={r.id}>
-                  <TableCell>
-                    <Link href={`/settings/document-templates/${r.id}`} className="font-medium hover:underline">{r.name}</Link>
-                    {r.description && <div className="text-xs text-muted-foreground">{r.description}</div>}
-                  </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">{r.key}</TableCell>
-                  <TableCell>
-                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Globe className="h-3 w-3" /> {r.locales.join(", ") || "—"}</span>
-                  </TableCell>
-                  <TableCell>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${statusBadge(r.status)}`}>
-                      {t(`documentTemplate.status_${r.status}`)}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <Link href={`/settings/document-templates/${r.id}`}>
-                      <Button size="sm" variant="ghost" className="gap-1.5"><Eye className="h-3.5 w-3.5" /> {t("common.edit")}</Button>
-                    </Link>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <DataTable
+          tableKey="document-templates"
+          columns={columns}
+          data={rows}
+          isLoading={isLoading}
+          rowKey={(r) => r.id}
+          emptyText={t("documentTemplate.empty")}
+        />
       </div>
 
       <CreateDialog kind={kind} open={createOpen} onOpenChange={setCreateOpen} />

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Languages, Plus, Search, Trash2, Save, Globe, Loader2 } from "lucide-react";
@@ -168,6 +168,63 @@ export default function TranslationsPage() {
 
   const isEn = lang === "en";
 
+  const columns: ColumnDef<Row>[] = useMemo(() => {
+    const cols: ColumnDef<Row>[] = [
+      {
+        key: "key",
+        header: t("settings_translations.col_key"),
+        hideable: false,
+        defaultWidth: 240,
+        cell: (r) => <span className="font-mono text-xs break-all">{r.key}</span>,
+      },
+    ];
+    if (!isEn) {
+      cols.push({
+        key: "en",
+        header: t("settings_translations.col_english_reference"),
+        defaultWidth: 260,
+        cell: (r) => <span className="text-sm text-muted-foreground">{r.en || <span className="italic opacity-40">—</span>}</span>,
+      });
+    }
+    cols.push({
+      key: "value",
+      header: isEn ? t("settings_translations.col_english_value") : t("settings_translations.col_translation"),
+      cell: (r) => {
+        const current = edits[r.key] ?? r.value;
+        return (
+          <Input
+            value={current}
+            onChange={(e) => setEdits((prev) => ({ ...prev, [r.key]: e.target.value }))}
+            className="h-9"
+            placeholder={isEn ? "" : r.en}
+          />
+        );
+      },
+    });
+    cols.push({
+      key: ACTIONS_KEY,
+      header: "",
+      hideable: false,
+      sortable: false,
+      align: "right",
+      cell: (r) => {
+        const current = edits[r.key] ?? r.value;
+        const dirty = edits[r.key] !== undefined && edits[r.key] !== r.value;
+        return (
+          <div className="flex gap-1 justify-end">
+            <Button size="icon" variant="ghost" disabled={!dirty || saveOne.isPending} onClick={() => saveOne.mutate({ key: r.key, value: current })} title={t("settings_translations.save_row_title")}>
+              <Save className="h-3.5 w-3.5" />
+            </Button>
+            <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setDeleteKey(r.key)} title={t("settings_translations.delete_key_title")}>
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        );
+      },
+    });
+    return cols;
+  }, [t, isEn, edits, saveOne]);
+
   return (
     <Layout>
       <PageHeader
@@ -203,52 +260,14 @@ export default function TranslationsPage() {
           </div>
         </div>
 
-        <div className="border rounded-lg bg-white">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[28%]">{t("settings_translations.col_key")}</TableHead>
-                {!isEn && <TableHead className="w-[30%]">{t("settings_translations.col_english_reference")}</TableHead>}
-                <TableHead>{isEn ? t("settings_translations.col_english_value") : t("settings_translations.col_translation")}</TableHead>
-                <TableHead className="w-20"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rowsQ.isLoading ? (
-                <TableRow><TableCell colSpan={isEn ? 3 : 4} className="text-center py-10 text-muted-foreground">{t("common.loading")}</TableCell></TableRow>
-              ) : filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={isEn ? 3 : 4} className="text-center py-10 text-muted-foreground">{t("settings_translations.no_keys_found")}</TableCell></TableRow>
-              ) : filtered.map((r) => {
-                const current = edits[r.key] ?? r.value;
-                const dirty = edits[r.key] !== undefined && edits[r.key] !== r.value;
-                return (
-                  <TableRow key={r.key} className={dirty ? "bg-amber-50/50" : ""}>
-                    <TableCell className="font-mono text-xs align-top pt-3.5 break-all">{r.key}</TableCell>
-                    {!isEn && <TableCell className="text-sm text-muted-foreground align-top pt-3.5">{r.en || <span className="italic opacity-40">—</span>}</TableCell>}
-                    <TableCell>
-                      <Input
-                        value={current}
-                        onChange={(e) => setEdits((prev) => ({ ...prev, [r.key]: e.target.value }))}
-                        className="h-9"
-                        placeholder={isEn ? "" : r.en}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1 justify-end">
-                        <Button size="icon" variant="ghost" disabled={!dirty || saveOne.isPending} onClick={() => saveOne.mutate({ key: r.key, value: current })} title={t("settings_translations.save_row_title")}>
-                          <Save className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setDeleteKey(r.key)} title={t("settings_translations.delete_key_title")}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+        <DataTable
+          tableKey="translations"
+          columns={columns}
+          data={filtered}
+          isLoading={rowsQ.isLoading}
+          rowKey={(r) => r.key}
+          emptyText={t("settings_translations.no_keys_found")}
+        />
         <p className="text-xs text-muted-foreground mt-3">{t("settings_translations.keys_count", { shown: filtered.length, total: rows.length })}{dirtyCount > 0 ? ` · ${t("settings_translations.unsaved_count", { count: dirtyCount })}` : ""}</p>
       </div>
 

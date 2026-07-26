@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, asc, isNull, inArray, and } from "drizzle-orm";
 import { db, productGroupsTable } from "@workspace/db";
+import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 
 const router: IRouter = Router();
 
@@ -10,7 +11,7 @@ router.get("/v1/product-groups", async (req, res): Promise<void> => {
     const rows = await db
       .select()
       .from(productGroupsTable)
-      .where(and(isNull(productGroupsTable.deleted_at), q ? ilike(productGroupsTable.name, `%${q}%`) : undefined))
+      .where(and(deletedFilter(productGroupsTable.deleted_at, req), q ? ilike(productGroupsTable.name, `%${q}%`) : undefined))
       .orderBy(asc(productGroupsTable.display_order), asc(productGroupsTable.name));
     res.json({ success: true, data: rows, meta: { total: rows.length } });
   } catch {
@@ -53,23 +54,13 @@ router.put("/v1/product-groups/:id", async (req, res): Promise<void> => {
   }
 });
 
-router.post("/v1/product-groups/bulk-delete", async (req, res): Promise<void> => {
-  const currentUser = (req as any).user;
-  if (currentUser?.role !== "SuperAdmin") {
-    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
-  }
-  const { ids, permanent } = req.body;
-  if (!Array.isArray(ids) || ids.length === 0) {
-    res.status(400).json({ error: "ids must be a non-empty array" }); return;
-  }
-  const numIds = ids.map(Number).filter(Boolean);
-  if (permanent) {
-    await db.delete(productGroupsTable).where(inArray(productGroupsTable.id, numIds));
-  } else {
-    await db.update(productGroupsTable).set({ deleted_at: new Date() }).where(inArray(productGroupsTable.id, numIds));
-  }
-  res.json({ success: true, affected: numIds.length });
-});
+const productGroupsSoftDelete = {
+  table: productGroupsTable,
+  idColumn: productGroupsTable.id,
+};
+
+router.post("/v1/product-groups/bulk-delete", makeBulkDelete(productGroupsSoftDelete));
+router.post("/v1/product-groups/bulk-restore", makeBulkRestore(productGroupsSoftDelete));
 
 router.delete("/v1/product-groups/:id", async (req, res): Promise<void> => {
   try {

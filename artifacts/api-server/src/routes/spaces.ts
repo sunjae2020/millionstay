@@ -1,7 +1,8 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, and, inArray, gte, lte, isNull, SQL } from "drizzle-orm";
-import { db, spacesTable, propertiesTable, spacePoliciesTable, spaceOptionMapsTable, spaceBlockedDatesTable, spaceAvailabilityTable, spaceServiceCatalogTable, serviceCatalogTable } from "@workspace/db";
+import { db, spacesTable, propertiesTable, spacePoliciesTable, spaceOptionMapsTable, spaceBlockedDatesTable, spaceAvailabilityTable, spaceServiceCatalogTable, serviceCatalogTable, accountsTable } from "@workspace/db";
 import { logAction } from "../utils/auditLog";
+import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import {
   ListSpacesQueryParams,
   CreateSpaceBody,
@@ -61,7 +62,7 @@ router.get("/v1/spaces", async (req, res): Promise<void> => {
   }
   const { space_type, status, property_id, booking_mode, search } = parsed.data;
 
-  const conditions: SQL[] = [isNull(spacesTable.deleted_at)];
+  const conditions: SQL[] = [deletedFilter(spacesTable.deleted_at, req)];
   if (space_type) conditions.push(eq(spacesTable.space_type, space_type));
   if (status) conditions.push(eq(spacesTable.status, status));
   if (property_id) conditions.push(eq(spacesTable.property_id, property_id));
@@ -80,12 +81,16 @@ router.get("/v1/spaces", async (req, res): Promise<void> => {
       parent_space_id: spacesTable.parent_space_id,
       space_policy_id: spacesTable.space_policy_id,
       policy_name: spacePoliciesTable.name,
+      landlord_account_id: spacesTable.landlord_account_id,
+      owner_name: accountsTable.name,
+      exclusive_area_m2: spacesTable.exclusive_area_m2,
       created_at: spacesTable.created_at,
       updated_at: spacesTable.updated_at,
     })
     .from(spacesTable)
     .leftJoin(propertiesTable, eq(spacesTable.property_id, propertiesTable.id))
     .leftJoin(spacePoliciesTable, eq(spacesTable.space_policy_id, spacePoliciesTable.id))
+    .leftJoin(accountsTable, eq(spacesTable.landlord_account_id, accountsTable.id))
     .where(and(...conditions))
     .orderBy(spacesTable.created_at);
 
@@ -190,25 +195,20 @@ router.put("/v1/spaces/:id", async (req, res): Promise<void> => {
   res.json(UpdateSpaceResponse.parse(full));
 });
 
-router.post("/v1/spaces/bulk-delete", async (req, res): Promise<void> => {
-  const currentUser = (req as any).user;
-  if (currentUser?.role !== "SuperAdmin") {
-    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
-  }
-  const { ids, permanent } = req.body;
-  if (!Array.isArray(ids) || ids.length === 0) {
-    res.status(400).json({ error: "ids must be a non-empty array" }); return;
-  }
-  const numIds = ids.map(Number).filter(Boolean);
-  if (permanent) {
-    await db.delete(spaceOptionMapsTable).where(inArray(spaceOptionMapsTable.space_id, numIds));
-    await db.delete(spaceBlockedDatesTable).where(inArray(spaceBlockedDatesTable.space_id, numIds));
-    await db.delete(spacesTable).where(inArray(spacesTable.id, numIds));
-  } else {
-    await db.update(spacesTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(spacesTable.id, numIds));
-  }
-  res.json({ success: true, affected: numIds.length });
-});
+const spaceSoftDelete = {
+  table: spacesTable,
+  idColumn: spacesTable.id,
+  statusKey: "status",
+  archivedStatus: "Archived",
+  restoredStatus: "Active",
+  onPurge: async (ids: number[]) => {
+    await db.delete(spaceOptionMapsTable).where(inArray(spaceOptionMapsTable.space_id, ids));
+    await db.delete(spaceBlockedDatesTable).where(inArray(spaceBlockedDatesTable.space_id, ids));
+  },
+};
+
+router.post("/v1/spaces/bulk-delete", makeBulkDelete(spaceSoftDelete));
+router.post("/v1/spaces/bulk-restore", makeBulkRestore(spaceSoftDelete));
 
 router.delete("/v1/spaces/:id", async (req, res): Promise<void> => {
   const params = DeleteSpaceParams.safeParse(req.params);

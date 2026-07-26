@@ -22,6 +22,14 @@ export interface UpdateSpaceBody {
   /** @nullable */
   base_currency?: string | null;
   /** @nullable */
+  monthly_rent?: number | null;
+  /** @nullable */
+  deposit_amount?: number | null;
+  /** @nullable */
+  purchase_price?: number | null;
+  /** @nullable */
+  estimated_sale_price?: number | null;
+  /** @nullable */
   min_stay_weeks?: number | null;
   /** @nullable */
   floor_number?: number | null;

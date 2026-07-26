@@ -259,6 +259,12 @@ export interface SpaceListItem {
   space_policy_id?: number | null;
   /** @nullable */
   policy_name?: string | null;
+  /** @nullable */
+  landlord_account_id?: number | null;
+  /** @nullable */
+  owner_name?: string | null;
+  /** @nullable */
+  exclusive_area_m2?: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -279,6 +285,14 @@ export interface Space {
   base_weekly_price?: number | null;
   /** @nullable */
   base_currency?: string | null;
+  /** @nullable */
+  monthly_rent?: number | null;
+  /** @nullable */
+  deposit_amount?: number | null;
+  /** @nullable */
+  purchase_price?: number | null;
+  /** @nullable */
+  estimated_sale_price?: number | null;
   /** @nullable */
   min_stay_weeks?: number | null;
   /** @nullable */
@@ -337,6 +351,14 @@ export interface CreateSpaceBody {
   /** @nullable */
   base_currency?: string | null;
   /** @nullable */
+  monthly_rent?: number | null;
+  /** @nullable */
+  deposit_amount?: number | null;
+  /** @nullable */
+  purchase_price?: number | null;
+  /** @nullable */
+  estimated_sale_price?: number | null;
+  /** @nullable */
   min_stay_weeks?: number | null;
   /** @nullable */
   floor_number?: number | null;
@@ -385,6 +407,14 @@ export interface UpdateSpaceBody {
   base_weekly_price?: number | null;
   /** @nullable */
   base_currency?: string | null;
+  /** @nullable */
+  monthly_rent?: number | null;
+  /** @nullable */
+  deposit_amount?: number | null;
+  /** @nullable */
+  purchase_price?: number | null;
+  /** @nullable */
+  estimated_sale_price?: number | null;
   /** @nullable */
   min_stay_weeks?: number | null;
   /** @nullable */

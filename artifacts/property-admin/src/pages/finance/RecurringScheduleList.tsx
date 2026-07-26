@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
@@ -11,24 +11,16 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, RefreshCw, ToggleLeft, ToggleRight, Calendar, Plus, Archive, X, AlertTriangle, Loader2, Trash2 } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Search, RefreshCw, ToggleLeft, ToggleRight, Calendar, Plus } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
-import { usePagination, TablePagination } from "@/components/ui/TablePagination";
-import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/date";
+import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 
 const FREQ_COLORS: Record<string, string> = {
   Weekly:   "bg-blue-100 text-blue-700",
   Biweekly: "bg-purple-100 text-purple-700",
   Monthly:  "bg-amber-100 text-amber-700",
-};
-
-const TYPE_LABELS: Record<string, string> = {
-  Rent:       "Rent",
-  ServiceFee: "Service Fee",
-  AdminFee:   "Admin Fee",
 };
 
 const APPROVAL_COLORS: Record<string, string> = {
@@ -37,10 +29,11 @@ const APPROVAL_COLORS: Record<string, string> = {
   Rejected:        "bg-red-100 text-red-700",
 };
 
-async function fetchSchedules(q?: string, activeFilter?: string) {
+async function fetchSchedules(q?: string, activeFilter?: string, deleted?: boolean) {
   const params = new URLSearchParams();
   if (q) params.set("q", q);
   if (activeFilter && activeFilter !== "_all") params.set("is_active", activeFilter);
+  if (deleted) params.set("deleted", "only");
   const res = await apiFetch(`/api/v1/recurring-schedules?${params}`);
   if (!res.ok) throw new Error("Failed to fetch schedules");
   return res.json();
@@ -78,21 +71,17 @@ function isOverdue(nextDue: string | null) {
 
 export default function RecurringScheduleList() {
   const { t } = useTranslation();
-  const { user } = useAuth();
-  const isSuperAdmin = user?.role === "SuperAdmin";
   const { toast } = useToast();
   const [q, setQ] = useState("");
   const [activeFilter, setActiveFilter] = useState("true");
   const [toggleTarget, setToggleTarget] = useState<{ id: number; is_active: boolean } | null>(null);
   const [generating, setGenerating] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [bulkAction, setBulkAction] = useState<"archive" | "permanent" | null>(null);
-  const [isBulkLoading, setIsBulkLoading] = useState(false);
+  const [showDeleted, setShowDeleted] = useState(false);
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["recurring-schedules", q, activeFilter],
-    queryFn: () => fetchSchedules(q || undefined, activeFilter),
+    queryKey: ["recurring-schedules", q, activeFilter, showDeleted],
+    queryFn: () => fetchSchedules(q || undefined, activeFilter, showDeleted),
   });
 
   const toggleMutation = useMutation({
@@ -134,42 +123,144 @@ export default function RecurringScheduleList() {
   };
 
   const rows: any[] = Array.isArray(data) ? data : (data?.data ?? []);
-  const pagination = usePagination(rows);
 
-  const pageIds = pagination.paginatedItems.map((s: any) => s.id);
-  const allPageSelected = pageIds.length > 0 && pageIds.every((id: number) => selectedIds.has(id));
-  const somePageSelected = pageIds.some((id: number) => selectedIds.has(id));
-  const toggleSelectAll = () => {
-    if (allPageSelected) {
-      setSelectedIds((prev) => { const n = new Set(prev); pageIds.forEach((id: number) => n.delete(id)); return n; });
-    } else {
-      setSelectedIds((prev) => { const n = new Set(prev); pageIds.forEach((id: number) => n.add(id)); return n; });
-    }
-  };
-  const toggleSelect = (id: number) => {
-    setSelectedIds((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  };
-  const clearSelection = () => setSelectedIds(new Set());
-  const handleBulkDelete = async (permanent: boolean) => {
-    setIsBulkLoading(true);
-    setBulkAction(null);
-    try {
-      const res = await apiFetch("/api/v1/recurring-schedules/bulk-delete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids: Array.from(selectedIds), permanent }),
-      });
-      const d = await res.json();
-      if (!res.ok) throw new Error(d.error ?? "Bulk delete failed");
-      qc.invalidateQueries({ queryKey: ["recurring-schedules"] });
-      toast({ title: permanent ? `${d.affected} schedules permanently deleted` : `${d.affected} schedules archived` });
-      clearSelection();
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    } finally {
-      setIsBulkLoading(false);
-    }
-  };
+  const columns: ColumnDef<any>[] = useMemo(
+    () => [
+      {
+        key: "booking_ref",
+        header: "recurring.col_booking",
+        hideable: false,
+        cell: (s) => (
+          <Link href={`/booking/bookings/${s.booking_id}`}
+            className="text-primary hover:underline font-mono text-xs font-semibold">
+            {s.booking_ref ?? `#${s.booking_id}`}
+          </Link>
+        ),
+      },
+      {
+        key: "account_name",
+        header: "recurring.col_account",
+        cell: (s) => <span className="text-sm">{s.account_name ?? "—"}</span>,
+      },
+      {
+        key: "schedule_type",
+        header: "recurring.col_type",
+        cell: (s) => (
+          <span className="text-xs text-muted-foreground">
+            {t(`recurring.type_${s.schedule_type.toLowerCase()}`) || s.schedule_type}
+          </span>
+        ),
+      },
+      {
+        key: "frequency",
+        header: "recurring.col_frequency",
+        cell: (s) => (
+          <Badge className={`text-xs ${FREQ_COLORS[s.frequency] ?? "bg-gray-100 text-gray-600"}`}>
+            {t(`recurring.freq_${s.frequency.toLowerCase()}`) || s.frequency}
+          </Badge>
+        ),
+      },
+      {
+        key: "amount",
+        header: "recurring.col_amount",
+        align: "right",
+        sortAccessor: (s) => Number(s.amount),
+        cell: (s) => (
+          <span className="tabular-nums font-medium">
+            ${Number(s.amount).toLocaleString("en-AU", { minimumFractionDigits: 2 })}
+            {s.gst_included && <span className="text-xs text-muted-foreground ml-1">inc GST</span>}
+          </span>
+        ),
+      },
+      {
+        key: "start_date",
+        header: "recurring.col_start_date",
+        cell: (s) => <span className="text-xs text-muted-foreground">{fmtDate(s.start_date)}</span>,
+      },
+      {
+        key: "next_due_date",
+        header: "recurring.col_next_due_date",
+        cell: (s) => {
+          const overdue = s.is_active && isOverdue(s.next_due_date);
+          return (
+            <div className="flex items-center gap-1.5">
+              {overdue && <Calendar className="h-3.5 w-3.5 text-red-500 shrink-0" />}
+              <span className={`text-xs font-medium ${overdue ? "text-red-600" : "text-gray-700"}`}>
+                {fmtDate(s.next_due_date)}
+              </span>
+            </div>
+          );
+        },
+      },
+      {
+        key: "approval_status",
+        header: "recurring.approval_status",
+        cell: (s) => (
+          <div className="flex flex-col items-start gap-1.5">
+            <Badge className={`text-xs ${APPROVAL_COLORS[s.approval_status] ?? "bg-gray-100 text-gray-500"}`}>
+              {s.approval_status === "PendingApproval"
+                ? t("recurring.status_pending")
+                : s.approval_status === "Approved"
+                  ? t("recurring.status_approved")
+                  : s.approval_status === "Rejected"
+                    ? t("recurring.status_rejected")
+                    : s.approval_status ?? "—"}
+            </Badge>
+            {s.approval_status === "PendingApproval" && (
+              <div className="flex gap-1.5">
+                <Button
+                  size="sm"
+                  className="h-6 px-2 text-xs bg-green-600 hover:bg-green-700"
+                  disabled={approvalMutation.isPending}
+                  onClick={() => approvalMutation.mutate({ id: s.id, action: "approve" })}
+                >
+                  {t("recurring.approve")}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-6 px-2 text-xs border-red-300 text-red-700 hover:bg-red-50"
+                  disabled={approvalMutation.isPending}
+                  onClick={() => approvalMutation.mutate({ id: s.id, action: "reject" })}
+                >
+                  {t("recurring.reject")}
+                </Button>
+              </div>
+            )}
+          </div>
+        ),
+      },
+      {
+        key: "is_active",
+        header: "recurring.col_status",
+        cell: (s) => (
+          <Badge className={`text-xs ${s.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+            {s.is_active ? t("common.active") : t("common.inactive")}
+          </Badge>
+        ),
+      },
+      {
+        key: ACTIONS_KEY,
+        header: "",
+        hideable: false,
+        sortable: false,
+        align: "right",
+        cell: (s) => (
+          <button
+            onClick={() => setToggleTarget({ id: s.id, is_active: !s.is_active })}
+            className="p-1.5 rounded hover:bg-muted transition-colors"
+            title={s.is_active ? t("common.pause") || "Pause" : t("common.resume") || "Resume"}
+          >
+            {s.is_active
+              ? <ToggleRight className="h-4 w-4 text-green-600" />
+              : <ToggleLeft className="h-4 w-4 text-gray-400" />
+            }
+          </button>
+        ),
+      },
+    ],
+    [t, approvalMutation.isPending],
+  );
 
   return (
     <Layout>
@@ -205,163 +296,22 @@ export default function RecurringScheduleList() {
           </Select>
         </div>
 
-        {isSuperAdmin && selectedIds.size > 0 && (
-          <div className="flex items-center gap-3 mb-3 px-4 py-2.5 rounded-lg bg-primary/10 border border-primary/20">
-            <span className="text-sm font-medium text-primary">{selectedIds.size} item{selectedIds.size > 1 ? "s" : ""} selected</span>
-            <button onClick={clearSelection} className="text-primary hover:text-primary"><X className="h-3.5 w-3.5" /></button>
-            <div className="ml-auto flex items-center gap-2">
-              {isBulkLoading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
-              <Button size="sm" variant="outline" className="h-7 border-amber-300 text-amber-700 hover:bg-amber-50 gap-1.5" onClick={() => setBulkAction("archive")} disabled={isBulkLoading}>
-                <Archive className="h-3.5 w-3.5" /> Archive Selected
-              </Button>
-              <Button size="sm" variant="destructive" className="h-7 gap-1.5" onClick={() => setBulkAction("permanent")} disabled={isBulkLoading}>
-                <Trash2 className="h-3.5 w-3.5" /> Delete Forever
-              </Button>
-            </div>
-          </div>
-        )}
-        <div className="border rounded-lg overflow-hidden bg-card">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 border-b">
-                <tr>
-                  {isSuperAdmin && <th className="px-3 py-3 w-8"><Checkbox checked={allPageSelected} data-state={somePageSelected && !allPageSelected ? "indeterminate" : allPageSelected ? "checked" : "unchecked"} onCheckedChange={toggleSelectAll} /></th>}
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_booking")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_account")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_type")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_frequency")}</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_amount")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_start_date")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_next_due_date")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.approval_status")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("recurring.col_status")}</th>
-                  <th className="px-4 py-3 w-16"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {isLoading ? (
-                  <tr><td colSpan={isSuperAdmin ? 11 : 10} className="px-4 py-10 text-center text-muted-foreground">{t("common.loading")}</td></tr>
-                ) : rows.length === 0 ? (
-                  <tr><td colSpan={isSuperAdmin ? 11 : 10} className="px-4 py-10 text-center text-muted-foreground">
-                    {t("recurring.no_schedules")}
-                  </td></tr>
-                ) : pagination.paginatedItems.map((s: any) => {
-                  const overdue = s.is_active && isOverdue(s.next_due_date);
-                  return (
-                    <tr key={s.id} className={`hover:bg-muted/30 transition-colors ${selectedIds.has(s.id) ? "bg-primary/5" : ""}`}>
-                      {isSuperAdmin && <td className="px-3 py-3"><Checkbox checked={selectedIds.has(s.id)} onCheckedChange={() => toggleSelect(s.id)} /></td>}
-                      <td className="px-4 py-3">
-                        <Link href={`/booking/bookings/${s.booking_id}`}
-                          className="text-primary hover:underline font-mono text-xs font-semibold">
-                          {s.booking_ref ?? `#${s.booking_id}`}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3 text-sm">{s.account_name ?? "—"}</td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">
-                        {t(`recurring.type_${s.schedule_type.toLowerCase()}`) || s.schedule_type}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge className={`text-xs ${FREQ_COLORS[s.frequency] ?? "bg-gray-100 text-gray-600"}`}>
-                          {t(`recurring.freq_${s.frequency.toLowerCase()}`) || s.frequency}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3 text-right tabular-nums font-medium">
-                        ${Number(s.amount).toLocaleString("en-AU", { minimumFractionDigits: 2 })}
-                        {s.gst_included && <span className="text-xs text-muted-foreground ml-1">inc GST</span>}
-                      </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">{fmtDate(s.start_date)}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1.5">
-                          {overdue && <Calendar className="h-3.5 w-3.5 text-red-500 shrink-0" />}
-                          <span className={`text-xs font-medium ${overdue ? "text-red-600" : "text-gray-700"}`}>
-                            {fmtDate(s.next_due_date)}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-col items-start gap-1.5">
-                          <Badge className={`text-xs ${APPROVAL_COLORS[s.approval_status] ?? "bg-gray-100 text-gray-500"}`}>
-                            {s.approval_status === "PendingApproval"
-                              ? t("recurring.status_pending")
-                              : s.approval_status === "Approved"
-                                ? t("recurring.status_approved")
-                                : s.approval_status === "Rejected"
-                                  ? t("recurring.status_rejected")
-                                  : s.approval_status ?? "—"}
-                          </Badge>
-                          {s.approval_status === "PendingApproval" && (
-                            <div className="flex gap-1.5">
-                              <Button
-                                size="sm"
-                                className="h-6 px-2 text-xs bg-green-600 hover:bg-green-700"
-                                disabled={approvalMutation.isPending}
-                                onClick={() => approvalMutation.mutate({ id: s.id, action: "approve" })}
-                              >
-                                {t("recurring.approve")}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-6 px-2 text-xs border-red-300 text-red-700 hover:bg-red-50"
-                                disabled={approvalMutation.isPending}
-                                onClick={() => approvalMutation.mutate({ id: s.id, action: "reject" })}
-                              >
-                                {t("recurring.reject")}
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge className={`text-xs ${s.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-                          {s.is_active ? t("common.active") : t("common.inactive")}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => setToggleTarget({ id: s.id, is_active: !s.is_active })}
-                          className="p-1.5 rounded hover:bg-muted transition-colors"
-                          title={s.is_active ? t("common.pause") || "Pause" : t("common.resume") || "Resume"}
-                        >
-                          {s.is_active
-                            ? <ToggleRight className="h-4 w-4 text-green-600" />
-                            : <ToggleLeft className="h-4 w-4 text-gray-400" />
-                          }
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <TablePagination {...pagination} />
+        <DataTable
+          tableKey="recurring-schedules"
+          columns={columns}
+          data={rows}
+          isLoading={isLoading}
+          rowKey={(s) => s.id}
+          emptyText={t("recurring.no_schedules")}
+          selection={{
+            enable: true,
+            resource: "recurring-schedules",
+            onChanged: () => qc.invalidateQueries({ queryKey: ["recurring-schedules"] }),
+          }}
+          showDeleted={showDeleted}
+          onToggleShowDeleted={setShowDeleted}
+        />
       </div>
-
-      <AlertDialog open={bulkAction !== null} onOpenChange={(o) => !o && setBulkAction(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-destructive" />
-              {bulkAction === "permanent" ? "Permanently Delete Schedules" : "Archive Schedules"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {bulkAction === "permanent"
-                ? `You are about to permanently delete ${selectedIds.size} schedule(s). This cannot be undone.`
-                : `You are about to archive ${selectedIds.size} schedule(s). They will be hidden from view.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <Button variant={bulkAction === "permanent" ? "destructive" : "outline"}
-              className={bulkAction !== "permanent" ? "border-amber-300 text-amber-700 hover:bg-amber-50" : ""}
-              onClick={() => handleBulkDelete(bulkAction === "permanent")}>
-              {bulkAction === "permanent" ? "Delete Forever" : "Archive All"}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <AlertDialog open={toggleTarget !== null} onOpenChange={() => setToggleTarget(null)}>
         <AlertDialogContent>

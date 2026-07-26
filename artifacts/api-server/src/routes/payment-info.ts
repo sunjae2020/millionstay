@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, and, isNull, inArray, SQL } from "drizzle-orm";
 import { db, paymentInfoTable } from "@workspace/db";
+import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import {
   ListPaymentInfoQueryParams,
   CreatePaymentInfoBody,
@@ -16,7 +17,7 @@ router.get("/v1/payment-info", async (req, res): Promise<void> => {
   const parsed = ListPaymentInfoQueryParams.safeParse(req.query);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const { search, payment_type } = parsed.data;
-  const conditions: SQL[] = [isNull(paymentInfoTable.deleted_at)];
+  const conditions: SQL[] = [deletedFilter(paymentInfoTable.deleted_at, req)];
   if (payment_type) conditions.push(eq(paymentInfoTable.payment_type, payment_type));
   if (search) conditions.push(ilike(paymentInfoTable.name, `%${search}%`));
   const rows = await db.select().from(paymentInfoTable)
@@ -53,23 +54,16 @@ router.put("/v1/payment-info/:id", async (req, res): Promise<void> => {
   res.json(row);
 });
 
-router.post("/v1/payment-info/bulk-delete", async (req, res): Promise<void> => {
-  const currentUser = (req as any).user;
-  if (currentUser?.role !== "SuperAdmin") {
-    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
-  }
-  const { ids, permanent } = req.body;
-  if (!Array.isArray(ids) || ids.length === 0) {
-    res.status(400).json({ error: "ids must be a non-empty array" }); return;
-  }
-  const numIds = ids.map(Number).filter(Boolean);
-  if (permanent) {
-    await db.delete(paymentInfoTable).where(inArray(paymentInfoTable.id, numIds));
-  } else {
-    await db.update(paymentInfoTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(paymentInfoTable.id, numIds));
-  }
-  res.json({ success: true, affected: numIds.length });
-});
+const paymentInfoSoftDelete = {
+  table: paymentInfoTable,
+  idColumn: paymentInfoTable.id,
+  statusKey: "status",
+  archivedStatus: "Archived",
+  restoredStatus: "Active",
+};
+
+router.post("/v1/payment-info/bulk-delete", makeBulkDelete(paymentInfoSoftDelete));
+router.post("/v1/payment-info/bulk-restore", makeBulkRestore(paymentInfoSoftDelete));
 
 router.delete("/v1/payment-info/:id", async (req, res): Promise<void> => {
   const parsed = DeletePaymentInfoParams.safeParse(req.params);

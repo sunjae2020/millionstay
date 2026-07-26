@@ -7,6 +7,7 @@ import { isCloudinaryConfigured, uploadToCloudinary, cldFolder } from "../utils/
 import { translateAndStoreMessage } from "../lib/chat/translateMessage";
 import { dispatchWorkOrder } from "../lib/dispatch/workOrderDispatch";
 import { logAction } from "../utils/auditLog";
+import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 
 const router: IRouter = Router();
 
@@ -96,7 +97,7 @@ router.get("/v1/cs-tickets", requireAuth, async (req, res): Promise<void> => {
   try {
     const { status, category, requester_type, q, limit = "50", offset = "0" } = req.query as Record<string, string>;
 
-    const conditions: any[] = [isNull(csTicketsTable.deleted_at)];
+    const conditions: any[] = [deletedFilter(csTicketsTable.deleted_at, req)];
     if (status) conditions.push(eq(csTicketsTable.status, status));
     if (category) conditions.push(eq(csTicketsTable.category, category));
     if (requester_type) conditions.push(eq(csTicketsTable.requester_type, requester_type));
@@ -315,23 +316,12 @@ router.post("/v1/cs-tickets/:id/messages/:mid/retranslate", requireAuth, async (
   }
 });
 
-router.post("/v1/cs-tickets/bulk-delete", requireAuth, async (req, res): Promise<void> => {
-  const currentUser = (req as any).user;
-  if (currentUser?.role !== "SuperAdmin") {
-    res.status(403).json({ error: "Only SuperAdmin can perform bulk delete" }); return;
-  }
-  const { ids, permanent } = req.body;
-  if (!Array.isArray(ids) || ids.length === 0) {
-    res.status(400).json({ error: "ids must be a non-empty array" }); return;
-  }
-  const numIds = ids.map(Number).filter(Boolean);
-  if (permanent) {
-    await db.delete(csTicketsTable).where(inArray(csTicketsTable.id, numIds));
-  } else {
-    await db.update(csTicketsTable).set({ deleted_at: new Date(), status: "Archived" }).where(inArray(csTicketsTable.id, numIds));
-  }
-  res.json({ success: true, affected: numIds.length });
-});
+const csTicketsSoftDelete = {
+  table: csTicketsTable,
+  idColumn: csTicketsTable.id,
+};
+router.post("/v1/cs-tickets/bulk-delete", requireAuth, makeBulkDelete(csTicketsSoftDelete));
+router.post("/v1/cs-tickets/bulk-restore", requireAuth, makeBulkRestore(csTicketsSoftDelete));
 
 router.delete("/v1/cs-tickets/:id", requireAuth, async (req, res): Promise<void> => {
   const id = Number(req.params.id);

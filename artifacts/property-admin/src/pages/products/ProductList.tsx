@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
-import { usePagination, TablePagination } from "@/components/ui/TablePagination";
+import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -111,8 +111,84 @@ export default function ProductList() {
     return true;
   });
 
-  const pagination = usePagination(filtered);
   const deleteTarget = products.find(p => p.id === deleteId);
+
+  const columns: ColumnDef<Product>[] = useMemo(
+    () => [
+      {
+        key: "name",
+        header: "product.col_name",
+        hideable: false,
+        defaultWidth: 220,
+        cell: (p) => (
+          <Link href={`/products/products/${p.id}`} className="text-primary hover:underline line-clamp-2 font-medium">
+            {p.name}
+          </Link>
+        ),
+      },
+      {
+        key: "promotion_name",
+        header: "product.col_promotion",
+        cell: (p) => (
+          <div className="max-w-[200px]">
+            <div className="text-xs text-muted-foreground truncate">{p.promotion_name ?? "—"}</div>
+            {p.promotion_id != null && PROMO_PERIOD[p.promotion_id] && (
+              <div className="text-[10px] text-muted-foreground/60 mt-0.5">{PROMO_PERIOD[p.promotion_id]}</div>
+            )}
+            {(p.promotion_valid_from || p.promotion_valid_to) && (
+              <div className="text-[10px] text-muted-foreground/50 mt-0.5">
+                {fmtDate(p.promotion_valid_from)} – {fmtDate(p.promotion_valid_to)}
+              </div>
+            )}
+          </div>
+        ),
+      },
+      {
+        key: "promotion_id",
+        header: "product.col_unit",
+        align: "right",
+        cell: (p) => (
+          <span className="text-xs tabular-nums text-muted-foreground">
+            {p.promotion_id === 4 ? "1 Day" : "1 Week"}
+          </span>
+        ),
+      },
+      {
+        key: "price",
+        header: "product.col_price",
+        align: "right",
+        cell: (p) => (
+          <span className="text-xs tabular-nums font-medium text-primary">
+            {p.price != null ? formatMoney(p.price, p.currency, currencyPosition) : "—"}
+          </span>
+        ),
+      },
+      {
+        key: ACTIONS_KEY,
+        header: "",
+        hideable: false,
+        sortable: false,
+        align: "right",
+        defaultWidth: 90,
+        cell: (p) => (
+          <div className="flex items-center gap-1 justify-end">
+            <Link href={`/products/products/${p.id}`}>
+              <button className="p-1.5 rounded hover:bg-muted transition-colors">
+                <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+              </button>
+            </Link>
+            <button
+              className="p-1.5 rounded hover:bg-destructive/10 transition-colors"
+              onClick={() => setDeleteId(p.id)}
+            >
+              <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+            </button>
+          </div>
+        ),
+      },
+    ],
+    [t, currencyPosition],
+  );
 
   return (
     <Layout>
@@ -164,82 +240,15 @@ export default function ProductList() {
           </Select>
         </div>
 
-        <div className="border rounded-lg overflow-hidden bg-card">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 border-b">
-                <tr>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("product.col_name")}</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("product.col_promotion")}</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("product.col_unit")}</th>
-                  <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("product.col_price")}</th>
-                  <th className="px-4 py-3 w-20"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("common.loading")}</td>
-                  </tr>
-                ) : filtered.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("product.no_products")}</td>
-                  </tr>
-                ) : (
-                  pagination.paginatedItems.map((p) => (
-                    <tr key={p.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3 font-medium max-w-[220px]">
-                        <Link
-                          href={`/products/products/${p.id}`}
-                          className="text-primary hover:underline line-clamp-2"
-                        >
-                          {p.name}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3 max-w-[200px]">
-                        <div className="text-xs text-muted-foreground truncate">{p.promotion_name ?? "—"}</div>
-                        {p.promotion_id != null && PROMO_PERIOD[p.promotion_id] && (
-                          <div className="text-[10px] text-muted-foreground/60 mt-0.5">{PROMO_PERIOD[p.promotion_id]}</div>
-                        )}
-                        {(p.promotion_valid_from || p.promotion_valid_to) && (
-                          <div className="text-[10px] text-muted-foreground/50 mt-0.5">
-                            {fmtDate(p.promotion_valid_from)} – {fmtDate(p.promotion_valid_to)}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-right text-xs tabular-nums text-muted-foreground">
-                        {p.promotion_id === 4 ? "1 Day" : "1 Week"}
-                      </td>
-                      <td className="px-4 py-3 text-right text-xs tabular-nums font-medium text-primary">
-                        {p.price != null ? formatMoney(p.price, p.currency, currencyPosition) : "—"}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1">
-                          <Link href={`/products/products/${p.id}`}>
-                            <button className="p-1.5 rounded hover:bg-muted transition-colors">
-                              <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                            </button>
-                          </Link>
-                          <button
-                            className="p-1.5 rounded hover:bg-destructive/10 transition-colors"
-                            onClick={() => setDeleteId(p.id)}
-                          >
-                            <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-          {filtered.length > 0 && (
-            <div className="border-t p-3">
-              <TablePagination {...pagination} />
-            </div>
-          )}
-        </div>
+        <DataTable
+          tableKey="accommodation-products"
+          columns={columns}
+          data={filtered}
+          isLoading={isLoading}
+          rowKey={(p) => p.id}
+          defaultSort={{ key: "name", dir: "asc" }}
+          emptyText={t("product.no_products")}
+        />
       </div>
 
       <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
