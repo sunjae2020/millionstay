@@ -11,6 +11,7 @@ import JobDetailPage from "@/pages/JobDetailPage";
 import WorkOrdersPage from "@/pages/WorkOrdersPage";
 import SchedulePage from "@/pages/SchedulePage";
 import EarningsPage from "@/pages/EarningsPage";
+import DocumentsPage from "@/pages/DocumentsPage";
 import SupportPage from "@/pages/SupportPage";
 import SupportDetailPage from "@/pages/SupportDetailPage";
 
@@ -44,6 +45,7 @@ function PortalRoutes() {
       <Route path="/work-orders" component={WorkOrdersPage} />
       <Route path="/schedule" component={SchedulePage} />
       <Route path="/earnings" component={EarningsPage} />
+      <Route path="/documents" component={DocumentsPage} />
       <Route path="/support" component={SupportPage} />
       <Route path="/support/:id" component={SupportDetailPage} />
       <Route>

@@ -17,7 +17,8 @@
     "support": "サポート",
     "dark_mode": "ダークモード",
     "light_mode": "ライトモード",
-    "work_orders": "作業指示"
+    "work_orders": "作業指示",
+    "documents": "書類"
   },
   "common": {
     "loading": "読み込み中...",
@@ -77,7 +78,24 @@
     "qlink_jobs": "マイジョブ",
     "qlink_schedule": "スケジュール",
     "qlink_earnings": "収益",
-    "load_failed": "ダッシュボードの読み込みに失敗しました"
+    "load_failed": "ダッシュボードの読み込みに失敗しました",
+    "manage_orders": "作業指示の管理",
+    "kpi_total_orders": "作業指示 合計",
+    "kpi_in_progress": "進行中",
+    "kpi_needs_ack": "確認待ち {{count}}件",
+    "kpi_completed": "完了",
+    "kpi_revenue": "作業金額",
+    "revenue_by_category": "カテゴリー別金額",
+    "status_distribution": "作業ステータス",
+    "no_orders": "作業指示はまだありません",
+    "sla_on_track": "順調",
+    "sla_awaiting_ack": "確認待ち",
+    "sla_breached": "SLA超過",
+    "recent_orders": "最近の作業指示",
+    "col_order": "作業指示",
+    "col_category": "カテゴリー",
+    "col_status": "ステータス",
+    "col_value": "金額"
   },
   "jobs": {
     "title": "マイジョブ",
@@ -245,6 +263,40 @@
     "btn_acknowledge": "確認",
     "btn_start": "作業開始",
     "btn_complete": "完了にする",
-    "overdue": "期限超過 — 確認してください"
+    "overdue": "期限超過 — 確認してください",
+    "cat_plumbing": "配管",
+    "cat_cleaning": "清掃",
+    "cat_electrical": "電気",
+    "cat_day_tour": "デイツアー",
+    "cat_fishing": "釣り",
+    "cat_general": "一般",
+    "cat_maintenance": "メンテナンス",
+    "status_Open": "受付",
+    "status_InProgress": "進行中",
+    "status_Completed": "完了",
+    "status_Cancelled": "キャンセル",
+    "status_PendingReview": "確認待ち"
+  },
+  "documents": {
+    "title": "書類",
+    "subtitle": "業務書類を安全に保管・管理できます。",
+    "category": "分類",
+    "upload": "書類をアップロード",
+    "uploading": "アップロード中…",
+    "upload_hint": "PDFまたは画像、最大20MB。ファイルは安全に保管され、本人と管理者のみが閲覧できます。",
+    "empty": "書類がありません",
+    "empty_help": "書類をアップロードして始めましょう。",
+    "load_failed": "書類を読み込めませんでした",
+    "upload_failed": "アップロードに失敗しました",
+    "download": "ダウンロード",
+    "download_failed": "ダウンロードに失敗しました",
+    "delete": "削除",
+    "delete_confirm": "この書類を削除しますか？",
+    "delete_failed": "削除に失敗しました",
+    "type_contract": "契約書",
+    "type_invoice": "請求書",
+    "type_report": "レポート",
+    "type_manual": "マニュアル",
+    "type_other": "その他"
   }
 }

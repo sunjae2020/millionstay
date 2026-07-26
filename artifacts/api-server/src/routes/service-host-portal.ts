@@ -13,9 +13,10 @@ import {
   invoicesTable,
   contactsTable,
   workOrdersTable,
+  documentsTable,
 } from "@workspace/db";
 import { requireServiceHostAuth, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth";
-import { isCloudinaryConfigured, uploadToCloudinary, deleteFromCloudinary, cldFolder } from "../utils/cloudinary";
+import { isCloudinaryConfigured, uploadToCloudinary, uploadPrivateToCloudinary, generateSignedUrl, deleteFromCloudinary, cldFolder } from "../utils/cloudinary";
 import { parsePageParams, pageMeta } from "../utils/pagination";
 
 const router: IRouter = Router();
@@ -108,6 +109,157 @@ async function partnerTransition(req: any, res: any, from: string[] | null, to: 
 }
 router.post("/v1/service-host/work-orders/:id/start", (req, res) => partnerTransition(req, res, ["Open"], "InProgress"));
 router.post("/v1/service-host/work-orders/:id/complete", (req, res) => partnerTransition(req, res, ["InProgress", "Open"], "Completed", "completed"));
+
+/* ─────────────────────────────────────────────
+   DOCUMENTS — partner document folder (문서 관리함)
+   Each partner stores/reads their own documents (contracts, invoices,
+   manuals, reports). Files live in Cloudinary as `authenticated` assets and
+   are served only via short-lived signed URLs. Rows in the shared `documents`
+   table are scoped to the partner via entity_type='service_host'.
+───────────────────────────────────────────── */
+
+const ALLOWED_DOC_MIME = new Set([
+  "application/pdf",
+  "image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif",
+]);
+const DOC_TYPES = new Set(["contract", "invoice", "report", "manual", "other"]);
+const uploadDoc = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024, files: 1 },
+  fileFilter: (_req, file, cb) => {
+    if (ALLOWED_DOC_MIME.has(file.mimetype.toLowerCase())) cb(null, true);
+    else cb(new Error(`Unsupported file type: ${file.mimetype}. Only PDF and image files are allowed.`));
+  },
+});
+
+// GET /api/v1/service-host/documents — list my documents (newest first).
+router.get("/v1/service-host/documents", async (req, res): Promise<void> => {
+  try {
+    const partner = (req as any).partner as PartnerAuthPayload;
+    const hostIds = await getHostServiceIds(partner.account_id);
+    if (!hostIds.length) { res.json({ success: true, data: [] }); return; }
+    const rows = await db
+      .select({
+        id: documentsTable.id,
+        doc_type: documentsTable.doc_type,
+        file_name: documentsTable.file_name,
+        file_size: documentsTable.file_size,
+        mime_type: documentsTable.mime_type,
+        created_at: documentsTable.created_at,
+      })
+      .from(documentsTable)
+      .where(and(
+        eq(documentsTable.entity_type, "service_host"),
+        inArray(documentsTable.entity_id, hostIds),
+        isNull(documentsTable.deleted_at),
+      ))
+      .orderBy(desc(documentsTable.created_at));
+    res.json({ success: true, data: rows });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
+  }
+});
+
+// POST /api/v1/service-host/documents — upload a document.
+router.post(
+  "/v1/service-host/documents",
+  (req, res, next) => {
+    uploadDoc.single("file")(req, res, (err) => {
+      if (err) { res.status(400).json({ success: false, error: { code: "UPLOAD_ERROR", message: err.message } }); return; }
+      next();
+    });
+  },
+  async (req, res): Promise<void> => {
+    let publicId: string | null = null;
+    try {
+      const partner = (req as any).partner as PartnerAuthPayload;
+      const hostIds = await getHostServiceIds(partner.account_id);
+      if (!hostIds.length) { res.status(403).json({ success: false, error: { code: "NO_HOST", message: "No active service host profile" } }); return; }
+
+      if (!isCloudinaryConfigured()) {
+        res.status(503).json({ success: false, error: { code: "NOT_CONFIGURED", message: "File upload not configured" } });
+        return;
+      }
+      const file = req.file as Express.Multer.File | undefined;
+      if (!file) { res.status(400).json({ success: false, error: { code: "NO_FILE", message: "No file provided" } }); return; }
+
+      const docType = String((req.body?.doc_type ?? "other")).toLowerCase();
+      if (!DOC_TYPES.has(docType)) { res.status(400).json({ success: false, error: { code: "INVALID_TYPE", message: `doc_type must be one of: ${[...DOC_TYPES].join(", ")}` } }); return; }
+      const title = typeof req.body?.title === "string" && req.body.title.trim() ? req.body.title.trim() : file.originalname;
+
+      const uploaded = await uploadPrivateToCloudinary(file.buffer, { folder: cldFolder("partner-documents"), resource_type: "auto" });
+      publicId = uploaded.public_id;
+
+      // Default retention: 7 years (Australian APP 11 record-keeping default).
+      const retentionUntil = new Date();
+      retentionUntil.setFullYear(retentionUntil.getFullYear() + 7);
+
+      const [row] = await db.insert(documentsTable).values({
+        entity_type: "service_host",
+        entity_id: hostIds[0]!,
+        doc_type: docType,
+        file_name: title,
+        file_size: uploaded.bytes ?? file.size,
+        mime_type: file.mimetype,
+        cloudinary_public_id: uploaded.public_id,
+        uploaded_by: partner.id ?? null,
+        uploaded_by_type: "partner",
+        retention_until: retentionUntil,
+      }).returning({
+        id: documentsTable.id,
+        doc_type: documentsTable.doc_type,
+        file_name: documentsTable.file_name,
+        file_size: documentsTable.file_size,
+        mime_type: documentsTable.mime_type,
+        created_at: documentsTable.created_at,
+      });
+      res.status(201).json({ success: true, data: row });
+    } catch (err: any) {
+      if (publicId) { try { await deleteFromCloudinary(publicId); } catch {} }
+      res.status(500).json({ success: false, error: { code: "UPLOAD_FAILED", message: err?.message ?? "Upload failed" } });
+    }
+  },
+);
+
+// Load a document owned by the calling partner.
+async function loadOwnedDocument(accountId: number, docId: string) {
+  const hostIds = await getHostServiceIds(accountId);
+  if (!hostIds.length) return null;
+  const [doc] = await db.select().from(documentsTable).where(and(
+    eq(documentsTable.id, docId),
+    eq(documentsTable.entity_type, "service_host"),
+    isNull(documentsTable.deleted_at),
+  )).limit(1);
+  if (!doc || doc.entity_id == null || !hostIds.includes(doc.entity_id)) return null;
+  return doc;
+}
+
+// GET /api/v1/service-host/documents/:id/download — short-lived signed URL.
+router.get("/v1/service-host/documents/:id/download", async (req, res): Promise<void> => {
+  try {
+    const partner = (req as any).partner as PartnerAuthPayload;
+    const doc = await loadOwnedDocument(partner.account_id, String(req.params.id));
+    if (!doc || !doc.cloudinary_public_id) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Document not found" } }); return; }
+    const url = generateSignedUrl(doc.cloudinary_public_id, 300);
+    res.json({ success: true, data: { url } });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
+  }
+});
+
+// DELETE /api/v1/service-host/documents/:id — soft-delete + remove the asset.
+router.delete("/v1/service-host/documents/:id", async (req, res): Promise<void> => {
+  try {
+    const partner = (req as any).partner as PartnerAuthPayload;
+    const doc = await loadOwnedDocument(partner.account_id, String(req.params.id));
+    if (!doc) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Document not found" } }); return; }
+    await db.update(documentsTable).set({ deleted_at: new Date(), updated_at: new Date() }).where(eq(documentsTable.id, doc.id));
+    if (doc.cloudinary_public_id) { try { await deleteFromCloudinary(doc.cloudinary_public_id); } catch {} }
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
+  }
+});
 
 /* GET /api/v1/service-host/dashboard */
 router.get("/v1/service-host/dashboard", requireServiceHostAuth, async (req, res): Promise<void> => {
