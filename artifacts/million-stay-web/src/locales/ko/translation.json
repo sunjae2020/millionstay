@@ -15,7 +15,8 @@
       "forAgent": "에이전트 안내",
       "forHomestayHost": "호스트 신청"
     },
-    "partnerLogin": "파트너 로그인"
+    "partnerLogin": "파트너 로그인",
+    "tenantLogin": "세입자 로그인"
   },
   "home": {
     "hero_tagline": "Million Homestay Australia",

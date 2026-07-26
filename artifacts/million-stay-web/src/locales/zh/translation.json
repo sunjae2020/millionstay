@@ -15,7 +15,8 @@
       "forAgent": "中介专区",
       "forHomestayHost": "成为寄宿家庭"
     },
-    "partnerLogin": "合作伙伴登录"
+    "partnerLogin": "合作伙伴登录",
+    "tenantLogin": "租户登录"
   },
   "home": {
     "hero_tagline": "Million Homestay Australia",

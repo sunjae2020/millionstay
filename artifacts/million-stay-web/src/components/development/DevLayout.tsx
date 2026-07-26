@@ -1,13 +1,15 @@
 import { type ReactNode, useEffect, useState, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X, ChevronDown, User, LayoutDashboard, LogOut } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuTrigger,
+  DropdownMenuItem, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { BrandMark } from "@/components/brand-mark";
 import { CurrencySelector } from "@/components/currency-selector";
 import { APP_NAME } from "@/lib/appName";
+import { useAuthStore } from "@/lib/store";
 import { getApiBase } from "@/lib/api-base";
 import { flagIsoFor } from "@/lib/flagOverrides";
 import { usePageContent } from "@/lib/usePageContent";
@@ -58,7 +60,8 @@ function FlagIcon({ iso, size = 20 }: { iso: string; size?: number }) {
 
 function DevNavbar() {
   const { t, i18n } = useTranslation();
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
+  const { token, guest, logout } = useAuthStore();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [languages, setLanguages] = useState<LangOption[]>(FALLBACK_LANGS);
@@ -99,6 +102,10 @@ function DevNavbar() {
   };
 
   const currentLang = languages.find((l) => l.code === i18n.language) ?? languages[0]!;
+
+  const tenantName =
+    [guest?.first_name, guest?.last_name].filter(Boolean).join(" ") || guest?.email || "";
+  const handleLogout = () => { logout(); setLocation("/"); };
 
   const headerCls = isHome
     ? `fixed top-0 inset-x-0 z-50 transition-colors duration-300 ${dark ? "bg-gradient-to-b from-black/45 to-transparent" : "bg-white shadow-sm"}`
@@ -185,6 +192,43 @@ function DevNavbar() {
               {t("nav.partnerLogin")}
             </Link>
 
+            {/* Tenant (guest) auth — sign-in CTA, or portal + logout when signed in */}
+            {token && guest ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={`hidden min-[860px]:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border rounded-lg transition-colors whitespace-nowrap ${
+                      dark
+                        ? "text-white/90 border-white/40 hover:text-white hover:border-white/70"
+                        : "text-gray-600 border-gray-200 hover:text-primary hover:border-primary/40"
+                    }`}
+                  >
+                    <User className="h-3.5 w-3.5" />
+                    <span className="max-w-[120px] truncate">{tenantName}</span>
+                    <ChevronDown className="h-3 w-3 opacity-60" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 p-1">
+                  <DropdownMenuItem onClick={() => setLocation("/portal/bookings")} className="gap-2">
+                    <LayoutDashboard className="h-4 w-4 text-gray-500" />
+                    {t("nav.myPortal")}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="gap-2 text-red-600 focus:text-red-600">
+                    <LogOut className="h-4 w-4" />
+                    {t("nav.logout")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link
+                href="/login"
+                className="hidden min-[860px]:inline-flex items-center px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors whitespace-nowrap"
+              >
+                {t("nav.tenantLogin")}
+              </Link>
+            )}
+
             <button
               className={`min-[860px]:hidden p-2 ${dark ? "text-white" : "text-gray-700 hover:text-primary"}`}
               onClick={() => setMobileOpen((v) => !v)}
@@ -215,6 +259,31 @@ function DevNavbar() {
           >
             {t("nav.partnerLogin")}
           </Link>
+          {token && guest ? (
+            <>
+              <Link
+                href="/portal/bookings"
+                onClick={() => setMobileOpen(false)}
+                className="block px-2 py-2.5 text-sm font-semibold text-gray-700 hover:text-primary"
+              >
+                {t("nav.myPortal")}
+              </Link>
+              <button
+                onClick={() => { setMobileOpen(false); handleLogout(); }}
+                className="block w-full text-left px-2 py-2.5 text-sm font-semibold text-red-600"
+              >
+                {t("nav.logout")}
+              </button>
+            </>
+          ) : (
+            <Link
+              href="/login"
+              onClick={() => setMobileOpen(false)}
+              className="block px-2 py-2.5 text-sm font-semibold text-gray-700 hover:text-primary"
+            >
+              {t("nav.tenantLogin")}
+            </Link>
+          )}
         </nav>
       )}
     </header>

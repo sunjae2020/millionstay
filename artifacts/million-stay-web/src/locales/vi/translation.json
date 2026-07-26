@@ -698,7 +698,8 @@
     }
   },
   "nav": {
-    "partnerLogin": "Đăng nhập đối tác"
+    "partnerLogin": "Đăng nhập đối tác",
+    "tenantLogin": "Đăng nhập người thuê"
   },
   "portalLogin": {
     "eyebrow": "Cổng đối tác",
