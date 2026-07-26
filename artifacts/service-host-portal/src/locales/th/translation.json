@@ -300,7 +300,18 @@
     "reported_at": "เวลาที่แจ้ง",
     "completed_at": "เวลาที่เสร็จ",
     "cost": "ค่าใช้จ่าย",
-    "notes": "หมายเหตุ"
+    "notes": "บันทึกงาน",
+    "photos_title": "รูปผลงานบริการ",
+    "photos_empty": "ยังไม่มีรูป อัปโหลดรูปงานที่เสร็จแล้ว",
+    "photo_add": "เพิ่มรูป",
+    "photo_uploading": "กำลังอัปโหลด…",
+    "photo_alt": "รูปบริการ",
+    "photo_delete": "ลบรูป",
+    "photo_delete_confirm": "ลบรูปนี้หรือไม่?",
+    "photo_delete_failed": "ลบไม่สำเร็จ",
+    "photo_upload_failed": "อัปโหลดไม่สำเร็จ",
+    "notes_placeholder": "อธิบายงานที่คุณดำเนินการ…",
+    "notes_save_failed": "บันทึกโน้ตไม่สำเร็จ"
   },
   "documents": {
     "title": "เอกสาร",

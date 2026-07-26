@@ -300,7 +300,18 @@
     "reported_at": "报告时间",
     "completed_at": "完成时间",
     "cost": "金额",
-    "notes": "备注"
+    "notes": "工作备注",
+    "photos_title": "服务结果照片",
+    "photos_empty": "暂无照片。请上传已完成工作的照片。",
+    "photo_add": "添加照片",
+    "photo_uploading": "上传中…",
+    "photo_alt": "服务照片",
+    "photo_delete": "删除照片",
+    "photo_delete_confirm": "删除此照片？",
+    "photo_delete_failed": "删除失败",
+    "photo_upload_failed": "上传失败",
+    "notes_placeholder": "描述您完成的工作…",
+    "notes_save_failed": "备注保存失败"
   },
   "documents": {
     "title": "文档",

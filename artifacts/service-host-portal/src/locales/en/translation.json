@@ -300,7 +300,18 @@
     "reported_at": "Reported",
     "completed_at": "Completed at",
     "cost": "Cost",
-    "notes": "Notes"
+    "notes": "Work notes",
+    "photos_title": "Service result photos",
+    "photos_empty": "No photos yet. Upload photos of the completed work.",
+    "photo_add": "Add photo",
+    "photo_uploading": "Uploading…",
+    "photo_alt": "Service photo",
+    "photo_delete": "Delete photo",
+    "photo_delete_confirm": "Delete this photo?",
+    "photo_delete_failed": "Failed to delete",
+    "photo_upload_failed": "Upload failed",
+    "notes_placeholder": "Describe the work you carried out…",
+    "notes_save_failed": "Failed to save notes"
   },
   "documents": {
     "title": "Documents",

@@ -300,7 +300,18 @@
     "reported_at": "접수 시각",
     "completed_at": "완료 시각",
     "cost": "금액",
-    "notes": "메모"
+    "notes": "작업 노트",
+    "photos_title": "서비스 결과 사진",
+    "photos_empty": "사진이 없습니다. 완료된 작업 사진을 올려주세요.",
+    "photo_add": "사진 추가",
+    "photo_uploading": "업로드 중…",
+    "photo_alt": "서비스 사진",
+    "photo_delete": "사진 삭제",
+    "photo_delete_confirm": "이 사진을 삭제할까요?",
+    "photo_delete_failed": "삭제에 실패했습니다",
+    "photo_upload_failed": "업로드에 실패했습니다",
+    "notes_placeholder": "수행한 작업 내용을 적어주세요…",
+    "notes_save_failed": "노트 저장에 실패했습니다"
   },
   "documents": {
     "title": "문서함",

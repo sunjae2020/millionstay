@@ -13,6 +13,7 @@ import {
   invoicesTable,
   contactsTable,
   workOrdersTable,
+  workOrderPhotosTable,
   documentsTable,
 } from "@workspace/db";
 import { requireServiceHostAuth, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth";
@@ -109,6 +110,99 @@ async function partnerTransition(req: any, res: any, from: string[] | null, to: 
 }
 router.post("/v1/service-host/work-orders/:id/start", (req, res) => partnerTransition(req, res, ["Open"], "InProgress"));
 router.post("/v1/service-host/work-orders/:id/complete", (req, res) => partnerTransition(req, res, ["InProgress", "Open"], "Completed", "completed"));
+
+// PATCH notes — partner records what they did on the job.
+router.patch("/v1/service-host/work-orders/:id/notes", async (req, res): Promise<void> => {
+  try {
+    const partner = (req as any).partner as PartnerAuthPayload;
+    const wo = await loadOwnedWorkOrder(partner.account_id, Number(req.params.id));
+    if (!wo) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Work order not found" } }); return; }
+    const notes = typeof req.body?.notes === "string" ? req.body.notes : null;
+    const [updated] = await db.update(workOrdersTable)
+      .set({ notes, updated_at: new Date() })
+      .where(eq(workOrdersTable.id, wo.id))
+      .returning();
+    res.json({ success: true, data: updated });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
+  }
+});
+
+// GET photos — service result / before-after evidence for one of my work orders.
+router.get("/v1/service-host/work-orders/:id/photos", async (req, res): Promise<void> => {
+  try {
+    const partner = (req as any).partner as PartnerAuthPayload;
+    const wo = await loadOwnedWorkOrder(partner.account_id, Number(req.params.id));
+    if (!wo) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Work order not found" } }); return; }
+    const rows = await db.select().from(workOrderPhotosTable)
+      .where(eq(workOrderPhotosTable.work_order_id, wo.id))
+      .orderBy(desc(workOrderPhotosTable.id));
+    res.json({ success: true, data: rows });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
+  }
+});
+
+// POST photo — partner uploads a service-result photo (kind: before|after).
+const MAX_WO_PHOTOS = 20;
+router.post(
+  "/v1/service-host/work-orders/:id/photos",
+  (req, res, next) => {
+    upload.single("image")(req, res, (err) => {
+      if (err) { res.status(400).json({ success: false, error: { code: "UPLOAD_ERROR", message: err.message } }); return; }
+      next();
+    });
+  },
+  async (req, res): Promise<void> => {
+    let publicId: string | null = null;
+    try {
+      const partner = (req as any).partner as PartnerAuthPayload;
+      const wo = await loadOwnedWorkOrder(partner.account_id, Number(req.params.id));
+      if (!wo) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Work order not found" } }); return; }
+      if (!isCloudinaryConfigured()) { res.status(503).json({ success: false, error: { code: "NOT_CONFIGURED", message: "Image upload not configured" } }); return; }
+      const file = req.file as Express.Multer.File | undefined;
+      if (!file) { res.status(400).json({ success: false, error: { code: "NO_FILE", message: "No image provided" } }); return; }
+
+      const existing = await db.select({ id: workOrderPhotosTable.id }).from(workOrderPhotosTable).where(eq(workOrderPhotosTable.work_order_id, wo.id));
+      if (existing.length >= MAX_WO_PHOTOS) { res.status(400).json({ success: false, error: { code: "MAX_REACHED", message: `Maximum of ${MAX_WO_PHOTOS} photos already uploaded` } }); return; }
+
+      const uploaded = await uploadToCloudinary(file.buffer, { folder: cldFolder("work-orders") });
+      publicId = uploaded.public_id;
+      const kind = req.body?.kind === "before" ? "before" : "after";
+      const [row] = await db.insert(workOrderPhotosTable).values({
+        work_order_id: wo.id,
+        url: uploaded.secure_url,
+        kind,
+        uploaded_by_type: "partner",
+        caption: typeof req.body?.caption === "string" && req.body.caption.trim() ? req.body.caption.trim() : null,
+      }).returning();
+      res.status(201).json({ success: true, data: row });
+    } catch (err: any) {
+      if (publicId) { try { await deleteFromCloudinary(publicId); } catch {} }
+      res.status(500).json({ success: false, error: { code: "UPLOAD_FAILED", message: err?.message ?? "Upload failed" } });
+    }
+  },
+);
+
+// DELETE photo — remove one of my work-order photos.
+router.delete("/v1/service-host/work-orders/:id/photos/:photoId", async (req, res): Promise<void> => {
+  try {
+    const partner = (req as any).partner as PartnerAuthPayload;
+    const wo = await loadOwnedWorkOrder(partner.account_id, Number(req.params.id));
+    if (!wo) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Work order not found" } }); return; }
+    const [photo] = await db.select().from(workOrderPhotosTable)
+      .where(and(eq(workOrderPhotosTable.id, Number(req.params.photoId)), eq(workOrderPhotosTable.work_order_id, wo.id)))
+      .limit(1);
+    if (!photo) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Photo not found" } }); return; }
+    await db.delete(workOrderPhotosTable).where(eq(workOrderPhotosTable.id, photo.id));
+    // Best-effort Cloudinary cleanup (public_id not stored → derive from URL).
+    const m = photo.url.match(/\/upload\/(?:.*?\/)?v\d+\/(.+)\.[^./]+$/);
+    if (m?.[1]) { try { await deleteFromCloudinary(m[1]); } catch {} }
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
+  }
+});
 
 /* ─────────────────────────────────────────────
    DOCUMENTS — partner document folder (문서 관리함)

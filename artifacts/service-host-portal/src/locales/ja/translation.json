@@ -300,7 +300,18 @@
     "reported_at": "受付日時",
     "completed_at": "完了日時",
     "cost": "金額",
-    "notes": "メモ"
+    "notes": "作業メモ",
+    "photos_title": "作業結果の写真",
+    "photos_empty": "写真がありません。完了した作業の写真をアップロードしてください。",
+    "photo_add": "写真を追加",
+    "photo_uploading": "アップロード中…",
+    "photo_alt": "作業写真",
+    "photo_delete": "写真を削除",
+    "photo_delete_confirm": "この写真を削除しますか？",
+    "photo_delete_failed": "削除に失敗しました",
+    "photo_upload_failed": "アップロードに失敗しました",
+    "notes_placeholder": "実施した作業内容を記入してください…",
+    "notes_save_failed": "メモの保存に失敗しました"
   },
   "documents": {
     "title": "書類",

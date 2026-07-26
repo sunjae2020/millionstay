@@ -1,11 +1,15 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Link, useRoute } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
-import { apiGet, apiPost } from "@/lib/api";
+import { apiGet, apiPost, apiFetch, ApiError } from "@/lib/api";
 import {
   ArrowLeft, Wrench, CheckCircle2, Clock, AlertTriangle, Play, Loader2,
+  Camera, Trash2, UploadCloud, Save, X,
 } from "lucide-react";
+
+type Photo = { id: number; url: string; kind: string; caption: string | null; uploaded_by_type: string };
+const MAX_PHOTOS = 20;
 
 // Full detail view for a single dispatched work order. Reuses the list
 // endpoint (which already returns every column) and picks the row by id, so it
@@ -68,21 +72,89 @@ export default function WorkOrderDetailPage() {
   const [wo, setWo] = useState<WorkOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  // Work notes
+  const [notes, setNotes] = useState("");
+  const [notesDirty, setNotesDirty] = useState(false);
+  const [savingNotes, setSavingNotes] = useState(false);
+  // Service-result photos
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [delPhoto, setDelPhoto] = useState<number | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     try {
       const res = await apiGet<{ data: WorkOrder[] }>("/v1/service-host/work-orders");
-      setWo((res.data ?? []).find((w) => w.id === id) ?? null);
+      const found = (res.data ?? []).find((w) => w.id === id) ?? null;
+      setWo(found);
+      if (found && !notesDirty) setNotes(found.notes ?? "");
     } catch { setWo(null); }
     finally { setLoading(false); }
+  }, [id, notesDirty]);
+
+  const loadPhotos = useCallback(async () => {
+    try {
+      const res = await apiGet<{ data: Photo[] }>(`/v1/service-host/work-orders/${id}/photos`);
+      setPhotos(res.data ?? []);
+    } catch { /* keep existing */ }
   }, [id]);
-  useEffect(() => { void load(); }, [load]);
+
+  useEffect(() => { void load(); void loadPhotos(); }, [load, loadPhotos]);
 
   async function act(action: "acknowledge" | "start" | "complete") {
     if (!wo) return;
     setBusy(true);
     try { await apiPost(`/v1/service-host/work-orders/${wo.id}/${action}`); await load(); }
     finally { setBusy(false); }
+  }
+
+  async function saveNotes() {
+    if (!wo) return;
+    setSavingNotes(true);
+    setError("");
+    try {
+      await apiFetch(`/v1/service-host/work-orders/${wo.id}/notes`, {
+        method: "PATCH", body: JSON.stringify({ notes }),
+      }).then((r) => { if (!r.ok) throw new ApiError(r.status, "SAVE", t("workorders.notes_save_failed", "Failed to save notes")); });
+      setNotesDirty(false);
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : t("workorders.notes_save_failed", "Failed to save notes"));
+    } finally { setSavingNotes(false); }
+  }
+
+  async function onFile(file: File) {
+    if (!wo) return;
+    setError("");
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("image", file);
+      fd.append("kind", "after");
+      const res = await apiFetch(`/v1/service-host/work-orders/${wo.id}/photos`, { method: "POST", body: fd });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new ApiError(res.status, "UPLOAD", (body as any)?.error?.message ?? t("workorders.photo_upload_failed", "Upload failed"));
+      }
+      await loadPhotos();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : t("workorders.photo_upload_failed", "Upload failed"));
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
+  async function removePhoto(photoId: number) {
+    if (!wo || !window.confirm(t("workorders.photo_delete_confirm", "Delete this photo?"))) return;
+    setDelPhoto(photoId);
+    try {
+      const res = await apiFetch(`/v1/service-host/work-orders/${wo.id}/photos/${photoId}`, { method: "DELETE" });
+      if (!res.ok) throw new ApiError(res.status, "DELETE", t("workorders.photo_delete_failed", "Failed to delete"));
+      setPhotos((p) => p.filter((x) => x.id !== photoId));
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : t("workorders.photo_delete_failed", "Failed to delete"));
+    } finally { setDelPhoto(null); }
   }
 
   const needsAck = wo && !wo.acknowledged_at && wo.status !== "Completed" && wo.status !== "Cancelled";
@@ -95,6 +167,13 @@ export default function WorkOrderDetailPage() {
             <ArrowLeft className="w-4 h-4" /> {t("workorders.detail_back", "Back to work orders")}
           </span>
         </Link>
+
+        {error && (
+          <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <span className="flex-1">{error}</span>
+            <button onClick={() => setError("")} aria-label={t("common.dismiss", "Dismiss")}><X className="w-4 h-4" /></button>
+          </div>
+        )}
 
         {loading ? (
           <div className="space-y-3">
@@ -161,12 +240,74 @@ export default function WorkOrderDetailPage() {
                 <Row label={t("workorders.completed_at", "Completed at")} value={fmt(wo.completed_at)} />
                 <Row label={t("workorders.cost", "Cost")} value={money(wo.cost, wo.currency)} />
               </dl>
-              {wo.notes && (
-                <div className="mt-4 pt-4 border-t border-border">
-                  <p className="text-xs font-medium text-muted-foreground mb-1">{t("workorders.notes", "Notes")}</p>
-                  <p className="text-sm text-foreground whitespace-pre-line">{wo.notes}</p>
+            </div>
+
+            {/* Service-result photos */}
+            <div className="bg-card border border-border rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Camera className="w-4 h-4 text-primary" /> {t("workorders.photos_title", "Service result photos")}
+                  <span className="text-xs font-normal text-muted-foreground">{photos.length}/{MAX_PHOTOS}</span>
+                </h2>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) void onFile(f); }}
+                />
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploading || photos.length >= MAX_PHOTOS}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-60"
+                >
+                  {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UploadCloud className="w-3.5 h-3.5" />}
+                  {uploading ? t("workorders.photo_uploading", "Uploading…") : t("workorders.photo_add", "Add photo")}
+                </button>
+              </div>
+              {photos.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-6 text-center">{t("workorders.photos_empty", "No photos yet. Upload photos of the completed work.")}</p>
+              ) : (
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                  {photos.map((p) => (
+                    <div key={p.id} className="relative group aspect-square rounded-lg overflow-hidden border border-border">
+                      <a href={p.url} target="_blank" rel="noopener">
+                        <img src={p.url} alt={p.caption ?? t("workorders.photo_alt", "Service photo")} className="w-full h-full object-cover" />
+                      </a>
+                      <button
+                        onClick={() => void removePhoto(p.id)}
+                        disabled={delPhoto === p.id}
+                        className="absolute top-1 right-1 p-1 rounded-md bg-black/55 text-white opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity disabled:opacity-100"
+                        aria-label={t("workorders.photo_delete", "Delete photo")}
+                      >
+                        {delPhoto === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
+            </div>
+
+            {/* Work notes */}
+            <div className="bg-card border border-border rounded-xl p-5">
+              <h2 className="text-sm font-semibold text-foreground mb-2">{t("workorders.notes", "Work notes")}</h2>
+              <textarea
+                value={notes}
+                onChange={(e) => { setNotes(e.target.value); setNotesDirty(true); }}
+                rows={4}
+                placeholder={t("workorders.notes_placeholder", "Describe the work you carried out…")}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-y focus:outline-none focus:ring-2 focus:ring-primary/40"
+              />
+              <div className="flex justify-end mt-2">
+                <button
+                  onClick={() => void saveNotes()}
+                  disabled={savingNotes || !notesDirty}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+                >
+                  {savingNotes ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {savingNotes ? t("common.saving", "Saving…") : t("common.save", "Save")}
+                </button>
+              </div>
             </div>
 
             {/* Actions */}
