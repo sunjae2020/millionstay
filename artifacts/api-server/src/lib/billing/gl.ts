@@ -21,6 +21,9 @@ export const ACCOUNTS = {
   // Refundable security deposits are a liability, not revenue — held until
   // refunded/forfeited (H-402).
   DEPOSIT_HELD: { code: "2100", name: "Deposits Held" },
+  // Service-host / contractor payouts (외주비): expense on accrual, payable until paid.
+  CONTRACTOR_EXPENSE: { code: "5100", name: "Contractor Expense" },
+  CONTRACTOR_PAYABLE: { code: "2200", name: "Contractor Payable" },
 } as const;
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
@@ -280,6 +283,50 @@ export async function postCommissionPaid(args: {
     currency: args.currency || "AUD",
     lines: [
       { account_code: ACCOUNTS.COMMISSION_PAYABLE.code, account_name: ACCOUNTS.COMMISSION_PAYABLE.name, debit: amount, credit: 0 },
+      { account_code: ACCOUNTS.CASH.code, account_name: ACCOUNTS.CASH.name, debit: 0, credit: amount },
+    ],
+  });
+}
+
+/** Dr Contractor Expense / Cr Contractor Payable when a partner payout is accrued. */
+export async function postPartnerPayoutAccrued(args: {
+  id: number;
+  amount: number;
+  currency: string;
+}): Promise<typeof journalEntriesTable.$inferSelect | null> {
+  const amount = round2(args.amount || 0);
+  if (amount <= 0) return null;
+  return postEntry({
+    postingKey: `partner_payout_accrued:${args.id}`,
+    entryDate: sydneyToday(),
+    description: `Partner payout accrued #${args.id}`,
+    sourceType: "partner_payout",
+    sourceId: args.id,
+    currency: args.currency || "AUD",
+    lines: [
+      { account_code: ACCOUNTS.CONTRACTOR_EXPENSE.code, account_name: ACCOUNTS.CONTRACTOR_EXPENSE.name, debit: amount, credit: 0 },
+      { account_code: ACCOUNTS.CONTRACTOR_PAYABLE.code, account_name: ACCOUNTS.CONTRACTOR_PAYABLE.name, debit: 0, credit: amount },
+    ],
+  });
+}
+
+/** Dr Contractor Payable / Cr Cash when a partner payout is paid. */
+export async function postPartnerPayoutPaid(args: {
+  id: number;
+  amount: number;
+  currency: string;
+}): Promise<typeof journalEntriesTable.$inferSelect | null> {
+  const amount = round2(args.amount || 0);
+  if (amount <= 0) return null;
+  return postEntry({
+    postingKey: `partner_payout_paid:${args.id}`,
+    entryDate: sydneyToday(),
+    description: `Partner payout paid #${args.id}`,
+    sourceType: "partner_payout",
+    sourceId: args.id,
+    currency: args.currency || "AUD",
+    lines: [
+      { account_code: ACCOUNTS.CONTRACTOR_PAYABLE.code, account_name: ACCOUNTS.CONTRACTOR_PAYABLE.name, debit: amount, credit: 0 },
       { account_code: ACCOUNTS.CASH.code, account_name: ACCOUNTS.CASH.name, debit: 0, credit: amount },
     ],
   });
