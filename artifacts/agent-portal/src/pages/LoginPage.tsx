@@ -45,7 +45,7 @@ export default function LoginPage() {
         <div className="relative z-10">
           {import.meta.env.VITE_LOGO_MODE === "text"
             ? <span className="font-display font-extrabold tracking-tight text-white text-xl whitespace-nowrap">{APP_NAME}</span>
-            : <img src={import.meta.env.VITE_LOGO_URL || `${import.meta.env.BASE_URL}logo-horizontal.png`} alt={APP_NAME} className={HAS_TENANT_LOGO ? "h-[4.5rem] w-auto" : "h-9 w-auto brightness-110"} style={HAS_TENANT_LOGO ? { filter: "brightness(0) invert(1)" } : undefined} />}
+            : <img src={import.meta.env.VITE_LOGO_URL || `${import.meta.env.BASE_URL}logo-horizontal.png`} alt={APP_NAME} className={HAS_TENANT_LOGO ? "h-[6.75rem] w-auto" : "h-[3.375rem] w-auto brightness-110"} style={HAS_TENANT_LOGO ? { filter: "brightness(0) invert(1)" } : undefined} />}
           <p className="text-white/30 text-[10px] tracking-[0.2em] uppercase mt-2 ml-0.5">
             {t("portal_label")}
           </p>
@@ -92,7 +92,7 @@ export default function LoginPage() {
             <div className="lg:hidden flex justify-center mb-10">
               {import.meta.env.VITE_LOGO_MODE === "text"
                 ? <span className="font-display font-extrabold tracking-tight text-primary text-xl whitespace-nowrap">{APP_NAME}</span>
-                : <img src={import.meta.env.VITE_LOGO_URL || `${import.meta.env.BASE_URL}logo-horizontal.png`} alt={APP_NAME} className={HAS_TENANT_LOGO ? "h-16 w-auto" : "h-8 w-auto"} />}
+                : <img src={import.meta.env.VITE_LOGO_URL || `${import.meta.env.BASE_URL}logo-horizontal.png`} alt={APP_NAME} className={HAS_TENANT_LOGO ? "h-24 w-auto" : "h-12 w-auto"} />}
             </div>
 
             <div className="mb-8">
