@@ -17,6 +17,7 @@ import { StatCard } from "@/components/stat-card";
 import { EmptyState } from "@/components/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrencyAmount } from "@/contexts/DisplayCurrencyContext";
+import { DEFAULT_CURRENCY } from "@/lib/defaultCurrency";
 
 /* ── helpers ─────────────────────────────────────────────── */
 
@@ -206,7 +207,9 @@ export default function Portal() {
 
   const unpaid = invoices.filter(isUnpaid);
   const balance = unpaid.reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
-  const displayCurrency = unpaid[0]?.currency ?? invoices[0]?.currency ?? bookings[0]?.currency ?? "AUD";
+  // Fall back to the instance's default currency (KRW for Metheim) — never a
+  // hard-coded AUD — so an empty portal shows ₩0 rather than A$0.
+  const displayCurrency = unpaid[0]?.currency ?? invoices[0]?.currency ?? bookings[0]?.currency ?? (DEFAULT_CURRENCY || "AUD");
 
   const docsPending = documents.filter((d) => PENDING_DOC.includes((d.status ?? "").toLowerCase())).length;
 
