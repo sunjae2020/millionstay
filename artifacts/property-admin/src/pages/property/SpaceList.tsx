@@ -233,12 +233,12 @@ export default function SpaceList() {
                 )}
                 {[
                   ["name", "space.col_name"],
-                  ["property_name", "space.col_property"],
-                  ["space_type", "space.col_type"],
+                  ["owner_name", "space.col_owner"],
+                  ["exclusive_area_m2", "space.label_area"],
                   ["status", "space.col_status"],
                   ["policy_name", "space.col_policy"],
                   ["parent_space_name", "space.col_parent"],
-                  ["created_at", "space.col_created"],
+                  ["updated_at", "space.col_updated"],
                 ].map(([key, label]) => (
                   <SortableTh key={key} sortKey={key} activeKey={sortKey} sortDir={sortDir} onSort={toggleSort}>
                     {t(label)}
@@ -263,13 +263,15 @@ export default function SpaceList() {
                     <td className="px-4 py-3 font-medium">
                       <Link href={`/property/spaces/${space.id}`} className="hover:underline text-primary">{space.name}</Link>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs">{space.property_name ?? "—"}</td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs">{space.space_type ?? "—"}</td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs">{space.owner_name ?? "—"}</td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs">
+                      {space.exclusive_area_m2 != null ? `${space.exclusive_area_m2}㎡` : "—"}
+                    </td>
                     <td className="px-4 py-3"><StatusBadge status={space.status} /></td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">{space.policy_name ?? "—"}</td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">{space.parent_space_name ?? "—"}</td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">
-                      {formatDate(space.created_at)}
+                      {formatDate(space.updated_at)}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">

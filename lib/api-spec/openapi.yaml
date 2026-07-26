@@ -3400,6 +3400,12 @@ components:
           type: ["integer", "null"]
         policy_name:
           type: ["string", "null"]
+        landlord_account_id:
+          type: ["integer", "null"]
+        owner_name:
+          type: ["string", "null"]
+        exclusive_area_m2:
+          type: ["number", "null"]
         created_at:
           type: string
           format: date-time

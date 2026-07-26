@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, ilike, and, inArray, gte, lte, isNull, SQL } from "drizzle-orm";
-import { db, spacesTable, propertiesTable, spacePoliciesTable, spaceOptionMapsTable, spaceBlockedDatesTable, spaceAvailabilityTable, spaceServiceCatalogTable, serviceCatalogTable } from "@workspace/db";
+import { db, spacesTable, propertiesTable, spacePoliciesTable, spaceOptionMapsTable, spaceBlockedDatesTable, spaceAvailabilityTable, spaceServiceCatalogTable, serviceCatalogTable, accountsTable } from "@workspace/db";
 import { logAction } from "../utils/auditLog";
 import {
   ListSpacesQueryParams,
@@ -80,12 +80,16 @@ router.get("/v1/spaces", async (req, res): Promise<void> => {
       parent_space_id: spacesTable.parent_space_id,
       space_policy_id: spacesTable.space_policy_id,
       policy_name: spacePoliciesTable.name,
+      landlord_account_id: spacesTable.landlord_account_id,
+      owner_name: accountsTable.name,
+      exclusive_area_m2: spacesTable.exclusive_area_m2,
       created_at: spacesTable.created_at,
       updated_at: spacesTable.updated_at,
     })
     .from(spacesTable)
     .leftJoin(propertiesTable, eq(spacesTable.property_id, propertiesTable.id))
     .leftJoin(spacePoliciesTable, eq(spacesTable.space_policy_id, spacePoliciesTable.id))
+    .leftJoin(accountsTable, eq(spacesTable.landlord_account_id, accountsTable.id))
     .where(and(...conditions))
     .orderBy(spacesTable.created_at);
 
