@@ -15,6 +15,15 @@ export const spacesTable = pgTable("spaces", {
   base_currency: text("base_currency"),
   floor_number: integer("floor_number"),
   floor_area_sqm: real("floor_area_sqm"),
+  // Korean real-estate area breakdown (㎡), typically authored on the parent
+  // "type" space (상위공간): 전용/주거공용/공급/기타공용/계약면적 + 대지지분.
+  // supply = exclusive + residential_common; contract = supply + other_common.
+  exclusive_area_m2: numeric("exclusive_area_m2", { precision: 10, scale: 3, mode: "number" }),
+  residential_common_area_m2: numeric("residential_common_area_m2", { precision: 10, scale: 3, mode: "number" }),
+  supply_area_m2: numeric("supply_area_m2", { precision: 10, scale: 3, mode: "number" }),
+  other_common_area_m2: numeric("other_common_area_m2", { precision: 10, scale: 3, mode: "number" }),
+  contract_area_m2: numeric("contract_area_m2", { precision: 10, scale: 3, mode: "number" }),
+  land_share_m2: numeric("land_share_m2", { precision: 10, scale: 3, mode: "number" }),
   description: text("description"),
   // @deprecated single-feed import; OTA integration uses channel_listings.ical_import_url
   // (one space can be listed on multiple channels). Kept until data is migrated.

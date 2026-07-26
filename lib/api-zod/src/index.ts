@@ -83,4 +83,5 @@ export {
   UpdateSuburbBody,
   UpdateTaskBody,
   UpdateTaskParams,
-  UpdateWorkOrderBody,} from "./generated/api";
+  UpdateWorkOrderBody,
+} from "./generated/api";
