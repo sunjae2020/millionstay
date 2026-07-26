@@ -188,7 +188,17 @@
     "not_configured": "미설정",
     "connected": "연결됨",
     "error": "오류",
-    "space_col": "공간"
+    "space_col": "공간",
+    "tabs": {
+      "overview": "개요",
+      "reservations": "예약",
+      "channels": "채널",
+      "crm": "CRM",
+      "finance": "재무",
+      "operations": "운영",
+      "homestay_ops": "홈스테이 운영",
+      "floor_board": "층별 현황"
+    }
   },
   "login": {
     "title": "관리자 로그인",
@@ -3617,5 +3627,24 @@
     "btn_forward": "전달",
     "btn_close": "종료",
     "forwarded_on": "전달"
+  },
+  "dash_floorboard": {
+    "title": "층별·타입별 현황",
+    "subtitle": "층·타입별 전체 세대 현황",
+    "by_status": "상태별",
+    "by_owner": "소유주별",
+    "kpi_total": "전체 세대",
+    "floor": "층",
+    "sum": "합계",
+    "loading": "불러오는 중…",
+    "empty": "이 매물에는 층 정보가 있는 세대가 없습니다.",
+    "hint": "세대를 클릭하면 상세로 이동하고, 범례를 클릭하면 해당 항목이 강조됩니다.",
+    "status_vacant": "공실",
+    "status_leased": "임대",
+    "status_sold": "분양",
+    "status_rented_out": "대여",
+    "status_unavailable": "임대불가",
+    "status_active": "활성",
+    "status_inactive": "비활성"
   }
 }

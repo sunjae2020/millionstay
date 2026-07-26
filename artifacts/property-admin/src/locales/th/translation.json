@@ -188,7 +188,17 @@
     "not_configured": "ยังไม่ได้ตั้งค่า",
     "connected": "เชื่อมต่อแล้ว",
     "error": "ข้อผิดพลาด",
-    "space_col": "พื้นที่"
+    "space_col": "พื้นที่",
+    "tabs": {
+      "overview": "ภาพรวม",
+      "reservations": "การจอง",
+      "channels": "ช่องทาง",
+      "crm": "CRM",
+      "finance": "การเงิน",
+      "operations": "การดำเนินงาน",
+      "homestay_ops": "โฮมสเตย์",
+      "floor_board": "ผังชั้น"
+    }
   },
   "login": {
     "title": "เข้าสู่ระบบผู้ดูแล",
@@ -3617,5 +3627,24 @@
     "btn_forward": "ส่งต่อ",
     "btn_close": "ปิด",
     "forwarded_on": "ส่งต่อ"
+  },
+  "dash_floorboard": {
+    "title": "สถานะตามชั้นและประเภท",
+    "subtitle": "ทุกยูนิตแยกตามชั้นและประเภท",
+    "by_status": "ตามสถานะ",
+    "by_owner": "ตามเจ้าของ",
+    "kpi_total": "ยูนิตทั้งหมด",
+    "floor": "ชั้น",
+    "sum": "รวม",
+    "loading": "กำลังโหลด…",
+    "empty": "ไม่มียูนิตที่ระบุชั้นสำหรับอสังหาริมทรัพย์นี้",
+    "hint": "คลิกยูนิตเพื่อดูรายละเอียด คลิกป้ายกำกับเพื่อไฮไลต์",
+    "status_vacant": "ว่าง",
+    "status_leased": "ให้เช่าแล้ว",
+    "status_sold": "ขายแล้ว",
+    "status_rented_out": "ปล่อยเช่า",
+    "status_unavailable": "ไม่พร้อมให้เช่า",
+    "status_active": "ใช้งาน",
+    "status_inactive": "ปิดใช้งาน"
   }
 }

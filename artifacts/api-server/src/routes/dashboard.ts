@@ -324,6 +324,140 @@ router.get("/v1/homestay-ops/summary", async (_req, res) => {
   }
 });
 
+// ── Floor / type occupancy board ───────────────────────────────────────────
+// Powers the "Floor Board" dashboard tab: a floor × unit-type matrix of every
+// floor-numbered unit in a property, colourable by status or owner. Generic —
+// works for any property whose spaces carry a `floor_number` (e.g. MetHeim 여수).
+
+interface FloorBoardUnit {
+  id: number;
+  name: string;
+  unit_label: string;
+  floor: number;
+  type: string;
+  status: string;
+  owner: string | null;
+  owner_id: number | null;
+}
+
+/** Natural sort key for unit types: "A타입" → ["A",0], "A-1타입" → ["A",1]. */
+function typeSortKey(t: string): [string, number] {
+  const m = /^([A-Za-z]+)(?:-(\d+))?/.exec(t);
+  return m ? [m[1].toUpperCase(), m[2] ? Number(m[2]) : 0] : [t.toUpperCase(), 0];
+}
+
+router.get("/v1/dashboard/floor-board", async (req, res) => {
+  try {
+    const requestedPid = Number((req.query as Record<string, string>).property_id) || null;
+
+    // Properties that actually have floor-numbered units, with unit counts.
+    const propAgg = await db
+      .select({
+        property_id: spacesTable.property_id,
+        name: propertiesTable.name,
+        unit_count: count(),
+      })
+      .from(spacesTable)
+      .leftJoin(propertiesTable, eq(spacesTable.property_id, propertiesTable.id))
+      .where(and(
+        isNull(spacesTable.deleted_at),
+        sql`${spacesTable.floor_number} is not null`,
+        sql`${spacesTable.property_id} is not null`,
+      ))
+      .groupBy(spacesTable.property_id, propertiesTable.name)
+      .orderBy(desc(count()));
+
+    const available_properties = propAgg.map((p) => ({
+      id: Number(p.property_id),
+      name: p.name ?? `#${p.property_id}`,
+      unit_count: Number(p.unit_count),
+    }));
+
+    const pid = requestedPid && available_properties.some((p) => p.id === requestedPid)
+      ? requestedPid
+      : (available_properties[0]?.id ?? null);
+
+    if (pid == null) {
+      res.json({
+        property_id: null,
+        property_name: null,
+        available_properties,
+        floors: [],
+        types: [],
+        units: [],
+        summary: { total: 0, by_status: [], by_owner: [], by_type: [] },
+      });
+      return;
+    }
+
+    const rows = await db
+      .select({
+        id: spacesTable.id,
+        name: spacesTable.name,
+        floor: spacesTable.floor_number,
+        type: spacesTable.custom_type_name,
+        space_type: spacesTable.space_type,
+        status: spacesTable.status,
+        owner_id: spacesTable.landlord_account_id,
+        owner: accountsTable.name,
+      })
+      .from(spacesTable)
+      .leftJoin(accountsTable, eq(spacesTable.landlord_account_id, accountsTable.id))
+      .where(and(
+        eq(spacesTable.property_id, pid),
+        isNull(spacesTable.deleted_at),
+        sql`${spacesTable.floor_number} is not null`,
+      ));
+
+    const units: FloorBoardUnit[] = rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      unit_label: (r.name ?? "").replace(/\s*·.*$/, "").replace(/호$/, "").trim() || r.name,
+      floor: Number(r.floor),
+      type: r.type ?? r.space_type ?? "—",
+      status: r.status ?? "—",
+      owner: r.owner ?? null,
+      owner_id: r.owner_id ?? null,
+    }));
+
+    const floors = [...new Set(units.map((u) => u.floor))].sort((a, b) => a - b);
+    const types = [...new Set(units.map((u) => u.type))].sort((a, b) => {
+      const ka = typeSortKey(a), kb = typeSortKey(b);
+      if (ka[0] !== kb[0]) return ka[0] < kb[0] ? -1 : 1;
+      return ka[1] - kb[1];
+    });
+
+    const by_status = Array.from(
+      units.reduce((m, u) => m.set(u.status, (m.get(u.status) ?? 0) + 1), new Map<string, number>()),
+      ([key, cnt]) => ({ key, count: cnt }),
+    ).sort((a, b) => b.count - a.count);
+
+    const by_type = types.map((t) => ({ key: t, count: units.filter((u) => u.type === t).length }));
+
+    const ownerMap = new Map<string, { count: number; id: number | null }>();
+    for (const u of units) {
+      if (!u.owner) continue;
+      const e = ownerMap.get(u.owner) ?? { count: 0, id: u.owner_id };
+      e.count++;
+      ownerMap.set(u.owner, e);
+    }
+    const by_owner = Array.from(ownerMap, ([key, v]) => ({ key, count: v.count, id: v.id }))
+      .sort((a, b) => b.count - a.count);
+
+    res.json({
+      property_id: pid,
+      property_name: available_properties.find((p) => p.id === pid)?.name ?? null,
+      available_properties,
+      floors,
+      types,
+      units,
+      summary: { total: units.length, by_status, by_owner, by_type },
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch floor board" });
+  }
+});
+
 // ── General ledger (read-only) ─────────────────────────────────────────────
 
 router.get("/v1/gl/entries", async (req, res) => {
