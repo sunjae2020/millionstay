@@ -58,12 +58,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="p-5 border-b border-sidebar-border flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             {import.meta.env.VITE_LOGO_MODE === "text"
-              ? <span className="font-display font-extrabold tracking-tight text-white text-xl whitespace-nowrap">{APP_NAME}</span>
+              ? <span className="font-display font-extrabold tracking-tight text-sidebar-foreground text-xl whitespace-nowrap">{APP_NAME}</span>
               : <img
                   src={TENANT_LOGO || `${import.meta.env.BASE_URL}millionstay-logo.png`}
                   alt={APP_NAME}
                   className={HAS_TENANT_LOGO ? "h-14 w-auto object-contain" : "h-[2.625rem] w-auto object-contain"}
-                  style={HAS_TENANT_LOGO ? { filter: "brightness(0) invert(1)" } : undefined}
+                  // The sidebar is near-white in light mode, dark navy in dark mode.
+                  // Invert the (teal) tenant logo to white only on the dark surface;
+                  // keep its natural colour on the light one so it stays visible.
+                  style={HAS_TENANT_LOGO && darkMode ? { filter: "brightness(0) invert(1)" } : undefined}
                 />}
           </div>
           <button
@@ -145,6 +148,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 src={TENANT_LOGO || `${import.meta.env.BASE_URL}logo-horizontal.png`}
                 alt={APP_NAME}
                 className={HAS_TENANT_LOGO ? "h-11 w-auto object-contain" : "h-9 w-auto object-contain"}
+                style={HAS_TENANT_LOGO && darkMode ? { filter: "brightness(0) invert(1)" } : undefined}
               />}
           <div className="ml-auto flex items-center gap-1">
             <button

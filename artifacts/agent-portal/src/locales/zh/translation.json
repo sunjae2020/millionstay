@@ -26,7 +26,8 @@
     "ongoing": "进行中",
     "tbd": "待定",
     "back": "返回",
-    "cancel": "取消"
+    "cancel": "取消",
+    "page_not_found": "未找到页面"
   },
   "login": {
     "headline_1": "自信地",
@@ -230,5 +231,31 @@
     "type_report": "报告",
     "type_manual": "手册",
     "type_other": "其他"
+  },
+  "forgot": {
+    "title": "重置密码",
+    "subtitle": "输入您的账户邮箱，我们将发送重置链接。",
+    "email_label": "邮箱地址",
+    "email_placeholder": "you@partner.com",
+    "submit": "发送重置链接",
+    "sending": "发送中...",
+    "back_to_login": "返回登录",
+    "sent": "如果存在 {{email}} 的账户，重置链接已发送。请查收邮件。链接将在1小时后失效。"
+  },
+  "reset": {
+    "title": "设置新密码",
+    "subtitle": "请选择一个未在其他地方使用过的强密码。",
+    "no_token": "此页面需要邮件中的重置链接。请打开我们发送的邮件中的链接。",
+    "done_msg": "密码已更新。您现在可以登录。",
+    "continue_login": "继续登录",
+    "new_password": "新密码",
+    "confirm_password": "确认新密码",
+    "policy_hint": "至少12位·需含大写+小写+数字+特殊字符。",
+    "submit": "设置新密码",
+    "updating": "更新中...",
+    "err_policy": "密码须至少12位，并包含大写、小写、数字和特殊字符。",
+    "err_mismatch": "两次密码不一致。",
+    "err_failed": "重置失败，链接可能已过期。",
+    "err_network": "网络错误。"
   }
 }
