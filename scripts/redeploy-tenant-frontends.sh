@@ -82,6 +82,15 @@ done < <(grep -vE '^\s*#' "$CFG")
 API_URL="${VITE_API_URL:?config.env must define VITE_API_URL (the tenant API host).}"
 echo "→ Tenant: $TENANT   API: $API_URL   apps: ${APPS[*]}"
 
+# Non-interactive auth for CI: when VERCEL_TOKEN / VERCEL_SCOPE are exported
+# (GitHub Actions), pass them through to every `vercel` call. Left empty for
+# local runs, which rely on the logged-in CLI — so local behavior is unchanged.
+# Plain string (unquoted expansion) so it works on macOS bash 3.2 too; the
+# values never contain spaces.
+VERCEL_AUTH=""
+[[ -n "${VERCEL_TOKEN:-}" ]] && VERCEL_AUTH="--token=$VERCEL_TOKEN"
+[[ -n "${VERCEL_SCOPE:-}" ]] && VERCEL_AUTH="$VERCEL_AUTH --scope=$VERCEL_SCOPE"
+
 # ── Brand overrides (build-time): generate teal/etc. brand.overrides.css from
 #    BRAND_* so every app's bundle themes correctly. Reverted at the end. ────
 echo "── generate brand.overrides.css from BRAND_* ──"
@@ -166,9 +175,9 @@ JSON
   echo "── [$app] deploy → $TENANT-$app ──"
   # Link by project NAME (no hardcoded ids). Separate call from deploy — the
   # deploy classifier blocks link+deploy compound lines.
-  vercel link --yes --project "$TENANT-$app" --cwd "$stage" >/dev/null
+  vercel link --yes $VERCEL_AUTH --project "$TENANT-$app" --cwd "$stage" >/dev/null
   local url
-  url="$(vercel deploy --prod --yes --cwd "$stage" 2>/dev/null | tail -1)"
+  url="$(vercel deploy --prod --yes $VERCEL_AUTH --cwd "$stage" 2>/dev/null | tail -1)"
   echo "  ✓ [$app] deployed: ${url:-<see vercel dashboard>}"
 }
 

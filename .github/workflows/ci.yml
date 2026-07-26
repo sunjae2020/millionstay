@@ -92,3 +92,42 @@ jobs:
       - name: Deploy to Vercel (production)
         working-directory: artifacts/property-admin
         run: npx vercel@latest deploy --prod --yes --token="$VERCEL_TOKEN"
+
+  # Auto-deploy the MetHeim white-label front-ends from main so the live tenant
+  # always matches main. Removes humans from the loop: metheim-* Vercel projects
+  # are NOT git-connected — every deploy is a local prebuilt upload, so manual /
+  # stale-tree redeploys clobbered each other ("last writer wins"). Running the
+  # shared redeploy script here (brand + env baked in) makes main the single
+  # source of truth. NOTE: metheim projects live under the `sunjae2020s-projects`
+  # Vercel scope, distinct from deploy-admin's team — needs a token with access
+  # to that scope (VERCEL_TOKEN_METHEIM secret; falls back to VERCEL_TOKEN).
+  deploy-metheim:
+    name: Deploy MetHeim frontends
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN_METHEIM || secrets.VERCEL_TOKEN }}
+      VERCEL_SCOPE: sunjae2020s-projects
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Builds each app with the tenant brand/env, stages a prebuilt dir with
+      # the /api proxy vercel.json, and deploys to the metheim-<app> projects.
+      # The script honors VERCEL_TOKEN / VERCEL_SCOPE for non-interactive auth.
+      - name: Deploy metheim admin + web
+        run: TENANT=metheim scripts/redeploy-tenant-frontends.sh admin web
