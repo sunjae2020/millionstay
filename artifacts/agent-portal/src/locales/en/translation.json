@@ -26,7 +26,8 @@
     "ongoing": "Ongoing",
     "tbd": "TBD",
     "back": "Back",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "page_not_found": "Page not found"
   },
   "login": {
     "headline_1": "Grow your book",
@@ -230,5 +231,31 @@
     "type_report": "Report",
     "type_manual": "Manual",
     "type_other": "Other"
+  },
+  "forgot": {
+    "title": "Reset your password",
+    "subtitle": "Enter your account email and we'll send you a reset link.",
+    "email_label": "Email address",
+    "email_placeholder": "you@partner.com",
+    "submit": "Send reset link",
+    "sending": "Sending...",
+    "back_to_login": "Back to login",
+    "sent": "If an account exists for {{email}}, a reset link has been sent. Please check your inbox. The link expires in 1 hour."
+  },
+  "reset": {
+    "title": "Set a new password",
+    "subtitle": "Choose a strong password you haven't used elsewhere.",
+    "no_token": "This page requires a reset link from your email. Please open the link in the message we sent you.",
+    "done_msg": "Your password has been updated. You can now sign in.",
+    "continue_login": "Continue to login",
+    "new_password": "New password",
+    "confirm_password": "Confirm new password",
+    "policy_hint": "12+ chars · upper + lower + digit + special required.",
+    "submit": "Set new password",
+    "updating": "Updating...",
+    "err_policy": "Password must be 12+ chars with upper, lower, digit, and special.",
+    "err_mismatch": "Passwords do not match.",
+    "err_failed": "Reset failed. The link may have expired.",
+    "err_network": "Network error."
   }
 }
