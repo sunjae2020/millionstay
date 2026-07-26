@@ -6,6 +6,9 @@ export const invoicesTable = pgTable("invoices", {
   booking_id: integer("booking_id"),
   contract_id: integer("contract_id"),
   quote_id: integer("quote_id"),
+  // Set when an invoice is a repair-cost charge-back to a property owner, linking
+  // it back to the completed work order it recovers (see work-orders charge-owner).
+  work_order_id: integer("work_order_id"),
   account_id: integer("account_id"),
   amount: numeric("amount", { precision: 10, scale: 2 }).notNull().default("0"),
   currency: text("currency").notNull().default("AUD"),

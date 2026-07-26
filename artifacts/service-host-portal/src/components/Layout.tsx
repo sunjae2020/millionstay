@@ -58,7 +58,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <img
                 src={`${import.meta.env.BASE_URL}millionstay-logo.png`}
                 alt={APP_NAME}
-                className="h-7 w-auto object-contain"
+                className="h-[2.625rem] w-auto object-contain"
               />
             )}
           </div>
@@ -141,7 +141,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <img
               src={`${import.meta.env.BASE_URL}logo-horizontal.png`}
               alt={APP_NAME}
-              className="h-6 w-auto object-contain"
+              className="h-9 w-auto object-contain"
             />
           )}
           <div className="ml-auto flex items-center gap-1">

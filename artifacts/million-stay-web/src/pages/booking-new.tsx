@@ -23,6 +23,17 @@ import {
 } from "lucide-react";
 import { APP_NAME } from "../lib/appName";
 import { COMPANY } from "../lib/company";
+import { formatCurrencyAmount } from "@/contexts/DisplayCurrencyContext";
+import { DEFAULT_CURRENCY } from "@/lib/defaultCurrency";
+import { PRICE_UNIT } from "@/lib/priceUnit";
+
+// Instance base currency (KRW for MetHeim, AUD default) + rate-period suffix.
+// De-Australianises the booking flow: money() renders ₩ for a Korean instance,
+// A$ for the primary. The numeric pricing model is unchanged.
+const BASE_CCY = DEFAULT_CURRENCY || "AUD";
+const money = (n: number) => formatCurrencyAmount(Number(n) || 0, BASE_CCY);
+const RATE_UNIT = PRICE_UNIT === "month" ? "/월" : PRICE_UNIT === "day" ? "/일" : "/week";
+const RATE_UNIT_SHORT = PRICE_UNIT === "month" ? "/월" : PRICE_UNIT === "day" ? "/일" : "/wk";
 
 /* ────────────────────────────────────────────── */
 /*  Constants                                     */
@@ -150,7 +161,7 @@ function SummaryCard({
             </span>
           </div>
         )}
-        {weeklyRate > 0 && <p className="text-primary font-bold text-sm">${weeklyRate}/week</p>}
+        {weeklyRate > 0 && <p className="text-primary font-bold text-sm">{money(weeklyRate)}{RATE_UNIT}</p>}
       </div>
 
       <Separator />
@@ -159,14 +170,14 @@ function SummaryCard({
         <div className="space-y-1.5 text-xs">
           <div className="flex justify-between text-gray-500">
             <span>Security Bond{bond > 0 ? "" : " (4 wk)"}</span>
-            <span>${cardLongBond.toLocaleString()}</span>
+            <span>{money(cardLongBond)}</span>
           </div>
-          {adminFee > 0 && <div className="flex justify-between text-gray-500"><span>Admin Fee</span><span>${adminFee}</span></div>}
-          {cleaningFee > 0 && <div className="flex justify-between text-gray-500"><span>Cleaning Fee</span><span>${cleaningFee}</span></div>}
-          <div className="flex justify-between text-gray-500"><span>Initial Rent (2 wk)</span><span>${(weeklyRate * 2).toLocaleString()}</span></div>
-          {servicesTotal > 0 && <div className="flex justify-between text-gray-500"><span>Extra Services</span><span>${servicesTotal}</span></div>}
+          {adminFee > 0 && <div className="flex justify-between text-gray-500"><span>Admin Fee</span><span>{money(adminFee)}</span></div>}
+          {cleaningFee > 0 && <div className="flex justify-between text-gray-500"><span>Cleaning Fee</span><span>{money(cleaningFee)}</span></div>}
+          <div className="flex justify-between text-gray-500"><span>Initial Rent (2 wk)</span><span>{money(weeklyRate * 2)}</span></div>
+          {servicesTotal > 0 && <div className="flex justify-between text-gray-500"><span>Extra Services</span><span>{money(servicesTotal)}</span></div>}
           <Separator />
-          <div className="flex justify-between font-bold text-sm"><span>Est. Due Today</span><span className="text-primary">${longInitial.toLocaleString()}</span></div>
+          <div className="flex justify-between font-bold text-sm"><span>Est. Due Today</span><span className="text-primary">{money(longInitial)}</span></div>
           <p className="text-gray-400 text-[10px]">Exact amount confirmed before payment</p>
         </div>
       ) : (
@@ -174,15 +185,15 @@ function SummaryCard({
           {cardProRata > 0 && (
             <div className="flex justify-between text-gray-500">
               <span>Rent <span className="text-gray-400">({cardDays}d)</span></span>
-              <span>${cardProRata.toLocaleString()}</span>
+              <span>{money(cardProRata)}</span>
             </div>
           )}
-          {bond > 0 && <div className="flex justify-between text-gray-500"><span>Security Bond</span><span>${bond.toLocaleString()}</span></div>}
-          {adminFee > 0 && <div className="flex justify-between text-gray-500"><span>Admin Fee</span><span>${adminFee}</span></div>}
-          {cleaningFee > 0 && <div className="flex justify-between text-gray-500"><span>Cleaning Fee</span><span>${cleaningFee}</span></div>}
-          {servicesTotal > 0 && <div className="flex justify-between text-gray-500"><span>Extra Services</span><span>${servicesTotal}</span></div>}
+          {bond > 0 && <div className="flex justify-between text-gray-500"><span>Security Bond</span><span>{money(bond)}</span></div>}
+          {adminFee > 0 && <div className="flex justify-between text-gray-500"><span>Admin Fee</span><span>{money(adminFee)}</span></div>}
+          {cleaningFee > 0 && <div className="flex justify-between text-gray-500"><span>Cleaning Fee</span><span>{money(cleaningFee)}</span></div>}
+          {servicesTotal > 0 && <div className="flex justify-between text-gray-500"><span>Extra Services</span><span>{money(servicesTotal)}</span></div>}
           <Separator />
-          <div className="flex justify-between font-bold text-sm"><span>Total Due Today</span><span className="text-primary">${shortTotal.toLocaleString()}</span></div>
+          <div className="flex justify-between font-bold text-sm"><span>Total Due Today</span><span className="text-primary">{money(shortTotal)}</span></div>
         </div>
       )}
 
@@ -194,7 +205,7 @@ function SummaryCard({
             {selectedServices.map((id) => {
               const svc = serviceItems.find((s) => s.id === id);
               if (!svc) return null;
-              return <div key={id} className="flex justify-between text-xs text-gray-600"><span>{svc.name}</span><span>${svc.base_price ?? 0}</span></div>;
+              return <div key={id} className="flex justify-between text-xs text-gray-600"><span>{svc.name}</span><span>{money(svc.base_price ?? 0)}</span></div>;
             })}
           </div>
         </>
@@ -211,9 +222,10 @@ function BankTransferDetails({ total, ref_ }: { total: number; ref_: string }) {
   const fields = [
     { label: "Bank",           value: COMPANY.bank.name },
     { label: "Account Name",   value: COMPANY.bank.accountName },
-    { label: "BSB",            value: COMPANY.bank.bsb },
+    // BSB is an Australian bank code; hidden on non-AUD (e.g. Korean) instances.
+    ...(BASE_CCY === "AUD" ? [{ label: "BSB", value: COMPANY.bank.bsb }] : []),
     { label: "Account No.",    value: COMPANY.bank.accountNo },
-    { label: "Amount",         value: `AUD $${total.toLocaleString()}` },
+    { label: "Amount",         value: money(total) },
     { label: "Reference",      value: ref_ || "Your Name + Check-in Date" },
   ];
   return (
@@ -374,7 +386,7 @@ export default function BookingNew() {
         space_id:          spaceId,
         product_id:        product?.id ?? productId,
         space_name:        space.name,
-        property_address:  space.property_address ?? space.suburb_name ?? "Melbourne",
+        property_address:  space.property_address ?? space.suburb_name ?? "",
         agreed_weekly_rate: weeklyRate,
         stay_weeks:        stayWeeks,
         // Fees come from the selected product (null = not charged for this product)
@@ -562,7 +574,7 @@ export default function BookingNew() {
               }`}>
                 <Calendar className="h-3.5 w-3.5" />
                 {isLong
-                  ? `Long-term Stay — ${stayWeeks} weeks (${stayWeeks} × ${weeklyRate ? `$${weeklyRate}/wk` : "TBD"})`
+                  ? `Long-term Stay — ${stayWeeks} weeks (${stayWeeks} × ${weeklyRate ? `${money(weeklyRate)}${RATE_UNIT_SHORT}` : "TBD"})`
                   : `Short-term Stay — ${stayWeeks} week${stayWeeks > 1 ? "s" : ""} (under 4 weeks)`}
               </div>
 
@@ -573,8 +585,8 @@ export default function BookingNew() {
                   space ? (
                     <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
                       <p className="font-semibold text-gray-800">{space.name}</p>
-                      <p className="text-sm text-gray-500">{space.property_address ?? space.suburb_name ?? "Melbourne"}</p>
-                      {weeklyRate > 0 && <p className="text-sm font-bold text-primary mt-1">${weeklyRate}/week</p>}
+                      <p className="text-sm text-gray-500">{space.property_address ?? space.suburb_name ?? ""}</p>
+                      {weeklyRate > 0 && <p className="text-sm font-bold text-primary mt-1">{money(weeklyRate)}{RATE_UNIT}</p>}
                     </div>
                   ) : null}
 
@@ -627,7 +639,7 @@ export default function BookingNew() {
                     </div>
                     <div className="col-span-2">
                       <label className="text-xs text-gray-500 font-medium">Phone <span className="text-gray-400">(optional)</span></label>
-                      <Input value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} placeholder="+61 4xx xxx xxx" className="mt-1 h-10" />
+                      <Input value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} placeholder="010-0000-0000" className="mt-1 h-10" />
                     </div>
                   </div>
                 ) : (
@@ -647,7 +659,7 @@ export default function BookingNew() {
                     </div>
                     <div className="col-span-2">
                       <label className="text-xs text-gray-500 font-medium">Phone</label>
-                      <Input value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} placeholder="+61 4xx xxx xxx" className="mt-1 h-10" />
+                      <Input value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} placeholder="010-0000-0000" className="mt-1 h-10" />
                     </div>
                     <div className="col-span-2">
                       <div className="flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
@@ -714,7 +726,7 @@ export default function BookingNew() {
                               )}
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-sm font-bold text-gray-700">+${svc.base_price ?? 0}</span>
+                              <span className="text-sm font-bold text-gray-700">+{money(svc.base_price ?? 0)}</span>
                               <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
                                 selected || mandatory ? "border-primary bg-primary" : "border-gray-300"
                               }`}>
@@ -760,20 +772,20 @@ export default function BookingNew() {
                       <span>
                         Rent
                         {weeklyRate > 0 && stayDays > 0 && (
-                          <span className="text-xs text-gray-400 ml-1">(${weeklyRate}/wk ÷ 7 × {stayDays} days)</span>
+                          <span className="text-xs text-gray-400 ml-1">({money(weeklyRate)}{RATE_UNIT_SHORT} ÷ 7 × {stayDays} days)</span>
                         )}
                       </span>
-                      <span>${proRataRent.toLocaleString()}</span>
+                      <span>{money(proRataRent)}</span>
                     </div>
                   )}
-                  {bond > 0 && <div className="flex justify-between text-gray-600"><span>Security Bond</span><span>${bond.toLocaleString()}</span></div>}
-                  {adminFee > 0 && <div className="flex justify-between text-gray-600"><span>Admin Fee</span><span>${adminFee.toLocaleString()}</span></div>}
-                  {cleaningFee > 0 && <div className="flex justify-between text-gray-600"><span>Cleaning Fee</span><span>${cleaningFee.toLocaleString()}</span></div>}
+                  {bond > 0 && <div className="flex justify-between text-gray-600"><span>Security Bond</span><span>{money(bond)}</span></div>}
+                  {adminFee > 0 && <div className="flex justify-between text-gray-600"><span>Admin Fee</span><span>{money(adminFee)}</span></div>}
+                  {cleaningFee > 0 && <div className="flex justify-between text-gray-600"><span>Cleaning Fee</span><span>{money(cleaningFee)}</span></div>}
                   {selectedServices.map((id) => { const s = serviceItems.find((x) => x.id === id); if (!s) return null; return (
-                    <div key={id} className="flex justify-between text-gray-600"><span>{s.name}</span><span>${(s.base_price ?? 0).toLocaleString()}</span></div>
+                    <div key={id} className="flex justify-between text-gray-600"><span>{s.name}</span><span>{money(s.base_price ?? 0)}</span></div>
                   ); })}
                   <Separator />
-                  <div className="flex justify-between font-bold text-base"><span>Total</span><span className="text-primary">${totalShort.toLocaleString()}</span></div>
+                  <div className="flex justify-between font-bold text-base"><span>Total</span><span className="text-primary">{money(totalShort)}</span></div>
                 </div>
 
                 {/* Payment method toggle */}
@@ -812,7 +824,7 @@ export default function BookingNew() {
                 <Button variant="outline" onClick={() => setStep(1)} className="flex-1 h-12 rounded-xl"><ChevronLeft className="h-4 w-4 mr-1" />Back</Button>
                 <Button onClick={handlePayment} disabled={paying} className="flex-[2] bg-primary hover:bg-primary/90 text-white font-bold h-12 rounded-xl">
                   {paying ? "Processing…" :
-                    paymentMethod === "card" ? `Pay $${totalShort.toLocaleString()}` : "Submit & Receive Invoice"}
+                    paymentMethod === "card" ? `Pay ${money(totalShort)}` : "Submit & Receive Invoice"}
                   {paymentMethod === "card" ? <CreditCard className="h-4 w-4 ml-2" /> : <Mail className="h-4 w-4 ml-2" />}
                 </Button>
               </div>
@@ -852,7 +864,7 @@ export default function BookingNew() {
                     </div>
                     <p className={`font-bold text-base shrink-0 ${
                       color === "blue" ? "text-blue-600" : color === "green" ? "text-green-600" : "text-primary"
-                    }`}>${amount.toLocaleString()}</p>
+                    }`}>{money(amount)}</p>
                   </div>
                 ))}
 
@@ -862,16 +874,16 @@ export default function BookingNew() {
                     <p className="font-bold text-base text-gray-800">Estimated Total Due Today</p>
                     <p className="text-xs text-gray-400 mt-0.5">Exact amount confirmed upon approval</p>
                   </div>
-                  <p className="font-black text-2xl text-primary">${totalLong.toLocaleString()}</p>
+                  <p className="font-black text-2xl text-primary">{money(totalLong)}</p>
                 </div>
 
                 <div className="bg-gray-50 rounded-xl px-4 py-3 space-y-1.5">
                   <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Ongoing Rent</p>
-                  {weeklyRate > 0 && <p className="text-sm text-gray-700"><span className="font-bold">${weeklyRate}/week</span> — due weekly in advance after check-in</p>}
+                  {weeklyRate > 0 && <p className="text-sm text-gray-700"><span className="font-bold">{money(weeklyRate)}{RATE_UNIT}</span> — due weekly in advance after check-in</p>}
                   {proRataRent > 0 && stayDays > 0 && (
                     <p className="text-xs text-gray-500 mt-1">
-                      Estimated total rent: <span className="font-semibold text-gray-700">${proRataRent.toLocaleString()}</span>
-                      <span className="text-gray-400"> (${weeklyRate}/wk ÷ 7 × {stayDays} days)</span>
+                      Estimated total rent: <span className="font-semibold text-gray-700">{money(proRataRent)}</span>
+                      <span className="text-gray-400"> ({money(weeklyRate)}{RATE_UNIT_SHORT} ÷ 7 × {stayDays} days)</span>
                     </p>
                   )}
                 </div>
@@ -903,7 +915,7 @@ export default function BookingNew() {
                     ["Check In", (() => { try { return format(new Date(session.check_in_date as string), "dd/MM/yyyy"); } catch { return session.check_in_date as string; } })()],
                     ["Check Out", (() => { try { return format(new Date(session.check_out_date as string), "dd/MM/yyyy"); } catch { return session.check_out_date as string; } })()],
                     ["Stay Duration", `${stayWeeks} weeks`],
-                    ["Weekly Rate", weeklyRate ? `$${weeklyRate}/week` : "TBD"],
+                    ["Weekly Rate", weeklyRate ? `${money(weeklyRate)}${RATE_UNIT}` : "TBD"],
                     ["Guests", String(session.num_guests ?? numGuests)],
                     ...(selectedServices.length > 0 ? [["Extra Services", selectedServices.map((id) => serviceItems.find((s) => s.id === id)?.name).join(", ")]] : []),
                     ...(session.special_requests ? [["Special Requests", session.special_requests as string]] : []),
@@ -916,7 +928,7 @@ export default function BookingNew() {
                 </div>
 
                 <div className="bg-primary/5 border border-primary/20 rounded-xl px-5 py-4">
-                  <div className="flex justify-between font-bold"><span>Est. Total Due at Confirmation</span><span className="text-primary">${totalLong.toLocaleString()}</span></div>
+                  <div className="flex justify-between font-bold"><span>Est. Total Due at Confirmation</span><span className="text-primary">{money(totalLong)}</span></div>
                 </div>
 
                 <div className="flex items-start gap-2 text-xs text-gray-500">

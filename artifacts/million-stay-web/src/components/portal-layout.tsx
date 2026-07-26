@@ -115,7 +115,7 @@ export function PortalLayout({ children, active }: PortalLayoutProps) {
         {/* Logo */}
         <div className="px-5 py-4 border-b border-gray-100 dark:border-sidebar-border shrink-0">
           <Link href="/" className="flex items-center gap-2">
-            <BrandMark className="h-8 w-auto" />
+            <BrandMark className="h-12 w-auto" />
           </Link>
         </div>
 
@@ -188,7 +188,7 @@ export function PortalLayout({ children, active }: PortalLayoutProps) {
       {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-100 dark:bg-sidebar dark:border-sidebar-border flex items-center justify-between px-4 h-14 shadow-sm">
         <Link href="/">
-          <BrandMark variant="mark" className="h-8 w-auto" />
+          <BrandMark variant="mark" className="h-12 w-auto" />
         </Link>
         <span className="text-sm font-semibold text-gray-700 dark:text-foreground">{t("portal.my_portal")}</span>
         <button
@@ -205,7 +205,7 @@ export function PortalLayout({ children, active }: PortalLayoutProps) {
           <div className="absolute inset-0 bg-black/30" onClick={() => setMobileOpen(false)} />
           <aside className="relative w-64 bg-white dark:bg-sidebar h-full flex flex-col shadow-xl">
             <div className="px-5 py-4 border-b border-gray-100 dark:border-sidebar-border flex items-center justify-between">
-              <BrandMark className="h-7 w-auto" />
+              <BrandMark className="h-[2.625rem] w-auto" />
               <button onClick={() => setMobileOpen(false)} className="p-1 text-gray-400 hover:text-gray-700 dark:text-muted-foreground dark:hover:text-foreground">
                 <X className="h-4 w-4" />
               </button>

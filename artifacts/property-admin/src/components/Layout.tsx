@@ -668,7 +668,7 @@ function SidebarLogo({
           : <img
               src={logo ?? `${import.meta.env.BASE_URL}millionstay-logo.png`}
               alt={brandName}
-              className="max-h-7 max-w-[150px] object-contain"
+              className="max-h-[2.625rem] max-w-[225px] object-contain"
             />}
       </div>
       {/* Collapse button — desktop only */}
@@ -840,7 +840,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             : <img
                 src={effectiveLogo ?? `${import.meta.env.BASE_URL}millionstay-logo.png`}
                 alt={brandName}
-                className="max-h-7 max-w-[140px] object-contain md:hidden"
+                className="max-h-[2.625rem] max-w-[210px] object-contain md:hidden"
               />}
 
           {/* Spacer */}

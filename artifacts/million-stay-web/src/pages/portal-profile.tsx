@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  User, Lock, Phone, Globe, GraduationCap, ShieldAlert,
+  User, Lock, Phone, Globe, Briefcase, Car, ShieldAlert,
   Banknote, Eye, EyeOff, Save, Plus, Pencil, Trash2,
   CreditCard, ChevronDown, X, Check, Mail, Camera, Loader2,
 } from "lucide-react";
@@ -19,11 +19,12 @@ type ProfileForm = {
   first_name: string; last_name: string; phone: string; nationality: string;
   date_of_birth: string; gender: string;
 };
-type StudyForm = {
-  university: string; department: string; student_id: string; study_year: string;
+type StayForm = {
+  company: string; job_title: string; stay_purpose: string;
+  vehicle_plate: string; parking_required: boolean;
 };
 type BankForm = {
-  bank_name: string; bank_account_name: string; bank_bsb: string;
+  bank_name: string; bank_account_name: string;
   bank_account_number: string; preferred_payment_method: string;
 };
 type EmergencyContact = {
@@ -31,11 +32,17 @@ type EmergencyContact = {
 };
 type EmergencyForm = { name: string; relationship: string; phone: string; email: string; is_primary: boolean };
 
-const STUDY_YEARS = ["Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Postgraduate", "PhD", "Other"];
+const STAY_PURPOSES = [
+  { value: "residence", key: "portal.profile.purpose_residence" },
+  { value: "business", key: "portal.profile.purpose_business" },
+  { value: "travel", key: "portal.profile.purpose_travel" },
+  { value: "study", key: "portal.profile.purpose_study" },
+  { value: "other", key: "portal.profile.purpose_other" },
+];
 const PAYMENT_METHODS = [
-  { value: "bank_transfer", label: "Bank Transfer" },
-  { value: "cash", label: "Cash" },
-  { value: "cheque", label: "Cheque" },
+  { value: "bank_transfer", key: "portal.profile.pay_bank_transfer" },
+  { value: "card", key: "portal.profile.pay_card" },
+  { value: "cash", key: "portal.profile.pay_cash" },
 ];
 const GENDERS = ["Male", "Female", "Non-binary", "Prefer not to say"];
 
@@ -96,7 +103,7 @@ export default function PortalProfile() {
 
   // ─── Section loading states ───────────────────────────────────────────────
   const [loadingPersonal, setLoadingPersonal] = useState(false);
-  const [loadingStudy, setLoadingStudy] = useState(false);
+  const [loadingStay, setLoadingStay] = useState(false);
   const [loadingBank, setLoadingBank] = useState(false);
   const [loadingPassword, setLoadingPassword] = useState(false);
 
@@ -109,11 +116,11 @@ export default function PortalProfile() {
     date_of_birth: "",
     gender: "",
   });
-  const [studyForm, setStudyForm] = useState<StudyForm>({
-    university: "", department: "", student_id: "", study_year: "",
+  const [stayForm, setStayForm] = useState<StayForm>({
+    company: "", job_title: "", stay_purpose: "", vehicle_plate: "", parking_required: false,
   });
   const [bankForm, setBankForm] = useState<BankForm>({
-    bank_name: "", bank_account_name: "", bank_bsb: "", bank_account_number: "", preferred_payment_method: "",
+    bank_name: "", bank_account_name: "", bank_account_number: "", preferred_payment_method: "",
   });
   const [passwordForm, setPasswordForm] = useState({ current_password: "", new_password: "", confirm_password: "" });
   const [showCurrent, setShowCurrent] = useState(false);
@@ -153,16 +160,16 @@ export default function PortalProfile() {
           date_of_birth: d.date_of_birth ?? "",
           gender: d.gender ?? "",
         });
-        setStudyForm({
-          university: d.university ?? "",
-          department: d.department ?? "",
-          student_id: d.student_id ?? "",
-          study_year: d.study_year ?? "",
+        setStayForm({
+          company: d.company ?? "",
+          job_title: d.job_title ?? "",
+          stay_purpose: d.stay_purpose ?? "",
+          vehicle_plate: d.vehicle_plate ?? "",
+          parking_required: d.parking_required ?? false,
         });
         setBankForm({
           bank_name: d.bank_name ?? "",
           bank_account_name: d.bank_account_name ?? "",
-          bank_bsb: d.bank_bsb ?? "",
           bank_account_number: d.bank_account_number ?? "",
           preferred_payment_method: d.preferred_payment_method ?? "",
         });
@@ -196,8 +203,8 @@ export default function PortalProfile() {
   }
 
   const savePersonal = () => putProfile(profileForm, setLoadingPersonal, "Personal information");
-  const saveStudy = () => putProfile(studyForm, setLoadingStudy, "Study information");
-  const saveBank = () => putProfile(bankForm, setLoadingBank, "Bank information");
+  const saveStay = () => putProfile(stayForm, setLoadingStay, "Stay information");
+  const saveBank = () => putProfile(bankForm, setLoadingBank, "Deposit account");
 
   // ─── Avatar upload ────────────────────────────────────────────────────────
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -445,7 +452,7 @@ export default function PortalProfile() {
             </div>
             <div>
               <label className={`${labelCls} flex items-center gap-1`}><Phone className="h-3 w-3" /> Phone Number</label>
-              <input type="tel" value={profileForm.phone} placeholder="+61 4xx xxx xxx"
+              <input type="tel" value={profileForm.phone} placeholder="010-0000-0000"
                 onChange={(e) => setProfileForm((f) => ({ ...f, phone: e.target.value }))}
                 className={inputCls} />
             </div>
@@ -473,38 +480,46 @@ export default function PortalProfile() {
           </div>
         </motion.div>
 
-        {/* ── 2. Study / Education Information ── */}
+        {/* ── 2. Stay / Rental Information ── */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
           className="bg-white rounded-2xl border p-6">
-          <SectionHeader icon={GraduationCap} title={t("portal.profile.study_title")} color="bg-blue-100" iconColor="text-blue-600" />
+          <SectionHeader icon={Briefcase} title={t("portal.profile.stay_title")} color="bg-teal-100" iconColor="text-teal-600" />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="sm:col-span-2">
-              <label className={labelCls}>University / School</label>
-              <input type="text" value={studyForm.university} placeholder="e.g. University of Melbourne"
-                onChange={(e) => setStudyForm((f) => ({ ...f, university: e.target.value }))}
+            <div>
+              <label className={labelCls}>{t("portal.profile.company")}</label>
+              <input type="text" value={stayForm.company}
+                onChange={(e) => setStayForm((f) => ({ ...f, company: e.target.value }))}
                 className={inputCls} />
             </div>
             <div>
-              <label className={labelCls}>Faculty / Department</label>
-              <input type="text" value={studyForm.department} placeholder="e.g. Engineering"
-                onChange={(e) => setStudyForm((f) => ({ ...f, department: e.target.value }))}
+              <label className={labelCls}>{t("portal.profile.job_title")}</label>
+              <input type="text" value={stayForm.job_title}
+                onChange={(e) => setStayForm((f) => ({ ...f, job_title: e.target.value }))}
                 className={inputCls} />
             </div>
+            <SelectField label={t("portal.profile.stay_purpose")} value={stayForm.stay_purpose}
+              onChange={(v) => setStayForm((f) => ({ ...f, stay_purpose: v }))}
+              options={STAY_PURPOSES.map((p) => ({ value: p.value, label: t(p.key) }))} />
             <div>
-              <label className={labelCls}>Student ID</label>
-              <input type="text" value={studyForm.student_id} placeholder="e.g. 123456789"
-                onChange={(e) => setStudyForm((f) => ({ ...f, student_id: e.target.value }))}
+              <label className={`${labelCls} flex items-center gap-1`}><Car className="h-3 w-3" /> {t("portal.profile.vehicle_plate")}</label>
+              <input type="text" value={stayForm.vehicle_plate} placeholder="12가 3456"
+                onChange={(e) => setStayForm((f) => ({ ...f, vehicle_plate: e.target.value }))}
                 className={inputCls} />
             </div>
-            <SelectField label="Year of Study" value={studyForm.study_year}
-              onChange={(v) => setStudyForm((f) => ({ ...f, study_year: v }))}
-              options={STUDY_YEARS.map((y) => ({ value: y, label: y }))} />
+            <div className="sm:col-span-2 flex items-center gap-2">
+              <input type="checkbox" id="parking_required" checked={stayForm.parking_required}
+                onChange={(e) => setStayForm((f) => ({ ...f, parking_required: e.target.checked }))}
+                className="h-4 w-4 rounded accent-teal-600" />
+              <label htmlFor="parking_required" className="text-sm text-gray-600 select-none cursor-pointer">
+                {t("portal.profile.parking_required")}
+              </label>
+            </div>
           </div>
 
           <div className="mt-5 flex justify-end">
-            <Button onClick={saveStudy} disabled={loadingStudy} className="bg-blue-600 hover:bg-blue-700 gap-2">
-              <Save className="h-4 w-4" />{loadingStudy ? t("portal.profile.saving") : t("portal.profile.save")}
+            <Button onClick={saveStay} disabled={loadingStay} className="bg-teal-600 hover:bg-teal-700 gap-2">
+              <Save className="h-4 w-4" />{loadingStay ? t("portal.profile.saving") : t("portal.profile.save")}
             </Button>
           </div>
         </motion.div>
@@ -603,40 +618,34 @@ export default function PortalProfile() {
         {/* ── 4. Bank / Payment Information ── */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
           className="bg-white rounded-2xl border p-6">
-          <SectionHeader icon={Banknote} title={t("portal.profile.bank_title")} color="bg-green-100" iconColor="text-green-700" />
+          <SectionHeader icon={Banknote} title={t("portal.profile.deposit_account_title")} color="bg-green-100" iconColor="text-green-700" />
 
           <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-xs text-amber-800 mb-4">
-            This information is used for refunds and rent payment processing only. It is kept confidential.
+            {t("portal.profile.deposit_notice")}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className={`${labelCls} flex items-center gap-1`}><CreditCard className="h-3 w-3" /> Bank Name</label>
-              <input type="text" value={bankForm.bank_name} placeholder="e.g. Commonwealth Bank"
+              <label className={`${labelCls} flex items-center gap-1`}><CreditCard className="h-3 w-3" /> {t("portal.profile.bank_name_label")}</label>
+              <input type="text" value={bankForm.bank_name} placeholder={t("portal.profile.bank_name_ph")}
                 onChange={(e) => setBankForm((f) => ({ ...f, bank_name: e.target.value }))}
                 className={inputCls} />
             </div>
             <div>
-              <label className={labelCls}>Account Name</label>
-              <input type="text" value={bankForm.bank_account_name} placeholder="Full name on account"
+              <label className={labelCls}>{t("portal.profile.account_name_label")}</label>
+              <input type="text" value={bankForm.bank_account_name} placeholder={t("portal.profile.account_name_ph")}
                 onChange={(e) => setBankForm((f) => ({ ...f, bank_account_name: e.target.value }))}
                 className={inputCls} />
             </div>
             <div>
-              <label className={labelCls}>BSB</label>
-              <input type="text" value={bankForm.bank_bsb} placeholder="e.g. 063-000"
-                onChange={(e) => setBankForm((f) => ({ ...f, bank_bsb: e.target.value }))}
-                className={inputCls} maxLength={7} />
-            </div>
-            <div>
-              <label className={labelCls}>Account Number</label>
-              <input type="text" value={bankForm.bank_account_number} placeholder="e.g. 12345678"
+              <label className={labelCls}>{t("portal.profile.account_number_label")}</label>
+              <input type="text" value={bankForm.bank_account_number} placeholder={t("portal.profile.account_number_ph")}
                 onChange={(e) => setBankForm((f) => ({ ...f, bank_account_number: e.target.value }))}
                 className={inputCls} />
             </div>
-            <SelectField label="Preferred Payment Method" value={bankForm.preferred_payment_method}
+            <SelectField label={t("portal.profile.payment_method_label")} value={bankForm.preferred_payment_method}
               onChange={(v) => setBankForm((f) => ({ ...f, preferred_payment_method: v }))}
-              options={PAYMENT_METHODS} />
+              options={PAYMENT_METHODS.map((m) => ({ value: m.value, label: t(m.key) }))} />
           </div>
 
           <div className="mt-5 flex justify-end">
@@ -722,7 +731,7 @@ function ContactForm({ form, setForm }: { form: EmergencyForm; setForm: (f: Emer
       </div>
       <div>
         <label className={labelCls}>Phone</label>
-        <input type="tel" value={form.phone} placeholder="+61 4xx xxx xxx"
+        <input type="tel" value={form.phone} placeholder="010-0000-0000"
           onChange={(e) => setForm({ ...form, phone: e.target.value })} className={inputCls} />
       </div>
       <div>

@@ -31,3 +31,16 @@ export const workOrdersTable = pgTable("work_orders", {
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// Photos attached to a work order — a repair request's "before" evidence and the
+// partner's "after"/confirmation photos. (CS ticket messages carry their own
+// images; this is the work-order-native slot that repairs previously lacked.)
+export const workOrderPhotosTable = pgTable("work_order_photos", {
+  id: serial("id").primaryKey(),
+  work_order_id: integer("work_order_id").notNull(), // work_orders.id
+  url: text("url").notNull(),
+  kind: text("kind").notNull().default("after"), // before | after
+  uploaded_by_type: text("uploaded_by_type").notNull().default("admin"), // admin | partner
+  caption: text("caption"),
+  created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
