@@ -81,10 +81,10 @@ export default function PortalDocuments() {
                 <Link href="/privacy-policy" className="text-primary hover:underline">{t("portal.documents.privacy_link")}</Link>
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {["passport", "visa", "enrollment", "bank_statement", "other"].map((type) => (
+                {["id_card", "employment", "lease", "deposit", "other"].map((type) => (
                   <label key={type} className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-primary hover:bg-primary/10 transition-all text-center">
                     <Plus className="h-5 w-5 text-gray-400" />
-                    <span className="text-xs font-medium text-gray-600 capitalize">{type.replace("_", " ")}</span>
+                    <span className="text-xs font-medium text-gray-600">{t(`portal.documents.type_${type}`)}</span>
                     <input
                       type="file"
                       className="hidden"
@@ -124,7 +124,7 @@ export default function PortalDocuments() {
                           <FileImage className="h-5 w-5 text-primary" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-gray-800 capitalize">{doc.document_type.replace("_", " ")}</p>
+                          <p className="text-sm font-semibold text-gray-800 capitalize">{t(`portal.documents.type_${doc.document_type}`, { defaultValue: doc.document_type.replace("_", " ") })}</p>
                           {doc.uploaded_at && (
                             <p className="text-xs text-gray-500">
                               {t("portal.documents.uploaded")} {format(new Date(doc.uploaded_at), "dd/MM/yyyy")}

@@ -192,6 +192,39 @@
       "empty_title": "Chưa có đặt phòng",
       "empty_sub": "Khi bạn đặt chỗ ở, nó sẽ hiển thị ở đây.",
       "empty_cta": "Khám phá chỗ ở"
+    },
+    "profile": {
+      "stay_title": "Thông tin lưu trú/thuê",
+      "company": "Công ty / Nơi công tác",
+      "job_title": "Chức vụ",
+      "stay_purpose": "Mục đích lưu trú",
+      "purpose_residence": "Cư trú / Thuê",
+      "purpose_business": "Công tác",
+      "purpose_travel": "Du lịch",
+      "purpose_study": "Học tập",
+      "purpose_other": "Khác",
+      "vehicle_plate": "Biển số xe",
+      "parking_required": "Cần chỗ đậu xe",
+      "deposit_account_title": "Tài khoản hoàn tiền đặt cọc",
+      "deposit_notice": "Tài khoản này chỉ dùng để hoàn tiền đặt cọc và xử lý thanh toán, được bảo mật an toàn.",
+      "bank_name_label": "Tên ngân hàng",
+      "bank_name_ph": "VD: KB Kookmin Bank",
+      "account_name_label": "Chủ tài khoản",
+      "account_name_ph": "Tên trên tài khoản",
+      "account_number_label": "Số tài khoản",
+      "account_number_ph": "Chỉ số, không có dấu gạch",
+      "payment_method_label": "Phương thức thanh toán ưu tiên",
+      "pay_bank_transfer": "Chuyển khoản ngân hàng",
+      "pay_card": "Thẻ",
+      "pay_cash": "Tiền mặt"
+    },
+    "documents": {
+      "type_id_card": "Giấy tờ tùy thân",
+      "type_employment": "Chứng nhận việc làm/kinh doanh",
+      "type_lease": "Hợp đồng thuê",
+      "type_deposit": "Liên quan đặt cọc",
+      "type_other": "Khác",
+      "empty_sub": "Tải lên giấy tờ tùy thân để bắt đầu"
     }
   },
   "dev": {

@@ -435,6 +435,11 @@ router.get("/v1/guest/profile", async (req, res): Promise<void> => {
       department: guestUsersTable.department,
       student_id: guestUsersTable.student_id,
       study_year: guestUsersTable.study_year,
+      company: guestUsersTable.company,
+      job_title: guestUsersTable.job_title,
+      stay_purpose: guestUsersTable.stay_purpose,
+      vehicle_plate: guestUsersTable.vehicle_plate,
+      parking_required: guestUsersTable.parking_required,
       bank_name: guestUsersTable.bank_name,
       bank_account_name: guestUsersTable.bank_account_name,
       bank_bsb: guestUsersTable.bank_bsb,
@@ -472,8 +477,11 @@ router.put("/v1/guest/profile", async (req, res): Promise<void> => {
     const {
       first_name, last_name, phone, nationality, date_of_birth, gender,
       university, department, student_id, study_year,
+      company, job_title, stay_purpose, vehicle_plate,
       bank_name, bank_account_name, bank_bsb, bank_account_number, preferred_payment_method,
     } = req.body as Record<string, string | undefined>;
+    // Boolean field is handled separately (undefined = leave unchanged).
+    const parking_required = (req.body as Record<string, unknown>)["parking_required"];
 
     const [updated] = await db
       .update(guestUsersTable)
@@ -488,6 +496,11 @@ router.put("/v1/guest/profile", async (req, res): Promise<void> => {
         department: department ?? undefined,
         student_id: student_id ?? undefined,
         study_year: study_year ?? undefined,
+        company: company ?? undefined,
+        job_title: job_title ?? undefined,
+        stay_purpose: stay_purpose ?? undefined,
+        vehicle_plate: vehicle_plate ?? undefined,
+        parking_required: typeof parking_required === "boolean" ? parking_required : undefined,
         bank_name: bank_name ?? undefined,
         bank_account_name: bank_account_name ?? undefined,
         bank_bsb: bank_bsb ?? undefined,
@@ -513,6 +526,7 @@ router.put("/v1/guest/profile", async (req, res): Promise<void> => {
     const changedFields = Object.entries({
       first_name, last_name, phone, nationality, date_of_birth, gender,
       university, department, student_id, study_year,
+      company, job_title, stay_purpose, vehicle_plate, parking_required,
       bank_name, bank_account_name, bank_bsb, bank_account_number, preferred_payment_method,
     }).filter(([, v]) => v !== undefined).map(([k]) => k);
     await logAction({

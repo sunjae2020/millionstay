@@ -255,7 +255,10 @@ export default function PortalMyData() {
                 <KvRow k="Nationality" v={profile?.["nationality"]} />
                 <KvRow k="Date of birth" v={profile?.["date_of_birth"]} />
                 <KvRow k="Gender" v={profile?.["gender"]} />
-                <KvRow k="University" v={profile?.["university"]} />
+                <KvRow k="Company / Affiliation" v={profile?.["company"]} />
+                <KvRow k="Job title" v={profile?.["job_title"]} />
+                <KvRow k="Stay purpose" v={profile?.["stay_purpose"]} />
+                <KvRow k="Vehicle plate" v={profile?.["vehicle_plate"]} />
                 <KvRow k="Account created" v={fmtDate(profile?.["created_at"])} />
               </div>
             </Section>
