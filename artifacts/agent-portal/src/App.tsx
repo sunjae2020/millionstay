@@ -8,7 +8,7 @@ import AgentApplicationPage from "@/pages/AgentApplicationPage";
 import DashboardPage from "@/pages/DashboardPage";
 import BookingsPage from "@/pages/BookingsPage";
 import BookingDetailPage from "@/pages/BookingDetailPage";
-import PropertiesPage from "@/pages/PropertiesPage";
+import DocumentsPage from "@/pages/DocumentsPage";
 import CommissionPage from "@/pages/CommissionPage";
 import SupportPage from "@/pages/SupportPage";
 import SupportDetailPage from "@/pages/SupportDetailPage";
@@ -40,7 +40,7 @@ function PortalRoutes() {
       <Route path="/" component={DashboardPage} />
       <Route path="/bookings" component={BookingsPage} />
       <Route path="/bookings/:id" component={BookingDetailPage} />
-      <Route path="/properties" component={PropertiesPage} />
+      <Route path="/documents" component={DocumentsPage} />
       <Route path="/commission" component={CommissionPage} />
       <Route path="/support" component={SupportPage} />
       <Route path="/support/:id" component={SupportDetailPage} />

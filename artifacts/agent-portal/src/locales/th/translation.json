@@ -16,7 +16,9 @@
     "sign_out": "ออกจากระบบ",
     "support": "ฝ่ายสนับสนุน",
     "dark_mode": "โหมดมืด",
-    "light_mode": "โหมดสว่าง"
+    "light_mode": "โหมดสว่าง",
+    "my_contracts": "สัญญาของฉัน",
+    "documents": "เอกสาร"
   },
   "common": {
     "loading": "กำลังโหลด...",
@@ -52,21 +54,31 @@
     "welcome": "ยินดีต้อนรับกลับ",
     "account_prefix": "บัญชี:",
     "subtitle_default": "สรุปผลงานของคุณ",
-    "stat_total_bookings": "การจองทั้งหมด",
-    "stat_active_bookings": "การจองที่ใช้งาน",
+    "stat_total_bookings": "สัญญาทั้งหมด",
+    "stat_active_bookings": "สัญญาที่ใช้งาน",
     "stat_rent_managed": "ค่าเช่าที่บริหาร",
     "stat_est_commission": "ค่าคอมมิชชันโดยประมาณ",
     "rate_percent": "อัตรา {{rate}}%",
     "rate_flat": "${{amount}} ต่อการจอง",
     "recent_bookings": "การจองล่าสุด",
-    "no_bookings": "ยังไม่มีการจองที่ได้รับมอบหมาย",
+    "no_bookings": "ยังไม่มีสัญญาที่ได้รับมอบหมาย",
     "view_all": "ดูทั้งหมด",
     "booking_label": "การจอง",
-    "checkin_label": "เช็คอิน"
+    "checkin_label": "เช็คอิน",
+    "revenue_trend": "แนวโน้มรายได้",
+    "last_6_months": "6 เดือนล่าสุด",
+    "contract_status": "สถานะสัญญา",
+    "no_data": "ยังไม่มีข้อมูล",
+    "recent_contracts": "สัญญาล่าสุด",
+    "revenue_label": "รายได้",
+    "commission_label": "ค่าคอมมิชชัน",
+    "col_ref": "เลขที่อ้างอิง",
+    "col_total": "รวม",
+    "col_status": "สถานะ"
   },
   "bookings": {
-    "title": "การจองของฉัน",
-    "subtitle": "การจองที่คุณได้รับเป็นตัวแทน",
+    "title": "สัญญาของฉัน",
+    "subtitle": "สัญญาที่คุณได้รับเป็นตัวแทน",
     "search_placeholder": "ค้นหาตามผู้เช่า ทรัพย์สิน หรือเลขอ้างอิง...",
     "col_ref": "อ้างอิง",
     "col_tenant": "ผู้เช่า",
@@ -74,7 +86,7 @@
     "col_checkin": "เช็คอิน",
     "col_rate": "อัตรา",
     "col_status": "สถานะ",
-    "no_bookings": "ไม่พบการจอง"
+    "no_bookings": "ไม่พบสัญญา"
   },
   "booking_detail": {
     "back": "กลับไปยังการจอง",
@@ -196,5 +208,27 @@
     "last_reply": "ตอบล่าสุด",
     "no_reply_yet": "ยังไม่มีการตอบกลับ",
     "english_label": "ภาษาอังกฤษ"
+  },
+  "documents": {
+    "title": "เอกสาร",
+    "subtitle": "จัดเก็บและจัดการเอกสารการทำงานของคุณอย่างปลอดภัย",
+    "category": "หมวดหมู่",
+    "upload": "อัปโหลดเอกสาร",
+    "uploading": "กำลังอัปโหลด…",
+    "upload_hint": "PDF หรือรูปภาพ สูงสุด 20 MB ไฟล์จัดเก็บอย่างปลอดภัยและมองเห็นได้เฉพาะคุณและผู้ดูแลระบบ",
+    "empty": "ยังไม่มีเอกสาร",
+    "empty_help": "อัปโหลดเอกสารเพื่อเริ่มต้น",
+    "load_failed": "โหลดเอกสารไม่สำเร็จ",
+    "upload_failed": "อัปโหลดไม่สำเร็จ",
+    "download": "ดาวน์โหลด",
+    "download_failed": "ดาวน์โหลดไม่สำเร็จ",
+    "delete": "ลบ",
+    "delete_confirm": "ลบเอกสารนี้หรือไม่?",
+    "delete_failed": "ลบไม่สำเร็จ",
+    "type_contract": "สัญญา",
+    "type_invoice": "ใบแจ้งหนี้",
+    "type_report": "รายงาน",
+    "type_manual": "คู่มือ",
+    "type_other": "อื่นๆ"
   }
 }

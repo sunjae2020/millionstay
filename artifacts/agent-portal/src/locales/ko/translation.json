@@ -16,7 +16,9 @@
     "sign_out": "로그아웃",
     "support": "고객지원",
     "dark_mode": "다크 모드",
-    "light_mode": "라이트 모드"
+    "light_mode": "라이트 모드",
+    "my_contracts": "내 계약",
+    "documents": "문서함"
   },
   "common": {
     "loading": "로딩 중...",
@@ -52,21 +54,31 @@
     "welcome": "다시 오신 것을 환영합니다",
     "account_prefix": "계정:",
     "subtitle_default": "성과 요약",
-    "stat_total_bookings": "총 예약",
-    "stat_active_bookings": "활성 예약",
+    "stat_total_bookings": "총 계약",
+    "stat_active_bookings": "활성 계약",
     "stat_rent_managed": "관리 임대료",
     "stat_est_commission": "예상 수수료",
     "rate_percent": "{{rate}}% 요율",
     "rate_flat": "건당 ${{amount}}",
     "recent_bookings": "최근 예약",
-    "no_bookings": "할당된 예약이 없습니다.",
+    "no_bookings": "할당된 계약이 없습니다.",
     "view_all": "모두 보기",
     "booking_label": "예약",
-    "checkin_label": "체크인"
+    "checkin_label": "체크인",
+    "revenue_trend": "수익 추이",
+    "last_6_months": "최근 6개월",
+    "contract_status": "계약 상태",
+    "no_data": "데이터가 없습니다",
+    "recent_contracts": "최근 계약",
+    "revenue_label": "수익",
+    "commission_label": "수수료",
+    "col_ref": "계약번호",
+    "col_total": "합계",
+    "col_status": "상태"
   },
   "bookings": {
-    "title": "내 예약",
-    "subtitle": "에이전트로 할당된 예약",
+    "title": "내 계약",
+    "subtitle": "에이전트로 할당된 계약",
     "search_placeholder": "임차인, 자산 또는 참조로 검색...",
     "col_ref": "참조",
     "col_tenant": "임차인",
@@ -74,7 +86,7 @@
     "col_checkin": "체크인",
     "col_rate": "요금",
     "col_status": "상태",
-    "no_bookings": "예약을 찾을 수 없습니다"
+    "no_bookings": "계약을 찾을 수 없습니다"
   },
   "booking_detail": {
     "back": "예약으로 돌아가기",
@@ -196,5 +208,27 @@
     "last_reply": "최근 답변",
     "no_reply_yet": "아직 답변 없음",
     "english_label": "영어"
+  },
+  "documents": {
+    "title": "문서함",
+    "subtitle": "업무 문서를 안전하게 보관하고 관리하세요.",
+    "category": "분류",
+    "upload": "문서 업로드",
+    "uploading": "업로드 중…",
+    "upload_hint": "PDF 또는 이미지, 최대 20MB. 파일은 안전하게 보관되며 본인과 관리자만 볼 수 있습니다.",
+    "empty": "문서가 없습니다",
+    "empty_help": "문서를 업로드해 시작하세요.",
+    "load_failed": "문서를 불러오지 못했습니다",
+    "upload_failed": "업로드에 실패했습니다",
+    "download": "다운로드",
+    "download_failed": "다운로드에 실패했습니다",
+    "delete": "삭제",
+    "delete_confirm": "이 문서를 삭제할까요?",
+    "delete_failed": "삭제에 실패했습니다",
+    "type_contract": "계약서",
+    "type_invoice": "청구서",
+    "type_report": "보고서",
+    "type_manual": "매뉴얼",
+    "type_other": "기타"
   }
 }

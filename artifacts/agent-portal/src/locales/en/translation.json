@@ -16,7 +16,9 @@
     "sign_out": "Sign out",
     "support": "Support",
     "dark_mode": "Dark mode",
-    "light_mode": "Light mode"
+    "light_mode": "Light mode",
+    "my_contracts": "My Contracts",
+    "documents": "Documents"
   },
   "common": {
     "loading": "Loading...",
@@ -52,21 +54,31 @@
     "welcome": "Welcome back",
     "account_prefix": "Account:",
     "subtitle_default": "Here's your performance summary",
-    "stat_total_bookings": "Total Bookings",
-    "stat_active_bookings": "Active Bookings",
+    "stat_total_bookings": "Total Contracts",
+    "stat_active_bookings": "Active Contracts",
     "stat_rent_managed": "Rent Managed",
     "stat_est_commission": "Est. Commission",
     "rate_percent": "{{rate}}% rate",
     "rate_flat": "${{amount}} flat",
     "recent_bookings": "Recent Bookings",
-    "no_bookings": "No bookings assigned yet.",
+    "no_bookings": "No contracts assigned yet.",
     "view_all": "View all",
     "booking_label": "Booking",
-    "checkin_label": "Check-in"
+    "checkin_label": "Check-in",
+    "revenue_trend": "Revenue trend",
+    "last_6_months": "Last 6 months",
+    "contract_status": "Contract status",
+    "no_data": "No data yet",
+    "recent_contracts": "Recent contracts",
+    "revenue_label": "Revenue",
+    "commission_label": "Commission",
+    "col_ref": "Reference",
+    "col_total": "Total",
+    "col_status": "Status"
   },
   "bookings": {
-    "title": "My Bookings",
-    "subtitle": "Bookings you have been assigned as agent",
+    "title": "My Contracts",
+    "subtitle": "Contracts you have been assigned as agent",
     "search_placeholder": "Search by tenant, property, or reference...",
     "col_ref": "Ref",
     "col_tenant": "Tenant",
@@ -74,7 +86,7 @@
     "col_checkin": "Check-in",
     "col_rate": "Rate",
     "col_status": "Status",
-    "no_bookings": "No bookings found"
+    "no_bookings": "No contracts found"
   },
   "booking_detail": {
     "back": "Back to bookings",
@@ -196,5 +208,27 @@
     "last_reply": "Last reply",
     "no_reply_yet": "No replies yet",
     "english_label": "English"
+  },
+  "documents": {
+    "title": "Documents",
+    "subtitle": "Store and manage your work documents securely.",
+    "category": "Category",
+    "upload": "Upload document",
+    "uploading": "Uploading…",
+    "upload_hint": "PDF or image, up to 20 MB. Files are stored securely and visible only to you and admin.",
+    "empty": "No documents yet",
+    "empty_help": "Upload a document to get started.",
+    "load_failed": "Failed to load documents",
+    "upload_failed": "Upload failed",
+    "download": "Download",
+    "download_failed": "Download failed",
+    "delete": "Delete",
+    "delete_confirm": "Delete this document?",
+    "delete_failed": "Failed to delete",
+    "type_contract": "Contract",
+    "type_invoice": "Invoice",
+    "type_report": "Report",
+    "type_manual": "Manual",
+    "type_other": "Other"
   }
 }
