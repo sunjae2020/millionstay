@@ -76,7 +76,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 src={import.meta.env.VITE_LOGO_URL || `${import.meta.env.BASE_URL}millionstay-logo.png`}
                 alt={APP_NAME}
                 className="h-[2.625rem] w-auto object-contain"
-                style={HAS_TENANT_LOGO ? { filter: "brightness(0) invert(1)" } : undefined}
+                // Sidebar is light in light mode, dark in dark mode. Knock the
+                // tenant logo to white only when the sidebar is dark; otherwise
+                // show its natural colour (a white logo would vanish on light).
+                style={HAS_TENANT_LOGO && darkMode ? { filter: "brightness(0) invert(1)" } : undefined}
               />
             )}
           </div>
@@ -163,6 +166,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               src={import.meta.env.VITE_LOGO_URL || `${import.meta.env.BASE_URL}logo-horizontal.png`}
               alt={APP_NAME}
               className="h-9 w-auto object-contain"
+              style={HAS_TENANT_LOGO && darkMode ? { filter: "brightness(0) invert(1)" } : undefined}
             />
           )}
           <div className="ml-auto flex items-center gap-1">
