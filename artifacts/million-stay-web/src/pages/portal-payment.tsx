@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation, Trans } from "react-i18next";
 import { useLocation } from "wouter";
 import { useAuthStore } from "@/lib/store";
 import { PortalLayout } from "@/components/portal-layout";
@@ -37,6 +38,7 @@ function fmtAmt(n: number | null | undefined, currency = "AUD") {
 
 /* ─── Bank Transfer Panel ─── */
 function BankDetails({ amount, invoiceRef }: { amount: number; invoiceRef: string }) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState<string | null>(null);
   const copy = (val: string, key: string) => {
     navigator.clipboard.writeText(val).then(() => {
@@ -46,19 +48,19 @@ function BankDetails({ amount, invoiceRef }: { amount: number; invoiceRef: strin
   };
 
   const rows: [string, string, string][] = [
-    ["Bank", COMPANY.bank.name, "bank"],
-    ["Account Name", COMPANY.bank.accountName, "name"],
-    ["BSB", COMPANY.bank.bsb, "bsb"],
-    ["Account No.", COMPANY.bank.accountNo, "acc"],
-    ["Amount", fmtAmt(amount), "amt"],
-    ["Reference", invoiceRef, "ref"],
+    [t("portal.payment.bank_label", "Bank"), COMPANY.bank.name, "bank"],
+    [t("portal.payment.account_name", "Account Name"), COMPANY.bank.accountName, "name"],
+    [t("portal.payment.bsb", "BSB"), COMPANY.bank.bsb, "bsb"],
+    [t("portal.payment.account_no", "Account No."), COMPANY.bank.accountNo, "acc"],
+    [t("portal.payment.amount", "Amount"), fmtAmt(amount), "amt"],
+    [t("portal.payment.reference", "Reference"), invoiceRef, "ref"],
   ];
 
   return (
     <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5 space-y-3">
       <div className="flex items-center gap-2 mb-1">
         <Building2 className="h-5 w-5 text-blue-600" />
-        <p className="font-semibold text-blue-800">Bank Transfer Details</p>
+        <p className="font-semibold text-blue-800">{t("portal.payment.bank_transfer_details", "Bank Transfer Details")}</p>
       </div>
       <div className="bg-white rounded-xl border border-blue-100 divide-y divide-blue-50">
         {rows.map(([label, value, key]) => (
@@ -68,7 +70,7 @@ function BankDetails({ amount, invoiceRef }: { amount: number; invoiceRef: strin
             <button
               onClick={() => copy(value, key)}
               className="ml-2 text-gray-400 hover:text-blue-600 transition-colors"
-              title="Copy"
+              title={t("portal.payment.copy", "Copy")}
             >
               {copied === key ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
             </button>
@@ -78,9 +80,12 @@ function BankDetails({ amount, invoiceRef }: { amount: number; invoiceRef: strin
       <div className="flex items-start gap-2 bg-white rounded-lg px-3 py-2.5 border border-blue-100">
         <AlertCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
         <p className="text-xs text-gray-600">
-          Please transfer within <strong>48 hours</strong> and use the invoice reference{" "}
-          <strong className="font-mono">{invoiceRef}</strong> in your description.
-          Your booking will be confirmed once payment is received.
+          <Trans
+            i18nKey="portal.payment.transfer_notice"
+            defaults="Please transfer within <b>48 hours</b> and use the invoice reference <ref>{{ref}}</ref> in your description. Your booking will be confirmed once payment is received."
+            values={{ ref: invoiceRef }}
+            components={{ b: <strong />, ref: <strong className="font-mono" /> }}
+          />
         </p>
       </div>
     </div>
@@ -106,6 +111,7 @@ function StripeCardForm({
   const stripe = useStripe();
   const elements = useElements();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [paying, setPaying] = useState(false);
 
   const handlePay = async () => {
@@ -117,7 +123,7 @@ function StripeCardForm({
       redirect: "if_required",
     });
     if (error) {
-      toast({ title: error.message ?? "Payment failed", variant: "destructive" });
+      toast({ title: error.message ?? t("portal.payment.payment_failed", "Payment failed"), variant: "destructive" });
       setPaying(false);
     } else {
       // Payment succeeded (no redirect needed)
@@ -129,7 +135,7 @@ function StripeCardForm({
     <div className="space-y-4">
       <PaymentElement options={{ layout: "tabs" }} />
       <p className="text-xs text-gray-400 flex items-center gap-1.5">
-        <Lock className="h-3 w-3" /> Your payment is secured by Stripe. Card details are never stored on our servers.
+        <Lock className="h-3 w-3" /> {t("portal.payment.stripe_helper", "Your payment is secured by Stripe. Card details are never stored on our servers.")}
       </p>
       <Button
         onClick={handlePay}
@@ -138,9 +144,9 @@ function StripeCardForm({
         style={{ backgroundColor: BRAND }}
       >
         {paying ? (
-          <span className="flex items-center gap-2"><span className="animate-spin rounded-full h-4 w-4 border-2 border-white/40 border-t-white" /> Processing…</span>
+          <span className="flex items-center gap-2"><span className="animate-spin rounded-full h-4 w-4 border-2 border-white/40 border-t-white" /> {t("portal.payment.processing", "Processing…")}</span>
         ) : (
-          <span className="flex items-center gap-2"><CreditCard className="h-5 w-5" /> Pay {fmtAmt(amount, currency)}</span>
+          <span className="flex items-center gap-2"><CreditCard className="h-5 w-5" /> {t("portal.payment.pay_amount", "Pay {{amount}}", { amount: fmtAmt(amount, currency) })}</span>
         )}
       </Button>
     </div>
@@ -149,33 +155,34 @@ function StripeCardForm({
 
 /* ─── Invoice Summary Card ─── */
 function InvoiceSummary({ inv }: { inv: MyInvoice }) {
+  const { t } = useTranslation();
   return (
     <div className="bg-white rounded-2xl border p-5 space-y-3 sticky top-24">
-      <h3 className="font-semibold text-gray-800 text-sm">Invoice Summary</h3>
+      <h3 className="font-semibold text-gray-800 text-sm">{t("portal.payment.invoice_summary", "Invoice Summary")}</h3>
       <div className="flex justify-between text-sm border-b pb-2">
-        <span className="text-gray-500">Invoice Ref</span>
+        <span className="text-gray-500">{t("portal.payment.invoice_ref", "Invoice Ref")}</span>
         <span className="font-mono font-semibold text-gray-800">{inv.invoice_ref ?? `INV-${inv.id}`}</span>
       </div>
       {inv.description && (
         <div className="flex justify-between text-sm border-b pb-2">
-          <span className="text-gray-500">Description</span>
+          <span className="text-gray-500">{t("portal.payment.description", "Description")}</span>
           <span className="font-medium text-gray-800 text-right max-w-[160px]">{inv.description}</span>
         </div>
       )}
       {inv.space_name && (
         <div className="flex justify-between text-sm border-b pb-2">
-          <span className="text-gray-500">Property</span>
+          <span className="text-gray-500">{t("portal.payment.property", "Property")}</span>
           <span className="font-medium text-gray-800 text-right max-w-[160px]">{inv.space_name}</span>
         </div>
       )}
       {inv.due_date && (
         <div className="flex justify-between text-sm border-b pb-2">
-          <span className="text-gray-500">Due Date</span>
+          <span className="text-gray-500">{t("portal.payment.due_date", "Due Date")}</span>
           <span className="font-medium text-gray-800">{fmtDate(inv.due_date)}</span>
         </div>
       )}
       <div className="flex justify-between items-center pt-1">
-        <span className="font-bold text-gray-900">Amount Due</span>
+        <span className="font-bold text-gray-900">{t("portal.payment.amount_due", "Amount Due")}</span>
         <span className="font-black text-xl" style={{ color: BRAND }}>{fmtAmt(inv.amount, inv.currency ?? "AUD")}</span>
       </div>
     </div>
@@ -187,6 +194,7 @@ export default function PortalPayment() {
   const [, setLocation] = useLocation();
   const { token } = useAuthStore();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const supportEmail = useSupportEmail();
 
   const params = new URLSearchParams(window.location.search);
@@ -245,7 +253,7 @@ export default function PortalPayment() {
         if (j.success && j.data?.client_secret) setClientSecret(j.data.client_secret);
         else if (j.error) toast({ title: j.error, variant: "destructive" });
       })
-      .catch(() => toast({ title: "Failed to initialise payment", variant: "destructive" }));
+      .catch(() => toast({ title: t("portal.payment.init_failed", "Failed to initialise payment"), variant: "destructive" }));
   }, [paymentMethod, stripeConfigured, invoice, token]);
 
   /* ── Bank transfer confirm ── */
@@ -262,10 +270,10 @@ export default function PortalPayment() {
       if (j.success) {
         setBankConfirmed(true);
       } else {
-        toast({ title: j.error ?? "Confirmation failed", variant: "destructive" });
+        toast({ title: j.error ?? t("portal.payment.confirmation_failed", "Confirmation failed"), variant: "destructive" });
       }
     } catch {
-      toast({ title: "Network error. Please try again.", variant: "destructive" });
+      toast({ title: t("portal.payment.network_error", "Network error. Please try again."), variant: "destructive" });
     } finally {
       setConfirmingBank(false);
     }
@@ -291,12 +299,12 @@ export default function PortalPayment() {
               : <Sparkles className="h-10 w-10 text-green-600" />}
           </motion.div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            {isBank ? "Bank Transfer Initiated!" : "Payment Complete!"}
+            {isBank ? t("portal.payment.bank_initiated_heading", "Bank Transfer Initiated!") : t("portal.payment.payment_complete_heading", "Payment Complete!")}
           </h2>
           <p className="text-sm text-gray-500 mb-6">
             {isBank
-              ? "Please complete your bank transfer within 48 hours using the details below. Your invoice will be marked as paid once payment is received."
-              : "Your payment has been processed successfully. A receipt has been emailed to you."}
+              ? t("portal.payment.bank_initiated_sub", "Please complete your bank transfer within 48 hours using the details below. Your invoice will be marked as paid once payment is received.")
+              : t("portal.payment.payment_complete_sub", "Your payment has been processed successfully. A receipt has been emailed to you.")}
           </p>
           {isBank && invoice && (
             <div className="mb-6 text-left">
@@ -309,10 +317,10 @@ export default function PortalPayment() {
               className="font-bold rounded-xl"
               style={{ backgroundColor: BRAND }}
             >
-              <LayoutDashboard className="h-4 w-4 mr-2" /> Back to Invoices
+              <LayoutDashboard className="h-4 w-4 mr-2" /> {t("portal.payment.back_to_invoices", "Back to Invoices")}
             </Button>
             <Button variant="outline" onClick={() => setLocation("/portal/bookings")} className="rounded-xl">
-              View Bookings
+              {t("portal.payment.view_bookings", "View Bookings")}
             </Button>
           </div>
         </div>
@@ -326,9 +334,9 @@ export default function PortalPayment() {
       <PortalLayout active="/portal/invoices">
         <div className="flex-1 max-w-lg mx-auto w-full px-4 py-16 text-center">
           <AlertCircle className="h-10 w-10 text-red-400 mx-auto mb-4" />
-          <p className="font-semibold text-gray-700 mb-2">Invoice not found</p>
-          <p className="text-sm text-gray-400 mb-6">This invoice may not exist or you don't have access to it.</p>
-          <Button onClick={() => setLocation("/portal/invoices")} variant="outline">Back to Invoices</Button>
+          <p className="font-semibold text-gray-700 mb-2">{t("portal.payment.invoice_not_found", "Invoice not found")}</p>
+          <p className="text-sm text-gray-400 mb-6">{t("portal.payment.invoice_not_found_sub", "This invoice may not exist or you don't have access to it.")}</p>
+          <Button onClick={() => setLocation("/portal/invoices")} variant="outline">{t("portal.payment.back_to_invoices", "Back to Invoices")}</Button>
         </div>
       </PortalLayout>
     );
@@ -340,18 +348,18 @@ export default function PortalPayment() {
       <PortalLayout active="/portal/invoices">
         <div className="flex-1 max-w-lg mx-auto w-full px-4 py-16 text-center">
           <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-4" />
-          <p className="text-xl font-bold text-gray-800 mb-2">Already Paid</p>
-          <p className="text-sm text-gray-500 mb-6">This invoice has been paid on {fmtDate(invoice.paid_at)}.</p>
+          <p className="text-xl font-bold text-gray-800 mb-2">{t("portal.payment.already_paid", "Already Paid")}</p>
+          <p className="text-sm text-gray-500 mb-6">{t("portal.payment.already_paid_sub", "This invoice has been paid on {{date}}.", { date: fmtDate(invoice.paid_at) })}</p>
           <div className="flex gap-3 justify-center">
             <Button
               onClick={() => setLocation(`/portal/invoices/${invoice.id}/receipt`)}
               style={{ backgroundColor: BRAND }}
               className="text-white font-bold rounded-xl"
             >
-              View Receipt
+              {t("portal.payment.view_receipt", "View Receipt")}
             </Button>
             <Button variant="outline" onClick={() => setLocation("/portal/invoices")} className="rounded-xl">
-              Back to Invoices
+              {t("portal.payment.back_to_invoices", "Back to Invoices")}
             </Button>
           </div>
         </div>
@@ -371,7 +379,7 @@ export default function PortalPayment() {
           onClick={() => setLocation("/portal/invoices")}
           className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 mb-6 transition-colors"
         >
-          <ChevronLeft className="h-4 w-4" /> Back to Invoices
+          <ChevronLeft className="h-4 w-4" /> {t("portal.payment.back_to_invoices", "Back to Invoices")}
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -381,7 +389,7 @@ export default function PortalPayment() {
             {/* Amount due banner */}
             {!loadingInvoice && invoice && (
               <div className="bg-white rounded-2xl border p-5">
-                <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Amount Due</p>
+                <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">{t("portal.payment.amount_due", "Amount Due")}</p>
                 <p className="text-3xl font-black" style={{ color: BRAND }}>{fmtAmt(amount, currency)}</p>
               </div>
             )}
@@ -389,11 +397,11 @@ export default function PortalPayment() {
 
             {/* Payment method toggle */}
             <div className="bg-white rounded-2xl border p-5 space-y-4">
-              <p className="text-sm font-semibold text-gray-700">Select Payment Method</p>
+              <p className="text-sm font-semibold text-gray-700">{t("portal.payment.select_payment_method", "Select Payment Method")}</p>
               <div className="grid grid-cols-2 gap-3">
                 {([
-                  ["card", CreditCard, "Credit / Debit Card"],
-                  ["bank", Banknote, "Bank Transfer"],
+                  ["card", CreditCard, t("portal.payment.method_card", "Credit / Debit Card")],
+                  ["bank", Banknote, t("portal.payment.method_bank", "Bank Transfer")],
                 ] as const).map(([m, Icon, label]) => (
                   <button
                     key={m}
@@ -423,9 +431,9 @@ export default function PortalPayment() {
                 >
                   <div className="flex items-center gap-2">
                     <CreditCard className="h-5 w-5 text-primary" />
-                    <h3 className="font-semibold text-gray-800">Card Payment</h3>
+                    <h3 className="font-semibold text-gray-800">{t("portal.payment.card_payment", "Card Payment")}</h3>
                     <span className="ml-auto text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full flex items-center gap-1">
-                      <Lock className="h-3 w-3" /> Secured by Stripe
+                      <Lock className="h-3 w-3" /> {t("portal.payment.secured_by_stripe", "Secured by Stripe")}
                     </span>
                   </div>
 
@@ -435,15 +443,15 @@ export default function PortalPayment() {
 
                   {stripeConfigured === false && (
                     <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 text-sm text-amber-700">
-                      <p className="font-semibold mb-1">Online card payment is not available</p>
-                      <p className="text-xs text-amber-600">Please use the bank transfer option or contact us at {supportEmail} to arrange payment.</p>
+                      <p className="font-semibold mb-1">{t("portal.payment.card_unavailable", "Online card payment is not available")}</p>
+                      <p className="text-xs text-amber-600">{t("portal.payment.card_unavailable_sub", "Please use the bank transfer option or contact us at {{email}} to arrange payment.", { email: supportEmail })}</p>
                     </div>
                   )}
 
                   {stripeConfigured && stripePromise && !clientSecret && !loadingInvoice && (
                     <div className="flex items-center gap-2 text-sm text-gray-400 py-4">
                       <span className="animate-spin rounded-full h-4 w-4 border-2 border-gray-200 border-t-primary" />
-                      Initialising secure payment…
+                      {t("portal.payment.initialising", "Initialising secure payment…")}
                     </div>
                   )}
 
@@ -483,7 +491,7 @@ export default function PortalPayment() {
                   <div className="bg-white rounded-2xl border p-5 space-y-4">
                     <div className="flex items-center gap-2">
                       <Building2 className="h-5 w-5 text-blue-600" />
-                      <h3 className="font-semibold text-gray-800">Bank Transfer</h3>
+                      <h3 className="font-semibold text-gray-800">{t("portal.payment.bank_transfer", "Bank Transfer")}</h3>
                     </div>
                     <BankDetails amount={amount} invoiceRef={invoiceRef} />
                     <div className="pt-1">
@@ -496,17 +504,17 @@ export default function PortalPayment() {
                         {confirmingBank ? (
                           <span className="flex items-center gap-2">
                             <span className="animate-spin rounded-full h-4 w-4 border-2 border-white/40 border-t-white" />
-                            Confirming…
+                            {t("portal.payment.confirming", "Confirming…")}
                           </span>
                         ) : (
                           <span className="flex items-center gap-2">
                             <Banknote className="h-5 w-5" />
-                            I've Initiated the Bank Transfer
+                            {t("portal.payment.initiated_bank_transfer", "I've Initiated the Bank Transfer")}
                           </span>
                         )}
                       </Button>
                       <p className="text-xs text-gray-400 text-center mt-2">
-                        Click after you have completed the transfer. We'll confirm your payment upon receipt.
+                        {t("portal.payment.bank_confirm_helper", "Click after you have completed the transfer. We'll confirm your payment upon receipt.")}
                       </p>
                     </div>
                   </div>

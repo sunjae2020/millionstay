@@ -44,7 +44,12 @@ const PAYMENT_METHODS = [
   { value: "card", key: "portal.profile.pay_card" },
   { value: "cash", key: "portal.profile.pay_cash" },
 ];
-const GENDERS = ["Male", "Female", "Non-binary", "Prefer not to say"];
+const GENDERS = [
+  { value: "Male", key: "portal.profile.gender_male" },
+  { value: "Female", key: "portal.profile.gender_female" },
+  { value: "Non-binary", key: "portal.profile.gender_non_binary" },
+  { value: "Prefer not to say", key: "portal.profile.gender_prefer_not" },
+];
 
 const inputCls = "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white";
 const labelCls = "block text-xs font-medium text-gray-500 mb-1.5";
@@ -66,6 +71,7 @@ function SelectField({ label, value, onChange, options }: {
   label: string; value: string; onChange: (v: string) => void;
   options: { value: string; label: string }[];
 }) {
+  const { t } = useTranslation();
   return (
     <div>
       <label className={labelCls}>{label}</label>
@@ -75,7 +81,7 @@ function SelectField({ label, value, onChange, options }: {
           onChange={(e) => onChange(e.target.value)}
           className={`${inputCls} appearance-none pr-8`}
         >
-          <option value="">— Select —</option>
+          <option value="">{t("portal.profile.select_placeholder", "— Select —")}</option>
           {options.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
@@ -190,31 +196,31 @@ export default function PortalProfile() {
       });
       if (res.status === 401) { handleUnauthorized(); return; }
       const j = await res.json();
-      if (!res.ok) throw new Error(typeof j.error === "string" ? j.error : (j.error?.message ?? "Update failed"));
+      if (!res.ok) throw new Error(typeof j.error === "string" ? j.error : (j.error?.message ?? t("portal.profile.toast_update_failed", "Update failed")));
       if (j.data) {
         setGuest({ ...guest!, first_name: j.data.first_name ?? null, last_name: j.data.last_name ?? null, phone: j.data.phone ?? null });
       }
-      toast({ title: `${section} updated`, description: "Saved successfully." });
+      toast({ title: t("portal.profile.toast_section_updated", "{{section}} updated", { section }), description: t("portal.profile.toast_saved_successfully", "Saved successfully.") });
     } catch (e: unknown) {
-      toast({ title: "Update failed", description: e instanceof Error ? e.message : "Please try again.", variant: "destructive" });
+      toast({ title: t("portal.profile.toast_update_failed", "Update failed"), description: e instanceof Error ? e.message : t("portal.profile.toast_try_again", "Please try again."), variant: "destructive" });
     } finally {
       setLoading(false);
     }
   }
 
-  const savePersonal = () => putProfile(profileForm, setLoadingPersonal, "Personal information");
-  const saveStay = () => putProfile(stayForm, setLoadingStay, "Stay information");
-  const saveBank = () => putProfile(bankForm, setLoadingBank, "Deposit account");
+  const savePersonal = () => putProfile(profileForm, setLoadingPersonal, t("portal.profile.section_personal_information", "Personal information"));
+  const saveStay = () => putProfile(stayForm, setLoadingStay, t("portal.profile.section_stay_information", "Stay information"));
+  const saveBank = () => putProfile(bankForm, setLoadingBank, t("portal.profile.section_deposit_account", "Deposit account"));
 
   // ─── Avatar upload ────────────────────────────────────────────────────────
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      toast({ title: "Invalid file type", description: "Please select an image file.", variant: "destructive" }); return;
+      toast({ title: t("portal.profile.toast_invalid_file_type", "Invalid file type"), description: t("portal.profile.toast_select_image", "Please select an image file."), variant: "destructive" }); return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "File too large", description: "Maximum file size is 5MB.", variant: "destructive" }); return;
+      toast({ title: t("portal.profile.toast_file_too_large", "File too large"), description: t("portal.profile.toast_max_file_size", "Maximum file size is 5MB."), variant: "destructive" }); return;
     }
     setAvatarLoading(true);
     try {
@@ -227,13 +233,13 @@ export default function PortalProfile() {
       });
       if (res.status === 401) { handleUnauthorized(); return; }
       const j = await res.json();
-      if (!res.ok) throw new Error(j.error ?? "Upload failed");
+      if (!res.ok) throw new Error(j.error ?? t("portal.profile.toast_upload_failed", "Upload failed"));
       const newUrl = j.data.avatar_url;
       setAvatarUrl(newUrl);
       setGuest({ ...guest!, avatar_url: newUrl });
-      toast({ title: "Profile photo updated", description: "Your photo has been saved." });
+      toast({ title: t("portal.profile.toast_photo_updated", "Profile photo updated"), description: t("portal.profile.toast_photo_saved", "Your photo has been saved.") });
     } catch (e: unknown) {
-      toast({ title: "Upload failed", description: e instanceof Error ? e.message : "Please try again.", variant: "destructive" });
+      toast({ title: t("portal.profile.toast_upload_failed", "Upload failed"), description: e instanceof Error ? e.message : t("portal.profile.toast_try_again", "Please try again."), variant: "destructive" });
     } finally {
       setAvatarLoading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -248,12 +254,12 @@ export default function PortalProfile() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.status === 401) { handleUnauthorized(); return; }
-      if (!res.ok) throw new Error("Delete failed");
+      if (!res.ok) throw new Error(t("portal.profile.toast_delete_failed", "Delete failed"));
       setAvatarUrl(null);
       setGuest({ ...guest!, avatar_url: null });
-      toast({ title: "Profile photo removed" });
+      toast({ title: t("portal.profile.toast_photo_removed", "Profile photo removed") });
     } catch (e: unknown) {
-      toast({ title: "Failed", description: e instanceof Error ? e.message : "Please try again.", variant: "destructive" });
+      toast({ title: t("portal.profile.toast_failed", "Failed"), description: e instanceof Error ? e.message : t("portal.profile.toast_try_again", "Please try again."), variant: "destructive" });
     } finally {
       setAvatarLoading(false);
     }
@@ -262,10 +268,10 @@ export default function PortalProfile() {
   // ─── Password change ──────────────────────────────────────────────────────
   const handlePasswordSave = async () => {
     if (passwordForm.new_password !== passwordForm.confirm_password) {
-      toast({ title: "Passwords don't match", variant: "destructive" }); return;
+      toast({ title: t("portal.profile.toast_passwords_no_match", "Passwords don't match"), variant: "destructive" }); return;
     }
     if (passwordForm.new_password.length < 8) {
-      toast({ title: "Password too short", description: "At least 8 characters required.", variant: "destructive" }); return;
+      toast({ title: t("portal.profile.toast_password_too_short", "Password too short"), description: t("portal.profile.toast_password_min", "At least 8 characters required."), variant: "destructive" }); return;
     }
     setLoadingPassword(true);
     try {
@@ -276,11 +282,11 @@ export default function PortalProfile() {
       });
       if (res.status === 401) { handleUnauthorized(); return; }
       const j = await res.json();
-      if (!res.ok) throw new Error(typeof j.error === "string" ? j.error : (j.error?.message ?? "Change failed"));
-      toast({ title: "Password changed", description: "Your password has been updated." });
+      if (!res.ok) throw new Error(typeof j.error === "string" ? j.error : (j.error?.message ?? t("portal.profile.toast_change_failed", "Change failed")));
+      toast({ title: t("portal.profile.toast_password_changed", "Password changed"), description: t("portal.profile.toast_password_updated", "Your password has been updated.") });
       setPasswordForm({ current_password: "", new_password: "", confirm_password: "" });
     } catch (e: unknown) {
-      toast({ title: "Error", description: e instanceof Error ? e.message : "Please try again.", variant: "destructive" });
+      toast({ title: t("portal.profile.toast_error", "Error"), description: e instanceof Error ? e.message : t("portal.profile.toast_try_again", "Please try again."), variant: "destructive" });
     } finally {
       setLoadingPassword(false);
     }
@@ -291,7 +297,7 @@ export default function PortalProfile() {
 
   const handleAddContact = async () => {
     if (!contactForm.name.trim()) {
-      toast({ title: "Name is required", variant: "destructive" }); return;
+      toast({ title: t("portal.profile.toast_name_required", "Name is required"), variant: "destructive" }); return;
     }
     setLoadingContact(true);
     try {
@@ -300,13 +306,13 @@ export default function PortalProfile() {
       });
       if (res.status === 401) { handleUnauthorized(); return; }
       const j = await res.json();
-      if (!res.ok) throw new Error(j.error?.message ?? j.error ?? "Failed to add contact");
+      if (!res.ok) throw new Error(j.error?.message ?? j.error ?? t("portal.profile.toast_failed_add_contact", "Failed to add contact"));
       setContacts((prev) => [...prev, j.data]);
       setShowAddContact(false);
       resetContactForm();
-      toast({ title: "Emergency contact added" });
+      toast({ title: t("portal.profile.toast_contact_added", "Emergency contact added") });
     } catch (e: unknown) {
-      toast({ title: "Error", description: e instanceof Error ? e.message : "Please try again.", variant: "destructive" });
+      toast({ title: t("portal.profile.toast_error", "Error"), description: e instanceof Error ? e.message : t("portal.profile.toast_try_again", "Please try again."), variant: "destructive" });
     } finally {
       setLoadingContact(false);
     }
@@ -320,13 +326,13 @@ export default function PortalProfile() {
       });
       if (res.status === 401) { handleUnauthorized(); return; }
       const j = await res.json();
-      if (!res.ok) throw new Error(j.error?.message ?? j.error ?? "Failed to update");
+      if (!res.ok) throw new Error(j.error?.message ?? j.error ?? t("portal.profile.toast_failed_update", "Failed to update"));
       setContacts((prev) => prev.map((c) => (c.id === id ? j.data : c)));
       setEditContactId(null);
       resetContactForm();
-      toast({ title: "Emergency contact updated" });
+      toast({ title: t("portal.profile.toast_contact_updated", "Emergency contact updated") });
     } catch (e: unknown) {
-      toast({ title: "Error", description: e instanceof Error ? e.message : "Please try again.", variant: "destructive" });
+      toast({ title: t("portal.profile.toast_error", "Error"), description: e instanceof Error ? e.message : t("portal.profile.toast_try_again", "Please try again."), variant: "destructive" });
     } finally {
       setLoadingContact(false);
     }
@@ -338,11 +344,11 @@ export default function PortalProfile() {
         method: "DELETE", headers: authHeaders(),
       });
       if (res.status === 401) { handleUnauthorized(); return; }
-      if (!res.ok) throw new Error("Failed to delete");
+      if (!res.ok) throw new Error(t("portal.profile.toast_failed_delete", "Failed to delete"));
       setContacts((prev) => prev.filter((c) => c.id !== id));
-      toast({ title: "Emergency contact removed" });
+      toast({ title: t("portal.profile.toast_contact_removed", "Emergency contact removed") });
     } catch {
-      toast({ title: "Error", description: "Could not delete contact.", variant: "destructive" });
+      toast({ title: t("portal.profile.toast_error", "Error"), description: t("portal.profile.toast_could_not_delete", "Could not delete contact."), variant: "destructive" });
     }
   };
 
@@ -365,7 +371,7 @@ export default function PortalProfile() {
             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
               <Camera className="h-4 w-4 text-primary" />
             </div>
-            <h2 className="font-semibold text-gray-800">Profile Photo</h2>
+            <h2 className="font-semibold text-gray-800">{t("portal.profile.photo_title", "Profile Photo")}</h2>
           </div>
 
           <div className="flex items-center gap-6">
@@ -373,7 +379,7 @@ export default function PortalProfile() {
             <div className="relative shrink-0">
               <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-gray-200 bg-gray-100 flex items-center justify-center">
                 {avatarUrl ? (
-                  <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                  <img src={avatarUrl} alt={t("portal.profile.photo_alt", "Profile")} className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-3xl font-bold text-gray-400">
                     {(profileForm.first_name?.[0] ?? guest?.email?.[0] ?? "G").toUpperCase()}
@@ -390,7 +396,7 @@ export default function PortalProfile() {
             {/* Upload Controls */}
             <div className="flex-1">
               <p className="text-sm text-gray-600 mb-3">
-                Upload a profile photo. Recommended: square image, at least 200×200px, max 5MB.
+                {t("portal.profile.photo_help", "Upload a profile photo. Recommended: square image, at least 200×200px, max 5MB.")}
               </p>
               <div className="flex flex-wrap gap-2">
                 <Button
@@ -411,7 +417,7 @@ export default function PortalProfile() {
                     className="gap-2 text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
                   >
                     <Trash2 className="h-4 w-4" />
-                    Remove
+                    {t("portal.profile.remove", "Remove")}
                   </Button>
                 )}
               </div>
@@ -433,44 +439,44 @@ export default function PortalProfile() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className={labelCls}>First Name</label>
+              <label className={labelCls}>{t("portal.profile.first_name", "First Name")}</label>
               <input type="text" value={profileForm.first_name}
                 onChange={(e) => setProfileForm((f) => ({ ...f, first_name: e.target.value }))}
                 className={inputCls} />
             </div>
             <div>
-              <label className={labelCls}>Last Name</label>
+              <label className={labelCls}>{t("portal.profile.last_name", "Last Name")}</label>
               <input type="text" value={profileForm.last_name}
                 onChange={(e) => setProfileForm((f) => ({ ...f, last_name: e.target.value }))}
                 className={inputCls} />
             </div>
             <div>
-              <label className={`${labelCls} flex items-center gap-1`}><Mail className="h-3 w-3" /> Email Address</label>
+              <label className={`${labelCls} flex items-center gap-1`}><Mail className="h-3 w-3" /> {t("portal.profile.email_address", "Email Address")}</label>
               <input type="email" value={guest?.email ?? ""} readOnly
                 className={`${inputCls} bg-gray-50 text-gray-500 cursor-default`} />
-              <p className="text-xs text-gray-400 mt-1">Email cannot be changed</p>
+              <p className="text-xs text-gray-400 mt-1">{t("portal.profile.email_cannot_change", "Email cannot be changed")}</p>
             </div>
             <div>
-              <label className={`${labelCls} flex items-center gap-1`}><Phone className="h-3 w-3" /> Phone Number</label>
+              <label className={`${labelCls} flex items-center gap-1`}><Phone className="h-3 w-3" /> {t("portal.profile.phone_number", "Phone Number")}</label>
               <input type="tel" value={profileForm.phone} placeholder="010-0000-0000"
                 onChange={(e) => setProfileForm((f) => ({ ...f, phone: e.target.value }))}
                 className={inputCls} />
             </div>
             <div>
-              <label className={`${labelCls} flex items-center gap-1`}><Globe className="h-3 w-3" /> Nationality</label>
-              <input type="text" value={profileForm.nationality} placeholder="e.g. Korean"
+              <label className={`${labelCls} flex items-center gap-1`}><Globe className="h-3 w-3" /> {t("portal.profile.nationality", "Nationality")}</label>
+              <input type="text" value={profileForm.nationality} placeholder={t("portal.profile.nationality_ph", "e.g. Korean")}
                 onChange={(e) => setProfileForm((f) => ({ ...f, nationality: e.target.value }))}
                 className={inputCls} />
             </div>
             <div>
-              <label className={labelCls}>Date of Birth</label>
+              <label className={labelCls}>{t("portal.profile.date_of_birth", "Date of Birth")}</label>
               <input type="date" value={profileForm.date_of_birth}
                 onChange={(e) => setProfileForm((f) => ({ ...f, date_of_birth: e.target.value }))}
                 className={inputCls} />
             </div>
-            <SelectField label="Gender" value={profileForm.gender}
+            <SelectField label={t("portal.profile.gender", "Gender")} value={profileForm.gender}
               onChange={(v) => setProfileForm((f) => ({ ...f, gender: v }))}
-              options={GENDERS.map((g) => ({ value: g, label: g }))} />
+              options={GENDERS.map((g) => ({ value: g.value, label: t(g.key, g.value) }))} />
           </div>
 
           <div className="mt-5 flex justify-end">
@@ -552,11 +558,11 @@ export default function PortalProfile() {
                     <ContactForm form={contactForm} setForm={setContactForm} />
                     <div className="flex gap-2 justify-end">
                       <Button variant="outline" size="sm" onClick={() => { setEditContactId(null); resetContactForm(); }}>
-                        <X className="h-3.5 w-3.5 mr-1" /> Cancel
+                        <X className="h-3.5 w-3.5 mr-1" /> {t("portal.profile.cancel", "Cancel")}
                       </Button>
                       <Button size="sm" disabled={loadingContact} onClick={() => handleUpdateContact(c.id)}
                         className="bg-red-600 hover:bg-red-700 gap-1">
-                        <Check className="h-3.5 w-3.5" />{loadingContact ? "Saving…" : "Save"}
+                        <Check className="h-3.5 w-3.5" />{loadingContact ? t("portal.profile.saving") : t("portal.profile.save")}
                       </Button>
                     </div>
                   </motion.div>
@@ -567,7 +573,7 @@ export default function PortalProfile() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium text-sm text-gray-800">{c.name}</span>
                         {c.relationship && <span className="text-xs text-gray-500 bg-gray-100 rounded-full px-2 py-0.5">{c.relationship}</span>}
-                        {c.is_primary && <span className="text-xs text-red-600 bg-red-50 rounded-full px-2 py-0.5 font-medium">Primary</span>}
+                        {c.is_primary && <span className="text-xs text-red-600 bg-red-50 rounded-full px-2 py-0.5 font-medium">{t("portal.profile.primary", "Primary")}</span>}
                       </div>
                       <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-gray-500">
                         {c.phone && <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{c.phone}</span>}
@@ -590,7 +596,7 @@ export default function PortalProfile() {
             </AnimatePresence>
 
             {contacts.length === 0 && !showAddContact && (
-              <p className="text-sm text-gray-400 text-center py-6">No emergency contacts yet. Add one for safety.</p>
+              <p className="text-sm text-gray-400 text-center py-6">{t("portal.profile.no_contacts", "No emergency contacts yet. Add one for safety.")}</p>
             )}
           </div>
 
@@ -599,15 +605,15 @@ export default function PortalProfile() {
             {showAddContact && (
               <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
                 className="mt-3 border border-red-200 rounded-xl p-4 bg-red-50/30 space-y-3">
-                <p className="text-xs font-medium text-red-700 mb-2">New Emergency Contact</p>
+                <p className="text-xs font-medium text-red-700 mb-2">{t("portal.profile.new_emergency_contact", "New Emergency Contact")}</p>
                 <ContactForm form={contactForm} setForm={setContactForm} />
                 <div className="flex gap-2 justify-end">
                   <Button variant="outline" size="sm" onClick={() => { setShowAddContact(false); resetContactForm(); }}>
-                    <X className="h-3.5 w-3.5 mr-1" /> Cancel
+                    <X className="h-3.5 w-3.5 mr-1" /> {t("portal.profile.cancel", "Cancel")}
                   </Button>
                   <Button size="sm" disabled={loadingContact} onClick={handleAddContact}
                     className="bg-red-600 hover:bg-red-700 gap-1">
-                    <Plus className="h-3.5 w-3.5" />{loadingContact ? "Adding…" : "Add Contact"}
+                    <Plus className="h-3.5 w-3.5" />{loadingContact ? t("portal.profile.adding", "Adding…") : t("portal.profile.add_contact", "Add Contact")}
                   </Button>
                 </div>
               </motion.div>
@@ -662,7 +668,7 @@ export default function PortalProfile() {
 
           <div className="space-y-4 max-w-sm">
             <div>
-              <label className={labelCls}>Current Password</label>
+              <label className={labelCls}>{t("portal.profile.current_password", "Current Password")}</label>
               <div className="relative">
                 <input type={showCurrent ? "text" : "password"} value={passwordForm.current_password}
                   onChange={(e) => setPasswordForm((f) => ({ ...f, current_password: e.target.value }))}
@@ -674,7 +680,7 @@ export default function PortalProfile() {
               </div>
             </div>
             <div>
-              <label className={labelCls}>New Password</label>
+              <label className={labelCls}>{t("portal.profile.new_password", "New Password")}</label>
               <div className="relative">
                 <input type={showNew ? "text" : "password"} value={passwordForm.new_password}
                   onChange={(e) => setPasswordForm((f) => ({ ...f, new_password: e.target.value }))}
@@ -686,7 +692,7 @@ export default function PortalProfile() {
               </div>
             </div>
             <div>
-              <label className={labelCls}>Confirm New Password</label>
+              <label className={labelCls}>{t("portal.profile.confirm_new_password", "Confirm New Password")}</label>
               <input type="password" value={passwordForm.confirm_password}
                 onChange={(e) => setPasswordForm((f) => ({ ...f, confirm_password: e.target.value }))}
                 className={inputCls} />
@@ -695,7 +701,7 @@ export default function PortalProfile() {
 
           <div className="mt-5">
             <Button onClick={handlePasswordSave} disabled={loadingPassword} variant="outline" className="gap-2">
-              <Lock className="h-4 w-4" />{loadingPassword ? "Changing…" : "Change Password"}
+              <Lock className="h-4 w-4" />{loadingPassword ? t("portal.profile.changing", "Changing…") : t("portal.profile.change_password", "Change Password")}
             </Button>
           </div>
         </motion.div>
@@ -707,36 +713,45 @@ export default function PortalProfile() {
 
 // ─── Sub-component: Emergency Contact Form ─────────────────────────────────
 function ContactForm({ form, setForm }: { form: EmergencyForm; setForm: (f: EmergencyForm) => void }) {
+  const { t } = useTranslation();
   const inputCls = "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400 bg-white";
   const labelCls = "block text-xs font-medium text-gray-500 mb-1";
-  const RELATIONSHIPS = ["Parent", "Sibling", "Spouse / Partner", "Friend", "Guardian", "Relative", "Other"];
+  const RELATIONSHIPS = [
+    { value: "Parent", key: "portal.profile.rel_parent" },
+    { value: "Sibling", key: "portal.profile.rel_sibling" },
+    { value: "Spouse / Partner", key: "portal.profile.rel_spouse_partner" },
+    { value: "Friend", key: "portal.profile.rel_friend" },
+    { value: "Guardian", key: "portal.profile.rel_guardian" },
+    { value: "Relative", key: "portal.profile.rel_relative" },
+    { value: "Other", key: "portal.profile.rel_other" },
+  ];
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
-        <label className={labelCls}>Full Name <span className="text-red-500">*</span></label>
-        <input type="text" value={form.name} placeholder="Contact's full name"
+        <label className={labelCls}>{t("portal.profile.full_name", "Full Name")} <span className="text-red-500">*</span></label>
+        <input type="text" value={form.name} placeholder={t("portal.profile.full_name_ph", "Contact's full name")}
           onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputCls} />
       </div>
       <div>
-        <label className={labelCls}>Relationship</label>
+        <label className={labelCls}>{t("portal.profile.relationship", "Relationship")}</label>
         <div className="relative">
           <select value={form.relationship} onChange={(e) => setForm({ ...form, relationship: e.target.value })}
             className={`${inputCls} appearance-none pr-8`}>
-            <option value="">— Select —</option>
-            {RELATIONSHIPS.map((r) => <option key={r} value={r}>{r}</option>)}
+            <option value="">{t("portal.profile.select_placeholder", "— Select —")}</option>
+            {RELATIONSHIPS.map((r) => <option key={r.value} value={r.value}>{t(r.key, r.value)}</option>)}
           </select>
           <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
         </div>
       </div>
       <div>
-        <label className={labelCls}>Phone</label>
+        <label className={labelCls}>{t("portal.profile.phone", "Phone")}</label>
         <input type="tel" value={form.phone} placeholder="010-0000-0000"
           onChange={(e) => setForm({ ...form, phone: e.target.value })} className={inputCls} />
       </div>
       <div>
-        <label className={labelCls}>Email</label>
-        <input type="email" value={form.email} placeholder="contact@email.com"
+        <label className={labelCls}>{t("portal.profile.email", "Email")}</label>
+        <input type="email" value={form.email} placeholder={t("portal.profile.email_ph", "contact@email.com")}
           onChange={(e) => setForm({ ...form, email: e.target.value })} className={inputCls} />
       </div>
       <div className="sm:col-span-2 flex items-center gap-2">
@@ -744,7 +759,7 @@ function ContactForm({ form, setForm }: { form: EmergencyForm; setForm: (f: Emer
           onChange={(e) => setForm({ ...form, is_primary: e.target.checked })}
           className="h-4 w-4 rounded accent-red-600" />
         <label htmlFor="is_primary" className="text-xs text-gray-600 select-none cursor-pointer">
-          Set as primary emergency contact
+          {t("portal.profile.set_as_primary", "Set as primary emergency contact")}
         </label>
       </div>
     </div>

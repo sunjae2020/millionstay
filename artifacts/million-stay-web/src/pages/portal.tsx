@@ -45,6 +45,7 @@ function isUnpaid(inv: MyInvoice) {
 /* ── recent activity row ─────────────────────────────────── */
 
 function ActivityRowMobile({ b }: { b: MyBooking }) {
+  const { t } = useTranslation();
   return (
     <Link href={`/portal/bookings/${b.id}`}
       className="flex flex-col gap-2 rounded-xl border border-card-border bg-card p-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
@@ -52,7 +53,7 @@ function ActivityRowMobile({ b }: { b: MyBooking }) {
         <span className="font-mono text-xs text-muted-foreground truncate">{b.booking_reference ?? `#${b.id}`}</span>
         <StatusBadge status={b.booking_status} />
       </div>
-      <p className="font-semibold text-sm text-card-foreground truncate">{b.space_name ?? b.property_name ?? "Stay"}</p>
+      <p className="font-semibold text-sm text-card-foreground truncate">{b.space_name ?? b.property_name ?? t("portal.home.stay_fallback", "Stay")}</p>
       <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
         <span className="inline-flex items-center gap-1"><CalendarRange className="h-3.5 w-3.5" />{formatDate(b.check_in_date)} → {formatDate(b.check_out_date)}</span>
         {b.total_amount && <span className="tabular-nums font-medium text-card-foreground">{formatMoney(Number(b.total_amount), b.currency ?? "AUD")}</span>}
@@ -203,7 +204,7 @@ export default function Portal() {
                         onClick={() => setLocation(`/portal/bookings/${b.id}`)}>
                         <td className="px-4 py-3 font-mono text-xs text-muted-foreground whitespace-nowrap">{b.booking_reference ?? `#${b.id}`}</td>
                         <td className="px-4 py-3 font-medium text-card-foreground">
-                          <span className="block truncate max-w-[180px]">{b.space_name ?? b.property_name ?? "Stay"}</span>
+                          <span className="block truncate max-w-[180px]">{b.space_name ?? b.property_name ?? t("portal.home.stay_fallback", "Stay")}</span>
                         </td>
                         <td className="px-4 py-3 text-muted-foreground whitespace-nowrap tabular-nums">{formatDate(b.check_in_date)} → {formatDate(b.check_out_date)}</td>
                         <td className="px-4 py-3"><StatusBadge status={b.booking_status} /></td>

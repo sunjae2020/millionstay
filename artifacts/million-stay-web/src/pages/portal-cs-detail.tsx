@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useParams, useLocation, Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { useAuthStore } from "@/lib/store";
 import { PortalLayout } from "@/components/portal-layout";
 import { Button } from "@/components/ui/button";
@@ -27,9 +28,20 @@ async function gFetch<T>(path: string, opts?: RequestInit): Promise<T> {
   return res.json();
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  Open: "Open", InProgress: "In Progress", Resolved: "Resolved", Closed: "Closed",
+const STATUS_KEYS: Record<string, string> = {
+  Open: "status_open", InProgress: "status_in_progress", Resolved: "status_resolved", Closed: "status_closed",
 };
+/* Render-time label helpers (never call t() at module scope) */
+function statusLabel(t: TFunction, status: string): string {
+  const k = STATUS_KEYS[status];
+  return k ? t(`portal.cs.${k}`, status) : status;
+}
+function catLabel(t: TFunction, value: string): string {
+  return t(`portal.cs.cat_${String(value).toLowerCase()}`, value);
+}
+function prioLabel(t: TFunction, value: string): string {
+  return t(`portal.cs.prio_${String(value).toLowerCase()}`, value);
+}
 const STATUS_COLORS: Record<string, string> = {
   Open: "bg-blue-100 text-blue-700",
   InProgress: "bg-amber-100 text-amber-700",
@@ -138,7 +150,7 @@ export default function PortalCsDetail() {
       qc.invalidateQueries({ queryKey: ["cs-ticket", id] });
       qc.invalidateQueries({ queryKey: ["guest-cs-tickets"] });
     },
-    onError: (e: any) => toast({ title: "Error", description: e?.error?.message || e?.message || "Failed to send message.", variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("portal.cs.error", "Error"), description: e?.error?.message || e?.message || t("portal.cs.send_failed", "Failed to send message."), variant: "destructive" }),
   });
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -159,7 +171,7 @@ export default function PortalCsDetail() {
         if (j.success) setImages(prev => [...prev, { url: j.url, name: file.name }]);
       }
     } catch {
-      toast({ title: "Upload failed", variant: "destructive" });
+      toast({ title: t("portal.cs.upload_failed", "Upload failed"), variant: "destructive" });
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -184,22 +196,22 @@ export default function PortalCsDetail() {
     return (
       <PortalLayout active="/portal/cs">
         <div className="flex-1 max-w-3xl mx-auto w-full px-4 py-8 text-center">
-          <p className="text-gray-500">Inquiry not found.</p>
-          <Link href="/portal/cs"><Button className="mt-4">Back to Inquiries</Button></Link>
+          <p className="text-gray-500">{t("portal.cs.not_found", "Inquiry not found.")}</p>
+          <Link href="/portal/cs"><Button className="mt-4">{t("portal.cs.back_to_inquiries", "Back to Inquiries")}</Button></Link>
         </div>
       </PortalLayout>
     );
   }
 
   const stColor = STATUS_COLORS[ticket.status] ?? STATUS_COLORS.Open;
-  const stLabel = STATUS_LABELS[ticket.status] ?? "Open";
+  const stLabel = statusLabel(t, ticket.status);
   const isClosed = ticket.status === "Closed";
 
   return (
     <PortalLayout active="/portal/cs">
       <div className="flex-1 max-w-3xl mx-auto w-full px-4 py-8">
         <button onClick={() => setLocation("/portal/cs")} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary mb-5 transition-colors">
-          <ArrowLeft className="h-4 w-4" /> Back to Inquiries
+          <ArrowLeft className="h-4 w-4" /> {t("portal.cs.back_to_inquiries", "Back to Inquiries")}
         </button>
 
         {/* Ticket Header */}
@@ -209,17 +221,17 @@ export default function PortalCsDetail() {
               <div className="flex items-center gap-2 flex-wrap mb-2">
                 <span className="text-xs font-mono text-gray-400">{ticket.ticket_ref}</span>
                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${CATEGORY_COLORS[ticket.category] ?? "bg-gray-100 text-gray-600"}`}>
-                  {ticket.category}
+                  {catLabel(t, ticket.category)}
                 </span>
                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${stColor}`}>
                   <StatusIcon status={ticket.status} />{stLabel}
                 </span>
                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${PRIORITY_COLORS[ticket.priority] ?? ""}`}>
-                  {ticket.priority}
+                  {prioLabel(t, ticket.priority)}
                 </span>
               </div>
               <h1 className="text-lg font-bold text-gray-900">{ticket.subject}</h1>
-              <p className="text-xs text-gray-400 mt-1">Submitted {format(new Date(ticket.created_at), "dd MMM yyyy, hh:mm a")}</p>
+              <p className="text-xs text-gray-400 mt-1">{t("portal.cs.submitted_on", "Submitted {{date}}", { date: format(new Date(ticket.created_at), "dd MMM yyyy, hh:mm a") })}</p>
             </div>
           </div>
 
@@ -227,7 +239,7 @@ export default function PortalCsDetail() {
             <div className="mt-3 pt-3 border-t border-gray-50">
               <p className="text-xs text-gray-500 flex items-center gap-1.5 flex-wrap">
                 <Calendar className="h-3.5 w-3.5 text-primary" />
-                <span>Related booking: <strong>{ticket.booking.booking_ref}</strong> ({ticket.booking.booking_status})</span>
+                <span>{t("portal.cs.related_booking", "Related booking:")} <strong>{ticket.booking.booking_ref}</strong> ({ticket.booking.booking_status})</span>
                 {ticket.booking.check_in_date && (
                   <span className="text-gray-400">· {format(new Date(ticket.booking.check_in_date), "dd/MM/yyyy")} → {ticket.booking.check_out_date ? format(new Date(ticket.booking.check_out_date), "dd/MM/yyyy") : "—"}</span>
                 )}
@@ -256,7 +268,7 @@ export default function PortalCsDetail() {
                       </div>
                     )}
                     <span className="text-xs text-gray-400">
-                      {isGuest ? "You" : `${APP_NAME} Support`} · {format(new Date(msg.created_at), "dd/MM/yyyy hh:mm a")}
+                      {isGuest ? t("portal.cs.sender_you", "You") : t("portal.cs.sender_support", "{{appName}} Support", { appName: APP_NAME })} · {format(new Date(msg.created_at), "dd/MM/yyyy hh:mm a")}
                     </span>
                   </div>
                   <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
@@ -278,7 +290,7 @@ export default function PortalCsDetail() {
                     <div className={`flex gap-2 mt-2 flex-wrap ${isGuest ? "justify-end" : "justify-start"}`}>
                       {parsedImgs.map((url, i) => (
                         <a key={i} href={url} target="_blank" rel="noopener noreferrer">
-                          <img src={url} alt={`attachment ${i + 1}`} className="h-24 w-24 object-cover rounded-lg border border-gray-200 hover:opacity-90 transition-opacity" />
+                          <img src={url} alt={t("portal.cs.attachment_n", "attachment {{n}}", { n: i + 1 })} className="h-24 w-24 object-cover rounded-lg border border-gray-200 hover:opacity-90 transition-opacity" />
                         </a>
                       ))}
                     </div>
@@ -293,12 +305,12 @@ export default function PortalCsDetail() {
         {/* Reply Box */}
         {isClosed ? (
           <div className="bg-gray-100 rounded-xl p-4 text-center text-sm text-gray-500">
-            This inquiry is closed. <Link href="/portal/cs/new"><span className="text-primary font-medium cursor-pointer hover:underline">Submit a new inquiry</span></Link> if you need further assistance.
+            {t("portal.cs.closed_notice", "This inquiry is closed.")} <Link href="/portal/cs/new"><span className="text-primary font-medium cursor-pointer hover:underline">{t("portal.cs.submit_new_inquiry", "Submit a new inquiry")}</span></Link> {t("portal.cs.need_assistance", "if you need further assistance.")}
           </div>
         ) : (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
             <Textarea
-              placeholder="Type your reply…"
+              placeholder={t("portal.cs.reply_placeholder", "Type your reply…")}
               value={reply}
               onChange={e => setReply(e.target.value)}
               rows={3}
@@ -328,7 +340,7 @@ export default function PortalCsDetail() {
                 className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-primary transition-colors px-2 py-1 rounded-lg hover:bg-gray-50"
               >
                 {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
-                Photo
+                {t("portal.cs.photo", "Photo")}
               </button>
               <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
               <div className="flex-1" />
@@ -338,7 +350,7 @@ export default function PortalCsDetail() {
                 className="bg-primary hover:bg-primary/90 text-white gap-2"
               >
                 {sendMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                Send
+                {t("portal.cs.send", "Send")}
               </Button>
             </div>
           </div>

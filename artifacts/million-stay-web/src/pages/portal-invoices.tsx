@@ -73,7 +73,7 @@ function InvoiceCard({ inv }: { inv: MyInvoice }) {
             <span className="font-mono text-sm font-semibold text-gray-800">
               {inv.invoice_ref ?? `INV-${inv.id}`}
             </span>
-            <StatusBadge status={inv.status ?? "Draft"} label={cfg.label} icon={<StatusIcon className="h-3 w-3" />} />
+            <StatusBadge status={inv.status ?? "Draft"} label={t("portal.invoices.status_" + cfg.label.toLowerCase(), cfg.label)} icon={<StatusIcon className="h-3 w-3" />} />
           </div>
 
           {/* Description (monthly label) — prominent */}
@@ -97,7 +97,7 @@ function InvoiceCard({ inv }: { inv: MyInvoice }) {
         {/* Amount */}
         <div className="text-right shrink-0">
           <p className="text-base font-bold text-gray-900">{fmtAmt(inv.amount, inv.currency ?? "AUD")}</p>
-          <p className="text-xs text-gray-400 mt-0.5">Due {fmtDate(inv.due_date)}</p>
+          <p className="text-xs text-gray-400 mt-0.5">{t("portal.invoices.due", "Due {{date}}", { date: fmtDate(inv.due_date) })}</p>
         </div>
       </div>
 
@@ -110,7 +110,7 @@ function InvoiceCard({ inv }: { inv: MyInvoice }) {
           {isPaid && inv.paid_at && (
             <span className="text-green-700 font-medium">
               {fmtDate(inv.paid_at)}
-              {inv.payment_method && ` · ${PAYMENT_METHOD_LABELS[inv.payment_method] ?? inv.payment_method}`}
+              {inv.payment_method && ` · ${t("portal.invoices.pm_" + inv.payment_method, PAYMENT_METHOD_LABELS[inv.payment_method] ?? inv.payment_method)}`}
             </span>
           )}
           {!isPaid && isOverdue && (

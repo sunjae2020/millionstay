@@ -47,7 +47,7 @@ function BookingCard({ booking }: { booking: Booking }) {
         <div className="flex-1 p-4 space-y-2">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="font-semibold text-gray-900">{booking.space_name ?? "Room"}</p>
+              <p className="font-semibold text-gray-900">{booking.space_name ?? t("portal.bookings.room_fallback", "Room")}</p>
               {booking.property_address && (
                 <div className="flex items-center gap-1 text-xs text-gray-500 mt-0.5">
                   <MapPin className="h-3 w-3" />
@@ -123,7 +123,7 @@ export default function PortalBookings() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm text-amber-700">
-                <span className="font-semibold">{b.space_name ?? "Your booking"}</span> — {t("portal.bookings.payment_pending")}
+                <span className="font-semibold">{b.space_name ?? t("portal.bookings.your_booking_fallback", "Your booking")}</span> — {t("portal.bookings.payment_pending")}
               </p>
               <p className="text-xs text-amber-600 mt-0.5">{t("portal.bookings.ref")}: <span className="font-mono">{b.booking_ref}</span></p>
             </div>
