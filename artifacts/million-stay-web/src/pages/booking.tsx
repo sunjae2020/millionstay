@@ -7,6 +7,8 @@ import { z } from "zod";
 import { useGetPublicSpace, getGetPublicSpaceQueryKey, useCreateGuestBooking, useGuestRegister, useGuestLogin } from "@/lib/guest-api";
 import { useAuthStore } from "@/lib/store";
 import { Navbar } from "@/components/navbar";
+import { DevNavbar } from "@/components/development/DevLayout";
+import { isDevelopmentSite } from "@/lib/site-mode";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/ui/date-input";
@@ -46,6 +48,10 @@ const stayDetailsSchema = z.object({
 });
 
 type StayDetailsData = z.infer<typeof stayDetailsSchema>;
+
+// MetHeim (development instance) wears the shared DevLayout header so the booking
+// flow reads as the same site as the landing page. See docs convention.
+const DEV_SITE = isDevelopmentSite();
 
 export default function Booking() {
   const { spaceId } = useParams<{ spaceId: string }>();
@@ -159,7 +165,7 @@ export default function Booking() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Navbar />
+        {DEV_SITE ? <DevNavbar /> : <Navbar />}
         <div className="container py-8">
           <Skeleton className="h-64 w-full rounded-xl" />
         </div>
@@ -170,7 +176,7 @@ export default function Booking() {
   if (!space) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Navbar />
+        {DEV_SITE ? <DevNavbar /> : <Navbar />}
         <div className="container py-16 text-center">
           <p className="text-muted-foreground">{t("booking.space_not_found")}</p>
           <Button onClick={() => setLocation("/search")} className="mt-4">{t("booking.browse_spaces")}</Button>
@@ -187,7 +193,7 @@ export default function Booking() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Navbar />
+      {DEV_SITE ? <DevNavbar /> : <Navbar />}
       <div className="container py-8 max-w-3xl">
         <Link href={`/spaces/${space.id}`} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6 w-fit">
           <ChevronLeft className="h-4 w-4" />

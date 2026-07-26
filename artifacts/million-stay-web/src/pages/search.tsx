@@ -7,6 +7,8 @@ import { FALLBACK_SPACES } from "@/lib/fallback-spaces";
 import { Navbar } from "@/components/navbar";
 import { SpaceCard } from "@/components/space-card";
 import { Footer } from "@/components/footer";
+import { DevNavbar, DevFooter } from "@/components/development/DevLayout";
+import { isDevelopmentSite } from "@/lib/site-mode";
 import { Slider } from "@/components/ui/slider";
 import {
   MapPin, X, ChevronDown, ChevronUp, Search as SearchIcon,
@@ -21,6 +23,12 @@ const PAGE_SIZE = 9;
 type SuburbDropdown = "suburb" | null;
 
 const today = new Date().toISOString().split("T")[0];
+
+// On the single-building "development" instance (MetHeim) the shared search page
+// must wear the same shell as the landing site — the DevLayout logo/menu header
+// and navy footer — so the header, mobile menu and footer read identically to
+// the main landing page. Standard instances keep the MillionStay Navbar/Footer.
+const DEV_SITE = isDevelopmentSite();
 
 export default function Search() {
   const { t } = useTranslation();
@@ -187,7 +195,7 @@ export default function Search() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#faf9f7]">
-      <Navbar />
+      {DEV_SITE ? <DevNavbar /> : <Navbar />}
 
       {/* ── Hero Banner ── */}
       <div className="relative h-52 md:h-60 overflow-hidden shrink-0">
@@ -209,7 +217,7 @@ export default function Search() {
       {/* ══════════════════════════════════════════════════════════
           Sticky Search Area
       ══════════════════════════════════════════════════════════ */}
-      <div className="sticky top-16 z-40 bg-white shadow-sm shrink-0">
+      <div className={`sticky ${DEV_SITE ? "top-20 lg:top-24" : "top-16"} z-40 bg-white shadow-sm shrink-0`}>
 
         {/* ── Row 1: Basic Search ── */}
         <div className="border-b border-gray-100">
@@ -669,7 +677,7 @@ export default function Search() {
               </>
             )}
           </div>
-          <Footer />
+          {DEV_SITE ? <DevFooter /> : <Footer />}
         </div>
 
       </div>
