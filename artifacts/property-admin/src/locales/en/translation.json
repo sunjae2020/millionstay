@@ -188,7 +188,17 @@
     "not_configured": "Not configured",
     "connected": "Connected",
     "error": "Error",
-    "space_col": "Space"
+    "space_col": "Space",
+    "tabs": {
+      "overview": "Overview",
+      "reservations": "Reservations",
+      "channels": "Channels",
+      "crm": "CRM",
+      "finance": "Finance",
+      "operations": "Operations",
+      "homestay_ops": "Homestay Ops",
+      "floor_board": "Floor Board"
+    }
   },
   "login": {
     "title": "Admin Login",
@@ -3617,5 +3627,24 @@
     "btn_forward": "Forward",
     "btn_close": "Close",
     "forwarded_on": "forwarded"
+  },
+  "dash_floorboard": {
+    "title": "Floor board",
+    "subtitle": "Every unit by floor and type",
+    "by_status": "By status",
+    "by_owner": "By owner",
+    "kpi_total": "Total units",
+    "floor": "Floor",
+    "sum": "Sum",
+    "loading": "Loading…",
+    "empty": "No floor-numbered units for this property.",
+    "hint": "Click a unit to open its detail. Click a legend chip to highlight.",
+    "status_vacant": "Vacant",
+    "status_leased": "Leased",
+    "status_sold": "Sold",
+    "status_rented_out": "Rented out",
+    "status_unavailable": "Unavailable",
+    "status_active": "Active",
+    "status_inactive": "Inactive"
   }
 }

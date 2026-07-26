@@ -188,7 +188,17 @@
     "not_configured": "未配置",
     "connected": "已连接",
     "error": "错误",
-    "space_col": "空间"
+    "space_col": "空间",
+    "tabs": {
+      "overview": "概览",
+      "reservations": "预订",
+      "channels": "渠道",
+      "crm": "CRM",
+      "finance": "财务",
+      "operations": "运营",
+      "homestay_ops": "寄宿运营",
+      "floor_board": "楼层看板"
+    }
   },
   "login": {
     "title": "管理员登录",
@@ -3617,5 +3627,24 @@
     "btn_forward": "转发",
     "btn_close": "关闭",
     "forwarded_on": "已转发"
+  },
+  "dash_floorboard": {
+    "title": "楼层与户型看板",
+    "subtitle": "按楼层和户型显示所有单元",
+    "by_status": "按状态",
+    "by_owner": "按所有者",
+    "kpi_total": "单元总数",
+    "floor": "楼层",
+    "sum": "合计",
+    "loading": "加载中…",
+    "empty": "该物业没有带楼层信息的单元。",
+    "hint": "点击单元查看详情，点击图例高亮显示。",
+    "status_vacant": "空置",
+    "status_leased": "已租",
+    "status_sold": "已售",
+    "status_rented_out": "出租",
+    "status_unavailable": "不可租",
+    "status_active": "启用",
+    "status_inactive": "停用"
   }
 }

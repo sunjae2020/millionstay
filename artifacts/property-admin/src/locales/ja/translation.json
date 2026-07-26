@@ -188,7 +188,17 @@
     "not_configured": "未設定",
     "connected": "接続済み",
     "error": "エラー",
-    "space_col": "スペース"
+    "space_col": "スペース",
+    "tabs": {
+      "overview": "概要",
+      "reservations": "予約",
+      "channels": "チャネル",
+      "crm": "CRM",
+      "finance": "財務",
+      "operations": "運用",
+      "homestay_ops": "ホームステイ運用",
+      "floor_board": "フロア一覧"
+    }
   },
   "login": {
     "title": "管理者ログイン",
@@ -3617,5 +3627,24 @@
     "btn_forward": "転送",
     "btn_close": "終了",
     "forwarded_on": "転送"
+  },
+  "dash_floorboard": {
+    "title": "フロア・タイプ別状況",
+    "subtitle": "階・タイプ別の全戸状況",
+    "by_status": "ステータス別",
+    "by_owner": "所有者別",
+    "kpi_total": "総戸数",
+    "floor": "階",
+    "sum": "合計",
+    "loading": "読み込み中…",
+    "empty": "この物件には階数付きの住戸がありません。",
+    "hint": "住戸をクリックすると詳細へ、凡例をクリックすると強調表示します。",
+    "status_vacant": "空室",
+    "status_leased": "賃貸",
+    "status_sold": "分譲",
+    "status_rented_out": "貸出",
+    "status_unavailable": "賃貸不可",
+    "status_active": "有効",
+    "status_inactive": "無効"
   }
 }
