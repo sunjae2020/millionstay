@@ -1478,7 +1478,11 @@
     "specialty_linen": "布草",
     "specialty_hvac": "暖通",
     "specialty_gardening": "园艺",
-    "specialty_pest": "消杀"
+    "specialty_pest": "消杀",
+    "tab_overview": "概览",
+    "tab_accounting": "作业 & 结算",
+    "tab_photos": "照片",
+    "tab_cs": "客服工单"
   },
   "receipt": {
     "no_receipts": "没有收据",
@@ -3621,5 +3625,34 @@
     "btn_forward": "转发",
     "btn_close": "关闭",
     "forwarded_on": "已转发"
+  },
+  "service_host_acct": {
+    "revenue": "产生营收",
+    "outstanding": "未付结算",
+    "approved": "已批准",
+    "paid": "已支付",
+    "payouts": "合作方结算",
+    "add_payout": "登记结算",
+    "amount": "金额",
+    "ref": "编号",
+    "no_payouts": "暂无结算",
+    "gl_note": "计提: 借 外包费用 / 贷 合作方应付款。支付: 借 应付款 / 贷 现金。",
+    "jobs": "服务作业",
+    "no_jobs": "无作业",
+    "booking": "预订",
+    "price": "金额",
+    "work_orders": "工单",
+    "cost": "成本",
+    "approve": "批准",
+    "mark_paid": "标记已付"
+  },
+  "service_host_photos": {
+    "empty": "暂无作业照片"
+  },
+  "service_host_cs": {
+    "empty": "该合作方暂无客服工单",
+    "ref": "编号",
+    "subject": "主题",
+    "category": "类别"
   }
 }

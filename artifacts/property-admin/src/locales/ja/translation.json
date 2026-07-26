@@ -1478,7 +1478,11 @@
     "specialty_linen": "リネン",
     "specialty_hvac": "空調",
     "specialty_gardening": "造園",
-    "specialty_pest": "害虫駆除"
+    "specialty_pest": "害虫駆除",
+    "tab_overview": "概要",
+    "tab_accounting": "ジョブ & 精算",
+    "tab_photos": "写真",
+    "tab_cs": "CSチケット"
   },
   "receipt": {
     "no_receipts": "領収書が見つかりません",
@@ -3621,5 +3625,34 @@
     "btn_forward": "転送",
     "btn_close": "終了",
     "forwarded_on": "転送"
+  },
+  "service_host_acct": {
+    "revenue": "発生売上",
+    "outstanding": "未払い精算",
+    "approved": "承認済み",
+    "paid": "支払済み",
+    "payouts": "パートナー精算",
+    "add_payout": "精算を登録",
+    "amount": "金額",
+    "ref": "番号",
+    "no_payouts": "精算履歴なし",
+    "gl_note": "計上: 借方 外注費 / 貸方 パートナー未払金。支払: 借方 未払金 / 貸方 現金。",
+    "jobs": "サービスジョブ",
+    "no_jobs": "ジョブなし",
+    "booking": "予約",
+    "price": "金額",
+    "work_orders": "作業指示",
+    "cost": "原価",
+    "approve": "承認",
+    "mark_paid": "支払済みにする"
+  },
+  "service_host_photos": {
+    "empty": "ジョブ写真がありません"
+  },
+  "service_host_cs": {
+    "empty": "このパートナーの問い合わせはありません",
+    "ref": "番号",
+    "subject": "件名",
+    "category": "分類"
   }
 }

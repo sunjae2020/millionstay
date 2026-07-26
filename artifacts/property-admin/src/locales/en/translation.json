@@ -1478,7 +1478,11 @@
     "specialty_linen": "Linen",
     "specialty_hvac": "HVAC",
     "specialty_gardening": "Gardening",
-    "specialty_pest": "Pest control"
+    "specialty_pest": "Pest control",
+    "tab_overview": "Overview",
+    "tab_accounting": "Jobs & Payouts",
+    "tab_photos": "Photos",
+    "tab_cs": "CS Tickets"
   },
   "receipt": {
     "no_receipts": "No receipts found",
@@ -3621,5 +3625,34 @@
     "btn_forward": "Forward",
     "btn_close": "Close",
     "forwarded_on": "forwarded"
+  },
+  "service_host_acct": {
+    "revenue": "Revenue generated",
+    "outstanding": "Outstanding payout",
+    "approved": "Approved",
+    "paid": "Paid",
+    "payouts": "Partner payouts",
+    "add_payout": "Record payout",
+    "amount": "Amount",
+    "ref": "Ref",
+    "no_payouts": "No payouts yet",
+    "gl_note": "Accrual posts Dr Contractor Expense / Cr Contractor Payable; payment posts Dr Payable / Cr Cash.",
+    "jobs": "Service jobs",
+    "no_jobs": "No jobs",
+    "booking": "Booking",
+    "price": "Price",
+    "work_orders": "Work orders",
+    "cost": "Cost",
+    "approve": "Approve",
+    "mark_paid": "Mark paid"
+  },
+  "service_host_photos": {
+    "empty": "No job photos yet"
+  },
+  "service_host_cs": {
+    "empty": "No support tickets from this partner",
+    "ref": "Ref",
+    "subject": "Subject",
+    "category": "Category"
   }
 }
