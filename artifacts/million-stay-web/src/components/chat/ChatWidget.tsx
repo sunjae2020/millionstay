@@ -48,9 +48,6 @@ export default function ChatWidget() {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [toolHint, setToolHint] = useState<string | null>(null);
-  // Bottom offset (px) for the launcher so it rests above the footer instead of
-  // covering its copyright / legal links.
-  const [btnBottom, setBtnBottom] = useState(20);
 
   const sessionId = useRef<string>("");
   const conversationId = useRef<string | null>(null);
@@ -58,25 +55,6 @@ export default function ChatWidget() {
 
   useEffect(() => { sessionId.current = getSessionId(); }, []);
 
-  // Track the page footer: once it scrolls into view, lift the launcher so it
-  // sits just above the footer's top edge and never overlaps its content.
-  useEffect(() => {
-    const footer = document.querySelector("footer");
-    if (!footer) return;
-    const update = () => {
-      const rect = footer.getBoundingClientRect();
-      const overlap = window.innerHeight - rect.top; // footer height within viewport
-      const max = window.innerHeight - 96;
-      setBtnBottom(Math.min(max, Math.max(20, overlap + 16)));
-    };
-    update();
-    window.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
-    return () => {
-      window.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
-    };
-  }, []);
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, toolHint, open]);
@@ -173,8 +151,8 @@ export default function ChatWidget() {
       <button
         aria-label={open ? t("chat.close") : t("chat.open")}
         onClick={() => setOpen((o) => !o)}
-        className="fixed right-5 z-[60] flex h-14 w-14 items-center justify-center rounded-full text-white shadow-lg transition-[transform,bottom] duration-200 hover:scale-105 focus:outline-none"
-        style={{ backgroundColor: ACCENT, bottom: open ? 20 : btnBottom }}
+        className="fixed bottom-5 right-5 z-[60] flex h-14 w-14 items-center justify-center rounded-full text-white shadow-lg transition-transform duration-200 hover:scale-105 focus:outline-none"
+        style={{ backgroundColor: ACCENT }}
       >
         {open ? <X className="h-6 w-6" /> : <MessageCircle className="h-7 w-7" />}
       </button>
