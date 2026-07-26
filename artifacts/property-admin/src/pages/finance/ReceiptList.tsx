@@ -131,7 +131,7 @@ export default function ReceiptList() {
         align: "right",
         cell: (r) => (
           <Link href={`/finance/invoices/${r.id}`}>
-            <button className="p-1.5 rounded hover:bg-muted transition-colors" title="View receipt">
+            <button className="p-1.5 rounded hover:bg-muted transition-colors" title={t("invoice.view_receipt")}>
               <Download className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
           </Link>

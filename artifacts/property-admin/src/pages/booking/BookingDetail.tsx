@@ -276,7 +276,7 @@ export default function BookingDetail() {
             <Link href={`/contracts/contracts/${linkedContract.id}`}>
               <Button variant="outline" size="sm" className="gap-1.5 border-blue-300 text-blue-700 hover:bg-blue-50">
                 <FileText className="h-3.5 w-3.5" />
-                View Contract <span className="text-xs font-mono opacity-70">{linkedContract.contract_ref}</span>
+                {t("booking.view_contract")} <span className="text-xs font-mono opacity-70">{linkedContract.contract_ref}</span>
                 <ExternalLink className="h-3 w-3" />
               </Button>
             </Link>
@@ -397,11 +397,11 @@ export default function BookingDetail() {
             </div>
           )}
           <div>
-            <Label>Product / Accommodation Package</Label>
+            <Label>{t("booking.label_product")}</Label>
             <Controller name="product_id" control={control} render={({ field }) => (
               <LookupSelect
                 lookupUrl="/api/v1/lookup/products"
-                placeholder="Select accommodation product…"
+                placeholder={t("booking.placeholder_product")}
                 value={field.value}
                 onChange={field.onChange}
                 displayValue={(booking as any)?.product_name ?? (booking as any)?.contract_product_name ?? undefined}
@@ -464,7 +464,7 @@ export default function BookingDetail() {
               {[
                 { id: "documents", label: t("booking.tab_documents") },
                 { id: "condition", label: t("booking.tab_condition") },
-                { id: "services", label: `Services${bookingServices.length ? ` (${bookingServices.length})` : ""}` },
+                { id: "services", label: `${t("booking.services")}${bookingServices.length ? ` (${bookingServices.length})` : ""}` },
                 { id: "invoices", label: t("booking.tab_invoices") },
                 { id: "notes", label: t("booking.tab_notes") },
                 { id: "activities", label: t("booking.tab_activities") }
@@ -482,7 +482,7 @@ export default function BookingDetail() {
             {activeTab === "documents" && (
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <h4 className="font-medium text-sm">KYC Documents</h4>
+                  <h4 className="font-medium text-sm">{t("booking.kyc_documents")}</h4>
                   <Button size="sm" variant="outline" onClick={() => setUploadDocOpen(true)}>
                     <Upload className="w-3.5 h-3.5 mr-1" /> {t("booking.btn_upload_doc")}
                   </Button>
@@ -551,23 +551,23 @@ export default function BookingDetail() {
             {activeTab === "services" && (
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <h4 className="font-medium text-sm">Services</h4>
+                  <h4 className="font-medium text-sm">{t("booking.services")}</h4>
                   <Button size="sm" variant="outline" onClick={() => setAddServiceOpen(true)}>
-                    <Plus className="w-3.5 h-3.5 mr-1" /> Add Service
+                    <Plus className="w-3.5 h-3.5 mr-1" /> {t("booking.add_service")}
                   </Button>
                 </div>
                 <div className="rounded-lg border bg-white overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50 border-b">
                       <tr>
-                        {["Service Name", "Type", "Qty", "Unit Price", "Total", "Billing", "Frequency", "Status", "Notes", ""].map((h) => (
-                          <th key={h} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>
+                        {[t("booking.col_service_name"), t("common.type"), t("booking.col_qty"), t("booking.col_unit_price"), t("common.total"), t("booking.col_billing"), t("booking.col_frequency"), t("common.status"), t("common.notes"), ""].map((h, i) => (
+                          <th key={i} className="text-left px-4 py-3 font-medium text-muted-foreground">{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {!bookingServices.length ? (
-                        <tr><td colSpan={10} className="text-center py-8 text-muted-foreground">No services added yet</td></tr>
+                        <tr><td colSpan={10} className="text-center py-8 text-muted-foreground">{t("booking.no_services")}</td></tr>
                       ) : bookingServices.map((svc: any) => (
                         <tr key={svc.id} className="border-b hover:bg-gray-50">
                           <td className="px-4 py-3 font-medium">{svc.service_name ?? svc.name}</td>
@@ -587,10 +587,10 @@ export default function BookingDetail() {
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-1">
-                              <Button size="sm" variant="ghost" className="h-7" title="Edit status & notes" onClick={() => { setEditSvc(svc); setEditSvcStatus(svc.status ?? "Active"); setEditSvcNotes(svc.notes ?? ""); }}>
+                              <Button size="sm" variant="ghost" className="h-7" title={t("booking.edit_status_notes")} onClick={() => { setEditSvc(svc); setEditSvcStatus(svc.status ?? "Active"); setEditSvcNotes(svc.notes ?? ""); }}>
                                 <FileText className="w-3.5 h-3.5" />
                               </Button>
-                              <Button size="sm" variant="ghost" className="h-7" title="View job report photos" onClick={() => setPhotosSvcId(svc.id)}>
+                              <Button size="sm" variant="ghost" className="h-7" title={t("booking.view_job_photos")} onClick={() => setPhotosSvcId(svc.id)}>
                                 <Camera className="w-3.5 h-3.5" />
                               </Button>
                               <Button size="sm" variant="ghost" className="h-7 text-red-500 hover:text-red-700" onClick={() => removeServiceMutation.mutate(svc.id)}>
@@ -657,12 +657,12 @@ export default function BookingDetail() {
 
             {activeTab === "notes" && (
               <div className="rounded-lg border bg-white p-6 text-muted-foreground text-sm text-center py-12">
-                {t("booking.tab_notes")} feature coming soon.
+                {t("booking.notes_coming_soon")}
               </div>
             )}
             {activeTab === "activities" && (
               <div className="rounded-lg border bg-white p-6 text-muted-foreground text-sm text-center py-12">
-                {t("booking.tab_activities")} log coming soon.
+                {t("booking.activities_coming_soon")}
               </div>
             )}
           </>
@@ -728,7 +728,7 @@ export default function BookingDetail() {
             </div>
             <div>
               <Label>{t("booking.dlg_file_url")}</Label>
-              <Input value={docUrl} onChange={(e) => setDocUrl(e.target.value)} placeholder="https://..." className="mt-1" />
+              <Input value={docUrl} onChange={(e) => setDocUrl(e.target.value)} placeholder={t("booking.placeholder_url")} className="mt-1" />
             </div>
             <div>
               <Label>{t("booking.dlg_expiry_date")}</Label>
@@ -750,49 +750,49 @@ export default function BookingDetail() {
       {/* Add Service Dialog */}
       <Dialog open={addServiceOpen} onOpenChange={setAddServiceOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Add Service</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("booking.add_service")}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label>Service Name *</Label>
-              <Input value={svcName} onChange={(e) => setSvcName(e.target.value)} placeholder="Cleaning, Parking, Internet..." className="mt-1" />
+              <Label>{t("booking.col_service_name")} *</Label>
+              <Input value={svcName} onChange={(e) => setSvcName(e.target.value)} placeholder={t("booking.placeholder_service_name")} className="mt-1" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Type</Label>
+                <Label>{t("common.type")}</Label>
                 <Select value={svcType} onValueChange={setSvcType}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="one_time">One-time</SelectItem>
-                    <SelectItem value="recurring">Recurring</SelectItem>
-                    <SelectItem value="scheduled">Scheduled</SelectItem>
+                    <SelectItem value="one_time">{t("booking.type_one_time")}</SelectItem>
+                    <SelectItem value="recurring">{t("booking.type_recurring")}</SelectItem>
+                    <SelectItem value="scheduled">{t("common.scheduled")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>Quantity</Label>
+                <Label>{t("booking.label_quantity")}</Label>
                 <Input type="number" value={svcQty} onChange={(e) => setSvcQty(e.target.value)} min={1} className="mt-1" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Unit Price (AUD)</Label>
+                <Label>{t("booking.label_unit_price_aud")}</Label>
                 <Input type="number" value={svcPrice} onChange={(e) => setSvcPrice(e.target.value)} placeholder="0.00" className="mt-1" />
               </div>
               <div>
-                <Label>Billing Frequency</Label>
+                <Label>{t("booking.label_billing_frequency")}</Label>
                 <Select value={svcFreq} onValueChange={setSvcFreq}>
-                  <SelectTrigger className="mt-1"><SelectValue placeholder="Select..." /></SelectTrigger>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder={t("booking.placeholder_select")} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="biweekly">Fortnightly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="once">Once</SelectItem>
+                    <SelectItem value="weekly">{t("common.weekly")}</SelectItem>
+                    <SelectItem value="biweekly">{t("booking.freq_fortnightly")}</SelectItem>
+                    <SelectItem value="monthly">{t("common.monthly")}</SelectItem>
+                    <SelectItem value="once">{t("booking.freq_once")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div>
-              <Label>Notes</Label>
+              <Label>{t("common.notes")}</Label>
               <Textarea rows={2} value={svcNotes} onChange={(e) => setSvcNotes(e.target.value)} className="mt-1" />
             </div>
           </div>
@@ -811,7 +811,7 @@ export default function BookingDetail() {
                 frequency: svcType === "recurring" ? (svcFreq || undefined) : undefined,
                 notes: svcNotes || undefined,
               });
-            }}>Add</Button>
+            }}>{t("common.add")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -819,10 +819,10 @@ export default function BookingDetail() {
       {/* Edit Service Status/Notes Dialog */}
       <Dialog open={editSvc !== null} onOpenChange={(open) => { if (!open) setEditSvc(null); }}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Edit Service: {editSvc?.service_name ?? editSvc?.name}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("booking.edit_service_title", { name: editSvc?.service_name ?? editSvc?.name })}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label>Status</Label>
+              <Label>{t("common.status")}</Label>
               <Select value={editSvcStatus} onValueChange={setEditSvcStatus}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -831,8 +831,8 @@ export default function BookingDetail() {
               </Select>
             </div>
             <div>
-              <Label>Notes</Label>
-              <Textarea rows={4} value={editSvcNotes} onChange={(e) => setEditSvcNotes(e.target.value)} className="mt-1" maxLength={5000} placeholder="Notes shared with the service host..." />
+              <Label>{t("common.notes")}</Label>
+              <Textarea rows={4} value={editSvcNotes} onChange={(e) => setEditSvcNotes(e.target.value)} className="mt-1" maxLength={5000} placeholder={t("booking.placeholder_service_notes")} />
             </div>
           </div>
           <DialogFooter>
@@ -842,7 +842,7 @@ export default function BookingDetail() {
               disabled={updateServiceMutation.isPending}
               onClick={() => editSvc && updateServiceMutation.mutate({ svcId: editSvc.id, payload: { status: editSvcStatus, notes: editSvcNotes || null } })}
             >
-              {updateServiceMutation.isPending ? "Saving..." : "Save"}
+              {updateServiceMutation.isPending ? t("common.saving") : t("common.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -853,16 +853,16 @@ export default function BookingDetail() {
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Camera className="w-4 h-4" /> Job Report Photos
+              <Camera className="w-4 h-4" /> {t("booking.job_report_photos")}
             </DialogTitle>
           </DialogHeader>
           <p className="text-xs text-muted-foreground -mt-2">
-            Photos uploaded by the service host for this job ({photos.length} photo{photos.length !== 1 ? "s" : ""})
+            {t("booking.job_photos_subtitle", { count: photos.length })}
           </p>
           {photos.length === 0 ? (
             <div className="border-2 border-dashed border-border rounded-lg p-12 text-center mt-2">
               <Camera className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">No photos uploaded yet</p>
+              <p className="text-sm text-muted-foreground">{t("booking.no_photos")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-2 max-h-[60vh] overflow-y-auto">

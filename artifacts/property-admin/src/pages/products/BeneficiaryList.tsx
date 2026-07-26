@@ -92,7 +92,7 @@ export default function BeneficiaryList() {
         cellClassName: "max-w-[200px] truncate",
         cell: (b) => (
           <span className="text-muted-foreground text-xs">
-            {b.contract_product_name ?? <span className="italic opacity-50">All products</span>}
+            {b.contract_product_name ?? <span className="italic opacity-50">{t("beneficiary.all_products")}</span>}
           </span>
         ),
       },
@@ -101,7 +101,7 @@ export default function BeneficiaryList() {
         header: "beneficiary.col_commission",
         cell: (b) => (
           <span className="text-muted-foreground text-xs">
-            {b.commission_name ?? <span className="italic opacity-50">Custom</span>}
+            {b.commission_name ?? <span className="italic opacity-50">{t("beneficiary.custom")}</span>}
           </span>
         ),
       },
@@ -180,7 +180,7 @@ export default function BeneficiaryList() {
     <Layout>
       <PageHeader
         title={t("nav.beneficiary")}
-        subtitle={`${filtered.length} of ${beneficiaries?.length ?? 0} ${t("common.total")}`}
+        subtitle={`${filtered.length} ${t("common.of")} ${beneficiaries?.length ?? 0} ${t("common.total")}`}
         actions={
           <Link href="/products/beneficiaries/new">
             <Button>

@@ -148,11 +148,11 @@ export default function SuburbDetail() {
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("suburb.label_state")}</Label>
-                <Input {...register("state")} placeholder="e.g. NSW, VIC" />
+                <Input {...register("state")} placeholder={t("suburb.placeholder_state")} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("suburb.label_postcode")}</Label>
-                <Input {...register("postcode")} placeholder="e.g. 2000" />
+                <Input {...register("postcode")} placeholder={t("suburb.placeholder_postcode")} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("suburb.label_country")} <span className="text-destructive">*</span></Label>
@@ -195,11 +195,11 @@ export default function SuburbDetail() {
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("suburb.label_lat")}</Label>
-                <Input {...register("lat")} type="number" step="any" placeholder="e.g. -33.8688" />
+                <Input {...register("lat")} type="number" step="any" placeholder={t("suburb.placeholder_lat")} />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("suburb.label_lng")}</Label>
-                <Input {...register("lng")} type="number" step="any" placeholder="e.g. 151.2093" />
+                <Input {...register("lng")} type="number" step="any" placeholder={t("suburb.placeholder_lng")} />
               </div>
             </div>
           </form>

@@ -159,10 +159,10 @@ export default function PaymentInfoList() {
                 <SelectTrigger className="h-8 w-44 text-sm"><SelectValue placeholder={t("payment_info.payment_type")} /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__all">{t("payment_info.all_types")}</SelectItem>
-                  <SelectItem value="BankTransfer">Bank Transfer</SelectItem>
+                  <SelectItem value="BankTransfer">{t("payment_info.type_bank_transfer")}</SelectItem>
                   <SelectItem value="Stripe">Stripe</SelectItem>
-                  <SelectItem value="Cash">Cash</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
+                  <SelectItem value="Cash">{t("payment_info.type_cash")}</SelectItem>
+                  <SelectItem value="Other">{t("payment_info.type_other")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -175,12 +175,12 @@ export default function PaymentInfoList() {
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-destructive" />
-              {isSuperAdmin ? "Delete Payment Info" : "Archive Payment Info"}
+              {isSuperAdmin ? t("payment_info.dialog_title_delete") : t("payment_info.dialog_title_archive")}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {isSuperAdmin
-                ? "Choose how to remove this record. Archiving hides it from view but keeps the data. Permanent deletion cannot be undone."
-                : "This payment info will be archived and hidden from view. A Super Admin can restore it if needed."}
+                ? t("payment_info.dialog_desc_delete")
+                : t("payment_info.dialog_desc_archive")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className={isSuperAdmin ? "flex-col sm:flex-row gap-2" : ""}>
@@ -190,14 +190,14 @@ export default function PaymentInfoList() {
               className="border-amber-300 text-amber-700 hover:bg-amber-50"
               onClick={() => deleteId && archiveMutation.mutate({ id: deleteId })}
               disabled={archiveMutation.isPending}>
-              Archive
+              {t("common.archive")}
             </Button>
             {isSuperAdmin && (
               <Button
                 variant="destructive"
                 onClick={handlePermanentDelete}
                 disabled={isPermanentDeleting}>
-                Delete Forever
+                {t("payment_info.delete_forever")}
               </Button>
             )}
           </AlertDialogFooter>

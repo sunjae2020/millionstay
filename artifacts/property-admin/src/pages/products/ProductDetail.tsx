@@ -95,11 +95,11 @@ export default function ProductDetail() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Failed");
-      toast({ title: "Service added" });
+      toast({ title: t('product.toast_service_added') });
       setAddOpen(false); setAddId(""); setAddMandatory(false); setAddPrice("");
       await loadSvcs();
     } catch (e: unknown) {
-      toast({ title: "Error", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
+      toast({ title: t('common.error'), description: e instanceof Error ? e.message : t('product.err_unknown'), variant: "destructive" });
     } finally { setAddSaving(false); }
   };
 
@@ -112,9 +112,9 @@ export default function ProductDetail() {
   };
 
   const removeSvc = async (mapId: number) => {
-    if (!id || !confirm("Remove this service from the product?")) return;
+    if (!id || !confirm(t('product.confirm_remove_service'))) return;
     const res = await apiFetch(`/api/v1/accommodations/${id}/services/${mapId}`, { method: "DELETE" });
-    if (res.ok) { toast({ title: "Service removed" }); setAccSvcs(prev => prev.filter(s => s.id !== mapId)); }
+    if (res.ok) { toast({ title: t('product.toast_service_removed') }); setAccSvcs(prev => prev.filter(s => s.id !== mapId)); }
   };
 
   const { currency: brandCurrency, currencyPosition } = useBrand();
@@ -209,11 +209,11 @@ export default function ProductDetail() {
       return res.json();
     },
     onSuccess: (data) => {
-      toast({ title: "Saved", description: "Product saved successfully." });
+      toast({ title: t('product.toast_saved'), description: t('product.toast_saved_desc') });
       qc.invalidateQueries({ queryKey: ["products"] });
       if (isNew) navigate(`/products/products/${data.id}`);
     },
-    onError: () => toast({ title: "Error", description: "Failed to save product.", variant: "destructive" }),
+    onError: () => toast({ title: t('common.error'), description: t('product.toast_save_failed'), variant: "destructive" }),
   });
 
   const availableToAdd = catalogSvcs.filter(c => !accSvcs.some(a => a.service_id === c.id));
@@ -241,11 +241,11 @@ export default function ProductDetail() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="col-span-2">
                 <Label>{t('product.label_name')} *</Label>
-                <Input {...register("name")} placeholder="e.g. Standard Room Package" className="mt-1" />
+                <Input {...register("name")} placeholder={t('product.ph_name')} className="mt-1" />
               </div>
               <div className="col-span-2">
                 <Label>{t('product.label_description')}</Label>
-                <Textarea {...register("item_description")} placeholder="Brief description" className="mt-1" rows={2} />
+                <Textarea {...register("item_description")} placeholder={t('product.ph_description')} className="mt-1" rows={2} />
               </div>
               <div>
                 <Label>{t('product.label_group')}</Label>
@@ -282,7 +282,7 @@ export default function ProductDetail() {
                   const fmt = (v: string | null) => formatDate(v);
                   return (
                     <p className="text-[11px] text-muted-foreground mt-1.5">
-                      Valid: {fmt(selPromo.valid_from)} – {fmt(selPromo.valid_to)}
+                      {t('product.valid_range', { from: fmt(selPromo.valid_from), to: fmt(selPromo.valid_to) })}
                     </p>
                   );
                 })()}
@@ -295,7 +295,7 @@ export default function ProductDetail() {
             <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">{t('product.section_pricing')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <Label>Weekly Rate (AUD)</Label>
+                <Label>{t('product.label_weekly_rate')}</Label>
                 <Input {...register("weekly_rate")} type="number" step="0.01" placeholder="0.00" className="mt-1" />
               </div>
               <div>
@@ -318,11 +318,11 @@ export default function ProductDetail() {
                 <Label>{t('product.label_gst_included')}</Label>
               </div>
               <div>
-                <Label>Admin Fee (AUD)</Label>
+                <Label>{t('product.label_admin_fee')}</Label>
                 <Input {...register("admin_fee")} type="number" step="0.01" placeholder="0.00" className="mt-1" />
               </div>
               <div>
-                <Label>Cleaning Fee (AUD)</Label>
+                <Label>{t('product.label_cleaning_fee')}</Label>
                 <Input {...register("cleaning_fee")} type="number" step="0.01" placeholder="0.00" className="mt-1" />
               </div>
             </div>
@@ -330,60 +330,60 @@ export default function ProductDetail() {
 
           {/* Billing & Contract Terms */}
           <div className="bg-white border rounded-lg p-6 space-y-4">
-            <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Billing &amp; Contract Terms</h2>
+            <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">{t('product.section_billing_contract')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <Label>Billing Frequency</Label>
+                <Label>{t('product.label_billing_frequency')}</Label>
                 <Select value={watch("billing_frequency")} onValueChange={v => setValue("billing_frequency", v)}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Weekly">Weekly</SelectItem>
-                    <SelectItem value="Biweekly">Fortnightly</SelectItem>
-                    <SelectItem value="Monthly">Monthly</SelectItem>
+                    <SelectItem value="Weekly">{t('common.weekly')}</SelectItem>
+                    <SelectItem value="Biweekly">{t('contract.freq_fortnightly')}</SelectItem>
+                    <SelectItem value="Monthly">{t('common.monthly')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>Term Type</Label>
+                <Label>{t('product.label_term_type')}</Label>
                 <Select value={watch("term_type") || "_none"} onValueChange={v => setValue("term_type", v === "_none" ? "" : v)}>
-                  <SelectTrigger className="mt-1"><SelectValue placeholder="Select…" /></SelectTrigger>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder={t('product.select_placeholder')} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="_none">— None —</SelectItem>
-                    <SelectItem value="Fixed">Fixed Term</SelectItem>
-                    <SelectItem value="Periodic">Periodic</SelectItem>
-                    <SelectItem value="Open">Open Ended</SelectItem>
+                    <SelectItem value="_none">{t('product.none_option')}</SelectItem>
+                    <SelectItem value="Fixed">{t('product.term_fixed')}</SelectItem>
+                    <SelectItem value="Periodic">{t('product.term_periodic')}</SelectItem>
+                    <SelectItem value="Open">{t('product.term_open')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>Min Contract Period</Label>
+                <Label>{t('product.label_min_contract')}</Label>
                 <div className="flex gap-2 mt-1">
-                  <Input {...register("min_contract_period")} type="number" placeholder="e.g. 4" className="w-24" />
+                  <Input {...register("min_contract_period")} type="number" placeholder={t('product.ph_min_contract')} className="w-24" />
                   <Select value={watch("min_contract_period_unit")} onValueChange={v => setValue("min_contract_period_unit", v)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="days">Days</SelectItem>
-                      <SelectItem value="weeks">Weeks</SelectItem>
-                      <SelectItem value="months">Months</SelectItem>
+                      <SelectItem value="days">{t('product.unit_days')}</SelectItem>
+                      <SelectItem value="weeks">{t('product.unit_weeks')}</SelectItem>
+                      <SelectItem value="months">{t('product.unit_months')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div>
-                <Label>Max Stay (weeks)</Label>
-                <Input {...register("max_stay_weeks")} type="number" placeholder="e.g. 52" className="mt-1" />
+                <Label>{t('product.label_max_stay')}</Label>
+                <Input {...register("max_stay_weeks")} type="number" placeholder={t('product.ph_max_stay')} className="mt-1" />
               </div>
               <div>
-                <Label>Bond (weeks)</Label>
+                <Label>{t('product.label_bond_weeks')}</Label>
                 <Input {...register("bond_weeks")} type="number" step="0.5" placeholder="4" className="mt-1" />
               </div>
               <div>
-                <Label>Advance Payment (weeks)</Label>
+                <Label>{t('product.label_advance_weeks')}</Label>
                 <Input {...register("advance_weeks")} type="number" step="0.5" placeholder="2" className="mt-1" />
               </div>
               <div>
-                <Label>Bond Amount (AUD override)</Label>
-                <Input {...register("bond_amount")} type="number" step="0.01" placeholder="Leave blank to use bond weeks" className="mt-1" />
+                <Label>{t('product.label_bond_amount')}</Label>
+                <Input {...register("bond_amount")} type="number" step="0.01" placeholder={t('product.ph_bond_amount')} className="mt-1" />
               </div>
             </div>
 
@@ -410,7 +410,7 @@ export default function ProductDetail() {
             </div>
 
             <div>
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mt-2 mb-3">Inclusions</h3>
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mt-2 mb-3">{t('product.section_inclusions')}</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {(["includes_wifi", "includes_parking", "includes_utilities", "includes_meals", "includes_laundry", "includes_cleaning"] as const).map(field => (
                   <div key={field} className="flex items-center gap-2">
@@ -420,8 +420,8 @@ export default function ProductDetail() {
                 ))}
               </div>
               <div className="mt-3">
-                <Label>Extra Inclusions (free text)</Label>
-                <Input {...register("extra_inclusions")} placeholder="e.g. Pool access, Gym" className="mt-1" />
+                <Label>{t('product.label_extra_inclusions')}</Label>
+                <Input {...register("extra_inclusions")} placeholder={t('product.ph_extra_inclusions')} className="mt-1" />
               </div>
             </div>
           </div>
@@ -490,10 +490,10 @@ export default function ProductDetail() {
                       <p className="text-xs text-muted-foreground">
                         {s.service_type} ·{" "}
                         {s.custom_price != null
-                          ? `${formatMoney(s.custom_price, s.currency, currencyPosition)} (custom)`
+                          ? `${formatMoney(s.custom_price, s.currency, currencyPosition)} ${t('product.custom_suffix')}`
                           : s.base_price != null
                           ? formatMoney(s.base_price, s.currency, currencyPosition)
-                          : "No price"}
+                          : t('product.no_price')}
                       </p>
                     </div>
                     <div className="flex items-center gap-4 ml-4">
@@ -503,7 +503,7 @@ export default function ProductDetail() {
                           onCheckedChange={v => toggleMandatory(s.id, v)}
                         />
                         <Label className={cn("text-xs", s.is_mandatory ? "text-orange-600 font-medium" : "text-muted-foreground")}>
-                          {s.is_mandatory ? "Mandatory" : "Optional"}
+                          {s.is_mandatory ? t('product.mandatory') : t('product.optional')}
                         </Label>
                       </div>
                       <Button variant="ghost" size="icon" className="text-red-400 hover:text-red-600 h-8 w-8" onClick={() => removeSvc(s.id)}>
@@ -522,35 +522,35 @@ export default function ProductDetail() {
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Add Service to Product</DialogTitle>
+            <DialogTitle>{t('product.add_service_title')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
-              <Label>Service *</Label>
+              <Label>{t('product.label_service')} *</Label>
               <Select value={addId} onValueChange={setAddId}>
-                <SelectTrigger className="mt-1"><SelectValue placeholder="Select a service" /></SelectTrigger>
+                <SelectTrigger className="mt-1"><SelectValue placeholder={t('product.ph_select_service')} /></SelectTrigger>
                 <SelectContent>
                   {availableToAdd.map(c => (
                     <SelectItem key={c.id} value={String(c.id)}>
                       {c.name}{c.base_price != null ? ` — ${formatMoney(c.base_price, c.currency, currencyPosition)}` : ""}
                     </SelectItem>
                   ))}
-                  {availableToAdd.length === 0 && <SelectItem value="_none" disabled>All services already added</SelectItem>}
+                  {availableToAdd.length === 0 && <SelectItem value="_none" disabled>{t('product.all_services_added')}</SelectItem>}
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>Custom Price (leave blank to use catalogue price)</Label>
-              <Input type="number" step="0.01" min="0" value={addPrice} onChange={e => setAddPrice(e.target.value)} placeholder="e.g. 150.00" className="mt-1" />
+              <Label>{t('product.label_custom_price')}</Label>
+              <Input type="number" step="0.01" min="0" value={addPrice} onChange={e => setAddPrice(e.target.value)} placeholder={t('product.ph_custom_price')} className="mt-1" />
             </div>
             <div className="flex items-center gap-2">
               <Switch checked={addMandatory} onCheckedChange={setAddMandatory} />
-              <Label>Mandatory (auto-selected for guests, cannot opt out)</Label>
+              <Label>{t('product.label_mandatory_full')}</Label>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddSvc} disabled={!addId || addSaving}>{addSaving ? "Adding…" : "Add Service"}</Button>
+            <Button variant="outline" onClick={() => setAddOpen(false)}>{t('common.cancel')}</Button>
+            <Button onClick={handleAddSvc} disabled={!addId || addSaving}>{addSaving ? t('product.adding') : t('product.add_service_btn')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

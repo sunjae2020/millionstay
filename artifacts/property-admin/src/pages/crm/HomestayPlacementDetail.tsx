@@ -515,9 +515,9 @@ export default function HomestayPlacementDetail() {
               <div className="border rounded-md p-3 grid gap-1">
                 <div><span className="text-muted-foreground">{t("homestayPlacement.bank_account_name")}:</span> <span className="font-medium">{sendBank.account_name || "—"}</span></div>
                 <div><span className="text-muted-foreground">{t("homestayPlacement.bank_name")}:</span> <span className="font-medium">{sendBank.bank_name || "—"}</span></div>
-                <div><span className="text-muted-foreground">BSB:</span> <span className="font-medium">{sendBank.bsb_number || "—"}</span></div>
+                <div><span className="text-muted-foreground">{t("homestayPlacement.bank_bsb")}:</span> <span className="font-medium">{sendBank.bsb_number || "—"}</span></div>
                 <div><span className="text-muted-foreground">{t("homestayPlacement.bank_account_number")}:</span> <span className="font-medium">{sendBank.account_number || "—"}</span></div>
-                {sendBank.swift_code && <div><span className="text-muted-foreground">SWIFT:</span> <span className="font-medium">{sendBank.swift_code}</span></div>}
+                {sendBank.swift_code && <div><span className="text-muted-foreground">{t("homestayPlacement.bank_swift")}:</span> <span className="font-medium">{sendBank.swift_code}</span></div>}
               </div>
             ) : <p className="text-amber-700">{t("homestayPlacement.bank_none")}</p>}
             <p className="text-xs text-muted-foreground">{t("homestayPlacement.bank_mark_paid_hint")}</p>

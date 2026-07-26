@@ -64,7 +64,7 @@ export default function BulkPhotoUploadList() {
     () => [
       {
         key: "date",
-        header: "Date",
+        header: "common.date",
         hideable: false,
         defaultWidth: 200,
         sortAccessor: (session) => session.date,
@@ -72,35 +72,35 @@ export default function BulkPhotoUploadList() {
       },
       {
         key: "spacesCount",
-        header: "Spaces",
+        header: "property.bulk_col_spaces",
         cell: (session) => (
           <span className="text-muted-foreground text-xs">
-            {session.spacesCount} space{session.spacesCount !== 1 ? "s" : ""}
+            {t("property.bulk_spaces", { count: session.spacesCount })}
           </span>
         ),
       },
       {
         key: "photosCount",
-        header: "Photos",
+        header: "property.bulk_col_photos",
         cell: (session) => (
           <span className="text-muted-foreground text-xs">
-            {session.photosCount} photo{session.photosCount !== 1 ? "s" : ""}
+            {t("property.bulk_photos", { count: session.photosCount })}
           </span>
         ),
       },
       {
         key: "failedCount",
-        header: "Status",
+        header: "common.status",
         cell: (session) =>
           session.failedCount === 0 ? (
             <Badge className="bg-green-100 text-green-800 hover:bg-green-100 gap-1">
               <CheckCircle2 className="h-3 w-3" />
-              Completed
+              {t("property.bulk_completed")}
             </Badge>
           ) : (
             <Badge variant="outline" className="border-amber-300 text-amber-700 gap-1">
               <AlertCircle className="h-3 w-3" />
-              Partial ({session.failedCount} failed)
+              {t("property.bulk_partial", { count: session.failedCount })}
             </Badge>
           ),
       },
@@ -130,11 +130,11 @@ export default function BulkPhotoUploadList() {
     <Layout>
       <PageHeader
         title={t("nav.bulk_photo")}
-        subtitle={`${sessions.length} upload session${sessions.length !== 1 ? "s" : ""}`}
+        subtitle={t("property.bulk_sessions", { count: sessions.length })}
         actions={
           <Button onClick={() => navigate("/property/bulk-photo-upload/new")}>
             <Plus className="h-4 w-4 mr-2" />
-            New Upload
+            {t("property.bulk_new_upload")}
           </Button>
         }
       />
@@ -151,12 +151,12 @@ export default function BulkPhotoUploadList() {
                 <Plus className="h-6 w-6" />
               </div>
               <div>
-                <p className="font-medium text-foreground">No upload sessions yet</p>
-                <p className="text-sm mt-1">Start a new bulk upload to assign photos to multiple spaces at once.</p>
+                <p className="font-medium text-foreground">{t("property.bulk_empty_title")}</p>
+                <p className="text-sm mt-1">{t("property.bulk_empty_desc")}</p>
               </div>
               <Button onClick={() => navigate("/property/bulk-photo-upload/new")}>
                 <Plus className="h-4 w-4 mr-2" />
-                Start New Upload
+                {t("property.bulk_start_upload")}
               </Button>
             </div>
           }
@@ -166,18 +166,18 @@ export default function BulkPhotoUploadList() {
       <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove Session</AlertDialogTitle>
+            <AlertDialogTitle>{t("property.bulk_remove_title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will remove this upload session from the history. Photos already uploaded will not be affected.
+              {t("property.bulk_remove_desc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive hover:bg-destructive/90"
               onClick={() => deleteId && handleDelete(deleteId)}
             >
-              Remove
+              {t("property.bulk_remove_confirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -764,7 +764,7 @@ export default function SpaceDetail() {
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_max_occupancy")}</Label>
-                    <Input {...register("max_occupancy")} type="number" min={1} placeholder="e.g. 2" />
+                    <Input {...register("max_occupancy")} type="number" min={1} placeholder={t("space.placeholder_max_occupancy")} />
                   </div>
                   <div className="col-span-2">
                     <MultiLookupField
@@ -880,11 +880,11 @@ export default function SpaceDetail() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_floor_number")}</Label>
-                    <Input {...register("floor_number")} type="number" placeholder="e.g. 3" />
+                    <Input {...register("floor_number")} type="number" placeholder={t("space.placeholder_floor_number")} />
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_floor_area")}</Label>
-                    <Input {...register("floor_area_sqm")} type="number" step="0.1" placeholder="e.g. 25.5" />
+                    <Input {...register("floor_area_sqm")} type="number" step="0.1" placeholder={t("space.placeholder_floor_area")} />
                   </div>
                 </div>
               </div>
@@ -893,7 +893,7 @@ export default function SpaceDetail() {
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">{t("space.section_accounts")}</h3>
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("space.label_landlord_account")}</Label>
-                  <Input {...register("landlord_account_id")} type="number" placeholder="Account ID" />
+                  <Input {...register("landlord_account_id")} type="number" placeholder={t("space.placeholder_landlord_account")} />
                 </div>
               </div>
 

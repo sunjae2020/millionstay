@@ -14,7 +14,7 @@ export default function UsersPage() {
             {t("nav.users")}
           </>
         }
-        subtitle="Manage admin users and access permissions"
+        subtitle={t("settings_users.page_subtitle")}
       />
       <div className="max-w-2xl px-8 py-6">
         <UserManagement />

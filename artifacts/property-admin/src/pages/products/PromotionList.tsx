@@ -31,17 +31,6 @@ const TERM_COLORS: Record<string, string> = {
   MidTerm: "bg-violet-100 text-violet-700",
   LongTerm: "bg-amber-100 text-amber-700",
 };
-const TERM_LABELS: Record<string, string> = {
-  ShortTerm: "Short-term",
-  MidTerm: "Mid-term",
-  LongTerm: "Long-term",
-};
-const FREQ_LABELS: Record<string, string> = {
-  Weekly: "Weekly",
-  Biweekly: "Biweekly",
-  Monthly: "Monthly",
-};
-
 function formatDiscount(promo: { promotion_type?: string; discount_percentage?: number | null; discount_amount?: number | null; free_nights?: number | null }) {
   if (promo.promotion_type === "Percentage" && promo.discount_percentage != null) return `${promo.discount_percentage}%`;
   if (promo.promotion_type === "Fixed" && promo.discount_amount != null) return `$${promo.discount_amount.toFixed(0)}`;
@@ -67,6 +56,17 @@ export default function PromotionList() {
   const [showDeleted, setShowDeleted] = useState(false);
   const [, navigate] = useLocation();
   const qc = useQueryClient();
+
+  const TERM_LABELS: Record<string, string> = {
+    ShortTerm: t("promotion.term_short"),
+    MidTerm: t("promotion.term_mid"),
+    LongTerm: t("promotion.term_long"),
+  };
+  const FREQ_LABELS: Record<string, string> = {
+    Weekly: t("common.weekly"),
+    Biweekly: t("common.biweekly"),
+    Monthly: t("common.monthly"),
+  };
 
   async function handleClone(p: any) {
     setCloningId(p.id);
@@ -156,7 +156,7 @@ export default function PromotionList() {
               variant="ghost" size="icon" className="h-7 w-7"
               disabled={cloningId === p.id}
               onClick={() => handleClone(p)}
-              title="Clone promotion"
+              title={t("promotion.clone_title")}
             >
               <Copy className={`h-3.5 w-3.5 ${cloningId === p.id ? "animate-pulse" : ""}`} />
             </Button>

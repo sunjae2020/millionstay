@@ -90,7 +90,7 @@ export default function CommissionDetail() {
     }
   };
 
-  if (!isNew && isLoading) return <Layout><p className="p-6 text-sm text-muted-foreground">Loading…</p></Layout>;
+  if (!isNew && isLoading) return <Layout><p className="p-6 text-sm text-muted-foreground">{t("common.loading")}</p></Layout>;
 
   return (
     <Layout>
@@ -113,8 +113,8 @@ export default function CommissionDetail() {
         <div className="grid gap-5">
           <div className="grid gap-1.5">
             <Label>{t("common.name")} *</Label>
-            <Input {...register("name", { required: true })} placeholder="e.g. 10% Agent Commission" />
-            {errors.name && <p className="text-xs text-destructive">Name is required</p>}
+            <Input {...register("name", { required: true })} placeholder={t("commission.ph_name")} />
+            {errors.name && <p className="text-xs text-destructive">{t("commission.name_required")}</p>}
           </div>
 
           <div className="grid gap-1.5">
@@ -123,8 +123,8 @@ export default function CommissionDetail() {
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Percentage">Percentage</SelectItem>
-                  <SelectItem value="FixedAmount">Fixed Amount</SelectItem>
+                  <SelectItem value="Percentage">{t("commission.type_percentage")}</SelectItem>
+                  <SelectItem value="FixedAmount">{t("commission.type_fixed_amount")}</SelectItem>
                 </SelectContent>
               </Select>
             )} />
@@ -133,18 +133,18 @@ export default function CommissionDetail() {
           {commissionType === "Percentage" ? (
             <div className="grid gap-1.5">
               <Label>{t("commission.label_rate")}</Label>
-              <Input {...register("commission_rate")} type="number" step="0.01" placeholder="e.g. 10" />
+              <Input {...register("commission_rate")} type="number" step="0.01" placeholder={t("commission.ph_rate")} />
             </div>
           ) : (
             <div className="grid gap-1.5">
               <Label>{t("commission.label_amount")}</Label>
-              <Input {...register("commission_amount")} type="number" step="0.01" placeholder="e.g. 500" />
+              <Input {...register("commission_amount")} type="number" step="0.01" placeholder={t("commission.ph_amount")} />
             </div>
           )}
 
           <div className="grid gap-1.5">
             <Label>{t("commission.label_notes")}</Label>
-            <Input {...register("description")} placeholder="Optional notes" />
+            <Input {...register("description")} placeholder={t("commission.ph_notes")} />
           </div>
 
           <div className="grid gap-1.5">
@@ -153,8 +153,8 @@ export default function CommissionDetail() {
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
+                  <SelectItem value="Active">{t("common.active")}</SelectItem>
+                  <SelectItem value="Inactive">{t("common.inactive")}</SelectItem>
                 </SelectContent>
               </Select>
             )} />

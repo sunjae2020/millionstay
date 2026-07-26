@@ -217,7 +217,7 @@ export default function AccountDetail() {
     }
   };
 
-  if (!isNew && isLoading) return <Layout><p className="p-6 text-sm text-muted-foreground">Loading…</p></Layout>;
+  if (!isNew && isLoading) return <Layout><p className="p-6 text-sm text-muted-foreground">{t('common.loading')}</p></Layout>;
 
   const detailsContent = (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -228,8 +228,8 @@ export default function AccountDetail() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="grid gap-1.5">
               <Label>{t('account.label_name')} *</Label>
-              <Input {...register("name", { required: true })} placeholder="e.g. Sunjae KIM" />
-              {errors.name && <p className="text-xs text-destructive">Required</p>}
+              <Input {...register("name", { required: true })} placeholder={t('account.ph_name_example')} />
+              {errors.name && <p className="text-xs text-destructive">{t('common.field_required')}</p>}
             </div>
             <div className="grid gap-1.5">
               <Label>{t('account.label_type')}</Label>
@@ -237,13 +237,13 @@ export default function AccountDetail() {
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Guest">Guest</SelectItem>
-                    <SelectItem value="SpaceOwner">Space Owner</SelectItem>
-                    <SelectItem value="Broker">Broker</SelectItem>
-                    <SelectItem value="Manager">Manager</SelectItem>
-                    <SelectItem value="RealEstateAgent">Real Estate Agent</SelectItem>
-                    <SelectItem value="ServiceHost">Service Host</SelectItem>
-                    <SelectItem value="Partner">Partner</SelectItem>
+                    <SelectItem value="Guest">{t('account.type_guest')}</SelectItem>
+                    <SelectItem value="SpaceOwner">{t('account.type_space_owner')}</SelectItem>
+                    <SelectItem value="Broker">{t('account.type_broker')}</SelectItem>
+                    <SelectItem value="Manager">{t('account.type_manager')}</SelectItem>
+                    <SelectItem value="RealEstateAgent">{t('account.type_real_estate_agent')}</SelectItem>
+                    <SelectItem value="ServiceHost">{t('account.type_service_host')}</SelectItem>
+                    <SelectItem value="Partner">{t('account.type_partner')}</SelectItem>
                   </SelectContent>
                 </Select>
               )} />
@@ -252,7 +252,7 @@ export default function AccountDetail() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="grid gap-1.5">
               <div className="flex items-center justify-between">
-                <Label>Primary Contact</Label>
+                <Label>{t('account.label_primary_contact')}</Label>
                 {primaryContactId && (
                   <Link href={`/crm/contacts/${primaryContactId}`}>
                     <span className="text-xs text-primary hover:underline flex items-center gap-1 cursor-pointer">
@@ -266,14 +266,14 @@ export default function AccountDetail() {
                   value={field.value}
                   onChange={field.onChange}
                   lookupUrl="/api/v1/lookup/contacts"
-                  placeholder="Search contacts…"
+                  placeholder={t('contact.search_placeholder')}
                   displayValue={(account as any)?.primary_contact_name}
                 />
               )} />
             </div>
             <div className="grid gap-1.5">
               <div className="flex items-center justify-between">
-                <Label>Secondary Contact</Label>
+                <Label>{t('account.label_secondary_contact')}</Label>
                 {secondaryContactId && (
                   <Link href={`/crm/contacts/${secondaryContactId}`}>
                     <span className="text-xs text-primary hover:underline flex items-center gap-1 cursor-pointer">
@@ -287,7 +287,7 @@ export default function AccountDetail() {
                   value={field.value}
                   onChange={field.onChange}
                   lookupUrl="/api/v1/lookup/contacts"
-                  placeholder="Search contacts…"
+                  placeholder={t('contact.search_placeholder')}
                   displayValue={(account as any)?.secondary_contact_name}
                 />
               )} />
@@ -299,7 +299,7 @@ export default function AccountDetail() {
               <Input {...register("account_email")} type="email" />
             </div>
             <div className="grid gap-1.5">
-              <Label>Website</Label>
+              <Label>{t('account.label_website')}</Label>
               <Input {...register("website_url")} placeholder="https://" />
             </div>
           </div>
@@ -328,7 +328,7 @@ export default function AccountDetail() {
         </div>
 
         <div className="rounded-lg border p-4 space-y-4">
-          <h3 className="font-semibold text-sm">{t('account.section_address')} (Secondary)</h3>
+          <h3 className="font-semibold text-sm">{t('account.section_address')} {t('account.suffix_secondary')}</h3>
           <Input {...register("secondary_address_line1")} placeholder={t('account.label_address')} />
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="col-span-2"><Input {...register("secondary_address_suburb")} placeholder={t('account.label_city')} /></div>
@@ -341,9 +341,9 @@ export default function AccountDetail() {
         {/* Finance — only for non-Guest/Staff */}
         {showFinance && (
           <div className="rounded-lg border p-4 space-y-4">
-            <h3 className="font-semibold text-sm">Finance</h3>
+            <h3 className="font-semibold text-sm">{t('account.section_finance')}</h3>
             <div className="grid gap-1.5">
-              <Label>Default Currency</Label>
+              <Label>{t('account.label_default_currency')}</Label>
               <Controller name="default_currency" control={control} render={({ field }) => (
                 <Select value={field.value || "__none"} onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}>
                   <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
@@ -355,25 +355,25 @@ export default function AccountDetail() {
               )} />
             </div>
             <div className="grid gap-1.5">
-              <Label>Default Commission</Label>
+              <Label>{t('account.label_default_commission')}</Label>
               <Controller name="default_commission_id" control={control} render={({ field }) => (
                 <LookupSelect
                   value={field.value}
                   onChange={field.onChange}
                   lookupUrl="/api/v1/lookup/commissions"
-                  placeholder="Search commissions…"
+                  placeholder={t('account.ph_search_commissions')}
                   displayValue={(account as any)?.default_commission_name}
                 />
               )} />
             </div>
             <div className="grid gap-1.5">
-              <Label>Payment Info</Label>
+              <Label>{t('account.label_payment_info')}</Label>
               <Controller name="payment_info_id" control={control} render={({ field }) => (
                 <LookupSelect
                   value={field.value}
                   onChange={field.onChange}
                   lookupUrl="/api/v1/lookup/payment-info"
-                  placeholder="Search payment info…"
+                  placeholder={t('account.ph_search_payment_info')}
                   displayValue={(account as any)?.payment_info_name}
                 />
               )} />
@@ -385,15 +385,15 @@ export default function AccountDetail() {
       {/* Right column */}
       <div className="space-y-4">
         <div className="rounded-lg border p-4 space-y-4">
-          <h3 className="font-semibold text-sm">Relationships</h3>
+          <h3 className="font-semibold text-sm">{t('account.section_relationships')}</h3>
           <div className="grid gap-1.5">
-            <Label>Parent Account</Label>
+            <Label>{t('account.label_parent_account')}</Label>
             <Controller name="parent_account_id" control={control} render={({ field }) => (
               <LookupSelect
                 value={field.value}
                 onChange={field.onChange}
                 lookupUrl="/api/v1/lookup/accounts"
-                placeholder="Search accounts…"
+                placeholder={t('account.search_placeholder')}
                 displayValue={(account as any)?.parent_account_name}
               />
             )} />
@@ -408,14 +408,14 @@ export default function AccountDetail() {
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
+                  <SelectItem value="Active">{t('common.active')}</SelectItem>
+                  <SelectItem value="Inactive">{t('common.inactive')}</SelectItem>
                 </SelectContent>
               </Select>
             )} />
           </div>
           <div className="flex items-center justify-between">
-            <Label>Manual Input</Label>
+            <Label>{t('common.manual_input')}</Label>
             <Controller name="manual_input" control={control} render={({ field }) => (
               <Switch checked={field.value} onCheckedChange={field.onChange} />
             )} />
@@ -424,7 +424,7 @@ export default function AccountDetail() {
 
         <div className="rounded-lg border p-4 space-y-2">
           <Label>{t('account.label_notes')}</Label>
-          <Input {...register("description")} placeholder="Internal notes" />
+          <Input {...register("description")} placeholder={t('common.ph_internal_notes')} />
         </div>
       </div>
     </div>
@@ -494,7 +494,7 @@ export default function AccountDetail() {
                   <tbody className="divide-y">
                     {!bookings?.length ? (
                       <tr>
-                        <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">No bookings for this account</td>
+                        <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">{t('account.empty_bookings')}</td>
                       </tr>
                     ) : (
                       (bookings as any[]).map((b: any) => (
@@ -535,7 +535,7 @@ export default function AccountDetail() {
                   <tbody className="divide-y">
                     {!contracts?.length ? (
                       <tr>
-                        <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">No contracts for this account</td>
+                        <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">{t('account.empty_contracts')}</td>
                       </tr>
                     ) : (
                       (contracts as any[]).map((c: any) => (
@@ -568,7 +568,7 @@ export default function AccountDetail() {
                     <tr>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_invoice_ref')}</th>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_amount')}</th>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">Currency</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_currency')}</th>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_due_date')}</th>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_status')}</th>
                     </tr>
@@ -576,7 +576,7 @@ export default function AccountDetail() {
                   <tbody className="divide-y">
                     {!invoices?.length ? (
                       <tr>
-                        <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">No invoices for this account</td>
+                        <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">{t('account.empty_invoices')}</td>
                       </tr>
                     ) : (
                       (invoices as any[]).map((inv: any) => (

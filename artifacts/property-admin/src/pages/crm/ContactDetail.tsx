@@ -57,6 +57,7 @@ interface ContactForm {
 }
 
 function ExpiryWarning({ label, dateStr }: { label: string; dateStr?: string | null }) {
+  const { t } = useTranslation();
   if (!dateStr) return null;
   const days = differenceInDays(parseISO(dateStr), new Date());
   if (days > 90) return null;
@@ -64,7 +65,7 @@ function ExpiryWarning({ label, dateStr }: { label: string; dateStr?: string | n
   return (
     <div className={`flex items-center gap-1 text-xs ${color} mt-0.5`}>
       <AlertTriangle className="h-3 w-3" />
-      {days < 0 ? `${label} expired ${-days}d ago` : `${label} expires in ${days}d`}
+      {days < 0 ? t('contact.expiry_expired', { label, days: -days }) : t('contact.expiry_expires', { label, days })}
     </div>
   );
 }
@@ -179,7 +180,7 @@ export default function ContactDetail() {
     }
   };
 
-  if (!isNew && isLoading) return <Layout><p className="p-6 text-sm text-muted-foreground">Loading…</p></Layout>;
+  if (!isNew && isLoading) return <Layout><p className="p-6 text-sm text-muted-foreground">{t('common.loading')}</p></Layout>;
 
   return (
     <Layout>
@@ -215,7 +216,7 @@ export default function ContactDetail() {
                   <h3 className="font-semibold text-sm">{t('contact.section_personal')}</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div className="grid gap-1.5">
-                      <Label>Title</Label>
+                      <Label>{t('common.title')}</Label>
                       <Controller name="title" control={control} render={({ field }) => (
                         <Select value={field.value || "__none"} onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}>
                           <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
@@ -232,15 +233,15 @@ export default function ContactDetail() {
                     <div className="grid gap-1.5">
                       <Label>{t('contact.label_first_name')} *</Label>
                       <Input {...register("first_name", { required: true })} />
-                      {errors.first_name && <p className="text-xs text-destructive">Required</p>}
+                      {errors.first_name && <p className="text-xs text-destructive">{t('common.field_required')}</p>}
                     </div>
                     <div className="grid gap-1.5">
                       <Label>{t('contact.label_last_name')} *</Label>
                       <Input {...register("last_name", { required: true })} />
-                      {errors.last_name && <p className="text-xs text-destructive">Required</p>}
+                      {errors.last_name && <p className="text-xs text-destructive">{t('common.field_required')}</p>}
                     </div>
                     <div className="grid gap-1.5">
-                      <Label>Other Name</Label>
+                      <Label>{t('contact.label_other_name')}</Label>
                       <Input {...register("other_name")} />
                     </div>
                   </div>
@@ -248,14 +249,14 @@ export default function ContactDetail() {
                     <div className="grid gap-1.5">
                       <Label>{t('contact.label_email')} *</Label>
                       <Input {...register("email", { required: true })} type="email" />
-                      {errors.email && <p className="text-xs text-destructive">Required</p>}
+                      {errors.email && <p className="text-xs text-destructive">{t('common.field_required')}</p>}
                     </div>
                     <div className="grid gap-1.5">
                       <Label>{t('contact.label_mobile')}</Label>
                       <Input {...register("mobile_number")} />
                     </div>
                     <div className="grid gap-1.5">
-                      <Label>Office Phone</Label>
+                      <Label>{t('contact.label_office_phone')}</Label>
                       <Input {...register("office_number")} />
                     </div>
                   </div>
@@ -267,16 +268,16 @@ export default function ContactDetail() {
                       )} />
                     </div>
                     <div className="grid gap-1.5">
-                      <Label>Gender</Label>
+                      <Label>{t('contact.label_gender')}</Label>
                       <Controller name="gender" control={control} render={({ field }) => (
                         <Select value={field.value || "__none"} onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}>
                           <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="__none">—</SelectItem>
-                            <SelectItem value="Male">Male</SelectItem>
-                            <SelectItem value="Female">Female</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
-                            <SelectItem value="PreferNotToSay">Prefer not to say</SelectItem>
+                            <SelectItem value="Male">{t('contact.gender_male')}</SelectItem>
+                            <SelectItem value="Female">{t('contact.gender_female')}</SelectItem>
+                            <SelectItem value="Other">{t('contact.gender_other')}</SelectItem>
+                            <SelectItem value="PreferNotToSay">{t('contact.gender_prefer_not')}</SelectItem>
                           </SelectContent>
                         </Select>
                       )} />
@@ -295,7 +296,7 @@ export default function ContactDetail() {
                     </div>
                   </div>
                   <div className="grid gap-1.5">
-                    <Label>SNS ID</Label>
+                    <Label>{t('contact.label_sns_id')}</Label>
                     <Input {...register("sns_id")} placeholder="WeChat / KakaoTalk / LINE ID" />
                   </div>
                 </div>
@@ -313,20 +314,20 @@ export default function ContactDetail() {
                       <Controller name="passport_expiry" control={control} render={({ field }) => (
                         <DateInput value={field.value ?? ""} onChange={field.onChange} />
                       )} />
-                      <ExpiryWarning label="Passport" dateStr={passportExpiry} />
+                      <ExpiryWarning label={t('contact.doc_passport')} dateStr={passportExpiry} />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="grid gap-1.5">
-                      <Label>Visa Type</Label>
-                      <Input {...register("visa_type")} placeholder="e.g. Student 500" />
+                      <Label>{t('contact.label_visa_type')}</Label>
+                      <Input {...register("visa_type")} placeholder={t('contact.ph_visa_example')} />
                     </div>
                     <div className="grid gap-1.5">
-                      <Label>Visa Expiry</Label>
+                      <Label>{t('contact.label_visa_expiry')}</Label>
                       <Controller name="visa_expiry" control={control} render={({ field }) => (
                         <DateInput value={field.value ?? ""} onChange={field.onChange} />
                       )} />
-                      <ExpiryWarning label="Visa" dateStr={visaExpiry} />
+                      <ExpiryWarning label={t('contact.doc_visa')} dateStr={visaExpiry} />
                     </div>
                   </div>
                 </div>
@@ -372,12 +373,12 @@ export default function ContactDetail() {
                 {/* Photo */}
                 {profilePhoto && (
                   <div className="rounded-lg border p-4">
-                    <Label className="mb-2 block">Photo Preview</Label>
+                    <Label className="mb-2 block">{t('contact.photo_preview')}</Label>
                     <img src={profilePhoto} alt="Profile" className="w-full max-h-40 object-contain rounded" />
                   </div>
                 )}
                 <div className="rounded-lg border p-4 space-y-4">
-                  <h3 className="font-semibold text-sm">Profile Photo URL</h3>
+                  <h3 className="font-semibold text-sm">{t('contact.section_photo_url')}</h3>
                   <Input {...register("profile_photo_url")} placeholder="https://..." />
                 </div>
 
@@ -392,27 +393,27 @@ export default function ContactDetail() {
                   </div>
                   <div className="grid gap-1.5">
                     <Label>{t('contact.label_portal_email')}</Label>
-                    <Input {...register("portal_user_id")} placeholder="Linked user ID" />
+                    <Input {...register("portal_user_id")} placeholder={t('contact.ph_linked_user_id')} />
                   </div>
                 </div>
 
                 {/* Settings */}
                 <div className="rounded-lg border p-4 space-y-4">
-                  <h3 className="font-semibold text-sm">Settings</h3>
+                  <h3 className="font-semibold text-sm">{t('contact.section_settings')}</h3>
                   <div className="grid gap-1.5">
                     <Label>{t('contact.label_status')}</Label>
                     <Controller name="status" control={control} render={({ field }) => (
                       <Select value={field.value} onValueChange={field.onChange}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Active">Active</SelectItem>
-                          <SelectItem value="Inactive">Inactive</SelectItem>
+                          <SelectItem value="Active">{t('common.active')}</SelectItem>
+                          <SelectItem value="Inactive">{t('common.inactive')}</SelectItem>
                         </SelectContent>
                       </Select>
                     )} />
                   </div>
                   <div className="flex items-center justify-between">
-                    <Label>Manual Input</Label>
+                    <Label>{t('common.manual_input')}</Label>
                     <Controller name="manual_input" control={control} render={({ field }) => (
                       <Switch checked={field.value} onCheckedChange={field.onChange} />
                     )} />
@@ -421,8 +422,8 @@ export default function ContactDetail() {
 
                 {/* Notes */}
                 <div className="rounded-lg border p-4 space-y-2">
-                  <Label>Description / Notes</Label>
-                  <Input {...register("description")} placeholder="Internal notes" />
+                  <Label>{t('contact.label_description_notes')}</Label>
+                  <Input {...register("description")} placeholder={t('common.ph_internal_notes')} />
                 </div>
               </div>
             </div>
@@ -430,19 +431,19 @@ export default function ContactDetail() {
 
           <TabsContent value="bookings">
             <div className="p-8 text-center text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
-              Bookings view content...
+              {t('contact.stub_bookings')}
             </div>
           </TabsContent>
 
           <TabsContent value="accounts">
             <div className="p-8 text-center text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
-              Accounts view content...
+              {t('contact.stub_accounts')}
             </div>
           </TabsContent>
 
           <TabsContent value="documents">
             <div className="p-8 text-center text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
-              Documents view content...
+              {t('contact.stub_documents')}
             </div>
           </TabsContent>
         </Tabs>

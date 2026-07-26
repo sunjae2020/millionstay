@@ -44,13 +44,13 @@ export default function ProductTypesPage() {
   const columns: ColumnDef<ProductType>[] = useMemo(() => [
     {
       key: "name",
-      header: "Name",
+      header: t("common.name"),
       hideable: false,
       cell: (ty) => <div className="font-medium">{ty.name}</div>,
     },
     {
       key: "description",
-      header: "Description",
+      header: t("common.description"),
       cell: (ty) => (
         <span className="text-sm text-muted-foreground max-w-xs truncate block">
           {ty.description || <span className="text-muted-foreground/40 italic">—</span>}
@@ -74,7 +74,7 @@ export default function ProductTypesPage() {
         </div>
       ),
     },
-  ], []);
+  ], [t]);
 
   const save = useMutation({
     mutationFn: async () => {
@@ -85,11 +85,11 @@ export default function ProductTypesPage() {
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: editing ? "Updated" : "Created", description: "Product type saved." });
+      toast({ title: editing ? t("common.updated") : t("common.created"), description: t("productTypes.toast_saved") });
       qc.invalidateQueries({ queryKey: ["product-types"] });
       setOpen(false); setEditing(null); setForm(EMPTY);
     },
-    onError: (e: any) => toast({ title: "Error", description: e.message || "Failed to save.", variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("common.error"), description: e.message || t("productTypes.toast_save_failed"), variant: "destructive" }),
   });
 
   const remove = useMutation({
@@ -98,11 +98,11 @@ export default function ProductTypesPage() {
       if (!res.ok) throw new Error(await res.text());
     },
     onSuccess: () => {
-      toast({ title: "Deleted", description: "Product type removed." });
+      toast({ title: t("common.deleted"), description: t("productTypes.toast_deleted") });
       qc.invalidateQueries({ queryKey: ["product-types"] });
       setDeleteId(null);
     },
-    onError: () => toast({ title: "Error", description: "Failed to delete.", variant: "destructive" }),
+    onError: () => toast({ title: t("common.error"), description: t("productTypes.toast_delete_failed"), variant: "destructive" }),
   });
 
   function openEdit(item: any) {
@@ -121,12 +121,12 @@ export default function ProductTypesPage() {
     <Layout>
       <PageHeader
         title={<><Tag className="h-5 w-5" />{t("nav.product_types")}</>}
-        subtitle="Manage product type definitions"
+        subtitle={t("productTypes.subtitle")}
       />
 
       <div className="px-8 py-6">
         <div className="flex gap-3 mb-4">
-          <Button onClick={openNew}><Plus className="h-4 w-4 mr-2" />New Type</Button>
+          <Button onClick={openNew}><Plus className="h-4 w-4 mr-2" />{t("productTypes.new_type")}</Button>
         </div>
 
         <DataTable
@@ -135,7 +135,7 @@ export default function ProductTypesPage() {
           data={filtered}
           isLoading={isLoading}
           rowKey={(ty) => ty.id}
-          emptyText="No product types found"
+          emptyText={t("productTypes.empty")}
           selection={{ enable: true, resource: "product-types", onChanged: () => qc.invalidateQueries({ queryKey: ["product-types"] }) }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
@@ -143,7 +143,7 @@ export default function ProductTypesPage() {
             <div className="flex flex-wrap items-center gap-2">
               <div className="relative w-56">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input className="pl-9" placeholder="Search types…" value={q} onChange={(e) => setQ(e.target.value)} />
+                <Input className="pl-9" placeholder={t("productTypes.search_ph")} value={q} onChange={(e) => setQ(e.target.value)} />
               </div>
             </div>
           }
@@ -155,34 +155,34 @@ export default function ProductTypesPage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>{editing ? "Edit Product Type" : "New Product Type"}</DialogTitle>
+            <DialogTitle>{editing ? t("productTypes.edit_title") : t("productTypes.new_title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
-              <Label>Name *</Label>
+              <Label>{t("common.name")} *</Label>
               <Input
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                 className="mt-1"
-                placeholder="e.g. Weekly Package"
+                placeholder={t("productTypes.name_ph")}
                 autoFocus
               />
             </div>
             <div>
-              <Label>Description</Label>
+              <Label>{t("common.description")}</Label>
               <Textarea
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 className="mt-1 resize-none"
                 rows={3}
-                placeholder="Optional description…"
+                placeholder={t("productTypes.description_ph")}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>{t("common.cancel")}</Button>
             <Button onClick={() => save.mutate()} disabled={!form.name.trim() || save.isPending}>
-              {save.isPending ? "Saving…" : "Save"}
+              {save.isPending ? t("common.saving") : t("common.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -191,15 +191,15 @@ export default function ProductTypesPage() {
       <AlertDialog open={deleteId !== null} onOpenChange={(o) => !o && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Product Type</AlertDialogTitle>
+            <AlertDialogTitle>{t("productTypes.delete_title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the type. Products using this type will lose their type assignment.
+              {t("productTypes.delete_desc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <Button variant="destructive" onClick={() => deleteId !== null && remove.mutate(deleteId)}>
-              Delete
+              {t("common.delete")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -14,7 +14,7 @@ export default function OrganisationPage() {
             {t("nav.organisation")}
           </>
         }
-        subtitle="Company profile and contact details"
+        subtitle={t("settings_org.page_subtitle")}
       />
       <div className="max-w-2xl px-8 py-6">
         <CompanyInfo />
