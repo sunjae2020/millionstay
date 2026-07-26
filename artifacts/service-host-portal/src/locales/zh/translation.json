@@ -285,7 +285,22 @@
     "sla_acknowledged": "已确认",
     "sla_met": "按时",
     "sla_breached": "超时",
-    "sla_escalated": "升级"
+    "sla_escalated": "升级",
+    "detail_back": "返回工单列表",
+    "detail_not_found": "未找到工单",
+    "priority": "优先级",
+    "priority_High": "高",
+    "priority_Normal": "普通",
+    "priority_Low": "低",
+    "description": "描述",
+    "details": "详细信息",
+    "dispatched": "派发时间",
+    "acknowledged_at": "确认时间",
+    "scheduled_at": "计划日期",
+    "reported_at": "报告时间",
+    "completed_at": "完成时间",
+    "cost": "金额",
+    "notes": "备注"
   },
   "documents": {
     "title": "文档",

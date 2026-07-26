@@ -285,7 +285,22 @@
     "sla_acknowledged": "ยืนยันแล้ว",
     "sla_met": "ตรงเวลา",
     "sla_breached": "เกินกำหนด",
-    "sla_escalated": "ยกระดับ"
+    "sla_escalated": "ยกระดับ",
+    "detail_back": "กลับไปที่รายการใบสั่งงาน",
+    "detail_not_found": "ไม่พบใบสั่งงาน",
+    "priority": "ความสำคัญ",
+    "priority_High": "สูง",
+    "priority_Normal": "ปกติ",
+    "priority_Low": "ต่ำ",
+    "description": "รายละเอียด",
+    "details": "ข้อมูล",
+    "dispatched": "เวลาที่มอบหมาย",
+    "acknowledged_at": "เวลาที่ยืนยัน",
+    "scheduled_at": "กำหนดการ",
+    "reported_at": "เวลาที่แจ้ง",
+    "completed_at": "เวลาที่เสร็จ",
+    "cost": "ค่าใช้จ่าย",
+    "notes": "หมายเหตุ"
   },
   "documents": {
     "title": "เอกสาร",

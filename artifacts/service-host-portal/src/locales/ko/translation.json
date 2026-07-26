@@ -285,7 +285,22 @@
     "sla_acknowledged": "확인됨",
     "sla_met": "정상",
     "sla_breached": "초과",
-    "sla_escalated": "상향"
+    "sla_escalated": "상향",
+    "detail_back": "작업지시 목록으로",
+    "detail_not_found": "작업지시를 찾을 수 없습니다",
+    "priority": "우선순위",
+    "priority_High": "높음",
+    "priority_Normal": "보통",
+    "priority_Low": "낮음",
+    "description": "설명",
+    "details": "세부 정보",
+    "dispatched": "배정 시각",
+    "acknowledged_at": "확인 시각",
+    "scheduled_at": "예정일",
+    "reported_at": "접수 시각",
+    "completed_at": "완료 시각",
+    "cost": "금액",
+    "notes": "메모"
   },
   "documents": {
     "title": "문서함",

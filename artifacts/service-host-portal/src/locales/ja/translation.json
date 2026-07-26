@@ -285,7 +285,22 @@
     "sla_acknowledged": "確認済み",
     "sla_met": "順守",
     "sla_breached": "超過",
-    "sla_escalated": "エスカレーション"
+    "sla_escalated": "エスカレーション",
+    "detail_back": "作業指示一覧に戻る",
+    "detail_not_found": "作業指示が見つかりません",
+    "priority": "優先度",
+    "priority_High": "高",
+    "priority_Normal": "通常",
+    "priority_Low": "低",
+    "description": "説明",
+    "details": "詳細",
+    "dispatched": "割当日時",
+    "acknowledged_at": "確認日時",
+    "scheduled_at": "予定日",
+    "reported_at": "受付日時",
+    "completed_at": "完了日時",
+    "cost": "金額",
+    "notes": "メモ"
   },
   "documents": {
     "title": "書類",
