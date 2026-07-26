@@ -22,6 +22,7 @@ interface IntegrationStatus {
   maps: { provider: string; configured: boolean; note: string };
   ical: { provider: string; configured: boolean; note: string };
   billing?: { recurring_invoices_enabled: boolean };
+  modules?: { homestay_enabled: boolean };
 }
 
 type BadgeVariant = "connected" | "test" | "not-required" | "not-configured" | "error";
@@ -327,6 +328,41 @@ const BillingFields = ({ status, onRefresh }: { status: IntegrationStatus | null
   );
 };
 
+const ModulesFields = ({ status, onRefresh }: { status: IntegrationStatus | null; onRefresh: () => void }) => {
+  const { t } = useTranslation();
+  const [saving, setSaving] = useState(false);
+  // Defaults to enabled when the toggle has never been saved.
+  const enabled = status?.modules?.homestay_enabled ?? true;
+  async function toggle() {
+    setSaving(true);
+    try {
+      await apiFetch("/api/v1/integrations/update-env", {
+        method: "POST",
+        body: JSON.stringify({ key: "HOMESTAY_MODULE_ENABLED", value: enabled ? "false" : "true" }),
+      });
+      onRefresh();
+    } finally {
+      setSaving(false);
+    }
+  }
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-3">
+        <Button size="sm" variant={enabled ? "outline" : "default"} className="h-8 text-xs" onClick={toggle} disabled={saving}>
+          {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : enabled ? t("common.disable") : t("common.enable")}
+        </Button>
+        <span className="text-sm">{enabled ? t("common.enabled") : t("common.disabled")}</span>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        When enabled, the sidebar shows the <strong>Homestay</strong> intake workflow —
+        Homestay Applications, Student Requests and Homestay Placements. Turn it off for
+        tenants that do not run homestay (the menus and their pages are hidden). Changes
+        appear after the next refresh; reload the app to update the sidebar immediately.
+      </p>
+    </div>
+  );
+};
+
 const GoogleSheetsFields = () => {
   const { t } = useTranslation();
   return (
@@ -462,6 +498,19 @@ const CARDS: CardDef[] = [
         : { variant: "not-configured", label: "Disabled" };
     },
     Fields: BillingFields,
+  },
+  {
+    id: "modules",
+    emoji: "🧩",
+    name: "Homestay Module",
+    description: "Show or hide the Homestay intake workflow (applications, student requests, placements)",
+    getBadge: (s) => {
+      if (!s) return { variant: "not-configured", label: "Not Configured" };
+      return s.modules?.homestay_enabled ?? true
+        ? { variant: "connected", label: "Enabled" }
+        : { variant: "not-configured", label: "Disabled" };
+    },
+    Fields: ModulesFields,
   },
 ];
 

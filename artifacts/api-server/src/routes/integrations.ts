@@ -21,6 +21,11 @@ const ALLOWED_KEYS = [
   "ANTHROPIC_API_KEY",
   "CHAT_WIDGET_ENABLED",
   "RECURRING_INVOICES_ENABLED",
+  // Per-tenant module toggle. When "false", the admin hides the Homestay
+  // intake workflow (applications / student requests / placements). Each
+  // tenant has its own DB, so this row is inherently per-instance. Defaults
+  // to enabled when unset, so homestay tenants are unaffected.
+  "HOMESTAY_MODULE_ENABLED",
   // Model for CS message auto-translation (defaults to Haiku 4.5 when unset).
   "CS_TRANSLATE_MODEL",
 ];
@@ -79,6 +84,7 @@ router.get("/v1/integrations/status", async (_req: Request, res: Response): Prom
   const opsEmail = await getEnvVar("LEAD_NOTIFICATION_EMAIL");
   const anthropicKey = await getEnvVar("ANTHROPIC_API_KEY");
   const widgetEnabledRaw = await getEnvVar("CHAT_WIDGET_ENABLED");
+  const homestayModuleRaw = await getEnvVar("HOMESTAY_MODULE_ENABLED");
 
   const stripeConfigured = !!stripeKey;
   const cloudinaryConfigured = !!(cloudName && cloudApiKey && cloudApiSecret);
@@ -140,6 +146,11 @@ router.get("/v1/integrations/status", async (_req: Request, res: Response): Prom
       },
       billing: {
         recurring_invoices_enabled: (await getEnvVar("RECURRING_INVOICES_ENABLED")) === "true",
+      },
+      modules: {
+        // Enabled unless explicitly turned off, so tenants that never set it
+        // (e.g. the homestay-carrying MillionStay instance) keep the menus.
+        homestay_enabled: homestayModuleRaw !== "false",
       },
     },
   });

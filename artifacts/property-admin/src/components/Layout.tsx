@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useBrand } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useModules } from "@/hooks/useModules";
 import { cn } from "@/lib/utils";
 import { APP_NAME } from "@/lib/appName";
 import {
@@ -81,8 +82,20 @@ type NavSection = {
   defaultOpen?: boolean;
 };
 
-function getNav(t: (k: string) => string): NavSection[] {
-  return [
+// Nav hrefs belonging to the Homestay intake module. Hidden when the tenant
+// has the module disabled (see useModules / HOMESTAY_MODULE_ENABLED).
+const HOMESTAY_NAV_HREFS = new Set([
+  "/account/homestay-applications",
+  "/account/homestay-student-requests",
+  "/account/homestay-placements",
+]);
+
+function getNav(
+  t: (k: string) => string,
+  opts?: { homestayEnabled?: boolean },
+): NavSection[] {
+  const homestayEnabled = opts?.homestayEnabled ?? true;
+  const sections: NavSection[] = [
     {
       label: t("nav.account"),
       icon: Users,
@@ -224,6 +237,14 @@ function getNav(t: (k: string) => string): NavSection[] {
       ],
     },
   ];
+
+  if (!homestayEnabled) {
+    return sections.map((s) => ({
+      ...s,
+      items: s.items.filter((i) => !HOMESTAY_NAV_HREFS.has(i.href)),
+    }));
+  }
+  return sections;
 }
 
 function NavLeaf({
@@ -669,7 +690,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { logo, logoDark, brandName, darkMode, toggleDarkMode } = useBrand();
   const effectiveLogo = darkMode && logoDark ? logoDark : logo;
   const { t } = useTranslation();
-  const NAV = getNav(t);
+  const { homestayEnabled } = useModules();
+  const NAV = getNav(t, { homestayEnabled });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
     try {
