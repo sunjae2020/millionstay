@@ -4,6 +4,7 @@ import { formatDateTime } from "@/lib/date";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
+import { ServiceHostAccounting, ServiceHostPhotos, ServiceHostCs } from "./ServiceHostTabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/ui/date-input";
@@ -74,6 +75,7 @@ export default function ServiceHostDetail() {
     mutation: { onSuccess: () => { qc.invalidateQueries({ queryKey: getListServiceHostsQueryKey({}) }); setLocation("/booking/service-hosts"); } },
   });
 
+  const [tab, setTab] = useState("overview");
   const [specialties, setSpecialties] = useState<string[]>([]);
   useEffect(() => { if (host) setSpecialties(Array.isArray((host as any).specialties) ? (host as any).specialties : []); }, [host]);
   const toggleSpecialty = (s: string) => setSpecialties((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
@@ -103,6 +105,25 @@ export default function ServiceHostDetail() {
           </div>
         }
       />
+      {!isNew && (
+        <div className="flex border-b gap-1 px-6">
+          {[
+            { id: "overview", label: t("service_host.tab_overview", "개요") },
+            { id: "accounting", label: t("service_host.tab_accounting", "잡 & 정산") },
+            { id: "photos", label: t("service_host.tab_photos", "사진") },
+            { id: "cs", label: t("service_host.tab_cs", "CS 티켓") },
+          ].map((tb) => (
+            <button key={tb.id} type="button" onClick={() => setTab(tb.id)}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${tab === tb.id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+              {tb.label}
+            </button>
+          ))}
+        </div>
+      )}
+      {!isNew && tab === "accounting" && <div className="p-6 max-w-4xl"><ServiceHostAccounting hostId={String(id)} /></div>}
+      {!isNew && tab === "photos" && <div className="p-6 max-w-4xl"><ServiceHostPhotos hostId={String(id)} /></div>}
+      {!isNew && tab === "cs" && <div className="p-6 max-w-4xl"><ServiceHostCs hostId={String(id)} /></div>}
+      {(isNew || tab === "overview") && (
       <div className="p-6 max-w-3xl space-y-6">
         <div className="rounded-lg border bg-white p-6 space-y-4">
           <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">{t("service_host.section_general")}</h3>
@@ -248,6 +269,7 @@ export default function ServiceHostDetail() {
           </div>
         </div>
       </div>
+      )}
     </Layout>
   );
 }
