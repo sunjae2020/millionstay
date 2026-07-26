@@ -49,7 +49,7 @@ function statusBucket(raw: string): StatusBucket {
   if (s.includes("active")) return "active";
   if (s.includes("confirm")) return "confirmed";
   if (s.includes("pend") || s.includes("upcoming") || s.includes("review")) return "pending";
-  if (s.includes("complete") || s.includes("past") || s.includes("ended") || s.includes("checkout")) return "completed";
+  if (s.includes("complete") || s.includes("past") || s.includes("ended") || s.includes("checkout") || s.includes("checked")) return "completed";
   if (s.includes("cancel") || s.includes("void") || s.includes("reject")) return "cancelled";
   return "other";
 }
