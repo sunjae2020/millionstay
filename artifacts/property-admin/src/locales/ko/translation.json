@@ -4459,5 +4459,33 @@
   },
   "settings_email_templates": {
     "page_subtitle": "자동 이메일 알림 사용자 지정"
+  },
+  "coa": {
+    "subtitle": "원장 계정과목(GL 계정) 마스터",
+    "code": "코드",
+    "type": "구분",
+    "parent": "상위 계정",
+    "parent_ph": "상위 계정 코드 (선택)",
+    "type_asset": "자산",
+    "type_liability": "부채",
+    "type_equity": "자본",
+    "type_revenue": "수익",
+    "type_expense": "비용",
+    "new_account": "계정과목 추가",
+    "load_standard": "표준 계정과목 불러오기",
+    "empty": "등록된 계정과목이 없습니다",
+    "search_ph": "코드 또는 이름 검색",
+    "name_ph": "계정과목명",
+    "accounts_count": "개 계정",
+    "edit_title": "계정과목 수정",
+    "new_title": "계정과목 추가",
+    "toast_saved": "계정과목이 저장되었습니다",
+    "toast_save_failed": "계정과목 저장에 실패했습니다",
+    "toast_deleted": "계정과목이 삭제되었습니다",
+    "toast_delete_failed": "계정과목 삭제에 실패했습니다",
+    "delete_title": "계정과목을 삭제할까요?",
+    "delete_desc": "보관함으로 이동됩니다. 나중에 복원할 수 있습니다.",
+    "seeded_title": "표준 계정과목을 불러왔습니다",
+    "seeded_desc": "{{count}}개 계정이 추가되었습니다"
   }
 }

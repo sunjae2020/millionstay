@@ -75,6 +75,7 @@ export * from "./homestay_host_availability";
 export * from "./document_templates";
 export * from "./document_template_translations";
 export * from "./journal";
+export * from "./chart_of_accounts";
 export * from "./sale_listings";
 export * from "./sale_inquiries";
 export * from "./user_table_prefs";

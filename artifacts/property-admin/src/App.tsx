@@ -115,6 +115,7 @@ import DesignPage from "@/pages/settings/sub/Design";
 import ContractTypesPage from "@/pages/settings/sub/ContractTypes";
 import ProductGroupsPage from "@/pages/settings/sub/ProductGroups";
 import ProductTypesPage from "@/pages/settings/sub/ProductTypes";
+import CostCenterPage from "@/pages/settings/sub/CostCenter";
 import TranslationsPage from "@/pages/settings/sub/Translations";
 import BookingReportPage from "@/pages/settings/sub/BookingReport";
 import IntegrationsPage from "@/pages/settings/sub/Integrations";
@@ -348,9 +349,7 @@ function Router() {
       <Route path="/settings/payment-info/new" component={PaymentInfoDetail} />
       <Route path="/settings/payment-info/:id" component={PaymentInfoDetail} />
 
-      <Route path="/settings/cost-center">
-        {() => <ComingSoonPage title="Cost Center" subtitle="Cost centre configuration" />}
-      </Route>
+      <Route path="/settings/cost-center" component={CostCenterPage} />
 
       <Route path="/settings/suburbs" component={SuburbList} />
       <Route path="/settings/suburbs/new" component={SuburbDetail} />
