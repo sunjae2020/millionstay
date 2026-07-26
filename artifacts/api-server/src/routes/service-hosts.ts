@@ -90,7 +90,9 @@ router.get("/v1/service-hosts/:id", async (req, res): Promise<void> => {
 router.put("/v1/service-hosts/:id", async (req, res): Promise<void> => {
   const paramParsed = UpdateServiceHostParams.safeParse({ id: Number(req.params.id) });
   if (!paramParsed.success) { res.status(400).json({ error: paramParsed.error.message }); return; }
-  const bodyParsed = CreateServiceHostBody.safeParse(req.body);
+  // PUT is a partial update: reuse the Create schema but make every field optional
+  // so callers can update e.g. only `specialties` without re-sending `name`.
+  const bodyParsed = CreateServiceHostBody.partial().safeParse(req.body);
   if (!bodyParsed.success) { res.status(400).json({ error: bodyParsed.error.message }); return; }
   const updateSet: Record<string, unknown> = { ...bodyParsed.data };
   // specialties (Phase 3 auto-dispatch) — not in the shared zod schema, so read

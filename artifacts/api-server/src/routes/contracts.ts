@@ -277,11 +277,14 @@ async function generateContractInvoicesAndSchedules(
   // on payment postInvoicePaid credits it to Deposits Held (2100) instead of
   // revenue (H-402) — which is what move-out settlement later releases.
   //
-  // Guarded to FRESH contracts (no invoices existed before this generation) so we
-  // never retroactively bond-invoice a contract already running whose bond may
-  // have been collected off-system. Also idempotent on the deposit line.
+  // Guarded to contracts with NO paid invoices yet, so we never retroactively
+  // bond-invoice a running contract whose bond may have been collected off-system.
+  // Using "no paid invoices" rather than "no invoices at all" lets a contract whose
+  // activation previously failed part-way (rent invoices created, then an error)
+  // still get its deposit invoice on a re-activate. Also idempotent on the deposit
+  // line (existingDeposit check below), so it never double-creates.
   const bond = Number(contract.bond_amount ?? 0);
-  if (bond > 0 && existingInvoices.length === 0) {
+  if (bond > 0 && !existingInvoices.some((i) => i.status === "Paid")) {
     const existingDeposit = await db
       .select({ id: invoiceLineItemsTable.id })
       .from(invoiceLineItemsTable)
@@ -738,15 +741,28 @@ router.post("/v1/contracts/:id/issue-signing", async (req, res): Promise<void> =
 
 router.post("/v1/contracts/:id/activate", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
+  const [existing] = await db.select().from(contractsTable).where(eq(contractsTable.id, id));
+  if (!existing) { res.status(404).json({ error: "NOT_FOUND" }); return; }
+
+  // Generate invoices + payment schedules FIRST, then flip the status. If
+  // generation throws, the contract is left in its prior (pre-Active) status so
+  // a retry re-runs cleanly — never a half-activated "Active but no invoices"
+  // record. mode="incremental" creates a cron-billed schedule instead of
+  // pre-generating the whole term up front.
+  const billingMode = req.body?.mode === "incremental" ? "incremental" : "upfront";
+  let generated: { invoices: number; schedules: number };
+  try {
+    generated = await generateContractInvoicesAndSchedules(id, billingMode);
+  } catch (err) {
+    console.error("[contracts] activate: invoice generation failed:", err);
+    res.status(500).json({ error: "INVOICE_GENERATION_FAILED", message: "Contract left un-activated; safe to retry." });
+    return;
+  }
+
   const [row] = await db.update(contractsTable)
     .set({ status: "Active", effective_date: new Date().toISOString().slice(0, 10) })
     .where(eq(contractsTable.id, id)).returning();
   if (!row) { res.status(404).json({ error: "NOT_FOUND" }); return; }
-
-  // Auto-generate invoices + payment schedules. mode="incremental" creates a
-  // cron-billed schedule instead of pre-generating the whole term up front.
-  const billingMode = req.body?.mode === "incremental" ? "incremental" : "upfront";
-  const generated = await generateContractInvoicesAndSchedules(id, billingMode);
 
   // Also set linked booking to Active
   if (row.booking_id) {

@@ -1,9 +1,12 @@
 import { Router } from "express";
-import { db, workOrdersTable, propertiesTable, spacesTable, contactsTable, serviceHostsTable } from "@workspace/db";
-import { eq, ilike, and, isNull, inArray } from "drizzle-orm";
+import multer from "multer";
+import { db, workOrdersTable, workOrderPhotosTable, propertiesTable, spacesTable, contactsTable, serviceHostsTable, invoicesTable, accountsTable } from "@workspace/db";
+import { eq, ilike, and, isNull, inArray, desc } from "drizzle-orm";
 import { dispatchWorkOrder } from "../lib/dispatch/workOrderDispatch";
 import { logAction } from "../utils/auditLog";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
+import { uploadToCloudinary, isCloudinaryConfigured, cldFolder } from "../utils/cloudinary";
+import { getRateToAud } from "../lib/rateSnapshot";
 import {
   CreateWorkOrderBody,
   UpdateWorkOrderBody,
@@ -12,6 +15,14 @@ import {
 } from "@workspace/api-zod";
 
 const router = Router();
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+
+async function nextInvoiceRef(): Promise<string> {
+  const year = new Date().getFullYear();
+  const rows = await db.select({ id: invoicesTable.id }).from(invoicesTable)
+    .where(ilike(invoicesTable.invoice_ref, `MS-INV-${year}-%`));
+  return `MS-INV-${year}-${String(rows.length + 1).padStart(5, "0")}`;
+}
 
 async function nextOrderRef(): Promise<string> {
   const year = new Date().getFullYear();
@@ -174,9 +185,20 @@ router.delete("/v1/work-orders/:id", async (req, res): Promise<void> => {
 });
 
 router.post("/v1/work-orders/:id/start", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const [cur] = await db.select().from(workOrdersTable).where(eq(workOrdersTable.id, id));
+  if (!cur) { res.status(404).json({ error: "Not found" }); return; }
+  if (cur.status !== "Open") { res.status(400).json({ error: "Work order not in Open status" }); return; }
+  const now = new Date();
+  // Starting work implies the dispatched partner acknowledged the job. Resolve the
+  // ack-SLA: a missed deadline stays 'breached' for the audit trail; otherwise it
+  // moves to 'acknowledged'. Un-dispatched orders keep their (null) sla_status.
+  const sla_status = cur.sla_status === "breached"
+    ? "breached"
+    : cur.sla_status === "pending_ack" ? "acknowledged" : cur.sla_status;
   const [row] = await db.update(workOrdersTable)
-    .set({ status: "InProgress", updated_at: new Date() })
-    .where(and(eq(workOrdersTable.id, Number(req.params.id)), eq(workOrdersTable.status, "Open")))
+    .set({ status: "InProgress", acknowledged_at: cur.acknowledged_at ?? (cur.service_host_id ? now : null), sla_status, updated_at: now })
+    .where(and(eq(workOrdersTable.id, id), eq(workOrdersTable.status, "Open")))
     .returning();
   if (!row) { res.status(400).json({ error: "Work order not in Open status" }); return; }
   const [result] = await enrichWorkOrders([row]);
@@ -196,19 +218,117 @@ router.post("/v1/work-orders/:id/review", async (req, res): Promise<void> => {
 router.post("/v1/work-orders/:id/complete", async (req, res): Promise<void> => {
   const parsed = CompleteWorkOrderBody.safeParse(req.body ?? {});
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  const id = Number(req.params.id);
+  const [cur] = await db.select().from(workOrdersTable).where(eq(workOrdersTable.id, id));
+  if (!cur) { res.status(404).json({ error: "Not found" }); return; }
+  const now = new Date();
   const updates: Partial<typeof workOrdersTable.$inferInsert> = {
     status: "Completed",
-    completed_at: new Date(),
-    updated_at: new Date(),
+    completed_at: now,
+    updated_at: now,
   };
+  // A completed job was necessarily acknowledged. Finalise the ack-SLA: keep a
+  // recorded 'breached' for the audit trail, otherwise mark it 'met'. Backfill
+  // acknowledged_at for dispatched orders that were completed without an explicit
+  // start/acknowledge step.
+  if (cur.service_host_id) {
+    updates.sla_status = cur.sla_status === "breached" ? "breached" : "met";
+    if (!cur.acknowledged_at) updates.acknowledged_at = now;
+  }
   if (parsed.data.cost != null) updates.cost = parsed.data.cost;
   if (parsed.data.notes != null) updates.notes = parsed.data.notes;
   const [row] = await db.update(workOrdersTable).set(updates)
-    .where(eq(workOrdersTable.id, Number(req.params.id)))
+    .where(eq(workOrdersTable.id, id))
     .returning();
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
   const [result] = await enrichWorkOrders([row]);
   res.json(result);
+});
+
+// ── Owner charge-back (#5) ───────────────────────────────────────────────────
+// Recover a completed repair's cost from the property owner by raising a Draft
+// invoice to them, linked back to the work order. Idempotent per work order.
+// Body: { amount?, markup_pct?, account_id?, currency?, due_date? }. Defaults to
+// the work order's own cost, and the space's landlord (spaces.landlord_account_id).
+router.post("/v1/work-orders/:id/charge-owner", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const [wo] = await db.select().from(workOrdersTable).where(eq(workOrdersTable.id, id));
+  if (!wo) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Work order not found" } }); return; }
+
+  // Idempotent: one charge-back invoice per work order.
+  const [already] = await db.select().from(invoicesTable).where(eq(invoicesTable.work_order_id, id)).limit(1);
+  if (already) { res.json({ success: true, data: already, alreadyCharged: true }); return; }
+
+  if (wo.status !== "Completed") {
+    res.status(409).json({ success: false, error: { code: "NOT_COMPLETED", message: "Only a completed work order can be charged to the owner." } }); return;
+  }
+
+  const base = req.body?.amount != null ? Number(req.body.amount) : Number(wo.cost ?? 0);
+  if (!(base > 0)) {
+    res.status(400).json({ success: false, error: { code: "NO_COST", message: "No cost to charge — set the work order cost or pass an amount." } }); return;
+  }
+  const markupPct = Number(req.body?.markup_pct ?? 0);
+  const amount = Math.round(base * (1 + markupPct / 100) * 100) / 100;
+
+  // Resolve the owner: explicit override, else the space's landlord.
+  let ownerAccountId: number | null = req.body?.account_id != null ? Number(req.body.account_id) : null;
+  if (!ownerAccountId && wo.space_id) {
+    const [sp] = await db.select({ landlord: spacesTable.landlord_account_id }).from(spacesTable).where(eq(spacesTable.id, wo.space_id));
+    ownerAccountId = sp?.landlord ?? null;
+  }
+  if (!ownerAccountId) {
+    res.status(400).json({ success: false, error: { code: "NO_OWNER", message: "Could not resolve the property owner; pass account_id." } }); return;
+  }
+
+  const ccy = req.body?.currency ?? wo.currency ?? "AUD";
+  const [inv] = await db.insert(invoicesTable).values({
+    invoice_ref: await nextInvoiceRef(),
+    account_id: ownerAccountId,
+    work_order_id: id,
+    amount: String(amount),
+    currency: ccy,
+    exchange_rate_to_aud: await getRateToAud(ccy),
+    status: "Draft",
+    due_date: req.body?.due_date ?? null,
+    description: `Repair charge — ${wo.order_ref}${wo.title ? `: ${wo.title}` : ""}${markupPct ? ` (+${markupPct}% admin)` : ""}`,
+  }).returning();
+  void logAction({ entityType: "work_order", entityId: id, action: "UPDATE", actorId: (req as any).user?.id ?? null, newValue: { charged_owner_invoice_id: inv.id, account_id: ownerAccountId, amount } });
+  res.status(201).json({ success: true, data: inv });
+});
+
+// ── Work-order photos (#7) — before/after (request/confirmation) evidence ─────
+router.get("/v1/work-orders/:id/photos", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const rows = await db.select().from(workOrderPhotosTable)
+    .where(eq(workOrderPhotosTable.work_order_id, id)).orderBy(desc(workOrderPhotosTable.id));
+  res.json({ success: true, data: rows });
+});
+
+// Accepts either a multipart `image` file (uploaded to Cloudinary) or a JSON body
+// with an existing `url`. Fields: kind (before|after), caption, uploaded_by_type.
+router.post("/v1/work-orders/:id/photos", upload.single("image"), async (req, res): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    const [wo] = await db.select({ id: workOrdersTable.id }).from(workOrdersTable).where(eq(workOrdersTable.id, id));
+    if (!wo) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Work order not found" } }); return; }
+
+    let url: string | null = typeof req.body?.url === "string" ? req.body.url : null;
+    if (!url && req.file) {
+      if (!isCloudinaryConfigured()) { res.status(503).json({ success: false, error: { code: "NOT_CONFIGURED", message: "Image upload not configured" } }); return; }
+      const result = await uploadToCloudinary(req.file.buffer, { folder: cldFolder("work-orders") });
+      url = result.secure_url;
+    }
+    if (!url) { res.status(400).json({ success: false, error: { code: "NO_IMAGE", message: "Provide an image file or a url." } }); return; }
+
+    const kind = req.body?.kind === "before" ? "before" : "after";
+    const uploaded_by_type = req.body?.uploaded_by_type === "partner" ? "partner" : "admin";
+    const [row] = await db.insert(workOrderPhotosTable).values({
+      work_order_id: id, url, kind, uploaded_by_type, caption: req.body?.caption ?? null,
+    }).returning();
+    res.status(201).json({ success: true, data: row });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: "UPLOAD_FAILED", message: err.message } });
+  }
 });
 
 router.post("/v1/work-orders/:id/cancel", async (req, res): Promise<void> => {
