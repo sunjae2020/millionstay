@@ -31,7 +31,7 @@ export default function ForgotPasswordPage() {
         <div>
           {import.meta.env.VITE_LOGO_MODE === "text"
             ? <span className="font-display font-extrabold tracking-tight text-primary text-xl whitespace-nowrap block mb-6">{APP_NAME}</span>
-            : <img src={`${import.meta.env.BASE_URL}logo-horizontal.png`} alt={APP_NAME} className="h-7 mb-6" />}
+            : <img src={import.meta.env.VITE_LOGO_URL || `${import.meta.env.BASE_URL}logo-horizontal.png`} alt={APP_NAME} className={`mb-6 w-auto ${import.meta.env.VITE_LOGO_URL ? "h-11" : "h-7"}`} />}
           <h1 className="text-2xl font-bold text-slate-900">Reset your password</h1>
           <p className="text-slate-500 text-sm mt-1">
             Enter your account email and we'll send you a reset link.
