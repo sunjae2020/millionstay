@@ -5,10 +5,16 @@ import { useAuth } from "@/lib/auth";
 import { useDarkMode } from "@/lib/darkMode";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { APP_NAME } from "@/lib/appName";
+import { OWNER_SITE_ENABLED } from "@/lib/flags";
 import {
   LayoutDashboard, Building2, BookOpen, TrendingUp,
-  LogOut, User, ChevronRight, Menu, X, Sun, Moon, Globe, Inbox, LifeBuoy,
+  LogOut, User, ChevronRight, Menu, X, Sun, Moon, Globe, Inbox, LifeBuoy, FileText,
 } from "lucide-react";
+
+// White-label tenants (VITE_LOGO_URL set) render their own logo. On the dark
+// sidebar it is knocked out to white (brightness(0) invert(1)), matching the
+// login page's branded panel.
+const HAS_TENANT_LOGO = Boolean(import.meta.env.VITE_LOGO_URL);
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -22,8 +28,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/properties", icon: Building2, label: t("nav.properties") },
     { href: "/bookings", icon: BookOpen, label: t("nav.occupancy") },
     { href: "/revenue", icon: TrendingUp, label: t("nav.revenue") },
-    { href: "/site", icon: Globe, label: t("nav.site", "My Site") },
-    { href: "/inquiries", icon: Inbox, label: t("nav.inquiries", "Inquiries") },
+    { href: "/documents", icon: FileText, label: t("nav.documents", "Documents") },
+    ...(OWNER_SITE_ENABLED
+      ? [
+          { href: "/site", icon: Globe, label: t("nav.site", "My Site") },
+          { href: "/inquiries", icon: Inbox, label: t("nav.inquiries", "Inquiries") },
+        ]
+      : []),
     { href: "/support", icon: LifeBuoy, label: t("nav.support", "Support") },
   ];
 
@@ -62,9 +73,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <span className="font-display font-extrabold tracking-tight text-white text-xl whitespace-nowrap">{APP_NAME}</span>
             ) : (
               <img
-                src={`${import.meta.env.BASE_URL}millionstay-logo.png`}
+                src={import.meta.env.VITE_LOGO_URL || `${import.meta.env.BASE_URL}millionstay-logo.png`}
                 alt={APP_NAME}
                 className="h-[2.625rem] w-auto object-contain"
+                style={HAS_TENANT_LOGO ? { filter: "brightness(0) invert(1)" } : undefined}
               />
             )}
           </div>
@@ -148,7 +160,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <span className="font-display font-extrabold tracking-tight text-primary text-xl whitespace-nowrap">{APP_NAME}</span>
           ) : (
             <img
-              src={`${import.meta.env.BASE_URL}logo-horizontal.png`}
+              src={import.meta.env.VITE_LOGO_URL || `${import.meta.env.BASE_URL}logo-horizontal.png`}
               alt={APP_NAME}
               className="h-9 w-auto object-contain"
             />

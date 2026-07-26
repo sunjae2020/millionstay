@@ -15,10 +15,11 @@ import {
   leadsTable,
   spaceAvailabilityTable,
   spaceTermCalendarTable,
+  documentsTable,
   validateSlug,
 } from "@workspace/db";
 import { requireOwnerAuth, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth";
-import { isCloudinaryConfigured, uploadToCloudinary, cldFolder } from "../utils/cloudinary";
+import { isCloudinaryConfigured, uploadToCloudinary, cldFolder, generateSignedUrl } from "../utils/cloudinary";
 import { logAction } from "../utils/auditLog";
 import { syncOwnerSubdomain } from "../lib/vercelDomains";
 import { parsePageParams, pageMeta, paginateArray } from "../utils/pagination";
@@ -484,6 +485,273 @@ router.get("/v1/owner/revenue", requireOwnerAuth, async (req, res): Promise<void
     },
     meta: pageMeta(filteredInvoices.length, { limit, offset, page }),
   });
+});
+
+/* ═══════════════════════════════════════════════════════
+   Analytics — aggregated series/breakdowns for the owner
+   dashboard (revenue trend, occupancy, contracts, invoices).
+   All scoped to the owner's own properties/spaces.
+═══════════════════════════════════════════════════════ */
+router.get("/v1/owner/analytics", requireOwnerAuth, async (req, res): Promise<void> => {
+  const partner = (req as any).partner as PartnerAuthPayload;
+
+  const empty = {
+    revenue_trend: [] as Array<{ month: string; paid: number; pending: number }>,
+    occupancy: { occupied: 0, total: 0, rate: 0 },
+    contracts_by_status: [] as Array<{ status: string; count: number }>,
+    invoices_summary: { paid: 0, pending: 0, overdue: 0, paid_count: 0, pending_count: 0, overdue_count: 0 },
+    spaces_by_status: [] as Array<{ status: string; count: number }>,
+    revenue_by_property: [] as Array<{ property: string; paid: number }>,
+    currency: "KRW",
+  };
+
+  const properties = await db
+    .select({ id: propertiesTable.id, name: propertiesTable.name })
+    .from(propertiesTable)
+    .where(and(eq(propertiesTable.owner_account_id, partner.account_id), isNull(propertiesTable.deleted_at)));
+  const propertyIds = properties.map((p) => p.id);
+  if (!propertyIds.length) {
+    res.json({ success: true, data: empty });
+    return;
+  }
+
+  const spaces = await db
+    .select({ id: spacesTable.id, property_id: spacesTable.property_id, status: spacesTable.status, base_currency: spacesTable.base_currency })
+    .from(spacesTable)
+    .where(and(inArray(spacesTable.property_id, propertyIds), isNull(spacesTable.deleted_at)));
+  const spaceIds = spaces.map((s) => s.id);
+  const propNameById = Object.fromEntries(properties.map((p) => [p.id, p.name]));
+  const propIdBySpace = Object.fromEntries(spaces.map((s) => [s.id, s.property_id]));
+  const currency = spaces.find((s) => s.base_currency)?.base_currency ?? "KRW";
+
+  const bookings = spaceIds.length
+    ? await db
+        .select({
+          id: bookingsTable.id,
+          space_id: bookingsTable.space_id,
+          booking_status: bookingsTable.booking_status,
+          check_in_date: bookingsTable.check_in_date,
+          check_out_date: bookingsTable.check_out_date,
+        })
+        .from(bookingsTable)
+        .where(and(inArray(bookingsTable.space_id, spaceIds), eq(bookingsTable.status, "Active")))
+    : [];
+  const bookingIds = bookings.map((b) => b.id);
+
+  const invoices = bookingIds.length
+    ? await db
+        .select({
+          booking_id: invoicesTable.booking_id,
+          amount: invoicesTable.amount,
+          status: invoicesTable.status,
+          due_date: invoicesTable.due_date,
+          paid_at: invoicesTable.paid_at,
+        })
+        .from(invoicesTable)
+        .where(inArray(invoicesTable.booking_id, bookingIds))
+    : [];
+
+  const contracts = spaceIds.length
+    ? await db
+        .select({ status: contractsTable.status, space_id: contractsTable.space_id })
+        .from(contractsTable)
+        .where(and(inArray(contractsTable.space_id, spaceIds), isNull(contractsTable.deleted_at)))
+    : [];
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Revenue trend — last 12 months, paid vs. outstanding (by due month).
+  const months: string[] = [];
+  {
+    const d = new Date();
+    d.setUTCDate(1);
+    for (let i = 11; i >= 0; i--) {
+      const m = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - i, 1));
+      months.push(m.toISOString().slice(0, 7));
+    }
+  }
+  const trendMap = Object.fromEntries(months.map((m) => [m, { paid: 0, pending: 0 }]));
+  const bookingById = Object.fromEntries(bookings.map((b) => [b.id, b]));
+  const revByProp: Record<number, number> = {};
+  for (const inv of invoices) {
+    const ref = (inv.paid_at ? inv.paid_at.toISOString().slice(0, 7) : (inv.due_date ?? "").slice(0, 7));
+    const amt = Number(inv.amount ?? 0);
+    if (inv.status === "Paid") {
+      if (trendMap[ref]) trendMap[ref].paid += amt;
+      const sid = bookingById[inv.booking_id ?? -1]?.space_id;
+      const pid = sid != null ? propIdBySpace[sid] : undefined;
+      if (pid != null) revByProp[pid] = (revByProp[pid] ?? 0) + amt;
+    } else if (inv.status !== "Void" && trendMap[ref]) {
+      trendMap[ref].pending += amt;
+    }
+  }
+  const revenue_trend = months.map((m) => ({ month: m, paid: trendMap[m].paid, pending: trendMap[m].pending }));
+
+  // Occupancy — spaces with a booking that spans today.
+  const occupiedSpaceIds = new Set<number>();
+  for (const b of bookings) {
+    if (!["Confirmed", "Active", "CheckedOut"].includes(b.booking_status)) continue;
+    const ci = b.check_in_date ?? null;
+    const co = b.check_out_date ?? null;
+    if (ci && ci <= today && (!co || co >= today) && b.space_id != null) occupiedSpaceIds.add(b.space_id);
+  }
+  const occupancy = { occupied: occupiedSpaceIds.size, total: spaces.length, rate: spaces.length ? Math.round((occupiedSpaceIds.size / spaces.length) * 100) : 0 };
+
+  // Contract + space status breakdowns.
+  const countBy = <T,>(rows: T[], key: (r: T) => string) => {
+    const m: Record<string, number> = {};
+    for (const r of rows) { const k = key(r) || "—"; m[k] = (m[k] ?? 0) + 1; }
+    return Object.entries(m).map(([status, count]) => ({ status, count }));
+  };
+  const contracts_by_status = countBy(contracts, (c) => c.status);
+  const spaces_by_status = countBy(spaces, (s) => s.status);
+
+  // Invoice money summary (paid / pending / overdue).
+  let paid = 0, pending = 0, overdue = 0, paidCount = 0, pendingCount = 0, overdueCount = 0;
+  for (const inv of invoices) {
+    const amt = Number(inv.amount ?? 0);
+    if (inv.status === "Paid") { paid += amt; paidCount++; }
+    else if (inv.status !== "Void") {
+      pending += amt; pendingCount++;
+      if (inv.due_date && inv.due_date < today) { overdue += amt; overdueCount++; }
+    }
+  }
+
+  const revenue_by_property = Object.entries(revByProp)
+    .map(([pid, amt]) => ({ property: propNameById[Number(pid)] ?? "—", paid: amt }))
+    .sort((a, b) => b.paid - a.paid)
+    .slice(0, 6);
+
+  res.json({
+    success: true,
+    data: {
+      revenue_trend,
+      occupancy,
+      contracts_by_status,
+      invoices_summary: { paid, pending, overdue, paid_count: paidCount, pending_count: pendingCount, overdue_count: overdueCount },
+      spaces_by_status,
+      revenue_by_property,
+      currency,
+    },
+  });
+});
+
+/* ═══════════════════════════════════════════════════════
+   Documents (문서 관리함) — READ-ONLY. Lists sensitive documents
+   (contracts, invoices, receipts…) that the operator has attached
+   to any entity the owner controls. Owner cannot upload/delete;
+   downloads go through a short-lived Cloudinary signed URL.
+═══════════════════════════════════════════════════════ */
+
+/** All entity ids (properties / spaces / bookings / contracts) this owner controls. */
+async function ownerEntityIds(accountId: number) {
+  const properties = await db
+    .select({ id: propertiesTable.id })
+    .from(propertiesTable)
+    .where(and(eq(propertiesTable.owner_account_id, accountId), isNull(propertiesTable.deleted_at)));
+  const propertyIds = properties.map((p) => p.id);
+
+  const spaces = propertyIds.length
+    ? await db.select({ id: spacesTable.id }).from(spacesTable).where(and(inArray(spacesTable.property_id, propertyIds), isNull(spacesTable.deleted_at)))
+    : [];
+  const spaceIds = spaces.map((s) => s.id);
+
+  const bookings = spaceIds.length
+    ? await db.select({ id: bookingsTable.id }).from(bookingsTable).where(inArray(bookingsTable.space_id, spaceIds))
+    : [];
+  const bookingIds = bookings.map((b) => b.id);
+
+  const contracts = spaceIds.length
+    ? await db.select({ id: contractsTable.id }).from(contractsTable).where(inArray(contractsTable.space_id, spaceIds))
+    : [];
+  const contractIds = contracts.map((c) => c.id);
+
+  return { propertyIds, spaceIds, bookingIds, contractIds };
+}
+
+/** Build the entity_type/entity_id filter for an owner's documents. */
+function ownerDocFilter(accountId: number, ids: Awaited<ReturnType<typeof ownerEntityIds>>) {
+  const clauses = [and(eq(documentsTable.entity_type, "account"), eq(documentsTable.entity_id, accountId))];
+  if (ids.propertyIds.length) clauses.push(and(eq(documentsTable.entity_type, "property"), inArray(documentsTable.entity_id, ids.propertyIds)));
+  if (ids.spaceIds.length) clauses.push(and(eq(documentsTable.entity_type, "space"), inArray(documentsTable.entity_id, ids.spaceIds)));
+  if (ids.bookingIds.length) clauses.push(and(eq(documentsTable.entity_type, "booking"), inArray(documentsTable.entity_id, ids.bookingIds)));
+  if (ids.contractIds.length) clauses.push(and(eq(documentsTable.entity_type, "contract"), inArray(documentsTable.entity_id, ids.contractIds)));
+  return or(...clauses);
+}
+
+/* GET /api/v1/owner/documents — paginated list of the owner's documents. */
+router.get("/v1/owner/documents", requireOwnerAuth, async (req, res): Promise<void> => {
+  const partner = (req as any).partner as PartnerAuthPayload;
+  const ids = await ownerEntityIds(partner.account_id);
+
+  const rows = await db
+    .select({
+      id: documentsTable.id,
+      entity_type: documentsTable.entity_type,
+      entity_id: documentsTable.entity_id,
+      doc_type: documentsTable.doc_type,
+      doc_ref: documentsTable.doc_ref,
+      version: documentsTable.version,
+      file_name: documentsTable.file_name,
+      file_size: documentsTable.file_size,
+      mime_type: documentsTable.mime_type,
+      created_at: documentsTable.created_at,
+    })
+    .from(documentsTable)
+    .where(and(isNull(documentsTable.deleted_at), ownerDocFilter(partner.account_id, ids)))
+    .orderBy(desc(documentsTable.created_at));
+
+  const typeFilter = typeof req.query.doc_type === "string" ? req.query.doc_type : "";
+  const { limit, offset, page, q } = parsePageParams(req.query);
+  const lowerQ = q.toLowerCase();
+  const filtered = rows.filter((d) => {
+    if (typeFilter && d.doc_type !== typeFilter) return false;
+    if (!lowerQ) return true;
+    return (d.file_name ?? "").toLowerCase().includes(lowerQ) || (d.doc_ref ?? "").toLowerCase().includes(lowerQ);
+  });
+
+  res.json({
+    success: true,
+    data: paginateArray(filtered, { limit, offset }),
+    meta: pageMeta(filtered.length, { limit, offset, page }),
+  });
+});
+
+/* GET /api/v1/owner/documents/:id/download — returns a short-lived signed URL. */
+router.get("/v1/owner/documents/:id/download", requireOwnerAuth, async (req, res): Promise<void> => {
+  const partner = (req as any).partner as PartnerAuthPayload;
+  const docId = String(req.params.id);
+
+  const [doc] = await db
+    .select({ entity_type: documentsTable.entity_type, entity_id: documentsTable.entity_id, cloudinary_public_id: documentsTable.cloudinary_public_id })
+    .from(documentsTable)
+    .where(and(eq(documentsTable.id, docId), isNull(documentsTable.deleted_at)))
+    .limit(1);
+
+  if (!doc) {
+    res.status(404).json({ success: false, error: "Document not found" });
+    return;
+  }
+
+  // Ownership check: the doc's entity must belong to this owner.
+  const ids = await ownerEntityIds(partner.account_id);
+  const owned =
+    (doc.entity_type === "account" && doc.entity_id === partner.account_id) ||
+    (doc.entity_type === "property" && ids.propertyIds.includes(doc.entity_id)) ||
+    (doc.entity_type === "space" && ids.spaceIds.includes(doc.entity_id)) ||
+    (doc.entity_type === "booking" && ids.bookingIds.includes(doc.entity_id)) ||
+    (doc.entity_type === "contract" && ids.contractIds.includes(doc.entity_id));
+
+  if (!owned) {
+    res.status(403).json({ success: false, error: "Forbidden" });
+    return;
+  }
+  if (!isCloudinaryConfigured() || !doc.cloudinary_public_id) {
+    res.status(404).json({ success: false, error: "File unavailable" });
+    return;
+  }
+
+  res.json({ success: true, data: { url: generateSignedUrl(doc.cloudinary_public_id, 300) } });
 });
 
 /* ═══════════════════════════════════════════════════════

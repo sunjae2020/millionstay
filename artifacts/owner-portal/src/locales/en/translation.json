@@ -20,7 +20,8 @@
     "dark_mode": "Dark mode",
     "light_mode": "Light mode",
     "switch_to_light": "Switch to light mode",
-    "switch_to_dark": "Switch to dark mode"
+    "switch_to_dark": "Switch to dark mode",
+    "documents": "Documents"
   },
   "common": {
     "loading": "Loading...",
@@ -104,7 +105,26 @@
     "site_cta_sub": "A public page where guests browse and book only your accommodation.",
     "site_manage": "Manage site",
     "site_get_started": "Get started",
-    "recent_inquiries": "Recent inquiries"
+    "recent_inquiries": "Recent inquiries",
+    "kpi_month_revenue": "This month's revenue",
+    "kpi_paid_invoices": "{{count}} invoices paid",
+    "kpi_occupancy": "Occupancy",
+    "kpi_occupancy_sub": "{{occupied}} of {{total}} spaces",
+    "kpi_active_bookings": "Active bookings",
+    "kpi_overdue": "Overdue",
+    "kpi_overdue_sub": "{{count}} invoices",
+    "revenue_trend": "Revenue trend",
+    "revenue_by_property": "Revenue by property",
+    "no_data": "No data yet",
+    "legend_paid": "Paid",
+    "legend_pending": "Outstanding",
+    "occupancy_title": "Occupancy",
+    "contracts_title": "Contracts",
+    "spaces_status_title": "Spaces by status",
+    "no_contracts": "No contracts",
+    "occupied": "Occupied",
+    "vacant": "Vacant",
+    "per_week": "wk"
   },
   "properties": {
     "title": "My Properties",
@@ -181,7 +201,11 @@
     "Inactive": "Inactive",
     "Paid": "Paid",
     "Overdue": "Overdue",
-    "Void": "Void"
+    "Void": "Void",
+    "Sent": "Sent",
+    "Signed": "Signed",
+    "Expired": "Expired",
+    "Terminated": "Terminated"
   },
   "site": {
     "title": "My Landing Site",
@@ -284,5 +308,28 @@
     "last_reply": "Last reply",
     "no_reply_yet": "No replies yet",
     "english_label": "English"
+  },
+  "documents": {
+    "title": "Documents",
+    "subtitle": "Contracts, invoices and records your operator has shared with you.",
+    "all": "All documents",
+    "search": "Search files",
+    "col_name": "Document",
+    "col_type": "Type",
+    "col_ref": "Reference",
+    "col_size": "Size",
+    "col_date": "Date",
+    "col_action": "",
+    "empty": "No documents yet",
+    "download": "Download",
+    "type": {
+      "contract": "Contract",
+      "invoice": "Invoice",
+      "receipt": "Receipt",
+      "quote": "Quote",
+      "tenancy": "Tenancy",
+      "placement": "Placement",
+      "passport": "Passport"
+    }
   }
 }

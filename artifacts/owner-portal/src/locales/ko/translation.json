@@ -20,7 +20,8 @@
     "dark_mode": "다크 모드",
     "light_mode": "라이트 모드",
     "switch_to_light": "라이트 모드로 전환",
-    "switch_to_dark": "다크 모드로 전환"
+    "switch_to_dark": "다크 모드로 전환",
+    "documents": "문서함"
   },
   "common": {
     "loading": "로딩 중...",
@@ -104,7 +105,26 @@
     "site_cta_sub": "게스트가 내 숙소만 둘러보고 예약하는 공개 페이지입니다.",
     "site_manage": "사이트 관리",
     "site_get_started": "시작하기",
-    "recent_inquiries": "최근 문의"
+    "recent_inquiries": "최근 문의",
+    "kpi_month_revenue": "이번 달 수익",
+    "kpi_paid_invoices": "결제 완료 {{count}}건",
+    "kpi_occupancy": "점유율",
+    "kpi_occupancy_sub": "전체 {{total}}실 중 {{occupied}}실",
+    "kpi_active_bookings": "활성 예약",
+    "kpi_overdue": "미수금",
+    "kpi_overdue_sub": "{{count}}건",
+    "revenue_trend": "수익 추이",
+    "revenue_by_property": "자산별 수익",
+    "no_data": "데이터 없음",
+    "legend_paid": "수납",
+    "legend_pending": "미수",
+    "occupancy_title": "점유 현황",
+    "contracts_title": "계약",
+    "spaces_status_title": "상태별 공간",
+    "no_contracts": "계약 없음",
+    "occupied": "사용중",
+    "vacant": "공실",
+    "per_week": "주"
   },
   "properties": {
     "title": "내 자산",
@@ -181,7 +201,11 @@
     "Inactive": "비활성",
     "Paid": "결제됨",
     "Overdue": "연체",
-    "Void": "무효"
+    "Void": "무효",
+    "Sent": "발송",
+    "Signed": "서명완료",
+    "Expired": "만료",
+    "Terminated": "해지"
   },
   "site": {
     "title": "내 랜딩 사이트",
@@ -284,5 +308,28 @@
     "last_reply": "최근 답변",
     "no_reply_yet": "아직 답변 없음",
     "english_label": "영어"
+  },
+  "documents": {
+    "title": "문서함",
+    "subtitle": "운영사가 공유한 계약서·청구서·증빙 문서입니다.",
+    "all": "전체 문서",
+    "search": "파일 검색",
+    "col_name": "문서",
+    "col_type": "종류",
+    "col_ref": "문서번호",
+    "col_size": "크기",
+    "col_date": "날짜",
+    "col_action": "",
+    "empty": "문서가 없습니다",
+    "download": "다운로드",
+    "type": {
+      "contract": "계약서",
+      "invoice": "청구서",
+      "receipt": "영수증",
+      "quote": "견적서",
+      "tenancy": "임대차계약",
+      "placement": "배정서",
+      "passport": "여권"
+    }
   }
 }

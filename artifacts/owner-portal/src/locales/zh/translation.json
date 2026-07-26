@@ -20,7 +20,8 @@
     "site": "我的网站",
     "inquiries": "咨询",
     "switch_to_light": "切换到浅色模式",
-    "switch_to_dark": "切换到深色模式"
+    "switch_to_dark": "切换到深色模式",
+    "documents": "文档"
   },
   "common": {
     "loading": "加载中...",
@@ -104,7 +105,26 @@
     "site_cta_sub": "访客可在此浏览并预订您房源的公开页面。",
     "site_manage": "管理网站",
     "site_get_started": "开始使用",
-    "recent_inquiries": "最近的咨询"
+    "recent_inquiries": "最近的咨询",
+    "kpi_month_revenue": "本月收入",
+    "kpi_paid_invoices": "已付 {{count}} 张",
+    "kpi_occupancy": "入住率",
+    "kpi_occupancy_sub": "{{total}} 间中 {{occupied}} 间",
+    "kpi_active_bookings": "有效预订",
+    "kpi_overdue": "逾期",
+    "kpi_overdue_sub": "{{count}} 张",
+    "revenue_trend": "收入趋势",
+    "revenue_by_property": "各物业收入",
+    "no_data": "暂无数据",
+    "legend_paid": "已收",
+    "legend_pending": "未收",
+    "occupancy_title": "入住情况",
+    "contracts_title": "合同",
+    "spaces_status_title": "按状态分类的空间",
+    "no_contracts": "无合同",
+    "occupied": "已入住",
+    "vacant": "空置",
+    "per_week": "周"
   },
   "properties": {
     "title": "我的物业",
@@ -181,7 +201,11 @@
     "Inactive": "未启用",
     "Paid": "已付款",
     "Overdue": "逾期",
-    "Void": "作废"
+    "Void": "作废",
+    "Sent": "已发送",
+    "Signed": "已签署",
+    "Expired": "已过期",
+    "Terminated": "已终止"
   },
   "calendar": {
     "no_spaces": "无房间",
@@ -284,5 +308,28 @@
     "subtitle": "通过您的网站收到的访客留言。",
     "empty": "暂无咨询。",
     "search_placeholder": "搜索姓名、邮箱或留言…"
+  },
+  "documents": {
+    "title": "文档",
+    "subtitle": "运营方与您共享的合同、发票和记录。",
+    "all": "全部文档",
+    "search": "搜索文件",
+    "col_name": "文档",
+    "col_type": "类型",
+    "col_ref": "编号",
+    "col_size": "大小",
+    "col_date": "日期",
+    "col_action": "",
+    "empty": "暂无文档",
+    "download": "下载",
+    "type": {
+      "contract": "合同",
+      "invoice": "发票",
+      "receipt": "收据",
+      "quote": "报价单",
+      "tenancy": "租赁合同",
+      "placement": "安置",
+      "passport": "护照"
+    }
   }
 }

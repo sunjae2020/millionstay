@@ -10,10 +10,12 @@ import PropertiesPage from "@/pages/PropertiesPage";
 import PropertyDetailPage from "@/pages/PropertyDetailPage";
 import BookingsPage from "@/pages/BookingsPage";
 import RevenuePage from "@/pages/RevenuePage";
+import DocumentsPage from "@/pages/DocumentsPage";
 import SitePage from "@/pages/SitePage";
 import InquiriesPage from "@/pages/InquiriesPage";
 import SupportPage from "@/pages/SupportPage";
 import SupportDetailPage from "@/pages/SupportDetailPage";
+import { OWNER_SITE_ENABLED } from "@/lib/flags";
 
 function PortalRoutes() {
   const { user, loading } = useAuth();
@@ -44,8 +46,9 @@ function PortalRoutes() {
       <Route path="/properties/:id" component={PropertyDetailPage} />
       <Route path="/bookings" component={BookingsPage} />
       <Route path="/revenue" component={RevenuePage} />
-      <Route path="/site" component={SitePage} />
-      <Route path="/inquiries" component={InquiriesPage} />
+      <Route path="/documents" component={DocumentsPage} />
+      {OWNER_SITE_ENABLED && <Route path="/site" component={SitePage} />}
+      {OWNER_SITE_ENABLED && <Route path="/inquiries" component={InquiriesPage} />}
       <Route path="/support" component={SupportPage} />
       <Route path="/support/:id" component={SupportDetailPage} />
       <Route>

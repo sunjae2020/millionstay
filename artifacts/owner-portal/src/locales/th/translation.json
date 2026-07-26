@@ -20,7 +20,8 @@
     "site": "เว็บไซต์ของฉัน",
     "inquiries": "การสอบถาม",
     "switch_to_light": "สลับเป็นโหมดสว่าง",
-    "switch_to_dark": "สลับเป็นโหมดมืด"
+    "switch_to_dark": "สลับเป็นโหมดมืด",
+    "documents": "เอกสาร"
   },
   "common": {
     "loading": "กำลังโหลด...",
@@ -104,7 +105,26 @@
     "site_cta_sub": "หน้าสาธารณะที่ผู้เข้าพักสามารถเรียกดูและจองเฉพาะที่พักของคุณได้",
     "site_manage": "จัดการเว็บไซต์",
     "site_get_started": "เริ่มต้นใช้งาน",
-    "recent_inquiries": "การสอบถามล่าสุด"
+    "recent_inquiries": "การสอบถามล่าสุด",
+    "kpi_month_revenue": "รายได้เดือนนี้",
+    "kpi_paid_invoices": "ชำระแล้ว {{count}} รายการ",
+    "kpi_occupancy": "อัตราการเข้าพัก",
+    "kpi_occupancy_sub": "{{occupied}} จาก {{total}} ห้อง",
+    "kpi_active_bookings": "การจองที่ใช้งาน",
+    "kpi_overdue": "ค้างชำระ",
+    "kpi_overdue_sub": "{{count}} รายการ",
+    "revenue_trend": "แนวโน้มรายได้",
+    "revenue_by_property": "รายได้ตามอสังหาฯ",
+    "no_data": "ยังไม่มีข้อมูล",
+    "legend_paid": "ชำระแล้ว",
+    "legend_pending": "ค้างชำระ",
+    "occupancy_title": "การเข้าพัก",
+    "contracts_title": "สัญญา",
+    "spaces_status_title": "ห้องตามสถานะ",
+    "no_contracts": "ไม่มีสัญญา",
+    "occupied": "เข้าพัก",
+    "vacant": "ว่าง",
+    "per_week": "สัปดาห์"
   },
   "properties": {
     "title": "ทรัพย์สินของฉัน",
@@ -181,7 +201,11 @@
     "Inactive": "ไม่ใช้งาน",
     "Paid": "ชำระแล้ว",
     "Overdue": "เกินกำหนด",
-    "Void": "เป็นโมฆะ"
+    "Void": "เป็นโมฆะ",
+    "Sent": "ส่งแล้ว",
+    "Signed": "ลงนามแล้ว",
+    "Expired": "หมดอายุ",
+    "Terminated": "ยกเลิก"
   },
   "calendar": {
     "no_spaces": "ไม่มีห้อง",
@@ -284,5 +308,28 @@
     "subtitle": "ข้อความจากผู้เข้าพักผ่านเว็บไซต์ของคุณ",
     "empty": "ยังไม่มีการสอบถาม",
     "search_placeholder": "ค้นหาชื่อ อีเมล หรือข้อความ…"
+  },
+  "documents": {
+    "title": "เอกสาร",
+    "subtitle": "สัญญา ใบแจ้งหนี้ และเอกสารที่ผู้ดูแลแบ่งปันกับคุณ",
+    "all": "เอกสารทั้งหมด",
+    "search": "ค้นหาไฟล์",
+    "col_name": "เอกสาร",
+    "col_type": "ประเภท",
+    "col_ref": "อ้างอิง",
+    "col_size": "ขนาด",
+    "col_date": "วันที่",
+    "col_action": "",
+    "empty": "ยังไม่มีเอกสาร",
+    "download": "ดาวน์โหลด",
+    "type": {
+      "contract": "สัญญา",
+      "invoice": "ใบแจ้งหนี้",
+      "receipt": "ใบเสร็จ",
+      "quote": "ใบเสนอราคา",
+      "tenancy": "สัญญาเช่า",
+      "placement": "การจัดวาง",
+      "passport": "หนังสือเดินทาง"
+    }
   }
 }

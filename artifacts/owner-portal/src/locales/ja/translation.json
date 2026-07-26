@@ -20,7 +20,8 @@
     "site": "マイサイト",
     "inquiries": "お問い合わせ",
     "switch_to_light": "ライトモードに切り替え",
-    "switch_to_dark": "ダークモードに切り替え"
+    "switch_to_dark": "ダークモードに切り替え",
+    "documents": "書類"
   },
   "common": {
     "loading": "読み込み中...",
@@ -104,7 +105,26 @@
     "site_cta_sub": "ゲストがあなたの宿泊施設だけを閲覧・予約できる公開ページです。",
     "site_manage": "サイトを管理",
     "site_get_started": "はじめる",
-    "recent_inquiries": "最近のお問い合わせ"
+    "recent_inquiries": "最近のお問い合わせ",
+    "kpi_month_revenue": "今月の収益",
+    "kpi_paid_invoices": "支払済 {{count}}件",
+    "kpi_occupancy": "稼働率",
+    "kpi_occupancy_sub": "{{total}}室中{{occupied}}室",
+    "kpi_active_bookings": "有効な予約",
+    "kpi_overdue": "延滞",
+    "kpi_overdue_sub": "{{count}}件",
+    "revenue_trend": "収益推移",
+    "revenue_by_property": "物件別収益",
+    "no_data": "データなし",
+    "legend_paid": "入金",
+    "legend_pending": "未収",
+    "occupancy_title": "稼働状況",
+    "contracts_title": "契約",
+    "spaces_status_title": "ステータス別スペース",
+    "no_contracts": "契約なし",
+    "occupied": "入居中",
+    "vacant": "空室",
+    "per_week": "週"
   },
   "properties": {
     "title": "マイ物件",
@@ -181,7 +201,11 @@
     "Inactive": "無効",
     "Paid": "支払済み",
     "Overdue": "延滞",
-    "Void": "無効"
+    "Void": "無効",
+    "Sent": "送信済",
+    "Signed": "署名済",
+    "Expired": "期限切れ",
+    "Terminated": "解約"
   },
   "calendar": {
     "no_spaces": "スペースなし",
@@ -284,5 +308,28 @@
     "subtitle": "ランディングサイトを通じて寄せられたゲストからのメッセージです。",
     "empty": "まだお問い合わせはありません。",
     "search_placeholder": "名前・メール・メッセージで検索…"
+  },
+  "documents": {
+    "title": "書類",
+    "subtitle": "運営者が共有した契約書・請求書・記録です。",
+    "all": "すべての書類",
+    "search": "ファイル検索",
+    "col_name": "書類",
+    "col_type": "種類",
+    "col_ref": "参照番号",
+    "col_size": "サイズ",
+    "col_date": "日付",
+    "col_action": "",
+    "empty": "書類がありません",
+    "download": "ダウンロード",
+    "type": {
+      "contract": "契約書",
+      "invoice": "請求書",
+      "receipt": "領収書",
+      "quote": "見積書",
+      "tenancy": "賃貸契約",
+      "placement": "配置",
+      "passport": "パスポート"
+    }
   }
 }
