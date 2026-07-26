@@ -17,7 +17,8 @@
     "support": "ฝ่ายสนับสนุน",
     "dark_mode": "โหมดมืด",
     "light_mode": "โหมดสว่าง",
-    "work_orders": "ใบสั่งงาน"
+    "work_orders": "ใบสั่งงาน",
+    "documents": "เอกสาร"
   },
   "common": {
     "loading": "กำลังโหลด...",
@@ -27,7 +28,8 @@
     "cancel": "ยกเลิก",
     "back": "กลับ",
     "tbd": "รอกำหนด",
-    "ongoing": "กำลังดำเนินการ"
+    "ongoing": "กำลังดำเนินการ",
+    "dismiss": "ปิด"
   },
   "login": {
     "headline_1": "ส่งมอบความเป็นเลิศ",
@@ -49,7 +51,8 @@
     "invalid": "ข้อมูลรับรองไม่ถูกต้อง",
     "secure": "การเข้าถึงที่ปลอดภัย · {{appName}} พอร์ทัลผู้ให้บริการ",
     "apply_prompt": "ต้องการเสนอบริการของคุณใช่ไหม?",
-    "apply_cta": "สมัครเป็นผู้ให้บริการ"
+    "apply_cta": "สมัครเป็นผู้ให้บริการ",
+    "forgot_password": "ลืมรหัสผ่าน?"
   },
   "trigger": {
     "at_checkin": "ที่เช็คอิน",
@@ -77,7 +80,24 @@
     "qlink_jobs": "งานของฉัน",
     "qlink_schedule": "กำหนดการ",
     "qlink_earnings": "รายได้",
-    "load_failed": "โหลดแดชบอร์ดไม่สำเร็จ"
+    "load_failed": "โหลดแดชบอร์ดไม่สำเร็จ",
+    "manage_orders": "จัดการใบสั่งงาน",
+    "kpi_total_orders": "ใบสั่งงานทั้งหมด",
+    "kpi_in_progress": "กำลังดำเนินการ",
+    "kpi_needs_ack": "รอการยืนยัน {{count}} รายการ",
+    "kpi_completed": "เสร็จสิ้น",
+    "kpi_revenue": "มูลค่างาน",
+    "revenue_by_category": "รายได้ตามหมวดหมู่",
+    "status_distribution": "สถานะงาน",
+    "no_orders": "ยังไม่มีใบสั่งงาน",
+    "sla_on_track": "ตามกำหนด",
+    "sla_awaiting_ack": "รอยืนยัน",
+    "sla_breached": "เกิน SLA",
+    "recent_orders": "ใบสั่งงานล่าสุด",
+    "col_order": "ใบสั่งงาน",
+    "col_category": "หมวดหมู่",
+    "col_status": "สถานะ",
+    "col_value": "มูลค่า"
   },
   "jobs": {
     "title": "งานของฉัน",
@@ -198,7 +218,9 @@
     "success_message": "ขอบคุณที่สนใจเป็นผู้ให้บริการของ {{appName}} ทีมปฏิบัติการของเราจะตรวจสอบใบสมัครและติดต่อกลับภายใน 1-2 วันทำการ",
     "reference_label": "เลขอ้างอิง:",
     "privacy_note": "การส่งใบสมัครถือว่าคุณยินยอมให้ {{appName}} ติดต่อคุณเกี่ยวกับใบสมัครนี้",
-    "privacy_policy_link": "Privacy Policy"
+    "privacy_policy_link": "Privacy Policy",
+    "phone_placeholder": "เช่น +82 10 1234 5678",
+    "service_area_placeholder": "เช่น เมืองหรือเขต"
   },
   "support": {
     "title": "ฝ่ายสนับสนุน",
@@ -235,7 +257,8 @@
     "created": "สร้างเมื่อ",
     "last_reply": "ตอบล่าสุด",
     "no_reply_yet": "ยังไม่มีการตอบกลับ",
-    "english_label": "ภาษาอังกฤษ"
+    "english_label": "ภาษาอังกฤษ",
+    "attachment_alt": "ไฟล์แนบ"
   },
   "workorders": {
     "title": "ใบสั่งงาน",
@@ -245,6 +268,97 @@
     "btn_acknowledge": "ยืนยัน",
     "btn_start": "เริ่มงาน",
     "btn_complete": "ทำเครื่องหมายเสร็จ",
-    "overdue": "เกินกำหนด — โปรดยืนยัน"
+    "overdue": "เกินกำหนด — โปรดยืนยัน",
+    "cat_plumbing": "ประปา",
+    "cat_cleaning": "ทำความสะอาด",
+    "cat_electrical": "ไฟฟ้า",
+    "cat_day_tour": "ทัวร์รายวัน",
+    "cat_fishing": "ตกปลา",
+    "cat_general": "ทั่วไป",
+    "cat_maintenance": "ซ่อมบำรุง",
+    "status_Open": "เปิด",
+    "status_InProgress": "กำลังดำเนินการ",
+    "status_Completed": "เสร็จสิ้น",
+    "status_Cancelled": "ยกเลิก",
+    "status_PendingReview": "รอตรวจสอบ",
+    "sla_pending_ack": "รอยืนยัน",
+    "sla_acknowledged": "ยืนยันแล้ว",
+    "sla_met": "ตรงเวลา",
+    "sla_breached": "เกินกำหนด",
+    "sla_escalated": "ยกระดับ",
+    "detail_back": "กลับไปที่รายการใบสั่งงาน",
+    "detail_not_found": "ไม่พบใบสั่งงาน",
+    "priority": "ความสำคัญ",
+    "priority_High": "สูง",
+    "priority_Normal": "ปกติ",
+    "priority_Low": "ต่ำ",
+    "description": "รายละเอียด",
+    "details": "ข้อมูล",
+    "dispatched": "เวลาที่มอบหมาย",
+    "acknowledged_at": "เวลาที่ยืนยัน",
+    "scheduled_at": "กำหนดการ",
+    "reported_at": "เวลาที่แจ้ง",
+    "completed_at": "เวลาที่เสร็จ",
+    "cost": "ค่าใช้จ่าย",
+    "notes": "หมายเหตุ"
+  },
+  "documents": {
+    "title": "เอกสาร",
+    "subtitle": "จัดเก็บและจัดการเอกสารการทำงานของคุณอย่างปลอดภัย",
+    "category": "หมวดหมู่",
+    "upload": "อัปโหลดเอกสาร",
+    "uploading": "กำลังอัปโหลด…",
+    "upload_hint": "PDF หรือรูปภาพ สูงสุด 20 MB ไฟล์จัดเก็บอย่างปลอดภัยและมองเห็นได้เฉพาะคุณและผู้ดูแลระบบ",
+    "empty": "ยังไม่มีเอกสาร",
+    "empty_help": "อัปโหลดเอกสารเพื่อเริ่มต้น",
+    "load_failed": "โหลดเอกสารไม่สำเร็จ",
+    "upload_failed": "อัปโหลดไม่สำเร็จ",
+    "download": "ดาวน์โหลด",
+    "download_failed": "ดาวน์โหลดไม่สำเร็จ",
+    "delete": "ลบ",
+    "delete_confirm": "ลบเอกสารนี้หรือไม่?",
+    "delete_failed": "ลบไม่สำเร็จ",
+    "type_contract": "สัญญา",
+    "type_invoice": "ใบแจ้งหนี้",
+    "type_report": "รายงาน",
+    "type_manual": "คู่มือ",
+    "type_other": "อื่นๆ"
+  },
+  "forgot": {
+    "title": "รีเซ็ตรหัสผ่าน",
+    "subtitle": "กรอกอีเมลบัญชีของคุณ แล้วเราจะส่งลิงก์รีเซ็ตให้",
+    "sent": "หากมีบัญชีสำหรับ {{email}} ระบบได้ส่งลิงก์รีเซ็ตแล้ว โปรดตรวจสอบกล่องจดหมาย ลิงก์จะหมดอายุใน 1 ชั่วโมง",
+    "back_to_login": "กลับไปที่หน้าเข้าสู่ระบบ",
+    "email": "ที่อยู่อีเมล",
+    "email_placeholder": "you@partner.com",
+    "sending": "กำลังส่ง...",
+    "send": "ส่งลิงก์รีเซ็ต"
+  },
+  "reset": {
+    "err_policy": "รหัสผ่านต้องมี 12 ตัวขึ้นไป พร้อมตัวพิมพ์ใหญ่ พิมพ์เล็ก ตัวเลข และอักขระพิเศษ",
+    "err_mismatch": "รหัสผ่านไม่ตรงกัน",
+    "err_failed": "รีเซ็ตไม่สำเร็จ ลิงก์อาจหมดอายุแล้ว",
+    "err_network": "เกิดข้อผิดพลาดเครือข่าย",
+    "title": "ตั้งรหัสผ่านใหม่",
+    "subtitle": "เลือกรหัสผ่านที่คาดเดายากและไม่ได้ใช้ที่อื่น",
+    "need_link": "หน้านี้ต้องใช้ลิงก์รีเซ็ตจากอีเมลของคุณ โปรดเปิดลิงก์ในข้อความที่เราส่งให้",
+    "done": "อัปเดตรหัสผ่านแล้ว คุณสามารถเข้าสู่ระบบได้",
+    "continue": "ไปที่หน้าเข้าสู่ระบบ",
+    "new_password": "รหัสผ่านใหม่",
+    "policy_hint": "12 ตัวขึ้นไป · ต้องมีพิมพ์ใหญ่+พิมพ์เล็ก+ตัวเลข+อักขระพิเศษ",
+    "confirm_password": "ยืนยันรหัสผ่านใหม่",
+    "updating": "กำลังอัปเดต...",
+    "submit": "ตั้งรหัสผ่านใหม่",
+    "back_to_login": "กลับไปที่หน้าเข้าสู่ระบบ"
+  },
+  "not_found": {
+    "title": "404 ไม่พบหน้า",
+    "desc": "ไม่มีหน้าที่คุณกำลังค้นหา"
+  },
+  "pagination": {
+    "rows_per_page": "แถวต่อหน้า:",
+    "range": "{{from}}–{{to}} จาก {{total}}",
+    "prev": "หน้าก่อนหน้า",
+    "next": "หน้าถัดไป"
   }
 }

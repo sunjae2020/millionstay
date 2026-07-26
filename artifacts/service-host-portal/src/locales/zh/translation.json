@@ -17,7 +17,8 @@
     "support": "客户支持",
     "dark_mode": "深色模式",
     "light_mode": "浅色模式",
-    "work_orders": "工单"
+    "work_orders": "工单",
+    "documents": "文档"
   },
   "common": {
     "loading": "加载中...",
@@ -27,7 +28,8 @@
     "cancel": "取消",
     "back": "返回",
     "tbd": "待定",
-    "ongoing": "进行中"
+    "ongoing": "进行中",
+    "dismiss": "关闭"
   },
   "login": {
     "headline_1": "每一次任务",
@@ -49,7 +51,8 @@
     "invalid": "凭证无效",
     "secure": "安全访问 · {{appName}} 服务主管门户",
     "apply_prompt": "想为我们提供服务？",
-    "apply_cta": "申请成为服务承包方"
+    "apply_cta": "申请成为服务承包方",
+    "forgot_password": "忘记密码？"
   },
   "trigger": {
     "at_checkin": "入住时",
@@ -77,7 +80,24 @@
     "qlink_jobs": "我的任务",
     "qlink_schedule": "日程",
     "qlink_earnings": "收入",
-    "load_failed": "加载仪表板失败"
+    "load_failed": "加载仪表板失败",
+    "manage_orders": "管理工单",
+    "kpi_total_orders": "工单总数",
+    "kpi_in_progress": "进行中",
+    "kpi_needs_ack": "{{count}} 项待确认",
+    "kpi_completed": "已完成",
+    "kpi_revenue": "工单金额",
+    "revenue_by_category": "按类别金额",
+    "status_distribution": "工单状态",
+    "no_orders": "暂无工单",
+    "sla_on_track": "正常",
+    "sla_awaiting_ack": "待确认",
+    "sla_breached": "SLA超时",
+    "recent_orders": "最近工单",
+    "col_order": "工单",
+    "col_category": "类别",
+    "col_status": "状态",
+    "col_value": "金额"
   },
   "jobs": {
     "title": "我的任务",
@@ -198,7 +218,9 @@
     "success_message": "感谢您有意成为 {{appName}} 的服务承包方。运营团队将审核您的申请，并在 1-2 个工作日内与您联系。",
     "reference_label": "申请编号：",
     "privacy_note": "提交即表示您同意 {{appName}} 就此申请与您联系。",
-    "privacy_policy_link": "Privacy Policy"
+    "privacy_policy_link": "Privacy Policy",
+    "phone_placeholder": "例如：+82 10 1234 5678",
+    "service_area_placeholder": "例如：城市或区域"
   },
   "support": {
     "title": "客户支持",
@@ -235,7 +257,8 @@
     "created": "创建时间",
     "last_reply": "最近回复",
     "no_reply_yet": "暂无回复",
-    "english_label": "英语"
+    "english_label": "英语",
+    "attachment_alt": "附件"
   },
   "workorders": {
     "title": "工单",
@@ -245,6 +268,97 @@
     "btn_acknowledge": "确认",
     "btn_start": "开始作业",
     "btn_complete": "标记完成",
-    "overdue": "已逾期 — 请确认"
+    "overdue": "已逾期 — 请确认",
+    "cat_plumbing": "管道",
+    "cat_cleaning": "清洁",
+    "cat_electrical": "电气",
+    "cat_day_tour": "一日游",
+    "cat_fishing": "海钓",
+    "cat_general": "一般",
+    "cat_maintenance": "维护",
+    "status_Open": "待处理",
+    "status_InProgress": "进行中",
+    "status_Completed": "已完成",
+    "status_Cancelled": "已取消",
+    "status_PendingReview": "待审核",
+    "sla_pending_ack": "待确认",
+    "sla_acknowledged": "已确认",
+    "sla_met": "按时",
+    "sla_breached": "超时",
+    "sla_escalated": "升级",
+    "detail_back": "返回工单列表",
+    "detail_not_found": "未找到工单",
+    "priority": "优先级",
+    "priority_High": "高",
+    "priority_Normal": "普通",
+    "priority_Low": "低",
+    "description": "描述",
+    "details": "详细信息",
+    "dispatched": "派发时间",
+    "acknowledged_at": "确认时间",
+    "scheduled_at": "计划日期",
+    "reported_at": "报告时间",
+    "completed_at": "完成时间",
+    "cost": "金额",
+    "notes": "备注"
+  },
+  "documents": {
+    "title": "文档",
+    "subtitle": "安全地存储和管理您的工作文档。",
+    "category": "类别",
+    "upload": "上传文档",
+    "uploading": "上传中…",
+    "upload_hint": "PDF或图片，最大20MB。文件安全存储，仅您和管理员可见。",
+    "empty": "暂无文档",
+    "empty_help": "上传文档以开始。",
+    "load_failed": "加载文档失败",
+    "upload_failed": "上传失败",
+    "download": "下载",
+    "download_failed": "下载失败",
+    "delete": "删除",
+    "delete_confirm": "删除此文档？",
+    "delete_failed": "删除失败",
+    "type_contract": "合同",
+    "type_invoice": "发票",
+    "type_report": "报告",
+    "type_manual": "手册",
+    "type_other": "其他"
+  },
+  "forgot": {
+    "title": "重置密码",
+    "subtitle": "输入您的账户邮箱，我们将发送重置链接。",
+    "sent": "如果 {{email}} 存在账户，重置链接已发送。请检查收件箱。链接将在1小时后失效。",
+    "back_to_login": "返回登录",
+    "email": "邮箱地址",
+    "email_placeholder": "you@partner.com",
+    "sending": "发送中...",
+    "send": "发送重置链接"
+  },
+  "reset": {
+    "err_policy": "密码须包含大写、小写、数字和特殊字符，且至少12位。",
+    "err_mismatch": "两次密码不一致。",
+    "err_failed": "重置失败，链接可能已过期。",
+    "err_network": "网络错误。",
+    "title": "设置新密码",
+    "subtitle": "请选择一个未在其他地方使用过的强密码。",
+    "need_link": "此页面需要邮件中的重置链接。请打开我们发送邮件中的链接。",
+    "done": "密码已更新，您现在可以登录。",
+    "continue": "前往登录",
+    "new_password": "新密码",
+    "policy_hint": "至少12位 · 需大写+小写+数字+特殊字符。",
+    "confirm_password": "确认新密码",
+    "updating": "更新中...",
+    "submit": "设置新密码",
+    "back_to_login": "返回登录"
+  },
+  "not_found": {
+    "title": "404 页面未找到",
+    "desc": "您访问的页面不存在。"
+  },
+  "pagination": {
+    "rows_per_page": "每页行数:",
+    "range": "第 {{from}}–{{to}} 条，共 {{total}} 条",
+    "prev": "上一页",
+    "next": "下一页"
   }
 }

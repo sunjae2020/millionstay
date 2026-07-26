@@ -220,7 +220,7 @@ export default function SupportDetailPage() {
                     <div className={`flex gap-2 mt-2 flex-wrap ${isAdmin ? "justify-start" : "justify-end"}`}>
                       {parsedImgs.map((url, i) => (
                         <a key={i} href={url} target="_blank" rel="noopener noreferrer">
-                          <img src={url} alt={`attachment ${i + 1}`} className="h-24 w-24 object-cover rounded-lg border border-border hover:opacity-90 transition-opacity" />
+                          <img src={url} alt={`${t("support.attachment_alt", "attachment")} ${i + 1}`} className="h-24 w-24 object-cover rounded-lg border border-border hover:opacity-90 transition-opacity" />
                         </a>
                       ))}
                     </div>
@@ -253,7 +253,7 @@ export default function SupportDetailPage() {
               <div className="flex gap-2 flex-wrap mb-3">
                 {images.map((img, i) => (
                   <div key={i} className="relative group w-16 h-16 rounded-lg overflow-hidden border border-border">
-                    <img src={img.url} alt="attachment" className="w-full h-full object-cover" />
+                    <img src={img.url} alt={t("support.attachment_alt", "attachment")} className="w-full h-full object-cover" />
                     <button
                       type="button"
                       onClick={() => setImages((prev) => prev.filter((_, j) => j !== i))}

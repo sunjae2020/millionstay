@@ -9,10 +9,13 @@ import DashboardPage from "@/pages/DashboardPage";
 import JobsPage from "@/pages/JobsPage";
 import JobDetailPage from "@/pages/JobDetailPage";
 import WorkOrdersPage from "@/pages/WorkOrdersPage";
+import WorkOrderDetailPage from "@/pages/WorkOrderDetailPage";
 import SchedulePage from "@/pages/SchedulePage";
 import EarningsPage from "@/pages/EarningsPage";
+import DocumentsPage from "@/pages/DocumentsPage";
 import SupportPage from "@/pages/SupportPage";
 import SupportDetailPage from "@/pages/SupportDetailPage";
+import NotFound from "@/pages/not-found";
 
 function PortalRoutes() {
   const { user, loading } = useAuth();
@@ -42,13 +45,13 @@ function PortalRoutes() {
       <Route path="/jobs" component={JobsPage} />
       <Route path="/jobs/:id" component={JobDetailPage} />
       <Route path="/work-orders" component={WorkOrdersPage} />
+      <Route path="/work-orders/:id" component={WorkOrderDetailPage} />
       <Route path="/schedule" component={SchedulePage} />
       <Route path="/earnings" component={EarningsPage} />
+      <Route path="/documents" component={DocumentsPage} />
       <Route path="/support" component={SupportPage} />
       <Route path="/support/:id" component={SupportDetailPage} />
-      <Route>
-        <div className="p-8 text-muted-foreground">Page not found</div>
-      </Route>
+      <Route component={NotFound} />
     </Switch>
   );
 }

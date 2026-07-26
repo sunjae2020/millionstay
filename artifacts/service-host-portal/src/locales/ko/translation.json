@@ -17,7 +17,8 @@
     "support": "고객지원",
     "dark_mode": "다크 모드",
     "light_mode": "라이트 모드",
-    "work_orders": "작업지시"
+    "work_orders": "작업지시",
+    "documents": "문서함"
   },
   "common": {
     "loading": "로딩 중...",
@@ -27,7 +28,8 @@
     "cancel": "취소",
     "back": "뒤로",
     "tbd": "미정",
-    "ongoing": "진행 중"
+    "ongoing": "진행 중",
+    "dismiss": "닫기"
   },
   "login": {
     "headline_1": "최고의 서비스를",
@@ -49,7 +51,8 @@
     "invalid": "잘못된 자격 증명",
     "secure": "보안 액세스 · {{appName}} 서비스 호스트 포털",
     "apply_prompt": "서비스를 제공하시겠어요?",
-    "apply_cta": "서비스 호스트 신청하기"
+    "apply_cta": "서비스 호스트 신청하기",
+    "forgot_password": "비밀번호를 잊으셨나요?"
   },
   "trigger": {
     "at_checkin": "체크인 시",
@@ -77,7 +80,24 @@
     "qlink_jobs": "내 작업",
     "qlink_schedule": "일정",
     "qlink_earnings": "수익",
-    "load_failed": "대시보드를 불러오지 못했습니다"
+    "load_failed": "대시보드를 불러오지 못했습니다",
+    "manage_orders": "작업지시 관리",
+    "kpi_total_orders": "전체 작업지시",
+    "kpi_in_progress": "진행 중",
+    "kpi_needs_ack": "확인 대기 {{count}}건",
+    "kpi_completed": "완료",
+    "kpi_revenue": "작업 금액",
+    "revenue_by_category": "카테고리별 금액",
+    "status_distribution": "작업 상태",
+    "no_orders": "등록된 작업지시가 없습니다",
+    "sla_on_track": "정상 진행",
+    "sla_awaiting_ack": "확인 대기",
+    "sla_breached": "SLA 초과",
+    "recent_orders": "최근 작업지시",
+    "col_order": "작업지시",
+    "col_category": "카테고리",
+    "col_status": "상태",
+    "col_value": "금액"
   },
   "jobs": {
     "title": "내 작업",
@@ -198,7 +218,9 @@
     "success_message": "{{appName}} 서비스 호스트에 관심을 가져 주셔서 감사합니다. 운영팀이 검토 후 영업일 기준 1-2일 내에 연락드리겠습니다.",
     "reference_label": "신청 번호:",
     "privacy_note": "제출함으로써 신청과 관련하여 {{appName}}의 연락을 받는 것에 동의합니다.",
-    "privacy_policy_link": "Privacy Policy"
+    "privacy_policy_link": "Privacy Policy",
+    "phone_placeholder": "예: +82 10 1234 5678",
+    "service_area_placeholder": "예: 여수시"
   },
   "support": {
     "title": "고객지원",
@@ -235,7 +257,8 @@
     "created": "등록일",
     "last_reply": "최근 답변",
     "no_reply_yet": "아직 답변 없음",
-    "english_label": "영어"
+    "english_label": "영어",
+    "attachment_alt": "첨부"
   },
   "workorders": {
     "title": "작업지시",
@@ -245,6 +268,97 @@
     "btn_acknowledge": "확인",
     "btn_start": "작업 시작",
     "btn_complete": "완료 처리",
-    "overdue": "기한 초과 — 확인해 주세요"
+    "overdue": "기한 초과 — 확인해 주세요",
+    "cat_plumbing": "배관",
+    "cat_cleaning": "청소",
+    "cat_electrical": "전기",
+    "cat_day_tour": "데이투어",
+    "cat_fishing": "낚시",
+    "cat_general": "일반",
+    "cat_maintenance": "유지보수",
+    "status_Open": "접수",
+    "status_InProgress": "진행 중",
+    "status_Completed": "완료",
+    "status_Cancelled": "취소",
+    "status_PendingReview": "검토 대기",
+    "sla_pending_ack": "확인 대기",
+    "sla_acknowledged": "확인됨",
+    "sla_met": "정상",
+    "sla_breached": "초과",
+    "sla_escalated": "상향",
+    "detail_back": "작업지시 목록으로",
+    "detail_not_found": "작업지시를 찾을 수 없습니다",
+    "priority": "우선순위",
+    "priority_High": "높음",
+    "priority_Normal": "보통",
+    "priority_Low": "낮음",
+    "description": "설명",
+    "details": "세부 정보",
+    "dispatched": "배정 시각",
+    "acknowledged_at": "확인 시각",
+    "scheduled_at": "예정일",
+    "reported_at": "접수 시각",
+    "completed_at": "완료 시각",
+    "cost": "금액",
+    "notes": "메모"
+  },
+  "documents": {
+    "title": "문서함",
+    "subtitle": "업무 문서를 안전하게 보관하고 관리하세요.",
+    "category": "분류",
+    "upload": "문서 업로드",
+    "uploading": "업로드 중…",
+    "upload_hint": "PDF 또는 이미지, 최대 20MB. 파일은 안전하게 보관되며 본인과 관리자만 볼 수 있습니다.",
+    "empty": "문서가 없습니다",
+    "empty_help": "문서를 업로드해 시작하세요.",
+    "load_failed": "문서를 불러오지 못했습니다",
+    "upload_failed": "업로드에 실패했습니다",
+    "download": "다운로드",
+    "download_failed": "다운로드에 실패했습니다",
+    "delete": "삭제",
+    "delete_confirm": "이 문서를 삭제할까요?",
+    "delete_failed": "삭제에 실패했습니다",
+    "type_contract": "계약서",
+    "type_invoice": "청구서",
+    "type_report": "보고서",
+    "type_manual": "매뉴얼",
+    "type_other": "기타"
+  },
+  "forgot": {
+    "title": "비밀번호 재설정",
+    "subtitle": "계정 이메일을 입력하시면 재설정 링크를 보내드립니다.",
+    "sent": "{{email}} 계정이 있는 경우 재설정 링크를 보냈습니다. 받은편지함을 확인해 주세요. 링크는 1시간 후 만료됩니다.",
+    "back_to_login": "로그인으로 돌아가기",
+    "email": "이메일 주소",
+    "email_placeholder": "you@partner.com",
+    "sending": "전송 중...",
+    "send": "재설정 링크 보내기"
+  },
+  "reset": {
+    "err_policy": "비밀번호는 대문자·소문자·숫자·특수문자를 포함해 12자 이상이어야 합니다.",
+    "err_mismatch": "비밀번호가 일치하지 않습니다.",
+    "err_failed": "재설정에 실패했습니다. 링크가 만료되었을 수 있습니다.",
+    "err_network": "네트워크 오류입니다.",
+    "title": "새 비밀번호 설정",
+    "subtitle": "다른 곳에서 사용하지 않은 강력한 비밀번호를 선택하세요.",
+    "need_link": "이 페이지는 이메일의 재설정 링크가 필요합니다. 보내드린 메일의 링크를 열어 주세요.",
+    "done": "비밀번호가 변경되었습니다. 이제 로그인할 수 있습니다.",
+    "continue": "로그인으로 이동",
+    "new_password": "새 비밀번호",
+    "policy_hint": "12자 이상 · 대문자+소문자+숫자+특수문자 필요.",
+    "confirm_password": "새 비밀번호 확인",
+    "updating": "변경 중...",
+    "submit": "새 비밀번호 설정",
+    "back_to_login": "로그인으로 돌아가기"
+  },
+  "not_found": {
+    "title": "404 페이지를 찾을 수 없습니다",
+    "desc": "찾으시는 페이지가 존재하지 않습니다."
+  },
+  "pagination": {
+    "rows_per_page": "페이지당 행:",
+    "range": "{{total}}개 중 {{from}}–{{to}}",
+    "prev": "이전 페이지",
+    "next": "다음 페이지"
   }
 }

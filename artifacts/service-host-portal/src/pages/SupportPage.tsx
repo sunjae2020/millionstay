@@ -166,7 +166,7 @@ export default function SupportPage() {
             <div className="flex gap-2 flex-wrap">
               {images.map((img, i) => (
                 <div key={i} className="relative group w-16 h-16 rounded-lg overflow-hidden border border-border">
-                  <img src={img.url} alt="attachment" className="w-full h-full object-cover" />
+                  <img src={img.url} alt={t("support.attachment_alt", "attachment")} className="w-full h-full object-cover" />
                   <button
                     type="button"
                     onClick={() => setImages((prev) => prev.filter((_, j) => j !== i))}

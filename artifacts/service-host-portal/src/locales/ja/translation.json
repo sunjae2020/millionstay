@@ -17,7 +17,8 @@
     "support": "サポート",
     "dark_mode": "ダークモード",
     "light_mode": "ライトモード",
-    "work_orders": "作業指示"
+    "work_orders": "作業指示",
+    "documents": "書類"
   },
   "common": {
     "loading": "読み込み中...",
@@ -27,7 +28,8 @@
     "cancel": "キャンセル",
     "back": "戻る",
     "tbd": "未定",
-    "ongoing": "進行中"
+    "ongoing": "進行中",
+    "dismiss": "閉じる"
   },
   "login": {
     "headline_1": "すべてのジョブで",
@@ -49,7 +51,8 @@
     "invalid": "資格情報が無効です",
     "secure": "セキュアアクセス · {{appName}} サービスホストポータル",
     "apply_prompt": "サービスを提供しませんか？",
-    "apply_cta": "サービスホストへ申請する"
+    "apply_cta": "サービスホストへ申請する",
+    "forgot_password": "パスワードをお忘れですか？"
   },
   "trigger": {
     "at_checkin": "チェックイン時",
@@ -77,7 +80,24 @@
     "qlink_jobs": "マイジョブ",
     "qlink_schedule": "スケジュール",
     "qlink_earnings": "収益",
-    "load_failed": "ダッシュボードの読み込みに失敗しました"
+    "load_failed": "ダッシュボードの読み込みに失敗しました",
+    "manage_orders": "作業指示の管理",
+    "kpi_total_orders": "作業指示 合計",
+    "kpi_in_progress": "進行中",
+    "kpi_needs_ack": "確認待ち {{count}}件",
+    "kpi_completed": "完了",
+    "kpi_revenue": "作業金額",
+    "revenue_by_category": "カテゴリー別金額",
+    "status_distribution": "作業ステータス",
+    "no_orders": "作業指示はまだありません",
+    "sla_on_track": "順調",
+    "sla_awaiting_ack": "確認待ち",
+    "sla_breached": "SLA超過",
+    "recent_orders": "最近の作業指示",
+    "col_order": "作業指示",
+    "col_category": "カテゴリー",
+    "col_status": "ステータス",
+    "col_value": "金額"
   },
   "jobs": {
     "title": "マイジョブ",
@@ -198,7 +218,9 @@
     "success_message": "{{appName}}サービスホストにご関心をお寄せいただきありがとうございます。運営チームが内容を確認のうえ、1〜2営業日以内にご連絡いたします。",
     "reference_label": "申請番号：",
     "privacy_note": "送信することで、本申請に関して{{appName}}から連絡を受けることに同意したものとみなします。",
-    "privacy_policy_link": "Privacy Policy"
+    "privacy_policy_link": "Privacy Policy",
+    "phone_placeholder": "例: +82 10 1234 5678",
+    "service_area_placeholder": "例: 市区町村"
   },
   "support": {
     "title": "サポート",
@@ -235,7 +257,8 @@
     "created": "作成日",
     "last_reply": "最新の返信",
     "no_reply_yet": "返信はまだありません",
-    "english_label": "英語"
+    "english_label": "英語",
+    "attachment_alt": "添付"
   },
   "workorders": {
     "title": "作業指示",
@@ -245,6 +268,97 @@
     "btn_acknowledge": "確認",
     "btn_start": "作業開始",
     "btn_complete": "完了にする",
-    "overdue": "期限超過 — 確認してください"
+    "overdue": "期限超過 — 確認してください",
+    "cat_plumbing": "配管",
+    "cat_cleaning": "清掃",
+    "cat_electrical": "電気",
+    "cat_day_tour": "デイツアー",
+    "cat_fishing": "釣り",
+    "cat_general": "一般",
+    "cat_maintenance": "メンテナンス",
+    "status_Open": "受付",
+    "status_InProgress": "進行中",
+    "status_Completed": "完了",
+    "status_Cancelled": "キャンセル",
+    "status_PendingReview": "確認待ち",
+    "sla_pending_ack": "確認待ち",
+    "sla_acknowledged": "確認済み",
+    "sla_met": "順守",
+    "sla_breached": "超過",
+    "sla_escalated": "エスカレーション",
+    "detail_back": "作業指示一覧に戻る",
+    "detail_not_found": "作業指示が見つかりません",
+    "priority": "優先度",
+    "priority_High": "高",
+    "priority_Normal": "通常",
+    "priority_Low": "低",
+    "description": "説明",
+    "details": "詳細",
+    "dispatched": "割当日時",
+    "acknowledged_at": "確認日時",
+    "scheduled_at": "予定日",
+    "reported_at": "受付日時",
+    "completed_at": "完了日時",
+    "cost": "金額",
+    "notes": "メモ"
+  },
+  "documents": {
+    "title": "書類",
+    "subtitle": "業務書類を安全に保管・管理できます。",
+    "category": "分類",
+    "upload": "書類をアップロード",
+    "uploading": "アップロード中…",
+    "upload_hint": "PDFまたは画像、最大20MB。ファイルは安全に保管され、本人と管理者のみが閲覧できます。",
+    "empty": "書類がありません",
+    "empty_help": "書類をアップロードして始めましょう。",
+    "load_failed": "書類を読み込めませんでした",
+    "upload_failed": "アップロードに失敗しました",
+    "download": "ダウンロード",
+    "download_failed": "ダウンロードに失敗しました",
+    "delete": "削除",
+    "delete_confirm": "この書類を削除しますか？",
+    "delete_failed": "削除に失敗しました",
+    "type_contract": "契約書",
+    "type_invoice": "請求書",
+    "type_report": "レポート",
+    "type_manual": "マニュアル",
+    "type_other": "その他"
+  },
+  "forgot": {
+    "title": "パスワードの再設定",
+    "subtitle": "アカウントのメールアドレスを入力すると、再設定リンクをお送りします。",
+    "sent": "{{email}} のアカウントが存在する場合、再設定リンクを送信しました。受信トレイをご確認ください。リンクは1時間で失効します。",
+    "back_to_login": "ログインに戻る",
+    "email": "メールアドレス",
+    "email_placeholder": "you@partner.com",
+    "sending": "送信中...",
+    "send": "再設定リンクを送信"
+  },
+  "reset": {
+    "err_policy": "パスワードは大文字・小文字・数字・記号を含む12文字以上である必要があります。",
+    "err_mismatch": "パスワードが一致しません。",
+    "err_failed": "再設定に失敗しました。リンクが失効した可能性があります。",
+    "err_network": "ネットワークエラーです。",
+    "title": "新しいパスワードを設定",
+    "subtitle": "他で使っていない強力なパスワードを選んでください。",
+    "need_link": "このページにはメールの再設定リンクが必要です。お送りしたメールのリンクを開いてください。",
+    "done": "パスワードを更新しました。ログインできます。",
+    "continue": "ログインへ進む",
+    "new_password": "新しいパスワード",
+    "policy_hint": "12文字以上 · 大文字+小文字+数字+記号が必要。",
+    "confirm_password": "新しいパスワード（確認）",
+    "updating": "更新中...",
+    "submit": "新しいパスワードを設定",
+    "back_to_login": "ログインに戻る"
+  },
+  "not_found": {
+    "title": "404 ページが見つかりません",
+    "desc": "お探しのページは存在しません。"
+  },
+  "pagination": {
+    "rows_per_page": "1ページの行数:",
+    "range": "{{total}}件中 {{from}}–{{to}}",
+    "prev": "前のページ",
+    "next": "次のページ"
   }
 }

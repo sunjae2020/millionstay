@@ -170,7 +170,7 @@ export default function LoginPage() {
             <div className="mt-3 text-right">
               <Link href="/forgot-password">
                 <a className="text-xs font-medium hover:underline" style={{ color: BRAND }}>
-                  Forgot password?
+                  {t("login.forgot_password", "Forgot password?")}
                 </a>
               </Link>
             </div>
