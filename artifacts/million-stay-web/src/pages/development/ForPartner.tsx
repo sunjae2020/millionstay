@@ -5,7 +5,7 @@ import { usePageContent } from "@/lib/usePageContent";
 import { InquiryForm } from "@/components/development/InquiryForm";
 import { submitContactInquiry } from "@/lib/development-api";
 
-// FOR PARTNERS — MetHeim variant of the old /for-agent page. Targets real-estate
+// FOR PARTNERS — Metheim variant of the old /for-agent page. Targets real-estate
 // agents / referral partners who introduce buyers or tenants to the building,
 // NOT education agents. Lands as a general contact lead. Dev-site only.
 

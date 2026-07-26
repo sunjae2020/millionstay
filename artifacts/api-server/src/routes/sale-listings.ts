@@ -6,7 +6,7 @@ import * as z from "zod/v4";
 import { isCloudinaryConfigured, uploadToCloudinary, cldFolder } from "../utils/cloudinary";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 
-// Admin CRUD for 분양/판매 listings shown on the development ("MetHeim") /buy
+// Admin CRUD for 분양/판매 listings shown on the development ("Metheim") /buy
 // board. Mounted under /api/v1 behind requireAuth (see app.ts), so every route
 // here is admin-authenticated. Public read + inquiry live in public.ts.
 

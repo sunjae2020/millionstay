@@ -5,7 +5,7 @@ import { getApiBase } from "@/lib/api-base";
 import { BrandMark } from "@/components/brand-mark";
 
 /** Brand accent — the instance primary (white-label): Million Orange on the
- *  primary site, Urban Teal on MetHeim, etc. Resolves via the CSS token so each
+ *  primary site, Urban Teal on Metheim, etc. Resolves via the CSS token so each
  *  tenant's chat widget matches its own brand. */
 const ACCENT = "hsl(var(--primary))";
 

@@ -1,4 +1,4 @@
--- Additive: move-out deposit settlement (MetHeim vision stage 5; see
+-- Additive: move-out deposit settlement (Metheim vision stage 5; see
 -- docs/proposals/CONDITION_REPORTS_SETTLEMENT.md). Reconciles the refundable
 -- security deposit (Deposits Held 2100) into deductions + refund on finalize.
 -- Applied directly to prod via psql (drizzle journal baseline still pending).

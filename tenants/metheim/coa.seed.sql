@@ -1,4 +1,4 @@
--- MetHeim Chart of Accounts (계정과목) — Korean real-estate lease/sale/management.
+-- Metheim Chart of Accounts (계정과목) — Korean real-estate lease/sale/management.
 -- Codes align with the auto-posting GL (journal.ts): 1000 현금, 2100 임대보증금,
 -- 2200 미지급금, 4000 임대수익, 5100 지급수수료. Idempotent (ON CONFLICT DO NOTHING).
 INSERT INTO chart_of_accounts (code, name, account_type, parent_code, sort_order) VALUES

@@ -5,8 +5,8 @@ import { usePageContent } from "@/lib/usePageContent";
 import { InquiryForm } from "@/components/development/InquiryForm";
 import { submitManagementInquiry } from "@/lib/development-api";
 
-// FOR OWNERS — MetHeim variant of the old /for-homestay-host page. Targets unit
-// owners / landlords who want MetHeim to lease and manage their unit, NOT
+// FOR OWNERS — Metheim variant of the old /for-homestay-host page. Targets unit
+// owners / landlords who want Metheim to lease and manage their unit, NOT
 // homestay hosts. Funnels into the entrusted-management application. Dev-site only.
 
 const BENEFITS = [

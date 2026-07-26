@@ -1,7 +1,7 @@
 # Development-site shared shell (header / footer) convention
 
 **Rule:** On the single-building **development** instance (`VITE_SITE_MODE=development`,
-e.g. MetHeim `metheim-web`), every shared page that is mounted underneath the
+e.g. Metheim `metheim-web`), every shared page that is mounted underneath the
 development site must render the **DevLayout** shell — the `DevNavbar` logo/menu
 header and the navy `DevFooter` — so the header, mobile hamburger menu and footer
 read **identically to the landing page** on both desktop and mobile. Standard
@@ -12,8 +12,8 @@ instances keep the MillionStay `Navbar` / `Footer`.
 The development site (`DevRouter`) mounts the shared short-term booking engine
 (`/search`, `/spaces/:id`, `/booking/*`) underneath its own marketing site. Those
 shared pages historically shipped the MillionStay `Navbar` (menu items: Search /
-Stay Plans / About / For Students / …) and the standard `Footer`. On MetHeim that
-produced a jarring split: the landing pages showed the MetHeim menu
+Stay Plans / About / For Students / …) and the standard `Footer`. On Metheim that
+produced a jarring split: the landing pages showed the Metheim menu
 (Home / About / Buy / Rent / Management / Directions) and the navy operator
 footer, but `/search` and the booking flow showed a different header, a different
 mobile menu, and a different footer. The mobile view was the most obviously

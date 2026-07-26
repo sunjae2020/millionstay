@@ -3,7 +3,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
 // CONDITION REPORTS — move-in / interim / move-out property-condition evidence
-// and tenant consensus (MetHeim vision stages 2 & 5; see
+// and tenant consensus (Metheim vision stages 2 & 5; see
 // docs/proposals/CONDITION_REPORTS_SETTLEMENT.md).
 //
 // Generic via bookings.id (the operational spine that homestay placements,

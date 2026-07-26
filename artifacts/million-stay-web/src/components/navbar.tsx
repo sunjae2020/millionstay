@@ -115,7 +115,7 @@ export function Navbar() {
     <header ref={navRef} className="w-full bg-white shadow-sm z-50 sticky top-0">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className={`flex items-center justify-between ${devSite ? "h-20 lg:h-24" : "h-16"}`}>
-          {/* Logo — on the MetHeim (development) site, match the landing header's
+          {/* Logo — on the Metheim (development) site, match the landing header's
               larger logo so /search & /spaces detail read as the same site. */}
           <Link href="/" className="flex items-center shrink-0">
             <BrandMark

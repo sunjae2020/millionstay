@@ -1,6 +1,6 @@
-# MetHeim — logo assets
+# Metheim — logo assets
 
-Brand logos for the **MetHeim** white-label instance (pilot 2nd tenant).
+Brand logos for the **Metheim** white-label instance (pilot 2nd tenant).
 Palette: Deep Teal `#005F73` (primary), Champagne `#E6D5B8` (symbol on dark),
 White `#FFFFFF` (reverse). See [../config.env](../config.env).
 
@@ -25,7 +25,7 @@ lockup art changes.
 `tenants/metheim/config.env` ships `VITE_LOGO_MODE=image` with these assets
 hosted on Cloudinary (`metheim/logos/`): `VITE_LOGO_URL` → horizontal-teal,
 `VITE_LOGO_MARK_URL` → symbol-teal, `VITE_FAVICON` → favicon. Re-upload to a
-MetHeim-owned Cloudinary once provisioned and update the URLs. For the dark admin
+Metheim-owned Cloudinary once provisioned and update the URLs. For the dark admin
 sidebar, upload `metheim-logo-horizontal-white.svg` and set the branding row's
 `logo_dark_url` (see [../branding-settings.seed.sql](../branding-settings.seed.sql)).
 

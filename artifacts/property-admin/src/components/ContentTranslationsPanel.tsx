@@ -25,7 +25,7 @@ async function fetchLanguages(): Promise<Lang[]> {
 /**
  * Admin panel to translate a guest-facing record's content (spaces / properties /
  * space-options). The original is authored in the base columns (Korean for the
- * MetHeim tenant); here the admin generates AI drafts per language and reviews
+ * Metheim tenant); here the admin generates AI drafts per language and reviews
  * them before saving. Public reads resolve one language with [lang → ko → en →
  * original] fallback, so untranslated records still show the original.
  */

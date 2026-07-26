@@ -1,14 +1,14 @@
 /**
- * Seed sample rental listings for the MetHeim (Yeosu) single-building instance.
+ * Seed sample rental listings for the Metheim (Yeosu) single-building instance.
  *
- * Creates one property (the MetHeim building) + a Yeosu suburb + a set of
+ * Creates one property (the Metheim building) + a Yeosu suburb + a set of
  * furnished units (spaces) with KRW pricing, photos, amenities and price tiers,
  * so the guest /search list and each /spaces/:id detail page render with real
  * content. All prices are in Korean won (base_currency / currency = "KRW").
  *
  * Idempotent: re-running skips anything already created (matched by name).
  *
- * Run against the MetHeim DB (DATABASE_URL injected by Railway):
+ * Run against the Metheim DB (DATABASE_URL injected by Railway):
  *   railway run -- pnpm --filter @workspace/scripts seed-metheim
  */
 import {
@@ -29,7 +29,7 @@ const ok = (m: string) => { console.log(`✅ ${m}`); stats.created++; };
 const skip = (m: string) => { console.log(`⏭️  ${m}`); stats.skipped++; };
 const fail = (m: string, e: unknown) => { console.error(`❌ ${m}`, e); stats.failed++; };
 
-const PROPERTY_NAME = "메트하임 여수 (MetHeim Yeosu)";
+const PROPERTY_NAME = "메트하임 여수 (Metheim Yeosu)";
 
 // A small pool of interior photos (Unsplash). Assigned 3 per unit, round-robin.
 const PHOTOS = [
@@ -131,7 +131,7 @@ async function upsertByName(table: any, name: string, insert: Record<string, unk
 }
 
 async function main() {
-  console.log("=== Seeding MetHeim Yeosu sample listings (KRW) ===\n");
+  console.log("=== Seeding Metheim Yeosu sample listings (KRW) ===\n");
 
   // 1. Suburb
   const suburbId = await upsertByName(suburbsTable, "여수 (Yeosu)", {

@@ -2,7 +2,7 @@
  * Per-instance listing price period (white-label).
  *
  * Injected at build time via VITE_PRICE_UNIT. Controls the "/ period" suffix
- * shown after a listing price on cards. A monthly-rental instance (e.g. MetHeim,
+ * shown after a listing price on cards. A monthly-rental instance (e.g. Metheim,
  * 월 단위 임대) sets `month` so cards read "₩500,000 / 월" instead of "/ 주".
  *
  * Values: `week` (default) | `month` | `day`.

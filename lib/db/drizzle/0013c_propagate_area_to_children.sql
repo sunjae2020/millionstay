@@ -1,7 +1,7 @@
 -- Data seed (NOT a schema migration): copy each parent unit-type's area
 -- breakdown down to its child spaces (individual units). Run AFTER 0013b.
 --
--- MetHeim Seoul DB: the 8 type parents are ids 276–283; their children are the
+-- Metheim Seoul DB: the 8 type parents are ids 276–283; their children are the
 -- 여수 269-unit ledger rows that reference them via parent_space_id. Denormalized
 -- copy — children get a snapshot of the parent's areas at run time (they do NOT
 -- auto-track later parent edits; re-run this to re-sync).

@@ -6,7 +6,7 @@ import { usePageContent } from "@/lib/usePageContent";
 import { InquiryForm } from "@/components/development/InquiryForm";
 import { submitLongTermInquiry } from "@/lib/development-api";
 
-// FOR RESIDENTS — MetHeim variant of the old /for-student page. Targets people
+// FOR RESIDENTS — Metheim variant of the old /for-student page. Targets people
 // who want to live in the building (tenants / residents), not students. Funnels
 // into a lease consultation (long-term inquiry) and the short-term Rent flow.
 // Dev-site only.

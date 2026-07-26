@@ -4,7 +4,7 @@ import { LOGO_HORIZONTAL, LOGO_MARK, LOGO_MODE } from "../lib/brand";
 /**
  * Brand mark — renders the instance logo image, or a text wordmark (the app
  * name in the display font) when `VITE_LOGO_MODE=text` (white-label instances
- * without a logo asset, e.g. the MetHeim pilot). Spec §2.3/§2.4.
+ * without a logo asset, e.g. the Metheim pilot). Spec §2.3/§2.4.
  *
  * `className` sizes the <img> in image mode (existing `h-9 w-auto` etc.).
  * `invert` renders a light wordmark for dark backgrounds (footer).

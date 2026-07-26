@@ -13,7 +13,7 @@ export const spacesTable = pgTable("spaces", {
   base_weekly_price: numeric("base_weekly_price", { precision: 12, scale: 2, mode: "number" }),
   base_daily_price: numeric("base_daily_price", { precision: 12, scale: 2, mode: "number" }),
   base_currency: text("base_currency"),
-  // Korean real-estate sale/lease pricing (통화 = base_currency, MetHeim=KRW):
+  // Korean real-estate sale/lease pricing (통화 = base_currency, Metheim=KRW):
   // 월간 요금(월세)/보증금/구매(매매) 금액/예상 판매금액. All numeric, nullable.
   monthly_rent: numeric("monthly_rent", { precision: 14, scale: 2, mode: "number" }),
   deposit_amount: numeric("deposit_amount", { precision: 14, scale: 2, mode: "number" }),

@@ -57,7 +57,7 @@ export default function DevRent() {
         </div>
       </section>
 
-      {/* Why MetHeim — 임대 */}
+      {/* Why Metheim — 임대 */}
       <section className="max-w-7xl mx-auto px-6 py-14 md:py-20">
         <SectionHeading
           eyebrow={pc("why_eyebrow", t("dev.rent.why_eyebrow"))}

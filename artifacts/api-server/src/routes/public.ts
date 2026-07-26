@@ -182,7 +182,7 @@ async function listPublicSpaces(
   const dbSpaceType = space_type ? (SPACE_TYPE_MAP[space_type] ?? space_type) : null;
 
   // Publicly listed = available to rent. "Active" is the standard flag; some
-  // white-label instances (e.g. MetHeim) mark the unit lifecycle in Korean on
+  // white-label instances (e.g. Metheim) mark the unit lifecycle in Korean on
   // this column — "공실" (vacant) is the rentable state, while 임대/분양/임대불가
   // (leased / for-sale / not-rentable) stay hidden.
   const conditions: SQL[] = [inArray(spacesTable.status, ["Active", "공실"])];
@@ -1100,7 +1100,7 @@ router.get("/v1/public/page-contents/:pageKey/:language", async (req, res): Prom
 });
 
 /* ───────────────────────────────────────────────────────
-   Public read of 분양/판매 listings for the development ("MetHeim") /buy board.
+   Public read of 분양/판매 listings for the development ("Metheim") /buy board.
    Published rows only. Per-locale copy in `translations` is resolved server-side
    with a lang → ko → en → first-available fallback and returned flat, so the
    client renders one language without shipping every locale.
@@ -1436,7 +1436,7 @@ router.post("/v1/public/contact-inquiries", async (req, res): Promise<void> => {
 });
 
 /* ───────────────────────────────────────────────────────
-   Development-site intake (single-building instances, e.g. MetHeim).
+   Development-site intake (single-building instances, e.g. Metheim).
    Three funnels — Buy / long-term Rent / Management — all land as leads,
    tagged by inquiry_type, with the structured fields packed into the lead
    description so they surface in the admin Leads pipeline. No separate table.

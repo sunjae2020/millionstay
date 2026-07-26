@@ -8,7 +8,7 @@ import { apiFetch, getStoredToken } from "@/lib/apiFetch";
  * are edited from Settings → Integrations. Values default to ENABLED when the
  * row was never saved, so tenants that carry the feature (e.g. MillionStay's
  * homestay intake) are unaffected — only a tenant that explicitly disables a
- * module (e.g. MetHeim) hides it.
+ * module (e.g. Metheim) hides it.
  *
  * Shares the `integration-status` query key with the Integrations/AI settings
  * pages, so the payload is fetched once and cached.

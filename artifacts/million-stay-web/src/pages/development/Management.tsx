@@ -131,7 +131,7 @@ export default function DevManagement() {
         </div>
       </section>
 
-      {/* Why MetHeim — 위탁관리 */}
+      {/* Why Metheim — 위탁관리 */}
       <section className="bg-[hsl(var(--brand-cream))] border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-6 py-14 md:py-20">
           <SectionHeading

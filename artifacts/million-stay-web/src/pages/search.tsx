@@ -24,7 +24,7 @@ type SuburbDropdown = "suburb" | null;
 
 const today = new Date().toISOString().split("T")[0];
 
-// On the single-building "development" instance (MetHeim) the shared search page
+// On the single-building "development" instance (Metheim) the shared search page
 // must wear the same shell as the landing site — the DevLayout logo/menu header
 // and navy footer — so the header, mobile menu and footer read identically to
 // the main landing page. Standard instances keep the MillionStay Navbar/Footer.

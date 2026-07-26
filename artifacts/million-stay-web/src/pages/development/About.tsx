@@ -5,7 +5,7 @@ import { DevLayout } from "@/components/development/DevLayout";
 import { BrandMark } from "@/components/brand-mark";
 import { usePageContent } from "@/lib/usePageContent";
 
-// 메트하임 소개 (About MetHeim) — brand story, logo meaning, image gallery, vision,
+// 메트하임 소개 (About Metheim) — brand story, logo meaning, image gallery, vision,
 // values and headline numbers. Content-only, CMS-editable per-locale via
 // usePageContent("dev-about"); every string falls back to i18n.
 

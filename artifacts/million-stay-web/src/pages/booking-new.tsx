@@ -27,7 +27,7 @@ import { formatCurrencyAmount } from "@/contexts/DisplayCurrencyContext";
 import { DEFAULT_CURRENCY } from "@/lib/defaultCurrency";
 import { PRICE_UNIT } from "@/lib/priceUnit";
 
-// Instance base currency (KRW for MetHeim, AUD default) + rate-period suffix.
+// Instance base currency (KRW for Metheim, AUD default) + rate-period suffix.
 // De-Australianises the booking flow: money() renders ₩ for a Korean instance,
 // A$ for the primary. The numeric pricing model is unchanged.
 const BASE_CCY = DEFAULT_CURRENCY || "AUD";
@@ -257,7 +257,7 @@ function BankTransferDetails({ total, ref_ }: { total: number; ref_: string }) {
 /*  Main Component                                */
 /* ────────────────────────────────────────────── */
 
-// MetHeim (development instance) wears the shared DevLayout header/footer so the
+// Metheim (development instance) wears the shared DevLayout header/footer so the
 // booking flow reads as the same site as the landing page. See docs convention.
 const DEV_SITE = isDevelopmentSite();
 

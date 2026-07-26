@@ -152,7 +152,7 @@ export async function submitListingInquiry(input: ListingInquiryInput): Promise<
 // ── Yield simulator (client-side estimate) ────────────────────────────────────
 // A transparent, purely front-end projection for the Management page. Inputs are
 // the buyer's numbers; assumptions (management fee %, default occupancy) are
-// overridable by the caller so the MetHeim team can retune them. Nothing here
+// overridable by the caller so the Metheim team can retune them. Nothing here
 // touches live data — it is an indicative estimate, not a quote.
 export interface YieldInputs {
   purchasePrice: number;      // 매입가

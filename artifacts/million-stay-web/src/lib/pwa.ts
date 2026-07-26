@@ -4,7 +4,7 @@ import { FAVICON_URL } from "./brand";
 // PWA setup (Phase 3): make the guest web installable to the home screen and
 // give it a basic offline shell. The manifest is generated at RUNTIME from the
 // per-instance brand (APP_NAME / FAVICON_URL) so each white-label tenant (e.g.
-// MetHeim) gets its own name + icon without a per-tenant build of a static file.
+// Metheim) gets its own name + icon without a per-tenant build of a static file.
 export function setupPwa(): void {
   try {
     const origin = window.location.origin;

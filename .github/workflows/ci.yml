@@ -93,7 +93,7 @@ jobs:
         working-directory: artifacts/property-admin
         run: npx vercel@latest deploy --prod --yes --token="$VERCEL_TOKEN"
 
-  # Auto-deploy the MetHeim white-label front-ends from main so the live tenant
+  # Auto-deploy the Metheim white-label front-ends from main so the live tenant
   # always matches main. Removes humans from the loop: metheim-* Vercel projects
   # are NOT git-connected — every deploy is a local prebuilt upload, so manual /
   # stale-tree redeploys clobbered each other ("last writer wins"). Running the
@@ -102,7 +102,7 @@ jobs:
   # Vercel scope, distinct from deploy-admin's team — needs a token with access
   # to that scope (VERCEL_TOKEN_METHEIM secret; falls back to VERCEL_TOKEN).
   deploy-metheim:
-    name: Deploy MetHeim frontends
+    name: Deploy Metheim frontends
     needs: verify
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest

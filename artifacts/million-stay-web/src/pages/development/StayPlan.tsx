@@ -6,7 +6,7 @@ import { usePageContent } from "@/lib/usePageContent";
 import { InquiryForm } from "@/components/development/InquiryForm";
 import { submitLongTermInquiry } from "@/lib/development-api";
 
-// STAY & LEASE PLANS — MetHeim variant of the old /stay-plan page. Explains the
+// STAY & LEASE PLANS — Metheim variant of the old /stay-plan page. Explains the
 // three ways to stay in the building (nightly / monthly / long-term lease) and
 // funnels into the shared short-term engine (/search) or a lease consultation.
 // Replaces the MillionStay marketplace pricing page. Dev-site only.
