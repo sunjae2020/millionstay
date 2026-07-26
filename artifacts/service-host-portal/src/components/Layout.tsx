@@ -11,9 +11,9 @@ import {
 } from "lucide-react";
 
 // White-label logo: tenants set VITE_LOGO_URL (e.g. MetHeim's teal wordmark).
-// When present we use it everywhere; the dark sidebar needs it forced white,
-// the light mobile header uses it as-is. Falls back to the bundled MillionStay
-// PNGs when no tenant logo is configured.
+// When present we use it everywhere, knocked white only on dark surfaces (dark
+// mode sidebar). Falls back to the bundled MillionStay PNGs when no tenant logo
+// is configured.
 const TENANT_LOGO_URL = import.meta.env.VITE_LOGO_URL as string | undefined;
 const HAS_TENANT_LOGO = Boolean(TENANT_LOGO_URL);
 const LOGO_TEXT_MODE = import.meta.env.VITE_LOGO_MODE === "text";
@@ -62,13 +62,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="p-5 border-b border-sidebar-border flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             {LOGO_TEXT_MODE ? (
-              <span className="font-display font-extrabold tracking-tight text-white text-xl whitespace-nowrap">{APP_NAME}</span>
+              <span className="font-display font-extrabold tracking-tight text-sidebar-foreground text-xl whitespace-nowrap">{APP_NAME}</span>
             ) : HAS_TENANT_LOGO ? (
               <img
                 src={TENANT_LOGO_URL}
                 alt={APP_NAME}
                 className="h-11 w-auto object-contain"
-                style={{ filter: "brightness(0) invert(1)" }}
+                // The sidebar is light in light mode and dark in dark mode, so
+                // only knock the tenant logo white when the surface is dark;
+                // otherwise show its natural brand colour.
+                style={darkMode ? { filter: "brightness(0) invert(1)" } : undefined}
               />
             ) : (
               <img
@@ -119,7 +122,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <User className="w-4 h-4 text-sidebar-accent-foreground" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-white truncate">
+              <div className="text-sm font-medium text-sidebar-foreground truncate">
                 {user?.first_name} {user?.last_name}
               </div>
               <div className="text-xs text-sidebar-accent-foreground truncate">{user?.email}</div>
@@ -131,7 +134,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <button
             onClick={toggleDarkMode}
             className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm text-sidebar-accent-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
-            aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+            aria-label={darkMode ? t("nav.light_mode") : t("nav.dark_mode")}
           >
             {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             {darkMode ? t("nav.light_mode") ?? "Light mode" : t("nav.dark_mode") ?? "Dark mode"}
@@ -166,7 +169,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <button
               onClick={toggleDarkMode}
               className="p-2 rounded-lg hover:bg-muted transition-colors text-foreground/70 hover:text-foreground"
-              aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+              aria-label={darkMode ? t("nav.light_mode") : t("nav.dark_mode")}
             >
               {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>

@@ -119,7 +119,7 @@ export default function DocumentsPage() {
         {error && (
           <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
             <span className="flex-1">{error}</span>
-            <button onClick={() => setError("")} aria-label="Dismiss"><X className="w-4 h-4" /></button>
+            <button onClick={() => setError("")} aria-label={t("common.dismiss", "Dismiss")}><X className="w-4 h-4" /></button>
           </div>
         )}
 

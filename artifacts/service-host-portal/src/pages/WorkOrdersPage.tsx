@@ -92,7 +92,7 @@ export default function WorkOrdersPage() {
                     {w.description && <p className="text-sm text-muted-foreground">{w.description}</p>}
                     <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {t("workorders.ack_due", "Ack by")}: {fmt(w.sla_ack_due_at)}</span>
-                      {w.sla_status && <span>SLA: <span className={`px-1.5 py-0.5 rounded ${slaStyle[w.sla_status] ?? ""}`}>{w.sla_status}</span></span>}
+                      {w.sla_status && <span>SLA: <span className={`px-1.5 py-0.5 rounded ${slaStyle[w.sla_status] ?? ""}`}>{t(`workorders.sla_${w.sla_status}`, w.sla_status)}</span></span>}
                       {w.acknowledged_at && <span className="flex items-center gap-1 text-green-600"><CheckCircle2 className="h-3 w-3" /> {t("workorders.acknowledged", "Acknowledged")}</span>}
                     </div>
                     <div className="flex gap-2 pt-1">

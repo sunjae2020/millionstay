@@ -28,7 +28,8 @@
     "cancel": "Cancel",
     "back": "Back",
     "tbd": "TBD",
-    "ongoing": "Ongoing"
+    "ongoing": "Ongoing",
+    "dismiss": "Dismiss"
   },
   "login": {
     "headline_1": "Deliver excellence,",
@@ -50,7 +51,8 @@
     "invalid": "Invalid credentials",
     "secure": "Secure access · {{appName}} Service Host Portal",
     "apply_prompt": "Want to offer your services?",
-    "apply_cta": "Apply to become a service host"
+    "apply_cta": "Apply to become a service host",
+    "forgot_password": "Forgot password?"
   },
   "trigger": {
     "at_checkin": "At Check-In",
@@ -216,7 +218,9 @@
     "success_message": "Thanks for your interest in becoming a {{appName}} service host. Our operations team will review your application and reach out within 1-2 business days.",
     "reference_label": "Your reference:",
     "privacy_note": "By submitting, you agree to be contacted by {{appName}} regarding your application.",
-    "privacy_policy_link": "Privacy Policy"
+    "privacy_policy_link": "Privacy Policy",
+    "phone_placeholder": "e.g. +82 10 1234 5678",
+    "service_area_placeholder": "e.g. city or district"
   },
   "support": {
     "title": "Support",
@@ -253,7 +257,8 @@
     "created": "Created",
     "last_reply": "Last reply",
     "no_reply_yet": "No replies yet",
-    "english_label": "English"
+    "english_label": "English",
+    "attachment_alt": "attachment"
   },
   "workorders": {
     "title": "Work Orders",
@@ -275,7 +280,12 @@
     "status_InProgress": "In progress",
     "status_Completed": "Completed",
     "status_Cancelled": "Cancelled",
-    "status_PendingReview": "Pending review"
+    "status_PendingReview": "Pending review",
+    "sla_pending_ack": "Pending ack",
+    "sla_acknowledged": "Acknowledged",
+    "sla_met": "On time",
+    "sla_breached": "Breached",
+    "sla_escalated": "Escalated"
   },
   "documents": {
     "title": "Documents",
@@ -298,5 +308,42 @@
     "type_report": "Report",
     "type_manual": "Manual",
     "type_other": "Other"
+  },
+  "forgot": {
+    "title": "Reset your password",
+    "subtitle": "Enter your account email and we'll send you a reset link.",
+    "sent": "If an account exists for {{email}}, a reset link has been sent. Please check your inbox. The link expires in 1 hour.",
+    "back_to_login": "Back to login",
+    "email": "Email address",
+    "email_placeholder": "you@partner.com",
+    "sending": "Sending...",
+    "send": "Send reset link"
+  },
+  "reset": {
+    "err_policy": "Password must be 12+ chars with upper, lower, digit, and special.",
+    "err_mismatch": "Passwords do not match.",
+    "err_failed": "Reset failed. The link may have expired.",
+    "err_network": "Network error.",
+    "title": "Set a new password",
+    "subtitle": "Choose a strong password you haven't used elsewhere.",
+    "need_link": "This page requires a reset link from your email. Please open the link in the message we sent you.",
+    "done": "Your password has been updated. You can now sign in.",
+    "continue": "Continue to login",
+    "new_password": "New password",
+    "policy_hint": "12+ chars · upper + lower + digit + special required.",
+    "confirm_password": "Confirm new password",
+    "updating": "Updating...",
+    "submit": "Set new password",
+    "back_to_login": "Back to login"
+  },
+  "not_found": {
+    "title": "404 Page Not Found",
+    "desc": "The page you're looking for doesn't exist."
+  },
+  "pagination": {
+    "rows_per_page": "Rows per page:",
+    "range": "{{from}}–{{to}} of {{total}}",
+    "prev": "Previous page",
+    "next": "Next page"
   }
 }
