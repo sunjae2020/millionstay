@@ -1959,12 +1959,12 @@
     "specialty_hvac": "暖通",
     "specialty_gardening": "园艺",
     "specialty_pest": "消杀",
+    "tab_overview": "概览",
+    "tab_accounting": "作业 & 结算",
+    "tab_photos": "照片",
+    "tab_cs": "客服工单",
     "col_name": "名称",
     "col_type": "类型",
-    "tab_accounting": "任务与结算",
-    "tab_cs": "客服工单",
-    "tab_overview": "概览",
-    "tab_photos": "照片",
     "section_main": "主要",
     "section_options": "选项",
     "label_business_start": "营业开始时间 (0-23)",
@@ -4197,41 +4197,41 @@
     "status_active": "启用",
     "status_inactive": "停用"
   },
+  "service_host_acct": {
+    "revenue": "产生营收",
+    "outstanding": "未付结算",
+    "approved": "已批准",
+    "paid": "已支付",
+    "payouts": "合作方结算",
+    "add_payout": "登记结算",
+    "amount": "金额",
+    "ref": "编号",
+    "no_payouts": "暂无结算",
+    "gl_note": "计提: 借 外包费用 / 贷 合作方应付款。支付: 借 应付款 / 贷 现金。",
+    "jobs": "服务作业",
+    "no_jobs": "无作业",
+    "booking": "预订",
+    "price": "金额",
+    "work_orders": "工单",
+    "cost": "成本",
+    "approve": "批准",
+    "mark_paid": "标记已付"
+  },
+  "service_host_photos": {
+    "empty": "暂无作业照片"
+  },
+  "service_host_cs": {
+    "empty": "该合作方暂无客服工单",
+    "ref": "编号",
+    "subject": "主题",
+    "category": "类别"
+  },
   "finance": {
     "no_receipts": "没有收据",
     "pause_schedule": "暂停计划",
     "pause_schedule_desc": "此计划将被暂停。恢复前不会生成新的发票。",
     "resume_schedule": "恢复计划",
     "resume_schedule_desc": "此计划将恢复，并在下一个到期日生成发票。"
-  },
-  "service_host_acct": {
-    "add_payout": "记录结算",
-    "amount": "金额",
-    "approve": "批准",
-    "approved": "已批准",
-    "booking": "预订",
-    "cost": "费用",
-    "gl_note": "计提时借记外包费用 / 贷记外包应付款；付款时借记应付款 / 贷记现金。",
-    "jobs": "服务任务",
-    "mark_paid": "标记已付",
-    "no_jobs": "无任务",
-    "no_payouts": "暂无结算",
-    "outstanding": "未付结算",
-    "paid": "已付",
-    "payouts": "合作方结算",
-    "price": "价格",
-    "ref": "编号",
-    "revenue": "产生的收入",
-    "work_orders": "工单"
-  },
-  "service_host_cs": {
-    "category": "类别",
-    "empty": "该合作方暂无支持工单",
-    "ref": "编号",
-    "subject": "主题"
-  },
-  "service_host_photos": {
-    "empty": "暂无任务照片"
   },
   "condition_report": {
     "title": "状况报告",

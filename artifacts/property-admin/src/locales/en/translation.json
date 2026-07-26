@@ -1959,12 +1959,12 @@
     "specialty_hvac": "HVAC",
     "specialty_gardening": "Gardening",
     "specialty_pest": "Pest control",
+    "tab_overview": "Overview",
+    "tab_accounting": "Jobs & Payouts",
+    "tab_photos": "Photos",
+    "tab_cs": "CS Tickets",
     "col_name": "Name",
     "col_type": "Type",
-    "tab_accounting": "Jobs & Payouts",
-    "tab_cs": "CS Tickets",
-    "tab_overview": "Overview",
-    "tab_photos": "Photos",
     "section_main": "MAIN",
     "section_options": "OPTIONS",
     "label_business_start": "Business Start Hour (0-23)",
@@ -4197,41 +4197,41 @@
     "status_active": "Active",
     "status_inactive": "Inactive"
   },
+  "service_host_acct": {
+    "revenue": "Revenue generated",
+    "outstanding": "Outstanding payout",
+    "approved": "Approved",
+    "paid": "Paid",
+    "payouts": "Partner payouts",
+    "add_payout": "Record payout",
+    "amount": "Amount",
+    "ref": "Ref",
+    "no_payouts": "No payouts yet",
+    "gl_note": "Accrual posts Dr Contractor Expense / Cr Contractor Payable; payment posts Dr Payable / Cr Cash.",
+    "jobs": "Service jobs",
+    "no_jobs": "No jobs",
+    "booking": "Booking",
+    "price": "Price",
+    "work_orders": "Work orders",
+    "cost": "Cost",
+    "approve": "Approve",
+    "mark_paid": "Mark paid"
+  },
+  "service_host_photos": {
+    "empty": "No job photos yet"
+  },
+  "service_host_cs": {
+    "empty": "No support tickets from this partner",
+    "ref": "Ref",
+    "subject": "Subject",
+    "category": "Category"
+  },
   "finance": {
     "no_receipts": "No receipts found",
     "pause_schedule": "Pause Schedule",
     "pause_schedule_desc": "This schedule will be paused. No new invoices will be generated until resumed.",
     "resume_schedule": "Resume Schedule",
     "resume_schedule_desc": "This schedule will resume and invoices will be generated on the next due date."
-  },
-  "service_host_acct": {
-    "add_payout": "Record payout",
-    "amount": "Amount",
-    "approve": "Approve",
-    "approved": "Approved",
-    "booking": "Booking",
-    "cost": "Cost",
-    "gl_note": "Accrual posts Dr Contractor Expense / Cr Contractor Payable; payment posts Dr Payable / Cr Cash.",
-    "jobs": "Service jobs",
-    "mark_paid": "Mark paid",
-    "no_jobs": "No jobs",
-    "no_payouts": "No payouts yet",
-    "outstanding": "Outstanding payout",
-    "paid": "Paid",
-    "payouts": "Partner payouts",
-    "price": "Price",
-    "ref": "Ref",
-    "revenue": "Revenue generated",
-    "work_orders": "Work orders"
-  },
-  "service_host_cs": {
-    "category": "Category",
-    "empty": "No support tickets from this partner",
-    "ref": "Ref",
-    "subject": "Subject"
-  },
-  "service_host_photos": {
-    "empty": "No job photos yet"
   },
   "condition_report": {
     "title": "Condition Reports",

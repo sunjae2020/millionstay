@@ -1959,12 +1959,12 @@
     "specialty_hvac": "냉난방",
     "specialty_gardening": "조경",
     "specialty_pest": "방역",
+    "tab_overview": "개요",
+    "tab_accounting": "잡 & 정산",
+    "tab_photos": "사진",
+    "tab_cs": "CS 티켓",
     "col_name": "이름",
     "col_type": "유형",
-    "tab_accounting": "잡 & 정산",
-    "tab_cs": "CS 티켓",
-    "tab_overview": "개요",
-    "tab_photos": "사진",
     "section_main": "메인",
     "section_options": "옵션",
     "label_business_start": "영업 시작 시각 (0-23)",
@@ -4197,41 +4197,41 @@
     "status_active": "활성",
     "status_inactive": "비활성"
   },
+  "service_host_acct": {
+    "revenue": "발생 매출",
+    "outstanding": "미지급 정산",
+    "approved": "승인됨",
+    "paid": "지급완료",
+    "payouts": "파트너 정산",
+    "add_payout": "정산 등록",
+    "amount": "금액",
+    "ref": "번호",
+    "no_payouts": "정산 내역 없음",
+    "gl_note": "적립: 차변 외주비 / 대변 파트너 미지급금. 지급: 차변 미지급금 / 대변 현금.",
+    "jobs": "서비스 잡",
+    "no_jobs": "잡 없음",
+    "booking": "예약",
+    "price": "금액",
+    "work_orders": "작업지시",
+    "cost": "원가",
+    "approve": "승인",
+    "mark_paid": "지급완료 처리"
+  },
+  "service_host_photos": {
+    "empty": "업로드된 잡 사진이 없습니다"
+  },
+  "service_host_cs": {
+    "empty": "이 파트너의 문의 티켓이 없습니다",
+    "ref": "번호",
+    "subject": "제목",
+    "category": "분류"
+  },
   "finance": {
     "no_receipts": "영수증이 없습니다",
     "pause_schedule": "일정 일시중지",
     "pause_schedule_desc": "이 일정이 일시중지됩니다. 재개하기 전까지 새 청구서가 생성되지 않습니다.",
     "resume_schedule": "일정 재개",
     "resume_schedule_desc": "이 일정이 재개되며 다음 마감일에 청구서가 생성됩니다."
-  },
-  "service_host_acct": {
-    "add_payout": "정산 기록",
-    "amount": "금액",
-    "approve": "승인",
-    "approved": "승인됨",
-    "booking": "예약",
-    "cost": "비용",
-    "gl_note": "발생 시 차변 외주비용 / 대변 외주 미지급금, 지급 시 차변 미지급금 / 대변 현금으로 계상됩니다.",
-    "jobs": "서비스 잡",
-    "mark_paid": "지급 처리",
-    "no_jobs": "잡 없음",
-    "no_payouts": "정산 내역 없음",
-    "outstanding": "미지급 정산",
-    "paid": "지급됨",
-    "payouts": "파트너 정산",
-    "price": "가격",
-    "ref": "번호",
-    "revenue": "발생 매출",
-    "work_orders": "작업지시"
-  },
-  "service_host_cs": {
-    "category": "카테고리",
-    "empty": "이 파트너의 지원 티켓이 없습니다",
-    "ref": "번호",
-    "subject": "제목"
-  },
-  "service_host_photos": {
-    "empty": "잡 사진이 없습니다"
   },
   "condition_report": {
     "title": "상태 보고서",

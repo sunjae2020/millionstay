@@ -1959,12 +1959,12 @@
     "specialty_hvac": "ปรับอากาศ",
     "specialty_gardening": "สวน",
     "specialty_pest": "กำจัดแมลง",
+    "tab_overview": "ภาพรวม",
+    "tab_accounting": "งาน & จ่ายเงิน",
+    "tab_photos": "รูปภาพ",
+    "tab_cs": "ตั๋ว CS",
     "col_name": "ชื่อ",
     "col_type": "ประเภท",
-    "tab_accounting": "งาน & การจ่ายเงิน",
-    "tab_cs": "ทิกเก็ต CS",
-    "tab_overview": "ภาพรวม",
-    "tab_photos": "รูปภาพ",
     "section_main": "หลัก",
     "section_options": "ตัวเลือก",
     "label_business_start": "เวลาเริ่มทำการ (0-23)",
@@ -4197,41 +4197,41 @@
     "status_active": "ใช้งาน",
     "status_inactive": "ปิดใช้งาน"
   },
+  "service_host_acct": {
+    "revenue": "รายได้ที่สร้าง",
+    "outstanding": "ค้างจ่าย",
+    "approved": "อนุมัติแล้ว",
+    "paid": "จ่ายแล้ว",
+    "payouts": "การจ่ายพาร์ทเนอร์",
+    "add_payout": "บันทึกการจ่าย",
+    "amount": "จำนวน",
+    "ref": "เลขที่",
+    "no_payouts": "ยังไม่มีการจ่าย",
+    "gl_note": "ตั้งค้าง: เดบิต ค่าจ้างเหมา / เครดิต เจ้าหนี้พาร์ทเนอร์ จ่าย: เดบิต เจ้าหนี้ / เครดิต เงินสด",
+    "jobs": "งานบริการ",
+    "no_jobs": "ไม่มีงาน",
+    "booking": "การจอง",
+    "price": "ราคา",
+    "work_orders": "ใบสั่งงาน",
+    "cost": "ต้นทุน",
+    "approve": "อนุมัติ",
+    "mark_paid": "ทำเครื่องหมายจ่ายแล้ว"
+  },
+  "service_host_photos": {
+    "empty": "ยังไม่มีรูปงาน"
+  },
+  "service_host_cs": {
+    "empty": "ไม่มีตั๋วจากพาร์ทเนอร์นี้",
+    "ref": "เลขที่",
+    "subject": "หัวข้อ",
+    "category": "หมวด"
+  },
   "finance": {
     "no_receipts": "ไม่พบใบเสร็จ",
     "pause_schedule": "หยุดตารางชั่วคราว",
     "pause_schedule_desc": "ตารางนี้จะถูกหยุดชั่วคราว จะไม่มีการสร้างใบแจ้งหนี้ใหม่จนกว่าจะเริ่มต่อ",
     "resume_schedule": "เริ่มตารางต่อ",
     "resume_schedule_desc": "ตารางนี้จะเริ่มต่อและจะสร้างใบแจ้งหนี้ในวันครบกำหนดถัดไป"
-  },
-  "service_host_acct": {
-    "add_payout": "บันทึกการจ่ายเงิน",
-    "amount": "จำนวนเงิน",
-    "approve": "อนุมัติ",
-    "approved": "อนุมัติแล้ว",
-    "booking": "การจอง",
-    "cost": "ค่าใช้จ่าย",
-    "gl_note": "การตั้งค้างลงเดบิตค่าใช้จ่ายผู้รับเหมา / เครดิตเจ้าหนี้ผู้รับเหมา และการจ่ายเงินลงเดบิตเจ้าหนี้ / เครดิตเงินสด",
-    "jobs": "งานบริการ",
-    "mark_paid": "ทำเครื่องหมายว่าจ่ายแล้ว",
-    "no_jobs": "ไม่มีงาน",
-    "no_payouts": "ยังไม่มีการจ่ายเงิน",
-    "outstanding": "การจ่ายเงินค้างชำระ",
-    "paid": "จ่ายแล้ว",
-    "payouts": "การจ่ายเงินพาร์ทเนอร์",
-    "price": "ราคา",
-    "ref": "รหัส",
-    "revenue": "รายได้ที่สร้าง",
-    "work_orders": "ใบสั่งงาน"
-  },
-  "service_host_cs": {
-    "category": "หมวดหมู่",
-    "empty": "ไม่มีทิกเก็ตสนับสนุนจากพาร์ทเนอร์นี้",
-    "ref": "รหัส",
-    "subject": "หัวข้อ"
-  },
-  "service_host_photos": {
-    "empty": "ยังไม่มีรูปภาพงาน"
   },
   "condition_report": {
     "title": "รายงานสภาพ",

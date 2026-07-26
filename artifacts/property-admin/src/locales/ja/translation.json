@@ -1959,12 +1959,12 @@
     "specialty_hvac": "空調",
     "specialty_gardening": "造園",
     "specialty_pest": "害虫駆除",
+    "tab_overview": "概要",
+    "tab_accounting": "ジョブ & 精算",
+    "tab_photos": "写真",
+    "tab_cs": "CSチケット",
     "col_name": "名前",
     "col_type": "タイプ",
-    "tab_accounting": "ジョブ & 精算",
-    "tab_cs": "CSチケット",
-    "tab_overview": "概要",
-    "tab_photos": "写真",
     "section_main": "メイン",
     "section_options": "オプション",
     "label_business_start": "営業開始時刻 (0-23)",
@@ -4197,41 +4197,41 @@
     "status_active": "有効",
     "status_inactive": "無効"
   },
+  "service_host_acct": {
+    "revenue": "発生売上",
+    "outstanding": "未払い精算",
+    "approved": "承認済み",
+    "paid": "支払済み",
+    "payouts": "パートナー精算",
+    "add_payout": "精算を登録",
+    "amount": "金額",
+    "ref": "番号",
+    "no_payouts": "精算履歴なし",
+    "gl_note": "計上: 借方 外注費 / 貸方 パートナー未払金。支払: 借方 未払金 / 貸方 現金。",
+    "jobs": "サービスジョブ",
+    "no_jobs": "ジョブなし",
+    "booking": "予約",
+    "price": "金額",
+    "work_orders": "作業指示",
+    "cost": "原価",
+    "approve": "承認",
+    "mark_paid": "支払済みにする"
+  },
+  "service_host_photos": {
+    "empty": "ジョブ写真がありません"
+  },
+  "service_host_cs": {
+    "empty": "このパートナーの問い合わせはありません",
+    "ref": "番号",
+    "subject": "件名",
+    "category": "分類"
+  },
   "finance": {
     "no_receipts": "領収書が見つかりません",
     "pause_schedule": "スケジュールを一時停止",
     "pause_schedule_desc": "このスケジュールは一時停止されます。再開するまで新しい請求書は生成されません。",
     "resume_schedule": "スケジュールを再開",
     "resume_schedule_desc": "このスケジュールが再開され、次回の期日に請求書が生成されます。"
-  },
-  "service_host_acct": {
-    "add_payout": "精算を記録",
-    "amount": "金額",
-    "approve": "承認",
-    "approved": "承認済み",
-    "booking": "予約",
-    "cost": "費用",
-    "gl_note": "発生時に借方 外注費 / 貸方 外注未払金、支払時に借方 未払金 / 貸方 現金を計上します。",
-    "jobs": "サービスジョブ",
-    "mark_paid": "支払済みにする",
-    "no_jobs": "ジョブなし",
-    "no_payouts": "精算はまだありません",
-    "outstanding": "未払い精算",
-    "paid": "支払済み",
-    "payouts": "パートナー精算",
-    "price": "価格",
-    "ref": "番号",
-    "revenue": "発生売上",
-    "work_orders": "作業指示"
-  },
-  "service_host_cs": {
-    "category": "カテゴリ",
-    "empty": "このパートナーからのサポートチケットはありません",
-    "ref": "番号",
-    "subject": "件名"
-  },
-  "service_host_photos": {
-    "empty": "ジョブ写真はまだありません"
   },
   "condition_report": {
     "title": "状態報告書",
