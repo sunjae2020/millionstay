@@ -21,7 +21,8 @@
       "forStudents": "留学生の方へ",
       "forAgent": "エージェントの方へ",
       "forHomestayHost": "ホストになる"
-    }
+    },
+    "partnerLogin": "パートナーログイン"
   },
   "home": {
     "hero_title": "メルボルンで、あなたの新しい住まいを",
@@ -1892,5 +1893,34 @@
       "s8_title": "第8条（準拠法および管轄）",
       "s8_body": "本規約は大韓民国の法令に従って解釈され、本サービスの利用に関して紛争が生じた場合、管轄裁判所は民事訴訟法に基づく裁判所とします。"
     }
+  },
+  "portalLogin": {
+    "eyebrow": "パートナーポータル",
+    "title": "パートナーログイン",
+    "subtitle": "エージェント・オーナー・サービスホストのポータルにログイン",
+    "forgot_title": "パスワードの再設定",
+    "forgot_subtitle": "再設定リンクをメールでお送りします",
+    "email": "メールアドレス",
+    "email_placeholder": "you@example.com",
+    "password": "パスワード",
+    "password_placeholder": "パスワードを入力",
+    "show_password": "パスワードを表示",
+    "hide_password": "パスワードを非表示",
+    "sign_in": "ログイン",
+    "signing_in": "ログイン中…",
+    "send_reset": "再設定リンクを送信",
+    "sending": "送信中…",
+    "forgot_link": "パスワードをお忘れですか？",
+    "forgot_sent": "そのメールアドレスのアカウントが存在する場合、再設定リンクを送信します。",
+    "back_to_signin": "ログインに戻る",
+    "back_home": "ホームに戻る",
+    "invalid": "メールアドレスまたはパスワードが正しくありません。",
+    "network_error": "ネットワークエラーです。もう一度お試しください。",
+    "unknown_portal": "このアカウントはパートナーポータルに紐付いていません。",
+    "apply_prompt": "まだパートナーではありませんか？お申し込み：",
+    "role_agent": "エージェント",
+    "role_owner": "オーナー",
+    "role_service_host": "サービスホスト",
+    "secure": "256ビット暗号化で保護されています"
   }
 }

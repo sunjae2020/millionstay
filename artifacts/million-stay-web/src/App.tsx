@@ -37,6 +37,7 @@ import ForHomestayHost from "@/pages/for-homestay-host";
 import ForShortTerm from "@/pages/for-short-term";
 import HostLogin from "@/pages/host-login";
 import HostPortal from "@/pages/host-portal";
+import PortalLogin from "@/pages/portal-login";
 import FAQ from "@/pages/faq";
 import HouseRules from "@/pages/house-rules";
 import PrivacyPolicy from "@/pages/privacy-policy";
@@ -115,6 +116,7 @@ function Router() {
       <Route path="/for-short-term" component={ForShortTerm} />
       <Route path="/host-login" component={HostLogin} />
       <Route path="/host-portal" component={HostPortal} />
+      <Route path="/portal-login" component={PortalLogin} />
       <Route path="/faq" component={FAQ} />
       <Route path="/house-rules" component={HouseRules} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />

@@ -696,5 +696,37 @@
       "s8_title": "Điều 8 (Luật điều chỉnh và thẩm quyền)",
       "s8_body": "Điều khoản này được giải thích theo pháp luật của Đại Hàn Dân Quốc, và mọi tranh chấp phát sinh liên quan đến việc sử dụng Dịch vụ thuộc thẩm quyền của tòa án theo Luật Tố tụng Dân sự."
     }
+  },
+  "nav": {
+    "partnerLogin": "Đăng nhập đối tác"
+  },
+  "portalLogin": {
+    "eyebrow": "Cổng đối tác",
+    "title": "Đăng nhập đối tác",
+    "subtitle": "Đăng nhập cổng đại lý, chủ sở hữu hoặc nhà cung cấp dịch vụ",
+    "forgot_title": "Đặt lại mật khẩu",
+    "forgot_subtitle": "Chúng tôi sẽ gửi liên kết đặt lại qua email",
+    "email": "Email",
+    "email_placeholder": "you@example.com",
+    "password": "Mật khẩu",
+    "password_placeholder": "Nhập mật khẩu của bạn",
+    "show_password": "Hiện mật khẩu",
+    "hide_password": "Ẩn mật khẩu",
+    "sign_in": "Đăng nhập",
+    "signing_in": "Đang đăng nhập…",
+    "send_reset": "Gửi liên kết đặt lại",
+    "sending": "Đang gửi…",
+    "forgot_link": "Quên mật khẩu?",
+    "forgot_sent": "Nếu tồn tại tài khoản cho email đó, liên kết đặt lại sẽ được gửi.",
+    "back_to_signin": "Quay lại đăng nhập",
+    "back_home": "Về trang chủ",
+    "invalid": "Email hoặc mật khẩu không đúng.",
+    "network_error": "Lỗi mạng. Vui lòng thử lại.",
+    "unknown_portal": "Tài khoản này không được liên kết với cổng đối tác.",
+    "apply_prompt": "Chưa phải đối tác? Đăng ký tham gia:",
+    "role_agent": "Đại lý",
+    "role_owner": "Chủ sở hữu",
+    "role_service_host": "Nhà cung cấp dịch vụ",
+    "secure": "Được bảo vệ bằng mã hóa 256-bit"
   }
 }

@@ -14,7 +14,8 @@
       "forStudents": "留学生专区",
       "forAgent": "中介专区",
       "forHomestayHost": "成为寄宿家庭"
-    }
+    },
+    "partnerLogin": "合作伙伴登录"
   },
   "home": {
     "hero_tagline": "Million Homestay Australia",
@@ -1745,5 +1746,34 @@
       "s8_title": "第八条（准据法与管辖）",
       "s8_body": "本条款依据大韩民国法律解释，因使用本服务而发生争议时，管辖法院为依《民事诉讼法》确定的法院。"
     }
+  },
+  "portalLogin": {
+    "eyebrow": "合作伙伴门户",
+    "title": "合作伙伴登录",
+    "subtitle": "登录代理、业主或服务管家门户",
+    "forgot_title": "重置密码",
+    "forgot_subtitle": "我们将通过电子邮件向您发送重置链接",
+    "email": "电子邮箱",
+    "email_placeholder": "you@example.com",
+    "password": "密码",
+    "password_placeholder": "请输入密码",
+    "show_password": "显示密码",
+    "hide_password": "隐藏密码",
+    "sign_in": "登录",
+    "signing_in": "登录中…",
+    "send_reset": "发送重置链接",
+    "sending": "发送中…",
+    "forgot_link": "忘记密码？",
+    "forgot_sent": "如果该邮箱存在账户，我们将发送重置链接。",
+    "back_to_signin": "返回登录",
+    "back_home": "返回首页",
+    "invalid": "邮箱或密码不正确。",
+    "network_error": "网络错误，请重试。",
+    "unknown_portal": "此账户未关联任何合作伙伴门户。",
+    "apply_prompt": "还不是合作伙伴？申请加入：",
+    "role_agent": "代理",
+    "role_owner": "业主",
+    "role_service_host": "服务管家",
+    "secure": "采用 256 位加密保护"
   }
 }

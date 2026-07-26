@@ -25,6 +25,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // SSO hand-off from the unified partner login on the landing site: after the
+    // partner authenticates there, the token is passed cross-origin in the URL
+    // fragment (#sso=...). Consume it, persist it, then strip it from the URL.
+    try {
+      const m = window.location.hash.match(/[#&]sso=([^&]+)/);
+      if (m && m[1]) {
+        localStorage.setItem("partner_token", decodeURIComponent(m[1]));
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      }
+    } catch { /* ignore malformed fragment */ }
+
     const token = localStorage.getItem("partner_token");
     if (!token) { setLoading(false); return; }
     apiGet<{ success: boolean; user: PartnerUser }>("/v1/auth/partner/me")

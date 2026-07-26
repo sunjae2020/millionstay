@@ -181,6 +181,14 @@ export function Navbar() {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* Partner portal login — shared entry for agent / owner / service host */}
+            <Link
+              href="/portal-login"
+              className="hidden md:inline-flex items-center px-2.5 py-1.5 text-xs font-medium text-gray-500 hover:text-primary border border-gray-200 rounded-lg hover:border-primary/40 transition-colors whitespace-nowrap"
+            >
+              {t("nav.partnerLogin")}
+            </Link>
+
             {/* Auth */}
             {token && guest ? (
               <DropdownMenu>
@@ -255,6 +263,15 @@ export function Navbar() {
                 {t(`nav.${link.key}`)}
               </Link>
             ))}
+
+            {/* Partner portal login (mobile) */}
+            <Link
+              href="/portal-login"
+              onClick={() => setMobileOpen(false)}
+              className="block px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary hover:bg-primary/10 rounded transition-colors"
+            >
+              {t("nav.partnerLogin")}
+            </Link>
 
             {/* Mobile currency switcher */}
             <CurrencySelector variant="mobile" />

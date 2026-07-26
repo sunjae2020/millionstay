@@ -173,6 +173,18 @@ function DevNavbar() {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* Partner portal login — shared entry for agent / owner / service host */}
+            <Link
+              href="/portal-login"
+              className={`hidden min-[860px]:inline-flex items-center px-3 py-1.5 text-xs font-semibold border rounded-lg transition-colors whitespace-nowrap ${
+                dark
+                  ? "text-white/90 border-white/40 hover:text-white hover:border-white/70"
+                  : "text-gray-600 border-gray-200 hover:text-primary hover:border-primary/40"
+              }`}
+            >
+              {t("nav.partnerLogin")}
+            </Link>
+
             <button
               className={`min-[860px]:hidden p-2 ${dark ? "text-white" : "text-gray-700 hover:text-primary"}`}
               onClick={() => setMobileOpen((v) => !v)}
@@ -196,6 +208,13 @@ function DevNavbar() {
               {t(link.key)}
             </Link>
           ))}
+          <Link
+            href="/portal-login"
+            onClick={() => setMobileOpen(false)}
+            className="block px-2 py-2.5 text-sm font-semibold text-primary border-t border-gray-100 mt-1 pt-3"
+          >
+            {t("nav.partnerLogin")}
+          </Link>
         </nav>
       )}
     </header>

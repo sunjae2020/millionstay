@@ -14,7 +14,8 @@
       "forStudents": "For Students",
       "forAgent": "For Agent",
       "forHomestayHost": "Become a Host"
-    }
+    },
+    "partnerLogin": "Partner Login"
   },
   "home": {
     "hero_tagline": "Million Homestay Australia",
@@ -2264,5 +2265,34 @@
       "s8_title": "Article 8 (Governing law and jurisdiction)",
       "s8_body": "These terms are interpreted under the laws of the Republic of Korea, and any dispute arising from use of the Services is subject to the court having jurisdiction under the Civil Procedure Act."
     }
+  },
+  "portalLogin": {
+    "eyebrow": "Partner Portal",
+    "title": "Partner Login",
+    "subtitle": "Sign in to your agent, owner or service host portal",
+    "forgot_title": "Reset your password",
+    "forgot_subtitle": "We'll email you a reset link",
+    "email": "Email",
+    "email_placeholder": "you@example.com",
+    "password": "Password",
+    "password_placeholder": "Enter your password",
+    "show_password": "Show password",
+    "hide_password": "Hide password",
+    "sign_in": "Sign in",
+    "signing_in": "Signing in…",
+    "send_reset": "Send reset link",
+    "sending": "Sending…",
+    "forgot_link": "Forgot password?",
+    "forgot_sent": "If an account exists for that email, a reset link is on its way.",
+    "back_to_signin": "Back to sign in",
+    "back_home": "Back to home",
+    "invalid": "Invalid email or password.",
+    "network_error": "Network error. Please try again.",
+    "unknown_portal": "This account is not linked to a partner portal.",
+    "apply_prompt": "Not a partner yet? Apply to join:",
+    "role_agent": "Agent",
+    "role_owner": "Owner",
+    "role_service_host": "Service Host",
+    "secure": "Secured with 256-bit encryption"
   }
 }
