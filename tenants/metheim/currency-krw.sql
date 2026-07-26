@@ -1,10 +1,10 @@
--- MetHeim: force KRW (한화) as the single currency for the whole instance.
+-- Metheim: force KRW (한화) as the single currency for the whole instance.
 -- (1) Relabel any non-KRW / NULL currency rows to KRW. The amounts are ALREADY
 --     KRW-magnitude figures that were mislabeled with the schema 'AUD' default
 --     (e.g. work_orders cost 80000 = ₩80,000), so this is a RELABEL, not an FX
 --     conversion — converting would 1000x inflate them.
 -- (2) Set every currency column DEFAULT to KRW so new rent/service/fee/invoice
---     records default to KRW. Per-instance (MetHeim has its own DB).
+--     records default to KRW. Per-instance (Metheim has its own DB).
 -- exchange_rates.from/to_currency and branding_settings.currency_position are
 -- intentionally NOT touched.
 BEGIN;

@@ -1,4 +1,4 @@
--- Additive: 분양/판매 property listings board for the development ("MetHeim") site.
+-- Additive: 분양/판매 property listings board for the development ("Metheim") site.
 -- Applied directly to prod via psql (the drizzle journal baseline restoration is
 -- still pending, so this DDL is not wired into meta/_journal). Additive-only.
 CREATE TABLE IF NOT EXISTS "sale_listings" (

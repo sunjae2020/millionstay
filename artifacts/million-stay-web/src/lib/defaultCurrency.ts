@@ -2,7 +2,7 @@
  * Per-instance default display currency (white-label, spec §2.3).
  *
  * Injected at build time via VITE_DEFAULT_CURRENCY. When set (e.g. `KRW` for the
- * MetHeim instance), the guest UI:
+ * Metheim instance), the guest UI:
  *   1. defaults the display currency to it (instead of the browser-language
  *      heuristic), and
  *   2. treats the instance as single-currency — every price is shown in this

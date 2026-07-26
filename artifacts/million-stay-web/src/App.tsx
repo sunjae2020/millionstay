@@ -69,7 +69,7 @@ const queryClient = new QueryClient({
 
 function Router() {
   // A single-building "development" instance (VITE_SITE_MODE=development, e.g.
-  // MetHeim) serves the 4-part Buy/Rent/Management site instead of the standard
+  // Metheim) serves the 4-part Buy/Rent/Management site instead of the standard
   // marketplace. Its router mounts the shared booking/portal routes underneath.
   if (isDevelopmentSite()) return <DevRouter />;
 

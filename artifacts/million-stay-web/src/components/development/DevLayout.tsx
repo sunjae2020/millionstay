@@ -15,7 +15,7 @@ import { flagIsoFor } from "@/lib/flagOverrides";
 import { usePageContent } from "@/lib/usePageContent";
 import { useCompanyContact } from "@/lib/guest-api";
 
-// Dedicated shell for the single-building "development" site (MetHeim). Four top
+// Dedicated shell for the single-building "development" site (Metheim). Four top
 // menus — Home / About / Buy / Rent / Management / Directions — plus currency +
 // language controls. Uses the instance brand tokens (--primary etc.).
 //
@@ -296,7 +296,7 @@ export function DevFooter() {
   const org = useCompanyContact();
   const year = new Date().getFullYear();
 
-  // Operator info (MetHeim Korea). Precedence: Settings → Organisation value if
+  // Operator info (Metheim Korea). Precedence: Settings → Organisation value if
   // set, else the CMS "dev-footer" overlay, else the localized i18n default.
   const metaAll: Array<[string, string]> = [
     [t("dev.footer.ceo_label"), org.ceo || company("ceo", t("dev.footer.ceo"))],
@@ -338,7 +338,7 @@ export function DevFooter() {
         </div>
       </div>
 
-      {/* Company / operator info (MetHeim Korea) */}
+      {/* Company / operator info (Metheim Korea) */}
       {meta.length > 0 && (
         <div className="border-t border-white/10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

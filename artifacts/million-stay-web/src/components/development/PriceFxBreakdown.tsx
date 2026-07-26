@@ -4,7 +4,7 @@ import { useDisplayCurrency, formatCurrencyAmount } from "@/contexts/DisplayCurr
 import { DEFAULT_CURRENCY } from "@/lib/defaultCurrency";
 
 // Multi-currency reference display for a single-currency (white-label) instance.
-// The listing price is quoted — and paid — in the instance base currency (MetHeim
+// The listing price is quoted — and paid — in the instance base currency (Metheim
 // → KRW, the 기준금액). To help international buyers, we ALSO show the same amount
 // converted into the site's other languages' currencies (USD/JPY/CNY/THB/VND) as
 // a non-binding reference, with a note that payment is in the base currency.

@@ -3,7 +3,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
 // 분양(pre-sale) / 판매(sale) property listings for the single-building
-// "development" site (MetHeim). Admin-managed board: each row is one unit/model
+// "development" site (Metheim). Admin-managed board: each row is one unit/model
 // posted on /buy, opening a detail page with its own inquiry form. Structural
 // fields are locale-independent; per-locale copy (title/subtitle/location/
 // price_label/description) lives in `translations` keyed by language code.

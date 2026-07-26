@@ -2,11 +2,11 @@
 
 **Status:** Draft / in progress
 **Owner:** Ops + Eng
-**Scope:** MetHeim vision "합의(Consensus) + 증빙(Evidence)" 축 — move-in condition
+**Scope:** Metheim vision "합의(Consensus) + 증빙(Evidence)" 축 — move-in condition
 onboarding, tenant agree/dispute, move-out image comparison, damage
 adjudication, deposit deduction/refund.
 
-This is the single biggest gap in the MetHeim lifecycle: **stage 2 (입실 온보딩)
+This is the single biggest gap in the Metheim lifecycle: **stage 2 (입실 온보딩)
 and stage 5 (퇴실/정산) have no schema, API, or UI today.** The billing/GL,
 e-sign tamper-evidence, and booking spine already exist and are reused verbatim.
 

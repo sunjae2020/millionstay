@@ -3,7 +3,7 @@
  *
  * Standard tenants use the platform listing lifecycle
  * (Active/Inactive/Suspended), which drives public visibility. Building-ledger
- * tenants (e.g. MetHeim — a single 분양/임대 building managed unit-by-unit) track
+ * tenants (e.g. Metheim — a single 분양/임대 building managed unit-by-unit) track
  * Korean occupancy states on each unit instead. The set is chosen at BUILD time
  * via `VITE_SPACE_STATUS_SET`, so it only affects that tenant's admin bundle;
  * the main MillionStay admin (which never sets the var) is unchanged.

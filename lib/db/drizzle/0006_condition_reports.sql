@@ -1,5 +1,5 @@
 -- Additive: move-in / interim / move-out condition reports + tenant consensus
--- (MetHeim vision stages 2 & 5; see docs/proposals/CONDITION_REPORTS_SETTLEMENT.md).
+-- (Metheim vision stages 2 & 5; see docs/proposals/CONDITION_REPORTS_SETTLEMENT.md).
 -- Applied directly to prod via psql (drizzle journal baseline restoration still
 -- pending, so this DDL is not wired into meta/_journal). Additive-only.
 CREATE TABLE IF NOT EXISTS "condition_reports" (

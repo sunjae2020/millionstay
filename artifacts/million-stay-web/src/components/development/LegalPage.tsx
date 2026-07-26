@@ -3,7 +3,7 @@ import { DevLayout } from "@/components/development/DevLayout";
 import { usePageContent } from "@/lib/usePageContent";
 import { useCompanyContact } from "@/lib/guest-api";
 
-// Shared layout for the MetHeim (Korea) legal documents — 개인정보처리방침 /
+// Shared layout for the Metheim (Korea) legal documents — 개인정보처리방침 /
 // 이용약관. Each renders a badge + title + effective date + intro, then a run of
 // numbered "title + body" sections (blank a title in the CMS to hide a section),
 // then the operator / company info block that is shared with the footer

@@ -20,7 +20,7 @@ import { isDevelopmentSite } from "@/lib/site-mode";
 import { addWeeks, format, parseISO } from "date-fns";
 import "leaflet/dist/leaflet.css";
 
-// On single-building white-label instances (e.g. MetHeim), the standard site's
+// On single-building white-label instances (e.g. Metheim), the standard site's
 // hardcoded "Melbourne" location fallbacks are wrong — suppress them in dev mode
 // so nothing shows a foreign city. MillionStay (standard) is left untouched.
 const DEV_SITE = isDevelopmentSite();
@@ -340,7 +340,7 @@ export default function SpaceDetail() {
   const weeklyRateDisplay = formatDisplayPrice(Number(weeklyRate), priceCurrency);
   const weeklyRateRef = Number(weeklyRate) > 0 ? weeklyRateDisplay.reference : null;
   // Format any amount in the listing's currency, honouring the instance's
-  // single-currency pin (e.g. MetHeim → ₩, converted from the AUD base).
+  // single-currency pin (e.g. Metheim → ₩, converted from the AUD base).
   const money = (n: number) => formatDisplayPrice(Number(n) || 0, priceCurrency).primary;
   // Pro-rata: weekly_rate / 7 × days
   const rentTotal = stayDays && weeklyRate ? Math.round((weeklyRate / 7) * stayDays * 100) / 100 : null;
@@ -423,7 +423,7 @@ export default function SpaceDetail() {
     <div className="min-h-screen flex flex-col bg-brand-cream">
       {DEV_SITE ? <DevNavbar /> : <Navbar />}
 
-      {/* Banner — theme-driven hero gradient (MetHeim: deep-teal → urban-teal
+      {/* Banner — theme-driven hero gradient (Metheim: deep-teal → urban-teal
           "night harbor"; standard: deep-navy → brand orange). */}
       <div className="h-20 flex items-center px-6" style={{ background: "linear-gradient(135deg, hsl(var(--brand-navy)) 0%, hsl(var(--primary)) 100%)" }}>
         <div className="max-w-6xl mx-auto w-full flex items-center gap-2">

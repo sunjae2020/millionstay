@@ -1,6 +1,6 @@
 import { type ComponentType } from "react";
 
-// Shared marketing building blocks for the MetHeim development site. These give
+// Shared marketing building blocks for the Metheim development site. These give
 // the Buy / Rent / Management pages a consistent "왜 메트하임 + 절차" rhythm while
 // keeping each funnel visually distinct: Buy uses a gold vertical timeline, Rent
 // a horizontal step row, Management an alternating zig-zag. All copy is passed in

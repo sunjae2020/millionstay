@@ -49,7 +49,7 @@ const stayDetailsSchema = z.object({
 
 type StayDetailsData = z.infer<typeof stayDetailsSchema>;
 
-// MetHeim (development instance) wears the shared DevLayout header so the booking
+// Metheim (development instance) wears the shared DevLayout header so the booking
 // flow reads as the same site as the landing page. See docs convention.
 const DEV_SITE = isDevelopmentSite();
 

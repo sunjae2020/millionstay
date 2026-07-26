@@ -3,7 +3,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
 // DEPOSIT SETTLEMENT — move-out reconciliation of the refundable security
-// deposit (MetHeim vision stage 5; see docs/proposals/CONDITION_REPORTS_SETTLEMENT.md).
+// deposit (Metheim vision stage 5; see docs/proposals/CONDITION_REPORTS_SETTLEMENT.md).
 //
 // Built on the booking spine + the move-out condition_report (phase='move_out')
 // vs the move-in baseline. `deposit_held` is snapshotted from the actually-paid

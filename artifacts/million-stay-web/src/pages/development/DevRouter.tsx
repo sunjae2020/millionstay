@@ -40,7 +40,7 @@ import Sign from "@/pages/sign";
 import PaymentResult from "@/pages/payment-result";
 import NotFound from "@/pages/not-found";
 
-// Dedicated router for a single-building "development" instance (MetHeim).
+// Dedicated router for a single-building "development" instance (Metheim).
 // Top-level marketing site is the 4-part Home/Buy/Rent/Management; the guest
 // booking + portal routes are mounted unchanged so the short-term Rent flow and
 // account area keep functioning.
@@ -56,7 +56,7 @@ export default function DevRouter() {
       <Route path="/management" component={DevManagement} />
       <Route path="/directions" component={DevDirections} />
 
-      {/* MetHeim-specific versions of the standard site's marketing pages.
+      {/* Metheim-specific versions of the standard site's marketing pages.
           Same URLs as MillionStay so existing links resolve, but tenant/owner/
           partner personas instead of student-homestay/education-agent content. */}
       <Route path="/stay-plan" component={DevStayPlan} />
@@ -89,7 +89,7 @@ export default function DevRouter() {
       <Route path="/portal/cs/:id" component={PortalCsDetail} />
       <Route path="/portal/cs" component={PortalCs} />
 
-      {/* MetHeim (Korea) legal pages — override the shared privacy policy with the
+      {/* Metheim (Korea) legal pages — override the shared privacy policy with the
           tenant's own 개인정보처리방침, plus a dedicated 이용약관. */}
       <Route path="/privacy-policy" component={DevPrivacy} />
       <Route path="/privacy" component={DevPrivacy} />

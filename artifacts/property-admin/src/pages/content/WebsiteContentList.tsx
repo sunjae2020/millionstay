@@ -76,12 +76,12 @@ const HS_PAGES: Omit<WebsitePageDef, "site" | "previewBase">[] = [
 ];
 
 // Development site — single-building white-label instances (VITE_SITE_MODE=
-// development, e.g. MetHeim Yeosu). "dev-" prefixed page keys. Six locales.
+// development, e.g. Metheim Yeosu). "dev-" prefixed page keys. Six locales.
 const DEV_PREVIEW = "https://metheim.com";
 const DEV_LANGS = [LANG.ko, LANG.en, LANG.ja, LANG.zh, LANG.vi, LANG.th];
 const DEV_PAGES: Omit<WebsitePageDef, "site" | "previewBase">[] = [
   { key: "dev-home", label: "Home", description: "Building identity — hero/vision, three pillars, why-us and CTA", icon: Home, path: "/" },
-  { key: "dev-about", label: "About MetHeim", description: "Brand story, vision and values", icon: Info, path: "/about" },
+  { key: "dev-about", label: "About Metheim", description: "Brand story, vision and values", icon: Info, path: "/about" },
   { key: "dev-buy", label: "Buy / Sales", description: "Pricing intro, floor plans, remaining units and sales inquiry", icon: Building2, path: "/buy" },
   { key: "dev-rent", label: "Rent / Stay", description: "Short-term booking intro and long-term lease consultation", icon: KeyRound, path: "/rent" },
   { key: "dev-manage", label: "Management", description: "Entrusted-management benefits, yield simulator and application", icon: LineChart, path: "/management" },

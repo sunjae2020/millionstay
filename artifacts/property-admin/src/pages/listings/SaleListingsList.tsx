@@ -21,7 +21,7 @@ const STATUS_COLORS: Record<string, string> = {
   sold: "bg-gray-200 text-gray-600",
 };
 
-// Show the best-available copy for the admin table: prefer Korean (MetHeim is a
+// Show the best-available copy for the admin table: prefer Korean (Metheim is a
 // Korean building), then English, then any filled locale.
 function pickCopy(translations: any, field: string): string {
   const t = translations ?? {};

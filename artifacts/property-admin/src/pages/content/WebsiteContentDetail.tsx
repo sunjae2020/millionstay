@@ -179,7 +179,7 @@ const PAGE_FIELDS: Record<string, SectionField[]> = {
     { key: "location_value", label: "Location Value", type: "text" },
   ],
 
-  // ── Development site (single-building instances, e.g. MetHeim) — "dev-"
+  // ── Development site (single-building instances, e.g. Metheim) — "dev-"
   //    prefixed. Fields overlay the built-in i18n copy; an empty field falls
   //    back to the default. Floor-plan/hero images use image URL fields.
   "dev-home": [
@@ -339,7 +339,7 @@ const PAGE_FIELDS: Record<string, SectionField[]> = {
     { key: "plan_4_area", label: "Plan 4 — Area", type: "text" },
     { key: "plan_4_price", label: "Plan 4 — Price", type: "text" },
     { key: "plan_4_status", label: "Plan 4 — Status", type: "text" },
-    // Why MetHeim (3 reasons)
+    // Why Metheim (3 reasons)
     { key: "why_eyebrow", label: "Why — Eyebrow", type: "text" },
     { key: "why_heading", label: "Why — Heading", type: "text" },
     { key: "why_subtitle", label: "Why — Subtitle", type: "textarea" },
@@ -367,7 +367,7 @@ const PAGE_FIELDS: Record<string, SectionField[]> = {
   "dev-rent": [
     { key: "hero_title", label: "Hero Title", type: "text" },
     { key: "hero_subtitle", label: "Hero Subtitle", type: "textarea" },
-    // Why MetHeim (3 reasons)
+    // Why Metheim (3 reasons)
     { key: "why_eyebrow", label: "Why — Eyebrow", type: "text" },
     { key: "why_heading", label: "Why — Heading", type: "text" },
     { key: "why_subtitle", label: "Why — Subtitle", type: "textarea" },
@@ -407,7 +407,7 @@ const PAGE_FIELDS: Record<string, SectionField[]> = {
     { key: "benefit_2_body", label: "Benefit 2 — Body", type: "textarea" },
     { key: "benefit_3_title", label: "Benefit 3 — Title", type: "text" },
     { key: "benefit_3_body", label: "Benefit 3 — Body", type: "textarea" },
-    // Why MetHeim (3 reasons)
+    // Why Metheim (3 reasons)
     { key: "why_eyebrow", label: "Why — Eyebrow", type: "text" },
     { key: "why_heading", label: "Why — Heading", type: "text" },
     { key: "why_subtitle", label: "Why — Subtitle", type: "textarea" },
@@ -452,7 +452,7 @@ const PAGE_FIELDS: Record<string, SectionField[]> = {
     { key: "parking_title", label: "Parking — Title", type: "text" },
     { key: "parking_body", label: "Parking — Body", type: "textarea" },
   ],
-  // Footer / operator info (MetHeim Korea) — also shown on the legal pages.
+  // Footer / operator info (Metheim Korea) — also shown on the legal pages.
   "dev-footer": [
     { key: "company_name", label: "Company Name (상호)", type: "text" },
     { key: "ceo", label: "CEO (대표)", type: "text" },

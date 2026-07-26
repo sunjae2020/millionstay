@@ -31,7 +31,7 @@ const DEFAULT_BY_LANG: Record<string, string> = {
 
 function detectDefaultCurrency(): string {
   // A per-instance pin (VITE_DEFAULT_CURRENCY) always wins over the browser
-  // heuristic so a single-currency white-label (e.g. MetHeim → KRW) is stable
+  // heuristic so a single-currency white-label (e.g. Metheim → KRW) is stable
   // regardless of the visitor's locale.
   if (DEFAULT_CURRENCY) return DEFAULT_CURRENCY;
   if (typeof navigator === "undefined") return "AUD";
@@ -87,7 +87,7 @@ type Ctx = {
   formatReference: (amount: number, from: string) => string | null;
   /**
    * Format a price for display. On a single-currency instance the primary price
-   * is always the instance's standard/base currency (기준금액, e.g. MetHeim → KRW —
+   * is always the instance's standard/base currency (기준금액, e.g. Metheim → KRW —
    * the amount quoted and settled at payment); the visitor's selected currency,
    * when different, is demoted to a smaller "≈" reference line. Otherwise the
    * primary price stays in the listing's own currency, with a converted "≈"
@@ -183,7 +183,7 @@ export function DisplayCurrencyProvider({ children }: { children: ReactNode }) {
       const src = (from || "AUD").toUpperCase();
       if (FORCE_DISPLAY_CURRENCY) {
         // The instance's standard/base currency (기준금액) is always the primary —
-        // e.g. MetHeim quotes and settles in KRW regardless of what the visitor
+        // e.g. Metheim quotes and settles in KRW regardless of what the visitor
         // selects. The selected currency is a reference-only line below it.
         const base = DEFAULT_CURRENCY;
         const primaryConv = convertPrice(amount, src, base);

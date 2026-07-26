@@ -1,4 +1,4 @@
--- MetHeim exchange-rate seed — tracked comparison currencies (all vs AUD).
+-- Metheim exchange-rate seed — tracked comparison currencies (all vs AUD).
 --
 -- WHY: the guest site quotes/collects in KRW but shows reference conversions
 -- (USD/JPY/CNY/THB/VND) next to each listing price. Conversion goes via AUD, and

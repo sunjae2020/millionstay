@@ -29,7 +29,7 @@ interface FloorBoard {
 
 type Dimension = "status" | "owner";
 
-/** Known status → stable palette colour (data values are Korean in MetHeim). */
+/** Known status → stable palette colour (data values are Korean in Metheim). */
 const STATUS_COLORS: Record<string, string> = {
   공실: "#94a3b8",
   임대: "#16a34a",

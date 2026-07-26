@@ -5,7 +5,7 @@
 -- Supply = exclusive + residential_common; contract = supply + other_common
 -- (verified consistent against the source ledger).
 --
--- Identity: MetHeim Seoul DB — the 8 parent-type spaces are named "A타입",
+-- Identity: Metheim Seoul DB — the 8 parent-type spaces are named "A타입",
 -- "A-1타입", … (ids 276–283, property_id = 1). Matched by name below.
 
 UPDATE "spaces" AS s SET

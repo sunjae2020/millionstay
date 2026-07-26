@@ -327,7 +327,7 @@ router.get("/v1/homestay-ops/summary", async (_req, res) => {
 // ── Floor / type occupancy board ───────────────────────────────────────────
 // Powers the "Floor Board" dashboard tab: a floor × unit-type matrix of every
 // floor-numbered unit in a property, colourable by status or owner. Generic —
-// works for any property whose spaces carry a `floor_number` (e.g. MetHeim 여수).
+// works for any property whose spaces carry a `floor_number` (e.g. Metheim 여수).
 
 interface FloorBoardUnit {
   id: number;

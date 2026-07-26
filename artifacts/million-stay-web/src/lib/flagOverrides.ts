@@ -3,7 +3,7 @@
  * defaultCurrency).
  *
  * Injected at build time via VITE_FLAG_OVERRIDES as a comma-separated list of
- * `<lang-code>:<iso-country>` pairs, e.g. `en:us` for the MetHeim instance so the
+ * `<lang-code>:<iso-country>` pairs, e.g. `en:us` for the Metheim instance so the
  * English language switcher shows the US flag instead of the primary MillionStay
  * default (Australia). The DB `languages.flag_iso` is shared across instances, so
  * this override is applied purely in the guest frontend and leaves the primary

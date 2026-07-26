@@ -1,12 +1,12 @@
 -- =============================================================================
 -- tenants/metheim/sale-listings.seed.sql
--- MetHeim Yeosu — 4 SAMPLE 분양(pre-sale) / 판매(sale) listings for the /buy board.
+-- Metheim Yeosu — 4 SAMPLE 분양(pre-sale) / 판매(sale) listings for the /buy board.
 --
 -- These are demo units for the single-building "development" site so the /buy
 -- board isn't empty. Structural fields are locale-independent; per-locale copy
 -- (title/subtitle/location/price_label/description) lives in `translations`,
 -- resolved server-side lang → ko → en. price_amount is KRW (drives the FX
--- reference breakdown); MetHeim guest UI is pinned to ₩.
+-- reference breakdown); Metheim guest UI is pinned to ₩.
 --
 -- IDEMPOTENT: every sample row is tagged translations->>'_seed' = 'metheim-sample'
 -- and deleted first, so re-running replaces the samples without duplicating.
