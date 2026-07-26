@@ -14,6 +14,7 @@ import EarningsPage from "@/pages/EarningsPage";
 import DocumentsPage from "@/pages/DocumentsPage";
 import SupportPage from "@/pages/SupportPage";
 import SupportDetailPage from "@/pages/SupportDetailPage";
+import NotFound from "@/pages/not-found";
 
 function PortalRoutes() {
   const { user, loading } = useAuth();
@@ -48,9 +49,7 @@ function PortalRoutes() {
       <Route path="/documents" component={DocumentsPage} />
       <Route path="/support" component={SupportPage} />
       <Route path="/support/:id" component={SupportDetailPage} />
-      <Route>
-        <div className="p-8 text-muted-foreground">Page not found</div>
-      </Route>
+      <Route component={NotFound} />
     </Switch>
   );
 }

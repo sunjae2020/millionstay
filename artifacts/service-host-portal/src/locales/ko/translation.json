@@ -28,7 +28,8 @@
     "cancel": "취소",
     "back": "뒤로",
     "tbd": "미정",
-    "ongoing": "진행 중"
+    "ongoing": "진행 중",
+    "dismiss": "닫기"
   },
   "login": {
     "headline_1": "최고의 서비스를",
@@ -50,7 +51,8 @@
     "invalid": "잘못된 자격 증명",
     "secure": "보안 액세스 · {{appName}} 서비스 호스트 포털",
     "apply_prompt": "서비스를 제공하시겠어요?",
-    "apply_cta": "서비스 호스트 신청하기"
+    "apply_cta": "서비스 호스트 신청하기",
+    "forgot_password": "비밀번호를 잊으셨나요?"
   },
   "trigger": {
     "at_checkin": "체크인 시",
@@ -216,7 +218,9 @@
     "success_message": "{{appName}} 서비스 호스트에 관심을 가져 주셔서 감사합니다. 운영팀이 검토 후 영업일 기준 1-2일 내에 연락드리겠습니다.",
     "reference_label": "신청 번호:",
     "privacy_note": "제출함으로써 신청과 관련하여 {{appName}}의 연락을 받는 것에 동의합니다.",
-    "privacy_policy_link": "Privacy Policy"
+    "privacy_policy_link": "Privacy Policy",
+    "phone_placeholder": "예: +82 10 1234 5678",
+    "service_area_placeholder": "예: 여수시"
   },
   "support": {
     "title": "고객지원",
@@ -253,7 +257,8 @@
     "created": "등록일",
     "last_reply": "최근 답변",
     "no_reply_yet": "아직 답변 없음",
-    "english_label": "영어"
+    "english_label": "영어",
+    "attachment_alt": "첨부"
   },
   "workorders": {
     "title": "작업지시",
@@ -275,7 +280,12 @@
     "status_InProgress": "진행 중",
     "status_Completed": "완료",
     "status_Cancelled": "취소",
-    "status_PendingReview": "검토 대기"
+    "status_PendingReview": "검토 대기",
+    "sla_pending_ack": "확인 대기",
+    "sla_acknowledged": "확인됨",
+    "sla_met": "정상",
+    "sla_breached": "초과",
+    "sla_escalated": "상향"
   },
   "documents": {
     "title": "문서함",
@@ -298,5 +308,42 @@
     "type_report": "보고서",
     "type_manual": "매뉴얼",
     "type_other": "기타"
+  },
+  "forgot": {
+    "title": "비밀번호 재설정",
+    "subtitle": "계정 이메일을 입력하시면 재설정 링크를 보내드립니다.",
+    "sent": "{{email}} 계정이 있는 경우 재설정 링크를 보냈습니다. 받은편지함을 확인해 주세요. 링크는 1시간 후 만료됩니다.",
+    "back_to_login": "로그인으로 돌아가기",
+    "email": "이메일 주소",
+    "email_placeholder": "you@partner.com",
+    "sending": "전송 중...",
+    "send": "재설정 링크 보내기"
+  },
+  "reset": {
+    "err_policy": "비밀번호는 대문자·소문자·숫자·특수문자를 포함해 12자 이상이어야 합니다.",
+    "err_mismatch": "비밀번호가 일치하지 않습니다.",
+    "err_failed": "재설정에 실패했습니다. 링크가 만료되었을 수 있습니다.",
+    "err_network": "네트워크 오류입니다.",
+    "title": "새 비밀번호 설정",
+    "subtitle": "다른 곳에서 사용하지 않은 강력한 비밀번호를 선택하세요.",
+    "need_link": "이 페이지는 이메일의 재설정 링크가 필요합니다. 보내드린 메일의 링크를 열어 주세요.",
+    "done": "비밀번호가 변경되었습니다. 이제 로그인할 수 있습니다.",
+    "continue": "로그인으로 이동",
+    "new_password": "새 비밀번호",
+    "policy_hint": "12자 이상 · 대문자+소문자+숫자+특수문자 필요.",
+    "confirm_password": "새 비밀번호 확인",
+    "updating": "변경 중...",
+    "submit": "새 비밀번호 설정",
+    "back_to_login": "로그인으로 돌아가기"
+  },
+  "not_found": {
+    "title": "404 페이지를 찾을 수 없습니다",
+    "desc": "찾으시는 페이지가 존재하지 않습니다."
+  },
+  "pagination": {
+    "rows_per_page": "페이지당 행:",
+    "range": "{{total}}개 중 {{from}}–{{to}}",
+    "prev": "이전 페이지",
+    "next": "다음 페이지"
   }
 }

@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
@@ -26,6 +27,7 @@ export function TablePagination({
   onPageSize,
   hideWhenEmpty = true,
 }: TablePaginationProps) {
+  const { t } = useTranslation();
   if (hideWhenEmpty && total === 0) return null;
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, total);
@@ -33,7 +35,7 @@ export function TablePagination({
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-border bg-muted/20 text-sm text-muted-foreground">
       <div className="flex items-center gap-2">
-        <span>Rows per page:</span>
+        <span>{t("pagination.rows_per_page", "Rows per page:")}</span>
         <select
           value={pageSize}
           onChange={(e) => onPageSize(Number(e.target.value))}
@@ -49,12 +51,12 @@ export function TablePagination({
 
       <div className="flex items-center gap-3">
         <span>
-          {from}–{to} of {total}
+          {t("pagination.range", "{{from}}–{{to}} of {{total}}", { from, to, total })}
         </span>
         <div className="flex items-center gap-1">
           <button
             type="button"
-            aria-label="Previous page"
+            aria-label={t("pagination.prev", "Previous page")}
             disabled={page <= 1}
             onClick={() => onPage(page - 1)}
             className="h-7 w-7 inline-flex items-center justify-center rounded-md hover:bg-muted disabled:opacity-40 disabled:pointer-events-none"
@@ -66,7 +68,7 @@ export function TablePagination({
           </span>
           <button
             type="button"
-            aria-label="Next page"
+            aria-label={t("pagination.next", "Next page")}
             disabled={page >= totalPages}
             onClick={() => onPage(page + 1)}
             className="h-7 w-7 inline-flex items-center justify-center rounded-md hover:bg-muted disabled:opacity-40 disabled:pointer-events-none"

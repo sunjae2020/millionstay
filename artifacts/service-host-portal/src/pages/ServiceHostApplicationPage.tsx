@@ -134,7 +134,7 @@ export default function ServiceHostApplicationPage() {
                 <input type="email" required value={form.email} onChange={(e) => update("email", e.target.value)} className={inputCls} />
               </Field>
               <Field label={t("apply.phone")}>
-                <input type="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)} className={inputCls} placeholder="+61 ..." />
+                <input type="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)} className={inputCls} placeholder={t("apply.phone_placeholder", "+61 ...")} />
               </Field>
             </div>
 
@@ -177,7 +177,7 @@ export default function ServiceHostApplicationPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                 <Field label={t("apply.service_area")}>
-                  <input value={form.service_area} onChange={(e) => update("service_area", e.target.value)} className={inputCls} placeholder="Melbourne CBD" />
+                  <input value={form.service_area} onChange={(e) => update("service_area", e.target.value)} className={inputCls} placeholder={t("apply.service_area_placeholder", "Melbourne CBD")} />
                 </Field>
                 <Field label={t("apply.years_experience")}>
                   <input type="number" min={0} value={form.years_experience} onChange={(e) => update("years_experience", e.target.value)} className={inputCls} />
