@@ -6,9 +6,15 @@ import { useDarkMode } from "@/lib/darkMode";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { APP_NAME } from "@/lib/appName";
 import {
-  LayoutDashboard, BookOpen, Building2, DollarSign,
+  LayoutDashboard, FileSignature, FolderOpen, DollarSign,
   LogOut, User, ChevronRight, Menu, X, Sun, Moon, LifeBuoy,
 } from "lucide-react";
+
+// White-label tenants (VITE_LOGO_URL set) render their own logo — white-inverted
+// on the dark sidebar, natural colour on the light mobile header — mirroring the
+// auth pages. Otherwise fall back to the bundled MillionStay assets.
+const TENANT_LOGO = import.meta.env.VITE_LOGO_URL as string | undefined;
+const HAS_TENANT_LOGO = Boolean(TENANT_LOGO);
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -19,8 +25,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { href: "/", icon: LayoutDashboard, label: t("nav.dashboard") },
-    { href: "/bookings", icon: BookOpen, label: t("nav.my_bookings") },
-    { href: "/properties", icon: Building2, label: t("nav.properties") },
+    { href: "/bookings", icon: FileSignature, label: t("nav.my_contracts") },
+    { href: "/documents", icon: FolderOpen, label: t("nav.documents") },
     { href: "/commission", icon: DollarSign, label: t("nav.commission") },
     { href: "/support", icon: LifeBuoy, label: t("nav.support", "Support") },
   ];
@@ -54,9 +60,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
             {import.meta.env.VITE_LOGO_MODE === "text"
               ? <span className="font-display font-extrabold tracking-tight text-white text-xl whitespace-nowrap">{APP_NAME}</span>
               : <img
-                  src={`${import.meta.env.BASE_URL}millionstay-logo.png`}
+                  src={TENANT_LOGO || `${import.meta.env.BASE_URL}millionstay-logo.png`}
                   alt={APP_NAME}
-                  className="h-[2.625rem] w-auto object-contain"
+                  className={HAS_TENANT_LOGO ? "h-14 w-auto object-contain" : "h-[2.625rem] w-auto object-contain"}
+                  style={HAS_TENANT_LOGO ? { filter: "brightness(0) invert(1)" } : undefined}
                 />}
           </div>
           <button
@@ -135,9 +142,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
           {import.meta.env.VITE_LOGO_MODE === "text"
             ? <span className="font-display font-extrabold tracking-tight text-primary text-xl whitespace-nowrap">{APP_NAME}</span>
             : <img
-                src={`${import.meta.env.BASE_URL}logo-horizontal.png`}
+                src={TENANT_LOGO || `${import.meta.env.BASE_URL}logo-horizontal.png`}
                 alt={APP_NAME}
-                className="h-9 w-auto object-contain"
+                className={HAS_TENANT_LOGO ? "h-11 w-auto object-contain" : "h-9 w-auto object-contain"}
               />}
           <div className="ml-auto flex items-center gap-1">
             <button

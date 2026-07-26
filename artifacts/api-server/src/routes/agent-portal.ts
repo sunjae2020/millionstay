@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
-import { eq, and, or, desc, sql, ilike, inArray } from "drizzle-orm";
+import multer from "multer";
+import { eq, and, or, desc, sql, ilike, inArray, isNull } from "drizzle-orm";
 import {
   db,
   bookingsTable,
@@ -11,8 +12,10 @@ import {
   accountsTable,
   commissionsTable,
   contactsTable,
+  documentsTable,
 } from "@workspace/db";
 import { requireAgentAuth, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth";
+import { isCloudinaryConfigured, uploadPrivateToCloudinary, generateSignedUrl, deleteFromCloudinary, cldFolder } from "../utils/cloudinary";
 import { parsePageParams, pageMeta, paginateArray } from "../utils/pagination";
 
 const router: IRouter = Router();
@@ -76,6 +79,45 @@ router.get("/v1/agent/dashboard", requireAgentAuth, async (req, res): Promise<vo
       ? totalRent * (commission.commission_rate / 100)
       : (commission?.commission_amount ?? 0) * totalBookings;
 
+  const commissionRateFor = (rent: number) =>
+    commission?.commission_type === "Percentage" && commission.commission_rate
+      ? rent * (commission.commission_rate / 100)
+      : (commission?.commission_amount ?? 0);
+
+  // Status breakdown — counts per contract status (for the donut chart).
+  const STATUS_ORDER = ["Draft", "Confirmed", "Active", "CheckedOut", "Cancelled"];
+  const statusCounts: Record<string, number> = {};
+  for (const b of bookings) statusCounts[b.booking_status] = (statusCounts[b.booking_status] ?? 0) + 1;
+  const status_breakdown = STATUS_ORDER
+    .filter((s) => statusCounts[s])
+    .map((s) => ({ status: s, count: statusCounts[s]! }));
+
+  // Monthly rent + commission trend — last 6 calendar months keyed by check-in.
+  const now = new Date();
+  const months: { key: string; label: string; rent: number; commission: number; contracts: number }[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({
+      key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+      label: `${d.getMonth() + 1}`,
+      rent: 0,
+      commission: 0,
+      contracts: 0,
+    });
+  }
+  const monthIdx = Object.fromEntries(months.map((m, i) => [m.key, i]));
+  for (const b of bookings) {
+    if (!b.check_in_date) continue;
+    const dt = new Date(b.check_in_date);
+    const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`;
+    const idx = monthIdx[key];
+    if (idx === undefined) continue;
+    const rent = parseFloat(b.total_rent ?? "0");
+    months[idx]!.rent += rent;
+    months[idx]!.commission += commissionRateFor(rent);
+    months[idx]!.contracts += 1;
+  }
+
   res.json({
     success: true,
     data: {
@@ -87,6 +129,8 @@ router.get("/v1/agent/dashboard", requireAgentAuth, async (req, res): Promise<vo
         total_rent_managed: totalRent,
         estimated_commission_earned: commissionEarned,
       },
+      status_breakdown,
+      monthly_trend: months,
       recent_bookings: bookings.slice(0, 5),
     },
   });
@@ -311,6 +355,151 @@ router.get("/v1/agent/commission", requireAgentAuth, async (req, res): Promise<v
     },
     meta: pageMeta(filtered.length, { limit, offset, page }),
   });
+});
+
+/* ─────────────────────────────────────────────
+   DOCUMENTS — agent document folder (문서 관리함)
+   The agent stores/reads their own documents (contracts, invoices, reports,
+   manuals). Files live in Cloudinary as `authenticated` assets and are served
+   only via short-lived signed URLs. Rows in the shared `documents` table are
+   scoped to the agent via entity_type='agent' + entity_id=account_id.
+───────────────────────────────────────────── */
+
+const ALLOWED_DOC_MIME = new Set([
+  "application/pdf",
+  "image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif",
+]);
+const DOC_TYPES = new Set(["contract", "invoice", "report", "manual", "other"]);
+const uploadDoc = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024, files: 1 },
+  fileFilter: (_req, file, cb) => {
+    if (ALLOWED_DOC_MIME.has(file.mimetype.toLowerCase())) cb(null, true);
+    else cb(new Error(`Unsupported file type: ${file.mimetype}. Only PDF and image files are allowed.`));
+  },
+});
+
+// GET /api/v1/agent/documents — list my documents (newest first).
+router.get("/v1/agent/documents", async (req, res): Promise<void> => {
+  try {
+    const partner = (req as any).partner as PartnerAuthPayload;
+    const rows = await db
+      .select({
+        id: documentsTable.id,
+        doc_type: documentsTable.doc_type,
+        file_name: documentsTable.file_name,
+        file_size: documentsTable.file_size,
+        mime_type: documentsTable.mime_type,
+        created_at: documentsTable.created_at,
+      })
+      .from(documentsTable)
+      .where(and(
+        eq(documentsTable.entity_type, "agent"),
+        eq(documentsTable.entity_id, partner.account_id),
+        isNull(documentsTable.deleted_at),
+      ))
+      .orderBy(desc(documentsTable.created_at));
+    res.json({ success: true, data: rows });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
+  }
+});
+
+// POST /api/v1/agent/documents — upload a document.
+router.post(
+  "/v1/agent/documents",
+  (req, res, next) => {
+    uploadDoc.single("file")(req, res, (err) => {
+      if (err) { res.status(400).json({ success: false, error: { code: "UPLOAD_ERROR", message: err.message } }); return; }
+      next();
+    });
+  },
+  async (req, res): Promise<void> => {
+    let publicId: string | null = null;
+    try {
+      const partner = (req as any).partner as PartnerAuthPayload;
+
+      if (!isCloudinaryConfigured()) {
+        res.status(503).json({ success: false, error: { code: "NOT_CONFIGURED", message: "File upload not configured" } });
+        return;
+      }
+      const file = req.file as Express.Multer.File | undefined;
+      if (!file) { res.status(400).json({ success: false, error: { code: "NO_FILE", message: "No file provided" } }); return; }
+
+      const docType = String((req.body?.doc_type ?? "other")).toLowerCase();
+      if (!DOC_TYPES.has(docType)) { res.status(400).json({ success: false, error: { code: "INVALID_TYPE", message: `doc_type must be one of: ${[...DOC_TYPES].join(", ")}` } }); return; }
+      const title = typeof req.body?.title === "string" && req.body.title.trim() ? req.body.title.trim() : file.originalname;
+
+      const uploaded = await uploadPrivateToCloudinary(file.buffer, { folder: cldFolder("partner-documents"), resource_type: "auto" });
+      publicId = uploaded.public_id;
+
+      // Default retention: 7 years (Australian APP 11 record-keeping default).
+      const retentionUntil = new Date();
+      retentionUntil.setFullYear(retentionUntil.getFullYear() + 7);
+
+      const [row] = await db.insert(documentsTable).values({
+        entity_type: "agent",
+        entity_id: partner.account_id,
+        doc_type: docType,
+        file_name: title,
+        file_size: uploaded.bytes ?? file.size,
+        mime_type: file.mimetype,
+        cloudinary_public_id: uploaded.public_id,
+        uploaded_by: partner.id ?? null,
+        uploaded_by_type: "partner",
+        retention_until: retentionUntil,
+      }).returning({
+        id: documentsTable.id,
+        doc_type: documentsTable.doc_type,
+        file_name: documentsTable.file_name,
+        file_size: documentsTable.file_size,
+        mime_type: documentsTable.mime_type,
+        created_at: documentsTable.created_at,
+      });
+      res.status(201).json({ success: true, data: row });
+    } catch (err: any) {
+      if (publicId) { try { await deleteFromCloudinary(publicId); } catch {} }
+      res.status(500).json({ success: false, error: { code: "UPLOAD_FAILED", message: err?.message ?? "Upload failed" } });
+    }
+  },
+);
+
+// Load a document owned by the calling agent.
+async function loadOwnedAgentDocument(accountId: number, docId: string) {
+  const [doc] = await db.select().from(documentsTable).where(and(
+    eq(documentsTable.id, docId),
+    eq(documentsTable.entity_type, "agent"),
+    eq(documentsTable.entity_id, accountId),
+    isNull(documentsTable.deleted_at),
+  )).limit(1);
+  return doc ?? null;
+}
+
+// GET /api/v1/agent/documents/:id/download — short-lived signed URL.
+router.get("/v1/agent/documents/:id/download", async (req, res): Promise<void> => {
+  try {
+    const partner = (req as any).partner as PartnerAuthPayload;
+    const doc = await loadOwnedAgentDocument(partner.account_id, String(req.params.id));
+    if (!doc || !doc.cloudinary_public_id) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Document not found" } }); return; }
+    const url = generateSignedUrl(doc.cloudinary_public_id, 300);
+    res.json({ success: true, data: { url } });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
+  }
+});
+
+// DELETE /api/v1/agent/documents/:id — soft-delete + remove the asset.
+router.delete("/v1/agent/documents/:id", async (req, res): Promise<void> => {
+  try {
+    const partner = (req as any).partner as PartnerAuthPayload;
+    const doc = await loadOwnedAgentDocument(partner.account_id, String(req.params.id));
+    if (!doc) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Document not found" } }); return; }
+    await db.update(documentsTable).set({ deleted_at: new Date(), updated_at: new Date() }).where(eq(documentsTable.id, doc.id));
+    if (doc.cloudinary_public_id) { try { await deleteFromCloudinary(doc.cloudinary_public_id); } catch {} }
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
+  }
 });
 
 export default router;

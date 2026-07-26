@@ -16,7 +16,9 @@
     "sign_out": "退出登录",
     "support": "客户支持",
     "dark_mode": "深色模式",
-    "light_mode": "浅色模式"
+    "light_mode": "浅色模式",
+    "my_contracts": "我的合同",
+    "documents": "文档"
   },
   "common": {
     "loading": "加载中...",
@@ -52,21 +54,31 @@
     "welcome": "欢迎回来",
     "account_prefix": "账户:",
     "subtitle_default": "您的业绩摘要",
-    "stat_total_bookings": "总预订",
-    "stat_active_bookings": "活跃预订",
+    "stat_total_bookings": "合同总数",
+    "stat_active_bookings": "活跃合同",
     "stat_rent_managed": "管理租金",
     "stat_est_commission": "预估佣金",
     "rate_percent": "{{rate}}% 比例",
     "rate_flat": "每单 ${{amount}}",
     "recent_bookings": "最近预订",
-    "no_bookings": "尚未分配预订。",
+    "no_bookings": "尚未分配合同。",
     "view_all": "查看全部",
     "booking_label": "预订",
-    "checkin_label": "入住"
+    "checkin_label": "入住",
+    "revenue_trend": "收益趋势",
+    "last_6_months": "近6个月",
+    "contract_status": "合同状态",
+    "no_data": "暂无数据",
+    "recent_contracts": "最近合同",
+    "revenue_label": "收益",
+    "commission_label": "佣金",
+    "col_ref": "编号",
+    "col_total": "合计",
+    "col_status": "状态"
   },
   "bookings": {
-    "title": "我的预订",
-    "subtitle": "您作为代理获得的预订",
+    "title": "我的合同",
+    "subtitle": "您作为代理获得的合同",
     "search_placeholder": "按租户、物业或编号搜索...",
     "col_ref": "编号",
     "col_tenant": "租户",
@@ -74,7 +86,7 @@
     "col_checkin": "入住",
     "col_rate": "费率",
     "col_status": "状态",
-    "no_bookings": "未找到预订"
+    "no_bookings": "未找到合同"
   },
   "booking_detail": {
     "back": "返回预订列表",
@@ -196,5 +208,27 @@
     "last_reply": "最近回复",
     "no_reply_yet": "暂无回复",
     "english_label": "英语"
+  },
+  "documents": {
+    "title": "文档",
+    "subtitle": "安全地存储和管理您的工作文档。",
+    "category": "类别",
+    "upload": "上传文档",
+    "uploading": "上传中…",
+    "upload_hint": "PDF或图片，最大20MB。文件安全存储，仅您和管理员可见。",
+    "empty": "暂无文档",
+    "empty_help": "上传文档以开始。",
+    "load_failed": "加载文档失败",
+    "upload_failed": "上传失败",
+    "download": "下载",
+    "download_failed": "下载失败",
+    "delete": "删除",
+    "delete_confirm": "删除此文档？",
+    "delete_failed": "删除失败",
+    "type_contract": "合同",
+    "type_invoice": "发票",
+    "type_report": "报告",
+    "type_manual": "手册",
+    "type_other": "其他"
   }
 }

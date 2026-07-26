@@ -16,7 +16,9 @@
     "sign_out": "ログアウト",
     "support": "サポート",
     "dark_mode": "ダークモード",
-    "light_mode": "ライトモード"
+    "light_mode": "ライトモード",
+    "my_contracts": "契約管理",
+    "documents": "書類"
   },
   "common": {
     "loading": "読み込み中...",
@@ -52,21 +54,31 @@
     "welcome": "おかえりなさい",
     "account_prefix": "アカウント:",
     "subtitle_default": "パフォーマンス概要",
-    "stat_total_bookings": "総予約数",
-    "stat_active_bookings": "進行中の予約",
+    "stat_total_bookings": "総契約数",
+    "stat_active_bookings": "進行中の契約",
     "stat_rent_managed": "管理賃料",
     "stat_est_commission": "見込み手数料",
     "rate_percent": "{{rate}}% 料率",
     "rate_flat": "1件あたり ${{amount}}",
     "recent_bookings": "最近の予約",
-    "no_bookings": "割り当てられた予約はまだありません。",
+    "no_bookings": "割り当てられた契約はまだありません。",
     "view_all": "すべて表示",
     "booking_label": "予約",
-    "checkin_label": "チェックイン"
+    "checkin_label": "チェックイン",
+    "revenue_trend": "収益推移",
+    "last_6_months": "直近6か月",
+    "contract_status": "契約ステータス",
+    "no_data": "データがありません",
+    "recent_contracts": "最近の契約",
+    "revenue_label": "収益",
+    "commission_label": "手数料",
+    "col_ref": "契約番号",
+    "col_total": "合計",
+    "col_status": "ステータス"
   },
   "bookings": {
-    "title": "マイ予約",
-    "subtitle": "エージェントとして割り当てられた予約",
+    "title": "契約管理",
+    "subtitle": "エージェントとして割り当てられた契約",
     "search_placeholder": "入居者、物件、または番号で検索...",
     "col_ref": "番号",
     "col_tenant": "入居者",
@@ -74,7 +86,7 @@
     "col_checkin": "チェックイン",
     "col_rate": "料金",
     "col_status": "ステータス",
-    "no_bookings": "予約が見つかりません"
+    "no_bookings": "契約が見つかりません"
   },
   "booking_detail": {
     "back": "予約一覧に戻る",
@@ -196,5 +208,27 @@
     "last_reply": "最新の返信",
     "no_reply_yet": "返信はまだありません",
     "english_label": "英語"
+  },
+  "documents": {
+    "title": "書類",
+    "subtitle": "業務書類を安全に保管・管理できます。",
+    "category": "分類",
+    "upload": "書類をアップロード",
+    "uploading": "アップロード中…",
+    "upload_hint": "PDFまたは画像、最大20MB。ファイルは安全に保管され、本人と管理者のみが閲覧できます。",
+    "empty": "書類がありません",
+    "empty_help": "書類をアップロードして始めましょう。",
+    "load_failed": "書類を読み込めませんでした",
+    "upload_failed": "アップロードに失敗しました",
+    "download": "ダウンロード",
+    "download_failed": "ダウンロードに失敗しました",
+    "delete": "削除",
+    "delete_confirm": "この書類を削除しますか？",
+    "delete_failed": "削除に失敗しました",
+    "type_contract": "契約書",
+    "type_invoice": "請求書",
+    "type_report": "レポート",
+    "type_manual": "マニュアル",
+    "type_other": "その他"
   }
 }
