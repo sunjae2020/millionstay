@@ -123,6 +123,15 @@ export default function PortalBookingDetail() {
       .catch(() => setLoading(false));
   }, [token, id]);
 
+  // Deep-link support: `?tab=contract` (e.g. from the dashboard "계약 상세" link)
+  // opens the Contract tab once the booking — and its contract — has loaded.
+  const [tab, setTab] = React.useState("overview");
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hasContract = !!(bookingData && (bookingData as Record<string, unknown>).contract);
+    if (params.get("tab") === "contract" && hasContract) setTab("contract");
+  }, [bookingData]);
+
   if (!token) return null;
 
   const b = bookingData;
@@ -205,7 +214,7 @@ export default function PortalBookingDetail() {
             </div>
 
             {/* Tabs */}
-            <Tabs defaultValue="overview">
+            <Tabs value={tab} onValueChange={setTab}>
               <TabsList className="bg-white border mb-4 flex-wrap h-auto">
                 <TabsTrigger value="overview">{t("portal.booking_detail.tab_overview", "Overview")}</TabsTrigger>
                 {contract && <TabsTrigger value="contract" className="gap-1.5"><ScrollText className="h-3.5 w-3.5" />{t("portal.booking_detail.tab_contract", "Contract")}</TabsTrigger>}
