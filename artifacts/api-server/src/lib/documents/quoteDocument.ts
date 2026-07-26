@@ -4,7 +4,7 @@
  * Renders a pre-sale quotation with line items, totals and a validity date,
  * using the shared brand shell so it matches invoices/receipts/contracts.
  */
-import { renderDocumentShell, escapeHtml, getCompanyInfo, statusWatermarkColor, type CompanyInfo } from "./theme";
+import { renderDocumentShell, escapeHtml, getCompanyInfo, statusWatermarkColor, formatDocMoney, type CompanyInfo } from "./theme";
 import { t, docLocale, statusLabel, type DocLang } from "./i18n";
 import { CARD_SURCHARGE_PCT } from "./invoiceDocument";
 
@@ -32,8 +32,7 @@ export interface QuoteDocInput {
 }
 
 function money(amount: string | number | null, currency: string | null): string {
-  const n = Number(amount ?? 0);
-  return `${n.toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency || "AUD"}`;
+  return formatDocMoney(amount, currency);
 }
 
 function formatDate(value: string | Date | null, lang: DocLang): string {

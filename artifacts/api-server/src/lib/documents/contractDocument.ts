@@ -5,7 +5,7 @@
  * terms, the free-text terms body, and a signature block. Uses the shared
  * document shell so colour/typography stay consistent with all other documents.
  */
-import { renderDocumentShell, escapeHtml, getCompanyInfo, type CompanyInfo } from "./theme";
+import { renderDocumentShell, escapeHtml, getCompanyInfo, formatDocMoney, type CompanyInfo } from "./theme";
 import { t, docLocale, type DocLang } from "./i18n";
 
 /** A priced add-on service line (from contract_line_items, item_type=Service):
@@ -68,8 +68,7 @@ export interface ContractDocInput {
 }
 
 function money(amount: number | null, currency: string | null): string {
-  if (amount == null) return "—";
-  return `${Number(amount).toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency || "AUD"}`;
+  return formatDocMoney(amount, currency);
 }
 
 function formatDate(value: string | Date | null, lang: DocLang): string {

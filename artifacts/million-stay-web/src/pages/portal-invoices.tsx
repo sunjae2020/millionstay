@@ -14,6 +14,7 @@ import {
   CalendarDays, Home, ExternalLink,
 } from "lucide-react";
 import { format } from "date-fns";
+import { formatCurrencyAmount } from "@/contexts/DisplayCurrencyContext";
 
 const BRAND = "hsl(var(--primary))"; // instance primary (white-label)
 
@@ -40,7 +41,7 @@ function fmtDate(d: string | null | undefined) {
 
 function fmtAmt(n: number | null | undefined, currency = "AUD") {
   if (n == null) return "—";
-  return `$${n.toLocaleString("en-AU", { minimumFractionDigits: 2 })} ${currency}`;
+  return formatCurrencyAmount(Number(n), currency);
 }
 
 function InvoiceCard({ inv }: { inv: MyInvoice }) {

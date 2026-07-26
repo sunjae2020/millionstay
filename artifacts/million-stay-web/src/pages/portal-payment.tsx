@@ -22,6 +22,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { apiFetch, useSupportEmail, type MyInvoice } from "@/lib/guest-api";
 import { COMPANY } from "../lib/company";
+import { formatCurrencyAmount } from "@/contexts/DisplayCurrencyContext";
 
 const BRAND = "hsl(var(--primary))"; // instance primary (white-label)
 const API = getApiBase();
@@ -33,7 +34,7 @@ function fmtDate(d: string | null | undefined) {
 }
 function fmtAmt(n: number | null | undefined, currency = "AUD") {
   if (n == null) return "—";
-  return `$${Number(n).toLocaleString("en-AU", { minimumFractionDigits: 2 })} ${currency}`;
+  return formatCurrencyAmount(Number(n), currency);
 }
 
 /* ─── Bank Transfer Panel ─── */

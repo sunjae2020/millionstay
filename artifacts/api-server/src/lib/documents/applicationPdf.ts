@@ -9,7 +9,7 @@
  *
  * One body builder + two thin mappers keep the field→row mapping in a single place.
  */
-import { renderDocumentShell, escapeHtml, getCompanyInfo, type CompanyInfo } from "./theme";
+import { renderDocumentShell, escapeHtml, getCompanyInfo, formatDocMoney, type CompanyInfo } from "./theme";
 import { serviceLabel } from "./i18n";
 import type { HomestayStudentRequest, HomestayHostApplication, HomestayPlacement, ShortTermApplication } from "@workspace/db";
 
@@ -491,10 +491,7 @@ export function placementToDoc(
   } = {},
 ): ApplicationDocInput {
   const signed = opts.signed ?? (signing?.status === "signed");
-  const money = (n: unknown) => {
-    const num = Number(n ?? 0);
-    return `${placement.currency || "AUD"} ${num.toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
+  const money = (n: unknown) => formatDocMoney(n as number, placement.currency);
   const studentName = student ? `${student.student_first_name} ${student.student_last_name}`.trim() : "—";
   const hostName = host ? `${host.first_name} ${host.last_name}`.trim() : "—";
 

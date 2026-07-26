@@ -10,6 +10,7 @@ import {
   escapeHtml,
   getCompanyInfo,
   statusWatermarkColor,
+  formatDocMoney,
   type CompanyInfo,
 } from "./theme";
 import { t, docLocale, statusLabel, type DocLang } from "./i18n";
@@ -52,10 +53,7 @@ const STATUS_STYLE: Record<string, { bg: string; fg: string }> = {
 };
 
 function formatMoney(amount: string | number | null, currency: string | null): string {
-  const n = Number(amount ?? 0);
-  const ccy = currency || "AUD";
-  const formatted = n.toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  return `${formatted} ${ccy}`;
+  return formatDocMoney(amount, currency);
 }
 
 function formatDate(value: string | Date | null, lang: DocLang): string {
