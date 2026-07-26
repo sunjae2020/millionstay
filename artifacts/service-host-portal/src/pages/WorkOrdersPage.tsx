@@ -49,7 +49,7 @@ export default function WorkOrdersPage() {
 
   const load = useCallback(async () => {
     try {
-      const res = await apiGet<{ data: WorkOrder[] }>("/api/v1/service-host/work-orders");
+      const res = await apiGet<{ data: WorkOrder[] }>("/v1/service-host/work-orders");
       setRows(res.data ?? []);
     } catch { setRows([]); }
   }, []);
@@ -57,7 +57,7 @@ export default function WorkOrdersPage() {
 
   async function act(id: number, action: "acknowledge" | "start" | "complete") {
     setBusy(id);
-    try { await apiPost(`/api/v1/service-host/work-orders/${id}/${action}`); await load(); }
+    try { await apiPost(`/v1/service-host/work-orders/${id}/${action}`); await load(); }
     finally { setBusy(null); }
   }
 
@@ -71,7 +71,7 @@ export default function WorkOrdersPage() {
         {rows === null ? (
           <p className="text-muted-foreground">{t("common.loading", "Loading…")}</p>
         ) : rows.length === 0 ? (
-          <div className="rounded-xl border bg-white p-8 text-center text-muted-foreground">
+          <div className="rounded-xl border border-border bg-card p-8 text-center text-muted-foreground">
             {t("workorders.empty", "No work orders assigned to you yet.")}
           </div>
         ) : (
@@ -79,17 +79,17 @@ export default function WorkOrdersPage() {
             {rows.map((w) => {
               const needsAck = !w.acknowledged_at && w.status !== "Completed" && w.status !== "Cancelled";
               return (
-                <div key={w.id} className="rounded-xl border bg-white overflow-hidden">
-                  <div className="px-4 py-3 border-b bg-gray-50 flex flex-wrap items-center justify-between gap-2">
+                <div key={w.id} className="rounded-xl border border-border bg-card overflow-hidden">
+                  <div className="px-4 py-3 border-b border-border bg-muted/40 flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-sm">{w.title}</span>
+                      <span className="font-semibold text-sm text-foreground">{w.title}</span>
                       <span className="text-xs font-mono text-muted-foreground">{w.order_ref}</span>
-                      {w.category && <span className="text-[11px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">{w.category}</span>}
+                      {w.category && <span className="text-[11px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{t(`workorders.cat_${w.category}`, w.category)}</span>}
                     </div>
-                    <span className={`text-xs px-2 py-0.5 rounded font-medium ${statusStyle[w.status] ?? "bg-gray-100 text-gray-600"}`}>{w.status}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded font-medium ${statusStyle[w.status] ?? "bg-muted text-muted-foreground"}`}>{t(`workorders.status_${w.status}`, w.status)}</span>
                   </div>
                   <div className="p-4 space-y-3">
-                    {w.description && <p className="text-sm text-gray-600">{w.description}</p>}
+                    {w.description && <p className="text-sm text-muted-foreground">{w.description}</p>}
                     <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {t("workorders.ack_due", "Ack by")}: {fmt(w.sla_ack_due_at)}</span>
                       {w.sla_status && <span>SLA: <span className={`px-1.5 py-0.5 rounded ${slaStyle[w.sla_status] ?? ""}`}>{w.sla_status}</span></span>}

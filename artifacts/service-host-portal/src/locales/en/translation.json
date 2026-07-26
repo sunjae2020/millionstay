@@ -17,7 +17,8 @@
     "support": "Support",
     "dark_mode": "Dark mode",
     "light_mode": "Light mode",
-    "work_orders": "Work Orders"
+    "work_orders": "Work Orders",
+    "documents": "Documents"
   },
   "common": {
     "loading": "Loading...",
@@ -77,7 +78,24 @@
     "qlink_jobs": "My Jobs",
     "qlink_schedule": "Schedule",
     "qlink_earnings": "Earnings",
-    "load_failed": "Failed to load dashboard"
+    "load_failed": "Failed to load dashboard",
+    "manage_orders": "Manage work orders",
+    "kpi_total_orders": "Total work orders",
+    "kpi_in_progress": "In progress",
+    "kpi_needs_ack": "{{count}} awaiting acknowledgement",
+    "kpi_completed": "Completed",
+    "kpi_revenue": "Order value",
+    "revenue_by_category": "Revenue by category",
+    "status_distribution": "Order status",
+    "no_orders": "No work orders yet",
+    "sla_on_track": "On track",
+    "sla_awaiting_ack": "Awaiting ack",
+    "sla_breached": "SLA breached",
+    "recent_orders": "Recent work orders",
+    "col_order": "Order",
+    "col_category": "Category",
+    "col_status": "Status",
+    "col_value": "Value"
   },
   "jobs": {
     "title": "My Jobs",
@@ -245,6 +263,40 @@
     "btn_acknowledge": "Acknowledge",
     "btn_start": "Start job",
     "btn_complete": "Mark complete",
-    "overdue": "Overdue — please acknowledge"
+    "overdue": "Overdue — please acknowledge",
+    "cat_plumbing": "Plumbing",
+    "cat_cleaning": "Cleaning",
+    "cat_electrical": "Electrical",
+    "cat_day_tour": "Day tour",
+    "cat_fishing": "Fishing",
+    "cat_general": "General",
+    "cat_maintenance": "Maintenance",
+    "status_Open": "Open",
+    "status_InProgress": "In progress",
+    "status_Completed": "Completed",
+    "status_Cancelled": "Cancelled",
+    "status_PendingReview": "Pending review"
+  },
+  "documents": {
+    "title": "Documents",
+    "subtitle": "Store and manage your work documents securely.",
+    "category": "Category",
+    "upload": "Upload document",
+    "uploading": "Uploading…",
+    "upload_hint": "PDF or image, up to 20 MB. Files are stored securely and visible only to you and admin.",
+    "empty": "No documents yet",
+    "empty_help": "Upload a document to get started.",
+    "load_failed": "Failed to load documents",
+    "upload_failed": "Upload failed",
+    "download": "Download",
+    "download_failed": "Download failed",
+    "delete": "Delete",
+    "delete_confirm": "Delete this document?",
+    "delete_failed": "Failed to delete",
+    "type_contract": "Contract",
+    "type_invoice": "Invoice",
+    "type_report": "Report",
+    "type_manual": "Manual",
+    "type_other": "Other"
   }
 }

@@ -17,7 +17,8 @@
     "support": "客户支持",
     "dark_mode": "深色模式",
     "light_mode": "浅色模式",
-    "work_orders": "工单"
+    "work_orders": "工单",
+    "documents": "文档"
   },
   "common": {
     "loading": "加载中...",
@@ -77,7 +78,24 @@
     "qlink_jobs": "我的任务",
     "qlink_schedule": "日程",
     "qlink_earnings": "收入",
-    "load_failed": "加载仪表板失败"
+    "load_failed": "加载仪表板失败",
+    "manage_orders": "管理工单",
+    "kpi_total_orders": "工单总数",
+    "kpi_in_progress": "进行中",
+    "kpi_needs_ack": "{{count}} 项待确认",
+    "kpi_completed": "已完成",
+    "kpi_revenue": "工单金额",
+    "revenue_by_category": "按类别金额",
+    "status_distribution": "工单状态",
+    "no_orders": "暂无工单",
+    "sla_on_track": "正常",
+    "sla_awaiting_ack": "待确认",
+    "sla_breached": "SLA超时",
+    "recent_orders": "最近工单",
+    "col_order": "工单",
+    "col_category": "类别",
+    "col_status": "状态",
+    "col_value": "金额"
   },
   "jobs": {
     "title": "我的任务",
@@ -245,6 +263,40 @@
     "btn_acknowledge": "确认",
     "btn_start": "开始作业",
     "btn_complete": "标记完成",
-    "overdue": "已逾期 — 请确认"
+    "overdue": "已逾期 — 请确认",
+    "cat_plumbing": "管道",
+    "cat_cleaning": "清洁",
+    "cat_electrical": "电气",
+    "cat_day_tour": "一日游",
+    "cat_fishing": "海钓",
+    "cat_general": "一般",
+    "cat_maintenance": "维护",
+    "status_Open": "待处理",
+    "status_InProgress": "进行中",
+    "status_Completed": "已完成",
+    "status_Cancelled": "已取消",
+    "status_PendingReview": "待审核"
+  },
+  "documents": {
+    "title": "文档",
+    "subtitle": "安全地存储和管理您的工作文档。",
+    "category": "类别",
+    "upload": "上传文档",
+    "uploading": "上传中…",
+    "upload_hint": "PDF或图片，最大20MB。文件安全存储，仅您和管理员可见。",
+    "empty": "暂无文档",
+    "empty_help": "上传文档以开始。",
+    "load_failed": "加载文档失败",
+    "upload_failed": "上传失败",
+    "download": "下载",
+    "download_failed": "下载失败",
+    "delete": "删除",
+    "delete_confirm": "删除此文档？",
+    "delete_failed": "删除失败",
+    "type_contract": "合同",
+    "type_invoice": "发票",
+    "type_report": "报告",
+    "type_manual": "手册",
+    "type_other": "其他"
   }
 }

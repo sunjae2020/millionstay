@@ -7,8 +7,16 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { APP_NAME } from "@/lib/appName";
 import {
   LayoutDashboard, Briefcase, CalendarDays, DollarSign,
-  LogOut, User, ChevronRight, Menu, X, Sun, Moon, LifeBuoy, Wrench,
+  LogOut, User, ChevronRight, Menu, X, Sun, Moon, LifeBuoy, Wrench, FolderOpen,
 } from "lucide-react";
+
+// White-label logo: tenants set VITE_LOGO_URL (e.g. MetHeim's teal wordmark).
+// When present we use it everywhere; the dark sidebar needs it forced white,
+// the light mobile header uses it as-is. Falls back to the bundled MillionStay
+// PNGs when no tenant logo is configured.
+const TENANT_LOGO_URL = import.meta.env.VITE_LOGO_URL as string | undefined;
+const HAS_TENANT_LOGO = Boolean(TENANT_LOGO_URL);
+const LOGO_TEXT_MODE = import.meta.env.VITE_LOGO_MODE === "text";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -23,6 +31,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/work-orders", icon: Wrench, label: t("nav.work_orders", "Work Orders") },
     { href: "/schedule", icon: CalendarDays, label: t("nav.schedule") },
     { href: "/earnings", icon: DollarSign, label: t("nav.earnings") },
+    { href: "/documents", icon: FolderOpen, label: t("nav.documents", "Documents") },
     { href: "/support", icon: LifeBuoy, label: t("nav.support", "Support") },
   ];
 
@@ -52,8 +61,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
       >
         <div className="p-5 border-b border-sidebar-border flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            {import.meta.env.VITE_LOGO_MODE === "text" ? (
+            {LOGO_TEXT_MODE ? (
               <span className="font-display font-extrabold tracking-tight text-white text-xl whitespace-nowrap">{APP_NAME}</span>
+            ) : HAS_TENANT_LOGO ? (
+              <img
+                src={TENANT_LOGO_URL}
+                alt={APP_NAME}
+                className="h-11 w-auto object-contain"
+                style={{ filter: "brightness(0) invert(1)" }}
+              />
             ) : (
               <img
                 src={`${import.meta.env.BASE_URL}millionstay-logo.png`}
@@ -135,8 +151,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-muted transition-colors">
             <Menu className="w-5 h-5 text-foreground" />
           </button>
-          {import.meta.env.VITE_LOGO_MODE === "text" ? (
+          {LOGO_TEXT_MODE ? (
             <span className="font-display font-extrabold tracking-tight text-primary text-xl whitespace-nowrap">{APP_NAME}</span>
+          ) : HAS_TENANT_LOGO ? (
+            <img src={TENANT_LOGO_URL} alt={APP_NAME} className="h-9 w-auto object-contain" />
           ) : (
             <img
               src={`${import.meta.env.BASE_URL}logo-horizontal.png`}

@@ -17,7 +17,8 @@
     "support": "고객지원",
     "dark_mode": "다크 모드",
     "light_mode": "라이트 모드",
-    "work_orders": "작업지시"
+    "work_orders": "작업지시",
+    "documents": "문서함"
   },
   "common": {
     "loading": "로딩 중...",
@@ -77,7 +78,24 @@
     "qlink_jobs": "내 작업",
     "qlink_schedule": "일정",
     "qlink_earnings": "수익",
-    "load_failed": "대시보드를 불러오지 못했습니다"
+    "load_failed": "대시보드를 불러오지 못했습니다",
+    "manage_orders": "작업지시 관리",
+    "kpi_total_orders": "전체 작업지시",
+    "kpi_in_progress": "진행 중",
+    "kpi_needs_ack": "확인 대기 {{count}}건",
+    "kpi_completed": "완료",
+    "kpi_revenue": "작업 금액",
+    "revenue_by_category": "카테고리별 금액",
+    "status_distribution": "작업 상태",
+    "no_orders": "등록된 작업지시가 없습니다",
+    "sla_on_track": "정상 진행",
+    "sla_awaiting_ack": "확인 대기",
+    "sla_breached": "SLA 초과",
+    "recent_orders": "최근 작업지시",
+    "col_order": "작업지시",
+    "col_category": "카테고리",
+    "col_status": "상태",
+    "col_value": "금액"
   },
   "jobs": {
     "title": "내 작업",
@@ -245,6 +263,40 @@
     "btn_acknowledge": "확인",
     "btn_start": "작업 시작",
     "btn_complete": "완료 처리",
-    "overdue": "기한 초과 — 확인해 주세요"
+    "overdue": "기한 초과 — 확인해 주세요",
+    "cat_plumbing": "배관",
+    "cat_cleaning": "청소",
+    "cat_electrical": "전기",
+    "cat_day_tour": "데이투어",
+    "cat_fishing": "낚시",
+    "cat_general": "일반",
+    "cat_maintenance": "유지보수",
+    "status_Open": "접수",
+    "status_InProgress": "진행 중",
+    "status_Completed": "완료",
+    "status_Cancelled": "취소",
+    "status_PendingReview": "검토 대기"
+  },
+  "documents": {
+    "title": "문서함",
+    "subtitle": "업무 문서를 안전하게 보관하고 관리하세요.",
+    "category": "분류",
+    "upload": "문서 업로드",
+    "uploading": "업로드 중…",
+    "upload_hint": "PDF 또는 이미지, 최대 20MB. 파일은 안전하게 보관되며 본인과 관리자만 볼 수 있습니다.",
+    "empty": "문서가 없습니다",
+    "empty_help": "문서를 업로드해 시작하세요.",
+    "load_failed": "문서를 불러오지 못했습니다",
+    "upload_failed": "업로드에 실패했습니다",
+    "download": "다운로드",
+    "download_failed": "다운로드에 실패했습니다",
+    "delete": "삭제",
+    "delete_confirm": "이 문서를 삭제할까요?",
+    "delete_failed": "삭제에 실패했습니다",
+    "type_contract": "계약서",
+    "type_invoice": "청구서",
+    "type_report": "보고서",
+    "type_manual": "매뉴얼",
+    "type_other": "기타"
   }
 }
