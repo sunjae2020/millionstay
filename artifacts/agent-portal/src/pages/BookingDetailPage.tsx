@@ -3,6 +3,7 @@ import { useRoute, Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
+import { formatDate } from "@/lib/dateFormat";
 import { ArrowLeft, User, Home, Calendar, DollarSign } from "lucide-react";
 
 interface BookingData {
@@ -126,9 +127,9 @@ export default function BookingDetailPage() {
           <div className="flex items-center gap-2 mb-4">
             <Calendar className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">
-              {data.check_in_date ? new Date(data.check_in_date).toLocaleDateString() : t("common.tbd")}
+              {formatDate(data.check_in_date, t("common.tbd"))}
               {" → "}
-              {data.check_out_date ? new Date(data.check_out_date).toLocaleDateString() : t("common.ongoing")}
+              {formatDate(data.check_out_date, t("common.ongoing"))}
             </span>
           </div>
           <Row label={t("booking_detail.weekly_rate")} value={`$${Number(data.agreed_weekly_rate ?? 0).toLocaleString()}`} />
@@ -149,8 +150,8 @@ export default function BookingDetailPage() {
                 {t(`status.${data.contract.status}`, data.contract.status)}
               </span>
             } />
-            <Row label={t("booking_detail.start_date")} value={data.contract.start_date ? new Date(data.contract.start_date).toLocaleDateString() : "—"} />
-            <Row label={t("booking_detail.end_date")} value={data.contract.end_date ? new Date(data.contract.end_date).toLocaleDateString() : "—"} />
+            <Row label={t("booking_detail.start_date")} value={formatDate(data.contract.start_date)} />
+            <Row label={t("booking_detail.end_date")} value={formatDate(data.contract.end_date)} />
           </Section>
         )}
 

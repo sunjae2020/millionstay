@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, Link } from "wouter";
 import AdminLayout from "@/components/admin-layout";
 import { StatusBadge } from "@/components/status-badge";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/dateFormat";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -17,11 +17,6 @@ type Booking = {
   guestFirstName: string; guestLastName: string; guestEmail: string;
   spaceName: string; createdAt: string;
 };
-
-function fmtDate(d: string | null) {
-  if (!d) return "—";
-  try { return format(new Date(d), "dd/MM/yyyy"); } catch { return d; }
-}
 
 const ALL_STATUSES = ["All", "Draft", "PendingPayment", "Confirmed", "Active", "Cancelled", "Completed"];
 
@@ -120,13 +115,13 @@ export default function AdminBookings() {
                       <p className="text-gray-400 text-xs">{b.guestEmail}</p>
                     </td>
                     <td className="px-5 py-3 text-gray-700 max-w-[150px] truncate">{b.spaceName ?? "—"}</td>
-                    <td className="px-5 py-3 text-gray-600 whitespace-nowrap">{fmtDate(b.checkInDate)}</td>
-                    <td className="px-5 py-3 text-gray-600 whitespace-nowrap">{fmtDate(b.checkOutDate)}</td>
+                    <td className="px-5 py-3 text-gray-600 whitespace-nowrap">{formatDate(b.checkInDate)}</td>
+                    <td className="px-5 py-3 text-gray-600 whitespace-nowrap">{formatDate(b.checkOutDate)}</td>
                     <td className="px-5 py-3 text-gray-800 font-medium">
                       {b.totalAmount ? `$${Number(b.totalAmount).toLocaleString()}` : "—"}
                     </td>
                     <td className="px-5 py-3"><StatusBadge status={b.contractStatus} /></td>
-                    <td className="px-5 py-3 text-gray-400 whitespace-nowrap">{fmtDate(b.createdAt)}</td>
+                    <td className="px-5 py-3 text-gray-400 whitespace-nowrap">{formatDate(b.createdAt)}</td>
                   </tr>
                 ))}
               </tbody>

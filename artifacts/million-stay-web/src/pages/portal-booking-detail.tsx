@@ -14,7 +14,7 @@ import {
   CreditCard, Receipt, ScrollText, Wrench, CalendarDays, ShieldCheck,
 } from "lucide-react";
 import { ConditionReports } from "@/components/condition-reports";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/dateFormat";
 import { getApiBase } from "@/lib/api-base";
 
 type BookingInvoice = {
@@ -78,11 +78,6 @@ const CONTRACT_STATUS_COLORS: Record<string, string> = {
   Terminated: "bg-red-100 text-red-700",
   Expired: "bg-orange-100 text-orange-700",
 };
-
-function formatDate(d: string | null) {
-  if (!d) return "—";
-  try { return format(new Date(d), "dd/MM/yyyy"); } catch { return d; }
-}
 
 const STATUS_COLORS: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-700",

@@ -5,18 +5,10 @@ import { Calendar, User, Tag, ArrowLeft, Share2, BookOpen } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { getApiBase } from "@/lib/api-base";
+import { formatDate } from "@/lib/dateFormat";
 
 const BASE = getApiBase();
 
-const LOCALE_MAP: Record<string, string> = {
-  en: "en-AU", ko: "ko-KR", ja: "ja-JP", zh: "zh-CN", th: "th-TH",
-};
-
-function formatDate(dateStr: string | null, lang: string) {
-  if (!dateStr) return "";
-  const locale = LOCALE_MAP[lang] ?? "en-AU";
-  return new Date(dateStr).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
-}
 
 async function fetchPost(slug: string) {
   const res = await fetch(`${BASE}/api/v1/public/blog/${slug}`);
@@ -26,7 +18,7 @@ async function fetchPost(slug: string) {
 
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   const { data: post, isLoading, isError } = useQuery({
     queryKey: ["public-blog-post", slug],
@@ -117,7 +109,7 @@ export default function BlogPost() {
               {post.published_at && (
                 <span className="flex items-center gap-1.5">
                   <Calendar className="h-4 w-4" />
-                  {formatDate(post.published_at, i18n.language)}
+                  {formatDate(post.published_at, "")}
                 </span>
               )}
               <button

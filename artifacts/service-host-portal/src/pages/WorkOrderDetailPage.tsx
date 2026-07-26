@@ -3,6 +3,7 @@ import { Link, useRoute } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet, apiPost, apiFetch, ApiError } from "@/lib/api";
+import { formatDateTime } from "@/lib/dateFormat";
 import {
   ArrowLeft, Wrench, CheckCircle2, Clock, AlertTriangle, Play, Loader2,
   Camera, Trash2, UploadCloud, Save, X,
@@ -50,10 +51,6 @@ const slaStyle: Record<string, string> = {
   escalated: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300",
 };
 
-function fmt(s: string | null): string {
-  if (!s) return "—";
-  try { return new Date(s).toLocaleString(); } catch { return s; }
-}
 function money(cost: string | null, currency: string | null): string {
   if (!cost) return "—";
   const n = Number(cost) || 0;
@@ -232,12 +229,12 @@ export default function WorkOrderDetailPage() {
             <div className="bg-card border border-border rounded-xl p-5">
               <h2 className="text-sm font-semibold text-foreground mb-3">{t("workorders.details", "Details")}</h2>
               <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
-                <Row label={t("workorders.dispatched", "Dispatched")} value={fmt(wo.dispatched_at)} />
-                <Row label={t("workorders.ack_due", "Ack by")} value={fmt(wo.sla_ack_due_at)} />
-                <Row label={t("workorders.acknowledged_at", "Acknowledged at")} value={fmt(wo.acknowledged_at)} />
+                <Row label={t("workorders.dispatched", "Dispatched")} value={formatDateTime(wo.dispatched_at)} />
+                <Row label={t("workorders.ack_due", "Ack by")} value={formatDateTime(wo.sla_ack_due_at)} />
+                <Row label={t("workorders.acknowledged_at", "Acknowledged at")} value={formatDateTime(wo.acknowledged_at)} />
                 <Row label={t("workorders.scheduled_at", "Scheduled")} value={wo.scheduled_at ?? "—"} />
-                <Row label={t("workorders.reported_at", "Reported")} value={wo.reported_at ? fmt(wo.reported_at) : "—"} />
-                <Row label={t("workorders.completed_at", "Completed at")} value={fmt(wo.completed_at)} />
+                <Row label={t("workorders.reported_at", "Reported")} value={formatDateTime(wo.reported_at)} />
+                <Row label={t("workorders.completed_at", "Completed at")} value={formatDateTime(wo.completed_at)} />
                 <Row label={t("workorders.cost", "Cost")} value={money(wo.cost, wo.currency)} />
               </dl>
             </div>

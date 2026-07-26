@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { getApiBase } from "@/lib/api-base";
 import { APP_NAME } from "../lib/appName";
+import { formatDate, formatDateTime } from "@/lib/dateFormat";
 
 const API_BASE = getApiBase();
 
@@ -63,11 +64,6 @@ function fmtBytes(n: number): string {
   if (n < 1024) return `${n} B`;
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
   return `${(n / 1024 / 1024).toFixed(1)} MB`;
-}
-
-function fmtDate(s: string | null | undefined): string {
-  if (!s) return "—";
-  try { return new Date(s).toLocaleString(); } catch { return s; }
 }
 
 function StatCard({ icon: Icon, label, value, color }: {
@@ -262,7 +258,7 @@ export default function PortalMyData() {
                 <KvRow k={t("portal.my_data.field_job_title", "Job title")} v={profile?.["job_title"]} />
                 <KvRow k={t("portal.my_data.field_stay_purpose", "Stay purpose")} v={profile?.["stay_purpose"]} />
                 <KvRow k={t("portal.my_data.field_vehicle_plate", "Vehicle plate")} v={profile?.["vehicle_plate"]} />
-                <KvRow k={t("portal.my_data.field_account_created", "Account created")} v={fmtDate(profile?.["created_at"])} />
+                <KvRow k={t("portal.my_data.field_account_created", "Account created")} v={formatDateTime(profile?.["created_at"])} />
               </div>
             </Section>
 
@@ -391,7 +387,7 @@ export default function PortalMyData() {
                             </span>
                           </td>
                           <td className="px-2 py-2 text-gray-500 text-xs">{inv.due_date ?? "—"}</td>
-                          <td className="px-2 py-2 text-gray-500 text-xs">{fmtDate(inv.paid_at)}</td>
+                          <td className="px-2 py-2 text-gray-500 text-xs">{formatDateTime(inv.paid_at)}</td>
                           <td className="px-2 py-2 text-right font-medium">
                             {inv.currency} {inv.amount}
                           </td>
@@ -415,11 +411,11 @@ export default function PortalMyData() {
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-gray-800 truncate">{d.file_name}</p>
                         <p className="text-xs text-gray-500">
-                          {d.doc_type} · {fmtBytes(d.file_size)} · {t("portal.my_data.uploaded_at", "uploaded {{date}}", { date: fmtDate(d.created_at) })}
+                          {d.doc_type} · {fmtBytes(d.file_size)} · {t("portal.my_data.uploaded_at", "uploaded {{date}}", { date: formatDateTime(d.created_at) })}
                         </p>
                       </div>
                       <span className="text-[11px] text-gray-400 shrink-0">
-                        {t("portal.my_data.retained_until", "Retained until {{date}}", { date: new Date(d.retention_until).toLocaleDateString() })}
+                        {t("portal.my_data.retained_until", "Retained until {{date}}", { date: formatDate(d.retention_until) })}
                       </span>
                     </div>
                   ))}
@@ -445,7 +441,7 @@ export default function PortalMyData() {
                         <div>
                           <p className="font-medium text-gray-800 capitalize">{c.channel}</p>
                           <p className="text-xs text-gray-500">
-                            {t("portal.my_data.source_label", "Source:")} {c.source ?? "—"} · {t("portal.my_data.last_update", "Last update")} {fmtDate(c.opted_out_at ?? c.opted_in_at)}
+                            {t("portal.my_data.source_label", "Source:")} {c.source ?? "—"} · {t("portal.my_data.last_update", "Last update")} {formatDateTime(c.opted_out_at ?? c.opted_in_at)}
                           </p>
                         </div>
                         <span
@@ -473,7 +469,7 @@ export default function PortalMyData() {
                 {t("portal.my_data.footer_body_suffix", "from the address on file ({{email}}). We respond within 30 days.", { email: profile?.["email"] ?? "—" })}
               </p>
               <p className="text-xs text-gray-400 mt-2">
-                {t("portal.my_data.generated_at", "Data generated at {{date}}.", { date: fmtDate(data.generated_at) })}
+                {t("portal.my_data.generated_at", "Data generated at {{date}}.", { date: formatDateTime(data.generated_at) })}
               </p>
             </div>
           </>

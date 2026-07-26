@@ -8,7 +8,7 @@ import { PortalLayout } from "@/components/portal-layout";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format } from "date-fns";
+import { formatDate, formatDateTime } from "@/lib/dateFormat";
 import { ArrowLeft, Send, ImageIcon, X, Loader2, Clock, CheckCircle2, XCircle, AlertCircle, Calendar, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getApiBase } from "@/lib/api-base";
@@ -231,7 +231,7 @@ export default function PortalCsDetail() {
                 </span>
               </div>
               <h1 className="text-lg font-bold text-gray-900">{ticket.subject}</h1>
-              <p className="text-xs text-gray-400 mt-1">{t("portal.cs.submitted_on", "Submitted {{date}}", { date: format(new Date(ticket.created_at), "dd MMM yyyy, hh:mm a") })}</p>
+              <p className="text-xs text-gray-400 mt-1">{t("portal.cs.submitted_on", "Submitted {{date}}", { date: formatDateTime(ticket.created_at) })}</p>
             </div>
           </div>
 
@@ -241,7 +241,7 @@ export default function PortalCsDetail() {
                 <Calendar className="h-3.5 w-3.5 text-primary" />
                 <span>{t("portal.cs.related_booking", "Related booking:")} <strong>{ticket.booking.booking_ref}</strong> ({ticket.booking.booking_status})</span>
                 {ticket.booking.check_in_date && (
-                  <span className="text-gray-400">· {format(new Date(ticket.booking.check_in_date), "dd/MM/yyyy")} → {ticket.booking.check_out_date ? format(new Date(ticket.booking.check_out_date), "dd/MM/yyyy") : "—"}</span>
+                  <span className="text-gray-400">· {formatDate(ticket.booking.check_in_date)} → {ticket.booking.check_out_date ? formatDate(ticket.booking.check_out_date) : "—"}</span>
                 )}
               </p>
             </div>
@@ -268,7 +268,7 @@ export default function PortalCsDetail() {
                       </div>
                     )}
                     <span className="text-xs text-gray-400">
-                      {isGuest ? t("portal.cs.sender_you", "You") : t("portal.cs.sender_support", "{{appName}} Support", { appName: APP_NAME })} · {format(new Date(msg.created_at), "dd/MM/yyyy hh:mm a")}
+                      {isGuest ? t("portal.cs.sender_you", "You") : t("portal.cs.sender_support", "{{appName}} Support", { appName: APP_NAME })} · {formatDateTime(msg.created_at)}
                     </span>
                   </div>
                   <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${

@@ -6,7 +6,7 @@
  * document shell so colour/typography stay consistent with all other documents.
  */
 import { renderDocumentShell, escapeHtml, getCompanyInfo, formatDocMoney, type CompanyInfo } from "./theme";
-import { t, docLocale, type DocLang } from "./i18n";
+import { t, formatDocDate, formatDocDateTime, type DocLang } from "./i18n";
 
 /** A priced add-on service line (from contract_line_items, item_type=Service):
  *  airport pickup, initial settlement, prepaid phone, etc. */
@@ -72,17 +72,11 @@ function money(amount: number | null, currency: string | null): string {
 }
 
 function formatDate(value: string | Date | null, lang: DocLang): string {
-  if (!value) return "—";
-  const d = typeof value === "string" ? new Date(value) : value;
-  if (Number.isNaN(d.getTime())) return escapeHtml(String(value));
-  return d.toLocaleDateString(docLocale(lang), { year: "numeric", month: "short", day: "numeric" });
+  return formatDocDate(value, lang);
 }
 
 function formatDateTime(value: string | null | undefined, lang: DocLang): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return escapeHtml(String(value));
-  return d.toLocaleString(docLocale(lang), { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  return formatDocDateTime(value, lang);
 }
 
 /**

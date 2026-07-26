@@ -55,6 +55,9 @@ export function CompanyInfo() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
+  // Date format is stored on the global branding row (Settings → Design shares it),
+  // NOT in the company_info blob — it governs every screen + document app-wide.
+  const [dateFormat, setDateFormat] = useState("DD/MM/YYYY");
   const { register, handleSubmit, control, reset } = useForm<CompanyForm>({ defaultValues: DEFAULTS });
 
   // Load persisted company info (used as the issuer block on all documents).
@@ -73,6 +76,21 @@ export function CompanyInfo() {
     return () => { active = false; };
   }, [reset]);
 
+  // Load the app-wide date format from the shared branding row.
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await apiFetch("/api/v1/branding");
+        if (!res.ok) return;
+        const body = await res.json();
+        const fmt = body?.data?.date_format;
+        if (active && typeof fmt === "string" && fmt) setDateFormat(fmt);
+      } catch { /* keep default */ }
+    })();
+    return () => { active = false; };
+  }, []);
+
   async function onSubmit(data: CompanyForm) {
     setSaving(true);
     try {
@@ -82,6 +100,13 @@ export function CompanyInfo() {
         headers: { "Content-Type": "application/json" },
       });
       if (!res.ok) { const b = await res.json().catch(() => null); throw new Error(b?.error ?? `HTTP ${res.status}`); }
+      // Persist the date format on the shared branding row (best-effort).
+      const bres = await apiFetch("/api/v1/branding", {
+        method: "PUT",
+        body: JSON.stringify({ date_format: dateFormat }),
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!bres.ok) { const b = await bres.json().catch(() => null); throw new Error(b?.error ?? `HTTP ${bres.status}`); }
       toast({ title: t("settings_company.save_success_title"), description: t("settings_company.save_success_desc") });
     } catch (err) {
       toast({ title: t("settings_company.save_failed_title"), description: err instanceof Error ? err.message : t("settings_company.error"), variant: "destructive" });
@@ -173,20 +198,7 @@ export function CompanyInfo() {
         </div>
         <div className="space-y-1.5">
           <Label>{t("settings_company.state_label")}</Label>
-          <Controller
-            name="state"
-            control={control}
-            render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {["ACT", "NSW", "NT", "QLD", "SA", "TAS", "VIC", "WA"].map((s) => (
-                    <SelectItem key={s} value={s}>{s}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
+          <Input {...register("state")} placeholder={t("settings_company.state_placeholder")} />
         </div>
         <div className="space-y-1.5">
           <Label>{t("settings_company.postcode_label")}</Label>
@@ -194,21 +206,7 @@ export function CompanyInfo() {
         </div>
         <div className="space-y-1.5">
           <Label>{t("settings_company.country_label")}</Label>
-          <Controller
-            name="country"
-            control={control}
-            render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="AU">{t("settings_company.country_au")}</SelectItem>
-                  <SelectItem value="NZ">{t("settings_company.country_nz")}</SelectItem>
-                  <SelectItem value="US">{t("settings_company.country_us")}</SelectItem>
-                  <SelectItem value="GB">{t("settings_company.country_gb")}</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          />
+          <Input {...register("country")} placeholder={t("settings_company.country_placeholder")} />
         </div>
       </div>
 
@@ -229,6 +227,13 @@ export function CompanyInfo() {
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="Asia/Seoul">Asia/Seoul (KST)</SelectItem>
+                  <SelectItem value="Asia/Tokyo">Asia/Tokyo (JST)</SelectItem>
+                  <SelectItem value="Asia/Shanghai">Asia/Shanghai (CST)</SelectItem>
+                  <SelectItem value="Asia/Hong_Kong">Asia/Hong_Kong (HKT)</SelectItem>
+                  <SelectItem value="Asia/Singapore">Asia/Singapore (SGT)</SelectItem>
+                  <SelectItem value="Asia/Bangkok">Asia/Bangkok (ICT)</SelectItem>
+                  <SelectItem value="Asia/Ho_Chi_Minh">Asia/Ho_Chi_Minh (ICT)</SelectItem>
                   <SelectItem value="Australia/Sydney">Australia/Sydney (AEST)</SelectItem>
                   <SelectItem value="Australia/Melbourne">Australia/Melbourne (AEST)</SelectItem>
                   <SelectItem value="Australia/Brisbane">Australia/Brisbane (AEST)</SelectItem>
@@ -241,6 +246,20 @@ export function CompanyInfo() {
               </Select>
             )}
           />
+        </div>
+        <div className="space-y-1.5">
+          <Label>{t("settings_company.date_format_label")}</Label>
+          <Select value={dateFormat} onValueChange={setDateFormat}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="DD/MM/YYYY">DD/MM/YYYY</SelectItem>
+              <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
+              <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
+              <SelectItem value="YYYY/MM/DD">YYYY/MM/DD</SelectItem>
+              <SelectItem value="D MMM YYYY">D MMM YYYY</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">{t("settings_company.date_format_helper")}</p>
         </div>
       </div>
 

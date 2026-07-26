@@ -20,6 +20,7 @@ const PATTERN_MAP: Record<string, string> = {
   "DD/MM/YYYY": "dd/MM/yyyy",
   "MM/DD/YYYY": "MM/dd/yyyy",
   "YYYY-MM-DD": "yyyy-MM-dd",
+  "YYYY/MM/DD": "yyyy/MM/dd",
   "D MMM YYYY": "d MMM yyyy",
 };
 

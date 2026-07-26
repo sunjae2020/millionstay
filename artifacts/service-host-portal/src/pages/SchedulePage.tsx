@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
+import { formatDate } from "@/lib/dateFormat";
 import { CalendarDays, MapPin, Clock, ChevronDown, List, CalendarRange } from "lucide-react";
 import { ScheduleCalendar } from "@/components/ScheduleCalendar";
 
@@ -19,11 +20,6 @@ interface ScheduleItem {
   space_name: string | null;
   property_name: string | null;
   scheduled_date: string | null;
-}
-
-function formatDate(d: string | null | undefined) {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
 }
 
 function formatShortDate(d: string | null | undefined) {

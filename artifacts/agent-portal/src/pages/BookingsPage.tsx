@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { useServerList } from "@/lib/useServerList";
 import { TablePagination } from "@/components/TablePagination";
+import { formatDate } from "@/lib/dateFormat";
 import { Search, ChevronRight } from "lucide-react";
 
 interface Booking {
@@ -106,7 +107,7 @@ export default function BookingsPage() {
                   <div className="text-xs text-muted-foreground">{b.space_name}</div>
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">
-                  {b.check_in_date ? new Date(b.check_in_date).toLocaleDateString() : "—"}
+                  {formatDate(b.check_in_date)}
                 </td>
                 <td className="px-4 py-3 font-medium text-foreground">
                   ${Number(b.agreed_weekly_rate ?? 0).toLocaleString()}/wk

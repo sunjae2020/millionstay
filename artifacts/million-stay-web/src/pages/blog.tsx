@@ -6,6 +6,7 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { getApiBase } from "@/lib/api-base";
 import { APP_NAME } from "../lib/appName";
+import { formatDate } from "@/lib/dateFormat";
 
 const BASE = getApiBase();
 
@@ -26,11 +27,6 @@ async function fetchCategories(): Promise<string[]> {
   } catch {
     return DEFAULT_CATEGORIES;
   }
-}
-
-function formatDate(dateStr: string | null) {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" });
 }
 
 async function fetchBlogPosts(category?: string) {
@@ -148,7 +144,7 @@ export default function Blog() {
                         )}
                         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
                           {posts[0].author && <span className="flex items-center gap-1"><User className="h-3.5 w-3.5" />{posts[0].author}</span>}
-                          {posts[0].published_at && <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />{formatDate(posts[0].published_at)}</span>}
+                          {posts[0].published_at && <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />{formatDate(posts[0].published_at, "")}</span>}
                         </div>
                         <div className="mt-5">
                           <span className="inline-flex items-center gap-1 text-primary font-semibold text-sm group-hover:gap-2 transition-all">
@@ -193,7 +189,7 @@ export default function Blog() {
                           )}
                           <div className="mt-auto flex flex-wrap items-center gap-3 text-xs text-gray-400">
                             {post.author && <span className="flex items-center gap-1"><User className="h-3 w-3" />{post.author}</span>}
-                            {post.published_at && <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{formatDate(post.published_at)}</span>}
+                            {post.published_at && <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{formatDate(post.published_at, "")}</span>}
                           </div>
                         </div>
                       </article>

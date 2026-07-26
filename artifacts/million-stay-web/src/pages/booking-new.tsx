@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import { getApiBase } from "@/lib/api-base";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/dateFormat";
 import { useGetPublicSpace, useCreateGuestBooking } from "@/lib/guest-api";
 import { useAuthStore } from "@/lib/store";
 import { Navbar } from "@/components/navbar";
@@ -154,9 +154,9 @@ function SummaryCard({
         {Boolean(session.check_in_date) && Boolean(session.check_out_date) && (
           <div className="flex items-start gap-1.5"><Calendar className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
             <span>
-              {(() => { try { return format(new Date(session.check_in_date as string), "dd/MM/yyyy"); } catch { return session.check_in_date as string; } })()}
+              {formatDate(session.check_in_date as string)}
               {" → "}
-              {(() => { try { return format(new Date(session.check_out_date as string), "dd/MM/yyyy"); } catch { return session.check_out_date as string; } })()}
+              {formatDate(session.check_out_date as string)}
               {cardDays > 0 ? ` (${cardDays}d)` : ""}
             </span>
           </div>
@@ -912,8 +912,8 @@ export default function BookingNew() {
                   {[
                     ["Property", session.space_name as string],
                     ["Address",  session.property_address as string],
-                    ["Check In", (() => { try { return format(new Date(session.check_in_date as string), "dd/MM/yyyy"); } catch { return session.check_in_date as string; } })()],
-                    ["Check Out", (() => { try { return format(new Date(session.check_out_date as string), "dd/MM/yyyy"); } catch { return session.check_out_date as string; } })()],
+                    ["Check In", formatDate(session.check_in_date as string)],
+                    ["Check Out", formatDate(session.check_out_date as string)],
                     ["Stay Duration", `${stayWeeks} weeks`],
                     ["Weekly Rate", weeklyRate ? `${money(weeklyRate)}${RATE_UNIT}` : "TBD"],
                     ["Guests", String(session.num_guests ?? numGuests)],

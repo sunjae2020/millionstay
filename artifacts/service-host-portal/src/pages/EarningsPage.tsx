@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
+import { formatDate } from "@/lib/dateFormat";
 import { DollarSign, TrendingUp, Briefcase, FileText } from "lucide-react";
 
 interface EarningsData {
@@ -17,11 +18,6 @@ const STATUS_COLORS: Record<string, string> = {
   Draft: "bg-yellow-100 text-yellow-700",
   Cancelled: "bg-red-100 text-red-700",
 };
-
-function formatDate(d: string | null | undefined) {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
-}
 
 export default function EarningsPage() {
   const { t } = useTranslation();

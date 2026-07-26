@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { useServerList } from "@/lib/useServerList";
 import { TablePagination } from "@/components/TablePagination";
+import { formatDate } from "@/lib/dateFormat";
 import { Inbox, Mail, Phone, Search } from "lucide-react";
 
 export interface Inquiry {
@@ -49,7 +50,7 @@ export function InquiryRow({ q }: { q: Inquiry }) {
             {t(`status.${q.lead_status}`, q.lead_status)}
           </span>
           <p className="text-xs text-muted-foreground mt-1">
-            {q.created_at ? new Date(q.created_at).toLocaleDateString() : ""}
+            {formatDate(q.created_at, "")}
           </p>
         </div>
       </div>

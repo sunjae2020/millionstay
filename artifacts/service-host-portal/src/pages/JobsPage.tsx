@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { useServerList } from "@/lib/useServerList";
 import { TablePagination } from "@/components/TablePagination";
+import { formatDate } from "@/lib/dateFormat";
 import { Briefcase, MapPin, Calendar, DollarSign, FileText, ChevronRight } from "lucide-react";
 
 interface Job {
@@ -28,11 +29,6 @@ interface Job {
     space: { id: number; name: string } | null;
     property: { id: number; name: string; address: string | null } | null;
   } | null;
-}
-
-function formatDate(d: string | null | undefined) {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
 }
 
 const STATUS_COLORS: Record<string, string> = {

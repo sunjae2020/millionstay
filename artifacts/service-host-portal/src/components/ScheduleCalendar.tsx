@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formatDate } from "@/lib/dateFormat";
 import { ChevronLeft, ChevronRight, MapPin, Clock } from "lucide-react";
 
 export interface CalendarItem {
@@ -184,7 +185,7 @@ export function ScheduleCalendar({ items, compact = false, onItemClick }: Props)
         <div className="flex items-center justify-between mb-2">
           <p className="text-xs font-semibold text-foreground">
             {selected
-              ? new Date(selected).toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+              ? formatDate(selected)
               : t("schedule.select_date")}
           </p>
           <div className="flex items-center gap-3 text-[10px] text-muted-foreground">

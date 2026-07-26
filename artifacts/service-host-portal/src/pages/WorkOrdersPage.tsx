@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet, apiPost } from "@/lib/api";
+import { formatDateTime } from "@/lib/dateFormat";
 import { Wrench, CheckCircle2, Clock, AlertTriangle, Play, ChevronRight } from "lucide-react";
 
 // Partner-facing dispatched maintenance work orders (Phase 3). Consumes the
@@ -37,11 +38,6 @@ const slaStyle: Record<string, string> = {
   breached: "bg-red-100 text-red-700",
   escalated: "bg-red-100 text-red-700",
 };
-
-function fmt(s: string | null): string {
-  if (!s) return "—";
-  try { return new Date(s).toLocaleString(); } catch { return s; }
-}
 
 export default function WorkOrdersPage() {
   const { t } = useTranslation();
@@ -103,7 +99,7 @@ export default function WorkOrdersPage() {
                   <div className="p-4 space-y-3">
                     {w.description && <p className="text-sm text-muted-foreground">{w.description}</p>}
                     <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {t("workorders.ack_due", "Ack by")}: {fmt(w.sla_ack_due_at)}</span>
+                      <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {t("workorders.ack_due", "Ack by")}: {formatDateTime(w.sla_ack_due_at)}</span>
                       {w.sla_status && <span>SLA: <span className={`px-1.5 py-0.5 rounded ${slaStyle[w.sla_status] ?? ""}`}>{t(`workorders.sla_${w.sla_status}`, w.sla_status)}</span></span>}
                       {w.acknowledged_at && <span className="flex items-center gap-1 text-green-600"><CheckCircle2 className="h-3 w-3" /> {t("workorders.acknowledged", "Acknowledged")}</span>}
                     </div>

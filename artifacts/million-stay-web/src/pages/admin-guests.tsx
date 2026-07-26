@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import AdminLayout from "@/components/admin-layout";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/dateFormat";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { getApiBase } from "@/lib/api-base";
@@ -14,11 +14,6 @@ type Guest = {
   id: number; email: string; firstName: string; lastName: string;
   phone: string | null; nationality: string | null; isActive: boolean; createdAt: string;
 };
-
-function fmtDate(d: string | null) {
-  if (!d) return "—";
-  try { return format(new Date(d), "dd/MM/yyyy"); } catch { return d; }
-}
 
 export default function AdminGuests() {
   const [guests, setGuests] = useState<Guest[]>([]);
@@ -98,7 +93,7 @@ export default function AdminGuests() {
                         {g.isActive ? "Active" : "Inactive"}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-gray-400">{fmtDate(g.createdAt)}</td>
+                    <td className="px-5 py-3 text-gray-400">{formatDate(g.createdAt)}</td>
                   </tr>
                 ))}
               </tbody>

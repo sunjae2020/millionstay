@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, Link } from "wouter";
 import AdminLayout from "@/components/admin-layout";
 import { StatusBadge } from "@/components/status-badge";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/dateFormat";
 import { ChevronLeft, CheckCircle, XCircle, FileText, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -23,11 +23,6 @@ type BookingDetail = {
   spaceName: string; spaceId: number;
   invoices: Invoice[]; documents: Doc[];
 };
-
-function fmtDate(d: string | null) {
-  if (!d) return "—";
-  try { return format(new Date(d), "dd/MM/yyyy"); } catch { return d; }
-}
 
 const BOOKING_STATUSES = ["Draft", "PendingPayment", "Confirmed", "Active", "Cancelled", "Completed"];
 const DOC_STATUSES = ["Pending", "Approved", "Rejected"];
@@ -105,7 +100,7 @@ export default function AdminBookingDetail({ params }: { params: { id: string } 
         <div className="flex items-start justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 font-mono">{booking.bookingRef}</h1>
-            <p className="text-gray-500 text-sm mt-1">Created {fmtDate(booking.createdAt)}</p>
+            <p className="text-gray-500 text-sm mt-1">Created {formatDate(booking.createdAt)}</p>
           </div>
           <StatusBadge status={booking.contractStatus} size="md" />
         </div>
@@ -117,8 +112,8 @@ export default function AdminBookingDetail({ params }: { params: { id: string } 
               <div className="grid grid-cols-2 gap-y-3 text-sm">
                 {[
                   ["Space", booking.spaceName],
-                  ["Check In", fmtDate(booking.checkInDate)],
-                  ["Check Out", fmtDate(booking.checkOutDate)],
+                  ["Check In", formatDate(booking.checkInDate)],
+                  ["Check Out", formatDate(booking.checkOutDate)],
                   ["Guests", String(booking.numGuests)],
                   ["Total Amount", booking.totalAmount ? `$${Number(booking.totalAmount).toLocaleString()}` : "—"],
                   ...(booking.specialRequests ? [["Special Requests", booking.specialRequests]] : []),
@@ -158,7 +153,7 @@ export default function AdminBookingDetail({ params }: { params: { id: string } 
                         <FileText className="h-4 w-4 text-gray-400" />
                         <div>
                           <p className="text-sm font-medium text-gray-800">{doc.documentType.replace(/_/g, " ")}</p>
-                          <p className="text-xs text-gray-400">{doc.uploadedAt ? fmtDate(doc.uploadedAt) : "Not uploaded"}</p>
+                          <p className="text-xs text-gray-400">{doc.uploadedAt ? formatDate(doc.uploadedAt) : "Not uploaded"}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -196,7 +191,7 @@ export default function AdminBookingDetail({ params }: { params: { id: string } 
                     <div key={inv.id} className="flex items-center justify-between text-sm border rounded-xl px-4 py-3">
                       <div>
                         <p className="font-medium text-gray-800">{inv.invoiceNumber ?? `INV-${inv.id}`}</p>
-                        <p className="text-gray-400 text-xs">Due: {fmtDate(inv.dueDate)}</p>
+                        <p className="text-gray-400 text-xs">Due: {formatDate(inv.dueDate)}</p>
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="font-semibold text-gray-800">${Number(inv.amount).toLocaleString()}</span>

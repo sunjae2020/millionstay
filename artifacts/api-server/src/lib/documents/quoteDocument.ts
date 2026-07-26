@@ -5,7 +5,7 @@
  * using the shared brand shell so it matches invoices/receipts/contracts.
  */
 import { renderDocumentShell, escapeHtml, getCompanyInfo, statusWatermarkColor, formatDocMoney, type CompanyInfo } from "./theme";
-import { t, docLocale, statusLabel, type DocLang } from "./i18n";
+import { t, formatDocDate, statusLabel, type DocLang } from "./i18n";
 import { CARD_SURCHARGE_PCT } from "./invoiceDocument";
 
 export interface QuoteLine {
@@ -36,10 +36,7 @@ function money(amount: string | number | null, currency: string | null): string 
 }
 
 function formatDate(value: string | Date | null, lang: DocLang): string {
-  if (!value) return "—";
-  const d = typeof value === "string" ? new Date(value) : value;
-  if (Number.isNaN(d.getTime())) return escapeHtml(String(value));
-  return d.toLocaleDateString(docLocale(lang), { year: "numeric", month: "short", day: "numeric" });
+  return formatDocDate(value, lang);
 }
 
 /** `termsHtml` is optional admin-authored standard copy from the editable

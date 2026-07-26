@@ -18,6 +18,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { DateInput } from "@/components/ui/date-input";
 import heroBg from "@assets/MS_Homepage_Photo_1920x1080_1775403929888.jpg";
+import { formatDate } from "@/lib/dateFormat";
 
 const PAGE_SIZE = 9;
 type SuburbDropdown = "suburb" | null;
@@ -188,10 +189,6 @@ export default function Search() {
   const suburbName = suburbs.find((s) => String(s.id) === suburbId)?.name ?? null;
   const appliedSuburbName = suburbs.find((s) => String(s.id) === applied.suburb_id)?.name ?? null;
 
-
-  /* ── Date label helper ── */
-  const fmtDate = (d: string) =>
-    d ? new Date(d + "T00:00").toLocaleDateString("en-AU", { day: "numeric", month: "short" }) : "";
 
   return (
     <div className="min-h-screen flex flex-col bg-[#faf9f7]">
@@ -484,11 +481,11 @@ export default function Search() {
                       <>
                         {t("search.showing_available")}{" "}
                         <span className="font-semibold text-primary">
-                          {fmtDate(applied.check_in)} → {fmtDate(applied.check_out)}
+                          {formatDate(applied.check_in, "")} → {formatDate(applied.check_out, "")}
                         </span>
                       </>
                     ) : applied.check_in ? (
-                      <>{t("search.check_in_from")} <span className="font-semibold text-primary">{fmtDate(applied.check_in)}</span> — {t("search.add_checkout")}</>
+                      <>{t("search.check_in_from")} <span className="font-semibold text-primary">{formatDate(applied.check_in, "")}</span> — {t("search.add_checkout")}</>
                     ) : null}
                   </div>
                   <button

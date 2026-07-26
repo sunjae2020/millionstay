@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
 import { TablePagination } from "@/components/TablePagination";
+import { formatDate } from "@/lib/dateFormat";
 import { DollarSign, TrendingUp, Clock, Search } from "lucide-react";
 
 interface Invoice {
@@ -159,7 +160,7 @@ export default function RevenuePage() {
                       <div className="text-xs text-muted-foreground">{inv.space_name}</div>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {inv.due_date ? new Date(inv.due_date).toLocaleDateString() : "—"}
+                      {formatDate(inv.due_date)}
                     </td>
                     <td className="px-4 py-3 font-medium text-foreground">
                       ${Number(inv.amount_due ?? 0).toLocaleString()} {inv.currency && <span className="text-muted-foreground text-xs">{inv.currency}</span>}

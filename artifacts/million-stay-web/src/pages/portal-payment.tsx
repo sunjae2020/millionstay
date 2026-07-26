@@ -12,7 +12,7 @@ import {
   Copy, Check, Building2,
 } from "lucide-react";
 import { getApiBase } from "@/lib/api-base";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/dateFormat";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -28,10 +28,6 @@ const BRAND = "hsl(var(--primary))"; // instance primary (white-label)
 const API = getApiBase();
 
 /* ─── helpers ─── */
-function fmtDate(d: string | null | undefined) {
-  if (!d) return "—";
-  try { return format(new Date(d), "dd MMM yyyy"); } catch { return d; }
-}
 function fmtAmt(n: number | null | undefined, currency = "AUD") {
   if (n == null) return "—";
   return formatCurrencyAmount(Number(n), currency);
@@ -179,7 +175,7 @@ function InvoiceSummary({ inv }: { inv: MyInvoice }) {
       {inv.due_date && (
         <div className="flex justify-between text-sm border-b pb-2">
           <span className="text-gray-500">{t("portal.payment.due_date", "Due Date")}</span>
-          <span className="font-medium text-gray-800">{fmtDate(inv.due_date)}</span>
+          <span className="font-medium text-gray-800">{formatDate(inv.due_date)}</span>
         </div>
       )}
       <div className="flex justify-between items-center pt-1">
@@ -350,7 +346,7 @@ export default function PortalPayment() {
         <div className="flex-1 max-w-lg mx-auto w-full px-4 py-16 text-center">
           <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-4" />
           <p className="text-xl font-bold text-gray-800 mb-2">{t("portal.payment.already_paid", "Already Paid")}</p>
-          <p className="text-sm text-gray-500 mb-6">{t("portal.payment.already_paid_sub", "This invoice has been paid on {{date}}.", { date: fmtDate(invoice.paid_at) })}</p>
+          <p className="text-sm text-gray-500 mb-6">{t("portal.payment.already_paid_sub", "This invoice has been paid on {{date}}.", { date: formatDate(invoice.paid_at) })}</p>
           <div className="flex gap-3 justify-center">
             <Button
               onClick={() => setLocation(`/portal/invoices/${invoice.id}/receipt`)}

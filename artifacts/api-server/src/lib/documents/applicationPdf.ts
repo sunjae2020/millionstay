@@ -10,7 +10,7 @@
  * One body builder + two thin mappers keep the field→row mapping in a single place.
  */
 import { renderDocumentShell, escapeHtml, getCompanyInfo, formatDocMoney, type CompanyInfo } from "./theme";
-import { serviceLabel } from "./i18n";
+import { serviceLabel, formatDocDate, formatDocDateTime } from "./i18n";
 import type { HomestayStudentRequest, HomestayHostApplication, HomestayPlacement, ShortTermApplication } from "@workspace/db";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -68,19 +68,11 @@ export interface SigningView {
    ───────────────────────────────────────────────────────────────────────────── */
 
 function fmtDate(value: string | Date | null | undefined): string {
-  if (!value) return "—";
-  const d = typeof value === "string" ? new Date(value) : value;
-  if (Number.isNaN(d.getTime())) return escapeHtml(String(value));
-  return d.toLocaleDateString("en-AU", { year: "numeric", month: "short", day: "numeric" });
+  return formatDocDate(value, "en");
 }
 
 function fmtDateTime(value: string | Date | null | undefined): string {
-  if (!value) return "—";
-  const d = typeof value === "string" ? new Date(value) : value;
-  if (Number.isNaN(d.getTime())) return escapeHtml(String(value));
-  return d.toLocaleString("en-AU", {
-    year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
-  });
+  return formatDocDateTime(value, "en");
 }
 
 function yesNo(v: unknown): string {

@@ -9,11 +9,31 @@
  * shape, and falls back to env-based defaults (`getCompanyInfo()`) for any
  * missing field — so documents always render even before the form is saved.
  */
-import { db, integrationSettings } from "@workspace/db";
+import { db, integrationSettings, brandingSettingsTable, BRANDING_SINGLETON_ID } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { getCompanyInfo, type CompanyInfo } from "./theme";
+import { setDocDateFormat } from "./i18n";
 
 export const COMPANY_INFO_KEY = "company_info";
+
+/**
+ * Refresh the app-wide document date format from the global branding row.
+ * Called from `resolveCompanyInfo()` — the common pre-build step of every
+ * document route — so all generated paperwork uses the configured format.
+ * `date_format` is a single global value, so caching it module-side is safe.
+ */
+async function syncDocDateFormat(): Promise<void> {
+  try {
+    const [row] = await db
+      .select({ date_format: brandingSettingsTable.date_format })
+      .from(brandingSettingsTable)
+      .where(eq(brandingSettingsTable.id, BRANDING_SINGLETON_ID))
+      .limit(1);
+    setDocDateFormat(row?.date_format);
+  } catch {
+    /* keep the last-known / default format */
+  }
+}
 
 /** Persisted form shape (Settings → Organisation). All fields optional. */
 export interface StoredCompanyInfo {
@@ -63,6 +83,7 @@ function composeAddress(s: StoredCompanyInfo): string {
 /** Resolve the document CompanyInfo: stored values override env defaults. */
 export async function resolveCompanyInfo(): Promise<CompanyInfo> {
   const defaults = getCompanyInfo();
+  await syncDocDateFormat();
   const s = await readStoredCompanyInfo();
   const address = composeAddress(s);
   return {

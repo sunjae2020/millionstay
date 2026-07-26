@@ -7,6 +7,7 @@ import {
 } from "recharts";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
+import { formatDate } from "@/lib/dateFormat";
 import { useAuth } from "@/lib/auth";
 import { useDarkMode } from "@/lib/darkMode";
 import { FileSignature, DollarSign, TrendingUp, Clock, ArrowRight, PieChart as PieIcon, LineChart as LineIcon } from "lucide-react";
@@ -260,7 +261,7 @@ export default function DashboardPage() {
                             <span className="font-mono text-xs text-primary hover:underline cursor-pointer">{b.booking_ref ?? `#${b.id}`}</span>
                           </Link>
                         </td>
-                        <td className="px-5 py-3 text-muted-foreground">{b.check_in_date ? new Date(b.check_in_date).toLocaleDateString() : t("common.tbd")}</td>
+                        <td className="px-5 py-3 text-muted-foreground">{formatDate(b.check_in_date, t("common.tbd"))}</td>
                         <td className="px-5 py-3 text-right font-medium text-foreground">{fmtMoney(Number(b.total_rent ?? 0))}</td>
                         <td className="px-5 py-3 text-right">
                           <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_CLS[b.booking_status] ?? "bg-gray-100 text-gray-600"}`}>

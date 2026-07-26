@@ -5,6 +5,7 @@ import { Calendar, User, ArrowRight, BookOpen } from "lucide-react";
 import { HomestayLayout } from "@/components/homestay/HomestayLayout";
 import { HS, HS_FONT } from "@/lib/homestay-theme";
 import { getApiBase } from "@/lib/api-base";
+import { formatDate } from "@/lib/dateFormat";
 
 const BASE = getApiBase();
 
@@ -14,11 +15,6 @@ const BASE = getApiBase();
 // — it's reached via direct link / footer / SEO for now.
 export const HOMESTAY_BLOG_CATEGORY = "Homestay";
 
-function formatDate(dateStr: string | null, lang: string) {
-  if (!dateStr) return "";
-  const locale = { en: "en-AU", ko: "ko-KR", ja: "ja-JP", zh: "zh-CN", th: "th-TH" }[lang] ?? "en-AU";
-  return new Date(dateStr).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
-}
 
 async function fetchHomestayPosts() {
   const qs = new URLSearchParams({ category: HOMESTAY_BLOG_CATEGORY });
@@ -29,8 +25,7 @@ async function fetchHomestayPosts() {
 }
 
 export default function HomestayBlog() {
-  const { t, i18n } = useTranslation();
-  const lang = (i18n.language || "en").split("-")[0];
+  const { t } = useTranslation();
 
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ["homestay-blog"],
@@ -93,7 +88,7 @@ export default function HomestayBlog() {
                     {post.excerpt && <p className="text-gray-500 text-sm line-clamp-2 mb-3">{post.excerpt}</p>}
                     <div className="mt-auto flex flex-wrap items-center gap-3 text-xs text-gray-400">
                       {post.author && <span className="flex items-center gap-1"><User className="h-3 w-3" />{post.author}</span>}
-                      {post.published_at && <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{formatDate(post.published_at, lang)}</span>}
+                      {post.published_at && <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{formatDate(post.published_at, "")}</span>}
                     </div>
                     <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold" style={{ color: HS.brand }}>
                       {t("homestay.blog.read")} <ArrowRight className="h-4 w-4" />

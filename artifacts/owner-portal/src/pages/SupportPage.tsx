@@ -7,6 +7,7 @@ import { apiGet, apiPost, apiFetch } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatDate } from "@/lib/dateFormat";
 import {
   LifeBuoy, Plus, ChevronRight, Clock, AlertCircle, CheckCircle2, XCircle,
   ImageIcon, X, Loader2, MessageSquare,
@@ -46,14 +47,6 @@ interface Ticket {
 export default function SupportPage() {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
-
-  const fmtDate = (d: string) => {
-    try {
-      return new Date(d).toLocaleDateString(i18n.language, {
-        year: "numeric", month: "short", day: "numeric",
-      });
-    } catch { return d; }
-  };
 
   const [showForm, setShowForm] = useState(false);
   const [category, setCategory] = useState<string>("General");
@@ -227,8 +220,8 @@ export default function SupportPage() {
                       <span className="flex items-center gap-1">
                         <MessageSquare className="h-3 w-3" /> {ticket.message_count} · {t(`support.category_${ticket.category.toLowerCase()}`, ticket.category)}
                       </span>
-                      <span>{t("support.created", "Created")}: {fmtDate(ticket.created_at)}</span>
-                      <span>{t("support.last_reply", "Last reply")}: {ticket.message_count > 1 ? fmtDate(ticket.updated_at) : t("support.no_reply_yet", "No replies yet")}</span>
+                      <span>{t("support.created", "Created")}: {formatDate(ticket.created_at)}</span>
+                      <span>{t("support.last_reply", "Last reply")}: {ticket.message_count > 1 ? formatDate(ticket.updated_at) : t("support.no_reply_yet", "No replies yet")}</span>
                     </div>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-1" />

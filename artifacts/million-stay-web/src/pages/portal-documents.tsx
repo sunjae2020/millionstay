@@ -8,7 +8,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { FileImage, CheckCircle2, Clock, AlertCircle, Plus } from "lucide-react";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/dateFormat";
 import { useToast } from "@/hooks/use-toast";
 import { getApiBase } from "@/lib/api-base";
 
@@ -130,7 +130,7 @@ export default function PortalDocuments() {
                           <p className="text-sm font-semibold text-gray-800 capitalize">{t(`portal.documents.type_${doc.document_type}`, { defaultValue: doc.document_type.replace("_", " ") })}</p>
                           {doc.uploaded_at && (
                             <p className="text-xs text-gray-500">
-                              {t("portal.documents.uploaded")} {format(new Date(doc.uploaded_at), "dd/MM/yyyy")}
+                              {t("portal.documents.uploaded")} {formatDate(doc.uploaded_at)}
                             </p>
                           )}
                         </div>

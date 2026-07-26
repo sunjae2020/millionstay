@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
 import { TablePagination } from "@/components/TablePagination";
+import { formatDate } from "@/lib/dateFormat";
 import { FileText, Download, Search, FileSignature, ReceiptText, FileArchive, Loader2 } from "lucide-react";
 
 interface OwnerDocument {
@@ -157,7 +158,7 @@ export default function DocumentsPage() {
                     {doc.doc_ref ?? "—"}{doc.version ? ` v${doc.version}` : ""}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{formatSize(doc.file_size)}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{doc.created_at ? new Date(doc.created_at).toLocaleDateString() : "—"}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{formatDate(doc.created_at)}</td>
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => download(doc)}

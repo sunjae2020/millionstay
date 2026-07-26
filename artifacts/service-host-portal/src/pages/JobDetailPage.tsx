@@ -3,6 +3,7 @@ import { Link, useRoute } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiFetch, apiGet } from "@/lib/api";
+import { formatDate } from "@/lib/dateFormat";
 import {
   ArrowLeft,
   Briefcase,
@@ -60,11 +61,6 @@ interface JobDetail {
   property: { id: number; name: string; address: string | null } | null;
   photos: Photo[];
   max_photos: number;
-}
-
-function formatDate(d: string | null | undefined) {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
 }
 
 export default function JobDetailPage() {

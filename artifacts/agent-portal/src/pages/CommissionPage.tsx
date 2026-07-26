@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
 import { TablePagination } from "@/components/TablePagination";
+import { formatDate } from "@/lib/dateFormat";
 import { DollarSign, TrendingUp, Clock, CheckCircle, Search } from "lucide-react";
 
 interface CommissionApiData {
@@ -164,10 +165,10 @@ export default function CommissionPage() {
                   <tr key={i} className="hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{row.booking_ref}</td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {row.check_in_date ? new Date(row.check_in_date).toLocaleDateString() : "—"}
+                      {formatDate(row.check_in_date)}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {row.check_out_date ? new Date(row.check_out_date).toLocaleDateString() : t("common.ongoing")}
+                      {formatDate(row.check_out_date, t("common.ongoing"))}
                     </td>
                     <td className="px-4 py-3 text-foreground">${Number(row.rent_amount ?? 0).toLocaleString()}</td>
                     <td className="px-4 py-3 font-semibold text-foreground">${Number(row.commission_earned ?? 0).toLocaleString()}</td>

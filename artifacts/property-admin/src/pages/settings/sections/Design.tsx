@@ -638,6 +638,7 @@ export function Design() {
                     <SelectItem value="DD/MM/YYYY">DD/MM/YYYY</SelectItem>
                     <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
                     <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
+                    <SelectItem value="YYYY/MM/DD">YYYY/MM/DD</SelectItem>
                     <SelectItem value="D MMM YYYY">D MMM YYYY</SelectItem>
                   </SelectContent>
                 </Select>

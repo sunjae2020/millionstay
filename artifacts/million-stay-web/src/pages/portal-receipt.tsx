@@ -6,7 +6,7 @@ import { useAuthStore } from "@/lib/store";
 import { apiFetch, useSupportEmail, type MyInvoice } from "@/lib/guest-api";
 import { Printer, ArrowLeft, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
+import { formatDate, formatDateTime } from "@/lib/dateFormat";
 import { APP_NAME } from "../lib/appName";
 import { BrandMark } from "../components/brand-mark";
 import { COMPANY } from "../lib/company";
@@ -22,11 +22,6 @@ const PAYMENT_METHOD_LABELS: Record<string, { key: string; en: string }> = {
   stripe: { key: "portal.receipt.method_stripe", en: "Stripe" },
   cheque: { key: "portal.receipt.method_cheque", en: "Cheque" },
 };
-
-function fmt(d: string | null | undefined, pattern = "dd MMM yyyy") {
-  if (!d) return "—";
-  try { return format(new Date(d), pattern); } catch { return d; }
-}
 
 function fmtAmt(n: number | null | undefined, currency = "AUD") {
   if (n == null) return "—";
@@ -143,7 +138,7 @@ export default function PortalReceipt() {
                 </div>
                 <span className="text-xs font-semibold text-green-700">{t("portal.receipt.payment_confirmed", "Payment Confirmed")}</span>
                 {inv.paid_at && (
-                  <span className="text-[11px] text-green-600 ml-auto">{t("portal.receipt.paid_on", "Paid on {{date}}", { date: fmt(inv.paid_at, "dd MMM yyyy 'at' h:mm a") })}</span>
+                  <span className="text-[11px] text-green-600 ml-auto">{t("portal.receipt.paid_on", "Paid on {{date}}", { date: formatDateTime(inv.paid_at) })}</span>
                 )}
               </div>
             )}
@@ -163,11 +158,11 @@ export default function PortalReceipt() {
               </div>
               <div>
                 <p className="text-[9px] font-semibold uppercase tracking-wider text-gray-400 mb-1">{t("portal.receipt.issue_date", "Issue Date")}</p>
-                <p className="text-xs font-medium text-gray-800">{fmt(inv.created_at)}</p>
+                <p className="text-xs font-medium text-gray-800">{formatDate(inv.created_at)}</p>
               </div>
               <div>
                 <p className="text-[9px] font-semibold uppercase tracking-wider text-gray-400 mb-1">{t("portal.receipt.due_date", "Due Date")}</p>
-                <p className="text-xs font-medium text-gray-800">{fmt(inv.due_date)}</p>
+                <p className="text-xs font-medium text-gray-800">{formatDate(inv.due_date)}</p>
               </div>
               {inv.booking_ref && (
                 <div>
@@ -179,7 +174,7 @@ export default function PortalReceipt() {
                 <div>
                   <p className="text-[9px] font-semibold uppercase tracking-wider text-gray-400 mb-1">{t("portal.receipt.rental_period", "Rental Period")}</p>
                   <p className="text-xs font-medium text-gray-800">
-                    {fmt(inv.check_in_date)} – {fmt(inv.check_out_date)}
+                    {formatDate(inv.check_in_date)} – {formatDate(inv.check_out_date)}
                   </p>
                 </div>
               )}
@@ -254,7 +249,7 @@ export default function PortalReceipt() {
                   </div>
                   <div>
                     <p className="text-[10px] text-gray-400">{t("portal.receipt.date_received", "Date Received")}</p>
-                    <p className="text-xs font-semibold text-gray-800">{fmt(inv.paid_at)}</p>
+                    <p className="text-xs font-semibold text-gray-800">{formatDate(inv.paid_at)}</p>
                   </div>
                   <div>
                     <p className="text-[10px] text-gray-400">{t("portal.receipt.amount_received", "Amount Received")}</p>

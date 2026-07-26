@@ -13,7 +13,7 @@ import {
   FileText, Receipt, AlertCircle, Clock, CheckCircle2,
   CalendarDays, Home, ExternalLink,
 } from "lucide-react";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/dateFormat";
 import { formatCurrencyAmount } from "@/contexts/DisplayCurrencyContext";
 
 const BRAND = "hsl(var(--primary))"; // instance primary (white-label)
@@ -33,11 +33,6 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
   stripe: "Stripe",
   cheque: "Cheque",
 };
-
-function fmtDate(d: string | null | undefined) {
-  if (!d) return "—";
-  try { return format(new Date(d), "dd MMM yyyy"); } catch { return d; }
-}
 
 function fmtAmt(n: number | null | undefined, currency = "AUD") {
   if (n == null) return "—";
@@ -98,7 +93,7 @@ function InvoiceCard({ inv }: { inv: MyInvoice }) {
         {/* Amount */}
         <div className="text-right shrink-0">
           <p className="text-base font-bold text-gray-900">{fmtAmt(inv.amount, inv.currency ?? "AUD")}</p>
-          <p className="text-xs text-gray-400 mt-0.5">{t("portal.invoices.due", "Due {{date}}", { date: fmtDate(inv.due_date) })}</p>
+          <p className="text-xs text-gray-400 mt-0.5">{t("portal.invoices.due", "Due {{date}}", { date: formatDate(inv.due_date) })}</p>
         </div>
       </div>
 
@@ -110,7 +105,7 @@ function InvoiceCard({ inv }: { inv: MyInvoice }) {
           )}
           {isPaid && inv.paid_at && (
             <span className="text-green-700 font-medium">
-              {fmtDate(inv.paid_at)}
+              {formatDate(inv.paid_at)}
               {inv.payment_method && ` · ${t("portal.invoices.pm_" + inv.payment_method, PAYMENT_METHOD_LABELS[inv.payment_method] ?? inv.payment_method)}`}
             </span>
           )}

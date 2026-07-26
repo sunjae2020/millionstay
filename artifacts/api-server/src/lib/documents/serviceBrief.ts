@@ -13,6 +13,7 @@
  * flight number, etc.) come from the per-service `notes` field that ops control.
  */
 import { renderDocumentShell, escapeHtml, getCompanyInfo, type CompanyInfo } from "./theme";
+import { formatDocDateTime } from "./i18n";
 
 export interface ServiceBriefInput {
   placement_ref: string;
@@ -42,10 +43,7 @@ function money(amount: number | null, currency: string | null): string {
 }
 
 function formatDateTime(value: string | Date | null): string {
-  if (!value) return "To be scheduled";
-  const d = typeof value === "string" ? new Date(value) : value;
-  if (Number.isNaN(d.getTime())) return escapeHtml(String(value));
-  return d.toLocaleString("en-AU", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  return formatDocDateTime(value, "en", "To be scheduled");
 }
 
 export function buildServiceBriefBody(b: ServiceBriefInput): string {

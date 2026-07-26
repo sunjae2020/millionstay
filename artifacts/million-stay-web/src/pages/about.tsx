@@ -8,6 +8,7 @@ import { Star, ChevronRight, BookOpen, Calendar, Tag } from "lucide-react";
 import heroBg from "@assets/MS_Homepage_Photo_1920x1080_1775403929888.jpg";
 import { getApiBase } from "@/lib/api-base";
 import { APP_NAME } from "../lib/appName";
+import { formatDate } from "@/lib/dateFormat";
 
 const BASE = getApiBase();
 
@@ -68,11 +69,6 @@ const FALLBACK_BLOGS = [
   },
 ];
 
-function formatDate(dateStr: string | null) {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
-}
-
 function fade(delay = 0) {
   return { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.45, delay } };
 }
@@ -100,7 +96,7 @@ function BlogCard({ post, index, clickable = true }: { post: any; index: number;
       <div className="p-5">
         {post.published_at && (
           <p className="text-xs text-gray-400 mb-2 flex items-center gap-1">
-            <Calendar className="h-3 w-3" />{formatDate(post.published_at)}
+            <Calendar className="h-3 w-3" />{formatDate(post.published_at, "")}
           </p>
         )}
         <h3 className="font-semibold text-gray-800 text-sm mb-2 leading-snug line-clamp-2 group-hover:text-primary transition-colors">{post.title}</h3>

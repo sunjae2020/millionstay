@@ -5,18 +5,10 @@ import { Calendar, User, ArrowLeft, Share2, BookOpen } from "lucide-react";
 import { HomestayLayout } from "@/components/homestay/HomestayLayout";
 import { HS, HS_FONT } from "@/lib/homestay-theme";
 import { getApiBase } from "@/lib/api-base";
+import { formatDate } from "@/lib/dateFormat";
 
 const BASE = getApiBase();
 
-const LOCALE_MAP: Record<string, string> = {
-  en: "en-AU", ko: "ko-KR", ja: "ja-JP", zh: "zh-CN", th: "th-TH",
-};
-
-function formatDate(dateStr: string | null, lang: string) {
-  if (!dateStr) return "";
-  const locale = LOCALE_MAP[lang] ?? "en-AU";
-  return new Date(dateStr).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
-}
 
 async function fetchPost(slug: string) {
   const res = await fetch(`${BASE}/api/v1/public/blog/${slug}`);
@@ -26,8 +18,7 @@ async function fetchPost(slug: string) {
 
 export default function HomestayBlogPost() {
   const { slug } = useParams<{ slug: string }>();
-  const { t, i18n } = useTranslation();
-  const lang = (i18n.language || "en").split("-")[0];
+  const { t } = useTranslation();
 
   const { data: post, isLoading, isError } = useQuery({
     queryKey: ["homestay-blog-post", slug],
@@ -100,7 +91,7 @@ export default function HomestayBlogPost() {
           )}
           {post.published_at && (
             <span className="flex items-center gap-1.5">
-              <Calendar className="h-4 w-4" /> {formatDate(post.published_at, lang)}
+              <Calendar className="h-4 w-4" /> {formatDate(post.published_at, "")}
             </span>
           )}
           <button onClick={handleShare} className="ml-auto flex items-center gap-1.5 text-gray-400 hover:opacity-80 transition-colors" title={t("blog_post.share_title")}>

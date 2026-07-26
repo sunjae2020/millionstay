@@ -11,12 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import { Calendar, MapPin, Home, ExternalLink, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
-
-function formatDate(d: string | null) {
-  if (!d) return "—";
-  try { return format(new Date(d), "dd/MM/yyyy"); } catch { return d; }
-}
+import { formatDate } from "@/lib/dateFormat";
 
 interface Booking {
   id: number;

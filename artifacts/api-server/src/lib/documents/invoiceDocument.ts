@@ -13,7 +13,7 @@ import {
   formatDocMoney,
   type CompanyInfo,
 } from "./theme";
-import { t, docLocale, statusLabel, type DocLang } from "./i18n";
+import { t, formatDocDate, statusLabel, type DocLang } from "./i18n";
 
 /** Card processing surcharge %, added only when the payer selects card. */
 export const CARD_SURCHARGE_PCT = 2;
@@ -57,10 +57,7 @@ function formatMoney(amount: string | number | null, currency: string | null): s
 }
 
 function formatDate(value: string | Date | null, lang: DocLang): string {
-  if (!value) return "—";
-  const d = typeof value === "string" ? new Date(value) : value;
-  if (Number.isNaN(d.getTime())) return escapeHtml(String(value));
-  return d.toLocaleDateString(docLocale(lang), { year: "numeric", month: "short", day: "numeric" });
+  return formatDocDate(value, lang);
 }
 
 function formatQty(value: string | number): string {

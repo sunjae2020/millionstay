@@ -16,7 +16,7 @@ import {
   XCircle, AlertCircle, Megaphone, Mail, MailOpen, Info, Wrench,
   CalendarDays, ShieldCheck, Star, Bell,
 } from "lucide-react";
-import { format } from "date-fns";
+import { formatDate, formatDateTime } from "@/lib/dateFormat";
 import { getApiBase } from "@/lib/api-base";
 
 const BASE = `${getApiBase()}/api/v1`;
@@ -131,7 +131,7 @@ function InquiryCard({ ticket }: { ticket: CsTicket }) {
                 <MessageCircle className="h-3 w-3" />
                 {ticket.message_count} {t("portal.cs.messages")}
               </span>
-              <span>{t("portal.cs.updated")} {format(new Date(ticket.updated_at), "dd MMM yyyy")}</span>
+              <span>{t("portal.cs.updated")} {formatDate(ticket.updated_at)}</span>
             </div>
           </div>
           <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-primary transition-colors shrink-0 mt-1" />
@@ -178,7 +178,7 @@ function AnnouncementCard({ ann }: { ann: Announcement }) {
               </div>
             </div>
             <p className="text-xs text-gray-400 mb-2">
-              {format(new Date(ann.published_at), "dd MMM yyyy")}
+              {formatDate(ann.published_at)}
             </p>
             <p className={`text-sm text-gray-600 leading-relaxed ${expanded ? "" : "line-clamp-2"}`}>
               {ann.body}
@@ -245,7 +245,7 @@ function DirectMessageCard({
                 <p className="text-xs text-gray-400">
                   {t("portal.cs.from")} <span className="font-medium text-gray-600">{msg.sender_name}</span>
                   {" · "}
-                  {format(new Date(msg.created_at), "dd MMM yyyy")}
+                  {formatDate(msg.created_at)}
                 </p>
               </div>
               <ChevronRight className={`h-4 w-4 shrink-0 mt-0.5 transition-transform ${expanded ? "rotate-90" : ""} text-gray-300`} />
@@ -269,7 +269,7 @@ function DirectMessageCard({
                 {msg.read_at && (
                   <p className="text-xs text-gray-400 mt-3 flex items-center gap-1">
                     <CheckCircle2 className="h-3 w-3 text-green-500" />
-                    {t("portal.cs.read_on")} {format(new Date(msg.read_at), "dd MMM yyyy 'at' h:mm a")}
+                    {t("portal.cs.read_on")} {formatDateTime(msg.read_at)}
                   </p>
                 )}
               </div>

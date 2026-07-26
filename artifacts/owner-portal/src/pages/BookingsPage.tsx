@@ -4,6 +4,7 @@ import { Layout } from "@/components/Layout";
 import { useServerList } from "@/lib/useServerList";
 import { TablePagination } from "@/components/TablePagination";
 import { OccupancyCalendar } from "@/components/OccupancyCalendar";
+import { formatDate } from "@/lib/dateFormat";
 import { Calendar, CalendarDays, List, Search, X } from "lucide-react";
 
 interface Booking {
@@ -193,9 +194,9 @@ export default function BookingsPage() {
                 <td className="px-4 py-3 text-muted-foreground">
                   <div className="flex items-center gap-1 text-xs">
                     <Calendar className="w-3 h-3" />
-                    {b.check_in_date ? new Date(b.check_in_date).toLocaleDateString() : "—"}
+                    {formatDate(b.check_in_date)}
                     {" → "}
-                    {b.check_out_date ? new Date(b.check_out_date).toLocaleDateString() : t("common.ongoing")}
+                    {formatDate(b.check_out_date, t("common.ongoing"))}
                   </div>
                 </td>
                 <td className="px-4 py-3 font-medium text-foreground">

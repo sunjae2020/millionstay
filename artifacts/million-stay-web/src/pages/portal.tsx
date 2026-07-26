@@ -18,17 +18,10 @@ import { EmptyState } from "@/components/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrencyAmount } from "@/contexts/DisplayCurrencyContext";
 import { DEFAULT_CURRENCY } from "@/lib/defaultCurrency";
+import { formatDate } from "@/lib/dateFormat";
 
 /* ── helpers ─────────────────────────────────────────────── */
 
-function formatDate(d?: string | null) {
-  if (!d) return "—";
-  try { return format(new Date(d), "yyyy.MM.dd"); } catch { return d; }
-}
-function formatShort(d?: string | null) {
-  if (!d) return "—";
-  try { return format(new Date(d), "MM.dd"); } catch { return d; }
-}
 function money(amount: number, currency = "AUD") {
   return formatCurrencyAmount(Number(amount) || 0, currency);
 }
@@ -153,7 +146,7 @@ function ContractRowMobile({ b }: { b: MyBooking }) {
       </div>
       <p className="font-semibold text-sm text-card-foreground truncate">{b.space_name ?? b.property_name ?? t("portal.home.stay_fallback", "Stay")}</p>
       <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-        <span className="inline-flex items-center gap-1"><CalendarRange className="h-3.5 w-3.5" />{formatShort(b.check_in_date)} → {formatShort(b.check_out_date)}</span>
+        <span className="inline-flex items-center gap-1"><CalendarRange className="h-3.5 w-3.5" />{formatDate(b.check_in_date)} → {formatDate(b.check_out_date)}</span>
         {b.total_amount && <span className="tabular-nums font-medium text-card-foreground">{money(Number(b.total_amount), b.currency ?? "AUD")}</span>}
       </div>
     </Link>

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, Link } from "wouter";
 import AdminLayout from "@/components/admin-layout";
 import { StatusBadge } from "@/components/status-badge";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/dateFormat";
 import { CalendarCheck, Users, Home, FileWarning } from "lucide-react";
 
 import { getApiBase } from "@/lib/api-base";
@@ -18,11 +18,6 @@ type Booking = {
   contractStatus: string; guestFirstName: string; guestLastName: string;
   guestEmail: string; spaceName: string; createdAt: string;
 };
-
-function fmtDate(d: string | null) {
-  if (!d) return "—";
-  try { return format(new Date(d), "dd/MM/yyyy"); } catch { return d; }
-}
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
@@ -108,9 +103,9 @@ export default function AdminDashboard() {
                       <p className="text-gray-400 text-xs">{b.guestEmail}</p>
                     </td>
                     <td className="px-6 py-3 text-gray-700">{b.spaceName ?? "—"}</td>
-                    <td className="px-6 py-3 text-gray-600">{fmtDate(b.checkInDate)}</td>
+                    <td className="px-6 py-3 text-gray-600">{formatDate(b.checkInDate)}</td>
                     <td className="px-6 py-3"><StatusBadge status={b.contractStatus} /></td>
-                    <td className="px-6 py-3 text-gray-400">{fmtDate(b.createdAt)}</td>
+                    <td className="px-6 py-3 text-gray-400">{formatDate(b.createdAt)}</td>
                   </tr>
                 ))}
               </tbody>

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Layout } from "@/components/Layout";
 import { apiGet, apiPost, apiFetch } from "@/lib/api";
+import { formatDateTime } from "@/lib/dateFormat";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -65,10 +66,6 @@ interface TicketDetail {
   messages: Message[];
   created_at: string;
   updated_at: string;
-}
-
-function fmt(d: string, locale?: string): string {
-  try { return new Date(d).toLocaleString(locale); } catch { return d; }
 }
 
 export default function SupportDetailPage() {
@@ -174,7 +171,7 @@ export default function SupportDetailPage() {
             </span>
           </div>
           <h1 className="text-lg font-bold text-foreground">{ticket.subject}</h1>
-          <p className="text-xs text-muted-foreground mt-1">{t("support.submitted", "Submitted")} {fmt(ticket.created_at, i18n.language)}</p>
+          <p className="text-xs text-muted-foreground mt-1">{t("support.submitted", "Submitted")} {formatDateTime(ticket.created_at)}</p>
         </div>
 
         {/* Conversation */}
@@ -198,7 +195,7 @@ export default function SupportDetailPage() {
                       </div>
                     )}
                     <span className="text-xs text-muted-foreground">
-                      {isAdmin ? t("support.sender_admin", "{{appName}} Support") : t("support.sender_you", "You")} · {fmt(msg.created_at, i18n.language)}
+                      {isAdmin ? t("support.sender_admin", "{{appName}} Support") : t("support.sender_you", "You")} · {formatDateTime(msg.created_at)}
                     </span>
                   </div>
                   <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${

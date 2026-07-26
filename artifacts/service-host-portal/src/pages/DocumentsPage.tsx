@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet, apiFetch, ApiError } from "@/lib/api";
+import { formatDate } from "@/lib/dateFormat";
 import {
   FolderOpen, FileText, Image as ImageIcon, Download, Trash2,
   UploadCloud, X, Loader2,
@@ -32,9 +33,6 @@ function fmtSize(bytes: number | null): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}
-function fmtDate(s: string): string {
-  try { return new Date(s).toLocaleDateString(); } catch { return s; }
 }
 
 export default function DocumentsPage() {
@@ -183,7 +181,7 @@ export default function DocumentsPage() {
                     <span className={`px-1.5 py-0.5 rounded font-medium ${typeStyle[d.doc_type] ?? typeStyle.other}`}>{t(`documents.type_${d.doc_type}`, d.doc_type)}</span>
                     <span>{fmtSize(d.file_size)}</span>
                     <span>·</span>
-                    <span>{fmtDate(d.created_at)}</span>
+                    <span>{formatDate(d.created_at)}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">

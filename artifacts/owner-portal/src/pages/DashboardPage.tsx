@@ -13,6 +13,7 @@ import {
   Building2, BookOpen, TrendingUp, ArrowRight, Globe, ExternalLink, Inbox,
   Wallet, PieChart as PieIcon, FileSignature, AlertTriangle, DoorOpen, BarChart3,
 } from "lucide-react";
+import { formatDate } from "@/lib/dateFormat";
 import { InquiryRow, type Inquiry } from "@/pages/InquiriesPage";
 
 interface Property {
@@ -335,7 +336,7 @@ export default function DashboardPage() {
                       <div>
                         <p className="text-sm font-medium text-foreground font-mono">{b.booking_ref ?? `#${b.id}`}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          {t("dashboard.checkin_label")}: {b.check_in_date ? new Date(b.check_in_date).toLocaleDateString() : t("common.tbd")}
+                          {t("dashboard.checkin_label")}: {formatDate(b.check_in_date, t("common.tbd"))}
                         </p>
                       </div>
                       <div className="text-right">

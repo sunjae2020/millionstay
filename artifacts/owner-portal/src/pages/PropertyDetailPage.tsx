@@ -17,6 +17,7 @@ import {
   Save,
   Loader2,
 } from "lucide-react";
+import { formatDate } from "@/lib/dateFormat";
 
 interface Space {
   id: number;
@@ -137,8 +138,6 @@ export default function PropertyDetailPage() {
     }
   }
 
-  const fmtDate = (d: string | null | undefined) =>
-    d ? new Date(d).toLocaleDateString() : "—";
   const fmtMoney = (n: number | null | undefined, currency = "AUD") =>
     n == null
       ? "—"
@@ -312,7 +311,7 @@ export default function PropertyDetailPage() {
                       <KV
                         icon={<Calendar className="w-3 h-3" />}
                         label={t("property_detail.term")}
-                        value={`${fmtDate(c.start_date)} → ${fmtDate(c.end_date)}`}
+                        value={`${formatDate(c.start_date)} → ${formatDate(c.end_date)}`}
                       />
                       <KV
                         icon={<DollarSign className="w-3 h-3" />}
@@ -413,7 +412,7 @@ export default function PropertyDetailPage() {
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">{doc.file_name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {doc.contract_ref} · {fmtDate(doc.uploaded_at)}
+                          {doc.contract_ref} · {formatDate(doc.uploaded_at)}
                         </p>
                       </div>
                     </div>
