@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { initTheme } from "@/lib/theme";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { useModules } from "@/hooks/useModules";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -169,6 +170,10 @@ function ProtectedRouter() {
 }
 
 function Router() {
+  // Hide the Homestay intake routes when the tenant has the module disabled,
+  // so direct-URL access falls through to the catch-all (menus are hidden too,
+  // see Layout/useModules). Defaults to enabled while loading / when unset.
+  const { homestayEnabled } = useModules();
   return (
     <Switch>
       {/* ── Auth (public) ──────────────────────────────── */}
@@ -210,12 +215,16 @@ function Router() {
       <Route path="/account/tasks/new" component={TaskDetail} />
       <Route path="/account/tasks/:id" component={TaskDetail} />
 
-      <Route path="/account/homestay-applications" component={HomestayApplications} />
-      <Route path="/account/homestay-applications/:id" component={HomestayApplicationDetail} />
-      <Route path="/account/homestay-student-requests" component={HomestayStudentRequests} />
-      <Route path="/account/homestay-student-requests/:id" component={HomestayStudentRequestDetail} />
-      <Route path="/account/homestay-placements" component={HomestayPlacements} />
-      <Route path="/account/homestay-placements/:id" component={HomestayPlacementDetail} />
+      {homestayEnabled && (
+        <>
+          <Route path="/account/homestay-applications" component={HomestayApplications} />
+          <Route path="/account/homestay-applications/:id" component={HomestayApplicationDetail} />
+          <Route path="/account/homestay-student-requests" component={HomestayStudentRequests} />
+          <Route path="/account/homestay-student-requests/:id" component={HomestayStudentRequestDetail} />
+          <Route path="/account/homestay-placements" component={HomestayPlacements} />
+          <Route path="/account/homestay-placements/:id" component={HomestayPlacementDetail} />
+        </>
+      )}
 
       {/* ── PROPERTY ──────────────────────────────────── */}
       <Route path="/property/properties" component={PropertyList} />
