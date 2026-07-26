@@ -127,7 +127,7 @@ export default function PortalMyData() {
       const res = await fetch(`${API_BASE}/api/v1/guest/me/data`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error(`Failed (${res.status})`);
+      if (!res.ok) throw new Error(`${t("portal.my_data.load_failed_fallback", "Failed to load your data")} (${res.status})`);
       const json = (await res.json()) as MyDataResponse;
       setData(json);
     } catch (err) {
@@ -150,7 +150,7 @@ export default function PortalMyData() {
       const res = await fetch(`${API_BASE}/api/v1/guest/me/data?format=download`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error(`Download failed (${res.status})`);
+      if (!res.ok) throw new Error(`${t("portal.my_data.download_failed_fallback", "Download failed")} (${res.status})`);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -347,7 +347,7 @@ export default function PortalMyData() {
                           </td>
                           <td className="px-2 py-2">
                             <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                              {b.booking_status}
+                              {t("portal.my_data.st_" + String(b.booking_status).toLowerCase(), b.booking_status)}
                             </span>
                           </td>
                           <td className="px-2 py-2 text-right font-medium">
@@ -383,7 +383,7 @@ export default function PortalMyData() {
                           <td className="px-2 py-2 font-mono text-xs">{inv.invoice_ref}</td>
                           <td className="px-2 py-2">
                             <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                              {inv.status}
+                              {t("portal.my_data.st_" + String(inv.status).toLowerCase(), inv.status)}
                             </span>
                           </td>
                           <td className="px-2 py-2 text-gray-500 text-xs">{inv.due_date ?? "—"}</td>
@@ -439,7 +439,7 @@ export default function PortalMyData() {
                         className="flex items-center justify-between rounded-lg border border-gray-100 p-3 text-sm"
                       >
                         <div>
-                          <p className="font-medium text-gray-800 capitalize">{c.channel}</p>
+                          <p className="font-medium text-gray-800 capitalize">{t("portal.my_data.ch_" + String(c.channel).toLowerCase(), c.channel)}</p>
                           <p className="text-xs text-gray-500">
                             {t("portal.my_data.source_label", "Source:")} {c.source ?? "—"} · {t("portal.my_data.last_update", "Last update")} {formatDateTime(c.opted_out_at ?? c.opted_in_at)}
                           </p>

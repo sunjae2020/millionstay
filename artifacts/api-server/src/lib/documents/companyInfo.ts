@@ -51,6 +51,7 @@ export interface StoredCompanyInfo {
   country?: string;
   timezone?: string;
   logo_url?: string;
+  brand_color?: string;
   // Operator/legal fields shown in the public landing footer + legal pages
   // (KR business-registration info, legally displayed publicly on a commerce site).
   ceo?: string;
@@ -95,6 +96,7 @@ export async function resolveCompanyInfo(): Promise<CompanyInfo> {
     website: s.website?.trim() || defaults.website,
     address: address || defaults.address,
     logoUrl: s.logo_url?.trim() || defaults.logoUrl,
+    brandColor: s.brand_color?.trim() || undefined,
   };
 }
 

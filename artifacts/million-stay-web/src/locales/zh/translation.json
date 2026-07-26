@@ -371,7 +371,19 @@
       "reply_placeholder": "输入您的回复…",
       "photo": "照片",
       "send": "发送",
-      "attachment_n": "附件 {{n}}"
+      "attachment_n": "附件 {{n}}",
+      "col_ref": "参考编号",
+      "col_subject": "主题",
+      "col_category": "类别",
+      "col_status": "状态",
+      "col_updated": "更新时间",
+      "bst_active": "进行中",
+      "bst_confirmed": "已确认",
+      "bst_checkedout": "已完成",
+      "bst_completed": "已完成",
+      "bst_cancelled": "已取消",
+      "bst_pendingpayment": "待付款",
+      "bst_pendingapproval": "待批准"
     },
     "profile": {
       "title": "我的资料",
@@ -558,7 +570,7 @@
       "contract_status": "状态",
       "contract_start_date": "开始日期",
       "contract_end_date": "结束日期",
-      "contract_weekly_rate": "周租金",
+      "contract_weekly_rate": "月租金",
       "contract_total_rent": "总租金",
       "contract_bond": "押金",
       "contract_advance": "预付款",
@@ -589,7 +601,21 @@
       "uploaded": "{{date}} 上传",
       "invoices_empty": "暂无账单",
       "invoice_due": "到期日 {{date}}",
-      "invoice_paid": "{{date}} 已支付"
+      "invoice_paid": "{{date}} 已支付",
+      "st_active": "进行中",
+      "st_confirmed": "已确认",
+      "st_pendingpayment": "待付款",
+      "st_pendingapproval": "待审批",
+      "st_cancelled": "已取消",
+      "st_completed": "已完成",
+      "st_checkedout": "已退房",
+      "st_draft": "草稿",
+      "st_signed": "已签署",
+      "st_sent": "已发送",
+      "st_paid": "已支付",
+      "st_overdue": "逾期",
+      "st_terminated": "已终止",
+      "st_expired": "已过期"
     },
     "cs_new": {
       "title": "新问询",
@@ -723,7 +749,23 @@
       "toast_download_started_title": "下载已开始",
       "toast_download_started_desc": "您的个人数据文件已保存。",
       "download_failed_fallback": "下载失败",
-      "toast_download_failed_title": "下载失败"
+      "toast_download_failed_title": "下载失败",
+      "st_active": "进行中",
+      "st_confirmed": "已确认",
+      "st_checkedout": "已完成",
+      "st_completed": "已完成",
+      "st_cancelled": "已取消",
+      "st_pendingpayment": "待付款",
+      "st_pendingapproval": "待审批",
+      "st_draft": "草稿",
+      "st_sent": "已发送",
+      "st_paid": "已支付",
+      "st_overdue": "逾期",
+      "st_void": "作废",
+      "ch_email": "电子邮件",
+      "ch_sms": "短信",
+      "ch_push": "推送",
+      "ch_marketing": "营销"
     },
     "payment": {
       "bank_label": "银行",
@@ -815,7 +857,8 @@
       "acc_label": "账号：",
       "account_name_label": "账户名：",
       "ref_label": "参考号：",
-      "thank_you_prefix": "感谢您选择"
+      "thank_you_prefix": "感谢您选择",
+      "abn_label": "营业执照号"
     }
   },
   "stay_plan": {

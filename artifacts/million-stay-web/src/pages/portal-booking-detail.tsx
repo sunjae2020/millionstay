@@ -16,6 +16,7 @@ import {
 import { ConditionReports } from "@/components/condition-reports";
 import { formatDate } from "@/lib/dateFormat";
 import { getApiBase } from "@/lib/api-base";
+import { formatCurrencyAmount } from "@/contexts/DisplayCurrencyContext";
 
 type BookingInvoice = {
   id: number;
@@ -149,7 +150,7 @@ export default function PortalBookingDetail() {
     <PortalLayout active="/portal/bookings">
       <div className="bg-gray-50 flex-1 flex flex-col">
 
-      <div className="bg-gradient-to-r from-[#c05010] via-[#e07828] to-[#c86820] py-8 px-4">
+      <div className="bg-gradient-to-r from-primary to-primary/80 py-8 px-4">
         <div className="max-w-4xl mx-auto">
           <Link href="/portal/bookings">
             <button className="flex items-center gap-1 text-white/70 hover:text-white text-sm mb-2 transition-colors">
@@ -180,7 +181,7 @@ export default function PortalBookingDetail() {
               <div className="space-y-1">
                 <div className="flex items-center gap-3">
                   <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-bold ${STATUS_COLORS[b.contract_status as string] ?? "bg-gray-100 text-gray-700"}`}>
-                    {b.contract_status as string}
+                    {t("portal.booking_detail.st_" + String(b.contract_status).toLowerCase(), b.contract_status as string)}
                   </span>
                 </div>
                 <p className="text-sm text-gray-500">{t("portal.booking_detail.ref", "Ref:")} <span className="font-mono font-semibold text-gray-700">{b.booking_ref as string}</span></p>
@@ -229,7 +230,7 @@ export default function PortalBookingDetail() {
                       { icon: Calendar, label: t("portal.booking_detail.field_check_in", "Check-in"), value: formatDate(b.check_in_date as string) },
                       { icon: Calendar, label: t("portal.booking_detail.field_check_out", "Check-out"), value: formatDate(b.check_out_date as string) },
                       { icon: Users, label: t("portal.booking_detail.field_guests", "Guests"), value: String(b.num_guests) },
-                      { icon: CreditCard, label: t("portal.booking_detail.field_total_amount", "Total Amount"), value: b.total_rent ? `$${Number(b.total_rent).toLocaleString()} AUD` : "—" },
+                      { icon: CreditCard, label: t("portal.booking_detail.field_total_amount", "Total Amount"), value: b.total_rent ? formatCurrencyAmount(Number(b.total_rent), (b.currency as string) ?? "KRW") : "—" },
                     ].map(({ icon: Icon, label, value }) => (
                       <div key={label} className="flex items-start gap-3">
                         <Icon className="h-4 w-4 text-primary mt-0.5 shrink-0" />
@@ -269,19 +270,19 @@ export default function PortalBookingDetail() {
                           <ScrollText className="h-4 w-4 text-primary" /> {t("portal.booking_detail.contract_details", "Contract Details")}
                         </h3>
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${CONTRACT_STATUS_COLORS[contract.status] ?? "bg-gray-100 text-gray-600"}`}>
-                          {contract.status}
+                          {t("portal.booking_detail.st_" + String(contract.status).toLowerCase(), contract.status)}
                         </span>
                       </div>
                       <div className="grid sm:grid-cols-2 gap-4 text-sm">
                         {[
                           { label: t("portal.booking_detail.contract_ref", "Contract Ref"), value: contract.contract_ref },
-                          { label: t("portal.booking_detail.contract_status", "Status"), value: contract.status },
+                          { label: t("portal.booking_detail.contract_status", "Status"), value: t("portal.booking_detail.st_" + String(contract.status).toLowerCase(), contract.status) },
                           { label: t("portal.booking_detail.contract_start_date", "Start Date"), value: formatDate(contract.start_date) },
                           { label: t("portal.booking_detail.contract_end_date", "End Date"), value: formatDate(contract.end_date) },
-                          { label: t("portal.booking_detail.contract_weekly_rate", "Weekly Rate"), value: contract.weekly_rate ? `$${Number(contract.weekly_rate).toLocaleString()} ${contract.currency}` : "—" },
-                          { label: t("portal.booking_detail.contract_total_rent", "Total Rent"), value: contract.total_rent ? `$${Number(contract.total_rent).toLocaleString()} ${contract.currency}` : "—" },
-                          { label: t("portal.booking_detail.contract_bond", "Bond"), value: contract.bond_amount ? `$${Number(contract.bond_amount).toLocaleString()} ${contract.currency}` : "—" },
-                          { label: t("portal.booking_detail.contract_advance", "Advance"), value: contract.advance_amount ? `$${Number(contract.advance_amount).toLocaleString()} ${contract.currency}` : "—" },
+                          { label: t("portal.booking_detail.contract_weekly_rate", "Monthly Rent"), value: contract.weekly_rate ? formatCurrencyAmount(Number(contract.weekly_rate), contract.currency) : "—" },
+                          { label: t("portal.booking_detail.contract_total_rent", "Total Rent"), value: contract.total_rent ? formatCurrencyAmount(Number(contract.total_rent), contract.currency) : "—" },
+                          { label: t("portal.booking_detail.contract_bond", "Bond"), value: contract.bond_amount ? formatCurrencyAmount(Number(contract.bond_amount), contract.currency) : "—" },
+                          { label: t("portal.booking_detail.contract_advance", "Advance"), value: contract.advance_amount ? formatCurrencyAmount(Number(contract.advance_amount), contract.currency) : "—" },
                           { label: t("portal.booking_detail.contract_signed_date", "Signed Date"), value: contract.signed_at ? formatDate(contract.signed_at) : t("portal.booking_detail.pending", "Pending") },
                           { label: t("portal.booking_detail.contract_effective_date", "Effective Date"), value: formatDate(contract.effective_date) },
                         ].map(({ label, value }) => (
@@ -329,7 +330,7 @@ export default function PortalBookingDetail() {
                               {paymentSchedule.map((s) => (
                                 <tr key={s.id} className="border-b last:border-0 hover:bg-gray-50">
                                   <td className="px-4 py-3 font-medium text-gray-800">{s.schedule_type}</td>
-                                  <td className="px-4 py-3 font-mono text-gray-900">${Number(s.amount).toFixed(2)} {s.currency}</td>
+                                  <td className="px-4 py-3 font-mono text-gray-900">{formatCurrencyAmount(Number(s.amount), s.currency)}</td>
                                   <td className="px-4 py-3 text-gray-500 capitalize">{s.frequency}</td>
                                   <td className="px-4 py-3 text-gray-500">{formatDate(s.start_date)}</td>
                                   <td className="px-4 py-3 text-gray-500">{s.end_date ? formatDate(s.end_date) : "—"}</td>
@@ -374,8 +375,8 @@ export default function PortalBookingDetail() {
                                   <td className="px-4 py-3 font-medium text-gray-800">{s.service_name}</td>
                                   <td className="px-4 py-3 text-gray-500 capitalize">{s.service_type ?? "—"}</td>
                                   <td className="px-4 py-3 text-gray-500">{s.quantity ?? 1}</td>
-                                  <td className="px-4 py-3 text-gray-500">{s.unit_price ? `$${Number(s.unit_price).toFixed(2)}` : "—"}</td>
-                                  <td className="px-4 py-3 font-medium text-gray-800">{s.total_price ? `$${Number(s.total_price).toFixed(2)}` : "—"}</td>
+                                  <td className="px-4 py-3 text-gray-500">{s.unit_price ? formatCurrencyAmount(Number(s.unit_price), (b.currency as string) ?? "KRW") : "—"}</td>
+                                  <td className="px-4 py-3 font-medium text-gray-800">{s.total_price ? formatCurrencyAmount(Number(s.total_price), (b.currency as string) ?? "KRW") : "—"}</td>
                                   <td className="px-4 py-3 text-gray-500 capitalize">{s.billing_trigger ?? s.frequency ?? "—"}</td>
                                 </tr>
                               ))}
@@ -467,8 +468,8 @@ export default function PortalBookingDetail() {
                             inv.status === "Paid" ? "bg-green-100 text-green-700" :
                             inv.status === "Overdue" ? "bg-red-100 text-red-700" :
                             "bg-amber-100 text-amber-700"
-                          }`}>{inv.status}</span>
-                          <p className="font-bold text-gray-900 text-sm">${Number(inv.amount).toLocaleString()}</p>
+                          }`}>{t("portal.booking_detail.st_" + String(inv.status).toLowerCase(), inv.status)}</span>
+                          <p className="font-bold text-gray-900 text-sm">{formatCurrencyAmount(Number(inv.amount), inv.currency)}</p>
                           {inv.status === "Paid" ? (
                             <Button
                               size="sm"

@@ -277,7 +277,7 @@ export default function PortalReceipt() {
             <div className="px-8 py-4 flex items-center justify-between border-t border-gray-100">
               <div>
                 <p className="text-xs font-bold text-gray-700">{COMPANY.legalName}</p>
-                <p className="text-[10px] text-gray-400">ABN: {COMPANY.abn} &nbsp;|&nbsp; {supportEmail}</p>
+                <p className="text-[10px] text-gray-400">{t("portal.receipt.abn_label", "ABN")}: {COMPANY.abn} &nbsp;|&nbsp; {supportEmail}</p>
               </div>
               <div className="text-right">
                 <p className="text-[10px] text-gray-400">{t("portal.receipt.thank_you_prefix", "Thank you for choosing")}</p>

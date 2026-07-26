@@ -412,7 +412,19 @@
       "reply_placeholder": "Type your reply…",
       "photo": "Photo",
       "send": "Send",
-      "attachment_n": "attachment {{n}}"
+      "attachment_n": "attachment {{n}}",
+      "col_ref": "Ref",
+      "col_subject": "Subject",
+      "col_category": "Category",
+      "col_status": "Status",
+      "col_updated": "Updated",
+      "bst_active": "Active",
+      "bst_confirmed": "Confirmed",
+      "bst_checkedout": "Checked Out",
+      "bst_completed": "Completed",
+      "bst_cancelled": "Cancelled",
+      "bst_pendingpayment": "Pending Payment",
+      "bst_pendingapproval": "Pending Approval"
     },
     "profile": {
       "title": "My Profile",
@@ -599,7 +611,7 @@
       "contract_status": "Status",
       "contract_start_date": "Start Date",
       "contract_end_date": "End Date",
-      "contract_weekly_rate": "Weekly Rate",
+      "contract_weekly_rate": "Monthly Rent",
       "contract_total_rent": "Total Rent",
       "contract_bond": "Bond",
       "contract_advance": "Advance",
@@ -630,7 +642,21 @@
       "uploaded": "Uploaded {{date}}",
       "invoices_empty": "No invoices yet",
       "invoice_due": "Due {{date}}",
-      "invoice_paid": "Paid {{date}}"
+      "invoice_paid": "Paid {{date}}",
+      "st_active": "Active",
+      "st_confirmed": "Confirmed",
+      "st_pendingpayment": "Pending Payment",
+      "st_pendingapproval": "Pending Approval",
+      "st_cancelled": "Cancelled",
+      "st_completed": "Completed",
+      "st_checkedout": "Checked Out",
+      "st_draft": "Draft",
+      "st_signed": "Signed",
+      "st_sent": "Sent",
+      "st_paid": "Paid",
+      "st_overdue": "Overdue",
+      "st_terminated": "Terminated",
+      "st_expired": "Expired"
     },
     "cs_new": {
       "title": "New Inquiry",
@@ -764,7 +790,23 @@
       "toast_download_started_title": "Download started",
       "toast_download_started_desc": "Your personal data file has been saved.",
       "download_failed_fallback": "Download failed",
-      "toast_download_failed_title": "Download failed"
+      "toast_download_failed_title": "Download failed",
+      "st_active": "Active",
+      "st_confirmed": "Confirmed",
+      "st_checkedout": "Checked out",
+      "st_completed": "Completed",
+      "st_cancelled": "Cancelled",
+      "st_pendingpayment": "Pending payment",
+      "st_pendingapproval": "Pending approval",
+      "st_draft": "Draft",
+      "st_sent": "Sent",
+      "st_paid": "Paid",
+      "st_overdue": "Overdue",
+      "st_void": "Void",
+      "ch_email": "Email",
+      "ch_sms": "SMS",
+      "ch_push": "Push",
+      "ch_marketing": "Marketing"
     },
     "payment": {
       "bank_label": "Bank",
@@ -856,7 +898,8 @@
       "acc_label": "Acc:",
       "account_name_label": "Account Name:",
       "ref_label": "Ref:",
-      "thank_you_prefix": "Thank you for choosing"
+      "thank_you_prefix": "Thank you for choosing",
+      "abn_label": "ABN"
     }
   },
   "stay_plan": {

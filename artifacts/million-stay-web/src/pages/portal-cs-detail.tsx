@@ -239,7 +239,7 @@ export default function PortalCsDetail() {
             <div className="mt-3 pt-3 border-t border-gray-50">
               <p className="text-xs text-gray-500 flex items-center gap-1.5 flex-wrap">
                 <Calendar className="h-3.5 w-3.5 text-primary" />
-                <span>{t("portal.cs.related_booking", "Related booking:")} <strong>{ticket.booking.booking_ref}</strong> ({ticket.booking.booking_status})</span>
+                <span>{t("portal.cs.related_booking", "Related booking:")} <strong>{ticket.booking.booking_ref}</strong> ({t("portal.cs.bst_" + String(ticket.booking.booking_status).toLowerCase(), ticket.booking.booking_status)})</span>
                 {ticket.booking.check_in_date && (
                   <span className="text-gray-400">· {formatDate(ticket.booking.check_in_date)} → {ticket.booking.check_out_date ? formatDate(ticket.booking.check_out_date) : "—"}</span>
                 )}

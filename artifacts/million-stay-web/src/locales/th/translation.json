@@ -495,7 +495,19 @@
       "reply_placeholder": "พิมพ์คำตอบของคุณ…",
       "photo": "รูปภาพ",
       "send": "ส่ง",
-      "attachment_n": "ไฟล์แนบ {{n}}"
+      "attachment_n": "ไฟล์แนบ {{n}}",
+      "col_ref": "อ้างอิง",
+      "col_subject": "หัวข้อ",
+      "col_category": "หมวดหมู่",
+      "col_status": "สถานะ",
+      "col_updated": "อัปเดต",
+      "bst_active": "กำลังดำเนินการ",
+      "bst_confirmed": "ยืนยันแล้ว",
+      "bst_checkedout": "เสร็จสิ้น",
+      "bst_completed": "เสร็จสิ้น",
+      "bst_cancelled": "ยกเลิก",
+      "bst_pendingpayment": "รอการชำระเงิน",
+      "bst_pendingapproval": "รอการอนุมัติ"
     },
     "profile": {
       "title": "โปรไฟล์ของฉัน",
@@ -682,7 +694,7 @@
       "contract_status": "สถานะ",
       "contract_start_date": "วันที่เริ่มต้น",
       "contract_end_date": "วันที่สิ้นสุด",
-      "contract_weekly_rate": "ค่าเช่ารายสัปดาห์",
+      "contract_weekly_rate": "ค่าเช่ารายเดือน",
       "contract_total_rent": "ค่าเช่ารวม",
       "contract_bond": "เงินประกัน",
       "contract_advance": "เงินล่วงหน้า",
@@ -713,7 +725,21 @@
       "uploaded": "อัปโหลดเมื่อ {{date}}",
       "invoices_empty": "ยังไม่มีใบแจ้งหนี้",
       "invoice_due": "ครบกำหนด {{date}}",
-      "invoice_paid": "ชำระเมื่อ {{date}}"
+      "invoice_paid": "ชำระเมื่อ {{date}}",
+      "st_active": "กำลังดำเนินการ",
+      "st_confirmed": "ยืนยันแล้ว",
+      "st_pendingpayment": "รอชำระเงิน",
+      "st_pendingapproval": "รออนุมัติ",
+      "st_cancelled": "ยกเลิกแล้ว",
+      "st_completed": "เสร็จสิ้น",
+      "st_checkedout": "เช็คเอาท์แล้ว",
+      "st_draft": "ฉบับร่าง",
+      "st_signed": "ลงนามแล้ว",
+      "st_sent": "ส่งแล้ว",
+      "st_paid": "ชำระแล้ว",
+      "st_overdue": "เกินกำหนด",
+      "st_terminated": "สิ้นสุดสัญญา",
+      "st_expired": "หมดอายุ"
     },
     "cs_new": {
       "title": "สอบถามใหม่",
@@ -847,7 +873,23 @@
       "toast_download_started_title": "เริ่มดาวน์โหลดแล้ว",
       "toast_download_started_desc": "บันทึกไฟล์ข้อมูลส่วนบุคคลของคุณแล้ว",
       "download_failed_fallback": "ดาวน์โหลดไม่สำเร็จ",
-      "toast_download_failed_title": "ดาวน์โหลดไม่สำเร็จ"
+      "toast_download_failed_title": "ดาวน์โหลดไม่สำเร็จ",
+      "st_active": "กำลังดำเนินการ",
+      "st_confirmed": "ยืนยันแล้ว",
+      "st_checkedout": "เสร็จสิ้น",
+      "st_completed": "เสร็จสิ้น",
+      "st_cancelled": "ยกเลิก",
+      "st_pendingpayment": "รอชำระเงิน",
+      "st_pendingapproval": "รออนุมัติ",
+      "st_draft": "ฉบับร่าง",
+      "st_sent": "ส่งแล้ว",
+      "st_paid": "ชำระแล้ว",
+      "st_overdue": "เกินกำหนด",
+      "st_void": "เป็นโมฆะ",
+      "ch_email": "อีเมล",
+      "ch_sms": "SMS",
+      "ch_push": "การแจ้งเตือนแบบพุช",
+      "ch_marketing": "การตลาด"
     },
     "payment": {
       "bank_label": "ธนาคาร",
@@ -939,7 +981,8 @@
       "acc_label": "บัญชี:",
       "account_name_label": "ชื่อบัญชี:",
       "ref_label": "อ้างอิง:",
-      "thank_you_prefix": "ขอบคุณที่เลือกใช้"
+      "thank_you_prefix": "ขอบคุณที่เลือกใช้",
+      "abn_label": "เลขทะเบียนธุรกิจ"
     }
   },
   "auth": {
