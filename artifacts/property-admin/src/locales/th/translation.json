@@ -4459,5 +4459,33 @@
   },
   "settings_email_templates": {
     "page_subtitle": "ปรับแต่งการแจ้งเตือนอีเมลอัตโนมัติ"
+  },
+  "coa": {
+    "subtitle": "ผังบัญชี (บัญชีแยกประเภท GL)",
+    "code": "รหัส",
+    "type": "ประเภท",
+    "parent": "บัญชีหลัก",
+    "parent_ph": "รหัสบัญชีหลัก (ไม่บังคับ)",
+    "type_asset": "สินทรัพย์",
+    "type_liability": "หนี้สิน",
+    "type_equity": "ส่วนของเจ้าของ",
+    "type_revenue": "รายได้",
+    "type_expense": "ค่าใช้จ่าย",
+    "new_account": "เพิ่มบัญชี",
+    "load_standard": "โหลดผังบัญชีมาตรฐาน",
+    "empty": "ยังไม่มีบัญชี",
+    "search_ph": "ค้นหารหัสหรือชื่อ",
+    "name_ph": "ชื่อบัญชี",
+    "accounts_count": "บัญชี",
+    "edit_title": "แก้ไขบัญชี",
+    "new_title": "เพิ่มบัญชี",
+    "toast_saved": "บันทึกบัญชีแล้ว",
+    "toast_save_failed": "บันทึกบัญชีไม่สำเร็จ",
+    "toast_deleted": "ลบบัญชีแล้ว",
+    "toast_delete_failed": "ลบบัญชีไม่สำเร็จ",
+    "delete_title": "ลบบัญชีนี้หรือไม่?",
+    "delete_desc": "บัญชีจะถูกย้ายไปที่คลังเก็บ คุณสามารถกู้คืนได้ภายหลัง",
+    "seeded_title": "โหลดผังบัญชีมาตรฐานแล้ว",
+    "seeded_desc": "เพิ่ม {{count}} บัญชี"
   }
 }

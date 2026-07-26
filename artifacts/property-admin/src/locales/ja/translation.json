@@ -4459,5 +4459,33 @@
   },
   "settings_email_templates": {
     "page_subtitle": "自動メール通知をカスタマイズ"
+  },
+  "coa": {
+    "subtitle": "元帳の勘定科目（GL勘定）マスター",
+    "code": "コード",
+    "type": "区分",
+    "parent": "親勘定",
+    "parent_ph": "親勘定コード（任意）",
+    "type_asset": "資産",
+    "type_liability": "負債",
+    "type_equity": "資本",
+    "type_revenue": "収益",
+    "type_expense": "費用",
+    "new_account": "勘定科目を追加",
+    "load_standard": "標準勘定科目を読み込む",
+    "empty": "登録された勘定科目がありません",
+    "search_ph": "コードまたは名称で検索",
+    "name_ph": "勘定科目名",
+    "accounts_count": "件",
+    "edit_title": "勘定科目の編集",
+    "new_title": "勘定科目の追加",
+    "toast_saved": "勘定科目を保存しました",
+    "toast_save_failed": "勘定科目の保存に失敗しました",
+    "toast_deleted": "勘定科目を削除しました",
+    "toast_delete_failed": "勘定科目の削除に失敗しました",
+    "delete_title": "勘定科目を削除しますか？",
+    "delete_desc": "アーカイブに移動します。後で復元できます。",
+    "seeded_title": "標準勘定科目を読み込みました",
+    "seeded_desc": "{{count}}件の勘定科目を追加しました"
   }
 }

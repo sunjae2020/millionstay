@@ -15,7 +15,8 @@
       "forAgent": "For Agent",
       "forHomestayHost": "Become a Host"
     },
-    "partnerLogin": "Partner Login"
+    "partnerLogin": "Partner Login",
+    "tenantLogin": "Tenant Login"
   },
   "home": {
     "hero_tagline": "Million Homestay Australia",

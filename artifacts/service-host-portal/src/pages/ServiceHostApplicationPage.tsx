@@ -86,9 +86,9 @@ export default function ServiceHostApplicationPage() {
             <span className="block font-display font-extrabold tracking-tight text-primary text-xl whitespace-nowrap mx-auto mb-6">{APP_NAME}</span>
           ) : (
             <img
-              src={`${import.meta.env.BASE_URL}logo-horizontal.png`}
+              src={import.meta.env.VITE_LOGO_URL || `${import.meta.env.BASE_URL}logo-horizontal.png`}
               alt={APP_NAME}
-              className="h-9 w-auto mx-auto mb-6"
+              className={`mx-auto mb-6 w-auto ${import.meta.env.VITE_LOGO_URL ? "h-12" : "h-9"}`}
             />
           )}
           <h1 className="text-3xl font-bold text-slate-900">{t("apply.title")}</h1>

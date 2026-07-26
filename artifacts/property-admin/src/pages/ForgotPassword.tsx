@@ -9,6 +9,9 @@ import logoSrc from "/millionstay-logo.png";
 import { APP_NAME } from "@/lib/appName";
 
 const BRAND = "hsl(var(--primary))";
+// Honor the tenant's configured logo (VITE_LOGO_URL), falling back to the bundled default.
+const LOGO_URL = import.meta.env.VITE_LOGO_URL || logoSrc;
+const HAS_TENANT_LOGO = Boolean(import.meta.env.VITE_LOGO_URL);
 
 export default function ForgotPasswordPage() {
   const { t } = useTranslation();
@@ -55,7 +58,7 @@ export default function ForgotPasswordPage() {
         <div className="relative z-10">
           {import.meta.env.VITE_LOGO_MODE === "text"
             ? <span className="font-display font-extrabold tracking-tight text-white text-xl whitespace-nowrap">{APP_NAME}</span>
-            : <img src={logoSrc} alt={APP_NAME} className="h-9 w-auto" />}
+            : <img src={LOGO_URL} alt={APP_NAME} className={HAS_TENANT_LOGO ? "h-[4.5rem] w-auto" : "h-9 w-auto"} style={HAS_TENANT_LOGO ? { filter: "brightness(0) invert(1)" } : undefined} />}
           <p className="text-white/30 text-[10px] tracking-[0.2em] uppercase mt-2 ml-0.5">{t("forgot_password.admin_portal")}</p>
         </div>
 
@@ -84,7 +87,7 @@ export default function ForgotPasswordPage() {
           <div className="lg:hidden flex justify-center mb-8">
             {import.meta.env.VITE_LOGO_MODE === "text"
               ? <span className="font-display font-extrabold tracking-tight text-primary text-xl whitespace-nowrap">{APP_NAME}</span>
-              : <img src={logoSrc} alt={APP_NAME} className="h-8 w-auto" />}
+              : <img src={LOGO_URL} alt={APP_NAME} className={HAS_TENANT_LOGO ? "h-16 w-auto" : "h-8 w-auto"} />}
           </div>
 
           {submitted ? (

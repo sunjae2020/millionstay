@@ -4459,5 +4459,33 @@
   },
   "settings_email_templates": {
     "page_subtitle": "Customise automated email notifications"
+  },
+  "coa": {
+    "subtitle": "Chart of accounts (GL account master) behind the ledger",
+    "code": "Code",
+    "type": "Type",
+    "parent": "Parent",
+    "parent_ph": "Parent code (optional)",
+    "type_asset": "Asset",
+    "type_liability": "Liability",
+    "type_equity": "Equity",
+    "type_revenue": "Revenue",
+    "type_expense": "Expense",
+    "new_account": "New Account",
+    "load_standard": "Load Standard COA",
+    "empty": "No accounts yet",
+    "search_ph": "Search code or name",
+    "name_ph": "Account name",
+    "accounts_count": "accounts",
+    "edit_title": "Edit Account",
+    "new_title": "New Account",
+    "toast_saved": "Account saved",
+    "toast_save_failed": "Failed to save account",
+    "toast_deleted": "Account deleted",
+    "toast_delete_failed": "Failed to delete account",
+    "delete_title": "Delete account?",
+    "delete_desc": "This account will be moved to the archive. You can restore it later.",
+    "seeded_title": "Standard COA loaded",
+    "seeded_desc": "{{count}} accounts added"
   }
 }

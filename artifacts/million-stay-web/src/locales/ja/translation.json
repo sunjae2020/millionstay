@@ -22,7 +22,8 @@
       "forAgent": "エージェントの方へ",
       "forHomestayHost": "ホストになる"
     },
-    "partnerLogin": "パートナーログイン"
+    "partnerLogin": "パートナーログイン",
+    "tenantLogin": "入居者ログイン"
   },
   "home": {
     "hero_title": "メルボルンで、あなたの新しい住まいを",

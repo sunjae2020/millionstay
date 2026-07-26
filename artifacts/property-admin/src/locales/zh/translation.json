@@ -4459,5 +4459,33 @@
   },
   "settings_email_templates": {
     "page_subtitle": "自定义自动电子邮件通知"
+  },
+  "coa": {
+    "subtitle": "总账会计科目（GL 科目）主数据",
+    "code": "编码",
+    "type": "类型",
+    "parent": "上级科目",
+    "parent_ph": "上级科目编码（可选）",
+    "type_asset": "资产",
+    "type_liability": "负债",
+    "type_equity": "权益",
+    "type_revenue": "收入",
+    "type_expense": "费用",
+    "new_account": "新增科目",
+    "load_standard": "载入标准科目表",
+    "empty": "暂无科目",
+    "search_ph": "搜索编码或名称",
+    "name_ph": "科目名称",
+    "accounts_count": "个科目",
+    "edit_title": "编辑科目",
+    "new_title": "新增科目",
+    "toast_saved": "科目已保存",
+    "toast_save_failed": "科目保存失败",
+    "toast_deleted": "科目已删除",
+    "toast_delete_failed": "科目删除失败",
+    "delete_title": "删除该科目？",
+    "delete_desc": "该科目将移至归档，稍后可恢复。",
+    "seeded_title": "已载入标准科目表",
+    "seeded_desc": "已新增 {{count}} 个科目"
   }
 }
