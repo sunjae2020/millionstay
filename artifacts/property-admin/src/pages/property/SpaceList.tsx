@@ -234,7 +234,7 @@ export default function SpaceList() {
                 {[
                   ["name", "space.col_name"],
                   ["owner_name", "space.col_owner"],
-                  ["exclusive_area_m2", "space.label_exclusive_area"],
+                  ["exclusive_area_m2", "space.label_area"],
                   ["status", "space.col_status"],
                   ["policy_name", "space.col_policy"],
                   ["parent_space_name", "space.col_parent"],
