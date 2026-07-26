@@ -134,7 +134,7 @@ export default function ServiceHostDetail() {
         </div>
 
         <div className="rounded-lg border bg-white p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">MAIN</h3>
+          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">{t("service_host.section_main")}</h3>
           <div>
             <Label>{t("service_host.label_account")}</Label>
             <Controller
@@ -143,7 +143,7 @@ export default function ServiceHostDetail() {
               render={({ field }) => (
                 <LookupSelect
                   lookupUrl="/api/v1/lookup/accounts"
-                  placeholder="Search accounts..."
+                  placeholder={t("service_host.search_account_placeholder")}
                   value={field.value ?? null}
                   onChange={field.onChange}
                   displayValue={(host as any)?.account_name}
@@ -159,7 +159,7 @@ export default function ServiceHostDetail() {
               render={({ field }) => (
                 <LookupSelect
                   lookupUrl="/api/v1/lookup/products"
-                  placeholder="Search contract products..."
+                  placeholder={t("service_host.search_service_placeholder")}
                   value={field.value ?? null}
                   onChange={field.onChange}
                   displayValue={(host as any)?.contract_product_name}
@@ -188,7 +188,7 @@ export default function ServiceHostDetail() {
         </div>
 
         <div className="rounded-lg border bg-white p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">OPTIONS</h3>
+          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">{t("service_host.section_options")}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <Label>{t("service_host.label_in_call")}</Label>
@@ -215,11 +215,11 @@ export default function ServiceHostDetail() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <Label>Business Start Hour (0-23)</Label>
+              <Label>{t("service_host.label_business_start")}</Label>
               <Input type="number" min={0} max={23} {...register("business_start_hour", { valueAsNumber: true })} className="mt-1" />
             </div>
             <div>
-              <Label>Business End Hour (0-23)</Label>
+              <Label>{t("service_host.label_business_end")}</Label>
               <Input type="number" min={0} max={23} {...register("business_end_hour", { valueAsNumber: true })} className="mt-1" />
             </div>
           </div>
@@ -227,7 +227,7 @@ export default function ServiceHostDetail() {
 
         <div className="rounded-lg border bg-white p-6 space-y-4">
           <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">{t("service_host.label_notes")}</h3>
-          <Textarea {...register("description")} rows={4} placeholder="Enter description..." />
+          <Textarea {...register("description")} rows={4} placeholder={t("common.notes_placeholder")} />
         </div>
 
         <div className="rounded-lg border bg-white p-6 space-y-3">

@@ -306,7 +306,29 @@
     "expired": "만료됨",
     "disabled": "비활성화",
     "clone": "복제",
-    "cloning": "복제 중…"
+    "cloning": "복제 중…",
+    "add_service": "서비스 추가",
+    "all_contract_products": "전체 계약 상품",
+    "archive": "보관",
+    "archived": "보관됨",
+    "cancelled": "취소됨",
+    "created": "생성됨",
+    "creating": "생성 중…",
+    "delete_forever": "영구 삭제",
+    "deleted": "삭제됨",
+    "error": "오류",
+    "notes_placeholder": "메모 입력…",
+    "optional_blank_all": "선택사항 — 비워두면 전체",
+    "pause": "일시중지",
+    "pending": "대기 중",
+    "rejected": "거절됨",
+    "restore": "복원",
+    "resume": "재개",
+    "select_account": "계정 선택",
+    "source": "출처",
+    "suspended": "정지됨",
+    "title": "제목",
+    "updated": "업데이트됨"
   },
   "lang": {
     "label": "언어",
@@ -846,7 +868,8 @@
     "label_ack_due": "확인 기한",
     "label_acknowledged": "확인됨",
     "not_dispatched": "파트너에 미배정. 파트너 전문분야와 일치하는 카테고리를 설정하고 배정하세요.",
-    "dispatch_failed": "배정 실패 — 일치하는 파트너 없음"
+    "dispatch_failed": "배정 실패 — 일치하는 파트너 없음",
+    "completed_work_orders": "완료된 작업 지시서"
   },
   "csticket": {
     "search_placeholder": "티켓 검색...",
@@ -915,7 +938,10 @@
     "requester_service_host": "서비스 호스트",
     "create_work_order": "작업지시 생성",
     "work_order_linked": "작업지시 생성됨",
-    "dispatch_to_partner": "생성 & 배정"
+    "dispatch_to_partner": "생성 & 배정",
+    "all_types": "전체 유형",
+    "col_requester": "요청자",
+    "col_type": "유형"
   },
   "property": {
     "new": "새 매물",
@@ -948,7 +974,27 @@
     "tab_spaces": "공간",
     "tab_photos": "사진",
     "tab_documents": "서류",
-    "tab_translations": "번역"
+    "tab_translations": "번역",
+    "btn_autodetect": "자동 감지",
+    "btn_detecting": "감지 중…",
+    "col_address": "주소",
+    "col_owner": "소유주",
+    "col_space_booking": "예약",
+    "col_space_name": "공간 이름",
+    "col_space_status": "상태",
+    "col_space_type": "유형",
+    "label_address2": "상세 주소",
+    "label_approval_status": "승인 상태",
+    "label_coords": "좌표",
+    "no_spaces": "공간이 없습니다",
+    "placeholder_address": "예: 테헤란로 123",
+    "placeholder_address2": "예: 4B호",
+    "placeholder_country": "국가 선택…",
+    "placeholder_description": "매물을 설명해 주세요…",
+    "placeholder_name": "예: 선라이즈 아파트",
+    "placeholder_suburb": "지역 검색…",
+    "subtitle_new": "새 매물 만들기",
+    "tab_details": "상세 정보"
   },
   "space": {
     "new": "새 공간",
@@ -1174,7 +1220,10 @@
     "svc_removed_toast": "서비스가 삭제되었습니다",
     "svc_remove_confirm": "이 서비스를 공간에서 삭제할까요?",
     "svc_add_failed": "서비스 추가에 실패했습니다",
-    "tab_translations": "번역"
+    "tab_translations": "번역",
+    "col_owner": "소유주",
+    "col_updated": "수정일",
+    "mode_manual": "수동"
   },
   "space_option": {
     "new": "새 공간 옵션",
@@ -1190,7 +1239,16 @@
     "label_icon": "아이콘",
     "label_category": "카테고리",
     "label_status": "상태",
-    "label_description": "설명"
+    "label_description": "설명",
+    "col_created": "생성일",
+    "col_display_name": "표시 이름",
+    "delete_desc": "이 공간 옵션을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "label_display_name": "표시 이름",
+    "no_records": "공간 옵션이 없습니다",
+    "placeholder_category": "예: 가구",
+    "placeholder_display_name": "예: 에어컨",
+    "placeholder_name": "예: air_conditioning",
+    "subtitle_new": "새 공간 옵션 만들기"
   },
   "space_policy": {
     "new": "새 공간 정책",
@@ -1214,7 +1272,12 @@
     "label_no_smoking": "금연",
     "label_min_age": "최소 연령",
     "label_status": "상태",
-    "label_notes": "메모"
+    "label_notes": "메모",
+    "label_meal_option": "식사 제공",
+    "label_minimum_age": "최소 연령",
+    "no_records": "공간 정책이 없습니다",
+    "placeholder_name": "예: 기본 하우스 룰",
+    "subtitle_new": "새 공간 정책 만들기"
   },
   "suburb": {
     "new": "새 지역",
@@ -1233,7 +1296,19 @@
     "label_country": "국가",
     "label_latitude": "위도",
     "label_longitude": "경도",
-    "label_status": "상태"
+    "label_status": "상태",
+    "all_countries": "모든 국가",
+    "col_area": "구역",
+    "col_created": "생성일",
+    "delete_desc": "이 지역을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "label_area_name": "구역명",
+    "label_lat": "위도",
+    "label_lng": "경도",
+    "no_records": "지역이 없습니다",
+    "placeholder_area_name": "예: 강남 일대",
+    "placeholder_name": "예: 강남구",
+    "state_filter_placeholder": "주/도 필터…",
+    "subtitle_new": "새 지역 만들기"
   },
   "product": {
     "new": "새 상품",
@@ -1264,7 +1339,21 @@
     "label_period_unit": "기간 단위",
     "label_promotion": "프로모션",
     "label_display_on_booking": "예약 페이지에 표시",
-    "label_status": "상태"
+    "label_status": "상태",
+    "click_add_service": "\"서비스 추가\"를 클릭하여 시작하세요",
+    "col_unit": "단위",
+    "delete_desc_1": "다음 상품을 삭제하시겠습니까",
+    "delete_fail": "상품 삭제에 실패했습니다",
+    "label_display_on_invoice": "청구서에 표시",
+    "label_group": "상품 그룹",
+    "label_gst_included": "GST 포함",
+    "label_no_promotion": "프로모션 없음",
+    "label_type": "상품 유형",
+    "no_services_assigned": "지정된 서비스가 없습니다",
+    "packed_services_desc": "이 상품에 포함된 서비스입니다.",
+    "section_display": "표시 옵션",
+    "section_packed_services": "포함 서비스",
+    "status_archived": "보관됨"
   },
   "contract_product": {
     "new": "새 계약 상품",
@@ -1328,7 +1417,16 @@
     "unlimited": "무제한",
     "freq_weekly": "주간",
     "freq_biweekly": "격주",
-    "freq_monthly": "월간"
+    "freq_monthly": "월간",
+    "all_statuses": "모든 상태",
+    "all_terms": "모든 기간",
+    "all_types": "모든 유형",
+    "col_billing": "청구",
+    "col_eff_rate": "실제 요금",
+    "col_promotion": "프로모션",
+    "col_space": "공간",
+    "col_term": "기간",
+    "col_weekly_rate": "주간 요금"
   },
   "promotion": {
     "new": "새 프로모션",
@@ -1379,7 +1477,17 @@
     "assoc_empty": "이 프로모션에 연결된 상품이 없습니다.",
     "assoc_empty_hint": "숙박 상품 또는 서비스 상품에 이 프로모션을 지정하면 여기에 표시됩니다.",
     "min_contract": "최소 {{count}} {{unit}}",
-    "service_products": "서비스 상품"
+    "service_products": "서비스 상품",
+    "all_statuses": "모든 상태",
+    "all_terms": "모든 기간",
+    "col_billing": "청구",
+    "col_code": "코드",
+    "col_stay": "숙박",
+    "col_term": "기간",
+    "status_disabled": "비활성화됨",
+    "status_draft": "초안",
+    "status_expired": "만료됨",
+    "status_scheduled": "예약됨"
   },
   "beneficiary": {
     "new": "새 수익자",
@@ -1397,7 +1505,31 @@
     "label_type": "수익자 유형",
     "label_percentage": "비율 (%)",
     "label_status": "상태",
-    "label_notes": "메모"
+    "label_notes": "메모",
+    "add_first": "수익자 추가",
+    "all_statuses": "모든 상태",
+    "all_types": "모든 유형",
+    "btn_create": "수익자 생성",
+    "col_commission": "수수료",
+    "col_priority": "우선순위",
+    "col_product": "상품",
+    "col_rate": "요율",
+    "custom_entry": "직접 입력",
+    "delete_desc": "이 수익자를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "fixed_amount_desc": "거래마다 이 수익자에게 지급되는 고정 금액입니다.",
+    "label_commission_template": "수수료 템플릿",
+    "label_commission_type": "수수료 유형",
+    "label_contract_product": "계약 상품",
+    "label_fixed_amount": "고정 금액",
+    "label_priority": "우선순위",
+    "label_split_percentage": "분배 비율",
+    "no_beneficiaries_sub": "수익자를 추가하여 수수료 분배를 설정하세요.",
+    "priority_desc": "숫자가 낮을수록 먼저 적용됩니다.",
+    "section_structure": "수수료 구조",
+    "split_percentage_desc": "이 수익자에게 배분되는 수수료 비율입니다.",
+    "status_archived": "보관됨",
+    "type_fixed": "고정",
+    "type_percentage": "비율"
   },
   "commission": {
     "new": "새 수수료",
@@ -1416,7 +1548,10 @@
     "label_rate": "수수료율 (%)",
     "label_amount": "금액",
     "label_status": "상태",
-    "label_notes": "메모"
+    "label_notes": "메모",
+    "all_statuses": "모든 상태",
+    "col_name": "이름",
+    "col_type": "유형"
   },
   "payment_info": {
     "new": "새 결제 정보",
@@ -1437,7 +1572,12 @@
     "label_account_number": "계좌 번호",
     "label_account_name": "예금주",
     "label_stripe_id": "Stripe 계정 ID",
-    "label_status": "상태"
+    "label_status": "상태",
+    "all_types": "모든 유형",
+    "col_bank_account": "은행 계좌",
+    "col_name": "이름",
+    "col_type": "유형",
+    "payment_type": "결제 유형"
   },
   "service": {
     "new": "새 서비스",
@@ -1455,7 +1595,46 @@
     "label_description": "설명",
     "label_price": "가격",
     "label_currency": "통화",
-    "label_status": "상태"
+    "label_status": "상태",
+    "all_statuses": "모든 상태",
+    "all_types": "모든 유형",
+    "archive_desc": "이 서비스는 보관되어 활성 목록에서 숨겨집니다. 나중에 복원할 수 있습니다.",
+    "archive_title": "서비스 보관?",
+    "btn_archive": "보관",
+    "col_billing": "청구",
+    "col_optional": "선택",
+    "col_refundable": "환불 가능",
+    "col_type": "유형",
+    "description_placeholder": "이 서비스를 설명하세요...",
+    "display_on_booking_desc": "예약 시 부가 옵션으로 이 서비스를 표시합니다.",
+    "has_variants_desc": "이 서비스에 대해 여러 옵션을 제공합니다 (예: 크기, 등급).",
+    "label_billing_trigger": "청구 시점",
+    "label_display_on_booking": "예약 시 표시",
+    "label_gst_included": "GST 포함",
+    "label_has_variants": "옵션 있음",
+    "label_refundable": "환불 가능",
+    "label_requires_scheduling": "일정 필요",
+    "label_scheduling_notes": "일정 메모",
+    "label_sort_order": "정렬 순서",
+    "label_stock_qty": "재고 수량",
+    "label_stock_tracked": "재고 추적",
+    "label_type": "유형",
+    "label_variant_options": "옵션 항목",
+    "refundable_desc": "취소 시 이 서비스는 환불될 수 있습니다.",
+    "scheduling_desc": "이 서비스는 예약된 시간대가 필요합니다.",
+    "section_display": "표시",
+    "section_physical": "실물",
+    "section_scheduling": "일정",
+    "sort_order_desc": "숫자가 작을수록 먼저 표시됩니다.",
+    "status_archived": "보관됨",
+    "stock_tracked_desc": "이 서비스의 가용 재고를 추적합니다.",
+    "trigger_at_booking": "예약 시",
+    "trigger_at_checkout": "체크아웃 시",
+    "trigger_on_request": "요청 시",
+    "type_one_time": "일회성",
+    "type_physical": "실물",
+    "type_scheduled": "일정 예약",
+    "variant_options_desc": "한 줄에 하나씩 옵션을 입력하세요."
   },
   "service_host": {
     "new": "새 서비스 호스트",
@@ -1489,7 +1668,19 @@
     "specialty_linen": "린넨",
     "specialty_hvac": "냉난방",
     "specialty_gardening": "조경",
-    "specialty_pest": "방역"
+    "specialty_pest": "방역",
+    "col_name": "이름",
+    "col_type": "유형",
+    "tab_accounting": "잡 & 정산",
+    "tab_cs": "CS 티켓",
+    "tab_overview": "개요",
+    "tab_photos": "사진",
+    "section_main": "메인",
+    "section_options": "옵션",
+    "label_business_start": "영업 시작 시각 (0-23)",
+    "label_business_end": "영업 종료 시각 (0-23)",
+    "search_account_placeholder": "계정 검색…",
+    "search_service_placeholder": "서비스 검색…"
   },
   "receipt": {
     "no_receipts": "영수증이 없습니다",
@@ -1516,7 +1707,13 @@
     "approve": "승인",
     "reject": "거부",
     "approved_toast": "일정이 승인되었습니다",
-    "rejected_toast": "일정이 거부되었습니다"
+    "rejected_toast": "일정이 거부되었습니다",
+    "col_account": "계정",
+    "col_booking": "예약",
+    "col_next_due_date": "다음 마감일",
+    "col_start_date": "시작일",
+    "col_type": "유형",
+    "generate_invoices": "마감 청구서 생성"
   },
   "tenant_lifecycle": {
     "title": "입주자 생애주기",
@@ -2337,7 +2534,17 @@
     "alert_overdue_tasks_one": "지연된 업무 {{count}}건",
     "time_minutes_ago_one": "{{count}}분 전",
     "time_hours_ago_one": "{{count}}시간 전",
-    "time_days_ago_one": "{{count}}일 전"
+    "time_days_ago_one": "{{count}}일 전",
+    "alert_overdue_invoices": "연체 청구서 {{count}}건 ({{amount}})",
+    "alert_overdue_tasks": "연체된 작업 {{count}}건",
+    "alert_pending_approvals": "승인 대기 예약 {{count}}건",
+    "alert_pending_properties": "승인 대기 건물 {{count}}건",
+    "alert_urgent_work_orders": "긴급 작업 지시 {{count}}건이 처리를 기다리고 있습니다",
+    "kpi_departures_scheduled": "출발 예정 {{count}}건",
+    "kpi_pending_approval": "{{count}}건 승인 대기",
+    "time_days_ago": "{{count}}일 전",
+    "time_hours_ago": "{{count}}시간 전",
+    "time_minutes_ago": "{{count}}분 전"
   },
   "settings_company": {
     "save_success_title": "저장됨",
@@ -2882,7 +3089,8 @@
       "live_preview_note": "실제 어시스턴트와 연결됩니다 — 여기서 주고받은 메시지도 방문자 대화처럼 저장됩니다.",
       "enabled_toast": "랜딩 페이지에 채팅 위젯이 활성화되었습니다",
       "disabled_toast": "랜딩 페이지에서 채팅 위젯이 숨겨졌습니다",
-      "update_error": "업데이트할 수 없습니다"
+      "update_error": "업데이트할 수 없습니다",
+      "docs_ok": "지식 문서 {{count}}건 준비됨"
     },
     "preview": {
       "title": "{{appName}} 어시스턴트",
@@ -3004,7 +3212,8 @@
     "edit_addon": "부가 서비스 수정",
     "new_addon": "부가 서비스 추가",
     "delete_addon": "부가 서비스 삭제",
-    "delete_confirm": "부가 서비스가 삭제됩니다. 연결된 숙소의 연결이 해제됩니다."
+    "delete_confirm": "부가 서비스가 삭제됩니다. 연결된 숙소의 연결이 해제됩니다.",
+    "section": "분류"
   },
   "homestay": {
     "list_title": "홈스테이 신청",
@@ -3135,11 +3344,49 @@
   },
   "page_translations": {
     "site_guest": "게스트 사이트",
-    "site_homestay": "홈스테이"
+    "site_homestay": "홈스테이",
+    "ai_all": "AI 페이지 번역 (모든 언어)",
+    "ai_all_title": "이 페이지를 활성화된 모든 언어로 번역합니다 (이미 존재하는 값은 건너뜁니다)",
+    "ai_review": "AI 페이지 검수",
+    "ai_review_title": "이 페이지의 모든 번역을 영어 원본과 대조하여 검수하고, 문제를 수정한 후 검수 완료로 표시합니다",
+    "ai_this": "AI 빈 항목 채우기 ({{lang}})",
+    "col_english": "영어 (원본)",
+    "col_english_value": "영어 값",
+    "col_key": "키",
+    "col_translation": "번역",
+    "keys_count": "키 {{count}}개",
+    "language": "언어",
+    "missing_count": "{{count}}개 누락",
+    "no_keys": "이 페이지의 키가 아직 없습니다. 먼저 영어 원본을 추가하세요.",
+    "page": "페이지",
+    "page_subtitle": "랜딩 페이지 콘텐츠를 페이지별로 정리하여 AI 번역하고 직접 편집할 수 있습니다. 저장하면 라이브 사이트에 즉시 반영됩니다.",
+    "page_title": "페이지 번역",
+    "preview": "미리보기",
+    "review_count": "{{count}}개 AI · 미검수",
+    "toast_ai_done": "AI가 {{count}}개 항목을 번역했습니다",
+    "toast_ai_failed": "AI 번역 실패",
+    "toast_review_done": "{{count}}개 항목을 검수하고 {{changed}}개를 수정했습니다",
+    "toast_review_failed": "AI 검수 실패",
+    "toast_save_failed": "저장 실패",
+    "toast_saved": "{{count}}개 변경사항을 저장했습니다"
   },
   "blog_categories": {
     "title": "블로그 카테고리",
-    "subtitle": "블로그 글과 공개 블로그 필터에 사용할 카테고리를 관리합니다."
+    "subtitle": "블로그 글과 공개 블로그 필터에 사용할 카테고리를 관리합니다.",
+    "add": "추가",
+    "added": "카테고리가 추가되었습니다",
+    "col_actions": "액션",
+    "col_name": "이름",
+    "col_visible": "표시",
+    "delete": "삭제",
+    "delete_confirm": "\"{{name}}\"을(를) 삭제하시겠습니까? 이미 사용 중인 게시글의 카테고리는 유지됩니다.",
+    "delete_title": "카테고리 삭제",
+    "deleted": "카테고리가 삭제되었습니다",
+    "empty": "아직 카테고리가 없습니다.",
+    "error": "문제가 발생했습니다",
+    "hidden": "숨김",
+    "new_placeholder": "새 카테고리 이름…",
+    "note": "카테고리를 숨기거나 삭제해도 이미 사용 중인 게시글은 변경되지 않으며, 해당 카테고리 텍스트가 그대로 유지됩니다."
   },
   "homestayStudent": {
     "list_title": "홈스테이 학생 신청",
@@ -3380,7 +3627,8 @@
     "billing_override_title": "배정 청구 재정의",
     "charge_pending_hint": "대기 중인 청구가 생성됩니다. 결제 목록에서 (카드 링크 / 계좌 정보) 전송하세요.",
     "toast_charge_created": "대기 중인 청구가 생성되었습니다",
-    "toast_link_sent": "결제 링크가 열리고 학생에게 이메일로 전송되었습니다"
+    "toast_link_sent": "결제 링크가 열리고 학생에게 이메일로 전송되었습니다",
+    "search_placeholder": "배치 번호 검색…"
   },
   "homestayDoc": {
     "title": "서명 및 문서",
@@ -3402,7 +3650,9 @@
     "toast_none_sent": "전송된 항목이 없습니다",
     "toast_none_sent_desc": "선택하신 항목에 대해 설정된 수신자가 없습니다. 설정 → 연동에서 운영 알림 이메일을 설정하거나, 등록된 이메일이 있는 수신자를 선택하세요.",
     "toast_link_copied": "서명 링크가 복사되었습니다",
-    "error": "문제가 발생했습니다"
+    "error": "문제가 발생했습니다",
+    "btn_issue": "서명 요청 발행",
+    "toast_issued": "서명 요청이 생성되었습니다"
   },
   "documentTemplate": {
     "title": "문서 템플릿",
@@ -3651,5 +3901,41 @@
     "status_unavailable": "임대불가",
     "status_active": "활성",
     "status_inactive": "비활성"
+  },
+  "finance": {
+    "no_receipts": "영수증이 없습니다",
+    "pause_schedule": "일정 일시중지",
+    "pause_schedule_desc": "이 일정이 일시중지됩니다. 재개하기 전까지 새 청구서가 생성되지 않습니다.",
+    "resume_schedule": "일정 재개",
+    "resume_schedule_desc": "이 일정이 재개되며 다음 마감일에 청구서가 생성됩니다."
+  },
+  "service_host_acct": {
+    "add_payout": "정산 기록",
+    "amount": "금액",
+    "approve": "승인",
+    "approved": "승인됨",
+    "booking": "예약",
+    "cost": "비용",
+    "gl_note": "발생 시 차변 외주비용 / 대변 외주 미지급금, 지급 시 차변 미지급금 / 대변 현금으로 계상됩니다.",
+    "jobs": "서비스 잡",
+    "mark_paid": "지급 처리",
+    "no_jobs": "잡 없음",
+    "no_payouts": "정산 내역 없음",
+    "outstanding": "미지급 정산",
+    "paid": "지급됨",
+    "payouts": "파트너 정산",
+    "price": "가격",
+    "ref": "번호",
+    "revenue": "발생 매출",
+    "work_orders": "작업지시"
+  },
+  "service_host_cs": {
+    "category": "카테고리",
+    "empty": "이 파트너의 지원 티켓이 없습니다",
+    "ref": "번호",
+    "subject": "제목"
+  },
+  "service_host_photos": {
+    "empty": "잡 사진이 없습니다"
   }
 }

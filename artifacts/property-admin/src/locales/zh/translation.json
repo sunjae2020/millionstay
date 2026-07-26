@@ -306,7 +306,29 @@
     "expired": "已过期",
     "disabled": "已禁用",
     "clone": "克隆",
-    "cloning": "克隆中…"
+    "cloning": "克隆中…",
+    "add_service": "添加服务",
+    "all_contract_products": "所有合同产品",
+    "archive": "归档",
+    "archived": "已归档",
+    "cancelled": "已取消",
+    "created": "已创建",
+    "creating": "创建中…",
+    "delete_forever": "永久删除",
+    "deleted": "已删除",
+    "error": "错误",
+    "notes_placeholder": "添加备注…",
+    "optional_blank_all": "可选 — 留空表示全部",
+    "pause": "暂停",
+    "pending": "待处理",
+    "rejected": "已拒绝",
+    "restore": "恢复",
+    "resume": "恢复运行",
+    "select_account": "选择账户",
+    "source": "来源",
+    "suspended": "已暂停",
+    "title": "标题",
+    "updated": "已更新"
   },
   "lang": {
     "label": "语言",
@@ -846,7 +868,8 @@
     "label_ack_due": "确认截止",
     "label_acknowledged": "已确认",
     "not_dispatched": "未派给合作方。设置与合作方专长匹配的类别后派单。",
-    "dispatch_failed": "派单失败 — 无匹配合作方"
+    "dispatch_failed": "派单失败 — 无匹配合作方",
+    "completed_work_orders": "已完成工单"
   },
   "csticket": {
     "search_placeholder": "搜索工单...",
@@ -915,7 +938,10 @@
     "requester_service_host": "服务人员",
     "create_work_order": "创建工单",
     "work_order_linked": "已创建工单",
-    "dispatch_to_partner": "创建并派单"
+    "dispatch_to_partner": "创建并派单",
+    "all_types": "全部类型",
+    "col_requester": "请求人",
+    "col_type": "类型"
   },
   "property": {
     "new": "新建房源",
@@ -948,7 +974,27 @@
     "tab_spaces": "空间",
     "tab_photos": "照片",
     "tab_documents": "证件",
-    "tab_translations": "翻译"
+    "tab_translations": "翻译",
+    "btn_autodetect": "自动检测",
+    "btn_detecting": "检测中…",
+    "col_address": "地址",
+    "col_owner": "业主",
+    "col_space_booking": "预订",
+    "col_space_name": "空间名称",
+    "col_space_status": "状态",
+    "col_space_type": "类型",
+    "label_address2": "地址2",
+    "label_approval_status": "审批状态",
+    "label_coords": "坐标",
+    "no_spaces": "没有空间",
+    "placeholder_address": "例如：中山路123号",
+    "placeholder_address2": "例如：4B室",
+    "placeholder_country": "选择国家…",
+    "placeholder_description": "描述此房源…",
+    "placeholder_name": "例如：日出公寓",
+    "placeholder_suburb": "搜索地区…",
+    "subtitle_new": "创建新房源",
+    "tab_details": "详情"
   },
   "space": {
     "new": "新建空间",
@@ -1174,7 +1220,10 @@
     "svc_removed_toast": "已删除服务",
     "svc_remove_confirm": "从此空间中移除该服务？",
     "svc_add_failed": "添加服务失败",
-    "tab_translations": "翻译"
+    "tab_translations": "翻译",
+    "col_owner": "业主",
+    "col_updated": "更新时间",
+    "mode_manual": "手动"
   },
   "space_option": {
     "new": "新建空间选项",
@@ -1190,7 +1239,16 @@
     "label_icon": "图标",
     "label_category": "类别",
     "label_status": "状态",
-    "label_description": "描述"
+    "label_description": "描述",
+    "col_created": "创建时间",
+    "col_display_name": "显示名称",
+    "delete_desc": "确定要删除此空间选项吗？此操作无法撤销。",
+    "label_display_name": "显示名称",
+    "no_records": "没有空间选项",
+    "placeholder_category": "例如：家具",
+    "placeholder_display_name": "例如：空调",
+    "placeholder_name": "例如：air_conditioning",
+    "subtitle_new": "创建新空间选项"
   },
   "space_policy": {
     "new": "新建空间政策",
@@ -1214,7 +1272,12 @@
     "label_no_smoking": "禁止吸烟",
     "label_min_age": "最低年龄",
     "label_status": "状态",
-    "label_notes": "备注"
+    "label_notes": "备注",
+    "label_meal_option": "餐食选项",
+    "label_minimum_age": "最低年龄",
+    "no_records": "没有空间政策",
+    "placeholder_name": "例如：标准房规",
+    "subtitle_new": "创建新空间政策"
   },
   "suburb": {
     "new": "新建地区",
@@ -1233,7 +1296,19 @@
     "label_country": "国家",
     "label_latitude": "纬度",
     "label_longitude": "经度",
-    "label_status": "状态"
+    "label_status": "状态",
+    "all_countries": "所有国家",
+    "col_area": "区域",
+    "col_created": "创建时间",
+    "delete_desc": "确定要删除此地区吗？此操作无法撤销。",
+    "label_area_name": "区域名称",
+    "label_lat": "纬度",
+    "label_lng": "经度",
+    "no_records": "没有地区",
+    "placeholder_area_name": "例如：市中心区域",
+    "placeholder_name": "例如：徐汇区",
+    "state_filter_placeholder": "按省/州筛选…",
+    "subtitle_new": "创建新地区"
   },
   "product": {
     "new": "新建产品",
@@ -1264,7 +1339,21 @@
     "label_period_unit": "期限单位",
     "label_promotion": "促销",
     "label_display_on_booking": "在预订页面显示",
-    "label_status": "状态"
+    "label_status": "状态",
+    "click_add_service": "点击「添加服务」开始",
+    "col_unit": "单位",
+    "delete_desc_1": "确定要删除",
+    "delete_fail": "删除产品失败",
+    "label_display_on_invoice": "在发票上显示",
+    "label_group": "产品分组",
+    "label_gst_included": "含 GST",
+    "label_no_promotion": "无促销",
+    "label_type": "产品类型",
+    "no_services_assigned": "尚未分配服务",
+    "packed_services_desc": "与此产品捆绑的服务。",
+    "section_display": "显示选项",
+    "section_packed_services": "捆绑服务",
+    "status_archived": "已归档"
   },
   "contract_product": {
     "new": "新建合同产品",
@@ -1328,7 +1417,16 @@
     "unlimited": "无限",
     "freq_weekly": "每周",
     "freq_biweekly": "每两周",
-    "freq_monthly": "每月"
+    "freq_monthly": "每月",
+    "all_statuses": "所有状态",
+    "all_terms": "所有期限",
+    "all_types": "所有类型",
+    "col_billing": "计费",
+    "col_eff_rate": "实际费用",
+    "col_promotion": "促销",
+    "col_space": "空间",
+    "col_term": "期限",
+    "col_weekly_rate": "周费"
   },
   "promotion": {
     "new": "新建促销",
@@ -1379,7 +1477,17 @@
     "assoc_empty": "当前没有产品关联到此促销。",
     "assoc_empty_hint": "将此促销分配给住宿产品或服务产品后即可在此显示。",
     "min_contract": "最少 {{count}} {{unit}}",
-    "service_products": "服务产品"
+    "service_products": "服务产品",
+    "all_statuses": "所有状态",
+    "all_terms": "所有期限",
+    "col_billing": "计费",
+    "col_code": "代码",
+    "col_stay": "入住",
+    "col_term": "期限",
+    "status_disabled": "已停用",
+    "status_draft": "草稿",
+    "status_expired": "已过期",
+    "status_scheduled": "已排期"
   },
   "beneficiary": {
     "new": "新建受益人",
@@ -1397,7 +1505,31 @@
     "label_type": "受益人类型",
     "label_percentage": "比例（%）",
     "label_status": "状态",
-    "label_notes": "备注"
+    "label_notes": "备注",
+    "add_first": "添加受益人",
+    "all_statuses": "所有状态",
+    "all_types": "所有类型",
+    "btn_create": "创建受益人",
+    "col_commission": "佣金",
+    "col_priority": "优先级",
+    "col_product": "产品",
+    "col_rate": "费率",
+    "custom_entry": "自定义",
+    "delete_desc": "确定要删除此受益人吗？此操作无法撤销。",
+    "fixed_amount_desc": "每笔交易支付给此受益人的固定金额。",
+    "label_commission_template": "佣金模板",
+    "label_commission_type": "佣金类型",
+    "label_contract_product": "合同产品",
+    "label_fixed_amount": "固定金额",
+    "label_priority": "优先级",
+    "label_split_percentage": "分成比例",
+    "no_beneficiaries_sub": "添加受益人以设置佣金分成。",
+    "priority_desc": "数字越小优先级越高。",
+    "section_structure": "佣金结构",
+    "split_percentage_desc": "分配给此受益人的佣金比例。",
+    "status_archived": "已归档",
+    "type_fixed": "固定",
+    "type_percentage": "比例"
   },
   "commission": {
     "new": "新建佣金",
@@ -1416,7 +1548,10 @@
     "label_rate": "佣金率（%）",
     "label_amount": "金额",
     "label_status": "状态",
-    "label_notes": "备注"
+    "label_notes": "备注",
+    "all_statuses": "所有状态",
+    "col_name": "名称",
+    "col_type": "类型"
   },
   "payment_info": {
     "new": "新建付款信息",
@@ -1437,7 +1572,12 @@
     "label_account_number": "账号",
     "label_account_name": "户名",
     "label_stripe_id": "Stripe账户ID",
-    "label_status": "状态"
+    "label_status": "状态",
+    "all_types": "所有类型",
+    "col_bank_account": "银行账户",
+    "col_name": "名称",
+    "col_type": "类型",
+    "payment_type": "付款类型"
   },
   "service": {
     "new": "新建服务",
@@ -1455,7 +1595,46 @@
     "label_description": "描述",
     "label_price": "价格",
     "label_currency": "货币",
-    "label_status": "状态"
+    "label_status": "状态",
+    "all_statuses": "所有状态",
+    "all_types": "所有类型",
+    "archive_desc": "此服务将被归档并从活动列表中隐藏。您可以稍后恢复。",
+    "archive_title": "归档服务？",
+    "btn_archive": "归档",
+    "col_billing": "计费",
+    "col_optional": "可选",
+    "col_refundable": "可退款",
+    "col_type": "类型",
+    "description_placeholder": "描述此服务...",
+    "display_on_booking_desc": "在预订时将此服务显示为附加选项。",
+    "has_variants_desc": "为此服务提供多个选项（例如尺寸、等级）。",
+    "label_billing_trigger": "计费触发",
+    "label_display_on_booking": "预订时显示",
+    "label_gst_included": "含 GST",
+    "label_has_variants": "有变体",
+    "label_refundable": "可退款",
+    "label_requires_scheduling": "需要排程",
+    "label_scheduling_notes": "排程备注",
+    "label_sort_order": "排序顺序",
+    "label_stock_qty": "库存数量",
+    "label_stock_tracked": "追踪库存",
+    "label_type": "类型",
+    "label_variant_options": "变体选项",
+    "refundable_desc": "如取消，此服务可退款。",
+    "scheduling_desc": "此服务需要预定的时间段。",
+    "section_display": "显示",
+    "section_physical": "实物",
+    "section_scheduling": "排程",
+    "sort_order_desc": "数字越小越靠前显示。",
+    "status_archived": "已归档",
+    "stock_tracked_desc": "追踪此服务的可用库存。",
+    "trigger_at_booking": "预订时",
+    "trigger_at_checkout": "退房时",
+    "trigger_on_request": "按需",
+    "type_one_time": "一次性",
+    "type_physical": "实物",
+    "type_scheduled": "预约",
+    "variant_options_desc": "每行添加一个选项。"
   },
   "service_host": {
     "new": "新建服务房东",
@@ -1489,7 +1668,19 @@
     "specialty_linen": "布草",
     "specialty_hvac": "暖通",
     "specialty_gardening": "园艺",
-    "specialty_pest": "消杀"
+    "specialty_pest": "消杀",
+    "col_name": "名称",
+    "col_type": "类型",
+    "tab_accounting": "任务与结算",
+    "tab_cs": "客服工单",
+    "tab_overview": "概览",
+    "tab_photos": "照片",
+    "section_main": "主要",
+    "section_options": "选项",
+    "label_business_start": "营业开始时间 (0-23)",
+    "label_business_end": "营业结束时间 (0-23)",
+    "search_account_placeholder": "搜索账户…",
+    "search_service_placeholder": "搜索服务…"
   },
   "receipt": {
     "no_receipts": "没有收据",
@@ -1516,7 +1707,13 @@
     "approve": "批准",
     "reject": "拒绝",
     "approved_toast": "计划已批准",
-    "rejected_toast": "计划已拒绝"
+    "rejected_toast": "计划已拒绝",
+    "col_account": "账户",
+    "col_booking": "预订",
+    "col_next_due_date": "下次到期日",
+    "col_start_date": "开始日期",
+    "col_type": "类型",
+    "generate_invoices": "生成到期发票"
   },
   "tenant_lifecycle": {
     "title": "租户生命周期",
@@ -2337,7 +2534,17 @@
     "alert_overdue_tasks_one": "{{count}} 个逾期任务",
     "time_minutes_ago_one": "{{count}} 分钟前",
     "time_hours_ago_one": "{{count}} 小时前",
-    "time_days_ago_one": "{{count}} 天前"
+    "time_days_ago_one": "{{count}} 天前",
+    "alert_overdue_invoices": "{{count}} 张逾期发票（{{amount}}）",
+    "alert_overdue_tasks": "{{count}} 个逾期任务",
+    "alert_pending_approvals": "{{count}} 个预订待审批",
+    "alert_pending_properties": "{{count}} 个物业待审批",
+    "alert_urgent_work_orders": "{{count}} 个紧急工单需要处理",
+    "kpi_departures_scheduled": "{{count}} 个离店计划",
+    "kpi_pending_approval": "{{count}} 个待审批",
+    "time_days_ago": "{{count}} 天前",
+    "time_hours_ago": "{{count}} 小时前",
+    "time_minutes_ago": "{{count}} 分钟前"
   },
   "settings_company": {
     "save_success_title": "已保存",
@@ -2882,7 +3089,8 @@
       "live_preview_note": "这会与真实助手对话 — 此处的消息会像访客对话一样被保存。",
       "enabled_toast": "已在着陆页启用聊天小部件",
       "disabled_toast": "已从着陆页隐藏聊天小部件",
-      "update_error": "无法更新"
+      "update_error": "无法更新",
+      "docs_ok": "{{count}} 个知识文档已就绪"
     },
     "preview": {
       "title": "{{appName}} 助手",
@@ -3004,7 +3212,8 @@
     "edit_addon": "编辑附加服务",
     "new_addon": "新增附加服务",
     "delete_addon": "删除附加服务",
-    "delete_confirm": "将删除该附加服务，使用它的住宿将解除关联。"
+    "delete_confirm": "将删除该附加服务，使用它的住宿将解除关联。",
+    "section": "分类"
   },
   "homestay": {
     "list_title": "寄宿家庭申请",
@@ -3135,11 +3344,49 @@
   },
   "page_translations": {
     "site_guest": "访客网站",
-    "site_homestay": "寄宿家庭"
+    "site_homestay": "寄宿家庭",
+    "ai_all": "AI 翻译页面（所有语言）",
+    "ai_all_title": "将此页面翻译为所有已启用的语言（跳过已存在的值）",
+    "ai_review": "AI 审校页面",
+    "ai_review_title": "对照英文原文审校本页所有译文，修正问题并标记为已审校",
+    "ai_this": "AI 填充空白（{{lang}}）",
+    "col_english": "英语（原文）",
+    "col_english_value": "英文值",
+    "col_key": "键",
+    "col_translation": "译文",
+    "keys_count": "{{count}} 个键",
+    "language": "语言",
+    "missing_count": "{{count}} 项缺失",
+    "no_keys": "此页面尚无键。请先添加英文原文。",
+    "page": "页面",
+    "page_subtitle": "按页面整理，对着陆页内容进行 AI 翻译和手动编辑。保存后立即应用到线上站点。",
+    "page_title": "页面翻译",
+    "preview": "预览",
+    "review_count": "{{count}} 个 AI · 未审校",
+    "toast_ai_done": "AI 已翻译 {{count}} 项",
+    "toast_ai_failed": "AI 翻译失败",
+    "toast_review_done": "已审校 {{count}} 项，修正 {{changed}} 项",
+    "toast_review_failed": "AI 审校失败",
+    "toast_save_failed": "保存失败",
+    "toast_saved": "已保存 {{count}} 项更改"
   },
   "blog_categories": {
     "title": "博客分类",
-    "subtitle": "管理博客文章和公开博客筛选所用的分类。"
+    "subtitle": "管理博客文章和公开博客筛选所用的分类。",
+    "add": "添加",
+    "added": "分类已添加",
+    "col_actions": "操作",
+    "col_name": "名称",
+    "col_visible": "显示",
+    "delete": "删除",
+    "delete_confirm": "删除\"{{name}}\"？已使用该分类的文章仍会保留其分类。",
+    "delete_title": "删除分类",
+    "deleted": "分类已删除",
+    "empty": "暂无分类。",
+    "error": "出现了错误",
+    "hidden": "已隐藏",
+    "new_placeholder": "新分类名称…",
+    "note": "隐藏或删除分类不会更改已使用该分类的文章 — 其分类文本将被保留。"
   },
   "homestayStudent": {
     "list_title": "寄宿家庭学生申请",
@@ -3380,7 +3627,8 @@
     "billing_override_title": "安置计费覆盖",
     "charge_pending_hint": "此操作将创建一笔待处理收费。请从付款列表中发送（银行卡链接 / 银行信息）。",
     "toast_charge_created": "待处理收费已创建",
-    "toast_link_sent": "付款链接已打开并通过邮件发送给学生"
+    "toast_link_sent": "付款链接已打开并通过邮件发送给学生",
+    "search_placeholder": "搜索安置编号…"
   },
   "homestayDoc": {
     "title": "签署与文档",
@@ -3402,7 +3650,9 @@
     "toast_none_sent": "未发送任何内容",
     "toast_none_sent_desc": "您所选的对象未配置收件人。请在「设置 → 集成」中设置运营通知邮箱，或选择一个有备案邮箱的收件人。",
     "toast_link_copied": "签署链接已复制",
-    "error": "出现错误"
+    "error": "出现错误",
+    "btn_issue": "发起签署请求",
+    "toast_issued": "已创建签署请求"
   },
   "documentTemplate": {
     "title": "文档模板",
@@ -3651,5 +3901,41 @@
     "status_unavailable": "不可租",
     "status_active": "启用",
     "status_inactive": "停用"
+  },
+  "finance": {
+    "no_receipts": "没有收据",
+    "pause_schedule": "暂停计划",
+    "pause_schedule_desc": "此计划将被暂停。恢复前不会生成新的发票。",
+    "resume_schedule": "恢复计划",
+    "resume_schedule_desc": "此计划将恢复，并在下一个到期日生成发票。"
+  },
+  "service_host_acct": {
+    "add_payout": "记录结算",
+    "amount": "金额",
+    "approve": "批准",
+    "approved": "已批准",
+    "booking": "预订",
+    "cost": "费用",
+    "gl_note": "计提时借记外包费用 / 贷记外包应付款；付款时借记应付款 / 贷记现金。",
+    "jobs": "服务任务",
+    "mark_paid": "标记已付",
+    "no_jobs": "无任务",
+    "no_payouts": "暂无结算",
+    "outstanding": "未付结算",
+    "paid": "已付",
+    "payouts": "合作方结算",
+    "price": "价格",
+    "ref": "编号",
+    "revenue": "产生的收入",
+    "work_orders": "工单"
+  },
+  "service_host_cs": {
+    "category": "类别",
+    "empty": "该合作方暂无支持工单",
+    "ref": "编号",
+    "subject": "主题"
+  },
+  "service_host_photos": {
+    "empty": "暂无任务照片"
   }
 }

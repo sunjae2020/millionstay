@@ -306,7 +306,29 @@
     "expired": "期限切れ",
     "disabled": "無効",
     "clone": "複製",
-    "cloning": "複製中…"
+    "cloning": "複製中…",
+    "add_service": "サービスを追加",
+    "all_contract_products": "すべての契約商品",
+    "archive": "アーカイブ",
+    "archived": "アーカイブ済み",
+    "cancelled": "キャンセル済み",
+    "created": "作成しました",
+    "creating": "作成中…",
+    "delete_forever": "完全に削除",
+    "deleted": "削除しました",
+    "error": "エラー",
+    "notes_placeholder": "メモを入力…",
+    "optional_blank_all": "任意 — 空欄はすべて",
+    "pause": "一時停止",
+    "pending": "保留中",
+    "rejected": "拒否済み",
+    "restore": "復元",
+    "resume": "再開",
+    "select_account": "アカウントを選択",
+    "source": "ソース",
+    "suspended": "停止中",
+    "title": "タイトル",
+    "updated": "更新しました"
   },
   "lang": {
     "label": "言語",
@@ -846,7 +868,8 @@
     "label_ack_due": "確認期限",
     "label_acknowledged": "確認済み",
     "not_dispatched": "パートナー未割当。専門分野に合うカテゴリを設定して割り当ててください。",
-    "dispatch_failed": "割当失敗 — 一致するパートナーなし"
+    "dispatch_failed": "割当失敗 — 一致するパートナーなし",
+    "completed_work_orders": "完了した作業指示"
   },
   "csticket": {
     "search_placeholder": "チケットを検索...",
@@ -915,7 +938,10 @@
     "requester_service_host": "サービスホスト",
     "create_work_order": "作業指示を作成",
     "work_order_linked": "作業指示を作成済み",
-    "dispatch_to_partner": "作成して割当"
+    "dispatch_to_partner": "作成して割当",
+    "all_types": "すべてのタイプ",
+    "col_requester": "リクエスト元",
+    "col_type": "タイプ"
   },
   "property": {
     "new": "新規物件",
@@ -948,7 +974,27 @@
     "tab_spaces": "スペース",
     "tab_photos": "写真",
     "tab_documents": "書類",
-    "tab_translations": "翻訳"
+    "tab_translations": "翻訳",
+    "btn_autodetect": "自動検出",
+    "btn_detecting": "検出中…",
+    "col_address": "住所",
+    "col_owner": "オーナー",
+    "col_space_booking": "予約",
+    "col_space_name": "スペース名",
+    "col_space_status": "ステータス",
+    "col_space_type": "タイプ",
+    "label_address2": "住所2",
+    "label_approval_status": "承認ステータス",
+    "label_coords": "座標",
+    "no_spaces": "スペースが見つかりません",
+    "placeholder_address": "例: 中央区銀座1-2-3",
+    "placeholder_address2": "例: 4B号室",
+    "placeholder_country": "国を選択…",
+    "placeholder_description": "物件の説明を入力…",
+    "placeholder_name": "例: サンライズアパート",
+    "placeholder_suburb": "エリアを検索…",
+    "subtitle_new": "新しい物件を作成",
+    "tab_details": "詳細"
   },
   "space": {
     "new": "新規スペース",
@@ -1174,7 +1220,10 @@
     "svc_removed_toast": "サービスを削除しました",
     "svc_remove_confirm": "このサービスをスペースから削除しますか？",
     "svc_add_failed": "サービスの追加に失敗しました",
-    "tab_translations": "翻訳"
+    "tab_translations": "翻訳",
+    "col_owner": "オーナー",
+    "col_updated": "更新日",
+    "mode_manual": "手動"
   },
   "space_option": {
     "new": "新規スペースオプション",
@@ -1190,7 +1239,16 @@
     "label_icon": "アイコン",
     "label_category": "カテゴリ",
     "label_status": "ステータス",
-    "label_description": "説明"
+    "label_description": "説明",
+    "col_created": "作成日",
+    "col_display_name": "表示名",
+    "delete_desc": "このスペースオプションを削除してもよろしいですか？この操作は元に戻せません。",
+    "label_display_name": "表示名",
+    "no_records": "スペースオプションが見つかりません",
+    "placeholder_category": "例: 家具",
+    "placeholder_display_name": "例: エアコン",
+    "placeholder_name": "例: air_conditioning",
+    "subtitle_new": "新しいスペースオプションを作成"
   },
   "space_policy": {
     "new": "新規スペースポリシー",
@@ -1214,7 +1272,12 @@
     "label_no_smoking": "禁煙",
     "label_min_age": "最低年齢",
     "label_status": "ステータス",
-    "label_notes": "メモ"
+    "label_notes": "メモ",
+    "label_meal_option": "食事オプション",
+    "label_minimum_age": "最低年齢",
+    "no_records": "スペースポリシーが見つかりません",
+    "placeholder_name": "例: 標準ハウスルール",
+    "subtitle_new": "新しいスペースポリシーを作成"
   },
   "suburb": {
     "new": "新規エリア",
@@ -1233,7 +1296,19 @@
     "label_country": "国",
     "label_latitude": "緯度",
     "label_longitude": "経度",
-    "label_status": "ステータス"
+    "label_status": "ステータス",
+    "all_countries": "すべての国",
+    "col_area": "地区",
+    "col_created": "作成日",
+    "delete_desc": "このエリアを削除してもよろしいですか？この操作は元に戻せません。",
+    "label_area_name": "地区名",
+    "label_lat": "緯度",
+    "label_lng": "経度",
+    "no_records": "エリアが見つかりません",
+    "placeholder_area_name": "例: 都心エリア",
+    "placeholder_name": "例: 渋谷",
+    "state_filter_placeholder": "都道府県で絞り込み…",
+    "subtitle_new": "新しいエリアを作成"
   },
   "product": {
     "new": "新規商品",
@@ -1264,7 +1339,21 @@
     "label_period_unit": "期間単位",
     "label_promotion": "プロモーション",
     "label_display_on_booking": "予約ページに表示",
-    "label_status": "ステータス"
+    "label_status": "ステータス",
+    "click_add_service": "「サービスを追加」をクリックして始めましょう",
+    "col_unit": "単位",
+    "delete_desc_1": "この商品を削除してもよろしいですか",
+    "delete_fail": "商品の削除に失敗しました",
+    "label_display_on_invoice": "請求書に表示",
+    "label_group": "商品グループ",
+    "label_gst_included": "GST込み",
+    "label_no_promotion": "プロモーションなし",
+    "label_type": "商品タイプ",
+    "no_services_assigned": "割り当てられたサービスがありません",
+    "packed_services_desc": "この商品にパッケージされたサービスです。",
+    "section_display": "表示オプション",
+    "section_packed_services": "パッケージサービス",
+    "status_archived": "アーカイブ済み"
   },
   "contract_product": {
     "new": "新規契約商品",
@@ -1328,7 +1417,16 @@
     "unlimited": "無制限",
     "freq_weekly": "毎週",
     "freq_biweekly": "隔週",
-    "freq_monthly": "毎月"
+    "freq_monthly": "毎月",
+    "all_statuses": "すべてのステータス",
+    "all_terms": "すべての期間",
+    "all_types": "すべてのタイプ",
+    "col_billing": "請求",
+    "col_eff_rate": "実質料金",
+    "col_promotion": "プロモーション",
+    "col_space": "スペース",
+    "col_term": "期間",
+    "col_weekly_rate": "週額料金"
   },
   "promotion": {
     "new": "新規プロモーション",
@@ -1379,7 +1477,17 @@
     "assoc_empty": "このプロモーションに関連付けられた商品はありません。",
     "assoc_empty_hint": "宿泊商品またはサービス商品にこのプロモーションを割り当てると、ここに表示されます。",
     "min_contract": "最短 {{count}} {{unit}}",
-    "service_products": "サービス商品"
+    "service_products": "サービス商品",
+    "all_statuses": "すべてのステータス",
+    "all_terms": "すべての期間",
+    "col_billing": "請求",
+    "col_code": "コード",
+    "col_stay": "滞在",
+    "col_term": "期間",
+    "status_disabled": "無効",
+    "status_draft": "下書き",
+    "status_expired": "期限切れ",
+    "status_scheduled": "予定"
   },
   "beneficiary": {
     "new": "新規受益者",
@@ -1397,7 +1505,31 @@
     "label_type": "受益者タイプ",
     "label_percentage": "割合（%）",
     "label_status": "ステータス",
-    "label_notes": "メモ"
+    "label_notes": "メモ",
+    "add_first": "受益者を追加",
+    "all_statuses": "すべてのステータス",
+    "all_types": "すべてのタイプ",
+    "btn_create": "受益者を作成",
+    "col_commission": "コミッション",
+    "col_priority": "優先度",
+    "col_product": "商品",
+    "col_rate": "率",
+    "custom_entry": "カスタム入力",
+    "delete_desc": "この受益者を削除してもよろしいですか？この操作は元に戻せません。",
+    "fixed_amount_desc": "取引ごとにこの受益者へ支払われる固定金額です。",
+    "label_commission_template": "コミッションテンプレート",
+    "label_commission_type": "コミッションタイプ",
+    "label_contract_product": "契約商品",
+    "label_fixed_amount": "固定金額",
+    "label_priority": "優先度",
+    "label_split_percentage": "配分割合",
+    "no_beneficiaries_sub": "受益者を追加してコミッションの配分を設定します。",
+    "priority_desc": "数字が小さいほど優先されます。",
+    "section_structure": "コミッション構成",
+    "split_percentage_desc": "この受益者に配分されるコミッションの割合です。",
+    "status_archived": "アーカイブ",
+    "type_fixed": "固定",
+    "type_percentage": "割合"
   },
   "commission": {
     "new": "新規コミッション",
@@ -1416,7 +1548,10 @@
     "label_rate": "コミッション率（%）",
     "label_amount": "金額",
     "label_status": "ステータス",
-    "label_notes": "メモ"
+    "label_notes": "メモ",
+    "all_statuses": "すべてのステータス",
+    "col_name": "名前",
+    "col_type": "タイプ"
   },
   "payment_info": {
     "new": "新規支払い情報",
@@ -1437,7 +1572,12 @@
     "label_account_number": "口座番号",
     "label_account_name": "口座名義",
     "label_stripe_id": "StripeアカウントID",
-    "label_status": "ステータス"
+    "label_status": "ステータス",
+    "all_types": "すべてのタイプ",
+    "col_bank_account": "銀行口座",
+    "col_name": "名前",
+    "col_type": "タイプ",
+    "payment_type": "支払タイプ"
   },
   "service": {
     "new": "新規サービス",
@@ -1455,7 +1595,46 @@
     "label_description": "説明",
     "label_price": "価格",
     "label_currency": "通貨",
-    "label_status": "ステータス"
+    "label_status": "ステータス",
+    "all_statuses": "すべてのステータス",
+    "all_types": "すべてのタイプ",
+    "archive_desc": "このサービスはアーカイブされ、有効なリストから非表示になります。後で復元できます。",
+    "archive_title": "サービスをアーカイブしますか？",
+    "btn_archive": "アーカイブ",
+    "col_billing": "請求",
+    "col_optional": "任意",
+    "col_refundable": "返金可能",
+    "col_type": "タイプ",
+    "description_placeholder": "このサービスの説明を入力...",
+    "display_on_booking_desc": "予約時にこのサービスを追加オプションとして表示します。",
+    "has_variants_desc": "このサービスに複数のオプションを提供します（例：サイズ、ランク）。",
+    "label_billing_trigger": "請求トリガー",
+    "label_display_on_booking": "予約時に表示",
+    "label_gst_included": "GST込み",
+    "label_has_variants": "バリエーションあり",
+    "label_refundable": "返金可能",
+    "label_requires_scheduling": "スケジュール調整が必要",
+    "label_scheduling_notes": "スケジュールメモ",
+    "label_sort_order": "並び順",
+    "label_stock_qty": "在庫数",
+    "label_stock_tracked": "在庫を追跡",
+    "label_type": "タイプ",
+    "label_variant_options": "バリエーションオプション",
+    "refundable_desc": "キャンセル時にこのサービスは返金できます。",
+    "scheduling_desc": "このサービスには予約された時間枠が必要です。",
+    "section_display": "表示",
+    "section_physical": "物理",
+    "section_scheduling": "スケジュール",
+    "sort_order_desc": "数字が小さいほど先に表示されます。",
+    "status_archived": "アーカイブ済み",
+    "stock_tracked_desc": "このサービスの利用可能な在庫を追跡します。",
+    "trigger_at_booking": "予約時",
+    "trigger_at_checkout": "チェックアウト時",
+    "trigger_on_request": "リクエスト時",
+    "type_one_time": "単発",
+    "type_physical": "物理",
+    "type_scheduled": "スケジュール制",
+    "variant_options_desc": "1行に1つずつオプションを入力してください。"
   },
   "service_host": {
     "new": "新規サービスホスト",
@@ -1489,7 +1668,19 @@
     "specialty_linen": "リネン",
     "specialty_hvac": "空調",
     "specialty_gardening": "造園",
-    "specialty_pest": "害虫駆除"
+    "specialty_pest": "害虫駆除",
+    "col_name": "名前",
+    "col_type": "タイプ",
+    "tab_accounting": "ジョブ & 精算",
+    "tab_cs": "CSチケット",
+    "tab_overview": "概要",
+    "tab_photos": "写真",
+    "section_main": "メイン",
+    "section_options": "オプション",
+    "label_business_start": "営業開始時刻 (0-23)",
+    "label_business_end": "営業終了時刻 (0-23)",
+    "search_account_placeholder": "アカウントを検索…",
+    "search_service_placeholder": "サービスを検索…"
   },
   "receipt": {
     "no_receipts": "領収書が見つかりません",
@@ -1516,7 +1707,13 @@
     "approve": "承認",
     "reject": "却下",
     "approved_toast": "スケジュールを承認しました",
-    "rejected_toast": "スケジュールを却下しました"
+    "rejected_toast": "スケジュールを却下しました",
+    "col_account": "アカウント",
+    "col_booking": "予約",
+    "col_next_due_date": "次回期日",
+    "col_start_date": "開始日",
+    "col_type": "タイプ",
+    "generate_invoices": "期日到来の請求書を生成"
   },
   "tenant_lifecycle": {
     "title": "テナントライフサイクル",
@@ -2337,7 +2534,17 @@
     "alert_overdue_tasks_one": "期限超過のタスク {{count}}件",
     "time_minutes_ago_one": "{{count}}分前",
     "time_hours_ago_one": "{{count}}時間前",
-    "time_days_ago_one": "{{count}}日前"
+    "time_days_ago_one": "{{count}}日前",
+    "alert_overdue_invoices": "延滞請求書{{count}}件 ({{amount}})",
+    "alert_overdue_tasks": "延滞タスク{{count}}件",
+    "alert_pending_approvals": "承認待ちの予約{{count}}件",
+    "alert_pending_properties": "承認待ちの物件{{count}}件",
+    "alert_urgent_work_orders": "緊急作業指示{{count}}件が対応待ちです",
+    "kpi_departures_scheduled": "出発予定{{count}}件",
+    "kpi_pending_approval": "{{count}}件承認待ち",
+    "time_days_ago": "{{count}}日前",
+    "time_hours_ago": "{{count}}時間前",
+    "time_minutes_ago": "{{count}}分前"
   },
   "settings_company": {
     "save_success_title": "保存しました",
@@ -2882,7 +3089,8 @@
       "live_preview_note": "実際のアシスタントと通信します — ここでのメッセージも訪問者の会話と同様に保存されます。",
       "enabled_toast": "ランディングページでチャットウィジェットを有効にしました",
       "disabled_toast": "ランディングページでチャットウィジェットを非表示にしました",
-      "update_error": "更新できませんでした"
+      "update_error": "更新できませんでした",
+      "docs_ok": "ナレッジ文書 {{count}}件 準備完了"
     },
     "preview": {
       "title": "{{appName}} アシスタント",
@@ -3004,7 +3212,8 @@
     "edit_addon": "付帯サービスを編集",
     "new_addon": "付帯サービスを追加",
     "delete_addon": "付帯サービスを削除",
-    "delete_confirm": "付帯サービスが削除されます。利用中の宿泊施設とのリンクが解除されます。"
+    "delete_confirm": "付帯サービスが削除されます。利用中の宿泊施設とのリンクが解除されます。",
+    "section": "分類"
   },
   "homestay": {
     "list_title": "ホームステイ申請",
@@ -3135,11 +3344,49 @@
   },
   "page_translations": {
     "site_guest": "ゲストサイト",
-    "site_homestay": "ホームステイ"
+    "site_homestay": "ホームステイ",
+    "ai_all": "AI ページ翻訳（全言語）",
+    "ai_all_title": "このページを有効なすべての言語に翻訳します（既存の値はスキップします）",
+    "ai_review": "AI ページレビュー",
+    "ai_review_title": "このページのすべての翻訳を英語の原文と照合してレビューし、問題を修正してレビュー済みにします",
+    "ai_this": "AI で空欄を補完（{{lang}}）",
+    "col_english": "英語（原文）",
+    "col_english_value": "英語の値",
+    "col_key": "キー",
+    "col_translation": "翻訳",
+    "keys_count": "{{count}}個のキー",
+    "language": "言語",
+    "missing_count": "{{count}}件未入力",
+    "no_keys": "このページのキーはまだありません。先に英語の原文を追加してください。",
+    "page": "ページ",
+    "page_subtitle": "ランディングページのコンテンツをページごとに整理し、AI 翻訳や手動編集ができます。保存するとライブサイトに即時反映されます。",
+    "page_title": "ページ翻訳",
+    "preview": "プレビュー",
+    "review_count": "{{count}}件 AI · 未レビュー",
+    "toast_ai_done": "AI が{{count}}件を翻訳しました",
+    "toast_ai_failed": "AI 翻訳に失敗しました",
+    "toast_review_done": "{{count}}件をレビューし、{{changed}}件を修正しました",
+    "toast_review_failed": "AI レビューに失敗しました",
+    "toast_save_failed": "保存に失敗しました",
+    "toast_saved": "{{count}}件の変更を保存しました"
   },
   "blog_categories": {
     "title": "ブログカテゴリ",
-    "subtitle": "ブログ記事と公開ブログのフィルターで使うカテゴリを管理します。"
+    "subtitle": "ブログ記事と公開ブログのフィルターで使うカテゴリを管理します。",
+    "add": "追加",
+    "added": "カテゴリを追加しました",
+    "col_actions": "アクション",
+    "col_name": "名前",
+    "col_visible": "表示",
+    "delete": "削除",
+    "delete_confirm": "「{{name}}」を削除しますか？すでに使用中の投稿のカテゴリはそのまま残ります。",
+    "delete_title": "カテゴリを削除",
+    "deleted": "カテゴリを削除しました",
+    "empty": "カテゴリはまだありません。",
+    "error": "問題が発生しました",
+    "hidden": "非表示",
+    "new_placeholder": "新しいカテゴリ名…",
+    "note": "カテゴリを非表示または削除しても、すでに使用中の投稿は変更されず、そのカテゴリのテキストは保持されます。"
   },
   "homestayStudent": {
     "list_title": "ホームステイ学生申請",
@@ -3380,7 +3627,8 @@
     "billing_override_title": "配置の請求上書き",
     "charge_pending_hint": "保留中の請求を作成します。支払いリスト（カードリンク / 銀行情報）から送信してください。",
     "toast_charge_created": "保留中の請求を作成しました",
-    "toast_link_sent": "支払いリンクを開き、学生にメール送信しました"
+    "toast_link_sent": "支払いリンクを開き、学生にメール送信しました",
+    "search_placeholder": "配置番号を検索…"
   },
   "homestayDoc": {
     "title": "署名・ドキュメント",
@@ -3402,7 +3650,9 @@
     "toast_none_sent": "何も送信されませんでした",
     "toast_none_sent_desc": "選択した宛先に受信者が設定されていません。設定 → 連携で運用通知用メールを設定するか、メールが登録されている受信者を選択してください。",
     "toast_link_copied": "署名リンクをコピーしました",
-    "error": "問題が発生しました"
+    "error": "問題が発生しました",
+    "btn_issue": "署名リクエストを発行",
+    "toast_issued": "署名リクエストを作成しました"
   },
   "documentTemplate": {
     "title": "ドキュメントテンプレート",
@@ -3651,5 +3901,41 @@
     "status_unavailable": "賃貸不可",
     "status_active": "有効",
     "status_inactive": "無効"
+  },
+  "finance": {
+    "no_receipts": "領収書が見つかりません",
+    "pause_schedule": "スケジュールを一時停止",
+    "pause_schedule_desc": "このスケジュールは一時停止されます。再開するまで新しい請求書は生成されません。",
+    "resume_schedule": "スケジュールを再開",
+    "resume_schedule_desc": "このスケジュールが再開され、次回の期日に請求書が生成されます。"
+  },
+  "service_host_acct": {
+    "add_payout": "精算を記録",
+    "amount": "金額",
+    "approve": "承認",
+    "approved": "承認済み",
+    "booking": "予約",
+    "cost": "費用",
+    "gl_note": "発生時に借方 外注費 / 貸方 外注未払金、支払時に借方 未払金 / 貸方 現金を計上します。",
+    "jobs": "サービスジョブ",
+    "mark_paid": "支払済みにする",
+    "no_jobs": "ジョブなし",
+    "no_payouts": "精算はまだありません",
+    "outstanding": "未払い精算",
+    "paid": "支払済み",
+    "payouts": "パートナー精算",
+    "price": "価格",
+    "ref": "番号",
+    "revenue": "発生売上",
+    "work_orders": "作業指示"
+  },
+  "service_host_cs": {
+    "category": "カテゴリ",
+    "empty": "このパートナーからのサポートチケットはありません",
+    "ref": "番号",
+    "subject": "件名"
+  },
+  "service_host_photos": {
+    "empty": "ジョブ写真はまだありません"
   }
 }

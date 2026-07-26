@@ -306,7 +306,29 @@
     "expired": "หมดอายุ",
     "disabled": "ปิดใช้งาน",
     "clone": "โคลน",
-    "cloning": "กำลังโคลน…"
+    "cloning": "กำลังโคลน…",
+    "add_service": "เพิ่มบริการ",
+    "all_contract_products": "สินค้าในสัญญาทั้งหมด",
+    "archive": "จัดเก็บ",
+    "archived": "จัดเก็บแล้ว",
+    "cancelled": "ยกเลิกแล้ว",
+    "created": "สร้างแล้ว",
+    "creating": "กำลังสร้าง…",
+    "delete_forever": "ลบถาวร",
+    "deleted": "ลบแล้ว",
+    "error": "ข้อผิดพลาด",
+    "notes_placeholder": "เพิ่มหมายเหตุ…",
+    "optional_blank_all": "ไม่บังคับ — เว้นว่างหมายถึงทั้งหมด",
+    "pause": "หยุดชั่วคราว",
+    "pending": "รอดำเนินการ",
+    "rejected": "ปฏิเสธแล้ว",
+    "restore": "กู้คืน",
+    "resume": "ดำเนินการต่อ",
+    "select_account": "เลือกบัญชี",
+    "source": "แหล่งที่มา",
+    "suspended": "ระงับแล้ว",
+    "title": "หัวข้อ",
+    "updated": "อัปเดตแล้ว"
   },
   "lang": {
     "label": "ภาษา",
@@ -846,7 +868,8 @@
     "label_ack_due": "ยืนยันภายใน",
     "label_acknowledged": "ยืนยันแล้ว",
     "not_dispatched": "ยังไม่ได้มอบหมาย ตั้งหมวดหมู่ให้ตรงกับความชำนาญของพาร์ทเนอร์แล้วมอบหมาย",
-    "dispatch_failed": "มอบหมายไม่สำเร็จ — ไม่มีพาร์ทเนอร์ที่ตรงกัน"
+    "dispatch_failed": "มอบหมายไม่สำเร็จ — ไม่มีพาร์ทเนอร์ที่ตรงกัน",
+    "completed_work_orders": "ใบสั่งงานที่เสร็จสิ้น"
   },
   "csticket": {
     "search_placeholder": "ค้นหาตั๋ว...",
@@ -915,7 +938,10 @@
     "requester_service_host": "เซอร์วิสโฮสต์",
     "create_work_order": "สร้างใบสั่งงาน",
     "work_order_linked": "สร้างใบสั่งงานแล้ว",
-    "dispatch_to_partner": "สร้างและมอบหมาย"
+    "dispatch_to_partner": "สร้างและมอบหมาย",
+    "all_types": "ทุกประเภท",
+    "col_requester": "ผู้ร้องขอ",
+    "col_type": "ประเภท"
   },
   "property": {
     "new": "อสังหาริมทรัพย์ใหม่",
@@ -948,7 +974,27 @@
     "tab_spaces": "พื้นที่",
     "tab_photos": "รูปภาพ",
     "tab_documents": "เอกสาร",
-    "tab_translations": "การแปล"
+    "tab_translations": "การแปล",
+    "btn_autodetect": "ตรวจหาอัตโนมัติ",
+    "btn_detecting": "กำลังตรวจหา…",
+    "col_address": "ที่อยู่",
+    "col_owner": "เจ้าของ",
+    "col_space_booking": "การจอง",
+    "col_space_name": "ชื่อพื้นที่",
+    "col_space_status": "สถานะ",
+    "col_space_type": "ประเภท",
+    "label_address2": "ที่อยู่ 2",
+    "label_approval_status": "สถานะการอนุมัติ",
+    "label_coords": "พิกัด",
+    "no_spaces": "ไม่พบพื้นที่",
+    "placeholder_address": "เช่น 123 ถนนสุขุมวิท",
+    "placeholder_address2": "เช่น ยูนิต 4B",
+    "placeholder_country": "เลือกประเทศ…",
+    "placeholder_description": "อธิบายอสังหาริมทรัพย์นี้…",
+    "placeholder_name": "เช่น ซันไรส์ อพาร์ทเมนต์",
+    "placeholder_suburb": "ค้นหาพื้นที่…",
+    "subtitle_new": "สร้างอสังหาริมทรัพย์ใหม่",
+    "tab_details": "รายละเอียด"
   },
   "space": {
     "new": "พื้นที่ใหม่",
@@ -1174,7 +1220,10 @@
     "svc_removed_toast": "ลบบริการแล้ว",
     "svc_remove_confirm": "ลบบริการนี้ออกจากพื้นที่หรือไม่?",
     "svc_add_failed": "เพิ่มบริการไม่สำเร็จ",
-    "tab_translations": "การแปล"
+    "tab_translations": "การแปล",
+    "col_owner": "เจ้าของ",
+    "col_updated": "วันที่แก้ไข",
+    "mode_manual": "ด้วยตนเอง"
   },
   "space_option": {
     "new": "ตัวเลือกพื้นที่ใหม่",
@@ -1190,7 +1239,16 @@
     "label_icon": "ไอคอน",
     "label_category": "หมวดหมู่",
     "label_status": "สถานะ",
-    "label_description": "คำอธิบาย"
+    "label_description": "คำอธิบาย",
+    "col_created": "วันที่สร้าง",
+    "col_display_name": "ชื่อที่แสดง",
+    "delete_desc": "คุณแน่ใจหรือไม่ว่าต้องการลบตัวเลือกพื้นที่นี้? การดำเนินการนี้ไม่สามารถยกเลิกได้",
+    "label_display_name": "ชื่อที่แสดง",
+    "no_records": "ไม่พบตัวเลือกพื้นที่",
+    "placeholder_category": "เช่น เฟอร์นิเจอร์",
+    "placeholder_display_name": "เช่น เครื่องปรับอากาศ",
+    "placeholder_name": "เช่น air_conditioning",
+    "subtitle_new": "สร้างตัวเลือกพื้นที่ใหม่"
   },
   "space_policy": {
     "new": "นโยบายพื้นที่ใหม่",
@@ -1214,7 +1272,12 @@
     "label_no_smoking": "ห้ามสูบบุหรี่",
     "label_min_age": "อายุขั้นต่ำ",
     "label_status": "สถานะ",
-    "label_notes": "หมายเหตุ"
+    "label_notes": "หมายเหตุ",
+    "label_meal_option": "ตัวเลือกมื้ออาหาร",
+    "label_minimum_age": "อายุขั้นต่ำ",
+    "no_records": "ไม่พบนโยบายพื้นที่",
+    "placeholder_name": "เช่น กฎบ้านมาตรฐาน",
+    "subtitle_new": "สร้างนโยบายพื้นที่ใหม่"
   },
   "suburb": {
     "new": "พื้นที่ใหม่",
@@ -1233,7 +1296,19 @@
     "label_country": "ประเทศ",
     "label_latitude": "ละติจูด",
     "label_longitude": "ลองจิจูด",
-    "label_status": "สถานะ"
+    "label_status": "สถานะ",
+    "all_countries": "ทุกประเทศ",
+    "col_area": "เขต",
+    "col_created": "วันที่สร้าง",
+    "delete_desc": "คุณแน่ใจหรือไม่ว่าต้องการลบพื้นที่นี้? การดำเนินการนี้ไม่สามารถยกเลิกได้",
+    "label_area_name": "ชื่อเขต",
+    "label_lat": "ละติจูด",
+    "label_lng": "ลองจิจูด",
+    "no_records": "ไม่พบพื้นที่",
+    "placeholder_area_name": "เช่น ย่านใจกลางเมือง",
+    "placeholder_name": "เช่น สุขุมวิท",
+    "state_filter_placeholder": "กรองตามจังหวัด/รัฐ…",
+    "subtitle_new": "สร้างพื้นที่ใหม่"
   },
   "product": {
     "new": "สินค้าใหม่",
@@ -1264,7 +1339,21 @@
     "label_period_unit": "หน่วยระยะเวลา",
     "label_promotion": "โปรโมชัน",
     "label_display_on_booking": "แสดงในหน้าการจอง",
-    "label_status": "สถานะ"
+    "label_status": "สถานะ",
+    "click_add_service": "คลิก \"เพิ่มบริการ\" เพื่อเริ่มต้น",
+    "col_unit": "หน่วย",
+    "delete_desc_1": "คุณแน่ใจหรือไม่ว่าต้องการลบ",
+    "delete_fail": "ลบสินค้าไม่สำเร็จ",
+    "label_display_on_invoice": "แสดงในใบแจ้งหนี้",
+    "label_group": "กลุ่มสินค้า",
+    "label_gst_included": "รวม GST",
+    "label_no_promotion": "ไม่มีโปรโมชัน",
+    "label_type": "ประเภทสินค้า",
+    "no_services_assigned": "ยังไม่มีบริการที่กำหนด",
+    "packed_services_desc": "บริการที่รวมอยู่กับสินค้านี้",
+    "section_display": "ตัวเลือกการแสดงผล",
+    "section_packed_services": "บริการแพ็กเกจ",
+    "status_archived": "จัดเก็บแล้ว"
   },
   "contract_product": {
     "new": "สินค้าในสัญญาใหม่",
@@ -1328,7 +1417,16 @@
     "unlimited": "ไม่จำกัด",
     "freq_weekly": "รายสัปดาห์",
     "freq_biweekly": "ทุกสองสัปดาห์",
-    "freq_monthly": "รายเดือน"
+    "freq_monthly": "รายเดือน",
+    "all_statuses": "ทุกสถานะ",
+    "all_terms": "ทุกระยะเวลา",
+    "all_types": "ทุกประเภท",
+    "col_billing": "การเรียกเก็บเงิน",
+    "col_eff_rate": "อัตราสุทธิ",
+    "col_promotion": "โปรโมชัน",
+    "col_space": "พื้นที่",
+    "col_term": "ระยะเวลา",
+    "col_weekly_rate": "ราคารายสัปดาห์"
   },
   "promotion": {
     "new": "โปรโมชันใหม่",
@@ -1379,7 +1477,17 @@
     "assoc_empty": "ยังไม่มีสินค้าที่เชื่อมโยงกับโปรโมชันนี้",
     "assoc_empty_hint": "กำหนดโปรโมชันนี้ให้กับสินค้าที่พักหรือสินค้าบริการเพื่อแสดงที่นี่",
     "min_contract": "ขั้นต่ำ {{count}} {{unit}}",
-    "service_products": "สินค้าบริการ"
+    "service_products": "สินค้าบริการ",
+    "all_statuses": "ทุกสถานะ",
+    "all_terms": "ทุกระยะเวลา",
+    "col_billing": "การเรียกเก็บเงิน",
+    "col_code": "รหัส",
+    "col_stay": "การเข้าพัก",
+    "col_term": "ระยะเวลา",
+    "status_disabled": "ปิดใช้งาน",
+    "status_draft": "ฉบับร่าง",
+    "status_expired": "หมดอายุ",
+    "status_scheduled": "กำหนดเวลาไว้"
   },
   "beneficiary": {
     "new": "ผู้รับผลประโยชน์ใหม่",
@@ -1397,7 +1505,31 @@
     "label_type": "ประเภทผู้รับผลประโยชน์",
     "label_percentage": "เปอร์เซ็นต์ (%)",
     "label_status": "สถานะ",
-    "label_notes": "หมายเหตุ"
+    "label_notes": "หมายเหตุ",
+    "add_first": "เพิ่มผู้รับผลประโยชน์",
+    "all_statuses": "ทุกสถานะ",
+    "all_types": "ทุกประเภท",
+    "btn_create": "สร้างผู้รับผลประโยชน์",
+    "col_commission": "ค่านายหน้า",
+    "col_priority": "ลำดับความสำคัญ",
+    "col_product": "สินค้า",
+    "col_rate": "อัตรา",
+    "custom_entry": "กำหนดเอง",
+    "delete_desc": "คุณแน่ใจหรือไม่ว่าต้องการลบผู้รับผลประโยชน์นี้? การดำเนินการนี้ไม่สามารถยกเลิกได้",
+    "fixed_amount_desc": "จำนวนเงินคงที่ที่จ่ายให้ผู้รับผลประโยชน์นี้ต่อธุรกรรม",
+    "label_commission_template": "เทมเพลตค่านายหน้า",
+    "label_commission_type": "ประเภทค่านายหน้า",
+    "label_contract_product": "สินค้าในสัญญา",
+    "label_fixed_amount": "จำนวนเงินคงที่",
+    "label_priority": "ลำดับความสำคัญ",
+    "label_split_percentage": "เปอร์เซ็นต์การแบ่ง",
+    "no_beneficiaries_sub": "เพิ่มผู้รับผลประโยชน์เพื่อกำหนดการแบ่งค่านายหน้า",
+    "priority_desc": "ตัวเลขที่น้อยกว่าจะมีลำดับความสำคัญก่อน",
+    "section_structure": "โครงสร้างค่านายหน้า",
+    "split_percentage_desc": "เปอร์เซ็นต์ของค่านายหน้าที่จัดสรรให้ผู้รับผลประโยชน์นี้",
+    "status_archived": "เก็บถาวร",
+    "type_fixed": "คงที่",
+    "type_percentage": "เปอร์เซ็นต์"
   },
   "commission": {
     "new": "ค่านายหน้าใหม่",
@@ -1416,7 +1548,10 @@
     "label_rate": "อัตราค่านายหน้า (%)",
     "label_amount": "จำนวนเงิน",
     "label_status": "สถานะ",
-    "label_notes": "หมายเหตุ"
+    "label_notes": "หมายเหตุ",
+    "all_statuses": "ทุกสถานะ",
+    "col_name": "ชื่อ",
+    "col_type": "ประเภท"
   },
   "payment_info": {
     "new": "ข้อมูลการชำระใหม่",
@@ -1437,7 +1572,12 @@
     "label_account_number": "เลขที่บัญชี",
     "label_account_name": "ชื่อบัญชี",
     "label_stripe_id": "Stripe Account ID",
-    "label_status": "สถานะ"
+    "label_status": "สถานะ",
+    "all_types": "ทุกประเภท",
+    "col_bank_account": "บัญชีธนาคาร",
+    "col_name": "ชื่อ",
+    "col_type": "ประเภท",
+    "payment_type": "ประเภทการชำระ"
   },
   "service": {
     "new": "บริการใหม่",
@@ -1455,7 +1595,46 @@
     "label_description": "คำอธิบาย",
     "label_price": "ราคา",
     "label_currency": "สกุลเงิน",
-    "label_status": "สถานะ"
+    "label_status": "สถานะ",
+    "all_statuses": "ทุกสถานะ",
+    "all_types": "ทุกประเภท",
+    "archive_desc": "บริการนี้จะถูกเก็บเข้าคลังและซ่อนจากรายการที่ใช้งานอยู่ คุณสามารถกู้คืนได้ภายหลัง",
+    "archive_title": "เก็บบริการเข้าคลัง?",
+    "btn_archive": "เก็บเข้าคลัง",
+    "col_billing": "การเรียกเก็บเงิน",
+    "col_optional": "ไม่บังคับ",
+    "col_refundable": "คืนเงินได้",
+    "col_type": "ประเภท",
+    "description_placeholder": "อธิบายบริการนี้...",
+    "display_on_booking_desc": "แสดงบริการนี้เป็นตัวเลือกเสริมระหว่างการจอง",
+    "has_variants_desc": "เสนอตัวเลือกหลายแบบสำหรับบริการนี้ (เช่น ขนาด ระดับ)",
+    "label_billing_trigger": "จุดเรียกเก็บเงิน",
+    "label_display_on_booking": "แสดงตอนจอง",
+    "label_gst_included": "รวม GST",
+    "label_has_variants": "มีตัวเลือกย่อย",
+    "label_refundable": "คืนเงินได้",
+    "label_requires_scheduling": "ต้องนัดเวลา",
+    "label_scheduling_notes": "หมายเหตุการนัดเวลา",
+    "label_sort_order": "ลำดับการจัดเรียง",
+    "label_stock_qty": "จำนวนสต็อก",
+    "label_stock_tracked": "ติดตามสต็อก",
+    "label_type": "ประเภท",
+    "label_variant_options": "ตัวเลือกย่อย",
+    "refundable_desc": "บริการนี้สามารถคืนเงินได้หากยกเลิก",
+    "scheduling_desc": "บริการนี้ต้องมีช่วงเวลาที่นัดหมายไว้",
+    "section_display": "การแสดงผล",
+    "section_physical": "สินค้าจริง",
+    "section_scheduling": "การนัดเวลา",
+    "sort_order_desc": "ตัวเลขน้อยกว่าจะแสดงก่อน",
+    "status_archived": "เก็บเข้าคลังแล้ว",
+    "stock_tracked_desc": "ติดตามสินค้าคงคลังที่มีสำหรับบริการนี้",
+    "trigger_at_booking": "ตอนจอง",
+    "trigger_at_checkout": "ตอนเช็คเอาต์",
+    "trigger_on_request": "เมื่อร้องขอ",
+    "type_one_time": "ครั้งเดียว",
+    "type_physical": "สินค้าจริง",
+    "type_scheduled": "ตามนัด",
+    "variant_options_desc": "เพิ่มหนึ่งตัวเลือกต่อหนึ่งบรรทัด"
   },
   "service_host": {
     "new": "เจ้าบ้านบริการใหม่",
@@ -1489,7 +1668,19 @@
     "specialty_linen": "ผ้า",
     "specialty_hvac": "ปรับอากาศ",
     "specialty_gardening": "สวน",
-    "specialty_pest": "กำจัดแมลง"
+    "specialty_pest": "กำจัดแมลง",
+    "col_name": "ชื่อ",
+    "col_type": "ประเภท",
+    "tab_accounting": "งาน & การจ่ายเงิน",
+    "tab_cs": "ทิกเก็ต CS",
+    "tab_overview": "ภาพรวม",
+    "tab_photos": "รูปภาพ",
+    "section_main": "หลัก",
+    "section_options": "ตัวเลือก",
+    "label_business_start": "เวลาเริ่มทำการ (0-23)",
+    "label_business_end": "เวลาสิ้นสุดทำการ (0-23)",
+    "search_account_placeholder": "ค้นหาบัญชี…",
+    "search_service_placeholder": "ค้นหาบริการ…"
   },
   "receipt": {
     "no_receipts": "ไม่พบใบเสร็จ",
@@ -1516,7 +1707,13 @@
     "approve": "อนุมัติ",
     "reject": "ปฏิเสธ",
     "approved_toast": "อนุมัติตารางแล้ว",
-    "rejected_toast": "ปฏิเสธตารางแล้ว"
+    "rejected_toast": "ปฏิเสธตารางแล้ว",
+    "col_account": "บัญชี",
+    "col_booking": "การจอง",
+    "col_next_due_date": "วันครบกำหนดถัดไป",
+    "col_start_date": "วันเริ่มต้น",
+    "col_type": "ประเภท",
+    "generate_invoices": "สร้างใบแจ้งหนี้ที่ครบกำหนด"
   },
   "tenant_lifecycle": {
     "title": "วงจรชีวิตผู้เช่า",
@@ -2337,7 +2534,17 @@
     "alert_overdue_tasks_one": "งานเกินกำหนด {{count}} รายการ",
     "time_minutes_ago_one": "{{count}} นาทีที่แล้ว",
     "time_hours_ago_one": "{{count}} ชั่วโมงที่แล้ว",
-    "time_days_ago_one": "{{count}} วันที่แล้ว"
+    "time_days_ago_one": "{{count}} วันที่แล้ว",
+    "alert_overdue_invoices": "ใบแจ้งหนี้ค้างชำระ {{count}} รายการ ({{amount}})",
+    "alert_overdue_tasks": "งานที่เกินกำหนด {{count}} รายการ",
+    "alert_pending_approvals": "การจองรอการอนุมัติ {{count}} รายการ",
+    "alert_pending_properties": "อสังหาริมทรัพย์รอการอนุมัติ {{count}} รายการ",
+    "alert_urgent_work_orders": "ใบสั่งงานเร่งด่วน {{count}} รายการต้องดำเนินการ",
+    "kpi_departures_scheduled": "กำหนดออก {{count}} รายการ",
+    "kpi_pending_approval": "รอการอนุมัติ {{count}} รายการ",
+    "time_days_ago": "{{count}} วันที่แล้ว",
+    "time_hours_ago": "{{count}} ชั่วโมงที่แล้ว",
+    "time_minutes_ago": "{{count}} นาทีที่แล้ว"
   },
   "settings_company": {
     "save_success_title": "บันทึกแล้ว",
@@ -2882,7 +3089,8 @@
       "live_preview_note": "นี่คือการสนทนากับผู้ช่วยจริง — ข้อความที่นี่จะถูกบันทึกเหมือนการสนทนาของผู้เข้าชมทั่วไป",
       "enabled_toast": "เปิดใช้งานวิดเจ็ตแชทบนหน้าแลนดิ้งแล้ว",
       "disabled_toast": "ซ่อนวิดเจ็ตแชทจากหน้าแลนดิ้งแล้ว",
-      "update_error": "ไม่สามารถอัปเดตได้"
+      "update_error": "ไม่สามารถอัปเดตได้",
+      "docs_ok": "เอกสารความรู้ {{count}} รายการพร้อมใช้งาน"
     },
     "preview": {
       "title": "ผู้ช่วย {{appName}}",
@@ -3004,7 +3212,8 @@
     "edit_addon": "แก้ไขบริการเสริม",
     "new_addon": "เพิ่มบริการเสริม",
     "delete_addon": "ลบบริการเสริม",
-    "delete_confirm": "การดำเนินการนี้จะลบบริการเสริม ที่พักที่ใช้งานอยู่จะสูญเสียการเชื่อมโยง"
+    "delete_confirm": "การดำเนินการนี้จะลบบริการเสริม ที่พักที่ใช้งานอยู่จะสูญเสียการเชื่อมโยง",
+    "section": "การจัดประเภท"
   },
   "homestay": {
     "list_title": "ใบสมัครโฮมสเตย์",
@@ -3135,11 +3344,49 @@
   },
   "page_translations": {
     "site_guest": "เว็บไซต์แขก",
-    "site_homestay": "โฮมสเตย์"
+    "site_homestay": "โฮมสเตย์",
+    "ai_all": "แปลหน้าด้วย AI (ทุกภาษา)",
+    "ai_all_title": "แปลหน้านี้เป็นทุกภาษาที่เปิดใช้งาน (ข้ามค่าที่มีอยู่แล้ว)",
+    "ai_review": "ตรวจทานหน้าด้วย AI",
+    "ai_review_title": "ตรวจทานทุกคำแปลในหน้านี้เทียบกับต้นฉบับภาษาอังกฤษ แก้ไขปัญหา และทำเครื่องหมายว่าตรวจทานแล้ว",
+    "ai_this": "AI เติมช่องว่าง ({{lang}})",
+    "col_english": "อังกฤษ (ต้นฉบับ)",
+    "col_english_value": "ค่าภาษาอังกฤษ",
+    "col_key": "คีย์",
+    "col_translation": "คำแปล",
+    "keys_count": "{{count}} คีย์",
+    "language": "ภาษา",
+    "missing_count": "ขาด {{count}} รายการ",
+    "no_keys": "ยังไม่มีคีย์สำหรับหน้านี้ กรุณาเพิ่มต้นฉบับภาษาอังกฤษก่อน",
+    "page": "หน้า",
+    "page_subtitle": "แปลด้วย AI และแก้ไขเนื้อหาหน้าแลนดิงด้วยตนเอง จัดตามหน้า การบันทึกจะมีผลกับเว็บไซต์จริงทันที",
+    "page_title": "การแปลหน้า",
+    "preview": "ดูตัวอย่าง",
+    "review_count": "{{count}} AI · ยังไม่ตรวจทาน",
+    "toast_ai_done": "AI แปลแล้ว {{count}} รายการ",
+    "toast_ai_failed": "การแปลด้วย AI ล้มเหลว",
+    "toast_review_done": "ตรวจทาน {{count}} รายการ แก้ไข {{changed}} รายการ",
+    "toast_review_failed": "การตรวจทานด้วย AI ล้มเหลว",
+    "toast_save_failed": "บันทึกล้มเหลว",
+    "toast_saved": "บันทึก {{count}} การเปลี่ยนแปลงแล้ว"
   },
   "blog_categories": {
     "title": "หมวดหมู่บล็อก",
-    "subtitle": "จัดการหมวดหมู่ที่ใช้กับบทความบล็อกและตัวกรองบล็อกสาธารณะ"
+    "subtitle": "จัดการหมวดหมู่ที่ใช้กับบทความบล็อกและตัวกรองบล็อกสาธารณะ",
+    "add": "เพิ่ม",
+    "added": "เพิ่มหมวดหมู่แล้ว",
+    "col_actions": "การดำเนินการ",
+    "col_name": "ชื่อ",
+    "col_visible": "แสดง",
+    "delete": "ลบ",
+    "delete_confirm": "ลบ \"{{name}}\" หรือไม่? โพสต์ที่ใช้อยู่แล้วจะยังคงหมวดหมู่เดิมไว้",
+    "delete_title": "ลบหมวดหมู่",
+    "deleted": "ลบหมวดหมู่แล้ว",
+    "empty": "ยังไม่มีหมวดหมู่",
+    "error": "เกิดข้อผิดพลาดบางอย่าง",
+    "hidden": "ซ่อน",
+    "new_placeholder": "ชื่อหมวดหมู่ใหม่…",
+    "note": "การซ่อนหรือลบหมวดหมู่จะไม่เปลี่ยนโพสต์ที่ใช้อยู่แล้ว — ข้อความหมวดหมู่ของโพสต์จะยังคงอยู่"
   },
   "homestayStudent": {
     "list_title": "ใบสมัครนักเรียนโฮมสเตย์",
@@ -3380,7 +3627,8 @@
     "billing_override_title": "การแทนที่การเรียกเก็บเงินของการจัดที่พัก",
     "charge_pending_hint": "การดำเนินการนี้สร้างรายการเรียกเก็บที่รอดำเนินการ ส่งรายการนี้ (ลิงก์บัตร / รายละเอียดธนาคาร) จากรายการการชำระเงิน",
     "toast_charge_created": "สร้างรายการเรียกเก็บที่รอดำเนินการแล้ว",
-    "toast_link_sent": "เปิดและส่งลิงก์ชำระเงินทางอีเมลถึงนักเรียนแล้ว"
+    "toast_link_sent": "เปิดและส่งลิงก์ชำระเงินทางอีเมลถึงนักเรียนแล้ว",
+    "search_placeholder": "ค้นหาหมายเลขการจัดวาง…"
   },
   "homestayDoc": {
     "title": "ลายเซ็นและเอกสาร",
@@ -3402,7 +3650,9 @@
     "toast_none_sent": "ไม่มีการส่งสิ่งใด",
     "toast_none_sent_desc": "ไม่ได้ตั้งค่าผู้รับสำหรับการเลือกของคุณ ตั้งค่าอีเมลแจ้งเตือนปฏิบัติการในการตั้งค่า → การเชื่อมต่อ หรือเลือกผู้รับที่มีอีเมลในระบบ",
     "toast_link_copied": "คัดลอกลิงก์ลงนามแล้ว",
-    "error": "เกิดข้อผิดพลาด"
+    "error": "เกิดข้อผิดพลาด",
+    "btn_issue": "ออกคำขอลงนาม",
+    "toast_issued": "สร้างคำขอลงนามแล้ว"
   },
   "documentTemplate": {
     "title": "แม่แบบเอกสาร",
@@ -3651,5 +3901,41 @@
     "status_unavailable": "ไม่พร้อมให้เช่า",
     "status_active": "ใช้งาน",
     "status_inactive": "ปิดใช้งาน"
+  },
+  "finance": {
+    "no_receipts": "ไม่พบใบเสร็จ",
+    "pause_schedule": "หยุดตารางชั่วคราว",
+    "pause_schedule_desc": "ตารางนี้จะถูกหยุดชั่วคราว จะไม่มีการสร้างใบแจ้งหนี้ใหม่จนกว่าจะเริ่มต่อ",
+    "resume_schedule": "เริ่มตารางต่อ",
+    "resume_schedule_desc": "ตารางนี้จะเริ่มต่อและจะสร้างใบแจ้งหนี้ในวันครบกำหนดถัดไป"
+  },
+  "service_host_acct": {
+    "add_payout": "บันทึกการจ่ายเงิน",
+    "amount": "จำนวนเงิน",
+    "approve": "อนุมัติ",
+    "approved": "อนุมัติแล้ว",
+    "booking": "การจอง",
+    "cost": "ค่าใช้จ่าย",
+    "gl_note": "การตั้งค้างลงเดบิตค่าใช้จ่ายผู้รับเหมา / เครดิตเจ้าหนี้ผู้รับเหมา และการจ่ายเงินลงเดบิตเจ้าหนี้ / เครดิตเงินสด",
+    "jobs": "งานบริการ",
+    "mark_paid": "ทำเครื่องหมายว่าจ่ายแล้ว",
+    "no_jobs": "ไม่มีงาน",
+    "no_payouts": "ยังไม่มีการจ่ายเงิน",
+    "outstanding": "การจ่ายเงินค้างชำระ",
+    "paid": "จ่ายแล้ว",
+    "payouts": "การจ่ายเงินพาร์ทเนอร์",
+    "price": "ราคา",
+    "ref": "รหัส",
+    "revenue": "รายได้ที่สร้าง",
+    "work_orders": "ใบสั่งงาน"
+  },
+  "service_host_cs": {
+    "category": "หมวดหมู่",
+    "empty": "ไม่มีทิกเก็ตสนับสนุนจากพาร์ทเนอร์นี้",
+    "ref": "รหัส",
+    "subject": "หัวข้อ"
+  },
+  "service_host_photos": {
+    "empty": "ยังไม่มีรูปภาพงาน"
   }
 }
