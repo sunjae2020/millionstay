@@ -285,7 +285,22 @@
     "sla_acknowledged": "Acknowledged",
     "sla_met": "On time",
     "sla_breached": "Breached",
-    "sla_escalated": "Escalated"
+    "sla_escalated": "Escalated",
+    "detail_back": "Back to work orders",
+    "detail_not_found": "Work order not found",
+    "priority": "Priority",
+    "priority_High": "High",
+    "priority_Normal": "Normal",
+    "priority_Low": "Low",
+    "description": "Description",
+    "details": "Details",
+    "dispatched": "Dispatched",
+    "acknowledged_at": "Acknowledged at",
+    "scheduled_at": "Scheduled",
+    "reported_at": "Reported",
+    "completed_at": "Completed at",
+    "cost": "Cost",
+    "notes": "Notes"
   },
   "documents": {
     "title": "Documents",
