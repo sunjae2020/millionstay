@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { DevLayout } from "@/components/development/DevLayout";
 import { usePageContent } from "@/lib/usePageContent";
+import { useCompanyContact } from "@/lib/guest-api";
 
 // Shared layout for the MetHeim (Korea) legal documents — 개인정보처리방침 /
 // 이용약관. Each renders a badge + title + effective date + intro, then a run of
@@ -15,6 +16,7 @@ export function LegalPage({ pageKey, ns }: { pageKey: "dev-privacy" | "dev-terms
   const { t } = useTranslation();
   const pc = usePageContent(pageKey);
   const company = usePageContent("dev-footer");
+  const org = useCompanyContact();
 
   const sections = Array.from({ length: MAX_SECTIONS }, (_, idx) => {
     const n = idx + 1;
@@ -24,14 +26,17 @@ export function LegalPage({ pageKey, ns }: { pageKey: "dev-privacy" | "dev-terms
     };
   }).filter((s) => s.title || s.body);
 
+  // Precedence: Settings → Organisation value if set, else CMS "dev-footer"
+  // overlay, else the localized i18n default.
   const infoAll: Array<[string, string]> = [
-    [t("dev.footer.company_name_label"), company("company_name", t("dev.footer.company_name"))],
-    [t("dev.footer.ceo_label"), company("ceo", t("dev.footer.ceo"))],
-    [t("dev.footer.biz_no_label"), company("biz_no", t("dev.footer.biz_no"))],
-    [t("dev.footer.address_label"), company("address", t("dev.footer.address"))],
-    [t("dev.footer.phone_label"), company("phone", t("dev.footer.phone"))],
-    [t("dev.footer.email_label"), company("email", t("dev.footer.email"))],
-    [t("dev.footer.privacy_officer_label"), company("privacy_officer", t("dev.footer.privacy_officer"))],
+    [t("dev.footer.company_name_label"), org.companyName || company("company_name", t("dev.footer.company_name"))],
+    [t("dev.footer.ceo_label"), org.ceo || company("ceo", t("dev.footer.ceo"))],
+    [t("dev.footer.biz_no_label"), org.bizNo || company("biz_no", t("dev.footer.biz_no"))],
+    [t("dev.footer.address_label"), org.address || company("address", t("dev.footer.address"))],
+    [t("dev.footer.phone_label"), org.phone || company("phone", t("dev.footer.phone"))],
+    [t("dev.footer.email_label"), org.email || company("email", t("dev.footer.email"))],
+    [t("dev.footer.homepage_label"), org.website || company("homepage", t("dev.footer.homepage"))],
+    [t("dev.footer.privacy_officer_label"), org.privacyOfficer || company("privacy_officer", t("dev.footer.privacy_officer"))],
   ];
   const info = infoAll.filter(([, v]) => v);
 

@@ -34,7 +34,7 @@ import { insertLeadWithGeneratedRef } from "../lib/leadRef.js";
 import { sendLeadNotificationEmail } from "../lib/email.js";
 import { sendApplicationAck } from "../services/applicationDocs.js";
 import type { ApplicationDocInput } from "../lib/documents/applicationPdf.js";
-import { resolveCompanyInfo } from "../lib/documents/companyInfo.js";
+import { resolvePublicCompanyContact } from "../lib/documents/companyInfo.js";
 import { getCompanyInfo } from "../lib/documents/theme";
 import { buildCalendar } from "../lib/ical.js";
 import { getSpaceCalendarEvents } from "../lib/spaceCalendar.js";
@@ -78,13 +78,15 @@ function productMinDays(period: number | null, unit: string | null): number | nu
 
 const router: IRouter = Router();
 
-/* GET /api/v1/public/company-contact — public-safe company contact details
+/* GET /api/v1/public/company-contact — public-safe company/operator details
    (single source = Settings → Organisation). Used by the guest web for the
-   support email shown in the footer / contact / receipt pages. */
+   support email AND for the landing footer + legal (개인정보처리방침/이용약관)
+   company block. Business-registration fields (company name, CEO, biz no,
+   address) are legally displayed publicly on a KR commerce site; footer fields
+   are empty when unset so the web falls back to its localized i18n defaults. */
 router.get("/v1/public/company-contact", async (_req, res): Promise<void> => {
   try {
-    const c = await resolveCompanyInfo();
-    res.json({ success: true, data: { email: c.email, phone: c.phone, tradingName: c.tradingName, website: c.website } });
+    res.json({ success: true, data: await resolvePublicCompanyContact() });
   } catch {
     const c = getCompanyInfo();
     res.json({ success: true, data: { email: c.email, phone: c.phone, tradingName: c.tradingName, website: c.website } });
@@ -179,7 +181,11 @@ async function listPublicSpaces(
   };
   const dbSpaceType = space_type ? (SPACE_TYPE_MAP[space_type] ?? space_type) : null;
 
-  const conditions: SQL[] = [eq(spacesTable.status, "Active")];
+  // Publicly listed = available to rent. "Active" is the standard flag; some
+  // white-label instances (e.g. MetHeim) mark the unit lifecycle in Korean on
+  // this column — "공실" (vacant) is the rentable state, while 임대/분양/임대불가
+  // (leased / for-sale / not-rentable) stay hidden.
+  const conditions: SQL[] = [inArray(spacesTable.status, ["Active", "공실"])];
   // Homestay listings are matched by the ops team, never browsed publicly.
   conditions.push(or(ne(spacesTable.space_type, "Homestay"), isNull(spacesTable.space_type)) as SQL);
   if (opts?.propertyIds) conditions.push(inArray(spacesTable.property_id, opts.propertyIds));

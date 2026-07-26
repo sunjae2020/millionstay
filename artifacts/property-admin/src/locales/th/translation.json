@@ -938,6 +938,7 @@
     "col_rate": "ราคารายสัปดาห์",
     "col_status": "สถานะ",
     "col_policy": "นโยบาย",
+    "all_parents": "พื้นที่หลักทั้งหมด",
     "col_parent": "พื้นที่หลัก",
     "col_created": "วันที่สร้าง",
     "delete_title": "ลบพื้นที่",
@@ -2336,7 +2337,14 @@
     "country_gb": "สหราชอาณาจักร",
     "regional_title": "การตั้งค่าภูมิภาค",
     "regional_subtitle": "เขตเวลาและการตั้งค่าการแสดงผล",
-    "timezone_label": "เขตเวลา"
+    "timezone_label": "เขตเวลา",
+    "operator_title": "ข้อมูลผู้ประกอบการ (ส่วนท้ายหน้าแลนดิ้ง)",
+    "operator_subtitle": "แสดงในส่วนท้ายของเว็บไซต์สาธารณะและหน้านโยบายความเป็นส่วนตัว / ข้อกำหนดการใช้งาน",
+    "ceo_label": "ผู้บริหาร / ผู้แทน",
+    "ceo_placeholder": "ชื่อ-นามสกุล",
+    "biz_no_label": "เลขทะเบียนธุรกิจ",
+    "privacy_officer_label": "ผู้รับผิดชอบข้อมูลส่วนบุคคล",
+    "privacy_officer_placeholder": "ชื่อ (อีเมล)"
   },
   "settings_dbsync": {
     "page_title": "ซิงค์ฐานข้อมูล",

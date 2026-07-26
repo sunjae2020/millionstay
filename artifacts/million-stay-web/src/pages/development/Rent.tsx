@@ -20,7 +20,8 @@ export default function DevRent() {
   const { t } = useTranslation();
   const pc = usePageContent("dev-rent");
   const { data } = useListFeaturedSpaces();
-  const spaces = (data?.data ?? []).slice(0, 4);
+  // 임대현황: 공실(Active·미점유) 중 3개만 미리보기로 노출. 나머지는 "전체보기" → /search (페이지네이션).
+  const spaces = (data?.data ?? []).slice(0, 3);
   const { forceDisplayCurrency } = useDisplayCurrency();
 
   const WHY = [
@@ -100,6 +101,15 @@ export default function DevRent() {
               {pc("short_title", t("dev.rent.short_heading"))}
             </h2>
             <p className="mt-2 text-gray-600 max-w-2xl leading-relaxed">{pc("short_body", t("dev.rent.short_body"))}</p>
+            {/* 랜트 옵션: 월 · 3개월 · 1년 등 임대 기간 안내 */}
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t("dev.rent.term_label")}</span>
+              {t("dev.rent.terms").split("·").map((term, i) => (
+                <span key={i} className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
+                  {term.trim()}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -114,7 +124,7 @@ export default function DevRent() {
                 {t("dev.rent.short_view_all")} <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
-            <div className="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {spaces.map((s: any, i: number) => (
                 <SpaceCard key={s.id} space={s} index={i} />
               ))}

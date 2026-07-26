@@ -938,6 +938,7 @@
     "col_rate": "주간 요금",
     "col_status": "상태",
     "col_policy": "정책",
+    "all_parents": "모든 상위 공간",
     "col_parent": "상위 공간",
     "col_created": "생성일",
     "delete_title": "공간 삭제",
@@ -2336,7 +2337,14 @@
     "country_gb": "영국",
     "regional_title": "지역 설정",
     "regional_subtitle": "시간대 및 표시 환경설정",
-    "timezone_label": "시간대"
+    "timezone_label": "시간대",
+    "operator_title": "사업자 정보(랜딩 푸터)",
+    "operator_subtitle": "공개 사이트 푸터와 개인정보처리방침·이용약관 페이지에 표시됩니다.",
+    "ceo_label": "대표자",
+    "ceo_placeholder": "성명",
+    "biz_no_label": "사업자등록번호",
+    "privacy_officer_label": "개인정보 보호책임자",
+    "privacy_officer_placeholder": "이름 (이메일)"
   },
   "settings_dbsync": {
     "page_title": "DB 동기화",

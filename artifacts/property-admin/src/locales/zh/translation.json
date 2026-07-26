@@ -938,6 +938,7 @@
     "col_rate": "周价格",
     "col_status": "状态",
     "col_policy": "政策",
+    "all_parents": "所有上级空间",
     "col_parent": "上级空间",
     "col_created": "创建时间",
     "delete_title": "删除空间",
@@ -2336,7 +2337,14 @@
     "country_gb": "英国",
     "regional_title": "区域设置",
     "regional_subtitle": "时区与显示偏好",
-    "timezone_label": "时区"
+    "timezone_label": "时区",
+    "operator_title": "经营者信息（落地页页脚）",
+    "operator_subtitle": "显示在公开网站页脚以及隐私政策 / 使用条款页面。",
+    "ceo_label": "代表 / 法定代表人",
+    "ceo_placeholder": "姓名",
+    "biz_no_label": "营业执照号",
+    "privacy_officer_label": "个人信息保护负责人",
+    "privacy_officer_placeholder": "姓名（邮箱）"
   },
   "settings_dbsync": {
     "page_title": "数据库同步",

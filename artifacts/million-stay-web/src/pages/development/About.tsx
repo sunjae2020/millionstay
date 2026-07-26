@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, Building2, Compass, HeartHandshake } from "lucide-react";
 import { DevLayout } from "@/components/development/DevLayout";
+import { BrandMark } from "@/components/brand-mark";
 import { usePageContent } from "@/lib/usePageContent";
 
 // 메트하임 소개 (About MetHeim) — brand story, logo meaning, image gallery, vision,
@@ -68,10 +69,10 @@ export default function DevAbout() {
       <section className="bg-[hsl(var(--brand-navy))] text-white">
         <div className="max-w-7xl mx-auto px-6 py-14 md:py-20 grid gap-10 lg:grid-cols-2 items-center">
           <div className="flex justify-center">
-            <div className="w-56 h-56 md:w-64 md:h-64 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center p-8">
+            <div className="w-56 h-56 md:w-64 md:h-64 rounded-3xl bg-white shadow-lg flex items-center justify-center p-8">
               {logoImage
-                ? <img src={logoImage} alt="MetHeim" className="max-w-full max-h-full object-contain" />
-                : <img src="/logo.svg" alt="MetHeim" className="max-w-full max-h-full object-contain brightness-0 invert opacity-90" />}
+                ? <img src={logoImage} alt="" className="max-w-full max-h-full object-contain" />
+                : <BrandMark variant="mark" className="max-w-full max-h-full object-contain" textClassName="text-4xl md:text-5xl" />}
             </div>
           </div>
           <div>

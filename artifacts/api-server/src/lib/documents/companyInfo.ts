@@ -31,6 +31,11 @@ export interface StoredCompanyInfo {
   country?: string;
   timezone?: string;
   logo_url?: string;
+  // Operator/legal fields shown in the public landing footer + legal pages
+  // (KR business-registration info, legally displayed publicly on a commerce site).
+  ceo?: string;
+  biz_no?: string;
+  privacy_officer?: string;
 }
 
 /** Read the raw stored blob (or empty object if unset / unparseable). */
@@ -69,5 +74,44 @@ export async function resolveCompanyInfo(): Promise<CompanyInfo> {
     website: s.website?.trim() || defaults.website,
     address: address || defaults.address,
     logoUrl: s.logo_url?.trim() || defaults.logoUrl,
+  };
+}
+
+/**
+ * Public-safe company/operator block for the landing footer + legal pages.
+ * Single source of truth = Settings → Organisation. Footer/legal fields are
+ * returned EMPTY when unset (not env-filled) so the guest web can fall back to
+ * its localized i18n defaults; only `email`/`tradingName` keep an env fallback
+ * for backward compatibility with the guest support-email lookup.
+ */
+export interface PublicCompanyContact {
+  email: string;
+  tradingName: string;
+  companyName: string;
+  ceo: string;
+  bizNo: string;
+  address: string;
+  phone: string;
+  website: string;
+  privacyOfficer: string;
+}
+
+export async function resolvePublicCompanyContact(): Promise<PublicCompanyContact> {
+  const defaults = getCompanyInfo();
+  const s = await readStoredCompanyInfo();
+  return {
+    email: s.email?.trim() || defaults.email,
+    tradingName: s.trading_name?.trim() || defaults.tradingName,
+    companyName: s.company_name?.trim() || "",
+    ceo: s.ceo?.trim() || "",
+    // `abn` is the same concept as a KR business-registration number — accept either.
+    bizNo: s.biz_no?.trim() || s.abn?.trim() || "",
+    // Free-text address line(s) only — NOT composeAddress(), whose AU state/
+    // country parts would pollute a KR footer (e.g. "…, VIC, AU"). Empty when
+    // unset so the web falls back to its localized i18n address.
+    address: [s.address1, s.address2].map((x) => x?.trim()).filter(Boolean).join(", "),
+    phone: s.phone?.trim() || "",
+    website: s.website?.trim() || "",
+    privacyOfficer: s.privacy_officer?.trim() || "",
   };
 }

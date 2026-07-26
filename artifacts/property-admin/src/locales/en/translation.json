@@ -938,6 +938,7 @@
     "col_rate": "Weekly Rate",
     "col_status": "Status",
     "col_policy": "Policy",
+    "all_parents": "All parent spaces",
     "col_parent": "Parent Space",
     "col_created": "Created",
     "delete_title": "Delete Space",
@@ -2336,7 +2337,14 @@
     "country_gb": "United Kingdom",
     "regional_title": "Regional Settings",
     "regional_subtitle": "Timezone and display preferences",
-    "timezone_label": "Timezone"
+    "timezone_label": "Timezone",
+    "operator_title": "Operator info (landing footer)",
+    "operator_subtitle": "Shown in the public site footer and the Privacy Policy / Terms pages.",
+    "ceo_label": "CEO / Representative",
+    "ceo_placeholder": "Full name",
+    "biz_no_label": "Business registration no.",
+    "privacy_officer_label": "Privacy officer",
+    "privacy_officer_placeholder": "Name (email)"
   },
   "settings_dbsync": {
     "page_title": "DB Sync",

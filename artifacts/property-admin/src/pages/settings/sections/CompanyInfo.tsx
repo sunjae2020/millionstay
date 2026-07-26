@@ -26,6 +26,9 @@ interface CompanyForm {
   postcode: string;
   country: string;
   timezone: string;
+  ceo: string;
+  biz_no: string;
+  privacy_officer: string;
 }
 
 const DEFAULTS: CompanyForm = {
@@ -43,6 +46,9 @@ const DEFAULTS: CompanyForm = {
   postcode: "",
   country: "AU",
   timezone: "Australia/Melbourne",
+  ceo: "",
+  biz_no: "",
+  privacy_officer: "",
 };
 
 export function CompanyInfo() {
@@ -120,6 +126,28 @@ export function CompanyInfo() {
           <Label>{t("settings_company.logo_url_label")}</Label>
           <Input {...register("logo_url")} placeholder="https://www.millionstay.com/millionstay-logo.png" />
           <p className="text-xs text-muted-foreground">{t("settings_company.logo_url_helper")}</p>
+        </div>
+      </div>
+
+      <Separator />
+
+      <div>
+        <h3 className="text-base font-semibold">{t("settings_company.operator_title")}</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">{t("settings_company.operator_subtitle")}</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <Label>{t("settings_company.ceo_label")}</Label>
+          <Input {...register("ceo")} placeholder={t("settings_company.ceo_placeholder")} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>{t("settings_company.biz_no_label")}</Label>
+          <Input {...register("biz_no")} placeholder="000-00-00000" />
+        </div>
+        <div className="space-y-1.5 col-span-2">
+          <Label>{t("settings_company.privacy_officer_label")}</Label>
+          <Input {...register("privacy_officer")} placeholder={t("settings_company.privacy_officer_placeholder")} />
         </div>
       </div>
 
