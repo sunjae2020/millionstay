@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, contractsTable, accountsTable, spacesTable, propertiesTable, contractProductsTable, accommodationCatalogTable, bookingsTable, recurringSchedulesTable, bookingServicesTable, invoicesTable, invoiceLineItemsTable, contractLineItemsTable } from "@workspace/db";
+import { db, contractsTable, accountsTable, spacesTable, propertiesTable, contractProductsTable, accommodationCatalogTable, bookingsTable, recurringSchedulesTable, bookingServicesTable, invoicesTable, invoiceLineItemsTable, contractLineItemsTable, contractRelatedCostsTable } from "@workspace/db";
 import { eq, ilike, and, like, desc, isNull, inArray } from "drizzle-orm";
 import { logAction } from "../utils/auditLog";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
@@ -940,6 +940,59 @@ router.patch("/v1/contracts/:id/line-items/:lineId", async (req, res): Promise<v
 router.delete("/v1/contracts/:id/line-items/:lineId", async (req, res): Promise<void> => {
   const lineId = Number(req.params.lineId);
   await db.update(contractLineItemsTable).set({ status: "Deleted", updated_at: new Date() }).where(eq(contractLineItemsTable.id, lineId));
+  res.json({ success: true });
+});
+
+// ─── Contract Related Costs CRUD ──────────────────────────────────────────────
+// Optional one-off costs (입주청소 / 임대수수료 / 부동산 수수료 …). 0..N per contract.
+
+router.get("/v1/contracts/:id/related-costs", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const rows = await db.select().from(contractRelatedCostsTable)
+    .where(and(eq(contractRelatedCostsTable.contract_id, id), eq(contractRelatedCostsTable.status, "Active")))
+    .orderBy(contractRelatedCostsTable.id);
+  res.json({ data: rows, meta: { total: rows.length } });
+});
+
+router.post("/v1/contracts/:id/related-costs", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const { cost_type, remitted_on, payee_name, amount, currency, note } = req.body;
+  if (!cost_type || !remitted_on || !payee_name || amount == null) {
+    res.status(400).json({ success: false, error: { message: "cost_type, remitted_on, payee_name and amount are required" } });
+    return;
+  }
+  const [row] = await db.insert(contractRelatedCostsTable).values({
+    contract_id: id,
+    cost_type,
+    remitted_on,
+    payee_name,
+    amount: Number(amount),
+    currency: currency ?? "AUD",
+    note: note ?? "",
+    status: "Active",
+  }).returning();
+  res.json(row);
+});
+
+router.patch("/v1/contracts/:id/related-costs/:costId", async (req, res): Promise<void> => {
+  const costId = Number(req.params.costId);
+  const { cost_type, remitted_on, payee_name, amount, currency, note } = req.body;
+  const [row] = await db.update(contractRelatedCostsTable).set({
+    ...(cost_type !== undefined && { cost_type }),
+    ...(remitted_on !== undefined && { remitted_on }),
+    ...(payee_name !== undefined && { payee_name }),
+    ...(amount !== undefined && { amount: Number(amount) }),
+    ...(currency !== undefined && { currency }),
+    ...(note !== undefined && { note }),
+    updated_at: new Date(),
+  }).where(eq(contractRelatedCostsTable.id, costId)).returning();
+  if (!row) { res.status(404).json({ success: false, error: { message: "Related cost not found" } }); return; }
+  res.json(row);
+});
+
+router.delete("/v1/contracts/:id/related-costs/:costId", async (req, res): Promise<void> => {
+  const costId = Number(req.params.costId);
+  await db.update(contractRelatedCostsTable).set({ status: "Deleted", updated_at: new Date() }).where(eq(contractRelatedCostsTable.id, costId));
   res.json({ success: true });
 });
 

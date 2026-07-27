@@ -22,7 +22,7 @@ import {
   getListContractsQueryKey, getGetContractQueryKey,
 } from "@workspace/api-client-react";
 import { LookupSelect } from "@/components/LookupSelect";
-import { ArrowLeft, Save, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail } from "lucide-react";
+import { ArrowLeft, Save, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail, Receipt } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentVersions } from "@/components/DocumentVersions";
@@ -125,6 +125,34 @@ export default function ContractDetail() {
     setLineDialogOpen(true);
   };
 
+  // Related Costs dialog state
+  const [costDialogOpen, setCostDialogOpen] = useState(false);
+  const [costEditItem, setCostEditItem] = useState<any | null>(null);
+  const [costType, setCostType] = useState("");
+  const [costRemittedOn, setCostRemittedOn] = useState("");
+  const [costPayeeName, setCostPayeeName] = useState("");
+  const [costAmount, setCostAmount] = useState("");
+  const [costCurrency, setCostCurrency] = useState("AUD");
+  const [costNote, setCostNote] = useState("");
+
+  const resetCostForm = () => {
+    setCostEditItem(null);
+    setCostType(""); setCostRemittedOn(""); setCostPayeeName("");
+    setCostAmount(""); setCostCurrency(contract?.currency ?? "AUD"); setCostNote("");
+  };
+
+  const openAddCost = () => { resetCostForm(); setCostDialogOpen(true); };
+  const openEditCost = (c: any) => {
+    setCostEditItem(c);
+    setCostType(c.cost_type ?? "");
+    setCostRemittedOn(c.remitted_on ?? "");
+    setCostPayeeName(c.payee_name ?? "");
+    setCostAmount(c.amount != null ? String(c.amount) : "");
+    setCostCurrency(c.currency ?? contract?.currency ?? "AUD");
+    setCostNote(c.note ?? "");
+    setCostDialogOpen(true);
+  };
+
   const openAddSched = () => { resetSchedForm(); setSchedDialogOpen(true); };
   const openEditSched = (s: any) => {
     setSchedEditItem(s);
@@ -157,6 +185,13 @@ export default function ContractDetail() {
     enabled: !isNew,
   });
   const lineItems: any[] = lineItemsData?.data ?? [];
+
+  const { data: relatedCostsData } = useQuery({
+    queryKey: ["contract-related-costs", id],
+    queryFn: async () => { const r = await apiFetch(`/api/v1/contracts/${id}/related-costs`); return r.json(); },
+    enabled: !isNew,
+  });
+  const relatedCosts: any[] = relatedCostsData?.data ?? [];
 
   const { register, handleSubmit, reset, control } = useForm<FormData>({
     defaultValues: {
@@ -242,6 +277,43 @@ export default function ContractDetail() {
     };
     if (lineEditItem) updateLineMutation.mutate({ lineId: lineEditItem.id, payload });
     else addLineMutation.mutate(payload);
+  };
+
+  const invalidateRelatedCosts = () => qc.invalidateQueries({ queryKey: ["contract-related-costs", id] });
+
+  const addCostMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const r = await apiFetch(`/api/v1/contracts/${id}/related-costs`, { method: "POST", body: JSON.stringify(payload), headers: { "Content-Type": "application/json" } });
+      if (!r.ok) throw new Error("Failed to add related cost");
+      return r.json();
+    },
+    onSuccess: () => { invalidateRelatedCosts(); setCostDialogOpen(false); resetCostForm(); },
+  });
+
+  const updateCostMutation = useMutation({
+    mutationFn: async ({ costId, payload }: { costId: number; payload: any }) => {
+      const r = await apiFetch(`/api/v1/contracts/${id}/related-costs/${costId}`, { method: "PATCH", body: JSON.stringify(payload), headers: { "Content-Type": "application/json" } });
+      if (!r.ok) throw new Error("Failed to update related cost");
+      return r.json();
+    },
+    onSuccess: () => { invalidateRelatedCosts(); setCostDialogOpen(false); resetCostForm(); },
+  });
+
+  const deleteCostMutation = useMutation({
+    mutationFn: async (costId: number) => {
+      const r = await apiFetch(`/api/v1/contracts/${id}/related-costs/${costId}`, { method: "DELETE" });
+      if (!r.ok && r.status !== 204) throw new Error("Failed to delete related cost");
+    },
+    onSuccess: () => invalidateRelatedCosts(),
+  });
+
+  const submitCostForm = () => {
+    const payload = {
+      cost_type: costType.trim(), remitted_on: costRemittedOn, payee_name: costPayeeName.trim(),
+      amount: Number(costAmount), currency: costCurrency, note: costNote.trim(),
+    };
+    if (costEditItem) updateCostMutation.mutate({ costId: costEditItem.id, payload });
+    else addCostMutation.mutate(payload);
   };
 
   const addSchedMutation = useMutation({
@@ -608,6 +680,7 @@ export default function ContractDetail() {
           <div className="flex border-b gap-1">
             {[
               { id: "line-items", label: `${t('contract.tab_line_items')}${lineItems.length ? ` (${lineItems.length})` : ""}`, icon: <List className="w-3.5 h-3.5" /> },
+              { id: "related-costs", label: `${t('contract.tab_related_costs')}${relatedCosts.length ? ` (${relatedCosts.length})` : ""}`, icon: <Receipt className="w-3.5 h-3.5" /> },
               { id: "schedule", label: `${t('contract.tab_schedule')}${schedules.length ? ` (${schedules.length})` : ""}`, icon: <CalendarDays className="w-3.5 h-3.5" /> },
             ].map((tab) => (
               <button
@@ -682,6 +755,65 @@ export default function ContractDetail() {
                         <td colSpan={6} className="px-4 py-3 text-right font-medium text-sm text-muted-foreground">{t('contract.total_contract_value')}</td>
                         <td className="px-4 py-3 font-mono font-bold text-sm">
                           {formatMoney(lineItems.reduce((sum: number, i: any) => sum + Number(i.total_price ?? 0), 0), currency, currencyPosition)}
+                        </td>
+                        <td colSpan={2} />
+                      </tr>
+                    </tfoot>
+                  )}
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "related-costs" && (
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h4 className="font-medium text-sm">{t('contract.related_costs_title')}</h4>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t('contract.related_costs_desc')}</p>
+                </div>
+                <Button size="sm" variant="outline" onClick={openAddCost}>
+                  <Plus className="w-3.5 h-3.5 mr-1" /> {t('contract.btn_add_cost')}
+                </Button>
+              </div>
+              <div className="rounded-lg border bg-white overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 border-b">
+                    <tr>
+                      {[t('contract.col_cost_type'), t('contract.col_remitted_on'), t('contract.col_payee_name'), t('common.amount'), t('contract.col_remarks'), ""].map((h, hi) => (
+                        <th key={hi} className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {!relatedCosts.length ? (
+                      <tr><td colSpan={6} className="text-center py-10 text-muted-foreground">{t('contract.no_related_costs')}</td></tr>
+                    ) : relatedCosts.map((c: any) => (
+                      <tr key={c.id} className="border-b hover:bg-gray-50">
+                        <td className="px-4 py-3 font-medium">{c.cost_type}</td>
+                        <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{c.remitted_on ? formatDate(c.remitted_on) : "—"}</td>
+                        <td className="px-4 py-3">{c.payee_name || "—"}</td>
+                        <td className="px-4 py-3 font-mono">{c.amount != null ? `${Number(c.amount).toLocaleString()} ${c.currency ?? ""}`.trim() : "—"}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{c.note || "—"}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-1">
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => openEditCost(c)}>
+                              <Pencil className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-red-500 hover:text-red-700" onClick={() => deleteCostMutation.mutate(c.id)}>
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  {relatedCosts.length > 0 && (
+                    <tfoot className="bg-gray-50 border-t">
+                      <tr>
+                        <td colSpan={3} className="px-4 py-3 text-right font-medium text-sm text-muted-foreground">{t('contract.total_related_costs')}</td>
+                        <td className="px-4 py-3 font-mono font-bold text-sm whitespace-nowrap">
+                          {relatedCosts.reduce((sum: number, c: any) => sum + Number(c.amount ?? 0), 0).toLocaleString()} {relatedCosts[0]?.currency ?? ""}
                         </td>
                         <td colSpan={2} />
                       </tr>
@@ -901,6 +1033,71 @@ export default function ContractDetail() {
               onClick={submitLineForm}
             >
               {lineEditItem ? t('contract.btn_save_changes') : t('contract.dlg_add_line')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add / Edit Related Cost Dialog */}
+      <Dialog open={costDialogOpen} onOpenChange={(open) => { if (!open) { setCostDialogOpen(false); resetCostForm(); } }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{costEditItem ? t('contract.dlg_edit_cost') : t('contract.dlg_add_cost')}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>{t('contract.col_cost_type')} *</Label>
+              <Input
+                value={costType}
+                onChange={e => setCostType(e.target.value)}
+                placeholder={t('contract.ph_cost_type')}
+                list="related-cost-type-suggestions"
+                className="mt-1"
+              />
+              <datalist id="related-cost-type-suggestions">
+                <option value={t('contract.cost_type_move_in_cleaning')} />
+                <option value={t('contract.cost_type_rental_fee')} />
+                <option value={t('contract.cost_type_agency_fee')} />
+              </datalist>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>{t('contract.col_remitted_on')} *</Label>
+                <DateInput value={costRemittedOn} onChange={setCostRemittedOn} className="mt-1" />
+              </div>
+              <div>
+                <Label>{t('contract.col_payee_name')} *</Label>
+                <Input value={costPayeeName} onChange={e => setCostPayeeName(e.target.value)} placeholder={t('contract.ph_payee_name')} className="mt-1" />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="col-span-2">
+                <Label>{t('common.amount')} *</Label>
+                <Input type="number" step="0.01" min="0" value={costAmount} onChange={e => setCostAmount(e.target.value)} placeholder="0.00" className="mt-1" />
+              </div>
+              <div>
+                <Label>{t('contract.label_currency')}</Label>
+                <Select value={costCurrency} onValueChange={setCostCurrency}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label>{t('contract.col_remarks')} *</Label>
+              <Input value={costNote} onChange={e => setCostNote(e.target.value)} placeholder={t('contract.ph_remarks')} className="mt-1" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setCostDialogOpen(false); resetCostForm(); }}>{t('common.cancel')}</Button>
+            <Button
+              className="bg-primary hover:bg-[#d4561a] text-white"
+              disabled={!costType.trim() || !costRemittedOn || !costPayeeName.trim() || !costAmount || !costNote.trim() || addCostMutation.isPending || updateCostMutation.isPending}
+              onClick={submitCostForm}
+            >
+              {costEditItem ? t('contract.btn_save_changes') : t('contract.dlg_add_cost')}
             </Button>
           </DialogFooter>
         </DialogContent>
