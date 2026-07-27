@@ -18,6 +18,7 @@ import { apiFetch } from "@/lib/apiFetch";
 import { LookupSelect } from "@/components/LookupSelect";
 import { HomestaySignatureCard } from "@/components/HomestaySignatureCard";
 import { StudentStatusBadge, STUDENT_STATUS_ORDER, STUDENT_STATUS_CONFIG, type StudentStatus } from "./HomestayStudentRequests";
+import { useBrand } from "@/contexts/ThemeContext";
 
 const API = "/api/v1/homestay-student-requests";
 
@@ -155,6 +156,7 @@ function YesNoTag({ value }: { value?: boolean }) {
 
 export default function HomestayStudentRequestDetail() {
   const { t } = useTranslation();
+  const { currency: brandCurrency } = useBrand();
   const { toast } = useToast();
   const qc = useQueryClient();
   const params = useParams<{ id: string }>();
@@ -173,7 +175,7 @@ export default function HomestayStudentRequestDetail() {
   // Create-placement dialog (from a host suggestion).
   const [placeOpen, setPlaceOpen] = useState(false);
   const [placeHost, setPlaceHost] = useState<{ id: number; name: string } | null>(null);
-  const [placeForm, setPlaceForm] = useState({ move_in_date: "", move_out_date: "", placement_fee: "", deposit: "", monthly_fee: "", currency: "AUD" });
+  const [placeForm, setPlaceForm] = useState({ move_in_date: "", move_out_date: "", placement_fee: "", deposit: "", monthly_fee: "", currency: brandCurrency });
   // Org-standard fee defaults (Settings → Homestay Billing) used to pre-fill the Create placement modal.
   const { data: billingResp } = useQuery({
     queryKey: ["homestay-billing-settings"],
@@ -330,7 +332,7 @@ export default function HomestayStudentRequestDetail() {
           placement_fee: placeForm.placement_fee || undefined,
           deposit: placeForm.deposit || undefined,
           monthly_fee: placeForm.monthly_fee || "0",
-          currency: placeForm.currency || "AUD",
+          currency: placeForm.currency || brandCurrency,
         }),
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error ?? "Failed to create placement");

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { DEFAULT_CURRENCY } from "../lib/currency";
 import { db, contractProductsTable, spacesTable, promotionsTable } from "@workspace/db";
 import { eq, ilike, and, isNull, inArray } from "drizzle-orm";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
@@ -66,7 +67,7 @@ router.post("/v1/contract-products", async (req, res): Promise<void> => {
     weekly_rate: data.weekly_rate ?? null,
     monthly_rate: data.monthly_rate ?? null,
     effective_weekly_rate: data.effective_weekly_rate ?? null,
-    currency: data.currency ?? "AUD",
+    currency: data.currency ?? DEFAULT_CURRENCY,
     billing_frequency: data.billing_frequency ?? null,
     bond_weeks: data.bond_weeks ?? 4,
     advance_weeks: data.advance_weeks ?? 2,
@@ -107,7 +108,7 @@ router.put("/v1/contract-products/:id", async (req, res): Promise<void> => {
     weekly_rate: data.weekly_rate ?? null,
     monthly_rate: data.monthly_rate ?? null,
     effective_weekly_rate: data.effective_weekly_rate ?? null,
-    currency: data.currency ?? "AUD",
+    currency: data.currency ?? DEFAULT_CURRENCY,
     billing_frequency: data.billing_frequency ?? null,
     bond_weeks: data.bond_weeks ?? null,
     advance_weeks: data.advance_weeks ?? null,

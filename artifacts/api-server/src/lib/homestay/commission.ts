@@ -13,6 +13,7 @@
 //
 // Money/rate columns are numeric → strings; wrap reads in Number(), writes in String().
 import { and, desc, eq, isNull } from "drizzle-orm";
+import { DEFAULT_CURRENCY } from "../currency.js";
 import {
   db,
   homestayPlacementsTable,
@@ -97,13 +98,13 @@ export async function createCommissionForPlacement(placementId: number): Promise
       fixed_component: String(fixed_component),
       percentage_component: String(percentage_component),
       amount: String(amount),
-      currency: placement.currency || "AUD",
+      currency: placement.currency || DEFAULT_CURRENCY,
       status: "Pending",
     })
     .returning({ id: agentCommissionLedgerTable.id });
 
   // Auto-post the GL accrual (best-effort; never blocks the accrual flow).
-  void postCommissionAccrued({ id: row!.id, amount: Number(amount), currency: placement.currency || "AUD" });
+  void postCommissionAccrued({ id: row!.id, amount: Number(amount), currency: placement.currency || DEFAULT_CURRENCY });
 
   return row!.id;
 }

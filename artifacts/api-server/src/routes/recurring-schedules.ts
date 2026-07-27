@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { DEFAULT_CURRENCY } from "../lib/currency";
 import { db, recurringSchedulesTable, invoicesTable, bookingsTable, accountsTable } from "@workspace/db";
 import { eq, and, lte, ilike, isNull, inArray } from "drizzle-orm";
 import { z } from "zod";
@@ -14,7 +15,7 @@ const CreateRecurringScheduleBody = z.object({
   schedule_type: z.enum(["Rent", "ServiceFee", "AdminFee"]).default("Rent"),
   frequency: z.enum(["Weekly", "Biweekly", "Monthly"]).default("Biweekly"),
   amount: z.string().min(1),
-  currency: z.string().default("AUD"),
+  currency: z.string().default(DEFAULT_CURRENCY),
   gst_included: z.boolean().default(true),
   start_date: z.string().min(1),
   end_date: z.string().optional().nullable(),

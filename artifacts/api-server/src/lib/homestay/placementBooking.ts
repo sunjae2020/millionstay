@@ -10,6 +10,7 @@
 // Money columns are numeric → Drizzle returns/accepts strings; wrap writes in
 // String(), reads in Number().
 import { and, eq, ilike, isNull } from "drizzle-orm";
+import { DEFAULT_CURRENCY } from "../currency.js";
 import {
   db,
   bookingsTable,
@@ -156,7 +157,7 @@ export async function createBookingForPlacement({
       check_in_date: placement.move_in_date ?? null,
       check_out_date: placement.move_out_date ?? null,
       agreed_weekly_rate: weekly,
-      currency: placement.currency ?? "AUD",
+      currency: placement.currency ?? DEFAULT_CURRENCY,
       num_guests: 1,
       room_type,
       meal_plan,

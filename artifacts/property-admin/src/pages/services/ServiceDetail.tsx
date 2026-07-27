@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Save, Calendar, Package, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
+import { useBrand } from "@/contexts/ThemeContext";
 
 const STATUS_COLORS: Record<string, string> = {
   Active: "bg-green-100 text-green-700",
@@ -69,6 +70,7 @@ export default function ServiceDetail() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const qc = useQueryClient();
+  const { currency: brandCurrency } = useBrand();
   const isNew = id === "new";
 
   const { data: service } = useQuery({
@@ -83,7 +85,7 @@ export default function ServiceDetail() {
       description:            service.description ?? "",
       service_type:           service.service_type ?? "one_time",
       base_price:             service.base_price != null ? String(service.base_price) : "",
-      currency:               service.currency ?? "AUD",
+      currency:               service.currency ?? brandCurrency,
       is_optional:            service.is_optional ?? true,
       is_refundable:          service.is_refundable ?? false,
       billing_trigger:        service.billing_trigger ?? "at_booking",
@@ -97,7 +99,7 @@ export default function ServiceDetail() {
       display_on_booking_page: service.display_on_booking_page ?? true,
       sort_order:             service.sort_order != null ? String(service.sort_order) : "0",
       status:                 service.status ?? "Active",
-    } : DEFAULTS,
+    } : { ...DEFAULTS, currency: brandCurrency },
   });
 
   const watchedType = watch("service_type");

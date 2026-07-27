@@ -21,11 +21,12 @@ import {
 } from "@workspace/api-client-react";
 import { LookupSelect } from "@/components/LookupSelect";
 import { useBrand } from "@/contexts/ThemeContext";
+import { SUPPORTED_CURRENCIES } from "@/lib/currency";
 import { ArrowLeft, Save, Trash2, Tag } from "lucide-react";
 import { Link } from "wouter";
 
 const PRODUCT_TYPES = ["Room", "Suite", "Apartment", "House", "Studio", "Service"];
-const CURRENCIES = ["KRW", "AUD", "USD", "SGD", "MYR", "GBP"];
+const CURRENCIES = SUPPORTED_CURRENCIES.map((c) => c.code);
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-700",
   Active: "bg-green-100 text-green-700",
@@ -132,7 +133,7 @@ export default function ContractProductDetail() {
         weekly_rate: product.weekly_rate != null ? String(product.weekly_rate) : "",
         monthly_rate: product.monthly_rate != null ? String(product.monthly_rate) : "",
         effective_weekly_rate: product.effective_weekly_rate != null ? String(product.effective_weekly_rate) : "",
-        currency: product.currency ?? "AUD",
+        currency: product.currency ?? brandCurrency,
         billing_frequency: product.billing_frequency ?? "Biweekly",
         bond_weeks: product.bond_weeks != null ? String(product.bond_weeks) : "4",
         advance_weeks: product.advance_weeks != null ? String(product.advance_weeks) : "2",
@@ -173,7 +174,7 @@ export default function ContractProductDetail() {
     weekly_rate: data.weekly_rate ? Number(data.weekly_rate) : null,
     monthly_rate: data.monthly_rate ? Number(data.monthly_rate) : null,
     effective_weekly_rate: data.effective_weekly_rate ? Number(data.effective_weekly_rate) : null,
-    currency: data.currency || "AUD",
+    currency: data.currency || brandCurrency,
     billing_frequency: data.billing_frequency || null,
     bond_weeks: data.bond_weeks ? Number(data.bond_weeks) : null,
     advance_weeks: data.advance_weeks ? Number(data.advance_weeks) : null,

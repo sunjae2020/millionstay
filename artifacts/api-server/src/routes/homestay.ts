@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import { DEFAULT_CURRENCY } from "../lib/currency";
 import bcrypt from "bcryptjs";
 import multer from "multer";
 import { eq, and, isNull, desc, ilike, or, inArray, sql } from "drizzle-orm";
@@ -119,7 +120,7 @@ async function ensureHomestayListings(app: typeof homestayHostApplicationsTable.
       name: r.name?.trim() || `Homestay Room ${i + 1}`,
       space_type: "Homestay",
       max_occupancy: bedOccupancy(r.bed_type),
-      base_currency: "AUD",
+      base_currency: DEFAULT_CURRENCY,
       description: r.comments ?? null,
       status: "Inactive", // hidden until the host activates their landing page
       property_id: property!.id,
@@ -139,7 +140,7 @@ async function ensureHomestayListings(app: typeof homestayHostApplicationsTable.
       room_type: "homestay" as const,
       meal_plan,
       includes_meals: meal_plan !== "none",
-      currency: "AUD",
+      currency: DEFAULT_CURRENCY,
       product_provider_account_id: app.account_id,
       status: "Active",
     })),

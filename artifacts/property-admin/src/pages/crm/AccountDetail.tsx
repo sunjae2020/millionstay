@@ -21,6 +21,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Save, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
 import { formatDate } from "@/lib/date";
+import { useBrand } from "@/contexts/ThemeContext";
+import { SUPPORTED_CURRENCIES } from "@/lib/currency";
 
 const ACCOUNT_TYPE_COLORS: Record<string, string> = {
   Guest: "bg-blue-100 text-blue-700 border-blue-200",
@@ -34,7 +36,7 @@ const ACCOUNT_TYPE_COLORS: Record<string, string> = {
 
 const ACCOUNT_TYPES_WITH_FINANCE = ["SpaceOwner", "Broker", "Manager", "RealEstateAgent", "ServiceHost", "Partner"];
 
-const CURRENCIES = ["AUD", "USD", "CNY", "KRW", "JPY", "GBP", "EUR", "SGD", "NZD"];
+const CURRENCIES = SUPPORTED_CURRENCIES.map((c) => c.code);
 
 const BOOKING_STATUS_COLORS: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-600",
@@ -90,6 +92,7 @@ interface AccountForm {
 
 export default function AccountDetail() {
   const { t } = useTranslation();
+  const { currency: brandCurrency } = useBrand();
   const params = useParams<{ id: string }>();
   const isNew = params.id === "new";
   const id = isNew ? null : parseInt(params.id ?? "0", 10);
@@ -122,7 +125,7 @@ export default function AccountDetail() {
       address_line1: "", address_suburb: "", address_state: "", address_postcode: "", address_country: "Australia",
       secondary_address_line1: "", secondary_address_suburb: "", secondary_address_state: "",
       secondary_address_postcode: "", secondary_address_country: "",
-      payment_info_id: null, default_commission_id: null, default_currency: "AUD",
+      payment_info_id: null, default_commission_id: null, default_currency: brandCurrency,
       parent_account_id: null, description: "", manual_input: false, status: "Active",
     },
   });
@@ -155,7 +158,7 @@ export default function AccountDetail() {
         secondary_address_country: account.secondary_address_country ?? "",
         payment_info_id: account.payment_info_id ?? null,
         default_commission_id: account.default_commission_id ?? null,
-        default_currency: account.default_currency ?? "AUD",
+        default_currency: account.default_currency ?? brandCurrency,
         parent_account_id: account.parent_account_id ?? null,
         description: account.description ?? "",
         manual_input: account.manual_input ?? false,

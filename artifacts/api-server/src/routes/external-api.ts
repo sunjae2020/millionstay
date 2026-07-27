@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import { DEFAULT_CURRENCY } from "../lib/currency";
 import { randomBytes } from "node:crypto";
 import { eq, and, gte, lte, isNull, inArray, desc, sql, type SQL } from "drizzle-orm";
 import {
@@ -99,7 +100,7 @@ router.post("/v1/bookings", requireScope("bookings:write"), async (req, res): Pr
       check_out_date: typeof b.check_out_date === "string" ? b.check_out_date : null,
       num_guests: b.num_guests != null ? Number(b.num_guests) : 1,
       agreed_weekly_rate: b.agreed_weekly_rate != null ? String(b.agreed_weekly_rate) : null,
-      currency: typeof b.currency === "string" ? b.currency : "AUD",
+      currency: typeof b.currency === "string" ? b.currency : DEFAULT_CURRENCY,
       customer_notes: typeof b.customer_notes === "string" ? b.customer_notes : null,
       booking_status: typeof b.booking_status === "string" ? b.booking_status : "Draft",
       booking_source: "external_api",

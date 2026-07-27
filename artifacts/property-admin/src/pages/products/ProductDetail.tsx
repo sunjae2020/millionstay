@@ -135,7 +135,7 @@ export default function ProductDetail() {
       item_description: product.item_description ?? "",
       price: product.price != null ? String(product.price) : "",
       weekly_rate: product.weekly_rate != null ? String(product.weekly_rate) : "",
-      currency: product.currency ?? "AUD",
+      currency: product.currency ?? brandCurrency,
       product_group_id: product.product_group_id ?? "",
       product_type_id: product.product_type_id ?? "",
       promotion_id: product.promotion_id ?? "",
@@ -297,7 +297,7 @@ export default function ProductDetail() {
             <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">{t('product.section_pricing')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <Label>{t('product.label_weekly_rate')}</Label>
+                <Label>{t('product.label_weekly_rate', { currency: brandCurrency })}</Label>
                 <Input {...register("weekly_rate")} type="number" step="0.01" placeholder="0.00" className="mt-1" />
               </div>
               <div>
@@ -320,11 +320,11 @@ export default function ProductDetail() {
                 <Label>{t('product.label_gst_included')}</Label>
               </div>
               <div>
-                <Label>{t('product.label_admin_fee')}</Label>
+                <Label>{t('product.label_admin_fee', { currency: brandCurrency })}</Label>
                 <Input {...register("admin_fee")} type="number" step="0.01" placeholder="0.00" className="mt-1" />
               </div>
               <div>
-                <Label>{t('product.label_cleaning_fee')}</Label>
+                <Label>{t('product.label_cleaning_fee', { currency: brandCurrency })}</Label>
                 <Input {...register("cleaning_fee")} type="number" step="0.01" placeholder="0.00" className="mt-1" />
               </div>
             </div>
@@ -384,7 +384,7 @@ export default function ProductDetail() {
                 <Input {...register("advance_weeks")} type="number" step="0.5" placeholder="2" className="mt-1" />
               </div>
               <div>
-                <Label>{t('product.label_bond_amount')}</Label>
+                <Label>{t('product.label_bond_amount', { currency: brandCurrency })}</Label>
                 <Input {...register("bond_amount")} type="number" step="0.01" placeholder={t('product.ph_bond_amount')} className="mt-1" />
               </div>
               <div>

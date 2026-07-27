@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import { DEFAULT_CURRENCY } from "../lib/currency";
 import { randomBytes } from "node:crypto";
 import { and, eq, asc, desc, gte, lte, inArray, or, isNull, isNotNull } from "drizzle-orm";
 import {
@@ -507,7 +508,7 @@ router.put("/v1/spaces/:id/rate-calendar", async (req, res): Promise<void> => {
         space_id: spaceId,
         date: String(r.date),
         rate: r.rate != null ? String(r.rate) : null,
-        currency: r.currency ? String(r.currency) : "AUD",
+        currency: r.currency ? String(r.currency) : DEFAULT_CURRENCY,
         min_stay: r.min_stay != null ? Number(r.min_stay) : null,
         max_stay: r.max_stay != null ? Number(r.max_stay) : null,
         closed_to_arrival: !!r.closed_to_arrival,
@@ -517,7 +518,7 @@ router.put("/v1/spaces/:id/rate-calendar", async (req, res): Promise<void> => {
         target: [spaceRateCalendarTable.space_id, spaceRateCalendarTable.date],
         set: {
           rate: r.rate != null ? String(r.rate) : null,
-          currency: r.currency ? String(r.currency) : "AUD",
+          currency: r.currency ? String(r.currency) : DEFAULT_CURRENCY,
           min_stay: r.min_stay != null ? Number(r.min_stay) : null,
           max_stay: r.max_stay != null ? Number(r.max_stay) : null,
           closed_to_arrival: !!r.closed_to_arrival,

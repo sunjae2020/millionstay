@@ -11,6 +11,7 @@
 // Mounted behind requireAuth by routes/index.ts. Money columns are numeric →
 // strings; wrap writes in String(), reads in Number().
 import { Router, type IRouter } from "express";
+import { DEFAULT_CURRENCY } from "../lib/currency";
 import { and, desc, eq, isNull, ilike, sql } from "drizzle-orm";
 import {
   db,
@@ -178,7 +179,7 @@ homestayPlacementAdminRouter.post("/v1/homestay-placements", async (req, res): P
       placement_fee: String(b.placement_fee ?? billing.default_placement_fee),
       deposit: String(b.deposit ?? billing.default_deposit),
       monthly_fee: String(b.monthly_fee ?? "0"),
-      currency: b.currency ?? "AUD",
+      currency: b.currency ?? DEFAULT_CURRENCY,
       proposed_at: now,
     }).returning();
 
@@ -402,7 +403,7 @@ homestayPlacementAdminRouter.post("/v1/homestay-placements/:id/charge", async (r
     if (!(base > 0)) { res.status(400).json({ error: "Nothing to charge for this kind" }); return; }
     const surcharge = method === "card" ? Math.round(base * (settings.surcharge_pct / 100) * 100) / 100 : 0;
     const total = Math.round((base + surcharge) * 100) / 100;
-    const currency = row.currency || "AUD";
+    const currency = row.currency || DEFAULT_CURRENCY;
 
     let payment_info_id: number | null = null;
     let bank = null;
@@ -461,7 +462,7 @@ homestayPlacementAdminRouter.post("/v1/homestay-placement-payments/:paymentId/se
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      line_items: [{ price_data: { currency: (pay.currency || "AUD").toLowerCase(), product_data: { name: label }, unit_amount: Math.round(Number(pay.amount) * 100) }, quantity: 1 }],
+      line_items: [{ price_data: { currency: (pay.currency || DEFAULT_CURRENCY).toLowerCase(), product_data: { name: label }, unit_amount: Math.round(Number(pay.amount) * 100) }, quantity: 1 }],
       metadata: { placement_payment_id: String(pay.id), placement_id: String(row.id), placement_ref: row.placement_ref, kind: pay.kind },
       customer_email: studentEmail || undefined,
       success_url: `${webBase}/payment-result?status=success&ref=${encodeURIComponent(row.placement_ref)}`,
@@ -577,7 +578,7 @@ homestayPlacementAdminRouter.post("/v1/homestay-placements/:id/payment-reminder"
       studentName: student ? formatPersonName(student.student_first_name, student.student_last_name) : null,
       placementRef: pl.placement_ref,
       amount: Number(charge.amount),
-      currency: charge.currency || "AUD",
+      currency: charge.currency || DEFAULT_CURRENCY,
     });
 
     void logAction({ entityType: ENTITY, entityId: id, action: "PAYMENT", actorId: (req as any).user?.id ?? null, newValue: { payment_id: charge.id, kind: "payment_reminder", emailed } });

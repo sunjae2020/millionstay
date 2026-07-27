@@ -479,7 +479,7 @@ export default function SpaceDetail() {
   const { register, handleSubmit, reset, control, watch, formState: { errors } } = useForm<SpaceForm>({
     defaultValues: {
       name: "", manual_input: false, space_type: "", custom_type_name: "",
-      max_occupancy: "", booking_mode: "", base_weekly_price: "", base_daily_price: "", base_currency: "AUD",
+      max_occupancy: "", booking_mode: "", base_weekly_price: "", base_daily_price: "", base_currency: currency,
       monthly_rent: "", deposit_amount: "", purchase_price: "", estimated_sale_price: "",
       floor_number: "", floor_area_sqm: "",
       exclusive_area_m2: "", residential_common_area_m2: "", supply_area_m2: "",
@@ -502,7 +502,7 @@ export default function SpaceDetail() {
         booking_mode: space.booking_mode ?? "",
         base_weekly_price: space.base_weekly_price?.toString() ?? "",
         base_daily_price: space.base_daily_price?.toString() ?? "",
-        base_currency: space.base_currency ?? "AUD",
+        base_currency: space.base_currency ?? currency,
         monthly_rent: space.monthly_rent?.toString() ?? "",
         deposit_amount: space.deposit_amount?.toString() ?? "",
         purchase_price: space.purchase_price?.toString() ?? "",
@@ -831,7 +831,7 @@ export default function SpaceDetail() {
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("space.section_pricing")}</h3>
                   <div className="flex items-center gap-2">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide whitespace-nowrap">{t("space.label_currency")}</Label>
-                    <Input {...register("base_currency")} placeholder="AUD" maxLength={3} className="w-20 h-8 text-sm uppercase" />
+                    <Input {...register("base_currency")} placeholder={currency} maxLength={3} className="w-20 h-8 text-sm uppercase" />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1421,7 +1421,7 @@ export default function SpaceDetail() {
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                        {t("space.svc_field_price")}
+                        {t("space.svc_field_price", { currency })}
                       </Label>
                       <Input
                         type="number" min="0" step="0.01"

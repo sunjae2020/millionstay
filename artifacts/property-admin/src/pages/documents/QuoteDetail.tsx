@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DocumentVersions } from "@/components/DocumentVersions";
 import { FileText as FileTextIcon } from "lucide-react";
 import { useBrand } from "@/contexts/ThemeContext";
-import { formatMoney } from "@/lib/currency";
+import { formatMoney, SUPPORTED_CURRENCIES } from "@/lib/currency";
 
 interface LineItem { name: string; quantity: number; unit_price: number; }
 
@@ -34,13 +34,13 @@ export default function QuoteDetail() {
   const [, navigate] = useLocation();
   const qc = useQueryClient();
   const { toast } = useToast();
-  const { currencyPosition } = useBrand();
+  const { currencyPosition, currency: brandCurrency } = useBrand();
   const isNew = id === "new";
 
   const [accountId, setAccountId] = useState<number | null>(null);
   const [leadId, setLeadId] = useState<number | null>(null);
   const [spaceId, setSpaceId] = useState<number | null>(null);
-  const [currency, setCurrency] = useState("AUD");
+  const [currency, setCurrency] = useState(brandCurrency);
   const [validUntil, setValidUntil] = useState("");
   const [description, setDescription] = useState("");
   const [notes, setNotes] = useState("");
@@ -64,7 +64,7 @@ export default function QuoteDetail() {
       setAccountId(quote.account_id ?? null);
       setLeadId(quote.lead_id ?? null);
       setSpaceId(quote.space_id ?? null);
-      setCurrency(quote.currency ?? "AUD");
+      setCurrency(quote.currency ?? brandCurrency);
       setValidUntil(quote.valid_until ?? "");
       setDescription(quote.description ?? "");
       setNotes(quote.notes ?? "");
@@ -281,8 +281,9 @@ export default function QuoteDetail() {
                 <Select value={currency} onValueChange={setCurrency}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="AUD">AUD</SelectItem><SelectItem value="USD">USD</SelectItem>
-                    <SelectItem value="SGD">SGD</SelectItem><SelectItem value="NZD">NZD</SelectItem>
+                    {SUPPORTED_CURRENCIES.map((c) => (
+                      <SelectItem key={c.code} value={c.code}>{c.code}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

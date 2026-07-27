@@ -5,6 +5,7 @@
 // advances next_billing_date by the cycle length. It does NOT collect/send — ops
 // send each pending charge from the admin (card link / bank details). Best-effort.
 import { and, eq, isNull, lte, sql } from "drizzle-orm";
+import { DEFAULT_CURRENCY } from "../currency.js";
 import {
   db,
   homestayPlacementsTable,
@@ -77,7 +78,7 @@ export async function generateRentCharges(): Promise<RentBillingResult> {
       const base = Number(pl.monthly_fee);
       const surcharge = method === "card" ? Math.round(base * (settings.surcharge_pct / 100) * 100) / 100 : 0;
       const total = Math.round((base + surcharge) * 100) / 100;
-      const currency = pl.currency || "AUD";
+      const currency = pl.currency || DEFAULT_CURRENCY;
 
       await db.insert(homestayPlacementPaymentsTable).values({
         placement_id: pl.id, kind: "monthly", method, status: "pending",

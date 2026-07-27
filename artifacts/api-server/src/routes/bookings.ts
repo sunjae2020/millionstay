@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import { DEFAULT_CURRENCY } from "../lib/currency";
 import { eq, ne, ilike, and, between, gte, lte, SQL, or, isNull, inArray } from "drizzle-orm";
 import {
   db,
@@ -224,7 +225,7 @@ router.post("/v1/bookings", async (req, res): Promise<void> => {
   const contactName = contact ? `${contact.first_name}_${contact.last_name}`.replace(/\s+/g, "_") : "Guest";
   const name = `GuestBook_${contactName}_${new Date().toISOString().slice(0, 10)}`;
 
-  const exchange_rate_to_aud = await getRateToAud((data as any).currency ?? "AUD");
+  const exchange_rate_to_aud = await getRateToAud((data as any).currency ?? DEFAULT_CURRENCY);
   const [row] = await db
     .insert(bookingsTable)
     .values({ ...data, ...stayDetails, booking_ref, name, booking_status: "Draft", exchange_rate_to_aud })
@@ -453,7 +454,7 @@ router.patch("/v1/bookings/:id/confirm", async (req, res): Promise<void> => {
       `  Duration    : ${existing.stay_weeks ?? "—"} weeks (${existing.stay_nights ?? "—"} nights)`,
       "",
       "FINANCIAL TERMS",
-      `  Currency            : ${existing.currency ?? "AUD"}`,
+      `  Currency            : ${existing.currency ?? DEFAULT_CURRENCY}`,
       monthlyRent != null
         ? `  Monthly Rent        : ${existing.currency} ${monthlyRent.toFixed(2)}` +
           (lease?.promotion_name ? `  (프로모션: ${lease.promotion_name})` : "")
@@ -501,8 +502,8 @@ router.patch("/v1/bookings/:id/confirm", async (req, res): Promise<void> => {
       bond_amount: bondAmount,
       advance_amount: advanceAmount,
       monthly_rent: monthlyRent,
-      currency: existing.currency ?? "AUD",
-      exchange_rate_to_aud: await getRateToAud(existing.currency ?? "AUD"),
+      currency: existing.currency ?? DEFAULT_CURRENCY,
+      exchange_rate_to_aud: await getRateToAud(existing.currency ?? DEFAULT_CURRENCY),
       status: "Draft",
       terms_text: termsText,
     }).returning();
@@ -538,7 +539,7 @@ router.patch("/v1/bookings/:id/confirm", async (req, res): Promise<void> => {
       unit_price: String(rentUnitPrice),
       quantity: 1,
       total_price: String(rentUnitPrice),
-      currency: existing.currency ?? "AUD",
+      currency: existing.currency ?? DEFAULT_CURRENCY,
       gst_included: true,
       status: "Active",
     });
@@ -555,7 +556,7 @@ router.patch("/v1/bookings/:id/confirm", async (req, res): Promise<void> => {
         unit_price: String(svc.unit_price),
         quantity: svc.quantity ?? 1,
         total_price: String(svc.total_price),
-        currency: svc.currency ?? existing.currency ?? "AUD",
+        currency: svc.currency ?? existing.currency ?? DEFAULT_CURRENCY,
         gst_included: true,
         service_id: svc.service_id ?? null,
         notes: svc.notes ?? null,
@@ -611,7 +612,7 @@ router.post("/v1/bookings/:id/services", async (req, res): Promise<void> => {
     quantity: qty,
     unit_price: String(price.toFixed(2)),
     total_price: String((price * qty).toFixed(2)),
-    currency: currency ?? "AUD",
+    currency: currency ?? DEFAULT_CURRENCY,
     billing_trigger: billing_trigger ?? "at_booking",
     frequency: frequency ?? null,
     notes: notes ?? null,

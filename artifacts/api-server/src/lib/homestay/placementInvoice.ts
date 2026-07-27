@@ -11,6 +11,7 @@
 // Money columns are numeric → Drizzle returns/accepts strings. Wrap reads with
 // Number() and writes with String(); totals are rounded to cents.
 import { and, eq, ilike } from "drizzle-orm";
+import { DEFAULT_CURRENCY } from "../currency.js";
 import {
   db,
   invoicesTable,
@@ -66,7 +67,7 @@ export async function createPlacementInvoice(
     throw new Error(`Placement ${placementId} not found`);
   }
 
-  const currency = placement.currency || "AUD";
+  const currency = placement.currency || DEFAULT_CURRENCY;
   const marker = `Homestay ${placement.placement_ref} — initial invoice`;
 
   // Idempotency: reuse an existing invoice for this booking carrying the marker.
@@ -224,7 +225,7 @@ export async function createExtensionInvoice(
   const amount = round2(weekly * extraWeeks);
   if (!(amount > 0)) return null;
 
-  const currency = placement.currency || "AUD";
+  const currency = placement.currency || DEFAULT_CURRENCY;
   let accountId: number | null = null;
   if (placement.booking_id != null) {
     const [booking] = await db

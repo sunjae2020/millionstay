@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { formatDate } from "@/lib/date";
 import { useBrand } from "@/contexts/ThemeContext";
-import { formatMoney } from "@/lib/currency";
+import { formatMoney, SUPPORTED_CURRENCIES } from "@/lib/currency";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,8 @@ import { useToast } from "@/hooks/use-toast";
 import { DocumentVersions } from "@/components/DocumentVersions";
 import { HomestaySignatureCard } from "@/components/HomestaySignatureCard";
 
-const CURRENCIES = ["AUD", "USD", "SGD", "MYR", "GBP"];
+// Ordered so the tenant's own currency (from branding) leads; KRW first.
+const CURRENCIES = SUPPORTED_CURRENCIES.map((c) => c.code);
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-700",
   Sent: "bg-blue-100 text-blue-700",
@@ -77,7 +78,7 @@ export default function ContractDetail() {
   const [schedType, setSchedType] = useState("Rent");
   const [schedFreq, setSchedFreq] = useState("Biweekly");
   const [schedAmount, setSchedAmount] = useState("");
-  const [schedCurrency, setSchedCurrency] = useState("AUD");
+  const [schedCurrency, setSchedCurrency] = useState(currency);
   const [schedStartDate, setSchedStartDate] = useState("");
   const [schedEndDate, setSchedEndDate] = useState("");
   const [schedNextDue, setSchedNextDue] = useState("");
@@ -87,7 +88,7 @@ export default function ContractDetail() {
   const resetSchedForm = () => {
     setSchedEditItem(null);
     setSchedType("Rent"); setSchedFreq("Biweekly"); setSchedAmount("");
-    setSchedCurrency("AUD"); setSchedStartDate(""); setSchedEndDate("");
+    setSchedCurrency(currency); setSchedStartDate(""); setSchedEndDate("");
     setSchedNextDue(""); setSchedActive(true); setSchedGst(true);
   };
 
@@ -100,7 +101,7 @@ export default function ContractDetail() {
   const [lineFreq, setLineFreq] = useState("");
   const [lineUnitPrice, setLineUnitPrice] = useState("");
   const [lineQty, setLineQty] = useState("1");
-  const [lineCurrency, setLineCurrency] = useState("AUD");
+  const [lineCurrency, setLineCurrency] = useState(currency);
   const [lineGst, setLineGst] = useState(true);
   const [lineNotes, setLineNotes] = useState("");
 
@@ -108,7 +109,7 @@ export default function ContractDetail() {
     setLineEditItem(null);
     setLineItemType("Service"); setLineName(""); setLineTrigger("at_activation");
     setLineFreq(""); setLineUnitPrice(""); setLineQty("1");
-    setLineCurrency("AUD"); setLineGst(true); setLineNotes("");
+    setLineCurrency(currency); setLineGst(true); setLineNotes("");
   };
 
   const openAddLine = () => { resetLineForm(); setLineDialogOpen(true); };
@@ -120,7 +121,7 @@ export default function ContractDetail() {
     setLineFreq(item.billing_frequency ?? "");
     setLineUnitPrice(item.unit_price != null ? String(item.unit_price) : "");
     setLineQty(item.quantity != null ? String(item.quantity) : "1");
-    setLineCurrency(item.currency ?? "AUD");
+    setLineCurrency(item.currency ?? currency);
     setLineGst(item.gst_included !== false);
     setLineNotes(item.notes ?? "");
     setLineDialogOpen(true);
@@ -133,13 +134,13 @@ export default function ContractDetail() {
   const [costRemittedOn, setCostRemittedOn] = useState("");
   const [costPayeeName, setCostPayeeName] = useState("");
   const [costAmount, setCostAmount] = useState("");
-  const [costCurrency, setCostCurrency] = useState("AUD");
+  const [costCurrency, setCostCurrency] = useState(currency);
   const [costNote, setCostNote] = useState("");
 
   const resetCostForm = () => {
     setCostEditItem(null);
     setCostType(""); setCostRemittedOn(""); setCostPayeeName("");
-    setCostAmount(""); setCostCurrency(contract?.currency ?? "AUD"); setCostNote("");
+    setCostAmount(""); setCostCurrency(contract?.currency ?? currency); setCostNote("");
   };
 
   const openAddCost = () => { resetCostForm(); setCostDialogOpen(true); };
@@ -149,7 +150,7 @@ export default function ContractDetail() {
     setCostRemittedOn(c.remitted_on ?? "");
     setCostPayeeName(c.payee_name ?? "");
     setCostAmount(c.amount != null ? String(c.amount) : "");
-    setCostCurrency(c.currency ?? contract?.currency ?? "AUD");
+    setCostCurrency(c.currency ?? contract?.currency ?? currency);
     setCostNote(c.note ?? "");
     setCostDialogOpen(true);
   };
@@ -160,7 +161,7 @@ export default function ContractDetail() {
     setSchedType(s.schedule_type ?? "Rent");
     setSchedFreq(s.frequency ?? "Biweekly");
     setSchedAmount(s.amount != null ? String(s.amount) : "");
-    setSchedCurrency(s.currency ?? "AUD");
+    setSchedCurrency(s.currency ?? currency);
     setSchedStartDate(s.start_date ?? "");
     setSchedEndDate(s.end_date ?? "");
     setSchedNextDue(s.next_due_date ?? "");
@@ -199,7 +200,7 @@ export default function ContractDetail() {
       booking_id: null, product_id: null, tenant_account_id: null,
       landlord_account_id: null, space_id: null,
       start_date: "", end_date: "", weekly_rate: "", total_rent: "",
-      monthly_rent: "", bond_amount: "", advance_amount: "", currency: "AUD",
+      monthly_rent: "", bond_amount: "", advance_amount: "", currency: currency,
       document_url: "", terms_text: "", notes: "",
     },
   });
@@ -219,7 +220,7 @@ export default function ContractDetail() {
         monthly_rent: (contract as any).monthly_rent != null ? String((contract as any).monthly_rent) : "",
         bond_amount: contract.bond_amount != null ? String(contract.bond_amount) : "",
         advance_amount: contract.advance_amount != null ? String(contract.advance_amount) : "",
-        currency: contract.currency ?? "AUD",
+        currency: contract.currency ?? currency,
         document_url: contract.document_url ?? "",
         terms_text: contract.terms_text ?? "",
         notes: contract.notes ?? "",
@@ -368,7 +369,7 @@ export default function ContractDetail() {
     monthly_rent: data.monthly_rent ? Number(data.monthly_rent) : null,
     bond_amount: data.bond_amount ? Number(data.bond_amount) : null,
     advance_amount: data.advance_amount ? Number(data.advance_amount) : null,
-    currency: data.currency || "AUD",
+    currency: data.currency || currency,
     document_url: data.document_url || null,
     terms_text: data.terms_text || null,
     notes: data.notes || null,

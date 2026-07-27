@@ -15,6 +15,7 @@ import {
   getListLeadsQueryKey, getGetLeadQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useBrand } from "@/contexts/ThemeContext";
 import { ArrowLeft, Save, TrendingDown, ArrowUpRight } from "lucide-react";
 import { Link } from "wouter";
 import { LookupSelect } from "@/components/LookupSelect";
@@ -69,6 +70,7 @@ interface ConvertForm {
 
 export default function LeadDetail() {
   const { t } = useTranslation();
+  const { currency: brandCurrency } = useBrand();
   const params = useParams<{ id: string }>();
   const isNew = params.id === "new";
   const id = isNew ? null : parseInt(params.id ?? "0", 10);
@@ -90,7 +92,7 @@ export default function LeadDetail() {
       inquiry_type: "", message: "",
       preferred_space_type: "", preferred_check_in_date: "",
       preferred_duration_weeks: "", preferred_suburb_id: null,
-      budget_min: "", budget_max: "", budget_currency: "AUD",
+      budget_min: "", budget_max: "", budget_currency: brandCurrency,
       assigned_to: "", description: "", status: "Active",
     },
   });
@@ -113,7 +115,7 @@ export default function LeadDetail() {
         preferred_suburb_id: lead.preferred_suburb_id ?? null,
         budget_min: lead.budget_min?.toString() ?? "",
         budget_max: lead.budget_max?.toString() ?? "",
-        budget_currency: lead.budget_currency ?? "AUD",
+        budget_currency: lead.budget_currency ?? brandCurrency,
         assigned_to: lead.assigned_to ?? "",
         description: lead.description ?? "",
         status: lead.status ?? "Active",
@@ -176,7 +178,7 @@ export default function LeadDetail() {
       preferred_suburb_id: values.preferred_suburb_id ?? null,
       budget_min: values.budget_min || null,
       budget_max: values.budget_max || null,
-      budget_currency: values.budget_currency || "AUD",
+      budget_currency: values.budget_currency || brandCurrency,
       assigned_to: values.assigned_to || null,
       description: values.description || null,
       status: values.status,
@@ -374,12 +376,13 @@ export default function LeadDetail() {
               </div>
 
               <div className="grid gap-1.5">
-                <Label>{t("lead.label_budget")}</Label>
+                <Label>{t("lead.label_budget", { currency: brandCurrency })}</Label>
                 <div className="flex items-center gap-2">
                   <Controller name="budget_currency" control={control} render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger className="w-24"><SelectValue /></SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="KRW">KRW</SelectItem>
                         <SelectItem value="AUD">AUD</SelectItem>
                         <SelectItem value="USD">USD</SelectItem>
                         <SelectItem value="CNY">CNY</SelectItem>

@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import { DEFAULT_CURRENCY } from "../lib/currency";
 import { db, bookingsTable, contactsTable, accountsTable, spacesTable } from "@workspace/db";
 import { eq, and, SQL, inArray } from "drizzle-orm";
 import { sql } from "drizzle-orm";
@@ -85,7 +86,7 @@ router.get("/v1/reports/bookings", async (req, res): Promise<void> => {
       meta: {
         total: data.length,
         total_revenue: Math.round(totalRevenue * 100) / 100,
-        currency: "AUD",
+        currency: DEFAULT_CURRENCY,
       },
     });
   } catch (err) {

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { DEFAULT_CURRENCY } from "../lib/currency";
 import { db, invoicesTable, invoiceLineItemsTable, bookingsTable, contractsTable, accountsTable, emailLogsTable } from "@workspace/db";
 import { eq, ilike, and, asc, isNull, inArray } from "drizzle-orm";
 import { z } from "zod";
@@ -136,7 +137,7 @@ router.post("/v1/invoices", async (req, res): Promise<void> => {
   const hasLineItems = lineItems.length > 0;
 
   const invoice_ref = await nextInvoiceRef();
-  const ccy = parsed.data.currency ?? "AUD";
+  const ccy = parsed.data.currency ?? DEFAULT_CURRENCY;
   const amount = hasLineItems ? sumLineItems(lineItems) : String(parsed.data.amount ?? 0);
   const [row] = await db.insert(invoicesTable).values({
     invoice_ref,
@@ -511,7 +512,7 @@ router.post("/v1/invoices/:id/checkout", async (req, res): Promise<void> => {
     mode: "payment",
     line_items: [{
       price_data: {
-        currency: (row.currency || "AUD").toLowerCase(),
+        currency: (row.currency || DEFAULT_CURRENCY).toLowerCase(),
         product_data: { name: `Invoice ${row.invoice_ref}${row.description ? ` — ${row.description}` : ""}${hasSurcharge ? ` (incl. ${surchargePct}% card surcharge)` : ""}`.slice(0, 250) },
         unit_amount: Math.round(chargeable * 100),
       },

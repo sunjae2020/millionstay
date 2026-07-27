@@ -12,6 +12,7 @@
  * re-delivery of the same webhook is a no-op update.
  */
 import { and, eq } from "drizzle-orm";
+import { DEFAULT_CURRENCY } from "../currency.js";
 import {
   db,
   channelsTable,
@@ -136,7 +137,7 @@ export async function ingestReservations(channelCode: string, payload: unknown):
           stay_nights: nightsBetween(r.checkIn, r.checkOut),
           num_guests: r.numGuests ?? 1,
           total_rent: r.totalAmount != null ? String(r.totalAmount) : null,
-          currency: r.currency ?? "AUD",
+          currency: r.currency ?? DEFAULT_CURRENCY,
           status: "Active",
         })
         .onConflictDoUpdate({
@@ -150,7 +151,7 @@ export async function ingestReservations(channelCode: string, payload: unknown):
             stay_nights: nightsBetween(r.checkIn, r.checkOut),
             num_guests: r.numGuests ?? 1,
             total_rent: r.totalAmount != null ? String(r.totalAmount) : null,
-            currency: r.currency ?? "AUD",
+            currency: r.currency ?? DEFAULT_CURRENCY,
             cancelled_at: null,
             cancellation_reason: null,
           },

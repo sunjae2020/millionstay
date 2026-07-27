@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { DEFAULT_CURRENCY } from "../lib/currency";
 import { db, contractsTable, accountsTable, spacesTable, propertiesTable, contractProductsTable, accommodationCatalogTable, bookingsTable, recurringSchedulesTable, bookingServicesTable, invoicesTable, invoiceLineItemsTable, contractLineItemsTable, contractRelatedCostsTable } from "@workspace/db";
 import { eq, ilike, and, like, desc, isNull, inArray } from "drizzle-orm";
 import { logAction } from "../utils/auditLog";
@@ -74,7 +75,7 @@ async function generateContractInvoicesAndSchedules(
 
   const start = contract.start_date;
   const end = contract.end_date;
-  const currency = contract.currency ?? "AUD";
+  const currency = contract.currency ?? DEFAULT_CURRENCY;
   const weeklyRate = contract.weekly_rate ?? 0;
 
   // ── Build location label ────────────────────────────────────────────────────
@@ -418,8 +419,8 @@ router.post("/v1/contracts", async (req, res): Promise<void> => {
     bond_amount: data.bond_amount ?? lease?.deposit_amount ?? null,
     monthly_rent: data.monthly_rent ?? lease?.effective_monthly ?? null,
     advance_amount: data.advance_amount ?? null,
-    currency: data.currency ?? lease?.currency ?? "AUD",
-    exchange_rate_to_aud: await getRateToAud(data.currency ?? lease?.currency ?? "AUD"),
+    currency: data.currency ?? lease?.currency ?? DEFAULT_CURRENCY,
+    exchange_rate_to_aud: await getRateToAud(data.currency ?? lease?.currency ?? DEFAULT_CURRENCY),
     status: "Draft",
     document_url: data.document_url ?? null,
     terms_text: data.terms_text ?? null,
@@ -652,7 +653,7 @@ router.put("/v1/contracts/:id", async (req, res): Promise<void> => {
         bond_amount: data.bond_amount ?? null,
         monthly_rent: data.monthly_rent ?? null,
         advance_amount: data.advance_amount ?? null,
-        currency: data.currency ?? "AUD",
+        currency: data.currency ?? DEFAULT_CURRENCY,
         document_url: data.document_url ?? null,
         terms_text: data.terms_text ?? null,
         notes: data.notes ?? null,
@@ -829,7 +830,7 @@ router.post("/v1/contracts/:id/payment-schedule", async (req, res): Promise<void
     schedule_type: schedule_type ?? "Rent",
     frequency: frequency ?? "Biweekly",
     amount: String(amount ?? "0"),
-    currency: currency ?? "AUD",
+    currency: currency ?? DEFAULT_CURRENCY,
     start_date: start_date,
     end_date: end_date ?? null,
     next_due_date: next_due_date ?? start_date,
@@ -913,7 +914,7 @@ router.post("/v1/contracts/:id/line-items", async (req, res): Promise<void> => {
     unit_price: String(price),
     quantity: qty,
     total_price: String(total),
-    currency: currency ?? "AUD",
+    currency: currency ?? DEFAULT_CURRENCY,
     gst_included: gst_included ?? true,
     service_id: service_id ?? null,
     notes: notes ?? null,
@@ -973,7 +974,7 @@ router.post("/v1/contracts/:id/related-costs", async (req, res): Promise<void> =
     remitted_on,
     payee_name,
     amount: Number(amount),
-    currency: currency ?? "AUD",
+    currency: currency ?? DEFAULT_CURRENCY,
     note: note ?? "",
     status: "Active",
   }).returning();

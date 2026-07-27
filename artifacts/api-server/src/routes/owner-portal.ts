@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import { DEFAULT_CURRENCY } from "../lib/currency";
 import multer from "multer";
 import { eq, and, or, ilike, desc, inArray, isNull, isNotNull, gte, lte, sql } from "drizzle-orm";
 import {
@@ -998,7 +999,7 @@ router.post("/v1/owner/spaces/:id/term", requireOwnerAuth, async (req, res): Pro
   if (!dates.length) { res.status(400).json({ error: "dates array (or from/to) is required" }); return; }
 
   const term_type = "short_term"; // only term the owner UI converts to today
-  const currency = typeof req.body?.currency === "string" && req.body.currency.trim() ? req.body.currency.trim() : "AUD";
+  const currency = typeof req.body?.currency === "string" && req.body.currency.trim() ? req.body.currency.trim() : DEFAULT_CURRENCY;
   // Daily rate: numeric column → store as string. Optional but validated when present.
   let daily_rate: string | null = null;
   if (req.body?.daily_rate !== undefined && req.body.daily_rate !== null && String(req.body.daily_rate) !== "") {

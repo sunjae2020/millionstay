@@ -175,7 +175,7 @@ export default function BookingDetail() {
     defaultValues: {
       account_id: null, contact_id: null, booking_source: "", customer_notes: "",
       space_id: null, check_in_date: "", check_out_date: "", agreed_weekly_rate: "",
-      currency: "AUD", num_guests: 1, product_id: null, status: "Active",
+      currency, num_guests: 1, product_id: null, status: "Active",
     },
   });
 
@@ -190,7 +190,7 @@ export default function BookingDetail() {
         check_in_date: booking.check_in_date ?? "",
         check_out_date: booking.check_out_date ?? "",
         agreed_weekly_rate: booking.agreed_weekly_rate ?? "",
-        currency: booking.currency ?? "AUD",
+        currency: booking.currency ?? currency,
         num_guests: booking.num_guests ?? 1,
         product_id: (booking as any).product_id ?? null,
         status: booking.status ?? "Active",
@@ -449,7 +449,7 @@ export default function BookingDetail() {
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {["AUD", "USD", "EUR", "GBP", "JPY"].map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    {["KRW", "AUD", "USD", "EUR", "GBP", "JPY"].map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                   </SelectContent>
                 </Select>
               )} />
@@ -778,7 +778,7 @@ export default function BookingDetail() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>{t("booking.label_unit_price_aud")}</Label>
+                <Label>{t("booking.label_unit_price_aud", { currency })}</Label>
                 <Input type="number" value={svcPrice} onChange={(e) => setSvcPrice(e.target.value)} placeholder="0.00" className="mt-1" />
               </div>
               <div>

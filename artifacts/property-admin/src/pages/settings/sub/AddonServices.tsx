@@ -166,7 +166,7 @@ export default function AddonServicesPage() {
 
   function openNew() {
     setEditing(null);
-    setForm(EMPTY);
+    setForm({ ...EMPTY, currency });
     setOpen(true);
   }
 

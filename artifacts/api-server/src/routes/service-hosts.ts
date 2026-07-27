@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import { DEFAULT_CURRENCY } from "../lib/currency";
 import { eq, ilike, and, inArray, desc, sql, isNull, SQL } from "drizzle-orm";
 import {
   db, serviceHostsTable, accountsTable, bookingServicesTable, bookingsTable,
@@ -223,7 +224,7 @@ router.post("/v1/service-hosts/:id/payouts", async (req, res): Promise<void> => 
       source_id: Number.isFinite(Number(req.body?.source_id)) && req.body?.source_id ? Number(req.body.source_id) : null,
       description: typeof req.body?.description === "string" ? req.body.description : null,
       amount: String(Math.round(amount * 100) / 100),
-      currency: typeof req.body?.currency === "string" ? req.body.currency : "AUD",
+      currency: typeof req.body?.currency === "string" ? req.body.currency : DEFAULT_CURRENCY,
       status: "Accrued",
       created_by: (req as any).user?.id ?? null,
     }).returning();

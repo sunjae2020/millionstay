@@ -23,7 +23,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { LookupSelect } from "@/components/LookupSelect";
 import { KpiCard, DashCard, Pill } from "@/components/dashboard/DashboardKit";
 import { useBrand } from "@/contexts/ThemeContext";
-import { formatMoney } from "@/lib/currency";
+import { formatMoney, SUPPORTED_CURRENCIES } from "@/lib/currency";
 import { formatDate } from "@/lib/date";
 
 const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
@@ -331,7 +331,7 @@ interface QuickBookingForm {
 
 export function QuickBookingPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useTranslation();
-  const { currencyPosition } = useBrand();
+  const { currencyPosition, currency: brandCurrency } = useBrand();
   const { toast } = useToast();
   const qc = useQueryClient();
   const [selectedPropertyId, setSelectedPropertyId] = useState<number | null>(null);
@@ -339,7 +339,7 @@ export function QuickBookingPanel({ open, onClose }: { open: boolean; onClose: (
     contact_id: null, space_id: null,
     check_in_date: "", check_out_date: "",
     agreed_weekly_rate: "", booking_source: "Direct",
-    num_guests: 1, customer_notes: "", currency: "AUD",
+    num_guests: 1, customer_notes: "", currency: brandCurrency,
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -391,7 +391,7 @@ export function QuickBookingPanel({ open, onClose }: { open: boolean; onClose: (
         contact_id: null, space_id: null,
         check_in_date: "", check_out_date: "",
         agreed_weekly_rate: "", booking_source: "Direct",
-        num_guests: 1, customer_notes: "", currency: "AUD",
+        num_guests: 1, customer_notes: "", currency: brandCurrency,
       });
       setSelectedPropertyId(null);
     } catch (e: any) {
@@ -474,8 +474,8 @@ export function QuickBookingPanel({ open, onClose }: { open: boolean; onClose: (
               <Select value={form.currency} onValueChange={v => setForm(f => ({ ...f, currency: v }))}>
                 <SelectTrigger className="mt-1.5 h-9 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {["AUD", "USD", "KRW", "CNY", "JPY", "SGD", "NZD"].map(c => (
-                    <SelectItem key={c} value={c} className="text-xs">{c}</SelectItem>
+                  {SUPPORTED_CURRENCIES.map((c) => (
+                    <SelectItem key={c.code} value={c.code} className="text-xs">{c.code}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

@@ -20,6 +20,7 @@ UPDATE branding_settings           SET currency='KRW'         WHERE currency    
 UPDATE channel_reservations        SET currency='KRW'         WHERE currency         IS DISTINCT FROM 'KRW';
 UPDATE contract_line_items         SET currency='KRW'         WHERE currency         IS DISTINCT FROM 'KRW';
 UPDATE contract_products           SET currency='KRW'         WHERE currency         IS DISTINCT FROM 'KRW';
+UPDATE contract_related_costs      SET currency='KRW'         WHERE currency         IS DISTINCT FROM 'KRW';
 UPDATE contracts                   SET currency='KRW'         WHERE currency         IS DISTINCT FROM 'KRW';
 UPDATE deposit_settlements         SET currency='KRW'         WHERE currency         IS DISTINCT FROM 'KRW';
 UPDATE homestay_placement_payments SET currency='KRW'         WHERE currency         IS DISTINCT FROM 'KRW';
@@ -48,6 +49,7 @@ ALTER TABLE branding_settings           ALTER COLUMN currency         SET DEFAUL
 ALTER TABLE channel_reservations        ALTER COLUMN currency         SET DEFAULT 'KRW';
 ALTER TABLE contract_line_items         ALTER COLUMN currency         SET DEFAULT 'KRW';
 ALTER TABLE contract_products           ALTER COLUMN currency         SET DEFAULT 'KRW';
+ALTER TABLE contract_related_costs      ALTER COLUMN currency         SET DEFAULT 'KRW';
 ALTER TABLE contracts                   ALTER COLUMN currency         SET DEFAULT 'KRW';
 ALTER TABLE deposit_settlements         ALTER COLUMN currency         SET DEFAULT 'KRW';
 ALTER TABLE homestay_placement_payments ALTER COLUMN currency         SET DEFAULT 'KRW';

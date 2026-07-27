@@ -360,7 +360,7 @@ export default function WorkOrderDetail() {
                 )} />
               </div>
               <div>
-                <Label>{t('workorder.label_cost', 'Estimated Cost (AUD)')}</Label>
+                <Label>{t('workorder.label_cost')} ({currency})</Label>
                 <Input type="number" step="0.01" placeholder="0.00" {...register("cost")} />
               </div>
             </div>

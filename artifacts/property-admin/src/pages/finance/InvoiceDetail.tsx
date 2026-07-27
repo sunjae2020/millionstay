@@ -28,6 +28,8 @@ import { ArrowLeft, Trash2, Save, FileDown, Eye, Mail } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentVersions } from "@/components/DocumentVersions";
+import { useBrand } from "@/contexts/ThemeContext";
+import { SUPPORTED_CURRENCIES } from "@/lib/currency";
 
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-600",
@@ -49,6 +51,7 @@ interface FormData {
 
 export default function InvoiceDetail() {
   const { t } = useTranslation();
+  const { currency: brandCurrency } = useBrand();
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const qc = useQueryClient();
@@ -138,7 +141,7 @@ export default function InvoiceDetail() {
   const { register, handleSubmit, reset, control } = useForm<FormData>({
     defaultValues: {
       booking_id: null, contract_id: null, account_id: null,
-      amount: "", currency: "AUD", due_date: "", description: "", notes: "",
+      amount: "", currency: brandCurrency, due_date: "", description: "", notes: "",
     },
   });
 
@@ -149,7 +152,7 @@ export default function InvoiceDetail() {
         contract_id: invoice.contract_id ?? null,
         account_id: invoice.account_id ?? null,
         amount: invoice.amount != null ? String(invoice.amount) : "",
-        currency: invoice.currency ?? "AUD",
+        currency: invoice.currency ?? brandCurrency,
         due_date: invoice.due_date ?? "",
         description: invoice.description ?? "",
         notes: invoice.notes ?? "",
@@ -174,7 +177,7 @@ export default function InvoiceDetail() {
     contract_id: data.contract_id ?? null,
     account_id: data.account_id ?? null,
     amount: data.amount ? Number(data.amount) : 0,
-    currency: data.currency || "AUD",
+    currency: data.currency || brandCurrency,
     due_date: data.due_date || null,
     description: data.description || null,
     notes: data.notes || null,
@@ -318,10 +321,9 @@ export default function InvoiceDetail() {
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="AUD">AUD</SelectItem>
-                      <SelectItem value="USD">USD</SelectItem>
-                      <SelectItem value="SGD">SGD</SelectItem>
-                      <SelectItem value="NZD">NZD</SelectItem>
+                      {SUPPORTED_CURRENCIES.map((c) => (
+                        <SelectItem key={c.code} value={c.code}>{c.code}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 )} />

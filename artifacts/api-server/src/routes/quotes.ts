@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { DEFAULT_CURRENCY } from "../lib/currency";
 import { db, quotesTable, quoteLineItemsTable, accountsTable, leadsTable, spacesTable, emailLogsTable, invoicesTable } from "@workspace/db";
 import { eq, ilike, and, isNull, inArray, asc, desc } from "drizzle-orm";
 import { z } from "zod";
@@ -26,7 +27,7 @@ const CreateQuoteBody = z.object({
   account_id: z.number().int().nullish(),
   lead_id: z.number().int().nullish(),
   space_id: z.number().int().nullish(),
-  currency: z.string().default("AUD"),
+  currency: z.string().default(DEFAULT_CURRENCY),
   valid_until: z.string().nullish(),
   description: z.string().nullish(),
   notes: z.string().nullish(),
@@ -92,7 +93,7 @@ router.post("/v1/quotes", async (req, res): Promise<void> => {
     account_id: parsed.data.account_id ?? null,
     lead_id: parsed.data.lead_id ?? null,
     space_id: parsed.data.space_id ?? null,
-    currency: parsed.data.currency ?? "AUD",
+    currency: parsed.data.currency ?? DEFAULT_CURRENCY,
     valid_until: parsed.data.valid_until ?? null,
     description: parsed.data.description ?? null,
     notes: parsed.data.notes ?? null,
@@ -298,7 +299,7 @@ router.post("/v1/quotes/:id/email", async (req, res): Promise<void> => {
 
   const result = await sendDocumentEmail({
     to, toName: docInput.party_name, lang, docTypeLabel: t(lang, "doctype.quote"), ref: docInput.quote_ref,
-    amountLabel: `${Number(docInput.total ?? 0).toLocaleString("en-AU", { minimumFractionDigits: 2 })} ${docInput.currency || "AUD"}`,
+    amountLabel: `${Number(docInput.total ?? 0).toLocaleString("en-AU", { minimumFractionDigits: 2 })} ${docInput.currency || DEFAULT_CURRENCY}`,
     note: docInput.valid_until ? t(lang, "email.note.validUntil", { date: docInput.valid_until }) : null,
     pdf, filename: `${docInput.quote_ref}.pdf`,
   });
@@ -360,7 +361,7 @@ router.post("/v1/quotes/:id/convert", async (req, res): Promise<void> => {
     account_id: quote.account_id ?? null,
     quote_id: quote.id,
     amount: quote.total ?? "0",
-    currency: quote.currency ?? "AUD",
+    currency: quote.currency ?? DEFAULT_CURRENCY,
     status: "Draft",
     description: quote.description ?? `Converted from quote ${quote.quote_ref}`,
   }).returning();

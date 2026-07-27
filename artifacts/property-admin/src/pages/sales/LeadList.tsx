@@ -86,7 +86,7 @@ function KanbanCard({ lead, onMove, onDelete }: {
 
       {(lead.budget_min || lead.budget_max) && (
         <p className="text-[10px] text-muted-foreground mb-2">
-          {t("lead.label_budget")}: {lead.budget_min != null ? formatMoney(lead.budget_min, lead.budget_currency ?? currency, currencyPosition) : "?"} – {lead.budget_max != null ? formatMoney(lead.budget_max, lead.budget_currency ?? currency, currencyPosition) : "?"}
+          {t("lead.label_budget", { currency })}: {lead.budget_min != null ? formatMoney(lead.budget_min, lead.budget_currency ?? currency, currencyPosition) : "?"} – {lead.budget_max != null ? formatMoney(lead.budget_max, lead.budget_currency ?? currency, currencyPosition) : "?"}
         </p>
       )}
 

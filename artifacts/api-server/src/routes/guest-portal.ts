@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import { DEFAULT_CURRENCY } from "../lib/currency";
 import { eq, and, or, desc, asc, inArray, isNull } from "drizzle-orm";
 import Stripe from "stripe";
 import {
@@ -163,8 +164,8 @@ router.post("/v1/guest/bookings", async (req, res): Promise<void> => {
         booking_status: "Pending",
         booking_source: "Guest Portal",
         status: "Active",
-        currency: (spaceRow as any).base_currency ?? "AUD",
-        exchange_rate_to_aud: await getRateToAud((spaceRow as any).base_currency ?? "AUD"),
+        currency: (spaceRow as any).base_currency ?? DEFAULT_CURRENCY,
+        exchange_rate_to_aud: await getRateToAud((spaceRow as any).base_currency ?? DEFAULT_CURRENCY),
       })
       .returning({
         id: bookingsTable.id,
@@ -807,7 +808,8 @@ router.post("/v1/guest/payment/confirm", async (req, res): Promise<void> => {
           booking_id: booking.id,
           account_id: booking.account_id ?? undefined,
           amount: String(invoiceAmount),
-          currency: "AUD",
+          currency: DEFAULT_CURRENCY,
+          // TODO(metheim): rate hardcoded to 1 — wrong for non-AUD tenants; should use getRateToAud(DEFAULT_CURRENCY)
           exchange_rate_to_aud: "1",
           status: payment_method === "bank_transfer" ? "Sent" : "Paid",
           paid_at: payment_method === "bank_transfer" ? null : new Date(),
@@ -849,7 +851,7 @@ router.post("/v1/guest/payment/confirm", async (req, res): Promise<void> => {
         invoice_ref: invoice?.invoice_ref,
         invoice_id: invoice?.id,
         amount: invoice?.amount,
-        currency: invoice?.currency ?? "AUD",
+        currency: invoice?.currency ?? DEFAULT_CURRENCY,
         status: invoice?.status,
         payment_method,
         paid_at: invoice?.paid_at,
@@ -923,7 +925,7 @@ router.post("/v1/guest/payment/create-intent", requireGuestAuth, async (req, res
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountCents,
-      currency: (invoice.currency ?? "AUD").toLowerCase(),
+      currency: (invoice.currency ?? DEFAULT_CURRENCY).toLowerCase(),
       metadata: {
         invoice_id: String(invoice.id),
         invoice_ref: invoice.invoice_ref ?? "",
@@ -938,7 +940,7 @@ router.post("/v1/guest/payment/create-intent", requireGuestAuth, async (req, res
       data: {
         client_secret: paymentIntent.client_secret,
         amount: invoice.amount,
-        currency: invoice.currency ?? "AUD",
+        currency: invoice.currency ?? DEFAULT_CURRENCY,
         invoice_ref: invoice.invoice_ref,
       },
     });
@@ -1040,7 +1042,7 @@ router.post("/v1/guest/payment/invoice-confirm", requireGuestAuth, async (req, r
         invoice_ref: updated.invoice_ref,
         invoice_id: updated.id,
         amount: updated.amount,
-        currency: updated.currency ?? "AUD",
+        currency: updated.currency ?? DEFAULT_CURRENCY,
         status: updated.status,
         payment_method,
         paid_at: updated.paid_at,

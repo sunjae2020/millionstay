@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import { DEFAULT_CURRENCY } from "../lib/currency";
 import { eq, and, desc, sql } from "drizzle-orm";
 import {
   db,
@@ -174,7 +175,7 @@ adminRouter.post("/v1/bookings/:bookingId/deposit-settlements", async (req, res)
         status: "draft",
         deposit_held: String(round2(depositHeld)),
         refund_amount: String(round2(depositHeld)),
-        currency: (booking as any).currency ?? "AUD",
+        currency: (booking as any).currency ?? DEFAULT_CURRENCY,
         notes: typeof req.body?.notes === "string" ? req.body.notes : null,
         created_by: (req as any).user?.id ?? null,
         audit_trail: [{ event: "created", at: new Date().toISOString(), actor: (req as any).user?.id ?? null, deposit_held: depositHeld }],

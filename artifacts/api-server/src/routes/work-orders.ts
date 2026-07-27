@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { DEFAULT_CURRENCY } from "../lib/currency";
 import multer from "multer";
 import { db, workOrdersTable, workOrderPhotosTable, propertiesTable, spacesTable, contactsTable, serviceHostsTable, invoicesTable, accountsTable } from "@workspace/db";
 import { eq, ilike, and, isNull, inArray, desc } from "drizzle-orm";
@@ -280,7 +281,7 @@ router.post("/v1/work-orders/:id/charge-owner", async (req, res): Promise<void> 
     res.status(400).json({ success: false, error: { code: "NO_OWNER", message: "Could not resolve the property owner; pass account_id." } }); return;
   }
 
-  const ccy = req.body?.currency ?? wo.currency ?? "AUD";
+  const ccy = req.body?.currency ?? wo.currency ?? DEFAULT_CURRENCY;
   const [inv] = await db.insert(invoicesTable).values({
     invoice_ref: await nextInvoiceRef(),
     account_id: ownerAccountId,

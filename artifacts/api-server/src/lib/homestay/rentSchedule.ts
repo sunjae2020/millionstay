@@ -9,6 +9,7 @@
 //
 // Money columns are numeric → strings.
 import { and, eq, isNull } from "drizzle-orm";
+import { DEFAULT_CURRENCY } from "../currency.js";
 import {
   db,
   recurringSchedulesTable,
@@ -84,7 +85,7 @@ export async function createRentScheduleForPlacement(placementId: number): Promi
       schedule_type: "Rent",
       frequency,
       amount: String(monthly),
-      currency: placement.currency || "AUD",
+      currency: placement.currency || DEFAULT_CURRENCY,
       start_date: start,
       next_due_date: start,
       billing_mode: "incremental",

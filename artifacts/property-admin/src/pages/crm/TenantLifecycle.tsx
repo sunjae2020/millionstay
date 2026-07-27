@@ -226,7 +226,7 @@ export default function TenantLifecycle() {
         checkOut: b.check_out_date ?? null,
         stayNights: b.stay_nights ?? null,
         totalRent: b.total_rent ?? null,
-        currency: b.currency ?? "AUD",
+        currency: b.currency ?? currency,
         stage,
         daysUntilCheckout,
         daysOverdue: daysUntilCheckout !== null && daysUntilCheckout < 0 ? -daysUntilCheckout : null,
