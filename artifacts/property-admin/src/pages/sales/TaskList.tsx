@@ -128,26 +128,52 @@ export default function TaskList() {
         key: "name",
         header: "common.name",
         hideable: false,
+        editable: { type: "text", getValue: (task) => task.name },
         cell: (task) => <Link href={`/sales/tasks/${task.id}`} className="font-medium hover:underline">{task.name}</Link>,
       },
       {
         key: "subject",
         header: "csticket.col_subject",
+        editable: { type: "text", getValue: (task) => task.subject ?? "" },
         cell: (task) => <span className="text-muted-foreground max-w-[160px] truncate inline-block align-bottom">{task.subject ?? "—"}</span>,
       },
       {
         key: "task_status",
         header: "task.col_status",
+        editable: {
+          type: "select",
+          getValue: (task) => task.task_status,
+          options: [
+            { value: "Todo", label: t("task.status_todo") },
+            { value: "InProgress", label: t("task.status_in_progress") },
+            { value: "Done", label: t("task.status_done") },
+            { value: "Cancelled", label: t("task.status_cancelled") },
+          ],
+        },
         cell: (task) => <TaskStatusBadge status={task.task_status} />,
       },
       {
         key: "priority",
         header: "task.col_priority",
+        editable: {
+          type: "select",
+          getValue: (task) => task.priority,
+          options: [
+            { value: "High", label: t("task.priority_high") },
+            { value: "Medium", label: t("task.priority_medium") },
+            { value: "Low", label: t("task.priority_low") },
+          ],
+        },
         cell: (task) => <PriorityBadge priority={task.priority} />,
       },
       {
         key: "task_category",
         header: "task.col_category",
+        editable: {
+          type: "select",
+          getValue: (task) => task.task_category ?? "",
+          options: ["CS", "Maintenance", "Follow-up", "Admin", "Other"].map((c) => ({ value: c, label: c })),
+        },
         cell: (task) => <span className="text-muted-foreground">{task.task_category ?? "—"}</span>,
       },
       {
@@ -158,6 +184,7 @@ export default function TaskList() {
       {
         key: "due_date",
         header: "task.col_due_date",
+        editable: { type: "date", getValue: (task) => task.due_date ?? "" },
         cell: (task) => {
           const isOverdue = task.due_date && task.due_date < today && task.task_status !== "Done" && task.task_status !== "Cancelled";
           return task.due_date ? (
@@ -258,6 +285,7 @@ export default function TaskList() {
             resource: "tasks",
             onChanged: () => qc.invalidateQueries({ queryKey: getListTasksQueryKey() }),
           }}
+          editing={{ resource: "tasks", onEdited: () => qc.invalidateQueries({ queryKey: getListTasksQueryKey() }) }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
           toolbarExtra={

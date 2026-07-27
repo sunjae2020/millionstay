@@ -79,6 +79,7 @@ export default function ServiceList() {
         key: "name",
         header: "service.col_name",
         hideable: false,
+        editable: { type: "text", getValue: (s) => s.name },
         cell: (s) => (
           <div>
             <Link href={`/services/${s.id}`} className="font-medium text-primary hover:underline">
@@ -91,6 +92,11 @@ export default function ServiceList() {
       {
         key: "service_type",
         header: "service.col_type",
+        editable: {
+          type: "select",
+          getValue: (s) => s.service_type,
+          options: ["one_time", "scheduled", "physical"].map((v) => ({ value: v, label: t(`service.type_${v}`) })),
+        },
         cell: (s) => {
           const typeConf = TYPE_CONFIG[s.service_type] ?? { label: s.service_type, color: "bg-gray-100 text-gray-600", icon: Zap };
           const Icon = typeConf.icon;
@@ -106,12 +112,18 @@ export default function ServiceList() {
         header: "service.col_price",
         align: "right",
         cellClassName: "tabular-nums font-medium",
+        editable: { type: "number", getValue: (s) => s.base_price ?? null, min: 0, step: 0.01 },
         cell: (s) => (s.base_price != null ? `$${Number(s.base_price).toFixed(0)}` : "—"),
       },
       {
         key: "billing_trigger",
         header: "service.col_billing",
         cellClassName: "text-xs text-muted-foreground",
+        editable: {
+          type: "select",
+          getValue: (s) => s.billing_trigger,
+          options: ["at_booking", "at_checkout", "on_request"].map((v) => ({ value: v, label: t(`service.trigger_${v}`) })),
+        },
         cell: (s) => {
           const TRIGGER_LABELS: Record<string, string> = {
             at_booking: t("service.trigger_at_booking"),
@@ -124,6 +136,7 @@ export default function ServiceList() {
       {
         key: "is_optional",
         header: "service.col_optional",
+        editable: { type: "boolean", getValue: (s) => !!s.is_optional },
         cell: (s) => (
           <span className={`text-xs ${s.is_optional ? "text-gray-400" : "text-primary font-medium"}`}>
             {s.is_optional ? t("common.optional") : t("common.required")}
@@ -133,6 +146,7 @@ export default function ServiceList() {
       {
         key: "is_refundable",
         header: "service.col_refundable",
+        editable: { type: "boolean", getValue: (s) => !!s.is_refundable },
         cell: (s) => (
           <span className={`text-xs ${s.is_refundable ? "text-green-600 font-medium" : "text-gray-400"}`}>
             {s.is_refundable ? t("common.yes") : t("common.no")}
@@ -142,6 +156,15 @@ export default function ServiceList() {
       {
         key: "status",
         header: "service.col_status",
+        editable: {
+          type: "select",
+          getValue: (s) => s.status,
+          options: [
+            { value: "Active", label: t("common.active") },
+            { value: "Inactive", label: t("common.inactive") },
+            { value: "Archived", label: t("service.status_archived") },
+          ],
+        },
         cell: (s) => <Badge className={`text-xs ${STATUS_COLORS[s.status] ?? ""}`}>{t(`common.${s.status.toLowerCase()}`)}</Badge>,
       },
       {
@@ -193,6 +216,7 @@ export default function ServiceList() {
             resource: "services",
             onChanged: () => qc.invalidateQueries({ queryKey: ["services"] }),
           }}
+          editing={{ resource: "services", onEdited: () => qc.invalidateQueries({ queryKey: ["services"] }) }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
           toolbarExtra={

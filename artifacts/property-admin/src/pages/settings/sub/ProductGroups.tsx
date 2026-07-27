@@ -45,12 +45,14 @@ export default function ProductGroupsPage() {
       key: "name",
       header: t("common.name"),
       hideable: false,
+      editable: { type: "text", getValue: (g) => g.name },
       cell: (g) => <div className="font-medium">{g.name}</div>,
     },
     {
       key: "display_order",
       header: t("productGroups.display_order"),
       align: "right",
+      editable: { type: "number", getValue: (g) => g.display_order, min: 0 },
       cell: (g) => <span className="text-muted-foreground text-sm">{g.display_order}</span>,
     },
     {
@@ -133,6 +135,7 @@ export default function ProductGroupsPage() {
           rowKey={(g) => g.id}
           emptyText={t("productGroups.empty")}
           selection={{ enable: true, resource: "product-groups", onChanged: () => qc.invalidateQueries({ queryKey: ["product-groups"] }) }}
+          editing={{ resource: "product-groups", onEdited: () => qc.invalidateQueries({ queryKey: ["product-groups"] }) }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
           toolbarExtra={

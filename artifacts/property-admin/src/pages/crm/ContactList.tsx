@@ -85,21 +85,25 @@ export default function ContactList() {
       {
         key: "email",
         header: "contact.col_email",
+        editable: { type: "text", getValue: (c) => c.email ?? "" },
         cell: (c) => <span className="text-muted-foreground">{c.email}</span>,
       },
       {
         key: "mobile_number",
         header: "contact.col_mobile",
+        editable: { type: "text", getValue: (c) => c.mobile_number ?? "" },
         cell: (c) => <span className="text-muted-foreground">{c.mobile_number ?? "—"}</span>,
       },
       {
         key: "nationality",
         header: "contact.col_nationality",
+        editable: { type: "text", getValue: (c) => c.nationality ?? "" },
         cell: (c) => <span className="text-muted-foreground">{c.nationality ?? "—"}</span>,
       },
       {
         key: "portal_enabled",
         header: "contact.col_portal",
+        editable: { type: "boolean", getValue: (c) => !!c.portal_enabled },
         cell: (c) =>
           c.portal_enabled
             ? <Badge variant="outline" className="gap-1 text-green-700 border-green-300"><Globe className="h-3 w-3" />{t("contact.portal_on")}</Badge>
@@ -108,6 +112,14 @@ export default function ContactList() {
       {
         key: "status",
         header: "contact.col_status",
+        editable: {
+          type: "select",
+          getValue: (c) => c.status,
+          options: [
+            { value: "Active", label: t("common.active") },
+            { value: "Inactive", label: t("common.inactive") },
+          ],
+        },
         cell: (c) => <StatusBadge status={c.status} />,
       },
       {
@@ -158,6 +170,7 @@ export default function ContactList() {
             resource: "contacts",
             onChanged: () => qc.invalidateQueries({ queryKey: getListContactsQueryKey() }),
           }}
+          editing={{ resource: "contacts", onEdited: () => qc.invalidateQueries({ queryKey: getListContactsQueryKey() }) }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
           toolbarExtra={

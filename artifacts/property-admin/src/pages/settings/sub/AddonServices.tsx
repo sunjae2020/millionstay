@@ -64,6 +64,7 @@ export default function AddonServicesPage() {
       key: "name",
       header: t("accommodation_options.col_name", "Name"),
       hideable: false,
+      editable: { type: "text", getValue: (item) => item.name },
       cell: (item) => (
         <>
           <div className="font-medium">{item.name}</div>
@@ -74,11 +75,17 @@ export default function AddonServicesPage() {
     {
       key: "category",
       header: t("accommodation_options.col_category", "Category"),
+      editable: {
+        type: "select",
+        getValue: (item) => item.category,
+        options: ADDON_CATEGORY_OPTIONS.map((o) => ({ value: o.value, label: t(o.i18nKey) })),
+      },
       cell: (item) => <Badge variant="secondary">{t(`accommodation_options.addon_category.${item.category}`, item.category)}</Badge>,
     },
     {
       key: "base_price",
       header: t("accommodation_options.col_price", "Price"),
+      editable: { type: "number", getValue: (item) => item.base_price, min: 0, step: 0.01 },
       cell: (item) => (
         <span className="text-sm">
           {item.base_price != null ? `${item.currency} ${item.base_price.toFixed(2)}` : <span className="text-muted-foreground/40 italic">—</span>}
@@ -88,6 +95,11 @@ export default function AddonServicesPage() {
     {
       key: "unit",
       header: t("accommodation_options.col_unit", "Unit"),
+      editable: {
+        type: "select",
+        getValue: (item) => item.unit,
+        options: ADDON_UNIT_OPTIONS.map((o) => ({ value: o.value, label: t(o.i18nKey) })),
+      },
       cell: (item) => <span className="text-sm text-muted-foreground">{t(`accommodation_options.addon_unit.${item.unit}`, item.unit)}</span>,
     },
     {
@@ -175,6 +187,7 @@ export default function AddonServicesPage() {
           rowKey={(s) => s.id}
           emptyText={t("accommodation_options.empty", "No add-on services")}
           selection={{ enable: true, resource: "addon-services", onChanged: () => qc.invalidateQueries({ queryKey: ["addon-services"] }) }}
+          editing={{ resource: "addon-services", onEdited: () => qc.invalidateQueries({ queryKey: ["addon-services"] }) }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
           toolbarExtra={

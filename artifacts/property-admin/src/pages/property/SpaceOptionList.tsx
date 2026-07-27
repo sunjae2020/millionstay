@@ -59,6 +59,7 @@ export default function SpaceOptionList() {
         header: "space_option.col_name",
         hideable: false,
         defaultWidth: 200,
+        editable: { type: "text", getValue: (opt) => opt.name },
         cell: (opt) => (
           <Link href={`/property/space-options/${opt.id}`} className="hover:underline text-primary font-medium">
             {opt.name}
@@ -68,16 +69,26 @@ export default function SpaceOptionList() {
       {
         key: "display_name",
         header: "space_option.col_display_name",
+        editable: { type: "text", getValue: (opt) => opt.display_name ?? "" },
         cell: (opt) => <span className="text-muted-foreground">{opt.display_name ?? "—"}</span>,
       },
       {
         key: "category",
         header: "space_option.col_category",
+        editable: { type: "text", getValue: (opt) => opt.category ?? "" },
         cell: (opt) => <span className="text-muted-foreground">{opt.category ?? "—"}</span>,
       },
       {
         key: "status",
         header: "space_option.col_status",
+        editable: {
+          type: "select",
+          getValue: (opt) => opt.status,
+          options: [
+            { value: "Active", label: t("common.active") },
+            { value: "Inactive", label: t("common.inactive") },
+          ],
+        },
         cell: (opt) => <StatusBadge status={opt.status} />,
       },
       {
@@ -137,6 +148,7 @@ export default function SpaceOptionList() {
             resource: "space-options",
             onChanged: () => qc.invalidateQueries({ queryKey: getListSpaceOptionsQueryKey() }),
           }}
+          editing={{ resource: "space-options", onEdited: () => qc.invalidateQueries({ queryKey: getListSpaceOptionsQueryKey() }) }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
           toolbarExtra={

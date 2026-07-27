@@ -347,7 +347,10 @@
     "enable": "활성화",
     "disable": "비활성화",
     "enabled": "활성화됨",
-    "network_error": "네트워크 오류 — 다시 시도해 주세요"
+    "network_error": "네트워크 오류 — 다시 시도해 주세요",
+    "saved": "저장됨",
+    "save_failed": "저장 실패",
+    "click_to_edit": "클릭하여 편집"
   },
   "lang": {
     "label": "언어",
@@ -2856,9 +2859,11 @@
     "address_line2_label": "주소 2(선택 사항)",
     "address_line2_placeholder": "호실, 층, 유닛...",
     "suburb_label": "지역",
-    "state_label": "주",
+    "state_label": "주 / 도",
+    "state_placeholder": "주 또는 도",
     "postcode_label": "우편번호",
     "country_label": "국가",
+    "country_placeholder": "국가",
     "country_au": "호주",
     "country_nz": "뉴질랜드",
     "country_us": "미국",
@@ -2866,6 +2871,8 @@
     "regional_title": "지역 설정",
     "regional_subtitle": "시간대 및 표시 환경설정",
     "timezone_label": "시간대",
+    "date_format_label": "날짜 형식",
+    "date_format_helper": "랜딩 사이트, 관리자, 모든 포털과 모든 서류(인보이스·영수증·계약서)에 동일하게 적용됩니다.",
     "operator_title": "사업자 정보(랜딩 푸터)",
     "operator_subtitle": "공개 사이트 푸터와 개인정보처리방침·이용약관 페이지에 표시됩니다.",
     "ceo_label": "대표자",

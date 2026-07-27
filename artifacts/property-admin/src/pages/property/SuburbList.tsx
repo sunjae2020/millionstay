@@ -64,6 +64,7 @@ export default function SuburbList() {
         header: "suburb.col_name",
         hideable: false,
         defaultWidth: 200,
+        editable: { type: "text", getValue: (suburb) => suburb.name },
         cell: (suburb) => (
           <Link href={`/property/suburbs/${suburb.id}`} className="hover:underline text-primary font-medium">
             {suburb.name}
@@ -73,21 +74,42 @@ export default function SuburbList() {
       {
         key: "area_name",
         header: "suburb.col_area",
+        editable: { type: "text", getValue: (suburb) => suburb.area_name ?? "" },
         cell: (suburb) => <span className="text-muted-foreground">{suburb.area_name ?? "—"}</span>,
       },
       {
         key: "state",
         header: "suburb.col_state",
+        editable: { type: "text", getValue: (suburb) => suburb.state ?? "" },
         cell: (suburb) => <span className="text-muted-foreground">{suburb.state ?? "—"}</span>,
       },
       {
         key: "country_code",
         header: "suburb.col_country",
+        editable: {
+          type: "select",
+          getValue: (suburb) => suburb.country_code,
+          options: [
+            { value: "AU", label: "AU" },
+            { value: "US", label: "US" },
+            { value: "GB", label: "GB" },
+            { value: "NZ", label: "NZ" },
+            { value: "KR", label: "KR" },
+          ],
+        },
         cell: (suburb) => <span className="text-muted-foreground">{suburb.country_code}</span>,
       },
       {
         key: "status",
         header: "suburb.col_status",
+        editable: {
+          type: "select",
+          getValue: (suburb) => suburb.status,
+          options: [
+            { value: "Active", label: t("common.active") },
+            { value: "Inactive", label: t("common.inactive") },
+          ],
+        },
         cell: (suburb) => <StatusBadge status={suburb.status} />,
       },
       {
@@ -147,6 +169,7 @@ export default function SuburbList() {
             resource: "suburbs",
             onChanged: () => qc.invalidateQueries({ queryKey: getListSuburbsQueryKey() }),
           }}
+          editing={{ resource: "suburbs", onEdited: () => qc.invalidateQueries({ queryKey: getListSuburbsQueryKey() }) }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
           toolbarExtra={

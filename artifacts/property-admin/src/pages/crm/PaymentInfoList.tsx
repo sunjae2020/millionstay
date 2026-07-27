@@ -71,6 +71,7 @@ export default function PaymentInfoList() {
         header: "payment_info.col_name",
         hideable: false,
         defaultWidth: 200,
+        editable: { type: "text", getValue: (r) => r.name },
         cell: (r) => (
           <Link href={`/crm/payment-info/${r.id}`} className="font-medium hover:underline">{r.name}</Link>
         ),
@@ -78,11 +79,22 @@ export default function PaymentInfoList() {
       {
         key: "payment_type",
         header: "payment_info.col_type",
+        editable: {
+          type: "select",
+          getValue: (r) => r.payment_type,
+          options: [
+            { value: "BankTransfer", label: t("payment_info.type_bank_transfer") },
+            { value: "Stripe", label: "Stripe" },
+            { value: "Cash", label: t("payment_info.type_cash") },
+            { value: "Other", label: t("payment_info.type_other") },
+          ],
+        },
         cell: (r) => <span className="text-muted-foreground">{r.payment_type}</span>,
       },
       {
         key: "bank_name",
         header: "payment_info.col_bank_account",
+        editable: { type: "text", getValue: (r) => r.bank_name ?? "" },
         cell: (r) => (
           <span className="text-muted-foreground">
             {r.bank_name && <span>{r.bank_name}</span>}
@@ -96,6 +108,14 @@ export default function PaymentInfoList() {
       {
         key: "status",
         header: "payment_info.col_status",
+        editable: {
+          type: "select",
+          getValue: (r) => r.status,
+          options: [
+            { value: "Active", label: t("common.active") },
+            { value: "Inactive", label: t("common.inactive") },
+          ],
+        },
         cell: (r) => <StatusBadge status={r.status} />,
       },
       {
@@ -146,6 +166,7 @@ export default function PaymentInfoList() {
             resource: "payment-info",
             onChanged: () => qc.invalidateQueries({ queryKey: getListPaymentInfoQueryKey() }),
           }}
+          editing={{ resource: "payment-info", onEdited: () => qc.invalidateQueries({ queryKey: getListPaymentInfoQueryKey() }) }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
           toolbarExtra={
