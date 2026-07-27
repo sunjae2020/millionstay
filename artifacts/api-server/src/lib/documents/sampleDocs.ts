@@ -15,52 +15,80 @@ import { buildContractHtml, type ContractDocInput } from "./contractDocument.js"
 import { buildApplicationHtml, placementToDoc } from "./applicationPdf.js";
 import { resolveCompanyInfo } from "./companyInfo.js";
 import { normalizeLang } from "./i18n.js";
+import { DEFAULT_CURRENCY } from "../currency.js";
+
+// The Templates Studio preview uses the tenant's default currency so ops see a
+// representative document — a Korean (KRW) instance shows ₩ amounts, addresses
+// and item names; every other instance keeps the AUD illustration. Amounts are
+// scaled to each currency (won-scale vs dollar-scale) so neither looks absurd.
+const KRW = DEFAULT_CURRENCY === "KRW";
+const CUR = DEFAULT_CURRENCY;
+const S = KRW
+  ? {
+      party: "김민재", email: "minjae.kim@example.com",
+      tenantAddr: "전남 여수시 좌수영로 101", acctAddr: "전남 여수시 좌수영로 101",
+      space: "메트하임 여수 — 원룸", product: "장기 임대",
+      monthly: 700000, placement: 300000, pickup: 50000, settle: 150000, sim: 30000,
+      bond: 3000000, advance: 700000, weekly: null as number | null, totalRent: 3500000,
+      liMonthly: "월 이용료 — 2026년 7월", liPickup: "공항 픽업", liSettle: "초기 정착 지원", liSim: "선불 SIM",
+      liPlacement: "입주 수수료 (1회성)", desc: "숙박 및 정착 서비스", pickupNote: "입국 시 — 항공편 KE123",
+    }
+  : {
+      party: "Minjae Kim", email: "minjae.kim@example.com",
+      tenantAddr: "12 Lygon Street, Carlton VIC 3053, Australia", acctAddr: "24 Drummond Street, Carlton VIC 3053",
+      space: "Carlton homestay — single room", product: "Long-term accommodation",
+      monthly: 1450, placement: 550, pickup: 90, settle: 250, sim: 30,
+      bond: 1200, advance: 1450, weekly: 360 as number | null, totalRent: 9360,
+      liMonthly: "Monthly accommodation fee — Jul 2026", liPickup: "Airport pickup", liSettle: "Initial settlement support", liSim: "Prepaid SIM",
+      liPlacement: "Placement fee (one-off)", desc: "Accommodation & arrival services", pickupNote: "On arrival — flight QF409",
+    };
 
 const sampleInvoice: InvoiceDocInput = {
   invoice_ref: "MS-INV-2026-00128", status: "Sent",
-  amount: 1820, currency: "AUD", due_date: "2026-07-01",
-  paid_at: null, payment_method: null, description: "Accommodation & arrival services",
+  amount: S.monthly + S.pickup + S.settle + S.sim, currency: CUR, due_date: "2026-07-01",
+  paid_at: null, payment_method: null, description: S.desc,
   notes: null, created_at: new Date().toISOString(),
-  account_name: "Minjae Kim", account_email: "minjae.kim@example.com",
-  account_address: "24 Drummond Street, Carlton VIC 3053",
+  account_name: S.party, account_email: S.email,
+  account_address: S.acctAddr,
   booking_ref: "MS-BKG-2026-0042", contract_ref: "MS-C-2026-00017",
   line_items: [
-    { label: "Monthly accommodation fee — Jul 2026", quantity: 1, unit_amount: 1450, total_amount: 1450 },
-    { label: "Airport pickup", description: "On arrival — flight QF409", quantity: 1, unit_amount: 90, total_amount: 90 },
-    { label: "Initial settlement support", quantity: 1, unit_amount: 250, total_amount: 250 },
-    { label: "Prepaid SIM", quantity: 1, unit_amount: 30, total_amount: 30 },
+    { label: S.liMonthly, quantity: 1, unit_amount: S.monthly, total_amount: S.monthly },
+    { label: S.liPickup, description: S.pickupNote, quantity: 1, unit_amount: S.pickup, total_amount: S.pickup },
+    { label: S.liSettle, quantity: 1, unit_amount: S.settle, total_amount: S.settle },
+    { label: S.liSim, quantity: 1, unit_amount: S.sim, total_amount: S.sim },
   ],
 };
 
 const sampleQuote: QuoteDocInput = {
   quote_ref: "MS-Q-2026-00091", status: "Sent",
-  currency: "AUD", subtotal: 2120, total: 2120, valid_until: "2026-07-10",
-  description: "Homestay accommodation & arrival services", notes: null, created_at: new Date().toISOString(),
-  party_name: "Minjae Kim", party_email: "minjae.kim@example.com", space_name: "Carlton homestay — single room",
+  currency: CUR, subtotal: S.monthly + S.placement + S.pickup + S.sim, total: S.monthly + S.placement + S.pickup + S.sim,
+  valid_until: "2026-07-10",
+  description: S.desc, notes: null, created_at: new Date().toISOString(),
+  party_name: S.party, party_email: S.email, space_name: S.space,
   line_items: [
-    { name: "Monthly accommodation fee", unit_price: 1450, quantity: 1, total_price: 1450 },
-    { name: "Placement fee (one-off)", unit_price: 550, quantity: 1, total_price: 550 },
-    { name: "Airport pickup", unit_price: 90, quantity: 1, total_price: 90 },
-    { name: "Prepaid SIM", unit_price: 30, quantity: 1, total_price: 30 },
+    { name: S.liMonthly.split(" — ")[0], unit_price: S.monthly, quantity: 1, total_price: S.monthly },
+    { name: S.liPlacement, unit_price: S.placement, quantity: 1, total_price: S.placement },
+    { name: S.liPickup, unit_price: S.pickup, quantity: 1, total_price: S.pickup },
+    { name: S.liSim, unit_price: S.sim, quantity: 1, total_price: S.sim },
   ],
 };
 
 const sampleContract: ContractDocInput = {
   contract_ref: "MS-C-2026-00017", status: "Sent",
-  tenant_name: "Minjae Kim", tenant_email: "minjae.kim@example.com",
-  tenant_address: "12 Lygon Street, Carlton VIC 3053, Australia",
-  landlord_name: "MillionStay Pty Ltd", landlord_email: "leasing@millionstay.com",
-  landlord_address: "Melbourne VIC 3000, Australia",
-  space_name: "Carlton homestay — single room", product_name: "Long-term accommodation",
+  tenant_name: S.party, tenant_email: S.email,
+  tenant_address: S.tenantAddr,
+  landlord_name: null, landlord_email: null,
+  landlord_address: null,
+  space_name: S.space, product_name: S.product,
   booking_ref: "MS-BKG-2026-0042",
   start_date: "2026-07-15", end_date: "2026-12-15",
   effective_date: "2026-07-15", expiry_date: "2026-12-15", billing_frequency: "Monthly",
-  weekly_rate: 360, total_rent: 9360, bond_amount: 1200, advance_amount: 1450,
-  currency: "AUD",
+  weekly_rate: S.weekly, total_rent: S.totalRent, bond_amount: S.bond, advance_amount: S.advance,
+  currency: CUR,
   additional_services: [
-    { name: "Airport pickup", quantity: 1, unit_amount: 90, total_amount: 90, recurring: false, frequency: null, notes: "On arrival — flight QF409" },
-    { name: "Initial settlement support", quantity: 1, unit_amount: 250, total_amount: 250, recurring: false, frequency: null, notes: null },
-    { name: "Prepaid SIM", quantity: 1, unit_amount: 30, total_amount: 30, recurring: false, frequency: null, notes: null },
+    { name: S.liPickup, quantity: 1, unit_amount: S.pickup, total_amount: S.pickup, recurring: false, frequency: null, notes: S.pickupNote },
+    { name: S.liSettle, quantity: 1, unit_amount: S.settle, total_amount: S.settle, recurring: false, frequency: null, notes: null },
+    { name: S.liSim, quantity: 1, unit_amount: S.sim, total_amount: S.sim, recurring: false, frequency: null, notes: null },
   ],
   terms_text: null, notes: null,
   signed_at: null, created_at: new Date().toISOString(),

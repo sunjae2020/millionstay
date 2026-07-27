@@ -9,6 +9,7 @@
 //
 // Money columns are numeric → strings.
 import { and, eq, isNull } from "drizzle-orm";
+import { DEFAULT_CURRENCY } from "../currency";
 import { db, recurringSchedulesTable, bookingsTable } from "@workspace/db";
 
 /**
@@ -60,7 +61,7 @@ export async function createBookingRecurringSchedule(bookingId: number): Promise
       schedule_type: "Rent",
       frequency: "Weekly",
       amount: String(weekly),
-      currency: booking.currency || "AUD",
+      currency: booking.currency || DEFAULT_CURRENCY,
       start_date: start,
       next_due_date: start,
       billing_mode: "incremental",

@@ -25,6 +25,8 @@
  * `tenants/metheim/config.env` (design guide §B2). Env is read once at module
  * load, which is correct since it is fixed for the life of the process.
  */
+import { DEFAULT_CURRENCY } from "../currency";
+
 const E = process.env;
 export const DOC_TOKENS = {
   brand: E.DOC_BRAND ?? "#E8621A",
@@ -97,7 +99,7 @@ export function formatDocMoney(
 ): string {
   const n = Number(amount);
   if (!Number.isFinite(n)) return "—";
-  const code = (currency || "AUD").toUpperCase();
+  const code = (currency || DEFAULT_CURRENCY).toUpperCase();
   const sym = CURRENCY_SYMBOL[code] ?? "";
   const decimals = ZERO_DECIMAL_CURRENCIES.has(code) ? 0 : 2;
   const rounded = Number(n.toFixed(decimals));

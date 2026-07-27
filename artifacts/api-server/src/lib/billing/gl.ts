@@ -10,6 +10,7 @@
 //
 // Money columns are numeric → strings; wrap reads in Number(), writes in String().
 import { and, desc, eq, gte, lte } from "drizzle-orm";
+import { DEFAULT_CURRENCY } from "../currency";
 import { db, journalEntriesTable, journalLinesTable, invoiceLineItemsTable } from "@workspace/db";
 
 // ── Fixed chart of accounts ────────────────────────────────────────────────
@@ -100,7 +101,7 @@ export async function postEntry(input: PostEntryInput): Promise<typeof journalEn
           description: input.description,
           source_type: input.sourceType,
           source_id: input.sourceId,
-          currency: input.currency || "AUD",
+          currency: input.currency || DEFAULT_CURRENCY,
         })
         .returning();
       if (!row) return null;
@@ -186,7 +187,7 @@ export async function postInvoicePaid(args: {
     description: `Invoice payment #${args.id}`,
     sourceType: "invoice",
     sourceId: args.id,
-    currency: args.currency || "AUD",
+    currency: args.currency || DEFAULT_CURRENCY,
     lines: [
       { account_code: ACCOUNTS.CASH.code, account_name: ACCOUNTS.CASH.name, debit: amount, credit: 0 },
       ...creditLines,
@@ -236,7 +237,7 @@ export async function postPlacementPaymentPaid(args: {
     description: `Homestay placement payment #${args.paymentId} (${args.kind})`,
     sourceType: "homestay_placement_payment",
     sourceId: args.paymentId,
-    currency: args.currency || "AUD",
+    currency: args.currency || DEFAULT_CURRENCY,
     lines: [
       { account_code: ACCOUNTS.CASH.code, account_name: ACCOUNTS.CASH.name, debit: amount, credit: 0 },
       ...creditLines,
@@ -258,7 +259,7 @@ export async function postCommissionAccrued(args: {
     description: `Commission accrued #${args.id}`,
     sourceType: "commission",
     sourceId: args.id,
-    currency: args.currency || "AUD",
+    currency: args.currency || DEFAULT_CURRENCY,
     lines: [
       { account_code: ACCOUNTS.COMMISSION_EXPENSE.code, account_name: ACCOUNTS.COMMISSION_EXPENSE.name, debit: amount, credit: 0 },
       { account_code: ACCOUNTS.COMMISSION_PAYABLE.code, account_name: ACCOUNTS.COMMISSION_PAYABLE.name, debit: 0, credit: amount },
@@ -280,7 +281,7 @@ export async function postCommissionPaid(args: {
     description: `Commission paid #${args.id}`,
     sourceType: "commission",
     sourceId: args.id,
-    currency: args.currency || "AUD",
+    currency: args.currency || DEFAULT_CURRENCY,
     lines: [
       { account_code: ACCOUNTS.COMMISSION_PAYABLE.code, account_name: ACCOUNTS.COMMISSION_PAYABLE.name, debit: amount, credit: 0 },
       { account_code: ACCOUNTS.CASH.code, account_name: ACCOUNTS.CASH.name, debit: 0, credit: amount },
@@ -302,7 +303,7 @@ export async function postPartnerPayoutAccrued(args: {
     description: `Partner payout accrued #${args.id}`,
     sourceType: "partner_payout",
     sourceId: args.id,
-    currency: args.currency || "AUD",
+    currency: args.currency || DEFAULT_CURRENCY,
     lines: [
       { account_code: ACCOUNTS.CONTRACTOR_EXPENSE.code, account_name: ACCOUNTS.CONTRACTOR_EXPENSE.name, debit: amount, credit: 0 },
       { account_code: ACCOUNTS.CONTRACTOR_PAYABLE.code, account_name: ACCOUNTS.CONTRACTOR_PAYABLE.name, debit: 0, credit: amount },
@@ -324,7 +325,7 @@ export async function postPartnerPayoutPaid(args: {
     description: `Partner payout paid #${args.id}`,
     sourceType: "partner_payout",
     sourceId: args.id,
-    currency: args.currency || "AUD",
+    currency: args.currency || DEFAULT_CURRENCY,
     lines: [
       { account_code: ACCOUNTS.CONTRACTOR_PAYABLE.code, account_name: ACCOUNTS.CONTRACTOR_PAYABLE.name, debit: amount, credit: 0 },
       { account_code: ACCOUNTS.CASH.code, account_name: ACCOUNTS.CASH.name, debit: 0, credit: amount },

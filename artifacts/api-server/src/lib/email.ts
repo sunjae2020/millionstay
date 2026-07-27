@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { DEFAULT_CURRENCY } from "./currency";
 import { db, marketingConsentsTable } from "@workspace/db";
 import { and, eq } from "drizzle-orm";
 import { t, normalizeLang, type DocLang } from "./documents/i18n";
@@ -329,7 +330,7 @@ export async function sendBookingConfirmation(data: BookingConfirmationData): Pr
     return false;
   }
 
-  const { to, guestName, bookingRef, spaceName, propertyAddress, checkIn, checkOut, weeklyRate, totalDue, currency = "AUD", isLongTerm } = data;
+  const { to, guestName, bookingRef, spaceName, propertyAddress, checkIn, checkOut, weeklyRate, totalDue, currency = DEFAULT_CURRENCY, isLongTerm } = data;
   const supportEmail = await resolveSupportEmail();
 
   const html = `

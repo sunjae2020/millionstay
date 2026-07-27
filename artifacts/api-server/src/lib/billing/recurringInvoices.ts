@@ -7,6 +7,7 @@
 // activation. Best-effort: never throws to the caller. Mirrors the homestay
 // rent automation in lib/homestay/monthlyBilling.ts.
 import { and, desc, eq, isNull, like, lte, sql } from "drizzle-orm";
+import { DEFAULT_CURRENCY } from "../currency";
 import {
   db,
   recurringSchedulesTable,
@@ -162,8 +163,8 @@ export async function generateRecurringInvoices(): Promise<RecurringBillingResul
           contract_id: s.contract_id ?? null,
           account_id: s.account_id || null,
           amount: String(s.amount),
-          currency: s.currency || "AUD",
-          exchange_rate_to_aud: await getRateToAud(s.currency || "AUD"),
+          currency: s.currency || DEFAULT_CURRENCY,
+          exchange_rate_to_aud: await getRateToAud(s.currency || DEFAULT_CURRENCY),
           status: "Sent",
           due_date: periodStart,
           description,
