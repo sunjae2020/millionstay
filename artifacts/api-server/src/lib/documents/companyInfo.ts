@@ -90,7 +90,10 @@ export async function resolveCompanyInfo(): Promise<CompanyInfo> {
   return {
     legalName: s.company_name?.trim() || defaults.legalName,
     tradingName: s.trading_name?.trim() || defaults.tradingName,
-    abn: s.abn?.trim() || defaults.abn,
+    // KR issuers store the registration number in biz_no (사업자등록번호); AU in abn.
+    abn: s.biz_no?.trim() || s.abn?.trim() || defaults.abn,
+    regLabel: defaults.regLabel,
+    ceo: s.ceo?.trim() || defaults.ceo,
     email: s.email?.trim() || defaults.email,
     phone: s.phone?.trim() || defaults.phone,
     website: s.website?.trim() || defaults.website,

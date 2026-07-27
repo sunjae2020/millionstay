@@ -28,7 +28,8 @@ INSERT INTO branding_settings (
   '#F4EFE1',    -- Cream       · warm light accent
   'dark',       -- deep-teal sidebar (guideline §12)
   'https://res.cloudinary.com/dthc3gmdr/image/upload/v1784456084/metheim/logos/metheim-logo-horizontal-teal.svg',
-  NULL,         -- logo_dark_url: upload metheim-logo-horizontal-white.svg, then fill (reverse logo for the dark sidebar)
+  'https://res.cloudinary.com/dthc3gmdr/image/upload/v1784456084/metheim/logos/metheim-logo-horizontal-white.svg',
+                -- logo_dark_url: all-white reverse lockup for the deep-teal sidebar / dark surfaces
   'https://res.cloudinary.com/dthc3gmdr/image/upload/v1784456074/metheim/logos/favicon.svg',
   false,        -- dark_mode
   'YYYY-MM-DD', -- KR date format (guideline tables use YYYY-MM-DD)
