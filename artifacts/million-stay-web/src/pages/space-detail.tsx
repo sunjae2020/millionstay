@@ -334,8 +334,10 @@ export default function SpaceDetail() {
 
   const stayWeeks = stayDays ? stayDays / 7 : null;
 
-  const selectedPriceProduct = space?.products?.find((p) => p.id === selectedProduct);
-  const weeklyRate = Number(selectedPriceProduct?.price ?? space?.base_weekly_price ?? 0);
+  const selectedPriceProduct = space?.products?.find((p) => p.id === selectedProduct) as any;
+  // Effective rate honours a promo tier's discounted price when selected.
+  const stdRate = Number(selectedPriceProduct?.price ?? space?.base_weekly_price ?? 0);
+  const weeklyRate = selectedPriceProduct?.promo_price != null ? Number(selectedPriceProduct.promo_price) : stdRate;
   const priceCurrency: string = (space?.base_currency || selectedPriceProduct?.currency || "AUD").toString().toUpperCase();
   const { formatDisplayPrice, forceDisplayCurrency } = useDisplayCurrency();
   const weeklyRateDisplay = formatDisplayPrice(Number(weeklyRate), priceCurrency);
@@ -346,8 +348,9 @@ export default function SpaceDetail() {
   // Pro-rata: weekly_rate / 7 × days
   const rentTotal = stayDays && weeklyRate ? Math.round((weeklyRate / 7) * stayDays * 100) / 100 : null;
 
-  // Fees come from the selected product (null = not charged for this product)
-  const productBond = selectedPriceProduct?.bond_amount ?? null;
+  // Fees come from the selected product (null = not charged for this product).
+  // Korean leases carry a 보증금 (deposit_amount); fall back to the weekly bond.
+  const productBond = selectedPriceProduct?.deposit_amount ?? selectedPriceProduct?.bond_amount ?? null;
   const productAdminFee = selectedPriceProduct?.admin_fee ?? null;
   const productCleaningFee = selectedPriceProduct?.cleaning_fee ?? null;
 
@@ -415,11 +418,12 @@ export default function SpaceDetail() {
   const addressParts = [space.property_address, space.suburb_name, space.property_state].filter(Boolean);
   const addressStr = addressParts.join(", ") + (space.property_postcode ? ` ${space.property_postcode}` : "");
   const amenities = (space.options ?? []) as Array<{ id: number | string; name: string }>;
-  // Lease price options (보증금 → 월세 tiers + 프로모션) — Metheim rate-card table.
-  const rentOptions = ((space as any).rent_options ?? []) as Array<{
-    id: number; deposit_amount: number; monthly_rent: number;
-    promo_monthly_rent: number | null; currency: string; is_default: boolean;
-  }>;
+  // Korean lease tiers = accommodation products carrying a 보증금 (deposit_amount),
+  // sorted by deposit asc (higher deposit ⇒ lower monthly rent). Selecting one
+  // sets product_id, which carries through booking → 계약.
+  const rentProducts = ((space.products ?? []) as any[])
+    .filter((p) => p.deposit_amount != null)
+    .sort((a, b) => Number(a.deposit_amount) - Number(b.deposit_amount));
   const fmtOpt = (n: number, cur?: string) =>
     formatDisplayPrice(Number(n) || 0, (cur || priceCurrency).toUpperCase()).primary;
   const lat = Number(space.latitude);
@@ -521,58 +525,55 @@ export default function SpaceDetail() {
               </>
             )}
 
-            {/* Rent Plans — 보증금별 월세 옵션 (임대료 rate card) */}
-            {rentOptions.length > 0 && (
+            {/* Rent Plans — 보증금별 월세 옵션 (임대료 rate card). Each row is an
+                accommodation product; selecting one sets product_id → booking → 계약. */}
+            {rentProducts.length > 0 && (
               <>
                 <Separator />
                 <div>
                   <h2 className="text-base font-bold text-gray-800 mb-1">{t("space.rent.plans_title")}</h2>
                   <p className="text-xs text-gray-500 mb-4">{t("space.rent.plans_subtitle")}</p>
-                  <div className="overflow-x-auto rounded-xl border bg-white">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
-                          <th className="text-left font-semibold px-4 py-2.5">{t("space.rent.deposit")}</th>
-                          <th className="text-right font-semibold px-4 py-2.5">{t("space.rent.monthly")}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rentOptions.map((o) => {
-                          const hasPromo = o.promo_monthly_rent != null && o.promo_monthly_rent < o.monthly_rent;
-                          return (
-                            <tr key={o.id} className="border-t border-gray-100">
-                              <td className="px-4 py-3 font-medium text-gray-800 whitespace-nowrap">
-                                {fmtOpt(o.deposit_amount, o.currency)}
-                                {o.is_default && (
-                                  <span className="ml-2 text-[10px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 rounded align-middle">
-                                    {t("space.rent.base")}
-                                  </span>
-                                )}
-                              </td>
-                              <td className="px-4 py-3 text-right whitespace-nowrap">
-                                {hasPromo ? (
-                                  <span className="inline-flex items-center gap-2 justify-end flex-wrap">
-                                    <span className="text-gray-400 line-through">{fmtOpt(o.monthly_rent, o.currency)}</span>
-                                    <span className="font-bold text-primary">
-                                      {fmtOpt(o.promo_monthly_rent!, o.currency)}
-                                      <span className="text-xs font-normal text-gray-400 ml-0.5">{t(PRICE_UNIT_KEY)}</span>
-                                    </span>
-                                    <span className="text-[10px] font-semibold bg-red-100 text-red-600 px-1.5 py-0.5 rounded">
-                                      {t("space.rent.promo")}
-                                    </span>
-                                  </span>
-                                ) : (
-                                  <span className="font-semibold text-gray-800">
-                                    {fmtOpt(o.monthly_rent, o.currency)}
-                                    <span className="text-xs font-normal text-gray-400 ml-0.5">{t(PRICE_UNIT_KEY)}</span>
-                                  </span>
-                                )}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                  <div className="overflow-hidden rounded-xl border bg-white divide-y divide-gray-100">
+                    {rentProducts.map((p: any) => {
+                      const promo = p.promo_price != null ? Number(p.promo_price) : null;
+                      const selected = selectedProduct === p.id;
+                      return (
+                        <button
+                          key={p.id}
+                          onClick={() => { setSelectedProduct(p.id); handleCheckInChange(checkIn); }}
+                          className={`w-full flex items-center justify-between gap-3 px-4 py-3 text-left transition-colors ${
+                            selected ? "bg-primary/5 ring-1 ring-inset ring-primary" : "hover:bg-gray-50"
+                          }`}
+                        >
+                          <span className="flex items-center gap-2.5 min-w-0">
+                            <span className={`w-4 h-4 rounded-full border-2 shrink-0 ${selected ? "border-primary bg-primary" : "border-gray-300"}`} />
+                            <span className="text-sm">
+                              <span className="text-gray-400">{t("space.rent.deposit")}</span>{" "}
+                              <span className="font-semibold text-gray-800">{fmtOpt(p.deposit_amount, p.currency)}</span>
+                            </span>
+                          </span>
+                          <span className="text-right whitespace-nowrap">
+                            {promo != null ? (
+                              <span className="inline-flex items-center gap-2 justify-end flex-wrap">
+                                <span className="text-gray-400 line-through text-sm">{fmtOpt(p.price, p.currency)}</span>
+                                <span className="font-bold text-primary">
+                                  {fmtOpt(promo, p.currency)}
+                                  <span className="text-xs font-normal text-gray-400 ml-0.5">{t(PRICE_UNIT_KEY)}</span>
+                                </span>
+                                <span className="text-[10px] font-semibold bg-red-100 text-red-600 px-1.5 py-0.5 rounded">
+                                  {t("space.rent.promo")}
+                                </span>
+                              </span>
+                            ) : (
+                              <span className="font-semibold text-gray-800">
+                                {fmtOpt(p.price, p.currency)}
+                                <span className="text-xs font-normal text-gray-400 ml-0.5">{t(PRICE_UNIT_KEY)}</span>
+                              </span>
+                            )}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                   {forceDisplayCurrency && (
                     <p className="mt-2 text-xs text-gray-400 leading-relaxed">{t("space.fx_payment_note")}</p>
@@ -581,8 +582,8 @@ export default function SpaceDetail() {
               </>
             )}
 
-            {/* Stay Plans */}
-            {space.products && space.products.length > 0 && (
+            {/* Stay Plans (short-term weekly plans; hidden when 보증금 rent tiers exist) */}
+            {space.products && space.products.length > 0 && rentProducts.length === 0 && (
               <>
                 <Separator />
                 <div>

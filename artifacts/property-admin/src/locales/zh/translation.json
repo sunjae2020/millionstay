@@ -1598,6 +1598,8 @@
     "label_advance_weeks": "预付款（周）",
     "label_bond_amount": "押金金额（AUD 覆盖）",
     "ph_bond_amount": "留空则按押金周数计算",
+    "label_deposit_amount": "保证金 (보증금)",
+    "ph_deposit_amount": "韩式租赁保证金；保证金越高，月租越低",
     "section_inclusions": "包含项目",
     "label_extra_inclusions": "额外包含项目（自由填写）",
     "ph_extra_inclusions": "例如：泳池使用、健身房",

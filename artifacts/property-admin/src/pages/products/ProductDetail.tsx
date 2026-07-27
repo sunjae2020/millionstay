@@ -149,6 +149,7 @@ export default function ProductDetail() {
       room_type: product.room_type ?? "",
       meal_plan: product.meal_plan ?? "",
       guest_age: product.guest_age ?? "",
+      deposit_amount: product.deposit_amount != null ? String(product.deposit_amount) : "",
       bond_amount: product.bond_amount != null ? String(product.bond_amount) : "",
       bond_weeks: product.bond_weeks != null ? String(product.bond_weeks) : "4",
       advance_weeks: product.advance_weeks != null ? String(product.advance_weeks) : "2",
@@ -170,7 +171,7 @@ export default function ProductDetail() {
       min_contract_period: "", min_contract_period_unit: "weeks",
       max_stay_weeks: "", billing_frequency: "Biweekly", term_type: "",
       contract_term: "", room_type: "", meal_plan: "", guest_age: "",
-      bond_amount: "", bond_weeks: "4", advance_weeks: "2",
+      deposit_amount: "", bond_amount: "", bond_weeks: "4", advance_weeks: "2",
       admin_fee: "", cleaning_fee: "",
       includes_wifi: false, includes_parking: false, includes_utilities: false,
       includes_meals: false, includes_laundry: false, includes_cleaning: false,
@@ -190,6 +191,7 @@ export default function ProductDetail() {
         promotion_id: values.promotion_id ? Number(values.promotion_id) : null,
         min_contract_period: values.min_contract_period !== "" ? Number(values.min_contract_period) : null,
         max_stay_weeks: values.max_stay_weeks !== "" ? Number(values.max_stay_weeks) : null,
+        deposit_amount: values.deposit_amount !== "" ? Number(values.deposit_amount) : null,
         bond_amount: values.bond_amount !== "" ? Number(values.bond_amount) : null,
         bond_weeks: values.bond_weeks !== "" ? Number(values.bond_weeks) : null,
         advance_weeks: values.advance_weeks !== "" ? Number(values.advance_weeks) : null,
@@ -384,6 +386,10 @@ export default function ProductDetail() {
               <div>
                 <Label>{t('product.label_bond_amount')}</Label>
                 <Input {...register("bond_amount")} type="number" step="0.01" placeholder={t('product.ph_bond_amount')} className="mt-1" />
+              </div>
+              <div>
+                <Label>{t('product.label_deposit_amount')}</Label>
+                <Input {...register("deposit_amount")} type="number" step="0.01" placeholder={t('product.ph_deposit_amount')} className="mt-1" />
               </div>
             </div>
 
