@@ -14,19 +14,34 @@
  * portal (`design-tokens.md`): brand orange #E8621A, Inter typeface, etc.
  */
 
-/** Brand + typographic design tokens. Keep in sync with the proposal §5.1. */
+/**
+ * Brand + typographic design tokens. Keep in sync with the proposal §5.1.
+ *
+ * Per-tenant override: every colour/font token falls back to the MillionStay
+ * default (Million Orange #E8621A, Inter) but can be overridden per deployment
+ * via `DOC_*` env, so a white-label instance re-themes its generated documents
+ * without a code change and MillionStay is untouched. This layers UNDER the
+ * DB-driven `company.brandColor` (branding row) used for the brand accent in
+ * renderDocumentShell: brandColor wins for the accent, DOC_BRAND is the fallback,
+ * and the neutral/surface tokens (ink/pageBg/border/accent) come from DOC_* too.
+ * Metheim sets the "Urban Teal" palette in `tenants/metheim/config.env` (design
+ * guide §B2). Env is read once at module load — fixed for the process lifetime.
+ */
+const E = process.env;
 export const DOC_TOKENS = {
-  brand: "#E8621A",
-  brandHover: "#F97316",
-  ink: "#111111",
-  inkMuted: "#555555",
-  inkFaint: "#999999",
-  pageBg: "#f9fafb",
-  cardBg: "#ffffff",
-  border: "#f0f0f0",
-  accentBg: "#FFF7F0",
-  accentBorder: "#FCD9B6",
-  font: `'Inter', 'Noto Sans KR', 'Noto Sans JP', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`,
+  brand: E.DOC_BRAND ?? "#E8621A",
+  brandHover: E.DOC_BRAND_HOVER ?? "#F97316",
+  ink: E.DOC_INK ?? "#111111",
+  inkMuted: E.DOC_INK_MUTED ?? "#555555",
+  inkFaint: E.DOC_INK_FAINT ?? "#999999",
+  pageBg: E.DOC_PAGE_BG ?? "#f9fafb",
+  cardBg: E.DOC_CARD_BG ?? "#ffffff",
+  border: E.DOC_BORDER ?? "#f0f0f0",
+  accentBg: E.DOC_ACCENT_BG ?? "#FFF7F0",
+  accentBorder: E.DOC_ACCENT_BORDER ?? "#FCD9B6",
+  font:
+    E.DOC_FONT ??
+    `'Inter', 'Noto Sans KR', 'Noto Sans JP', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`,
   monoFont: `'SFMono-Regular', ui-monospace, Menlo, Consolas, monospace`,
   radius: "14px",
   lineHeight: "1.5",
@@ -36,7 +51,15 @@ export const DOC_TOKENS = {
 export interface CompanyInfo {
   legalName: string;
   tradingName: string;
+  /** Business-registration number shown in the issuer block (AU ABN / KR 사업자등록번호). */
   abn: string;
+  /**
+   * Label for the registration number, jurisdiction-specific. Defaults to "ABN"
+   * (MillionStay / Australia); a KR instance sets `DOC_REG_LABEL=사업자등록번호`.
+   */
+  regLabel: string;
+  /** Legal representative / CEO (KR 대표자). Shown in parens when set. */
+  ceo: string;
   email: string;
   phone: string;
   website: string;
@@ -52,6 +75,8 @@ export function getCompanyInfo(): CompanyInfo {
     legalName: process.env.COMPANY_LEGAL_NAME ?? "MillionStay Pty Ltd",
     tradingName: process.env.COMPANY_TRADING_NAME ?? "MillionStay",
     abn: process.env.COMPANY_ABN ?? "",
+    regLabel: process.env.DOC_REG_LABEL ?? "ABN",
+    ceo: process.env.COMPANY_CEO ?? "",
     email: process.env.SUPPORT_EMAIL ?? "millionstay.com@gmail.com",
     phone: process.env.COMPANY_PHONE ?? "",
     website: process.env.PUBLIC_WEB_URL ?? "https://www.millionstay.com",
@@ -330,7 +355,7 @@ export function renderDocumentShell(opts: RenderShellOptions): string {
       <div>
         <div class="doc-type">${escapeHtml(opts.docType)}</div>
         <div class="issuer">
-          ${escapeHtml(company.legalName)}${company.abn ? `<br/>ABN ${escapeHtml(company.abn)}` : ""}<br/>
+          ${escapeHtml(company.legalName)}${company.ceo ? ` (${escapeHtml(company.ceo)})` : ""}${company.abn ? `<br/>${escapeHtml(company.regLabel)} ${escapeHtml(company.abn)}` : ""}<br/>
           ${escapeHtml(company.email)}
         </div>
       </div>
