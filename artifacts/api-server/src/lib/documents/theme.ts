@@ -14,19 +14,32 @@
  * portal (`design-tokens.md`): brand orange #E8621A, Inter typeface, etc.
  */
 
-/** Brand + typographic design tokens. Keep in sync with the proposal §5.1. */
+/**
+ * Brand + typographic design tokens. Keep in sync with the proposal §5.1.
+ *
+ * Per-tenant override: every colour/font token falls back to the MillionStay
+ * default (Million Orange #E8621A, Inter) but can be overridden per deployment
+ * via `DOC_*` env — so a white-label instance re-themes its generated documents
+ * without a code change and MillionStay is untouched (same pattern as
+ * `getCompanyInfo()` below). Metheim sets the "Urban Teal" palette in
+ * `tenants/metheim/config.env` (design guide §B2). Env is read once at module
+ * load, which is correct since it is fixed for the life of the process.
+ */
+const E = process.env;
 export const DOC_TOKENS = {
-  brand: "#E8621A",
-  brandHover: "#F97316",
-  ink: "#111111",
-  inkMuted: "#555555",
-  inkFaint: "#999999",
-  pageBg: "#f9fafb",
-  cardBg: "#ffffff",
-  border: "#f0f0f0",
-  accentBg: "#FFF7F0",
-  accentBorder: "#FCD9B6",
-  font: `'Inter', 'Noto Sans KR', 'Noto Sans JP', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`,
+  brand: E.DOC_BRAND ?? "#E8621A",
+  brandHover: E.DOC_BRAND_HOVER ?? "#F97316",
+  ink: E.DOC_INK ?? "#111111",
+  inkMuted: E.DOC_INK_MUTED ?? "#555555",
+  inkFaint: E.DOC_INK_FAINT ?? "#999999",
+  pageBg: E.DOC_PAGE_BG ?? "#f9fafb",
+  cardBg: E.DOC_CARD_BG ?? "#ffffff",
+  border: E.DOC_BORDER ?? "#f0f0f0",
+  accentBg: E.DOC_ACCENT_BG ?? "#FFF7F0",
+  accentBorder: E.DOC_ACCENT_BORDER ?? "#FCD9B6",
+  font:
+    E.DOC_FONT ??
+    `'Inter', 'Noto Sans KR', 'Noto Sans JP', 'Noto Sans SC', 'Noto Sans TC', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`,
   monoFont: `'SFMono-Regular', ui-monospace, Menlo, Consolas, monospace`,
   radius: "14px",
   lineHeight: "1.5",
@@ -55,6 +68,34 @@ export function getCompanyInfo(): CompanyInfo {
     address: process.env.COMPANY_ADDRESS ?? "Melbourne, VIC, Australia",
     logoUrl: process.env.EMAIL_LOGO_URL ?? "https://www.millionstay.com/millionstay-logo.png",
   };
+}
+
+// Currency formatting for documents. Mirrors the guest web's
+// `formatCurrencyAmount` (DisplayCurrencyContext) so invoices/receipts/quotes/
+// contracts render the correct symbol per currency — e.g. ₩450,000 for a Korean
+// (Metheim) KRW invoice instead of the old hard-coded "450,000.00 AUD".
+const CURRENCY_SYMBOL: Record<string, string> = {
+  AUD: "A$", USD: "US$", KRW: "₩", JPY: "¥", CNY: "¥", THB: "฿",
+  PHP: "₱", MYR: "RM ", SGD: "S$", EUR: "€", GBP: "£", VND: "₫", IDR: "Rp ",
+};
+const ZERO_DECIMAL_CURRENCIES = new Set(["KRW", "JPY", "THB", "PHP", "VND", "IDR"]);
+
+/** Format a monetary amount in its own currency: `₩450,000`, `A$1,234.56`. */
+export function formatDocMoney(
+  amount: string | number | null | undefined,
+  currency: string | null | undefined,
+): string {
+  const n = Number(amount);
+  if (!Number.isFinite(n)) return "—";
+  const code = (currency || "AUD").toUpperCase();
+  const sym = CURRENCY_SYMBOL[code] ?? "";
+  const decimals = ZERO_DECIMAL_CURRENCIES.has(code) ? 0 : 2;
+  const rounded = Number(n.toFixed(decimals));
+  const formatted = rounded.toLocaleString("en-US", {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
+  return sym ? `${sym}${formatted}` : `${formatted} ${code}`;
 }
 
 /** HTML-escape user-supplied text before interpolating into templates. */

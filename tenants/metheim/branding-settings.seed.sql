@@ -1,13 +1,13 @@
 -- =============================================================================
 -- tenants/metheim/branding-settings.seed.sql
--- MetHeim admin brand kit — seeds the single `branding_settings` row (id=1) that
+-- Metheim admin brand kit — seeds the single `branding_settings` row (id=1) that
 -- backs the property-admin "Design & Branding" page at RUNTIME. Build-time
 -- defaults live in @workspace/design-tokens/brand.css + tenants/metheim/config.env
 -- (BRAND_*); this row overrides them live for everyone on the instance.
 --
 -- Source of truth: tenants/metheim/brand-guidelines.md v1.0.
 --
--- Apply to the MetHeim instance DB ONLY (Supabase project: metheim /
+-- Apply to the Metheim instance DB ONLY (Supabase project: metheim /
 -- dhdjxweuushugqltjael) — NEVER the primary MillionStay DB:
 --   psql "$METHEIM_DATABASE_URL" -f tenants/metheim/branding-settings.seed.sql
 -- (`pnpm db:push` hangs on the interactive _seed_meta prompt — use psql.)
@@ -22,13 +22,14 @@ INSERT INTO branding_settings (
   logo_url, logo_dark_url, favicon_url,
   dark_mode, date_format, currency, currency_position
 ) VALUES (
-  1, 'MetHeim',
+  1, 'Metheim',
   '#005F73',    -- Urban Teal  · primary
   '#00323D',    -- Deep Teal   · secondary / dark heading
   '#F4EFE1',    -- Cream       · warm light accent
   'dark',       -- deep-teal sidebar (guideline §12)
   'https://res.cloudinary.com/dthc3gmdr/image/upload/v1784456084/metheim/logos/metheim-logo-horizontal-teal.svg',
-  NULL,         -- logo_dark_url: upload metheim-logo-horizontal-white.svg, then fill (reverse logo for the dark sidebar)
+  'https://res.cloudinary.com/dthc3gmdr/image/upload/v1784456084/metheim/logos/metheim-logo-horizontal-white.svg',
+                -- logo_dark_url: all-white reverse lockup for the deep-teal sidebar / dark surfaces
   'https://res.cloudinary.com/dthc3gmdr/image/upload/v1784456074/metheim/logos/favicon.svg',
   false,        -- dark_mode
   'YYYY-MM-DD', -- KR date format (guideline tables use YYYY-MM-DD)
