@@ -16,6 +16,8 @@ export const contractsTable = pgTable("contracts", {
   weekly_rate: numeric("weekly_rate", { precision: 12, scale: 2, mode: "number" }),
   total_rent: numeric("total_rent", { precision: 12, scale: 2, mode: "number" }),
   bond_amount: numeric("bond_amount", { precision: 12, scale: 2, mode: "number" }),
+  // 월세 — promo-adjusted monthly rent auto-filled from the linked 숙박상품 tier.
+  monthly_rent: numeric("monthly_rent", { precision: 12, scale: 2, mode: "number" }),
   advance_amount: numeric("advance_amount", { precision: 12, scale: 2, mode: "number" }),
   currency: text("currency").notNull().default("AUD"),
   exchange_rate_to_aud: numeric("exchange_rate_to_aud", { precision: 18, scale: 8 }),

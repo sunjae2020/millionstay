@@ -785,6 +785,7 @@
     "label_end": "終了日",
     "label_weekly_rate": "週額料金",
     "label_total_rent": "総家賃",
+    "label_monthly_rent": "月額賃料 (월세)",
     "label_currency": "通貨",
     "label_status": "ステータス",
     "label_notes": "メモ",

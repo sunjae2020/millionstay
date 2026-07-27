@@ -785,6 +785,7 @@
     "label_end": "วันสิ้นสุด",
     "label_weekly_rate": "ราคารายสัปดาห์",
     "label_total_rent": "ค่าเช่ารวม",
+    "label_monthly_rent": "ค่าเช่ารายเดือน (월세)",
     "label_currency": "สกุลเงิน",
     "label_status": "สถานะ",
     "label_notes": "หมายเหตุ",

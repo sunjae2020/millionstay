@@ -4,6 +4,7 @@ import { eq, ilike, and, like, desc, isNull, inArray } from "drizzle-orm";
 import { logAction } from "../utils/auditLog";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import { getRateToAud } from "../lib/rateSnapshot";
+import { resolveLeaseTermsFromProduct } from "../lib/leaseTerms";
 import { buildContractHtml, type ContractDocInput } from "../lib/documents/contractDocument";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
@@ -399,6 +400,9 @@ router.get("/v1/contracts", async (req, res): Promise<void> => {
 router.post("/v1/contracts", async (req, res): Promise<void> => {
   const data = req.body;
   const contract_ref = await nextContractRef();
+  // Auto-fill 보증금 / 월세 from the selected 숙박상품 (Korean rent tier) as defaults —
+  // only where the caller didn't provide the field, so manual values still win.
+  const lease = await resolveLeaseTermsFromProduct(data.product_id);
   const [row] = await db.insert(contractsTable).values({
     contract_ref,
     booking_id: data.booking_id ?? null,
@@ -411,10 +415,11 @@ router.post("/v1/contracts", async (req, res): Promise<void> => {
     end_date: data.end_date ?? null,
     weekly_rate: data.weekly_rate ?? null,
     total_rent: data.total_rent ?? null,
-    bond_amount: data.bond_amount ?? null,
+    bond_amount: data.bond_amount ?? lease?.deposit_amount ?? null,
+    monthly_rent: data.monthly_rent ?? lease?.effective_monthly ?? null,
     advance_amount: data.advance_amount ?? null,
-    currency: data.currency ?? "AUD",
-    exchange_rate_to_aud: await getRateToAud(data.currency ?? "AUD"),
+    currency: data.currency ?? lease?.currency ?? "AUD",
+    exchange_rate_to_aud: await getRateToAud(data.currency ?? lease?.currency ?? "AUD"),
     status: "Draft",
     document_url: data.document_url ?? null,
     terms_text: data.terms_text ?? null,
@@ -645,6 +650,7 @@ router.put("/v1/contracts/:id", async (req, res): Promise<void> => {
         weekly_rate: data.weekly_rate ?? null,
         total_rent: data.total_rent ?? null,
         bond_amount: data.bond_amount ?? null,
+        monthly_rent: data.monthly_rent ?? null,
         advance_amount: data.advance_amount ?? null,
         currency: data.currency ?? "AUD",
         document_url: data.document_url ?? null,

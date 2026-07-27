@@ -785,6 +785,7 @@
     "label_end": "End Date",
     "label_weekly_rate": "Weekly Rate",
     "label_total_rent": "Total Rent",
+    "label_monthly_rent": "Monthly Rent (월세)",
     "label_currency": "Currency",
     "label_status": "Status",
     "label_notes": "Notes",

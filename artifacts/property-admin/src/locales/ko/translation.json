@@ -785,6 +785,7 @@
     "label_end": "종료일",
     "label_weekly_rate": "주간 요금",
     "label_total_rent": "총 임대료",
+    "label_monthly_rent": "월세",
     "label_currency": "통화",
     "label_status": "상태",
     "label_notes": "메모",

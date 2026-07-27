@@ -785,6 +785,7 @@
     "label_end": "结束日期",
     "label_weekly_rate": "周价格",
     "label_total_rent": "总租金",
+    "label_monthly_rent": "月租 (월세)",
     "label_currency": "货币",
     "label_status": "状态",
     "label_notes": "备注",

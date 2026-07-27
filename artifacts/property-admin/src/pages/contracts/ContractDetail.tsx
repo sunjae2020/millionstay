@@ -48,6 +48,7 @@ interface FormData {
   end_date: string;
   weekly_rate: string;
   total_rent: string;
+  monthly_rent: string;
   bond_amount: string;
   advance_amount: string;
   currency: string;
@@ -198,7 +199,7 @@ export default function ContractDetail() {
       booking_id: null, product_id: null, tenant_account_id: null,
       landlord_account_id: null, space_id: null,
       start_date: "", end_date: "", weekly_rate: "", total_rent: "",
-      bond_amount: "", advance_amount: "", currency: "AUD",
+      monthly_rent: "", bond_amount: "", advance_amount: "", currency: "AUD",
       document_url: "", terms_text: "", notes: "",
     },
   });
@@ -215,6 +216,7 @@ export default function ContractDetail() {
         end_date: contract.end_date ?? "",
         weekly_rate: contract.weekly_rate != null ? String(contract.weekly_rate) : "",
         total_rent: contract.total_rent != null ? String(contract.total_rent) : "",
+        monthly_rent: (contract as any).monthly_rent != null ? String((contract as any).monthly_rent) : "",
         bond_amount: contract.bond_amount != null ? String(contract.bond_amount) : "",
         advance_amount: contract.advance_amount != null ? String(contract.advance_amount) : "",
         currency: contract.currency ?? "AUD",
@@ -363,6 +365,7 @@ export default function ContractDetail() {
     end_date: data.end_date || null,
     weekly_rate: data.weekly_rate ? Number(data.weekly_rate) : null,
     total_rent: data.total_rent ? Number(data.total_rent) : null,
+    monthly_rent: data.monthly_rent ? Number(data.monthly_rent) : null,
     bond_amount: data.bond_amount ? Number(data.bond_amount) : null,
     advance_amount: data.advance_amount ? Number(data.advance_amount) : null,
     currency: data.currency || "AUD",
@@ -640,6 +643,10 @@ export default function ContractDetail() {
                 <div>
                   <Label>{t('contract.label_total_rent')}</Label>
                   <Input {...register("total_rent")} type="number" step="0.01" min="0" />
+                </div>
+                <div>
+                  <Label>{t('contract.label_monthly_rent')}</Label>
+                  <Input {...register("monthly_rent")} type="number" step="0.01" min="0" />
                 </div>
                 <div>
                   <Label>{t('contract.label_bond')}</Label>

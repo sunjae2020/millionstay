@@ -19,6 +19,7 @@ import {
 } from "@workspace/db";
 import { logAction } from "../utils/auditLog";
 import { getRateToAud } from "../lib/rateSnapshot";
+import { resolveLeaseTermsFromProduct } from "../lib/leaseTerms";
 import { createBookingRecurringSchedule } from "../lib/billing/bookingSchedule";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import {
@@ -421,8 +422,14 @@ router.patch("/v1/bookings/:id/confirm", async (req, res): Promise<void> => {
 
     const weeklyRate = parseFloat(existing.agreed_weekly_rate ?? "0");
     const totalRent = parseFloat(existing.total_rent ?? "0");
-    const bondAmount = weeklyRate * 4;
     const advanceAmount = weeklyRate * 2;
+
+    // Auto-fill 보증금 / 월세 / 프로모션 from the selected 숙박상품 (Korean rent tier).
+    // For such products the deposit + promo-adjusted monthly become the contract's
+    // bond_amount / monthly_rent; otherwise fall back to the western 4-week bond.
+    const lease = await resolveLeaseTermsFromProduct(existing.product_id);
+    const bondAmount = lease?.deposit_amount != null ? lease.deposit_amount : weeklyRate * 4;
+    const monthlyRent = lease?.effective_monthly ?? null;
 
     const serviceLines = services.length > 0
       ? services.map(s => `  - ${s.name} (x${s.quantity}): ${existing.currency} ${s.total_price}`).join("\n")
@@ -447,9 +454,14 @@ router.patch("/v1/bookings/:id/confirm", async (req, res): Promise<void> => {
       "",
       "FINANCIAL TERMS",
       `  Currency            : ${existing.currency ?? "AUD"}`,
-      `  Weekly Rent         : ${existing.currency} ${weeklyRate.toFixed(2)}`,
+      monthlyRent != null
+        ? `  Monthly Rent        : ${existing.currency} ${monthlyRent.toFixed(2)}` +
+          (lease?.promotion_name ? `  (프로모션: ${lease.promotion_name})` : "")
+        : `  Weekly Rent         : ${existing.currency} ${weeklyRate.toFixed(2)}`,
       `  Total Rent          : ${existing.currency} ${totalRent.toFixed(2)}`,
-      `  Security Bond       : ${existing.currency} ${bondAmount.toFixed(2)} (4 weeks rent)`,
+      lease?.deposit_amount != null
+        ? `  Deposit (보증금)     : ${existing.currency} ${bondAmount.toFixed(2)}`
+        : `  Security Bond       : ${existing.currency} ${bondAmount.toFixed(2)} (4 weeks rent)`,
       `  Advance Payment     : ${existing.currency} ${advanceAmount.toFixed(2)} (2 weeks rent)`,
       "",
       "ADDITIONAL SERVICES",
@@ -488,6 +500,7 @@ router.patch("/v1/bookings/:id/confirm", async (req, res): Promise<void> => {
       total_rent: totalRent,
       bond_amount: bondAmount,
       advance_amount: advanceAmount,
+      monthly_rent: monthlyRent,
       currency: existing.currency ?? "AUD",
       exchange_rate_to_aud: await getRateToAud(existing.currency ?? "AUD"),
       status: "Draft",
