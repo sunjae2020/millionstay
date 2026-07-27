@@ -11,6 +11,8 @@ import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import { formatDate } from "@/lib/date";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
 
 interface HubDocument {
   doc_type: "Invoice" | "Receipt" | "Contract";
@@ -57,6 +59,7 @@ async function fetchDocuments(q: string, type: string): Promise<HubDocument[]> {
 
 export default function DocumentHub() {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
   const { toast } = useToast();
   const [q, setQ] = useState("");
   const [type, setType] = useState("_all");
@@ -168,7 +171,7 @@ export default function DocumentHub() {
         align: "right",
         cell: (doc) => (
           <span className="tabular-nums">
-            {doc.amount != null ? `${doc.amount.toLocaleString("en-AU", { minimumFractionDigits: 2 })} ${doc.currency ?? ""}` : "—"}
+            {doc.amount != null ? formatMoney(doc.amount, doc.currency ?? currency, currencyPosition) : "—"}
           </span>
         ),
       },
@@ -212,7 +215,7 @@ export default function DocumentHub() {
         ),
       },
     ],
-    [t, busy, docLang],
+    [t, busy, docLang, currency, currencyPosition],
   );
 
   return (

@@ -10,6 +10,8 @@ import { Search, Plus, FileText } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import { formatDate } from "@/lib/date";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
 
 const STATUS_COLORS: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-500",
@@ -34,6 +36,7 @@ async function fetchQuotes(q: string): Promise<any[]> {
 
 export default function QuoteList() {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
   const [, navigate] = useLocation();
   const [q, setQ] = useState("");
   const { data, isLoading } = useQuery({ queryKey: ["quotes", q], queryFn: () => fetchQuotes(q) });
@@ -63,7 +66,7 @@ export default function QuoteList() {
         sortAccessor: (r) => Number(r.total),
         cell: (r) => (
           <span className="tabular-nums">
-            {Number(r.total).toLocaleString("en-AU", { minimumFractionDigits: 2 })} {r.currency}
+            {formatMoney(r.total, r.currency ?? currency, currencyPosition)}
           </span>
         ),
       },
@@ -78,7 +81,7 @@ export default function QuoteList() {
         cell: (r) => <Badge className={`text-xs ${STATUS_COLORS[r.status] ?? ""}`}>{r.status}</Badge>,
       },
     ],
-    [t],
+    [t, currency, currencyPosition],
   );
 
   return (

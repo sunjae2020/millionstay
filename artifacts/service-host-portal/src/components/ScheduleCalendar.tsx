@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formatDate } from "@/lib/dateFormat";
+import { formatMoney } from "@/lib/money";
 import { ChevronLeft, ChevronRight, MapPin, Clock } from "lucide-react";
 
 export interface CalendarItem {
@@ -230,8 +231,7 @@ export function ScheduleCalendar({ items, compact = false, onItemClick }: Props)
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="text-sm font-bold text-foreground">${parseFloat(it.total_price).toFixed(2)}</p>
-                    <p className="text-[10px] text-muted-foreground">{it.currency}</p>
+                    <p className="text-sm font-bold text-foreground">{formatMoney(it.total_price, it.currency)}</p>
                   </div>
                 </div>
               </div>

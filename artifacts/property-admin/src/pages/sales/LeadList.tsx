@@ -13,6 +13,9 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
+import { formatDate } from "@/lib/date";
 import { useToast } from "@/hooks/use-toast";
 
 const LEAD_STATUSES = ["New", "Contacted", "Qualified", "ConvertedToBooking", "Lost"] as const;
@@ -49,6 +52,7 @@ function KanbanCard({ lead, onMove, onDelete }: {
   onDelete: (id: number) => void;
 }) {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
   const nextStatus = NEXT_STATUS[lead.lead_status];
   const nextCfg = nextStatus ? STATUS_CONFIG[nextStatus] : null;
 
@@ -82,7 +86,7 @@ function KanbanCard({ lead, onMove, onDelete }: {
 
       {(lead.budget_min || lead.budget_max) && (
         <p className="text-[10px] text-muted-foreground mb-2">
-          {t("lead.label_budget")}: ${lead.budget_min ?? "?"} – ${lead.budget_max ?? "?"} {lead.budget_currency ?? "AUD"}
+          {t("lead.label_budget")}: {lead.budget_min != null ? formatMoney(lead.budget_min, lead.budget_currency ?? currency, currencyPosition) : "?"} – {lead.budget_max != null ? formatMoney(lead.budget_max, lead.budget_currency ?? currency, currencyPosition) : "?"}
         </p>
       )}
 
@@ -136,6 +140,7 @@ function KanbanView({ leads, onMove, onDelete }: {
 
 export default function LeadList() {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [sourceFilter, setSourceFilter] = useState("");
@@ -215,7 +220,7 @@ export default function LeadList() {
       {
         key: "preferred_check_in_date",
         header: "booking.col_checkin",
-        cell: (l) => <span className="text-muted-foreground">{l.preferred_check_in_date ?? "—"}</span>,
+        cell: (l) => <span className="text-muted-foreground">{formatDate(l.preferred_check_in_date)}</span>,
       },
       {
         key: "budget",
@@ -223,7 +228,9 @@ export default function LeadList() {
         sortAccessor: (l) => Number(l.budget_min),
         cell: (l) => (
           <span className="text-muted-foreground">
-            {l.budget_min || l.budget_max ? `$${l.budget_min ?? "?"} – $${l.budget_max ?? "?"}` : "—"}
+            {l.budget_min || l.budget_max
+              ? `${l.budget_min != null ? formatMoney(l.budget_min, l.budget_currency ?? currency, currencyPosition) : "?"} – ${l.budget_max != null ? formatMoney(l.budget_max, l.budget_currency ?? currency, currencyPosition) : "?"}`
+              : "—"}
           </span>
         ),
       },
@@ -265,7 +272,7 @@ export default function LeadList() {
         ),
       },
     ],
-    [t, handleMove],
+    [t, handleMove, currency, currencyPosition],
   );
 
   return (

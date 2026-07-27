@@ -5,6 +5,7 @@ import { Layout } from "@/components/Layout";
 import { DateInput } from "@/components/ui/date-input";
 import { apiFetch } from "@/lib/apiFetch";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
+import { formatDate } from "@/lib/date";
 
 type GlLine = {
   account_code: string;
@@ -181,7 +182,7 @@ export default function Journal() {
                     <div>
                       <div className="font-medium">{entry.description}</div>
                       <div className="text-xs text-muted-foreground mt-0.5">
-                        {entry.entry_date}
+                        {formatDate(entry.entry_date)}
                         {" · "}
                         {t("journal.source")}: {entry.source_type}
                         {entry.source_id != null ? ` #${entry.source_id}` : ""}

@@ -3,6 +3,7 @@ import { getApiBase } from "@/lib/api-base";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CheckCircle2, AlertTriangle, ShieldCheck, Camera, Loader2, Wallet } from "lucide-react";
+import { formatCurrencyAmount } from "@/contexts/DisplayCurrencyContext";
 
 // Tenant-facing move-in/move-out condition report: read the admin-published
 // property condition, then agree or dispute each item. A dispute lets the
@@ -97,7 +98,7 @@ type Settlement = {
 };
 
 function money(n: string | number, ccy: string) {
-  return `${ccy} ${Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return formatCurrencyAmount(Number(n), (ccy || "AUD").toUpperCase());
 }
 
 function DepositSettlements({ bookingId, token }: { bookingId: string | number; token: string }) {

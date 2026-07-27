@@ -5,6 +5,7 @@ import { Layout } from "@/components/Layout";
 import { useServerList } from "@/lib/useServerList";
 import { TablePagination } from "@/components/TablePagination";
 import { formatDate } from "@/lib/dateFormat";
+import { formatMoney } from "@/lib/money";
 import { Search, ChevronRight } from "lucide-react";
 
 interface Booking {
@@ -110,7 +111,7 @@ export default function BookingsPage() {
                   {formatDate(b.check_in_date)}
                 </td>
                 <td className="px-4 py-3 font-medium text-foreground">
-                  ${Number(b.agreed_weekly_rate ?? 0).toLocaleString()}/wk
+                  {formatMoney(b.agreed_weekly_rate ?? 0)}/wk
                 </td>
                 <td className="px-4 py-3">
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_CLS[b.booking_status] ?? "bg-gray-100 text-gray-600"}`}>

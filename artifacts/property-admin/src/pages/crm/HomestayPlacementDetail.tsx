@@ -5,6 +5,8 @@ import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatDate, formatDateTime } from "@/lib/date";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -88,6 +90,7 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
 
 export default function HomestayPlacementDetail() {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
   const { toast } = useToast();
   const qc = useQueryClient();
   const params = useParams<{ id: string }>();
@@ -256,7 +259,7 @@ export default function HomestayPlacementDetail() {
   if (isLoading) return <Layout><p className="p-6 text-sm text-muted-foreground">{t("common.loading")}</p></Layout>;
   if (!p) return <Layout><p className="p-6 text-sm text-muted-foreground">{t("homestayPlacement.not_found")}</p></Layout>;
 
-  const money = (v?: string) => (v == null ? "—" : `${p.currency || "AUD"} ${Number(v).toLocaleString("en-AU", { minimumFractionDigits: 2 })}`);
+  const money = (v?: string) => (v == null ? "—" : formatMoney(v, p.currency || currency, currencyPosition));
   const contractSigned = latestSigning?.status === "signed";
   const canAccept = p.status === "Proposed";
   const canIssue = ["Proposed", "HostAccepted", "AwaitingPayment"].includes(p.status);
@@ -357,9 +360,9 @@ export default function HomestayPlacementDetail() {
                   <div className="flex flex-wrap items-center gap-2 text-sm">
                     <span className="font-medium">{t(`homestayPlacement.kind_${pay.kind}`)}</span>
                     <span className="text-xs text-muted-foreground">· {t(`homestayPlacement.method_${pay.method}`)}</span>
-                    <span className="font-medium">{pay.currency} {Number(pay.amount).toLocaleString("en-AU", { minimumFractionDigits: 2 })}</span>
+                    <span className="font-medium">{formatMoney(pay.amount, pay.currency ?? currency, currencyPosition)}</span>
                     {Number(pay.surcharge_amount) > 0 && (
-                      <span className="text-[11px] text-muted-foreground">({t("homestayPlacement.incl_surcharge")} {pay.currency} {Number(pay.surcharge_amount).toLocaleString("en-AU", { minimumFractionDigits: 2 })})</span>
+                      <span className="text-[11px] text-muted-foreground">({t("homestayPlacement.incl_surcharge")} {formatMoney(pay.surcharge_amount, pay.currency ?? currency, currencyPosition)})</span>
                     )}
                     <span className={`text-xs font-medium ${pay.status === "paid" ? "text-green-700" : pay.status === "pending" ? "text-amber-700" : "text-red-600"}`}>· {t(`homestayPlacement.paystatus_${pay.status}`)}</span>
                     {pay.paid_at && <span className="text-[11px] text-muted-foreground">{formatDate(pay.paid_at)}</span>}

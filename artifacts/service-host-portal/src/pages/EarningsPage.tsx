@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
 import { formatDate } from "@/lib/dateFormat";
+import { formatMoney } from "@/lib/money";
 import { DollarSign, TrendingUp, Briefcase, FileText } from "lucide-react";
 
 interface EarningsData {
@@ -58,8 +59,7 @@ export default function EarningsPage() {
             <div className="h-10 w-40 bg-white/20 rounded-lg animate-pulse" />
           ) : (
             <p className="text-4xl font-bold">
-              ${totalEarned.toLocaleString("en-AU", { minimumFractionDigits: 2 })}
-              <span className="text-sm font-normal opacity-70 ml-1">AUD</span>
+              {formatMoney(totalEarned)}
             </p>
           )}
           <p className="text-xs opacity-70 mt-2">
@@ -102,7 +102,7 @@ export default function EarningsPage() {
                         <span className="text-xs text-muted-foreground">{t("earnings.jobs_count", { count: s.count })}</span>
                       </div>
                       <span className="text-sm font-bold text-foreground">
-                        ${parseFloat(s.total).toLocaleString("en-AU", { minimumFractionDigits: 2 })}
+                        {formatMoney(s.total)}
                       </span>
                     </div>
                     <div className="w-full bg-muted rounded-full h-1.5">
@@ -142,9 +142,8 @@ export default function EarningsPage() {
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-sm font-bold text-foreground">
-                        ${parseFloat(b.total).toLocaleString("en-AU", { minimumFractionDigits: 2 })}
+                        {formatMoney(b.total)}
                       </p>
-                      <p className="text-xs text-muted-foreground">AUD</p>
                     </div>
                   </div>
                 </div>

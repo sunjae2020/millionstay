@@ -14,6 +14,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
+import { formatDate } from "@/lib/date";
 
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-600",
@@ -24,6 +27,7 @@ const statusColors: Record<string, string> = {
 
 export default function InvoiceList() {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
   const [, navigate] = useLocation();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("_all");
@@ -74,14 +78,14 @@ export default function InvoiceList() {
         sortAccessor: (inv) => inv.amount,
         cell: (inv) => (
           <span className="font-medium">
-            ${inv.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {inv.currency}
+            {formatMoney(inv.amount, inv.currency ?? currency, currencyPosition)}
           </span>
         ),
       },
       {
         key: "due_date",
         header: "invoice.col_due_date",
-        cell: (inv) => <span className="text-muted-foreground">{inv.due_date ?? "—"}</span>,
+        cell: (inv) => <span className="text-muted-foreground">{formatDate(inv.due_date)}</span>,
       },
       {
         key: "status",
@@ -93,7 +97,7 @@ export default function InvoiceList() {
         ),
       },
     ],
-    [t],
+    [t, currency, currencyPosition],
   );
 
   return (

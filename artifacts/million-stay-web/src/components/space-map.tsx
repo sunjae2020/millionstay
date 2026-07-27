@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from "react";
 import type { Map as LeafletMap, Marker, Popup } from "leaflet";
+import { useDisplayCurrency } from "@/contexts/DisplayCurrencyContext";
 
 interface SpaceMapItem {
   id: number | string;
@@ -7,6 +8,7 @@ interface SpaceMapItem {
   latitude: number | null;
   longitude: number | null;
   base_weekly_price: number;
+  base_currency?: string | null;
   suburb_name?: string | null;
   primary_image?: string | null;
   primary_thumbnail?: string | null;
@@ -34,9 +36,18 @@ export function SpaceMap({
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const markersRef = useRef<Map<string, { marker: Marker; popup: Popup }>>(new Map());
+  const { formatDisplayPrice } = useDisplayCurrency();
+
+  // Price shown on markers / popups in the instance display currency (₩ on
+  // Metheim), converted from the listing's base currency — never a bare A$.
+  const priceLabel = useCallback(
+    (space: SpaceMapItem) =>
+      formatDisplayPrice(Number(space.base_weekly_price) || 0, (space.base_currency || "AUD").toUpperCase()).primary,
+    [formatDisplayPrice],
+  );
 
   const getMarkerHtml = useCallback(
-    (price: number, isActive: boolean) => `
+    (price: string, isActive: boolean) => `
     <div style="
       background: ${isActive ? "hsl(var(--brand-orange))" : "#ffffff"};
       color: ${isActive ? "#ffffff" : "#1a1a1a"};
@@ -49,7 +60,7 @@ export function SpaceMap({
       box-shadow: 0 2px 8px rgba(0,0,0,0.18);
       cursor: pointer;
       transition: all 0.15s ease;
-    ">$${price}/wk</div>
+    ">${price}/wk</div>
   `,
     []
   );
@@ -101,7 +112,7 @@ export function SpaceMap({
     validSpaces.forEach((space) => {
       const icon = L.divIcon({
         className: "",
-        html: getMarkerHtml(space.base_weekly_price, false),
+        html: getMarkerHtml(priceLabel(space), false),
         iconAnchor: [30, 12],
       });
 
@@ -115,7 +126,7 @@ export function SpaceMap({
             <div style="font-weight:700;font-size:13px;line-height:1.3;margin-bottom:2px;color:#111">${space.name}</div>
             <div style="color:#888;font-size:11px;margin-bottom:8px">${space.suburb_name ? `${space.suburb_name}, VIC` : "Melbourne, VIC"}</div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-              <span style="font-weight:700;font-size:14px;color:#111">$${space.base_weekly_price}<span style="font-size:11px;font-weight:400;color:#888">/wk</span></span>
+              <span style="font-weight:700;font-size:14px;color:#111">${priceLabel(space)}<span style="font-size:11px;font-weight:400;color:#888">/wk</span></span>
               ${space.min_contract_period ? `<span style="font-size:11px;color:#888">Min ${space.min_contract_period}wks</span>` : ""}
             </div>
             <a href="/spaces/${space.id}" style="display:block;text-align:center;background:hsl(var(--brand-orange));color:#fff;border-radius:7px;padding:7px 0;font-size:12px;font-weight:700;text-decoration:none">View Details →</a>
@@ -161,7 +172,7 @@ export function SpaceMap({
         if (!space) return;
         const icon = L.divIcon({
           className: "",
-          html: getMarkerHtml(space.base_weekly_price, isActive),
+          html: getMarkerHtml(priceLabel(space), isActive),
           iconAnchor: [30, 12],
         });
         marker.setIcon(icon);

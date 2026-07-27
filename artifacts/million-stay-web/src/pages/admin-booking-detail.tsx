@@ -3,6 +3,8 @@ import { useLocation, Link } from "wouter";
 import AdminLayout from "@/components/admin-layout";
 import { StatusBadge } from "@/components/status-badge";
 import { formatDate } from "@/lib/dateFormat";
+import { formatCurrencyAmount } from "@/contexts/DisplayCurrencyContext";
+import { DEFAULT_CURRENCY } from "@/lib/defaultCurrency";
 import { ChevronLeft, CheckCircle, XCircle, FileText, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -115,7 +117,7 @@ export default function AdminBookingDetail({ params }: { params: { id: string } 
                   ["Check In", formatDate(booking.checkInDate)],
                   ["Check Out", formatDate(booking.checkOutDate)],
                   ["Guests", String(booking.numGuests)],
-                  ["Total Amount", booking.totalAmount ? `$${Number(booking.totalAmount).toLocaleString()}` : "—"],
+                  ["Total Amount", booking.totalAmount ? formatCurrencyAmount(Number(booking.totalAmount), DEFAULT_CURRENCY || "AUD") : "—"],
                   ...(booking.specialRequests ? [["Special Requests", booking.specialRequests]] : []),
                 ].map(([label, value]) => (
                   <div key={label} className="contents">
@@ -194,7 +196,7 @@ export default function AdminBookingDetail({ params }: { params: { id: string } 
                         <p className="text-gray-400 text-xs">Due: {formatDate(inv.dueDate)}</p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="font-semibold text-gray-800">${Number(inv.amount).toLocaleString()}</span>
+                        <span className="font-semibold text-gray-800">{formatCurrencyAmount(Number(inv.amount), DEFAULT_CURRENCY || "AUD")}</span>
                         <StatusBadge status={inv.status} />
                       </div>
                     </div>

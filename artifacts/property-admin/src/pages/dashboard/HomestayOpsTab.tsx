@@ -6,6 +6,8 @@ import {
 } from "recharts";
 import { Handshake, DollarSign, CalendarCheck, Clock, Users, GraduationCap, ClipboardList } from "lucide-react";
 import { KpiCard, DashCard, ACCENT } from "@/components/dashboard/DashboardKit";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
 
 interface StatusCount { status: string; count: number }
 interface TopAgent { agent_account_id: number; name: string; total: number }
@@ -20,11 +22,10 @@ interface HomestayOpsSummary {
 
 const BAR_COLORS = ["#E8621A", "#16a34a", "#2563eb", "#d97706", "#7c3aed", "#dc2626", "#14b8a6", "#ec4899", "#4f46e5", "#64748b"];
 
-function fmt(n: number, currency = "AUD") {
-  return new Intl.NumberFormat("en-AU", { style: "currency", currency, maximumFractionDigits: 0 }).format(n);
-}
 
 export default function HomestayOpsTab() {
+  const { currency, currencyPosition } = useBrand();
+  const fmt = (n: number) => formatMoney(n, currency, currencyPosition);
   const { t } = useTranslation();
   const [summary, setSummary] = useState<HomestayOpsSummary | null>(null);
 

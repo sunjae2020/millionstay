@@ -13,6 +13,9 @@ import {
   Activity, ArrowRight, CheckSquare,
 } from "lucide-react";
 import { KpiCard, DashCard, BRAND, BRAND_SOFT } from "@/components/dashboard/DashboardKit";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
+import { formatDate } from "@/lib/date";
 
 const CAL_COLORS: Record<string, string> = {
   Draft: "#9ca3af", PendingPayment: "#eab308", PendingApproval: "#f59e0b",
@@ -26,10 +29,6 @@ const STATUS_BADGE: Record<string, string> = {
   Active: "bg-green-100 text-green-700", CheckedOut: "bg-indigo-100 text-indigo-700",
   Cancelled: "bg-gray-100 text-gray-500",
 };
-
-function fmtMoney(n: number, currency = "AUD") {
-  return new Intl.NumberFormat("en-AU", { style: "currency", currency, maximumFractionDigits: 0 }).format(n);
-}
 
 function MiniCalendar({ bookings }: { bookings: any[] }) {
   const { t } = useTranslation();
@@ -132,6 +131,8 @@ function MiniStat({ icon: Icon, label, value, href }: {
 
 export default function OverviewTab() {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
+  const fmtMoney = (n: number) => formatMoney(n, currency, currencyPosition);
   const { data: suburbs } = useListSuburbs();
   const { data: properties } = useListProperties();
   const { data: spaces } = useListSpaces();
@@ -311,8 +312,8 @@ export default function OverviewTab() {
                     </td>
                     <td className="px-3 py-2">{(b as any).contact_name ?? "—"}</td>
                     <td className="px-3 py-2">{(b as any).space_name ?? "—"}</td>
-                    <td className="px-3 py-2">{b.check_in_date ?? "—"}</td>
-                    <td className="px-3 py-2">{b.total_rent ? `${b.currency ?? "AUD"} ${parseFloat(b.total_rent).toLocaleString()}` : "—"}</td>
+                    <td className="px-3 py-2">{formatDate(b.check_in_date)}</td>
+                    <td className="px-3 py-2">{b.total_rent ? formatMoney(b.total_rent, b.currency ?? currency, currencyPosition) : "—"}</td>
                     <td className="px-3 py-2">
                       <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${STATUS_BADGE[b.booking_status] ?? "bg-gray-100 text-gray-600"}`}>
                         {t(`dash_overview.status_${String(b.booking_status).toLowerCase()}`, { defaultValue: b.booking_status })}

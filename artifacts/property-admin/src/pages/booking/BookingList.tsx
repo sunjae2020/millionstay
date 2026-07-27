@@ -12,6 +12,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, List, Calendar } from "lucide-react";
 import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { formatDate } from "@/lib/date";
 
 const BOOKING_STATUS_COLORS: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-700 border-gray-200",
@@ -167,12 +168,12 @@ export default function BookingList() {
       {
         key: "check_in_date",
         header: "booking.col_checkin",
-        cell: (b) => <span className="text-muted-foreground whitespace-nowrap">{b.check_in_date ?? "—"}</span>,
+        cell: (b) => <span className="text-muted-foreground whitespace-nowrap">{formatDate(b.check_in_date)}</span>,
       },
       {
         key: "check_out_date",
         header: "booking.col_checkout",
-        cell: (b) => <span className="text-muted-foreground whitespace-nowrap">{b.check_out_date ?? "—"}</span>,
+        cell: (b) => <span className="text-muted-foreground whitespace-nowrap">{formatDate(b.check_out_date)}</span>,
       },
       {
         key: "stay_nights",

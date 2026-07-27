@@ -8,6 +8,7 @@ import {
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
 import { formatDate } from "@/lib/dateFormat";
+import { formatMoney, currencySymbol } from "@/lib/money";
 import { useAuth } from "@/lib/auth";
 import { useDarkMode } from "@/lib/darkMode";
 import { FileSignature, DollarSign, TrendingUp, Clock, ArrowRight, PieChart as PieIcon, LineChart as LineIcon } from "lucide-react";
@@ -56,24 +57,15 @@ const STATUS_COLOR: Record<string, string> = {
   Cancelled: "#DB2777",
 };
 
-const CURRENCY = (import.meta.env.VITE_DEFAULT_CURRENCY as string | undefined) || "";
+const CURRENCY =
+  (import.meta.env.VITE_DEFAULT_CURRENCY as string | undefined)?.trim().toUpperCase() || "AUD";
 function fmtMoney(n: number): string {
-  const v = Number(n ?? 0);
-  if (CURRENCY) {
-    try {
-      return new Intl.NumberFormat(undefined, { style: "currency", currency: CURRENCY, maximumFractionDigits: 0 }).format(v);
-    } catch { /* fall through */ }
-  }
-  return `$${Math.round(v).toLocaleString()}`;
+  return formatMoney(Math.round(Number(n ?? 0)));
 }
 function fmtCompact(n: number): string {
   const v = Number(n ?? 0);
-  if (CURRENCY) {
-    try {
-      return new Intl.NumberFormat(undefined, { style: "currency", currency: CURRENCY, notation: "compact", maximumFractionDigits: 1 }).format(v);
-    } catch { /* fall through */ }
-  }
-  return `$${Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 }).format(v)}`;
+  const compact = Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 }).format(v);
+  return `${currencySymbol(CURRENCY)}${compact}`;
 }
 
 function StatCard({ label, value, sub, icon: Icon, iconCls }: { label: string; value: string | number; sub?: string; icon: React.ElementType; iconCls: string }) {
@@ -153,7 +145,7 @@ export default function DashboardPage() {
             <StatCard
               label={t("dashboard.stat_est_commission")}
               value={fmtMoney(data.stats.estimated_commission_earned)}
-              sub={data.commission ? (data.commission.commission_type === "Percentage" ? t("dashboard.rate_percent", { rate: data.commission.commission_rate }) : t("dashboard.rate_flat", { amount: data.commission.commission_amount })) : undefined}
+              sub={data.commission ? (data.commission.commission_type === "Percentage" ? t("dashboard.rate_percent", { rate: data.commission.commission_rate }) : t("dashboard.rate_flat", { amount: formatMoney(data.commission.commission_amount) })) : undefined}
               icon={TrendingUp}
               iconCls="bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300"
             />

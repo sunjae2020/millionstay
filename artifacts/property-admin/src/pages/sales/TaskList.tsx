@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Layout, PageHeader } from "@/components/Layout";
+import { formatDate } from "@/lib/date";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -163,7 +164,7 @@ export default function TaskList() {
           return task.due_date ? (
             <span className={`flex items-center gap-1 ${isOverdue ? "text-red-600 font-medium" : ""}`}>
               {isOverdue && <AlertCircle className="h-3.5 w-3.5" />}
-              {task.due_date}
+              {formatDate(task.due_date)}
             </span>
           ) : <span className="text-muted-foreground">—</span>;
         },

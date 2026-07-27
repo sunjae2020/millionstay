@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
 import { formatDate } from "@/lib/dateFormat";
+import { formatMoney } from "@/lib/money";
 import { CalendarDays, MapPin, Clock, ChevronDown, List, CalendarRange } from "lucide-react";
 import { ScheduleCalendar } from "@/components/ScheduleCalendar";
 
@@ -182,9 +183,8 @@ export default function SchedulePage() {
                           </div>
                           <div className="text-right flex-shrink-0">
                             <p className="text-sm font-bold text-foreground">
-                              ${parseFloat(item.total_price).toFixed(2)}
+                              {formatMoney(item.total_price, item.currency)}
                             </p>
-                            <p className="text-xs text-muted-foreground">{item.currency}</p>
                           </div>
                         </div>
                       </div>

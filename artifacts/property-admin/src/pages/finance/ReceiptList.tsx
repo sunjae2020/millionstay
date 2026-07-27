@@ -10,6 +10,8 @@ import { Search, Download } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { formatDate, formatDateTime } from "@/lib/date";
 import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
 
 const STATUS_COLORS: Record<string, string> = {
   Paid:  "bg-green-100 text-green-700",
@@ -42,6 +44,7 @@ function fmtDateTime(d: string | Date | null) {
 
 export default function ReceiptList() {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
   const [q, setQ] = useState("");
   const [methodFilter, setMethodFilter] = useState("_all");
 
@@ -104,7 +107,7 @@ export default function ReceiptList() {
         sortAccessor: (r) => Number(r.amount),
         cell: (r) => (
           <span className="tabular-nums font-semibold text-green-700">
-            ${Number(r.amount).toLocaleString("en-AU", { minimumFractionDigits: 2 })}
+            {formatMoney(r.amount, r.currency ?? currency, currencyPosition)}
           </span>
         ),
       },
@@ -138,14 +141,14 @@ export default function ReceiptList() {
         ),
       },
     ],
-    [t],
+    [t, currency, currencyPosition],
   );
 
   return (
     <Layout>
       <PageHeader
         title={t("nav.receipt")}
-        subtitle={`${rows.length} ${t("nav.receipt")} · ${t("common.total")} $${totalPaid.toLocaleString("en-AU", { minimumFractionDigits: 2 })}`}
+        subtitle={`${rows.length} ${t("nav.receipt")} · ${t("common.total")} ${formatMoney(totalPaid, currency, currencyPosition)}`}
       />
 
       <div className="p-6">

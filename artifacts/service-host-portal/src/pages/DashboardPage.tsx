@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { useAuth } from "@/lib/auth";
 import { apiGet } from "@/lib/api";
+import { formatMoney } from "@/lib/money";
 import {
   Briefcase, Clock, CheckCircle2, Wallet, ArrowRight, Calendar, Wrench,
   AlertTriangle, Activity, TrendingUp, ClipboardList,
@@ -44,13 +45,7 @@ const STATUS_META: Record<string, { label: string; color: string; chip: string }
 const AXIS = "#94a3b8";
 
 function money(n: number, currency: string) {
-  try {
-    return new Intl.NumberFormat(currency === "KRW" ? "ko-KR" : "en-AU", {
-      style: "currency", currency, maximumFractionDigits: currency === "KRW" ? 0 : 2,
-    }).format(n);
-  } catch {
-    return `${currency} ${n.toLocaleString()}`;
-  }
+  return formatMoney(n, currency);
 }
 
 export default function DashboardPage() {

@@ -8,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -45,6 +47,7 @@ const EMPTY = {
 
 export default function AddonServicesPage() {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
   const { toast } = useToast();
   const qc = useQueryClient();
   const [q, setQ] = useState("");
@@ -81,7 +84,7 @@ export default function AddonServicesPage() {
       header: t("accommodation_options.col_price", "Price"),
       cell: (item) => (
         <span className="text-sm">
-          {item.base_price != null ? `${item.currency} ${item.base_price.toFixed(2)}` : <span className="text-muted-foreground/40 italic">—</span>}
+          {item.base_price != null ? formatMoney(item.base_price, item.currency ?? currency, currencyPosition) : <span className="text-muted-foreground/40 italic">—</span>}
         </span>
       ),
     },
@@ -103,7 +106,7 @@ export default function AddonServicesPage() {
         </div>
       ),
     },
-  ], [t]);
+  ], [t, currency, currencyPosition]);
 
   const save = useMutation({
     mutationFn: async () => {

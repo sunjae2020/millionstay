@@ -6,6 +6,7 @@ import { Layout, PageHeader } from "@/components/Layout";
 import { apiJson } from "@/lib/apiFetch";
 import { Button } from "@/components/ui/button";
 import { EyeOff, Eye, Send, Lock, Mail, Phone, MessageSquare, ArrowLeft } from "lucide-react";
+import { formatDate, formatDateTime } from "@/lib/date";
 
 // Privacy-gated sale-inquiry review queue (vision "1차 문의 비공개"). The
 // enquirer's identity is withheld until an admin explicitly reveals it; the admin
@@ -64,7 +65,7 @@ export default function SaleInquiries() {
                 <span className="text-sm font-semibold">{r.listing_title ?? t("sale_inquiries.general", "General inquiry")}</span>
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_STYLE[r.status] ?? "bg-gray-100"}`}>{t(`sale_inquiries.status_${r.status}`, r.status)}</span>
               </div>
-              <span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString()}</span>
+              <span className="text-xs text-muted-foreground">{formatDateTime(r.created_at)}</span>
             </div>
             <div className="p-4 space-y-3">
               {/* Identity — masked until revealed */}
@@ -94,7 +95,7 @@ export default function SaleInquiries() {
                 {r.status !== "closed" && (
                   <Button size="sm" variant="ghost" onClick={() => setStatusM.mutate({ id: r.id, status: "closed" })}>{t("sale_inquiries.btn_close", "Close")}</Button>
                 )}
-                {r.forwarded_at && <span className="text-xs text-green-600 self-center">✓ {t("sale_inquiries.forwarded_on", "forwarded")} {new Date(r.forwarded_at).toLocaleDateString()}</span>}
+                {r.forwarded_at && <span className="text-xs text-green-600 self-center">✓ {t("sale_inquiries.forwarded_on", "forwarded")} {formatDate(r.forwarded_at)}</span>}
               </div>
             </div>
           </div>

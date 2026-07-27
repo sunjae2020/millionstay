@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { formatDateTime } from "@/lib/date";
+import { formatDate, formatDateTime } from "@/lib/date";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -229,7 +229,7 @@ export default function ExchangeRateList() {
       {
         key: "effective_date",
         header: "exchange_rate.effective_date",
-        cell: (r) => <span>{r.effective_date}</span>,
+        cell: (r) => <span>{formatDate(r.effective_date)}</span>,
       },
       {
         key: "updated_at",

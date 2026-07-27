@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
 import { formatDate } from "@/lib/dateFormat";
+import { formatMoney } from "@/lib/money";
 import { ArrowLeft, User, Home, Calendar, DollarSign } from "lucide-react";
 
 interface BookingData {
@@ -132,11 +133,11 @@ export default function BookingDetailPage() {
               {formatDate(data.check_out_date, t("common.ongoing"))}
             </span>
           </div>
-          <Row label={t("booking_detail.weekly_rate")} value={`$${Number(data.agreed_weekly_rate ?? 0).toLocaleString()}`} />
-          <Row label={t("booking_detail.total_rent")} value={`$${Number(data.total_rent ?? 0).toLocaleString()}`} />
-          <Row label={t("booking_detail.bond")} value={data.bond_amount ? `$${Number(data.bond_amount).toLocaleString()}` : "—"} />
-          <Row label={t("booking_detail.admin_fee")} value={data.admin_fee ? `$${Number(data.admin_fee).toLocaleString()}` : "—"} />
-          <Row label={t("booking_detail.cleaning_fee")} value={data.cleaning_fee ? `$${Number(data.cleaning_fee).toLocaleString()}` : "—"} />
+          <Row label={t("booking_detail.weekly_rate")} value={formatMoney(data.agreed_weekly_rate ?? 0)} />
+          <Row label={t("booking_detail.total_rent")} value={formatMoney(data.total_rent ?? 0)} />
+          <Row label={t("booking_detail.bond")} value={data.bond_amount ? formatMoney(data.bond_amount) : "—"} />
+          <Row label={t("booking_detail.admin_fee")} value={data.admin_fee ? formatMoney(data.admin_fee) : "—"} />
+          <Row label={t("booking_detail.cleaning_fee")} value={data.cleaning_fee ? formatMoney(data.cleaning_fee) : "—"} />
         </Section>
 
         {data.contract && (

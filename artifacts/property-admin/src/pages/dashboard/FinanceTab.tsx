@@ -13,6 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { KpiCard, DashCard, Pill } from "@/components/dashboard/DashboardKit";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
+import { formatDate } from "@/lib/date";
 
 interface FinanceSummary {
   total_revenue: number;
@@ -58,10 +61,6 @@ const STATUS_BADGE: Record<string, string> = {
   Void:    "bg-gray-100 text-gray-500",
 };
 
-function fmt(n: number, currency = "AUD") {
-  return new Intl.NumberFormat("en-AU", { style: "currency", currency, maximumFractionDigits: 0 }).format(n);
-}
-
 function shortMonth(m: string) {
   const [y, mo] = m.split("-");
   const d = new Date(Number(y), Number(mo) - 1, 1);
@@ -70,6 +69,8 @@ function shortMonth(m: string) {
 
 export default function FinanceTab() {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
+  const fmt = (n: number) => formatMoney(n, currency, currencyPosition);
   const [summary, setSummary] = useState<FinanceSummary | null>(null);
   const [monthly, setMonthly] = useState<MonthlyRevenue[]>([]);
   const [byProp, setByProp] = useState<PropertyRevenue[]>([]);
@@ -243,7 +244,7 @@ export default function FinanceTab() {
                   <td className="px-3 py-2 font-mono">{inv.invoice_ref}</td>
                   <td className="px-3 py-2">{(inv as any).account_name ?? "—"}</td>
                   <td className="px-3 py-2 font-medium">{fmt(inv.amount ?? 0)}</td>
-                  <td className="px-3 py-2">{inv.due_date ?? "—"}</td>
+                  <td className="px-3 py-2">{formatDate(inv.due_date)}</td>
                   <td className="px-3 py-2">
                     <Pill className={STATUS_BADGE[inv.effective_status] ?? "bg-gray-100 text-gray-600"}>{t(`dash_finance.status_${String(inv.effective_status).toLowerCase()}`)}</Pill>
                   </td>

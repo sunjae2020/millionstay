@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiFetch, apiGet } from "@/lib/api";
 import { formatDate } from "@/lib/dateFormat";
+import { formatMoney } from "@/lib/money";
 import {
   ArrowLeft,
   Briefcase,
@@ -214,12 +215,11 @@ export default function JobDetailPage() {
                 <div className="text-right flex-shrink-0">
                   <div className="flex items-center gap-1 justify-end">
                     <DollarSign className="w-4 h-4 text-primary" />
-                    <span className="text-2xl font-bold text-foreground">{parseFloat(job.total_price).toFixed(2)}</span>
-                    <span className="text-xs text-muted-foreground">{job.currency}</span>
+                    <span className="text-2xl font-bold text-foreground">{formatMoney(job.total_price, job.currency)}</span>
                   </div>
                   {job.quantity > 1 && (
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {job.quantity} × ${parseFloat(job.unit_price).toFixed(2)}
+                      {job.quantity} × {formatMoney(job.unit_price, job.currency)}
                     </p>
                   )}
                 </div>

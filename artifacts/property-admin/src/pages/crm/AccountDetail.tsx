@@ -20,6 +20,7 @@ import { LookupSelect } from "@/components/LookupSelect";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Save, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
+import { formatDate } from "@/lib/date";
 
 const ACCOUNT_TYPE_COLORS: Record<string, string> = {
   Guest: "bg-blue-100 text-blue-700 border-blue-200",
@@ -505,8 +506,8 @@ export default function AccountDetail() {
                             </Link>
                           </td>
                           <td className="px-4 py-3 text-muted-foreground">{b.space_name ?? "—"}</td>
-                          <td className="px-4 py-3 text-muted-foreground">{b.check_in_date ?? "—"}</td>
-                          <td className="px-4 py-3 text-muted-foreground">{b.check_out_date ?? "—"}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{formatDate(b.check_in_date)}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{formatDate(b.check_out_date)}</td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${BOOKING_STATUS_COLORS[b.booking_status] ?? "bg-gray-100 text-gray-600"}`}>
                               {b.booking_status ?? "—"}
@@ -546,8 +547,8 @@ export default function AccountDetail() {
                             </Link>
                           </td>
                           <td className="px-4 py-3 text-muted-foreground">{c.space_name ?? "—"}</td>
-                          <td className="px-4 py-3 text-muted-foreground">{c.start_date ?? "—"}</td>
-                          <td className="px-4 py-3 text-muted-foreground">{c.end_date ?? "—"}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{formatDate(c.start_date)}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{formatDate(c.end_date)}</td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${CONTRACT_STATUS_COLORS[c.status] ?? "bg-gray-100 text-gray-600"}`}>
                               {c.status ?? "—"}
@@ -588,7 +589,7 @@ export default function AccountDetail() {
                           </td>
                           <td className="px-4 py-3">{inv.amount != null ? Number(inv.amount).toFixed(2) : "—"}</td>
                           <td className="px-4 py-3 text-muted-foreground">{inv.currency ?? "—"}</td>
-                          <td className="px-4 py-3 text-muted-foreground">{inv.due_date ?? "—"}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{formatDate(inv.due_date)}</td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${INVOICE_STATUS_COLORS[inv.status] ?? "bg-gray-100 text-gray-600"}`}>
                               {inv.status ?? "Draft"}

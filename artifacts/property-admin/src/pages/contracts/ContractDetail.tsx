@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { formatDate } from "@/lib/date";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -56,6 +58,7 @@ interface FormData {
 
 export default function ContractDetail() {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const qc = useQueryClient();
@@ -652,9 +655,9 @@ export default function ContractDetail() {
                           {item.billing_trigger === "recurring" ? t('contract.billing_recurring') : item.billing_trigger === "at_activation" ? t('contract.billing_onetime') : item.billing_trigger}
                         </td>
                         <td className="px-4 py-3 text-muted-foreground">{item.billing_frequency ?? "—"}</td>
-                        <td className="px-4 py-3 font-mono">{item.unit_price != null ? `$${Number(item.unit_price).toFixed(2)}` : "—"}</td>
+                        <td className="px-4 py-3 font-mono">{item.unit_price != null ? formatMoney(item.unit_price, item.currency ?? currency, currencyPosition) : "—"}</td>
                         <td className="px-4 py-3 text-center">{item.quantity ?? 1}</td>
-                        <td className="px-4 py-3 font-mono font-medium">{item.total_price != null ? `$${Number(item.total_price).toFixed(2)}` : "—"}</td>
+                        <td className="px-4 py-3 font-mono font-medium">{item.total_price != null ? formatMoney(item.total_price, item.currency ?? currency, currencyPosition) : "—"}</td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${item.gst_included ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"}`}>
                             {item.gst_included ? t('contract.gst_incl') : t('contract.gst_ex')}
@@ -678,7 +681,7 @@ export default function ContractDetail() {
                       <tr>
                         <td colSpan={6} className="px-4 py-3 text-right font-medium text-sm text-muted-foreground">{t('contract.total_contract_value')}</td>
                         <td className="px-4 py-3 font-mono font-bold text-sm">
-                          ${lineItems.reduce((sum: number, i: any) => sum + Number(i.total_price ?? 0), 0).toFixed(2)}
+                          {formatMoney(lineItems.reduce((sum: number, i: any) => sum + Number(i.total_price ?? 0), 0), currency, currencyPosition)}
                         </td>
                         <td colSpan={2} />
                       </tr>
@@ -712,11 +715,11 @@ export default function ContractDetail() {
                     ) : schedules.map((s: any) => (
                       <tr key={s.id} className="border-b hover:bg-gray-50">
                         <td className="px-4 py-3 font-medium">{s.schedule_type ?? "Rent"}</td>
-                        <td className="px-4 py-3 font-mono">{s.amount != null ? `$${Number(s.amount).toFixed(2)}` : "—"}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{s.currency ?? "AUD"}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{s.start_date ?? "—"}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{s.end_date ?? "—"}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{s.next_due_date ?? "—"}</td>
+                        <td className="px-4 py-3 font-mono">{s.amount != null ? formatMoney(s.amount, s.currency ?? currency, currencyPosition) : "—"}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{s.currency ?? currency}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{formatDate(s.start_date)}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{formatDate(s.end_date)}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{formatDate(s.next_due_date)}</td>
                         <td className="px-4 py-3 text-muted-foreground">{s.frequency ?? "—"}</td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s.gst_included ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"}`}>
@@ -885,7 +888,7 @@ export default function ContractDetail() {
             {lineUnitPrice && lineQty && (
               <div className="bg-gray-50 rounded p-3 text-sm">
                 <span className="text-muted-foreground">{t('common.total')}: </span>
-                <span className="font-mono font-bold">${(Number(lineUnitPrice) * Number(lineQty)).toFixed(2)} {lineCurrency}</span>
+                <span className="font-mono font-bold">{formatMoney(Number(lineUnitPrice) * Number(lineQty), lineCurrency, currencyPosition)}</span>
                 {lineTrigger === "recurring" && lineFreq && <span className="text-muted-foreground ml-2">{t('contract.per_period', { period: lineFreq.toLowerCase() })}</span>}
               </div>
             )}

@@ -11,6 +11,7 @@ import { APP_NAME } from "../lib/appName";
 import { BrandMark } from "../components/brand-mark";
 import { COMPANY } from "../lib/company";
 import { formatCurrencyAmount } from "@/contexts/DisplayCurrencyContext";
+import { DEFAULT_CURRENCY } from "@/lib/defaultCurrency";
 
 const BRAND = "hsl(var(--primary))"; // instance primary (white-label)
 
@@ -23,9 +24,9 @@ const PAYMENT_METHOD_LABELS: Record<string, { key: string; en: string }> = {
   cheque: { key: "portal.receipt.method_cheque", en: "Cheque" },
 };
 
-function fmtAmt(n: number | null | undefined, currency = "AUD") {
+function fmtAmt(n: number | null | undefined, currency?: string | null) {
   if (n == null) return "—";
-  return formatCurrencyAmount(Number(n), currency);
+  return formatCurrencyAmount(Number(n), (currency || DEFAULT_CURRENCY || "AUD").toUpperCase());
 }
 
 export default function PortalReceipt() {
@@ -204,7 +205,7 @@ export default function PortalReceipt() {
                       {inv.notes && <p className="text-[11px] text-gray-400 mt-0.5">{inv.notes}</p>}
                     </td>
                     <td className="pt-3 pb-2 text-right">
-                      <p className="text-sm font-semibold text-gray-900">{fmtAmt(inv.amount, inv.currency ?? "AUD")}</p>
+                      <p className="text-sm font-semibold text-gray-900">{fmtAmt(inv.amount, inv.currency)}</p>
                     </td>
                   </tr>
                 </tbody>
@@ -215,7 +216,7 @@ export default function PortalReceipt() {
             <div className="px-8 py-3 border-b border-gray-100">
               <div className="flex justify-between items-center mb-1.5">
                 <span className="text-xs text-gray-500">{t("portal.receipt.subtotal", "Subtotal")}</span>
-                <span className="text-xs text-gray-700">{fmtAmt(inv.amount, inv.currency ?? "AUD")}</span>
+                <span className="text-xs text-gray-700">{fmtAmt(inv.amount, inv.currency)}</span>
               </div>
               <div className="flex justify-between items-center mb-1.5">
                 <span className="text-xs text-gray-500">{t("portal.receipt.gst", "GST (10%)")}</span>
@@ -224,7 +225,7 @@ export default function PortalReceipt() {
               <div className="flex justify-between items-center pt-2 mt-1 border-t border-gray-100">
                 <span className="font-bold text-sm text-gray-900">{t("portal.receipt.total_amount", "Total Amount")}</span>
                 <span className="font-bold text-lg" style={{ color: BRAND }}>
-                  {fmtAmt(inv.amount, inv.currency ?? "AUD")}
+                  {fmtAmt(inv.amount, inv.currency)}
                 </span>
               </div>
             </div>
@@ -253,7 +254,7 @@ export default function PortalReceipt() {
                   </div>
                   <div>
                     <p className="text-[10px] text-gray-400">{t("portal.receipt.amount_received", "Amount Received")}</p>
-                    <p className="text-xs font-semibold text-gray-800">{fmtAmt(inv.amount, inv.currency ?? "AUD")}</p>
+                    <p className="text-xs font-semibold text-gray-800">{fmtAmt(inv.amount, inv.currency)}</p>
                   </div>
                 </div>
               </div>

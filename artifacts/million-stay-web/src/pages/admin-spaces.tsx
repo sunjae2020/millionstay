@@ -4,6 +4,8 @@ import AdminLayout from "@/components/admin-layout";
 import { Camera, Home } from "lucide-react";
 
 import { getApiBase } from "@/lib/api-base";
+import { formatCurrencyAmount } from "@/contexts/DisplayCurrencyContext";
+import { DEFAULT_CURRENCY } from "@/lib/defaultCurrency";
 const API = getApiBase();
 const ADMIN_KEY = "ms_admin_key";
 function getKey() { return localStorage.getItem(ADMIN_KEY) ?? ""; }
@@ -69,7 +71,7 @@ export default function AdminSpaces() {
                   <p className="text-gray-500 text-xs mt-0.5 truncate">{space.propertyName} · {space.suburbName}</p>
                   <div className="flex items-center justify-between mt-3">
                     <div>
-                      <span className="text-primary font-bold">${Number(space.baseWeeklyPrice).toLocaleString()}</span>
+                      <span className="text-primary font-bold">{formatCurrencyAmount(Number(space.baseWeeklyPrice), DEFAULT_CURRENCY || "AUD")}</span>
                       <span className="text-gray-400 text-xs">/wk</span>
                     </div>
                     <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">

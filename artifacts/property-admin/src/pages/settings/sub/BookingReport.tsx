@@ -10,6 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import { useQuery } from "@tanstack/react-query";
 import { BarChart2, Download, Search } from "lucide-react";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
+import { formatDate } from "@/lib/date";
 
 const BOOKING_STATUSES = ["Draft", "PendingApproval", "Confirmed", "Active", "CheckedOut", "Cancelled", "NoShow"];
 
@@ -47,6 +50,7 @@ function exportCsv(data: any[]) {
 
 export default function BookingReportPage() {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [status, setStatus] = useState("_all");
@@ -63,11 +67,11 @@ export default function BookingReportPage() {
     { key: "booking_ref", header: t("bookingReport.col_booking_ref"), cell: (r) => <span className="font-mono text-sm text-primary">{r.booking_ref}</span> },
     { key: "guest_name", header: t("bookingReport.col_guest"), cell: (r) => <span className="text-sm">{r.guest_name}</span> },
     { key: "space_name", header: t("bookingReport.col_space"), cell: (r) => <span className="text-sm text-muted-foreground">{r.space_name}</span> },
-    { key: "check_in_date", header: t("bookingReport.col_check_in"), cell: (r) => <span className="text-sm">{r.check_in_date}</span> },
-    { key: "check_out_date", header: t("bookingReport.col_check_out"), cell: (r) => <span className="text-sm">{r.check_out_date}</span> },
+    { key: "check_in_date", header: t("bookingReport.col_check_in"), cell: (r) => <span className="text-sm">{formatDate(r.check_in_date)}</span> },
+    { key: "check_out_date", header: t("bookingReport.col_check_out"), cell: (r) => <span className="text-sm">{formatDate(r.check_out_date)}</span> },
     { key: "weeks", header: t("bookingReport.col_weeks"), align: "right", cell: (r) => <span className="text-sm">{r.weeks}</span> },
-    { key: "agreed_weekly_rate", header: t("bookingReport.col_rate"), align: "right", cell: (r) => <span className="text-sm">${r.agreed_weekly_rate}/wk</span> },
-    { key: "total_rent", header: t("common.total"), align: "right", cell: (r) => <span className="text-sm font-medium">${Number(r.total_rent ?? 0).toFixed(2)}</span> },
+    { key: "agreed_weekly_rate", header: t("bookingReport.col_rate"), align: "right", cell: (r) => <span className="text-sm">{formatMoney(r.agreed_weekly_rate, currency, currencyPosition)}/wk</span> },
+    { key: "total_rent", header: t("common.total"), align: "right", cell: (r) => <span className="text-sm font-medium">{formatMoney(r.total_rent ?? 0, currency, currencyPosition)}</span> },
     {
       key: "booking_status",
       header: t("common.status"),
@@ -77,7 +81,7 @@ export default function BookingReportPage() {
         </Badge>
       ),
     },
-  ], [t]);
+  ], [t, currency, currencyPosition]);
 
   return (
     <Layout>
@@ -122,13 +126,13 @@ export default function BookingReportPage() {
             <div className="bg-white border rounded-lg p-4">
               <p className="text-sm text-muted-foreground">{t("bookingReport.total_revenue")}</p>
               <p className="text-2xl font-bold mt-1">
-                ${Number(meta.total_revenue ?? 0).toLocaleString("en-AU", { minimumFractionDigits: 2 })} AUD
+                {formatMoney(meta.total_revenue ?? 0, currency, currencyPosition)}
               </p>
             </div>
             <div className="bg-white border rounded-lg p-4">
               <p className="text-sm text-muted-foreground">{t("bookingReport.avg_per_booking")}</p>
               <p className="text-2xl font-bold mt-1">
-                ${meta.total > 0 ? Number(meta.total_revenue / meta.total).toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"} AUD
+                {formatMoney(meta.total > 0 ? meta.total_revenue / meta.total : 0, currency, currencyPosition)}
               </p>
             </div>
           </div>
@@ -146,7 +150,7 @@ export default function BookingReportPage() {
         {rows.length > 0 && (
           <div className="mt-3 flex justify-end gap-6 text-sm font-medium text-muted-foreground">
             <span>{t("bookingReport.summary_total", { count: meta.total })}</span>
-            <span>${Number(meta.total_revenue ?? 0).toLocaleString("en-AU", { minimumFractionDigits: 2 })}</span>
+            <span>{formatMoney(meta.total_revenue ?? 0, currency, currencyPosition)}</span>
           </div>
         )}
       </div>

@@ -15,6 +15,8 @@ import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentVersions } from "@/components/DocumentVersions";
 import { FileText as FileTextIcon } from "lucide-react";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
 
 interface LineItem { name: string; quantity: number; unit_price: number; }
 
@@ -32,6 +34,7 @@ export default function QuoteDetail() {
   const [, navigate] = useLocation();
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { currencyPosition } = useBrand();
   const isNew = id === "new";
 
   const [accountId, setAccountId] = useState<number | null>(null);
@@ -257,7 +260,7 @@ export default function QuoteDetail() {
                   <Input className="col-span-12 sm:col-span-6" placeholder={t("quote.item_description", "Item description")} value={it.name} onChange={(e) => updateItem(idx, { name: e.target.value })} />
                   <Input className="col-span-4 sm:col-span-2 text-right" type="number" min="1" value={it.quantity} onChange={(e) => updateItem(idx, { quantity: Number(e.target.value) })} />
                   <Input className="col-span-5 sm:col-span-2 text-right" type="number" step="0.01" value={it.unit_price} onChange={(e) => updateItem(idx, { unit_price: Number(e.target.value) })} />
-                  <div className="col-span-2 sm:col-span-1 text-right text-sm tabular-nums">{((Number(it.unit_price) || 0) * (Number(it.quantity) || 0)).toLocaleString("en-AU", { minimumFractionDigits: 2 })}</div>
+                  <div className="col-span-2 sm:col-span-1 text-right text-sm tabular-nums">{formatMoney((Number(it.unit_price) || 0) * (Number(it.quantity) || 0), currency, currencyPosition)}</div>
                   <button className="col-span-1 text-red-500 hover:text-red-700" onClick={() => removeItem(idx)} title={t("quote.remove", "Remove")}><Trash2 className="h-4 w-4 mx-auto" /></button>
                 </div>
               ))}
@@ -265,7 +268,7 @@ export default function QuoteDetail() {
             <div className="flex justify-end mt-4 pt-4 border-t">
               <div className="text-right">
                 <span className="text-sm text-muted-foreground mr-3">{t("common.total", "Total")}</span>
-                <span className="text-lg font-bold">{total.toLocaleString("en-AU", { minimumFractionDigits: 2 })} {currency}</span>
+                <span className="text-lg font-bold">{formatMoney(total, currency, currencyPosition)}</span>
               </div>
             </div>
           </div>

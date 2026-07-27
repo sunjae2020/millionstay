@@ -5,6 +5,7 @@ import { Layout } from "@/components/Layout";
 import { useServerList } from "@/lib/useServerList";
 import { TablePagination } from "@/components/TablePagination";
 import { formatDate } from "@/lib/dateFormat";
+import { formatMoney } from "@/lib/money";
 import { Briefcase, MapPin, Calendar, DollarSign, FileText, ChevronRight } from "lucide-react";
 
 interface Job {
@@ -150,13 +151,12 @@ export default function JobsPage() {
                     <div className="flex items-center gap-1 justify-end">
                       <DollarSign className="w-3.5 h-3.5 text-primary" />
                       <span className="text-lg font-bold text-foreground">
-                        {parseFloat(job.total_price).toFixed(2)}
+                        {formatMoney(job.total_price, job.currency)}
                       </span>
-                      <span className="text-xs text-muted-foreground">{job.currency}</span>
                     </div>
                     {job.quantity > 1 && (
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        {job.quantity} × ${parseFloat(job.unit_price).toFixed(2)}
+                        {job.quantity} × {formatMoney(job.unit_price, job.currency)}
                       </p>
                     )}
                     <ChevronRight className="w-4 h-4 text-muted-foreground inline-block mt-2" />

@@ -3,6 +3,8 @@ import { useLocation, Link } from "wouter";
 import AdminLayout from "@/components/admin-layout";
 import { StatusBadge } from "@/components/status-badge";
 import { formatDate } from "@/lib/dateFormat";
+import { formatCurrencyAmount } from "@/contexts/DisplayCurrencyContext";
+import { DEFAULT_CURRENCY } from "@/lib/defaultCurrency";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -118,7 +120,7 @@ export default function AdminBookings() {
                     <td className="px-5 py-3 text-gray-600 whitespace-nowrap">{formatDate(b.checkInDate)}</td>
                     <td className="px-5 py-3 text-gray-600 whitespace-nowrap">{formatDate(b.checkOutDate)}</td>
                     <td className="px-5 py-3 text-gray-800 font-medium">
-                      {b.totalAmount ? `$${Number(b.totalAmount).toLocaleString()}` : "—"}
+                      {b.totalAmount ? formatCurrencyAmount(Number(b.totalAmount), DEFAULT_CURRENCY || "AUD") : "—"}
                     </td>
                     <td className="px-5 py-3"><StatusBadge status={b.contractStatus} /></td>
                     <td className="px-5 py-3 text-gray-400 whitespace-nowrap">{formatDate(b.createdAt)}</td>

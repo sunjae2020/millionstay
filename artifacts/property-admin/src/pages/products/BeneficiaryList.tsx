@@ -16,6 +16,8 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2, Users } from "lucide-react";
 import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -34,6 +36,7 @@ const TYPE_COLORS: Record<string, string> = {
 
 export default function BeneficiaryList() {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("_all");
   const [typeFilter, setTypeFilter] = useState("_all");
@@ -130,7 +133,7 @@ export default function BeneficiaryList() {
           <span className="text-xs tabular-nums font-semibold text-primary">
             {b.commission_type === "Percentage"
               ? b.split_percentage != null ? `${b.split_percentage}%` : "—"
-              : b.fixed_amount != null ? `$${Number(b.fixed_amount).toFixed(2)}` : "—"}
+              : b.fixed_amount != null ? formatMoney(b.fixed_amount, currency, currencyPosition) : "—"}
           </span>
         ),
       },
@@ -173,7 +176,7 @@ export default function BeneficiaryList() {
         ),
       },
     ],
-    [t],
+    [t, currency, currencyPosition],
   );
 
   return (

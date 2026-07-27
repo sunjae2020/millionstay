@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { MessageCircle, X, Send, Loader2, ExternalLink } from "lucide-react";
 import { getApiBase } from "@/lib/api-base";
 import { BrandMark } from "@/components/brand-mark";
+import { useDisplayCurrency } from "@/contexts/DisplayCurrencyContext";
 
 /** Brand accent — the instance primary (white-label): Million Orange on the
  *  primary site, Urban Teal on Metheim, etc. Resolves via the CSS token so each
@@ -43,6 +44,7 @@ function getSessionId(): string {
 
 export default function ChatWidget() {
   const { t } = useTranslation();
+  const { formatDisplayPrice } = useDisplayCurrency();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMsg[]>([{ role: "assistant", text: t("chat.greeting") }]);
   const [input, setInput] = useState("");
@@ -201,7 +203,7 @@ export default function ChatWidget() {
                           </div>
                           {r.weekly_price != null && (
                             <div className="text-xs font-semibold" style={{ color: ACCENT }}>
-                              {r.currency ?? "AUD"} {r.weekly_price}{t("chat.per_week")}
+                              {formatDisplayPrice(Number(r.weekly_price), (r.currency ?? "AUD").toUpperCase()).primary}{t("chat.per_week")}
                             </div>
                           )}
                         </div>

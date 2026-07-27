@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm, Controller } from "react-hook-form";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
 import {
   useGetPromotion, useCreatePromotion, useUpdatePromotion, useDeletePromotion,
   getListPromotionsQueryKey, getGetPromotionQueryKey,
@@ -69,6 +71,7 @@ interface PromotionForm {
 
 export default function PromotionDetail() {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
   const params = useParams<{ id: string }>();
   const isNew = params.id === "new";
   const id = isNew ? null : parseInt(params.id ?? "0", 10);
@@ -479,7 +482,7 @@ export default function PromotionDetail() {
                               </div>
                               <div className="flex items-center gap-2 text-muted-foreground">
                                 {a.price != null && (
-                                  <span className="text-xs">{a.currency} ${a.price.toFixed(2)}</span>
+                                  <span className="text-xs">{formatMoney(a.price, a.currency ?? currency, currencyPosition)}</span>
                                 )}
                                 <ExternalLink className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
                               </div>
@@ -509,7 +512,7 @@ export default function PromotionDetail() {
                               </div>
                               <div className="flex items-center gap-2 text-muted-foreground">
                                 {s.base_price != null && (
-                                  <span className="text-xs">{s.currency} ${s.base_price.toFixed(2)}</span>
+                                  <span className="text-xs">{formatMoney(s.base_price, s.currency ?? currency, currencyPosition)}</span>
                                 )}
                                 <ExternalLink className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
                               </div>

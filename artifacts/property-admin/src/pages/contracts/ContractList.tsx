@@ -15,6 +15,9 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search } from "lucide-react";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
+import { formatDate } from "@/lib/date";
 
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-700",
@@ -27,6 +30,7 @@ const statusColors: Record<string, string> = {
 
 export default function ContractList() {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("_all");
   const [showDeleted, setShowDeleted] = useState(false);
@@ -72,22 +76,22 @@ export default function ContractList() {
       {
         key: "start_date",
         header: "contract.col_start",
-        cell: (c) => <span className="text-sm">{c.start_date ?? "—"}</span>,
+        cell: (c) => <span className="text-sm">{formatDate(c.start_date)}</span>,
       },
       {
         key: "end_date",
         header: "contract.col_end",
-        cell: (c) => <span className="text-sm">{c.end_date ?? "—"}</span>,
+        cell: (c) => <span className="text-sm">{formatDate(c.end_date)}</span>,
       },
       {
         key: "weekly_rate",
         header: "contract.col_weekly_rate",
-        cell: (c) => <span className="text-sm">{c.weekly_rate != null ? `$${c.weekly_rate}/wk` : "—"}</span>,
+        cell: (c) => <span className="text-sm">{c.weekly_rate != null ? `${formatMoney(c.weekly_rate, currency, currencyPosition)}/wk` : "—"}</span>,
       },
       {
         key: "total_rent",
         header: "contract.col_total_rent",
-        cell: (c) => <span className="text-sm">{c.total_rent != null ? `$${c.total_rent.toLocaleString()}` : "—"}</span>,
+        cell: (c) => <span className="text-sm">{c.total_rent != null ? formatMoney(c.total_rent, currency, currencyPosition) : "—"}</span>,
       },
       {
         key: "status",
@@ -99,7 +103,7 @@ export default function ContractList() {
         ),
       },
     ],
-    [t],
+    [t, currency, currencyPosition],
   );
 
   return (

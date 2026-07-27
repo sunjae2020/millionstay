@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { apiGet, apiPost, apiDelete, ApiError } from "@/lib/api";
+import { formatMoney } from "@/lib/money";
 import { ChevronLeft, ChevronRight, Ban, Sun, RotateCcw, CalendarOff, Search } from "lucide-react";
 
 /* ── types ── */
@@ -275,7 +276,7 @@ export function OccupancyCalendar() {
                 disabled={!clickable}
                 title={
                   status === "booked" ? `${day?.tenant ?? ""} ${day?.booking_ref ?? ""}`.trim()
-                  : status === "short_term" ? `${t("calendar.legend.short_term")}${day?.daily_rate ? ` · ${day.currency ?? ""} ${day.daily_rate}` : ""}`
+                  : status === "short_term" ? `${t("calendar.legend.short_term")}${day?.daily_rate ? ` · ${formatMoney(day.daily_rate, day.currency)}` : ""}`
                   : status === "blocked" ? day?.block_reason ?? t("calendar.legend.blocked")
                   : ""
                 }
@@ -286,7 +287,7 @@ export function OccupancyCalendar() {
                   <div className="text-[10px] mt-0.5 truncate">{day?.tenant ?? t("calendar.legend.booked")}</div>
                 )}
                 {status === "short_term" && day?.daily_rate && (
-                  <div className="text-[10px] mt-0.5 truncate">{day.currency ?? "$"} {day.daily_rate}</div>
+                  <div className="text-[10px] mt-0.5 truncate">{formatMoney(day.daily_rate, day.currency)}</div>
                 )}
                 {status === "blocked" && (
                   <div className="text-[10px] mt-0.5 truncate">{t("calendar.legend.blocked")}</div>

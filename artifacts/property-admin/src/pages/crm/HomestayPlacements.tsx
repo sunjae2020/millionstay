@@ -121,7 +121,7 @@ export default function HomestayPlacements() {
       {
         key: "move_in_date",
         header: "homestayPlacement.col_move_in",
-        cell: (r) => <span className="text-sm text-muted-foreground">{r.move_in_date || <span className="text-muted-foreground/40">—</span>}</span>,
+        cell: (r) => <span className="text-sm text-muted-foreground">{r.move_in_date ? formatDate(r.move_in_date) : <span className="text-muted-foreground/40">—</span>}</span>,
       },
       {
         key: "status",

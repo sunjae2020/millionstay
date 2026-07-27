@@ -6,6 +6,8 @@ import { apiJson } from "@/lib/apiFetch";
 import { LookupSelect } from "@/components/LookupSelect";
 import { Button } from "@/components/ui/button";
 import { Percent, Plus, Trash2 } from "lucide-react";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
 
 // Admin management of agent commission plans (per-agent rate + base). The base
 // determines what percentage_rate applies to — upfront payment, one month's rent,
@@ -66,6 +68,7 @@ export default function CommissionPlansPage() {
 function baseLabel(t: any, base: string) { return t(`commission_plans.base_${base}`, base); }
 
 function PlanRow({ plan, onChanged, onDelete, t }: { plan: Plan; onChanged: () => void; onDelete: () => void; t: any }) {
+  const { currency, currencyPosition } = useBrand();
   const [editing, setEditing] = useState(false);
   if (editing) return <tr><td colSpan={7} className="p-3 bg-gray-50"><PlanForm plan={plan} onDone={() => { setEditing(false); onChanged(); }} onCancel={() => setEditing(false)} /></td></tr>;
   return (
@@ -73,7 +76,7 @@ function PlanRow({ plan, onChanged, onDelete, t }: { plan: Plan; onChanged: () =
       <td className="px-4 py-2.5 font-medium">{plan.agent_name ?? `#${plan.account_id}`}{plan.name ? <span className="text-muted-foreground"> · {plan.name}</span> : null}</td>
       <td className="px-4 py-2.5"><span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">{baseLabel(t, plan.base_type)}</span></td>
       <td className="px-4 py-2.5">{Number(plan.percentage_rate)}%</td>
-      <td className="px-4 py-2.5">{Number(plan.fixed_referral_fee).toLocaleString()}</td>
+      <td className="px-4 py-2.5">{formatMoney(plan.fixed_referral_fee, currency, currencyPosition)}</td>
       <td className="px-4 py-2.5">{plan.stack ? "✓" : "—"}</td>
       <td className="px-4 py-2.5">{plan.status}</td>
       <td className="px-4 py-2.5 text-right whitespace-nowrap">

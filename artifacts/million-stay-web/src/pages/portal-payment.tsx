@@ -23,14 +23,15 @@ import {
 import { apiFetch, useSupportEmail, type MyInvoice } from "@/lib/guest-api";
 import { COMPANY } from "../lib/company";
 import { formatCurrencyAmount } from "@/contexts/DisplayCurrencyContext";
+import { DEFAULT_CURRENCY } from "@/lib/defaultCurrency";
 
 const BRAND = "hsl(var(--primary))"; // instance primary (white-label)
 const API = getApiBase();
 
 /* ─── helpers ─── */
-function fmtAmt(n: number | null | undefined, currency = "AUD") {
+function fmtAmt(n: number | null | undefined, currency?: string | null) {
   if (n == null) return "—";
-  return formatCurrencyAmount(Number(n), currency);
+  return formatCurrencyAmount(Number(n), (currency || DEFAULT_CURRENCY || "AUD").toUpperCase());
 }
 
 /* ─── Bank Transfer Panel ─── */
@@ -180,7 +181,7 @@ function InvoiceSummary({ inv }: { inv: MyInvoice }) {
       )}
       <div className="flex justify-between items-center pt-1">
         <span className="font-bold text-gray-900">{t("portal.payment.amount_due", "Amount Due")}</span>
-        <span className="font-black text-xl" style={{ color: BRAND }}>{fmtAmt(inv.amount, inv.currency ?? "AUD")}</span>
+        <span className="font-black text-xl" style={{ color: BRAND }}>{fmtAmt(inv.amount, inv.currency)}</span>
       </div>
     </div>
   );
@@ -365,7 +366,7 @@ export default function PortalPayment() {
   }
 
   const amount = Number(invoice?.amount ?? 0);
-  const currency = invoice?.currency ?? "AUD";
+  const currency = invoice?.currency ?? (DEFAULT_CURRENCY || "AUD");
   const invoiceRef = invoice?.invoice_ref ?? `INV-${invoiceId}`;
 
   return (

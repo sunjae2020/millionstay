@@ -18,6 +18,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { formatDate } from "@/lib/dateFormat";
+import { formatMoney } from "@/lib/money";
 
 interface Space {
   id: number;
@@ -138,10 +139,8 @@ export default function PropertyDetailPage() {
     }
   }
 
-  const fmtMoney = (n: number | null | undefined, currency = "AUD") =>
-    n == null
-      ? "—"
-      : `${currency} $${Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const fmtMoney = (n: number | null | undefined, currency?: string | null) =>
+    n == null ? "—" : formatMoney(n, currency);
 
   return (
     <Layout>

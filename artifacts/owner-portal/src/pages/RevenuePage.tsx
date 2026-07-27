@@ -4,6 +4,7 @@ import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
 import { TablePagination } from "@/components/TablePagination";
 import { formatDate } from "@/lib/dateFormat";
+import { formatMoney } from "@/lib/money";
 import { DollarSign, TrendingUp, Clock, Search } from "lucide-react";
 
 interface Invoice {
@@ -116,8 +117,8 @@ export default function RevenuePage() {
       {data && (
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-8">
-            <StatCard label={t("revenue.total_collected")} value={`$${Number(data.total_revenue ?? 0).toLocaleString()}`} icon={DollarSign} iconCls="bg-primary/10 text-primary" />
-            <StatCard label={t("revenue.pending")} value={`$${Number(data.pending_revenue ?? 0).toLocaleString()}`} icon={Clock} iconCls="bg-yellow-50 text-yellow-600" />
+            <StatCard label={t("revenue.total_collected")} value={formatMoney(data.total_revenue ?? 0)} icon={DollarSign} iconCls="bg-primary/10 text-primary" />
+            <StatCard label={t("revenue.pending")} value={formatMoney(data.pending_revenue ?? 0)} icon={Clock} iconCls="bg-yellow-50 text-yellow-600" />
             <StatCard label={t("revenue.total_invoices")} value={String(total)} icon={TrendingUp} iconCls="bg-blue-50 text-blue-600" />
           </div>
 
@@ -163,10 +164,10 @@ export default function RevenuePage() {
                       {formatDate(inv.due_date)}
                     </td>
                     <td className="px-4 py-3 font-medium text-foreground">
-                      ${Number(inv.amount_due ?? 0).toLocaleString()} {inv.currency && <span className="text-muted-foreground text-xs">{inv.currency}</span>}
+                      {formatMoney(inv.amount_due ?? 0, inv.currency)}
                     </td>
                     <td className="px-4 py-3 font-medium text-green-600">
-                      ${Number(inv.amount_paid ?? 0).toLocaleString()}
+                      {formatMoney(inv.amount_paid ?? 0, inv.currency)}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${INV_STATUS_CLS[inv.status] ?? "bg-gray-100 text-gray-600"}`}>

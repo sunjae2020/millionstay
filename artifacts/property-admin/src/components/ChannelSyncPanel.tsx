@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, startOfMonth, endOfMonth, addMonths, getDay } from "date-fns";
+import { formatDate } from "@/lib/date";
 import { Copy, Check, Plus, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -262,7 +263,7 @@ export function ChannelSyncPanel({ spaceId, channels, listings }: { spaceId: num
                   <tr key={r.id} className="border-b last:border-0">
                     <td className="py-1.5 pr-3 font-mono text-xs">{r.external_reservation_id}</td>
                     <td className="py-1.5 pr-3">{r.guest_name ?? "—"}</td>
-                    <td className="py-1.5 pr-3 whitespace-nowrap">{r.check_in_date} → {r.check_out_date}</td>
+                    <td className="py-1.5 pr-3 whitespace-nowrap">{formatDate(r.check_in_date)} → {formatDate(r.check_out_date)}</td>
                     <td className="py-1.5 pr-3 whitespace-nowrap">{r.total_amount ? `${r.total_amount} ${r.currency ?? ""}` : "—"}</td>
                     <td className="py-1.5 pr-3">
                       <Badge variant={r.reservation_status === "Cancelled" ? "destructive" : r.reservation_status === "Mapped" ? "outline" : "secondary"} className="text-[10px]">

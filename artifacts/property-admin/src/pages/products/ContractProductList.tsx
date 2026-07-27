@@ -15,6 +15,8 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Package, Tag } from "lucide-react";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
 
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-700",
@@ -37,6 +39,7 @@ const PRODUCT_TYPES = ["Room", "Suite", "Apartment", "House", "Studio", "Service
 
 export default function ContractProductList() {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("_all");
   const [productType, setProductType] = useState("_all");
@@ -101,7 +104,7 @@ export default function ContractProductList() {
         key: "weekly_rate",
         header: "contract_product.col_weekly_rate",
         cell: (p) => (
-          <span className="text-sm font-mono">{p.weekly_rate != null ? `$${p.weekly_rate.toFixed(0)}/wk` : "—"}</span>
+          <span className="text-sm font-mono">{p.weekly_rate != null ? `${formatMoney(p.weekly_rate, currency, currencyPosition)}/wk` : "—"}</span>
         ),
       },
       {
@@ -110,8 +113,8 @@ export default function ContractProductList() {
         cell: (p) => (
           <span className="text-sm font-mono font-semibold text-primary">
             {p.effective_weekly_rate != null && p.effective_weekly_rate !== p.weekly_rate
-              ? `$${p.effective_weekly_rate.toFixed(0)}/wk`
-              : (p.weekly_rate != null ? `$${p.weekly_rate.toFixed(0)}/wk` : "—")}
+              ? `${formatMoney(p.effective_weekly_rate, currency, currencyPosition)}/wk`
+              : (p.weekly_rate != null ? `${formatMoney(p.weekly_rate, currency, currencyPosition)}/wk` : "—")}
           </span>
         ),
       },
@@ -126,7 +129,7 @@ export default function ContractProductList() {
         cell: (p) => <Badge className={statusColors[p.status] ?? "bg-gray-100 text-gray-700"}>{p.status}</Badge>,
       },
     ],
-    [t],
+    [t, currency, currencyPosition],
   );
 
   return (

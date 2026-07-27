@@ -5,13 +5,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiJson } from "@/lib/apiFetch";
 import { Button } from "@/components/ui/button";
 import { Briefcase, Wrench, Receipt, Plus, Camera, Headphones } from "lucide-react";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
 
 // Admin service-host detail tabs (#4): jobs & payouts (GL-backed accounting),
 // photos, and CS tickets — all scoped to one service host by id.
 
-function money(n: string | number, ccy = "AUD") {
-  return `${ccy} ${Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
 const chip = (s: string) => {
   const m: Record<string, string> = {
     Accrued: "bg-blue-100 text-blue-700", Approved: "bg-amber-100 text-amber-700",
@@ -25,6 +24,8 @@ const chip = (s: string) => {
 /* ── Jobs & Payouts (accounting) ─────────────────────────────────────────── */
 export function ServiceHostAccounting({ hostId }: { hostId: string }) {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
+  const money = (n: string | number, ccy?: string | null) => formatMoney(n, ccy ?? currency, currencyPosition);
   const qc = useQueryClient();
   const jobsQ = useQuery<{ data: { jobs: any[]; work_orders: any[] } }>({ queryKey: ["sh-jobs", hostId], queryFn: () => apiJson(`/api/v1/service-hosts/${hostId}/jobs`) });
   const payQ = useQuery<{ data: any[]; summary: any }>({ queryKey: ["sh-payouts", hostId], queryFn: () => apiJson(`/api/v1/service-hosts/${hostId}/payouts`) });

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useLocation, useParams, Link } from "wouter";
 import { formatDate } from "@/lib/date";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
@@ -75,6 +77,7 @@ function calcStay(checkIn: string, checkOut: string, rate: string) {
 
 export default function BookingDetail() {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
   const { id } = useParams<{ id: string }>();
   const isNew = id === "new";
   const [, setLocation] = useLocation();
@@ -517,7 +520,7 @@ export default function BookingDetail() {
                               {doc.verified_status}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-muted-foreground">{doc.expiry_date ?? "—"}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{formatDate(doc.expiry_date)}</td>
                           <td className="px-4 py-3 text-muted-foreground">{formatDate(doc.created_at)}</td>
                           <td className="px-4 py-3">
                             <div className="flex gap-1">
@@ -573,8 +576,8 @@ export default function BookingDetail() {
                           <td className="px-4 py-3 font-medium">{svc.service_name ?? svc.name}</td>
                           <td className="px-4 py-3 text-muted-foreground">{svc.service_type ?? "—"}</td>
                           <td className="px-4 py-3">{svc.quantity ?? 1}</td>
-                          <td className="px-4 py-3">{svc.unit_price ? `$${Number(svc.unit_price).toFixed(2)}` : "—"}</td>
-                          <td className="px-4 py-3">{svc.total_price ? `$${Number(svc.total_price).toFixed(2)}` : "—"}</td>
+                          <td className="px-4 py-3">{svc.unit_price ? formatMoney(svc.unit_price, svc.currency ?? currency, currencyPosition) : "—"}</td>
+                          <td className="px-4 py-3">{svc.total_price ? formatMoney(svc.total_price, svc.currency ?? currency, currencyPosition) : "—"}</td>
                           <td className="px-4 py-3 text-muted-foreground">{svc.billing_trigger ?? "—"}</td>
                           <td className="px-4 py-3 text-muted-foreground">{svc.frequency ?? "—"}</td>
                           <td className="px-4 py-3">
@@ -641,7 +644,7 @@ export default function BookingDetail() {
                           </td>
                           <td className="px-4 py-3">{inv.amount != null ? Number(inv.amount).toFixed(2) : "—"}</td>
                           <td className="px-4 py-3">{inv.currency ?? "—"}</td>
-                          <td className="px-4 py-3 text-muted-foreground">{inv.due_date ?? "—"}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{formatDate(inv.due_date)}</td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${inv.status === "Paid" ? "bg-green-100 text-green-700" : inv.status === "Sent" ? "bg-blue-100 text-blue-700" : inv.status === "Void" ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-600"}`}>
                               {inv.status ?? "Draft"}

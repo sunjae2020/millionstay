@@ -4,6 +4,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiJson } from "@/lib/apiFetch";
 import { Button } from "@/components/ui/button";
 import { Plus, Wallet, Lock, Trash2, Send } from "lucide-react";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
 
 // Admin move-out deposit settlement: snapshot Deposits Held, itemise damage
 // deductions (linked to move-out condition evidence), propose to the tenant,
@@ -24,9 +26,6 @@ const STATUS_STYLE: Record<string, string> = {
   finalized: "bg-gray-200 text-gray-700",
 };
 
-function money(n: string | number, ccy: string) {
-  return `${ccy} ${Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
 
 export function BookingDepositSettlement({ bookingId }: { bookingId: string }) {
   const { t } = useTranslation();
@@ -63,6 +62,8 @@ export function BookingDepositSettlement({ bookingId }: { bookingId: string }) {
 
 function SettlementCard({ s, onChanged }: { s: Settlement; onChanged: () => void }) {
   const { t } = useTranslation();
+  const { currencyPosition } = useBrand();
+  const money = (n: string | number, ccy: string) => formatMoney(n, ccy, currencyPosition);
   const editable = s.status === "draft" || s.status === "proposed";
   const [showAdd, setShowAdd] = useState(false);
 

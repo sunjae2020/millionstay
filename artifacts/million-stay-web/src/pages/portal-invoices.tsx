@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { formatDate } from "@/lib/dateFormat";
 import { formatCurrencyAmount } from "@/contexts/DisplayCurrencyContext";
+import { DEFAULT_CURRENCY } from "@/lib/defaultCurrency";
 
 const BRAND = "hsl(var(--primary))"; // instance primary (white-label)
 
@@ -34,9 +35,9 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
   cheque: "Cheque",
 };
 
-function fmtAmt(n: number | null | undefined, currency = "AUD") {
+function fmtAmt(n: number | null | undefined, currency?: string | null) {
   if (n == null) return "—";
-  return formatCurrencyAmount(Number(n), currency);
+  return formatCurrencyAmount(Number(n), (currency || DEFAULT_CURRENCY || "AUD").toUpperCase());
 }
 
 function InvoiceCard({ inv }: { inv: MyInvoice }) {
@@ -92,7 +93,7 @@ function InvoiceCard({ inv }: { inv: MyInvoice }) {
 
         {/* Amount */}
         <div className="text-right shrink-0">
-          <p className="text-base font-bold text-gray-900">{fmtAmt(inv.amount, inv.currency ?? "AUD")}</p>
+          <p className="text-base font-bold text-gray-900">{fmtAmt(inv.amount, inv.currency)}</p>
           <p className="text-xs text-gray-400 mt-0.5">{t("portal.invoices.due", "Due {{date}}", { date: formatDate(inv.due_date) })}</p>
         </div>
       </div>

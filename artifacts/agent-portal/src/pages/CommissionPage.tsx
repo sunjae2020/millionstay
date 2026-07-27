@@ -4,6 +4,7 @@ import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
 import { TablePagination } from "@/components/TablePagination";
 import { formatDate } from "@/lib/dateFormat";
+import { formatMoney } from "@/lib/money";
 import { DollarSign, TrendingUp, Clock, CheckCircle, Search } from "lucide-react";
 
 interface CommissionApiData {
@@ -117,14 +118,14 @@ export default function CommissionPage() {
                 <span className="text-sm text-primary font-semibold">
                   {data.commission.commission_type === "Percentage"
                     ? t("commission.rate_percent", { rate: data.commission.commission_rate })
-                    : t("commission.rate_flat", { amount: data.commission.commission_amount })}
+                    : t("commission.rate_flat", { amount: formatMoney(data.commission.commission_amount) })}
                 </span>
               </div>
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 mb-8">
-            <StatCard label={t("commission.stat_total_earned")} value={`$${Number(data.total_earned ?? 0).toLocaleString()}`} icon={DollarSign} iconCls="bg-primary/10 text-primary" />
+            <StatCard label={t("commission.stat_total_earned")} value={formatMoney(data.total_earned ?? 0)} icon={DollarSign} iconCls="bg-primary/10 text-primary" />
             <StatCard label={t("commission.stat_all_bookings")} value={String(data.paid_count + data.pending_count)} icon={TrendingUp} iconCls="bg-blue-50 text-blue-600" />
             <StatCard label={t("commission.stat_paid")} value={String(data.paid_count)} icon={CheckCircle} iconCls="bg-green-50 text-green-600" />
             <StatCard label={t("commission.stat_pending")} value={String(data.pending_count)} icon={Clock} iconCls="bg-yellow-50 text-yellow-600" />
@@ -170,8 +171,8 @@ export default function CommissionPage() {
                     <td className="px-4 py-3 text-muted-foreground">
                       {formatDate(row.check_out_date, t("common.ongoing"))}
                     </td>
-                    <td className="px-4 py-3 text-foreground">${Number(row.rent_amount ?? 0).toLocaleString()}</td>
-                    <td className="px-4 py-3 font-semibold text-foreground">${Number(row.commission_earned ?? 0).toLocaleString()}</td>
+                    <td className="px-4 py-3 text-foreground">{formatMoney(row.rent_amount ?? 0)}</td>
+                    <td className="px-4 py-3 font-semibold text-foreground">{formatMoney(row.commission_earned ?? 0)}</td>
                     <td className="px-4 py-3">
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${["Active", "CheckedOut"].includes(row.booking_status) ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
                         {t(`status.${row.booking_status}`, row.booking_status)}

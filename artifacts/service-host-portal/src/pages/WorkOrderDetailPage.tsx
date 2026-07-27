@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet, apiPost, apiFetch, ApiError } from "@/lib/api";
 import { formatDateTime } from "@/lib/dateFormat";
+import { formatMoney } from "@/lib/money";
 import {
   ArrowLeft, Wrench, CheckCircle2, Clock, AlertTriangle, Play, Loader2,
   Camera, Trash2, UploadCloud, Save, X,
@@ -53,13 +54,7 @@ const slaStyle: Record<string, string> = {
 
 function money(cost: string | null, currency: string | null): string {
   if (!cost) return "—";
-  const n = Number(cost) || 0;
-  const cur = currency || "KRW";
-  try {
-    return new Intl.NumberFormat(cur === "KRW" ? "ko-KR" : "en-AU", {
-      style: "currency", currency: cur, maximumFractionDigits: cur === "KRW" ? 0 : 2,
-    }).format(n);
-  } catch { return `${cur} ${n.toLocaleString()}`; }
+  return formatMoney(cost, currency);
 }
 
 export default function WorkOrderDetailPage() {
@@ -232,7 +227,7 @@ export default function WorkOrderDetailPage() {
                 <Row label={t("workorders.dispatched", "Dispatched")} value={formatDateTime(wo.dispatched_at)} />
                 <Row label={t("workorders.ack_due", "Ack by")} value={formatDateTime(wo.sla_ack_due_at)} />
                 <Row label={t("workorders.acknowledged_at", "Acknowledged at")} value={formatDateTime(wo.acknowledged_at)} />
-                <Row label={t("workorders.scheduled_at", "Scheduled")} value={wo.scheduled_at ?? "—"} />
+                <Row label={t("workorders.scheduled_at", "Scheduled")} value={formatDateTime(wo.scheduled_at)} />
                 <Row label={t("workorders.reported_at", "Reported")} value={formatDateTime(wo.reported_at)} />
                 <Row label={t("workorders.completed_at", "Completed at")} value={formatDateTime(wo.completed_at)} />
                 <Row label={t("workorders.cost", "Cost")} value={money(wo.cost, wo.currency)} />

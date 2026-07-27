@@ -22,7 +22,7 @@ import { formatDate } from "@/lib/dateFormat";
 
 /* ── helpers ─────────────────────────────────────────────── */
 
-function money(amount: number, currency = "AUD") {
+function money(amount: number, currency = DEFAULT_CURRENCY || "AUD") {
   return formatCurrencyAmount(Number(amount) || 0, currency);
 }
 
@@ -147,7 +147,7 @@ function ContractRowMobile({ b }: { b: MyBooking }) {
       <p className="font-semibold text-sm text-card-foreground truncate">{b.space_name ?? b.property_name ?? t("portal.home.stay_fallback", "Stay")}</p>
       <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
         <span className="inline-flex items-center gap-1"><CalendarRange className="h-3.5 w-3.5" />{formatDate(b.check_in_date)} → {formatDate(b.check_out_date)}</span>
-        {b.total_amount && <span className="tabular-nums font-medium text-card-foreground">{money(Number(b.total_amount), b.currency ?? "AUD")}</span>}
+        {b.total_amount && <span className="tabular-nums font-medium text-card-foreground">{money(Number(b.total_amount), b.currency ?? (DEFAULT_CURRENCY || "AUD"))}</span>}
       </div>
     </Link>
   );
@@ -390,7 +390,7 @@ export default function Portal() {
                         <td className="px-4 py-3 text-muted-foreground whitespace-nowrap tabular-nums">{formatDate(b.check_in_date)} → {formatDate(b.check_out_date)}</td>
                         <td className="px-4 py-3"><StatusBadge status={b.booking_status} /></td>
                         <td className="px-4 py-3 text-right tabular-nums font-medium text-card-foreground whitespace-nowrap">
-                          {b.total_amount ? money(Number(b.total_amount), b.currency ?? "AUD") : "—"}
+                          {b.total_amount ? money(Number(b.total_amount), b.currency ?? (DEFAULT_CURRENCY || "AUD")) : "—"}
                         </td>
                         <td className="px-4 py-3 text-muted-foreground">
                           <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />

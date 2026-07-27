@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { apiFetch, apiJson } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { MessageCircle, Send, Loader2, ExternalLink, Bot, AlertCircle, CheckCircle2 } from "lucide-react";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
 
 const ACCENT = "hsl(var(--primary))";
 
@@ -186,6 +188,7 @@ interface PreviewMsg { role: "user" | "assistant"; text: string; rooms?: RoomCar
 
 function ChatPreview() {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
   const [messages, setMessages] = useState<PreviewMsg[]>([{ role: "assistant", text: t("ai.preview.greeting") }]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -283,7 +286,7 @@ function ChatPreview() {
                       <div className="truncate font-medium">{r.name ?? t("ai.preview.room_fallback", { id: r.space_id })}</div>
                       <div className="truncate text-xs text-muted-foreground">{[r.city, r.space_type].filter(Boolean).join(" · ")}</div>
                     </div>
-                    {r.weekly_price != null && <span className="text-xs font-semibold" style={{ color: ACCENT }}>{r.currency ?? "AUD"} {r.weekly_price}</span>}
+                    {r.weekly_price != null && <span className="text-xs font-semibold" style={{ color: ACCENT }}>{formatMoney(r.weekly_price, r.currency ?? currency, currencyPosition)}</span>}
                     <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
                   </a>
                 ))}

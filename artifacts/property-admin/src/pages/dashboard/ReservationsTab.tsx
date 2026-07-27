@@ -22,6 +22,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { LookupSelect } from "@/components/LookupSelect";
 import { KpiCard, DashCard, Pill } from "@/components/dashboard/DashboardKit";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
+import { formatDate } from "@/lib/date";
 
 const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   Draft:           { bg: "#f8fafc", text: "#64748b", border: "#cbd5e1" },
@@ -328,6 +331,7 @@ interface QuickBookingForm {
 
 export function QuickBookingPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useTranslation();
+  const { currencyPosition } = useBrand();
   const { toast } = useToast();
   const qc = useQueryClient();
   const [selectedPropertyId, setSelectedPropertyId] = useState<number | null>(null);
@@ -509,7 +513,7 @@ export function QuickBookingPanel({ open, onClose }: { open: boolean; onClose: (
                   <p className="text-[10px] text-muted-foreground">{t("dash_reservations.weeks")}</p>
                 </div>
                 <div>
-                  <p className="text-lg font-bold">{form.currency} {parseFloat(stay.total).toLocaleString()}</p>
+                  <p className="text-lg font-bold">{formatMoney(stay.total, form.currency, currencyPosition)}</p>
                   <p className="text-[10px] text-muted-foreground">{t("dash_reservations.total_rent")}</p>
                 </div>
               </div>
@@ -535,6 +539,7 @@ export function QuickBookingPanel({ open, onClose }: { open: boolean; onClose: (
 
 export default function ReservationsTab() {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
   const [, navigate] = useLocation();
 
   const [weekStart, setWeekStart] = useState(() => {
@@ -678,11 +683,11 @@ export default function ReservationsTab() {
                   <td className="px-3 py-2 font-mono font-medium">{b.booking_ref}</td>
                   <td className="px-3 py-2">{(b as any).contact_name ?? "—"}</td>
                   <td className="px-3 py-2">{(b as any).space_name ?? "—"}</td>
-                  <td className="px-3 py-2">{b.check_in_date ?? "—"}</td>
-                  <td className="px-3 py-2">{b.check_out_date ?? "—"}</td>
+                  <td className="px-3 py-2">{formatDate(b.check_in_date)}</td>
+                  <td className="px-3 py-2">{formatDate(b.check_out_date)}</td>
                   <td className="px-3 py-2">{b.stay_nights ?? "—"}</td>
                   <td className="px-3 py-2">
-                    {b.total_rent ? `${b.currency ?? "AUD"} ${parseFloat(b.total_rent).toLocaleString()}` : "—"}
+                    {b.total_rent ? formatMoney(b.total_rent, b.currency ?? currency, currencyPosition) : "—"}
                   </td>
                   <td className="px-3 py-2">
                     <Pill className={STATUS_BADGE[b.booking_status] ?? "bg-gray-100 text-gray-600"}>{b.booking_status}</Pill>

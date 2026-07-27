@@ -51,6 +51,8 @@ import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { format, parseISO, startOfMonth, endOfMonth, addMonths, getDay } from "date-fns";
 import { formatDateTime } from "@/lib/date";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
 import { AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface SpaceForm {
@@ -83,6 +85,7 @@ interface SpaceForm {
 
 export default function SpaceDetail() {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
   const params = useParams<{ id: string }>();
   const isNew = params.id === "new";
   const id = isNew ? null : parseInt(params.id ?? "0", 10);
@@ -1357,11 +1360,11 @@ export default function SpaceDetail() {
                             <td className="px-4 py-3 text-right">
                               {svc.custom_price != null ? (
                                 <span className="font-semibold text-orange-600">
-                                  {svc.currency} {svc.custom_price.toFixed(2)}
+                                  {formatMoney(svc.custom_price, svc.currency ?? currency, currencyPosition)}
                                   <span className="ml-1 text-xs text-muted-foreground font-normal">({t("space.svc_custom")})</span>
                                 </span>
                               ) : svc.base_price != null ? (
-                                <span>{svc.currency} {svc.base_price.toFixed(2)}</span>
+                                <span>{formatMoney(svc.base_price, svc.currency ?? currency, currencyPosition)}</span>
                               ) : (
                                 <span className="text-muted-foreground">—</span>
                               )}

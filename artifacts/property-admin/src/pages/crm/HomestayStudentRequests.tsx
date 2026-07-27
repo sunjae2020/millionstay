@@ -163,7 +163,7 @@ export default function HomestayStudentRequests() {
         key: "start",
         header: "homestayStudent.col_start",
         sortAccessor: (r) => r.preferences?.homestay_start_date ?? "",
-        cell: (r) => <span className="text-sm text-muted-foreground">{r.preferences?.homestay_start_date || <span className="text-muted-foreground/40">—</span>}</span>,
+        cell: (r) => <span className="text-sm text-muted-foreground">{r.preferences?.homestay_start_date ? formatDate(r.preferences.homestay_start_date) : <span className="text-muted-foreground/40">—</span>}</span>,
       },
       {
         key: "status",

@@ -16,6 +16,8 @@ import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/date";
 import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
 
 const FREQ_COLORS: Record<string, string> = {
   Weekly:   "bg-blue-100 text-blue-700",
@@ -71,6 +73,7 @@ function isOverdue(nextDue: string | null) {
 
 export default function RecurringScheduleList() {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
   const { toast } = useToast();
   const [q, setQ] = useState("");
   const [activeFilter, setActiveFilter] = useState("true");
@@ -167,7 +170,7 @@ export default function RecurringScheduleList() {
         sortAccessor: (s) => Number(s.amount),
         cell: (s) => (
           <span className="tabular-nums font-medium">
-            ${Number(s.amount).toLocaleString("en-AU", { minimumFractionDigits: 2 })}
+            {formatMoney(s.amount, s.currency ?? currency, currencyPosition)}
             {s.gst_included && <span className="text-xs text-muted-foreground ml-1">inc GST</span>}
           </span>
         ),
@@ -259,7 +262,7 @@ export default function RecurringScheduleList() {
         ),
       },
     ],
-    [t, approvalMutation.isPending],
+    [t, approvalMutation.isPending, currency, currencyPosition],
   );
 
   return (

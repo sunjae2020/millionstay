@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { KpiCard, DashCard, Pill, ACCENT } from "@/components/dashboard/DashboardKit";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
 
 const LEAD_PIPELINE = ["New", "Contacted", "Qualified", "Converted"] as const;
 const PIPELINE_COLOR: Record<string, string> = {
@@ -39,6 +41,7 @@ const TASK_STATUS_BADGE: Record<string, string> = {
 
 export default function CrmTab() {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
   const { data: contacts } = useListContacts();
   const { data: accounts } = useListAccounts();
   const { data: leads } = useListLeads({});
@@ -89,10 +92,10 @@ export default function CrmTab() {
     .slice(0, 8);
 
   function fmtBudget(l: any) {
-    const cur = l.budget_currency ?? "AUD";
-    if (l.budget_min && l.budget_max) return `${cur} ${Number(l.budget_min).toLocaleString()}–${Number(l.budget_max).toLocaleString()}`;
-    if (l.budget_max) return `≤ ${cur} ${Number(l.budget_max).toLocaleString()}`;
-    if (l.budget_min) return `≥ ${cur} ${Number(l.budget_min).toLocaleString()}`;
+    const cur = l.budget_currency ?? currency;
+    if (l.budget_min && l.budget_max) return `${formatMoney(l.budget_min, cur, currencyPosition)}–${formatMoney(l.budget_max, cur, currencyPosition)}`;
+    if (l.budget_max) return `≤ ${formatMoney(l.budget_max, cur, currencyPosition)}`;
+    if (l.budget_min) return `≥ ${formatMoney(l.budget_min, cur, currencyPosition)}`;
     return "—";
   }
 

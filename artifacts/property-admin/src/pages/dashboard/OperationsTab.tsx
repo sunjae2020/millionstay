@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { KpiCard, DashCard, Pill } from "@/components/dashboard/DashboardKit";
+import { formatDateTime } from "@/lib/date";
 
 interface OpsKpis {
   open_count: number;
@@ -112,8 +113,7 @@ export default function OperationsTab() {
   }
 
   function formatTime(iso: string) {
-    const d = new Date(iso);
-    return d.toLocaleString("en", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+    return formatDateTime(iso);
   }
 
   function activityIcon(action: string) {

@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tag, Plus, Search, Pencil, Copy } from "lucide-react";
 import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
 import {
   useListPromotions,
   getListPromotionsQueryKey,
@@ -31,9 +33,9 @@ const TERM_COLORS: Record<string, string> = {
   MidTerm: "bg-violet-100 text-violet-700",
   LongTerm: "bg-amber-100 text-amber-700",
 };
-function formatDiscount(promo: { promotion_type?: string; discount_percentage?: number | null; discount_amount?: number | null; free_nights?: number | null }) {
+function formatDiscount(promo: { promotion_type?: string; discount_percentage?: number | null; discount_amount?: number | null; free_nights?: number | null }, currency: string, currencyPosition: string) {
   if (promo.promotion_type === "Percentage" && promo.discount_percentage != null) return `${promo.discount_percentage}%`;
-  if (promo.promotion_type === "Fixed" && promo.discount_amount != null) return `$${promo.discount_amount.toFixed(0)}`;
+  if (promo.promotion_type === "Fixed" && promo.discount_amount != null) return formatMoney(promo.discount_amount, currency, currencyPosition);
   if (promo.promotion_type === "FreeNights" && promo.free_nights != null) return `${promo.free_nights} nights`;
   if (promo.promotion_type === "None") return "—";
   return "—";
@@ -49,6 +51,7 @@ function stayRange(promo: { min_stay_weeks?: number | null; max_stay_weeks?: num
 
 export default function PromotionList() {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("_all");
   const [termType, setTermType] = useState("_all");
@@ -118,7 +121,7 @@ export default function PromotionList() {
         key: "discount",
         header: "promotion.col_discount",
         sortable: false,
-        cell: (p) => <span className="text-sm font-mono font-semibold">{formatDiscount(p)}</span>,
+        cell: (p) => <span className="text-sm font-mono font-semibold">{formatDiscount(p, currency, currencyPosition)}</span>,
       },
       {
         key: "min_stay_weeks",
@@ -164,7 +167,7 @@ export default function PromotionList() {
         ),
       },
     ],
-    [t, cloningId],
+    [t, cloningId, currency, currencyPosition],
   );
 
   return (

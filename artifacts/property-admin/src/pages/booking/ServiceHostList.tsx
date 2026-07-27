@@ -8,6 +8,7 @@ import { useListServiceHosts, useDeleteServiceHost, getListServiceHostsQueryKey 
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { formatDate } from "@/lib/date";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -63,7 +64,7 @@ export default function ServiceHostList() {
         header: "service_host.col_period",
         cell: (host) => (
           <span className="text-muted-foreground">
-            {host.from_date && host.to_date ? `${host.from_date} → ${host.to_date}` : "—"}
+            {host.from_date && host.to_date ? `${formatDate(host.from_date)} → ${formatDate(host.to_date)}` : "—"}
           </span>
         ),
       },

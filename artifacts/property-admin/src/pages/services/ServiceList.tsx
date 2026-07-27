@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Plus, Search, Pencil, Archive, Calendar, Package, Zap } from "lucide-react";
 import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
 import { apiFetch } from "@/lib/apiFetch";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -46,6 +48,7 @@ async function archiveService(id: number) {
 
 export default function ServiceList() {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
   const [q, setQ] = useState("");
   const [typeFilter, setTypeFilter] = useState("_all");
   const [statusFilter, setStatusFilter] = useState("Active");
@@ -106,7 +109,7 @@ export default function ServiceList() {
         header: "service.col_price",
         align: "right",
         cellClassName: "tabular-nums font-medium",
-        cell: (s) => (s.base_price != null ? `$${Number(s.base_price).toFixed(0)}` : "—"),
+        cell: (s) => (s.base_price != null ? formatMoney(s.base_price, s.currency ?? currency, currencyPosition) : "—"),
       },
       {
         key: "billing_trigger",
@@ -165,7 +168,7 @@ export default function ServiceList() {
         ),
       },
     ],
-    [t],
+    [t, currency, currencyPosition],
   );
 
   return (

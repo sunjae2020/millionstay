@@ -11,6 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
+import { formatDate } from "@/lib/date";
 
 type LifecycleStage = "MovingIn" | "Residing" | "MovingOut" | "Completed" | "All";
 
@@ -96,6 +99,7 @@ function getDaysUntilCheckout(checkOut: string | null, today: string): number | 
 
 function TenantCard({ tenant, compact }: { tenant: TenantRecord; compact?: boolean }) {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
   const cfg = STAGE_CONFIG[tenant.stage];
   const Icon = cfg.icon;
 
@@ -127,11 +131,11 @@ function TenantCard({ tenant, compact }: { tenant: TenantRecord; compact?: boole
         <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
           <div className="flex items-center gap-1 text-muted-foreground">
             <LogIn className="h-3 w-3 shrink-0" />
-            <span>{tenant.checkIn ?? "—"}</span>
+            <span>{formatDate(tenant.checkIn)}</span>
           </div>
           <div className="flex items-center gap-1 text-muted-foreground">
             <LogOut className="h-3 w-3 shrink-0" />
-            <span>{tenant.checkOut ?? "—"}</span>
+            <span>{formatDate(tenant.checkOut)}</span>
           </div>
           {tenant.stayNights && (
             <div className="flex items-center gap-1 text-muted-foreground">
@@ -142,7 +146,7 @@ function TenantCard({ tenant, compact }: { tenant: TenantRecord; compact?: boole
           {tenant.totalRent && (
             <div className="flex items-center gap-1 text-muted-foreground font-medium">
               <DollarSign className="h-3 w-3 shrink-0" />
-              <span>{tenant.currency ?? "AUD"} {parseFloat(tenant.totalRent).toLocaleString()}</span>
+              <span>{formatMoney(tenant.totalRent, tenant.currency ?? currency, currencyPosition)}</span>
             </div>
           )}
         </div>
@@ -196,6 +200,7 @@ function StageSummaryCard({ stage, count, active }: { stage: LifecycleStage; cou
 
 export default function TenantLifecycle() {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
   const [stageFilter, setStageFilter] = useState<LifecycleStage>("All");
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
@@ -284,12 +289,12 @@ export default function TenantLifecycle() {
       {
         key: "checkIn",
         header: "tenant_lifecycle.col_check_in",
-        cell: (tenant) => <span className="text-muted-foreground">{tenant.checkIn ?? "—"}</span>,
+        cell: (tenant) => <span className="text-muted-foreground">{formatDate(tenant.checkIn)}</span>,
       },
       {
         key: "checkOut",
         header: "tenant_lifecycle.col_check_out",
-        cell: (tenant) => <span className="text-muted-foreground">{tenant.checkOut ?? "—"}</span>,
+        cell: (tenant) => <span className="text-muted-foreground">{formatDate(tenant.checkOut)}</span>,
       },
       {
         key: "stayNights",
@@ -301,7 +306,7 @@ export default function TenantLifecycle() {
         header: "tenant_lifecycle.col_rent",
         cell: (tenant) => (
           <span className="text-muted-foreground">
-            {tenant.totalRent ? `${tenant.currency} ${parseFloat(tenant.totalRent).toLocaleString()}` : "—"}
+            {tenant.totalRent ? formatMoney(tenant.totalRent, tenant.currency ?? currency, currencyPosition) : "—"}
           </span>
         ),
       },
@@ -333,7 +338,7 @@ export default function TenantLifecycle() {
         ),
       },
     ],
-    [t],
+    [t, currency, currencyPosition],
   );
 
   return (

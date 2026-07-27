@@ -14,6 +14,7 @@ import {
   Wallet, PieChart as PieIcon, FileSignature, AlertTriangle, DoorOpen, BarChart3,
 } from "lucide-react";
 import { formatDate } from "@/lib/dateFormat";
+import { formatMoney } from "@/lib/money";
 import { InquiryRow, type Inquiry } from "@/pages/InquiriesPage";
 
 interface Property {
@@ -65,11 +66,7 @@ const TOOLTIP_STYLE = {
 };
 
 function money(v: number, currency: string): string {
-  try {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency, maximumFractionDigits: 0 }).format(v || 0);
-  } catch {
-    return `${currency} ${Math.round(v || 0).toLocaleString()}`;
-  }
+  return formatMoney(v, currency);
 }
 
 const STATUS_CLS: Record<string, string> = {

@@ -15,6 +15,8 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Pencil, Trash2, AlertTriangle } from "lucide-react";
 import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { useBrand } from "@/contexts/ThemeContext";
+import { formatMoney } from "@/lib/currency";
 import {
   AlertDialog, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -24,6 +26,7 @@ import { apiFetch } from "@/lib/apiFetch";
 
 export default function CommissionList() {
   const { t } = useTranslation();
+  const { currency, currencyPosition } = useBrand();
   const { user } = useAuth();
   const isSuperAdmin = user?.role === "SuperAdmin";
   const [search, setSearch] = useState("");
@@ -87,7 +90,7 @@ export default function CommissionList() {
         cell: (c) =>
           c.commission_type === "Percentage"
             ? `${c.commission_rate ?? "—"}%`
-            : `$${c.commission_amount ?? "—"}`,
+            : (c.commission_amount != null ? formatMoney(c.commission_amount, currency, currencyPosition) : "—"),
       },
       {
         key: "status",
@@ -114,7 +117,7 @@ export default function CommissionList() {
         ),
       },
     ],
-    [t],
+    [t, currency, currencyPosition],
   );
 
   return (

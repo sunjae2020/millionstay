@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useGetPublicSpace, getGetPublicSpaceQueryKey, useCreateGuestBooking, useGuestRegister, useGuestLogin } from "@/lib/guest-api";
 import { useAuthStore } from "@/lib/store";
+import { useDisplayCurrency } from "@/contexts/DisplayCurrencyContext";
 import { Navbar } from "@/components/navbar";
 import { DevNavbar } from "@/components/development/DevLayout";
 import { isDevelopmentSite } from "@/lib/site-mode";
@@ -59,6 +60,7 @@ export default function Booking() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { token, guest: authGuest, setAuth } = useAuthStore();
+  const { formatDisplayPrice } = useDisplayCurrency();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [bookingRef, setBookingRef] = useState<string>("");
@@ -190,6 +192,9 @@ export default function Booking() {
     : null;
 
   const weeklyPrice = selectedProduct?.price ?? space.base_weekly_price;
+  const priceCcy = (((space as { base_currency?: string }).base_currency) || "AUD").toUpperCase();
+  const money = (n: number | string | null | undefined) =>
+    formatDisplayPrice(Number(n) || 0, priceCcy).primary;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -543,18 +548,18 @@ export default function Booking() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("booking.weekly_rent")}</span>
-                    <span className="font-medium">${weeklyPrice}</span>
+                    <span className="font-medium">{money(weeklyPrice)}</span>
                   </div>
                   {selectedProduct?.admin_fee != null && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">{t("booking.admin_fee")}</span>
-                      <span>${selectedProduct.admin_fee}</span>
+                      <span>{money(selectedProduct.admin_fee)}</span>
                     </div>
                   )}
                   {selectedProduct?.bond_amount != null && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">{t("booking.bond")}</span>
-                      <span>${selectedProduct.bond_amount}</span>
+                      <span>{money(selectedProduct.bond_amount)}</span>
                     </div>
                   )}
                 </div>
