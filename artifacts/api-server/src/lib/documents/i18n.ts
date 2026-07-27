@@ -14,14 +14,81 @@ export type DocLang = "en" | "ko" | "zh" | "ja" | "th" | "vi";
 
 const SUPPORTED: DocLang[] = ["en", "ko", "zh", "ja", "th", "vi"];
 
+/**
+ * The tenant-wide default document language, used when a request carries no
+ * (or an unrecognised) `lang`. MillionStay leaves this unset → English; a
+ * white-label instance sets `DEFAULT_DOC_LANG` in its config.env (Metheim = `ko`)
+ * so all its invoices/receipts/quotes/contracts and cover emails render in the
+ * local language by default without every caller having to pass `?lang=`.
+ * Read once at module load — it is fixed for the life of the process.
+ */
+const DEFAULT_DOC_LANG: DocLang = (() => {
+  const l = (process.env.DEFAULT_DOC_LANG ?? "").toLowerCase().slice(0, 2);
+  return (SUPPORTED as string[]).includes(l) ? (l as DocLang) : "en";
+})();
+
 export function normalizeLang(input: string | undefined | null): DocLang {
   const l = (input ?? "").toLowerCase().slice(0, 2);
-  return (SUPPORTED as string[]).includes(l) ? (l as DocLang) : "en";
+  return (SUPPORTED as string[]).includes(l) ? (l as DocLang) : DEFAULT_DOC_LANG;
 }
 
 /** Intl locale used for date formatting per document language. */
 export function docLocale(lang: DocLang): string {
   return { en: "en-AU", ko: "ko-KR", zh: "zh-CN", ja: "ja-JP", th: "th-TH", vi: "vi-VN" }[lang];
+}
+
+// ── App-wide date format (Settings → Organisation / Design → Date format) ─────
+// Every document (invoice, receipt, quote, contract, application, service brief)
+// renders its date portion in the admin's configured format so all paperwork is
+// consistent with the landing site, admin and portals. Mirrors the option list
+// in property-admin/src/lib/date.ts. The value is a single global branding
+// setting, refreshed via `setDocDateFormat()` from `resolveCompanyInfo()` before
+// each build. Time (when shown) is always appended as 24-hour HH:mm.
+type DateFormatLabel = "DD/MM/YYYY" | "MM/DD/YYYY" | "YYYY-MM-DD" | "YYYY/MM/DD" | "D MMM YYYY";
+const KNOWN_DATE_FORMATS: string[] = ["DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD", "YYYY/MM/DD", "D MMM YYYY"];
+let currentDateFormat: DateFormatLabel = "DD/MM/YYYY";
+
+/** Set the app-wide document date format (ignores unknown labels). */
+export function setDocDateFormat(label: string | null | undefined): void {
+  if (label && KNOWN_DATE_FORMATS.includes(label)) currentDateFormat = label as DateFormatLabel;
+}
+
+function toDateObj(value: string | number | Date | null | undefined): Date | null {
+  if (value == null || value === "") return null;
+  const d = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function pad2(n: number): string {
+  return String(n).padStart(2, "0");
+}
+
+/**
+ * Format a date using the configured app-wide format. `lang` only affects the
+ * localized month name of the "D MMM YYYY" style; the numeric styles are
+ * locale-independent so every document reads identically.
+ */
+export function formatDocDate(value: string | number | Date | null | undefined, lang: DocLang, fallback = "—"): string {
+  const d = toDateObj(value);
+  if (!d) return fallback;
+  const Y = d.getFullYear();
+  const M = d.getMonth() + 1;
+  const D = d.getDate();
+  switch (currentDateFormat) {
+    case "MM/DD/YYYY": return `${pad2(M)}/${pad2(D)}/${Y}`;
+    case "YYYY-MM-DD": return `${Y}-${pad2(M)}-${pad2(D)}`;
+    case "YYYY/MM/DD": return `${Y}/${pad2(M)}/${pad2(D)}`;
+    case "D MMM YYYY": return d.toLocaleDateString(docLocale(lang), { year: "numeric", month: "short", day: "numeric" });
+    case "DD/MM/YYYY":
+    default: return `${pad2(D)}/${pad2(M)}/${Y}`;
+  }
+}
+
+/** Format date + 24-hour time (e.g. "2026/06/13 14:30"). */
+export function formatDocDateTime(value: string | number | Date | null | undefined, lang: DocLang, fallback = "—"): string {
+  const d = toDateObj(value);
+  if (!d) return fallback;
+  return `${formatDocDate(d, lang)} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }
 
 type Dict = Record<string, Record<DocLang, string>>;
@@ -132,12 +199,12 @@ const LABELS: Dict = {
 
   // ── Email cover (when documents are emailed) ──────────────────────────
   "email.subject": {
-    en: "{doc} {ref} from MillionStay",
-    ko: "MillionStay {doc} {ref}",
-    zh: "MillionStay {doc} {ref}",
-    ja: "MillionStay {doc} {ref}",
-    th: "{doc} {ref} จาก MillionStay",
-    vi: "{doc} {ref} từ MillionStay",
+    en: "{doc} {ref} from {brand}",
+    ko: "{brand} {doc} {ref}",
+    zh: "{brand} {doc} {ref}",
+    ja: "{brand} {doc} {ref}",
+    th: "{doc} {ref} จาก {brand}",
+    vi: "{doc} {ref} từ {brand}",
   },
   "email.greeting.named": {
     en: "Hi {name},", ko: "{name}님, 안녕하세요.", zh: "您好 {name}：", ja: "{name} 様", th: "เรียน คุณ{name},", vi: "Xin chào {name},",

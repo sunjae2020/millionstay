@@ -49,7 +49,15 @@ export const DOC_TOKENS = {
 export interface CompanyInfo {
   legalName: string;
   tradingName: string;
+  /** Business-registration number shown in the issuer block (AU ABN / KR 사업자등록번호). */
   abn: string;
+  /**
+   * Label for the registration number, jurisdiction-specific. Defaults to "ABN"
+   * (MillionStay / Australia); a KR instance sets `DOC_REG_LABEL=사업자등록번호`.
+   */
+  regLabel: string;
+  /** Legal representative / CEO (KR 대표자). Shown when set; empty otherwise. */
+  ceo: string;
   email: string;
   phone: string;
   website: string;
@@ -62,6 +70,8 @@ export function getCompanyInfo(): CompanyInfo {
     legalName: process.env.COMPANY_LEGAL_NAME ?? "MillionStay Pty Ltd",
     tradingName: process.env.COMPANY_TRADING_NAME ?? "MillionStay",
     abn: process.env.COMPANY_ABN ?? "",
+    regLabel: process.env.DOC_REG_LABEL ?? "ABN",
+    ceo: process.env.COMPANY_CEO ?? "",
     email: process.env.SUPPORT_EMAIL ?? "millionstay.com@gmail.com",
     phone: process.env.COMPANY_PHONE ?? "",
     website: process.env.PUBLIC_WEB_URL ?? "https://www.millionstay.com",
@@ -337,7 +347,7 @@ export function renderDocumentShell(opts: RenderShellOptions): string {
       <div>
         <div class="doc-type">${escapeHtml(opts.docType)}</div>
         <div class="issuer">
-          ${escapeHtml(company.legalName)}${company.abn ? `<br/>ABN ${escapeHtml(company.abn)}` : ""}<br/>
+          ${escapeHtml(company.legalName)}${company.ceo ? ` (${escapeHtml(company.ceo)})` : ""}${company.abn ? `<br/>${escapeHtml(company.regLabel)} ${escapeHtml(company.abn)}` : ""}<br/>
           ${escapeHtml(company.email)}
         </div>
       </div>

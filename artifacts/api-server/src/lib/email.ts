@@ -5,6 +5,7 @@ import { t, normalizeLang, type DocLang } from "./documents/i18n";
 import { buildUnsubscribeUrl } from "./unsubscribeToken";
 import { resolveTemplate, renderString } from "./documents/templateEngine";
 import { resolveCompanyInfo } from "./documents/companyInfo";
+import { DOC_TOKENS } from "./documents/theme";
 
 let resend: Resend | null = null;
 let resendKey: string | null = null;
@@ -85,7 +86,14 @@ export async function sendDocumentEmail(
   opts: DocumentEmailOptions,
 ): Promise<{ ok: boolean; id?: string; skipped?: boolean; error?: string; subject: string }> {
   const lang = normalizeLang(typeof opts.lang === "string" ? opts.lang : opts.lang);
-  const subject = opts.subject ?? t(lang, "email.subject", { doc: opts.docTypeLabel, ref: opts.ref });
+  // Single source of truth for issuer identity = Settings → Organisation, falling
+  // back to env defaults. So the logo, brand name in the subject, support email and
+  // legal footer all follow the tenant's org profile with no per-tenant code.
+  const company = await resolveCompanyInfo().catch(() => null);
+  const brand = company?.tradingName || "MillionStay";
+  const logoUrl = company?.logoUrl || LOGO_URL;
+  const legalName = company?.legalName || "MillionStay Pty Ltd";
+  const subject = opts.subject ?? t(lang, "email.subject", { doc: opts.docTypeLabel, ref: opts.ref, brand });
 
   const client = getResend();
   if (!client) {
@@ -93,7 +101,7 @@ export async function sendDocumentEmail(
     return { ok: false, skipped: true, error: "Email service not configured", subject };
   }
 
-  const supportEmail = await resolveSupportEmail();
+  const supportEmail = company?.email || (await resolveSupportEmail());
   const greeting = opts.toName
     ? t(lang, "email.greeting.named", { name: `<strong>${safeName(opts.toName)}</strong>` })
     : t(lang, "email.greeting.plain");
@@ -104,14 +112,14 @@ export async function sendDocumentEmail(
   .header{background:#fff;padding:28px 32px;border-bottom:1px solid #f0f0f0;}
   .header img{height:36px;width:auto;display:block;}
   .body{padding:32px;}
-  .ref-box{background:#FFF7F0;border:1px solid #FCD9B6;border-radius:10px;padding:16px 20px;margin:20px 0;}
+  .ref-box{background:${DOC_TOKENS.accentBg};border:1px solid ${DOC_TOKENS.accentBorder};border-radius:10px;padding:16px 20px;margin:20px 0;}
   .ref-box .label{font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:#999;}
-  .ref-box .ref{font-size:18px;font-weight:700;color:#E8621A;font-family:monospace;letter-spacing:0.04em;}
+  .ref-box .ref{font-size:18px;font-weight:700;color:${DOC_TOKENS.brand};font-family:monospace;letter-spacing:0.04em;}
   .amount{font-size:15px;color:#111;margin-top:8px;font-weight:600;}
   .footer{padding:20px 32px;border-top:1px solid #f0f0f0;font-size:12px;color:#999;text-align:center;}
 </style></head><body>
 <div class="container">
-  <div class="header"><img src="${LOGO_URL}" alt="MillionStay" /></div>
+  <div class="header"><img src="${logoUrl}" alt="${escapeHtml(brand)}" /></div>
   <div class="body">
     <p style="font-size:16px;">${greeting}</p>
     <p style="color:#555;font-size:14px;">${t(lang, "email.body", { doc: escapeHtml(opts.docTypeLabel) })}</p>
@@ -121,9 +129,9 @@ export async function sendDocumentEmail(
       ${opts.amountLabel ? `<div class="amount">${escapeHtml(opts.amountLabel)}</div>` : ""}
     </div>
     ${opts.note ? `<p style="font-size:13px;color:#555;">${escapeHtml(opts.note)}</p>` : ""}
-    <p style="font-size:13px;color:#999;">${t(lang, "email.questions", { email: `<a href="mailto:${supportEmail}" style="color:#E8621A;">${supportEmail}</a>` })}</p>
+    <p style="font-size:13px;color:#999;">${t(lang, "email.questions", { email: `<a href="mailto:${supportEmail}" style="color:${DOC_TOKENS.brand};">${supportEmail}</a>` })}</p>
   </div>
-  <div class="footer">© ${new Date().getFullYear()} MillionStay Pty Ltd · ${t(lang, "email.sentTo", { to: escapeHtml(opts.to) })}</div>
+  <div class="footer">© ${new Date().getFullYear()} ${escapeHtml(legalName)} · ${t(lang, "email.sentTo", { to: escapeHtml(opts.to) })}</div>
 </div></body></html>`;
 
   const payload = {
