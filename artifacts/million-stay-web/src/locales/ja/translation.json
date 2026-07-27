@@ -496,7 +496,19 @@
       "reply_placeholder": "返信を入力してください…",
       "photo": "写真",
       "send": "送信",
-      "attachment_n": "添付ファイル {{n}}"
+      "attachment_n": "添付ファイル {{n}}",
+      "col_ref": "参照",
+      "col_subject": "件名",
+      "col_category": "カテゴリ",
+      "col_status": "ステータス",
+      "col_updated": "更新",
+      "bst_active": "進行中",
+      "bst_confirmed": "確定",
+      "bst_checkedout": "完了",
+      "bst_completed": "完了",
+      "bst_cancelled": "キャンセル",
+      "bst_pendingpayment": "支払い待ち",
+      "bst_pendingapproval": "承認待ち"
     },
     "profile": {
       "title": "プロフィール",
@@ -683,7 +695,7 @@
       "contract_status": "ステータス",
       "contract_start_date": "開始日",
       "contract_end_date": "終了日",
-      "contract_weekly_rate": "週額料金",
+      "contract_weekly_rate": "月額賃料",
       "contract_total_rent": "賃料合計",
       "contract_bond": "保証金",
       "contract_advance": "前払金",
@@ -714,7 +726,21 @@
       "uploaded": "{{date}} アップロード",
       "invoices_empty": "まだ請求書はありません",
       "invoice_due": "支払期限 {{date}}",
-      "invoice_paid": "{{date}} 支払済み"
+      "invoice_paid": "{{date}} 支払済み",
+      "st_active": "進行中",
+      "st_confirmed": "確定",
+      "st_pendingpayment": "支払い待ち",
+      "st_pendingapproval": "承認待ち",
+      "st_cancelled": "キャンセル",
+      "st_completed": "完了",
+      "st_checkedout": "チェックアウト済み",
+      "st_draft": "下書き",
+      "st_signed": "署名済み",
+      "st_sent": "送信済み",
+      "st_paid": "支払い済み",
+      "st_overdue": "延滞",
+      "st_terminated": "解約",
+      "st_expired": "期限切れ"
     },
     "cs_new": {
       "title": "新規問い合わせ",
@@ -848,7 +874,23 @@
       "toast_download_started_title": "ダウンロードを開始しました",
       "toast_download_started_desc": "個人データファイルを保存しました。",
       "download_failed_fallback": "ダウンロードに失敗しました",
-      "toast_download_failed_title": "ダウンロード失敗"
+      "toast_download_failed_title": "ダウンロード失敗",
+      "st_active": "進行中",
+      "st_confirmed": "確定",
+      "st_checkedout": "完了",
+      "st_completed": "完了",
+      "st_cancelled": "キャンセル",
+      "st_pendingpayment": "支払い待ち",
+      "st_pendingapproval": "承認待ち",
+      "st_draft": "下書き",
+      "st_sent": "送信済み",
+      "st_paid": "支払い済み",
+      "st_overdue": "延滞",
+      "st_void": "無効",
+      "ch_email": "メール",
+      "ch_sms": "SMS",
+      "ch_push": "プッシュ通知",
+      "ch_marketing": "マーケティング"
     },
     "payment": {
       "bank_label": "銀行",
@@ -940,7 +982,8 @@
       "acc_label": "口座：",
       "account_name_label": "口座名義：",
       "ref_label": "参照番号：",
-      "thank_you_prefix": "ご利用いただきありがとうございます"
+      "thank_you_prefix": "ご利用いただきありがとうございます",
+      "abn_label": "事業者番号"
     }
   },
   "auth": {

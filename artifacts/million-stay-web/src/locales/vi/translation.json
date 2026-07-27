@@ -348,7 +348,7 @@
       "contract_status": "Trạng thái",
       "contract_start_date": "Ngày bắt đầu",
       "contract_end_date": "Ngày kết thúc",
-      "contract_weekly_rate": "Giá thuê tuần",
+      "contract_weekly_rate": "Tiền thuê hàng tháng",
       "contract_total_rent": "Tổng tiền thuê",
       "contract_bond": "Tiền đặt cọc",
       "contract_advance": "Tiền trả trước",
@@ -381,7 +381,21 @@
       "invoice_due": "Hạn {{date}}",
       "invoice_paid": "Đã thanh toán {{date}}",
       "view": "Xem",
-      "upcoming": "Sắp tới"
+      "upcoming": "Sắp tới",
+      "st_active": "Đang hoạt động",
+      "st_confirmed": "Đã xác nhận",
+      "st_pendingpayment": "Chờ thanh toán",
+      "st_pendingapproval": "Chờ phê duyệt",
+      "st_cancelled": "Đã hủy",
+      "st_completed": "Đã hoàn tất",
+      "st_checkedout": "Đã trả phòng",
+      "st_draft": "Bản nháp",
+      "st_signed": "Đã ký",
+      "st_sent": "Đã gửi",
+      "st_paid": "Đã thanh toán",
+      "st_overdue": "Quá hạn",
+      "st_terminated": "Đã chấm dứt",
+      "st_expired": "Đã hết hạn"
     },
     "cs": {
       "status_open": "Đang mở",
@@ -419,7 +433,19 @@
       "reply_placeholder": "Nhập câu trả lời của bạn…",
       "photo": "Ảnh",
       "send": "Gửi",
-      "attachment_n": "tệp đính kèm {{n}}"
+      "attachment_n": "tệp đính kèm {{n}}",
+      "col_ref": "Mã tham chiếu",
+      "col_subject": "Tiêu đề",
+      "col_category": "Danh mục",
+      "col_status": "Trạng thái",
+      "col_updated": "Cập nhật",
+      "bst_active": "Đang hoạt động",
+      "bst_confirmed": "Đã xác nhận",
+      "bst_checkedout": "Đã hoàn tất",
+      "bst_completed": "Đã hoàn tất",
+      "bst_cancelled": "Đã hủy",
+      "bst_pendingpayment": "Chờ thanh toán",
+      "bst_pendingapproval": "Chờ phê duyệt"
     },
     "invoices": {
       "status_paid": "Đã thanh toán",
@@ -499,7 +525,23 @@
       "toast_download_started_title": "Đã bắt đầu tải xuống",
       "toast_download_started_desc": "Tệp dữ liệu cá nhân của bạn đã được lưu.",
       "download_failed_fallback": "Tải xuống thất bại",
-      "toast_download_failed_title": "Tải xuống thất bại"
+      "toast_download_failed_title": "Tải xuống thất bại",
+      "st_active": "Đang hoạt động",
+      "st_confirmed": "Đã xác nhận",
+      "st_checkedout": "Đã hoàn tất",
+      "st_completed": "Đã hoàn tất",
+      "st_cancelled": "Đã hủy",
+      "st_pendingpayment": "Chờ thanh toán",
+      "st_pendingapproval": "Chờ phê duyệt",
+      "st_draft": "Bản nháp",
+      "st_sent": "Đã gửi",
+      "st_paid": "Đã thanh toán",
+      "st_overdue": "Quá hạn",
+      "st_void": "Vô hiệu",
+      "ch_email": "Email",
+      "ch_sms": "Tin nhắn SMS",
+      "ch_push": "Thông báo đẩy",
+      "ch_marketing": "Tiếp thị"
     },
     "payment": {
       "bank_label": "Ngân hàng",
@@ -591,7 +633,8 @@
       "acc_label": "Tài khoản:",
       "account_name_label": "Tên tài khoản:",
       "ref_label": "Mã tham chiếu:",
-      "thank_you_prefix": "Cảm ơn bạn đã chọn"
+      "thank_you_prefix": "Cảm ơn bạn đã chọn",
+      "abn_label": "Mã số doanh nghiệp"
     }
   },
   "dev": {

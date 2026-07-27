@@ -412,7 +412,19 @@
       "reply_placeholder": "답변을 입력하세요…",
       "photo": "사진",
       "send": "전송",
-      "attachment_n": "첨부파일 {{n}}"
+      "attachment_n": "첨부파일 {{n}}",
+      "col_ref": "참조",
+      "col_subject": "제목",
+      "col_category": "카테고리",
+      "col_status": "상태",
+      "col_updated": "업데이트",
+      "bst_active": "진행 중",
+      "bst_confirmed": "확정",
+      "bst_checkedout": "완료",
+      "bst_completed": "완료",
+      "bst_cancelled": "취소",
+      "bst_pendingpayment": "결제 대기",
+      "bst_pendingapproval": "승인 대기"
     },
     "profile": {
       "title": "내 프로필",
@@ -599,7 +611,7 @@
       "contract_status": "상태",
       "contract_start_date": "시작일",
       "contract_end_date": "종료일",
-      "contract_weekly_rate": "주 임대료",
+      "contract_weekly_rate": "월 임대료",
       "contract_total_rent": "총 임대료",
       "contract_bond": "보증금",
       "contract_advance": "선납금",
@@ -630,7 +642,21 @@
       "uploaded": "{{date}} 업로드됨",
       "invoices_empty": "아직 청구서가 없습니다",
       "invoice_due": "납부 기한 {{date}}",
-      "invoice_paid": "{{date}} 결제 완료"
+      "invoice_paid": "{{date}} 결제 완료",
+      "st_active": "진행 중",
+      "st_confirmed": "확정",
+      "st_pendingpayment": "결제 대기",
+      "st_pendingapproval": "승인 대기",
+      "st_cancelled": "취소",
+      "st_completed": "완료",
+      "st_checkedout": "완료",
+      "st_draft": "임시",
+      "st_signed": "서명완료",
+      "st_sent": "발송됨",
+      "st_paid": "납부완료",
+      "st_overdue": "연체",
+      "st_terminated": "해지",
+      "st_expired": "만료"
     },
     "cs_new": {
       "title": "새 문의",
@@ -764,7 +790,23 @@
       "toast_download_started_title": "다운로드 시작",
       "toast_download_started_desc": "개인정보 파일이 저장되었습니다.",
       "download_failed_fallback": "다운로드에 실패했습니다",
-      "toast_download_failed_title": "다운로드 실패"
+      "toast_download_failed_title": "다운로드 실패",
+      "st_active": "진행 중",
+      "st_confirmed": "확정",
+      "st_checkedout": "완료",
+      "st_completed": "완료",
+      "st_cancelled": "취소",
+      "st_pendingpayment": "결제 대기",
+      "st_pendingapproval": "승인 대기",
+      "st_draft": "임시",
+      "st_sent": "발송됨",
+      "st_paid": "납부완료",
+      "st_overdue": "연체",
+      "st_void": "무효",
+      "ch_email": "이메일",
+      "ch_sms": "문자",
+      "ch_push": "푸시",
+      "ch_marketing": "마케팅"
     },
     "payment": {
       "bank_label": "은행",
@@ -856,7 +898,8 @@
       "acc_label": "계좌:",
       "account_name_label": "예금주:",
       "ref_label": "참조번호:",
-      "thank_you_prefix": "이용해 주셔서 감사합니다"
+      "thank_you_prefix": "이용해 주셔서 감사합니다",
+      "abn_label": "사업자등록번호"
     }
   },
   "stay_plan": {

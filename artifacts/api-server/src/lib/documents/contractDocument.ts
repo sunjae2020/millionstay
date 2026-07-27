@@ -124,12 +124,12 @@ function renderTerms(text: string | null, lang: DocLang): string {
 
 /** Render the priced add-on services as an itemised table (qty/unit/total),
  *  tagging each row as recurring or one-off. Empty string when none. */
-function renderAdditionalServices(c: ContractDocInput, lang: DocLang): string {
+function renderAdditionalServices(c: ContractDocInput, lang: DocLang, brand: string): string {
   const svcs = (c.additional_services ?? []).filter((s) => s && (Number(s.total_amount) !== 0 || Number(s.unit_amount) !== 0 || s.name));
   if (!svcs.length) return "";
   const subtotal = svcs.reduce((sum, s) => sum + Number(s.total_amount ?? 0), 0);
   const rows = svcs.map((s) => {
-    const tag = `<span style="display:inline-block;margin-left:8px;padding:1px 8px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:0.04em;background:#FFF7F0;color:#E8621A;">${
+    const tag = `<span style="display:inline-block;margin-left:8px;padding:1px 8px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:0.04em;background:#FFF7F0;color:${brand};">${
       s.recurring ? `${t(lang, "recurring")}${s.frequency?.trim() ? ` · ${escapeHtml(s.frequency)}` : ""}` : t(lang, "oneOff")
     }</span>`;
     return `
@@ -166,7 +166,10 @@ function freqLabel(freq: string | null | undefined, lang: DocLang): string {
   return freq ? escapeHtml(freq) : "";
 }
 
-export function buildContractBody(c: ContractDocInput, lang: DocLang = "en"): string {
+export function buildContractBody(c: ContractDocInput, lang: DocLang = "en", company?: CompanyInfo): string {
+  // Per-tenant brand color for inline accents (status badge, service tags),
+  // falling back to the default orange so the primary AU instance is unchanged.
+  const brand = company?.brandColor || "#E8621A";
   const row = (label: string, value: string) =>
     `<div class="row"><span class="label">${label}</span><span class="value">${value}</span></div>`;
   const signedSuffix = c.signed_at ? ` · ${t(lang, "signed")} ${formatDate(c.signed_at, lang)}` : "";
@@ -185,7 +188,7 @@ export function buildContractBody(c: ContractDocInput, lang: DocLang = "en"): st
         <div class="ref-chip" style="font-size:20px;">${escapeHtml(c.contract_ref)}</div>
         <div style="font-size:13px;color:#777;margin-top:4px;">${t(lang, "prepared")} ${formatDate(c.created_at, lang)}</div>
       </div>
-      <span class="badge" style="background:#FFF7F0;color:#E8621A;">${escapeHtml(c.status || "Draft")}</span>
+      <span class="badge" style="background:#FFF7F0;color:${brand};">${escapeHtml(c.status || "Draft")}</span>
     </div>
 
     <div class="section">
@@ -226,7 +229,7 @@ export function buildContractBody(c: ContractDocInput, lang: DocLang = "en"): st
       ${c.total_rent != null ? row(t(lang, "totalRent"), money(c.total_rent, c.currency)) : ""}
     </div>` : ""}
 
-    ${renderAdditionalServices(c, lang)}
+    ${renderAdditionalServices(c, lang, brand)}
 
     ${renderTerms(c.terms_text, lang)}
 
@@ -251,10 +254,11 @@ export function buildContractBody(c: ContractDocInput, lang: DocLang = "en"): st
 }
 
 export function buildContractHtml(c: ContractDocInput, company?: CompanyInfo, forPrint = true, lang: DocLang = "en"): string {
+  const resolvedCompany = company ?? getCompanyInfo();
   return renderDocumentShell({
     docType: t(lang, "doctype.contract"),
-    bodyHtml: buildContractBody(c, lang),
-    company: company ?? getCompanyInfo(),
+    bodyHtml: buildContractBody(c, lang, resolvedCompany),
+    company: resolvedCompany,
     forPrint,
   });
 }

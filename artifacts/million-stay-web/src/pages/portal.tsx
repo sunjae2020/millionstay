@@ -249,7 +249,7 @@ export default function Portal() {
 
   return (
     <PortalLayout active="/portal">
-      <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
+      <div className="p-4 sm:p-6 lg:p-8 w-full">
         {/* Greeting */}
         <header className="mb-5 sm:mb-6">
           <h1 className="text-xl sm:text-2xl font-bold text-foreground">

@@ -42,6 +42,9 @@ export interface CompanyInfo {
   website: string;
   address: string;
   logoUrl: string;
+  /** Per-tenant brand color for document shell accents. Falls back to
+   *  DOC_TOKENS.brand (#E8621A) when unset so the primary AU instance is orange. */
+  brandColor?: string;
 }
 
 export function getCompanyInfo(): CompanyInfo {
@@ -138,6 +141,9 @@ export function statusWatermarkColor(status: string): string {
 export function renderDocumentShell(opts: RenderShellOptions): string {
   const t = DOC_TOKENS;
   const company = opts.company ?? getCompanyInfo();
+  // Per-tenant brand color, falling back to the default orange (#E8621A) so the
+  // primary AU instance is unchanged while MetHeim documents render teal.
+  const brand = company.brandColor || DOC_TOKENS.brand;
   const year = new Date().getFullYear();
   const print = opts.forPrint ?? false;
   const watermark = opts.watermark;
@@ -173,7 +179,7 @@ export function renderDocumentShell(opts: RenderShellOptions): string {
     background: ${t.cardBg};
     border-radius: ${print ? "0" : t.radius};
     overflow: hidden;
-    border-top: 4px solid ${t.brand};
+    border-top: 4px solid ${brand};
     ${print ? "" : "box-shadow: 0 2px 8px rgba(0,0,0,0.08);"}
   }
   .doc-header {
@@ -189,7 +195,7 @@ export function renderDocumentShell(opts: RenderShellOptions): string {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: ${t.brand};
+    color: ${brand};
     text-align: right;
   }
   .doc-header .issuer {
@@ -223,7 +229,7 @@ export function renderDocumentShell(opts: RenderShellOptions): string {
     text-transform: uppercase;
     letter-spacing: 0.08em;
     font-weight: 700;
-    color: ${t.brand};
+    color: ${brand};
     margin: 0 0 12px;
     padding-bottom: 8px;
     border-bottom: 1px solid ${t.border};
@@ -242,7 +248,7 @@ export function renderDocumentShell(opts: RenderShellOptions): string {
     font-family: ${t.monoFont};
     letter-spacing: 0.05em;
     font-weight: 700;
-    color: ${t.brand};
+    color: ${brand};
   }
   table.lines { width: 100%; border-collapse: collapse; margin: 8px 0 0; font-size: 14px; }
   table.lines th {
@@ -257,7 +263,7 @@ export function renderDocumentShell(opts: RenderShellOptions): string {
   table.lines th.num, table.lines td.num { text-align: right; }
   table.lines td { padding: 12px 0; border-bottom: 1px solid ${t.border}; vertical-align: top; }
   .total-box {
-    background: ${t.brand};
+    background: ${brand};
     border-radius: 12px;
     padding: 16px 20px;
     display: flex;

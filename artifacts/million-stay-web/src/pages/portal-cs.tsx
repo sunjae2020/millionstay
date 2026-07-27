@@ -169,11 +169,11 @@ function AnnouncementCard({ ann }: { ann: Announcement }) {
               <div className="flex items-center gap-1.5 shrink-0">
                 {isHighPriority && (
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${ANN_PRIORITY_BADGE[ann.priority]}`}>
-                    {ann.priority}
+                    {t("portal.cs.prio_" + String(ann.priority).toLowerCase(), ann.priority)}
                   </span>
                 )}
                 <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${cfg.bg} ${cfg.text}`}>
-                  {ann.category}
+                  {t("portal.cs.cat_" + String(ann.category).toLowerCase(), ann.category)}
                 </span>
               </div>
             </div>
@@ -437,9 +437,54 @@ export default function PortalCs() {
                 />
               </div>
             ) : (
-              <AnimatePresence>
-                {tickets.map((t) => <InquiryCard key={t.id} ticket={t} />)}
-              </AnimatePresence>
+              <>
+                {/* Mobile: stacked cards */}
+                <div className="md:hidden space-y-3">
+                  <AnimatePresence>
+                    {tickets.map((tk) => <InquiryCard key={tk.id} ticket={tk} />)}
+                  </AnimatePresence>
+                </div>
+
+                {/* Desktop: summary table */}
+                <div className="hidden md:block overflow-hidden rounded-2xl border border-card-border bg-card">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-card-border text-left text-xs uppercase tracking-wider text-muted-foreground">
+                        <th className="font-medium px-4 py-3">{t("portal.cs.col_ref", "Ref")}</th>
+                        <th className="font-medium px-4 py-3">{t("portal.cs.col_subject", "Subject")}</th>
+                        <th className="font-medium px-4 py-3">{t("portal.cs.col_category", "Category")}</th>
+                        <th className="font-medium px-4 py-3">{t("portal.cs.col_status", "Status")}</th>
+                        <th className="font-medium px-4 py-3 whitespace-nowrap">{t("portal.cs.col_updated", "Updated")}</th>
+                        <th className="font-medium px-4 py-3 w-8" aria-hidden />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tickets.map((tk) => (
+                        <tr key={tk.id}
+                          className="border-b border-card-border last:border-0 hover:bg-muted/50 transition-colors cursor-pointer group"
+                          onClick={() => setLocation(`/portal/cs/${tk.id}`)}>
+                          <td className="px-4 py-3 font-mono text-xs text-muted-foreground whitespace-nowrap">{tk.ticket_ref}</td>
+                          <td className="px-4 py-3 font-medium text-card-foreground">
+                            <span className="block truncate max-w-[220px]">{tk.subject}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${CATEGORY_COLORS[tk.category] ?? "bg-gray-100 text-gray-600"}`}>
+                              {catLabel(t, tk.category)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <StatusBadge status={tk.status} label={statusLabel(t, tk.status)} icon={<StatusIcon status={tk.status} />} />
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground whitespace-nowrap tabular-nums">{formatDate(tk.updated_at)}</td>
+                          <td className="px-4 py-3 text-muted-foreground">
+                            <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </TabsContent>
 
