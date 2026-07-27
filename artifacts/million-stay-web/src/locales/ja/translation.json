@@ -195,6 +195,14 @@
     "active_count": "{{count}}個のフィルター"
   },
   "space": {
+    "rent": {
+      "plans_title": "賃料プラン",
+      "plans_subtitle": "保証金が高いほど月額賃料が下がります。赤字はプロモーション価格です。",
+      "deposit": "保証金",
+      "monthly": "月額賃料",
+      "promo": "プロモ",
+      "base": "基本"
+    },
     "per_week": "/ 週",
     "per_month": "/ 月",
     "fx_payment_note": "お支払いは基準額（韓国ウォン）で行われます。換算額はご参考用の表示です。",

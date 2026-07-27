@@ -138,6 +138,14 @@
     "tab_homestay": "寄宿家庭"
   },
   "space": {
+    "rent": {
+      "plans_title": "租金方案",
+      "plans_subtitle": "押金越高，月租越低。红色为促销价格。",
+      "deposit": "押金",
+      "monthly": "月租",
+      "promo": "促销",
+      "base": "基本"
+    },
     "per_week": "/ 周",
     "per_month": "/ 月",
     "fx_payment_note": "以基准金额（韩元）付款，换算金额仅供参考。",

@@ -10,6 +10,7 @@ import {
   spaceImagesTable,
   spaceOptionsTable,
   accommodationCatalogTable,
+  spaceRentOptionsTable,
   accommodationServiceCatalogTable,
   serviceCatalogTable,
   spaceServiceCatalogTable,
@@ -628,7 +629,7 @@ router.get("/v1/public/spaces/:id", async (req, res): Promise<void> => {
   const publicLat = space.privacy_map_blur ? blurredCoords?.lat ?? null : (space.latitude ? Number(space.latitude) : null);
   const publicLng = space.privacy_map_blur ? blurredCoords?.lng ?? null : (space.longitude ? Number(space.longitude) : null);
 
-  const [ownImages, optionMaps, pricingTiers] = await Promise.all([
+  const [ownImages, optionMaps, pricingTiers, rentOptions] = await Promise.all([
     db.select().from(spaceImagesTable)
       .where(eq(spaceImagesTable.space_id, spaceId))
       .orderBy(desc(spaceImagesTable.is_primary), asc(spaceImagesTable.display_order)),
@@ -657,6 +658,21 @@ router.get("/v1/public/spaces/:id", async (req, res): Promise<void> => {
         eq(accommodationCatalogTable.status, "Active"),
       ))
       .orderBy(asc(accommodationCatalogTable.price)),
+    // Lease price options (보증금 → 월세 tiers + 프로모션) for the rent rate-card table.
+    db.select({
+        id: spaceRentOptionsTable.id,
+        deposit_amount: spaceRentOptionsTable.deposit_amount,
+        monthly_rent: spaceRentOptionsTable.monthly_rent,
+        promo_monthly_rent: spaceRentOptionsTable.promo_monthly_rent,
+        currency: spaceRentOptionsTable.currency,
+        is_default: spaceRentOptionsTable.is_default,
+      })
+      .from(spaceRentOptionsTable)
+      .where(and(
+        eq(spaceRentOptionsTable.space_id, spaceId),
+        isNull(spaceRentOptionsTable.deleted_at),
+      ))
+      .orderBy(asc(spaceRentOptionsTable.display_order), asc(spaceRentOptionsTable.deposit_amount)),
   ]);
 
   let images = ownImages;
@@ -701,6 +717,7 @@ router.get("/v1/public/spaces/:id", async (req, res): Promise<void> => {
       images_from_parent: imagesFromParent,
       space_options: resolvedOptions,
       products: pricingTiers,
+      rent_options: rentOptions,
     },
   });
 });

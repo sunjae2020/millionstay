@@ -179,6 +179,14 @@
     "tab_homestay": "홈스테이"
   },
   "space": {
+    "rent": {
+      "plans_title": "임대료 안내",
+      "plans_subtitle": "보증금이 높을수록 월세가 낮아집니다. 빨간색은 프로모션 가격입니다.",
+      "deposit": "보증금",
+      "monthly": "월세",
+      "promo": "프로모션",
+      "base": "기본"
+    },
     "per_week": "/ 주",
     "per_month": "/ 월",
     "fx_payment_note": "결제는 기준금액(한화)으로 이루어지며, 환산 금액은 참고용입니다.",

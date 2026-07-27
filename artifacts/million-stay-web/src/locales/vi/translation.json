@@ -1,5 +1,13 @@
 {
   "space": {
+    "rent": {
+      "plans_title": "Bảng giá thuê",
+      "plans_subtitle": "Đặt cọc càng cao thì tiền thuê hàng tháng càng thấp. Giá màu đỏ là giá khuyến mãi.",
+      "deposit": "Tiền cọc",
+      "monthly": "Tiền thuê tháng",
+      "promo": "Khuyến mãi",
+      "base": "Cơ bản"
+    },
     "per_month": "/ tháng",
     "fx_payment_note": "Thanh toán theo số tiền cơ sở (KRW); số tiền quy đổi chỉ mang tính tham khảo."
   },

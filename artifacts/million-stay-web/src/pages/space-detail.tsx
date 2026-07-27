@@ -17,6 +17,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Footer } from "@/components/footer";
 import { useDisplayCurrency } from "@/contexts/DisplayCurrencyContext";
 import { isDevelopmentSite } from "@/lib/site-mode";
+import { PRICE_UNIT_KEY } from "@/lib/priceUnit";
 import { addWeeks, format, parseISO } from "date-fns";
 import "leaflet/dist/leaflet.css";
 
@@ -414,6 +415,13 @@ export default function SpaceDetail() {
   const addressParts = [space.property_address, space.suburb_name, space.property_state].filter(Boolean);
   const addressStr = addressParts.join(", ") + (space.property_postcode ? ` ${space.property_postcode}` : "");
   const amenities = (space.options ?? []) as Array<{ id: number | string; name: string }>;
+  // Lease price options (보증금 → 월세 tiers + 프로모션) — Metheim rate-card table.
+  const rentOptions = ((space as any).rent_options ?? []) as Array<{
+    id: number; deposit_amount: number; monthly_rent: number;
+    promo_monthly_rent: number | null; currency: string; is_default: boolean;
+  }>;
+  const fmtOpt = (n: number, cur?: string) =>
+    formatDisplayPrice(Number(n) || 0, (cur || priceCurrency).toUpperCase()).primary;
   const lat = Number(space.latitude);
   const lng = Number(space.longitude);
   const isMapBlurred = space.privacy_map_blur === true;
@@ -509,6 +517,66 @@ export default function SpaceDetail() {
                       </div>
                     ))}
                   </div>
+                </div>
+              </>
+            )}
+
+            {/* Rent Plans — 보증금별 월세 옵션 (임대료 rate card) */}
+            {rentOptions.length > 0 && (
+              <>
+                <Separator />
+                <div>
+                  <h2 className="text-base font-bold text-gray-800 mb-1">{t("space.rent.plans_title")}</h2>
+                  <p className="text-xs text-gray-500 mb-4">{t("space.rent.plans_subtitle")}</p>
+                  <div className="overflow-x-auto rounded-xl border bg-white">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
+                          <th className="text-left font-semibold px-4 py-2.5">{t("space.rent.deposit")}</th>
+                          <th className="text-right font-semibold px-4 py-2.5">{t("space.rent.monthly")}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rentOptions.map((o) => {
+                          const hasPromo = o.promo_monthly_rent != null && o.promo_monthly_rent < o.monthly_rent;
+                          return (
+                            <tr key={o.id} className="border-t border-gray-100">
+                              <td className="px-4 py-3 font-medium text-gray-800 whitespace-nowrap">
+                                {fmtOpt(o.deposit_amount, o.currency)}
+                                {o.is_default && (
+                                  <span className="ml-2 text-[10px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 rounded align-middle">
+                                    {t("space.rent.base")}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 text-right whitespace-nowrap">
+                                {hasPromo ? (
+                                  <span className="inline-flex items-center gap-2 justify-end flex-wrap">
+                                    <span className="text-gray-400 line-through">{fmtOpt(o.monthly_rent, o.currency)}</span>
+                                    <span className="font-bold text-primary">
+                                      {fmtOpt(o.promo_monthly_rent!, o.currency)}
+                                      <span className="text-xs font-normal text-gray-400 ml-0.5">{t(PRICE_UNIT_KEY)}</span>
+                                    </span>
+                                    <span className="text-[10px] font-semibold bg-red-100 text-red-600 px-1.5 py-0.5 rounded">
+                                      {t("space.rent.promo")}
+                                    </span>
+                                  </span>
+                                ) : (
+                                  <span className="font-semibold text-gray-800">
+                                    {fmtOpt(o.monthly_rent, o.currency)}
+                                    <span className="text-xs font-normal text-gray-400 ml-0.5">{t(PRICE_UNIT_KEY)}</span>
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  {forceDisplayCurrency && (
+                    <p className="mt-2 text-xs text-gray-400 leading-relaxed">{t("space.fx_payment_note")}</p>
+                  )}
                 </div>
               </>
             )}

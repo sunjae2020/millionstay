@@ -179,6 +179,14 @@
     "tab_homestay": "Homestay"
   },
   "space": {
+    "rent": {
+      "plans_title": "Rent Plans",
+      "plans_subtitle": "A higher deposit lowers your monthly rent. Prices shown in red are promotional rates.",
+      "deposit": "Deposit",
+      "monthly": "Monthly Rent",
+      "promo": "Promo",
+      "base": "Base"
+    },
     "per_week": "/ week",
     "per_month": "/ month",
     "fx_payment_note": "Prices are payable in the base amount (KRW); converted amounts are shown for reference only.",
