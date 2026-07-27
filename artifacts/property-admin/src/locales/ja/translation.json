@@ -1598,6 +1598,8 @@
     "label_advance_weeks": "前払金 (週)",
     "label_bond_amount": "保証金額 (AUD 上書き)",
     "ph_bond_amount": "空欄の場合は保証金の週数を使用します",
+    "label_deposit_amount": "保証金 (敷金)",
+    "ph_deposit_amount": "韓国式リースの保証金。保証金が高いほど月額賃料が下がります",
     "section_inclusions": "含まれるもの",
     "label_extra_inclusions": "追加の含まれるもの (自由入力)",
     "ph_extra_inclusions": "例: プール利用、ジム",

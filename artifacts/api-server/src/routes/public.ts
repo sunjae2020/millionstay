@@ -10,7 +10,7 @@ import {
   spaceImagesTable,
   spaceOptionsTable,
   accommodationCatalogTable,
-  spaceRentOptionsTable,
+  promotionsTable,
   accommodationServiceCatalogTable,
   serviceCatalogTable,
   spaceServiceCatalogTable,
@@ -629,7 +629,7 @@ router.get("/v1/public/spaces/:id", async (req, res): Promise<void> => {
   const publicLat = space.privacy_map_blur ? blurredCoords?.lat ?? null : (space.latitude ? Number(space.latitude) : null);
   const publicLng = space.privacy_map_blur ? blurredCoords?.lng ?? null : (space.longitude ? Number(space.longitude) : null);
 
-  const [ownImages, optionMaps, pricingTiers, rentOptions] = await Promise.all([
+  const [ownImages, optionMaps, pricingTiers] = await Promise.all([
     db.select().from(spaceImagesTable)
       .where(eq(spaceImagesTable.space_id, spaceId))
       .orderBy(desc(spaceImagesTable.is_primary), asc(spaceImagesTable.display_order)),
@@ -642,37 +642,37 @@ router.get("/v1/public/spaces/:id", async (req, res): Promise<void> => {
       .from(spaceOptionMapsTable)
       .leftJoin(spaceOptionsTable, eq(spaceOptionMapsTable.space_option_id, spaceOptionsTable.id))
       .where(eq(spaceOptionMapsTable.space_id, spaceId)),
+    // Accommodation products (숙박상품). For Korean leases these carry the
+    // 보증금 (deposit_amount) tier + an optional 프로모션 (Amount promotion), so a
+    // selected 보증금/월세 tier flows through booking → 계약.
     db.select({
         id: accommodationCatalogTable.id,
         name: accommodationCatalogTable.name,
         price: accommodationCatalogTable.price,
+        deposit_amount: accommodationCatalogTable.deposit_amount,
+        currency: accommodationCatalogTable.currency,
         min_contract_period: accommodationCatalogTable.min_contract_period,
         min_contract_period_unit: accommodationCatalogTable.min_contract_period_unit,
         bond_amount: accommodationCatalogTable.bond_amount,
         admin_fee: accommodationCatalogTable.admin_fee,
         cleaning_fee: accommodationCatalogTable.cleaning_fee,
+        product_tag: accommodationCatalogTable.product_tag,
+        promotion_id: accommodationCatalogTable.promotion_id,
+        promotion_name: promotionsTable.name,
+        promotion_type: promotionsTable.promotion_type,
+        promotion_discount_amount: promotionsTable.discount_amount,
+        promotion_discount_percentage: promotionsTable.discount_percentage,
       })
       .from(accommodationCatalogTable)
+      .leftJoin(promotionsTable, and(
+        eq(promotionsTable.id, accommodationCatalogTable.promotion_id),
+        eq(promotionsTable.status, "Active"),
+      ))
       .where(and(
         eq(accommodationCatalogTable.space_id, spaceId),
         eq(accommodationCatalogTable.status, "Active"),
       ))
       .orderBy(asc(accommodationCatalogTable.price)),
-    // Lease price options (보증금 → 월세 tiers + 프로모션) for the rent rate-card table.
-    db.select({
-        id: spaceRentOptionsTable.id,
-        deposit_amount: spaceRentOptionsTable.deposit_amount,
-        monthly_rent: spaceRentOptionsTable.monthly_rent,
-        promo_monthly_rent: spaceRentOptionsTable.promo_monthly_rent,
-        currency: spaceRentOptionsTable.currency,
-        is_default: spaceRentOptionsTable.is_default,
-      })
-      .from(spaceRentOptionsTable)
-      .where(and(
-        eq(spaceRentOptionsTable.space_id, spaceId),
-        isNull(spaceRentOptionsTable.deleted_at),
-      ))
-      .orderBy(asc(spaceRentOptionsTable.display_order), asc(spaceRentOptionsTable.deposit_amount)),
   ]);
 
   let images = ownImages;
@@ -716,8 +716,20 @@ router.get("/v1/public/spaces/:id", async (req, res): Promise<void> => {
       images,
       images_from_parent: imagesFromParent,
       space_options: resolvedOptions,
-      products: pricingTiers,
-      rent_options: rentOptions,
+      // Resolve each product's effective (promotional) price from its linked
+      // promotion so the client renders 정상/프로모 without re-deriving discounts.
+      products: pricingTiers.map((p) => {
+        const price = p.price != null ? Number(p.price) : null;
+        let promoPrice: number | null = null;
+        if (price != null && p.promotion_id) {
+          if (p.promotion_discount_amount != null) promoPrice = price - Number(p.promotion_discount_amount);
+          else if (p.promotion_discount_percentage != null) promoPrice = Math.round(price * (1 - Number(p.promotion_discount_percentage) / 100));
+        }
+        return {
+          ...p,
+          promo_price: promoPrice != null && promoPrice < (price ?? 0) ? promoPrice : null,
+        };
+      }),
     },
   });
 });

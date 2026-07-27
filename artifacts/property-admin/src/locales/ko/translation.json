@@ -1598,6 +1598,8 @@
     "label_advance_weeks": "선납금 (주)",
     "label_bond_amount": "보증금 금액 (AUD 재설정)",
     "ph_bond_amount": "비워두면 보증금 주 수를 사용합니다",
+    "label_deposit_amount": "보증금",
+    "ph_deposit_amount": "한국식 임대 보증금; 보증금이 높을수록 월세가 낮아집니다",
     "section_inclusions": "포함 사항",
     "label_extra_inclusions": "추가 포함 사항 (자유 입력)",
     "ph_extra_inclusions": "예: 수영장 이용, 헬스장",

@@ -1598,6 +1598,8 @@
     "label_advance_weeks": "Advance Payment (weeks)",
     "label_bond_amount": "Bond Amount (AUD override)",
     "ph_bond_amount": "Leave blank to use bond weeks",
+    "label_deposit_amount": "Deposit (보증금)",
+    "ph_deposit_amount": "Korean lease deposit; higher deposit lowers monthly rent",
     "section_inclusions": "Inclusions",
     "label_extra_inclusions": "Extra Inclusions (free text)",
     "ph_extra_inclusions": "e.g. Pool access, Gym",

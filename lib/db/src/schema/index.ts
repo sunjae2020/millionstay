@@ -4,7 +4,6 @@ export * from "./properties";
 export * from "./space_options";
 export * from "./space_policies";
 export * from "./spaces";
-export * from "./space_rent_options";
 export * from "./commissions";
 export * from "./payment_info";
 export * from "./contacts";

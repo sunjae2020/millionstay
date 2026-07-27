@@ -28,6 +28,10 @@ export const accommodationCatalogTable = pgTable("accommodation_catalog", {
   meal_plan: mealPlanEnum("meal_plan"),   // homestay only
   guest_age: guestAgeEnum("guest_age"),   // homestay only
   bond_amount: numeric("bond_amount", { precision: 12, scale: 2, mode: "number" }),
+  // Korean lease deposit (보증금). Distinct from the western weekly bond above:
+  // for month-based leases a higher deposit lowers the monthly rent. Nullable/
+  // additive; only set on Korean rent products (e.g. Metheim 임대료 rate card).
+  deposit_amount: numeric("deposit_amount", { precision: 14, scale: 2, mode: "number" }),
   bond_weeks: real("bond_weeks").default(4),
   advance_weeks: real("advance_weeks").default(2),
   admin_fee: numeric("admin_fee", { precision: 12, scale: 2, mode: "number" }),
