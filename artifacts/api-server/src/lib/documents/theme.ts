@@ -14,6 +14,8 @@
  * portal (`design-tokens.md`): brand orange #E8621A, Inter typeface, etc.
  */
 
+import { DEFAULT_CURRENCY } from "../currency";
+
 /**
  * Brand + typographic design tokens. Keep in sync with the proposal §5.1.
  *
@@ -102,7 +104,7 @@ export function formatDocMoney(
 ): string {
   const n = Number(amount);
   if (!Number.isFinite(n)) return "—";
-  const code = (currency || "AUD").toUpperCase();
+  const code = (currency || DEFAULT_CURRENCY).toUpperCase();
   const sym = CURRENCY_SYMBOL[code] ?? "";
   const decimals = ZERO_DECIMAL_CURRENCIES.has(code) ? 0 : 2;
   const rounded = Number(n.toFixed(decimals));
