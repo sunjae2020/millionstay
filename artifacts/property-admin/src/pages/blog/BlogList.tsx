@@ -74,6 +74,7 @@ export default function BlogList() {
         header: "blog.col_title",
         hideable: false,
         defaultWidth: 320,
+        editable: { type: "text", getValue: (post) => post.title },
         cell: (post) => (
           <div className="font-medium">
             <Link href={`/content/blog/${post.id}`} className="text-primary hover:underline line-clamp-1">
@@ -86,17 +87,28 @@ export default function BlogList() {
       {
         key: "category",
         header: "blog.col_category",
+        editable: { type: "text", getValue: (post) => post.category ?? "" },
         cell: (post) =>
           post.category ? <Badge variant="outline" className="text-xs">{post.category}</Badge> : <span className="text-muted-foreground/40">—</span>,
       },
       {
         key: "author",
         header: "blog.col_author",
+        editable: { type: "text", getValue: (post) => post.author ?? "" },
         cell: (post) => <span className="text-sm text-muted-foreground">{post.author || "—"}</span>,
       },
       {
         key: "status",
         header: "common.status",
+        editable: {
+          type: "select",
+          getValue: (post) => post.status,
+          options: [
+            { value: "Draft", label: t("blog.status_draft") },
+            { value: "Published", label: t("blog.status_published") },
+            { value: "Archived", label: t("blog.status_archived") },
+          ],
+        },
         cell: (post) => (
           <Badge className={`${STATUS_COLORS[post.status] ?? "bg-gray-100 text-gray-600"} text-[10px] px-1.5 py-0`}>
             {STATUS_LABEL_KEYS[post.status] ? t(STATUS_LABEL_KEYS[post.status]) : post.status}
@@ -106,6 +118,7 @@ export default function BlogList() {
       {
         key: "published_at",
         header: "blog.col_published",
+        editable: { type: "date", getValue: (post) => (post.published_at ? String(post.published_at).slice(0, 10) : "") },
         cell: (post) => <span className="text-sm text-muted-foreground">{formatDate(post.published_at)}</span>,
       },
       {
@@ -164,6 +177,7 @@ export default function BlogList() {
             resource: "blog-posts",
             onChanged: () => qc.invalidateQueries({ queryKey: ["blog-posts"] }),
           }}
+          editing={{ resource: "blog-posts", onEdited: () => qc.invalidateQueries({ queryKey: ["blog-posts"] }) }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
           toolbarExtra={

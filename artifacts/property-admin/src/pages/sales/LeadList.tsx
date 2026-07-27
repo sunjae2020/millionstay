@@ -205,21 +205,33 @@ export default function LeadList() {
       {
         key: "email",
         header: "lead.col_email",
+        editable: { type: "text", getValue: (l) => l.email ?? "" },
         cell: (l) => <span className="text-muted-foreground">{l.email}</span>,
       },
       {
         key: "lead_source",
         header: "lead.col_source",
+        editable: {
+          type: "select",
+          getValue: (l) => l.lead_source ?? "",
+          options: ["Website", "Agent", "Referral", "WalkIn", "OTA", "Social", "Other"].map((s) => ({ value: s, label: s })),
+        },
         cell: (l) => <span className="text-muted-foreground">{l.lead_source ?? "—"}</span>,
       },
       {
         key: "lead_status",
         header: "lead.col_status",
+        editable: {
+          type: "select",
+          getValue: (l) => l.lead_status,
+          options: LEAD_STATUSES.map((s) => ({ value: s, label: STATUS_CONFIG[s]?.label ?? s })),
+        },
         cell: (l) => <LeadStatusBadge status={l.lead_status} />,
       },
       {
         key: "preferred_check_in_date",
         header: "booking.col_checkin",
+        editable: { type: "date", getValue: (l) => l.preferred_check_in_date ?? "" },
         cell: (l) => <span className="text-muted-foreground">{formatDate(l.preferred_check_in_date)}</span>,
       },
       {
@@ -321,6 +333,7 @@ export default function LeadList() {
             isLoading={isLoading}
             rowKey={(l) => l.id}
             emptyText={t("lead.no_leads")}
+            editing={{ resource: "leads", onEdited: () => qc.invalidateQueries({ queryKey: getListLeadsQueryKey() }) }}
             toolbarExtra={
               <div className="flex flex-wrap items-center gap-2">
                 <div className="relative w-56">

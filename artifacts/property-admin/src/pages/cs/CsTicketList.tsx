@@ -148,6 +148,14 @@ export default function CsTicketList() {
       {
         key: "status",
         header: "csticket.col_status",
+        editable: {
+          type: "select",
+          getValue: (ticket) => ticket.status,
+          options: ["Open", "InProgress", "Resolved", "Closed"].map((s) => ({
+            value: s,
+            label: t(`csticket.status_${s.toLowerCase() === "inprogress" ? "in_progress" : s.toLowerCase()}` as any),
+          })),
+        },
         cell: (ticket) => {
           const st = STATUS_CONFIG[ticket.status] ?? STATUS_CONFIG.Open;
           const sl = (ticket.status ?? "open").toLowerCase();
@@ -162,6 +170,14 @@ export default function CsTicketList() {
       {
         key: "priority",
         header: "csticket.col_priority",
+        editable: {
+          type: "select",
+          getValue: (ticket) => ticket.priority,
+          options: ["Low", "Normal", "High", "Urgent"].map((p) => ({
+            value: p,
+            label: t(`csticket.priority_${p.toLowerCase()}` as any),
+          })),
+        },
         cell: (ticket) => (
           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${PRIORITY_COLORS[ticket.priority ?? ""] ?? ""}`}>
             {t(`csticket.priority_${(ticket.priority ?? "normal").toLowerCase()}` as any)}
@@ -242,6 +258,7 @@ export default function CsTicketList() {
             resource: "cs-tickets",
             onChanged: () => refetch(),
           }}
+          editing={{ resource: "cs-tickets", onEdited: () => refetch() }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
           toolbarExtra={

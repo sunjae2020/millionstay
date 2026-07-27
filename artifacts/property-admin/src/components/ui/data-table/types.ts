@@ -2,6 +2,27 @@ import type { ReactNode } from "react";
 
 export type Align = "left" | "right" | "center";
 
+/** Value produced by an inline editor and sent in the PATCH/PUT body. */
+export type EditValue = string | number | boolean | null;
+
+/** Inline-edit descriptor for a single column (safe-bucket lists only). */
+export interface EditableConfig<T> {
+  /** Editor widget. `boolean` toggles-and-saves on click; the rest are click-to-edit. */
+  type: "text" | "number" | "select" | "boolean" | "date";
+  /** Body field name; defaults to the column `key`. */
+  field?: string;
+  /** Current value fed to the editor. */
+  getValue: (row: T) => EditValue | undefined;
+  /** Options for `select`. Labels are pre-resolved (already `t()`-ed by the page). */
+  options?: Array<{ value: string; label: string }>;
+  /** Return false to keep a specific row read-only. */
+  canEdit?: (row: T) => boolean;
+  min?: number;
+  max?: number;
+  step?: number;
+  placeholder?: string;
+}
+
 /** Reserved column key for the per-row action buttons column. Always pinned
  *  last, never hideable, never sortable, excluded from the Columns menu. */
 export const ACTIONS_KEY = "__actions";
@@ -32,8 +53,23 @@ export interface ColumnDef<T> {
   hideable?: boolean;
   /** Hidden until the user enables it (only applies when no prefs are saved yet). */
   defaultHidden?: boolean;
+  /** Makes the cell inline-editable when the table is given an `editing` prop. */
+  editable?: EditableConfig<T>;
   headerClassName?: string;
   cellClassName?: string;
+}
+
+/**
+ * Inline-editing wiring for a table. Either point at a REST `resource`
+ * (PUT/PATCH `/api/v1/<resource>/<id>` with `{ [field]: value }`) or supply a
+ * custom `save` for non-standard endpoints (e.g. upsert-by-key). `onEdited`
+ * runs after a successful save so the page can invalidate its query.
+ */
+export interface DataTableEditing<T> {
+  resource?: string;
+  method?: "PUT" | "PATCH";
+  save?: (row: T, field: string, value: EditValue) => Promise<void>;
+  onEdited?: () => void;
 }
 
 /** Persisted per-user prefs blob for one table. */

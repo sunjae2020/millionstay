@@ -40,6 +40,7 @@ export default function ServiceHostList() {
         key: "name",
         header: "service_host.col_name",
         hideable: false,
+        editable: { type: "text", getValue: (host) => host.name },
         cell: (host) => <Link href={`/booking/service-hosts/${host.id}`} className="font-medium text-primary hover:underline">{host.name}</Link>,
       },
       {
@@ -62,6 +63,7 @@ export default function ServiceHostList() {
       {
         key: "from_date",
         header: "service_host.col_period",
+        editable: { type: "date", getValue: (host) => host.from_date ?? "" },
         cell: (host) => (
           <span className="text-muted-foreground">
             {host.from_date && host.to_date ? `${formatDate(host.from_date)} → ${formatDate(host.to_date)}` : "—"}
@@ -71,6 +73,14 @@ export default function ServiceHostList() {
       {
         key: "status",
         header: "service_host.col_status",
+        editable: {
+          type: "select",
+          getValue: (host) => host.status,
+          options: [
+            { value: "Active", label: t("common.active") },
+            { value: "Inactive", label: t("common.inactive") },
+          ],
+        },
         cell: (host) => (
           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${host.status === "Active" ? "bg-green-100 text-green-700 border-green-200" : "bg-gray-100 text-gray-600 border-gray-200"}`}>
             {t(`common.${host.status.toLowerCase()}`)}
@@ -118,6 +128,7 @@ export default function ServiceHostList() {
           isLoading={isLoading}
           rowKey={(host) => host.id}
           emptyText={t("service_host.no_hosts")}
+          editing={{ resource: "service-hosts", onEdited: () => qc.invalidateQueries({ queryKey: getListServiceHostsQueryKey({}) }) }}
           toolbarExtra={
             <div className="flex flex-wrap items-center gap-2">
               <div className="relative w-56">

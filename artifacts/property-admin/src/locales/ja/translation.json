@@ -347,7 +347,10 @@
     "enable": "有効化",
     "disable": "無効化",
     "enabled": "有効",
-    "network_error": "ネットワークエラー — もう一度お試しください"
+    "network_error": "ネットワークエラー — もう一度お試しください",
+    "saved": "保存しました",
+    "save_failed": "保存に失敗しました",
+    "click_to_edit": "クリックして編集"
   },
   "lang": {
     "label": "言語",

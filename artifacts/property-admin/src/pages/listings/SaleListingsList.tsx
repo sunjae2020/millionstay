@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "wouter";
 import { formatDate as fmtDate } from "@/lib/date";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +42,7 @@ async function fetchListings(params: Record<string, string>) {
 
 export default function SaleListingsList() {
   const { t } = useTranslation();
+  const qc = useQueryClient();
   const [category, setCategory] = useState("_all");
   const [status, setStatus] = useState("_all");
 
@@ -94,6 +95,14 @@ export default function SaleListingsList() {
         key: "category",
         header: "listings.col_category",
         sortAccessor: (r) => r.category,
+        editable: {
+          type: "select",
+          getValue: (r) => r.category,
+          options: [
+            { value: "presale", label: t("listings.category_presale") },
+            { value: "sale", label: t("listings.category_sale") },
+          ],
+        },
         cell: (row) => (
           <Badge className={`${CATEGORY_COLORS[row.category] ?? "bg-gray-100 text-gray-600"} text-[10px] px-1.5 py-0`}>
             {t(`listings.category_${row.category}`, { defaultValue: row.category })}
@@ -104,6 +113,15 @@ export default function SaleListingsList() {
         key: "status",
         header: "common.status",
         sortAccessor: (r) => r.status,
+        editable: {
+          type: "select",
+          getValue: (r) => r.status,
+          options: [
+            { value: "available", label: t("listings.status_available") },
+            { value: "reserved", label: t("listings.status_reserved") },
+            { value: "sold", label: t("listings.status_sold") },
+          ],
+        },
         cell: (row) => (
           <Badge className={`${STATUS_COLORS[row.status] ?? "bg-gray-100 text-gray-600"} text-[10px] px-1.5 py-0`}>
             {t(`listings.status_${row.status}`, { defaultValue: row.status })}
@@ -122,6 +140,7 @@ export default function SaleListingsList() {
         key: "published",
         header: "listings.col_published",
         sortAccessor: (r) => (r.published ? 1 : 0),
+        editable: { type: "boolean", getValue: (r) => !!r.published },
         cell: (row) =>
           row.published ? (
             <Badge className="bg-green-100 text-green-700 text-[10px] px-1.5 py-0">{t("listings.published")}</Badge>
@@ -163,6 +182,7 @@ export default function SaleListingsList() {
           data={listings}
           isLoading={isLoading}
           rowKey={(row) => row.id}
+          editing={{ resource: "sale-listings", onEdited: () => qc.invalidateQueries({ queryKey: ["sale-listings"] }) }}
           toolbarExtra={
             <div className="flex flex-wrap items-center gap-2">
               <Select value={category} onValueChange={setCategory}>

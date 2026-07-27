@@ -67,6 +67,7 @@ export default function SpacePolicyList() {
         header: "space_policy.col_name",
         hideable: false,
         defaultWidth: 200,
+        editable: { type: "text", getValue: (policy) => policy.name },
         cell: (policy) => (
           <Link href={`/property/space-policies/${policy.id}`} className="hover:underline text-primary font-medium">
             {policy.name}
@@ -76,31 +77,44 @@ export default function SpacePolicyList() {
       {
         key: "same_gender",
         header: "space_policy.col_same_gender",
+        editable: { type: "boolean", getValue: (policy) => policy.same_gender },
         cell: (policy) => <BoolCell value={policy.same_gender} />,
       },
       {
         key: "lady_only",
         header: "space_policy.col_lady_only",
+        editable: { type: "boolean", getValue: (policy) => policy.lady_only },
         cell: (policy) => <BoolCell value={policy.lady_only} />,
       },
       {
         key: "no_pet",
         header: "space_policy.col_no_pet",
+        editable: { type: "boolean", getValue: (policy) => policy.no_pet },
         cell: (policy) => <BoolCell value={policy.no_pet} />,
       },
       {
         key: "no_smoking",
         header: "space_policy.col_no_smoking",
+        editable: { type: "boolean", getValue: (policy) => policy.no_smoking },
         cell: (policy) => <BoolCell value={policy.no_smoking} />,
       },
       {
         key: "minimum_age",
         header: "space_policy.col_min_age",
+        editable: { type: "number", getValue: (policy) => policy.minimum_age ?? null, min: 0 },
         cell: (policy) => <span className="text-muted-foreground">{policy.minimum_age ?? "—"}</span>,
       },
       {
         key: "status",
         header: "space_policy.col_status",
+        editable: {
+          type: "select",
+          getValue: (policy) => policy.status,
+          options: [
+            { value: "Active", label: t("common.active") },
+            { value: "Inactive", label: t("common.inactive") },
+          ],
+        },
         cell: (policy) => <StatusBadge status={policy.status} />,
       },
       {
@@ -154,6 +168,7 @@ export default function SpacePolicyList() {
             resource: "space-policies",
             onChanged: () => qc.invalidateQueries({ queryKey: getListSpacePoliciesQueryKey() }),
           }}
+          editing={{ resource: "space-policies", onEdited: () => qc.invalidateQueries({ queryKey: getListSpacePoliciesQueryKey() }) }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
           toolbarExtra={

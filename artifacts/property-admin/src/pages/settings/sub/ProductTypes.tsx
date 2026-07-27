@@ -46,11 +46,13 @@ export default function ProductTypesPage() {
       key: "name",
       header: t("common.name"),
       hideable: false,
+      editable: { type: "text", getValue: (ty) => ty.name },
       cell: (ty) => <div className="font-medium">{ty.name}</div>,
     },
     {
       key: "description",
       header: t("common.description"),
+      editable: { type: "text", getValue: (ty) => ty.description ?? "" },
       cell: (ty) => (
         <span className="text-sm text-muted-foreground max-w-xs truncate block">
           {ty.description || <span className="text-muted-foreground/40 italic">—</span>}
@@ -137,6 +139,7 @@ export default function ProductTypesPage() {
           rowKey={(ty) => ty.id}
           emptyText={t("productTypes.empty")}
           selection={{ enable: true, resource: "product-types", onChanged: () => qc.invalidateQueries({ queryKey: ["product-types"] }) }}
+          editing={{ resource: "product-types", onEdited: () => qc.invalidateQueries({ queryKey: ["product-types"] }) }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
           toolbarExtra={

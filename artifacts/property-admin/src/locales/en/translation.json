@@ -347,7 +347,10 @@
     "enable": "Enable",
     "disable": "Disable",
     "enabled": "Enabled",
-    "network_error": "Network error — please try again"
+    "network_error": "Network error — please try again",
+    "saved": "Saved",
+    "save_failed": "Save failed",
+    "click_to_edit": "Click to edit"
   },
   "lang": {
     "label": "Language",

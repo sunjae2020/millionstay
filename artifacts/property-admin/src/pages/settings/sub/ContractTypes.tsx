@@ -46,6 +46,7 @@ export default function ContractTypesPage() {
       key: "name",
       header: t("common.name"),
       hideable: false,
+      editable: { type: "text", getValue: (ct) => ct.name },
       cell: (ct) => (
         <>
           <div className="font-medium">{ct.name}</div>
@@ -56,26 +57,35 @@ export default function ContractTypesPage() {
     {
       key: "contract_security",
       header: t("contractTypes.col_security"),
+      editable: {
+        type: "select",
+        getValue: (ct) => ct.contract_security,
+        options: SECURITY_OPTIONS.map((s) => ({ value: s, label: s })),
+      },
       cell: (ct) => <Badge variant="outline">{ct.contract_security}</Badge>,
     },
     {
       key: "require_passport",
       header: t("contractTypes.col_passport"),
+      editable: { type: "boolean", getValue: (ct) => ct.require_passport },
       cell: (ct) => <span className="text-sm">{ct.require_passport ? "✓" : "—"}</span>,
     },
     {
       key: "require_visa",
       header: t("contractTypes.col_visa"),
+      editable: { type: "boolean", getValue: (ct) => ct.require_visa },
       cell: (ct) => <span className="text-sm">{ct.require_visa ? "✓" : "—"}</span>,
     },
     {
       key: "require_enrollment",
       header: t("contractTypes.col_enrollment"),
+      editable: { type: "boolean", getValue: (ct) => ct.require_enrollment },
       cell: (ct) => <span className="text-sm">{ct.require_enrollment ? "✓" : "—"}</span>,
     },
     {
       key: "is_active",
       header: t("common.status"),
+      editable: { type: "boolean", getValue: (ct) => ct.is_active },
       cell: (ct) => (
         <Badge className={ct.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}>
           {ct.is_active ? t("common.active") : t("common.inactive")}
@@ -154,6 +164,7 @@ export default function ContractTypesPage() {
           rowKey={(ct) => ct.id}
           emptyText={t("contractTypes.empty")}
           selection={{ enable: true, resource: "contract-types", onChanged: () => qc.invalidateQueries({ queryKey: ["contract-types"] }) }}
+          editing={{ resource: "contract-types", onEdited: () => qc.invalidateQueries({ queryKey: ["contract-types"] }) }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
           toolbarExtra={

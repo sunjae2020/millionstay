@@ -347,7 +347,10 @@
     "enable": "활성화",
     "disable": "비활성화",
     "enabled": "활성화됨",
-    "network_error": "네트워크 오류 — 다시 시도해 주세요"
+    "network_error": "네트워크 오류 — 다시 시도해 주세요",
+    "saved": "저장됨",
+    "save_failed": "저장 실패",
+    "click_to_edit": "클릭하여 편집"
   },
   "lang": {
     "label": "언어",

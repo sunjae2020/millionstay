@@ -27,10 +27,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { ACTIONS_KEY, type ColumnDef } from "./types";
+import { ACTIONS_KEY, type ColumnDef, type DataTableEditing, type EditValue } from "./types";
 import { useTablePrefs } from "./useTablePrefs";
 import { ResizableSortableTh } from "./ResizableSortableTh";
 import { ColumnsMenu } from "./ColumnsMenu";
+import { EditableCell } from "./EditableCell";
 
 export interface DataTableSelection {
   enable: boolean;
@@ -50,6 +51,8 @@ export interface DataTableProps<T> {
   defaultSort?: { key: string; dir?: "asc" | "desc" };
   defaultPageSize?: number;
   selection?: DataTableSelection;
+  /** Inline cell editing for `editable` columns. Omit for read-only tables. */
+  editing?: DataTableEditing<T>;
   /** Deleted-rows view (SuperAdmin). The page owns the actual fetch. */
   showDeleted?: boolean;
   onToggleShowDeleted?: (next: boolean) => void;
@@ -70,6 +73,7 @@ export function DataTable<T>({
   defaultSort,
   defaultPageSize,
   selection,
+  editing,
   showDeleted = false,
   onToggleShowDeleted,
   toolbarExtra,
@@ -157,6 +161,39 @@ export function DataTable<T>({
       });
     } finally {
       setIsBulkLoading(false);
+    }
+  }
+
+  // Inline editing: write-capable admins only (Viewer is read-only), and never
+  // on archived rows. Save routes through the page's custom `save` or a default
+  // PUT/PATCH to /api/v1/<resource>/<id> with the single changed field.
+  const inlineEditEnabled = !!editing && canWrite && !showDeleted;
+
+  async function saveCell(row: T, field: string, value: EditValue) {
+    try {
+      if (editing?.save) {
+        await editing.save(row, field, value);
+      } else if (editing?.resource) {
+        const res = await apiFetch(`/api/v1/${editing.resource}/${rowKey(row)}`, {
+          method: editing.method ?? "PUT",
+          body: JSON.stringify({ [field]: value }),
+        });
+        if (!res.ok) {
+          const msg = await res.text().catch(() => "");
+          throw new Error(msg || t("common.save_failed"));
+        }
+      } else {
+        return;
+      }
+      editing?.onEdited?.();
+      toast({ title: t("common.saved") });
+    } catch (err) {
+      toast({
+        title: t("common.error"),
+        description: err instanceof Error ? err.message : String(err),
+        variant: "destructive",
+      });
+      throw err;
     }
   }
 
@@ -383,6 +420,8 @@ export function DataTable<T>({
                               </button>
                               {col.cell(row)}
                             </div>
+                          ) : col.editable && inlineEditEnabled ? (
+                            <EditableCell col={col} row={row} onSave={saveCell} />
                           ) : (
                             col.cell(row)
                           )}

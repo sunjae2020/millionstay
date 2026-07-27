@@ -120,6 +120,7 @@ export default function ProductList() {
         header: "product.col_name",
         hideable: false,
         defaultWidth: 220,
+        editable: { type: "text", getValue: (p) => p.name },
         cell: (p) => (
           <Link href={`/products/products/${p.id}`} className="text-primary hover:underline line-clamp-2 font-medium">
             {p.name}
@@ -157,6 +158,7 @@ export default function ProductList() {
         key: "price",
         header: "product.col_price",
         align: "right",
+        editable: { type: "number", getValue: (p) => p.price ?? null, min: 0, step: 0.01 },
         cell: (p) => (
           <span className="text-xs tabular-nums font-medium text-primary">
             {p.price != null ? formatMoney(p.price, p.currency, currencyPosition) : "—"}
@@ -214,6 +216,7 @@ export default function ProductList() {
           rowKey={(p) => p.id}
           defaultSort={{ key: "name", dir: "asc" }}
           emptyText={t("product.no_products")}
+          editing={{ resource: "accommodations", onEdited: () => qc.invalidateQueries({ queryKey: ["accommodation-products"] }) }}
           toolbarExtra={
             <div className="flex flex-wrap items-center gap-2">
               <div className="relative w-56">

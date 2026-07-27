@@ -84,6 +84,7 @@ export default function AccountList() {
         header: "account.col_name",
         hideable: false,
         defaultWidth: 200,
+        editable: { type: "text", getValue: (a) => a.name },
         cell: (a) => (
           <Link href={`/crm/accounts/${a.id}`} className="font-medium hover:underline">{a.name}</Link>
         ),
@@ -91,6 +92,11 @@ export default function AccountList() {
       {
         key: "account_type",
         header: "account.col_type",
+        editable: {
+          type: "select",
+          getValue: (a) => a.account_type,
+          options: Object.keys(ACCOUNT_TYPE_COLORS).map((k) => ({ value: k, label: k })),
+        },
         cell: (a) => (
           <Badge variant="outline" className={`text-xs ${ACCOUNT_TYPE_COLORS[a.account_type] ?? "bg-gray-100 text-gray-700"}`}>
             {a.account_type}
@@ -105,11 +111,20 @@ export default function AccountList() {
       {
         key: "account_email",
         header: "account.col_email",
+        editable: { type: "text", getValue: (a) => a.account_email ?? "" },
         cell: (a) => <span className="text-muted-foreground">{a.account_email ?? "—"}</span>,
       },
       {
         key: "status",
         header: "account.col_status",
+        editable: {
+          type: "select",
+          getValue: (a) => a.status,
+          options: [
+            { value: "Active", label: t("common.active") },
+            { value: "Inactive", label: t("common.inactive") },
+          ],
+        },
         cell: (a) => <StatusBadge status={a.status} />,
       },
       {
@@ -160,6 +175,7 @@ export default function AccountList() {
             resource: "accounts",
             onChanged: () => qc.invalidateQueries({ queryKey: getListAccountsQueryKey() }),
           }}
+          editing={{ resource: "accounts", onEdited: () => qc.invalidateQueries({ queryKey: getListAccountsQueryKey() }) }}
           showDeleted={showDeleted}
           onToggleShowDeleted={setShowDeleted}
           toolbarExtra={
