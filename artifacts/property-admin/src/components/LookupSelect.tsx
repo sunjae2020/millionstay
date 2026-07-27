@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Search, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { apiJson } from "@/lib/apiFetch";
 
 interface LookupSelectProps {
   value: number | null | undefined;
@@ -11,6 +13,8 @@ interface LookupSelectProps {
   lookupUrl: string;
   placeholder?: string;
   displayValue?: string | null;
+  /** Ids to hide from the result list (e.g. the record itself, to block self-linking). */
+  excludeIds?: number[];
 }
 
 interface LookupItem {
@@ -18,24 +22,30 @@ interface LookupItem {
   display: string;
 }
 
-export function LookupSelect({ value, onChange, lookupUrl, placeholder = "Search…", displayValue }: LookupSelectProps) {
+export function LookupSelect({ value, onChange, lookupUrl, placeholder = "Search…", displayValue, excludeIds }: LookupSelectProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<LookupItem[]>([]);
   const [selectedLabel, setSelectedLabel] = useState<string | null>(displayValue ?? null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
 
   async function handleSearch(q: string) {
     setQuery(q);
     setLoading(true);
+    setError(false);
     try {
       const sep = lookupUrl.includes("?") ? "&" : "?";
       const url = `${lookupUrl}${sep}q=${encodeURIComponent(q)}`;
-      const res = await fetch(url);
-      const data: LookupItem[] = await res.json();
-      setResults(data);
+      // Lookup endpoints sit behind requireAuth — must go through apiJson so the
+      // Bearer token is attached (a bare fetch() silently 401s → empty list).
+      const data = await apiJson<LookupItem[]>(url);
+      const list = Array.isArray(data) ? data : [];
+      setResults(excludeIds?.length ? list.filter((i) => !excludeIds.includes(i.id)) : list);
     } catch {
       setResults([]);
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -88,7 +98,7 @@ export function LookupSelect({ value, onChange, lookupUrl, placeholder = "Search
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Select</DialogTitle>
+            <DialogTitle>{t('common.select')}</DialogTitle>
           </DialogHeader>
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -101,9 +111,12 @@ export function LookupSelect({ value, onChange, lookupUrl, placeholder = "Search
             />
           </div>
           <ScrollArea className="max-h-64">
-            {loading && <p className="px-3 py-2 text-sm text-muted-foreground">Searching…</p>}
-            {!loading && results.length === 0 && (
-              <p className="px-3 py-2 text-sm text-muted-foreground">No results found</p>
+            {loading && <p className="px-3 py-2 text-sm text-muted-foreground">{t('common.loading')}</p>}
+            {!loading && error && (
+              <p className="px-3 py-2 text-sm text-destructive">{t('common.error')}</p>
+            )}
+            {!loading && !error && results.length === 0 && (
+              <p className="px-3 py-2 text-sm text-muted-foreground">{t('common.no_results')}</p>
             )}
             {results.map((item) => (
               <button

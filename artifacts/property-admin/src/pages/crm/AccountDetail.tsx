@@ -399,6 +399,7 @@ export default function AccountDetail() {
                 lookupUrl="/api/v1/lookup/accounts"
                 placeholder={t('account.search_placeholder')}
                 displayValue={(account as any)?.parent_account_name}
+                excludeIds={!isNew && id ? [Number(id)] : undefined}
               />
             )} />
           </div>
