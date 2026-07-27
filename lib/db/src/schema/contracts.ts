@@ -19,6 +19,14 @@ export const contractsTable = pgTable("contracts", {
   // 월세 — promo-adjusted monthly rent auto-filled from the linked 숙박상품 tier.
   monthly_rent: numeric("monthly_rent", { precision: 12, scale: 2, mode: "number" }),
   advance_amount: numeric("advance_amount", { precision: 12, scale: 2, mode: "number" }),
+  // Korean-lease payment structure (계약서 구분 / 계약금·잔금·보증금·월세)
+  contract_category: text("contract_category"),
+  down_payment: numeric("down_payment", { precision: 12, scale: 2, mode: "number" }),
+  down_payment_date: text("down_payment_date"),
+  balance_amount: numeric("balance_amount", { precision: 12, scale: 2, mode: "number" }),
+  balance_date: text("balance_date"),
+  monthly_rent: numeric("monthly_rent", { precision: 12, scale: 2, mode: "number" }),
+  rent_due_day: integer("rent_due_day"),
   currency: text("currency").notNull().default("AUD"),
   exchange_rate_to_aud: numeric("exchange_rate_to_aud", { precision: 18, scale: 8 }),
   status: text("status").notNull().default("Draft"),

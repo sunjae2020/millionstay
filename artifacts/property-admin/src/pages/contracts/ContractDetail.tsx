@@ -31,6 +31,13 @@ import ContractInspections from "@/components/ContractInspections";
 
 // Ordered so the tenant's own currency (from branding) leads; KRW first.
 const CURRENCIES = SUPPORTED_CURRENCIES.map((c) => c.code);
+const CONTRACT_CATEGORIES = [
+  { value: "sale", labelKey: "contract.cat_sale" },
+  { value: "jeonse", labelKey: "contract.cat_jeonse" },
+  { value: "wolse", labelKey: "contract.cat_wolse" },
+  { value: "short_term", labelKey: "contract.cat_short" },
+  { value: "long_term", labelKey: "contract.cat_long" },
+];
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-700",
   Sent: "bg-blue-100 text-blue-700",
@@ -53,6 +60,13 @@ interface FormData {
   monthly_rent: string;
   bond_amount: string;
   advance_amount: string;
+  contract_category: string;
+  down_payment: string;
+  down_payment_date: string;
+  balance_amount: string;
+  balance_date: string;
+  monthly_rent: string;
+  rent_due_day: string;
   currency: string;
   document_url: string;
   terms_text: string;
@@ -201,7 +215,10 @@ export default function ContractDetail() {
       booking_id: null, product_id: null, tenant_account_id: null,
       landlord_account_id: null, space_id: null,
       start_date: "", end_date: "", weekly_rate: "", total_rent: "",
-      monthly_rent: "", bond_amount: "", advance_amount: "", currency: currency,
+      monthly_rent: "", bond_amount: "", advance_amount: "",
+      contract_category: "", down_payment: "", down_payment_date: "",
+      balance_amount: "", balance_date: "", rent_due_day: "",
+      currency: currency,
       document_url: "", terms_text: "", notes: "",
     },
   });
@@ -221,6 +238,12 @@ export default function ContractDetail() {
         monthly_rent: (contract as any).monthly_rent != null ? String((contract as any).monthly_rent) : "",
         bond_amount: contract.bond_amount != null ? String(contract.bond_amount) : "",
         advance_amount: contract.advance_amount != null ? String(contract.advance_amount) : "",
+        contract_category: (contract as any).contract_category ?? "",
+        down_payment: (contract as any).down_payment != null ? String((contract as any).down_payment) : "",
+        down_payment_date: (contract as any).down_payment_date ?? "",
+        balance_amount: (contract as any).balance_amount != null ? String((contract as any).balance_amount) : "",
+        balance_date: (contract as any).balance_date ?? "",
+        rent_due_day: (contract as any).rent_due_day != null ? String((contract as any).rent_due_day) : "",
         currency: contract.currency ?? currency,
         document_url: contract.document_url ?? "",
         terms_text: contract.terms_text ?? "",
@@ -370,6 +393,12 @@ export default function ContractDetail() {
     monthly_rent: data.monthly_rent ? Number(data.monthly_rent) : null,
     bond_amount: data.bond_amount ? Number(data.bond_amount) : null,
     advance_amount: data.advance_amount ? Number(data.advance_amount) : null,
+    contract_category: data.contract_category || null,
+    down_payment: data.down_payment ? Number(data.down_payment) : null,
+    down_payment_date: data.down_payment_date || null,
+    balance_amount: data.balance_amount ? Number(data.balance_amount) : null,
+    balance_date: data.balance_date || null,
+    rent_due_day: data.rent_due_day ? Number(data.rent_due_day) : null,
     currency: data.currency || currency,
     document_url: data.document_url || null,
     terms_text: data.terms_text || null,
@@ -577,6 +606,17 @@ export default function ContractDetail() {
                     />
                   )} />
                 </div>
+                <div>
+                  <Label>{t('contract.label_contract_category')}</Label>
+                  <Controller name="contract_category" control={control} render={({ field }) => (
+                    <Select value={field.value || undefined} onValueChange={field.onChange}>
+                      <SelectTrigger><SelectValue placeholder={t('contract.ph_select_category')} /></SelectTrigger>
+                      <SelectContent>
+                        {CONTRACT_CATEGORIES.map(c => <SelectItem key={c.value} value={c.value}>{t(c.labelKey)}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )} />
+                </div>
               </div>
             </div>
 
@@ -611,22 +651,61 @@ export default function ContractDetail() {
               </div>
             </div>
 
-            {/* Terms */}
+            {/* Payment Terms (Korean lease structure) */}
             <div className="border rounded-lg bg-white p-4 sm:p-6">
-              <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">{t('contract.section_financial')}</h2>
+              <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">{t('contract.section_payment_terms')}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label>{t('contract.label_start')}</Label>
+                  <Label>{t('contract.label_move_in')}</Label>
                   <Controller name="start_date" control={control} render={({ field }) => (
                     <DateInput value={field.value ?? ""} onChange={field.onChange} />
                   )} />
                 </div>
                 <div>
-                  <Label>{t('contract.label_end')}</Label>
+                  <Label>{t('contract.label_move_out')}</Label>
                   <Controller name="end_date" control={control} render={({ field }) => (
                     <DateInput value={field.value ?? ""} onChange={field.onChange} />
                   )} />
                 </div>
+                <div>
+                  <Label>{t('contract.label_down_payment')}</Label>
+                  <Input {...register("down_payment")} type="number" step="0.01" min="0" />
+                </div>
+                <div>
+                  <Label>{t('contract.label_down_payment_date')}</Label>
+                  <Controller name="down_payment_date" control={control} render={({ field }) => (
+                    <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                  )} />
+                </div>
+                <div>
+                  <Label>{t('contract.label_balance')}</Label>
+                  <Input {...register("balance_amount")} type="number" step="0.01" min="0" />
+                </div>
+                <div>
+                  <Label>{t('contract.label_balance_date')}</Label>
+                  <Controller name="balance_date" control={control} render={({ field }) => (
+                    <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                  )} />
+                </div>
+                <div>
+                  <Label>{t('contract.label_deposit')}</Label>
+                  <Input {...register("bond_amount")} type="number" step="0.01" min="0" />
+                </div>
+                <div>
+                  <Label>{t('contract.label_monthly_rent')}</Label>
+                  <Input {...register("monthly_rent")} type="number" step="0.01" min="0" />
+                </div>
+                <div>
+                  <Label>{t('contract.label_rent_due_day')}</Label>
+                  <Input {...register("rent_due_day")} type="number" step="1" min="1" max="31" />
+                </div>
+              </div>
+            </div>
+
+            {/* Financial */}
+            <div className="border rounded-lg bg-white p-4 sm:p-6">
+              <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">{t('contract.section_financial')}</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>{t('contract.label_currency')}</Label>
                   <Controller name="currency" control={control} render={({ field }) => (
@@ -647,14 +726,7 @@ export default function ContractDetail() {
                   <Input {...register("total_rent")} type="number" step="0.01" min="0" />
                 </div>
                 <div>
-                  <Label>{t('contract.label_monthly_rent')}</Label>
-                  <Input {...register("monthly_rent")} type="number" step="0.01" min="0" />
-                </div>
-                <div>
-                  <Label>{t('contract.label_bond')}</Label>
-                  <Input {...register("bond_amount")} type="number" step="0.01" min="0" />
-                </div>
-                <div>
+
                   <Label>{t('contract.label_advance')}</Label>
                   <Input {...register("advance_amount")} type="number" step="0.01" min="0" />
                 </div>
