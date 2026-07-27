@@ -12,7 +12,7 @@
  * address or unrelated fees are included. Operational details (pickup location,
  * flight number, etc.) come from the per-service `notes` field that ops control.
  */
-import { renderDocumentShell, escapeHtml, getCompanyInfo, type CompanyInfo } from "./theme";
+import { renderDocumentShell, escapeHtml, getCompanyInfo, formatDocMoney, type CompanyInfo } from "./theme";
 import { formatDocDateTime } from "./i18n";
 
 export interface ServiceBriefInput {
@@ -39,7 +39,9 @@ function serviceTypeLabel(raw: string): string {
 
 function money(amount: number | null, currency: string | null): string {
   if (amount == null) return "—";
-  return `${Number(amount).toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency || "AUD"}`;
+  // Delegate to the shared formatter: correct symbol + decimals per currency,
+  // falling back to the tenant DEFAULT_CURRENCY (KRW for Metheim) when blank.
+  return formatDocMoney(amount, currency);
 }
 
 function formatDateTime(value: string | Date | null): string {

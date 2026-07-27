@@ -14,11 +14,12 @@ import { buildQuoteHtml, type QuoteDocInput } from "./quoteDocument.js";
 import { buildContractHtml, type ContractDocInput } from "./contractDocument.js";
 import { buildApplicationHtml, placementToDoc } from "./applicationPdf.js";
 import { resolveCompanyInfo } from "./companyInfo.js";
+import { DEFAULT_CURRENCY } from "../currency.js";
 import { normalizeLang } from "./i18n.js";
 
 const sampleInvoice: InvoiceDocInput = {
   invoice_ref: "MS-INV-2026-00128", status: "Sent",
-  amount: 1820, currency: "AUD", due_date: "2026-07-01",
+  amount: 1820, currency: DEFAULT_CURRENCY, due_date: "2026-07-01",
   paid_at: null, payment_method: null, description: "Accommodation & arrival services",
   notes: null, created_at: new Date().toISOString(),
   account_name: "Minjae Kim", account_email: "minjae.kim@example.com",
@@ -34,7 +35,7 @@ const sampleInvoice: InvoiceDocInput = {
 
 const sampleQuote: QuoteDocInput = {
   quote_ref: "MS-Q-2026-00091", status: "Sent",
-  currency: "AUD", subtotal: 2120, total: 2120, valid_until: "2026-07-10",
+  currency: DEFAULT_CURRENCY, subtotal: 2120, total: 2120, valid_until: "2026-07-10",
   description: "Homestay accommodation & arrival services", notes: null, created_at: new Date().toISOString(),
   party_name: "Minjae Kim", party_email: "minjae.kim@example.com", space_name: "Carlton homestay — single room",
   line_items: [
@@ -56,7 +57,7 @@ const sampleContract: ContractDocInput = {
   start_date: "2026-07-15", end_date: "2026-12-15",
   effective_date: "2026-07-15", expiry_date: "2026-12-15", billing_frequency: "Monthly",
   weekly_rate: 360, total_rent: 9360, bond_amount: 1200, advance_amount: 1450,
-  currency: "AUD",
+  currency: DEFAULT_CURRENCY,
   additional_services: [
     { name: "Airport pickup", quantity: 1, unit_amount: 90, total_amount: 90, recurring: false, frequency: null, notes: "On arrival — flight QF409" },
     { name: "Initial settlement support", quantity: 1, unit_amount: 250, total_amount: 250, recurring: false, frequency: null, notes: null },
@@ -68,7 +69,7 @@ const sampleContract: ContractDocInput = {
 
 const samplePlacement = {
   placement_ref: "MS-HSP-2026-00042", status: "AwaitingPayment",
-  currency: "AUD", move_in_date: "2026-07-15", move_out_date: "2026-12-15",
+  currency: DEFAULT_CURRENCY, move_in_date: "2026-07-15", move_out_date: "2026-12-15",
   billing_cycle_weeks: 4, billing_method: "card",
   placement_fee: 550, deposit: 1200, monthly_fee: 1450, created_at: new Date().toISOString(),
 };
