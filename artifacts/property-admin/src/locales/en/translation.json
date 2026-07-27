@@ -4486,7 +4486,9 @@
     "revenue_report_title": "Revenue Report",
     "revenue_report_desc": "Revenue breakdown and trends",
     "occupancy_report_title": "Occupancy Report",
-    "occupancy_report_desc": "Space occupancy over time"
+    "occupancy_report_desc": "Space occupancy over time",
+    "rental_fees_title": "Rental Fee Schedule",
+    "rental_fees_desc": "Per-type brokerage & self-management commission rate card"
   },
   "settings_org": {
     "page_subtitle": "Company profile and contact details"
@@ -4521,5 +4523,21 @@
     "delete_desc": "This account will be moved to the archive. You can restore it later.",
     "seeded_title": "Standard COA loaded",
     "seeded_desc": "{{count}} accounts added"
+  },
+  "rental_fees": {
+    "title": "Rental Fee Schedule",
+    "subtitle": "Per-type brokerage & self-management commission rate card used when a unit is rented.",
+    "add": "New type",
+    "seed": "Load default table (A,B / C / D / E)",
+    "col_type": "Type",
+    "col_brokerage": "Brokerage fee",
+    "col_self": "Self-management fee",
+    "col_working": "Working fee",
+    "col_status": "Status",
+    "currency": "Currency",
+    "note": "Note",
+    "surcharge": "Brokerage surcharge %",
+    "withholding": "Self withholding %",
+    "footnote": "Brokerage shows the base amount plus the simplified-tax surcharge actually paid; self-management shows the base amount net of withholding tax. Working is the flat self fee when the customer is sourced directly (no external agent)."
   }
 }

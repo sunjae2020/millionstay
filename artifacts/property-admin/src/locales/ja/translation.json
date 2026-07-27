@@ -4486,7 +4486,9 @@
     "revenue_report_title": "売上レポート",
     "revenue_report_desc": "売上の内訳と傾向",
     "occupancy_report_title": "稼働率レポート",
-    "occupancy_report_desc": "期間ごとのスペース稼働率"
+    "occupancy_report_desc": "期間ごとのスペース稼働率",
+    "rental_fees_title": "賃貸手数料表",
+    "rental_fees_desc": "タイプ別の仲介・自社管理手数料の基準表"
   },
   "settings_org": {
     "page_subtitle": "会社プロフィールと連絡先"
@@ -4521,5 +4523,21 @@
     "delete_desc": "アーカイブに移動します。後で復元できます。",
     "seeded_title": "標準勘定科目を読み込みました",
     "seeded_desc": "{{count}}件の勘定科目を追加しました"
+  },
+  "rental_fees": {
+    "title": "賃貸手数料表",
+    "subtitle": "賃貸時に適用されるタイプ別の仲介手数料・自社管理手数料の基準表です。",
+    "add": "タイプを追加",
+    "seed": "デフォルト表を読み込む (A,B / C / D / E)",
+    "col_type": "タイプ",
+    "col_brokerage": "仲介手数料",
+    "col_self": "自社手数料",
+    "col_working": "Working手数料",
+    "col_status": "ステータス",
+    "currency": "通貨",
+    "note": "備考",
+    "surcharge": "仲介 簡易課税 %",
+    "withholding": "自社 源泉徴収 %",
+    "footnote": "仲介手数料は基準額に簡易課税を加算した実支払額、自社手数料は基準額から源泉徴収を差し引いた実支払額を併せて表示します。Workingは直接集客（不動産を介さない）時に適用する自社手数料の固定額です。"
   }
 }

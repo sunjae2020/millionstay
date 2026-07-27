@@ -116,6 +116,7 @@ import ContractTypesPage from "@/pages/settings/sub/ContractTypes";
 import ProductGroupsPage from "@/pages/settings/sub/ProductGroups";
 import ProductTypesPage from "@/pages/settings/sub/ProductTypes";
 import CostCenterPage from "@/pages/settings/sub/CostCenter";
+import RentalFeeSchedulesPage from "@/pages/settings/sub/RentalFeeSchedules";
 import TranslationsPage from "@/pages/settings/sub/Translations";
 import BookingReportPage from "@/pages/settings/sub/BookingReport";
 import IntegrationsPage from "@/pages/settings/sub/Integrations";
@@ -330,6 +331,7 @@ function Router() {
       <Route path="/settings/users" component={UsersPage} />
       <Route path="/settings/roles" component={RolesPage} />
       <Route path="/settings/commission-plans" component={CommissionPlansPage} />
+      <Route path="/settings/rental-fee-schedules" component={RentalFeeSchedulesPage} />
       <Route path="/settings/email-templates" component={EmailTemplatesPage} />
       <Route path="/settings/document-templates" component={DocumentTemplatesPage} />
       <Route path="/settings/document-templates/:id" component={DocumentTemplateEditPage} />

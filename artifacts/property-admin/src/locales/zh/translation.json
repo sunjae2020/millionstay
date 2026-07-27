@@ -4486,7 +4486,9 @@
     "revenue_report_title": "收入报表",
     "revenue_report_desc": "收入明细和趋势",
     "occupancy_report_title": "入住率报表",
-    "occupancy_report_desc": "一段时间内的空间入住率"
+    "occupancy_report_desc": "一段时间内的空间入住率",
+    "rental_fees_title": "租赁佣金标准表",
+    "rental_fees_desc": "按房型的中介与自营管理佣金标准表"
   },
   "settings_org": {
     "page_subtitle": "公司资料和联系方式"
@@ -4521,5 +4523,21 @@
     "delete_desc": "该科目将移至归档，稍后可恢复。",
     "seeded_title": "已载入标准科目表",
     "seeded_desc": "已新增 {{count}} 个科目"
+  },
+  "rental_fees": {
+    "title": "租赁佣金标准表",
+    "subtitle": "租赁时按房型适用的中介佣金与自营管理佣金标准表。",
+    "add": "新增房型",
+    "seed": "载入默认表 (A,B / C / D / E)",
+    "col_type": "房型",
+    "col_brokerage": "中介佣金",
+    "col_self": "自营佣金",
+    "col_working": "Working佣金",
+    "col_status": "状态",
+    "currency": "货币",
+    "note": "备注",
+    "surcharge": "中介简易课税 %",
+    "withholding": "自营预扣税 %",
+    "footnote": "中介佣金显示基准金额加计简易课税后的实付金额；自营佣金显示基准金额扣除预扣税后的实付金额。Working 为直接获客（不经过中介）时适用的自营佣金固定金额。"
   }
 }

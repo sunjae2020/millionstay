@@ -151,6 +151,12 @@ const REF_CARDS: CardDef[] = [
     href: "/settings/cost-center",
   },
   {
+    title: "settings_hub.rental_fees_title",
+    description: "settings_hub.rental_fees_desc",
+    icon: Percent,
+    href: "/settings/rental-fee-schedules",
+  },
+  {
     title: "settings_hub.suburb_title",
     description: "settings_hub.suburb_desc",
     icon: MapPin,

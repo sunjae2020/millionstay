@@ -4486,7 +4486,9 @@
     "revenue_report_title": "매출 리포트",
     "revenue_report_desc": "매출 내역 및 추세",
     "occupancy_report_title": "점유율 리포트",
-    "occupancy_report_desc": "기간별 공간 점유율"
+    "occupancy_report_desc": "기간별 공간 점유율",
+    "rental_fees_title": "임대 수수료 기준표",
+    "rental_fees_desc": "타입별 중개·자체 관리수수료 기준표"
   },
   "settings_org": {
     "page_subtitle": "회사 프로필 및 연락처 정보"
@@ -4521,5 +4523,21 @@
     "delete_desc": "보관함으로 이동됩니다. 나중에 복원할 수 있습니다.",
     "seeded_title": "표준 계정과목을 불러왔습니다",
     "seeded_desc": "{{count}}개 계정이 추가되었습니다"
+  },
+  "rental_fees": {
+    "title": "임대 수수료 기준표",
+    "subtitle": "임대 시 적용되는 타입별 부동산 중개수수료·자체 관리수수료 기준표입니다.",
+    "add": "타입 추가",
+    "seed": "기본 표 불러오기 (A,B / C / D / E)",
+    "col_type": "타입",
+    "col_brokerage": "중개수수료",
+    "col_self": "자체수수료",
+    "col_working": "Working수수료",
+    "col_status": "상태",
+    "currency": "통화",
+    "note": "비고",
+    "surcharge": "중개 간이과세 %",
+    "withholding": "자체 원천징수 %",
+    "footnote": "중개수수료는 기준 금액에 간이과세를 가산한 실지급액을, 자체수수료는 기준 금액에서 원천징수를 차감한 실지급액을 함께 표시합니다. Working은 직접 모객(부동산 미경유) 시 적용하는 자체수수료 고정액입니다."
   }
 }
