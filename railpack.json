@@ -6,6 +6,10 @@
     }
   },
   "deploy": {
-    "startCommand": "node --enable-source-maps artifacts/api-server/dist/index.mjs"
+    "startCommand": "node --enable-source-maps artifacts/api-server/dist/index.mjs",
+    "aptPackages": ["chromium"],
+    "variables": {
+      "PUPPETEER_SKIP_DOWNLOAD": "true"
+    }
   }
 }
