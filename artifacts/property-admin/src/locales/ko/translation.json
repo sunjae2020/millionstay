@@ -2870,6 +2870,11 @@
     "website_label": "웹사이트",
     "logo_url_label": "로고 URL",
     "logo_url_helper": "모든 문서(청구서, 영수증, 견적서, 계약서)와 이메일의 머리글에 표시됩니다.",
+    "stamp_label": "회사 도장(직인)",
+    "stamp_upload": "도장 업로드",
+    "stamp_helper": "퇴거 세대 확인서의 발행처 서명란에 표시됩니다. 배경이 투명한 PNG를 권장합니다.",
+    "stamp_none": "없음",
+    "stamp_upload_failed": "도장 이미지 업로드에 실패했습니다.",
     "address_title": "주소",
     "address_subtitle": "주 사업장",
     "address_line1_label": "주소 1",
@@ -4291,7 +4296,9 @@
     "no_deductions": "공제 없음 — 보증금 전액 환급.",
     "add_deduction": "공제 추가",
     "finalized_gl": "확정됨 — 총계정원장 분개 전기 완료 (차변 예치 보증금 / 대변 현금 + 수익).",
-    "placeholder_description": "손상 설명 (예: 바닥 긁힘 수리)"
+    "placeholder_description": "손상 설명 (예: 바닥 긁힘 수리)",
+    "download_pdf": "퇴거 세대 확인서 PDF",
+    "pdf_failed": "퇴거 세대 확인서 PDF 생성에 실패했습니다."
   },
   "integrations": {
     "subtitle": "모든 외부 서비스 연동을 관리합니다",

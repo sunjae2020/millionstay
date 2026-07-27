@@ -67,6 +67,13 @@ export interface CompanyInfo {
   website: string;
   address: string;
   logoUrl: string;
+  /**
+   * Company seal / stamp (도장/직인) image URL. Rendered on documents that carry
+   * a signature/issuer block (e.g. the move-out confirmation). Empty when unset,
+   * in which case the document simply omits the seal. Uploaded via Settings →
+   * Organisation (Cloudinary), with a `DOC_STAMP_URL` env fallback.
+   */
+  stampUrl: string;
   /** Per-tenant brand color for document shell accents. Falls back to
    *  DOC_TOKENS.brand (#E8621A) when unset so the primary AU instance is orange. */
   brandColor?: string;
@@ -84,6 +91,7 @@ export function getCompanyInfo(): CompanyInfo {
     website: process.env.PUBLIC_WEB_URL ?? "https://www.millionstay.com",
     address: process.env.COMPANY_ADDRESS ?? "Melbourne, VIC, Australia",
     logoUrl: process.env.EMAIL_LOGO_URL ?? "https://www.millionstay.com/millionstay-logo.png",
+    stampUrl: process.env.DOC_STAMP_URL ?? "",
   };
 }
 

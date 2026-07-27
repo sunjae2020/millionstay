@@ -25,6 +25,7 @@ const CompanyInfoBody = z.object({
   country: z.string().optional(),
   timezone: z.string().optional(),
   logo_url: z.string().optional(),
+  stamp_url: z.string().optional(),
   brand_color: z.string().optional(),
   ceo: z.string().optional(),
   biz_no: z.string().optional(),

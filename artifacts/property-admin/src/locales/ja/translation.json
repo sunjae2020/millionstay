@@ -2870,6 +2870,11 @@
     "website_label": "ウェブサイト",
     "logo_url_label": "ロゴURL",
     "logo_url_helper": "すべての書類（請求書、領収書、見積書、契約書）およびメールのヘッダーに表示されます。",
+    "stamp_label": "会社印（社印）",
+    "stamp_upload": "印鑑をアップロード",
+    "stamp_helper": "退去世帯確認書の発行者署名欄に表示されます。背景が透明なPNGを推奨します。",
+    "stamp_none": "なし",
+    "stamp_upload_failed": "印鑑画像のアップロードに失敗しました。",
     "address_title": "住所",
     "address_subtitle": "主たる事業所",
     "address_line1_label": "住所1",
@@ -4291,7 +4296,9 @@
     "no_deductions": "控除なし — 敷金全額を返金。",
     "add_deduction": "控除を追加",
     "finalized_gl": "確定済み — 総勘定元帳仕訳を記帳済み (借方 預り敷金 / 貸方 現金 + 収益)。",
-    "placeholder_description": "損傷の説明 (例: 床の傷の修理)"
+    "placeholder_description": "損傷の説明 (例: 床の傷の修理)",
+    "download_pdf": "退去世帯確認書 PDF",
+    "pdf_failed": "退去世帯確認書のPDF生成に失敗しました。"
   },
   "integrations": {
     "subtitle": "すべての外部サービス連携を管理します",

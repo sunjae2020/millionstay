@@ -13,6 +13,7 @@ import { buildReceiptHtml } from "./receiptDocument.js";
 import { buildQuoteHtml, type QuoteDocInput } from "./quoteDocument.js";
 import { buildContractHtml, type ContractDocInput } from "./contractDocument.js";
 import { buildApplicationHtml, placementToDoc } from "./applicationPdf.js";
+import { buildMoveOutSettlementHtml, type MoveOutDocInput } from "./moveOutSettlementDocument.js";
 import { resolveCompanyInfo } from "./companyInfo.js";
 import { DEFAULT_CURRENCY } from "../currency.js";
 import { normalizeLang } from "./i18n.js";
@@ -92,6 +93,19 @@ const sampleStudent = {
   guardian_email: "soyeon.kim@example.com", guardian_phone: "+82 10 8765 4321",
 };
 
+// Representative move-out confirmation (deposit settlement) for the Studio preview.
+const sampleMoveOut: MoveOutDocInput = {
+  settlement_ref: "MS-DS-2026-00042", status: "finalized",
+  as_of_date: "2026-07-21", currency: DEFAULT_CURRENCY,
+  unit: "Unit 402", tenant_name: "Minjae Kim",
+  contract_start: "2024-07-22", contract_end: "2026-07-21",
+  monthly_rent: 1450, deposit_held: 1200, total_deducted: 250, refund_amount: 950,
+  deductions: [
+    { description: "Outstanding rent", amount: 150, remark: "Part of final month" },
+    { description: "End-of-lease cleaning", amount: 100, remark: "" },
+  ],
+};
+
 /**
  * Render a full sample document for a `pdf.*` template, injecting the edited body
  * as the document's terms/notes. Returns null for keys without a known full-doc
@@ -129,6 +143,9 @@ export async function renderSampleDocumentHtml(key: string, bodyHtml: string, lo
       },
     );
     return buildApplicationHtml(doc, true, company);
+  }
+  if (key === "pdf.move_out_confirmation") {
+    return buildMoveOutSettlementHtml(sampleMoveOut, company, true, lang, body ?? "");
   }
   return null;
 }

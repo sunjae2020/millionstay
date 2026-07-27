@@ -184,6 +184,29 @@ const LABELS: Dict = {
     vi: "Thanh toán bằng thẻ chịu phụ phí {pct}%, được cộng vào khi chọn thẻ ở bước thanh toán.",
   },
 
+  // ── Move-out confirmation / deposit settlement (퇴거 세대 확인서) ──────────
+  "doctype.move_out":     { en: "Move-out Confirmation", ko: "퇴거 세대 확인서", zh: "退租确认书", ja: "退去世帯確認書", th: "หนังสือยืนยันการย้ายออก", vi: "Xác nhận trả phòng" },
+  "moveout.heading":      { en: "Move-out Confirmation", ko: "퇴거 세대 확인서", zh: "退租确认书", ja: "退去世帯確認書", th: "หนังสือยืนยันการย้ายออก", vi: "Xác nhận trả phòng" },
+  "moveout.asOf":         { en: "as of {date}",          ko: "{date} 기준",     zh: "截至 {date}",  ja: "{date} 基準",     th: "ณ วันที่ {date}",       vi: "tính đến {date}" },
+  "moveout.household":    { en: "Household",             ko: "세대 정보",       zh: "住户信息",     ja: "世帯情報",        th: "ข้อมูลผู้เช่า",         vi: "Thông tin hộ" },
+  "moveout.unit":         { en: "Unit",                  ko: "세대호수",        zh: "房号",         ja: "世帯番号",        th: "หมายเลขห้อง",           vi: "Số căn hộ" },
+  "moveout.contractPeriod": { en: "Contract Period",     ko: "계약기간",        zh: "合同期间",     ja: "契約期間",        th: "ระยะเวลาสัญญา",         vi: "Thời hạn hợp đồng" },
+  "moveout.settlement":   { en: "Settlement",            ko: "정산 내역",       zh: "结算明细",     ja: "精算内訳",        th: "รายการชำระบัญชี",       vi: "Chi tiết quyết toán" },
+  "moveout.no":           { en: "No.",                   ko: "순번",            zh: "序号",         ja: "番号",            th: "ลำดับ",                 vi: "STT" },
+  "moveout.item":         { en: "Item",                  ko: "항목",            zh: "项目",         ja: "項目",            th: "รายการ",                vi: "Hạng mục" },
+  "moveout.remark":       { en: "Remark",                ko: "비고",            zh: "备注",         ja: "備考",            th: "หมายเหตุ",              vi: "Ghi chú" },
+  "moveout.totalA":       { en: "Total (A)",             ko: "합계 A",          zh: "合计 A",       ja: "合計 A",          th: "รวม A",                 vi: "Tổng A" },
+  "moveout.depositB":     { en: "Deposit (B)",           ko: "보증금 B",        zh: "押金 B",       ja: "保証金 B",        th: "เงินประกัน B",          vi: "Tiền cọc B" },
+  "moveout.diffC":        { en: "Balance C (B−A)",       ko: "차액 C (B-A)",    zh: "差额 C (B-A)", ja: "差額 C (B-A)",    th: "ส่วนต่าง C (B-A)",      vi: "Chênh lệch C (B-A)" },
+  "moveout.transferNote": {
+    en: "* If you registered your residence at this address, be sure to file a move-out (residence transfer) report after confirming the deposit refund.",
+    ko: "* 전입신고하셨다면 보증금 반환 확인 후 필히 전출신고 하셔야 합니다.",
+    zh: "* 如已办理迁入登记，请在确认押金退还后务必办理迁出登记。",
+    ja: "* 転入届を提出された場合は、保証金の返還を確認後、必ず転出届を提出してください。",
+    th: "* หากท่านได้แจ้งย้ายเข้าตามที่อยู่นี้ กรุณาแจ้งย้ายออกหลังจากยืนยันการคืนเงินประกันแล้ว",
+    vi: "* Nếu bạn đã đăng ký cư trú tại địa chỉ này, hãy chắc chắn khai báo chuyển đi sau khi xác nhận việc hoàn trả tiền cọc.",
+  },
+
   // ── Email cover (when documents are emailed) ──────────────────────────
   "email.subject": {
     en: "{doc} {ref} from MillionStay",

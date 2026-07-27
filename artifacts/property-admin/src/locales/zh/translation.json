@@ -2870,6 +2870,11 @@
     "website_label": "网站",
     "logo_url_label": "徽标 URL",
     "logo_url_helper": "显示在每份文档（发票、收据、报价单、合同）和电子邮件的页眉中。",
+    "stamp_label": "公司印章",
+    "stamp_upload": "上传印章",
+    "stamp_helper": "显示在退租确认书的落款处。建议使用透明背景的 PNG。",
+    "stamp_none": "无",
+    "stamp_upload_failed": "上传印章图片失败。",
     "address_title": "地址",
     "address_subtitle": "主要营业地点",
     "address_line1_label": "地址行 1",
@@ -4291,7 +4296,9 @@
     "no_deductions": "无扣款 — 全额退还押金。",
     "add_deduction": "添加扣款",
     "finalized_gl": "已定稿 — 已过总账分录（借 已收押金 / 贷 现金 + 收入）。",
-    "placeholder_description": "损坏说明（例如：地板划痕修复）"
+    "placeholder_description": "损坏说明（例如：地板划痕修复）",
+    "download_pdf": "退租确认书 PDF",
+    "pdf_failed": "生成退租确认书 PDF 失败。"
   },
   "integrations": {
     "subtitle": "管理所有外部服务连接",

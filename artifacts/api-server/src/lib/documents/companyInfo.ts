@@ -51,6 +51,8 @@ export interface StoredCompanyInfo {
   country?: string;
   timezone?: string;
   logo_url?: string;
+  /** Company seal / stamp (도장) image URL, shown on the issuer/signature block. */
+  stamp_url?: string;
   brand_color?: string;
   // Operator/legal fields shown in the public landing footer + legal pages
   // (KR business-registration info, legally displayed publicly on a commerce site).
@@ -99,6 +101,7 @@ export async function resolveCompanyInfo(): Promise<CompanyInfo> {
     website: s.website?.trim() || defaults.website,
     address: address || defaults.address,
     logoUrl: s.logo_url?.trim() || defaults.logoUrl,
+    stampUrl: s.stamp_url?.trim() || defaults.stampUrl,
     brandColor: s.brand_color?.trim() || undefined,
   };
 }

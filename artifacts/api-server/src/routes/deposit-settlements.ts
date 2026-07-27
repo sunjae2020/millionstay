@@ -11,11 +11,18 @@ import {
   conditionReportsTable,
   depositSettlementsTable,
   depositDeductionItemsTable,
+  spacesTable,
+  accountsTable,
 } from "@workspace/db";
 import { requireAuth } from "../middlewares/requireAuth";
 import { requireGuestAuth } from "../middlewares/requireGuestAuth";
 import { logAction } from "../utils/auditLog";
 import { postEntry, ACCOUNTS } from "../lib/billing/gl";
+import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
+import { resolveCompanyInfo } from "../lib/documents/companyInfo";
+import { normalizeLang } from "../lib/documents/i18n";
+import { resolveTemplateBody } from "../lib/documents/templateEngine";
+import { buildMoveOutSettlementHtml, type MoveOutDocInput } from "../lib/documents/moveOutSettlementDocument";
 
 const ENTITY = "deposit_settlement";
 
@@ -290,6 +297,92 @@ adminRouter.post("/v1/deposit-settlements/:id/finalize", async (req, res): Promi
     res.json({ success: true, data: await loadSettlementDetail(id) });
   } catch (err: any) {
     res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
+  }
+});
+
+// Assemble the move-out confirmation document input: settlement totals +
+// deduction lines + the booking's household details (unit, tenant, contract
+// period, rent) resolved from space / account / contract.
+async function buildMoveOutDocInput(id: number): Promise<MoveOutDocInput | null> {
+  const detail = await loadSettlementDetail(id);
+  if (!detail) return null;
+
+  const [booking] = await db.select().from(bookingsTable).where(eq(bookingsTable.id, detail.booking_id)).limit(1);
+
+  let unit: string | null = null;
+  let spaceRent: number | null = null;
+  if (booking?.space_id) {
+    const [space] = await db
+      .select({ name: spacesTable.name, monthly_rent: spacesTable.monthly_rent })
+      .from(spacesTable)
+      .where(eq(spacesTable.id, booking.space_id))
+      .limit(1);
+    unit = space?.name ?? null;
+    spaceRent = space?.monthly_rent ?? null;
+  }
+
+  let tenantName: string | null = booking?.name ?? null;
+  if (booking?.account_id) {
+    const [account] = await db
+      .select({ name: accountsTable.name })
+      .from(accountsTable)
+      .where(eq(accountsTable.id, booking.account_id))
+      .limit(1);
+    if (account?.name) tenantName = account.name;
+  }
+
+  // Contract period: prefer the latest contract, else the booking dates.
+  const [contract] = await db
+    .select({ start: contractsTable.start_date, end: contractsTable.end_date })
+    .from(contractsTable)
+    .where(eq(contractsTable.booking_id, detail.booking_id))
+    .orderBy(desc(contractsTable.id))
+    .limit(1);
+
+  const asOf = detail.finalized_at ?? detail.proposed_at ?? detail.created_at;
+
+  return {
+    settlement_ref: detail.settlement_ref,
+    status: detail.status,
+    as_of_date: asOf ? new Date(asOf).toISOString() : null,
+    currency: detail.currency,
+    unit,
+    tenant_name: tenantName,
+    contract_start: contract?.start ?? booking?.check_in_date ?? null,
+    contract_end: contract?.end ?? booking?.check_out_date ?? null,
+    monthly_rent: spaceRent ?? null,
+    deposit_held: Number(detail.deposit_held ?? 0),
+    total_deducted: Number(detail.total_deducted ?? 0),
+    refund_amount: Number(detail.refund_amount ?? 0),
+    deductions: detail.deductions.map((d) => ({ description: d.description, amount: Number(d.amount ?? 0), remark: null })),
+  };
+}
+
+// Render the move-out confirmation ("퇴거 세대 확인서") as a branded document.
+//   GET /v1/deposit-settlements/:id/document.pdf               → application/pdf
+//   GET /v1/deposit-settlements/:id/document.pdf?format=html   → HTML preview
+adminRouter.get("/v1/deposit-settlements/:id/document.pdf", async (req, res): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+    const docInput = await buildMoveOutDocInput(id);
+    if (!docInput) { res.status(404).json({ error: "Settlement not found" }); return; }
+
+    const asHtml = req.query.format === "html";
+    const lang = normalizeLang(req.query.lang as string);
+    const note = await resolveTemplateBody("pdf", "pdf.move_out_confirmation", lang, { ref: docInput.settlement_ref });
+    const html = buildMoveOutSettlementHtml(docInput, await resolveCompanyInfo(), !asHtml, lang, note);
+
+    if (asHtml) { res.type("html").send(html); return; }
+    const pdf = await htmlToPdf(html);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `inline; filename="${docInput.settlement_ref}.pdf"`);
+    res.setHeader("Content-Length", String(pdf.length));
+    res.send(pdf);
+  } catch (err: any) {
+    if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
+    console.error("[deposit-settlements] PDF generation failed:", err);
+    res.status(500).json({ error: "Failed to generate PDF" });
   }
 });
 

@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Save } from "lucide-react";
+import { Save, Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
+import { uploadBrandingImage } from "@/lib/theme";
 import { useTranslation } from "react-i18next";
 import { APP_NAME } from "@/lib/appName";
 
@@ -19,6 +20,7 @@ interface CompanyForm {
   email: string;
   website: string;
   logo_url: string;
+  stamp_url: string;
   address1: string;
   address2: string;
   suburb: string;
@@ -39,6 +41,7 @@ const DEFAULTS: CompanyForm = {
   email: "",
   website: "",
   logo_url: "",
+  stamp_url: "",
   address1: "",
   address2: "",
   suburb: "",
@@ -58,7 +61,24 @@ export function CompanyInfo() {
   // Date format is stored on the global branding row (Settings → Design shares it),
   // NOT in the company_info blob — it governs every screen + document app-wide.
   const [dateFormat, setDateFormat] = useState("DD/MM/YYYY");
-  const { register, handleSubmit, control, reset } = useForm<CompanyForm>({ defaultValues: DEFAULTS });
+  const [uploadingStamp, setUploadingStamp] = useState(false);
+  const { register, handleSubmit, control, reset, setValue, watch } = useForm<CompanyForm>({ defaultValues: DEFAULTS });
+  const stampUrl = watch("stamp_url");
+
+  async function onStampFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file
+    if (!file) return;
+    setUploadingStamp(true);
+    try {
+      const url = await uploadBrandingImage(file);
+      setValue("stamp_url", url, { shouldDirty: true });
+    } catch {
+      toast({ title: t("settings_company.save_failed_title"), description: t("settings_company.stamp_upload_failed"), variant: "destructive" });
+    } finally {
+      setUploadingStamp(false);
+    }
+  }
 
   // Load persisted company info (used as the issuer block on all documents).
   useEffect(() => {
@@ -151,6 +171,36 @@ export function CompanyInfo() {
           <Label>{t("settings_company.logo_url_label")}</Label>
           <Input {...register("logo_url")} placeholder="https://www.millionstay.com/millionstay-logo.png" />
           <p className="text-xs text-muted-foreground">{t("settings_company.logo_url_helper")}</p>
+        </div>
+        <div className="space-y-1.5 col-span-2">
+          <Label>{t("settings_company.stamp_label")}</Label>
+          <div className="flex items-center gap-3">
+            {stampUrl ? (
+              <div className="relative">
+                <img src={stampUrl} alt="" className="h-16 w-16 rounded-md border object-contain bg-white p-1" />
+                <button
+                  type="button"
+                  onClick={() => setValue("stamp_url", "", { shouldDirty: true })}
+                  className="absolute -right-2 -top-2 rounded-full border bg-white p-0.5 text-muted-foreground hover:text-red-600"
+                  aria-label={t("common.remove")}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex h-16 w-16 items-center justify-center rounded-md border border-dashed text-[10px] text-muted-foreground">
+                {t("settings_company.stamp_none")}
+              </div>
+            )}
+            <div className="space-y-1.5">
+              <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm hover:bg-muted/50">
+                <Upload className="h-3.5 w-3.5" />
+                {uploadingStamp ? t("common.uploading") : t("settings_company.stamp_upload")}
+                <input type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={onStampFile} disabled={uploadingStamp} />
+              </label>
+              <p className="text-xs text-muted-foreground">{t("settings_company.stamp_helper")}</p>
+            </div>
+          </div>
         </div>
       </div>
 

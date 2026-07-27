@@ -2870,6 +2870,11 @@
     "website_label": "Website",
     "logo_url_label": "Logo URL",
     "logo_url_helper": "Shown in the header of every document (invoice, receipt, quote, contract) and email.",
+    "stamp_label": "Company seal (stamp)",
+    "stamp_upload": "Upload seal",
+    "stamp_helper": "Shown on the move-out confirmation issuer block. A PNG with a transparent background works best.",
+    "stamp_none": "No seal",
+    "stamp_upload_failed": "Failed to upload the seal image.",
     "address_title": "Address",
     "address_subtitle": "Principal place of business",
     "address_line1_label": "Address Line 1",
@@ -4291,7 +4296,9 @@
     "no_deductions": "No deductions — full deposit refunded.",
     "add_deduction": "Add deduction",
     "finalized_gl": "Finalized — GL entry posted (Dr Deposits Held / Cr Cash + Revenue).",
-    "placeholder_description": "Damage description (e.g. floor scratch repair)"
+    "placeholder_description": "Damage description (e.g. floor scratch repair)",
+    "download_pdf": "Move-out confirmation PDF",
+    "pdf_failed": "Failed to generate the move-out confirmation PDF."
   },
   "integrations": {
     "subtitle": "Manage all external service connections",

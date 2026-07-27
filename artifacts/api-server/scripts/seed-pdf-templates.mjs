@@ -141,6 +141,17 @@ const QUOTE_NOTE = {
   vi: "<p><strong>Về báo giá này.</strong> Báo giá này là ước tính và có hiệu lực đến {{valid_until}}. Giá được hiển thị bằng đơn vị tiền tệ nêu trên và có thể thay đổi sau ngày hết hiệu lực. Để tiếp tục, vui lòng trả lời báo giá này hoặc liên hệ với chúng tôi theo thông tin bên dưới.</p>",
 };
 
+// ── Move-out confirmation notice (HTML, all six locales) ─────────────────────
+// The standard residence-transfer notice printed under the settlement table.
+const MOVE_OUT_NOTE = {
+  en: "<p>* If you registered your residence at this address, be sure to file a move-out (residence transfer) report after confirming the deposit refund.</p>",
+  ko: "<p>* 전입신고하셨다면 보증금 반환 확인 후 필히 전출신고 하셔야 합니다.</p>",
+  ja: "<p>* 転入届を提出された場合は、保証金の返還を確認後、必ず転出届を提出してください。</p>",
+  zh: "<p>* 如已办理迁入登记，请在确认押金退还后务必办理迁出登记。</p>",
+  th: "<p>* หากท่านได้แจ้งย้ายเข้าตามที่อยู่นี้ กรุณาแจ้งย้ายออกหลังจากยืนยันการคืนเงินประกันแล้ว</p>",
+  vi: "<p>* Nếu bạn đã đăng ký cư trú tại địa chỉ này, hãy chắc chắn khai báo chuyển đi sau khi xác nhận việc hoàn trả tiền cọc.</p>",
+};
+
 const TEMPLATES = [
   {
     key: "pdf.invoice", name: "Invoice — PDF document", category: "Documents",
@@ -174,6 +185,11 @@ const TEMPLATES = [
       ko: teamBody("homestay_placement_terms", "ko"), ja: teamBody("homestay_placement_terms", "ja"),
       zh: teamBody("homestay_placement_terms", "zh"), th: teamBody("homestay_placement_terms", "th"),
     },
+  },
+  {
+    key: "pdf.move_out_confirmation", name: "Move-out Confirmation — PDF document", category: "Documents",
+    vars: { ref: { type: "string" } },
+    bodies: MOVE_OUT_NOTE,
   },
 ];
 
