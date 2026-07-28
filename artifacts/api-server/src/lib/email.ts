@@ -5,6 +5,7 @@ import { t, normalizeLang, type DocLang } from "./documents/i18n";
 import { buildUnsubscribeUrl } from "./unsubscribeToken";
 import { resolveTemplate, renderString } from "./documents/templateEngine";
 import { resolveCompanyInfo } from "./documents/companyInfo";
+import { DOC_TOKENS } from "./documents/theme";
 
 let resend: Resend | null = null;
 let resendKey: string | null = null;
@@ -790,6 +791,185 @@ export async function sendMarketingEmail(
     return { ok: true, id };
   } catch (err) {
     console.error(`[email] Failed to send marketing email to ${to}:`, err);
+    return { ok: false, error: err instanceof Error ? err.message : "Send failed" };
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   세대점검표 — tenant signing-link invitation
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+export interface InspectionSignLinkEmailOptions {
+  to: string;
+  toName?: string | null;
+  /** Signing URL (token link). */
+  url: string;
+  /** move_in | move_out — decides the wording. */
+  phase: "move_in" | "move_out";
+  /** Unit identifier shown in the summary box, e.g. "101호 · B타입". */
+  unit?: string | null;
+  reportRef: string;
+  expiresAt?: Date | string | null;
+  /** Copy language. Defaults to the tenant's document language. */
+  lang?: string;
+}
+
+// Tenant-facing copy. Korean leads because this is a Korean-lease document; the
+// other locales exist so the same link works for foreign tenants.
+const SIGN_LINK_COPY: Record<string, {
+  subject: (brand: string, phase: string) => string;
+  phase: Record<"move_in" | "move_out", string>;
+  greeting: (name: string) => string;
+  intro: (phase: string) => string;
+  cta: string;
+  unitLabel: string;
+  refLabel: string;
+  expiry: (date: string) => string;
+  fallback: string;
+  questions: (email: string) => string;
+}> = {
+  ko: {
+    subject: (brand, phase) => `[${brand}] ${phase} 확인 및 서명 요청`,
+    phase: { move_in: "입주 점검", move_out: "퇴거 점검" },
+    greeting: (name) => (name ? `${name}님, 안녕하세요.` : "안녕하세요."),
+    intro: (phase) => `${phase} 결과를 확인하실 수 있도록 세대점검표를 보내드립니다. 아래 버튼을 눌러 항목별 내용을 확인하시고, 다른 점이 있으면 이의제기와 함께 사진을 남겨 주세요. 확인이 끝나면 화면에서 바로 서명하실 수 있습니다.`,
+    cta: "점검표 확인하고 서명하기",
+    unitLabel: "세대",
+    refLabel: "점검표 번호",
+    expiry: (date) => `이 링크는 ${date}까지 사용하실 수 있습니다.`,
+    fallback: "버튼이 열리지 않으면 아래 주소를 복사해 브라우저에 붙여 넣어 주세요.",
+    questions: (email) => `문의사항은 ${email} 으로 회신해 주세요.`,
+  },
+  en: {
+    subject: (brand, phase) => `[${brand}] ${phase} — please review and sign`,
+    phase: { move_in: "Move-in inspection", move_out: "Move-out inspection" },
+    greeting: (name) => (name ? `Hi ${name},` : "Hello,"),
+    intro: (phase) => `Here is the unit inspection checklist from your ${phase.toLowerCase()}. Tap the button below to review each item. If anything differs from what you see, raise a dispute and attach a photo. You can sign directly on the same screen once you are done.`,
+    cta: "Review and sign",
+    unitLabel: "Unit",
+    refLabel: "Reference",
+    expiry: (date) => `This link is valid until ${date}.`,
+    fallback: "If the button does not work, copy this address into your browser.",
+    questions: (email) => `Questions? Just reply to ${email}.`,
+  },
+  ja: {
+    subject: (brand, phase) => `[${brand}] ${phase}のご確認と署名のお願い`,
+    phase: { move_in: "入居点検", move_out: "退去点検" },
+    greeting: (name) => (name ? `${name} 様` : "お世話になっております。"),
+    intro: (phase) => `${phase}の結果をご確認いただくため、住戸点検表をお送りします。下のボタンから各項目をご確認いただき、相違がある場合は異議と写真をお送りください。ご確認後、そのまま画面上で署名いただけます。`,
+    cta: "点検表を確認して署名する",
+    unitLabel: "住戸",
+    refLabel: "点検表番号",
+    expiry: (date) => `このリンクは ${date} までご利用いただけます。`,
+    fallback: "ボタンが開かない場合は、下記のURLをブラウザに貼り付けてください。",
+    questions: (email) => `ご不明な点は ${email} までご返信ください。`,
+  },
+  zh: {
+    subject: (brand, phase) => `[${brand}] ${phase}确认与签名`,
+    phase: { move_in: "入住点检", move_out: "退租点检" },
+    greeting: (name) => (name ? `${name} 您好，` : "您好，"),
+    intro: (phase) => `现将${phase}的房屋点检表发送给您。请点击下方按钮逐项确认，如与实际情况不符，可提出异议并上传照片。确认完成后即可在同一页面签名。`,
+    cta: "查看点检表并签名",
+    unitLabel: "房屋",
+    refLabel: "点检表编号",
+    expiry: (date) => `此链接有效期至 ${date}。`,
+    fallback: "如果按钮无法打开，请复制以下网址到浏览器中打开。",
+    questions: (email) => `如有疑问，请回复至 ${email}。`,
+  },
+  th: {
+    subject: (brand, phase) => `[${brand}] ${phase} — กรุณาตรวจสอบและลงลายเซ็น`,
+    phase: { move_in: "การตรวจตอนเข้าอยู่", move_out: "การตรวจตอนย้ายออก" },
+    greeting: (name) => (name ? `เรียน คุณ${name}` : "สวัสดีค่ะ"),
+    intro: (phase) => `นี่คือแบบตรวจสภาพห้องจาก${phase} กรุณากดปุ่มด้านล่างเพื่อตรวจสอบแต่ละรายการ หากมีจุดใดไม่ตรงกับสภาพจริง สามารถโต้แย้งพร้อมแนบรูปได้ และลงลายเซ็นได้ในหน้าเดียวกัน`,
+    cta: "ตรวจสอบและลงลายเซ็น",
+    unitLabel: "ห้องพัก",
+    refLabel: "เลขที่แบบตรวจ",
+    expiry: (date) => `ลิงก์นี้ใช้ได้ถึง ${date}`,
+    fallback: "หากปุ่มไม่ทำงาน กรุณาคัดลอกลิงก์ด้านล่างไปเปิดในเบราว์เซอร์",
+    questions: (email) => `หากมีข้อสงสัย กรุณาตอบกลับมาที่ ${email}`,
+  },
+};
+
+/**
+ * Email the tenant their 세대점검표 signing link.
+ *
+ * Best-effort like the other transactional senders: returns a result instead of
+ * throwing, so issuing the link never fails because mail is misconfigured — the
+ * admin can always copy the URL by hand.
+ */
+export async function sendInspectionSignLinkEmail(
+  opts: InspectionSignLinkEmailOptions,
+): Promise<{ ok: boolean; skipped?: boolean; error?: string }> {
+  const client = getResend();
+  if (!client) {
+    console.log(`[email] RESEND_API_KEY not set — inspection sign link: ${opts.url}`);
+    return { ok: false, skipped: true, error: "Email service not configured" };
+  }
+
+  const company = await resolveCompanyInfo().catch(() => null);
+  const brand = company?.tradingName || "MillionStay";
+  const logoUrl = company?.logoUrl || LOGO_URL;
+  const legalName = company?.legalName || "MillionStay Pty Ltd";
+  const supportEmail = company?.email || (await resolveSupportEmail());
+
+  const lang = normalizeLang(opts.lang ?? process.env.DEFAULT_DOC_LANG ?? "en");
+  const copy = SIGN_LINK_COPY[lang] ?? SIGN_LINK_COPY.en!;
+  const phaseLabel = copy.phase[opts.phase];
+  const safeUrl = escapeHtml(opts.url);
+  const expiry = opts.expiresAt
+    ? copy.expiry(new Date(opts.expiresAt).toISOString().slice(0, 10))
+    : null;
+
+  const html = `
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+  body{font-family:-apple-system,'Malgun Gothic',sans-serif;margin:0;padding:0;background:#f9fafb;color:#111;}
+  .container{max-width:560px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+  .header{background:#fff;padding:28px 32px;border-bottom:1px solid #f0f0f0;}
+  .header img{height:36px;width:auto;display:block;}
+  .body{padding:32px;}
+  .btn{display:block;text-align:center;background:${DOC_TOKENS.brand};color:#fff;text-decoration:none;padding:14px 24px;border-radius:12px;font-weight:700;font-size:15px;margin:24px 0;}
+  .box{background:${DOC_TOKENS.accentBg};border:1px solid ${DOC_TOKENS.accentBorder};border-radius:10px;padding:16px 20px;margin:20px 0;}
+  .box .label{font-size:12px;letter-spacing:0.04em;color:#999;}
+  .box .value{font-size:15px;font-weight:700;color:#111;}
+  .note{font-size:12px;color:#999;margin-top:16px;}
+  .footer{padding:20px 32px;border-top:1px solid #f0f0f0;font-size:12px;color:#999;text-align:center;}
+</style></head><body>
+<div class="container">
+  <div class="header"><img src="${logoUrl}" alt="${escapeHtml(brand)}" /></div>
+  <div class="body">
+    <p style="font-size:16px;">${escapeHtml(copy.greeting(safeName(opts.toName)))}</p>
+    <p style="color:#555;font-size:14px;line-height:1.7;">${escapeHtml(copy.intro(phaseLabel))}</p>
+    <div class="box">
+      ${opts.unit ? `<div class="label">${escapeHtml(copy.unitLabel)}</div><div class="value">${escapeHtml(opts.unit)}</div>` : ""}
+      <div class="label" style="margin-top:${opts.unit ? "10px" : "0"};">${escapeHtml(copy.refLabel)}</div>
+      <div class="value" style="font-family:monospace;">${escapeHtml(opts.reportRef)}</div>
+    </div>
+    <a href="${safeUrl}" class="btn">${escapeHtml(copy.cta)} →</a>
+    ${expiry ? `<p class="note">${escapeHtml(expiry)}</p>` : ""}
+    <p style="font-size:13px;color:#999;">${escapeHtml(copy.fallback)}<br>
+      <span style="color:${DOC_TOKENS.brand};word-break:break-all;">${safeUrl}</span>
+    </p>
+    <p style="font-size:13px;color:#999;">${escapeHtml(copy.questions(supportEmail))}</p>
+  </div>
+  <div class="footer">© ${new Date().getFullYear()} ${escapeHtml(legalName)} · ${escapeHtml(opts.to)}</div>
+</div></body></html>`;
+
+  try {
+    const { data, error } = await client.emails.send({
+      from: FROM,
+      to: [opts.to],
+      subject: copy.subject(brand, phaseLabel),
+      html,
+    });
+    if (error || !data?.id) {
+      const message = (error as { message?: string } | null)?.message ?? "Send returned no message id";
+      console.error(`[email] Inspection sign link to ${opts.to} rejected:`, message);
+      return { ok: false, error: message };
+    }
+    console.log(`[email] Inspection sign link ${opts.reportRef} sent to ${opts.to} (${data.id})`);
+    return { ok: true };
+  } catch (err) {
+    console.error(`[email] Failed to send inspection sign link to ${opts.to}:`, err);
     return { ok: false, error: err instanceof Error ? err.message : "Send failed" };
   }
 }

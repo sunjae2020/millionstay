@@ -282,8 +282,10 @@ const guestRouter: IRouter = Router();
 guestRouter.use("/v1/guest", requireGuestAuth);
 
 // Verify a booking belongs to the authenticated guest's account.
-async function guestOwnsBooking(guestAccountId: number | null, bookingId: number): Promise<boolean> {
-  if (!guestAccountId) return false;
+async function guestOwnsBooking(guestAccountId: number | null, bookingId: number | null): Promise<boolean> {
+  // booking_id is nullable now that the same tables also serve contract-anchored
+  // 세대점검표 reports — a report without a booking is never guest-visible.
+  if (!guestAccountId || !bookingId) return false;
   const [row] = await db
     .select({ id: bookingsTable.id })
     .from(bookingsTable)

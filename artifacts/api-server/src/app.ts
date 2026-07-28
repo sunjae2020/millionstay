@@ -27,6 +27,7 @@ import serviceHostPortalRouter from "./routes/service-host-portal";
 import partnerCsRouter from "./routes/partner-cs";
 import { homestayPublicRouter, homestayPortalRouter } from "./routes/homestay";
 import { contractSigningPublicRouter, contractSigningAdminRouter } from "./routes/contract-signing";
+import { unitInspectionsAdminRouter, unitInspectionsPublicRouter } from "./routes/unit-inspections";
 import { homestayStudentPublicRouter } from "./routes/homestay-students";
 import { shortTermPublicRouter } from "./routes/short-term";
 import pageContentsRouter from "./routes/page-contents";
@@ -232,6 +233,9 @@ app.use("/api", publicRouter);
 app.use("/api", homestayPublicRouter);
 // Public e-signature: token-addressed signing page fetch + submit (no auth).
 app.use("/api", contractSigningPublicRouter);
+// 세대점검표 — tenant signing link (token-addressed, no login). Must sit before
+// the global requireAuth guard.
+app.use("/api", unitInspectionsPublicRouter);
 // Public homestay student application intake (no auth).
 app.use("/api", homestayStudentPublicRouter);
 // Public short-term accommodation application intake (no auth).
@@ -290,6 +294,8 @@ app.use("/api", contractSigningAdminRouter);
 app.use("/api", rolesRouter);
 // Condition reports — admin side (self-guards with requireAuth on /v1).
 app.use("/api", conditionReportsAdminRouter);
+// 세대점검표 — admin side (self-guards with requireAuth on /v1).
+app.use("/api", unitInspectionsAdminRouter);
 app.use("/api", depositSettlementsAdminRouter);
 app.use("/api", router);
 

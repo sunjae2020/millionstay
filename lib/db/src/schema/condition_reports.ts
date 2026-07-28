@@ -18,13 +18,32 @@ import { z } from "zod/v4";
 export const conditionReportsTable = pgTable("condition_reports", {
   id: serial("id").primaryKey(),
   report_ref: text("report_ref").notNull().unique(), // e.g. "CR-2026-00001"
-  booking_id: integer("booking_id").notNull(),
-  phase: text("phase").notNull().default("move_in"), // move_in | interim | move_out
+  // Exactly one anchor is set: booking_id (booking-phase evidence) or
+  // contract_id (a lease's 세대점검표 attachment). Both are nullable so the same
+  // tables serve either — see `template_key`.
+  booking_id: integer("booking_id"),
+  contract_id: integer("contract_id"),
+  // null = free-form report (the original booking flow); "metheim_unit" = the
+  // Metheim 세대점검표 form, which carries both 입주 and 퇴거 columns on ONE sheet.
+  template_key: text("template_key"),
+  phase: text("phase").notNull().default("move_in"), // move_in | interim | move_out | full
   status: text("status").notNull().default("draft"),
   // draft → published → tenant_agreed | disputed → finalized
 
   title: text("title"),
   summary: text("summary"), // admin 특이사항 요약
+
+  // Header + meter + 특약 payload for template-driven forms:
+  // { unit_type, unit_no, tenant_name, tenant_phone, move_in_date, move_out_date,
+  //   meters: { in: {electric,water,gas}, out: {…} },
+  //   inspector_in, inspector_out, confirmed_in, confirmed_out, remarks, special_terms }
+  meta: jsonb("meta").notNull().default({}),
+
+  // Token-addressed tenant signing link (no login) — one live token at a time,
+  // scoped to the phase being signed.
+  sign_token: text("sign_token").unique(),
+  sign_token_phase: text("sign_token_phase"), // move_in | move_out
+  sign_token_expires_at: timestamp("sign_token_expires_at", { withTimezone: true }),
 
   created_by: integer("created_by"), // admin users.id
   published_at: timestamp("published_at", { withTimezone: true }),
@@ -50,6 +69,16 @@ export const conditionReportItemsTable = pgTable("condition_report_items", {
   description: text("description"), // admin 특이사항
   condition_rating: text("condition_rating"), // good | fair | damaged
   sort_order: integer("sort_order").notNull().default(0),
+
+  // Template-driven (세대점검표) columns. The paper form records a defect note per
+  // item for BOTH 입주 and 퇴거 on the same row, so each phase gets its own pair.
+  group_key: text("group_key"),   // provided | entrance | bathroom | kitchen | living | bedroom | boiler
+  item_code: text("item_code"),   // stable template id, e.g. "entrance.fire_door"
+  move_in_status: text("move_in_status"),   // ok | defect | na
+  move_in_note: text("move_in_note"),       // 입주하자 내용
+  move_out_status: text("move_out_status"), // ok | defect | na
+  move_out_note: text("move_out_note"),     // 퇴거하자 내용
+
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -63,6 +92,7 @@ export const conditionReportPhotosTable = pgTable("condition_report_photos", {
   cloudinary_id: text("cloudinary_id"),
   caption: text("caption"),
   content_hash: text("content_hash"), // sha256 of image bytes — anti-tamper
+  phase: text("phase").notNull().default("move_in"), // which column the photo evidences
   taken_at: timestamp("taken_at", { withTimezone: true }),
   uploaded_by_type: text("uploaded_by_type").notNull().default("admin"), // admin | tenant
   uploaded_by_id: integer("uploaded_by_id"),
@@ -78,6 +108,24 @@ export const conditionReportResponsesTable = pgTable("condition_report_responses
   responded_at: timestamp("responded_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// Drawn signatures — 점검자(inspector) and 임차인(tenant), captured per phase.
+// Legal metadata (server-side timestamp, ip, user agent) is authoritative; the
+// signed item set is hashed into content_hash so a signature can be tied to the
+// exact checklist state it approved.
+export const conditionReportSignaturesTable = pgTable("condition_report_signatures", {
+  id: serial("id").primaryKey(),
+  condition_report_id: integer("condition_report_id").notNull(),
+  phase: text("phase").notNull(),         // move_in | move_out
+  role: text("role").notNull(),           // inspector | tenant
+  signer_name: text("signer_name"),
+  signature_image: text("signature_image").notNull(), // data:image/png;base64,…
+  content_hash: text("content_hash"),     // sha256 of the checklist state signed
+  signed_at: timestamp("signed_at", { withTimezone: true }).notNull().defaultNow(),
+  ip: text("ip"),
+  user_agent: text("user_agent"),
+  created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const insertConditionReportSchema = createInsertSchema(conditionReportsTable).omit({
   id: true, created_at: true, updated_at: true,
 });
@@ -86,3 +134,4 @@ export type ConditionReport = typeof conditionReportsTable.$inferSelect;
 export type ConditionReportItem = typeof conditionReportItemsTable.$inferSelect;
 export type ConditionReportPhoto = typeof conditionReportPhotosTable.$inferSelect;
 export type ConditionReportResponse = typeof conditionReportResponsesTable.$inferSelect;
+export type ConditionReportSignature = typeof conditionReportSignaturesTable.$inferSelect;

@@ -52,6 +52,7 @@ import OwnerLanding from "@/pages/owner-landing";
 import HomestayRouter from "@/pages/homestay/HomestayRouter";
 import DevRouter from "@/pages/development/DevRouter";
 import Sign from "@/pages/sign";
+import InspectionSign from "@/pages/inspection-sign";
 import PaymentResult from "@/pages/payment-result";
 import { getApiBase } from "@/lib/api-base";
 import { getOwnerSiteSlug } from "@/lib/owner-site";
@@ -84,6 +85,8 @@ function Router() {
     <Switch>
       <Route path="/">{ownerSlug ? <OwnerLanding slug={ownerSlug} /> : <Home />}</Route>
       <Route path="/sign/:token" component={Sign} />
+      {/* 세대점검표 — tenant review & signature (token link, no login). */}
+      <Route path="/inspection/:token" component={InspectionSign} />
       <Route path="/search" component={Search} />
       <Route path="/spaces/:id" component={SpaceDetail} />
       <Route path="/booking/new" component={BookingNew} />
