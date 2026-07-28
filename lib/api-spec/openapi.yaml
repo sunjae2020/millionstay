@@ -3835,6 +3835,14 @@ components:
           type: ["string", "null"]
         sns_id:
           type: ["string", "null"]
+        sns_type:
+          type: ["string", "null"]
+        emergency_contact_name:
+          type: ["string", "null"]
+        emergency_contact_phone:
+          type: ["string", "null"]
+        emergency_contact_email:
+          type: ["string", "null"]
         company_name:
           type: ["string", "null"]
         job_title:
@@ -3843,6 +3851,8 @@ components:
           type: ["string", "null"]
         website:
           type: ["string", "null"]
+        is_foreigner:
+          type: boolean
         passport_number:
           type: ["string", "null"]
         passport_expiry:
@@ -3904,6 +3914,14 @@ components:
           type: ["string", "null"]
         sns_id:
           type: ["string", "null"]
+        sns_type:
+          type: ["string", "null"]
+        emergency_contact_name:
+          type: ["string", "null"]
+        emergency_contact_phone:
+          type: ["string", "null"]
+        emergency_contact_email:
+          type: ["string", "null"]
         company_name:
           type: ["string", "null"]
         job_title:
@@ -3912,6 +3930,8 @@ components:
           type: ["string", "null"]
         website:
           type: ["string", "null"]
+        is_foreigner:
+          type: boolean
         passport_number:
           type: ["string", "null"]
         passport_expiry:
@@ -3972,6 +3992,14 @@ components:
           type: ["string", "null"]
         sns_id:
           type: ["string", "null"]
+        sns_type:
+          type: ["string", "null"]
+        emergency_contact_name:
+          type: ["string", "null"]
+        emergency_contact_phone:
+          type: ["string", "null"]
+        emergency_contact_email:
+          type: ["string", "null"]
         company_name:
           type: ["string", "null"]
         job_title:
@@ -3980,6 +4008,8 @@ components:
           type: ["string", "null"]
         website:
           type: ["string", "null"]
+        is_foreigner:
+          type: boolean
         passport_number:
           type: ["string", "null"]
         passport_expiry:

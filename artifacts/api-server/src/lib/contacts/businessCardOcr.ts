@@ -1,4 +1,5 @@
 import { getAnthropic, isChatConfigured } from "../chat/anthropic.js";
+import { COUNTRY_PROMPT_LIST, normaliseCountry } from "../countries.js";
 
 /**
  * Business-card OCR — Contact detail → 명함.
@@ -77,7 +78,8 @@ const SYSTEM_PROMPT =
   `휴대폰/Mobile/M/HP is mobile_number; one labelled Tel/전화/사무실/Office is office_number. ` +
   `A fax number is NOT a phone field — put it in notes.\n` +
   `- Address: put the full street address in address_line1, the city/시·군·구 in suburb, the province/state/도 in state, ` +
-  `the postal code in postcode, and the country in country (use the English country name, e.g. "South Korea"). ` +
+  `the postal code in postcode, and the country in country — for country answer with the value on the LEFT of ` +
+  `these pairs: ${COUNTRY_PROMPT_LIST}, or omit it if the country is not listed. ` +
   `If the address is a single unsplittable line, put it all in address_line1 and leave the rest out.\n` +
   `- sns_id is a KakaoTalk / WeChat / LINE / WhatsApp ID if one is printed.\n` +
   `- website is the URL as printed (no scheme is fine).\n` +
@@ -141,7 +143,15 @@ export async function scanBusinessCard(
   const fields: OcrFields = {};
   for (const key of OCR_FIELDS) {
     const v = parsed.fields?.[key];
-    if (typeof v === "string" && v.trim()) fields[key] = v.trim().slice(0, 255);
+    if (typeof v !== "string" || !v.trim()) continue;
+    const value = v.trim().slice(0, 255);
+    // country must land on a value the admin's dropdown can show.
+    if (key === "country") {
+      const c = normaliseCountry(value);
+      if (c) fields.country = c;
+      continue;
+    }
+    fields[key] = value;
   }
 
   const confidence =

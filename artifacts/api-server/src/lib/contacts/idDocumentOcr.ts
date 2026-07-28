@@ -1,4 +1,5 @@
 import { getAnthropic, isChatConfigured } from "../chat/anthropic.js";
+import { COUNTRY_PROMPT_LIST, normaliseCountry } from "../countries.js";
 
 /**
  * Identity-document reader — Contact detail → "신분증에서 사진 추출".
@@ -25,17 +26,6 @@ import { getAnthropic, isChatConfigured } from "../chat/anthropic.js";
 export function getIdOcrModel(): string {
   return process.env["ID_DOC_OCR_MODEL"] || process.env["CHAT_MODEL"] || "claude-sonnet-4-6";
 }
-
-/**
- * Countries offered by the contact form's nationality/country selects. The model
- * must answer with one of these exact strings so the value fits the dropdown —
- * keep in sync with COUNTRIES in property-admin ContactDetail.tsx.
- */
-export const ALLOWED_COUNTRIES = [
-  "Australia", "China", "South Korea", "Japan", "United States", "United Kingdom",
-  "New Zealand", "Singapore", "India", "Canada", "Germany", "France", "Brazil",
-  "Hong Kong", "Taiwan", "Vietnam", "Malaysia", "Indonesia", "Thailand",
-] as const;
 
 /** General (non-identifying) fields the reader may fill. Keys are `contacts` columns. */
 export const ID_FIELDS = [
@@ -109,12 +99,6 @@ function normalizeGender(v: string): string | null {
   return GENDER_MAP[v.trim().toLowerCase()] ?? null;
 }
 
-function normalizeCountry(v: string): string | null {
-  const needle = v.trim().toLowerCase();
-  const hit = ALLOWED_COUNTRIES.find((c) => c.toLowerCase() === needle);
-  return hit ?? null;
-}
-
 /** ISO date (YYYY-MM-DD) only — the contact form's date inputs expect it. */
 function normalizeDate(v: string): string | null {
   const m = /^(\d{4})[-.\/\s]?(\d{1,2})[-.\/\s]?(\d{1,2})\.?$/.exec(v.trim());
@@ -141,8 +125,9 @@ const SYSTEM_PROMPT =
   `  gender — exactly "Male" or "Female", and ONLY when the document explicitly prints a sex/성별 field ` +
   `(e.g. a passport's "Sex M"). NEVER infer gender from the portrait, the person's name, or any digit of an ` +
   `ID number — if no sex field is printed, omit the key.\n` +
-  `  nationality, country — must be one of exactly: ${ALLOWED_COUNTRIES.join(", ")}. Omit if the document's ` +
-  `country is not in that list. A Korean document with no explicit nationality means "South Korea".\n` +
+  `  nationality, country — answer with the value on the LEFT of these pairs (the bracketed spellings are the ` +
+  `same country, listed so you can match them): ${COUNTRY_PROMPT_LIST}. Omit if the document's country is not ` +
+  `listed. A Korean document with no explicit nationality means "대한민국".\n` +
   `  address_line1, suburb, state, postcode — the registered address, if the document prints one. ` +
   `Put the street address in address_line1, the 시/군/구 in suburb, the 도/province in state.\n\n` +
   `ABSOLUTE PROHIBITION — you must NEVER output, and never include anywhere in your answer:\n` +
@@ -215,7 +200,7 @@ export async function scanIdDocument(image: { buffer: Buffer; mimetype: string }
       continue;
     }
     if (key === "nationality" || key === "country") {
-      const c = normalizeCountry(value);
+      const c = normaliseCountry(value);
       if (c) fields[key] = c;
       continue;
     }

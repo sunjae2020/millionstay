@@ -20,15 +20,26 @@ import { Link } from "wouter";
 import { ContactMediaPanel, type PendingCards } from "@/components/ContactMediaPanel";
 import { apiFetch } from "@/lib/apiFetch";
 import { formatPersonName } from "@/lib/nameFormat";
+import { COUNTRIES, normaliseCountry, defaultCountry } from "@/lib/countries";
+import { KoreanAddressSearch } from "@/components/KoreanAddressSearch";
 import { differenceInDays, parseISO } from "date-fns";
 
-const COUNTRIES = [
-  "Australia", "China", "South Korea", "Japan", "United States", "United Kingdom",
-  "New Zealand", "Singapore", "India", "Canada", "Germany", "France", "Brazil",
-  "Hong Kong", "Taiwan", "Vietnam", "Malaysia", "Indonesia", "Thailand",
-];
+/**
+ * Messenger the SNS id belongs to. Stored as the canonical English name; the
+ * label is localised, so a Korean admin picks 카카오톡 and the row reads
+ * "KakaoTalk" everywhere else.
+ */
+const SNS_TYPES = ["KakaoTalk", "LINE", "WhatsApp", "WeChat", "Telegram", "Instagram", "Facebook", "Other"] as const;
 
-const NATIONALITIES = COUNTRIES;
+const SNS_PLACEHOLDER: Record<string, string> = {
+  KakaoTalk: "kakao_id",
+  LINE: "line_id",
+  WhatsApp: "+82 10 1234 5678",
+  WeChat: "wechat_id",
+  Telegram: "@telegram",
+  Instagram: "@instagram",
+  Facebook: "facebook.com/…",
+};
 
 interface ContactForm {
   first_name: string;
@@ -42,6 +53,11 @@ interface ContactForm {
   nationality: string;
   gender: string;
   sns_id: string;
+  sns_type: string;
+  is_foreigner: boolean;
+  emergency_contact_name: string;
+  emergency_contact_phone: string;
+  emergency_contact_email: string;
   company_name: string;
   job_title: string;
   department: string;
@@ -93,10 +109,12 @@ export default function ContactDetail() {
     defaultValues: {
       first_name: "", last_name: "", title: "", other_name: "", email: "",
       mobile_number: "", office_number: "", date_of_birth: "", nationality: "",
-      gender: "", sns_id: "", company_name: "", job_title: "", department: "", website: "",
+      gender: "", sns_id: "", sns_type: "", is_foreigner: false,
+      emergency_contact_name: "", emergency_contact_phone: "", emergency_contact_email: "",
+      company_name: "", job_title: "", department: "", website: "",
       passport_number: "", passport_expiry: "", visa_type: "",
       visa_expiry: "", address_line1: "", suburb: "", state: "", postcode: "",
-      country: "Australia", portal_enabled: false, portal_user_id: "", profile_photo_url: "",
+      country: defaultCountry(), portal_enabled: false, portal_user_id: "", profile_photo_url: "",
       description: "", manual_input: false, status: "Active",
     },
   });
@@ -104,6 +122,8 @@ export default function ContactDetail() {
   const passportExpiry = watch("passport_expiry");
   const visaExpiry = watch("visa_expiry");
   const profilePhoto = watch("profile_photo_url");
+  const snsType = watch("sns_type");
+  const isForeigner = watch("is_foreigner");
 
   useEffect(() => {
     if (contact) {
@@ -116,9 +136,14 @@ export default function ContactDetail() {
         mobile_number: contact.mobile_number ?? "",
         office_number: contact.office_number ?? "",
         date_of_birth: contact.date_of_birth ?? "",
-        nationality: contact.nationality ?? "",
+        nationality: normaliseCountry(contact.nationality),
         gender: contact.gender ?? "",
         sns_id: contact.sns_id ?? "",
+        sns_type: contact.sns_type ?? "",
+        is_foreigner: contact.is_foreigner ?? false,
+        emergency_contact_name: contact.emergency_contact_name ?? "",
+        emergency_contact_phone: contact.emergency_contact_phone ?? "",
+        emergency_contact_email: contact.emergency_contact_email ?? "",
         company_name: contact.company_name ?? "",
         job_title: contact.job_title ?? "",
         department: contact.department ?? "",
@@ -131,7 +156,7 @@ export default function ContactDetail() {
         suburb: contact.suburb ?? "",
         state: contact.state ?? "",
         postcode: contact.postcode ?? "",
-        country: contact.country ?? "Australia",
+        country: normaliseCountry(contact.country) || defaultCountry(),
         portal_enabled: contact.portal_enabled ?? false,
         portal_user_id: contact.portal_user_id ?? "",
         profile_photo_url: contact.profile_photo_url ?? "",
@@ -187,6 +212,21 @@ export default function ContactDetail() {
     },
   });
 
+  /**
+   * Fill the address block from the 우편번호 lookup. Nationality follows the
+   * address country as a default only — an existing value is never overwritten,
+   * because a foreign national living in Korea has both, and they differ.
+   */
+  function applyAddress(a: { postcode: string; address: string; suburb: string; state: string; country: string }) {
+    setValue("postcode", a.postcode, { shouldDirty: true });
+    setValue("address_line1", a.address, { shouldDirty: true });
+    setValue("suburb", a.suburb, { shouldDirty: true });
+    setValue("state", a.state, { shouldDirty: true });
+    const country = normaliseCountry(a.country);
+    setValue("country", country, { shouldDirty: true });
+    if (!getValues("nationality")) setValue("nationality", country, { shouldDirty: true });
+  }
+
   /** Apply the OCR fields the admin ticked in the approval dialog. */
   function applyScannedFields(fields: Record<string, string>) {
     for (const [key, value] of Object.entries(fields)) {
@@ -217,6 +257,10 @@ export default function ContactDetail() {
       title: values.title || null,
       other_name: values.other_name || null,
       sns_id: values.sns_id || null,
+      sns_type: values.sns_type || null,
+      emergency_contact_name: values.emergency_contact_name || null,
+      emergency_contact_phone: values.emergency_contact_phone || null,
+      emergency_contact_email: values.emergency_contact_email || null,
       company_name: values.company_name || null,
       job_title: values.job_title || null,
       department: values.department || null,
@@ -338,15 +382,33 @@ export default function ContactDetail() {
                           <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="__none">—</SelectItem>
-                            {NATIONALITIES.map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+                            {COUNTRIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.value}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      )} />
+                      {/* Defaults to the address country, then edited by hand when they differ. */}
+                      <p className="text-xs text-muted-foreground">{t('contact.hint_nationality_follows_address')}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid gap-1.5">
+                      <Label>{t('contact.label_sns_type')}</Label>
+                      <Controller name="sns_type" control={control} render={({ field }) => (
+                        <Select value={field.value || "__none"} onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}>
+                          <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none">—</SelectItem>
+                            {SNS_TYPES.map((n) => (
+                              <SelectItem key={n} value={n}>{t(`contact.sns_${n.toLowerCase()}`)}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       )} />
                     </div>
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label>{t('contact.label_sns_id')}</Label>
-                    <Input {...register("sns_id")} placeholder="WeChat / KakaoTalk / LINE ID" />
+                    <div className="grid gap-1.5 sm:col-span-2">
+                      <Label>{t('contact.label_sns_id')}</Label>
+                      <Input {...register("sns_id")} placeholder={SNS_PLACEHOLDER[snsType] ?? t('contact.ph_sns_id')} />
+                    </div>
                   </div>
                 </div>
 
@@ -373,9 +435,20 @@ export default function ContactDetail() {
                   </div>
                 </div>
 
-                {/* KYC */}
+                {/* Foreign-national details — passport/visa only matter for foreigners,
+                    so the whole block is behind a toggle instead of sitting empty. */}
                 <div className="rounded-lg border p-4 space-y-4">
-                  <h3 className="font-semibold text-sm">{t('contact.section_identity')}</h3>
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <h3 className="font-semibold text-sm">{t('contact.section_foreigner')}</h3>
+                      <p className="text-xs text-muted-foreground">{t('contact.hint_foreigner')}</p>
+                    </div>
+                    <Controller name="is_foreigner" control={control} render={({ field }) => (
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    )} />
+                  </div>
+                  {isForeigner && (
+                  <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="grid gap-1.5">
                       <Label>{t('contact.label_passport')}</Label>
@@ -402,40 +475,66 @@ export default function ContactDetail() {
                       <ExpiryWarning label={t('contact.doc_visa')} dateStr={visaExpiry} />
                     </div>
                   </div>
+                  </>
+                  )}
                 </div>
 
-                {/* Address */}
+                {/* Address — looked up, not typed (see KoreanAddressSearch). */}
                 <div className="rounded-lg border p-4 space-y-4">
-                  <h3 className="font-semibold text-sm">{t('contact.section_address')}</h3>
-                  <div className="grid gap-1.5">
-                    <Label>{t('contact.label_address')}</Label>
-                    <Input {...register("address_line1")} />
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="font-semibold text-sm">{t('contact.section_address')}</h3>
+                    <KoreanAddressSearch onSelect={applyAddress} />
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="grid gap-1.5 col-span-2">
-                      <Label>{t('contact.label_city')}</Label>
-                      <Input {...register("suburb")} />
+                    <div className="grid gap-1.5">
+                      <Label>{t('contact.label_postcode')}</Label>
+                      <Input {...register("postcode")} placeholder="00000" />
                     </div>
+                    <div className="grid gap-1.5 col-span-1 sm:col-span-3">
+                      <Label>{t('contact.label_address')}</Label>
+                      <Input {...register("address_line1")} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="grid gap-1.5">
                       <Label>{t('contact.label_state')}</Label>
                       <Input {...register("state")} />
                     </div>
                     <div className="grid gap-1.5">
-                      <Label>{t('contact.label_postcode')}</Label>
-                      <Input {...register("postcode")} />
+                      <Label>{t('contact.label_city')}</Label>
+                      <Input {...register("suburb")} />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label>{t('contact.label_country')}</Label>
+                      <Controller name="country" control={control} render={({ field }) => (
+                        <Select value={field.value || "__none"} onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}>
+                          <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none">—</SelectItem>
+                            {COUNTRIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.value}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      )} />
                     </div>
                   </div>
-                  <div className="grid gap-1.5">
-                    <Label>{t('contact.label_country')}</Label>
-                    <Controller name="country" control={control} render={({ field }) => (
-                      <Select value={field.value || "__none"} onValueChange={(v) => field.onChange(v === "__none" ? "" : v)}>
-                        <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="__none">—</SelectItem>
-                          {COUNTRIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    )} />
+                </div>
+
+                {/* Emergency contact — next of kin, one inline entry. */}
+                <div className="rounded-lg border p-4 space-y-4">
+                  <h3 className="font-semibold text-sm">{t('contact.section_emergency')}</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid gap-1.5">
+                      <Label>{t('contact.label_emergency_name')}</Label>
+                      <Input {...register("emergency_contact_name")} />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label>{t('contact.label_emergency_phone')}</Label>
+                      <Input {...register("emergency_contact_phone")} placeholder="010-0000-0000" />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label>{t('contact.label_emergency_email')}</Label>
+                      <Input {...register("emergency_contact_email")} type="email" />
+                    </div>
                   </div>
                 </div>
               </div>

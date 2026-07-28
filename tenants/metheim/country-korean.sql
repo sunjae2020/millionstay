@@ -21,3 +21,9 @@ UPDATE contacts
    SET country = '대한민국',
        updated_at = now()
  WHERE country IN ('KR', 'KOR', 'Korea', 'South Korea', 'Republic of Korea', '한국');
+
+-- Nationality follows the same rule as the address country.
+UPDATE contacts
+   SET nationality = '대한민국',
+       updated_at = now()
+ WHERE nationality IN ('KR', 'KOR', 'Korea', 'South Korea', 'Republic of Korea', '한국');

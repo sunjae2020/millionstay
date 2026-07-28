@@ -17,12 +17,17 @@ export const contactsTable = pgTable("contacts", {
   nationality: text("nationality"),
   gender: text("gender"),
   sns_id: text("sns_id"),
+  // Which messenger sns_id belongs to (KakaoTalk / LINE / WhatsApp / WeChat …).
+  sns_type: text("sns_type"),
   // Business-card fields (populated manually or by the AI business-card OCR).
   // `title` above is the honorific (Mr/Ms) — `job_title` is the role on the card.
   company_name: text("company_name"),
   job_title: text("job_title"),
   department: text("department"),
   website: text("website"),
+  // Passport/visa details only apply to foreign nationals — the admin form
+  // keeps that block behind this toggle.
+  is_foreigner: boolean("is_foreigner").notNull().default(false),
   passport_number: text("passport_number"),
   passport_expiry: text("passport_expiry"),
   visa_type: text("visa_type"),
@@ -32,6 +37,11 @@ export const contactsTable = pgTable("contacts", {
   state: text("state"),
   postcode: text("postcode"),
   country: text("country"),
+  // Next of kin. Guest-portal users have their own guest_emergency_contacts
+  // table; a CRM contact needs a single inline entry, not a 1:N list.
+  emergency_contact_name: text("emergency_contact_name"),
+  emergency_contact_phone: text("emergency_contact_phone"),
+  emergency_contact_email: text("emergency_contact_email"),
   portal_enabled: boolean("portal_enabled").notNull().default(false),
   portal_user_id: text("portal_user_id"),
   profile_photo_url: text("profile_photo_url"),

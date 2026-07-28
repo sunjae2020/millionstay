@@ -585,6 +585,14 @@ export interface ContactResponse {
   /** @nullable */
   sns_id?: string | null;
   /** @nullable */
+  sns_type?: string | null;
+  /** @nullable */
+  emergency_contact_name?: string | null;
+  /** @nullable */
+  emergency_contact_phone?: string | null;
+  /** @nullable */
+  emergency_contact_email?: string | null;
+  /** @nullable */
   company_name?: string | null;
   /** @nullable */
   job_title?: string | null;
@@ -592,6 +600,7 @@ export interface ContactResponse {
   department?: string | null;
   /** @nullable */
   website?: string | null;
+  is_foreigner?: boolean;
   /** @nullable */
   passport_number?: string | null;
   /** @nullable */
@@ -644,6 +653,14 @@ export interface CreateContactBody {
   /** @nullable */
   sns_id?: string | null;
   /** @nullable */
+  sns_type?: string | null;
+  /** @nullable */
+  emergency_contact_name?: string | null;
+  /** @nullable */
+  emergency_contact_phone?: string | null;
+  /** @nullable */
+  emergency_contact_email?: string | null;
+  /** @nullable */
   company_name?: string | null;
   /** @nullable */
   job_title?: string | null;
@@ -651,6 +668,7 @@ export interface CreateContactBody {
   department?: string | null;
   /** @nullable */
   website?: string | null;
+  is_foreigner?: boolean;
   /** @nullable */
   passport_number?: string | null;
   /** @nullable */
@@ -701,6 +719,14 @@ export interface UpdateContactBody {
   /** @nullable */
   sns_id?: string | null;
   /** @nullable */
+  sns_type?: string | null;
+  /** @nullable */
+  emergency_contact_name?: string | null;
+  /** @nullable */
+  emergency_contact_phone?: string | null;
+  /** @nullable */
+  emergency_contact_email?: string | null;
+  /** @nullable */
   company_name?: string | null;
   /** @nullable */
   job_title?: string | null;
@@ -708,6 +734,7 @@ export interface UpdateContactBody {
   department?: string | null;
   /** @nullable */
   website?: string | null;
+  is_foreigner?: boolean;
   /** @nullable */
   passport_number?: string | null;
   /** @nullable */
