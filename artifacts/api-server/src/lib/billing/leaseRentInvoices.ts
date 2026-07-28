@@ -87,6 +87,12 @@ export async function generateLeaseRentInvoices(opts: { year?: number; month?: n
   for (const lease of leases) {
     const dueDate = dueDateFor(year, month, lease.rent_due_day ?? 1);
 
+    // The month may only partially overlap the lease (a lease ending 2026-08-05
+    // with rent due on the 6th owes nothing for August). Bill only when the due
+    // date itself falls inside the tenancy.
+    if (lease.start_date && dueDate < lease.start_date) { skipped++; continue; }
+    if (lease.end_date && dueDate > lease.end_date) { skipped++; continue; }
+
     // Already billed for this month? (covers both migrated and generated refs)
     const [existing] = await db.select({ id: invoicesTable.id })
       .from(invoicesTable)

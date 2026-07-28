@@ -415,6 +415,10 @@ UPDATE accounts SET deleted_at = now(), updated_at = now()
  WHERE deleted_at IS NULL AND (name LIKE 'TEST-%'${PURGE_DEMO ? " OR name LIKE '데모 %'" : ""});
 UPDATE contacts SET deleted_at = now(), updated_at = now()
  WHERE deleted_at IS NULL AND email LIKE '%@example.com';
+-- Invoices hanging off a retired test contract would still count in the finance
+-- dashboard, so retire them with their contract.
+UPDATE invoices SET deleted_at = now(), updated_at = now()
+ WHERE deleted_at IS NULL AND contract_id IN (SELECT id FROM contracts WHERE deleted_at IS NOT NULL);
 ` : "";
 
 const sql = `
