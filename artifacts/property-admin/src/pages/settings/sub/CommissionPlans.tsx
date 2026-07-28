@@ -3,11 +3,9 @@ import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Layout, PageHeader } from "@/components/Layout";
 import { apiJson } from "@/lib/apiFetch";
-import { LookupSelect } from "@/components/LookupSelect";
+import { AccountLookupSelect } from "@/components/AccountLookupSelect";
 import { Button } from "@/components/ui/button";
 import { Percent, Plus, Trash2 } from "lucide-react";
-import { useBrand } from "@/contexts/ThemeContext";
-import { formatMoney } from "@/lib/currency";
 
 // Admin management of agent commission plans (per-agent rate + base). The base
 // determines what percentage_rate applies to — upfront payment, one month's rent,
@@ -68,7 +66,6 @@ export default function CommissionPlansPage() {
 function baseLabel(t: any, base: string) { return t(`commission_plans.base_${base}`, base); }
 
 function PlanRow({ plan, onChanged, onDelete, t }: { plan: Plan; onChanged: () => void; onDelete: () => void; t: any }) {
-  const { currency, currencyPosition } = useBrand();
   const [editing, setEditing] = useState(false);
   if (editing) return <tr><td colSpan={7} className="p-3 bg-gray-50"><PlanForm plan={plan} onDone={() => { setEditing(false); onChanged(); }} onCancel={() => setEditing(false)} /></td></tr>;
   return (
@@ -76,7 +73,7 @@ function PlanRow({ plan, onChanged, onDelete, t }: { plan: Plan; onChanged: () =
       <td className="px-4 py-2.5 font-medium">{plan.agent_name ?? `#${plan.account_id}`}{plan.name ? <span className="text-muted-foreground"> · {plan.name}</span> : null}</td>
       <td className="px-4 py-2.5"><span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">{baseLabel(t, plan.base_type)}</span></td>
       <td className="px-4 py-2.5">{Number(plan.percentage_rate)}%</td>
-      <td className="px-4 py-2.5">{formatMoney(plan.fixed_referral_fee, currency, currencyPosition)}</td>
+      <td className="px-4 py-2.5">{Number(plan.fixed_referral_fee).toLocaleString()}</td>
       <td className="px-4 py-2.5">{plan.stack ? "✓" : "—"}</td>
       <td className="px-4 py-2.5">{plan.status}</td>
       <td className="px-4 py-2.5 text-right whitespace-nowrap">
@@ -110,7 +107,7 @@ function PlanForm({ plan, onDone, onCancel }: { plan?: Plan; onDone: () => void;
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-xs text-muted-foreground mb-1">{t("commission_plans.col_agent", "Agent")}</label>
-          <LookupSelect value={accountId} onChange={setAccountId} lookupUrl="/api/v1/lookup/accounts?type=Agent" displayValue={plan?.agent_name} placeholder={t("commission_plans.pick_agent", "Search agent…")} />
+          <AccountLookupSelect value={accountId} onChange={setAccountId} lookupUrl="/api/v1/lookup/accounts?type=Agent" displayValue={plan?.agent_name} placeholder={t("commission_plans.pick_agent", "Search agent…")} />
         </div>
         <div>
           <label className="block text-xs text-muted-foreground mb-1">{t("commission_plans.col_base", "Base")}</label>

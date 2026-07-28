@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { formatDate } from "@/lib/date";
-import { useBrand } from "@/contexts/ThemeContext";
-import { formatMoney, SUPPORTED_CURRENCIES } from "@/lib/currency";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -22,14 +20,17 @@ import {
   getListContractsQueryKey, getGetContractQueryKey,
 } from "@workspace/api-client-react";
 import { LookupSelect } from "@/components/LookupSelect";
-import { ArrowLeft, Save, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail, Receipt, ClipboardList , Wallet, Check } from "lucide-react";
+import { AccountLookupSelect } from "@/components/AccountLookupSelect";
+import { ArrowLeft, Save, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail, Receipt, ClipboardList, Wallet, Check } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentVersions } from "@/components/DocumentVersions";
 import { HomestaySignatureCard } from "@/components/HomestaySignatureCard";
 import ContractInspections from "@/components/ContractInspections";
+import { useBrand } from "@/contexts/ThemeContext";
+import { SUPPORTED_CURRENCIES } from "@/lib/currency";
 
-// Ordered so the tenant's own currency (from branding) leads; KRW first.
+// Ordered so the tenant's own currency (from branding) leads; falls back to the full list.
 const CURRENCIES = SUPPORTED_CURRENCIES.map((c) => c.code);
 const CONTRACT_CATEGORIES = [
   { value: "sale", labelKey: "contract.cat_sale" },
@@ -57,7 +58,6 @@ interface FormData {
   end_date: string;
   weekly_rate: string;
   total_rent: string;
-  monthly_rent: string;
   bond_amount: string;
   advance_amount: string;
   contract_category: string;
@@ -65,6 +65,7 @@ interface FormData {
   down_payment_date: string;
   balance_amount: string;
   balance_date: string;
+  monthly_rent: string;
   rent_due_day: string;
   currency: string;
   document_url: string;
@@ -74,11 +75,12 @@ interface FormData {
 
 export default function ContractDetail() {
   const { t } = useTranslation();
-  const { currency, currencyPosition } = useBrand();
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const qc = useQueryClient();
   const isNew = id === "new";
+  // Tenant default currency from branding settings (Metheim → KRW; MillionStay → AUD).
+  const { currency: brandCurrency } = useBrand();
 
   const [terminateOpen, setTerminateOpen] = useState(false);
   const [terminateReason, setTerminateReason] = useState("");
@@ -92,7 +94,7 @@ export default function ContractDetail() {
   const [schedType, setSchedType] = useState("Rent");
   const [schedFreq, setSchedFreq] = useState("Biweekly");
   const [schedAmount, setSchedAmount] = useState("");
-  const [schedCurrency, setSchedCurrency] = useState(currency);
+  const [schedCurrency, setSchedCurrency] = useState(brandCurrency);
   const [schedStartDate, setSchedStartDate] = useState("");
   const [schedEndDate, setSchedEndDate] = useState("");
   const [schedNextDue, setSchedNextDue] = useState("");
@@ -102,7 +104,7 @@ export default function ContractDetail() {
   const resetSchedForm = () => {
     setSchedEditItem(null);
     setSchedType("Rent"); setSchedFreq("Biweekly"); setSchedAmount("");
-    setSchedCurrency(currency); setSchedStartDate(""); setSchedEndDate("");
+    setSchedCurrency(brandCurrency); setSchedStartDate(""); setSchedEndDate("");
     setSchedNextDue(""); setSchedActive(true); setSchedGst(true);
   };
 
@@ -115,7 +117,7 @@ export default function ContractDetail() {
   const [lineFreq, setLineFreq] = useState("");
   const [lineUnitPrice, setLineUnitPrice] = useState("");
   const [lineQty, setLineQty] = useState("1");
-  const [lineCurrency, setLineCurrency] = useState(currency);
+  const [lineCurrency, setLineCurrency] = useState(brandCurrency);
   const [lineGst, setLineGst] = useState(true);
   const [lineNotes, setLineNotes] = useState("");
 
@@ -123,7 +125,7 @@ export default function ContractDetail() {
     setLineEditItem(null);
     setLineItemType("Service"); setLineName(""); setLineTrigger("at_activation");
     setLineFreq(""); setLineUnitPrice(""); setLineQty("1");
-    setLineCurrency(currency); setLineGst(true); setLineNotes("");
+    setLineCurrency(brandCurrency); setLineGst(true); setLineNotes("");
   };
 
   const openAddLine = () => { resetLineForm(); setLineDialogOpen(true); };
@@ -135,7 +137,7 @@ export default function ContractDetail() {
     setLineFreq(item.billing_frequency ?? "");
     setLineUnitPrice(item.unit_price != null ? String(item.unit_price) : "");
     setLineQty(item.quantity != null ? String(item.quantity) : "1");
-    setLineCurrency(item.currency ?? currency);
+    setLineCurrency(item.currency ?? brandCurrency);
     setLineGst(item.gst_included !== false);
     setLineNotes(item.notes ?? "");
     setLineDialogOpen(true);
@@ -148,13 +150,13 @@ export default function ContractDetail() {
   const [costRemittedOn, setCostRemittedOn] = useState("");
   const [costPayeeName, setCostPayeeName] = useState("");
   const [costAmount, setCostAmount] = useState("");
-  const [costCurrency, setCostCurrency] = useState(currency);
+  const [costCurrency, setCostCurrency] = useState(brandCurrency);
   const [costNote, setCostNote] = useState("");
 
   const resetCostForm = () => {
     setCostEditItem(null);
     setCostType(""); setCostRemittedOn(""); setCostPayeeName("");
-    setCostAmount(""); setCostCurrency(contract?.currency ?? currency); setCostNote("");
+    setCostAmount(""); setCostCurrency(contract?.currency ?? brandCurrency); setCostNote("");
   };
 
   const openAddCost = () => { resetCostForm(); setCostDialogOpen(true); };
@@ -164,7 +166,7 @@ export default function ContractDetail() {
     setCostRemittedOn(c.remitted_on ?? "");
     setCostPayeeName(c.payee_name ?? "");
     setCostAmount(c.amount != null ? String(c.amount) : "");
-    setCostCurrency(c.currency ?? contract?.currency ?? currency);
+    setCostCurrency(c.currency ?? contract?.currency ?? brandCurrency);
     setCostNote(c.note ?? "");
     setCostDialogOpen(true);
   };
@@ -175,7 +177,7 @@ export default function ContractDetail() {
     setSchedType(s.schedule_type ?? "Rent");
     setSchedFreq(s.frequency ?? "Biweekly");
     setSchedAmount(s.amount != null ? String(s.amount) : "");
-    setSchedCurrency(s.currency ?? currency);
+    setSchedCurrency(s.currency ?? brandCurrency);
     setSchedStartDate(s.start_date ?? "");
     setSchedEndDate(s.end_date ?? "");
     setSchedNextDue(s.next_due_date ?? "");
@@ -208,6 +210,7 @@ export default function ContractDetail() {
     enabled: !isNew,
   });
   const relatedCosts: any[] = relatedCostsData?.data ?? [];
+
   // Rent ledger — every invoice raised against this contract, grouped by the
   // month it falls due, so the tab reproduces the 12-column spreadsheet view.
   const { data: rentInvoicesData } = useQuery({
@@ -234,16 +237,15 @@ export default function ContractDetail() {
   const ledgerOpen = ledgerRows.filter((r) => r.invoice && r.invoice.status !== "Paid");
   const sumAmount = (rows: typeof ledgerRows) => rows.reduce((s, r) => s + Number(r.invoice?.amount ?? 0), 0);
 
-
   const { register, handleSubmit, reset, control } = useForm<FormData>({
     defaultValues: {
       booking_id: null, product_id: null, tenant_account_id: null,
       landlord_account_id: null, space_id: null,
       start_date: "", end_date: "", weekly_rate: "", total_rent: "",
-      monthly_rent: "", bond_amount: "", advance_amount: "",
+      bond_amount: "", advance_amount: "",
       contract_category: "", down_payment: "", down_payment_date: "",
-      balance_amount: "", balance_date: "", rent_due_day: "",
-      currency: currency,
+      balance_amount: "", balance_date: "", monthly_rent: "", rent_due_day: "",
+      currency: brandCurrency,
       document_url: "", terms_text: "", notes: "",
     },
   });
@@ -260,7 +262,6 @@ export default function ContractDetail() {
         end_date: contract.end_date ?? "",
         weekly_rate: contract.weekly_rate != null ? String(contract.weekly_rate) : "",
         total_rent: contract.total_rent != null ? String(contract.total_rent) : "",
-        monthly_rent: (contract as any).monthly_rent != null ? String((contract as any).monthly_rent) : "",
         bond_amount: contract.bond_amount != null ? String(contract.bond_amount) : "",
         advance_amount: contract.advance_amount != null ? String(contract.advance_amount) : "",
         contract_category: (contract as any).contract_category ?? "",
@@ -268,8 +269,9 @@ export default function ContractDetail() {
         down_payment_date: (contract as any).down_payment_date ?? "",
         balance_amount: (contract as any).balance_amount != null ? String((contract as any).balance_amount) : "",
         balance_date: (contract as any).balance_date ?? "",
+        monthly_rent: (contract as any).monthly_rent != null ? String((contract as any).monthly_rent) : "",
         rent_due_day: (contract as any).rent_due_day != null ? String((contract as any).rent_due_day) : "",
-        currency: contract.currency ?? currency,
+        currency: contract.currency ?? brandCurrency,
         document_url: contract.document_url ?? "",
         terms_text: contract.terms_text ?? "",
         notes: contract.notes ?? "",
@@ -463,7 +465,6 @@ export default function ContractDetail() {
     end_date: data.end_date || null,
     weekly_rate: data.weekly_rate ? Number(data.weekly_rate) : null,
     total_rent: data.total_rent ? Number(data.total_rent) : null,
-    monthly_rent: data.monthly_rent ? Number(data.monthly_rent) : null,
     bond_amount: data.bond_amount ? Number(data.bond_amount) : null,
     advance_amount: data.advance_amount ? Number(data.advance_amount) : null,
     contract_category: data.contract_category || null,
@@ -471,8 +472,9 @@ export default function ContractDetail() {
     down_payment_date: data.down_payment_date || null,
     balance_amount: data.balance_amount ? Number(data.balance_amount) : null,
     balance_date: data.balance_date || null,
+    monthly_rent: data.monthly_rent ? Number(data.monthly_rent) : null,
     rent_due_day: data.rent_due_day ? Number(data.rent_due_day) : null,
-    currency: data.currency || currency,
+    currency: data.currency || brandCurrency,
     document_url: data.document_url || null,
     terms_text: data.terms_text || null,
     notes: data.notes || null,
@@ -704,7 +706,7 @@ export default function ContractDetail() {
                 <div>
                   <Label>{t('contract.label_tenant')} *</Label>
                   <Controller name="tenant_account_id" control={control} render={({ field }) => (
-                    <LookupSelect
+                    <AccountLookupSelect
                       lookupUrl="/api/v1/lookup/accounts"
                       value={field.value}
                       onChange={field.onChange}
@@ -716,7 +718,7 @@ export default function ContractDetail() {
                 <div>
                   <Label>{t('contract.label_landlord')}</Label>
                   <Controller name="landlord_account_id" control={control} render={({ field }) => (
-                    <LookupSelect
+                    <AccountLookupSelect
                       lookupUrl="/api/v1/lookup/accounts"
                       value={field.value}
                       onChange={field.onChange}
@@ -803,7 +805,6 @@ export default function ContractDetail() {
                   <Input {...register("total_rent")} type="number" step="0.01" min="0" />
                 </div>
                 <div>
-
                   <Label>{t('contract.label_advance')}</Label>
                   <Input {...register("advance_amount")} type="number" step="0.01" min="0" />
                 </div>
@@ -888,9 +889,9 @@ export default function ContractDetail() {
                           {item.billing_trigger === "recurring" ? t('contract.billing_recurring') : item.billing_trigger === "at_activation" ? t('contract.billing_onetime') : item.billing_trigger}
                         </td>
                         <td className="px-4 py-3 text-muted-foreground">{item.billing_frequency ?? "—"}</td>
-                        <td className="px-4 py-3 font-mono">{item.unit_price != null ? formatMoney(item.unit_price, item.currency ?? currency, currencyPosition) : "—"}</td>
+                        <td className="px-4 py-3 font-mono">{item.unit_price != null ? `$${Number(item.unit_price).toFixed(2)}` : "—"}</td>
                         <td className="px-4 py-3 text-center">{item.quantity ?? 1}</td>
-                        <td className="px-4 py-3 font-mono font-medium">{item.total_price != null ? formatMoney(item.total_price, item.currency ?? currency, currencyPosition) : "—"}</td>
+                        <td className="px-4 py-3 font-mono font-medium">{item.total_price != null ? `$${Number(item.total_price).toFixed(2)}` : "—"}</td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${item.gst_included ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"}`}>
                             {item.gst_included ? t('contract.gst_incl') : t('contract.gst_ex')}
@@ -914,7 +915,7 @@ export default function ContractDetail() {
                       <tr>
                         <td colSpan={6} className="px-4 py-3 text-right font-medium text-sm text-muted-foreground">{t('contract.total_contract_value')}</td>
                         <td className="px-4 py-3 font-mono font-bold text-sm">
-                          {formatMoney(lineItems.reduce((sum: number, i: any) => sum + Number(i.total_price ?? 0), 0), currency, currencyPosition)}
+                          ${lineItems.reduce((sum: number, i: any) => sum + Number(i.total_price ?? 0), 0).toFixed(2)}
                         </td>
                         <td colSpan={2} />
                       </tr>
@@ -1120,11 +1121,11 @@ export default function ContractDetail() {
                     ) : schedules.map((s: any) => (
                       <tr key={s.id} className="border-b hover:bg-gray-50">
                         <td className="px-4 py-3 font-medium">{s.schedule_type ?? "Rent"}</td>
-                        <td className="px-4 py-3 font-mono">{s.amount != null ? formatMoney(s.amount, s.currency ?? currency, currencyPosition) : "—"}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{s.currency ?? currency}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{formatDate(s.start_date)}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{formatDate(s.end_date)}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{formatDate(s.next_due_date)}</td>
+                        <td className="px-4 py-3 font-mono">{s.amount != null ? `$${Number(s.amount).toFixed(2)}` : "—"}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{s.currency ?? brandCurrency}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{s.start_date ?? "—"}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{s.end_date ?? "—"}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{s.next_due_date ?? "—"}</td>
                         <td className="px-4 py-3 text-muted-foreground">{s.frequency ?? "—"}</td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${s.gst_included ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"}`}>
@@ -1295,7 +1296,7 @@ export default function ContractDetail() {
             {lineUnitPrice && lineQty && (
               <div className="bg-gray-50 rounded p-3 text-sm">
                 <span className="text-muted-foreground">{t('common.total')}: </span>
-                <span className="font-mono font-bold">{formatMoney(Number(lineUnitPrice) * Number(lineQty), lineCurrency, currencyPosition)}</span>
+                <span className="font-mono font-bold">${(Number(lineUnitPrice) * Number(lineQty)).toFixed(2)} {lineCurrency}</span>
                 {lineTrigger === "recurring" && lineFreq && <span className="text-muted-foreground ml-2">{t('contract.per_period', { period: lineFreq.toLowerCase() })}</span>}
               </div>
             )}
