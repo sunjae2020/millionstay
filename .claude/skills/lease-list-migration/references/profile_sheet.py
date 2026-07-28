@@ -14,15 +14,17 @@ from collections import Counter
 
 ALIASES = {
     "성함": ["성함", "성명", "이름", "임차인", "세입자"],
+    "계약일": ["계약일", "계약체결일"],
     "호수": ["호수", "호실", "세대"],
     "보증금": ["보증금"],
     "월세": ["월세", "임대료", "월임대료"],
     "계약금": ["계약금"],
     "잔금": ["잔금"],
-    "입주일": ["입주일", "입주"],
+    "입주일": ["입주일", "입주", "입주날짜", "입주 날짜"],
+    "임대기간": ["임대기간", "임대 기간", "계약기간", "계약 기간"],
     "퇴거일": ["퇴거일", "퇴거", "만료일"],
     "입주청소": ["입주청소", "입주 청소"],
-    "임대수수료": ["임대수수료 입금", "임대수수료", "임대 수수료"],
+    "임대수수료": ["임대수수료 입금", "임대수수료", "임대 수수료", "임대차수수료 입금"],
     "부동산수수료": ["부동산 수수료 입금", "부동산수수료", "부동산 수수료", "중개수수료"],
 }
 
@@ -36,9 +38,19 @@ def money(v):
     return int(nums[-1].replace(",", "")) if nums else 0
 
 
+def find_header_row(rows):
+    """제목 행이 앞에 오는 시트가 있어 NO/성함이 있는 행을 헤더로 잡는다."""
+    for i, r in enumerate(rows[:6]):
+        cells = [norm(c).replace(" ", "") for c in r]
+        if "NO" in cells or any(a.replace(" ", "") in cells for a in ALIASES["성함"]):
+            return i
+    return 0
+
+
 def main(path):
     rows = list(csv.reader(io.StringIO(open(path, encoding="utf-8").read())))
-    group, sub, body = rows[0], rows[1], rows[2:]
+    h = find_header_row(rows)
+    group, sub, body = rows[h], rows[h + 1] if h + 1 < len(rows) else [], rows[h + 2:]
 
     col = {}
     for key, names in ALIASES.items():
@@ -56,18 +68,29 @@ def main(path):
                     col[fee] = i
                     break
 
-    months = {}
-    for i, h in enumerate(sub):
-        m = re.match(r"^(\d{1,2})\s*월$", norm(h))
+    seq = []
+    for i, hh in enumerate(sub):
+        m = re.match(r"^(\d{1,2})\s*월$", norm(hh))
         if m:
-            months.setdefault(int(m.group(1)), i)
+            seq.append((int(m.group(1)), i))
+    # 앞머리 12월처럼 월 번호가 되돌아가면 그 앞은 전년도 컬럼이다
+    offsets, off = [], 0
+    for k in range(len(seq) - 1, -1, -1):
+        if k < len(seq) - 1 and seq[k][0] >= seq[k + 1][0]:
+            off -= 1
+        offsets.insert(0, off)
+    months = {mo: idx for (mo, idx), o in zip(seq, offsets) if o == 0}
+    prev_year_cols = [mo for (mo, _), o in zip(seq, offsets) if o < 0]
 
-    year = next((m.group(1) for h in group if (m := re.search(r"(20\d{2})\s*년", norm(h)))), "?")
+    year = next((m.group(1) for hh in list(group) + list(rows[0]) if (m := re.search(r"(20\d{2})\s*년", norm(hh)))), "?")
 
     seen, uniq, dup = set(), [], 0
     for r in body:
         if not any(norm(x) for x in r):
             continue
+        unit = norm(r[col["호수"]]) if 0 <= col["호수"] < len(r) else ""
+        if not re.fullmatch(r"[0-9]{3,4}", unit):
+            continue   # 합계/구분 행
         key = tuple(norm(x) for x in r)
         if key in seen:
             dup += 1
@@ -84,7 +107,7 @@ def main(path):
     missing = [k for k, v in col.items() if v < 0]
     if missing:
         print(f"⚠️  못 찾은 컬럼 : {', '.join(missing)} → HEADER_ALIASES 확인")
-    print(f"월별 컬럼       : {sorted(months)}")
+    print(f"월별 컬럼       : {sorted(months)}" + (f"  (전년도 컬럼: {prev_year_cols})" if prev_year_cols else ""))
     print(f"고유 성함       : {len(set(norm(cell(r, col['성함'])) for r in uniq))}")
 
     for label in ("보증금", "월세", "계약금", "잔금", "입주청소", "임대수수료", "부동산수수료"):

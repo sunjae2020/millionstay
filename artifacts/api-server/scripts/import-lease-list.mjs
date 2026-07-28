@@ -62,6 +62,9 @@ const opt = (n, d = null) => {
 const COMMIT = flag("--commit");
 const CLEANUP_TESTS = flag("--cleanup-tests");
 const PURGE_DEMO = flag("--purge-demo");
+// 기본은 백필: 기존 계약의 값은 건드리지 않고 비어 있는 칸만 채운다(과거 연도 시트를
+// 넣어도 최신 값이 밀리지 않게). 시트가 최신·권위 있는 자료일 때만 --overwrite.
+const OVERWRITE = flag("--overwrite");
 const CSV_PATH = (opt("--csv") || "").replace(/^~/, process.env.HOME || "~");
 const REPORT_PATH = opt("--report");
 const CURRENCY = "KRW";
@@ -108,7 +111,7 @@ const HEADER_ALIASES = {
   unit: ["호수", "호실", "세대"],
   phone: ["연락처", "전화번호", "휴대폰", "핸드폰"],
   address: ["주소", "주소지"],
-  category: ["계약서 구분", "계약구분", "계약 구분"],
+  category: ["계약서 구분", "계약구분", "계약 구분", "계약서구분", "계약자구분", "계약자 구분"],
   downDate: ["계약금입금일", "계약금 입금일"],
   down: ["계약금"],
   balDate: ["잔금입금일", "잔금 입금일"],
@@ -116,14 +119,15 @@ const HEADER_ALIASES = {
   bond: ["보증금"],
   rent: ["월세", "임대료", "월임대료"],
   rentDue: ["월세 납입일", "월세납입일", "납입일", "납부일"],
-  moveIn: ["입주일", "입주"],
+  moveIn: ["입주일", "입주", "입주날짜", "입주 날짜"],
   moveOut: ["퇴거일", "퇴거", "만료일"],
+  leasePeriod: ["임대기간", "임대 기간", "계약기간", "계약 기간"],
   cleaning: ["입주청소", "입주 청소"],
-  leaseFee: ["임대수수료 입금", "임대수수료", "임대 수수료"],
+  leaseFee: ["임대수수료 입금", "임대수수료", "임대 수수료", "임대차수수료 입금", "임대차수수료"],
   agencyFee: ["부동산 수수료 입금", "부동산수수료", "부동산 수수료", "중개수수료"],
   total: ["합  계", "합계", "총계"],
   note: ["비  고", "비고", "특이사항"],
-  monthly: ["월세 입금 현황", "월세입금현황", "입금 현황"],
+  monthly: ["월세 입금 현황", "월세입금현황", "입금 현황", "입금현황"],
 };
 
 const norm = (v) => String(v ?? "").replace(/\s+/g, " ").trim();
@@ -160,22 +164,42 @@ function resolveColumns(groupRow, subRow) {
   C.leaseFeeCols = feeTriple(C.leaseFee);
   C.agencyFeeCols = feeTriple(C.agencyFee);
 
-  // Monthly rent block: sub headers 1월…12월 after the group header.
-  C.months = {};
+  // Monthly rent block: sub headers 1월…12월 after the group header. Some sheets
+  // lead with the PREVIOUS year's December (12월,1월,2월,…), so the sequence is
+  // walked in order and rolled forward whenever the month number goes backwards.
+  C.monthCols = [];
   const monthStart = C.monthly >= 0 ? C.monthly : 0;
+  const seq = [];
   for (let i = monthStart; i < subRow.length; i++) {
     const m = norm(subRow[i]).match(/^(\d{1,2})\s*월$/);
     if (m) {
       const n = Number(m[1]);
-      if (n >= 1 && n <= 12 && C.months[n] === undefined) C.months[n] = i;
+      if (n >= 1 && n <= 12) seq.push({ month: n, idx: i });
     }
   }
+  // Columns belonging to the ledger year are the LAST ascending run; anything
+  // before a backwards step is the prior year.
+  let offset = 0;
+  for (let k = seq.length - 1; k >= 0; k--) {
+    if (k < seq.length - 1 && seq[k].month >= seq[k + 1].month) offset -= 1;
+    seq[k].yearOffset = offset;
+  }
+  C.monthCols = seq;
 
   const missing = ["name", "unit"].filter((k) => C[k] < 0);
   if (missing.length) {
     throw new Error(`필수 컬럼을 찾지 못했습니다: ${missing.join(", ")} — 헤더 별칭(HEADER_ALIASES)에 추가하세요`);
   }
   return C;
+}
+
+/** Sheets may open with a title row; the header row is the one carrying NO/성함. */
+function findHeaderRow(rows) {
+  for (let i = 0; i < Math.min(rows.length, 6); i++) {
+    const cells = (rows[i] ?? []).map((c) => norm(c).replace(/\s/g, ""));
+    if (cells.includes("NO") || HEADER_ALIASES.name.some((a) => cells.includes(a.replace(/\s/g, "")))) return i;
+  }
+  return 0;
 }
 
 /** "2025년 월세 입금 현황" → 2025 */
@@ -191,15 +215,43 @@ const cell = (row, idx) => (idx >= 0 && idx < row.length ? row[idx] : "");
 
 const clean = (v) => String(v ?? "").replace(/ /g, " ").trim();
 
+/** 금액 토큰: 3자리 묶음 콤마 표기이거나 5자리 이상 연속 숫자.
+  * 원본 오타 "24,03.04"(마침표 대신 쉼표)를 2,403원으로 읽지 않도록 좁혀 둔다. */
+const MONEY_TOKEN = /[0-9]{1,3}(?:,[0-9]{3})+|[0-9]{5,}/;
+const MONEY_TOKEN_G = new RegExp(MONEY_TOKEN.source, "g");
+
 /** "₩10,000,000" | "신탁사\n3,000,000" → 10000000 | 3000000 (+ leftover note) */
 function parseMoney(raw) {
   const s = clean(raw);
   if (!s || s === "-") return { amount: null, note: "" };
-  const nums = s.match(/[\d,]{3,}/g);
+  // Older sheets record a payment per line ("700,000\n23.05.26 입금완료\n1,000,000…"),
+  // so amounts that OPEN a line are installments of one figure and are summed.
+  // Amounts buried mid-line (dates, remarks) are ignored.
+  const lineLead = s.split("\n")
+    .map((l) => l.trim().match(new RegExp(`^₩?\\s*(${MONEY_TOKEN.source})(?![\\d.,])`)))
+    .filter(Boolean)
+    .map((m) => Number(m[1].replace(/,/g, "")))
+    .filter((n) => Number.isFinite(n) && n > 0);
+  const note = s.replace(/[\d,₩\s]+/g, " ").replace(/\s+/g, " ").trim();
+  if (lineLead.length) return { amount: lineLead.reduce((a, b) => a + b, 0), note };
+  const nums = s.match(MONEY_TOKEN_G);
   if (!nums) return { amount: null, note: s };
   const amount = Number(nums[nums.length - 1].replace(/,/g, ""));
-  const note = s.replace(/[\d,₩\s]+/g, " ").replace(/\s+/g, " ").trim();
   return { amount: Number.isFinite(amount) ? amount : null, note };
+}
+
+/** "23.02.28~24.01.28" (여러 줄이면 마지막 구간이 최신) → {start, end} */
+function parseLeasePeriod(raw) {
+  const s = clean(raw);
+  if (!s || s === "-") return { start: null, end: null };
+  const ranges = [...s.matchAll(/(\d{2}|\d{4})\.(\d{1,2})\.(\d{1,2})\s*~\s*(\d{2}|\d{4})\.(\d{1,2})\.(\d{1,2})/g)];
+  if (!ranges.length) return { start: null, end: null };
+  const iso = (y, m, d) => {
+    const yy = y.length === 4 ? Number(y) : 2000 + Number(y);
+    return `${yy}-${String(Number(m)).padStart(2, "0")}-${String(Number(d)).padStart(2, "0")}`;
+  };
+  const first = ranges[0], last = ranges[ranges.length - 1];
+  return { start: iso(first[1], first[2], first[3]), end: iso(last[4], last[5], last[6]) };
 }
 
 /** "25.01.31" | "2026.02.05" → "2025-01-31" | "2026-02-05" (+ leftover note) */
@@ -312,9 +364,14 @@ function parsePhones(raw) {
 function parseMonthCell(raw, month, monthlyRent) {
   const s = clean(raw);
   if (!s || s === "-") return null;
-  const dayMatch = s.match(/^(\d{1,2})\s*일/) || s.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
-  const amtMatch = s.match(/([\d,]{5,})\s*(원|입금|한화)?/);
-  const explicitAmount = amtMatch ? Number(amtMatch[1].replace(/,/g, "")) : null;
+  // 무료 렌트/퇴거 표기는 청구 자체가 없다.
+  if (/^FREE$/i.test(s) || /무료/.test(s) || /^퇴거$/.test(s)) return null;
+  // 오래된 시트는 "23.02.27\nO" 처럼 입금 날짜로 기록한다.
+  const isoDay = s.match(/(\d{2})\.(\d{1,2})\.(\d{1,2})/);
+  const dayMatch = s.match(/^(\d{1,2})\s*일/) || s.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/)
+    || (isoDay ? [isoDay[0], isoDay[3]] : null);
+  const amtMatch = s.match(MONEY_TOKEN_G) ? s.match(MONEY_TOKEN) : null;
+  const explicitAmount = amtMatch ? Number(amtMatch[0].replace(/,/g, "")) : null;
 
   if (/미납/.test(s)) {
     return { status: "Overdue", paid_day: null, amount: monthlyRent, method: null, note: s };
@@ -338,9 +395,19 @@ function parseMonthCell(raw, month, monthlyRent) {
 // ── Load + normalise the sheet ───────────────────────────────────────────────
 const raw = fs.readFileSync(CSV_PATH, "utf8");
 const allRows = parseCsv(raw);
-const C = resolveColumns(allRows[0] ?? [], allRows[1] ?? []);
-const YEAR = YEAR_OPT ?? detectYear(allRows[0] ?? [], C.monthly) ?? new Date().getFullYear();
-const bodyRows = allRows.slice(2).filter((r) => r.some((c) => clean(c)));
+const HEADER_ROW = findHeaderRow(allRows);
+const C = resolveColumns(allRows[HEADER_ROW] ?? [], allRows[HEADER_ROW + 1] ?? []);
+// 연도는 월별 블록 헤더 → 시트 제목 행 → 파일명 순으로 찾는다 (2023/2024 시트는
+// 제목에 연도가 없어 파일명이 마지막 근거가 된다). --year 가 있으면 언제나 우선.
+const YEAR = YEAR_OPT
+  ?? detectYear(allRows[HEADER_ROW] ?? [], C.monthly)
+  ?? detectYear(allRows[0] ?? [], -1)
+  ?? (path.basename(CSV_PATH).match(/(20\d{2})/)?.[1] ? Number(path.basename(CSV_PATH).match(/(20\d{2})/)[1]) : null)
+  ?? new Date().getFullYear();
+// A data row must carry a unit; 합계/빈 줄은 걸러낸다.
+const bodyRows = allRows.slice(HEADER_ROW + 2)
+  .filter((r) => r.some((c) => clean(c)))
+  .filter((r) => /^[0-9]{3,4}$/.test(clean(cell(r, C.unit))));
 
 const seen = new Set();
 const rowsIn = [];
@@ -368,6 +435,10 @@ const records = rowsIn.map((r, i) => {
   const due = parseDueDay(cell(r, C.rentDue));
   const moveIn = parseDate(cell(r, C.moveIn));
   const moveOut = parseDate(cell(r, C.moveOut));
+  // 오래된 시트는 퇴거일 대신 "임대기간"만 있다 — 없는 값만 여기서 채운다.
+  const period = parseLeasePeriod(cell(r, C.leasePeriod));
+  const startDate = moveIn.date ?? period.start;
+  const endDate = moveOut.date ?? period.end;
   const flagCol = clean(cell(r, C.no));
 
   const noteParts = [];
@@ -418,11 +489,9 @@ const records = rowsIn.map((r, i) => {
   }
 
   const months = [];
-  for (let m = 1; m <= 12; m++) {
-    const monthIdx = C.months[m];
-    if (monthIdx === undefined) continue;
-    const parsed = parseMonthCell(cell(r, monthIdx), m, rent.amount ?? 0);
-    if (parsed) months.push({ month: m, ...parsed });
+  for (const mc of C.monthCols) {
+    const parsed = parseMonthCell(cell(r, mc.idx), mc.month, rent.amount ?? 0);
+    if (parsed) months.push({ month: mc.month, yearOffset: mc.yearOffset ?? 0, ...parsed });
   }
 
   return {
@@ -441,8 +510,8 @@ const records = rowsIn.map((r, i) => {
     bond_amount: bond.amount,
     monthly_rent: rent.amount,
     rent_due_day: due.day,
-    start_date: moveIn.date,
-    end_date: moveOut.date,
+    start_date: startDate,
+    end_date: endDate,
     auto_renew: /자동연장/.test(clean(cell(r, C.moveOut))),
     notes: noteParts.join("\n"),
     costs,
@@ -473,6 +542,11 @@ for (const rec of ordered) unitFinal.set(rec.unit, rec.ended ? "공실" : "임�
 
 // ── SQL generation (one round trip — the Seoul pooler makes per-row round
 //    trips punishingly slow, so the whole migration runs server-side) ─────────
+/** 필드 병합 규칙: 백필이면 기존 우선, --overwrite 면 시트 우선. */
+const W = (col) => (OVERWRITE
+  ? `COALESCE(EXCLUDED.${col}, contracts.${col})`
+  : `COALESCE(contracts.${col}, EXCLUDED.${col})`);
+
 const q = (v) => (v === null || v === undefined || v === "" ? "NULL" : `'${String(v).replace(/'/g, "''")}'`);
 const n = (v) => (v === null || v === undefined || Number.isNaN(Number(v)) ? "NULL" : String(Number(v)));
 const b = (v) => (v ? "true" : "false");
@@ -491,15 +565,22 @@ const costRows = records.flatMap((r) => r.costs.map((c) => `(${[
   q(r.ref), q(c.cost_type), q(c.remitted_on), q(c.payee_name ?? ""), n(c.amount ?? 0), q(c.note ?? ""),
 ].join(",")})`)).join(",\n");
 
+/** 그 달의 마지막 날 (2월 30일 같은 원장 표기를 실제 날짜로 눌러 준다) */
+const lastDayOf = (y, mo) => new Date(Date.UTC(y, mo, 0)).getUTCDate();
+
 const monthRows = records.flatMap((r) => r.months.map((m) => {
+  // A leading 12월 column belongs to the previous year (yearOffset = -1).
+  const year = YEAR + (m.yearOffset ?? 0);
   const mm = String(m.month).padStart(2, "0");
-  const dueDay = Math.min(r.rent_due_day ?? m.paid_day ?? 1, 28);
+  const last = lastDayOf(year, m.month);
+  const dueDay = Math.min(r.rent_due_day ?? m.paid_day ?? 1, last);
+  const paidDay = m.paid_day ? Math.min(m.paid_day, last) : null;
   return `(${[
-    q(r.ref), m.month, q(`MH-R-${YEAR}-${mm}-${r.unit}`),
+    q(r.ref), m.month, q(`MH-R-${year}-${mm}-${r.unit}`),
     n(m.amount ?? 0), q(m.status),
-    q(`${YEAR}-${mm}-${String(dueDay).padStart(2, "0")}`),
-    q(m.paid_day ? `${YEAR}-${mm}-${String(m.paid_day).padStart(2, "0")}` : null),
-    q(m.method), q(`${YEAR}년 ${m.month}월 월세 (${r.unit}호)`), q(m.note),
+    q(`${year}-${mm}-${String(dueDay).padStart(2, "0")}`),
+    q(paidDay ? `${year}-${mm}-${String(paidDay).padStart(2, "0")}` : null),
+    q(m.method), q(`${year}년 ${m.month}월 월세 (${r.unit}호)`), q(m.note),
   ].join(",")})`;
 })).join(",\n");
 
@@ -521,6 +602,7 @@ UPDATE invoices SET deleted_at = now(), updated_at = now()
 
 const sql = `
 BEGIN;
+DROP TABLE IF EXISTS imp, imp_cost, imp_month, imp_unit, unmapped;
 ${cleanupSql}
 CREATE TEMP TABLE imp (
   seq int, ref text, unit text, account_name text, org text,
@@ -549,7 +631,8 @@ INSERT INTO imp_unit VALUES
 ${unitRows};
 
 -- unmapped 호수 (must be empty)
-CREATE TEMP TABLE unmapped AS
+DROP TABLE IF EXISTS unmapped;
+CREATE TEMP TABLE unmapped ON COMMIT DROP AS
 SELECT i.unit, i.account_name FROM imp i
  WHERE NOT EXISTS (SELECT 1 FROM spaces s WHERE s.name = i.unit || '호' AND s.parent_space_id IS NOT NULL AND s.deleted_at IS NULL);
 
@@ -635,17 +718,31 @@ UPDATE imp i SET space_id = s.id
   FROM spaces s
  WHERE s.name = i.unit || '호' AND s.parent_space_id IS NOT NULL AND s.deleted_at IS NULL;
 
-UPDATE imp i SET existing_id = c.id, final_ref = c.contract_ref
+ALTER TABLE imp ADD COLUMN was_existing boolean NOT NULL DEFAULT false;
+
+UPDATE imp i SET existing_id = c.id, final_ref = c.contract_ref, was_existing = true
   FROM contracts c
  WHERE c.deleted_at IS NULL AND c.space_id = i.space_id
    AND c.start_date IS NOT NULL AND i.start_date IS NOT NULL
    AND c.start_date = i.start_date;
 
+-- 시트마다 입주일이 하루이틀 다르게 적힌 같은 계약(예: 23.11.30 vs 23.12.01)을
+-- 새 계약으로 만들지 않도록, 남은 행은 "같은 호실 + 같은 세입자 + 입주일 7일 이내"로
+-- 한 번 더 맞춰 본다. 세입자 이름까지 같아야 하므로 연속 임차인과 섞이지 않는다.
+UPDATE imp i SET existing_id = c.id, final_ref = c.contract_ref, was_existing = true
+  FROM contracts c
+  JOIN accounts a ON a.id = c.tenant_account_id AND a.deleted_at IS NULL
+ WHERE i.existing_id IS NULL
+   AND c.deleted_at IS NULL AND c.space_id = i.space_id
+   AND a.name = i.account_name
+   AND c.start_date IS NOT NULL AND i.start_date IS NOT NULL
+   AND abs(c.start_date::date - i.start_date::date) <= 7;
+
 -- 새 계약 ref 는 해당 연도 접두사에서 이어붙인다 (다른 연도 ref 와 충돌하지 않음)
 WITH base AS (
-  SELECT COALESCE(MAX(NULLIF(regexp_replace(contract_ref, '^MH-L-\d{4}-', ''), '')::int), 0) AS n
+  SELECT COALESCE(MAX(NULLIF(regexp_replace(contract_ref, '^MH-L-[0-9]{4}-', ''), '')::int), 0) AS n
     FROM contracts
-   WHERE contract_ref ~ '^MH-L-${YEAR}-\d+$'
+   WHERE contract_ref ~ '^MH-L-${YEAR}-[0-9]+$'
 ), numbered AS (
   SELECT seq, row_number() OVER (ORDER BY seq) AS rn FROM imp WHERE existing_id IS NULL
 )
@@ -664,24 +761,24 @@ SELECT i.final_ref,
 FROM imp i
 JOIN spaces s ON s.id = i.space_id
 ON CONFLICT (contract_ref) DO UPDATE SET
-  -- 시트에 값이 있으면 그 값을, 없으면 기존 값을 유지한다 (오래된 시트가 최신 값을 지우지 않도록)
-  tenant_account_id = COALESCE(EXCLUDED.tenant_account_id, contracts.tenant_account_id),
+  -- 백필 모드(기본): 기존 계약의 값은 그대로 두고 비어 있는 칸만 채운다.
+  -- --overwrite 모드: 시트에 값이 있으면 그 값이 이긴다.
+  tenant_account_id = ${W("tenant_account_id")},
   landlord_account_id = COALESCE(contracts.landlord_account_id, EXCLUDED.landlord_account_id),
   space_id = COALESCE(EXCLUDED.space_id, contracts.space_id),
-  contract_category = COALESCE(EXCLUDED.contract_category, contracts.contract_category),
-  down_payment = COALESCE(EXCLUDED.down_payment, contracts.down_payment),
-  down_payment_date = COALESCE(EXCLUDED.down_payment_date, contracts.down_payment_date),
-  balance_amount = COALESCE(EXCLUDED.balance_amount, contracts.balance_amount),
-  balance_date = COALESCE(EXCLUDED.balance_date, contracts.balance_date),
-  bond_amount = COALESCE(EXCLUDED.bond_amount, contracts.bond_amount),
-  monthly_rent = COALESCE(EXCLUDED.monthly_rent, contracts.monthly_rent),
-  rent_due_day = COALESCE(EXCLUDED.rent_due_day, contracts.rent_due_day),
-  start_date = COALESCE(EXCLUDED.start_date, contracts.start_date),
-  -- 종료일은 더 나중 값(연장)이 이긴다
-  end_date = CASE
-    WHEN contracts.end_date IS NULL OR EXCLUDED.end_date IS NULL THEN COALESCE(contracts.end_date, EXCLUDED.end_date)
-    WHEN EXCLUDED.end_date > contracts.end_date THEN EXCLUDED.end_date ELSE contracts.end_date END,
-  status = CASE WHEN contracts.status IN ('Draft') THEN EXCLUDED.status ELSE contracts.status END,
+  contract_category = ${W("contract_category")},
+  down_payment = ${W("down_payment")},
+  down_payment_date = ${W("down_payment_date")},
+  balance_amount = ${W("balance_amount")},
+  balance_date = ${W("balance_date")},
+  bond_amount = ${W("bond_amount")},
+  monthly_rent = ${W("monthly_rent")},
+  rent_due_day = ${W("rent_due_day")},
+  start_date = ${W("start_date")},
+  -- 종료일: 백필에서는 기존 값을 그대로 둔다(자동연장 계약의 NULL 이 지워지지 않도록).
+  -- overwrite 에서는 시트 값이 그대로 반영된다(NULL 포함).
+  end_date = ${OVERWRITE ? "EXCLUDED.end_date" : "CASE WHEN contracts.end_date IS NULL THEN NULL ELSE COALESCE(contracts.end_date, EXCLUDED.end_date) END"},
+  status = ${OVERWRITE ? "EXCLUDED.status" : "CASE WHEN contracts.status IN ('Draft') THEN EXCLUDED.status ELSE contracts.status END"},
   notes = CASE
     WHEN COALESCE(contracts.notes,'') = '' THEN EXCLUDED.notes
     WHEN position('[${YEAR} 임대리스트' in contracts.notes) > 0 THEN contracts.notes
@@ -708,7 +805,8 @@ WHERE i.existing_id IS NOT NULL
 INSERT INTO invoices
   (invoice_ref, contract_id, account_id, amount, currency, status, due_date, paid_at,
    payment_method, description, notes)
-SELECT m.invoice_ref, i.existing_id, c.tenant_account_id, m.amount, '${CURRENCY}', m.status,
+SELECT 'MH-R-' || substring(m.due_date, 1, 7) || '-C' || c.id,
+       i.existing_id, c.tenant_account_id, m.amount, '${CURRENCY}', m.status,
        m.due_date, NULLIF(m.paid_on,'')::timestamptz, m.method, m.descr, m.note
 FROM imp_month m
 JOIN imp i ON i.ref = m.ref
@@ -718,7 +816,9 @@ WHERE i.existing_id IS NOT NULL
     SELECT 1 FROM invoices inv
      WHERE inv.contract_id = i.existing_id AND inv.deleted_at IS NULL
        AND substring(inv.due_date, 1, 7) = substring(m.due_date, 1, 7))
-  AND NOT EXISTS (SELECT 1 FROM invoices inv2 WHERE inv2.invoice_ref = m.invoice_ref);
+  AND NOT EXISTS (
+    SELECT 1 FROM invoices inv2
+     WHERE inv2.invoice_ref = 'MH-R-' || substring(m.due_date, 1, 7) || '-C' || c.id);
 
 -- 6. spaces.status — 시트가 아니라 DB의 "가장 최근 계약"에서 다시 계산한다.
 --    (과거 연도 시트를 넣어도 현재 입주 상태를 되돌리지 않음)
@@ -762,7 +862,9 @@ SELECT 'SAMPLE' AS marker, c.contract_ref, s.name AS unit, a.name AS tenant, c.c
  ORDER BY i.seq LIMIT 8;
 
 SELECT 'MATCHING' AS marker,
-  (SELECT count(*) FROM imp WHERE existing_id IS NOT NULL AND final_ref NOT LIKE 'MH-L-${YEAR}-%') AS matched_existing_other_year,
+  (SELECT count(*) FROM imp WHERE was_existing) AS matched_existing_contract,
+  (SELECT count(*) FROM imp WHERE NOT was_existing) AS newly_created_contract,
+  (SELECT count(*) FROM imp WHERE was_existing AND final_ref NOT LIKE 'MH-L-${YEAR}-%') AS matched_from_other_year,
   (SELECT count(*) FROM imp WHERE space_id IS NULL) AS unit_not_found,
   (SELECT count(*) FROM imp WHERE start_date IS NULL) AS no_move_in_date;
 
