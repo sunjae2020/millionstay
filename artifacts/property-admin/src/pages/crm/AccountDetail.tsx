@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
@@ -12,17 +12,20 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useForm, Controller } from "react-hook-form";
 import {
   useGetAccount, useCreateAccount, useUpdateAccount,
-  useListBookings, useListContracts, useListInvoices,
+  useListBookings, useListContracts, useListInvoices, useListAccounts,
   getListAccountsQueryKey, getGetAccountQueryKey,
   getListBookingsQueryKey, getListContractsQueryKey, getListInvoicesQueryKey,
 } from "@workspace/api-client-react";
 import { LookupSelect } from "@/components/LookupSelect";
-import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Save, ExternalLink } from "lucide-react";
+import { AccountIdentityPanel, type FillSource } from "@/components/AccountIdentityPanel";
+import { EntityPreviewDialog, type EntityPreview } from "@/components/EntityPreviewDialog";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiFetch, apiJson } from "@/lib/apiFetch";
+import { ArrowLeft, Save, ExternalLink, AlertTriangle, Building2, FileText, Download, Upload, Trash2 } from "lucide-react";
 import { Link } from "wouter";
-import { formatDate } from "@/lib/date";
 import { useBrand } from "@/contexts/ThemeContext";
-import { SUPPORTED_CURRENCIES } from "@/lib/currency";
+import { SUPPORTED_CURRENCIES, formatMoney } from "@/lib/currency";
+import { formatDate } from "@/lib/date";
 
 const ACCOUNT_TYPE_COLORS: Record<string, string> = {
   Guest: "bg-blue-100 text-blue-700 border-blue-200",
@@ -86,9 +89,64 @@ interface AccountForm {
   default_currency: string;
   parent_account_id: number | null;
   description: string;
+  logo_url: string;
+  biz_registration_no: string;
+  ceo_name: string;
   manual_input: boolean;
   status: string;
 }
+
+/** Shape of GET /v1/accounts/:id/finance — see the route for the aggregation. */
+interface FinanceTx {
+  kind: "Invoice" | "Payout" | "Cost";
+  id: number;
+  ref: string;
+  date: string | null;
+  description: string;
+  amount: number;
+  currency: string;
+  status: string;
+  detail_url: string;
+}
+interface FinanceSummary {
+  currency: string;
+  receivable: {
+    outstanding: Record<string, number>;
+    overdue: Record<string, number>;
+    paid: Record<string, number>;
+    count: number;
+  };
+  payable: { outstanding: Record<string, number>; paid: Record<string, number>; count: number };
+  costs: { total: Record<string, number> };
+  transactions: FinanceTx[];
+}
+interface RelatedData {
+  contacts: Array<Record<string, any>>;
+  spaces: Array<Record<string, any>>;
+  children: Array<Record<string, any>>;
+}
+interface AccountDocument {
+  id: string;
+  doc_type: string;
+  file_name: string;
+  file_size: number;
+  mime_type: string;
+  created_at: string;
+  signed_url: string;
+}
+
+/** "₩1,200,000 · $340.00" — accounts can transact in more than one currency. */
+function formatTotals(totals: Record<string, number> | undefined, fallbackCurrency: string): string {
+  const entries = Object.entries(totals ?? {}).filter(([, v]) => v);
+  if (!entries.length) return formatMoney(0, fallbackCurrency);
+  return entries.map(([currency, amount]) => formatMoney(amount, currency)).join(" · ");
+}
+
+const TX_KIND_COLORS: Record<string, string> = {
+  Invoice: "bg-blue-100 text-blue-700",
+  Payout: "bg-orange-100 text-orange-700",
+  Cost: "bg-purple-100 text-purple-700",
+};
 
 export default function AccountDetail() {
   const { t } = useTranslation();
@@ -118,7 +176,64 @@ export default function AccountDetail() {
     { query: { enabled: !isNew && !!id, queryKey: getListInvoicesQueryKey({ account_id: id ?? undefined }) } }
   );
 
-  const { register, handleSubmit, reset, control, watch, formState: { errors } } = useForm<AccountForm>({
+  // Tab data that has no generated hook — these endpoints are account-specific.
+  const { data: finance } = useQuery<FinanceSummary>({
+    queryKey: ["account-finance", id],
+    queryFn: () => apiJson<FinanceSummary>(`/api/v1/accounts/${id}/finance`),
+    enabled: !isNew && !!id,
+  });
+  const { data: related } = useQuery<RelatedData>({
+    queryKey: ["account-related", id],
+    queryFn: () => apiJson<RelatedData>(`/api/v1/accounts/${id}/related`),
+    enabled: !isNew && !!id,
+  });
+  const { data: accountDocs } = useQuery<AccountDocument[]>({
+    queryKey: ["account-documents", id],
+    queryFn: () => apiJson<AccountDocument[]>(`/api/v1/accounts/${id}/documents`),
+    enabled: !isNew && !!id,
+  });
+
+  // Account files: upload / delete straight from the Files tab.
+  const docInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [docError, setDocError] = useState<string | null>(null);
+
+  async function handleDocUpload(file?: File) {
+    if (!file || !id) return;
+    setUploadingDoc(true);
+    setDocError(null);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await apiFetch(`/api/v1/accounts/${id}/documents`, { method: "POST", body: form });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error ?? t('account.file_upload_failed'));
+      qc.invalidateQueries({ queryKey: ["account-documents", id] });
+    } catch (err) {
+      setDocError(err instanceof Error ? err.message : t('account.file_upload_failed'));
+    } finally {
+      setUploadingDoc(false);
+      if (docInputRef.current) docInputRef.current.value = "";
+    }
+  }
+
+  async function handleDocDelete(docId: string) {
+    if (!id) return;
+    await apiFetch(`/api/v1/accounts/${id}/documents/${docId}`, { method: "DELETE" });
+    qc.invalidateQueries({ queryKey: ["account-documents", id] });
+  }
+
+  // Row → quick-look modal. One piece of state drives every tab.
+  const [preview, setPreview] = useState<EntityPreview | null>(null);
+
+  // Verification + provenance live outside the form: they are set by the
+  // identity panel, not typed, but must ride along on save.
+  const [bizVerify, setBizVerify] = useState<{ status: string | null; verified_at: string | null }>({
+    status: null, verified_at: null,
+  });
+  const [fieldSources, setFieldSources] = useState<Record<string, string>>({});
+
+  const { register, handleSubmit, reset, control, watch, setValue, getValues, formState: { errors } } = useForm<AccountForm>({
     defaultValues: {
       name: "", account_type: "Guest", primary_contact_id: null, secondary_contact_id: null,
       account_email: "", website_url: "", phone1: "", phone2: "",
@@ -126,7 +241,8 @@ export default function AccountDetail() {
       secondary_address_line1: "", secondary_address_suburb: "", secondary_address_state: "",
       secondary_address_postcode: "", secondary_address_country: "",
       payment_info_id: null, default_commission_id: null, default_currency: brandCurrency,
-      parent_account_id: null, description: "", manual_input: false, status: "Active",
+      parent_account_id: null, description: "", logo_url: "", biz_registration_no: "", ceo_name: "",
+      manual_input: false, status: "Active",
     },
   });
 
@@ -134,6 +250,10 @@ export default function AccountDetail() {
   const showFinance = ACCOUNT_TYPES_WITH_FINANCE.includes(accountType);
   const primaryContactId = watch("primary_contact_id");
   const secondaryContactId = watch("secondary_contact_id");
+  const logoUrl = watch("logo_url");
+  const websiteUrl = watch("website_url");
+  const bizNo = watch("biz_registration_no");
+  const nameValue = watch("name");
 
   useEffect(() => {
     if (account) {
@@ -161,9 +281,17 @@ export default function AccountDetail() {
         default_currency: account.default_currency ?? brandCurrency,
         parent_account_id: account.parent_account_id ?? null,
         description: account.description ?? "",
+        logo_url: (account as any).logo_url ?? "",
+        biz_registration_no: (account as any).biz_registration_no ?? "",
+        ceo_name: (account as any).ceo_name ?? "",
         manual_input: account.manual_input ?? false,
         status: account.status ?? "Active",
       });
+      setBizVerify({
+        status: (account as any).biz_verify_status ?? null,
+        verified_at: (account as any).biz_verified_at ?? null,
+      });
+      setFieldSources(((account as any).field_sources ?? {}) as Record<string, string>);
     }
   }, [account, reset]);
 
@@ -211,6 +339,14 @@ export default function AccountDetail() {
       default_currency: showFinance ? (values.default_currency || null) : null,
       parent_account_id: values.parent_account_id,
       description: values.description || null,
+      logo_url: values.logo_url || null,
+      biz_registration_no: values.biz_registration_no || null,
+      ceo_name: values.ceo_name || null,
+      // Verification only means anything alongside the number it was run on —
+      // clearing the number clears the verdict with it.
+      biz_verify_status: values.biz_registration_no ? bizVerify.status : null,
+      biz_verified_at: values.biz_registration_no ? bizVerify.verified_at : null,
+      field_sources: Object.keys(fieldSources).length ? fieldSources : null,
       manual_input: values.manual_input,
       status: values.status,
     };
@@ -221,7 +357,66 @@ export default function AccountDetail() {
     }
   };
 
+  /** Applies fields approved in the identity panel and records where they came from. */
+  const handleApplyFields = (fields: Record<string, string>, source: FillSource) => {
+    for (const [key, value] of Object.entries(fields)) {
+      setValue(key as keyof AccountForm, value as never, { shouldDirty: true });
+    }
+    setFieldSources((prev) => {
+      const next = { ...prev };
+      for (const key of Object.keys(fields)) next[key] = source;
+      return next;
+    });
+    // A re-scraped number has not been re-verified — drop the stale verdict.
+    if (fields["biz_registration_no"]) setBizVerify({ status: null, verified_at: null });
+  };
+
+  // ── Duplicate guard ─────────────────────────────────────────────────────
+  // Catching "㈜메트하임" being created twice is far cheaper here than merging
+  // two accounts later. Name, business number and website domain all count.
+  const { data: allAccounts } = useListAccounts(
+    {}, { query: { queryKey: getListAccountsQueryKey({}) } },
+  );
+  const duplicates = useMemo(() => {
+    const rows = (allAccounts as any[] | undefined) ?? [];
+    const name = nameValue.trim().toLowerCase();
+    const digits = bizNo.replace(/\D/g, "");
+    const domain = (() => {
+      const raw = websiteUrl.trim();
+      if (!raw) return "";
+      try {
+        return new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`).hostname.replace(/^www\./, "").toLowerCase();
+      } catch { return ""; }
+    })();
+
+    return rows.filter((a) => {
+      if (!isNew && a.id === id) return false;
+      if (name && String(a.name ?? "").trim().toLowerCase() === name) return true;
+      if (digits.length === 10 && String(a.biz_registration_no ?? "").replace(/\D/g, "") === digits) return true;
+      if (domain && String(a.website_url ?? "").toLowerCase().includes(domain)) return true;
+      return false;
+    });
+  }, [allAccounts, nameValue, bizNo, websiteUrl, isNew, id]);
+
   if (!isNew && isLoading) return <Layout><p className="p-6 text-sm text-muted-foreground">{t('common.loading')}</p></Layout>;
+
+  const duplicateBanner = duplicates.length > 0 && (
+    <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-900 p-3">
+      <p className="text-sm font-medium text-amber-800 dark:text-amber-200 flex items-center gap-1.5">
+        <AlertTriangle className="h-4 w-4" /> {t("account.duplicate_warning")}
+      </p>
+      <ul className="mt-1.5 space-y-0.5">
+        {duplicates.slice(0, 5).map((d) => (
+          <li key={d.id} className="text-sm">
+            <Link href={`/crm/accounts/${d.id}`}>
+              <span className="text-primary hover:underline cursor-pointer">{d.name}</span>
+            </Link>
+            <span className="text-muted-foreground"> · {d.account_type}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 
   const detailsContent = (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -317,6 +512,16 @@ export default function AccountDetail() {
               <Input {...register("phone2")} />
             </div>
           </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid gap-1.5">
+              <Label>{t('account.label_biz_no')}</Label>
+              <Input {...register("biz_registration_no")} placeholder="000-00-00000" />
+            </div>
+            <div className="grid gap-1.5">
+              <Label>{t('account.label_ceo')}</Label>
+              <Input {...register("ceo_name")} />
+            </div>
+          </div>
         </div>
 
         {/* Address */}
@@ -388,6 +593,33 @@ export default function AccountDetail() {
 
       {/* Right column */}
       <div className="space-y-4">
+        <AccountIdentityPanel
+          currentValues={{
+            name: getValues("name") ?? "",
+            account_email: getValues("account_email") ?? "",
+            website_url: getValues("website_url") ?? "",
+            phone1: getValues("phone1") ?? "",
+            phone2: getValues("phone2") ?? "",
+            address_line1: getValues("address_line1") ?? "",
+            address_suburb: getValues("address_suburb") ?? "",
+            address_state: getValues("address_state") ?? "",
+            address_postcode: getValues("address_postcode") ?? "",
+            address_country: getValues("address_country") ?? "",
+            biz_registration_no: getValues("biz_registration_no") ?? "",
+            ceo_name: getValues("ceo_name") ?? "",
+            description: getValues("description") ?? "",
+          }}
+          onApplyFields={handleApplyFields}
+          logoUrl={logoUrl}
+          onLogoChange={(url) => setValue("logo_url", url, { shouldDirty: true })}
+          primaryContactId={primaryContactId}
+          websiteUrl={websiteUrl}
+          bizNo={bizNo}
+          bizVerify={bizVerify}
+          onBizVerified={setBizVerify}
+          fieldSources={fieldSources}
+        />
+
         <div className="rounded-lg border p-4 space-y-4">
           <h3 className="font-semibold text-sm">{t('account.section_relationships')}</h3>
           <div className="grid gap-1.5">
@@ -441,6 +673,9 @@ export default function AccountDetail() {
         title={
           isNew ? `${t("common.new")} ${t("nav.account")}` : (
             <div className="flex items-center gap-2">
+              {logoUrl && (
+                <img src={logoUrl} alt="" className="h-7 w-7 rounded border object-contain bg-background" />
+              )}
               <span>{account?.name ?? t("nav.account")}</span>
               {account && (
                 <Badge variant="outline" className={`text-xs ${ACCOUNT_TYPE_COLORS[account.account_type] ?? ""}`}>
@@ -464,24 +699,282 @@ export default function AccountDetail() {
       />
       <div className="p-4 sm:p-6">
         {isNew ? (
-          detailsContent
+          <>
+            {duplicateBanner}
+            {detailsContent}
+          </>
         ) : (
           <Tabs defaultValue="details">
-            <TabsList className="mb-5">
+            <TabsList className="mb-5 flex-wrap h-auto">
               <TabsTrigger value="details">{t('account.tab_overview')}</TabsTrigger>
+              <TabsTrigger value="contacts">
+                {t('account.tab_contacts')}{related?.contacts.length ? ` (${related.contacts.length})` : ""}
+              </TabsTrigger>
               <TabsTrigger value="bookings">
                 {t('account.tab_bookings')}{bookings?.length ? ` (${bookings.length})` : ""}
               </TabsTrigger>
               <TabsTrigger value="contracts">
-                {t('account.tab_documents')}{contracts?.length ? ` (${contracts.length})` : ""}
+                {t('account.tab_contracts')}{contracts?.length ? ` (${contracts.length})` : ""}
               </TabsTrigger>
               <TabsTrigger value="invoices">
                 {t('account.tab_invoices')}{invoices?.length ? ` (${invoices.length})` : ""}
               </TabsTrigger>
+              <TabsTrigger value="finance">{t('account.tab_finance')}</TabsTrigger>
+              <TabsTrigger value="assets">
+                {t('account.tab_assets')}{related?.spaces.length ? ` (${related.spaces.length})` : ""}
+              </TabsTrigger>
+              <TabsTrigger value="documents">
+                {t('account.tab_files')}{accountDocs?.length ? ` (${accountDocs.length})` : ""}
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="details">
+              {duplicateBanner}
               {detailsContent}
+            </TabsContent>
+
+            {/* ── Contacts ────────────────────────────────────────────── */}
+            <TabsContent value="contacts">
+              <div className="rounded-md border bg-card overflow-x-auto max-w-4xl">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50 border-b">
+                    <tr>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_contact_name')}</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_role')}</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.label_email')}</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_phone')}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {!related?.contacts.length ? (
+                      <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground text-sm">{t('account.empty_contacts')}</td></tr>
+                    ) : (
+                      related.contacts.map((c: any) => (
+                        <tr key={c.id} className="hover:bg-muted/30 transition-colors cursor-pointer"
+                          onClick={() => setPreview({
+                            title: [c.last_name, c.first_name].filter(Boolean).join(" "),
+                            subtitle: [c.job_title, c.company_name].filter(Boolean).join(" · ") || null,
+                            badge: { label: c.role === "Primary" ? t('account.role_primary') : t('account.role_secondary') },
+                            fields: [
+                              { label: t('account.label_email'), value: c.email },
+                              { label: t('account.col_mobile'), value: c.mobile_number },
+                              { label: t('account.col_office'), value: c.office_number },
+                              { label: t('account.label_department'), value: c.department },
+                              { label: t('account.label_nationality'), value: c.nationality },
+                              { label: t('account.label_website'), value: c.website },
+                              { label: t('account.label_address'), wide: true, value: [c.address_line1, c.suburb, c.state, c.postcode, c.country].filter(Boolean).join(", ") },
+                              { label: t('account.label_notes'), wide: true, value: c.description },
+                            ],
+                            detailUrl: `/crm/contacts/${c.id}`,
+                          })}>
+                          <td className="px-4 py-3 font-medium">{[c.last_name, c.first_name].filter(Boolean).join(" ")}</td>
+                          <td className="px-4 py-3 text-muted-foreground">
+                            {c.role === "Primary" ? t('account.role_primary') : t('account.role_secondary')}
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">{c.email ?? "—"}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{c.mobile_number ?? c.office_number ?? "—"}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </TabsContent>
+
+            {/* ── Finance (회계) ──────────────────────────────────────── */}
+            <TabsContent value="finance">
+              <div className="space-y-5 max-w-4xl">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="rounded-lg border bg-card p-4">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">{t('account.finance_receivable')}</p>
+                    <p className="mt-1 text-lg font-semibold">
+                      {formatTotals(finance?.receivable.outstanding, finance?.currency ?? "AUD")}
+                    </p>
+                    {Object.keys(finance?.receivable.overdue ?? {}).length > 0 && (
+                      <p className="mt-0.5 text-xs text-destructive">
+                        {t('account.finance_overdue')}: {formatTotals(finance?.receivable.overdue, finance?.currency ?? "AUD")}
+                      </p>
+                    )}
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {t('account.finance_paid')}: {formatTotals(finance?.receivable.paid, finance?.currency ?? "AUD")}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border bg-card p-4">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">{t('account.finance_payable')}</p>
+                    <p className="mt-1 text-lg font-semibold">
+                      {formatTotals(finance?.payable.outstanding, finance?.currency ?? "AUD")}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {t('account.finance_paid')}: {formatTotals(finance?.payable.paid, finance?.currency ?? "AUD")}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border bg-card p-4">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">{t('account.finance_costs')}</p>
+                    <p className="mt-1 text-lg font-semibold">
+                      {formatTotals(finance?.costs.total, finance?.currency ?? "AUD")}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{t('account.finance_costs_hint')}</p>
+                  </div>
+                </div>
+
+                <div className="rounded-md border bg-card overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50 border-b">
+                      <tr>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_date')}</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_kind')}</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_reference')}</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_description')}</th>
+                        <th className="text-right px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_amount')}</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_status')}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {!finance?.transactions.length ? (
+                        <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-sm">{t('account.empty_transactions')}</td></tr>
+                      ) : (
+                        finance.transactions.map((tx) => (
+                          <tr key={`${tx.kind}-${tx.id}`} className="hover:bg-muted/30 transition-colors cursor-pointer"
+                            onClick={() => setPreview({
+                              title: tx.ref,
+                              subtitle: tx.description || null,
+                              badge: { label: t(`account.tx_${tx.kind.toLowerCase()}`), className: TX_KIND_COLORS[tx.kind] },
+                              fields: [
+                                { label: t('account.col_amount'), value: formatMoney(tx.amount, tx.currency) },
+                                { label: t('account.col_date'), value: formatDate(tx.date) },
+                                { label: t('account.col_status'), value: tx.status },
+                                { label: t('account.col_currency'), value: tx.currency },
+                              ],
+                              detailUrl: tx.detail_url,
+                            })}>
+                            <td className="px-4 py-3 text-muted-foreground">{formatDate(tx.date)}</td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${TX_KIND_COLORS[tx.kind] ?? "bg-gray-100 text-gray-600"}`}>
+                                {t(`account.tx_${tx.kind.toLowerCase()}`)}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 font-medium">{tx.ref}</td>
+                            <td className="px-4 py-3 text-muted-foreground">{tx.description || "—"}</td>
+                            <td className="px-4 py-3 text-right">{formatMoney(tx.amount, tx.currency)}</td>
+                            <td className="px-4 py-3 text-muted-foreground">{tx.status}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* ── Assets (owned spaces + sub-accounts) ────────────────── */}
+            <TabsContent value="assets">
+              <div className="space-y-5 max-w-4xl">
+                <div className="rounded-md border bg-card overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50 border-b">
+                      <tr>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_space')}</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_property')}</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_area')}</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_status')}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {!related?.spaces.length ? (
+                        <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground text-sm">{t('account.empty_assets')}</td></tr>
+                      ) : (
+                        related.spaces.map((s: any) => (
+                          <tr key={s.id} className="hover:bg-muted/30 transition-colors cursor-pointer"
+                            onClick={() => setPreview({
+                              title: s.name,
+                              subtitle: s.property_name ?? null,
+                              badge: { label: s.status },
+                              fields: [
+                                { label: t('account.col_type'), value: s.custom_type_name ?? s.space_type },
+                                { label: t('account.col_floor'), value: s.floor_number },
+                                { label: t('account.col_area'), value: s.exclusive_area_m2 ? `${s.exclusive_area_m2} ㎡` : null },
+                                { label: t('account.col_monthly_rent'), value: s.monthly_rent != null ? formatMoney(s.monthly_rent, s.base_currency ?? brandCurrency) : null },
+                                { label: t('account.col_deposit'), value: s.deposit_amount != null ? formatMoney(s.deposit_amount, s.base_currency ?? brandCurrency) : null },
+                              ],
+                              detailUrl: `/property/spaces/${s.id}`,
+                            })}>
+                            <td className="px-4 py-3 font-medium flex items-center gap-1.5">
+                              <Building2 className="h-3.5 w-3.5 text-muted-foreground" />{s.name}
+                            </td>
+                            <td className="px-4 py-3 text-muted-foreground">{s.property_name ?? "—"}</td>
+                            <td className="px-4 py-3 text-muted-foreground">{s.exclusive_area_m2 ? `${s.exclusive_area_m2} ㎡` : "—"}</td>
+                            <td className="px-4 py-3 text-muted-foreground">{s.status}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {!!related?.children.length && (
+                  <div>
+                    <h3 className="font-semibold text-sm mb-2">{t('account.sub_accounts')}</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {related.children.map((c: any) => (
+                        <Link key={c.id} href={`/crm/accounts/${c.id}`}>
+                          <Badge variant="outline" className="cursor-pointer hover:bg-muted">{c.name}</Badge>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            {/* ── Files ───────────────────────────────────────────────── */}
+            <TabsContent value="documents">
+              <div className="max-w-4xl mb-3 flex items-center gap-3">
+                <input ref={docInputRef} type="file" className="hidden"
+                  onChange={(e) => void handleDocUpload(e.target.files?.[0])} />
+                <Button type="button" variant="outline" size="sm" className="gap-1.5"
+                  disabled={uploadingDoc} onClick={() => docInputRef.current?.click()}>
+                  <Upload className="h-4 w-4" />
+                  {uploadingDoc ? t('common.loading') : t('account.upload_file')}
+                </Button>
+                {docError && <p className="text-xs text-destructive">{docError}</p>}
+              </div>
+              <div className="rounded-md border bg-card overflow-x-auto max-w-4xl">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50 border-b">
+                    <tr>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_file')}</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_kind')}</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_date')}</th>
+                      <th className="px-4 py-3" />
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {!accountDocs?.length ? (
+                      <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground text-sm">{t('account.empty_files')}</td></tr>
+                    ) : (
+                      accountDocs.map((d) => (
+                        <tr key={d.id} className="hover:bg-muted/30 transition-colors">
+                          <td className="px-4 py-3 font-medium flex items-center gap-1.5">
+                            <FileText className="h-3.5 w-3.5 text-muted-foreground" />{d.file_name}
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">{d.doc_type}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{formatDate(d.created_at)}</td>
+                          <td className="px-4 py-3 text-right whitespace-nowrap">
+                            <a href={d.signed_url} target="_blank" rel="noreferrer"
+                              className="text-primary hover:underline inline-flex items-center gap-1 text-xs">
+                              <Download className="h-3.5 w-3.5" /> {t('common.download')}
+                            </a>
+                            <button type="button" onClick={() => void handleDocDelete(d.id)}
+                              className="ml-3 text-destructive hover:underline inline-flex items-center gap-1 text-xs">
+                              <Trash2 className="h-3.5 w-3.5" /> {t('common.remove')}
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </TabsContent>
 
             <TabsContent value="bookings">
@@ -503,15 +996,25 @@ export default function AccountDetail() {
                       </tr>
                     ) : (
                       (bookings as any[]).map((b: any) => (
-                        <tr key={b.id} className="hover:bg-muted/30 transition-colors">
-                          <td className="px-4 py-3 font-medium">
-                            <Link href={`/booking/bookings/${b.id}`}>
-                              <span className="text-primary hover:underline cursor-pointer">{b.booking_ref ?? `#${b.id}`}</span>
-                            </Link>
-                          </td>
+                        <tr key={b.id} className="hover:bg-muted/30 transition-colors cursor-pointer"
+                          onClick={() => setPreview({
+                            title: b.booking_ref ?? `#${b.id}`,
+                            subtitle: b.space_name ?? null,
+                            badge: { label: b.booking_status ?? "—", className: BOOKING_STATUS_COLORS[b.booking_status] },
+                            fields: [
+                              { label: t('account.col_space'), value: b.space_name },
+                              { label: t('account.col_checkin'), value: formatDate(b.check_in_date) },
+                              { label: t('account.col_checkout'), value: formatDate(b.check_out_date) },
+                              { label: t('account.col_guests'), value: b.guest_count },
+                              { label: t('account.col_amount'), value: b.total_amount != null ? formatMoney(b.total_amount, b.currency ?? brandCurrency) : null },
+                              { label: t('account.col_notes'), wide: true, value: b.notes },
+                            ],
+                            detailUrl: `/booking/bookings/${b.id}`,
+                          })}>
+                          <td className="px-4 py-3 font-medium text-primary">{b.booking_ref ?? `#${b.id}`}</td>
                           <td className="px-4 py-3 text-muted-foreground">{b.space_name ?? "—"}</td>
-                          <td className="px-4 py-3 text-muted-foreground">{formatDate(b.check_in_date)}</td>
-                          <td className="px-4 py-3 text-muted-foreground">{formatDate(b.check_out_date)}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{b.check_in_date ?? "—"}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{b.check_out_date ?? "—"}</td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${BOOKING_STATUS_COLORS[b.booking_status] ?? "bg-gray-100 text-gray-600"}`}>
                               {b.booking_status ?? "—"}
@@ -530,7 +1033,7 @@ export default function AccountDetail() {
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50 border-b">
                     <tr>
-                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_invoice_ref')}</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_contract_ref')}</th>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_space')}</th>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_checkin')}</th>
                       <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t('account.col_checkout')}</th>
@@ -544,15 +1047,25 @@ export default function AccountDetail() {
                       </tr>
                     ) : (
                       (contracts as any[]).map((c: any) => (
-                        <tr key={c.id} className="hover:bg-muted/30 transition-colors">
-                          <td className="px-4 py-3 font-medium">
-                            <Link href={`/booking/contracts/${c.id}`}>
-                              <span className="text-primary hover:underline cursor-pointer">{c.contract_ref ?? `#${c.id}`}</span>
-                            </Link>
-                          </td>
+                        <tr key={c.id} className="hover:bg-muted/30 transition-colors cursor-pointer"
+                          onClick={() => setPreview({
+                            title: c.contract_ref ?? `#${c.id}`,
+                            subtitle: c.space_name ?? null,
+                            badge: { label: c.status ?? "—", className: CONTRACT_STATUS_COLORS[c.status] },
+                            fields: [
+                              { label: t('account.col_space'), value: c.space_name },
+                              { label: t('account.col_checkin'), value: formatDate(c.start_date) },
+                              { label: t('account.col_checkout'), value: formatDate(c.end_date) },
+                              { label: t('account.col_monthly_rent'), value: c.monthly_rent != null ? formatMoney(c.monthly_rent, c.currency ?? brandCurrency) : null },
+                              { label: t('account.col_deposit'), value: c.bond_amount != null ? formatMoney(c.bond_amount, c.currency ?? brandCurrency) : null },
+                              { label: t('account.col_notes'), wide: true, value: c.notes },
+                            ],
+                            detailUrl: `/booking/contracts/${c.id}`,
+                          })}>
+                          <td className="px-4 py-3 font-medium text-primary">{c.contract_ref ?? `#${c.id}`}</td>
                           <td className="px-4 py-3 text-muted-foreground">{c.space_name ?? "—"}</td>
-                          <td className="px-4 py-3 text-muted-foreground">{formatDate(c.start_date)}</td>
-                          <td className="px-4 py-3 text-muted-foreground">{formatDate(c.end_date)}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{c.start_date ?? "—"}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{c.end_date ?? "—"}</td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${CONTRACT_STATUS_COLORS[c.status] ?? "bg-gray-100 text-gray-600"}`}>
                               {c.status ?? "—"}
@@ -585,15 +1098,24 @@ export default function AccountDetail() {
                       </tr>
                     ) : (
                       (invoices as any[]).map((inv: any) => (
-                        <tr key={inv.id} className="hover:bg-muted/30 transition-colors">
-                          <td className="px-4 py-3 font-medium">
-                            <Link href={`/finance/invoices/${inv.id}`}>
-                              <span className="text-primary hover:underline cursor-pointer">{inv.invoice_ref ?? `#${inv.id}`}</span>
-                            </Link>
-                          </td>
+                        <tr key={inv.id} className="hover:bg-muted/30 transition-colors cursor-pointer"
+                          onClick={() => setPreview({
+                            title: inv.invoice_ref ?? `#${inv.id}`,
+                            subtitle: inv.description ?? null,
+                            badge: { label: inv.status ?? "Draft", className: INVOICE_STATUS_COLORS[inv.status] },
+                            fields: [
+                              { label: t('account.col_amount'), value: formatMoney(inv.amount, inv.currency ?? brandCurrency) },
+                              { label: t('account.col_due_date'), value: formatDate(inv.due_date) },
+                              { label: t('account.col_status'), value: inv.status },
+                              { label: t('account.col_payment_method'), value: inv.payment_method },
+                              { label: t('account.col_notes'), wide: true, value: inv.notes },
+                            ],
+                            detailUrl: `/finance/invoices/${inv.id}`,
+                          })}>
+                          <td className="px-4 py-3 font-medium text-primary">{inv.invoice_ref ?? `#${inv.id}`}</td>
                           <td className="px-4 py-3">{inv.amount != null ? Number(inv.amount).toFixed(2) : "—"}</td>
                           <td className="px-4 py-3 text-muted-foreground">{inv.currency ?? "—"}</td>
-                          <td className="px-4 py-3 text-muted-foreground">{formatDate(inv.due_date)}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{inv.due_date ?? "—"}</td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${INVOICE_STATUS_COLORS[inv.status] ?? "bg-gray-100 text-gray-600"}`}>
                               {inv.status ?? "Draft"}
@@ -609,6 +1131,8 @@ export default function AccountDetail() {
           </Tabs>
         )}
       </div>
+
+      <EntityPreviewDialog preview={preview} onClose={() => setPreview(null)} />
     </Layout>
   );
 }

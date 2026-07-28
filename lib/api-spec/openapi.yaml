@@ -4073,6 +4073,20 @@ components:
           type: ["string", "null"]
         description:
           type: ["string", "null"]
+        logo_url:
+          type: ["string", "null"]
+        biz_registration_no:
+          type: ["string", "null"]
+        biz_verify_status:
+          type: ["string", "null"]
+        biz_verified_at:
+          type: ["string", "null"]
+        ceo_name:
+          type: ["string", "null"]
+        field_sources:
+          type: ["object", "null"]
+          additionalProperties:
+            type: string
         manual_input:
           type: boolean
         status:
@@ -4132,6 +4146,20 @@ components:
           type: ["integer", "null"]
         description:
           type: ["string", "null"]
+        logo_url:
+          type: ["string", "null"]
+        biz_registration_no:
+          type: ["string", "null"]
+        biz_verify_status:
+          type: ["string", "null"]
+        biz_verified_at:
+          type: ["string", "null"]
+        ceo_name:
+          type: ["string", "null"]
+        field_sources:
+          type: ["object", "null"]
+          additionalProperties:
+            type: string
         manual_input:
           type: boolean
           default: false
@@ -4189,6 +4217,20 @@ components:
           type: ["integer", "null"]
         description:
           type: ["string", "null"]
+        logo_url:
+          type: ["string", "null"]
+        biz_registration_no:
+          type: ["string", "null"]
+        biz_verify_status:
+          type: ["string", "null"]
+        biz_verified_at:
+          type: ["string", "null"]
+        ceo_name:
+          type: ["string", "null"]
+        field_sources:
+          type: ["object", "null"]
+          additionalProperties:
+            type: string
         manual_input:
           type: boolean
         status:

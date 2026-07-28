@@ -737,6 +737,11 @@ export interface UpdateContactBody {
   status?: string;
 }
 
+/**
+ * @nullable
+ */
+export type AccountResponseFieldSources = { [key: string]: string } | null;
+
 export interface AccountResponse {
   id: number;
   name: string;
@@ -793,11 +798,28 @@ export interface AccountResponse {
   parent_account_name?: string | null;
   /** @nullable */
   description?: string | null;
+  /** @nullable */
+  logo_url?: string | null;
+  /** @nullable */
+  biz_registration_no?: string | null;
+  /** @nullable */
+  biz_verify_status?: string | null;
+  /** @nullable */
+  biz_verified_at?: string | null;
+  /** @nullable */
+  ceo_name?: string | null;
+  /** @nullable */
+  field_sources?: AccountResponseFieldSources;
   manual_input: boolean;
   status: string;
   created_at: string;
   updated_at: string;
 }
+
+/**
+ * @nullable
+ */
+export type CreateAccountBodyFieldSources = { [key: string]: string } | null;
 
 export interface CreateAccountBody {
   name: string;
@@ -844,9 +866,26 @@ export interface CreateAccountBody {
   parent_account_id?: number | null;
   /** @nullable */
   description?: string | null;
+  /** @nullable */
+  logo_url?: string | null;
+  /** @nullable */
+  biz_registration_no?: string | null;
+  /** @nullable */
+  biz_verify_status?: string | null;
+  /** @nullable */
+  biz_verified_at?: string | null;
+  /** @nullable */
+  ceo_name?: string | null;
+  /** @nullable */
+  field_sources?: CreateAccountBodyFieldSources;
   manual_input?: boolean;
   status?: string;
 }
+
+/**
+ * @nullable
+ */
+export type UpdateAccountBodyFieldSources = { [key: string]: string } | null;
 
 export interface UpdateAccountBody {
   name?: string;
@@ -893,6 +932,18 @@ export interface UpdateAccountBody {
   parent_account_id?: number | null;
   /** @nullable */
   description?: string | null;
+  /** @nullable */
+  logo_url?: string | null;
+  /** @nullable */
+  biz_registration_no?: string | null;
+  /** @nullable */
+  biz_verify_status?: string | null;
+  /** @nullable */
+  biz_verified_at?: string | null;
+  /** @nullable */
+  ceo_name?: string | null;
+  /** @nullable */
+  field_sources?: UpdateAccountBodyFieldSources;
   manual_input?: boolean;
   status?: string;
 }
