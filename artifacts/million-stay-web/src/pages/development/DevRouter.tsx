@@ -37,6 +37,7 @@ import PortalCs from "@/pages/portal-cs";
 import PortalCsNew from "@/pages/portal-cs-new";
 import PortalCsDetail from "@/pages/portal-cs-detail";
 import Sign from "@/pages/sign";
+import InspectionSign from "@/pages/inspection-sign";
 import PaymentResult from "@/pages/payment-result";
 import NotFound from "@/pages/not-found";
 
@@ -97,6 +98,8 @@ export default function DevRouter() {
 
       {/* Misc shared */}
       <Route path="/sign/:token" component={Sign} />
+      {/* 세대점검표 — tenant review & signature (token link, no login). */}
+      <Route path="/inspection/:token" component={InspectionSign} />
       <Route path="/payment-result" component={PaymentResult} />
 
       <Route component={NotFound} />
