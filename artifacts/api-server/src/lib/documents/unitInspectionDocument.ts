@@ -14,7 +14,9 @@
  */
 import { renderDocumentShell, escapeHtml, getCompanyInfo, type CompanyInfo } from "./theme";
 import {
+  chrome,
   getInspectionTemplate,
+  localize,
   type InspectionTemplate,
 } from "../inspections/metheimUnitTemplate";
 
@@ -64,10 +66,10 @@ export interface InspectionDocInput {
   signatures: InspectionDocSignature[];
 }
 
-const STATUS_MARK: Record<string, string> = {
-  ok: "이상없음",
-  defect: "하자",
-  na: "해당없음",
+const STATUS_CHROME: Record<string, string> = {
+  ok: "statusOk",
+  defect: "statusDefect",
+  na: "statusNa",
 };
 
 const DASH = "";
@@ -92,60 +94,61 @@ function renderSignature(
   sigs: InspectionDocSignature[],
   phase: InspectionPhase,
   role: "inspector" | "tenant",
+  t: (key: string) => string,
 ): string {
   const sig = sigs.find((s) => s.phase === phase && s.role === role);
-  if (!sig) return `<span class="ui-sigblank">(서명)</span>`;
+  if (!sig) return `<span class="ui-sigblank">${escapeHtml(t("signature"))}</span>`;
   const name = sig.signer_name ? `<span class="ui-signame">${escapeHtml(sig.signer_name)}</span>` : "";
   return `<span class="ui-sig"><img src="${escapeHtml(sig.signature_image)}" alt="" />${name}</span>`;
 }
 
 /** Header block: 타입 / 호수 / 임차인명 / 연락처 / 입주일 / 퇴거일. */
-function renderHeader(d: InspectionDocInput | null, template: InspectionTemplate): string {
+function renderHeader(d: InspectionDocInput | null, template: InspectionTemplate, t: (key: string) => string): string {
   const m = d?.meta ?? {};
   return `<table class="ui-head">
       <tr>
-        <th class="ui-hk">타 입</th>
+        <th class="ui-hk">${escapeHtml(t("unitType"))}</th>
         <td class="ui-types">${renderUnitTypes(template, m.unit_type)}</td>
-        <th class="ui-hk">임차인명</th>
+        <th class="ui-hk">${escapeHtml(t("tenantName"))}</th>
         <td>${fillLine(m.tenant_name)}</td>
-        <th class="ui-hk">연 락 처</th>
+        <th class="ui-hk">${escapeHtml(t("tenantPhone"))}</th>
         <td>${fillLine(m.tenant_phone, "010-")}</td>
       </tr>
       <tr>
-        <th class="ui-hk">호 수</th>
-        <td>${m.unit_no ? `${escapeHtml(m.unit_no)}` : ""} 호</td>
-        <th class="ui-hk">입 주 일</th>
-        <td>${fillLine(m.move_in_date, "20 . .")}</td>
-        <th class="ui-hk">퇴 거 일</th>
-        <td>${fillLine(m.move_out_date, "20 . .")}</td>
+        <th class="ui-hk">${escapeHtml(t("unitNo"))}</th>
+        <td>${m.unit_no ? `${escapeHtml(m.unit_no)}` : ""} ${escapeHtml(t("unitSuffix"))}</td>
+        <th class="ui-hk">${escapeHtml(t("moveInDate"))}</th>
+        <td>${fillLine(m.move_in_date, t("yearPlaceholder"))}</td>
+        <th class="ui-hk">${escapeHtml(t("moveOutDate"))}</th>
+        <td>${fillLine(m.move_out_date, t("yearPlaceholder"))}</td>
       </tr>
     </table>`;
 }
 
 /** 검침 내역: 전입 / 전출 × 전기 · 수도 · 가스. */
-function renderMeters(d: InspectionDocInput | null): string {
+function renderMeters(d: InspectionDocInput | null, t: (key: string) => string): string {
   const meters = d?.meta?.meters ?? {};
   const row = (label: string, side: { electric?: string | null; water?: string | null; gas?: string | null } = {}) =>
     `<tr>
-      <th class="ui-hk">${label}</th>
-      <th class="ui-mk">전 기</th><td class="ui-mv">${fillLine(side.electric)} kwh</td>
-      <th class="ui-mk">수 도</th><td class="ui-mv">${fillLine(side.water)} kwh</td>
-      <th class="ui-mk">가 스</th><td class="ui-mv">${fillLine(side.gas)} kwh</td>
+      <th class="ui-hk">${escapeHtml(label)}</th>
+      <th class="ui-mk">${escapeHtml(t("electric"))}</th><td class="ui-mv">${fillLine(side.electric)} kwh</td>
+      <th class="ui-mk">${escapeHtml(t("water"))}</th><td class="ui-mv">${fillLine(side.water)} kwh</td>
+      <th class="ui-mk">${escapeHtml(t("gas"))}</th><td class="ui-mv">${fillLine(side.gas)} kwh</td>
     </tr>`;
   return `<table class="ui-meters">
-      ${row("전 입 / 검침 내역", meters.in)}
-      ${row("전 출 / 검침 내역", meters.out)}
+      ${row(t("metersIn"), meters.in)}
+      ${row(t("metersOut"), meters.out)}
     </table>`;
 }
 
 /** One checklist cell: status chip + defect note + photo count. */
-function renderCell(status: string | null, note: string | null, photos = 0): string {
+function renderCell(status: string | null, note: string | null, photos: number, t: (key: string) => string): string {
   if (!status && !note && !photos) return "";
   const chip = status
-    ? `<span class="ui-chip ui-chip-${escapeHtml(status)}">${escapeHtml(STATUS_MARK[status] ?? status)}</span>`
+    ? `<span class="ui-chip ui-chip-${escapeHtml(status)}">${escapeHtml(t(STATUS_CHROME[status] ?? "") || status)}</span>`
     : "";
   const text = note ? `<span class="ui-note">${escapeHtml(note)}</span>` : "";
-  const pics = photos ? `<span class="ui-pics">사진 ${photos}</span>` : "";
+  const pics = photos ? `<span class="ui-pics">${escapeHtml(t("photoCount"))} ${photos}</span>` : "";
   return `${chip}${text}${pics}`;
 }
 
@@ -158,6 +161,8 @@ function renderChecklist(
   d: InspectionDocInput | null,
   template: InspectionTemplate,
   hiddenCodes: Set<string>,
+  lang: string,
+  t: (key: string) => string,
 ): string {
   const byCode = new Map((d?.items ?? []).filter((i) => i.item_code).map((i) => [i.item_code as string, i]));
   const templateCodes = new Set(template.groups.flatMap((gr) => gr.items.map((i) => i.code)));
@@ -174,13 +179,13 @@ function renderChecklist(
       if (!groupItems.length) return "";
       const rows = groupItems.map((tItem, idx) => {
         const it = byCode.get(tItem.code);
-        const inCell = renderCell(it?.move_in_status ?? null, it?.move_in_note ?? null, it?.photoCounts?.move_in ?? 0);
-        const outCell = renderCell(it?.move_out_status ?? null, it?.move_out_note ?? null, it?.photoCounts?.move_out ?? 0);
+        const inCell = renderCell(it?.move_in_status ?? null, it?.move_in_note ?? null, it?.photoCounts?.move_in ?? 0, t);
+        const outCell = renderCell(it?.move_out_status ?? null, it?.move_out_note ?? null, it?.photoCounts?.move_out ?? 0, t);
         const groupCell =
           idx === 0
-            ? `<th class="ui-group" rowspan="${groupItems.length}"><span>${escapeHtml(group.label)}</span></th>`
+            ? `<th class="ui-group" rowspan="${groupItems.length}"><span>${escapeHtml(localize(group.label, lang))}</span></th>`
             : "";
-        return `<tr>${groupCell}<td class="ui-item">${escapeHtml(tItem.label)}</td><td class="ui-fill">${inCell}</td><td class="ui-fill">${outCell}</td></tr>`;
+        return `<tr>${groupCell}<td class="ui-item">${escapeHtml(localize(tItem.label, lang))}</td><td class="ui-fill">${inCell}</td><td class="ui-fill">${outCell}</td></tr>`;
       });
       return rows.join("");
     })
@@ -191,11 +196,11 @@ function renderChecklist(
         .map((it, idx) => {
           const groupCell =
             idx === 0
-              ? `<th class="ui-group" rowspan="${custom.length}"><span>추가 항목</span></th>`
+              ? `<th class="ui-group" rowspan="${custom.length}"><span>${escapeHtml(t("extraItems"))}</span></th>`
               : "";
           return `<tr>${groupCell}<td class="ui-item">${escapeHtml(it.label)}</td>
-            <td class="ui-fill">${renderCell(it.move_in_status, it.move_in_note, it.photoCounts?.move_in ?? 0)}</td>
-            <td class="ui-fill">${renderCell(it.move_out_status, it.move_out_note, it.photoCounts?.move_out ?? 0)}</td></tr>`;
+            <td class="ui-fill">${renderCell(it.move_in_status, it.move_in_note, it.photoCounts?.move_in ?? 0, t)}</td>
+            <td class="ui-fill">${renderCell(it.move_out_status, it.move_out_note, it.photoCounts?.move_out ?? 0, t)}</td></tr>`;
         })
         .join("")
     : "";
@@ -203,19 +208,19 @@ function renderChecklist(
   return `<table class="ui-list">
       <thead>
         <tr>
-          <th class="ui-hk" style="width:9%;" rowspan="2">구 분</th>
-          <th class="ui-hk" style="width:21%;" rowspan="2">항 목</th>
-          <th style="width:35%;">입주하자 점검자: ${renderSignature(sigs, "move_in", "inspector")} ${fillLine(m.inspector_in)}</th>
-          <th style="width:35%;">퇴거하자 점검자: ${renderSignature(sigs, "move_out", "inspector")} ${fillLine(m.inspector_out)}</th>
+          <th class="ui-hk" style="width:9%;" rowspan="2">${escapeHtml(t("groupCol"))}</th>
+          <th class="ui-hk" style="width:21%;" rowspan="2">${escapeHtml(t("itemCol"))}</th>
+          <th style="width:35%;">${escapeHtml(t("inspectorIn"))}: ${renderSignature(sigs, "move_in", "inspector", t)} ${fillLine(m.inspector_in)}</th>
+          <th style="width:35%;">${escapeHtml(t("inspectorOut"))}: ${renderSignature(sigs, "move_out", "inspector", t)} ${fillLine(m.inspector_out)}</th>
         </tr>
         <tr>
-          <th class="ui-sub">확 인 일 : ${fillLine(m.confirmed_in, "202 년 월 일")}</th>
-          <th class="ui-sub">확 인 일 : ${fillLine(m.confirmed_out, "202 년 월 일")}</th>
+          <th class="ui-sub">${escapeHtml(t("confirmedOn"))} : ${fillLine(m.confirmed_in, t("datePlaceholder"))}</th>
+          <th class="ui-sub">${escapeHtml(t("confirmedOn"))} : ${fillLine(m.confirmed_out, t("datePlaceholder"))}</th>
         </tr>
         <tr>
-          <th class="ui-hk" colspan="2">임차인 확인</th>
-          <th class="ui-sub">${renderSignature(sigs, "move_in", "tenant")}</th>
-          <th class="ui-sub">${renderSignature(sigs, "move_out", "tenant")}</th>
+          <th class="ui-hk" colspan="2">${escapeHtml(t("tenantConfirm"))}</th>
+          <th class="ui-sub">${renderSignature(sigs, "move_in", "tenant", t)}</th>
+          <th class="ui-sub">${renderSignature(sigs, "move_out", "tenant", t)}</th>
         </tr>
       </thead>
       <tbody>${groupRows}${customRows}</tbody>
@@ -223,19 +228,19 @@ function renderChecklist(
 }
 
 /** 비고 free-text box. */
-function renderRemarks(d: InspectionDocInput | null): string {
+function renderRemarks(d: InspectionDocInput | null, t: (key: string) => string): string {
   return `<table class="ui-remarks">
-      <tr><th class="ui-hk">비 고</th><td>${fillLine(d?.meta?.remarks)}</td></tr>
+      <tr><th class="ui-hk">${escapeHtml(t("remarks"))}</th><td>${fillLine(d?.meta?.remarks)}</td></tr>
     </table>`;
 }
 
 /** [특약 사항] numbered clauses. */
-function renderSpecialTerms(template: InspectionTemplate): string {
+function renderSpecialTerms(template: InspectionTemplate, lang: string, t: (key: string) => string): string {
   const items = template.specialTerms
-    .map((term, i) => `<li><span class="ui-num">${["①", "②", "③", "④", "⑤"][i] ?? `${i + 1}.`}</span>${escapeHtml(term)}</li>`)
+    .map((term, i) => `<li><span class="ui-num">${["①", "②", "③", "④", "⑤"][i] ?? `${i + 1}.`}</span>${escapeHtml(localize(term, lang))}</li>`)
     .join("");
   return `<div class="ui-terms">
-      <h3>[특약 사항]</h3>
+      <h3>${escapeHtml(t("specialTerms"))}</h3>
       <ol>${items}</ol>
     </div>`;
 }
@@ -288,20 +293,22 @@ export function buildUnitInspectionBody(
   template: InspectionTemplate,
   companyName: string,
   hiddenCodes: Set<string> = new Set(),
+  lang = "ko",
 ): string {
+  const t = (key: string) => chrome(template, key, lang);
   const ref = d?.report_ref ? `<div class="ui-ref">${escapeHtml(d.report_ref)}</div>` : "";
   return `${INSPECTION_STYLE}
     <div class="ui-title">
-      <h1>${escapeHtml(companyName)} ${escapeHtml(template.heading)}</h1>
+      <h1>${escapeHtml(companyName)} ${escapeHtml(localize(template.heading, lang))}</h1>
       ${ref}
     </div>
-    ${renderHeader(d, template)}
-    <div class="ui-sec">[점 검 내 용]</div>
-    ${renderMeters(d)}
-    <div class="ui-sec">[하 자 내 용]</div>
-    ${renderChecklist(d, template, hiddenCodes)}
-    ${renderRemarks(d)}
-    ${renderSpecialTerms(template)}
+    ${renderHeader(d, template, t)}
+    <div class="ui-sec">${escapeHtml(t("inspectionSection"))}</div>
+    ${renderMeters(d, t)}
+    <div class="ui-sec">${escapeHtml(t("defectsSection"))}</div>
+    ${renderChecklist(d, template, hiddenCodes, lang, t)}
+    ${renderRemarks(d, t)}
+    ${renderSpecialTerms(template, lang, t)}
   `;
 }
 
@@ -315,13 +322,16 @@ export function buildUnitInspectionHtml(opts: {
   headingPrefix?: string | null;
   /** Template rows switched off in 설정 — dropped from the blank form. */
   hiddenCodes?: Set<string>;
+  /** Document language (ko default — the form is a Korean lease document). */
+  lang?: string;
 }): string {
   const co = opts.company ?? getCompanyInfo();
   const template = getInspectionTemplate(opts.templateKey);
+  const lang = opts.lang ?? "ko";
   const prefix = (opts.headingPrefix ?? co.tradingName ?? co.legalName ?? "").trim();
   return renderDocumentShell({
-    docType: template.heading,
-    bodyHtml: buildUnitInspectionBody(opts.data, template, prefix, opts.hiddenCodes ?? new Set()),
+    docType: localize(template.heading, lang),
+    bodyHtml: buildUnitInspectionBody(opts.data, template, prefix, opts.hiddenCodes ?? new Set(), lang),
     company: co,
     forPrint: opts.forPrint ?? true,
   });

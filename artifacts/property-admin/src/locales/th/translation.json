@@ -4770,6 +4770,7 @@
   },
   "inspection": {
     "add_item": "เพิ่มรายการ",
+    "add_photo": "เพิ่มรูป",
     "blank_pdf": "แบบฟอร์มเปล่า (PDF)",
     "col_ref": "เลขที่",
     "confirmed_on": "วันที่ยืนยัน",
@@ -4783,6 +4784,7 @@
     "filled_pdf": "PDF ที่กรอกแล้ว",
     "finalize": "ปิดการตรวจ",
     "group_other": "รายการเพิ่มเติม",
+    "hash": "แฮช",
     "hide_hidden": "ซ่อนรายการที่ซ่อนไว้",
     "hide_item": "ห้องนี้ไม่มีรายการนี้ — ซ่อน",
     "inspector_name": "ผู้ตรวจ",

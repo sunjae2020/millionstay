@@ -4770,6 +4770,7 @@
   },
   "inspection": {
     "add_item": "項目を追加",
+    "add_photo": "写真を追加",
     "blank_pdf": "白紙様式（PDF）",
     "col_ref": "番号",
     "confirmed_on": "確認日",
@@ -4783,6 +4784,7 @@
     "filled_pdf": "記入済みPDF",
     "finalize": "点検を確定",
     "group_other": "追加項目",
+    "hash": "ハッシュ",
     "hide_hidden": "非表示項目を隠す",
     "hide_item": "この住戸にない項目 — 非表示",
     "inspector_name": "点検者",

@@ -52,13 +52,17 @@ interface Inspection {
   contract_id: number | null;
   status: string;
   title: string | null;
+  title_display: string;
   meta: Record<string, any>;
   sign_token: string | null;
   sign_token_phase: string | null;
   sign_token_expires_at: string | null;
   items: InspectionItem[];
-  signatures: Array<{ id: number; phase: string; role: string; signer_name: string | null; signature_image: string; signed_at: string }>;
-  template: { key: string; name: string; heading: string; unitTypes: string[]; groups: Array<{ key: string; label: string }>; specialTerms: string[] };
+  signatures: Array<{
+    id: number; phase: string; role: string; signer_name: string | null;
+    signature_image: string; signed_at: string; ip: string | null; content_hash: string | null;
+  }>;
+  templateView: { key: string; name: string; heading: string; unitTypes: string[]; groups: Array<{ key: string; label: string }>; specialTerms: string[] };
 }
 
 const STATUS_CYCLE: Array<{ value: ItemStatus; icon: typeof Check; className: string }> = [
@@ -68,7 +72,7 @@ const STATUS_CYCLE: Array<{ value: ItemStatus; icon: typeof Check; className: st
 ];
 
 export default function InspectionDetail() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const qc = useQueryClient();
@@ -88,10 +92,12 @@ export default function InspectionDetail() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadTargetRef = useRef<number | null>(null);
 
-  const queryKey = ["inspection", id];
+  const lang = i18n.language;
+  const queryKey = ["inspection", id, lang];
   const { data, isLoading } = useQuery({
     queryKey,
-    queryFn: async () => (await apiJson<{ data: Inspection }>(`/api/v1/inspections/${id}`)).data,
+    queryFn: async () =>
+      (await apiJson<{ data: Inspection }>(`/api/v1/inspections/${id}?lang=${encodeURIComponent(lang)}`)).data,
   });
   const report = data;
 
@@ -118,7 +124,7 @@ export default function InspectionDetail() {
       if (!byKey.has(key)) byKey.set(key, []);
       byKey.get(key)!.push(item);
     }
-    const ordered = (report?.template.groups ?? []).map((g) => ({ key: g.key, label: g.label, items: byKey.get(g.key) ?? [] }));
+    const ordered = (report?.templateView.groups ?? []).map((g) => ({ key: g.key, label: g.label, items: byKey.get(g.key) ?? [] }));
     const extras = [...byKey.entries()]
       .filter(([k]) => !ordered.some((g) => g.key === k))
       .map(([k, items]) => ({ key: k, label: t("inspection.group_other"), items }));
@@ -213,7 +219,7 @@ export default function InspectionDetail() {
   }
 
   async function downloadPdf() {
-    const res = await apiFetch(`/api/v1/inspections/${id}/document.pdf`);
+    const res = await apiFetch(`/api/v1/inspections/${id}/document.pdf?lang=${encodeURIComponent(lang)}`);
     if (!res.ok) { toast({ title: t("inspection.pdf_failed"), variant: "destructive" }); return; }
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
@@ -286,7 +292,7 @@ export default function InspectionDetail() {
             <Button variant="ghost" size="sm" className="-ml-2 mb-1" onClick={() => navigate(report.contract_id ? `/booking/contracts/${report.contract_id}` : "/booking/contracts")}>
               <ArrowLeft className="w-4 h-4 mr-1" /> {t("common.back")}
             </Button>
-            <h1 className="text-xl font-semibold truncate">{report.title || report.template.name}</h1>
+            <h1 className="text-xl font-semibold truncate">{report.title_display}</h1>
             <p className="text-xs text-muted-foreground mt-0.5">
               {report.report_ref} · <Badge variant="outline">{t(`inspection.status_${report.status}`, report.status)}</Badge>
             </p>
@@ -322,7 +328,7 @@ export default function InspectionDetail() {
         <div className="rounded-lg border bg-white p-4 space-y-3">
           <h2 className="text-sm font-medium">{t("inspection.section_header")}</h2>
           <div className="grid grid-cols-2 gap-3">
-            {metaField("unit_type", t("inspection.unit_type"), report.template.unitTypes.join(" / "))}
+            {metaField("unit_type", t("inspection.unit_type"), report.templateView.unitTypes.join(" / "))}
             {metaField("unit_no", t("inspection.unit_no"))}
             {metaField("tenant_name", t("inspection.tenant_name"))}
             {metaField("tenant_phone", t("inspection.tenant_phone"), "010-")}
@@ -429,44 +435,50 @@ export default function InspectionDetail() {
                             </div>
                           </div>
 
+                          {/* Defect note only matters for a defect; photos are
+                              available on every row — a photo of an intact
+                              fixture at move-in is exactly what settles a
+                              dispute at move-out. */}
                           {!item.hidden && status === "defect" && (
-                            <div className="space-y-2">
-                              <Textarea
-                                rows={2}
-                                defaultValue={noteOf(item)}
-                                disabled={locked}
-                                placeholder={t("inspection.defect_placeholder")}
-                                onBlur={(e) => {
-                                  if (e.target.value !== noteOf(item)) {
-                                    patchItem.mutate({ itemId: item.id, patch: { [`${phase}_note`]: e.target.value } });
-                                  }
-                                }}
-                              />
-                              <div className="flex items-center gap-2 flex-wrap">
-                                {photos.map((p) => (
-                                  <div key={p.id} className="relative">
-                                    <a href={p.file_url} target="_blank" rel="noopener noreferrer">
-                                      <img src={p.thumbnail_url || p.file_url} alt="" className="h-16 w-16 rounded-md object-cover border" />
-                                    </a>
-                                    {!locked && (
-                                      <button
-                                        onClick={() => removePhoto.mutate(p.id)}
-                                        className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-white border shadow flex items-center justify-center text-red-500"
-                                      >
-                                        <X className="w-3 h-3" />
-                                      </button>
-                                    )}
-                                  </div>
-                                ))}
-                                {!locked && (
-                                  <button
-                                    onClick={() => { uploadTargetRef.current = item.id; fileInputRef.current?.click(); }}
-                                    className="h-16 w-16 rounded-md border border-dashed flex items-center justify-center text-muted-foreground hover:bg-gray-50"
-                                  >
-                                    {uploadingItem === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
-                                  </button>
-                                )}
-                              </div>
+                            <Textarea
+                              rows={2}
+                              defaultValue={noteOf(item)}
+                              disabled={locked}
+                              placeholder={t("inspection.defect_placeholder")}
+                              onBlur={(e) => {
+                                if (e.target.value !== noteOf(item)) {
+                                  patchItem.mutate({ itemId: item.id, patch: { [`${phase}_note`]: e.target.value } });
+                                }
+                              }}
+                            />
+                          )}
+
+                          {!item.hidden && (photos.length > 0 || !locked) && (
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {photos.map((p) => (
+                                <div key={p.id} className="relative">
+                                  <a href={p.file_url} target="_blank" rel="noopener noreferrer">
+                                    <img src={p.thumbnail_url || p.file_url} alt="" className="h-16 w-16 rounded-md object-cover border" />
+                                  </a>
+                                  {!locked && (
+                                    <button
+                                      onClick={() => removePhoto.mutate(p.id)}
+                                      className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-white border shadow flex items-center justify-center text-red-500"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  )}
+                                </div>
+                              ))}
+                              {!locked && (
+                                <button
+                                  onClick={() => { uploadTargetRef.current = item.id; fileInputRef.current?.click(); }}
+                                  title={t("inspection.add_photo")}
+                                  className="h-16 w-16 rounded-md border border-dashed flex items-center justify-center text-muted-foreground hover:bg-gray-50"
+                                >
+                                  {uploadingItem === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
+                                </button>
+                              )}
                             </div>
                           )}
 
@@ -524,7 +536,13 @@ export default function InspectionDetail() {
                     <>
                       <img src={sig.signature_image} alt="" className="h-14 object-contain" />
                       <p className="text-[11px] text-muted-foreground mt-1">
-                        {sig.signer_name || "—"} · {formatDate(sig.signed_at)}
+                        {sig.signer_name || "—"} · {new Date(sig.signed_at).toLocaleString()}
+                      </p>
+                      {/* Recorded server-side at sign time — this is what makes
+                          the signature hold up if it is ever questioned. */}
+                      <p className="text-[10px] text-muted-foreground/80 mt-0.5">
+                        {sig.ip ? `IP ${sig.ip}` : ""}
+                        {sig.content_hash ? ` · ${t("inspection.hash")} ${sig.content_hash.slice(0, 12)}` : ""}
                       </p>
                     </>
                   ) : role === "inspector" ? (
@@ -596,7 +614,7 @@ export default function InspectionDetail() {
         <div className="rounded-lg border bg-white p-4">
           <h2 className="text-sm font-medium mb-2">{t("inspection.special_terms")}</h2>
           <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal pl-4">
-            {report.template.specialTerms.map((term, i) => <li key={i}>{term}</li>)}
+            {report.templateView.specialTerms.map((term, i) => <li key={i}>{term}</li>)}
           </ol>
         </div>
       </div>

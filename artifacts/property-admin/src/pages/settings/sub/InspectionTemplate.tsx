@@ -33,14 +33,16 @@ interface Template {
 }
 
 export default function InspectionTemplatePage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { toast } = useToast();
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [dirty, setDirty] = useState(false);
 
+  const lang = i18n.language;
   const { data: templates, isLoading } = useQuery({
-    queryKey: ["inspection-templates"],
-    queryFn: async () => (await apiJson<{ data: Template[] }>("/api/v1/inspection-templates")).data,
+    queryKey: ["inspection-templates", lang],
+    queryFn: async () =>
+      (await apiJson<{ data: Template[] }>(`/api/v1/inspection-templates?lang=${encodeURIComponent(lang)}`)).data,
   });
   const template = templates?.[0];
 

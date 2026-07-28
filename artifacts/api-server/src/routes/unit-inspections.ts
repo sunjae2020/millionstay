@@ -44,7 +44,10 @@ import {
   DEFAULT_INSPECTION_TEMPLATE_KEY,
   INSPECTION_TEMPLATES,
   getInspectionTemplate,
+  labelIndex,
+  localize,
   templateItemRows,
+  type InspectionTemplate,
 } from "../lib/inspections/metheimUnitTemplate";
 import { hiddenCodesFor, readTemplatePrefs, writeTemplatePrefs } from "../lib/inspections/templatePrefs";
 import { clientIp, signingBaseUrl } from "../services/contractSigning";
@@ -65,6 +68,35 @@ function asPhase(value: unknown, fallback: Phase = "move_in"): Phase {
   return PHASES.includes(value as Phase) ? (value as Phase) : fallback;
 }
 
+/**
+ * Display language for labels. Callers pass ?lang= (the admin sends its i18n
+ * language, the tenant page its own); Korean is the fallback because the form
+ * itself is a Korean lease document.
+ */
+function reqLang(req: any): string {
+  const q = req.query?.lang ?? req.body?.lang;
+  return typeof q === "string" && q ? q : (process.env.DEFAULT_DOC_LANG ?? "ko");
+}
+
+/**
+ * Swap stored Korean row labels for the requested language.
+ *
+ * Rows are stored with their Korean label (the paper form's wording) and matched
+ * back to the template by `item_code`. Rows added on site have no code, so they
+ * keep whatever the inspector typed — translating free text would be a guess.
+ */
+function localizeItems<T extends { item_code: string | null; label: string }>(
+  items: T[],
+  template: InspectionTemplate,
+  lang: string,
+): T[] {
+  const labels = labelIndex(template);
+  return items.map((it) => {
+    const localized = it.item_code ? labels.get(it.item_code) : null;
+    return localized ? { ...it, label: localize(localized, lang) } : it;
+  });
+}
+
 function fail(res: any, code: number, errCode: string, message: string): void {
   res.status(code).json({ success: false, error: { code: errCode, message } });
 }
@@ -80,7 +112,7 @@ async function generateReportRef(): Promise<string> {
 }
 
 /** Load a report with items (+ their photos/responses) and signatures. */
-async function loadInspection(id: number) {
+async function loadInspection(id: number, lang = "ko") {
   const [report] = await db.select().from(conditionReportsTable).where(eq(conditionReportsTable.id, id)).limit(1);
   if (!report) return null;
   const items = await db
@@ -101,10 +133,24 @@ async function loadInspection(id: number) {
   const responses = itemIds.length
     ? await db.select().from(conditionReportResponsesTable).where(inArray(conditionReportResponsesTable.item_id, itemIds))
     : [];
+  const template = getInspectionTemplate(report.template_key);
+  // The stored title is the template's Korean name unless someone renamed it, so
+  // an untouched title follows the reader's language instead of pinning Korean.
+  const title_display =
+    report.title && report.title !== template.name.ko ? report.title : localize(template.name, lang);
   return {
     ...report,
-    template: getInspectionTemplate(report.template_key),
-    items: items.map((it) => ({
+    title_display,
+    template,
+    templateView: {
+      key: template.key,
+      name: localize(template.name, lang),
+      heading: localize(template.heading, lang),
+      unitTypes: template.unitTypes,
+      groups: template.groups.map((gr) => ({ key: gr.key, label: localize(gr.label, lang) })),
+      specialTerms: template.specialTerms.map((term) => localize(term, lang)),
+    },
+    items: localizeItems(items, template, lang).map((it) => ({
       ...it,
       photos: photos.filter((p) => p.item_id === it.id),
       responses: responses.filter((r) => r.item_id === it.id),
@@ -211,17 +257,22 @@ const adminRouter: IRouter = Router();
 adminRouter.use("/v1", requireAuth);
 
 // Available templates (for the "새 점검표" picker).
-adminRouter.get("/v1/inspection-templates", async (_req, res): Promise<void> => {
+adminRouter.get("/v1/inspection-templates", async (req, res): Promise<void> => {
+  const lang = reqLang(req);
   res.json({
     success: true,
     data: Object.values(INSPECTION_TEMPLATES).map((t) => ({
       key: t.key,
-      name: t.name,
-      heading: t.heading,
+      name: localize(t.name, lang),
+      heading: localize(t.heading, lang),
       unitTypes: t.unitTypes,
       itemCount: t.groups.reduce((n, g) => n + g.items.length, 0),
-      groups: t.groups.map((g) => ({ key: g.key, label: g.label, items: g.items })),
-      specialTerms: t.specialTerms,
+      groups: t.groups.map((gr) => ({
+        key: gr.key,
+        label: localize(gr.label, lang),
+        items: gr.items.map((i) => ({ code: i.code, label: localize(i.label, lang) })),
+      })),
+      specialTerms: t.specialTerms.map((term) => localize(term, lang)),
     })),
   });
 });
@@ -278,7 +329,7 @@ async function createInspectionForContract(
       template_key: template.key,
       phase: "full",
       status: "draft",
-      title: opts.title?.trim() || template.name,
+      title: opts.title?.trim() || template.name.ko,
       meta,
       created_by: opts.actorId ?? null,
       audit_trail: [{ event: "created", at: new Date().toISOString(), actor: opts.actorId ?? null }],
@@ -344,7 +395,7 @@ adminRouter.get("/v1/contracts/:contractId/inspection", async (req, res): Promis
         id = row.id;
       }
     }
-    res.json({ success: true, data: await loadInspection(id) });
+    res.json({ success: true, data: await loadInspection(id, reqLang(req)) });
   } catch (err: any) {
     fail(res, 500, "SERVER_ERROR", err.message);
   }
@@ -352,7 +403,7 @@ adminRouter.get("/v1/contracts/:contractId/inspection", async (req, res): Promis
 
 adminRouter.get("/v1/inspections/:id", async (req, res): Promise<void> => {
   try {
-    const detail = await loadInspection(Number(req.params.id));
+    const detail = await loadInspection(Number(req.params.id), reqLang(req));
     if (!detail) { fail(res, 404, "NOT_FOUND", "Inspection not found"); return; }
     res.json({ success: true, data: detail });
   } catch (err: any) {
@@ -376,7 +427,7 @@ adminRouter.patch("/v1/inspections/:id", async (req, res): Promise<void> => {
     if (Object.keys(patch).length) {
       await db.update(conditionReportsTable).set(patch).where(eq(conditionReportsTable.id, id));
     }
-    res.json({ success: true, data: await loadInspection(id) });
+    res.json({ success: true, data: await loadInspection(id, reqLang(req)) });
   } catch (err: any) {
     fail(res, 500, "SERVER_ERROR", err.message);
   }
@@ -666,7 +717,7 @@ adminRouter.post("/v1/inspections/:id/finalize", async (req, res): Promise<void>
       })
       .where(eq(conditionReportsTable.id, id));
     void logAction({ entityType: ENTITY, entityId: id, action: "STATUS_CHANGE", actorId: (req as any).user?.id ?? null, newValue: { status: "finalized" } });
-    res.json({ success: true, data: await loadInspection(id) });
+    res.json({ success: true, data: await loadInspection(id, reqLang(req)) });
   } catch (err: any) {
     fail(res, 500, "SERVER_ERROR", err.message);
   }
@@ -691,9 +742,10 @@ async function renderInspectionPdf(
   filename: string,
   format: string,
   hiddenCodes?: Set<string>,
+  lang = "ko",
 ): Promise<void> {
   const company = await resolveCompanyInfo();
-  const html = buildUnitInspectionHtml({ data, templateKey, company, forPrint: true, hiddenCodes });
+  const html = buildUnitInspectionHtml({ data, templateKey, company, forPrint: true, hiddenCodes, lang });
   if (format === "html") { res.setHeader("Content-Type", "text/html; charset=utf-8"); res.send(html); return; }
   try {
     const pdf = await htmlToPdf(html);
@@ -716,7 +768,7 @@ adminRouter.get("/v1/inspection-form/blank.pdf", async (req, res): Promise<void>
   try {
     const templateKey = typeof req.query.template === "string" ? req.query.template : DEFAULT_INSPECTION_TEMPLATE_KEY;
     const hidden = await hiddenCodesFor(getInspectionTemplate(templateKey).key);
-    await renderInspectionPdf(res, null, templateKey, "unit-inspection-blank", String(req.query.format ?? ""), hidden);
+    await renderInspectionPdf(res, null, templateKey, "unit-inspection-blank", String(req.query.format ?? ""), hidden, reqLang(req));
   } catch (err: any) {
     fail(res, 500, "PDF_FAILED", err.message);
   }
@@ -727,7 +779,7 @@ adminRouter.get("/v1/inspections/:id/document.pdf", async (req, res): Promise<vo
   try {
     const report = await loadInspection(Number(req.params.id));
     if (!report) { fail(res, 404, "NOT_FOUND", "Inspection not found"); return; }
-    await renderInspectionPdf(res, toDocInput(report), report.template_key, report.report_ref, String(req.query.format ?? ""));
+    await renderInspectionPdf(res, toDocInput(report), report.template_key, report.report_ref, String(req.query.format ?? ""), undefined, reqLang(req));
   } catch (err: any) {
     fail(res, 500, "PDF_FAILED", err.message);
   }
@@ -739,12 +791,12 @@ adminRouter.get("/v1/inspections/:id/document.pdf", async (req, res): Promise<vo
 const publicRouter: IRouter = Router();
 
 /** Resolve a live token → { report, phase }, or null when unusable. */
-async function resolveToken(token: string): Promise<{ report: Inspection; phase: Phase } | null> {
+async function resolveToken(token: string, lang = "ko"): Promise<{ report: Inspection; phase: Phase } | null> {
   if (!token) return null;
   const [row] = await db.select().from(conditionReportsTable).where(eq(conditionReportsTable.sign_token, token)).limit(1);
   if (!row || row.deleted_at) return null;
   if (row.sign_token_expires_at && new Date(row.sign_token_expires_at) < new Date()) return null;
-  const report = await loadInspection(row.id);
+  const report = await loadInspection(row.id, lang);
   if (!report) return null;
   return { report, phase: asPhase(row.sign_token_phase) };
 }
@@ -756,9 +808,13 @@ function publicView(report: Inspection, phase: Phase) {
     phase,
     title: report.title,
     status: report.status,
-    template: { key: report.template.key, heading: report.template.heading, specialTerms: report.template.specialTerms },
+    template: {
+      key: report.templateView.key,
+      heading: report.templateView.heading,
+      specialTerms: report.templateView.specialTerms,
+    },
     meta: report.meta,
-    groups: report.template.groups.map((g) => ({ key: g.key, label: g.label })),
+    groups: report.templateView.groups,
     signed: report.signatures.some((s) => s.phase === phase && s.role === "tenant"),
     items: report.items.filter((it) => !it.hidden).map((it) => ({
       id: it.id,
@@ -774,7 +830,7 @@ function publicView(report: Inspection, phase: Phase) {
 
 publicRouter.get("/v1/public/unit-inspections/:token", async (req, res): Promise<void> => {
   try {
-    const found = await resolveToken(String(req.params.token));
+    const found = await resolveToken(String(req.params.token), reqLang(req));
     if (!found) { res.status(404).json({ error: "not_found", message: "유효하지 않거나 만료된 링크입니다." }); return; }
     await db
       .update(conditionReportsTable)
@@ -789,7 +845,7 @@ publicRouter.get("/v1/public/unit-inspections/:token", async (req, res): Promise
 // Per-item 동의 / 이의제기.
 publicRouter.post("/v1/public/unit-inspections/:token/respond", async (req, res): Promise<void> => {
   try {
-    const found = await resolveToken(String(req.params.token));
+    const found = await resolveToken(String(req.params.token), reqLang(req));
     if (!found) { res.status(404).json({ error: "not_found", message: "유효하지 않거나 만료된 링크입니다." }); return; }
     if (found.report.signatures.some((s) => s.phase === found.phase && s.role === "tenant")) {
       res.status(409).json({ error: "already_signed", message: "이미 서명이 완료되었습니다." }); return;
@@ -814,7 +870,7 @@ publicRouter.post("/v1/public/unit-inspections/:token/respond", async (req, res)
 // Tenant evidence photo.
 publicRouter.post("/v1/public/unit-inspections/:token/photos", upload.single("image"), async (req, res): Promise<void> => {
   try {
-    const found = await resolveToken(String(req.params.token));
+    const found = await resolveToken(String(req.params.token), reqLang(req));
     if (!found) { res.status(404).json({ error: "not_found", message: "유효하지 않거나 만료된 링크입니다." }); return; }
     if (!req.file) { res.status(400).json({ error: "no_file", message: "사진이 없습니다." }); return; }
     if (!isCloudinaryConfigured()) { res.status(503).json({ error: "not_configured", message: "이미지 업로드가 설정되지 않았습니다." }); return; }
@@ -845,7 +901,7 @@ publicRouter.post("/v1/public/unit-inspections/:token/photos", upload.single("im
 // Tenant signs the phase. The signature is bound to a hash of what was shown.
 publicRouter.post("/v1/public/unit-inspections/:token/sign", async (req, res): Promise<void> => {
   try {
-    const found = await resolveToken(String(req.params.token));
+    const found = await resolveToken(String(req.params.token), reqLang(req));
     if (!found) { res.status(404).json({ error: "not_found", message: "유효하지 않거나 만료된 링크입니다." }); return; }
     const { report, phase } = found;
     if (report.signatures.some((s) => s.phase === phase && s.role === "tenant")) {
@@ -900,9 +956,9 @@ publicRouter.post("/v1/public/unit-inspections/:token/sign", async (req, res): P
 // Token-gated PDF of what the tenant signed / is being asked to sign.
 publicRouter.get("/v1/public/unit-inspections/:token/document.pdf", async (req, res): Promise<void> => {
   try {
-    const found = await resolveToken(String(req.params.token));
+    const found = await resolveToken(String(req.params.token), reqLang(req));
     if (!found) { res.status(404).send("Not found"); return; }
-    await renderInspectionPdf(res, toDocInput(found.report), found.report.template_key, found.report.report_ref, String(req.query.format ?? ""));
+    await renderInspectionPdf(res, toDocInput(found.report), found.report.template_key, found.report.report_ref, String(req.query.format ?? ""), undefined, reqLang(req));
   } catch (err: any) {
     res.status(500).send("Failed to render document");
   }

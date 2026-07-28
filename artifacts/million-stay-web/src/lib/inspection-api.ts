@@ -59,8 +59,10 @@ async function request(path: string, init?: RequestInit): Promise<any> {
   return body;
 }
 
-export async function getInspection(token: string): Promise<InspectionView> {
-  const body = await request(`${BASE}/${encodeURIComponent(token)}`);
+/** `lang` localises the row labels server-side (they are stored in Korean). */
+export async function getInspection(token: string, lang?: string): Promise<InspectionView> {
+  const query = lang ? `?lang=${encodeURIComponent(lang)}` : "";
+  const body = await request(`${BASE}/${encodeURIComponent(token)}${query}`);
   return body.data as InspectionView;
 }
 
@@ -94,6 +96,7 @@ export async function signInspection(token: string, signerName: string, signatur
 }
 
 /** Token-gated PDF of the checklist as shown. */
-export function inspectionPdfUrl(token: string): string {
-  return `${BASE}/${encodeURIComponent(token)}/document.pdf`;
+export function inspectionPdfUrl(token: string, lang?: string): string {
+  const query = lang ? `?lang=${encodeURIComponent(lang)}` : "";
+  return `${BASE}/${encodeURIComponent(token)}/document.pdf${query}`;
 }

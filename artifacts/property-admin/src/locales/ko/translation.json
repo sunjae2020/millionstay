@@ -4770,6 +4770,7 @@
   },
   "inspection": {
     "add_item": "항목 추가",
+    "add_photo": "사진 추가",
     "blank_pdf": "빈 양식 (PDF)",
     "col_ref": "번호",
     "confirmed_on": "확인일",
@@ -4783,6 +4784,7 @@
     "filled_pdf": "작성본 PDF",
     "finalize": "점검 확정",
     "group_other": "추가 항목",
+    "hash": "해시",
     "hide_hidden": "숨긴 항목 감추기",
     "hide_item": "이 세대에 없는 항목 — 숨기기",
     "inspector_name": "점검자",

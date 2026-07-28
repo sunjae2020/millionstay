@@ -4770,6 +4770,7 @@
   },
   "inspection": {
     "add_item": "Add item",
+    "add_photo": "Add photo",
     "blank_pdf": "Blank form (PDF)",
     "col_ref": "Ref",
     "confirmed_on": "Confirmed on",
@@ -4783,6 +4784,7 @@
     "filled_pdf": "Checklist PDF",
     "finalize": "Finalize",
     "group_other": "Additional items",
+    "hash": "Hash",
     "hide_hidden": "Hide hidden rows",
     "hide_item": "Not applicable to this unit — hide",
     "inspector_name": "Inspector",

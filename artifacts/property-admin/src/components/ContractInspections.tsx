@@ -28,6 +28,7 @@ interface Inspection {
   id: number;
   report_ref: string;
   title: string | null;
+  title_display: string;
   status: string;
   created_at: string;
   items: InspectionItem[];
@@ -43,16 +44,17 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default function ContractInspections({ contractId }: { contractId: string | number }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [busy, setBusy] = useState(false);
 
+  const lang = i18n.language;
   const { data: report, isLoading, error } = useQuery({
-    queryKey: ["contract-inspection", String(contractId)],
+    queryKey: ["contract-inspection", String(contractId), lang],
     // Get-or-create: the server hands back this lease's checklist, making one
     // the first time the tab is opened.
-    queryFn: async () => (await apiJson<{ data: Inspection }>(`/api/v1/contracts/${contractId}/inspection`)).data,
+    queryFn: async () => (await apiJson<{ data: Inspection }>(`/api/v1/contracts/${contractId}/inspection?lang=${encodeURIComponent(lang)}`)).data,
   });
 
   async function openPdf(path: string, filename: string) {
@@ -92,7 +94,7 @@ export default function ContractInspections({ contractId }: { contractId: string
         </div>
         <Button
           size="sm" variant="outline" disabled={busy}
-          onClick={() => openPdf("/api/v1/inspection-form/blank.pdf", "unit-inspection-blank.pdf")}
+          onClick={() => openPdf(`/api/v1/inspection-form/blank.pdf?lang=${encodeURIComponent(lang)}`, "unit-inspection-blank.pdf")}
         >
           <Printer className="w-3.5 h-3.5 mr-1" />{t("inspection.blank_pdf")}
         </Button>
@@ -116,7 +118,7 @@ export default function ContractInspections({ contractId }: { contractId: string
             <div>
               <p className="font-medium flex items-center gap-1.5">
                 <ClipboardList className="w-4 h-4 text-muted-foreground" />
-                {report.title || "—"}
+                {report.title_display}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 <span className="font-mono">{report.report_ref}</span> · {formatDate(report.created_at)}
@@ -154,7 +156,7 @@ export default function ContractInspections({ contractId }: { contractId: string
             </Button>
             <Button
               size="sm" variant="outline" disabled={busy}
-              onClick={() => openPdf(`/api/v1/inspections/${report.id}/document.pdf`, `${report.report_ref}.pdf`)}
+              onClick={() => openPdf(`/api/v1/inspections/${report.id}/document.pdf?lang=${encodeURIComponent(lang)}`, `${report.report_ref}.pdf`)}
             >
               <FileDown className="w-3.5 h-3.5 mr-1" />{t("inspection.filled_pdf")}
             </Button>

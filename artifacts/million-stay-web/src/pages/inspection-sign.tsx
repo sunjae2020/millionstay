@@ -38,7 +38,7 @@ const STATUS_ICON = {
 } as const;
 
 export default function InspectionSign() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [, params] = useRoute("/inspection/:token");
   const token = params?.token ?? "";
 
@@ -60,7 +60,7 @@ export default function InspectionSign() {
   async function load() {
     setLoading(true);
     try {
-      const data = await getInspection(token);
+      const data = await getInspection(token, i18n.language);
       setView(data);
       setSignerName((prev) => prev || (data.meta?.tenant_name ?? ""));
       setLoadError(null);
@@ -72,7 +72,7 @@ export default function InspectionSign() {
     }
   }
 
-  useEffect(() => { void load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [token]);
+  useEffect(() => { void load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [token, i18n.language]);
 
   const groups = useMemo(() => {
     if (!view) return [];
@@ -168,7 +168,7 @@ export default function InspectionSign() {
         </div>
         <h1 className="mt-5 text-2xl font-bold">{t("inspectionSign.done_title")}</h1>
         <p className="mt-2 text-muted-foreground">{t("inspectionSign.done_desc")}</p>
-        <a href={inspectionPdfUrl(token)} target="_blank" rel="noopener noreferrer" className="mt-6 inline-block">
+        <a href={inspectionPdfUrl(token, i18n.language)} target="_blank" rel="noopener noreferrer" className="mt-6 inline-block">
           <Button><Download className="w-4 h-4 mr-1.5" />{t("inspectionSign.download_pdf")}</Button>
         </a>
       </div>,
@@ -277,25 +277,30 @@ export default function InspectionSign() {
                         </div>
 
                         {isDisputed && (
-                          <div className="space-y-2">
-                            <Textarea
-                              rows={2}
-                              placeholder={t("inspectionSign.dispute_placeholder")}
-                              value={comments[item.id] ?? item.response?.comment ?? ""}
-                              onChange={(e) => setComments((prev) => ({ ...prev, [item.id]: e.target.value }))}
-                              onBlur={() => respond(item, "disputed")}
-                            />
-                            <Button
-                              size="sm" variant="outline"
-                              onClick={() => { uploadTargetRef.current = item.id; fileInputRef.current?.click(); }}
-                              disabled={uploading === item.id}
-                            >
-                              {uploading === item.id
-                                ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
-                                : <Camera className="w-3.5 h-3.5 mr-1" />}
-                              {t("inspectionSign.add_photo")}
-                            </Button>
-                          </div>
+                          <Textarea
+                            rows={2}
+                            placeholder={t("inspectionSign.dispute_placeholder")}
+                            value={comments[item.id] ?? item.response?.comment ?? ""}
+                            onChange={(e) => setComments((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                            onBlur={() => respond(item, "disputed")}
+                          />
+                        )}
+
+                        {/* Any row can carry the tenant's own photo, not only a
+                            disputed one — evidence is worth more the earlier it
+                            is taken. */}
+                        {!view.signed && (
+                          <Button
+                            size="sm" variant="ghost"
+                            className="text-muted-foreground"
+                            onClick={() => { uploadTargetRef.current = item.id; fileInputRef.current?.click(); }}
+                            disabled={uploading === item.id}
+                          >
+                            {uploading === item.id
+                              ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                              : <Camera className="w-3.5 h-3.5 mr-1" />}
+                            {t("inspectionSign.add_photo")}
+                          </Button>
                         )}
                       </div>
                     );

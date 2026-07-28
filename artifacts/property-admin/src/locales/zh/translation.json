@@ -4770,6 +4770,7 @@
   },
   "inspection": {
     "add_item": "添加项目",
+    "add_photo": "添加照片",
     "blank_pdf": "空白表格（PDF）",
     "col_ref": "编号",
     "confirmed_on": "确认日期",
@@ -4783,6 +4784,7 @@
     "filled_pdf": "填写版 PDF",
     "finalize": "确定点检",
     "group_other": "追加项目",
+    "hash": "哈希",
     "hide_hidden": "收起已隐藏项目",
     "hide_item": "本房屋没有的项目 — 隐藏",
     "inspector_name": "点检人",
