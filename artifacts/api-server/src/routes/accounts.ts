@@ -7,6 +7,7 @@ import {
   spacesTable, propertiesTable, documentsTable, serviceHostsTable,
 } from "@workspace/db";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
+import { formatPersonName } from "../lib/nameFormat";
 import { enrichFromWebsite, downloadImage } from "../lib/accounts/websiteEnrich";
 import {
   verifyBizNo, isBizVerifyConfigured, isValidBizNoChecksum, formatBizNo, normaliseBizNo,
@@ -51,8 +52,8 @@ async function enrichAccount(row: typeof accountsTable.$inferSelect) {
 
   return {
     ...row,
-    primary_contact_name: primaryContact ? `${primaryContact.first_name} ${primaryContact.last_name}` : null,
-    secondary_contact_name: secondaryContact ? `${secondaryContact.first_name} ${secondaryContact.last_name}` : null,
+    primary_contact_name: primaryContact ? formatPersonName(primaryContact.first_name, primaryContact.last_name) : null,
+    secondary_contact_name: secondaryContact ? formatPersonName(secondaryContact.first_name, secondaryContact.last_name) : null,
     default_commission_name: commission?.name ?? null,
     payment_info_name: payInfo?.name ?? null,
     parent_account_name: parentAccount?.name ?? null,

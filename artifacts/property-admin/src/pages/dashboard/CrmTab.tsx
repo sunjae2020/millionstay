@@ -9,8 +9,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { KpiCard, DashCard, Pill, ACCENT } from "@/components/dashboard/DashboardKit";
 import { useBrand } from "@/contexts/ThemeContext";
-import { formatMoney } from "@/lib/currency";
-import { formatPersonName } from "@/lib/nameFormat";
 
 const LEAD_PIPELINE = ["New", "Contacted", "Qualified", "Converted"] as const;
 const PIPELINE_COLOR: Record<string, string> = {
@@ -42,7 +40,7 @@ const TASK_STATUS_BADGE: Record<string, string> = {
 
 export default function CrmTab() {
   const { t } = useTranslation();
-  const { currency, currencyPosition } = useBrand();
+  const { currency: brandCurrency } = useBrand();
   const { data: contacts } = useListContacts();
   const { data: accounts } = useListAccounts();
   const { data: leads } = useListLeads({});
@@ -50,8 +48,10 @@ export default function CrmTab() {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const guestAccounts = accounts?.filter(a => a.account_type === "Guest").length ?? 0;
-  const ownerAccounts = accounts?.filter(a => a.account_type === "SpaceOwner" || a.account_type === "Landlord").length ?? 0;
+  // Occupants = both stay lengths. Counting only "Guest" hid the 70 long-stay
+  // 세입자 that make up most of the Korean instance's accounts.
+  const occupantAccounts = accounts?.filter(a => a.account_type === "Guest" || a.account_type === "Tenant").length ?? 0;
+  const ownerAccounts = accounts?.filter(a => a.account_type === "SpaceOwner").length ?? 0;
 
   const activeLeads = leads?.filter(l => !isConverted(l.lead_status) && l.lead_status !== "Lost").length ?? 0;
   const convertedLeads = leads?.filter(l => isConverted(l.lead_status)).length ?? 0;
@@ -93,10 +93,10 @@ export default function CrmTab() {
     .slice(0, 8);
 
   function fmtBudget(l: any) {
-    const cur = l.budget_currency ?? currency;
-    if (l.budget_min && l.budget_max) return `${formatMoney(l.budget_min, cur, currencyPosition)}–${formatMoney(l.budget_max, cur, currencyPosition)}`;
-    if (l.budget_max) return `≤ ${formatMoney(l.budget_max, cur, currencyPosition)}`;
-    if (l.budget_min) return `≥ ${formatMoney(l.budget_min, cur, currencyPosition)}`;
+    const cur = l.budget_currency ?? brandCurrency;
+    if (l.budget_min && l.budget_max) return `${cur} ${Number(l.budget_min).toLocaleString()}–${Number(l.budget_max).toLocaleString()}`;
+    if (l.budget_max) return `≤ ${cur} ${Number(l.budget_max).toLocaleString()}`;
+    if (l.budget_min) return `≥ ${cur} ${Number(l.budget_min).toLocaleString()}`;
     return "—";
   }
 
@@ -117,7 +117,7 @@ export default function CrmTab() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard icon={Users} accent="blue" label={t("dash_crm.total_contacts")} value={contacts?.length ?? "—"} sublabel={t("dash_crm.people_in_crm")} />
-        <KpiCard icon={Briefcase} accent="purple" label={t("dash_crm.accounts")} value={accounts?.length ?? "—"} sublabel={t("dash_crm.guests_owners", { guests: guestAccounts, owners: ownerAccounts })} />
+        <KpiCard icon={Briefcase} accent="purple" label={t("dash_crm.accounts")} value={accounts?.length ?? "—"} sublabel={t("dash_crm.occupants_owners", { occupants: occupantAccounts, owners: ownerAccounts })} />
         <KpiCard icon={TrendingUp} accent="brand" label={t("dash_crm.active_leads")} value={activeLeads} sublabel={t("dash_crm.conversion_rate_pct", { rate: conversionRate })} progress={conversionRate} trend={convertedLeads > 0 ? t("dash_crm.count_won", { count: convertedLeads }) : undefined} trendType="up" />
         <KpiCard icon={CheckSquare} accent={overdueTasks > 0 ? "red" : "green"} label={t("dash_crm.open_tasks")} value={openTasks} sublabel={overdueTasks > 0 ? t("dash_crm.count_overdue", { count: overdueTasks }) : t("dash_crm.all_on_track")} trend={overdueTasks > 0 ? t("dash_crm.overdue") : undefined} trendType="down" />
       </div>
@@ -194,7 +194,7 @@ export default function CrmTab() {
                     <td className="px-3 py-2 font-mono font-medium">
                       <Link href={`/account/leads/${l.id}`} className="hover:text-primary">{l.lead_ref}</Link>
                     </td>
-                    <td className="px-3 py-2">{formatPersonName(l.first_name, l.last_name) || "—"}</td>
+                    <td className="px-3 py-2">{[l.first_name, l.last_name].filter(Boolean).join(" ") || "—"}</td>
                     <td className="px-3 py-2">{l.lead_source ?? "—"}</td>
                     <td className="px-3 py-2 text-muted-foreground">{fmtBudget(l)}</td>
                     <td className="px-3 py-2">
@@ -243,9 +243,9 @@ export default function CrmTab() {
       <DashCard title={t("dash_crm.account_types")} icon={Briefcase}>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
+            { type: "Tenant", icon: BedDouble, accent: ACCENT.blue },
             { type: "Guest", icon: BedDouble, accent: ACCENT.brand },
             { type: "SpaceOwner", icon: Building2, accent: ACCENT.green },
-            { type: "Landlord", icon: Building2, accent: ACCENT.blue },
             { type: "Agent", icon: Briefcase, accent: ACCENT.purple },
           ].map(({ type, icon: Icon, accent }) => (
             <div key={type} className="rounded-xl border p-3 flex items-center gap-3">

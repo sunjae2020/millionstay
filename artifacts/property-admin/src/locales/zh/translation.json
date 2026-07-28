@@ -632,12 +632,12 @@
     "col_amount": "金额",
     "col_due_date": "到期日",
     "ph_name_example": "例如 Sunjae KIM",
-    "type_guest": "客人",
-    "type_space_owner": "空间业主",
+    "type_guest": "住客（短期居住）",
+    "type_space_owner": "业主·出租人",
     "type_broker": "经纪人",
     "type_manager": "管理者",
     "type_real_estate_agent": "房地产中介",
-    "type_service_host": "服务提供者",
+    "type_service_host": "协力厂商",
     "type_partner": "合作伙伴",
     "label_primary_contact": "主要联系人",
     "label_secondary_contact": "次要联系人",
@@ -740,7 +740,13 @@
     "empty_files": "该账户暂无文件",
     "sub_accounts": "子账户",
     "upload_file": "上传文件",
-    "file_upload_failed": "文件上传失败"
+    "file_upload_failed": "文件上传失败",
+    "type_tenant": "承租人（长期居住）",
+    "type_agent": "房地产中介",
+    "type_homestay_host": "寄宿家庭",
+    "country_other": "其他（手动输入）",
+    "postcode_search": "查找邮编",
+    "postcode_search_failed": "无法打开地址搜索"
   },
   "lead": {
     "new": "新建线索",
@@ -2965,7 +2971,9 @@
     "account_type_guest": "房客",
     "account_type_spaceowner": "空间业主",
     "account_type_landlord": "房东",
-    "account_type_agent": "代理人"
+    "account_type_agent": "代理人",
+    "account_type_tenant": "承租人",
+    "occupants_owners": "承租人·住客 {{occupants}} · 业主 {{owners}}"
   },
   "dash_overview": {
     "no_upcoming_bookings": "暂无即将到来的预订",

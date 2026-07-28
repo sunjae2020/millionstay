@@ -632,12 +632,12 @@
     "col_amount": "금액",
     "col_due_date": "납기일",
     "ph_name_example": "예: 김선재",
-    "type_guest": "게스트",
-    "type_space_owner": "공간 소유주",
+    "type_guest": "게스트 (단기체류)",
+    "type_space_owner": "임대인·소유주",
     "type_broker": "브로커",
     "type_manager": "관리자",
     "type_real_estate_agent": "부동산 중개인",
-    "type_service_host": "서비스 호스트",
+    "type_service_host": "협력업체",
     "type_partner": "파트너",
     "label_primary_contact": "주 연락처",
     "label_secondary_contact": "보조 연락처",
@@ -740,7 +740,13 @@
     "empty_files": "이 계정의 파일이 없습니다",
     "sub_accounts": "하위 계정",
     "upload_file": "파일 업로드",
-    "file_upload_failed": "파일을 업로드하지 못했습니다"
+    "file_upload_failed": "파일을 업로드하지 못했습니다",
+    "type_tenant": "세입자 (장기체류)",
+    "type_agent": "부동산 중개",
+    "type_homestay_host": "홈스테이 호스트",
+    "country_other": "기타 (직접 입력)",
+    "postcode_search": "우편번호 찾기",
+    "postcode_search_failed": "주소 검색을 열지 못했습니다"
   },
   "lead": {
     "new": "새 리드",
@@ -2965,7 +2971,9 @@
     "account_type_guest": "게스트",
     "account_type_spaceowner": "공간 소유주",
     "account_type_landlord": "임대인",
-    "account_type_agent": "에이전트"
+    "account_type_agent": "에이전트",
+    "account_type_tenant": "세입자",
+    "occupants_owners": "세입자·게스트 {{occupants}} · 임대인 {{owners}}"
   },
   "dash_overview": {
     "no_upcoming_bookings": "예정된 예약이 없습니다",

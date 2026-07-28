@@ -632,12 +632,12 @@
     "col_amount": "Amount",
     "col_due_date": "Due Date",
     "ph_name_example": "e.g. Sunjae KIM",
-    "type_guest": "Guest",
-    "type_space_owner": "Space Owner",
+    "type_guest": "Guest (short stay)",
+    "type_space_owner": "Owner / Landlord",
     "type_broker": "Broker",
     "type_manager": "Manager",
     "type_real_estate_agent": "Real Estate Agent",
-    "type_service_host": "Service Host",
+    "type_service_host": "Service Partner",
     "type_partner": "Partner",
     "label_primary_contact": "Primary Contact",
     "label_secondary_contact": "Secondary Contact",
@@ -740,7 +740,13 @@
     "empty_files": "No files for this account",
     "sub_accounts": "Sub-accounts",
     "upload_file": "Upload file",
-    "file_upload_failed": "The file could not be uploaded"
+    "file_upload_failed": "The file could not be uploaded",
+    "type_tenant": "Tenant (long stay)",
+    "type_agent": "Real Estate Agent",
+    "type_homestay_host": "Homestay Host",
+    "country_other": "Other (type it in)",
+    "postcode_search": "Find postcode",
+    "postcode_search_failed": "The address search could not be opened"
   },
   "lead": {
     "new": "New Lead",
@@ -2965,7 +2971,9 @@
     "account_type_guest": "Guest",
     "account_type_spaceowner": "Space Owner",
     "account_type_landlord": "Landlord",
-    "account_type_agent": "Agent"
+    "account_type_agent": "Agent",
+    "account_type_tenant": "Tenant",
+    "occupants_owners": "{{occupants}} tenants & guests · {{owners}} owners"
   },
   "dash_overview": {
     "no_upcoming_bookings": "No upcoming bookings",

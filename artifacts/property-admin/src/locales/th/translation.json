@@ -632,12 +632,12 @@
     "col_amount": "จำนวนเงิน",
     "col_due_date": "วันครบกำหนด",
     "ph_name_example": "เช่น Sunjae KIM",
-    "type_guest": "แขก",
-    "type_space_owner": "เจ้าของพื้นที่",
+    "type_guest": "ผู้เข้าพัก (พักระยะสั้น)",
+    "type_space_owner": "เจ้าของ / ผู้ให้เช่า",
     "type_broker": "นายหน้า",
     "type_manager": "ผู้จัดการ",
     "type_real_estate_agent": "ตัวแทนอสังหาริมทรัพย์",
-    "type_service_host": "ผู้ให้บริการ",
+    "type_service_host": "พันธมิตรบริการ",
     "type_partner": "พาร์ทเนอร์",
     "label_primary_contact": "ผู้ติดต่อหลัก",
     "label_secondary_contact": "ผู้ติดต่อสำรอง",
@@ -740,7 +740,13 @@
     "empty_files": "ยังไม่มีไฟล์ของบัญชีนี้",
     "sub_accounts": "บัญชีย่อย",
     "upload_file": "อัปโหลดไฟล์",
-    "file_upload_failed": "อัปโหลดไฟล์ไม่สำเร็จ"
+    "file_upload_failed": "อัปโหลดไฟล์ไม่สำเร็จ",
+    "type_tenant": "ผู้เช่า (พักระยะยาว)",
+    "type_agent": "นายหน้าอสังหาฯ",
+    "type_homestay_host": "เจ้าบ้านโฮมสเตย์",
+    "country_other": "อื่น ๆ (พิมพ์เอง)",
+    "postcode_search": "ค้นหารหัสไปรษณีย์",
+    "postcode_search_failed": "เปิดการค้นหาที่อยู่ไม่สำเร็จ"
   },
   "lead": {
     "new": "ลีดใหม่",
@@ -2965,7 +2971,9 @@
     "account_type_guest": "ผู้เข้าพัก",
     "account_type_spaceowner": "เจ้าของพื้นที่",
     "account_type_landlord": "เจ้าของที่พัก",
-    "account_type_agent": "ตัวแทน"
+    "account_type_agent": "ตัวแทน",
+    "account_type_tenant": "ผู้เช่า",
+    "occupants_owners": "ผู้เช่าและผู้เข้าพัก {{occupants}} · เจ้าของ {{owners}}"
   },
   "dash_overview": {
     "no_upcoming_bookings": "ไม่มีการจองที่กำลังจะมาถึง",

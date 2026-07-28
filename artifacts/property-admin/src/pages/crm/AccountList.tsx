@@ -22,20 +22,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/apiFetch";
+import { accountTypeOptions, accountTypeLabel, accountTypeColor } from "@/lib/accountTypes";
+import { useModules } from "@/hooks/useModules";
 
-const ACCOUNT_TYPE_COLORS: Record<string, string> = {
-  Guest: "bg-blue-100 text-blue-700 border-blue-200",
-  SpaceOwner: "bg-purple-100 text-purple-700 border-purple-200",
-  Broker: "bg-teal-100 text-teal-700 border-teal-200",
-  Manager: "bg-cyan-100 text-cyan-700 border-cyan-200",
-  RealEstateAgent: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  ServiceHost: "bg-orange-100 text-orange-700 border-orange-200",
-  Partner: "bg-indigo-100 text-indigo-700 border-indigo-200",
-};
 
 export default function AccountList() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { homestayEnabled } = useModules();
+  const typeOptions = accountTypeOptions(homestayEnabled);
   const isSuperAdmin = user?.role === "SuperAdmin";
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
@@ -95,11 +90,11 @@ export default function AccountList() {
         editable: {
           type: "select",
           getValue: (a) => a.account_type,
-          options: Object.keys(ACCOUNT_TYPE_COLORS).map((k) => ({ value: k, label: k })),
+          options: typeOptions.map((d) => ({ value: d.value, label: t(d.labelKey) })),
         },
         cell: (a) => (
-          <Badge variant="outline" className={`text-xs ${ACCOUNT_TYPE_COLORS[a.account_type] ?? "bg-gray-100 text-gray-700"}`}>
-            {a.account_type}
+          <Badge variant="outline" className={`text-xs ${accountTypeColor(a.account_type)}`}>
+            {accountTypeLabel(t, a.account_type)}
           </Badge>
         ),
       },
@@ -189,8 +184,8 @@ export default function AccountList() {
                 <SelectTrigger className="h-8 w-40 text-sm"><SelectValue placeholder={t("account.account_type")} /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__all">{t("account.all_types")}</SelectItem>
-                  {Object.keys(ACCOUNT_TYPE_COLORS).map((item) => (
-                    <SelectItem key={item} value={item}>{item}</SelectItem>
+                  {typeOptions.map((d) => (
+                    <SelectItem key={d.value} value={d.value}>{t(d.labelKey)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
