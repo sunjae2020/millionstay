@@ -8,7 +8,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { apiFetch } from "@/lib/apiFetch";
-import { Loader2, Sparkles, Trash2, Upload, User, IdCard } from "lucide-react";
+import { Loader2, Sparkles, Trash2, Upload, User, IdCard, ScanLine, ShieldCheck } from "lucide-react";
 
 /**
  * Profile photo + business-card panel for the contact form.
@@ -21,6 +21,11 @@ import { Loader2, Sparkles, Trash2, Upload, User, IdCard } from "lucide-react";
  *
  * OCR never writes to the form on its own: the extracted fields are shown in an
  * approval dialog and only the ticked ones are applied.
+ *
+ * The panel can also read an identity document (passport / 주민등록증 / 운전면허증 /
+ * 외국인등록증): the printed portrait is cropped out into the profile photo and the
+ * general details are offered for approval. The ID image itself is never stored,
+ * and document numbers (주민등록번호, 여권번호, 면허번호…) are never collected.
  */
 
 export interface ScannedCardRef {
@@ -64,6 +69,28 @@ const OCR_FIELD_LABELS: Array<[string, string]> = [
   ["sns_id", "contact.label_sns_id"],
 ];
 
+/** General fields an ID document can fill, in approval-dialog order. */
+const ID_FIELD_LABELS: Array<[string, string]> = [
+  ["last_name", "contact.label_last_name"],
+  ["first_name", "contact.label_first_name"],
+  ["date_of_birth", "contact.label_dob"],
+  ["gender", "contact.label_gender"],
+  ["nationality", "contact.label_nationality"],
+  ["address_line1", "contact.label_address"],
+  ["suburb", "contact.label_city"],
+  ["state", "contact.label_state"],
+  ["postcode", "contact.label_postcode"],
+  ["country", "contact.label_country"],
+];
+
+const ID_DOC_KIND_LABELS: Record<string, string> = {
+  passport: "contact.id_kind_passport",
+  national_id: "contact.id_kind_national_id",
+  driver_licence: "contact.id_kind_driver_licence",
+  residence_card: "contact.id_kind_residence_card",
+  other: "contact.id_kind_other",
+};
+
 interface Props {
   /** null while the contact is still unsaved (new form). */
   contactId: number | null;
@@ -103,6 +130,18 @@ export function ContactMediaPanel({
   /** Form values snapshotted when the dialog opened, for the before/after columns. */
   const [snapshot, setSnapshot] = useState<Record<string, string>>({});
   const [ocrNotes, setOcrNotes] = useState<string | null>(null);
+
+  const idInputRef = useRef<HTMLInputElement>(null);
+  const [idScanning, setIdScanning] = useState(false);
+  const [idError, setIdError] = useState<string | null>(null);
+  const [idOpen, setIdOpen] = useState(false);
+  const [idDocKind, setIdDocKind] = useState<string>("other");
+  const [idPhoto, setIdPhoto] = useState<{ url: string; public_id: string } | null>(null);
+  const [idFields, setIdFields] = useState<Record<string, string>>({});
+  const [idSelected, setIdSelected] = useState<Record<string, boolean>>({});
+  const [idBlocked, setIdBlocked] = useState<string[]>([]);
+  const [idSnapshot, setIdSnapshot] = useState<Record<string, string>>({});
+  const [idUsePhoto, setIdUsePhoto] = useState(true);
 
   const [documents, setDocuments] = useState<ContactDocument[]>([]);
 
@@ -208,6 +247,69 @@ export function ContactMediaPanel({
     setReviewOpen(false);
   }
 
+  async function handleIdPick(file: File | undefined) {
+    if (!file) return;
+    setIdError(null);
+    setIdScanning(true);
+    try {
+      const form = new FormData();
+      form.append("image", file);
+      const res = await apiFetch("/api/v1/contacts/id-document/scan", { method: "POST", body: form });
+      const data = await res.json();
+      if (!res.ok || !data?.success) throw new Error(data?.error ?? t("contact.id_scan_failed"));
+
+      const fields = (data.fields ?? {}) as Record<string, string>;
+      const current = getCurrentValues();
+      setIdSnapshot(current);
+      setIdFields(fields);
+      setIdDocKind(String(data.doc_kind ?? "other"));
+      setIdPhoto((data.photo ?? null) as { url: string; public_id: string } | null);
+      setIdBlocked(Array.isArray(data.blocked) ? (data.blocked as string[]) : []);
+      setIdUsePhoto(!!data.photo);
+      const preselect: Record<string, boolean> = {};
+      for (const [key, value] of Object.entries(fields)) {
+        preselect[key] = !!value && value !== (current[key] ?? "");
+      }
+      setIdSelected(preselect);
+      setIdOpen(true);
+    } catch (err) {
+      setIdError(err instanceof Error ? err.message : t("contact.id_scan_failed"));
+    } finally {
+      setIdScanning(false);
+      if (idInputRef.current) idInputRef.current.value = "";
+    }
+  }
+
+  function applyIdScan() {
+    const out: Record<string, string> = {};
+    for (const [key, value] of Object.entries(idFields)) {
+      if (idSelected[key] && value) out[key] = value;
+    }
+    if (Object.keys(out).length) onApplyFields(out);
+    if (idUsePhoto && idPhoto) onPhotoChange(idPhoto.url);
+    setIdOpen(false);
+    // Not accepted → the cropped avatar has no owner, so drop it from storage.
+    if (!idUsePhoto && idPhoto) void discardIdPhoto(idPhoto.public_id);
+    setIdPhoto(null);
+  }
+
+  function cancelIdScan() {
+    setIdOpen(false);
+    if (idPhoto) void discardIdPhoto(idPhoto.public_id);
+    setIdPhoto(null);
+  }
+
+  async function discardIdPhoto(publicId: string) {
+    try {
+      await apiFetch("/api/v1/contacts/photo/discard", {
+        method: "POST",
+        body: JSON.stringify({ public_id: publicId }),
+      });
+    } catch {
+      /* best effort — an orphaned crop is harmless, the ID itself was never stored */
+    }
+  }
+
   async function deleteDocument(docId: string) {
     if (!contactId) return;
     await apiFetch(`/api/v1/contacts/${contactId}/documents/${docId}`, { method: "DELETE" });
@@ -217,6 +319,7 @@ export function ContactMediaPanel({
   const storedFront = documents.find((d) => d.doc_type === "business_card_front");
   const storedBack = documents.find((d) => d.doc_type === "business_card_back");
   const rows = OCR_FIELD_LABELS.filter(([key]) => extracted[key]);
+  const idRows = ID_FIELD_LABELS.filter(([key]) => idFields[key]);
 
   return (
     <>
@@ -237,6 +340,13 @@ export function ContactMediaPanel({
               {uploadingPhoto ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
               {t("contact.photo_upload")}
             </Button>
+            <input ref={idInputRef} type="file" accept="image/*" className="hidden"
+              onChange={(e) => void handleIdPick(e.target.files?.[0])} />
+            <Button type="button" variant="outline" size="sm" className="gap-1.5"
+              disabled={idScanning} onClick={() => idInputRef.current?.click()}>
+              {idScanning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ScanLine className="h-3.5 w-3.5" />}
+              {idScanning ? t("contact.id_scanning") : t("contact.id_scan")}
+            </Button>
             {photoUrl && (
               <Button type="button" variant="ghost" size="sm" className="gap-1.5 text-destructive"
                 onClick={() => onPhotoChange("")}>
@@ -246,6 +356,11 @@ export function ContactMediaPanel({
           </div>
         </div>
         {photoError && <p className="text-xs text-destructive">{photoError}</p>}
+        {idError && <p className="text-xs text-destructive">{idError}</p>}
+        <p className="text-xs text-muted-foreground flex items-start gap-1">
+          <ShieldCheck className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+          {t("contact.id_privacy_hint")}
+        </p>
         <div className="grid gap-1.5">
           <Label className="text-xs text-muted-foreground">{t("contact.section_photo_url")}</Label>
           <Input value={photoUrl} placeholder="https://..." onChange={(e) => onPhotoChange(e.target.value)} />
@@ -294,6 +409,96 @@ export function ContactMediaPanel({
           <p className="text-xs text-muted-foreground">{t("contact.card_attach_hint")}</p>
         )}
       </div>
+
+      {/* ID-document approval dialog — the crop and the general fields, opt-in per row. */}
+      <Dialog open={idOpen} onOpenChange={(o) => { if (!o) cancelIdScan(); }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{t("contact.id_review_title")}</DialogTitle>
+            <DialogDescription>
+              {t("contact.id_review_desc")}
+              {` · ${t(ID_DOC_KIND_LABELS[idDocKind] ?? "contact.id_kind_other")}`}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="max-h-[55vh] overflow-y-auto space-y-4">
+            {/* Cropped portrait */}
+            <div className="flex items-center gap-4 rounded-lg border p-3">
+              <div className="h-24 w-24 shrink-0 rounded-full border bg-muted/40 overflow-hidden flex items-center justify-center">
+                {idPhoto
+                  ? <img src={idPhoto.url} alt="" className="h-full w-full object-cover" />
+                  : <User className="h-8 w-8 text-muted-foreground" />}
+              </div>
+              <div className="space-y-1.5">
+                {idPhoto ? (
+                  <label className="flex items-center gap-2 text-sm">
+                    <Checkbox checked={idUsePhoto} onCheckedChange={(c) => setIdUsePhoto(c === true)} />
+                    {t("contact.id_use_photo")}
+                  </label>
+                ) : (
+                  <p className="text-sm text-muted-foreground">{t("contact.id_no_portrait")}</p>
+                )}
+                <p className="text-xs text-muted-foreground">{t("contact.id_photo_hint")}</p>
+              </div>
+            </div>
+
+            {/* General fields */}
+            {idRows.length > 0 ? (
+              <table className="w-full text-sm">
+                <thead className="text-xs text-muted-foreground">
+                  <tr className="border-b">
+                    <th className="w-8 py-2" />
+                    <th className="text-left py-2 font-medium">{t("contact.card_col_field")}</th>
+                    <th className="text-left py-2 font-medium">{t("contact.card_col_current")}</th>
+                    <th className="text-left py-2 font-medium">{t("contact.id_col_scanned")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {idRows.map(([key, labelKey]) => {
+                    const current = idSnapshot[key] ?? "";
+                    const value = idFields[key] ?? "";
+                    return (
+                      <tr key={key} className="border-b last:border-0">
+                        <td className="py-2 align-top">
+                          <Checkbox checked={!!idSelected[key]}
+                            onCheckedChange={(c) => setIdSelected((v) => ({ ...v, [key]: c === true }))} />
+                        </td>
+                        <td className="py-2 align-top text-muted-foreground">{t(labelKey)}</td>
+                        <td className="py-2 align-top text-muted-foreground">{current || "—"}</td>
+                        <td className="py-2 align-top font-medium">
+                          {value}
+                          {current && current !== value && (
+                            <span className="ml-1.5 text-xs text-orange-600">{t("contact.card_overwrites")}</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            ) : (
+              <p className="text-sm text-muted-foreground">{t("contact.id_no_fields")}</p>
+            )}
+
+            <p className="text-xs text-muted-foreground flex items-start gap-1 rounded-md bg-muted/40 p-2.5">
+              <ShieldCheck className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+              <span>
+                {t("contact.id_not_collected")}
+                {idBlocked.length > 0 && ` (${t("contact.id_blocked_count", { count: idBlocked.length })})`}
+              </span>
+            </p>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button type="button" variant="outline" onClick={cancelIdScan}>{t("common.cancel")}</Button>
+            <Button type="button" variant="outline"
+              onClick={() => setIdSelected(Object.fromEntries(idRows.map(([k]) => [k, true])))}>
+              {t("contact.card_select_all")}
+            </Button>
+            <Button type="button" onClick={applyIdScan}>{t("contact.card_apply")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* OCR approval dialog — nothing is written until the admin confirms. */}
       <Dialog open={reviewOpen} onOpenChange={setReviewOpen}>

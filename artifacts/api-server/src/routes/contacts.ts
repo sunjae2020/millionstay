@@ -13,6 +13,11 @@ import {
 } from "../utils/cloudinary";
 import { calcRetentionDate } from "../lib/retention";
 import { scanBusinessCard, isSupportedCardMime } from "../lib/contacts/businessCardOcr";
+import {
+  scanIdDocument,
+  isSupportedIdMime,
+  portraitCropTransformation,
+} from "../lib/contacts/idDocumentOcr";
 import { formatFirstName, formatLastName } from "../lib/nameFormat";
 import {
   ListContactsQueryParams,
@@ -112,6 +117,78 @@ router.post("/v1/contacts/photo", upload.single("image"), async (req, res): Prom
     console.error("[contacts] profile photo upload failed:", err instanceof Error ? err.message : err);
     res.status(500).json({ error: "Image upload failed" });
   }
+});
+
+// POST /v1/contacts/photo/discard { public_id } — throw away an avatar the admin
+// did not accept (e.g. cancelled the ID-scan approval dialog). Scoped to the
+// avatars folder so it can never be used to delete other assets.
+router.post("/v1/contacts/photo/discard", async (req, res): Promise<void> => {
+  const publicId = String((req.body as { public_id?: string })?.public_id ?? "");
+  if (!publicId.startsWith(`${cldFolder("avatars")}/`)) {
+    res.status(400).json({ error: "Not an avatar asset" });
+    return;
+  }
+  await deleteFromCloudinary(publicId);
+  res.status(204).end();
+});
+
+// POST /v1/contacts/id-document/scan (multipart: image) — read an ID document
+// (passport / 주민등록증 / 운전면허증 / 외국인등록증), crop the printed portrait out of
+// it into a profile photo, and return the GENERAL details for the admin to approve.
+//
+// Privacy, by design:
+//   • The ID image is NEVER stored. It exists in this request's memory only; the
+//     single Cloudinary upload carries an *incoming* transformation, so the only
+//     asset that ever lands in storage is the cropped portrait.
+//   • No document numbers are collected — see lib/contacts/idDocumentOcr.ts. The
+//     model is instructed never to emit them and every value is scrubbed again here.
+router.post("/v1/contacts/id-document/scan", upload.single("image"), async (req, res): Promise<void> => {
+  const file = (req as unknown as { file?: UploadedFile }).file;
+  if (!file) { res.status(400).json({ error: "No file provided" }); return; }
+  if (!isSupportedIdMime(file.mimetype)) {
+    res.status(400).json({ error: "ID images must be JPEG, PNG, WebP or GIF" });
+    return;
+  }
+  if (!isCloudinaryConfigured()) { res.status(503).json({ error: "Image storage is not configured" }); return; }
+
+  let scan: Awaited<ReturnType<typeof scanIdDocument>>;
+  try {
+    scan = await scanIdDocument({ buffer: file.buffer, mimetype: file.mimetype });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "ID reading failed";
+    console.error("[contacts] id document scan failed:", message);
+    // Missing AI key is a configuration problem, not a bad request.
+    res.status(message.includes("AI is not configured") ? 503 : 502).json({ error: message });
+    return;
+  }
+
+  if (!scan.isIdDocument) {
+    res.status(422).json({ error: "This image does not look like an identity document", doc_kind: scan.docKind });
+    return;
+  }
+
+  let photo: { url: string; public_id: string } | null = null;
+  if (scan.portrait) {
+    try {
+      const uploaded = await uploadToCloudinary(file.buffer, {
+        folder: cldFolder("avatars"),
+        transformation: portraitCropTransformation(scan.portrait),
+      });
+      photo = { url: uploaded.secure_url, public_id: uploaded.public_id };
+    } catch (err) {
+      console.error("[contacts] portrait crop upload failed:", err instanceof Error ? err.message : err);
+    }
+  }
+
+  res.json({
+    success: true,
+    doc_kind: scan.docKind,
+    confidence: scan.confidence,
+    photo,
+    fields: scan.fields,
+    // Field names dropped because the value looked like an ID/document number.
+    blocked: scan.blocked,
+  });
 });
 
 // POST /v1/contacts/business-card/scan (multipart: front, back?) — store the card
