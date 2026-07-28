@@ -1,27 +1,42 @@
 /**
- * import-lease-list-2026.mjs
+ * import-lease-list.mjs
  *
- * One-off (idempotent) migration of the Metheim 여수 "2026년 임대리스트" spreadsheet
- * into the real tables:
+ * Idempotent migration of a Metheim 여수 "임대리스트" spreadsheet (any year) into
+ * the real tables:
  *
  *   contacts                 성함(성/이름 분리) · 연락처 · 한국 주소
  *   accounts                 세입자(Tenant) 계정, 법인은 상위 계정으로 재사용
  *   contracts                계약서 구분/계약금/잔금/보증금/월세/납입일/입주일/퇴거일/비고
  *   contract_related_costs   입주청소 · 임대수수료 · 부동산수수료
- *   invoices                 2026년 월별 월세 입금 현황 (월 1건)
- *   spaces.status            계약 있는 세대 → 임대 / 퇴거 완료 → 공실
+ *   invoices                 해당 연도 월별 월세 입금 현황 (월 1건)
+ *   spaces.status            계약 있는 세대 → 임대 / 최종 퇴거 → 공실
  *
- * Runs against the Metheim DB only. Default is DRY RUN — nothing is written and a
- * full report is printed; pass --commit to apply inside a single transaction.
+ * NEVER DUPLICATES. Older sheets (2023/2024/2025) list tenants and leases that a
+ * later sheet already brought in, so every row is matched to what exists first:
+ *   - contact  → 성/이름 + 휴대폰 (없으면 성/이름) 일치 시 기존 연락처를 보강
+ *   - account  → 같은 이름의 기존 계정을 재사용 (SpaceOwner 등 타입 무관)
+ *   - contract → 같은 호실 + 같은 입주일이면 같은 계약으로 보고 빈 값만 채움
+ *   - costs    → 같은 (계약·항목·송금일·금액) 행은 다시 넣지 않음
+ *   - invoices → 계약당 월 1건, 이미 있으면 건너뜀
+ * So a lease running 2024→2026 stays ONE contract no matter how many sheets it
+ * appears in, and re-running the same sheet changes nothing.
+ *
+ * Columns are resolved by HEADER TEXT (with aliases), not by position, so a year
+ * whose sheet has extra/missing/reordered columns still imports.
+ *
+ * Runs against one tenant DB. Default is DRY RUN — nothing is written and a full
+ * report is printed; pass --commit to apply inside a single transaction.
  *
  * Usage:
- *   DATABASE_URL=<metheim> node scripts/import-lease-list-2026.mjs \
- *     --csv "~/Downloads/2026년 임대리스트.xlsx - 임대리스트(2026) (1).csv" \
+ *   DATABASE_URL=<db> node scripts/import-lease-list.mjs \
+ *     --csv "~/Downloads/2025년 임대리스트.csv" [--year 2025] \
  *     [--commit] [--cleanup-tests] [--purge-demo] [--report <path>]
  *
  * Flags:
+ *   --year N         ledger year for the monthly rent columns (default: parsed
+ *                    from the "YYYY년 월세 입금 현황" header, else current year)
  *   --commit         apply (otherwise dry run)
- *   --cleanup-tests  soft-delete the pre-existing TEST/샘플 tenant data
+ *   --cleanup-tests  soft-delete the pre-existing TEST/샘플 tenant data + their invoices
  *   --purge-demo     also soft-delete the demo agent/host portal sample rows
  *                    (SMP-CT-*, 데모 * accounts) — off by default because the
  *                    partner-portal demo logins depend on them
@@ -50,7 +65,7 @@ const PURGE_DEMO = flag("--purge-demo");
 const CSV_PATH = (opt("--csv") || "").replace(/^~/, process.env.HOME || "~");
 const REPORT_PATH = opt("--report");
 const CURRENCY = "KRW";
-const YEAR = 2026;
+const YEAR_OPT = opt("--year") ? Number(opt("--year")) : null;
 
 if (!CSV_PATH || !fs.existsSync(CSV_PATH)) {
   console.error(`CSV not found: ${CSV_PATH || "(missing --csv)"}`);
@@ -81,19 +96,99 @@ function parseCsv(text) {
   return rows;
 }
 
-// Column indexes (see the sheet header; row 0 = group header, row 1 = sub header).
-const C = {
-  no: 0, contractDate: 1, name: 2, type: 3, unit: 4, phone: 5, address: 6,
-  category: 7, downDate: 8, down: 9, balDate: 10, bal: 11, bond: 12,
-  rent: 13, rentDue: 14, moveIn: 15, moveOut: 16,
-  cleaning: 17,
-  leaseFeeDate: 18, leaseFeePayee: 19, leaseFeeAmt: 20,
-  agencyFeeDate: 21, agencyFeePayee: 22, agencyFeeAmt: 23,
-  total: 24, note: 25,
-  month1: 26, // …month12 = 37
+// ── Column resolution by header text ─────────────────────────────────────────
+// Sheets differ year to year (extra columns, renamed headers, reordered blocks),
+// so columns are found by their header wording instead of a fixed index. Row 0 is
+// the group header, row 1 the sub header (입금일/성함/입금액, 1월…12월).
+const HEADER_ALIASES = {
+  no: ["NO", "번호", "연번"],
+  contractDate: ["계약일", "계약체결일"],
+  name: ["성함", "성명", "이름", "임차인", "세입자"],
+  type: ["TYPE", "타입", "유형"],
+  unit: ["호수", "호실", "세대"],
+  phone: ["연락처", "전화번호", "휴대폰", "핸드폰"],
+  address: ["주소", "주소지"],
+  category: ["계약서 구분", "계약구분", "계약 구분"],
+  downDate: ["계약금입금일", "계약금 입금일"],
+  down: ["계약금"],
+  balDate: ["잔금입금일", "잔금 입금일"],
+  bal: ["잔금"],
+  bond: ["보증금"],
+  rent: ["월세", "임대료", "월임대료"],
+  rentDue: ["월세 납입일", "월세납입일", "납입일", "납부일"],
+  moveIn: ["입주일", "입주"],
+  moveOut: ["퇴거일", "퇴거", "만료일"],
+  cleaning: ["입주청소", "입주 청소"],
+  leaseFee: ["임대수수료 입금", "임대수수료", "임대 수수료"],
+  agencyFee: ["부동산 수수료 입금", "부동산수수료", "부동산 수수료", "중개수수료"],
+  total: ["합  계", "합계", "총계"],
+  note: ["비  고", "비고", "특이사항"],
+  monthly: ["월세 입금 현황", "월세입금현황", "입금 현황"],
 };
 
+const norm = (v) => String(v ?? "").replace(/\s+/g, " ").trim();
+
+/** Locate every column this importer understands; throws when a must-have is missing. */
+function resolveColumns(groupRow, subRow) {
+  const find = (aliases) => {
+    for (let i = 0; i < groupRow.length; i++) {
+      const h = norm(groupRow[i]);
+      if (!h) continue;
+      if (aliases.some((a) => h === a || h.replace(/\s/g, "") === a.replace(/\s/g, ""))) return i;
+    }
+    return -1;
+  };
+  const C = {};
+  for (const [key, aliases] of Object.entries(HEADER_ALIASES)) C[key] = find(aliases);
+
+  // Fee blocks span three sub-columns: 입금일 / 성함 / 입금액.
+  const feeTriple = (startIdx) => {
+    if (startIdx < 0) return { date: -1, payee: -1, amount: -1 };
+    const at = (label, from) => {
+      for (let i = from; i < Math.min(from + 4, subRow.length); i++) {
+        const sub = norm(subRow[i]).replace(/\s/g, "");
+        if (sub === label) return i;
+      }
+      return -1;
+    };
+    return {
+      date: at("입금일", startIdx),
+      payee: at("성함", startIdx),
+      amount: at("입금액", startIdx),
+    };
+  };
+  C.leaseFeeCols = feeTriple(C.leaseFee);
+  C.agencyFeeCols = feeTriple(C.agencyFee);
+
+  // Monthly rent block: sub headers 1월…12월 after the group header.
+  C.months = {};
+  const monthStart = C.monthly >= 0 ? C.monthly : 0;
+  for (let i = monthStart; i < subRow.length; i++) {
+    const m = norm(subRow[i]).match(/^(\d{1,2})\s*월$/);
+    if (m) {
+      const n = Number(m[1]);
+      if (n >= 1 && n <= 12 && C.months[n] === undefined) C.months[n] = i;
+    }
+  }
+
+  const missing = ["name", "unit"].filter((k) => C[k] < 0);
+  if (missing.length) {
+    throw new Error(`필수 컬럼을 찾지 못했습니다: ${missing.join(", ")} — 헤더 별칭(HEADER_ALIASES)에 추가하세요`);
+  }
+  return C;
+}
+
+/** "2025년 월세 입금 현황" → 2025 */
+function detectYear(groupRow, colIdx) {
+  const cell = norm(groupRow[colIdx >= 0 ? colIdx : 0]);
+  const m = cell.match(/(20\d{2})\s*년/);
+  return m ? Number(m[1]) : null;
+}
+
 // ── Value parsing helpers ────────────────────────────────────────────────────
+/** Read a cell by resolved column index; a column the sheet lacks reads as "". */
+const cell = (row, idx) => (idx >= 0 && idx < row.length ? row[idx] : "");
+
 const clean = (v) => String(v ?? "").replace(/ /g, " ").trim();
 
 /** "₩10,000,000" | "신탁사\n3,000,000" → 10000000 | 3000000 (+ leftover note) */
@@ -243,6 +338,8 @@ function parseMonthCell(raw, month, monthlyRent) {
 // ── Load + normalise the sheet ───────────────────────────────────────────────
 const raw = fs.readFileSync(CSV_PATH, "utf8");
 const allRows = parseCsv(raw);
+const C = resolveColumns(allRows[0] ?? [], allRows[1] ?? []);
+const YEAR = YEAR_OPT ?? detectYear(allRows[0] ?? [], C.monthly) ?? new Date().getFullYear();
 const bodyRows = allRows.slice(2).filter((r) => r.some((c) => clean(c)));
 
 const seen = new Set();
@@ -250,31 +347,31 @@ const rowsIn = [];
 const duplicates = [];
 for (const r of bodyRows) {
   const key = r.map(clean).join("");
-  if (seen.has(key)) { duplicates.push({ name: clean(r[C.name]), unit: clean(r[C.unit]) }); continue; }
+  if (seen.has(key)) { duplicates.push({ name: clean(cell(r, C.name)), unit: clean(cell(r, C.unit)) }); continue; }
   seen.add(key);
   rowsIn.push(r);
 }
 
 const records = rowsIn.map((r, i) => {
   const seq = i + 1;
-  const nameCell = clean(r[C.name]);
+  const nameCell = clean(cell(r, C.name));
   const { org, persons } = parseNameCell(nameCell);
-  const phones = parsePhones(r[C.phone]);
-  const addr = parseKoreanAddress(r[C.address]);
-  const contractDate = parseDate(r[C.contractDate]);
-  const down = parseMoney(r[C.down]);
-  const downDate = parseDate(r[C.downDate]);
-  const bal = parseMoney(r[C.bal]);
-  const balDate = parseDate(r[C.balDate]);
-  const bond = parseMoney(r[C.bond]);
-  const rent = parseMoney(r[C.rent]);
-  const due = parseDueDay(r[C.rentDue]);
-  const moveIn = parseDate(r[C.moveIn]);
-  const moveOut = parseDate(r[C.moveOut]);
-  const flagCol = clean(r[C.no]);
+  const phones = parsePhones(cell(r, C.phone));
+  const addr = parseKoreanAddress(cell(r, C.address));
+  const contractDate = parseDate(cell(r, C.contractDate));
+  const down = parseMoney(cell(r, C.down));
+  const downDate = parseDate(cell(r, C.downDate));
+  const bal = parseMoney(cell(r, C.bal));
+  const balDate = parseDate(cell(r, C.balDate));
+  const bond = parseMoney(cell(r, C.bond));
+  const rent = parseMoney(cell(r, C.rent));
+  const due = parseDueDay(cell(r, C.rentDue));
+  const moveIn = parseDate(cell(r, C.moveIn));
+  const moveOut = parseDate(cell(r, C.moveOut));
+  const flagCol = clean(cell(r, C.no));
 
   const noteParts = [];
-  const bizNote = clean(r[C.note]);
+  const bizNote = clean(cell(r, C.note));
   if (bizNote) noteParts.push(bizNote);
   if (moveOut.note) noteParts.push(`퇴거일 원문: ${moveOut.note}`);
   if (downDate.note) noteParts.push(`계약금 입금일 원문: ${downDate.note}`);
@@ -283,10 +380,10 @@ const records = rowsIn.map((r, i) => {
   if (bond.note) noteParts.push(`보증금 비고: ${bond.note}`);
   if (due.note) noteParts.push(`월세 납입일 원문: ${due.note}`);
   if (phones.note && /[가-힣(]/.test(phones.note)) noteParts.push(`연락처 원문: ${phones.note}`);
-  noteParts.push(`[원본 임대리스트 NO ${flagCol || seq}]`);
+  noteParts.push(`[${YEAR} 임대리스트 NO ${flagCol || seq}]`);
 
   const costs = [];
-  const cleaning = clean(r[C.cleaning]);
+  const cleaning = clean(cell(r, C.cleaning));
   if (cleaning) {
     const m = parseMoney(cleaning);
     const isX = /^X$/i.test(cleaning);
@@ -299,22 +396,22 @@ const records = rowsIn.map((r, i) => {
       skip: isX,
     });
   }
-  const leaseAmt = parseMoney(r[C.leaseFeeAmt]);
-  if (leaseAmt.amount || clean(r[C.leaseFeePayee])) {
+  const leaseAmt = parseMoney(cell(r, C.leaseFeeCols.amount));
+  if (leaseAmt.amount || clean(cell(r, C.leaseFeeCols.payee))) {
     costs.push({
       cost_type: "임대수수료",
-      remitted_on: parseDate(r[C.leaseFeeDate]).date,
-      payee_name: clean(r[C.leaseFeePayee]).replace(/\n/g, " / "),
+      remitted_on: parseDate(cell(r, C.leaseFeeCols.date)).date,
+      payee_name: clean(cell(r, C.leaseFeeCols.payee)).replace(/\n/g, " / "),
       amount: leaseAmt.amount ?? 0,
       note: "",
     });
   }
-  const agencyAmt = parseMoney(r[C.agencyFeeAmt]);
-  if (agencyAmt.amount || clean(r[C.agencyFeePayee])) {
+  const agencyAmt = parseMoney(cell(r, C.agencyFeeCols.amount));
+  if (agencyAmt.amount || clean(cell(r, C.agencyFeeCols.payee))) {
     costs.push({
       cost_type: "부동산수수료",
-      remitted_on: parseDate(r[C.agencyFeeDate]).date,
-      payee_name: clean(r[C.agencyFeePayee]).replace(/\n/g, " / "),
+      remitted_on: parseDate(cell(r, C.agencyFeeCols.date)).date,
+      payee_name: clean(cell(r, C.agencyFeeCols.payee)).replace(/\n/g, " / "),
       amount: agencyAmt.amount ?? 0,
       note: "",
     });
@@ -322,21 +419,22 @@ const records = rowsIn.map((r, i) => {
 
   const months = [];
   for (let m = 1; m <= 12; m++) {
-    const cell = r[C.month1 + (m - 1)];
-    const parsed = parseMonthCell(cell, m, rent.amount ?? 0);
+    const monthIdx = C.months[m];
+    if (monthIdx === undefined) continue;
+    const parsed = parseMonthCell(cell(r, monthIdx), m, rent.amount ?? 0);
     if (parsed) months.push({ month: m, ...parsed });
   }
 
   return {
     seq,
-    ref: `MH-L-2026-${String(seq).padStart(4, "0")}`,
+    ref: `ROW-${String(seq).padStart(4, "0")}`, // sheet-row key; the DB ref is resolved by identity
     sourceNo: flagCol,
     vacated: flagCol === "퇴거",
     nameCell, org, persons,
     phones, addr,
-    unit: clean(r[C.unit]),
-    typeLabel: clean(r[C.type]),
-    category: clean(r[C.category]) || null,
+    unit: clean(cell(r, C.unit)),
+    typeLabel: clean(cell(r, C.type)),
+    category: clean(cell(r, C.category)) || null,
     contract_date: contractDate.date,
     down_payment: down.amount, down_payment_date: downDate.date,
     balance_amount: bal.amount, balance_date: balDate.date,
@@ -345,7 +443,7 @@ const records = rowsIn.map((r, i) => {
     rent_due_day: due.day,
     start_date: moveIn.date,
     end_date: moveOut.date,
-    auto_renew: /자동연장/.test(clean(r[C.moveOut])),
+    auto_renew: /자동연장/.test(clean(cell(r, C.moveOut))),
     notes: noteParts.join("\n"),
     costs,
     months,
@@ -397,7 +495,7 @@ const monthRows = records.flatMap((r) => r.months.map((m) => {
   const mm = String(m.month).padStart(2, "0");
   const dueDay = Math.min(r.rent_due_day ?? m.paid_day ?? 1, 28);
   return `(${[
-    q(r.ref), m.month, q(`MH-R-${YEAR}-${mm}-${String(r.seq).padStart(4, "0")}`),
+    q(r.ref), m.month, q(`MH-R-${YEAR}-${mm}-${r.unit}`),
     n(m.amount ?? 0), q(m.status),
     q(`${YEAR}-${mm}-${String(dueDay).padStart(2, "0")}`),
     q(m.paid_day ? `${YEAR}-${mm}-${String(m.paid_day).padStart(2, "0")}` : null),
@@ -455,7 +553,8 @@ CREATE TEMP TABLE unmapped AS
 SELECT i.unit, i.account_name FROM imp i
  WHERE NOT EXISTS (SELECT 1 FROM spaces s WHERE s.name = i.unit || '호' AND s.parent_space_id IS NOT NULL AND s.deleted_at IS NULL);
 
--- 1. contacts (성/이름 분리, 한국 주소, email 없음 → NULL)
+-- 1. contacts — 기존 연락처를 먼저 찾고(성/이름 + 휴대폰, 한쪽 번호가 비었으면 이름만으로도
+--    동일인으로 봄), 없을 때만 새로 만든다. 기존 행은 비어 있는 칸만 채운다.
 WITH src AS (
   SELECT p1_first f, p1_last l, mobile, office, phone_note, addr1, suburb, state, country FROM imp WHERE p1_first <> ''
   UNION ALL
@@ -470,19 +569,37 @@ SELECT d.f, d.l, NULL, d.mobile, d.office, NULLIF(d.addr1,''), NULLIF(d.suburb,'
        NULL, d.country, NULLIF(d.phone_note,''), true, 'Active'
 FROM dedup d
 WHERE NOT EXISTS (
-  SELECT 1 FROM contacts c WHERE c.deleted_at IS NULL AND c.first_name = d.f AND c.last_name = d.l
-    AND COALESCE(c.mobile_number,'') = COALESCE(d.mobile,'')
+  SELECT 1 FROM contacts c
+   WHERE c.deleted_at IS NULL AND c.first_name = d.f AND c.last_name = d.l
+     AND (COALESCE(c.mobile_number,'') = COALESCE(d.mobile,'')
+       OR COALESCE(c.mobile_number,'') = '' OR COALESCE(d.mobile,'') = '')
 );
 
--- 2. accounts (세입자; 법인/기관은 상위 계정으로 1개만, 기존 동명 계정은 재사용)
+-- 기존 연락처 보강 (덮어쓰지 않고 빈 칸만)
+UPDATE contacts c SET
+  mobile_number = COALESCE(c.mobile_number, i.mobile),
+  office_number = COALESCE(c.office_number, i.office),
+  address_line1 = COALESCE(NULLIF(c.address_line1,''), NULLIF(i.addr1,'')),
+  suburb        = COALESCE(NULLIF(c.suburb,''), NULLIF(i.suburb,'')),
+  state         = COALESCE(NULLIF(c.state,''), NULLIF(i.state,'')),
+  country       = COALESCE(NULLIF(c.country,''), i.country),
+  updated_at = now()
+FROM imp i
+WHERE c.deleted_at IS NULL AND i.p1_first <> ''
+  AND c.first_name = i.p1_first AND c.last_name = i.p1_last
+  AND (COALESCE(c.mobile_number,'') = COALESCE(i.mobile,'')
+    OR COALESCE(c.mobile_number,'') = '' OR COALESCE(i.mobile,'') = '');
+
+-- 2. accounts — 같은 이름의 기존 계정이 있으면 타입과 무관하게 재사용(건물주가 세입자인 경우 포함),
+--    없을 때만 Tenant 계정을 만든다.
 INSERT INTO accounts
   (name, account_type, default_currency, phone1, phone2, address_line1, address_suburb,
    address_state, address_country, description, manual_input, status)
 SELECT DISTINCT ON (i.account_name)
-  i.account_name, 'Tenant', 'KRW', i.mobile, i.office, NULLIF(i.addr1,''), NULLIF(i.suburb,''),
+  i.account_name, 'Tenant', '${CURRENCY}', i.mobile, i.office, NULLIF(i.addr1,''), NULLIF(i.suburb,''),
   NULLIF(i.state,''), i.country,
-  CASE WHEN COALESCE(i.org,'') <> '' THEN '법인/기관 세입자 (2026 임대리스트 이관)'
-       ELSE '세입자 (2026 임대리스트 이관)' END,
+  CASE WHEN COALESCE(i.org,'') <> '' THEN '법인/기관 세입자 (${YEAR} 임대리스트 이관)'
+       ELSE '세입자 (${YEAR} 임대리스트 이관)' END,
   true, 'Active'
 FROM imp i
 WHERE NOT EXISTS (SELECT 1 FROM accounts a WHERE a.deleted_at IS NULL AND a.name = i.account_name)
@@ -496,65 +613,126 @@ UPDATE accounts a SET
   address_suburb = COALESCE(NULLIF(a.address_suburb,''), NULLIF(i.suburb,'')),
   address_state = COALESCE(NULLIF(a.address_state,''), NULLIF(i.state,'')),
   address_country = COALESCE(NULLIF(a.address_country,''), i.country),
-  default_currency = 'KRW', updated_at = now()
+  default_currency = COALESCE(a.default_currency, '${CURRENCY}'), updated_at = now()
 FROM (SELECT DISTINCT ON (account_name) * FROM imp ORDER BY account_name, seq) i
 LEFT JOIN contacts c ON c.deleted_at IS NULL AND c.first_name = i.p1_first AND c.last_name = i.p1_last
-  AND COALESCE(c.mobile_number,'') = COALESCE(i.mobile,'') AND i.p1_first <> ''
+  AND (COALESCE(c.mobile_number,'') = COALESCE(i.mobile,'') OR COALESCE(i.mobile,'') = '')
+  AND i.p1_first <> ''
 WHERE a.deleted_at IS NULL AND a.name = i.account_name;
 
 UPDATE accounts a SET secondary_contact_id = c.id, updated_at = now()
 FROM (SELECT DISTINCT ON (account_name) * FROM imp WHERE p2_first <> '' ORDER BY account_name, seq) i
 JOIN contacts c ON c.deleted_at IS NULL AND c.first_name = i.p2_first AND c.last_name = i.p2_last
-  AND COALESCE(c.mobile_number,'') = COALESCE(i.mobile,'')
 WHERE a.deleted_at IS NULL AND a.name = i.account_name AND a.secondary_contact_id IS NULL;
 
--- 3. contracts (계약서 구분/계약금/잔금/보증금/월세/납입일/입주일/퇴거일/비고)
+-- 3. contracts — 계약의 신원은 "호실 + 입주일". 이미 있으면 그 계약을 채우고,
+--    없을 때만 새 계약을 만든다(다른 연도 시트에 같은 계약이 또 나와도 1건 유지).
+ALTER TABLE imp ADD COLUMN space_id int;
+ALTER TABLE imp ADD COLUMN existing_id int;
+ALTER TABLE imp ADD COLUMN final_ref text;
+
+UPDATE imp i SET space_id = s.id
+  FROM spaces s
+ WHERE s.name = i.unit || '호' AND s.parent_space_id IS NOT NULL AND s.deleted_at IS NULL;
+
+UPDATE imp i SET existing_id = c.id, final_ref = c.contract_ref
+  FROM contracts c
+ WHERE c.deleted_at IS NULL AND c.space_id = i.space_id
+   AND c.start_date IS NOT NULL AND i.start_date IS NOT NULL
+   AND c.start_date = i.start_date;
+
+-- 새 계약 ref 는 해당 연도 접두사에서 이어붙인다 (다른 연도 ref 와 충돌하지 않음)
+WITH base AS (
+  SELECT COALESCE(MAX(NULLIF(regexp_replace(contract_ref, '^MH-L-\d{4}-', ''), '')::int), 0) AS n
+    FROM contracts
+   WHERE contract_ref ~ '^MH-L-${YEAR}-\d+$'
+), numbered AS (
+  SELECT seq, row_number() OVER (ORDER BY seq) AS rn FROM imp WHERE existing_id IS NULL
+)
+UPDATE imp i SET final_ref = 'MH-L-${YEAR}-' || lpad(((SELECT n FROM base) + n.rn)::text, 4, '0')
+  FROM numbered n WHERE i.seq = n.seq;
+
 INSERT INTO contracts
   (contract_ref, tenant_account_id, landlord_account_id, space_id, contract_category,
    down_payment, down_payment_date, balance_amount, balance_date, bond_amount,
    monthly_rent, rent_due_day, start_date, end_date, status, notes, currency)
-SELECT i.ref,
+SELECT i.final_ref,
        (SELECT a.id FROM accounts a WHERE a.deleted_at IS NULL AND a.name = i.account_name ORDER BY a.id LIMIT 1),
        s.landlord_account_id, s.id, i.category,
        i.down_payment, i.down_payment_date, i.balance_amount, i.balance_date, i.bond_amount,
        i.monthly_rent, i.rent_due_day, i.start_date, i.end_date, i.status, i.notes, '${CURRENCY}'
 FROM imp i
-JOIN spaces s ON s.name = i.unit || '호' AND s.parent_space_id IS NOT NULL AND s.deleted_at IS NULL
+JOIN spaces s ON s.id = i.space_id
 ON CONFLICT (contract_ref) DO UPDATE SET
-  tenant_account_id = EXCLUDED.tenant_account_id,
+  -- 시트에 값이 있으면 그 값을, 없으면 기존 값을 유지한다 (오래된 시트가 최신 값을 지우지 않도록)
+  tenant_account_id = COALESCE(EXCLUDED.tenant_account_id, contracts.tenant_account_id),
   landlord_account_id = COALESCE(contracts.landlord_account_id, EXCLUDED.landlord_account_id),
-  space_id = EXCLUDED.space_id, contract_category = EXCLUDED.contract_category,
-  down_payment = EXCLUDED.down_payment, down_payment_date = EXCLUDED.down_payment_date,
-  balance_amount = EXCLUDED.balance_amount, balance_date = EXCLUDED.balance_date,
-  bond_amount = EXCLUDED.bond_amount, monthly_rent = EXCLUDED.monthly_rent,
-  rent_due_day = EXCLUDED.rent_due_day, start_date = EXCLUDED.start_date,
-  end_date = EXCLUDED.end_date, status = EXCLUDED.status, notes = EXCLUDED.notes,
-  currency = EXCLUDED.currency, deleted_at = NULL, updated_at = now();
+  space_id = COALESCE(EXCLUDED.space_id, contracts.space_id),
+  contract_category = COALESCE(EXCLUDED.contract_category, contracts.contract_category),
+  down_payment = COALESCE(EXCLUDED.down_payment, contracts.down_payment),
+  down_payment_date = COALESCE(EXCLUDED.down_payment_date, contracts.down_payment_date),
+  balance_amount = COALESCE(EXCLUDED.balance_amount, contracts.balance_amount),
+  balance_date = COALESCE(EXCLUDED.balance_date, contracts.balance_date),
+  bond_amount = COALESCE(EXCLUDED.bond_amount, contracts.bond_amount),
+  monthly_rent = COALESCE(EXCLUDED.monthly_rent, contracts.monthly_rent),
+  rent_due_day = COALESCE(EXCLUDED.rent_due_day, contracts.rent_due_day),
+  start_date = COALESCE(EXCLUDED.start_date, contracts.start_date),
+  -- 종료일은 더 나중 값(연장)이 이긴다
+  end_date = CASE
+    WHEN contracts.end_date IS NULL OR EXCLUDED.end_date IS NULL THEN COALESCE(contracts.end_date, EXCLUDED.end_date)
+    WHEN EXCLUDED.end_date > contracts.end_date THEN EXCLUDED.end_date ELSE contracts.end_date END,
+  status = CASE WHEN contracts.status IN ('Draft') THEN EXCLUDED.status ELSE contracts.status END,
+  notes = CASE
+    WHEN COALESCE(contracts.notes,'') = '' THEN EXCLUDED.notes
+    WHEN position('[${YEAR} 임대리스트' in contracts.notes) > 0 THEN contracts.notes
+    ELSE contracts.notes || E'\n' || EXCLUDED.notes END,
+  currency = COALESCE(contracts.currency, EXCLUDED.currency),
+  updated_at = now();
 
--- 4. contract_related_costs (입주청소 / 임대수수료 / 부동산수수료)
-DELETE FROM contract_related_costs rc
- USING contracts c JOIN imp i ON i.ref = c.contract_ref
- WHERE rc.contract_id = c.id;
+UPDATE imp i SET existing_id = c.id FROM contracts c WHERE c.contract_ref = i.final_ref;
+
+-- 4. contract_related_costs — 같은 (계약·항목·송금일·금액) 행은 다시 넣지 않는다
+--    (다른 연도 시트에서 이미 들어온 비용을 지우거나 중복시키지 않음)
 INSERT INTO contract_related_costs (contract_id, cost_type, remitted_on, payee_name, amount, currency, note, status)
-SELECT c.id, m.cost_type, m.remitted_on, COALESCE(m.payee,''), COALESCE(m.amount,0), '${CURRENCY}', COALESCE(m.note,''), 'Active'
-FROM imp_cost m JOIN contracts c ON c.contract_ref = m.ref;
+SELECT i.existing_id, m.cost_type, m.remitted_on, COALESCE(m.payee,''), COALESCE(m.amount,0),
+       '${CURRENCY}', COALESCE(m.note,''), 'Active'
+FROM imp_cost m JOIN imp i ON i.ref = m.ref
+WHERE i.existing_id IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM contract_related_costs rc
+     WHERE rc.contract_id = i.existing_id AND rc.cost_type = m.cost_type
+       AND COALESCE(rc.remitted_on,'') = COALESCE(m.remitted_on,'')
+       AND rc.amount = COALESCE(m.amount,0));
 
--- 5. 2026년 월세 입금 현황 → invoices (월 1건)
-DELETE FROM invoices inv
- USING contracts c JOIN imp i ON i.ref = c.contract_ref
- WHERE inv.contract_id = c.id AND inv.invoice_ref LIKE 'MH-R-${YEAR}-%';
+-- 5. 월별 월세 입금 현황 → invoices (계약당 월 1건, 이미 있으면 건너뜀)
 INSERT INTO invoices
   (invoice_ref, contract_id, account_id, amount, currency, status, due_date, paid_at,
    payment_method, description, notes)
-SELECT m.invoice_ref, c.id, c.tenant_account_id, m.amount, '${CURRENCY}', m.status,
+SELECT m.invoice_ref, i.existing_id, c.tenant_account_id, m.amount, '${CURRENCY}', m.status,
        m.due_date, NULLIF(m.paid_on,'')::timestamptz, m.method, m.descr, m.note
-FROM imp_month m JOIN contracts c ON c.contract_ref = m.ref;
+FROM imp_month m
+JOIN imp i ON i.ref = m.ref
+JOIN contracts c ON c.id = i.existing_id
+WHERE i.existing_id IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM invoices inv
+     WHERE inv.contract_id = i.existing_id AND inv.deleted_at IS NULL
+       AND substring(inv.due_date, 1, 7) = substring(m.due_date, 1, 7))
+  AND NOT EXISTS (SELECT 1 FROM invoices inv2 WHERE inv2.invoice_ref = m.invoice_ref);
 
--- 6. spaces.status 동기화 (진행 계약 → 임대 / 최종 퇴거 → 공실)
-UPDATE spaces s SET status = u.next_status, updated_at = now()
-FROM imp_unit u
-WHERE s.name = u.unit || '호' AND s.parent_space_id IS NOT NULL AND s.deleted_at IS NULL
-  AND s.status IS DISTINCT FROM u.next_status;
+-- 6. spaces.status — 시트가 아니라 DB의 "가장 최근 계약"에서 다시 계산한다.
+--    (과거 연도 시트를 넣어도 현재 입주 상태를 되돌리지 않음)
+WITH latest AS (
+  SELECT DISTINCT ON (c.space_id) c.space_id, c.status
+    FROM contracts c
+   WHERE c.deleted_at IS NULL AND c.space_id IN (SELECT space_id FROM imp WHERE space_id IS NOT NULL)
+   ORDER BY c.space_id, c.start_date DESC NULLS LAST, c.id DESC
+)
+UPDATE spaces s SET status = CASE WHEN l.status = 'Active' THEN '임대' ELSE '공실' END, updated_at = now()
+FROM latest l
+WHERE s.id = l.space_id AND s.deleted_at IS NULL
+  AND s.status IS DISTINCT FROM (CASE WHEN l.status = 'Active' THEN '임대' ELSE '공실' END)
+  AND s.status IN ('임대','공실','Active','Inactive');
 
 -- ── report ───────────────────────────────────────────────────────────────────
 SELECT 'REPORT' AS marker,
@@ -563,10 +741,11 @@ SELECT 'REPORT' AS marker,
   (SELECT count(*) FROM contacts WHERE deleted_at IS NULL) AS contacts_total,
   (SELECT count(*) FROM contacts WHERE deleted_at IS NULL AND manual_input) AS contacts_imported,
   (SELECT count(*) FROM accounts WHERE deleted_at IS NULL AND account_type = 'Tenant') AS tenant_accounts,
-  (SELECT count(*) FROM contracts WHERE deleted_at IS NULL AND contract_ref LIKE 'MH-L-${YEAR}-%') AS contracts_imported,
+  (SELECT count(*) FROM imp WHERE existing_id IS NOT NULL) AS contracts_linked,
+  (SELECT count(*) FROM imp WHERE final_ref LIKE 'MH-L-${YEAR}-%' AND existing_id IS NOT NULL) AS contracts_this_year_ref,
   (SELECT count(*) FROM contracts WHERE deleted_at IS NULL) AS contracts_total,
   (SELECT count(*) FROM contract_related_costs) AS related_costs,
-  (SELECT count(*) FROM invoices WHERE invoice_ref LIKE 'MH-R-${YEAR}-%') AS invoices_2026,
+  (SELECT count(*) FROM invoices WHERE deleted_at IS NULL AND due_date LIKE '${YEAR}-%') AS invoices_year,
   (SELECT count(*) FROM spaces WHERE status = '임대' AND parent_space_id IS NOT NULL) AS spaces_rented,
   (SELECT count(*) FROM spaces WHERE status = '공실' AND parent_space_id IS NOT NULL) AS spaces_vacant;
 
@@ -574,12 +753,18 @@ SELECT 'COSTS' AS marker, cost_type, count(*) AS rows, sum(amount)::bigint AS to
   FROM contract_related_costs GROUP BY cost_type ORDER BY cost_type;
 
 SELECT 'INVOICES' AS marker, status, count(*) AS rows, sum(amount)::bigint AS total
-  FROM invoices WHERE invoice_ref LIKE 'MH-R-${YEAR}-%' GROUP BY status ORDER BY status;
+  FROM invoices WHERE deleted_at IS NULL AND due_date LIKE '${YEAR}-%' GROUP BY status ORDER BY status;
 
 SELECT 'SAMPLE' AS marker, c.contract_ref, s.name AS unit, a.name AS tenant, c.contract_category,
        c.bond_amount::bigint, c.monthly_rent::bigint, c.rent_due_day, c.start_date, c.end_date, c.status
-  FROM contracts c JOIN spaces s ON s.id = c.space_id LEFT JOIN accounts a ON a.id = c.tenant_account_id
- WHERE c.contract_ref LIKE 'MH-L-${YEAR}-%' ORDER BY c.contract_ref LIMIT 8;
+  FROM imp i JOIN contracts c ON c.id = i.existing_id
+  JOIN spaces s ON s.id = c.space_id LEFT JOIN accounts a ON a.id = c.tenant_account_id
+ ORDER BY i.seq LIMIT 8;
+
+SELECT 'MATCHING' AS marker,
+  (SELECT count(*) FROM imp WHERE existing_id IS NOT NULL AND final_ref NOT LIKE 'MH-L-${YEAR}-%') AS matched_existing_other_year,
+  (SELECT count(*) FROM imp WHERE space_id IS NULL) AS unit_not_found,
+  (SELECT count(*) FROM imp WHERE start_date IS NULL) AS no_move_in_date;
 
 SELECT 'CONTACTS' AS marker, last_name, first_name, mobile_number, state, suburb, address_line1
   FROM contacts WHERE deleted_at IS NULL AND manual_input ORDER BY id LIMIT 10;
@@ -605,6 +790,7 @@ const report = {
   cleanup_tests: CLEANUP_TESTS,
   purge_demo: PURGE_DEMO,
   duplicate_rows_dropped: duplicates,
+  year: YEAR,
   rows_in_scope: records.length,
   parsed: {
     tenant_accounts: new Set(records.map((r) => r.account_name)).size,

@@ -54,7 +54,11 @@ Thumbs.db
 
 # Per-tenant config: config.env is committed (non-secret); secrets are NOT.
 tenants/*/secrets.env
-.claude/
+
+# Local Claude Code state stays out of git, but shared project SKILLS are versioned
+# (they encode repo-specific procedures the whole team runs).
+.claude/*
+!.claude/skills/
 
 # Sensitive credential docs (plaintext passwords — never commit/push)
 docs/LOGIN_CREDENTIALS.md
