@@ -4674,7 +4674,9 @@
     "occupancy_report_title": "入住率报表",
     "occupancy_report_desc": "一段时间内的空间入住率",
     "rental_fees_title": "租赁佣金标准表",
-    "rental_fees_desc": "按房型的中介与自营管理佣金标准表"
+    "rental_fees_desc": "按房型的中介与自营管理佣金标准表",
+    "inspection_template_title": "点检表样式",
+    "inspection_template_desc": "房屋点检表包含的项目配置"
   },
   "settings_org": {
     "page_subtitle": "公司资料和联系方式"
@@ -4753,8 +4755,11 @@
     "email_failed": "邮件发送失败",
     "email_no_recipient": "没有登记的租客邮箱，请先填写。",
     "email_sent": "已发送邮件至 {{to}}",
+    "filled_pdf": "填写版 PDF",
     "finalize": "确定点检",
     "group_other": "追加项目",
+    "hide_hidden": "收起已隐藏项目",
+    "hide_item": "本房屋没有的项目 — 隐藏",
     "inspector_name": "点检人",
     "inspector_sign_title": "点检人签名",
     "issue_link": "生成租客签名链接",
@@ -4766,6 +4771,7 @@
     "link_expires": "{{date}} 到期",
     "link_failed": "链接生成失败",
     "link_hint": "请将此链接发送给租客，无需登录即可签名。",
+    "load_failed": "无法加载点检表。",
     "locked_notice": "租客已签名，无法再修改。",
     "meter_electric": "电",
     "meter_gas": "燃气",
@@ -4776,6 +4782,7 @@
     "move_out_date": "退租日",
     "new": "新建点检表",
     "none": "暂无点检表。",
+    "open": "打开点检表",
     "pdf_failed": "无法生成 PDF",
     "phase_move_in": "入住点检",
     "phase_move_out": "退租点检",
@@ -4789,6 +4796,7 @@
     "section_header": "房屋信息",
     "section_signatures": "签名",
     "send_email": "发送邮件",
+    "show_hidden": "显示已隐藏项目 ({{count}})",
     "sign_failed": "签名保存失败",
     "sign_here": "请在此处签名",
     "sign_now": "立即签名",
@@ -4807,8 +4815,21 @@
     "tenant_name": "租客姓名",
     "tenant_not_signed": "尚未签名。",
     "tenant_phone": "联系电话",
+    "tenant_signed": "租客已签名",
+    "unhide_item": "恢复该项目",
     "unit_no": "房号",
     "unit_type": "户型",
     "upload_failed": "照片上传失败"
+  },
+  "inspection_template": {
+    "active_count": "共 {{total}} 项，启用 {{active}} 项",
+    "clear_all": "全部取消",
+    "description": "选择房屋点检表包含的项目。",
+    "note": "取消勾选的项目将从此后创建的点检表、租客界面和 PDF 中一并移除。已创建的点检表保持不变；个别房屋的例外可在该点检表中单独关闭。",
+    "reset": "全部恢复",
+    "save_failed": "样式保存失败",
+    "saved": "已保存样式",
+    "select_all": "全选",
+    "title": "点检表样式"
   }
 }

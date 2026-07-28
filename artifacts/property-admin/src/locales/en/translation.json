@@ -4674,7 +4674,9 @@
     "occupancy_report_title": "Occupancy Report",
     "occupancy_report_desc": "Space occupancy over time",
     "rental_fees_title": "Rental Fee Schedule",
-    "rental_fees_desc": "Per-type brokerage & self-management commission rate card"
+    "rental_fees_desc": "Per-type brokerage & self-management commission rate card",
+    "inspection_template_title": "Inspection form",
+    "inspection_template_desc": "Rows carried by every unit inspection checklist"
   },
   "settings_org": {
     "page_subtitle": "Company profile and contact details"
@@ -4753,8 +4755,11 @@
     "email_failed": "Could not send the email",
     "email_no_recipient": "No tenant email on file. Enter one first.",
     "email_sent": "Email sent to {{to}}",
+    "filled_pdf": "Checklist PDF",
     "finalize": "Finalize",
     "group_other": "Additional items",
+    "hide_hidden": "Hide hidden rows",
+    "hide_item": "Not applicable to this unit — hide",
     "inspector_name": "Inspector",
     "inspector_sign_title": "Inspector signature",
     "issue_link": "Issue tenant signing link",
@@ -4766,6 +4771,7 @@
     "link_expires": "Expires {{date}}",
     "link_failed": "Could not issue the link",
     "link_hint": "Send this link to the tenant. No login required.",
+    "load_failed": "Could not load the checklist.",
     "locked_notice": "The tenant has signed this phase — it is now read-only.",
     "meter_electric": "Electricity",
     "meter_gas": "Gas",
@@ -4776,6 +4782,7 @@
     "move_out_date": "Move-out date",
     "new": "New checklist",
     "none": "No checklist yet.",
+    "open": "Open checklist",
     "pdf_failed": "Could not generate the PDF",
     "phase_move_in": "Move-in",
     "phase_move_out": "Move-out",
@@ -4789,6 +4796,7 @@
     "section_header": "Household details",
     "section_signatures": "Signatures",
     "send_email": "Send by email",
+    "show_hidden": "Show hidden ({{count}})",
     "sign_failed": "Could not save the signature",
     "sign_here": "Draw your signature here",
     "sign_now": "Sign now",
@@ -4807,8 +4815,21 @@
     "tenant_name": "Tenant",
     "tenant_not_signed": "Not signed yet.",
     "tenant_phone": "Phone",
+    "tenant_signed": "Tenant signed",
+    "unhide_item": "Restore this row",
     "unit_no": "Unit no.",
     "unit_type": "Unit type",
     "upload_failed": "Photo upload failed"
+  },
+  "inspection_template": {
+    "active_count": "{{active}} of {{total}} rows active",
+    "clear_all": "clear all",
+    "description": "Choose which rows every unit inspection checklist carries.",
+    "note": "Unticked rows disappear from new checklists, the tenant's view and both PDFs. Checklists that already exist are left unchanged. A single unit's exception can be toggled on its own checklist.",
+    "reset": "Restore all",
+    "save_failed": "Could not save the form",
+    "saved": "Form saved",
+    "select_all": "select all",
+    "title": "Inspection form"
   }
 }

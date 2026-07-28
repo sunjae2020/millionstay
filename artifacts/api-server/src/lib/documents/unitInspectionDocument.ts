@@ -154,7 +154,11 @@ function renderCell(status: string | null, note: string | null, photos = 0): str
  * row in order; a filled form maps the saved items onto the same skeleton and
  * appends any custom rows added on site.
  */
-function renderChecklist(d: InspectionDocInput | null, template: InspectionTemplate): string {
+function renderChecklist(
+  d: InspectionDocInput | null,
+  template: InspectionTemplate,
+  hiddenCodes: Set<string>,
+): string {
   const byCode = new Map((d?.items ?? []).filter((i) => i.item_code).map((i) => [i.item_code as string, i]));
   const templateCodes = new Set(template.groups.flatMap((gr) => gr.items.map((i) => i.code)));
   const custom = (d?.items ?? []).filter((i) => !i.item_code || !templateCodes.has(i.item_code));
@@ -162,15 +166,19 @@ function renderChecklist(d: InspectionDocInput | null, template: InspectionTempl
   const sigs = d?.signatures ?? [];
   const m = d?.meta ?? {};
 
+  const visible = (code: string) => (d ? byCode.has(code) : !hiddenCodes.has(code));
+
   const groupRows = template.groups
     .map((group) => {
-      const rows = group.items.map((tItem, idx) => {
+      const groupItems = group.items.filter((i) => visible(i.code));
+      if (!groupItems.length) return "";
+      const rows = groupItems.map((tItem, idx) => {
         const it = byCode.get(tItem.code);
         const inCell = renderCell(it?.move_in_status ?? null, it?.move_in_note ?? null, it?.photoCounts?.move_in ?? 0);
         const outCell = renderCell(it?.move_out_status ?? null, it?.move_out_note ?? null, it?.photoCounts?.move_out ?? 0);
         const groupCell =
           idx === 0
-            ? `<th class="ui-group" rowspan="${group.items.length}"><span>${escapeHtml(group.label)}</span></th>`
+            ? `<th class="ui-group" rowspan="${groupItems.length}"><span>${escapeHtml(group.label)}</span></th>`
             : "";
         return `<tr>${groupCell}<td class="ui-item">${escapeHtml(tItem.label)}</td><td class="ui-fill">${inCell}</td><td class="ui-fill">${outCell}</td></tr>`;
       });
@@ -279,6 +287,7 @@ export function buildUnitInspectionBody(
   d: InspectionDocInput | null,
   template: InspectionTemplate,
   companyName: string,
+  hiddenCodes: Set<string> = new Set(),
 ): string {
   const ref = d?.report_ref ? `<div class="ui-ref">${escapeHtml(d.report_ref)}</div>` : "";
   return `${INSPECTION_STYLE}
@@ -290,7 +299,7 @@ export function buildUnitInspectionBody(
     <div class="ui-sec">[점 검 내 용]</div>
     ${renderMeters(d)}
     <div class="ui-sec">[하 자 내 용]</div>
-    ${renderChecklist(d, template)}
+    ${renderChecklist(d, template, hiddenCodes)}
     ${renderRemarks(d)}
     ${renderSpecialTerms(template)}
   `;
@@ -304,13 +313,15 @@ export function buildUnitInspectionHtml(opts: {
   forPrint?: boolean;
   /** Overrides the heading prefix; defaults to the company's trading name. */
   headingPrefix?: string | null;
+  /** Template rows switched off in 설정 — dropped from the blank form. */
+  hiddenCodes?: Set<string>;
 }): string {
   const co = opts.company ?? getCompanyInfo();
   const template = getInspectionTemplate(opts.templateKey);
   const prefix = (opts.headingPrefix ?? co.tradingName ?? co.legalName ?? "").trim();
   return renderDocumentShell({
     docType: template.heading,
-    bodyHtml: buildUnitInspectionBody(opts.data, template, prefix),
+    bodyHtml: buildUnitInspectionBody(opts.data, template, prefix, opts.hiddenCodes ?? new Set()),
     company: co,
     forPrint: opts.forPrint ?? true,
   });

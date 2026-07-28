@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, text, jsonb, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, jsonb, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -78,6 +78,10 @@ export const conditionReportItemsTable = pgTable("condition_report_items", {
   move_in_note: text("move_in_note"),       // 입주하자 내용
   move_out_status: text("move_out_status"), // ok | defect | na
   move_out_note: text("move_out_note"),     // 퇴거하자 내용
+  // Rows a unit does not have (월패드 없는 건물, A타입의 이동식 식탁 …) are hidden
+  // rather than deleted, so the template stays comparable across units and the
+  // row can be brought back. Hidden rows leave the tenant view and the PDF too.
+  hidden: boolean("hidden").notNull().default(false),
 
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

@@ -1,29 +1,37 @@
 /**
  * 세대점검표 tab on the contract detail page.
  *
- * Management view only — create a checklist from a template, see each one's
- * progress and signature state, print the blank or the filled form. The actual
+ * Every lease has exactly one checklist, so this is not a list — opening the tab
+ * fetches (and on first open creates) the contract's single 점검표 and shows its
+ * state: progress per phase, signatures, and the print/open actions. The
  * item-by-item filling happens on the mobile-friendly /inspections/:id page,
  * because it is done at the unit, on a phone.
  */
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ClipboardList, FileDown, Loader2, Plus, Printer, Trash2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { ClipboardList, ExternalLink, FileDown, Loader2, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { apiFetch, apiJson } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/date";
 
-interface InspectionRow {
+interface InspectionItem {
+  hidden: boolean;
+  move_in_status: string | null;
+  move_out_status: string | null;
+}
+
+interface Inspection {
   id: number;
   report_ref: string;
   title: string | null;
   status: string;
-  template_key: string | null;
   created_at: string;
+  items: InspectionItem[];
+  signatures: Array<{ phase: string; role: string; signed_at: string }>;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -37,27 +45,14 @@ const STATUS_STYLES: Record<string, string> = {
 export default function ContractInspections({ contractId }: { contractId: string | number }) {
   const { t } = useTranslation();
   const [, navigate] = useLocation();
-  const qc = useQueryClient();
   const { toast } = useToast();
   const [busy, setBusy] = useState(false);
 
-  const queryKey = ["contract-inspections", String(contractId)];
-  const { data, isLoading } = useQuery({
-    queryKey,
-    queryFn: async () => (await apiJson<{ data: InspectionRow[] }>(`/api/v1/contracts/${contractId}/inspections`)).data,
-  });
-  const rows = data ?? [];
-
-  const create = useMutation({
-    mutationFn: async () =>
-      apiJson<{ data: { id: number } }>(`/api/v1/contracts/${contractId}/inspections`, { method: "POST", body: "{}" }),
-    onSuccess: (res) => { void qc.invalidateQueries({ queryKey }); navigate(`/inspections/${res.data.id}`); },
-    onError: (e: any) => toast({ title: t("inspection.create_failed"), description: e?.message, variant: "destructive" }),
-  });
-
-  const remove = useMutation({
-    mutationFn: async (id: number) => apiJson(`/api/v1/inspections/${id}`, { method: "DELETE" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey }),
+  const { data: report, isLoading, error } = useQuery({
+    queryKey: ["contract-inspection", String(contractId)],
+    // Get-or-create: the server hands back this lease's checklist, making one
+    // the first time the tab is opened.
+    queryFn: async () => (await apiJson<{ data: Inspection }>(`/api/v1/contracts/${contractId}/inspection`)).data,
   });
 
   async function openPdf(path: string, filename: string) {
@@ -81,6 +76,13 @@ export default function ContractInspections({ contractId }: { contractId: string
     }
   }
 
+  const visible = (report?.items ?? []).filter((i) => !i.hidden);
+  const progress = (phase: "move_in" | "move_out") => ({
+    done: visible.filter((i) => (phase === "move_in" ? i.move_in_status : i.move_out_status)).length,
+    total: visible.length,
+    signed: (report?.signatures ?? []).some((s) => s.phase === phase && s.role === "tenant"),
+  });
+
   return (
     <div className="space-y-3">
       <div className="flex justify-between items-center gap-3 flex-wrap">
@@ -88,69 +90,77 @@ export default function ContractInspections({ contractId }: { contractId: string
           <h4 className="font-medium text-sm">{t("inspection.tab_title")}</h4>
           <p className="text-xs text-muted-foreground mt-0.5">{t("inspection.tab_desc")}</p>
         </div>
-        <div className="flex gap-2">
-          <Button
-            size="sm" variant="outline" disabled={busy}
-            onClick={() => openPdf("/api/v1/inspection-form/blank.pdf", "unit-inspection-blank.pdf")}
-          >
-            <Printer className="w-3.5 h-3.5 mr-1" />{t("inspection.blank_pdf")}
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => create.mutate()} disabled={create.isPending}>
-            <Plus className="w-3.5 h-3.5 mr-1" />{t("inspection.new")}
-          </Button>
-        </div>
+        <Button
+          size="sm" variant="outline" disabled={busy}
+          onClick={() => openPdf("/api/v1/inspection-form/blank.pdf", "unit-inspection-blank.pdf")}
+        >
+          <Printer className="w-3.5 h-3.5 mr-1" />{t("inspection.blank_pdf")}
+        </Button>
       </div>
 
-      <div className="rounded-lg border bg-white overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              {[t("inspection.col_ref"), t("common.name"), t("common.status"), t("common.created"), ""].map((h, i) => (
-                <th key={i} className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <tr><td colSpan={5} className="text-center py-10"><Loader2 className="w-4 h-4 animate-spin inline" /></td></tr>
-            ) : !rows.length ? (
-              <tr><td colSpan={5} className="text-center py-10 text-muted-foreground">{t("inspection.none")}</td></tr>
-            ) : rows.map((row) => (
-              <tr key={row.id} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/inspections/${row.id}`)}>
-                <td className="px-4 py-3 font-mono text-xs">{row.report_ref}</td>
-                <td className="px-4 py-3 font-medium">
-                  <span className="inline-flex items-center gap-1.5">
-                    <ClipboardList className="w-3.5 h-3.5 text-muted-foreground" />
-                    {row.title || "—"}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <Badge className={`${STATUS_STYLES[row.status] ?? "bg-gray-100 text-gray-700"} hover:opacity-100`}>
-                    {t(`inspection.status_${row.status}`, row.status)}
-                  </Badge>
-                </td>
-                <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(row.created_at)}</td>
-                <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                  <div className="flex gap-1">
-                    <Button
-                      size="sm" variant="ghost" className="h-7 w-7 p-0" disabled={busy}
-                      onClick={() => openPdf(`/api/v1/inspections/${row.id}/document.pdf`, `${row.report_ref}.pdf`)}
-                    >
-                      <FileDown className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button
-                      size="sm" variant="ghost" className="h-7 w-7 p-0 text-red-500 hover:text-red-700"
-                      onClick={() => remove.mutate(row.id)}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
+      {isLoading && (
+        <div className="rounded-lg border bg-white py-12 text-center">
+          <Loader2 className="w-5 h-5 animate-spin inline text-muted-foreground" />
+        </div>
+      )}
+
+      {error && !isLoading && (
+        <div className="rounded-lg border bg-white py-10 text-center text-sm text-muted-foreground">
+          {t("inspection.load_failed")}
+        </div>
+      )}
+
+      {report && (
+        <div className="rounded-lg border bg-white p-4 space-y-4">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div>
+              <p className="font-medium flex items-center gap-1.5">
+                <ClipboardList className="w-4 h-4 text-muted-foreground" />
+                {report.title || "—"}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                <span className="font-mono">{report.report_ref}</span> · {formatDate(report.created_at)}
+              </p>
+            </div>
+            <Badge className={`${STATUS_STYLES[report.status] ?? "bg-gray-100 text-gray-700"} hover:opacity-100`}>
+              {t(`inspection.status_${report.status}`, report.status)}
+            </Badge>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-3">
+            {(["move_in", "move_out"] as const).map((phase) => {
+              const p = progress(phase);
+              const pct = p.total ? Math.round((p.done / p.total) * 100) : 0;
+              return (
+                <div key={phase} className="rounded-lg border p-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium">{t(`inspection.phase_${phase}`)}</span>
+                    <span className="text-xs text-muted-foreground">{p.done}/{p.total}</span>
                   </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                  <div className="mt-2 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                    <div className="h-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {p.signed ? t("inspection.tenant_signed") : t("inspection.tenant_not_signed")}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex gap-2 flex-wrap">
+            <Button size="sm" onClick={() => navigate(`/inspections/${report.id}`)}>
+              <ExternalLink className="w-3.5 h-3.5 mr-1" />{t("inspection.open")}
+            </Button>
+            <Button
+              size="sm" variant="outline" disabled={busy}
+              onClick={() => openPdf(`/api/v1/inspections/${report.id}/document.pdf`, `${report.report_ref}.pdf`)}
+            >
+              <FileDown className="w-3.5 h-3.5 mr-1" />{t("inspection.filled_pdf")}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -25,6 +25,7 @@ import {
   Database,
   Package,
   MailCheck,
+  ClipboardList,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -155,6 +156,12 @@ const REF_CARDS: CardDef[] = [
     description: "settings_hub.rental_fees_desc",
     icon: Percent,
     href: "/settings/rental-fee-schedules",
+  },
+  {
+    title: "settings_hub.inspection_template_title",
+    description: "settings_hub.inspection_template_desc",
+    icon: ClipboardList,
+    href: "/settings/inspection-template",
   },
   {
     title: "settings_hub.suburb_title",

@@ -46,6 +46,7 @@ import {
   getInspectionTemplate,
   templateItemRows,
 } from "../lib/inspections/metheimUnitTemplate";
+import { hiddenCodesFor, readTemplatePrefs, writeTemplatePrefs } from "../lib/inspections/templatePrefs";
 import { clientIp, signingBaseUrl } from "../services/contractSigning";
 import { sendInspectionSignLinkEmail } from "../lib/email";
 
@@ -117,7 +118,9 @@ type Inspection = NonNullable<Awaited<ReturnType<typeof loadInspection>>>;
 
 /** Shape a loaded report for the PDF builder. */
 function toDocInput(report: Inspection): InspectionDocInput {
-  const items: InspectionDocItem[] = report.items.map((it) => ({
+  // Hidden rows leave the printed record entirely — a row a unit does not have
+  // must not sit there inviting a signature.
+  const items: InspectionDocItem[] = report.items.filter((it) => !it.hidden).map((it) => ({
     item_code: it.item_code,
     group_key: it.group_key,
     label: it.label,
@@ -150,7 +153,7 @@ function phaseSnapshot(report: Inspection, phase: Phase) {
     phase,
     capturedAt: new Date().toISOString(),
     meta: report.meta ?? {},
-    items: report.items.map((it) => ({
+    items: report.items.filter((it) => !it.hidden).map((it) => ({
       id: it.id,
       item_code: it.item_code,
       label: it.label,
@@ -223,72 +226,125 @@ adminRouter.get("/v1/inspection-templates", async (_req, res): Promise<void> => 
   });
 });
 
-// A contract's inspections.
-adminRouter.get("/v1/contracts/:contractId/inspections", async (req, res): Promise<void> => {
+
+// Which template rows this tenant wants on the form at all (설정 → 점검표 양식).
+adminRouter.get("/v1/inspection-templates/:key/prefs", async (req, res): Promise<void> => {
   try {
-    const contractId = Number(req.params.contractId);
-    const rows = await db
-      .select()
-      .from(conditionReportsTable)
-      .where(and(eq(conditionReportsTable.contract_id, contractId), isNull(conditionReportsTable.deleted_at)))
-      .orderBy(desc(conditionReportsTable.created_at));
-    res.json({ success: true, data: rows, meta: { total: rows.length } });
+    const prefs = await readTemplatePrefs();
+    const key = String(req.params.key);
+    res.json({ success: true, data: { key, hidden: prefs[key]?.hidden ?? [] } });
   } catch (err: any) {
     fail(res, 500, "SERVER_ERROR", err.message);
   }
 });
 
-// Create a checklist for a contract, seeded from a template.
-adminRouter.post("/v1/contracts/:contractId/inspections", async (req, res): Promise<void> => {
+adminRouter.put("/v1/inspection-templates/:key/prefs", async (req, res): Promise<void> => {
+  try {
+    const key = String(req.params.key);
+    const hidden = Array.isArray(req.body?.hidden) ? req.body.hidden : [];
+    const prefs = await writeTemplatePrefs(key, hidden);
+    void logAction({
+      entityType: ENTITY, entityId: 0, action: "UPDATE",
+      actorId: (req as any).user?.id ?? null,
+      newValue: { template: key, hidden: hidden.length },
+    });
+    res.json({ success: true, data: { key, hidden: prefs[key]?.hidden ?? [] } });
+  } catch (err: any) {
+    fail(res, 500, "SERVER_ERROR", err.message);
+  }
+});
+
+/**
+ * Create the checklist for a contract, seeded from a template.
+ *
+ * Rows switched off in 설정 are still created, marked `hidden` — so a per-contract
+ * decision can bring one back without re-seeding, and the template stays a
+ * comparable skeleton across units.
+ */
+async function createInspectionForContract(
+  contractId: number,
+  opts: { templateKey?: string; title?: string; meta?: Record<string, unknown>; actorId?: number | null } = {},
+) {
+  const template = getInspectionTemplate(opts.templateKey ?? DEFAULT_INSPECTION_TEMPLATE_KEY);
+  const meta = { ...(await prefillMetaFromContract(contractId)), ...(opts.meta ?? {}) };
+  const hidden = await hiddenCodesFor(template.key);
+  const report_ref = await generateReportRef();
+
+  const [report] = await db
+    .insert(conditionReportsTable)
+    .values({
+      report_ref,
+      contract_id: contractId,
+      template_key: template.key,
+      phase: "full",
+      status: "draft",
+      title: opts.title?.trim() || template.name,
+      meta,
+      created_by: opts.actorId ?? null,
+      audit_trail: [{ event: "created", at: new Date().toISOString(), actor: opts.actorId ?? null }],
+    })
+    .returning();
+
+  const rows = templateItemRows(template);
+  if (rows.length) {
+    await db.insert(conditionReportItemsTable).values(
+      rows.map((r) => ({
+        condition_report_id: report!.id,
+        group_key: r.group_key,
+        item_code: r.item_code,
+        label: r.label,
+        sort_order: r.sort_order,
+        hidden: hidden.has(r.item_code),
+      })),
+    );
+  }
+  void logAction({
+    entityType: ENTITY, entityId: report!.id, action: "CREATE", actorId: opts.actorId ?? null,
+    newValue: { report_ref, contract_id: contractId, template: template.key, items: rows.length, hidden: hidden.size },
+  });
+  return report!.id;
+}
+
+/**
+ * The contract's checklist — created on first access.
+ *
+ * Every lease carries exactly one 세대점검표 (DB-enforced by a partial unique
+ * index), so this is a get-or-create rather than a list: no admin has to
+ * remember to add one, and existing contracts pick theirs up on first open.
+ */
+adminRouter.get("/v1/contracts/:contractId/inspection", async (req, res): Promise<void> => {
   try {
     const contractId = Number(req.params.contractId);
     const [contract] = await db
-      .select({ id: contractsTable.id, ref: contractsTable.contract_ref })
+      .select({ id: contractsTable.id })
       .from(contractsTable)
       .where(eq(contractsTable.id, contractId))
       .limit(1);
     if (!contract) { fail(res, 404, "NOT_FOUND", "Contract not found"); return; }
 
-    const templateKey = typeof req.body?.template_key === "string" ? req.body.template_key : DEFAULT_INSPECTION_TEMPLATE_KEY;
-    const template = getInspectionTemplate(templateKey);
-    const meta = { ...(await prefillMetaFromContract(contractId)), ...(req.body?.meta ?? {}) };
-    const report_ref = await generateReportRef();
+    const [existing] = await db
+      .select({ id: conditionReportsTable.id })
+      .from(conditionReportsTable)
+      .where(and(eq(conditionReportsTable.contract_id, contractId), isNull(conditionReportsTable.deleted_at)))
+      .limit(1);
 
-    const [report] = await db
-      .insert(conditionReportsTable)
-      .values({
-        report_ref,
-        contract_id: contractId,
-        template_key: template.key,
-        phase: "full",
-        status: "draft",
-        title: typeof req.body?.title === "string" && req.body.title.trim() ? req.body.title.trim() : template.name,
-        meta,
-        created_by: (req as any).user?.id ?? null,
-        audit_trail: [{ event: "created", at: new Date().toISOString(), actor: (req as any).user?.id ?? null }],
-      })
-      .returning();
-
-    // Freeze a copy of the template's items onto the report — later template
-    // edits must never mutate a checklist someone already signed.
-    const rows = templateItemRows(template);
-    if (rows.length) {
-      await db.insert(conditionReportItemsTable).values(
-        rows.map((r) => ({
-          condition_report_id: report!.id,
-          group_key: r.group_key,
-          item_code: r.item_code,
-          label: r.label,
-          sort_order: r.sort_order,
-        })),
-      );
+    let id = existing?.id;
+    if (!id) {
+      try {
+        id = await createInspectionForContract(contractId, { actorId: (req as any).user?.id ?? null });
+      } catch (err: any) {
+        // Lost a race against a concurrent first open — the unique index did its
+        // job; just read back whichever row won.
+        const [row] = await db
+          .select({ id: conditionReportsTable.id })
+          .from(conditionReportsTable)
+          .where(and(eq(conditionReportsTable.contract_id, contractId), isNull(conditionReportsTable.deleted_at)))
+          .limit(1);
+        if (!row) throw err;
+        id = row.id;
+      }
     }
-    void logAction({
-      entityType: ENTITY, entityId: report!.id, action: "CREATE",
-      actorId: (req as any).user?.id ?? null,
-      newValue: { report_ref, contract_id: contractId, template: template.key, items: rows.length },
-    });
-    res.status(201).json({ success: true, data: await loadInspection(report!.id) });
+    res.json({ success: true, data: await loadInspection(id) });
   } catch (err: any) {
     fail(res, 500, "SERVER_ERROR", err.message);
   }
@@ -369,6 +425,7 @@ adminRouter.patch("/v1/inspections/:id/items/:itemId", async (req, res): Promise
       if (nKey in (req.body ?? {})) patch[nKey] = typeof req.body[nKey] === "string" ? req.body[nKey] : null;
     }
     if (typeof req.body?.label === "string" && req.body.label.trim()) patch.label = req.body.label.trim();
+    if (typeof req.body?.hidden === "boolean") patch.hidden = req.body.hidden;
     if (Object.keys(patch).length) {
       await db.update(conditionReportItemsTable).set(patch).where(eq(conditionReportItemsTable.id, itemId));
     }
@@ -627,9 +684,16 @@ adminRouter.delete("/v1/inspections/:id", async (req, res): Promise<void> => {
 });
 
 /** Render a report (or a blank form) as PDF / HTML preview. */
-async function renderInspectionPdf(res: any, data: InspectionDocInput | null, templateKey: string | null, filename: string, format: string): Promise<void> {
+async function renderInspectionPdf(
+  res: any,
+  data: InspectionDocInput | null,
+  templateKey: string | null,
+  filename: string,
+  format: string,
+  hiddenCodes?: Set<string>,
+): Promise<void> {
   const company = await resolveCompanyInfo();
-  const html = buildUnitInspectionHtml({ data, templateKey, company, forPrint: true });
+  const html = buildUnitInspectionHtml({ data, templateKey, company, forPrint: true, hiddenCodes });
   if (format === "html") { res.setHeader("Content-Type", "text/html; charset=utf-8"); res.send(html); return; }
   try {
     const pdf = await htmlToPdf(html);
@@ -651,7 +715,8 @@ async function renderInspectionPdf(res: any, data: InspectionDocInput | null, te
 adminRouter.get("/v1/inspection-form/blank.pdf", async (req, res): Promise<void> => {
   try {
     const templateKey = typeof req.query.template === "string" ? req.query.template : DEFAULT_INSPECTION_TEMPLATE_KEY;
-    await renderInspectionPdf(res, null, templateKey, "unit-inspection-blank", String(req.query.format ?? ""));
+    const hidden = await hiddenCodesFor(getInspectionTemplate(templateKey).key);
+    await renderInspectionPdf(res, null, templateKey, "unit-inspection-blank", String(req.query.format ?? ""), hidden);
   } catch (err: any) {
     fail(res, 500, "PDF_FAILED", err.message);
   }
@@ -695,7 +760,7 @@ function publicView(report: Inspection, phase: Phase) {
     meta: report.meta,
     groups: report.template.groups.map((g) => ({ key: g.key, label: g.label })),
     signed: report.signatures.some((s) => s.phase === phase && s.role === "tenant"),
-    items: report.items.map((it) => ({
+    items: report.items.filter((it) => !it.hidden).map((it) => ({
       id: it.id,
       group_key: it.group_key,
       label: it.label,

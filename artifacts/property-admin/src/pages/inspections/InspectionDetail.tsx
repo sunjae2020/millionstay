@@ -15,7 +15,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft, Camera, Check, ChevronDown, ChevronRight, Copy, FileDown, Link2,
-  Loader2, Mail, Minus, Plus, Trash2, TriangleAlert, X,
+  Eye, EyeOff, Loader2, Mail, Minus, Plus, Trash2, TriangleAlert, X,
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,7 @@ interface InspectionItem {
   move_in_note: string | null;
   move_out_status: ItemStatus | null;
   move_out_note: string | null;
+  hidden: boolean;
   photos: Array<{ id: number; phase: string; file_url: string; thumbnail_url: string | null }>;
   responses: Array<{ decision: string; comment: string | null }>;
 }
@@ -82,6 +83,7 @@ export default function InspectionDetail() {
   const [signName, setSignName] = useState("");
   const [linkResult, setLinkResult] = useState<{ url: string; expires_at: string } | null>(null);
   const [recipient, setRecipient] = useState("");
+  const [showHidden, setShowHidden] = useState(false);
   const [uploadingItem, setUploadingItem] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadTargetRef = useRef<number | null>(null);
@@ -111,6 +113,7 @@ export default function InspectionDetail() {
   const groups = useMemo(() => {
     const byKey = new Map<string, InspectionItem[]>();
     for (const item of report?.items ?? []) {
+      if (item.hidden && !showHidden) continue;
       const key = item.group_key ?? "other";
       if (!byKey.has(key)) byKey.set(key, []);
       byKey.get(key)!.push(item);
@@ -120,7 +123,7 @@ export default function InspectionDetail() {
       .filter(([k]) => !ordered.some((g) => g.key === k))
       .map(([k, items]) => ({ key: k, label: t("inspection.group_other"), items }));
     return [...ordered, ...extras].filter((g) => g.items.length);
-  }, [report, t]);
+  }, [report, t, showHidden]);
 
   // ── mutations ──────────────────────────────────────────────────────────────
   const patchItem = useMutation({
@@ -270,7 +273,9 @@ export default function InspectionDetail() {
     );
   }
 
-  const filled = report.items.filter((i) => statusOf(i)).length;
+  const activeItems = report.items.filter((i) => !i.hidden);
+  const hiddenCount = report.items.length - activeItems.length;
+  const filled = activeItems.filter((i) => statusOf(i)).length;
 
   return (
     <Layout>
@@ -344,18 +349,25 @@ export default function InspectionDetail() {
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-medium">
             {t("inspection.section_checklist")}{" "}
-            <span className="text-muted-foreground font-normal">({filled}/{report.items.length})</span>
+            <span className="text-muted-foreground font-normal">({filled}/{activeItems.length})</span>
           </h2>
-          <Button size="sm" variant="outline" disabled={locked} onClick={() => setAddOpen(true)}>
-            <Plus className="w-3.5 h-3.5 mr-1" />{t("inspection.add_item")}
-          </Button>
+          <div className="flex gap-2">
+            <Button size="sm" variant="ghost" onClick={() => setShowHidden((v) => !v)}>
+              {showHidden ? <EyeOff className="w-3.5 h-3.5 mr-1" /> : <Eye className="w-3.5 h-3.5 mr-1" />}
+              {showHidden ? t("inspection.hide_hidden") : t("inspection.show_hidden", { count: hiddenCount })}
+            </Button>
+            <Button size="sm" variant="outline" disabled={locked} onClick={() => setAddOpen(true)}>
+              <Plus className="w-3.5 h-3.5 mr-1" />{t("inspection.add_item")}
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-2">
           {groups.map((group) => {
             const open = openGroups[group.key] ?? true;
-            const done = group.items.filter((i) => statusOf(i)).length;
-            const defects = group.items.filter((i) => statusOf(i) === "defect").length;
+            const shown = group.items.filter((i) => !i.hidden);
+            const done = shown.filter((i) => statusOf(i)).length;
+            const defects = shown.filter((i) => statusOf(i) === "defect").length;
             return (
               <div key={group.key} className="rounded-lg border bg-white overflow-hidden">
                 <button
@@ -368,7 +380,7 @@ export default function InspectionDetail() {
                   </span>
                   <span className="flex items-center gap-2 text-xs text-muted-foreground">
                     {defects > 0 && <Badge className="bg-red-100 text-red-700 hover:bg-red-100">{t("inspection.defects", { count: defects })}</Badge>}
-                    {done}/{group.items.length}
+                    {done}/{shown.length}
                   </span>
                 </button>
 
@@ -379,11 +391,13 @@ export default function InspectionDetail() {
                       const photos = item.photos.filter((p) => p.phase === phase);
                       const dispute = item.responses[0];
                       return (
-                        <div key={item.id} className="px-4 py-3 space-y-2">
+                        <div key={item.id} className={`px-4 py-3 space-y-2 ${item.hidden ? "bg-gray-50/70" : ""}`}>
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-sm">{item.label}</span>
+                            <span className={`text-sm ${item.hidden ? "text-muted-foreground line-through" : ""}`}>
+                              {item.label}
+                            </span>
                             <div className="flex items-center gap-1 shrink-0">
-                              {STATUS_CYCLE.map(({ value, icon: Icon, className }) => (
+                              {!item.hidden && STATUS_CYCLE.map(({ value, icon: Icon, className }) => (
                                 <button
                                   key={value}
                                   disabled={locked}
@@ -396,6 +410,14 @@ export default function InspectionDetail() {
                                   <Icon className="w-4 h-4" />
                                 </button>
                               ))}
+                              <button
+                                disabled={locked}
+                                title={item.hidden ? t("inspection.unhide_item") : t("inspection.hide_item")}
+                                onClick={() => patchItem.mutate({ itemId: item.id, patch: { hidden: !item.hidden } })}
+                                className="h-8 w-8 rounded-md border border-input flex items-center justify-center text-muted-foreground hover:bg-gray-50 disabled:opacity-50"
+                              >
+                                {item.hidden ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                              </button>
                               {!item.item_code && !locked && (
                                 <button
                                   onClick={() => removeItem.mutate(item.id)}
@@ -407,7 +429,7 @@ export default function InspectionDetail() {
                             </div>
                           </div>
 
-                          {status === "defect" && (
+                          {!item.hidden && status === "defect" && (
                             <div className="space-y-2">
                               <Textarea
                                 rows={2}
@@ -448,7 +470,7 @@ export default function InspectionDetail() {
                             </div>
                           )}
 
-                          {dispute && (
+                          {!item.hidden && dispute && (
                             <p className={`text-xs ${dispute.decision === "disputed" ? "text-red-600" : "text-green-700"}`}>
                               {t(`inspection.tenant_${dispute.decision}`)}
                               {dispute.comment ? ` — ${dispute.comment}` : ""}

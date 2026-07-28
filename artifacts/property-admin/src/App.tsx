@@ -118,6 +118,7 @@ import ProductGroupsPage from "@/pages/settings/sub/ProductGroups";
 import ProductTypesPage from "@/pages/settings/sub/ProductTypes";
 import CostCenterPage from "@/pages/settings/sub/CostCenter";
 import RentalFeeSchedulesPage from "@/pages/settings/sub/RentalFeeSchedules";
+import InspectionTemplatePage from "@/pages/settings/sub/InspectionTemplate";
 import TranslationsPage from "@/pages/settings/sub/Translations";
 import BookingReportPage from "@/pages/settings/sub/BookingReport";
 import IntegrationsPage from "@/pages/settings/sub/Integrations";
@@ -335,6 +336,8 @@ function Router() {
       <Route path="/settings/roles" component={RolesPage} />
       <Route path="/settings/commission-plans" component={CommissionPlansPage} />
       <Route path="/settings/rental-fee-schedules" component={RentalFeeSchedulesPage} />
+      {/* 세대점검표 양식 — which rows every checklist carries. */}
+      <Route path="/settings/inspection-template" component={InspectionTemplatePage} />
       <Route path="/settings/email-templates" component={EmailTemplatesPage} />
       <Route path="/settings/document-templates" component={DocumentTemplatesPage} />
       <Route path="/settings/document-templates/:id" component={DocumentTemplateEditPage} />

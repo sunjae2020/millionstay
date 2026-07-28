@@ -4674,7 +4674,9 @@
     "occupancy_report_title": "稼働率レポート",
     "occupancy_report_desc": "期間ごとのスペース稼働率",
     "rental_fees_title": "賃貸手数料表",
-    "rental_fees_desc": "タイプ別の仲介・自社管理手数料の基準表"
+    "rental_fees_desc": "タイプ別の仲介・自社管理手数料の基準表",
+    "inspection_template_title": "点検表の様式",
+    "inspection_template_desc": "住戸点検表に含める項目の構成"
   },
   "settings_org": {
     "page_subtitle": "会社プロフィールと連絡先"
@@ -4753,8 +4755,11 @@
     "email_failed": "メールを送信できませんでした",
     "email_no_recipient": "登録された入居者のメールアドレスがありません。入力してください。",
     "email_sent": "{{to}} にメールを送信しました",
+    "filled_pdf": "記入済みPDF",
     "finalize": "点検を確定",
     "group_other": "追加項目",
+    "hide_hidden": "非表示項目を隠す",
+    "hide_item": "この住戸にない項目 — 非表示",
     "inspector_name": "点検者",
     "inspector_sign_title": "点検者署名",
     "issue_link": "入居者署名リンクを発行",
@@ -4766,6 +4771,7 @@
     "link_expires": "{{date}} まで有効",
     "link_failed": "リンクを発行できませんでした",
     "link_hint": "このリンクを入居者にお送りください。ログインは不要です。",
+    "load_failed": "点検表を読み込めませんでした。",
     "locked_notice": "入居者の署名が完了しているため編集できません。",
     "meter_electric": "電気",
     "meter_gas": "ガス",
@@ -4776,6 +4782,7 @@
     "move_out_date": "退去日",
     "new": "新規点検表",
     "none": "点検表がありません。",
+    "open": "点検表を開く",
     "pdf_failed": "PDFを作成できませんでした",
     "phase_move_in": "入居点検",
     "phase_move_out": "退去点検",
@@ -4789,6 +4796,7 @@
     "section_header": "住戸情報",
     "section_signatures": "署名",
     "send_email": "メールで送信",
+    "show_hidden": "非表示項目を見る ({{count}})",
     "sign_failed": "署名を保存できませんでした",
     "sign_here": "ここに署名してください",
     "sign_now": "署名する",
@@ -4807,8 +4815,21 @@
     "tenant_name": "入居者名",
     "tenant_not_signed": "未署名です。",
     "tenant_phone": "連絡先",
+    "tenant_signed": "入居者署名済み",
+    "unhide_item": "項目を戻す",
     "unit_no": "部屋番号",
     "unit_type": "タイプ",
     "upload_failed": "写真のアップロードに失敗しました"
+  },
+  "inspection_template": {
+    "active_count": "{{total}}件中 {{active}}件を使用",
+    "clear_all": "すべて解除",
+    "description": "住戸点検表に含める項目を選びます。",
+    "note": "チェックを外した項目は、以降に作成される点検表・入居者画面・PDFすべてから外れます。既存の点検表はそのまま維持され、特定の住戸だけ異なる場合はその点検表で個別に切り替えられます。",
+    "reset": "すべて復元",
+    "save_failed": "様式を保存できませんでした",
+    "saved": "様式を保存しました",
+    "select_all": "すべて選択",
+    "title": "点検表の様式"
   }
 }
