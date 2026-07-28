@@ -21,7 +21,7 @@ interface IntegrationStatus {
   ai: { configured: boolean; masked_key: string; model: string | null; error: string | null };
   maps: { provider: string; configured: boolean; note: string };
   ical: { provider: string; configured: boolean; note: string };
-  billing?: { recurring_invoices_enabled: boolean };
+  billing?: { recurring_invoices_enabled: boolean; lease_rent_invoices_enabled?: boolean };
   modules?: { homestay_enabled: boolean };
 }
 
@@ -311,19 +311,44 @@ const BillingFields = ({ status, onRefresh }: { status: IntegrationStatus | null
       setSaving(false);
     }
   }
+  const leaseEnabled = status?.billing?.lease_rent_invoices_enabled ?? false;
+  const [leaseSaving, setLeaseSaving] = useState(false);
+  async function toggleLease() {
+    setLeaseSaving(true);
+    try {
+      await apiFetch("/api/v1/integrations/update-env", {
+        method: "POST",
+        body: JSON.stringify({ key: "LEASE_RENT_INVOICES_ENABLED", value: leaseEnabled ? "false" : "true" }),
+      });
+      onRefresh();
+    } finally {
+      setLeaseSaving(false);
+    }
+  }
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-3">
-        <Button size="sm" variant={enabled ? "outline" : "default"} className="h-8 text-xs" onClick={toggle} disabled={saving}>
-          {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : enabled ? t("common.disable") : t("common.enable")}
-        </Button>
-        <span className="text-sm">{enabled ? t("common.enabled") : t("common.disabled")}</span>
+    <div className="space-y-5">
+      <div className="space-y-3">
+        <div className="flex items-center gap-3">
+          <Button size="sm" variant={enabled ? "outline" : "default"} className="h-8 text-xs" onClick={toggle} disabled={saving}>
+            {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : enabled ? t("common.disable") : t("common.enable")}
+          </Button>
+          <span className="text-sm">{enabled ? t("common.enabled") : t("common.disabled")}</span>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          When enabled, a daily job (02:30 Sydney) auto-generates the next due invoice for any
+          contract schedule set to <strong>incremental</strong> billing. Legacy contracts whose invoices
+          were pre-generated up front are never affected. Off by default.
+        </p>
       </div>
-      <p className="text-xs text-muted-foreground">
-        When enabled, a daily job (02:30 Sydney) auto-generates the next due invoice for any
-        contract schedule set to <strong>incremental</strong> billing. Legacy contracts whose invoices
-        were pre-generated up front are never affected. Off by default.
-      </p>
+      <div className="space-y-3 border-t pt-4">
+        <div className="flex items-center gap-3">
+          <Button size="sm" variant={leaseEnabled ? "outline" : "default"} className="h-8 text-xs" onClick={toggleLease} disabled={leaseSaving}>
+            {leaseSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : leaseEnabled ? t("common.disable") : t("common.enable")}
+          </Button>
+          <span className="text-sm">{t("integrations.lease_rent_title")} — {leaseEnabled ? t("common.enabled") : t("common.disabled")}</span>
+        </div>
+        <p className="text-xs text-muted-foreground">{t("integrations.lease_rent_desc")}</p>
+      </div>
     </div>
   );
 };

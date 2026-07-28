@@ -8,7 +8,9 @@ export const contactsTable = pgTable("contacts", {
   last_name: text("last_name").notNull(),
   title: text("title"),
   other_name: text("other_name"),
-  email: text("email").notNull(),
+  // Nullable since the 2026 Korean lease-list migration: bulk-imported tenants
+  // often have no email on record (phone is the contact channel in KR leases).
+  email: text("email"),
   mobile_number: text("mobile_number"),
   office_number: text("office_number"),
   date_of_birth: text("date_of_birth"),

@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, propertiesTable, spacesTable, contactsTable, accountsTable, bookingsTable, leadsTable, tasksTable, invoicesTable, contractsTable, workOrdersTable, systemLogsTable, homestayPlacementsTable, homestayStudentRequestsTable, homestayPlacementPaymentsTable, agentCommissionLedgerTable } from "@workspace/db";
-import { eq, count, and, gte, lte, lt, sql, desc, isNull } from "drizzle-orm";
+import { eq, count, and, gte, lte, lt, sql, desc, isNull, inArray } from "drizzle-orm";
 import { listEntries, trialBalance } from "../lib/billing/gl";
 
 const router: IRouter = Router();
@@ -129,6 +129,69 @@ router.get("/v1/finance/summary", async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch finance summary" });
+  }
+});
+
+/**
+ * 월세 미납 현황 — every unpaid rent invoice grouped by contract, so the finance
+ * dashboard shows who is behind, by how many months, and for how much.
+ */
+router.get("/v1/finance/rent-arrears", async (_req, res) => {
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const rows = await db.select({
+      invoice_id: invoicesTable.id,
+      invoice_ref: invoicesTable.invoice_ref,
+      amount: invoicesTable.amount,
+      currency: invoicesTable.currency,
+      status: invoicesTable.status,
+      due_date: invoicesTable.due_date,
+      notes: invoicesTable.notes,
+      contract_id: contractsTable.id,
+      contract_ref: contractsTable.contract_ref,
+      tenant_name: accountsTable.name,
+      unit_name: spacesTable.name,
+    })
+      .from(invoicesTable)
+      .innerJoin(contractsTable, eq(contractsTable.id, invoicesTable.contract_id))
+      .leftJoin(accountsTable, eq(accountsTable.id, contractsTable.tenant_account_id))
+      .leftJoin(spacesTable, eq(spacesTable.id, contractsTable.space_id))
+      .where(and(
+        isNull(invoicesTable.deleted_at),
+        isNull(contractsTable.deleted_at),
+        inArray(invoicesTable.status, ["Overdue", "Sent", "Draft", "Unpaid"]),
+      ));
+
+    const overdue = rows.filter((r) => r.status === "Overdue" || (r.due_date ? r.due_date < today : false));
+    const byContract = new Map<number, any>();
+    for (const r of overdue) {
+      const entry = byContract.get(r.contract_id) ?? {
+        contract_id: r.contract_id,
+        contract_ref: r.contract_ref,
+        tenant_name: r.tenant_name,
+        unit_name: r.unit_name,
+        currency: r.currency,
+        months: 0,
+        total_amount: 0,
+        oldest_due_date: r.due_date,
+        invoices: [] as any[],
+      };
+      entry.months += 1;
+      entry.total_amount += Number(r.amount ?? 0);
+      if (r.due_date && (!entry.oldest_due_date || r.due_date < entry.oldest_due_date)) entry.oldest_due_date = r.due_date;
+      entry.invoices.push({ id: r.invoice_id, invoice_ref: r.invoice_ref, due_date: r.due_date, amount: Number(r.amount ?? 0), notes: r.notes });
+      byContract.set(r.contract_id, entry);
+    }
+    const arrears = [...byContract.values()].sort((a, b) => b.total_amount - a.total_amount);
+    res.json({
+      total_amount: arrears.reduce((s, a) => s + a.total_amount, 0),
+      total_invoices: overdue.length,
+      contracts: arrears.length,
+      currency: arrears[0]?.currency ?? null,
+      data: arrears,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch rent arrears" });
   }
 });
 

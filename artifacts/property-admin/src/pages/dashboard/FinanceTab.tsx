@@ -75,6 +75,7 @@ export default function FinanceTab() {
   const [monthly, setMonthly] = useState<MonthlyRevenue[]>([]);
   const [byProp, setByProp] = useState<PropertyRevenue[]>([]);
   const [taxRows, setTaxRows] = useState<TaxRow[]>([]);
+  const [arrears, setArrears] = useState<{ total_amount: number; total_invoices: number; contracts: number; data: any[] } | null>(null);
   const { toast } = useToast();
 
   const { data: invoices, refetch } = useListInvoices({});
@@ -85,11 +86,13 @@ export default function FinanceTab() {
       apiFetch("/api/v1/finance/revenue/monthly?months=6").then(r => r.json()),
       apiFetch("/api/v1/finance/revenue/by-property").then(r => r.json()),
       apiFetch("/api/v1/finance/tax-summary").then(r => r.json()),
-    ]).then(([s, m, p, t]) => {
+      apiFetch("/api/v1/finance/rent-arrears").then(r => r.json()).catch(() => null),
+    ]).then(([s, m, p, t, a]) => {
       setSummary(s);
       setMonthly(Array.isArray(m) ? m : []);
       setByProp(Array.isArray(p) ? p : []);
       setTaxRows(Array.isArray(t) ? t : []);
+      setArrears(a && Array.isArray(a.data) ? a : null);
     }).catch(() => {});
   }, []);
 
@@ -156,6 +159,46 @@ export default function FinanceTab() {
         <KpiCard label={t("dash_finance.paid_this_month")} value={summary?.paid_count ?? "—"} icon={CheckCircle} accent="brand" sublabel={currentMonthLabel} />
         <KpiCard label={t("dash_finance.overdue_invoices")} value={summary?.overdue_count ?? "—"} icon={Clock} accent={summary?.overdue_count ? "red" : "slate"} sublabel={t("dash_finance.past_due_date")} trend={summary?.overdue_count ? t("dash_finance.follow_up") : undefined} trendType="down" />
       </div>
+
+      {arrears && arrears.data.length > 0 && (
+        <DashCard title={`${t("dash_finance.rent_arrears")} · ${arrears.contracts}${t("dash_finance.arrears_contracts_suffix")}`} icon={Clock}>
+          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 mb-3">
+            <span className="text-xl font-bold text-red-600">{fmt(arrears.total_amount)}</span>
+            <span className="text-xs text-muted-foreground">{t("dash_finance.arrears_invoices", { count: arrears.total_invoices })}</span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="border-b text-xs text-muted-foreground">
+                <tr>
+                  <th className="text-left py-2 pr-3 font-medium">{t("dash_finance.arrears_tenant")}</th>
+                  <th className="text-left py-2 pr-3 font-medium">{t("dash_finance.arrears_unit")}</th>
+                  <th className="text-right py-2 pr-3 font-medium">{t("dash_finance.arrears_months")}</th>
+                  <th className="text-right py-2 pr-3 font-medium">{t("dash_finance.arrears_amount")}</th>
+                  <th className="text-left py-2 font-medium">{t("dash_finance.arrears_oldest")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {arrears.data.slice(0, 10).map((row: any) => (
+                  <tr key={row.contract_id} className="border-b last:border-0">
+                    <td className="py-2 pr-3">
+                      <Link href={`/contracts/${row.contract_id}`} className="text-primary hover:underline">
+                        {row.tenant_name ?? row.contract_ref}
+                      </Link>
+                    </td>
+                    <td className="py-2 pr-3 text-muted-foreground">{row.unit_name ?? "—"}</td>
+                    <td className="py-2 pr-3 text-right font-medium">{row.months}</td>
+                    <td className="py-2 pr-3 text-right font-mono text-red-600">{fmt(row.total_amount)}</td>
+                    <td className="py-2 text-muted-foreground">{row.oldest_due_date ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {arrears.data.length > 10 && (
+            <p className="text-xs text-muted-foreground mt-2">{t("dash_finance.arrears_more", { count: arrears.data.length - 10 })}</p>
+          )}
+        </DashCard>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <DashCard className="lg:col-span-2" title={t("dash_finance.revenue_trend_6mo")} icon={TrendingUp}>

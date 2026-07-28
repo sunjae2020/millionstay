@@ -13,6 +13,7 @@ import { syncAllChannelImports } from "./lib/icalImport";
 import { purgeExpiredDocuments } from "./lib/retentionPurge";
 import { generateRentCharges } from "./lib/homestay/monthlyBilling";
 import { generateRecurringInvoices } from "./lib/billing/recurringInvoices";
+import { generateLeaseRentInvoices } from "./lib/billing/leaseRentInvoices";
 import { checkWorkOrderSla } from "./lib/dispatch/workOrderDispatch";
 
 const rawPort = process.env["PORT"];
@@ -214,6 +215,21 @@ cron.schedule(
     generateRecurringInvoices()
       .then((r) => logger.info({ ...r }, "Cron recurring invoice billing"))
       .catch((err) => logger.error({ err }, "Cron recurring invoice billing failed"));
+  },
+  { timezone: "Australia/Sydney" },
+);
+
+// Korean monthly-lease rent — daily at 03:00 Sydney. Creates the current month's
+// rent invoice for every Active contract carrying 월세 + 납입일 (no booking needed),
+// then flags every past-due unpaid invoice as Overdue so the 미납 dashboard and the
+// contract's 월세 입금 tab stay current. Idempotent (one invoice per contract-month);
+// self-gates on LEASE_RENT_INVOICES_ENABLED, off by default.
+cron.schedule(
+  "0 3 * * *",
+  () => {
+    generateLeaseRentInvoices()
+      .then((r) => { if (r.enabled) logger.info({ ...r }, "Cron lease rent billing"); })
+      .catch((err) => logger.error({ err }, "Cron lease rent billing failed"));
   },
   { timezone: "Australia/Sydney" },
 );

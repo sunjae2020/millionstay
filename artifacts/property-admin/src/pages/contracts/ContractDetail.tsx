@@ -22,7 +22,7 @@ import {
   getListContractsQueryKey, getGetContractQueryKey,
 } from "@workspace/api-client-react";
 import { LookupSelect } from "@/components/LookupSelect";
-import { ArrowLeft, Save, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail, Receipt, ClipboardList } from "lucide-react";
+import { ArrowLeft, Save, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail, Receipt, ClipboardList , Wallet, Check } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentVersions } from "@/components/DocumentVersions";
@@ -65,7 +65,6 @@ interface FormData {
   down_payment_date: string;
   balance_amount: string;
   balance_date: string;
-  monthly_rent: string;
   rent_due_day: string;
   currency: string;
   document_url: string;
@@ -209,6 +208,32 @@ export default function ContractDetail() {
     enabled: !isNew,
   });
   const relatedCosts: any[] = relatedCostsData?.data ?? [];
+  // Rent ledger — every invoice raised against this contract, grouped by the
+  // month it falls due, so the tab reproduces the 12-column spreadsheet view.
+  const { data: rentInvoicesData } = useQuery({
+    queryKey: ["contract-invoices", id],
+    queryFn: async () => { const r = await apiFetch(`/api/v1/invoices?contract_id=${id}`); return r.json(); },
+    enabled: !isNew,
+  });
+  const rentInvoices: any[] = Array.isArray(rentInvoicesData) ? rentInvoicesData : (rentInvoicesData?.data ?? []);
+  const ledgerYears = Array.from(new Set(rentInvoices
+    .map((inv: any) => Number(String(inv.due_date ?? "").slice(0, 4)))
+    .filter((y: number) => Number.isFinite(y) && y > 1900))).sort((a, b) => b - a);
+  const [ledgerYear, setLedgerYear] = useState<number>(new Date().getFullYear());
+  useEffect(() => {
+    if (ledgerYears.length && !ledgerYears.includes(ledgerYear)) setLedgerYear(ledgerYears[0]);
+  }, [ledgerYears.join(",")]);
+  const ledgerByMonth = new Map<number, any>();
+  for (const inv of rentInvoices) {
+    const due = String(inv.due_date ?? "");
+    if (Number(due.slice(0, 4)) !== ledgerYear) continue;
+    ledgerByMonth.set(Number(due.slice(5, 7)), inv);
+  }
+  const ledgerRows = Array.from({ length: 12 }, (_, i) => ({ month: i + 1, invoice: ledgerByMonth.get(i + 1) ?? null }));
+  const ledgerPaid = ledgerRows.filter((r) => r.invoice?.status === "Paid");
+  const ledgerOpen = ledgerRows.filter((r) => r.invoice && r.invoice.status !== "Paid");
+  const sumAmount = (rows: typeof ledgerRows) => rows.reduce((s, r) => s + Number(r.invoice?.amount ?? 0), 0);
+
 
   const { register, handleSubmit, reset, control } = useForm<FormData>({
     defaultValues: {
@@ -333,6 +358,54 @@ export default function ContractDetail() {
     },
     onSuccess: () => invalidateRelatedCosts(),
   });
+
+  // Rent ledger actions: settle a month, or pull its receipt PDF (posts to the GL
+  // through the shared invoice payment endpoint — no separate accounting path).
+  const payRentMutation = useMutation({
+    mutationFn: async ({ invoiceId, method }: { invoiceId: number; method: string }) => {
+      const r = await apiFetch(`/api/v1/invoices/${invoiceId}/pay`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ payment_method: method }),
+      });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error ?? "Failed to record payment");
+      return r.json();
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["contract-invoices", id] }),
+    onError: (err: any) => toast({ title: t('contract.rent_pay_failed'), description: String(err?.message ?? err), variant: "destructive" }),
+  });
+
+  // Draft the move-out deposit settlement from this lease: 보증금 = bond_amount and
+  // every month settled out of the deposit becomes a deduction line.
+  const draftSettlementMutation = useMutation({
+    mutationFn: async () => {
+      const r = await apiFetch(`/api/v1/contracts/${id}/deposit-settlements`, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(body?.error?.message ?? "Failed to draft settlement");
+      return body.data;
+    },
+    onSuccess: (data: any) => toast({
+      title: t('contract.settlement_created'),
+      description: `${data?.settlement_ref ?? ""} · ${t('contract.settlement_refund')}: ${Number(data?.refund_amount ?? 0).toLocaleString()}`,
+    }),
+    onError: (err: any) => toast({ title: t('contract.settlement_failed'), description: String(err?.message ?? err), variant: "destructive" }),
+  });
+
+  const downloadReceipt = async (invoice: any) => {
+    try {
+      const res = await apiFetch(`/api/v1/invoices/${invoice.id}/receipt/pdf`);
+      if (!res.ok) throw new Error(await res.text());
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${invoice.invoice_ref ?? "receipt"}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast({ title: t('contract.receipt_failed'), description: err instanceof Error ? err.message : String(err), variant: "destructive" });
+    }
+  };
 
   const submitCostForm = () => {
     const payload = {
@@ -613,6 +686,10 @@ export default function ContractDetail() {
                       <SelectTrigger><SelectValue placeholder={t('contract.ph_select_category')} /></SelectTrigger>
                       <SelectContent>
                         {CONTRACT_CATEGORIES.map(c => <SelectItem key={c.value} value={c.value}>{t(c.labelKey)}</SelectItem>)}
+                        {/* Imported ledgers carry free-text categories (e.g. 시행사/신탁사) — keep them selectable so saving never drops the value. */}
+                        {field.value && !CONTRACT_CATEGORIES.some(c => c.value === field.value) && (
+                          <SelectItem value={field.value}>{field.value}</SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                   )} />
@@ -762,6 +839,7 @@ export default function ContractDetail() {
             {[
               { id: "line-items", label: `${t('contract.tab_line_items')}${lineItems.length ? ` (${lineItems.length})` : ""}`, icon: <List className="w-3.5 h-3.5" /> },
               { id: "related-costs", label: `${t('contract.tab_related_costs')}${relatedCosts.length ? ` (${relatedCosts.length})` : ""}`, icon: <Receipt className="w-3.5 h-3.5" /> },
+              { id: "rent-ledger", label: `${t('contract.tab_rent_ledger')}${rentInvoices.length ? ` (${rentInvoices.length})` : ""}`, icon: <Wallet className="w-3.5 h-3.5" /> },
               { id: "schedule", label: `${t('contract.tab_schedule')}${schedules.length ? ` (${schedules.length})` : ""}`, icon: <CalendarDays className="w-3.5 h-3.5" /> },
               { id: "inspections", label: t('inspection.tab_title'), icon: <ClipboardList className="w-3.5 h-3.5" /> },
             ].map((tab) => (
@@ -839,6 +917,119 @@ export default function ContractDetail() {
                           {formatMoney(lineItems.reduce((sum: number, i: any) => sum + Number(i.total_price ?? 0), 0), currency, currencyPosition)}
                         </td>
                         <td colSpan={2} />
+                      </tr>
+                    </tfoot>
+                  )}
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "rent-ledger" && (
+            <div className="space-y-3">
+              <div className="flex flex-wrap justify-between items-center gap-2">
+                <div>
+                  <h4 className="font-medium text-sm">{t('contract.rent_ledger_title')}</h4>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t('contract.rent_ledger_desc')}</p>
+                </div>
+                <div className="flex items-center gap-1">
+                  {Number(contract?.bond_amount ?? 0) > 0 && (
+                    <Button size="sm" variant="outline" disabled={draftSettlementMutation.isPending}
+                      onClick={() => draftSettlementMutation.mutate()}>
+                      <Receipt className="w-3.5 h-3.5 mr-1" />{t('contract.btn_draft_settlement')}
+                    </Button>
+                  )}
+                  {(ledgerYears.length ? ledgerYears : [ledgerYear]).map((y) => (
+                    <Button key={y} size="sm" variant={y === ledgerYear ? "default" : "outline"} onClick={() => setLedgerYear(y)}>
+                      {y}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 12-month strip — the spreadsheet's 월별 입금 현황 at a glance */}
+              <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-12 gap-1.5">
+                {ledgerRows.map(({ month, invoice }) => {
+                  const paid = invoice?.status === "Paid";
+                  const open = Boolean(invoice) && !paid;
+                  return (
+                    <div
+                      key={month}
+                      className={`rounded-md border px-2 py-1.5 text-center ${paid ? "bg-green-50 border-green-200" : open ? "bg-red-50 border-red-200" : "bg-gray-50"}`}
+                      title={invoice?.notes ?? ""}
+                    >
+                      <div className="text-[11px] text-muted-foreground">{t('contract.month_label', { n: month })}</div>
+                      <div className={`text-xs font-medium ${paid ? "text-green-700" : open ? "text-red-600" : "text-muted-foreground"}`}>
+                        {paid
+                          ? (invoice.paid_at ? `${new Date(invoice.paid_at).getDate()}${t('contract.day_suffix')}` : t('invoice.status_paid'))
+                          : open ? t('contract.rent_unpaid') : "—"}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="rounded-lg border bg-white overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 border-b">
+                    <tr>
+                      {[t('contract.col_month'), t('contract.col_invoice_ref'), t('contract.col_due_date'), t('contract.col_paid_on'),
+                        t('common.amount'), t('common.status'), t('contract.col_payment_method'), t('contract.col_remarks'), ""].map((h, hi) => (
+                        <th key={hi} className="text-left px-4 py-3 font-medium text-muted-foreground whitespace-nowrap">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {!rentInvoices.length ? (
+                      <tr><td colSpan={9} className="text-center py-10 text-muted-foreground">{t('contract.no_rent_ledger')}</td></tr>
+                    ) : ledgerRows.filter((r) => r.invoice).map(({ month, invoice }) => (
+                      <tr key={month} className="border-b hover:bg-gray-50">
+                        <td className="px-4 py-3 font-medium whitespace-nowrap">{t('contract.month_label', { n: month })}</td>
+                        <td className="px-4 py-3">
+                          <button type="button" className="text-primary hover:underline" onClick={() => navigate(`/finance/invoices/${invoice.id}`)}>
+                            {invoice.invoice_ref}
+                          </button>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{invoice.due_date ? formatDate(invoice.due_date) : "—"}</td>
+                        <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{invoice.paid_at ? formatDate(invoice.paid_at) : "—"}</td>
+                        <td className="px-4 py-3 font-mono whitespace-nowrap">{Number(invoice.amount ?? 0).toLocaleString()} {invoice.currency}</td>
+                        <td className="px-4 py-3">
+                          <Badge className={invoice.status === "Paid" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}>{invoice.status}</Badge>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">{invoice.payment_method || "—"}</td>
+                        <td className="px-4 py-3 text-muted-foreground whitespace-pre-line">{invoice.notes || "—"}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-1">
+                            {invoice.status === "Paid" ? (
+                              <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => downloadReceipt(invoice)}>
+                                <FileDown className="w-3.5 h-3.5 mr-1" />{t('contract.btn_receipt')}
+                              </Button>
+                            ) : (
+                              <Button size="sm" variant="ghost" className="h-7 px-2 text-green-700"
+                                disabled={payRentMutation.isPending}
+                                onClick={() => payRentMutation.mutate({ invoiceId: invoice.id, method: t('contract.method_bank_transfer') })}>
+                                <Check className="w-3.5 h-3.5 mr-1" />{t('contract.btn_mark_paid')}
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  {rentInvoices.length > 0 && (
+                    <tfoot className="bg-gray-50 border-t">
+                      <tr>
+                        <td colSpan={4} className="px-4 py-3 text-right font-medium text-sm text-muted-foreground">{t('contract.total_rent_paid')}</td>
+                        <td className="px-4 py-3 font-mono font-bold text-sm whitespace-nowrap text-green-700">
+                          {sumAmount(ledgerPaid).toLocaleString()} {contract?.currency ?? ""}
+                        </td>
+                        <td colSpan={4} className="px-4 py-3 text-sm text-muted-foreground">
+                          {ledgerOpen.length > 0 && (
+                            <span className="text-red-600 font-medium">
+                              {t('contract.total_rent_outstanding')}: {sumAmount(ledgerOpen).toLocaleString()} {contract?.currency ?? ""} ({ledgerOpen.length})
+                            </span>
+                          )}
+                        </td>
                       </tr>
                     </tfoot>
                   )}

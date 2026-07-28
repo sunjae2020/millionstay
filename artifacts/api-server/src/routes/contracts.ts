@@ -6,6 +6,7 @@ import { logAction } from "../utils/auditLog";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import { getRateToAud } from "../lib/rateSnapshot";
 import { resolveLeaseTermsFromProduct } from "../lib/leaseTerms";
+import { generateLeaseRentInvoices } from "../lib/billing/leaseRentInvoices";
 import { buildContractHtml, type ContractDocInput } from "../lib/documents/contractDocument";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
@@ -1013,6 +1014,25 @@ router.delete("/v1/contracts/:id/related-costs/:costId", async (req, res): Promi
   const costId = Number(req.params.costId);
   await db.update(contractRelatedCostsTable).set({ status: "Deleted", updated_at: new Date() }).where(eq(contractRelatedCostsTable.id, costId));
   res.json({ success: true });
+});
+
+/**
+ * Generate the monthly rent invoices for a given month across every Active lease
+ * (the 잔여월 자동 발행 button). Runs the same idempotent generator as the daily
+ * cron, but forced — so an admin can fill in a month without waiting for 03:00.
+ */
+router.post("/v1/contracts/generate-rent-invoices", async (req, res): Promise<void> => {
+  const { year, month, months } = req.body ?? {};
+  const targets: Array<{ year: number; month: number }> = Array.isArray(months)
+    ? months.filter((m: any) => m?.year && m?.month)
+    : [{ year: Number(year) || new Date().getFullYear(), month: Number(month) || new Date().getMonth() + 1 }];
+  let created = 0, overdue = 0, skipped = 0;
+  for (const target of targets) {
+    const r = await generateLeaseRentInvoices({ year: target.year, month: target.month, force: true });
+    created += r.created; overdue = r.overdue; skipped += r.skipped;
+  }
+  await logAction({ entityType: "invoice", entityId: 0, action: "AUTO_CREATED", newValue: { kind: "lease_rent", targets, created, skipped } });
+  res.json({ created, skipped, overdue, months: targets });
 });
 
 router.get("/v1/lookup/contracts", async (req, res): Promise<void> => {

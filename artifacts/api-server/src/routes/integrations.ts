@@ -21,6 +21,9 @@ const ALLOWED_KEYS = [
   "ANTHROPIC_API_KEY",
   "CHAT_WIDGET_ENABLED",
   "RECURRING_INVOICES_ENABLED",
+  // Korean monthly-lease rent automation (contract-driven, no booking needed):
+  // generates each Active lease's monthly rent invoice and flags overdue ones.
+  "LEASE_RENT_INVOICES_ENABLED",
   // Per-tenant module toggle. When "false", the admin hides the Homestay
   // intake workflow (applications / student requests / placements). Each
   // tenant has its own DB, so this row is inherently per-instance. Defaults
@@ -146,6 +149,7 @@ router.get("/v1/integrations/status", async (_req: Request, res: Response): Prom
       },
       billing: {
         recurring_invoices_enabled: (await getEnvVar("RECURRING_INVOICES_ENABLED")) === "true",
+        lease_rent_invoices_enabled: (await getEnvVar("LEASE_RENT_INVOICES_ENABLED")) === "true",
       },
       modules: {
         // Enabled unless explicitly turned off, so tenants that never set it

@@ -236,10 +236,12 @@ router.post("/v1/invoices/:id/pay", async (req, res): Promise<void> => {
   const paidAt = parsed.data.paid_at ? new Date(parsed.data.paid_at) : new Date();
   const [row] = await db.update(invoicesTable)
     .set({ status: "Paid", payment_method: parsed.data.payment_method, paid_at: paidAt, updated_at: new Date() })
-    .where(and(eq(invoicesTable.id, Number(req.params.id)), eq(invoicesTable.status, "Sent")))
+    // Payable from any open state — imported rent ledgers land as Overdue/Draft
+    // and are still settled the same way as a Sent invoice.
+    .where(and(eq(invoicesTable.id, Number(req.params.id)), inArray(invoicesTable.status, ["Sent", "Draft", "Overdue", "Unpaid"])))
     .returning();
-  if (!row) { res.status(400).json({ error: "Invoice not in Sent status" }); return; }
-  await logAction({ entityType: "invoice", entityId: row.id, action: "PAYMENT", oldValue: { status: "Sent" }, newValue: { status: "Paid", payment_method: parsed.data.payment_method } });
+  if (!row) { res.status(400).json({ error: "Invoice is not in a payable status" }); return; }
+  await logAction({ entityType: "invoice", entityId: row.id, action: "PAYMENT", oldValue: { status: "open" }, newValue: { status: "Paid", payment_method: parsed.data.payment_method } });
   // Auto-post the GL entry (best-effort; never blocks or alters the response).
   void postInvoicePaid({ id: row.id, amount: Number(row.amount), currency: row.currency, paidAt: paidAt.toISOString() });
   const [result] = await enrichInvoices([row]);

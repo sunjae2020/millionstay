@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { DEFAULT_CURRENCY } from "../lib/currency";
-import { eq, and, or, desc, asc, inArray, isNull } from "drizzle-orm";
+import { eq, and, or, desc, asc, inArray, isNull, lte } from "drizzle-orm";
 import Stripe from "stripe";
 import {
   db,
@@ -260,7 +260,7 @@ router.get("/v1/guest/bookings/:id", async (req, res): Promise<void> => {
       created_at: invoicesTable.created_at,
     })
     .from(invoicesTable)
-    .where(eq(invoicesTable.booking_id, bookingId))
+    .where(and(eq(invoicesTable.booking_id, bookingId), notFutureBilled()))
     .orderBy(asc(invoicesTable.id));
 
   // Include contract linked to this booking (read-only for guest)
@@ -323,6 +323,19 @@ router.get("/v1/guest/bookings/:id", async (req, res): Promise<void> => {
   res.json({ success: true, data: { ...booking, invoices, contract: contract ?? null, payment_schedule: paymentSchedule, services } });
 });
 
+/**
+ * Rent is billed ahead for the whole year (the lease-rent generator raises every
+ * month's invoice up front), but a tenant may only see invoices already due —
+ * the current month and anything outstanding before it. Future months stay
+ * internal until their month arrives.
+ */
+function currentMonthEnd(): string {
+  const now = new Date();
+  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0));
+  return end.toISOString().slice(0, 10);
+}
+const notFutureBilled = () => or(isNull(invoicesTable.due_date), lte(invoicesTable.due_date, currentMonthEnd()));
+
 /* ───────────────────────────────────────────────────────
    GET /api/v1/guest/invoices — 내 결제 현황
 ──────────────────────────────────────────────────────── */
@@ -351,7 +364,7 @@ router.get("/v1/guest/invoices", async (req, res): Promise<void> => {
     .leftJoin(bookingsTable, eq(invoicesTable.booking_id, bookingsTable.id))
     .leftJoin(spacesTable, eq(bookingsTable.space_id, spacesTable.id))
     .leftJoin(propertiesTable, eq(spacesTable.property_id, propertiesTable.id))
-    .where(eq(invoicesTable.account_id, guest.account_id))
+    .where(and(eq(invoicesTable.account_id, guest.account_id), notFutureBilled()))
     .orderBy(asc(invoicesTable.due_date));
 
   res.json({ success: true, data: invoices, meta: { total: invoices.length } });
@@ -394,6 +407,7 @@ router.get("/v1/guest/invoices/:id", async (req, res): Promise<void> => {
     .where(and(
       eq(invoicesTable.id, invId),
       eq(invoicesTable.account_id, guest.account_id),
+      notFutureBilled(),
     ))
     .limit(1);
 

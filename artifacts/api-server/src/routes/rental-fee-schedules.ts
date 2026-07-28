@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { eq, ilike, asc, and } from "drizzle-orm";
-import { db, rentalFeeSchedulesTable } from "@workspace/db";
+import { eq, ilike, asc, and, isNull, inArray } from "drizzle-orm";
+import { db, rentalFeeSchedulesTable, contractsTable, contractRelatedCostsTable, spacesTable, accountsTable } from "@workspace/db";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 
 const router: IRouter = Router();
@@ -35,6 +35,87 @@ router.get("/v1/rental-fee-schedules", async (req, res): Promise<void> => {
   } catch {
     res.status(500).json({ error: "Failed to list rental fee schedules" });
   }
+});
+
+/**
+ * 임대 수수료 대사 — rate card (config) vs what was actually paid on each contract
+ * (contract_related_costs). Per contract we compare the sum of 임대수수료 +
+ * 부동산수수료 against the schedule row whose type_label covers the unit's type,
+ * so operations can see over/under payments at a glance.
+ */
+router.get("/v1/rental-fee-schedules/reconciliation", async (req, res): Promise<void> => {
+  const { basis } = req.query as Record<string, string>;
+  // Which rate-card column the actual amount is measured against.
+  const column: "brokerage" | "self" | "working" =
+    basis === "self" ? "self" : basis === "working" ? "working" : "brokerage";
+
+  const schedules = await db.select().from(rentalFeeSchedulesTable)
+    .where(and(isNull(rentalFeeSchedulesTable.deleted_at), eq(rentalFeeSchedulesTable.status, "Active")))
+    .orderBy(asc(rentalFeeSchedulesTable.sort_order));
+
+  // "A,B" covers both A and A-1 style labels — match on the leading letter.
+  const scheduleFor = (typeName: string | null) => {
+    if (!typeName) return null;
+    const letter = (typeName.match(/^[A-Za-z]+/) ?? [""])[0].toUpperCase();
+    if (!letter) return null;
+    return schedules.find((s) => s.type_label.split(/[,\s]+/).some((l) => l.trim().toUpperCase() === letter)) ?? null;
+  };
+
+  const contracts = await db.select({
+    id: contractsTable.id,
+    contract_ref: contractsTable.contract_ref,
+    status: contractsTable.status,
+    start_date: contractsTable.start_date,
+    tenant_name: accountsTable.name,
+    unit_name: spacesTable.name,
+    unit_type: spacesTable.custom_type_name,
+    currency: contractsTable.currency,
+  })
+    .from(contractsTable)
+    .leftJoin(accountsTable, eq(accountsTable.id, contractsTable.tenant_account_id))
+    .leftJoin(spacesTable, eq(spacesTable.id, contractsTable.space_id))
+    .where(isNull(contractsTable.deleted_at));
+
+  const costs = contracts.length
+    ? await db.select().from(contractRelatedCostsTable)
+        .where(inArray(contractRelatedCostsTable.contract_id, contracts.map((c) => c.id)))
+    : [];
+  const costsByContract = new Map<number, typeof costs>();
+  for (const c of costs) {
+    const list = costsByContract.get(c.contract_id) ?? [];
+    list.push(c);
+    costsByContract.set(c.contract_id, list);
+  }
+
+  const rows = contracts.map((c) => {
+    const list = costsByContract.get(c.id) ?? [];
+    const lease = list.filter((x) => x.cost_type === "임대수수료").reduce((s, x) => s + Number(x.amount ?? 0), 0);
+    const agency = list.filter((x) => x.cost_type === "부동산수수료").reduce((s, x) => s + Number(x.amount ?? 0), 0);
+    const sched = scheduleFor(c.unit_type);
+    const expected = sched
+      ? column === "brokerage" ? sched.brokerage_fee * (1 + sched.brokerage_surcharge_rate / 100)
+        : column === "self" ? sched.self_fee * (1 - sched.self_withholding_rate / 100)
+        : sched.working_fee
+      : null;
+    const actual = lease + agency;
+    return {
+      contract_id: c.id, contract_ref: c.contract_ref, status: c.status, start_date: c.start_date,
+      tenant_name: c.tenant_name, unit_name: c.unit_name, unit_type: c.unit_type,
+      currency: c.currency, type_label: sched?.type_label ?? null,
+      expected: expected == null ? null : Math.round(expected),
+      lease_fee: lease, agency_fee: agency, actual,
+      diff: expected == null ? null : Math.round(actual - expected),
+    };
+  }).filter((r) => r.actual > 0 || r.expected != null);
+
+  res.json({
+    basis: column,
+    total_expected: rows.reduce((s, r) => s + (r.expected ?? 0), 0),
+    total_actual: rows.reduce((s, r) => s + r.actual, 0),
+    mismatched: rows.filter((r) => r.diff != null && r.diff !== 0).length,
+    unmatched_type: rows.filter((r) => r.expected == null).length,
+    data: rows.sort((a, b) => Math.abs(b.diff ?? 0) - Math.abs(a.diff ?? 0)),
+  });
 });
 
 router.get("/v1/rental-fee-schedules/:id", async (req, res): Promise<void> => {

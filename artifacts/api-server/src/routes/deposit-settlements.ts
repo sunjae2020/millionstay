@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { DEFAULT_CURRENCY } from "../lib/currency";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, isNull } from "drizzle-orm";
 import {
   db,
   bookingsTable,
@@ -188,6 +188,76 @@ adminRouter.post("/v1/bookings/:bookingId/deposit-settlements", async (req, res)
   }
 });
 
+/* ── Contract-based settlements (Korean monthly lease, no booking spine) ──────
+   The lease's 보증금 is contracts.bond_amount, and any month settled out of the
+   deposit is an invoice carrying payment_method='보증금 차감'. Drafting a settlement
+   snapshots the deposit and turns each of those months into a deduction line, so
+   the move-out 정산서 reflects what the rent ledger already recorded. Draft only —
+   GL release on finalize stays booking-backed (a lease deposit is not yet posted
+   to Deposits Held 2100). */
+adminRouter.get("/v1/contracts/:contractId/deposit-settlements", async (req, res): Promise<void> => {
+  try {
+    const contractId = Number(req.params.contractId);
+    const rows = await db.select().from(depositSettlementsTable)
+      .where(eq(depositSettlementsTable.contract_id, contractId))
+      .orderBy(desc(depositSettlementsTable.created_at));
+    res.json({ success: true, data: rows });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
+  }
+});
+
+adminRouter.post("/v1/contracts/:contractId/deposit-settlements", async (req, res): Promise<void> => {
+  try {
+    const contractId = Number(req.params.contractId);
+    const [contract] = await db.select().from(contractsTable).where(eq(contractsTable.id, contractId)).limit(1);
+    if (!contract) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Contract not found" } }); return; }
+
+    const depositHeld = Number(contract.bond_amount ?? 0);
+    const settlement_ref = await generateSettlementRef();
+    const [row] = await db.insert(depositSettlementsTable).values({
+      settlement_ref,
+      booking_id: contract.booking_id ?? null,
+      contract_id: contractId,
+      status: "draft",
+      deposit_held: String(round2(depositHeld)),
+      refund_amount: String(round2(depositHeld)),
+      currency: contract.currency ?? DEFAULT_CURRENCY,
+      notes: typeof req.body?.notes === "string" ? req.body.notes : null,
+      created_by: (req as any).user?.id ?? null,
+      audit_trail: [{ event: "created", at: new Date().toISOString(), actor: (req as any).user?.id ?? null, deposit_held: depositHeld, source: "contract" }],
+    }).returning();
+
+    // Rent months already settled out of the deposit become deduction lines.
+    const deducted = await db.select({
+      id: invoicesTable.id,
+      invoice_ref: invoicesTable.invoice_ref,
+      amount: invoicesTable.amount,
+      description: invoicesTable.description,
+      due_date: invoicesTable.due_date,
+    })
+      .from(invoicesTable)
+      .where(and(
+        eq(invoicesTable.contract_id, contractId),
+        isNull(invoicesTable.deleted_at),
+        eq(invoicesTable.payment_method, "보증금 차감"),
+      ));
+    for (const inv of deducted) {
+      await db.insert(depositDeductionItemsTable).values({
+        deposit_settlement_id: row!.id,
+        description: `${inv.description ?? inv.invoice_ref}${inv.due_date ? ` (${inv.due_date})` : ""}`,
+        amount: String(round2(Number(inv.amount ?? 0))),
+      });
+    }
+    const totals = await recomputeTotals(row!.id);
+
+    void logAction({ entityType: ENTITY, entityId: row!.id, action: "CREATE", actorId: (req as any).user?.id ?? null, newValue: { settlement_ref, contract_id: contractId, deposit_held: depositHeld, deductions: deducted.length } });
+    res.status(201).json({ success: true, data: { ...row, ...totals, deductions: deducted.length } });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: { code: "SERVER_ERROR", message: err.message } });
+  }
+});
+
 adminRouter.get("/v1/deposit-settlements/:id", async (req, res): Promise<void> => {
   try {
     const detail = await loadSettlementDetail(Number(req.params.id));
@@ -269,7 +339,9 @@ adminRouter.post("/v1/deposit-settlements/:id/finalize", async (req, res): Promi
     // refund is handled operationally). When a deposit WAS invoiced (line_type=
     // 'deposit'), deposit_held == glBacked and the release balances:
     // Dr Deposits Held = Cr Cash (refund) + Cr Revenue (forfeited).
-    const { glBacked } = await resolveDeposit(s.booking_id);
+    // Contract-based (lease) settlements have no booking spine and no 2100
+    // liability behind them, so there is nothing to release.
+    const { glBacked } = s.booking_id ? await resolveDeposit(s.booking_id) : { glBacked: 0 };
     let glPosted = false;
     if (glBacked > 0) {
       const entry = await postEntry({
@@ -308,7 +380,9 @@ async function buildMoveOutDocInput(id: number): Promise<MoveOutDocInput | null>
   const detail = await loadSettlementDetail(id);
   if (!detail) return null;
 
-  const [booking] = await db.select().from(bookingsTable).where(eq(bookingsTable.id, detail.booking_id)).limit(1);
+  const [booking] = detail.booking_id
+    ? await db.select().from(bookingsTable).where(eq(bookingsTable.id, detail.booking_id)).limit(1)
+    : [undefined as any];
 
   let unit: string | null = null;
   let spaceRent: number | null = null;
@@ -332,13 +406,34 @@ async function buildMoveOutDocInput(id: number): Promise<MoveOutDocInput | null>
     if (account?.name) tenantName = account.name;
   }
 
-  // Contract period: prefer the latest contract, else the booking dates.
-  const [contract] = await db
-    .select({ start: contractsTable.start_date, end: contractsTable.end_date })
-    .from(contractsTable)
-    .where(eq(contractsTable.booking_id, detail.booking_id))
-    .orderBy(desc(contractsTable.id))
-    .limit(1);
+  // Contract period: the settlement's own lease when contract-backed, else the
+  // latest contract on the booking.
+  const contractCols = {
+    start: contractsTable.start_date, end: contractsTable.end_date,
+    space_id: contractsTable.space_id, tenant_account_id: contractsTable.tenant_account_id,
+  };
+  const [contract] = detail.contract_id
+    ? await db.select(contractCols).from(contractsTable).where(eq(contractsTable.id, detail.contract_id)).limit(1)
+    : detail.booking_id
+      ? await db.select(contractCols).from(contractsTable)
+          .where(eq(contractsTable.booking_id, detail.booking_id))
+          .orderBy(desc(contractsTable.id)).limit(1)
+      : [undefined as any];
+
+  // A lease settlement has no booking, so unit/tenant come off the contract.
+  if (!unit && contract?.space_id) {
+    const [space] = await db
+      .select({ name: spacesTable.name, monthly_rent: spacesTable.monthly_rent })
+      .from(spacesTable).where(eq(spacesTable.id, contract.space_id)).limit(1);
+    unit = space?.name ?? null;
+    spaceRent = spaceRent ?? space?.monthly_rent ?? null;
+  }
+  if (!tenantName && contract?.tenant_account_id) {
+    const [account] = await db
+      .select({ name: accountsTable.name })
+      .from(accountsTable).where(eq(accountsTable.id, contract.tenant_account_id)).limit(1);
+    tenantName = account?.name ?? null;
+  }
 
   const asOf = detail.finalized_at ?? detail.proposed_at ?? detail.created_at;
 
@@ -428,7 +523,7 @@ guestRouter.post("/v1/guest/deposit-settlements/:id/acknowledge", async (req, re
     const guest = (req as any).guest;
     const id = Number(req.params.id);
     const [s] = await db.select().from(depositSettlementsTable).where(eq(depositSettlementsTable.id, id)).limit(1);
-    if (!s || !(await guestOwnsBooking(guest?.account_id ?? null, s.booking_id))) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Settlement not found" } }); return; }
+    if (!s || s.booking_id == null || !(await guestOwnsBooking(guest?.account_id ?? null, s.booking_id))) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Settlement not found" } }); return; }
     if (s.status !== "proposed") { res.status(409).json({ success: false, error: { code: "NOT_OPEN", message: "Settlement is not awaiting acknowledgement" } }); return; }
     const audit = Array.isArray(s.audit_trail) ? s.audit_trail : [];
     await db.update(depositSettlementsTable).set({ status: "tenant_ack", tenant_ack_at: new Date(), audit_trail: [...audit, { event: "tenant_ack", at: new Date().toISOString() }] }).where(eq(depositSettlementsTable.id, id));

@@ -17,7 +17,10 @@ import { z } from "zod/v4";
 export const depositSettlementsTable = pgTable("deposit_settlements", {
   id: serial("id").primaryKey(),
   settlement_ref: text("settlement_ref").notNull().unique(), // e.g. "DS-2026-00001"
-  booking_id: integer("booking_id").notNull(),
+  // Exactly one spine is set: a booking (short-term/homestay) OR a contract
+  // (Korean monthly lease, imported straight onto `contracts` with no booking).
+  booking_id: integer("booking_id"),
+  contract_id: integer("contract_id"),
   move_out_report_id: integer("move_out_report_id"), // condition_reports.id (phase='move_out')
   status: text("status").notNull().default("draft"),
   // draft → proposed → tenant_ack → finalized  (+ cancelled)

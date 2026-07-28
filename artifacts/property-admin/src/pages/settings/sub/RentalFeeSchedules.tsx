@@ -64,7 +64,7 @@ export default function RentalFeeSchedulesPage() {
         title={<><Wallet className="h-5 w-5" />{t("rental_fees.title", "Rental Fee Schedule")}</>}
         subtitle={t("rental_fees.subtitle", "Per-type brokerage & self-management commission rate card used when a unit is rented.")}
       />
-      <div className="px-8 py-6 space-y-4 max-w-4xl">
+      <div className="px-8 py-6 space-y-4 max-w-6xl">
         <div className="flex flex-wrap gap-2">
           {!creating && (
             <Button size="sm" variant="outline" onClick={() => setCreating(true)}>
@@ -101,6 +101,8 @@ export default function RentalFeeSchedulesPage() {
           </table>
         </div>
 
+        <Reconciliation />
+
         <p className="text-[11px] text-muted-foreground leading-relaxed">
           {t("rental_fees.footnote", "Brokerage shows the base amount plus the 간이과세 surcharge actually paid; self-management shows the base amount net of 원천징수 withholding. Working is the flat self fee when the customer is sourced directly (no external agent).")}
         </p>
@@ -136,6 +138,101 @@ function ScheduleRow({ row, onChanged, onDelete, t }: { row: Schedule; onChanged
         <button className="text-red-600 hover:text-red-700" onClick={onDelete}><Trash2 className="h-3.5 w-3.5 inline" /></button>
       </td>
     </tr>
+  );
+}
+
+// 대사(Reconciliation): rate card vs the amounts actually recorded on each contract
+// under 관련 비용. Highlights over/under payments and contracts whose unit type has
+// no matching rate-card row.
+type ReconRow = {
+  contract_id: number; contract_ref: string; status: string; start_date: string | null;
+  tenant_name: string | null; unit_name: string | null; unit_type: string | null;
+  currency: string; type_label: string | null;
+  expected: number | null; lease_fee: number; agency_fee: number; actual: number; diff: number | null;
+};
+
+function Reconciliation() {
+  const { t } = useTranslation();
+  const [basis, setBasis] = useState<"brokerage" | "self" | "working">("brokerage");
+  const [onlyMismatch, setOnlyMismatch] = useState(true);
+  const { data } = useQuery<{ basis: string; total_expected: number; total_actual: number; mismatched: number; unmatched_type: number; data: ReconRow[] }>({
+    queryKey: ["rental-fee-reconciliation", basis],
+    queryFn: () => apiJson(`/api/v1/rental-fee-schedules/reconciliation?basis=${basis}`),
+  });
+  const all = data?.data ?? [];
+  const rows = onlyMismatch ? all.filter((r) => r.diff == null || r.diff !== 0) : all;
+  const currency = all[0]?.currency ?? "KRW";
+
+  return (
+    <div className="space-y-3 pt-4 border-t">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h3 className="text-sm font-semibold">{t("rental_fees.recon_title", "Fee reconciliation")}</h3>
+          <p className="text-xs text-muted-foreground">{t("rental_fees.recon_desc", "Rate card vs the fees actually recorded on each contract.")}</p>
+        </div>
+        <div className="flex items-center gap-1">
+          {(["brokerage", "self", "working"] as const).map((b) => (
+            <Button key={b} size="sm" variant={basis === b ? "default" : "outline"} onClick={() => setBasis(b)}>
+              {t(`rental_fees.col_${b}`, b)}
+            </Button>
+          ))}
+          <Button size="sm" variant={onlyMismatch ? "default" : "outline"} onClick={() => setOnlyMismatch((v) => !v)}>
+            {t("rental_fees.recon_only_diff", "Differences only")}
+          </Button>
+        </div>
+      </div>
+
+      {data && (
+        <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+          <span>{t("rental_fees.recon_expected", "Expected")}: <strong className="text-foreground">{money(data.total_expected, currency)}</strong></span>
+          <span>{t("rental_fees.recon_actual", "Actual")}: <strong className="text-foreground">{money(data.total_actual, currency)}</strong></span>
+          <span>{t("rental_fees.recon_mismatch", "Mismatched")}: <strong className="text-foreground">{data.mismatched}</strong></span>
+          {data.unmatched_type > 0 && (
+            <span className="text-amber-600">{t("rental_fees.recon_no_rate", "No rate-card row")}: <strong>{data.unmatched_type}</strong></span>
+          )}
+        </div>
+      )}
+
+      <div className="rounded-lg border bg-white overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 border-b">
+            <tr>
+              {[
+                t("rental_fees.recon_contract", "Contract"), t("rental_fees.recon_tenant", "Tenant"),
+                t("rental_fees.recon_unit", "Unit"), t("rental_fees.col_type", "Type"),
+                t("rental_fees.recon_expected", "Expected"), t("rental_fees.recon_lease_fee", "임대수수료"),
+                t("rental_fees.recon_agency_fee", "부동산수수료"), t("rental_fees.recon_actual", "Actual"),
+                t("rental_fees.recon_diff", "Difference"),
+              ].map((h, i) => (
+                <th key={i} className="text-left px-4 py-2.5 font-medium text-muted-foreground whitespace-nowrap">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 ? (
+              <tr><td colSpan={9} className="text-center py-8 text-muted-foreground">{t("rental_fees.recon_empty", "Nothing to reconcile")}</td></tr>
+            ) : rows.slice(0, 100).map((r) => (
+              <tr key={r.contract_id} className="border-b last:border-0 hover:bg-gray-50">
+                <td className="px-4 py-2.5 whitespace-nowrap">
+                  <a className="text-primary hover:underline" href={`/contracts/${r.contract_id}`}>{r.contract_ref}</a>
+                </td>
+                <td className="px-4 py-2.5">{r.tenant_name ?? "—"}</td>
+                <td className="px-4 py-2.5 text-muted-foreground">{r.unit_name ?? "—"}</td>
+                <td className="px-4 py-2.5 text-muted-foreground">{r.unit_type ?? "—"}</td>
+                <td className="px-4 py-2.5 font-mono">{r.expected == null ? "—" : money(r.expected, r.currency)}</td>
+                <td className="px-4 py-2.5 font-mono text-muted-foreground">{money(r.lease_fee, r.currency)}</td>
+                <td className="px-4 py-2.5 font-mono text-muted-foreground">{money(r.agency_fee, r.currency)}</td>
+                <td className="px-4 py-2.5 font-mono">{money(r.actual, r.currency)}</td>
+                <td className={`px-4 py-2.5 font-mono font-medium ${r.diff == null ? "text-amber-600" : r.diff === 0 ? "text-muted-foreground" : r.diff > 0 ? "text-red-600" : "text-blue-600"}`}>
+                  {r.diff == null ? t("rental_fees.recon_no_rate", "No rate-card row") : `${r.diff > 0 ? "+" : ""}${money(r.diff, r.currency)}`}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {rows.length > 100 && <p className="text-[11px] text-muted-foreground">{t("rental_fees.recon_truncated", "Showing the first 100 rows.")}</p>}
+    </div>
   );
 }
 

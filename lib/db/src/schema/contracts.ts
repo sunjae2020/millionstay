@@ -25,7 +25,6 @@ export const contractsTable = pgTable("contracts", {
   down_payment_date: text("down_payment_date"),
   balance_amount: numeric("balance_amount", { precision: 12, scale: 2, mode: "number" }),
   balance_date: text("balance_date"),
-  monthly_rent: numeric("monthly_rent", { precision: 12, scale: 2, mode: "number" }),
   rent_due_day: integer("rent_due_day"),
   currency: text("currency").notNull().default("AUD"),
   exchange_rate_to_aud: numeric("exchange_rate_to_aud", { precision: 18, scale: 8 }),
