@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { DEFAULT_CURRENCY } from "../lib/currency";
 import multer from "multer";
-import { db, workOrdersTable, workOrderPhotosTable, propertiesTable, spacesTable, contactsTable, serviceHostsTable, invoicesTable, accountsTable } from "@workspace/db";
+import { db, workOrdersTable, workOrderPhotosTable, propertiesTable, spacesTable, contactsTable, serviceHostsTable, invoicesTable, accountsTable, usersTable } from "@workspace/db";
+import { formatPersonName } from "../lib/nameFormat";
+import { sendAppointmentConfirmationEmail } from "../lib/email";
 import { eq, ilike, and, isNull, inArray, desc } from "drizzle-orm";
 import { dispatchWorkOrder } from "../lib/dispatch/workOrderDispatch";
 import { logAction } from "../utils/auditLog";
@@ -37,16 +39,18 @@ async function enrichWorkOrders(rows: (typeof workOrdersTable.$inferSelect)[]) {
   if (rows.length === 0) return [];
   const propertyIds = [...new Set(rows.map(r => r.property_id).filter(Boolean))] as number[];
   const spaceIds = [...new Set(rows.map(r => r.space_id).filter(Boolean))] as number[];
-  const contactIds = [...new Set(rows.map(r => r.assigned_contact_id).filter(Boolean))] as number[];
+  const contactIds = [...new Set(rows.flatMap(r => [r.assigned_contact_id, r.attendee_contact_id]).filter(Boolean))] as number[];
+  const userIds = [...new Set(rows.map(r => r.assigned_user_id).filter(Boolean))] as number[];
   const hostIds = [...new Set(rows.map(r => r.service_host_id).filter(Boolean))] as number[];
 
   const propertyMap: Record<number, string> = {};
   const spaceMap: Record<number, string> = {};
   const contactMap: Record<number, string> = {};
   const hostMap: Record<number, string> = {};
+  const userMap: Record<number, string> = {};
 
   // Batched lookups — see enrichContracts in contracts.ts.
-  const [propertyRows, spaceRows, contactRows, hostRows] = await Promise.all([
+  const [propertyRows, spaceRows, contactRows, hostRows, userRows] = await Promise.all([
     propertyIds.length
       ? db.select({ id: propertiesTable.id, name: propertiesTable.name }).from(propertiesTable).where(inArray(propertiesTable.id, propertyIds))
       : Promise.resolve([]),
@@ -59,11 +63,15 @@ async function enrichWorkOrders(rows: (typeof workOrdersTable.$inferSelect)[]) {
     hostIds.length
       ? db.select({ id: serviceHostsTable.id, name: serviceHostsTable.name }).from(serviceHostsTable).where(inArray(serviceHostsTable.id, hostIds))
       : Promise.resolve([]),
+    userIds.length
+      ? db.select({ id: usersTable.id, first_name: usersTable.first_name, last_name: usersTable.last_name, email: usersTable.email }).from(usersTable).where(inArray(usersTable.id, userIds))
+      : Promise.resolve([]),
   ]);
   for (const p of propertyRows) propertyMap[p.id] = p.name;
   for (const s of spaceRows) spaceMap[s.id] = s.name;
   for (const c of contactRows) contactMap[c.id] = `${c.first_name} ${c.last_name}`.trim();
   for (const h of hostRows) hostMap[h.id] = h.name;
+  for (const u of userRows) userMap[u.id] = formatPersonName(u.first_name, u.last_name) || u.email;
 
   return rows.map(r => ({
     ...r,
@@ -71,7 +79,43 @@ async function enrichWorkOrders(rows: (typeof workOrdersTable.$inferSelect)[]) {
     space_name: r.space_id ? (spaceMap[r.space_id] ?? null) : null,
     assigned_contact_name: r.assigned_contact_id ? (contactMap[r.assigned_contact_id] ?? null) : null,
     service_host_name: r.service_host_id ? (hostMap[r.service_host_id] ?? null) : null,
+    attendee_contact_name: r.attendee_contact_id ? (contactMap[r.attendee_contact_id] ?? null) : null,
+    assigned_user_name: r.assigned_user_id ? (userMap[r.assigned_user_id] ?? null) : null,
   }));
+}
+
+// 방문 약속 fields — the generated zod bodies strip unknown keys, so these ride
+// straight off req.body (same pattern as the Korean payment fields on contracts).
+type AppointmentFields = Partial<Pick<typeof workOrdersTable.$inferInsert,
+  "scheduled_start_at" | "scheduled_end_at" | "assigned_user_id" | "attendee_contact_id"
+  | "location_note" | "access_method" | "inspection_type" | "condition_report_id">>;
+
+function appointmentFieldsFrom(body: any, { partial }: { partial: boolean }): AppointmentFields {
+  const num = (v: any) => {
+    if (v === null || v === undefined || v === "") return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+  const str = (v: any) => (v === null || v === undefined || v === "" ? null : String(v));
+  const when = (v: any) => {
+    if (v === null || v === undefined || v === "") return null;
+    const d = new Date(v);
+    return Number.isNaN(d.getTime()) ? null : d;
+  };
+  const out: AppointmentFields = {};
+  const take = (key: keyof AppointmentFields, value: any) => {
+    if (partial && body?.[key] === undefined) return;
+    (out as any)[key] = value;
+  };
+  take("scheduled_start_at", when(body?.scheduled_start_at));
+  take("scheduled_end_at", when(body?.scheduled_end_at));
+  take("assigned_user_id", num(body?.assigned_user_id));
+  take("attendee_contact_id", num(body?.attendee_contact_id));
+  take("location_note", str(body?.location_note));
+  take("access_method", str(body?.access_method));
+  take("inspection_type", str(body?.inspection_type));
+  take("condition_report_id", num(body?.condition_report_id));
+  return out;
 }
 
 router.get("/v1/work-orders", async (req, res): Promise<void> => {
@@ -105,6 +149,7 @@ router.post("/v1/work-orders", async (req, res): Promise<void> => {
     scheduled_at: parsed.data.scheduled_at ?? null,
     cost: parsed.data.cost ?? null,
     notes: parsed.data.notes ?? null,
+    ...appointmentFieldsFrom(req.body, { partial: false }),
   }).returning();
 
   // Auto-dispatch to a matching partner when a category is set (unless the caller
@@ -156,6 +201,7 @@ router.put("/v1/work-orders/:id", async (req, res): Promise<void> => {
   if (parsed.data.scheduled_at !== undefined) updates.scheduled_at = parsed.data.scheduled_at;
   if (parsed.data.cost !== undefined) updates.cost = parsed.data.cost;
   if (parsed.data.notes !== undefined) updates.notes = parsed.data.notes;
+  Object.assign(updates, appointmentFieldsFrom(req.body, { partial: true }));
   const [row] = await db.update(workOrdersTable).set(updates).where(eq(workOrdersTable.id, Number(req.params.id))).returning();
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
   const [result] = await enrichWorkOrders([row]);
@@ -298,6 +344,69 @@ router.post("/v1/work-orders/:id/charge-owner", async (req, res): Promise<void> 
   }).returning();
   void logAction({ entityType: "work_order", entityId: id, action: "UPDATE", actorId: (req as any).user?.id ?? null, newValue: { charged_owner_invoice_id: inv.id, account_id: ownerAccountId, amount } });
   res.status(201).json({ success: true, data: inv });
+});
+
+// ── 방문 확정 메일 (+ invite.ics) ─────────────────────────────────────────────
+// Sends the confirmed inspection slot to the person who meets us on site
+// (attendee_contact_id by default) with a calendar invite attached. Re-sending
+// bumps the .ics SEQUENCE so clients update the existing entry instead of
+// duplicating it.
+// Body (all optional): { to, contact_id, lang }
+router.post("/v1/work-orders/:id/send-confirmation", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const [wo] = await db.select().from(workOrdersTable).where(eq(workOrdersTable.id, id));
+  if (!wo) { res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Work order not found" } }); return; }
+  if (!wo.scheduled_start_at) {
+    res.status(400).json({ success: false, error: { code: "NOT_SCHEDULED", message: "Set the appointment start time before sending a confirmation." } });
+    return;
+  }
+
+  // Recipient: explicit address > explicit contact > the visit's attendee.
+  let to: string | null = typeof req.body?.to === "string" && req.body.to.trim() ? req.body.to.trim() : null;
+  let toName: string | null = null;
+  const contactId = req.body?.contact_id != null ? Number(req.body.contact_id) : wo.attendee_contact_id;
+  if (contactId) {
+    const [c] = await db.select({
+      email: contactsTable.email, first_name: contactsTable.first_name, last_name: contactsTable.last_name,
+    }).from(contactsTable).where(eq(contactsTable.id, contactId));
+    if (c) {
+      toName = formatPersonName(c.first_name, c.last_name);
+      if (!to) to = c.email ?? null;
+    }
+  }
+  if (!to) {
+    res.status(400).json({ success: false, error: { code: "NO_RECIPIENT", message: "No email address — set an attendee with an email, or pass `to`." } });
+    return;
+  }
+
+  const [enrichedWo] = await enrichWorkOrders([wo]);
+  const start = wo.scheduled_start_at;
+  // Default to a one-hour visit when no end was set.
+  const end = wo.scheduled_end_at ?? new Date(start.getTime() + 60 * 60 * 1000);
+  const unit = [enrichedWo?.property_name, enrichedWo?.space_name].filter(Boolean).join(" · ") || null;
+  // Re-sends must bump SEQUENCE — count the previous sends as the sequence base.
+  const sequence = wo.confirmation_sent_at ? 1 : 0;
+
+  const result = await sendAppointmentConfirmationEmail({
+    to, toName,
+    orderRef: wo.order_ref,
+    title: wo.title,
+    start, end,
+    unit,
+    locationNote: wo.location_note,
+    visitorName: enrichedWo?.assigned_user_name ?? enrichedWo?.service_host_name ?? enrichedWo?.assigned_contact_name ?? null,
+    sequence,
+    lang: typeof req.body?.lang === "string" ? req.body.lang : undefined,
+  });
+
+  if (!result.ok) {
+    res.status(result.skipped ? 503 : 502).json({ success: false, error: { code: "SEND_FAILED", message: result.error ?? "Send failed" } });
+    return;
+  }
+  const now = new Date();
+  await db.update(workOrdersTable).set({ confirmation_sent_at: now, updated_at: now }).where(eq(workOrdersTable.id, id));
+  void logAction({ entityType: "work_order", entityId: id, action: "UPDATE", actorId: (req as any).user?.id ?? null, newValue: { confirmation_sent_to: to } });
+  res.json({ success: true, data: { to, sent_at: now.toISOString() } });
 });
 
 // ── Work-order photos (#7) — before/after (request/confirmation) evidence ─────

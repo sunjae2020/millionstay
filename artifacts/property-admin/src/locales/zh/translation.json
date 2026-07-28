@@ -116,7 +116,8 @@
     "homestay_billing": "寄宿计费",
     "application_emails": "申请确认邮件",
     "sale_listings": "销售房源",
-    "booking_contract": "预订与合同"
+    "booking_contract": "预订与合同",
+    "calendar": "工作日历"
   },
   "dashboard": {
     "title": "仪表板",
@@ -1255,7 +1256,36 @@
     "label_acknowledged": "已确认",
     "not_dispatched": "未派给合作方。设置与合作方专长匹配的类别后派单。",
     "dispatch_failed": "派单失败 — 无匹配合作方",
-    "completed_work_orders": "已完成工单"
+    "completed_work_orders": "已完成工单",
+    "section_appointment": "上门预约",
+    "label_inspection_type": "检查类型",
+    "ph_inspection_type": "非检查",
+    "inspection_move_in": "入住检查",
+    "inspection_move_out": "退租检查",
+    "inspection_routine": "定期检查",
+    "inspection_pre_listing": "上架前检查",
+    "inspection_defect_check": "缺陷确认",
+    "label_access_method": "进入方式",
+    "ph_access_method": "如何进入房屋？",
+    "access_tenant_present": "租客在场",
+    "access_vacant_key": "空置 — 办公室钥匙",
+    "access_lockbox": "钥匙盒 / 门锁密码",
+    "access_agent": "中介开门",
+    "access_other": "其他",
+    "label_start_at": "开始时间",
+    "label_end_at": "结束时间",
+    "end_hint": "留空按1小时计算。",
+    "label_assigned_user": "负责员工",
+    "ph_user_search": "搜索员工…",
+    "label_attendee": "现场对接人",
+    "attendee_hint": "确认邮件将发送给该联系人。",
+    "label_location_note": "集合地点 / 进入说明",
+    "ph_location_note": "例：大堂、地下一层停车场、门锁密码1234",
+    "btn_send_confirmation": "发送确认邮件（附.ics）",
+    "btn_resend_confirmation": "重新发送确认邮件",
+    "confirmation_sent": "已发送确认邮件",
+    "confirmation_ok": "确认邮件已发送至 {{to}}",
+    "confirmation_failed": "无法发送确认邮件。"
   },
   "csticket": {
     "search_placeholder": "搜索工单...",
@@ -4859,5 +4889,18 @@
     "saved": "已保存样式",
     "select_all": "全选",
     "title": "点检表样式"
+  },
+  "calendar": {
+    "title": "工作日历",
+    "today": "今天",
+    "new_visit": "安排上门",
+    "show": "显示项目",
+    "pick_day": "请选择日期",
+    "no_events": "当天没有安排。",
+    "source_work_orders": "检查与上门",
+    "source_tasks": "任务截止日",
+    "source_contracts": "入住·退租",
+    "source_bookings": "入住·退房",
+    "source_invoices": "开票与收款"
   }
 }

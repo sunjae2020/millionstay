@@ -55,6 +55,7 @@ import BookingDetail from "@/pages/booking/BookingDetail";
 import ContractList from "@/pages/contracts/ContractList";
 import ContractDetail from "@/pages/contracts/ContractDetail";
 import InspectionDetail from "@/pages/inspections/InspectionDetail";
+import CalendarPage from "@/pages/calendar/CalendarPage";
 import ProductList from "@/pages/products/ProductList";
 import ProductDetail from "@/pages/products/ProductDetail";
 import PromotionList from "@/pages/products/PromotionList";
@@ -260,6 +261,7 @@ function Router() {
       <Route path="/booking/contracts/:id" component={ContractDetail} />
       {/* 세대점검표 — on-site (mobile) editor, reached from a contract's 점검표 tab. */}
       <Route path="/inspections/:id" component={InspectionDetail} />
+      <Route path="/calendar" component={CalendarPage} />
 
       <Route path="/booking/service-hosts" component={ServiceHostList} />
       <Route path="/booking/service-hosts/new" component={ServiceHostDetail} />

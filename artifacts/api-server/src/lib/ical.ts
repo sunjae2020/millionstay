@@ -110,3 +110,62 @@ export function buildCalendar(events: ICalEvent[], opts: BuildCalendarOptions): 
   lines.push("END:VCALENDAR");
   return lines.map(foldLine).join("\r\n") + "\r\n";
 }
+
+/**
+ * A timed (as opposed to all-day) event — a site visit / inspection appointment.
+ * Emitted as UTC instants, which every calendar client renders in the viewer's
+ * own timezone; no VTIMEZONE block needed.
+ */
+export interface ICalAppointment {
+  uid: string;
+  start: Date;
+  end: Date;
+  summary: string;
+  description?: string | null;
+  location?: string | null;
+  /** METHOD:REQUEST + a bumped SEQUENCE lets clients update an existing entry. */
+  sequence?: number;
+  organizer?: { name?: string | null; email: string } | null;
+}
+
+/**
+ * Build a VCALENDAR carrying timed appointments, suitable for attaching to a
+ * confirmation email as `invite.ics`. METHOD:REQUEST so Gmail/Outlook offer
+ * "add to calendar" rather than treating it as a read-only publication.
+ */
+export function buildAppointmentIcs(
+  events: ICalAppointment[],
+  opts: { calendarName: string; prodId?: string; now?: Date },
+): string {
+  const dtstamp = toICalTimestamp(opts.now ?? new Date());
+  const lines: string[] = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    `PRODID:${opts.prodId ?? "-//MillionStay//Appointments//EN"}`,
+    "CALSCALE:GREGORIAN",
+    "METHOD:REQUEST",
+    `X-WR-CALNAME:${escapeText(opts.calendarName)}`,
+  ];
+
+  for (const ev of events) {
+    lines.push(
+      "BEGIN:VEVENT",
+      `UID:${escapeText(ev.uid)}`,
+      `DTSTAMP:${dtstamp}`,
+      `DTSTART:${toICalTimestamp(ev.start)}`,
+      `DTEND:${toICalTimestamp(ev.end)}`,
+      `SUMMARY:${escapeText(ev.summary)}`,
+      `SEQUENCE:${ev.sequence ?? 0}`,
+    );
+    if (ev.description) lines.push(`DESCRIPTION:${escapeText(ev.description)}`);
+    if (ev.location) lines.push(`LOCATION:${escapeText(ev.location)}`);
+    if (ev.organizer) {
+      const cn = ev.organizer.name ? `;CN=${escapeText(ev.organizer.name)}` : "";
+      lines.push(`ORGANIZER${cn}:mailto:${ev.organizer.email}`);
+    }
+    lines.push("STATUS:CONFIRMED", "TRANSP:OPAQUE", "END:VEVENT");
+  }
+
+  lines.push("END:VCALENDAR");
+  return lines.map(foldLine).join("\r\n") + "\r\n";
+}

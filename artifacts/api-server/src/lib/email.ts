@@ -1,7 +1,8 @@
 import { Resend } from "resend";
 import { db, marketingConsentsTable } from "@workspace/db";
 import { and, eq } from "drizzle-orm";
-import { t, normalizeLang, type DocLang } from "./documents/i18n";
+import { t, normalizeLang, docLocale, type DocLang } from "./documents/i18n";
+import { buildAppointmentIcs } from "./ical";
 import { buildUnsubscribeUrl } from "./unsubscribeToken";
 import { resolveTemplate, renderString } from "./documents/templateEngine";
 import { resolveCompanyInfo } from "./documents/companyInfo";
@@ -970,6 +971,222 @@ export async function sendInspectionSignLinkEmail(
     return { ok: true };
   } catch (err) {
     console.error(`[email] Failed to send inspection sign link to ${opts.to}:`, err);
+    return { ok: false, error: err instanceof Error ? err.message : "Send failed" };
+  }
+}
+
+// ── 방문 약속 확정 메일 (인스펙션 · 현장 방문) ────────────────────────────────
+
+export interface AppointmentConfirmationEmailOptions {
+  to: string;
+  toName?: string | null;
+  /** Work-order reference, e.g. "MS-WO-2026-00042". */
+  orderRef: string;
+  /** Visit title — 점검 종류가 들어간 한 줄. */
+  title: string;
+  start: Date;
+  end: Date;
+  /** Unit / property label shown in the summary box and used as .ics LOCATION. */
+  unit?: string | null;
+  /** 집결지·주차·출입 안내. */
+  locationNote?: string | null;
+  /** Who to expect on site (staff or partner name). */
+  visitorName?: string | null;
+  /** Bumped on every re-send so calendar clients update rather than duplicate. */
+  sequence?: number;
+  /** Copy language. Defaults to the tenant's document language. */
+  lang?: string;
+}
+
+interface AppointmentCopy {
+  subject: (brand: string, date: string) => string;
+  greeting: (name: string) => string;
+  intro: string;
+  whenLabel: string;
+  unitLabel: string;
+  visitorLabel: string;
+  accessLabel: string;
+  refLabel: string;
+  icsNote: string;
+  reschedule: (email: string) => string;
+}
+
+const APPOINTMENT_COPY: Record<DocLang, AppointmentCopy> = {
+  en: {
+    subject: (brand, date) => `[${brand}] Inspection appointment confirmed — ${date}`,
+    greeting: (name) => (name ? `Dear ${name},` : "Hello,"),
+    intro: "Your property inspection is confirmed for the time below. Please make sure someone can let us in, or let us know if the time no longer suits.",
+    whenLabel: "Date & time",
+    unitLabel: "Property",
+    visitorLabel: "Visiting",
+    accessLabel: "Access notes",
+    refLabel: "Reference",
+    icsNote: "The attached invite.ics adds this visit to your calendar.",
+    reschedule: (email) => `To reschedule, reply to this email or contact ${email}.`,
+  },
+  ko: {
+    subject: (brand, date) => `[${brand}] 세대 점검 방문 확정 — ${date}`,
+    greeting: (name) => (name ? `${name}님 안녕하세요,` : "안녕하세요,"),
+    intro: "아래 일정으로 세대 점검 방문이 확정되었습니다. 방문 시간에 출입이 가능하도록 준비 부탁드리며, 일정 변경이 필요하시면 미리 알려주세요.",
+    whenLabel: "방문 일시",
+    unitLabel: "대상 세대",
+    visitorLabel: "방문자",
+    accessLabel: "출입 안내",
+    refLabel: "접수번호",
+    icsNote: "첨부된 invite.ics 파일로 캘린더에 일정을 추가하실 수 있습니다.",
+    reschedule: (email) => `일정 변경은 본 메일에 회신하시거나 ${email} 으로 연락 주세요.`,
+  },
+  ja: {
+    subject: (brand, date) => `[${brand}] 点検訪問のご確定 — ${date}`,
+    greeting: (name) => (name ? `${name} 様` : "こんにちは、"),
+    intro: "下記の日程で住戸点検の訪問が確定しました。当日ご入室いただけるようご準備をお願いいたします。日程の変更が必要な場合はご連絡ください。",
+    whenLabel: "訪問日時",
+    unitLabel: "対象住戸",
+    visitorLabel: "訪問者",
+    accessLabel: "入室について",
+    refLabel: "受付番号",
+    icsNote: "添付の invite.ics からカレンダーに登録できます。",
+    reschedule: (email) => `日程変更をご希望の場合は本メールにご返信いただくか、${email} までご連絡ください。`,
+  },
+  zh: {
+    subject: (brand, date) => `[${brand}] 房屋检查预约已确认 — ${date}`,
+    greeting: (name) => (name ? `${name} 您好，` : "您好，"),
+    intro: "您的房屋检查已按以下时间确认。请确保届时可以入内，如需改期请提前告知我们。",
+    whenLabel: "检查时间",
+    unitLabel: "房屋",
+    visitorLabel: "到访人员",
+    accessLabel: "入内说明",
+    refLabel: "编号",
+    icsNote: "可通过附件 invite.ics 将此行程加入日历。",
+    reschedule: (email) => `如需改期，请回复本邮件或联系 ${email}。`,
+  },
+  th: {
+    subject: (brand, date) => `[${brand}] ยืนยันนัดตรวจสภาพห้อง — ${date}`,
+    greeting: (name) => (name ? `เรียน คุณ${name}` : "สวัสดีค่ะ"),
+    intro: "การเข้าตรวจสภาพห้องได้รับการยืนยันตามเวลาด้านล่าง กรุณาจัดเตรียมให้เจ้าหน้าที่เข้าห้องได้ หากต้องการเปลี่ยนเวลากรุณาแจ้งล่วงหน้า",
+    whenLabel: "วันและเวลา",
+    unitLabel: "ห้องพัก",
+    visitorLabel: "ผู้เข้าตรวจ",
+    accessLabel: "การเข้าห้อง",
+    refLabel: "เลขที่อ้างอิง",
+    icsNote: "ไฟล์แนบ invite.ics ใช้เพิ่มนัดหมายนี้ลงในปฏิทินของคุณได้",
+    reschedule: (email) => `หากต้องการเลื่อนนัด กรุณาตอบกลับอีเมลนี้หรือติดต่อ ${email}`,
+  },
+  vi: {
+    subject: (brand, date) => `[${brand}] Xác nhận lịch kiểm tra căn hộ — ${date}`,
+    greeting: (name) => (name ? `Kính gửi ${name},` : "Xin chào,"),
+    intro: "Lịch kiểm tra căn hộ của bạn đã được xác nhận vào thời gian dưới đây. Vui lòng thu xếp để chúng tôi có thể vào căn hộ, hoặc báo trước nếu bạn cần đổi lịch.",
+    whenLabel: "Thời gian",
+    unitLabel: "Căn hộ",
+    visitorLabel: "Người đến kiểm tra",
+    accessLabel: "Hướng dẫn ra vào",
+    refLabel: "Mã tham chiếu",
+    icsNote: "Tệp invite.ics đính kèm giúp bạn thêm lịch hẹn này vào lịch cá nhân.",
+    reschedule: (email) => `Để đổi lịch, vui lòng trả lời email này hoặc liên hệ ${email}.`,
+  },
+};
+
+/**
+ * Email the tenant (or landlord) their confirmed inspection slot, with an
+ * `invite.ics` attachment so the visit lands in their own calendar.
+ *
+ * Best-effort like the other transactional senders — a mail failure never blocks
+ * the appointment itself.
+ */
+export async function sendAppointmentConfirmationEmail(
+  opts: AppointmentConfirmationEmailOptions,
+): Promise<{ ok: boolean; skipped?: boolean; error?: string }> {
+  const client = getResend();
+  if (!client) {
+    console.log(`[email] RESEND_API_KEY not set — appointment confirmation skipped: ${opts.orderRef}`);
+    return { ok: false, skipped: true, error: "Email service not configured" };
+  }
+
+  const company = await resolveCompanyInfo().catch(() => null);
+  const brand = company?.tradingName || "MillionStay";
+  const logoUrl = company?.logoUrl || LOGO_URL;
+  const legalName = company?.legalName || "MillionStay Pty Ltd";
+  const supportEmail = company?.email || (await resolveSupportEmail());
+
+  const lang = normalizeLang(opts.lang ?? process.env.DEFAULT_DOC_LANG ?? "en");
+  const copy = APPOINTMENT_COPY[lang] ?? APPOINTMENT_COPY.en!;
+  const locale = docLocale(lang);
+  const tz = process.env.DEFAULT_TIMEZONE ?? undefined;
+  const fmt = new Intl.DateTimeFormat(locale, {
+    dateStyle: "full", timeStyle: "short", ...(tz ? { timeZone: tz } : {}),
+  });
+  const timeOnly = new Intl.DateTimeFormat(locale, {
+    timeStyle: "short", ...(tz ? { timeZone: tz } : {}),
+  });
+  const whenText = `${fmt.format(opts.start)} – ${timeOnly.format(opts.end)}`;
+  const dateShort = new Intl.DateTimeFormat(locale, {
+    dateStyle: "medium", ...(tz ? { timeZone: tz } : {}),
+  }).format(opts.start);
+
+  const row = (label: string, value: string) => `
+      <div class="label" style="margin-top:10px;">${escapeHtml(label)}</div>
+      <div class="value">${escapeHtml(value)}</div>`;
+
+  const html = `
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+  body{font-family:-apple-system,'Malgun Gothic',sans-serif;margin:0;padding:0;background:#f9fafb;color:#111;}
+  .container{max-width:560px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+  .header{background:#fff;padding:28px 32px;border-bottom:1px solid #f0f0f0;}
+  .header img{height:36px;width:auto;display:block;}
+  .body{padding:32px;}
+  .box{background:${DOC_TOKENS.accentBg};border:1px solid ${DOC_TOKENS.accentBorder};border-radius:10px;padding:16px 20px;margin:20px 0;}
+  .box .label{font-size:12px;letter-spacing:0.04em;color:#999;}
+  .box .value{font-size:15px;font-weight:700;color:#111;}
+  .footer{padding:20px 32px;border-top:1px solid #f0f0f0;font-size:12px;color:#999;text-align:center;}
+</style></head><body>
+<div class="container">
+  <div class="header"><img src="${logoUrl}" alt="${escapeHtml(brand)}" /></div>
+  <div class="body">
+    <p style="font-size:16px;">${escapeHtml(copy.greeting(safeName(opts.toName)))}</p>
+    <p style="color:#555;font-size:14px;line-height:1.7;">${escapeHtml(copy.intro)}</p>
+    <div class="box">
+      <div class="label" style="margin-top:0;">${escapeHtml(copy.whenLabel)}</div>
+      <div class="value">${escapeHtml(whenText)}</div>
+      ${opts.unit ? row(copy.unitLabel, opts.unit) : ""}
+      ${opts.visitorName ? row(copy.visitorLabel, opts.visitorName) : ""}
+      ${opts.locationNote ? row(copy.accessLabel, opts.locationNote) : ""}
+      <div class="label" style="margin-top:10px;">${escapeHtml(copy.refLabel)}</div>
+      <div class="value" style="font-family:monospace;">${escapeHtml(opts.orderRef)}</div>
+    </div>
+    <p style="font-size:13px;color:#999;">${escapeHtml(copy.icsNote)}</p>
+    <p style="font-size:13px;color:#999;">${escapeHtml(copy.reschedule(supportEmail))}</p>
+  </div>
+  <div class="footer">© ${new Date().getFullYear()} ${escapeHtml(legalName)} · ${escapeHtml(opts.to)}</div>
+</div></body></html>`;
+
+  const ics = buildAppointmentIcs([{
+    uid: `wo-${opts.orderRef}@millionstay`,
+    start: opts.start,
+    end: opts.end,
+    summary: `[${brand}] ${opts.title}`,
+    description: [opts.locationNote, copy.reschedule(supportEmail)].filter(Boolean).join("\n"),
+    location: opts.unit ?? null,
+    sequence: opts.sequence ?? 0,
+    organizer: { name: brand, email: supportEmail },
+  }], { calendarName: brand });
+
+  try {
+    const { data, error } = await client.emails.send({
+      from: FROM,
+      to: [opts.to],
+      subject: copy.subject(brand, dateShort),
+      html,
+      attachments: [{ filename: "invite.ics", content: Buffer.from(ics, "utf8").toString("base64") }],
+    });
+    if (error || !data?.id) {
+      const message = (error as { message?: string } | null)?.message ?? "Send returned no message id";
+      console.error(`[email] Appointment confirmation to ${opts.to} rejected:`, message);
+      return { ok: false, error: message };
+    }
+    console.log(`[email] Appointment confirmation ${opts.orderRef} sent to ${opts.to} (${data.id})`);
+    return { ok: true };
+  } catch (err) {
+    console.error(`[email] Failed to send appointment confirmation to ${opts.to}:`, err);
     return { ok: false, error: err instanceof Error ? err.message : "Send failed" };
   }
 }

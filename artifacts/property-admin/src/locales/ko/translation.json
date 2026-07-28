@@ -116,7 +116,8 @@
     "homestay_billing": "홈스테이 청구",
     "application_emails": "신청 접수 메일",
     "sale_listings": "분양·판매 물건",
-    "booking_contract": "예약 & 계약"
+    "booking_contract": "예약 & 계약",
+    "calendar": "업무 캘린더"
   },
   "dashboard": {
     "title": "대시보드",
@@ -1255,7 +1256,36 @@
     "label_acknowledged": "확인됨",
     "not_dispatched": "파트너에 미배정. 파트너 전문분야와 일치하는 카테고리를 설정하고 배정하세요.",
     "dispatch_failed": "배정 실패 — 일치하는 파트너 없음",
-    "completed_work_orders": "완료된 작업 지시서"
+    "completed_work_orders": "완료된 작업 지시서",
+    "section_appointment": "방문 약속",
+    "label_inspection_type": "점검 종류",
+    "ph_inspection_type": "점검이 아님",
+    "inspection_move_in": "입주 점검",
+    "inspection_move_out": "퇴거 점검",
+    "inspection_routine": "정기 점검",
+    "inspection_pre_listing": "매물 등록 전 점검",
+    "inspection_defect_check": "하자 확인",
+    "label_access_method": "출입 방법",
+    "ph_access_method": "어떻게 들어가나요?",
+    "access_tenant_present": "세입자 동석",
+    "access_vacant_key": "공실 — 사무실 열쇠",
+    "access_lockbox": "키박스 / 도어락 번호",
+    "access_agent": "중개인 개문",
+    "access_other": "기타",
+    "label_start_at": "시작 일시",
+    "label_end_at": "종료 일시",
+    "end_hint": "비워두면 1시간 방문으로 처리됩니다.",
+    "label_assigned_user": "담당 직원",
+    "ph_user_search": "직원 검색…",
+    "label_attendee": "현장 입회자",
+    "attendee_hint": "확정 메일은 이 연락처로 발송됩니다.",
+    "label_location_note": "집결지 / 출입 안내",
+    "ph_location_note": "예: 로비, 지하1층 주차장, 도어락 1234",
+    "btn_send_confirmation": "확정 메일 보내기 (.ics 첨부)",
+    "btn_resend_confirmation": "확정 메일 재발송",
+    "confirmation_sent": "확정 메일 발송",
+    "confirmation_ok": "{{to}} 으로 확정 메일을 보냈습니다",
+    "confirmation_failed": "확정 메일을 보내지 못했습니다."
   },
   "csticket": {
     "search_placeholder": "티켓 검색...",
@@ -4859,5 +4889,18 @@
     "saved": "양식을 저장했습니다",
     "select_all": "전체 선택",
     "title": "점검표 양식"
+  },
+  "calendar": {
+    "title": "업무 캘린더",
+    "today": "오늘",
+    "new_visit": "방문 잡기",
+    "show": "표시 항목",
+    "pick_day": "날짜를 선택하세요",
+    "no_events": "이 날짜에는 일정이 없습니다.",
+    "source_work_orders": "점검·방문",
+    "source_tasks": "업무 마감일",
+    "source_contracts": "입주·퇴거",
+    "source_bookings": "체크인·체크아웃",
+    "source_invoices": "청구·수납"
   }
 }

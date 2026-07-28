@@ -116,7 +116,8 @@
     "blog_categories": "Danh mục blog",
     "application_emails": "Email đơn đăng ký",
     "sale_listings": "Tin rao bán",
-    "booking_contract": "Đặt chỗ & Hợp đồng"
+    "booking_contract": "Đặt chỗ & Hợp đồng",
+    "calendar": "Lịch công việc"
   },
   "dashboard": {
     "title": "Bảng điều khiển",
@@ -1217,7 +1218,36 @@
     "label_acknowledged": "Đã xác nhận",
     "not_dispatched": "Chưa được điều phối đến đối tác nào. Hãy đặt danh mục phù hợp với chuyên môn của đối tác rồi điều phối.",
     "dispatch_failed": "Điều phối thất bại — không có đối tác phù hợp",
-    "completed_work_orders": "Đơn công việc đã hoàn thành"
+    "completed_work_orders": "Đơn công việc đã hoàn thành",
+    "section_appointment": "Lịch hẹn kiểm tra",
+    "label_inspection_type": "Loại kiểm tra",
+    "ph_inspection_type": "Không phải kiểm tra",
+    "inspection_move_in": "Kiểm tra khi nhận nhà",
+    "inspection_move_out": "Kiểm tra khi trả nhà",
+    "inspection_routine": "Kiểm tra định kỳ",
+    "inspection_pre_listing": "Kiểm tra trước khi đăng cho thuê",
+    "inspection_defect_check": "Kiểm tra lỗi hỏng",
+    "label_access_method": "Cách vào căn hộ",
+    "ph_access_method": "Chúng tôi vào bằng cách nào?",
+    "access_tenant_present": "Có khách thuê ở nhà",
+    "access_vacant_key": "Căn trống — chìa khóa văn phòng",
+    "access_lockbox": "Hộp khóa / mã cửa",
+    "access_agent": "Môi giới mở cửa",
+    "access_other": "Khác",
+    "label_start_at": "Bắt đầu lúc",
+    "label_end_at": "Kết thúc lúc",
+    "end_hint": "Để trống = buổi kiểm tra 1 giờ.",
+    "label_assigned_user": "Nhân viên phụ trách",
+    "ph_user_search": "Tìm nhân viên…",
+    "label_attendee": "Người đón tại hiện trường",
+    "attendee_hint": "Email xác nhận sẽ gửi tới liên hệ này.",
+    "label_location_note": "Điểm hẹn / hướng dẫn ra vào",
+    "ph_location_note": "VD: sảnh, bãi xe tầng B1, mã cửa 1234",
+    "btn_send_confirmation": "Gửi xác nhận + .ics",
+    "btn_resend_confirmation": "Gửi lại xác nhận",
+    "confirmation_sent": "Đã gửi xác nhận",
+    "confirmation_ok": "Đã gửi email xác nhận tới {{to}}",
+    "confirmation_failed": "Không gửi được email xác nhận."
   },
   "csticket": {
     "search_placeholder": "Tìm kiếm phiếu hỗ trợ...",
@@ -4761,5 +4791,18 @@
     "saved": "Đã lưu mẫu",
     "select_all": "chọn tất cả",
     "title": "Mẫu kiểm tra"
+  },
+  "calendar": {
+    "title": "Lịch công việc",
+    "today": "Hôm nay",
+    "new_visit": "Đặt lịch kiểm tra",
+    "show": "Hiển thị",
+    "pick_day": "Chọn ngày",
+    "no_events": "Không có lịch nào trong ngày này.",
+    "source_work_orders": "Kiểm tra & đến hiện trường",
+    "source_tasks": "Hạn công việc",
+    "source_contracts": "Nhận nhà / trả nhà",
+    "source_bookings": "Nhận phòng / trả phòng",
+    "source_invoices": "Hóa đơn & thu tiền"
   }
 }

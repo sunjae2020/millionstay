@@ -116,7 +116,8 @@
     "homestay_billing": "ホームステイ請求",
     "application_emails": "申請確認メール",
     "sale_listings": "分譲・販売物件",
-    "booking_contract": "予約・契約"
+    "booking_contract": "予約・契約",
+    "calendar": "業務カレンダー"
   },
   "dashboard": {
     "title": "ダッシュボード",
@@ -1255,7 +1256,36 @@
     "label_acknowledged": "確認済み",
     "not_dispatched": "パートナー未割当。専門分野に合うカテゴリを設定して割り当ててください。",
     "dispatch_failed": "割当失敗 — 一致するパートナーなし",
-    "completed_work_orders": "完了した作業指示"
+    "completed_work_orders": "完了した作業指示",
+    "section_appointment": "訪問予約",
+    "label_inspection_type": "点検の種類",
+    "ph_inspection_type": "点検ではない",
+    "inspection_move_in": "入居点検",
+    "inspection_move_out": "退去点検",
+    "inspection_routine": "定期点検",
+    "inspection_pre_listing": "募集前点検",
+    "inspection_defect_check": "不具合確認",
+    "label_access_method": "入室方法",
+    "ph_access_method": "どのように入室しますか？",
+    "access_tenant_present": "入居者立会い",
+    "access_vacant_key": "空室 — 事務所の鍵",
+    "access_lockbox": "キーボックス / 暗証番号",
+    "access_agent": "仲介業者が開錠",
+    "access_other": "その他",
+    "label_start_at": "開始日時",
+    "label_end_at": "終了日時",
+    "end_hint": "未入力の場合は1時間の訪問として扱います。",
+    "label_assigned_user": "担当スタッフ",
+    "ph_user_search": "スタッフを検索…",
+    "label_attendee": "現地立会者",
+    "attendee_hint": "確定メールはこの連絡先に送信されます。",
+    "label_location_note": "集合場所 / 入室案内",
+    "ph_location_note": "例: ロビー、地下1階駐車場、暗証番号1234",
+    "btn_send_confirmation": "確定メール送信（.ics添付）",
+    "btn_resend_confirmation": "確定メール再送",
+    "confirmation_sent": "確定メール送信済み",
+    "confirmation_ok": "{{to}} に確定メールを送信しました",
+    "confirmation_failed": "確定メールを送信できませんでした。"
   },
   "csticket": {
     "search_placeholder": "チケットを検索...",
@@ -4859,5 +4889,18 @@
     "saved": "様式を保存しました",
     "select_all": "すべて選択",
     "title": "点検表の様式"
+  },
+  "calendar": {
+    "title": "業務カレンダー",
+    "today": "今日",
+    "new_visit": "訪問を登録",
+    "show": "表示項目",
+    "pick_day": "日付を選択してください",
+    "no_events": "この日の予定はありません。",
+    "source_work_orders": "点検・訪問",
+    "source_tasks": "業務の期限",
+    "source_contracts": "入居・退去",
+    "source_bookings": "チェックイン・アウト",
+    "source_invoices": "請求・入金"
   }
 }

@@ -26,6 +26,28 @@ export const workOrdersTable = pgTable("work_orders", {
   completed_at: timestamp("completed_at", { withTimezone: true }),
   cost: numeric("cost", { precision: 12, scale: 2, mode: "number" }),
   currency: text("currency").notNull().default("AUD"),
+  // ── 방문 약속 (인스펙션·현장 방문) ──────────────────────────────────────────
+  // `scheduled_at` above is a legacy date-only text column (kept for compat).
+  // A real appointment needs a start AND an end instant, so the calendar can lay
+  // it out and the .ics can carry a duration. Both are timestamptz.
+  scheduled_start_at: timestamp("scheduled_start_at", { withTimezone: true }),
+  scheduled_end_at: timestamp("scheduled_end_at", { withTimezone: true }),
+  // Internal staff owner of the visit (users.id) — distinct from
+  // assigned_contact_id (an external individual) and service_host_id (a partner).
+  assigned_user_id: integer("assigned_user_id"),
+  // Who meets us on site (usually the tenant): contacts.id.
+  attendee_contact_id: integer("attendee_contact_id"),
+  // Meeting point / parking / building entrance notes.
+  location_note: text("location_note"),
+  // How we get in: vacant_key | tenant_present | lockbox | agent | other
+  access_method: text("access_method"),
+  // Inspection sub-type when category='inspection':
+  // move_in | move_out | routine | pre_listing | defect_check
+  inspection_type: text("inspection_type"),
+  // The 세대점검표 produced by this visit (condition_reports.id), if any.
+  condition_report_id: integer("condition_report_id"),
+  // Last time the appointment-confirmation email (+ .ics) went out.
+  confirmation_sent_at: timestamp("confirmation_sent_at", { withTimezone: true }),
   notes: text("notes"),
   deleted_at: timestamp("deleted_at"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

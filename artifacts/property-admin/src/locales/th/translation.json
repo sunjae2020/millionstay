@@ -116,7 +116,8 @@
     "homestay_billing": "การเรียกเก็บเงินโฮมสเตย์",
     "application_emails": "อีเมลยืนยันใบสมัคร",
     "sale_listings": "รายการขาย",
-    "booking_contract": "การจอง & สัญญา"
+    "booking_contract": "การจอง & สัญญา",
+    "calendar": "ปฏิทินงาน"
   },
   "dashboard": {
     "title": "แดชบอร์ด",
@@ -1255,7 +1256,36 @@
     "label_acknowledged": "ยืนยันแล้ว",
     "not_dispatched": "ยังไม่ได้มอบหมาย ตั้งหมวดหมู่ให้ตรงกับความชำนาญของพาร์ทเนอร์แล้วมอบหมาย",
     "dispatch_failed": "มอบหมายไม่สำเร็จ — ไม่มีพาร์ทเนอร์ที่ตรงกัน",
-    "completed_work_orders": "ใบสั่งงานที่เสร็จสิ้น"
+    "completed_work_orders": "ใบสั่งงานที่เสร็จสิ้น",
+    "section_appointment": "นัดหมายเข้าพื้นที่",
+    "label_inspection_type": "ประเภทการตรวจ",
+    "ph_inspection_type": "ไม่ใช่การตรวจ",
+    "inspection_move_in": "ตรวจตอนเข้าอยู่",
+    "inspection_move_out": "ตรวจตอนย้ายออก",
+    "inspection_routine": "ตรวจตามรอบ",
+    "inspection_pre_listing": "ตรวจก่อนประกาศเช่า",
+    "inspection_defect_check": "ตรวจจุดชำรุด",
+    "label_access_method": "การเข้าห้อง",
+    "ph_access_method": "เข้าห้องอย่างไร?",
+    "access_tenant_present": "ผู้เช่าอยู่ด้วย",
+    "access_vacant_key": "ห้องว่าง — กุญแจสำนักงาน",
+    "access_lockbox": "กล่องกุญแจ / รหัสประตู",
+    "access_agent": "นายหน้าเปิดให้",
+    "access_other": "อื่น ๆ",
+    "label_start_at": "เริ่มเวลา",
+    "label_end_at": "สิ้นสุดเวลา",
+    "end_hint": "เว้นว่าง = ใช้เวลา 1 ชั่วโมง",
+    "label_assigned_user": "เจ้าหน้าที่ผู้รับผิดชอบ",
+    "ph_user_search": "ค้นหาเจ้าหน้าที่…",
+    "label_attendee": "ผู้รับที่หน้างาน",
+    "attendee_hint": "อีเมลยืนยันจะส่งไปยังผู้ติดต่อนี้",
+    "label_location_note": "จุดนัดพบ / วิธีเข้าพื้นที่",
+    "ph_location_note": "เช่น ล็อบบี้ ที่จอดรถชั้น B1 รหัสประตู 1234",
+    "btn_send_confirmation": "ส่งอีเมลยืนยัน + .ics",
+    "btn_resend_confirmation": "ส่งอีเมลยืนยันอีกครั้ง",
+    "confirmation_sent": "ส่งอีเมลยืนยันแล้ว",
+    "confirmation_ok": "ส่งอีเมลยืนยันไปที่ {{to}} แล้ว",
+    "confirmation_failed": "ไม่สามารถส่งอีเมลยืนยันได้"
   },
   "csticket": {
     "search_placeholder": "ค้นหาตั๋ว...",
@@ -4859,5 +4889,18 @@
     "saved": "บันทึกรูปแบบแล้ว",
     "select_all": "เลือกทั้งหมด",
     "title": "รูปแบบแบบตรวจ"
+  },
+  "calendar": {
+    "title": "ปฏิทินงาน",
+    "today": "วันนี้",
+    "new_visit": "นัดเข้าตรวจ",
+    "show": "แสดง",
+    "pick_day": "เลือกวันที่",
+    "no_events": "ไม่มีนัดหมายในวันนี้",
+    "source_work_orders": "การตรวจและการเข้าพื้นที่",
+    "source_tasks": "กำหนดส่งงาน",
+    "source_contracts": "เข้าอยู่ / ย้ายออก",
+    "source_bookings": "เช็คอิน / เช็คเอาต์",
+    "source_invoices": "การวางบิลและรับชำระ"
   }
 }

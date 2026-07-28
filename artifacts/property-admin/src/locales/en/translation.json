@@ -116,7 +116,8 @@
     "blog_categories": "Blog Categories",
     "application_emails": "Application Emails",
     "sale_listings": "Sale Listings",
-    "booking_contract": "Bookings & Contracts"
+    "booking_contract": "Bookings & Contracts",
+    "calendar": "Work Calendar"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1255,7 +1256,36 @@
     "label_acknowledged": "Acknowledged",
     "not_dispatched": "Not dispatched to a partner. Set a category matching a partner specialty and dispatch.",
     "dispatch_failed": "Dispatch failed — no matching partner",
-    "completed_work_orders": "Completed Work Orders"
+    "completed_work_orders": "Completed Work Orders",
+    "section_appointment": "Appointment",
+    "label_inspection_type": "Inspection type",
+    "ph_inspection_type": "Not an inspection",
+    "inspection_move_in": "Move-in inspection",
+    "inspection_move_out": "Move-out inspection",
+    "inspection_routine": "Routine inspection",
+    "inspection_pre_listing": "Pre-listing inspection",
+    "inspection_defect_check": "Defect check",
+    "label_access_method": "Access",
+    "ph_access_method": "How do we get in?",
+    "access_tenant_present": "Tenant present",
+    "access_vacant_key": "Vacant — office key",
+    "access_lockbox": "Lockbox / door code",
+    "access_agent": "Agent opens",
+    "access_other": "Other",
+    "label_start_at": "Starts at",
+    "label_end_at": "Ends at",
+    "end_hint": "Blank = 1 hour visit.",
+    "label_assigned_user": "Staff in charge",
+    "ph_user_search": "Search staff…",
+    "label_attendee": "Met on site by",
+    "attendee_hint": "The confirmation email goes to this contact.",
+    "label_location_note": "Meeting point / access notes",
+    "ph_location_note": "e.g. Lobby, B1 parking, door code 1234",
+    "btn_send_confirmation": "Send confirmation + .ics",
+    "btn_resend_confirmation": "Resend confirmation",
+    "confirmation_sent": "Confirmation sent",
+    "confirmation_ok": "Confirmation sent to {{to}}",
+    "confirmation_failed": "Could not send the confirmation email."
   },
   "csticket": {
     "search_placeholder": "Search tickets...",
@@ -4859,5 +4889,18 @@
     "saved": "Form saved",
     "select_all": "select all",
     "title": "Inspection form"
+  },
+  "calendar": {
+    "title": "Work Calendar",
+    "today": "Today",
+    "new_visit": "Schedule a visit",
+    "show": "Show",
+    "pick_day": "Pick a date",
+    "no_events": "Nothing scheduled for this day.",
+    "source_work_orders": "Inspections & visits",
+    "source_tasks": "Task due dates",
+    "source_contracts": "Move-in / move-out",
+    "source_bookings": "Check-in / check-out",
+    "source_invoices": "Billing & payments"
   }
 }

@@ -26,9 +26,25 @@ import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Trash2, Save, Send, ShieldAlert, CheckCircle2, Clock } from "lucide-react";
+import { ArrowLeft, Trash2, Save, Send, ShieldAlert, CheckCircle2, Clock, CalendarClock, Mail } from "lucide-react";
 import { useState } from "react";
 import { apiJson } from "@/lib/apiFetch";
+
+/** ISO instant → the "YYYY-MM-DDTHH:mm" a datetime-local input expects (local tz). */
+function toLocalInput(value: string | null | undefined): string {
+  if (!value) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/** datetime-local value → ISO instant for the API (empty → null). */
+function fromLocalInput(value: string): string | null {
+  if (!value) return null;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
 
 const statusColors: Record<string, string> = {
   Open: "bg-blue-100 text-blue-700",
@@ -50,6 +66,14 @@ interface FormData {
   scheduled_at: string;
   cost: string;
   notes: string;
+  // 방문 약속 — 인스펙션/현장 방문의 시간·담당·출입
+  inspection_type: string;
+  scheduled_start_at: string; // datetime-local ("YYYY-MM-DDTHH:mm")
+  scheduled_end_at: string;
+  assigned_user_id: number | null;
+  attendee_contact_id: number | null;
+  location_note: string;
+  access_method: string;
 }
 
 export default function WorkOrderDetail() {
@@ -69,6 +93,8 @@ export default function WorkOrderDetail() {
       property_id: null, space_id: null, title: "", description: "",
       priority: "Normal", category: "", assigned_contact_id: null,
       reported_at: "", scheduled_at: "", cost: "", notes: "",
+      inspection_type: "", scheduled_start_at: "", scheduled_end_at: "",
+      assigned_user_id: null, attendee_contact_id: null, location_note: "", access_method: "",
     },
   });
 
@@ -86,6 +112,13 @@ export default function WorkOrderDetail() {
         scheduled_at: wo.scheduled_at ?? "",
         cost: wo.cost != null ? String(wo.cost) : "",
         notes: wo.notes ?? "",
+        inspection_type: (wo as any).inspection_type ?? "",
+        scheduled_start_at: toLocalInput((wo as any).scheduled_start_at),
+        scheduled_end_at: toLocalInput((wo as any).scheduled_end_at),
+        assigned_user_id: (wo as any).assigned_user_id ?? null,
+        attendee_contact_id: (wo as any).attendee_contact_id ?? null,
+        location_note: (wo as any).location_note ?? "",
+        access_method: (wo as any).access_method ?? "",
       });
     }
   }, [wo, reset]);
@@ -115,6 +148,13 @@ export default function WorkOrderDetail() {
     scheduled_at: data.scheduled_at || null,
     cost: data.cost ? Number(data.cost) : null,
     notes: data.notes || null,
+    inspection_type: data.inspection_type || null,
+    scheduled_start_at: fromLocalInput(data.scheduled_start_at),
+    scheduled_end_at: fromLocalInput(data.scheduled_end_at),
+    assigned_user_id: data.assigned_user_id ?? null,
+    attendee_contact_id: data.attendee_contact_id ?? null,
+    location_note: data.location_note || null,
+    access_method: data.access_method || null,
   });
 
   const onSubmit = (data: FormData) => {
@@ -133,6 +173,23 @@ export default function WorkOrderDetail() {
       setDispatchError(e?.message ?? t('workorder.dispatch_failed', 'Dispatch failed — no matching partner'));
     } finally {
       setDispatching(false);
+    }
+  };
+
+  const [sendingConfirm, setSendingConfirm] = useState(false);
+  const [confirmMsg, setConfirmMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const sendConfirmation = async () => {
+    setSendingConfirm(true); setConfirmMsg(null);
+    try {
+      const r = await apiJson<{ data?: { to?: string } }>(`/api/v1/work-orders/${id}/send-confirmation`, {
+        method: "POST", body: JSON.stringify({}),
+      });
+      setConfirmMsg({ ok: true, text: t('workorder.confirmation_ok', 'Confirmation sent to {{to}}', { to: r?.data?.to ?? "" }) });
+      invalidate(); refetch();
+    } catch (e: any) {
+      setConfirmMsg({ ok: false, text: e?.message ?? t('workorder.confirmation_failed', 'Could not send the confirmation email.') });
+    } finally {
+      setSendingConfirm(false);
     }
   };
 
@@ -362,6 +419,103 @@ export default function WorkOrderDetail() {
               <div>
                 <Label>{t('workorder.label_cost')} ({currency})</Label>
                 <Input type="number" step="0.01" placeholder="0.00" {...register("cost")} />
+              </div>
+            </div>
+          </div>
+
+          {/* 방문 약속 — 인스펙션 일정·담당·출입 (업무 캘린더에 표시된다) */}
+          <div className="border rounded-lg bg-white p-4 sm:p-6">
+            <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
+              <h2 className="text-sm font-semibold uppercase text-primary tracking-wide flex items-center gap-1.5">
+                <CalendarClock className="h-4 w-4" /> {t('workorder.section_appointment', 'Appointment')}
+              </h2>
+              {!isNew && (
+                <div className="flex items-center gap-2">
+                  {(wo as any)?.confirmation_sent_at && (
+                    <span className="text-xs text-muted-foreground">
+                      {t('workorder.confirmation_sent', 'Confirmation sent')} {formatDate((wo as any).confirmation_sent_at)}
+                    </span>
+                  )}
+                  <Button type="button" size="sm" variant="outline" disabled={sendingConfirm} onClick={sendConfirmation}>
+                    <Mail className="h-3.5 w-3.5 mr-1" />
+                    {(wo as any)?.confirmation_sent_at
+                      ? t('workorder.btn_resend_confirmation', 'Resend confirmation')
+                      : t('workorder.btn_send_confirmation', 'Send confirmation + .ics')}
+                  </Button>
+                </div>
+              )}
+            </div>
+            {confirmMsg && <p className={`text-xs mb-3 ${confirmMsg.ok ? "text-green-600" : "text-red-600"}`}>{confirmMsg.text}</p>}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label>{t('workorder.label_inspection_type', 'Inspection type')}</Label>
+                <Controller name="inspection_type" control={control} render={({ field }) => (
+                  <Select value={field.value || "_none"} onValueChange={(v) => field.onChange(v === "_none" ? "" : v)}>
+                    <SelectTrigger><SelectValue placeholder={t('workorder.ph_inspection_type', 'Not an inspection')} /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">— {t('common.none')} —</SelectItem>
+                      <SelectItem value="move_in">{t('workorder.inspection_move_in', 'Move-in inspection')}</SelectItem>
+                      <SelectItem value="move_out">{t('workorder.inspection_move_out', 'Move-out inspection')}</SelectItem>
+                      <SelectItem value="routine">{t('workorder.inspection_routine', 'Routine inspection')}</SelectItem>
+                      <SelectItem value="pre_listing">{t('workorder.inspection_pre_listing', 'Pre-listing inspection')}</SelectItem>
+                      <SelectItem value="defect_check">{t('workorder.inspection_defect_check', 'Defect check')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )} />
+              </div>
+              <div>
+                <Label>{t('workorder.label_access_method', 'Access')}</Label>
+                <Controller name="access_method" control={control} render={({ field }) => (
+                  <Select value={field.value || "_none"} onValueChange={(v) => field.onChange(v === "_none" ? "" : v)}>
+                    <SelectTrigger><SelectValue placeholder={t('workorder.ph_access_method', 'How do we get in?')} /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">— {t('common.none')} —</SelectItem>
+                      <SelectItem value="tenant_present">{t('workorder.access_tenant_present', 'Tenant present')}</SelectItem>
+                      <SelectItem value="vacant_key">{t('workorder.access_vacant_key', 'Vacant — office key')}</SelectItem>
+                      <SelectItem value="lockbox">{t('workorder.access_lockbox', 'Lockbox / door code')}</SelectItem>
+                      <SelectItem value="agent">{t('workorder.access_agent', 'Agent opens')}</SelectItem>
+                      <SelectItem value="other">{t('workorder.access_other', 'Other')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )} />
+              </div>
+              <div>
+                <Label>{t('workorder.label_start_at', 'Starts at')}</Label>
+                <Input type="datetime-local" {...register("scheduled_start_at")} />
+              </div>
+              <div>
+                <Label>{t('workorder.label_end_at', 'Ends at')}</Label>
+                <Input type="datetime-local" {...register("scheduled_end_at")} />
+                <p className="text-xs text-muted-foreground mt-1">{t('workorder.end_hint', 'Blank = 1 hour visit.')}</p>
+              </div>
+              <div>
+                <Label>{t('workorder.label_assigned_user', 'Staff in charge')}</Label>
+                <Controller name="assigned_user_id" control={control} render={({ field }) => (
+                  <LookupSelect
+                    lookupUrl="/api/v1/lookup/admin-users"
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder={t('workorder.ph_user_search', 'Search staff…')}
+                    displayValue={(wo as any)?.assigned_user_name ?? null}
+                  />
+                )} />
+              </div>
+              <div>
+                <Label>{t('workorder.label_attendee', 'Met on site by')}</Label>
+                <Controller name="attendee_contact_id" control={control} render={({ field }) => (
+                  <LookupSelect
+                    lookupUrl="/api/v1/lookup/contacts"
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder={t('workorder.ph_contact_search')}
+                    displayValue={(wo as any)?.attendee_contact_name ?? null}
+                  />
+                )} />
+                <p className="text-xs text-muted-foreground mt-1">{t('workorder.attendee_hint', 'The confirmation email goes to this contact.')}</p>
+              </div>
+              <div className="col-span-1 sm:col-span-2">
+                <Label>{t('workorder.label_location_note', 'Meeting point / access notes')}</Label>
+                <Input placeholder={t('workorder.ph_location_note', 'e.g. Lobby, B1 parking, door code 1234')} {...register("location_note")} />
               </div>
             </div>
           </div>
