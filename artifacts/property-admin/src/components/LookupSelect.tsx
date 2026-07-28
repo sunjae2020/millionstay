@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { apiJson } from "@/lib/apiFetch";
 
-interface LookupSelectProps {
+export interface LookupSelectProps {
   value: number | null | undefined;
   onChange: (id: number | null) => void;
   lookupUrl: string;
@@ -15,14 +15,25 @@ interface LookupSelectProps {
   displayValue?: string | null;
   /** Ids to hide from the result list (e.g. the record itself, to block self-linking). */
   excludeIds?: number[];
+  /**
+   * Builds the row label from the raw item instead of using `display`.
+   *
+   * Lookup endpoints are shared with non-admin consumers and the API has no
+   * admin i18n, so `display` is always English. Endpoints that also return
+   * their parts (e.g. accounts return `name` + `account_type`) can be
+   * relabelled here — see AccountLookupSelect.
+   */
+  formatLabel?: (item: LookupItem) => string;
 }
 
-interface LookupItem {
+/** Every lookup returns id + display; endpoints may add their own fields. */
+export interface LookupItem {
   id: number;
   display: string;
+  [key: string]: unknown;
 }
 
-export function LookupSelect({ value, onChange, lookupUrl, placeholder = "Search…", displayValue, excludeIds }: LookupSelectProps) {
+export function LookupSelect({ value, onChange, lookupUrl, placeholder = "Search…", displayValue, excludeIds, formatLabel }: LookupSelectProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -56,9 +67,11 @@ export function LookupSelect({ value, onChange, lookupUrl, placeholder = "Search
     handleSearch("");
   }
 
+  const labelOf = (item: LookupItem) => formatLabel?.(item) ?? item.display;
+
   function handleSelect(item: LookupItem) {
     onChange(item.id);
-    setSelectedLabel(item.display);
+    setSelectedLabel(labelOf(item));
     setOpen(false);
     setQuery("");
   }
@@ -125,7 +138,7 @@ export function LookupSelect({ value, onChange, lookupUrl, placeholder = "Search
                 className="w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground rounded-sm transition-colors"
                 onClick={() => handleSelect(item)}
               >
-                {item.display}
+                {labelOf(item)}
               </button>
             ))}
           </ScrollArea>

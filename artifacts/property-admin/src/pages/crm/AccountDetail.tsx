@@ -17,6 +17,7 @@ import {
   getListBookingsQueryKey, getListContractsQueryKey, getListInvoicesQueryKey,
 } from "@workspace/api-client-react";
 import { LookupSelect } from "@/components/LookupSelect";
+import { AccountLookupSelect } from "@/components/AccountLookupSelect";
 import { AccountIdentityPanel, type FillSource } from "@/components/AccountIdentityPanel";
 import { EntityPreviewDialog, type EntityPreview } from "@/components/EntityPreviewDialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -665,7 +666,7 @@ export default function AccountDetail() {
           <div className="grid gap-1.5">
             <Label>{t('account.label_parent_account')}</Label>
             <Controller name="parent_account_id" control={control} render={({ field }) => (
-              <LookupSelect
+              <AccountLookupSelect
                 value={field.value}
                 onChange={field.onChange}
                 lookupUrl="/api/v1/lookup/accounts"

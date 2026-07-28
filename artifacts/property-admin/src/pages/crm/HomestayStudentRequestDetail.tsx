@@ -16,6 +16,7 @@ import { ArrowLeft, GraduationCap, PencilLine, ShieldCheck, Sparkles, Wand2, Loa
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
 import { LookupSelect } from "@/components/LookupSelect";
+import { AccountLookupSelect } from "@/components/AccountLookupSelect";
 import { HomestaySignatureCard } from "@/components/HomestaySignatureCard";
 import { StudentStatusBadge, STUDENT_STATUS_ORDER, STUDENT_STATUS_CONFIG, type StudentStatus } from "./HomestayStudentRequests";
 import { useBrand } from "@/contexts/ThemeContext";
@@ -408,7 +409,7 @@ export default function HomestayStudentRequestDetail() {
           <div className="p-4 grid gap-4 sm:grid-cols-2">
             <div className="grid gap-1.5">
               <Label>{t("homestayStudent.assignment_agent")}</Label>
-              <LookupSelect
+              <AccountLookupSelect
                 value={agentAccountId}
                 onChange={setAgentAccountId}
                 lookupUrl="/api/v1/lookup/accounts?type=Agent"

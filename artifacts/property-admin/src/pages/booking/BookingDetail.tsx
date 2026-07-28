@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useParams, Link } from "wouter";
 import { formatDate } from "@/lib/date";
-import { useBrand } from "@/contexts/ThemeContext";
-import { formatMoney } from "@/lib/currency";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
@@ -27,7 +25,10 @@ import {
 import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
 import { ArrowLeft, Save, FileText, CheckCircle2, XCircle, Upload, ExternalLink, Plus, Trash2, Camera } from "lucide-react";
 import { LookupSelect } from "@/components/LookupSelect";
+import { AccountLookupSelect } from "@/components/AccountLookupSelect";
 import { apiFetch } from "@/lib/apiFetch";
+import { useBrand } from "@/contexts/ThemeContext";
+import { SUPPORTED_CURRENCIES } from "@/lib/currency";
 import { BookingConditionReports } from "./BookingConditionReports";
 import { BookingDepositSettlement } from "./BookingDepositSettlement";
 
@@ -77,7 +78,6 @@ function calcStay(checkIn: string, checkOut: string, rate: string) {
 
 export default function BookingDetail() {
   const { t } = useTranslation();
-  const { currency, currencyPosition } = useBrand();
   const { id } = useParams<{ id: string }>();
   const isNew = id === "new";
   const [, setLocation] = useLocation();
@@ -114,6 +114,7 @@ export default function BookingDetail() {
   const [svcPrice, setSvcPrice] = useState("");
   const [svcFreq, setSvcFreq] = useState("");
   const [svcNotes, setSvcNotes] = useState("");
+  const { currency: brandCurrency } = useBrand();
   function resetServiceForm() { setSvcName(""); setSvcType("one_time"); setSvcQty("1"); setSvcPrice(""); setSvcFreq(""); setSvcNotes(""); }
 
   const { data: booking, refetch } = useGetBooking(Number(id), { query: { enabled: !isNew, queryKey: getGetBookingQueryKey(Number(id)) } });
@@ -175,7 +176,7 @@ export default function BookingDetail() {
     defaultValues: {
       account_id: null, contact_id: null, booking_source: "", customer_notes: "",
       space_id: null, check_in_date: "", check_out_date: "", agreed_weekly_rate: "",
-      currency, num_guests: 1, product_id: null, status: "Active",
+      currency: brandCurrency, num_guests: 1, product_id: null, status: "Active",
     },
   });
 
@@ -190,7 +191,7 @@ export default function BookingDetail() {
         check_in_date: booking.check_in_date ?? "",
         check_out_date: booking.check_out_date ?? "",
         agreed_weekly_rate: booking.agreed_weekly_rate ?? "",
-        currency: booking.currency ?? currency,
+        currency: booking.currency ?? brandCurrency,
         num_guests: booking.num_guests ?? 1,
         product_id: (booking as any).product_id ?? null,
         status: booking.status ?? "Active",
@@ -334,7 +335,7 @@ export default function BookingDetail() {
             <div>
               <Label>{t("booking.label_account")} *</Label>
               <Controller name="account_id" control={control} render={({ field }) => (
-                <LookupSelect
+                <AccountLookupSelect
                   lookupUrl="/api/v1/lookup/accounts"
                   placeholder={t("booking.placeholder_account")}
                   value={field.value}
@@ -449,7 +450,7 @@ export default function BookingDetail() {
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {["KRW", "AUD", "USD", "EUR", "GBP", "JPY"].map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    {SUPPORTED_CURRENCIES.map((c) => <SelectItem key={c.code} value={c.code}>{c.code}</SelectItem>)}
                   </SelectContent>
                 </Select>
               )} />
@@ -520,7 +521,7 @@ export default function BookingDetail() {
                               {doc.verified_status}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-muted-foreground">{formatDate(doc.expiry_date)}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{doc.expiry_date ?? "—"}</td>
                           <td className="px-4 py-3 text-muted-foreground">{formatDate(doc.created_at)}</td>
                           <td className="px-4 py-3">
                             <div className="flex gap-1">
@@ -576,8 +577,8 @@ export default function BookingDetail() {
                           <td className="px-4 py-3 font-medium">{svc.service_name ?? svc.name}</td>
                           <td className="px-4 py-3 text-muted-foreground">{svc.service_type ?? "—"}</td>
                           <td className="px-4 py-3">{svc.quantity ?? 1}</td>
-                          <td className="px-4 py-3">{svc.unit_price ? formatMoney(svc.unit_price, svc.currency ?? currency, currencyPosition) : "—"}</td>
-                          <td className="px-4 py-3">{svc.total_price ? formatMoney(svc.total_price, svc.currency ?? currency, currencyPosition) : "—"}</td>
+                          <td className="px-4 py-3">{svc.unit_price ? `$${Number(svc.unit_price).toFixed(2)}` : "—"}</td>
+                          <td className="px-4 py-3">{svc.total_price ? `$${Number(svc.total_price).toFixed(2)}` : "—"}</td>
                           <td className="px-4 py-3 text-muted-foreground">{svc.billing_trigger ?? "—"}</td>
                           <td className="px-4 py-3 text-muted-foreground">{svc.frequency ?? "—"}</td>
                           <td className="px-4 py-3">
@@ -644,7 +645,7 @@ export default function BookingDetail() {
                           </td>
                           <td className="px-4 py-3">{inv.amount != null ? Number(inv.amount).toFixed(2) : "—"}</td>
                           <td className="px-4 py-3">{inv.currency ?? "—"}</td>
-                          <td className="px-4 py-3 text-muted-foreground">{formatDate(inv.due_date)}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{inv.due_date ?? "—"}</td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${inv.status === "Paid" ? "bg-green-100 text-green-700" : inv.status === "Sent" ? "bg-blue-100 text-blue-700" : inv.status === "Void" ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-600"}`}>
                               {inv.status ?? "Draft"}
@@ -778,7 +779,7 @@ export default function BookingDetail() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>{t("booking.label_unit_price_aud", { currency })}</Label>
+                <Label>{t("booking.label_unit_price_aud", { currency: brandCurrency })}</Label>
                 <Input type="number" value={svcPrice} onChange={(e) => setSvcPrice(e.target.value)} placeholder="0.00" className="mt-1" />
               </div>
               <div>

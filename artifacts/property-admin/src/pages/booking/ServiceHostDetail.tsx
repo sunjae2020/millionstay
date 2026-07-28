@@ -18,6 +18,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Save } from "lucide-react";
 import { LookupSelect } from "@/components/LookupSelect";
+import { AccountLookupSelect } from "@/components/AccountLookupSelect";
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -141,7 +142,7 @@ export default function ServiceHostDetail() {
               name="account_id"
               control={control}
               render={({ field }) => (
-                <LookupSelect
+                <AccountLookupSelect
                   lookupUrl="/api/v1/lookup/accounts"
                   placeholder={t("service_host.search_account_placeholder")}
                   value={field.value ?? null}

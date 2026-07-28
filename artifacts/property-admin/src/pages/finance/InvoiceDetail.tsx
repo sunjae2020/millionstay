@@ -17,6 +17,7 @@ import {
 } from "@workspace/api-client-react";
 import { Layout } from "@/components/Layout";
 import { LookupSelect } from "@/components/LookupSelect";
+import { AccountLookupSelect } from "@/components/AccountLookupSelect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/ui/date-input";
@@ -24,12 +25,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useBrand } from "@/contexts/ThemeContext";
+import { SUPPORTED_CURRENCIES } from "@/lib/currency";
 import { ArrowLeft, Trash2, Save, FileDown, Eye, Mail } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentVersions } from "@/components/DocumentVersions";
-import { useBrand } from "@/contexts/ThemeContext";
-import { SUPPORTED_CURRENCIES } from "@/lib/currency";
 
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-600",
@@ -295,7 +296,7 @@ export default function InvoiceDetail() {
               <div>
                 <Label>{t('invoice.label_account')}</Label>
                 <Controller name="account_id" control={control} render={({ field }) => (
-                  <LookupSelect
+                  <AccountLookupSelect
                     lookupUrl="/api/v1/lookup/accounts"
                     value={field.value}
                     onChange={field.onChange}

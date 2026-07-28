@@ -18,6 +18,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Save, CheckCircle2 } from "lucide-react";
 import { Link } from "wouter";
 import { LookupSelect } from "@/components/LookupSelect";
+import { AccountLookupSelect } from "@/components/AccountLookupSelect";
 import { StatusBadge } from "@/components/StatusBadge";
 
 interface TaskForm {
@@ -272,7 +273,7 @@ export default function TaskDetail() {
               <div className="grid gap-1.5">
                 <Label>{t("account.account_type")}</Label>
                 <Controller name="account_id" control={control} render={({ field }) => (
-                  <LookupSelect
+                  <AccountLookupSelect
                     value={field.value}
                     onChange={field.onChange}
                     lookupUrl="/api/v1/lookup/accounts"

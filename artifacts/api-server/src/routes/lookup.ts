@@ -50,9 +50,15 @@ router.get("/v1/lookup/accounts", async (req, res): Promise<void> => {
   }).from(accountsTable)
     .where(conditions.length ? and(...conditions) : undefined)
     .limit(20);
+  // `display` stays for callers that render the string as-is; `name` and
+  // `account_type` ship alongside it so the admin can build a localised label
+  // (the API has no admin i18n, so "(Tenant)" would otherwise leak into a
+  // Korean UI — see AccountLookupSelect).
   res.json(rows.map((r) => ({
     id: r.id,
     display: `${r.name} (${r.account_type})`,
+    name: r.name,
+    account_type: r.account_type,
   })));
 });
 
