@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -27,6 +27,19 @@ export const accountsTable = pgTable("accounts", {
   default_currency: text("default_currency").default("AUD"),
   parent_account_id: integer("parent_account_id"),
   description: text("description"),
+  // Brand/company identity. `logo_url` is a Cloudinary URL — website enrichment
+  // re-uploads any logo it finds rather than hot-linking the source site.
+  logo_url: text("logo_url"),
+  // Korean company registration. `biz_verify_status` is the NTS 사업자등록 상태
+  // (Valid | Closed | Suspended | NotFound) recorded at `biz_verified_at`.
+  biz_registration_no: text("biz_registration_no"),
+  biz_verify_status: text("biz_verify_status"),
+  biz_verified_at: timestamp("biz_verified_at", { withTimezone: true }),
+  ceo_name: text("ceo_name"),
+  // Provenance per column: { "<column>": "manual" | "contact" | "crawl" }.
+  // Written when a field is filled from the linked contact or the website
+  // crawler, so an admin can tell which values were auto-collected.
+  field_sources: jsonb("field_sources").$type<Record<string, string>>(),
   manual_input: boolean("manual_input").notNull().default(false),
   status: text("status").notNull().default("Active"),
   deleted_at: timestamp("deleted_at", { withTimezone: true }),

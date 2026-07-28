@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { CreateAccountBodyFieldSources } from "./createAccountBodyFieldSources";
 
 export interface CreateAccountBody {
   name: string;
@@ -51,6 +52,18 @@ export interface CreateAccountBody {
   parent_account_id?: number | null;
   /** @nullable */
   description?: string | null;
+  /** @nullable */
+  logo_url?: string | null;
+  /** @nullable */
+  biz_registration_no?: string | null;
+  /** @nullable */
+  biz_verify_status?: string | null;
+  /** @nullable */
+  biz_verified_at?: string | null;
+  /** @nullable */
+  ceo_name?: string | null;
+  /** @nullable */
+  field_sources?: CreateAccountBodyFieldSources;
   manual_input?: boolean;
   status?: string;
 }
