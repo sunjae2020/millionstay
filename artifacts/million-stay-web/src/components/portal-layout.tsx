@@ -26,6 +26,7 @@ const LANGUAGES = [
   { code: "zh", flag: "🇨🇳", label: "ZH" },
   { code: "ja", flag: "🇯🇵", label: "JA" },
   { code: "th", flag: "🇹🇭", label: "TH" },
+  { code: "vi", flag: "🇻🇳", label: "VI" },
 ].map((l) => {
   const override = flagOverride(l.code);
   return override ? { ...l, flag: flagEmoji(override) } : l;

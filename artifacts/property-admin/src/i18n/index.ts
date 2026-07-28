@@ -8,6 +8,7 @@ import koTranslations from "../locales/ko/translation.json";
 import zhTranslations from "../locales/zh/translation.json";
 import jaTranslations from "../locales/ja/translation.json";
 import thTranslations from "../locales/th/translation.json";
+import viTranslations from "../locales/vi/translation.json";
 
 const resources = {
   en: { translation: enTranslations },
@@ -15,9 +16,10 @@ const resources = {
   zh: { translation: zhTranslations },
   ja: { translation: jaTranslations },
   th: { translation: thTranslations },
+  vi: { translation: viTranslations },
 };
 
-const SUPPORTED = new Set(["en", "ko", "zh", "ja", "th"]);
+const SUPPORTED = new Set(["en", "ko", "zh", "ja", "th", "vi"]);
 
 function detectBrowserLanguage(): string {
   const langs = navigator.languages?.length ? navigator.languages : [navigator.language];

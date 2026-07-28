@@ -8,6 +8,7 @@ const LANGUAGES = [
   { code: "zh", label: "中文" },
   { code: "ja", label: "日本語" },
   { code: "th", label: "ภาษาไทย" },
+  { code: "vi", label: "Tiếng Việt" },
 ];
 
 export function LanguageSwitcher({ variant = "header" }: { variant?: "header" | "sidebar" }) {

@@ -136,9 +136,11 @@ function getNav(
       icon: CalendarCheck,
       defaultOpen: false,
       items: [
+        { href: "/calendar", label: t("nav.calendar"), icon: CalendarDays },
         { href: "/booking/bookings", label: t("nav.booking"), icon: CalendarDays },
         { href: "/booking/contracts", label: t("nav.contract"), icon: FileText },
         { href: "/booking/service-hosts", label: t("nav.service_host"), icon: Users },
+        { href: "/maintenance/work-orders", label: t("nav.work_order"), icon: Wrench },
       ],
     },
     {
@@ -455,6 +457,7 @@ const LANGUAGES = [
   { code: "zh", label: "中文" },
   { code: "ja", label: "日本語" },
   { code: "th", label: "ภาษาไทย" },
+  { code: "vi", label: "Tiếng Việt" },
 ];
 
 function HeaderLanguageSwitcher() {

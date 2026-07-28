@@ -35,6 +35,7 @@ const FALLBACK_LANGUAGES: LangOption[] = [
   { code: "zh", label: "ZH", iso: "cn", name: "中文" },
   { code: "ja", label: "JA", iso: "jp", name: "日本語" },
   { code: "th", label: "TH", iso: "th", name: "ภาษาไทย" },
+  { code: "vi", label: "VI", iso: "vn", name: "Tiếng Việt" },
 ].map((l) => ({ ...l, iso: flagIsoFor(l.code, l.iso) }));
 
 function FlagIcon({ iso, size = 20 }: { iso: string; size?: number }) {

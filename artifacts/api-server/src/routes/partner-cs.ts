@@ -7,7 +7,7 @@ import { isCloudinaryConfigured, uploadToCloudinary, cldFolder } from "../utils/
 import { translateAndStoreMessage } from "../lib/chat/translateMessage";
 
 // Languages the partner portals ship (no Vietnamese, unlike the guest web app).
-const SUPPORTED_PARTNER_LANGS = ["en", "ja", "ko", "th", "zh"];
+const SUPPORTED_PARTNER_LANGS = ["en", "ja", "ko", "th", "vi", "zh"];
 function normalizeLang(raw: unknown): string {
   const code = typeof raw === "string" ? raw.trim().toLowerCase().slice(0, 2) : "";
   return SUPPORTED_PARTNER_LANGS.includes(code) ? code : "en";

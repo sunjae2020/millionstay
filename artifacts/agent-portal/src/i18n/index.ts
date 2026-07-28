@@ -5,10 +5,11 @@ import ko from "@/locales/ko/translation.json";
 import zh from "@/locales/zh/translation.json";
 import ja from "@/locales/ja/translation.json";
 import th from "@/locales/th/translation.json";
+import vi from "@/locales/vi/translation.json";
 import { APP_NAME } from "@/lib/appName";
 
 const STORAGE_KEY = "ms_agent_language";
-const SUPPORTED = ["en", "ko", "zh", "ja", "th"];
+const SUPPORTED = ["en", "ko", "zh", "ja", "th", "vi"];
 
 function detectLanguage(): string {
   try {
@@ -26,6 +27,7 @@ void i18n.use(initReactI18next).init({
     zh: { translation: zh },
     ja: { translation: ja },
     th: { translation: th },
+    vi: { translation: vi },
   },
   lng: detectLanguage(),
   fallbackLng: "en",
