@@ -225,12 +225,18 @@ router.get("/v1/finance/revenue/by-property", async (req, res) => {
 
     const bookingIds = [...new Set(invoices.map(i => i.booking_id).filter(Boolean))] as number[];
     const bookingMap: Record<number, number | null> = {};
-    for (const id of bookingIds) {
-      const [b] = await db.select({ space_id: bookingsTable.space_id }).from(bookingsTable).where(eq(bookingsTable.id, id));
-      if (b?.space_id) {
-        const [s] = await db.select({ property_id: spacesTable.property_id }).from(spacesTable).where(eq(spacesTable.id, b.space_id));
-        bookingMap[id] = s?.property_id ?? null;
-      }
+    // Two batched queries instead of two per booking — see enrichContracts in contracts.ts.
+    const bookingRows = bookingIds.length
+      ? await db.select({ id: bookingsTable.id, space_id: bookingsTable.space_id }).from(bookingsTable).where(inArray(bookingsTable.id, bookingIds))
+      : [];
+    const bookingSpaceIds = [...new Set(bookingRows.map(b => b.space_id).filter(Boolean))] as number[];
+    const spaceRows = bookingSpaceIds.length
+      ? await db.select({ id: spacesTable.id, property_id: spacesTable.property_id }).from(spacesTable).where(inArray(spacesTable.id, bookingSpaceIds))
+      : [];
+    const spacePropertyMap: Record<number, number | null> = {};
+    for (const s of spaceRows) spacePropertyMap[s.id] = s.property_id ?? null;
+    for (const b of bookingRows) {
+      if (b.space_id) bookingMap[b.id] = spacePropertyMap[b.space_id] ?? null;
     }
     const propRevenue: Record<number, number> = {};
     for (const inv of invoices) {

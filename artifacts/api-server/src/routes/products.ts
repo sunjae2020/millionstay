@@ -10,20 +10,23 @@ async function enrich(products: (typeof contractProductsTable.$inferSelect)[]) {
   if (products.length === 0) return [];
 
   const spaceIds = [...new Set(products.map(p => p.space_id).filter(Boolean))] as number[];
-  const spaceMap: Record<number, string> = {};
-  for (const sid of spaceIds) {
-    const rows = await db.select({ id: spacesTable.id, name: spacesTable.name })
-      .from(spacesTable).where(eq(spacesTable.id, sid));
-    for (const s of rows) spaceMap[s.id] = s.name;
-  }
-
   const promoIds = [...new Set(products.map(p => p.promotion_id).filter(Boolean))] as number[];
+
+  const spaceMap: Record<number, string> = {};
   const promoMap: Record<number, { name: string; discount_percentage: number | null }> = {};
-  for (const pid of promoIds) {
-    const rows = await db.select({ id: promotionsTable.id, name: promotionsTable.name, discount_percentage: promotionsTable.discount_percentage })
-      .from(promotionsTable).where(eq(promotionsTable.id, pid));
-    for (const p of rows) promoMap[p.id] = { name: p.name, discount_percentage: p.discount_percentage };
-  }
+
+  // Batched lookups — see enrichContracts in contracts.ts.
+  const [spaceRows, promoRows] = await Promise.all([
+    spaceIds.length
+      ? db.select({ id: spacesTable.id, name: spacesTable.name }).from(spacesTable).where(inArray(spacesTable.id, spaceIds))
+      : Promise.resolve([]),
+    promoIds.length
+      ? db.select({ id: promotionsTable.id, name: promotionsTable.name, discount_percentage: promotionsTable.discount_percentage })
+          .from(promotionsTable).where(inArray(promotionsTable.id, promoIds))
+      : Promise.resolve([]),
+  ]);
+  for (const s of spaceRows) spaceMap[s.id] = s.name;
+  for (const p of promoRows) promoMap[p.id] = { name: p.name, discount_percentage: p.discount_percentage };
 
   return products.map(p => {
     const promo = p.promotion_id ? promoMap[p.promotion_id] : null;

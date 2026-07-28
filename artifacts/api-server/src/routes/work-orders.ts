@@ -45,22 +45,25 @@ async function enrichWorkOrders(rows: (typeof workOrdersTable.$inferSelect)[]) {
   const contactMap: Record<number, string> = {};
   const hostMap: Record<number, string> = {};
 
-  for (const id of propertyIds) {
-    const [p] = await db.select({ id: propertiesTable.id, name: propertiesTable.name }).from(propertiesTable).where(eq(propertiesTable.id, id));
-    if (p) propertyMap[p.id] = p.name;
-  }
-  for (const id of spaceIds) {
-    const [s] = await db.select({ id: spacesTable.id, name: spacesTable.name }).from(spacesTable).where(eq(spacesTable.id, id));
-    if (s) spaceMap[s.id] = s.name;
-  }
-  for (const id of contactIds) {
-    const [c] = await db.select({ id: contactsTable.id, first_name: contactsTable.first_name, last_name: contactsTable.last_name }).from(contactsTable).where(eq(contactsTable.id, id));
-    if (c) contactMap[c.id] = `${c.first_name} ${c.last_name}`.trim();
-  }
-  for (const id of hostIds) {
-    const [h] = await db.select({ id: serviceHostsTable.id, name: serviceHostsTable.name }).from(serviceHostsTable).where(eq(serviceHostsTable.id, id));
-    if (h) hostMap[h.id] = h.name;
-  }
+  // Batched lookups — see enrichContracts in contracts.ts.
+  const [propertyRows, spaceRows, contactRows, hostRows] = await Promise.all([
+    propertyIds.length
+      ? db.select({ id: propertiesTable.id, name: propertiesTable.name }).from(propertiesTable).where(inArray(propertiesTable.id, propertyIds))
+      : Promise.resolve([]),
+    spaceIds.length
+      ? db.select({ id: spacesTable.id, name: spacesTable.name }).from(spacesTable).where(inArray(spacesTable.id, spaceIds))
+      : Promise.resolve([]),
+    contactIds.length
+      ? db.select({ id: contactsTable.id, first_name: contactsTable.first_name, last_name: contactsTable.last_name }).from(contactsTable).where(inArray(contactsTable.id, contactIds))
+      : Promise.resolve([]),
+    hostIds.length
+      ? db.select({ id: serviceHostsTable.id, name: serviceHostsTable.name }).from(serviceHostsTable).where(inArray(serviceHostsTable.id, hostIds))
+      : Promise.resolve([]),
+  ]);
+  for (const p of propertyRows) propertyMap[p.id] = p.name;
+  for (const s of spaceRows) spaceMap[s.id] = s.name;
+  for (const c of contactRows) contactMap[c.id] = `${c.first_name} ${c.last_name}`.trim();
+  for (const h of hostRows) hostMap[h.id] = h.name;
 
   return rows.map(r => ({
     ...r,

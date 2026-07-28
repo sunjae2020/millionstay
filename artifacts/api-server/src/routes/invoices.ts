@@ -92,18 +92,22 @@ async function enrichInvoices(rows: (typeof invoicesTable.$inferSelect)[]) {
   const contractMap: Record<number, string> = {};
   const accountMap: Record<number, string> = {};
 
-  for (const id of bookingIds) {
-    const [b] = await db.select({ id: bookingsTable.id, booking_ref: bookingsTable.booking_ref }).from(bookingsTable).where(eq(bookingsTable.id, id));
-    if (b) bookingMap[b.id] = b.booking_ref;
-  }
-  for (const id of contractIds) {
-    const [c] = await db.select({ id: contractsTable.id, contract_ref: contractsTable.contract_ref }).from(contractsTable).where(eq(contractsTable.id, id));
-    if (c) contractMap[c.id] = c.contract_ref;
-  }
-  for (const id of accountIds) {
-    const [a] = await db.select({ id: accountsTable.id, name: accountsTable.name }).from(accountsTable).where(eq(accountsTable.id, id));
-    if (a) accountMap[a.id] = a.name;
-  }
+  // Batched lookups — see enrichContracts in contracts.ts: a per-id loop is an
+  // N+1 that costs one round trip per invoice.
+  const [bookingRows, contractRows, accountRows] = await Promise.all([
+    bookingIds.length
+      ? db.select({ id: bookingsTable.id, booking_ref: bookingsTable.booking_ref }).from(bookingsTable).where(inArray(bookingsTable.id, bookingIds))
+      : Promise.resolve([]),
+    contractIds.length
+      ? db.select({ id: contractsTable.id, contract_ref: contractsTable.contract_ref }).from(contractsTable).where(inArray(contractsTable.id, contractIds))
+      : Promise.resolve([]),
+    accountIds.length
+      ? db.select({ id: accountsTable.id, name: accountsTable.name }).from(accountsTable).where(inArray(accountsTable.id, accountIds))
+      : Promise.resolve([]),
+  ]);
+  for (const b of bookingRows) bookingMap[b.id] = b.booking_ref;
+  for (const c of contractRows) contractMap[c.id] = c.contract_ref;
+  for (const a of accountRows) accountMap[a.id] = a.name;
 
   return rows.map(r => ({
     ...r,

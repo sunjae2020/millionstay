@@ -49,14 +49,17 @@ async function enrichQuotes(rows: (typeof quotesTable.$inferSelect)[]) {
   const spaceIds = [...new Set(rows.map(r => r.space_id).filter(Boolean))] as number[];
   const accountMap: Record<number, string> = {};
   const spaceMap: Record<number, string> = {};
-  for (const id of accountIds) {
-    const [a] = await db.select({ id: accountsTable.id, name: accountsTable.name }).from(accountsTable).where(eq(accountsTable.id, id));
-    if (a) accountMap[a.id] = a.name;
-  }
-  for (const id of spaceIds) {
-    const [s] = await db.select({ id: spacesTable.id, name: spacesTable.name }).from(spacesTable).where(eq(spacesTable.id, id));
-    if (s) spaceMap[s.id] = s.name;
-  }
+  // Batched lookups — see enrichContracts in contracts.ts.
+  const [accountRows, spaceRows] = await Promise.all([
+    accountIds.length
+      ? db.select({ id: accountsTable.id, name: accountsTable.name }).from(accountsTable).where(inArray(accountsTable.id, accountIds))
+      : Promise.resolve([]),
+    spaceIds.length
+      ? db.select({ id: spacesTable.id, name: spacesTable.name }).from(spacesTable).where(inArray(spacesTable.id, spaceIds))
+      : Promise.resolve([]),
+  ]);
+  for (const a of accountRows) accountMap[a.id] = a.name;
+  for (const s of spaceRows) spaceMap[s.id] = s.name;
   return rows.map(r => ({
     ...r,
     account_name: r.account_id ? (accountMap[r.account_id] ?? null) : null,

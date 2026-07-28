@@ -350,26 +350,32 @@ async function enrichContracts(rows: (typeof contractsTable.$inferSelect)[]) {
   const accommodationMap: Record<number, string> = {};
   const bookingMap: Record<number, string> = {};
 
-  for (const id of [...new Set([...tenantIds, ...landlordIds])]) {
-    const [a] = await db.select({ id: accountsTable.id, name: accountsTable.name }).from(accountsTable).where(eq(accountsTable.id, id));
-    if (a) accountMap[a.id] = a.name;
-  }
-  for (const id of spaceIds) {
-    const [s] = await db.select({ id: spacesTable.id, name: spacesTable.name }).from(spacesTable).where(eq(spacesTable.id, id));
-    if (s) spaceMap[s.id] = s.name;
-  }
-  for (const id of legacyProductIds) {
-    const [p] = await db.select({ id: contractProductsTable.id, name: contractProductsTable.name }).from(contractProductsTable).where(eq(contractProductsTable.id, id));
-    if (p) productMap[p.id] = p.name;
-  }
-  for (const id of productIds) {
-    const [p] = await db.select({ id: accommodationCatalogTable.id, name: accommodationCatalogTable.name }).from(accommodationCatalogTable).where(eq(accommodationCatalogTable.id, id));
-    if (p) accommodationMap[p.id] = p.name;
-  }
-  for (const id of bookingIds) {
-    const [b] = await db.select({ id: bookingsTable.id, booking_ref: bookingsTable.booking_ref }).from(bookingsTable).where(eq(bookingsTable.id, id));
-    if (b) bookingMap[b.id] = b.booking_ref;
-  }
+  // One batched query per lookup table. A per-id loop here is an N+1 that costs a
+  // full round trip per contract — 40s+ on a remote pooler once the lease import
+  // pushed the table to a few hundred rows.
+  const accountIds = [...new Set([...tenantIds, ...landlordIds])];
+  const [accountRows, spaceRows, legacyProductRows, productRows, bookingRows] = await Promise.all([
+    accountIds.length
+      ? db.select({ id: accountsTable.id, name: accountsTable.name }).from(accountsTable).where(inArray(accountsTable.id, accountIds))
+      : Promise.resolve([]),
+    spaceIds.length
+      ? db.select({ id: spacesTable.id, name: spacesTable.name }).from(spacesTable).where(inArray(spacesTable.id, spaceIds))
+      : Promise.resolve([]),
+    legacyProductIds.length
+      ? db.select({ id: contractProductsTable.id, name: contractProductsTable.name }).from(contractProductsTable).where(inArray(contractProductsTable.id, legacyProductIds))
+      : Promise.resolve([]),
+    productIds.length
+      ? db.select({ id: accommodationCatalogTable.id, name: accommodationCatalogTable.name }).from(accommodationCatalogTable).where(inArray(accommodationCatalogTable.id, productIds))
+      : Promise.resolve([]),
+    bookingIds.length
+      ? db.select({ id: bookingsTable.id, booking_ref: bookingsTable.booking_ref }).from(bookingsTable).where(inArray(bookingsTable.id, bookingIds))
+      : Promise.resolve([]),
+  ]);
+  for (const a of accountRows) accountMap[a.id] = a.name;
+  for (const s of spaceRows) spaceMap[s.id] = s.name;
+  for (const p of legacyProductRows) productMap[p.id] = p.name;
+  for (const p of productRows) accommodationMap[p.id] = p.name;
+  for (const b of bookingRows) bookingMap[b.id] = b.booking_ref;
 
   return rows.map(r => ({
     ...r,
