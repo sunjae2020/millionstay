@@ -1,4 +1,5 @@
 import { useRef, useEffect, useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { RotateCcw, PenLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HS, HS_TINT } from "@/lib/homestay-theme";
@@ -20,8 +21,9 @@ export default function SignaturePad({
   height = 180,
   className = "",
   disabled = false,
-  label = "Signature",
+  label,
 }: SignaturePadProps) {
+  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isDrawing = useRef(false);
   const lastPos = useRef<{ x: number; y: number } | null>(null);
@@ -132,7 +134,7 @@ export default function SignaturePad({
 
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
-      {label && <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: HS.mocha }}>{label}</p>}
+      {(label ?? t("signaturePad.label")) && <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: HS.mocha }}>{label ?? t("signaturePad.label")}</p>}
       <div
         className="relative rounded-xl border overflow-hidden"
         style={{ borderColor: HS.mocha, backgroundColor: HS_TINT.cream }}
@@ -140,7 +142,7 @@ export default function SignaturePad({
         {isEmpty && !disabled && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 pointer-events-none select-none">
             <PenLine className="w-5 h-5" style={{ color: HS.mocha }} />
-            <p className="text-xs" style={{ color: HS.mocha }}>Draw your signature here</p>
+            <p className="text-xs" style={{ color: HS.mocha }}>{t("signaturePad.hint")}</p>
           </div>
         )}
         <canvas
@@ -153,7 +155,7 @@ export default function SignaturePad({
       {!disabled && (
         <div className="flex justify-end">
           <Button type="button" variant="ghost" size="sm" onClick={clear} className="h-7 px-2 text-xs gap-1" style={{ color: HS.brand }}>
-            <RotateCcw className="w-3 h-3" /> Clear
+            <RotateCcw className="w-3 h-3" /> {t("signaturePad.clear")}
           </Button>
         </div>
       )}

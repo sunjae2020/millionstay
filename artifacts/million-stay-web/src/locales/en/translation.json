@@ -1,4 +1,9 @@
 {
+  "signaturePad": {
+    "label": "Signature",
+    "hint": "Draw your signature here",
+    "clear": "Clear"
+  },
   "nav": {
     "search": "Find a Room",
     "login": "Log in",

@@ -1,4 +1,9 @@
 {
+  "signaturePad": {
+    "label": "서명",
+    "hint": "이곳에 서명해 주세요",
+    "clear": "지우기"
+  },
   "nav": {
     "search": "방 찾기",
     "login": "로그인",

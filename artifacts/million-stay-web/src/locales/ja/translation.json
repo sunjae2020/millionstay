@@ -1,4 +1,9 @@
 {
+  "signaturePad": {
+    "label": "署名",
+    "hint": "ここに署名してください",
+    "clear": "消去"
+  },
   "nav": {
     "find_room": "部屋を探す",
     "how_it_works": "ご利用方法",

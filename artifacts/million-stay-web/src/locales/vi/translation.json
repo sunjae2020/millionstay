@@ -1,4 +1,9 @@
 {
+  "signaturePad": {
+    "label": "Chữ ký",
+    "hint": "Vui lòng ký tên tại đây",
+    "clear": "Xóa"
+  },
   "nav": {
     "search": "Tìm phòng",
     "login": "Đăng nhập",

@@ -1,4 +1,9 @@
 {
+  "signaturePad": {
+    "label": "签名",
+    "hint": "请在此处签名",
+    "clear": "清除"
+  },
   "nav": {
     "search": "找房间",
     "login": "登录",
