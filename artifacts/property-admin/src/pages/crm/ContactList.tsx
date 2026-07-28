@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/apiFetch";
+import { formatPersonName, personSortKey } from "@/lib/nameFormat";
 
 export default function ContactList() {
   const { t } = useTranslation();
@@ -86,11 +87,11 @@ export default function ContactList() {
         header: "contact.col_name",
         hideable: false,
         defaultWidth: 200,
-        sortAccessor: (c) => `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim(),
+        sortAccessor: (c) => personSortKey(c.first_name, c.last_name),
         cell: (c) => (
           <>
             <Link href={`/crm/contacts/${c.id}`} className="font-medium hover:underline">
-              {c.first_name} {c.last_name}
+              {formatPersonName(c.first_name, c.last_name)}
             </Link>
             {c.nationality && <span className="ml-1 text-xs text-muted-foreground">({c.nationality})</span>}
           </>

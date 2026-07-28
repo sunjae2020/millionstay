@@ -19,6 +19,7 @@ import { ArrowLeft, Save, AlertTriangle } from "lucide-react";
 import { Link } from "wouter";
 import { ContactMediaPanel, type PendingCards } from "@/components/ContactMediaPanel";
 import { apiFetch } from "@/lib/apiFetch";
+import { formatPersonName } from "@/lib/nameFormat";
 import { differenceInDays, parseISO } from "date-fns";
 
 const COUNTRIES = [
@@ -233,7 +234,7 @@ export default function ContactDetail() {
   return (
     <Layout>
       <PageHeader
-        title={isNew ? `${t("common.new")} ${t("nav.contact")}` : contact ? `${contact.first_name} ${contact.last_name}` : t("nav.contact")}
+        title={isNew ? `${t("common.new")} ${t("nav.contact")}` : contact ? formatPersonName(contact.first_name, contact.last_name) : t("nav.contact")}
         actions={
           <div className="flex gap-2">
             <Link href="/crm/contacts">

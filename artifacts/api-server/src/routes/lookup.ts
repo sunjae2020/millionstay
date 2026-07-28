@@ -2,6 +2,8 @@ import { Router, type IRouter } from "express";
 import { ilike, and, eq, isNull, SQL, asc } from "drizzle-orm";
 import { db, contactsTable, accountsTable, commissionsTable, paymentInfoTable, spacesTable, suburbsTable, propertiesTable, accommodationCatalogTable, productGroupsTable, productTypesTable, contractTypesTable, usersTable } from "@workspace/db";
 
+import { formatPersonName } from "../lib/nameFormat";
+
 const router: IRouter = Router();
 
 router.get("/v1/lookup/contacts", async (req, res): Promise<void> => {
@@ -25,7 +27,7 @@ router.get("/v1/lookup/contacts", async (req, res): Promise<void> => {
     .limit(20);
   res.json(rows.map((r) => ({
     id: r.id,
-    display: `${r.first_name} ${r.last_name} — ${r.email}`,
+    display: `${formatPersonName(r.first_name, r.last_name)} — ${r.email}`,
   })));
 });
 
@@ -79,7 +81,7 @@ router.get("/v1/lookup/admin-users", async (req, res): Promise<void> => {
     .limit(20);
   res.json(rows.map((r) => ({
     id: r.id,
-    display: `${`${r.first_name} ${r.last_name}`.trim()} (${r.email})`,
+    display: `${formatPersonName(r.first_name, r.last_name)} (${r.email})`,
   })));
 });
 

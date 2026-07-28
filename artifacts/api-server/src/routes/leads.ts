@@ -12,8 +12,17 @@ import {
   ConvertLeadBody,
 } from "@workspace/api-zod";
 import { insertLeadWithGeneratedRef } from "../lib/leadRef.js";
+import { formatFirstName, formatLastName } from "../lib/nameFormat.js";
 
 const router: IRouter = Router();
+
+/** Canonical person-name casing on write — see lib/nameFormat.ts. */
+function normalizeNames<T extends { first_name?: string | null; last_name?: string | null }>(data: T): T {
+  const out = { ...data };
+  if (typeof out.first_name === "string") out.first_name = formatFirstName(out.first_name);
+  if (typeof out.last_name === "string") out.last_name = formatLastName(out.last_name);
+  return out;
+}
 
 router.get("/v1/leads", async (req, res): Promise<void> => {
   const parsed = ListLeadsQueryParams.safeParse(req.query);
@@ -75,7 +84,7 @@ router.get("/v1/leads", async (req, res): Promise<void> => {
 router.post("/v1/leads", async (req, res): Promise<void> => {
   const parsed = CreateLeadBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
-  const inserted = await insertLeadWithGeneratedRef(parsed.data);
+  const inserted = await insertLeadWithGeneratedRef(normalizeNames(parsed.data));
   const [row] = await db
     .select()
     .from(leadsTable)
@@ -130,7 +139,7 @@ router.put("/v1/leads/:id", async (req, res): Promise<void> => {
   const bodyParsed = UpdateLeadBody.safeParse(req.body);
   if (!bodyParsed.success) { res.status(400).json({ error: bodyParsed.error.message }); return; }
   const [row] = await db.update(leadsTable)
-    .set({ ...bodyParsed.data, updated_at: new Date() })
+    .set({ ...normalizeNames(bodyParsed.data), updated_at: new Date() })
     .where(eq(leadsTable.id, paramsParsed.data.id))
     .returning();
   if (!row) { res.status(404).json({ error: "Not found" }); return; }

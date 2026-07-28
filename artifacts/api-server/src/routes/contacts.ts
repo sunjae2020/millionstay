@@ -13,6 +13,7 @@ import {
 } from "../utils/cloudinary";
 import { calcRetentionDate } from "../lib/retention";
 import { scanBusinessCard, isSupportedCardMime } from "../lib/contacts/businessCardOcr";
+import { formatFirstName, formatLastName } from "../lib/nameFormat";
 import {
   ListContactsQueryParams,
   CreateContactBody,
@@ -23,6 +24,18 @@ import {
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
+
+/**
+ * Canonical person-name casing on write (Firstname / LASTNAME). Hangul, Kana and
+ * Han are unaffected by case mapping, so this is safe for every script — display
+ * order is handled at render time by formatPersonName.
+ */
+function normalizeNames<T extends { first_name?: string | null; last_name?: string | null }>(data: T): T {
+  const out = { ...data };
+  if (typeof out.first_name === "string") out.first_name = formatFirstName(out.first_name);
+  if (typeof out.last_name === "string") out.last_name = formatLastName(out.last_name);
+  return out;
+}
 
 router.get("/v1/contacts", async (req, res): Promise<void> => {
   const parsed = ListContactsQueryParams.safeParse(req.query);
@@ -43,14 +56,15 @@ router.get("/v1/contacts", async (req, res): Promise<void> => {
   }
   const rows = await db.select().from(contactsTable)
     .where(and(...conditions))
-    .orderBy(contactsTable.last_name);
+    // Person lists sort by family name, then given name (see lib/nameFormat.ts).
+    .orderBy(contactsTable.last_name, contactsTable.first_name);
   res.json(rows);
 });
 
 router.post("/v1/contacts", async (req, res): Promise<void> => {
   const parsed = CreateContactBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
-  const [row] = await db.insert(contactsTable).values(parsed.data).returning();
+  const [row] = await db.insert(contactsTable).values(normalizeNames(parsed.data)).returning();
   res.status(201).json(row);
 });
 
@@ -281,7 +295,7 @@ router.put("/v1/contacts/:id", async (req, res): Promise<void> => {
   const bodyParsed = UpdateContactBody.safeParse(req.body);
   if (!bodyParsed.success) { res.status(400).json({ error: bodyParsed.error.message }); return; }
   const [row] = await db.update(contactsTable)
-    .set({ ...bodyParsed.data, updated_at: new Date() })
+    .set({ ...normalizeNames(bodyParsed.data), updated_at: new Date() })
     .where(eq(contactsTable.id, paramsParsed.data.id))
     .returning();
   if (!row) { res.status(404).json({ error: "Not found" }); return; }

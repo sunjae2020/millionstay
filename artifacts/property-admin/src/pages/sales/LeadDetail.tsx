@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { formatDateTime } from "@/lib/date";
+import { formatPersonName } from "@/lib/nameFormat";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -200,7 +201,7 @@ export default function LeadDetail() {
       <PageHeader
         title={
           <span className="flex items-center gap-2">
-            {isNew ? `${t("common.new")} ${t("nav.lead")}` : `${lead?.first_name ?? ""} ${lead?.last_name ?? ""}`}
+            {isNew ? `${t("common.new")} ${t("nav.lead")}` : formatPersonName(lead?.first_name, lead?.last_name)}
             {!isNew && lead && <LeadStatusBadge status={lead.lead_status} />}
           </span>
         }

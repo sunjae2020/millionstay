@@ -16,6 +16,7 @@ import {
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 import { formatDate } from "@/lib/date";
+import { formatPersonName, personSortKey } from "@/lib/nameFormat";
 import { useToast } from "@/hooks/use-toast";
 
 const LEAD_STATUSES = ["New", "Contacted", "Qualified", "ConvertedToBooking", "Lost"] as const;
@@ -61,7 +62,7 @@ function KanbanCard({ lead, onMove, onDelete }: {
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="flex-1 min-w-0">
           <Link href={`/sales/leads/${lead.id}`}>
-            <p className="text-sm font-semibold hover:text-primary truncate">{lead.first_name} {lead.last_name}</p>
+            <p className="text-sm font-semibold hover:text-primary truncate">{formatPersonName(lead.first_name, lead.last_name)}</p>
           </Link>
           <p className="text-[10px] text-muted-foreground font-mono">{lead.lead_ref}</p>
         </div>
@@ -195,10 +196,10 @@ export default function LeadList() {
         key: "name",
         header: "lead.col_name",
         hideable: false,
-        sortAccessor: (l) => `${l.first_name ?? ""} ${l.last_name ?? ""}`.trim(),
+        sortAccessor: (l) => personSortKey(l.first_name, l.last_name),
         cell: (l) => (
           <Link href={`/sales/leads/${l.id}`} className="font-medium hover:underline">
-            {l.first_name} {l.last_name}
+            {formatPersonName(l.first_name, l.last_name)}
           </Link>
         ),
       },
