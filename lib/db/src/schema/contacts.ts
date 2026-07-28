@@ -15,6 +15,12 @@ export const contactsTable = pgTable("contacts", {
   nationality: text("nationality"),
   gender: text("gender"),
   sns_id: text("sns_id"),
+  // Business-card fields (populated manually or by the AI business-card OCR).
+  // `title` above is the honorific (Mr/Ms) — `job_title` is the role on the card.
+  company_name: text("company_name"),
+  job_title: text("job_title"),
+  department: text("department"),
+  website: text("website"),
   passport_number: text("passport_number"),
   passport_expiry: text("passport_expiry"),
   visa_type: text("visa_type"),

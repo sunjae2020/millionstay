@@ -14,7 +14,7 @@ import {
   type ListContactsParams,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Pencil, Trash2, Globe, AlertTriangle } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Globe, AlertTriangle, User } from "lucide-react";
 import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import {
   AlertDialog, AlertDialogCancel, AlertDialogContent,
@@ -67,6 +67,20 @@ export default function ContactList() {
   type ContactRow = NonNullable<typeof contacts>[number];
   const columns: ColumnDef<ContactRow>[] = useMemo(
     () => [
+      {
+        key: "photo",
+        header: "contact.col_photo",
+        sortable: false,
+        defaultWidth: 56,
+        align: "center",
+        cell: (c) => (
+          <div className="mx-auto h-8 w-8 rounded-full border bg-muted/40 overflow-hidden flex items-center justify-center">
+            {c.profile_photo_url
+              ? <img src={c.profile_photo_url} alt="" className="h-full w-full object-cover" loading="lazy" />
+              : <User className="h-4 w-4 text-muted-foreground" />}
+          </div>
+        ),
+      },
       {
         key: "name",
         header: "contact.col_name",

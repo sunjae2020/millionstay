@@ -3835,6 +3835,14 @@ components:
           type: ["string", "null"]
         sns_id:
           type: ["string", "null"]
+        company_name:
+          type: ["string", "null"]
+        job_title:
+          type: ["string", "null"]
+        department:
+          type: ["string", "null"]
+        website:
+          type: ["string", "null"]
         passport_number:
           type: ["string", "null"]
         passport_expiry:
@@ -3896,6 +3904,14 @@ components:
           type: ["string", "null"]
         sns_id:
           type: ["string", "null"]
+        company_name:
+          type: ["string", "null"]
+        job_title:
+          type: ["string", "null"]
+        department:
+          type: ["string", "null"]
+        website:
+          type: ["string", "null"]
         passport_number:
           type: ["string", "null"]
         passport_expiry:
@@ -3955,6 +3971,14 @@ components:
         gender:
           type: ["string", "null"]
         sns_id:
+          type: ["string", "null"]
+        company_name:
+          type: ["string", "null"]
+        job_title:
+          type: ["string", "null"]
+        department:
+          type: ["string", "null"]
+        website:
           type: ["string", "null"]
         passport_number:
           type: ["string", "null"]

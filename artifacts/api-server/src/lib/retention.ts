@@ -14,6 +14,11 @@ export const RETENTION_DAYS: Record<string, number> = {
   receipt: 365 * 5,
   id_document: 30,
   visa_document: 30,
+  // Business cards are business contact details deliberately handed over, kept
+  // for the life of the commercial relationship rather than destroyed at 30 days
+  // like identity documents.
+  business_card_front: 365 * 5,
+  business_card_back: 365 * 5,
   other: 365 * 2,
 };
 

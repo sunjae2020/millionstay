@@ -585,6 +585,14 @@ export interface ContactResponse {
   /** @nullable */
   sns_id?: string | null;
   /** @nullable */
+  company_name?: string | null;
+  /** @nullable */
+  job_title?: string | null;
+  /** @nullable */
+  department?: string | null;
+  /** @nullable */
+  website?: string | null;
+  /** @nullable */
   passport_number?: string | null;
   /** @nullable */
   passport_expiry?: string | null;
@@ -636,6 +644,14 @@ export interface CreateContactBody {
   /** @nullable */
   sns_id?: string | null;
   /** @nullable */
+  company_name?: string | null;
+  /** @nullable */
+  job_title?: string | null;
+  /** @nullable */
+  department?: string | null;
+  /** @nullable */
+  website?: string | null;
+  /** @nullable */
   passport_number?: string | null;
   /** @nullable */
   passport_expiry?: string | null;
@@ -684,6 +700,14 @@ export interface UpdateContactBody {
   gender?: string | null;
   /** @nullable */
   sns_id?: string | null;
+  /** @nullable */
+  company_name?: string | null;
+  /** @nullable */
+  job_title?: string | null;
+  /** @nullable */
+  department?: string | null;
+  /** @nullable */
+  website?: string | null;
   /** @nullable */
   passport_number?: string | null;
   /** @nullable */

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Layout, PageHeader } from "@/components/Layout";
@@ -17,6 +17,8 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Save, AlertTriangle } from "lucide-react";
 import { Link } from "wouter";
+import { ContactMediaPanel, type PendingCards } from "@/components/ContactMediaPanel";
+import { apiFetch } from "@/lib/apiFetch";
 import { differenceInDays, parseISO } from "date-fns";
 
 const COUNTRIES = [
@@ -39,6 +41,10 @@ interface ContactForm {
   nationality: string;
   gender: string;
   sns_id: string;
+  company_name: string;
+  job_title: string;
+  department: string;
+  website: string;
   passport_number: string;
   passport_expiry: string;
   visa_type: string;
@@ -82,11 +88,12 @@ export default function ContactDetail() {
     id!, { query: { enabled: !isNew && !!id, queryKey: getGetContactQueryKey(id!) } }
   );
 
-  const { register, handleSubmit, reset, control, watch, formState: { errors } } = useForm<ContactForm>({
+  const { register, handleSubmit, reset, control, watch, setValue, getValues, formState: { errors } } = useForm<ContactForm>({
     defaultValues: {
       first_name: "", last_name: "", title: "", other_name: "", email: "",
       mobile_number: "", office_number: "", date_of_birth: "", nationality: "",
-      gender: "", sns_id: "", passport_number: "", passport_expiry: "", visa_type: "",
+      gender: "", sns_id: "", company_name: "", job_title: "", department: "", website: "",
+      passport_number: "", passport_expiry: "", visa_type: "",
       visa_expiry: "", address_line1: "", suburb: "", state: "", postcode: "",
       country: "Australia", portal_enabled: false, portal_user_id: "", profile_photo_url: "",
       description: "", manual_input: false, status: "Active",
@@ -111,6 +118,10 @@ export default function ContactDetail() {
         nationality: contact.nationality ?? "",
         gender: contact.gender ?? "",
         sns_id: contact.sns_id ?? "",
+        company_name: contact.company_name ?? "",
+        job_title: contact.job_title ?? "",
+        department: contact.department ?? "",
+        website: contact.website ?? "",
         passport_number: contact.passport_number ?? "",
         passport_expiry: contact.passport_expiry ?? "",
         visa_type: contact.visa_type ?? "",
@@ -130,9 +141,34 @@ export default function ContactDetail() {
     }
   }, [contact, reset]);
 
+  // Business cards are scanned before the contact necessarily exists, so the
+  // uploaded images are held here and attached to the record once it is saved.
+  const pendingCardsRef = useRef<PendingCards>({});
+  const [docRefresh, setDocRefresh] = useState(0);
+
+  async function attachPendingCards(contactId: number) {
+    const cards = pendingCardsRef.current;
+    if (!cards.front && !cards.back) return;
+    try {
+      await apiFetch(`/api/v1/contacts/${contactId}/business-card`, {
+        method: "POST",
+        body: JSON.stringify({
+          ...(cards.front ? { front: cards.front } : {}),
+          ...(cards.back ? { back: cards.back } : {}),
+        }),
+      });
+      pendingCardsRef.current = {};
+      setDocRefresh((n) => n + 1);
+    } catch (err) {
+      // The contact itself saved fine — surface the card failure without losing it.
+      console.error("[contact] attaching business card failed", err);
+    }
+  }
+
   const createMutation = useCreateContact({
     mutation: {
-      onSuccess: () => {
+      onSuccess: async (created) => {
+        if (created?.id) await attachPendingCards(created.id);
         qc.invalidateQueries({ queryKey: getListContactsQueryKey() });
         navigate("/crm/contacts");
       },
@@ -141,13 +177,21 @@ export default function ContactDetail() {
 
   const updateMutation = useUpdateContact({
     mutation: {
-      onSuccess: () => {
+      onSuccess: async () => {
+        if (id) await attachPendingCards(id);
         qc.invalidateQueries({ queryKey: getListContactsQueryKey() });
         if (id) qc.invalidateQueries({ queryKey: getGetContactQueryKey(id) });
         navigate("/crm/contacts");
       },
     },
   });
+
+  /** Apply the OCR fields the admin ticked in the approval dialog. */
+  function applyScannedFields(fields: Record<string, string>) {
+    for (const [key, value] of Object.entries(fields)) {
+      setValue(key as keyof ContactForm, value, { shouldDirty: true });
+    }
+  }
 
   const onSubmit = (values: ContactForm) => {
     const data = {
@@ -172,6 +216,10 @@ export default function ContactDetail() {
       title: values.title || null,
       other_name: values.other_name || null,
       sns_id: values.sns_id || null,
+      company_name: values.company_name || null,
+      job_title: values.job_title || null,
+      department: values.department || null,
+      website: values.website || null,
     };
     if (isNew) {
       createMutation.mutate({ data });
@@ -301,6 +349,29 @@ export default function ContactDetail() {
                   </div>
                 </div>
 
+                {/* Work — the fields a business card carries. */}
+                <div className="rounded-lg border p-4 space-y-4">
+                  <h3 className="font-semibold text-sm">{t('contact.section_work')}</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid gap-1.5">
+                      <Label>{t('contact.label_company')}</Label>
+                      <Input {...register("company_name")} />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label>{t('contact.label_department')}</Label>
+                      <Input {...register("department")} />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label>{t('contact.label_job_title')}</Label>
+                      <Input {...register("job_title")} />
+                    </div>
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label>{t('contact.label_website')}</Label>
+                    <Input {...register("website")} placeholder="https://..." />
+                  </div>
+                </div>
+
                 {/* KYC */}
                 <div className="rounded-lg border p-4 space-y-4">
                   <h3 className="font-semibold text-sm">{t('contact.section_identity')}</h3>
@@ -370,17 +441,16 @@ export default function ContactDetail() {
 
               {/* Right column */}
               <div className="space-y-4">
-                {/* Photo */}
-                {profilePhoto && (
-                  <div className="rounded-lg border p-4">
-                    <Label className="mb-2 block">{t('contact.photo_preview')}</Label>
-                    <img src={profilePhoto} alt="Profile" className="w-full max-h-40 object-contain rounded" />
-                  </div>
-                )}
-                <div className="rounded-lg border p-4 space-y-4">
-                  <h3 className="font-semibold text-sm">{t('contact.section_photo_url')}</h3>
-                  <Input {...register("profile_photo_url")} placeholder="https://..." />
-                </div>
+                {/* Profile photo + business card (upload, OCR, stored files) */}
+                <ContactMediaPanel
+                  contactId={id}
+                  photoUrl={profilePhoto ?? ""}
+                  onPhotoChange={(url) => setValue("profile_photo_url", url, { shouldDirty: true })}
+                  getCurrentValues={() => getValues() as unknown as Record<string, string>}
+                  onApplyFields={applyScannedFields}
+                  onPendingCardsChange={(cards) => { pendingCardsRef.current = cards; }}
+                  refreshToken={docRefresh}
+                />
 
                 {/* Portal */}
                 <div className="rounded-lg border p-4 space-y-4">
