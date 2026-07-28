@@ -139,7 +139,7 @@ export default function InspectionSign() {
   const shell = (children: React.ReactNode) => (
     <div className="min-h-screen flex flex-col bg-background">
       {DEV_SITE ? <DevNavbar /> : <Navbar />}
-      <main className="flex-1 container max-w-2xl py-8">{children}</main>
+      <main className="flex-1 w-full mx-auto max-w-3xl px-4 sm:px-6 py-8 sm:py-12">{children}</main>
       {DEV_SITE ? <DevFooter /> : <Footer />}
     </div>
   );
@@ -152,7 +152,7 @@ export default function InspectionSign() {
 
   if (loadError) {
     return shell(
-      <div className="rounded-2xl border bg-card p-8 text-center">
+      <div className="mx-auto max-w-md rounded-2xl border bg-card p-8 text-center">
         <AlertCircle className="w-10 h-10 mx-auto text-muted-foreground" />
         <h1 className="mt-4 text-xl font-bold">{t("inspectionSign.unavailable")}</h1>
         <p className="mt-2 text-muted-foreground">{loadError.message}</p>
@@ -162,7 +162,7 @@ export default function InspectionSign() {
 
   if (done || view?.signed) {
     return shell(
-      <div className="rounded-2xl border bg-card p-8 text-center">
+      <div className="mx-auto max-w-md rounded-2xl border bg-card p-8 text-center">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
           <CheckCircle2 className="w-9 h-9 text-primary" />
         </div>
@@ -180,16 +180,16 @@ export default function InspectionSign() {
   const meta = view.meta ?? {};
 
   return shell(
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-bold">{view.template.heading}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{view.template.heading}</h1>
+        <p className="mt-1.5 text-sm text-muted-foreground">
           {t(`inspectionSign.phase_${view.phase}`)} · {view.report_ref}
         </p>
       </div>
 
       {/* Header summary */}
-      <div className="rounded-xl border bg-card p-4 grid grid-cols-2 gap-y-2 gap-x-4 text-sm">
+      <div className="rounded-xl border bg-card p-4 sm:p-5 grid grid-cols-2 sm:grid-cols-4 gap-y-3 gap-x-4 text-sm">
         {[
           [t("inspectionSign.unit"), [meta.unit_no, meta.unit_type].filter(Boolean).join(" · ")],
           [t("inspectionSign.tenant"), meta.tenant_name],
@@ -214,7 +214,7 @@ export default function InspectionSign() {
           return (
             <div key={group.key} className="rounded-xl border bg-card overflow-hidden">
               <button
-                className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium"
+                className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-sm font-medium hover:bg-muted/40 transition-colors"
                 onClick={() => setOpenGroups((prev) => ({ ...prev, [group.key]: !open }))}
               >
                 <span className="flex items-center gap-2">
@@ -257,11 +257,13 @@ export default function InspectionSign() {
                           </div>
                         )}
 
-                        <div className="flex gap-2">
+                        {/* Full-width taps on a phone; on a wider screen they
+                            stop growing so the row stays scannable. */}
+                        <div className="flex gap-2 sm:justify-start">
                           <Button
                             size="sm"
                             variant={item.response?.decision === "agreed" ? "default" : "outline"}
-                            className="flex-1"
+                            className="flex-1 sm:flex-none sm:min-w-32"
                             onClick={() => respond(item, "agreed")}
                           >
                             {t("inspectionSign.agree")}
@@ -269,7 +271,7 @@ export default function InspectionSign() {
                           <Button
                             size="sm"
                             variant={isDisputed ? "destructive" : "outline"}
-                            className="flex-1"
+                            className="flex-1 sm:flex-none sm:min-w-32"
                             onClick={() => respond(item, "disputed")}
                           >
                             {t("inspectionSign.dispute")}
@@ -292,7 +294,7 @@ export default function InspectionSign() {
                         {!view.signed && (
                           <Button
                             size="sm" variant="ghost"
-                            className="text-muted-foreground"
+                            className="-ml-2 text-muted-foreground"
                             onClick={() => { uploadTargetRef.current = item.id; fileInputRef.current?.click(); }}
                             disabled={uploading === item.id}
                           >
@@ -327,22 +329,22 @@ export default function InspectionSign() {
       />
 
       {/* 특약사항 */}
-      <div className="rounded-xl border bg-card p-4">
-        <h2 className="text-sm font-semibold mb-2">{t("inspectionSign.special_terms")}</h2>
-        <ol className="space-y-1.5 text-xs text-muted-foreground list-decimal pl-4">
+      <div className="rounded-xl border bg-card p-4 sm:p-5">
+        <h2 className="text-sm font-semibold mb-2.5">{t("inspectionSign.special_terms")}</h2>
+        <ol className="space-y-2 text-xs leading-relaxed text-muted-foreground list-decimal pl-4">
           {view.template.specialTerms.map((term, i) => <li key={i}>{term}</li>)}
         </ol>
       </div>
 
       {/* Signature */}
-      <div className="rounded-xl border bg-card p-4 space-y-3">
+      <div className="rounded-xl border bg-card p-4 sm:p-5 space-y-3.5">
         <h2 className="text-sm font-semibold">{t("inspectionSign.sign_title")}</h2>
         {unanswered > 0 && (
           <p className="text-xs text-amber-700">{t("inspectionSign.unanswered", { count: unanswered })}</p>
         )}
         <div>
           <label className="text-xs text-muted-foreground">{t("inspectionSign.signer_name")}</label>
-          <Input value={signerName} onChange={(e) => setSignerName(e.target.value)} />
+          <Input className="mt-1" value={signerName} onChange={(e) => setSignerName(e.target.value)} />
         </div>
         <SignaturePad value={signature} onChange={setSignature} label={t("inspectionSign.signature")} />
         <label className="flex items-start gap-2 text-xs text-muted-foreground">
@@ -352,7 +354,7 @@ export default function InspectionSign() {
         {submitError && (
           <p className="text-sm text-red-600 flex items-center gap-1.5"><X className="w-4 h-4" />{submitError}</p>
         )}
-        <Button className="w-full" onClick={submit} disabled={submitting || !signature || !consent}>
+        <Button className="w-full h-11 text-base" onClick={submit} disabled={submitting || !signature || !consent}>
           {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : t("inspectionSign.submit")}
         </Button>
       </div>

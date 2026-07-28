@@ -2,7 +2,6 @@ import { useRef, useEffect, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { RotateCcw, PenLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { HS, HS_TINT } from "@/lib/homestay-theme";
 
 // Canvas signature pad — draws with mouse/touch and emits a PNG data URL.
 // Ported from Edubee CRM (self-contained; no third-party signature library).
@@ -134,15 +133,16 @@ export default function SignaturePad({
 
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
-      {(label ?? t("signaturePad.label")) && <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: HS.mocha }}>{label ?? t("signaturePad.label")}</p>}
-      <div
-        className="relative rounded-xl border overflow-hidden"
-        style={{ borderColor: HS.mocha, backgroundColor: HS_TINT.cream }}
-      >
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {label ?? t("signaturePad.label")}
+      </p>
+      {/* Neutral, token-driven surface so the pad inherits whichever tenant
+          palette the app is themed with instead of the homestay cream. */}
+      <div className="relative rounded-xl border border-border bg-muted/30 overflow-hidden">
         {isEmpty && !disabled && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 pointer-events-none select-none">
-            <PenLine className="w-5 h-5" style={{ color: HS.mocha }} />
-            <p className="text-xs" style={{ color: HS.mocha }}>{t("signaturePad.hint")}</p>
+            <PenLine className="w-5 h-5 text-muted-foreground/60" />
+            <p className="text-xs text-muted-foreground">{t("signaturePad.hint")}</p>
           </div>
         )}
         <canvas
@@ -154,7 +154,7 @@ export default function SignaturePad({
       </div>
       {!disabled && (
         <div className="flex justify-end">
-          <Button type="button" variant="ghost" size="sm" onClick={clear} className="h-7 px-2 text-xs gap-1" style={{ color: HS.brand }}>
+          <Button type="button" variant="ghost" size="sm" onClick={clear} className="h-7 px-2 text-xs gap-1 text-primary">
             <RotateCcw className="w-3 h-3" /> {t("signaturePad.clear")}
           </Button>
         </div>
