@@ -632,12 +632,12 @@
     "col_amount": "金額",
     "col_due_date": "支払期限",
     "ph_name_example": "例: Sunjae KIM",
-    "type_guest": "ゲスト",
-    "type_space_owner": "スペースオーナー",
+    "type_guest": "ゲスト（短期滞在）",
+    "type_space_owner": "オーナー・貸主",
     "type_broker": "ブローカー",
     "type_manager": "マネージャー",
     "type_real_estate_agent": "不動産エージェント",
-    "type_service_host": "サービスホスト",
+    "type_service_host": "協力業者",
     "type_partner": "パートナー",
     "label_primary_contact": "主要連絡先",
     "label_secondary_contact": "副次連絡先",
@@ -740,7 +740,13 @@
     "empty_files": "このアカウントのファイルがありません",
     "sub_accounts": "下位アカウント",
     "upload_file": "ファイルをアップロード",
-    "file_upload_failed": "ファイルをアップロードできませんでした"
+    "file_upload_failed": "ファイルをアップロードできませんでした",
+    "type_tenant": "賃借人（長期滞在）",
+    "type_agent": "不動産仲介",
+    "type_homestay_host": "ホームステイホスト",
+    "country_other": "その他（直接入力）",
+    "postcode_search": "郵便番号検索",
+    "postcode_search_failed": "住所検索を開けませんでした"
   },
   "lead": {
     "new": "新規リード",
@@ -2965,7 +2971,9 @@
     "account_type_guest": "ゲスト",
     "account_type_spaceowner": "スペースオーナー",
     "account_type_landlord": "賃貸人",
-    "account_type_agent": "エージェント"
+    "account_type_agent": "エージェント",
+    "account_type_tenant": "賃借人",
+    "occupants_owners": "賃借人・ゲスト {{occupants}} · オーナー {{owners}}"
   },
   "dash_overview": {
     "no_upcoming_bookings": "今後の予約はありません",

@@ -25,19 +25,14 @@ import { ArrowLeft, Save, ExternalLink, AlertTriangle, Building2, FileText, Down
 import { Link } from "wouter";
 import { useBrand } from "@/contexts/ThemeContext";
 import { SUPPORTED_CURRENCIES, formatMoney } from "@/lib/currency";
+import { accountTypeOptions, accountTypeLabel, accountTypeColor } from "@/lib/accountTypes";
+import { COUNTRIES, normaliseCountry, defaultCountry } from "@/lib/countries";
+import { formatPersonName } from "@/lib/nameFormat";
+import { useModules } from "@/hooks/useModules";
+import { KoreanAddressSearch, type KoreanAddress } from "@/components/KoreanAddressSearch";
 import { formatDate } from "@/lib/date";
 
-const ACCOUNT_TYPE_COLORS: Record<string, string> = {
-  Guest: "bg-blue-100 text-blue-700 border-blue-200",
-  SpaceOwner: "bg-purple-100 text-purple-700 border-purple-200",
-  Broker: "bg-teal-100 text-teal-700 border-teal-200",
-  Manager: "bg-cyan-100 text-cyan-700 border-cyan-200",
-  RealEstateAgent: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  ServiceHost: "bg-orange-100 text-orange-700 border-orange-200",
-  Partner: "bg-indigo-100 text-indigo-700 border-indigo-200",
-};
-
-const ACCOUNT_TYPES_WITH_FINANCE = ["SpaceOwner", "Broker", "Manager", "RealEstateAgent", "ServiceHost", "Partner"];
+const ACCOUNT_TYPES_WITH_FINANCE = ["SpaceOwner", "Agent", "ServiceHost", "Partner", "HomestayHost"];
 
 const CURRENCIES = SUPPORTED_CURRENCIES.map((c) => c.code);
 
@@ -151,6 +146,8 @@ const TX_KIND_COLORS: Record<string, string> = {
 export default function AccountDetail() {
   const { t } = useTranslation();
   const { currency: brandCurrency } = useBrand();
+  const { homestayEnabled } = useModules();
+  const typeOptions = accountTypeOptions(homestayEnabled);
   const params = useParams<{ id: string }>();
   const isNew = params.id === "new";
   const id = isNew ? null : parseInt(params.id ?? "0", 10);
@@ -235,9 +232,9 @@ export default function AccountDetail() {
 
   const { register, handleSubmit, reset, control, watch, setValue, getValues, formState: { errors } } = useForm<AccountForm>({
     defaultValues: {
-      name: "", account_type: "Guest", primary_contact_id: null, secondary_contact_id: null,
+      name: "", account_type: "Tenant", primary_contact_id: null, secondary_contact_id: null,
       account_email: "", website_url: "", phone1: "", phone2: "",
-      address_line1: "", address_suburb: "", address_state: "", address_postcode: "", address_country: "Australia",
+      address_line1: "", address_suburb: "", address_state: "", address_postcode: "", address_country: defaultCountry(),
       secondary_address_line1: "", secondary_address_suburb: "", secondary_address_state: "",
       secondary_address_postcode: "", secondary_address_country: "",
       payment_info_id: null, default_commission_id: null, default_currency: brandCurrency,
@@ -259,7 +256,7 @@ export default function AccountDetail() {
     if (account) {
       reset({
         name: account.name ?? "",
-        account_type: account.account_type ?? "Guest",
+        account_type: account.account_type ?? "Tenant",
         primary_contact_id: account.primary_contact_id ?? null,
         secondary_contact_id: account.secondary_contact_id ?? null,
         account_email: account.account_email ?? "",
@@ -270,7 +267,7 @@ export default function AccountDetail() {
         address_suburb: account.address_suburb ?? "",
         address_state: account.address_state ?? "",
         address_postcode: account.address_postcode ?? "",
-        address_country: account.address_country ?? "Australia",
+        address_country: normaliseCountry(account.address_country) || defaultCountry(),
         secondary_address_line1: account.secondary_address_line1 ?? "",
         secondary_address_suburb: account.secondary_address_suburb ?? "",
         secondary_address_state: account.secondary_address_state ?? "",
@@ -360,7 +357,9 @@ export default function AccountDetail() {
   /** Applies fields approved in the identity panel and records where they came from. */
   const handleApplyFields = (fields: Record<string, string>, source: FillSource) => {
     for (const [key, value] of Object.entries(fields)) {
-      setValue(key as keyof AccountForm, value as never, { shouldDirty: true });
+      // A site may still print "KR" — store it the way we store countries.
+      const v = key === "address_country" ? normaliseCountry(value) : value;
+      setValue(key as keyof AccountForm, v as never, { shouldDirty: true });
     }
     setFieldSources((prev) => {
       const next = { ...prev };
@@ -400,6 +399,40 @@ export default function AccountDetail() {
 
   if (!isNew && isLoading) return <Layout><p className="p-6 text-sm text-muted-foreground">{t('common.loading')}</p></Layout>;
 
+  /** Writes a 우편번호-찾기 result onto either address block. */
+  const applyKoreanAddress = (prefix: "" | "secondary_", a: KoreanAddress) => {
+    const set = (suffix: string, value: string) =>
+      setValue(`${prefix}address_${suffix}` as keyof AccountForm, value as never, { shouldDirty: true });
+    set("line1", a.address);
+    set("suburb", a.suburb);
+    set("state", a.state);
+    set("postcode", a.postcode);
+    set("country", a.country);
+  };
+
+  /** Country picker that keeps free text working for anywhere unlisted. */
+  const CountryField = ({ name }: { name: "address_country" | "secondary_address_country" }) => (
+    <Controller name={name} control={control} render={({ field }) => {
+      const current = normaliseCountry(field.value);
+      const known = COUNTRIES.some((c) => c.value === current);
+      return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Select value={known ? current : "__other"} onValueChange={(v) => field.onChange(v === "__other" ? "" : v)}>
+            <SelectTrigger><SelectValue placeholder={t('account.label_country')} /></SelectTrigger>
+            <SelectContent>
+              {COUNTRIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.value}</SelectItem>)}
+              <SelectItem value="__other">{t('account.country_other')}</SelectItem>
+            </SelectContent>
+          </Select>
+          {!known && (
+            <Input value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value)}
+              placeholder={t('account.label_country')} />
+          )}
+        </div>
+      );
+    }} />
+  );
+
   const duplicateBanner = duplicates.length > 0 && (
     <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-900 p-3">
       <p className="text-sm font-medium text-amber-800 dark:text-amber-200 flex items-center gap-1.5">
@@ -436,13 +469,14 @@ export default function AccountDetail() {
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Guest">{t('account.type_guest')}</SelectItem>
-                    <SelectItem value="SpaceOwner">{t('account.type_space_owner')}</SelectItem>
-                    <SelectItem value="Broker">{t('account.type_broker')}</SelectItem>
-                    <SelectItem value="Manager">{t('account.type_manager')}</SelectItem>
-                    <SelectItem value="RealEstateAgent">{t('account.type_real_estate_agent')}</SelectItem>
-                    <SelectItem value="ServiceHost">{t('account.type_service_host')}</SelectItem>
-                    <SelectItem value="Partner">{t('account.type_partner')}</SelectItem>
+                    {typeOptions.map((d) => (
+                      <SelectItem key={d.value} value={d.value}>{t(d.labelKey)}</SelectItem>
+                    ))}
+                    {/* A legacy value still on the record stays selectable so
+                        opening the page cannot silently retype the account. */}
+                    {field.value && !typeOptions.some((d) => d.value === field.value) && (
+                      <SelectItem value={field.value}>{field.value}</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               )} />
@@ -526,25 +560,31 @@ export default function AccountDetail() {
 
         {/* Address */}
         <div className="rounded-lg border p-4 space-y-4">
-          <h3 className="font-semibold text-sm">{t('account.section_address')}</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-sm">{t('account.section_address')}</h3>
+            <KoreanAddressSearch onSelect={(a) => applyKoreanAddress("", a)} />
+          </div>
           <Input {...register("address_line1")} placeholder={t('account.label_address')} />
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="col-span-2"><Input {...register("address_suburb")} placeholder={t('account.label_city')} /></div>
             <Input {...register("address_state")} placeholder={t('account.label_state')} />
             <Input {...register("address_postcode")} placeholder={t('account.label_postcode')} />
           </div>
-          <Input {...register("address_country")} placeholder={t('account.label_country')} />
+          <CountryField name="address_country" />
         </div>
 
         <div className="rounded-lg border p-4 space-y-4">
-          <h3 className="font-semibold text-sm">{t('account.section_address')} {t('account.suffix_secondary')}</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-sm">{t('account.section_address')} {t('account.suffix_secondary')}</h3>
+            <KoreanAddressSearch onSelect={(a) => applyKoreanAddress("secondary_", a)} />
+          </div>
           <Input {...register("secondary_address_line1")} placeholder={t('account.label_address')} />
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="col-span-2"><Input {...register("secondary_address_suburb")} placeholder={t('account.label_city')} /></div>
             <Input {...register("secondary_address_state")} placeholder={t('account.label_state')} />
             <Input {...register("secondary_address_postcode")} placeholder={t('account.label_postcode')} />
           </div>
-          <Input {...register("secondary_address_country")} placeholder={t('account.label_country')} />
+          <CountryField name="secondary_address_country" />
         </div>
 
         {/* Finance — only for non-Guest/Staff */}
@@ -678,8 +718,8 @@ export default function AccountDetail() {
               )}
               <span>{account?.name ?? t("nav.account")}</span>
               {account && (
-                <Badge variant="outline" className={`text-xs ${ACCOUNT_TYPE_COLORS[account.account_type] ?? ""}`}>
-                  {account.account_type}
+                <Badge variant="outline" className={`text-xs ${accountTypeColor(account.account_type)}`}>
+                  {accountTypeLabel(t, account.account_type)}
                 </Badge>
               )}
             </div>
@@ -752,7 +792,7 @@ export default function AccountDetail() {
                       related.contacts.map((c: any) => (
                         <tr key={c.id} className="hover:bg-muted/30 transition-colors cursor-pointer"
                           onClick={() => setPreview({
-                            title: [c.last_name, c.first_name].filter(Boolean).join(" "),
+                            title: formatPersonName(c.first_name, c.last_name),
                             subtitle: [c.job_title, c.company_name].filter(Boolean).join(" · ") || null,
                             badge: { label: c.role === "Primary" ? t('account.role_primary') : t('account.role_secondary') },
                             fields: [
@@ -767,7 +807,7 @@ export default function AccountDetail() {
                             ],
                             detailUrl: `/crm/contacts/${c.id}`,
                           })}>
-                          <td className="px-4 py-3 font-medium">{[c.last_name, c.first_name].filter(Boolean).join(" ")}</td>
+                          <td className="px-4 py-3 font-medium">{formatPersonName(c.first_name, c.last_name)}</td>
                           <td className="px-4 py-3 text-muted-foreground">
                             {c.role === "Primary" ? t('account.role_primary') : t('account.role_secondary')}
                           </td>

@@ -280,8 +280,9 @@ const SYSTEM_PROMPT =
   `separators, e.g. "02-1234-5678". A fax number is NOT a phone field — put it in notes.\n` +
   `- Address: the full street address in address_line1, the city/시·군·구 in address_suburb, the ` +
   `province/state/도 in address_state, the postal code in address_postcode, and the country in ` +
-  `address_country as a two-letter ISO code (KR, AU, JP…). If the address is one unsplittable line, ` +
-  `put it all in address_line1 and leave the rest out.\n` +
+  `address_country as a full country NAME in the language the address is written in ` +
+  `(대한민국, Australia, 日本 …) — never a two-letter ISO code. If the address is one unsplittable ` +
+  `line, put it all in address_line1 and leave the rest out.\n` +
   `- biz_registration_no is the Korean 사업자등록번호 — 10 digits, normally printed as "123-45-67890". ` +
   `Do NOT confuse it with 법인등록번호 (13 digits) or 통신판매업신고번호; those belong in notes.\n` +
   `- ceo_name is the 대표/대표이사/대표자 name.\n` +
