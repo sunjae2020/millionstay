@@ -55,7 +55,7 @@ export default function Dashboard() {
           </div>
           <span className="inline-flex items-center gap-1.5 self-start text-xs font-semibold text-green-600 bg-green-50 dark:bg-green-500/10 px-2.5 py-1 rounded-full">
             <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-            Live data
+            {t("dashboard.live_data")}
           </span>
         </div>
         <div className="mt-3 pb-3">

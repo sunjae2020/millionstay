@@ -12,6 +12,7 @@ import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-tab
 import { Languages, Save, Sparkles, Loader2, ExternalLink, CheckCheck } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
+import adminEn from "@/locales/en/translation.json";
 
 // ─── Page registry ───────────────────────────────────────────────────────────
 // Groups the flat i18n `translations` keys into editable "pages" by key prefix.
@@ -26,6 +27,8 @@ type PageDef = { prefix: string; label: string; site: string; path?: string };
 const SITES = [
   { id: "guest", label: "Guest Site", host: "www.millionstay.com", previewBase: "https://millionstay.com.au" },
   { id: "homestay", label: "Homestay", host: "homestay.millionstay.com", previewBase: "https://homestay.millionstay.com" },
+  { id: "development", label: "Building Site", host: "metheim.com", previewBase: "https://metheim.com" },
+  { id: "admin", label: "Admin Console", host: "", previewBase: "" },
 ];
 
 const PAGES: PageDef[] = [
@@ -56,6 +59,29 @@ const PAGES: PageDef[] = [
   { prefix: "homestay.nav", label: "Homestay · Navigation", site: "homestay" },
   { prefix: "homestay.footer", label: "Homestay · Footer", site: "homestay" },
   { prefix: "homestay.sections", label: "Homestay · Shared Sections", site: "homestay" },
+  // Building site — single-building white-label instances (Metheim Yeosu).
+  { prefix: "dev.home", label: "Building · Home", site: "development", path: "/" },
+  { prefix: "dev.about", label: "Building · About", site: "development", path: "/about" },
+  { prefix: "dev.buy", label: "Building · Buy / Sales", site: "development", path: "/buy" },
+  { prefix: "dev.listing", label: "Building · Sale Listings", site: "development", path: "/buy/list" },
+  { prefix: "dev.rent", label: "Building · Rent / Stay", site: "development", path: "/rent" },
+  { prefix: "dev.mgmt", label: "Building · Management", site: "development", path: "/management" },
+  { prefix: "dev.directions", label: "Building · Directions", site: "development", path: "/directions" },
+  { prefix: "dev.stayplan", label: "Building · Stay Plans", site: "development", path: "/stay-plan" },
+  { prefix: "dev.resident", label: "Building · For Residents", site: "development", path: "/for-student" },
+  { prefix: "dev.owner", label: "Building · For Owners", site: "development", path: "/for-homestay-host" },
+  { prefix: "dev.partner", label: "Building · For Partners", site: "development", path: "/for-agent" },
+  { prefix: "dev.privacy", label: "Building · Privacy", site: "development", path: "/privacy-policy" },
+  { prefix: "dev.terms", label: "Building · Terms", site: "development", path: "/terms" },
+  { prefix: "dev.nav", label: "Building · Navigation", site: "development" },
+  { prefix: "dev.footer", label: "Building · Footer", site: "development" },
+  { prefix: "dev.form", label: "Building · Shared Forms", site: "development" },
+  // Admin console — this app's own UI strings, one entry per top-level namespace
+  // of the bundled English resource. Derived rather than hand-listed so a new
+  // namespace becomes editable without touching this file.
+  ...Object.keys(adminEn)
+    .sort()
+    .map((ns) => ({ prefix: `admin.${ns}`, label: ns.replace(/_/g, " "), site: "admin" })),
 ];
 
 type Lang = { code: string; name: string; english_name: string | null; enabled: boolean; is_default: boolean; sort_order: number };
@@ -70,8 +96,10 @@ async function fetchLanguages(): Promise<Lang[]> {
   return (await res.json()).data ?? [];
 }
 
-async function fetchRows(lang: string): Promise<Row[]> {
-  const res = await apiFetch(`${TR_API}?lang=${encodeURIComponent(lang)}`);
+// The admin namespace alone holds thousands of keys, so ask the API for just the
+// prefix being edited instead of pulling the whole table on every page switch.
+async function fetchRows(lang: string, prefix: string): Promise<Row[]> {
+  const res = await apiFetch(`${TR_API}?lang=${encodeURIComponent(lang)}&prefix=${encodeURIComponent(prefix)}`);
   if (!res.ok) throw new Error("Failed to load translations");
   return (await res.json()).data ?? [];
 }
@@ -107,7 +135,7 @@ export default function PageTranslations() {
     setEdits({});
   }
 
-  const rowsQ = useQuery({ queryKey: ["page-translations", lang], queryFn: () => fetchRows(lang) });
+  const rowsQ = useQuery({ queryKey: ["page-translations", lang, prefix], queryFn: () => fetchRows(lang, prefix) });
   const pageRows = useMemo(() => {
     const all = rowsQ.data ?? [];
     return all
@@ -267,7 +295,8 @@ export default function PageTranslations() {
       />
 
       <div className="px-8 py-6">
-        {/* Site switcher — Guest (www) and Homestay are managed separately. */}
+        {/* Site switcher — the public sites and the admin console are managed
+            separately even though every key lives in one translations table. */}
         <div className="mb-4 inline-flex rounded-lg border bg-muted/30 p-1">
           {SITES.map((s) => (
             <button
@@ -278,14 +307,23 @@ export default function PageTranslations() {
               }`}
             >
               <span>{t(`page_translations.site_${s.id}`, { defaultValue: s.label })}</span>
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal">{s.host}</Badge>
+              {s.host && <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal">{s.host}</Badge>}
             </button>
           ))}
         </div>
 
+        {site === "admin" && (
+          <p className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+            {t("page_translations.admin_hint", {
+              defaultValue:
+                "These are this console's own labels, grouped by module. A saved value overrides the shipped wording for every user of this instance; leave a field empty to keep the default. Reload the console to see the change.",
+            })}
+          </p>
+        )}
+
         <div className="flex flex-wrap items-end gap-3 mb-4">
           <div>
-            <Label className="text-xs text-muted-foreground">{t("page_translations.page", { defaultValue: "Page" })}</Label>
+            <Label className="text-xs text-muted-foreground">{site === "admin" ? t("page_translations.module", { defaultValue: "Module" }) : t("page_translations.page", { defaultValue: "Page" })}</Label>
             <Select value={prefix} onValueChange={(v) => { setPrefix(v); setEdits({}); }}>
               <SelectTrigger className="w-72 mt-1"><SelectValue /></SelectTrigger>
               <SelectContent>

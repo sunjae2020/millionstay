@@ -254,26 +254,22 @@ interface CardDef {
   emoji: string;
   name: string;
   description: string;
-  getBadge: (status: IntegrationStatus | null) => { variant: BadgeVariant; label: string };
+  getBadge: (status: IntegrationStatus | null) => { variant: BadgeVariant; label: string; labelVars?: { suffix?: string } };
   Fields: React.ComponentType<{ status: IntegrationStatus | null; onRefresh: () => void }>;
   testEndpoint?: string;
   testLabel?: string;
   isComingSoon?: boolean;
 }
 
-const MapsFields = () => (
-  <p className="text-sm text-muted-foreground">
-    Uses <strong>OpenStreetMap / Nominatim</strong> for geocoding and Leaflet for map rendering.
-    No API key or configuration needed.
-  </p>
-);
+const MapsFields = () => {
+  const { t } = useTranslation();
+  return <p className="text-sm text-muted-foreground">{t("integrations.maps_body")}</p>;
+};
 
-const ICalFields = () => (
-  <p className="text-sm text-muted-foreground">
-    Configure iCal Import URLs on each <strong>Space</strong> detail page under the OTA Sync section.
-    Availability will be synced automatically.
-  </p>
-);
+const ICalFields = () => {
+  const { t } = useTranslation();
+  return <p className="text-sm text-muted-foreground">{t("integrations.ical_body")}</p>;
+};
 
 const AiFields = ({ status, onRefresh }: { status: IntegrationStatus | null; onRefresh: () => void }) => {
   const { t } = useTranslation();
@@ -284,11 +280,11 @@ const AiFields = ({ status, onRefresh }: { status: IntegrationStatus | null; onR
       <MaskedKeyInput value={status?.ai.masked_key ?? ""} envKey="ANTHROPIC_API_KEY" onSaved={onRefresh} />
     </div>
     <p className="text-xs text-muted-foreground">
-      Powers the landing-page chat assistant. Get a key at{" "}
+      {t("integrations.ai_key_hint")}{" "}
       <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
         console.anthropic.com
       </a>
-      {status?.ai.model && <> · Model: <strong>{status.ai.model}</strong></>}.
+      {status?.ai.model && <> · {t("integrations.ai_model", { model: status.ai.model })}</>}.
     </p>
     {status?.ai.error && <p className="text-xs text-red-600">{status.ai.error}</p>}
   </div>
@@ -379,10 +375,7 @@ const ModulesFields = ({ status, onRefresh }: { status: IntegrationStatus | null
         <span className="text-sm">{enabled ? t("common.enabled") : t("common.disabled")}</span>
       </div>
       <p className="text-xs text-muted-foreground">
-        When enabled, the sidebar shows the <strong>Homestay</strong> intake workflow —
-        Homestay Applications, Student Requests and Homestay Placements. Turn it off for
-        tenants that do not run homestay (the menus and their pages are hidden). Changes
-        appear after the next refresh; reload the app to update the sidebar immediately.
+        {t("integrations.modules_body")}
       </p>
     </div>
   );
@@ -393,17 +386,12 @@ const GoogleSheetsFields = () => {
   return (
   <div className="space-y-3 text-sm">
     <p className="text-muted-foreground">
-      Sync the <strong>Homestay Student Applications</strong> ops queue with a Google Sheet.
-      Editing a row's <strong>status</strong> or <strong>notes</strong> in the sheet updates the
-      matching application in real time. Student/guardian details stay read-only.
+      {t("integrations.sheets_body")}
     </p>
     <ol className="list-decimal list-inside space-y-1.5 text-xs text-muted-foreground">
-      <li>
-        Issue an API key with the <code className="bg-muted px-1 rounded">homestay:read</code> and{" "}
-        <code className="bg-muted px-1 rounded">homestay:write</code> scopes.
-      </li>
-      <li>In your Google Sheet, add the provided Apps Script and paste the key into Script Properties.</li>
-      <li>Run the install step once, then use the sheet's <strong>{APP_NAME} → Pull latest</strong> menu.</li>
+      <li>{t("integrations.sheets_step1")}</li>
+      <li>{t("integrations.sheets_step2")}</li>
+      <li>{t("integrations.sheets_step3", { menu: `${APP_NAME} → Pull latest` })}</li>
     </ol>
     <div className="flex flex-wrap items-center gap-2 pt-1">
       <Link href="/settings/api-keys">
@@ -425,115 +413,115 @@ const CARDS: CardDef[] = [
   {
     id: "stripe",
     emoji: "💳",
-    name: "Stripe Payments",
-    description: "Process payments, subscriptions, and invoices",
+    name: "integrations.card_stripe",
+    description: "integrations.card_stripe_desc",
     getBadge: (s) => {
-      if (!s) return { variant: "not-configured", label: "Not Configured" };
-      if (s.stripe.error) return { variant: "error", label: "Error" };
-      if (!s.stripe.configured) return { variant: "not-configured", label: "Not Configured" };
+      if (!s) return { variant: "not-configured", label: "integrations.badge_not_configured" };
+      if (s.stripe.error) return { variant: "error", label: "integrations.badge_error" };
+      if (!s.stripe.configured) return { variant: "not-configured", label: "integrations.badge_not_configured" };
       return s.stripe.mode === "live"
-        ? { variant: "connected", label: "Live Mode" }
-        : { variant: "test", label: "Test Mode" };
+        ? { variant: "connected", label: "integrations.badge_live" }
+        : { variant: "test", label: "integrations.badge_test" };
     },
     Fields: StripeFields,
     testEndpoint: "/api/v1/integrations/stripe/test",
-    testLabel: "Test Stripe",
+    testLabel: "integrations.test_stripe",
   },
   {
     id: "cloudinary",
     emoji: "☁️",
-    name: "Cloudinary Storage",
-    description: "Photo storage and automatic image optimisation",
+    name: "integrations.card_cloudinary",
+    description: "integrations.card_cloudinary_desc",
     getBadge: (s) => {
-      if (!s) return { variant: "not-configured", label: "Not Configured" };
-      if (s.cloudinary.error) return { variant: "error", label: "Error — check credentials" };
-      if (!s.cloudinary.configured) return { variant: "not-configured", label: "Not Configured" };
-      return { variant: "connected", label: s.cloudinary.storage_mb ? `Connected · ${s.cloudinary.storage_mb}MB` : "Connected" };
+      if (!s) return { variant: "not-configured", label: "integrations.badge_not_configured" };
+      if (s.cloudinary.error) return { variant: "error", label: "integrations.badge_error_credentials" };
+      if (!s.cloudinary.configured) return { variant: "not-configured", label: "integrations.badge_not_configured" };
+      return { variant: "connected", label: "integrations.badge_connected", labelVars: s.cloudinary.storage_mb ? { suffix: ` · ${s.cloudinary.storage_mb}MB` } : undefined };
     },
     Fields: CloudinaryFields,
     testEndpoint: "/api/v1/integrations/cloudinary/test",
-    testLabel: "Test Cloudinary",
+    testLabel: "integrations.test_cloudinary",
   },
   {
     id: "resend",
     emoji: "📧",
-    name: "Resend Email",
-    description: "Transactional emails for bookings, invoices, and notifications",
+    name: "integrations.card_resend",
+    description: "integrations.card_resend_desc",
     getBadge: (s) => {
-      if (!s) return { variant: "not-configured", label: "Not Configured" };
-      if (s.resend.error) return { variant: "error", label: "Error" };
-      if (!s.resend.configured) return { variant: "not-configured", label: "Not Configured" };
-      return { variant: "connected", label: "Connected" };
+      if (!s) return { variant: "not-configured", label: "integrations.badge_not_configured" };
+      if (s.resend.error) return { variant: "error", label: "integrations.badge_error" };
+      if (!s.resend.configured) return { variant: "not-configured", label: "integrations.badge_not_configured" };
+      return { variant: "connected", label: "integrations.badge_connected" };
     },
     Fields: ResendFields,
   },
   {
     id: "maps",
     emoji: "🗺️",
-    name: "Maps",
-    description: "Interactive maps and geocoding via OpenStreetMap — no API key required",
-    getBadge: () => ({ variant: "not-required", label: "Not Required" }),
+    name: "integrations.card_maps",
+    description: "integrations.card_maps_desc",
+    getBadge: () => ({ variant: "not-required", label: "integrations.badge_not_required" }),
     Fields: MapsFields,
   },
   {
     id: "ical",
     emoji: "📅",
-    name: "OTA / iCal Sync",
-    description: "Sync availability from Airbnb, Booking.com and other OTA platforms via iCal",
+    name: "integrations.card_ical",
+    description: "integrations.card_ical_desc",
     getBadge: (s) => {
-      if (!s) return { variant: "not-configured", label: "Not Configured" };
+      if (!s) return { variant: "not-configured", label: "integrations.badge_not_configured" };
       return s.ical.configured
-        ? { variant: "connected", label: "Connected" }
-        : { variant: "not-configured", label: "Not Configured" };
+        ? { variant: "connected", label: "integrations.badge_connected" }
+        : { variant: "not-configured", label: "integrations.badge_not_configured" };
     },
     Fields: ICalFields,
   },
   {
     id: "ai",
     emoji: "🤖",
-    name: "AI Chatbot",
-    description: "AI-powered guest assistant for the landing-page chat widget",
+    name: "integrations.card_ai",
+    description: "integrations.card_ai_desc",
     getBadge: (s) => {
-      if (!s) return { variant: "not-configured", label: "Not Configured" };
-      if (s.ai.error) return { variant: "error", label: "Error" };
-      if (!s.ai.configured) return { variant: "not-configured", label: "Not Configured" };
-      return { variant: "connected", label: "Connected" };
+      if (!s) return { variant: "not-configured", label: "integrations.badge_not_configured" };
+      if (s.ai.error) return { variant: "error", label: "integrations.badge_error" };
+      if (!s.ai.configured) return { variant: "not-configured", label: "integrations.badge_not_configured" };
+      return { variant: "connected", label: "integrations.badge_connected" };
     },
     Fields: AiFields,
     testEndpoint: "/api/v1/integrations/anthropic/test",
-    testLabel: "Test AI",
+    testLabel: "integrations.test_ai",
   },
   {
     id: "google-sheets",
     emoji: "📊",
-    name: "Google Sheets",
-    description: "Sync Homestay Student Applications with a Google Sheet (status & ops notes)",
-    getBadge: () => ({ variant: "not-required", label: "Self-service" }),
+    name: "integrations.card_sheets",
+    description: "integrations.card_sheets_desc",
+    getBadge: () => ({ variant: "not-required", label: "integrations.badge_self_service" }),
     Fields: GoogleSheetsFields,
   },
   {
     id: "billing",
     emoji: "🔁",
-    name: "Recurring Billing",
-    description: "Auto-generate periodic rent invoices for long-term contracts on incremental billing",
+    name: "integrations.card_billing",
+    description: "integrations.card_billing_desc",
     getBadge: (s) => {
-      if (!s) return { variant: "not-configured", label: "Not Configured" };
+      if (!s) return { variant: "not-configured", label: "integrations.badge_not_configured" };
       return s.billing?.recurring_invoices_enabled
-        ? { variant: "connected", label: "Enabled" }
-        : { variant: "not-configured", label: "Disabled" };
+        ? { variant: "connected", label: "integrations.badge_enabled" }
+        : { variant: "not-configured", label: "integrations.badge_disabled" };
     },
     Fields: BillingFields,
   },
   {
     id: "modules",
     emoji: "🧩",
-    name: "Homestay Module",
-    description: "Show or hide the Homestay intake workflow (applications, student requests, placements)",
+    name: "integrations.card_modules",
+    description: "integrations.card_modules_desc",
     getBadge: (s) => {
-      if (!s) return { variant: "not-configured", label: "Not Configured" };
+      if (!s) return { variant: "not-configured", label: "integrations.badge_not_configured" };
       return s.modules?.homestay_enabled ?? true
-        ? { variant: "connected", label: "Enabled" }
-        : { variant: "not-configured", label: "Disabled" };
+        ? { variant: "connected", label: "integrations.badge_enabled" }
+        : { variant: "not-configured", label: "integrations.badge_disabled" };
     },
     Fields: ModulesFields,
   },
@@ -552,7 +540,7 @@ function IntegrationCard({
   const [expanded, setExpanded] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ ok: boolean; msg: string } | null>(null);
-  const { variant, label } = card.getBadge(status);
+  const { variant, label, labelVars } = card.getBadge(status);
 
   async function handleTest() {
     if (!card.testEndpoint) return;
@@ -588,10 +576,10 @@ function IntegrationCard({
         <span className="text-2xl shrink-0">{card.emoji}</span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-sm">{card.name}</span>
-            <StatusBadge variant={variant} label={label} />
+            <span className="font-semibold text-sm">{t(card.name)}</span>
+            <StatusBadge variant={variant} label={`${t(label)}${labelVars?.suffix ?? ""}`} />
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5 truncate">{card.description}</p>
+          <p className="text-xs text-muted-foreground mt-0.5 truncate">{t(card.description)}</p>
         </div>
         {!card.isComingSoon && (
           expanded
@@ -629,7 +617,7 @@ function IntegrationCard({
                 disabled={testing}
               >
                 {testing && <Loader2 className="h-3 w-3 animate-spin" />}
-                {card.testLabel ?? t("integrations.test_connection")}
+                {card.testLabel ? t(card.testLabel) : t("integrations.test_connection")}
               </Button>
             </div>
           )}

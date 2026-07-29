@@ -49,4 +49,48 @@ i18n
     },
   });
 
+/* ─── DB-managed overrides ────────────────────────────────────────────────
+   The bundled JSON above is the source of truth for admin copy. On top of it we
+   overlay whatever an editor has saved under the `admin.` namespace in the
+   translations table (Content → Page Translations → Admin Console), so wording
+   can be corrected per tenant without a redeploy. Failures are swallowed — the
+   console keeps working on the bundled strings if the API is unreachable. */
+
+function unflatten(flat: Record<string, string>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(flat)) {
+    const parts = k.split(".");
+    let node = out;
+    for (let i = 0; i < parts.length - 1; i++) {
+      const p = parts[i]!;
+      if (typeof node[p] !== "object" || node[p] === null) node[p] = {};
+      node = node[p] as Record<string, unknown>;
+    }
+    node[parts[parts.length - 1]!] = v;
+  }
+  return out;
+}
+
+const overlaidLangs = new Set<string>();
+
+export async function loadDbTranslations(lng: string): Promise<void> {
+  if (!lng || overlaidLangs.has(lng)) return;
+  overlaidLangs.add(lng);
+  try {
+    const res = await fetch(`/api/v1/public/translations/${encodeURIComponent(lng)}?prefix=admin.`);
+    if (!res.ok) { overlaidLangs.delete(lng); return; }
+    const json = await res.json();
+    const flat: Record<string, string> = json?.data ?? {};
+    if (flat && Object.keys(flat).length > 0) {
+      i18n.addResourceBundle(lng, "translation", unflatten(flat), true, true);
+      if (lng === i18n.language) void i18n.changeLanguage(lng);
+    }
+  } catch {
+    overlaidLangs.delete(lng);
+  }
+}
+
+void loadDbTranslations(i18n.language);
+i18n.on("languageChanged", (lng) => void loadDbTranslations(lng));
+
 export default i18n;

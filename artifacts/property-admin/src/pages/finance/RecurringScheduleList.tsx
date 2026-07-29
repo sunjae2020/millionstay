@@ -108,7 +108,7 @@ export default function RecurringScheduleList() {
       });
     },
     onError: (err: any) => {
-      toast({ title: "Error", description: err?.message, variant: "destructive" });
+      toast({ title: t("common.error"), description: err?.message, variant: "destructive" });
     },
   });
 

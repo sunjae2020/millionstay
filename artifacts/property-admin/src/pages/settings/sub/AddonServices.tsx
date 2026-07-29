@@ -138,7 +138,7 @@ export default function AddonServicesPage() {
       qc.invalidateQueries({ queryKey: ["addon-services"] });
       setOpen(false); setEditing(null); setForm(EMPTY);
     },
-    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+    onError: (e: any) => toast({ title: t("common.error"), description: e.message, variant: "destructive" }),
   });
 
   const remove = useMutation({
@@ -151,7 +151,7 @@ export default function AddonServicesPage() {
       qc.invalidateQueries({ queryKey: ["addon-services"] });
       setDeleteId(null);
     },
-    onError: () => toast({ title: "Error", description: "Failed to delete.", variant: "destructive" }),
+    onError: () => toast({ title: t("common.error"), description: t("common.delete_failed"), variant: "destructive" }),
   });
 
   function openEdit(item: AddonService) {

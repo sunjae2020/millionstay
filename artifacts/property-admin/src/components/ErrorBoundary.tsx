@@ -1,4 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from "react";
+import i18n from "@/i18n";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -36,9 +37,9 @@ export class ErrorBoundary extends Component<Props, State> {
           <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mb-4">
             <AlertTriangle className="h-7 w-7 text-red-500" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-1">Something went wrong</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-1">{i18n.t("error_boundary.title")}</h2>
           <p className="text-sm text-gray-500 mb-6 max-w-sm">
-            An unexpected error occurred while rendering this page. Please try refreshing.
+            {i18n.t("error_boundary.description")}
           </p>
           {this.state.error && (
             <pre className="text-xs text-left bg-gray-50 border border-gray-200 rounded-lg p-3 mb-5 max-w-lg overflow-auto text-red-600 w-full">
@@ -47,10 +48,10 @@ export class ErrorBoundary extends Component<Props, State> {
           )}
           <div className="flex gap-3">
             <Button variant="outline" onClick={this.handleReset} className="gap-2">
-              <RefreshCw className="h-4 w-4" /> Try again
+              <RefreshCw className="h-4 w-4" /> {i18n.t("error_boundary.try_again")}
             </Button>
             <Button onClick={() => window.location.reload()}>
-              Reload page
+              {i18n.t("error_boundary.reload")}
             </Button>
           </div>
         </div>

@@ -58,10 +58,10 @@ export function DocumentVersions({
       const res = await apiFetch(freezeUrl, { method: "POST" });
       const body = await res.json().catch(() => null);
       if (!res.ok) throw new Error(body?.error ?? `HTTP ${res.status}`);
-      toast({ title: "Version frozen", description: `Saved v${body?.version ?? "?"} as an immutable snapshot.` });
+      toast({ title: t("doc_versions.toast_frozen"), description: t("doc_versions.toast_frozen_desc", { version: body?.version ?? "?" }) });
       qc.invalidateQueries({ queryKey });
     } catch (err) {
-      toast({ title: "Freeze failed", description: err instanceof Error ? err.message : "Error", variant: "destructive" });
+      toast({ title: t("doc_versions.toast_failed"), description: err instanceof Error ? err.message : t("common.error"), variant: "destructive" });
     } finally {
       setFreezing(false);
     }
@@ -70,22 +70,22 @@ export function DocumentVersions({
   return (
     <>
       <Button type="button" variant="outline" onClick={() => setOpen(true)}>
-        <History className="h-4 w-4 mr-1" /> Versions
+        <History className="h-4 w-4 mr-1" /> {t("doc_versions.button")}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><Lock className="h-4 w-4" /> Frozen Versions</DialogTitle>
+            <DialogTitle className="flex items-center gap-2"><Lock className="h-4 w-4" /> {t("doc_versions.dialog_title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Each time this document is emailed or frozen, an immutable PDF snapshot is stored.
+              {t("doc_versions.description")}
             </p>
             <div className="border rounded-lg divide-y max-h-72 overflow-y-auto">
               {isLoading ? (
-                <div className="p-4 text-center text-sm text-muted-foreground">Loading…</div>
+                <div className="p-4 text-center text-sm text-muted-foreground">{t("common.loading")}</div>
               ) : snapshots.length === 0 ? (
-                <div className="p-6 text-center text-sm text-muted-foreground">No frozen versions yet.</div>
+                <div className="p-6 text-center text-sm text-muted-foreground">{t("doc_versions.empty")}</div>
               ) : snapshots.map((s) => (
                 <div key={s.id} className="flex items-center justify-between px-3 py-2.5 text-sm">
                   <div>
@@ -97,7 +97,7 @@ export function DocumentVersions({
                     </div>
                   </div>
                   {s.download_url ? (
-                    <button type="button" className="p-1.5 rounded hover:bg-muted" title="Preview this version"
+                    <button type="button" className="p-1.5 rounded hover:bg-muted" title={t("doc_versions.preview")}
                       onClick={() => openPreview({
                         title: `${s.file_name} · v${s.version ?? "?"}`,
                         filename: s.file_name,

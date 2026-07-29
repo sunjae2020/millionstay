@@ -249,7 +249,7 @@ export default function ServiceHostDetail() {
         </div>
 
         <div className="rounded-lg border bg-white p-6 space-y-4">
-          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">ADMIN</h3>
+          <h3 className="text-xs font-semibold text-primary uppercase tracking-wider border-b pb-2">{t("service_host.section_admin")}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>{t("service_host.label_status")}</Label>

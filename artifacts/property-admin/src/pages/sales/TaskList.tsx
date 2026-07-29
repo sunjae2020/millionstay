@@ -105,13 +105,13 @@ export default function TaskList() {
   function handleStatusChange(id: number, newStatus: string) {
     if (newStatus === "Done") {
       completeMutation.mutate({ id }, {
-        onSuccess: () => toast({ title: "Task completed" }),
-        onError: () => toast({ title: "Failed to update task", variant: "destructive" }),
+        onSuccess: () => toast({ title: t("task.complete_success") }),
+        onError: () => toast({ title: t("task.complete_fail"), variant: "destructive" }),
       });
     } else {
       updateMutation.mutate({ id, data: { task_status: newStatus } }, {
-        onSuccess: () => toast({ title: `Task moved to ${newStatus}` }),
-        onError: () => toast({ title: "Failed to update task", variant: "destructive" }),
+        onSuccess: () => toast({ title: t("task.status_moved", { status: newStatus }) }),
+        onError: () => toast({ title: t("task.complete_fail"), variant: "destructive" }),
       });
     }
   }

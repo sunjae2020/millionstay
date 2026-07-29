@@ -117,7 +117,8 @@
     "application_emails": "Email đơn đăng ký",
     "sale_listings": "Tin rao bán",
     "booking_contract": "Đặt chỗ & Hợp đồng",
-    "calendar": "Lịch công việc"
+    "calendar": "Lịch công việc",
+    "dashboards": "Bảng điều khiển"
   },
   "dashboard": {
     "title": "Bảng điều khiển",
@@ -197,8 +198,11 @@
       "finance": "Tài chính",
       "operations": "Vận hành",
       "homestay_ops": "Vận hành Homestay",
-      "floor_board": "Sơ đồ tầng"
-    }
+      "floor_board": "Sơ đồ tầng",
+      "crm": "CRM"
+    },
+    "live_data": "Dữ liệu thời gian thực",
+    "crm_section": "CRM"
   },
   "login": {
     "title": "Đăng nhập Quản trị",
@@ -351,10 +355,26 @@
     "click_to_edit": "Nhấp để chỉnh sửa",
     "remove": "Xóa",
     "open_detail": "Mở trang chi tiết",
-    "preview": "Xem trước"
+    "preview": "Xem trước",
+    "expand_sidebar": "Mở thanh bên",
+    "collapse_sidebar": "Thu gọn thanh bên",
+    "close_menu": "Đóng menu",
+    "open_menu": "Mở menu",
+    "del_dialog_title_delete": "Xoá {{entity}}",
+    "del_dialog_title_archive": "Lưu trữ {{entity}}",
+    "del_dialog_desc_super": "Chọn cách xử lý bản ghi này. Lưu trữ sẽ ẩn khỏi danh sách nhưng vẫn giữ dữ liệu; xoá vĩnh viễn thì không thể hoàn tác.",
+    "del_dialog_desc_plain": "Bản ghi này sẽ được lưu trữ và ẩn khỏi danh sách. Quản trị viên cấp cao có thể khôi phục khi cần.",
+    "delete_failed": "Xoá không thành công.",
+    "email": "Email"
   },
   "lang": {
-    "label": "Ngôn ngữ"
+    "label": "Ngôn ngữ",
+    "en": "English",
+    "ko": "한국어",
+    "zh": "中文",
+    "ja": "日本語",
+    "th": "ภาษาไทย",
+    "vi": "Tiếng Việt"
   },
   "booking": {
     "new": "Đặt phòng mới",
@@ -471,7 +491,8 @@
     "job_photos_subtitle": "Ảnh do đơn vị cung cấp dịch vụ tải lên cho công việc này ({{count}} ảnh)",
     "no_photos": "Chưa có ảnh nào được tải lên",
     "notes_coming_soon": "Tính năng ghi chú sắp ra mắt.",
-    "activities_coming_soon": "Nhật ký hoạt động sắp ra mắt."
+    "activities_coming_soon": "Nhật ký hoạt động sắp ra mắt.",
+    "placeholder_url": "https://..."
   },
   "contact": {
     "new": "Liên hệ mới",
@@ -586,7 +607,18 @@
     "hint_nationality_follows_address": "Mặc định theo quốc gia địa chỉ; chỉnh sửa nếu khác.",
     "section_emergency": "Liên hệ khẩn cấp",
     "label_emergency_name": "Họ tên",
-    "label_emergency_phone": "Số điện thoại"
+    "label_emergency_phone": "Số điện thoại",
+    "col_email": "Email",
+    "label_email": "Email",
+    "doc_visa": "Thị thực",
+    "sns_kakaotalk": "KakaoTalk",
+    "sns_line": "LINE",
+    "sns_whatsapp": "WhatsApp",
+    "sns_wechat": "WeChat",
+    "sns_telegram": "Telegram",
+    "sns_instagram": "Instagram",
+    "sns_facebook": "Facebook",
+    "label_emergency_email": "Email"
   },
   "account": {
     "new": "Tài khoản mới",
@@ -743,7 +775,9 @@
     "type_homestay_host": "Chủ nhà homestay",
     "country_other": "Khác (nhập vào)",
     "postcode_search": "Tìm mã bưu điện",
-    "postcode_search_failed": "Không thể mở tìm kiếm địa chỉ"
+    "postcode_search_failed": "Không thể mở tìm kiếm địa chỉ",
+    "col_email": "Email",
+    "label_website": "Website"
   },
   "lead": {
     "new": "Khách hàng tiềm năng mới",
@@ -827,7 +861,15 @@
     "label_check_out": "Ngày trả phòng",
     "label_weekly_rate": "Giá thuê theo tuần đã thỏa thuận",
     "ph_weekly_rate": "Tự động điền từ không gian",
-    "btn_confirm_conversion": "Xác nhận chuyển đổi"
+    "btn_confirm_conversion": "Xác nhận chuyển đổi",
+    "view_kanban": "Kanban",
+    "col_email": "Email",
+    "move_to": "→ {{stage}}",
+    "label_email": "Email",
+    "ph_email": "email@example.com",
+    "ph_phone": "+61 4xx xxx xxx",
+    "source_website": "Website",
+    "source_ota": "OTA"
   },
   "task": {
     "new": "Tác vụ mới",
@@ -887,7 +929,8 @@
     "ph_notes": "Ghi chú công việc…",
     "section_admin": "Hành chính",
     "label_record_status": "Trạng thái bản ghi",
-    "label_completed": "Đã hoàn thành:"
+    "label_completed": "Đã hoàn thành:",
+    "status_moved": "Đã chuyển công việc sang {{status}}"
   },
   "contract": {
     "new": "Hợp đồng mới",
@@ -1063,7 +1106,11 @@
     "btn_draft_settlement": "Soạn quyết toán tiền đặt cọc",
     "settlement_created": "Đã soạn quyết toán tiền đặt cọc",
     "settlement_refund": "Hoàn tiền",
-    "settlement_failed": "Không thể soạn quyết toán"
+    "settlement_failed": "Không thể soạn quyết toán",
+    "col_gst": "GST",
+    "sched_type_gas": "Gas",
+    "sched_type_internet": "Internet",
+    "day_suffix": ""
   },
   "invoice": {
     "new": "Tạo hóa đơn mới",
@@ -1142,7 +1189,10 @@
     "pay_link_created": "Đã tạo liên kết thanh toán",
     "pay_link_created_desc": "Đã mở Stripe Checkout; liên kết đã được sao chép vào clipboard.",
     "pay_link_failed": "Không thể tạo liên kết thanh toán",
-    "view_receipt": "Xem biên nhận"
+    "view_receipt": "Xem biên nhận",
+    "btn_pdf": "PDF",
+    "btn_email": "Email",
+    "method_stripe": "Stripe"
   },
   "workorder": {
     "new": "Tạo phiếu công việc mới",
@@ -1719,7 +1769,11 @@
     "placeholder_state": "Ví dụ: NSW, VIC",
     "placeholder_postcode": "Ví dụ: 2000",
     "placeholder_lat": "Ví dụ: -33.8688",
-    "placeholder_lng": "Ví dụ: 151.2093"
+    "placeholder_lng": "Ví dụ: 151.2093",
+    "country_au": "Úc",
+    "country_us": "Hoa Kỳ",
+    "country_gb": "Vương quốc Anh",
+    "country_nz": "New Zealand"
   },
   "product": {
     "new": "Sản phẩm mới",
@@ -1886,7 +1940,10 @@
     "col_term": "Kỳ hạn",
     "col_weekly_rate": "Giá theo tuần",
     "ph_weekly_rate": "VD: 430",
-    "ph_monthly_rate": "VD: 1720"
+    "ph_monthly_rate": "VD: 1720",
+    "label_wifi": "WiFi",
+    "type_suite": "Suite",
+    "type_studio": "Studio"
   },
   "promotion": {
     "new": "Khuyến mãi mới",
@@ -2069,7 +2126,9 @@
     "dialog_title_archive": "Lưu Trữ Thông Tin Thanh Toán",
     "dialog_desc_delete": "Chọn cách xóa bản ghi này. Lưu trữ sẽ ẩn khỏi danh sách hiển thị nhưng vẫn giữ dữ liệu. Xóa vĩnh viễn không thể hoàn tác.",
     "dialog_desc_archive": "Thông tin thanh toán này sẽ được lưu trữ và ẩn khỏi danh sách hiển thị. Quản trị viên cấp cao có thể khôi phục nếu cần.",
-    "delete_forever": "Xóa Vĩnh Viễn"
+    "delete_forever": "Xóa Vĩnh Viễn",
+    "section_stripe": "STRIPE",
+    "label_bsb": "BSB"
   },
   "service": {
     "new": "Dịch Vụ Mới",
@@ -2180,7 +2239,8 @@
     "label_business_start": "Giờ bắt đầu làm việc (0-23)",
     "label_business_end": "Giờ kết thúc làm việc (0-23)",
     "search_account_placeholder": "Tìm kiếm tài khoản…",
-    "search_service_placeholder": "Tìm kiếm dịch vụ…"
+    "search_service_placeholder": "Tìm kiếm dịch vụ…",
+    "section_admin": "Quản trị"
   },
   "receipt": {
     "no_receipts": "Không tìm thấy hóa đơn nào",
@@ -2297,7 +2357,8 @@
     "label_org_name": "Tên Tổ Chức",
     "label_primary_color": "Màu Chủ Đạo",
     "save_success": "Đã lưu cài đặt",
-    "save_error": "Lưu cài đặt thất bại"
+    "save_error": "Lưu cài đặt thất bại",
+    "label_logo": "Logo"
   },
   "dash_reservations": {
     "title": "Bảng Điều Khiển Đặt Chỗ",
@@ -2599,7 +2660,11 @@
     "seo_title_short_placeholder": "Tiêu đề SEO…",
     "meta_description_short_placeholder": "Mô tả meta…",
     "keywords_short_placeholder": "Từ khóa cách nhau bằng dấu phẩy…",
-    "site_guest": "Trang Khách"
+    "site_guest": "Trang Khách",
+    "tab_seo": "SEO",
+    "field_slug": "Slug",
+    "slug_placeholder": "my-blog-post",
+    "site_homestay": "Homestay"
   },
   "document_hub": {
     "title": "Tài liệu",
@@ -2625,7 +2690,8 @@
     "email_sent_desc": "Đã gửi {{type}} qua email cho {{recipient}}.",
     "recipient": "người nhận",
     "email_failed": "Gửi email thất bại",
-    "error": "Lỗi"
+    "error": "Lỗi",
+    "email_lang": "Email ({{lang}})"
   },
   "quote": {
     "title": "Báo giá",
@@ -2675,7 +2741,9 @@
     "toast_convert_failed": "Chuyển đổi thất bại",
     "toast_email_sent": "Đã gửi email",
     "toast_email_sent_desc": "Đã gửi báo giá qua email cho {{to}}.",
-    "toast_email_failed": "Gửi email thất bại"
+    "toast_email_failed": "Gửi email thất bại",
+    "pdf": "PDF",
+    "email": "Email"
   },
   "media": {
     "page_title": "Thư viện Media",
@@ -2895,7 +2963,321 @@
     "ph_home_stat_rooms": "500+",
     "ph_home_stat_universities": "40+",
     "ph_home_stat_support": "24/7",
-    "site_homestay": "Homestay"
+    "site_homestay": "Homestay",
+    "field_homestay_home_hero_title": "Tiêu đề hero",
+    "field_homestay_home_hero_lead": "Đoạn dẫn hero",
+    "field_homestay_home_hero_cta_find": "CTA chính — Tìm homestay",
+    "field_homestay_home_hero_cta_host": "CTA phụ — Trở thành chủ nhà",
+    "field_homestay_about_hero_eyebrow": "Dòng dẫn hero",
+    "field_homestay_about_hero_title": "Tiêu đề hero",
+    "field_homestay_about_hero_lead_p1": "Đoạn dẫn hero — Đoạn 1",
+    "field_homestay_about_hero_lead_p2": "Đoạn dẫn hero — Đoạn 2",
+    "field_homestay_about_bridging_heading": "Tiêu đề mục kết nối",
+    "field_homestay_about_bridging_body": "Nội dung mục kết nối",
+    "field_homestay_about_mission_heading": "Tiêu đề sứ mệnh",
+    "field_homestay_about_mission_body": "Nội dung sứ mệnh",
+    "field_homestay_about_vision_heading": "Tiêu đề tầm nhìn",
+    "field_homestay_about_vision_body": "Nội dung tầm nhìn",
+    "field_homestay_students_hero_eyebrow": "Dòng dẫn hero",
+    "field_homestay_students_hero_title": "Tiêu đề hero",
+    "field_homestay_students_hero_lead": "Đoạn dẫn hero",
+    "field_homestay_hosts_hero_eyebrow": "Dòng dẫn hero",
+    "field_homestay_hosts_hero_title": "Tiêu đề hero",
+    "field_homestay_hosts_hero_lead": "Đoạn dẫn hero",
+    "field_homestay_partners_hero_eyebrow": "Dòng dẫn hero",
+    "field_homestay_partners_hero_title": "Tiêu đề hero",
+    "field_homestay_partners_hero_lead": "Đoạn dẫn hero",
+    "field_homestay_contact_heading": "Tiêu đề mục liên hệ",
+    "field_homestay_contact_subheading": "Phụ đề mục liên hệ",
+    "field_homestay_contact_location_value": "Giá trị vị trí",
+    "field_dev_home_hero_eyebrow": "Dòng dẫn hero (hiển thị ở mọi slide)",
+    "field_dev_home_hero_slide_1_image": "Slide 1 — URL hình ảnh",
+    "field_dev_home_hero_slide_1_title": "Slide 1 — Tiêu đề",
+    "field_dev_home_hero_slide_1_subtitle": "Slide 1 — Phụ đề",
+    "field_dev_home_hero_slide_2_image": "Slide 2 — URL hình ảnh",
+    "field_dev_home_hero_slide_2_title": "Slide 2 — Tiêu đề",
+    "field_dev_home_hero_slide_2_subtitle": "Slide 2 — Phụ đề",
+    "field_dev_home_hero_slide_3_image": "Slide 3 — URL hình ảnh",
+    "field_dev_home_hero_slide_3_title": "Slide 3 — Tiêu đề",
+    "field_dev_home_hero_slide_3_subtitle": "Slide 3 — Phụ đề",
+    "field_dev_home_hero_slide_4_image": "Slide 4 — URL hình ảnh",
+    "field_dev_home_hero_slide_4_title": "Slide 4 — Tiêu đề",
+    "field_dev_home_hero_slide_4_subtitle": "Slide 4 — Phụ đề",
+    "field_dev_home_hero_slide_5_image": "Slide 5 — URL hình ảnh (tuỳ chọn)",
+    "field_dev_home_hero_slide_5_title": "Slide 5 — Tiêu đề (tuỳ chọn)",
+    "field_dev_home_hero_slide_5_subtitle": "Slide 5 — Phụ đề (tuỳ chọn)",
+    "field_dev_home_pillar_buy_title": "Trụ cột — Tiêu đề mua bán",
+    "field_dev_home_pillar_buy_body": "Trụ cột — Nội dung mua bán",
+    "field_dev_home_pillar_rent_title": "Trụ cột — Tiêu đề cho thuê",
+    "field_dev_home_pillar_rent_body": "Trụ cột — Nội dung cho thuê",
+    "field_dev_home_pillar_mgmt_title": "Trụ cột — Tiêu đề quản lý",
+    "field_dev_home_pillar_mgmt_body": "Trụ cột — Nội dung quản lý",
+    "field_dev_home_why_heading": "Tiêu đề mục lý do chọn",
+    "field_dev_home_why_1_title": "Lý do chọn 1 — Tiêu đề",
+    "field_dev_home_why_1_body": "Lý do chọn 1 — Nội dung",
+    "field_dev_home_why_2_title": "Lý do chọn 2 — Tiêu đề",
+    "field_dev_home_why_2_body": "Lý do chọn 2 — Nội dung",
+    "field_dev_home_why_3_title": "Lý do chọn 3 — Tiêu đề",
+    "field_dev_home_why_3_body": "Lý do chọn 3 — Nội dung",
+    "field_dev_home_cta_title": "Tiêu đề CTA",
+    "field_dev_home_cta_subtitle": "Phụ đề CTA",
+    "field_dev_home_intro_image": "Mở đầu — URL hình ảnh",
+    "field_dev_home_intro_eyebrow": "Mở đầu — Dòng dẫn",
+    "field_dev_home_intro_title": "Mở đầu — Tiêu đề",
+    "field_dev_home_intro_body": "Mở đầu — Nội dung",
+    "field_dev_home_intro_stat_1_value": "Chỉ số mở đầu 1 — Giá trị",
+    "field_dev_home_intro_stat_1_label": "Chỉ số mở đầu 1 — Nhãn",
+    "field_dev_home_intro_stat_2_value": "Chỉ số mở đầu 2 — Giá trị",
+    "field_dev_home_intro_stat_2_label": "Chỉ số mở đầu 2 — Nhãn",
+    "field_dev_home_intro_stat_3_value": "Chỉ số mở đầu 3 — Giá trị",
+    "field_dev_home_intro_stat_3_label": "Chỉ số mở đầu 3 — Nhãn",
+    "field_dev_home_reviews_eyebrow": "Đánh giá — Dòng dẫn",
+    "field_dev_home_reviews_heading": "Đánh giá — Tiêu đề",
+    "field_dev_home_reviews_subtitle": "Đánh giá — Phụ đề",
+    "field_dev_home_review_1_quote": "Đánh giá 1 — Trích dẫn",
+    "field_dev_home_review_1_name": "Đánh giá 1 — Tên",
+    "field_dev_home_review_1_role": "Đánh giá 1 — Vai trò",
+    "field_dev_home_review_1_avatar": "Đánh giá 1 — URL ảnh đại diện",
+    "field_dev_home_review_2_quote": "Đánh giá 2 — Trích dẫn",
+    "field_dev_home_review_2_name": "Đánh giá 2 — Tên",
+    "field_dev_home_review_2_role": "Đánh giá 2 — Vai trò",
+    "field_dev_home_review_2_avatar": "Đánh giá 2 — URL ảnh đại diện",
+    "field_dev_home_review_3_quote": "Đánh giá 3 — Trích dẫn",
+    "field_dev_home_review_3_name": "Đánh giá 3 — Tên",
+    "field_dev_home_review_3_role": "Đánh giá 3 — Vai trò",
+    "field_dev_home_review_3_avatar": "Đánh giá 3 — URL ảnh đại diện",
+    "field_dev_home_news_eyebrow": "Tin tức — Dòng dẫn",
+    "field_dev_home_news_heading": "Tin tức — Tiêu đề",
+    "field_dev_home_news_subtitle": "Tin tức — Phụ đề",
+    "field_dev_home_news_1_title": "Tin tức 1 — Tiêu đề",
+    "field_dev_home_news_1_date": "Tin tức 1 — Ngày",
+    "field_dev_home_news_1_summary": "Tin tức 1 — Tóm tắt",
+    "field_dev_home_news_1_image": "Tin tức 1 — URL hình ảnh",
+    "field_dev_home_news_1_link": "Tin tức 1 — URL liên kết (tuỳ chọn)",
+    "field_dev_home_news_2_title": "Tin tức 2 — Tiêu đề",
+    "field_dev_home_news_2_date": "Tin tức 2 — Ngày",
+    "field_dev_home_news_2_summary": "Tin tức 2 — Tóm tắt",
+    "field_dev_home_news_2_image": "Tin tức 2 — URL hình ảnh",
+    "field_dev_home_news_2_link": "Tin tức 2 — URL liên kết (tuỳ chọn)",
+    "field_dev_home_news_3_title": "Tin tức 3 — Tiêu đề",
+    "field_dev_home_news_3_date": "Tin tức 3 — Ngày",
+    "field_dev_home_news_3_summary": "Tin tức 3 — Tóm tắt",
+    "field_dev_home_news_3_image": "Tin tức 3 — URL hình ảnh",
+    "field_dev_home_news_3_link": "Tin tức 3 — URL liên kết (tuỳ chọn)",
+    "field_dev_about_hero_image_url": "URL ảnh nền hero",
+    "field_dev_about_eyebrow": "Dòng dẫn hero",
+    "field_dev_about_hero_title": "Tiêu đề hero",
+    "field_dev_about_hero_subtitle": "Phụ đề hero",
+    "field_dev_about_story_title": "Tiêu đề mục câu chuyện",
+    "field_dev_about_story_p1": "Đoạn câu chuyện 1",
+    "field_dev_about_story_p2": "Đoạn câu chuyện 2",
+    "field_dev_about_vision_title": "Tiêu đề tầm nhìn",
+    "field_dev_about_vision_body": "Nội dung tầm nhìn",
+    "field_dev_about_value_1_title": "Giá trị 1 — Tiêu đề",
+    "field_dev_about_value_1_body": "Giá trị 1 — Nội dung",
+    "field_dev_about_value_2_title": "Giá trị 2 — Tiêu đề",
+    "field_dev_about_value_2_body": "Giá trị 2 — Nội dung",
+    "field_dev_about_value_3_title": "Giá trị 3 — Tiêu đề",
+    "field_dev_about_value_3_body": "Giá trị 3 — Nội dung",
+    "field_dev_about_logo_image": "Logo — URL hình ảnh (bỏ trống sẽ dùng logo thương hiệu)",
+    "field_dev_about_logo_eyebrow": "Logo — Dòng dẫn",
+    "field_dev_about_logo_title": "Logo — Tiêu đề",
+    "field_dev_about_logo_body_1": "Logo — Đoạn 1",
+    "field_dev_about_logo_body_2": "Logo — Đoạn 2",
+    "field_dev_about_gallery_eyebrow": "Thư viện ảnh — Dòng dẫn",
+    "field_dev_about_gallery_heading": "Thư viện ảnh — Tiêu đề",
+    "field_dev_about_gallery_subtitle": "Thư viện ảnh — Phụ đề",
+    "field_dev_about_gallery_1_image": "Thư viện ảnh 1 — URL hình ảnh",
+    "field_dev_about_gallery_1_caption": "Thư viện ảnh 1 — Chú thích",
+    "field_dev_about_gallery_2_image": "Thư viện ảnh 2 — URL hình ảnh",
+    "field_dev_about_gallery_2_caption": "Thư viện ảnh 2 — Chú thích",
+    "field_dev_about_gallery_3_image": "Thư viện ảnh 3 — URL hình ảnh",
+    "field_dev_about_gallery_3_caption": "Thư viện ảnh 3 — Chú thích",
+    "field_dev_about_gallery_4_image": "Thư viện ảnh 4 — URL hình ảnh",
+    "field_dev_about_gallery_4_caption": "Thư viện ảnh 4 — Chú thích",
+    "field_dev_about_stat_1_value": "Chỉ số 1 — Giá trị",
+    "field_dev_about_stat_1_label": "Chỉ số 1 — Nhãn",
+    "field_dev_about_stat_2_value": "Chỉ số 2 — Giá trị",
+    "field_dev_about_stat_2_label": "Chỉ số 2 — Nhãn",
+    "field_dev_about_stat_3_value": "Chỉ số 3 — Giá trị",
+    "field_dev_about_stat_3_label": "Chỉ số 3 — Nhãn",
+    "field_dev_about_stat_4_value": "Chỉ số 4 — Giá trị",
+    "field_dev_about_stat_4_label": "Chỉ số 4 — Nhãn",
+    "field_dev_about_cta_title": "Tiêu đề CTA",
+    "field_dev_about_cta_subtitle": "Phụ đề CTA",
+    "field_dev_buy_hero_title": "Tiêu đề hero",
+    "field_dev_buy_hero_subtitle": "Phụ đề hero",
+    "field_dev_buy_overview_title": "Tiêu đề tổng quan",
+    "field_dev_buy_overview_p1": "Đoạn tổng quan 1",
+    "field_dev_buy_overview_p2": "Đoạn tổng quan 2",
+    "field_dev_buy_remaining_units": "Căn còn lại (tiêu đề)",
+    "field_dev_buy_remaining_note": "Ghi chú căn còn lại",
+    "field_dev_buy_plans_title": "Tiêu đề mục mặt bằng",
+    "field_dev_buy_plan_1_image": "Mặt bằng 1 — URL hình ảnh",
+    "field_dev_buy_plan_1_name": "Mặt bằng 1 — Tên",
+    "field_dev_buy_plan_1_area": "Mặt bằng 1 — Diện tích",
+    "field_dev_buy_plan_1_price": "Mặt bằng 1 — Giá",
+    "field_dev_buy_plan_1_status": "Mặt bằng 1 — Trạng thái (vd: Còn hàng)",
+    "field_dev_buy_plan_2_image": "Mặt bằng 2 — URL hình ảnh",
+    "field_dev_buy_plan_2_name": "Mặt bằng 2 — Tên",
+    "field_dev_buy_plan_2_area": "Mặt bằng 2 — Diện tích",
+    "field_dev_buy_plan_2_price": "Mặt bằng 2 — Giá",
+    "field_dev_buy_plan_2_status": "Mặt bằng 2 — Trạng thái",
+    "field_dev_buy_plan_3_image": "Mặt bằng 3 — URL hình ảnh",
+    "field_dev_buy_plan_3_name": "Mặt bằng 3 — Tên",
+    "field_dev_buy_plan_3_area": "Mặt bằng 3 — Diện tích",
+    "field_dev_buy_plan_3_price": "Mặt bằng 3 — Giá",
+    "field_dev_buy_plan_3_status": "Mặt bằng 3 — Trạng thái",
+    "field_dev_buy_plan_4_image": "Mặt bằng 4 — URL hình ảnh",
+    "field_dev_buy_plan_4_name": "Mặt bằng 4 — Tên",
+    "field_dev_buy_plan_4_area": "Mặt bằng 4 — Diện tích",
+    "field_dev_buy_plan_4_price": "Mặt bằng 4 — Giá",
+    "field_dev_buy_plan_4_status": "Mặt bằng 4 — Trạng thái",
+    "field_dev_buy_why_eyebrow": "Lý do chọn — Dòng dẫn",
+    "field_dev_buy_why_heading": "Lý do chọn — Tiêu đề",
+    "field_dev_buy_why_subtitle": "Lý do chọn — Phụ đề",
+    "field_dev_buy_why_1_title": "Lý do chọn 1 — Tiêu đề",
+    "field_dev_buy_why_1_body": "Lý do chọn 1 — Nội dung",
+    "field_dev_buy_why_2_title": "Lý do chọn 2 — Tiêu đề",
+    "field_dev_buy_why_2_body": "Lý do chọn 2 — Nội dung",
+    "field_dev_buy_why_3_title": "Lý do chọn 3 — Tiêu đề",
+    "field_dev_buy_why_3_body": "Lý do chọn 3 — Nội dung",
+    "field_dev_buy_process_eyebrow": "Quy trình — Dòng dẫn",
+    "field_dev_buy_process_heading": "Quy trình — Tiêu đề",
+    "field_dev_buy_process_subtitle": "Quy trình — Phụ đề",
+    "field_dev_buy_step_1_title": "Bước 1 — Tiêu đề",
+    "field_dev_buy_step_1_body": "Bước 1 — Nội dung",
+    "field_dev_buy_step_2_title": "Bước 2 — Tiêu đề",
+    "field_dev_buy_step_2_body": "Bước 2 — Nội dung",
+    "field_dev_buy_step_3_title": "Bước 3 — Tiêu đề",
+    "field_dev_buy_step_3_body": "Bước 3 — Nội dung",
+    "field_dev_buy_step_4_title": "Bước 4 — Tiêu đề",
+    "field_dev_buy_step_4_body": "Bước 4 — Nội dung",
+    "field_dev_buy_inquiry_title": "Tiêu đề mục liên hệ tư vấn",
+    "field_dev_buy_inquiry_subtitle": "Phụ đề mục liên hệ tư vấn",
+    "field_dev_rent_hero_title": "Tiêu đề hero",
+    "field_dev_rent_hero_subtitle": "Phụ đề hero",
+    "field_dev_rent_why_eyebrow": "Lý do chọn — Dòng dẫn",
+    "field_dev_rent_why_heading": "Lý do chọn — Tiêu đề",
+    "field_dev_rent_why_subtitle": "Lý do chọn — Phụ đề",
+    "field_dev_rent_why_1_title": "Lý do chọn 1 — Tiêu đề",
+    "field_dev_rent_why_1_body": "Lý do chọn 1 — Nội dung",
+    "field_dev_rent_why_2_title": "Lý do chọn 2 — Tiêu đề",
+    "field_dev_rent_why_2_body": "Lý do chọn 2 — Nội dung",
+    "field_dev_rent_why_3_title": "Lý do chọn 3 — Tiêu đề",
+    "field_dev_rent_why_3_body": "Lý do chọn 3 — Nội dung",
+    "field_dev_rent_process_eyebrow": "Quy trình — Dòng dẫn",
+    "field_dev_rent_process_heading": "Quy trình — Tiêu đề",
+    "field_dev_rent_process_subtitle": "Quy trình — Phụ đề",
+    "field_dev_rent_step_1_title": "Bước 1 — Tiêu đề",
+    "field_dev_rent_step_1_body": "Bước 1 — Nội dung",
+    "field_dev_rent_step_2_title": "Bước 2 — Tiêu đề",
+    "field_dev_rent_step_2_body": "Bước 2 — Nội dung",
+    "field_dev_rent_step_3_title": "Bước 3 — Tiêu đề",
+    "field_dev_rent_step_3_body": "Bước 3 — Nội dung",
+    "field_dev_rent_step_4_title": "Bước 4 — Tiêu đề",
+    "field_dev_rent_step_4_body": "Bước 4 — Nội dung",
+    "field_dev_rent_short_title": "Ngắn hạn — Tiêu đề",
+    "field_dev_rent_short_body": "Ngắn hạn — Nội dung",
+    "field_dev_rent_long_title": "Dài hạn — Tiêu đề",
+    "field_dev_rent_long_body": "Dài hạn — Nội dung",
+    "field_dev_rent_long_point_1": "Dài hạn — Điểm 1",
+    "field_dev_rent_long_point_2": "Dài hạn — Điểm 2",
+    "field_dev_rent_long_point_3": "Dài hạn — Điểm 3",
+    "field_dev_manage_hero_title": "Tiêu đề hero",
+    "field_dev_manage_hero_subtitle": "Phụ đề hero",
+    "field_dev_manage_benefits_heading": "Tiêu đề mục lợi ích",
+    "field_dev_manage_benefit_1_title": "Lợi ích 1 — Tiêu đề",
+    "field_dev_manage_benefit_1_body": "Lợi ích 1 — Nội dung",
+    "field_dev_manage_benefit_2_title": "Lợi ích 2 — Tiêu đề",
+    "field_dev_manage_benefit_2_body": "Lợi ích 2 — Nội dung",
+    "field_dev_manage_benefit_3_title": "Lợi ích 3 — Tiêu đề",
+    "field_dev_manage_benefit_3_body": "Lợi ích 3 — Nội dung",
+    "field_dev_manage_why_eyebrow": "Lý do chọn — Dòng dẫn",
+    "field_dev_manage_why_heading": "Lý do chọn — Tiêu đề",
+    "field_dev_manage_why_subtitle": "Lý do chọn — Phụ đề",
+    "field_dev_manage_why_1_title": "Lý do chọn 1 — Tiêu đề",
+    "field_dev_manage_why_1_body": "Lý do chọn 1 — Nội dung",
+    "field_dev_manage_why_2_title": "Lý do chọn 2 — Tiêu đề",
+    "field_dev_manage_why_2_body": "Lý do chọn 2 — Nội dung",
+    "field_dev_manage_why_3_title": "Lý do chọn 3 — Tiêu đề",
+    "field_dev_manage_why_3_body": "Lý do chọn 3 — Nội dung",
+    "field_dev_manage_process_eyebrow": "Quy trình — Dòng dẫn",
+    "field_dev_manage_process_heading": "Quy trình — Tiêu đề",
+    "field_dev_manage_process_subtitle": "Quy trình — Phụ đề",
+    "field_dev_manage_step_1_title": "Bước 1 — Tiêu đề",
+    "field_dev_manage_step_1_body": "Bước 1 — Nội dung",
+    "field_dev_manage_step_2_title": "Bước 2 — Tiêu đề",
+    "field_dev_manage_step_2_body": "Bước 2 — Nội dung",
+    "field_dev_manage_step_3_title": "Bước 3 — Tiêu đề",
+    "field_dev_manage_step_3_body": "Bước 3 — Nội dung",
+    "field_dev_manage_step_4_title": "Bước 4 — Tiêu đề",
+    "field_dev_manage_step_4_body": "Bước 4 — Nội dung",
+    "field_dev_manage_sim_title": "Công cụ ước tính lợi nhuận — Tiêu đề",
+    "field_dev_manage_sim_subtitle": "Công cụ ước tính lợi nhuận — Phụ đề",
+    "field_dev_manage_apply_title": "Đăng ký — Tiêu đề",
+    "field_dev_manage_apply_subtitle": "Đăng ký — Phụ đề",
+    "field_dev_directions_eyebrow": "Dòng dẫn hero",
+    "field_dev_directions_hero_title": "Tiêu đề hero",
+    "field_dev_directions_hero_subtitle": "Phụ đề hero",
+    "field_dev_directions_address_label": "Nhãn địa chỉ",
+    "field_dev_directions_address": "Địa chỉ",
+    "field_dev_directions_map_embed_url": "URL nhúng bản đồ (tuỳ chọn — bỏ trống sẽ tự tạo từ địa chỉ)",
+    "field_dev_directions_phone_label": "Nhãn điện thoại",
+    "field_dev_directions_phone": "Điện thoại",
+    "field_dev_directions_email_label": "Nhãn email",
+    "field_dev_directions_email": "Email",
+    "field_dev_directions_hours_label": "Nhãn giờ làm việc",
+    "field_dev_directions_hours": "Giờ làm việc",
+    "field_dev_directions_transit_title": "Giao thông — Tiêu đề",
+    "field_dev_directions_transit_body": "Giao thông — Nội dung",
+    "field_dev_directions_parking_title": "Bãi đỗ xe — Tiêu đề",
+    "field_dev_directions_parking_body": "Bãi đỗ xe — Nội dung",
+    "field_dev_footer_company_name": "Tên công ty (상호)",
+    "field_dev_footer_ceo": "Người đại diện (대표)",
+    "field_dev_footer_biz_no": "Mã số doanh nghiệp (사업자등록번호)",
+    "field_dev_footer_address": "Địa chỉ (주소)",
+    "field_dev_footer_phone": "Điện thoại chính (대표전화)",
+    "field_dev_footer_email": "Email (이메일)",
+    "field_dev_footer_privacy_officer": "Người phụ trách bảo vệ dữ liệu (개인정보 보호책임자)",
+    "field_dev_privacy_title": "Tiêu đề trang",
+    "field_dev_privacy_updated": "Ngày hiệu lực",
+    "field_dev_privacy_intro": "Mở đầu",
+    "field_dev_privacy_s1_title": "Mục 1 — Tiêu đề",
+    "field_dev_privacy_s1_body": "Mục 1 — Nội dung",
+    "field_dev_privacy_s2_title": "Mục 2 — Tiêu đề",
+    "field_dev_privacy_s2_body": "Mục 2 — Nội dung",
+    "field_dev_privacy_s3_title": "Mục 3 — Tiêu đề",
+    "field_dev_privacy_s3_body": "Mục 3 — Nội dung",
+    "field_dev_privacy_s4_title": "Mục 4 — Tiêu đề",
+    "field_dev_privacy_s4_body": "Mục 4 — Nội dung",
+    "field_dev_privacy_s5_title": "Mục 5 — Tiêu đề",
+    "field_dev_privacy_s5_body": "Mục 5 — Nội dung",
+    "field_dev_privacy_s6_title": "Mục 6 — Tiêu đề",
+    "field_dev_privacy_s6_body": "Mục 6 — Nội dung",
+    "field_dev_privacy_s7_title": "Mục 7 — Tiêu đề",
+    "field_dev_privacy_s7_body": "Mục 7 — Nội dung",
+    "field_dev_privacy_s8_title": "Mục 8 — Tiêu đề",
+    "field_dev_privacy_s8_body": "Mục 8 — Nội dung",
+    "field_dev_terms_title": "Tiêu đề trang",
+    "field_dev_terms_updated": "Ngày hiệu lực",
+    "field_dev_terms_intro": "Mở đầu",
+    "field_dev_terms_s1_title": "Điều 1 — Tiêu đề",
+    "field_dev_terms_s1_body": "Điều 1 — Nội dung",
+    "field_dev_terms_s2_title": "Điều 2 — Tiêu đề",
+    "field_dev_terms_s2_body": "Điều 2 — Nội dung",
+    "field_dev_terms_s3_title": "Điều 3 — Tiêu đề",
+    "field_dev_terms_s3_body": "Điều 3 — Nội dung",
+    "field_dev_terms_s4_title": "Điều 4 — Tiêu đề",
+    "field_dev_terms_s4_body": "Điều 4 — Nội dung",
+    "field_dev_terms_s5_title": "Điều 5 — Tiêu đề",
+    "field_dev_terms_s5_body": "Điều 5 — Nội dung",
+    "field_dev_terms_s6_title": "Điều 6 — Tiêu đề",
+    "field_dev_terms_s6_body": "Điều 6 — Nội dung",
+    "field_dev_terms_s7_title": "Điều 7 — Tiêu đề",
+    "field_dev_terms_s7_body": "Điều 7 — Nội dung",
+    "field_dev_terms_s8_title": "Điều 8 — Tiêu đề",
+    "field_dev_terms_s8_body": "Điều 8 — Nội dung"
   },
   "dash_channels": {
     "intro_prefix": "Xem tổng quan mọi kết nối kênh OTA trên tất cả không gian. Thiết lập riêng cho từng không gian nằm ở trang chi tiết",
@@ -3110,7 +3492,10 @@
     "ceo_placeholder": "Họ và tên",
     "biz_no_label": "Số đăng ký kinh doanh",
     "privacy_officer_label": "Cán bộ phụ trách bảo mật",
-    "privacy_officer_placeholder": "Tên (email)"
+    "privacy_officer_placeholder": "Tên (email)",
+    "abn_label": "ABN",
+    "website_label": "Website",
+    "country_nz": "New Zealand"
   },
   "settings_dbsync": {
     "page_title": "Đồng bộ DB",
@@ -3217,7 +3602,10 @@
     "toast_save_failed_title": "Lưu thất bại",
     "toast_save_failed_desc": "Không thể lưu thương hiệu của bạn. Vui lòng thử lại.",
     "preset_teal": "Xanh mòng két",
-    "page_subtitle": "Logo, favicon, màu sắc, chế độ tối và tùy chọn hiển thị"
+    "page_subtitle": "Logo, favicon, màu sắc, chế độ tối và tùy chọn hiển thị",
+    "logo_favicon": "Logo & Favicon",
+    "logo": "Logo",
+    "favicon": "Favicon"
   },
   "settings_email": {
     "current_status_title": "Trạng thái Hiện tại",
@@ -3243,7 +3631,10 @@
     "from_email_label": "Email người gửi",
     "reply_to_label": "Trả lời tới (tùy chọn)",
     "toast_saved_title": "Đã lưu",
-    "toast_saved_desc": "Cài đặt email đã được cập nhật."
+    "toast_saved_desc": "Cài đặt email đã được cập nhật.",
+    "provider_smtp": "SMTP",
+    "security_starttls": "STARTTLS (587)",
+    "security_ssl": "SSL/TLS (465)"
   },
   "settings_integrations": {
     "title": "Tích hợp bên thứ ba",
@@ -3262,7 +3653,8 @@
     "desc_google_maps": "Bản đồ vị trí bất động sản và gợi ý tự động địa chỉ",
     "desc_twilio": "Thông báo SMS (xác nhận đặt phòng, cảnh báo thanh toán)",
     "desc_docusign": "Chữ ký điện tử cho việc ký hợp đồng tự động",
-    "desc_xero": "Đồng bộ phần mềm kế toán (hóa đơn, chi phí)"
+    "desc_xero": "Đồng bộ phần mềm kế toán (hóa đơn, chi phí)",
+    "category_email": "Email"
   },
   "settings_notifications": {
     "preferences_title": "Tùy chọn thông báo",
@@ -3293,7 +3685,8 @@
     "event_lead_assigned_label": "Khách hàng tiềm năng được phân công",
     "event_lead_assigned_desc": "Khi một khách hàng tiềm năng được phân công cho thành viên nhóm",
     "event_daily_summary_label": "Báo cáo tổng hợp hàng ngày",
-    "event_daily_summary_desc": "Tổng hợp hoạt động hàng ngày được gửi lúc 9 giờ sáng"
+    "event_daily_summary_desc": "Tổng hợp hoạt động hàng ngày được gửi lúc 9 giờ sáng",
+    "column_email": "Email"
   },
   "settings_payments": {
     "mode_live": "Thực tế",
@@ -3455,11 +3848,16 @@
     "toast_user_created": "Đã tạo người dùng",
     "toast_user_created_desc": "Tài khoản đã được tạo và đang hoạt động.",
     "toast_create_failed": "Tạo người dùng thất bại",
-    "page_subtitle": "Quản lý người dùng quản trị và quyền truy cập"
+    "page_subtitle": "Quản lý người dùng quản trị và quyền truy cập",
+    "field_email": "Email"
   },
   "coming_soon": {
     "heading": "Sắp ra mắt",
-    "description": "Mục này đang được phát triển."
+    "description": "Mục này đang được phát triển.",
+    "sub_transactions": "Xem toàn bộ giao dịch tài chính",
+    "sub_system_log": "Nhật ký kiểm toán sự kiện hệ thống",
+    "sub_revenue_report": "Cơ cấu và xu hướng doanh thu",
+    "sub_occupancy_report": "Tỷ lệ lấp đầy theo thời gian"
   },
   "exchange_rate": {
     "page_title": "Tỷ giá hối đoái",
@@ -3498,7 +3896,19 @@
     "toast_no_live_rate_desc": "{{currency}} không được nhà cung cấp trả về",
     "toast_positive_rate": "Vui lòng nhập tỷ giá dương",
     "none_value": "không có",
-    "unknown_error": "lỗi không xác định"
+    "unknown_error": "lỗi không xác định",
+    "cur_aud": "Đô la Úc",
+    "cur_usd": "Đô la Mỹ",
+    "cur_krw": "Won Hàn Quốc",
+    "cur_myr": "Ringgit Malaysia",
+    "cur_jpy": "Yên Nhật",
+    "cur_cny": "Nhân dân tệ",
+    "cur_thb": "Baht Thái",
+    "cur_vnd": "Đồng Việt Nam",
+    "cur_php": "Peso Philippines",
+    "cur_sgd": "Đô la Singapore",
+    "cur_eur": "Euro",
+    "cur_gbp": "Bảng Anh"
   },
   "forgot_password": {
     "admin_portal": "Cổng Quản trị",
@@ -3516,7 +3926,8 @@
     "success_title": "Kiểm tra email của bạn",
     "success_message": "Nếu tài khoản tồn tại cho <1>{{email}}</1>, chúng tôi đã gửi một liên kết đặt lại mật khẩu. Vui lòng kiểm tra hộp thư đến (và thư mục spam).",
     "link_expiry": "Liên kết sẽ hết hạn sau <1>1 giờ</1>.",
-    "error_generic": "Đã xảy ra lỗi. Vui lòng thử lại."
+    "error_generic": "Đã xảy ra lỗi. Vui lòng thử lại.",
+    "email_placeholder": "your@email.com"
   },
   "not_found": {
     "heading": "404 Không Tìm Thấy Trang",
@@ -3553,7 +3964,9 @@
     "back_to_sign_in": "Quay lại Đăng nhập",
     "error_passwords_no_match": "Mật khẩu không khớp.",
     "error_password_too_short": "Mật khẩu phải có ít nhất 8 ký tự.",
-    "error_registration_failed": "Đăng ký thất bại. Vui lòng thử lại."
+    "error_registration_failed": "Đăng ký thất bại. Vui lòng thử lại.",
+    "first_name_placeholder": "Lan",
+    "last_name_placeholder": "Nguyễn"
   },
   "reset_password": {
     "admin_portal": "Cổng Quản trị",
@@ -3665,7 +4078,8 @@
       "loading_transcript": "Đang tải bản ghi…",
       "tool_label": "công cụ · {{name}}",
       "role_user": "người dùng",
-      "role_assistant": "trợ lý"
+      "role_assistant": "trợ lý",
+      "lead": "Khách tiềm năng #{{id}}"
     },
     "cs_translate": {
       "title": "Mô hình Tự động Dịch CS",
@@ -3691,7 +4105,8 @@
     "room_type": {
       "room_share": "Ở ghép phòng",
       "house_share": "Ở ghép nhà",
-      "entire_place": "Nguyên căn"
+      "entire_place": "Nguyên căn",
+      "homestay": "Homestay"
     },
     "meal_plan": {
       "none": "Không có bữa ăn",
@@ -3848,7 +4263,10 @@
     "f_bank_name": "Tên ngân hàng",
     "f_bank_account_name": "Tên tài khoản",
     "f_bank_bsb": "Mã BSB",
-    "f_bank_account_number": "Số tài khoản"
+    "f_bank_account_number": "Số tài khoản",
+    "col_email": "Email",
+    "f_email": "Email",
+    "f_bank_swift": "SWIFT / BIC"
   },
   "homestayStudent": {
     "list_title": "Đơn đăng ký Homestay Sinh viên",
@@ -3971,7 +4389,10 @@
     "gender_male": "Nam",
     "gender_female": "Nữ",
     "gender_either": "Không phân biệt",
-    "manual_search_no_match": "Không có gia đình bản xứ nào khớp với các bộ lọc này."
+    "manual_search_no_match": "Không có gia đình bản xứ nào khớp với các bộ lọc này.",
+    "minor_short": "Dưới 18",
+    "col_email": "Email",
+    "f_email": "Email"
   },
   "homestayPlacement": {
     "list_title": "Bố trí Homestay",
@@ -4087,7 +4508,9 @@
     "charge_pending_hint": "Thao tác này sẽ tạo một khoản thu đang chờ xử lý. Gửi khoản thu (liên kết thẻ / thông tin ngân hàng) từ danh sách Thanh toán.",
     "toast_charge_created": "Đã tạo khoản thu đang chờ xử lý",
     "toast_link_sent": "Đã mở liên kết thanh toán và gửi email cho học viên",
-    "search_placeholder": "Tìm mã placement…"
+    "search_placeholder": "Tìm mã placement…",
+    "bank_bsb": "BSB",
+    "bank_swift": "SWIFT"
   },
   "homestayDoc": {
     "title": "Chữ ký & tài liệu",
@@ -4149,7 +4572,9 @@
     "toast_published": "Đã xuất bản mẫu",
     "toast_test_sent": "Đã gửi email thử",
     "toast_created": "Đã tạo mẫu",
-    "error": "Đã xảy ra lỗi"
+    "error": "Đã xảy ra lỗi",
+    "kind_email": "Email",
+    "kind_pdf": "PDF"
   },
   "homestayBilling": {
     "title": "Thanh toán Homestay",
@@ -4225,7 +4650,28 @@
     "page_homestay_coming_soon": "Homestay · Sắp ra mắt",
     "page_homestay_nav": "Homestay · Điều hướng",
     "page_homestay_footer": "Homestay · Chân trang",
-    "page_homestay_sections": "Homestay · Phần dùng chung"
+    "page_homestay_sections": "Homestay · Phần dùng chung",
+    "site_development": "Trang tòa nhà",
+    "site_admin": "Bảng quản trị",
+    "module": "Mô-đun",
+    "admin_hint": "Đây là các nhãn của chính bảng quản trị, nhóm theo mô-đun. Giá trị đã lưu sẽ thay thế nội dung mặc định cho mọi người dùng của phiên bản này; để trống nếu muốn giữ mặc định. Tải lại trang để thấy thay đổi.",
+    "page_dev_home": "Tòa nhà · Trang chủ",
+    "page_dev_about": "Tòa nhà · Giới thiệu",
+    "page_dev_buy": "Tòa nhà · Mua / Bán",
+    "page_dev_listing": "Tòa nhà · Danh sách bán",
+    "page_dev_rent": "Tòa nhà · Thuê / Lưu trú",
+    "page_dev_mgmt": "Tòa nhà · Ủy thác quản lý",
+    "page_dev_directions": "Tòa nhà · Chỉ đường",
+    "page_dev_stayplan": "Tòa nhà · Gói lưu trú",
+    "page_dev_resident": "Tòa nhà · Dành cho cư dân",
+    "page_dev_owner": "Tòa nhà · Dành cho chủ sở hữu",
+    "page_dev_partner": "Tòa nhà · Dành cho đối tác",
+    "page_dev_privacy": "Tòa nhà · Chính sách bảo mật",
+    "page_dev_terms": "Tòa nhà · Điều khoản sử dụng",
+    "page_dev_nav": "Tòa nhà · Điều hướng",
+    "page_dev_footer": "Tòa nhà · Chân trang",
+    "page_dev_form": "Tòa nhà · Biểu mẫu dùng chung",
+    "site_homestay": "Homestay"
   },
   "blog_categories": {
     "title": "Danh mục Blog",
@@ -4378,7 +4824,8 @@
     "res_operations": "Vận hành",
     "res_users": "Người dùng",
     "res_settings": "Cài đặt",
-    "new_role_name_placeholder": "vd: Tài chính"
+    "new_role_name_placeholder": "vd: Tài chính",
+    "res_crm": "CRM"
   },
   "commission_plans": {
     "title": "Kế hoạch hoa hồng",
@@ -4536,7 +4983,51 @@
     "loading_status": "Đang tải trạng thái tích hợp...",
     "super_admin_required": "Cần vai trò Super Admin để cập nhật API key.",
     "lease_rent_title": "Tiền thuê hàng tháng theo hợp đồng",
-    "lease_rent_desc": "Khi bật, một tác vụ hàng ngày (03:00 giờ Sydney) sẽ lập hóa đơn tiền thuê tháng hiện tại cho mọi hợp đồng đang hoạt động có tiền thuê hàng tháng và ngày đến hạn — không cần đặt phòng — và đánh dấu các hóa đơn quá hạn là Quá hạn để hiển thị trên bảng điều khiển nợ."
+    "lease_rent_desc": "Khi bật, một tác vụ hàng ngày (03:00 giờ Sydney) sẽ lập hóa đơn tiền thuê tháng hiện tại cho mọi hợp đồng đang hoạt động có tiền thuê hàng tháng và ngày đến hạn — không cần đặt phòng — và đánh dấu các hóa đơn quá hạn là Quá hạn để hiển thị trên bảng điều khiển nợ.",
+    "maps_body": "Dùng OpenStreetMap / Nominatim để mã hoá địa lý và Leaflet để hiển thị bản đồ. Không cần API key hay cấu hình.",
+    "ical_body": "Cấu hình URL nhập iCal ở trang chi tiết từng không gian, trong mục OTA Sync. Tình trạng phòng trống sẽ được đồng bộ tự động.",
+    "ai_key_hint": "Cung cấp trợ lý chat trên trang đích. Lấy khoá tại",
+    "ai_model": "Mô hình: {{model}}",
+    "modules_body": "Khi bật, thanh bên sẽ hiển thị quy trình tiếp nhận homestay — đơn đăng ký, yêu cầu của học sinh và bố trí chỗ ở. Tắt cho các đơn vị không làm homestay; menu và trang liên quan sẽ bị ẩn. Tải lại ứng dụng để cập nhật thanh bên ngay.",
+    "sheets_body": "Đồng bộ hàng đợi xử lý đơn đăng ký học sinh homestay với Google Sheet. Sửa trạng thái hoặc ghi chú trong sheet sẽ cập nhật đơn tương ứng theo thời gian thực. Thông tin học sinh và người giám hộ chỉ đọc.",
+    "sheets_step1": "Cấp API key có phạm vi homestay:read và homestay:write.",
+    "sheets_step2": "Trong Google Sheet, thêm Apps Script được cung cấp và dán khoá vào Script Properties.",
+    "sheets_step3": "Chạy bước cài đặt một lần, sau đó dùng menu {{menu}} của sheet.",
+    "card_stripe": "Thanh toán Stripe",
+    "card_stripe_desc": "Xử lý thanh toán, gói thuê bao và hoá đơn",
+    "card_cloudinary": "Lưu trữ Cloudinary",
+    "card_cloudinary_desc": "Lưu ảnh và tối ưu hình ảnh tự động",
+    "card_resend": "Email Resend",
+    "card_resend_desc": "Email giao dịch cho đặt phòng, hoá đơn và thông báo",
+    "card_maps": "Bản đồ",
+    "card_maps_desc": "Bản đồ và mã hoá địa lý qua OpenStreetMap — không cần API key",
+    "card_ical": "Đồng bộ OTA / iCal",
+    "card_ical_desc": "Đồng bộ tình trạng phòng từ Airbnb, Booking.com và các OTA khác qua iCal",
+    "card_ai": "Chatbot AI",
+    "card_ai_desc": "Trợ lý AI cho widget chat trên trang đích",
+    "card_sheets": "Google Sheets",
+    "card_sheets_desc": "Đồng bộ đơn đăng ký học sinh homestay với Google Sheet (trạng thái & ghi chú)",
+    "card_billing": "Thanh toán định kỳ",
+    "card_billing_desc": "Tự động tạo hoá đơn tiền thuê định kỳ cho hợp đồng dài hạn",
+    "card_modules": "Mô-đun Homestay",
+    "card_modules_desc": "Hiện hoặc ẩn quy trình tiếp nhận homestay (đơn đăng ký, yêu cầu học sinh, bố trí)",
+    "badge_not_configured": "Chưa cấu hình",
+    "badge_error": "Lỗi",
+    "badge_error_credentials": "Lỗi — kiểm tra thông tin xác thực",
+    "badge_live": "Chế độ thật",
+    "badge_test": "Chế độ thử",
+    "badge_connected": "Đã kết nối",
+    "badge_not_required": "Không cần cấu hình",
+    "badge_self_service": "Tự cấu hình",
+    "badge_enabled": "Đang bật",
+    "badge_disabled": "Đang tắt",
+    "test_stripe": "Kiểm tra Stripe",
+    "test_cloudinary": "Kiểm tra Cloudinary",
+    "test_ai": "Kiểm tra AI",
+    "cloudinary_api_key": "API Key (CLOUDINARY_API_KEY)",
+    "cloudinary_api_secret": "API Secret (CLOUDINARY_API_SECRET)",
+    "resend_api_key": "API Key (RESEND_API_KEY)",
+    "anthropic_api_key": "Anthropic API Key (ANTHROPIC_API_KEY)"
   },
   "apiKeys": {
     "subtitle": "Cấp API key để các ứng dụng bên ngoài kết nối với {{app}}",
@@ -4559,7 +5050,10 @@
     "last_used": "Lần dùng cuối: {{value}}",
     "never": "chưa từng",
     "rotate": "Đổi mới",
-    "revoke": "Thu hồi"
+    "revoke": "Thu hồi",
+    "api_key_label": "API Key (X-API-Key)",
+    "api_secret_label": "API Secret (X-API-Secret)",
+    "secret_masked": "khoá bí mật ••••{{last4}}"
   },
   "contractTypes": {
     "subtitle": "Định nghĩa các danh mục loại hợp đồng và yêu cầu",
@@ -4578,7 +5072,8 @@
     "require_visa": "Yêu cầu Visa",
     "require_enrollment": "Yêu cầu Đăng ký",
     "toast_saved": "Đã lưu loại hợp đồng.",
-    "toast_save_failed": "Lưu thất bại."
+    "toast_save_failed": "Lưu thất bại.",
+    "col_visa": "Visa"
   },
   "productGroups": {
     "subtitle": "Sắp xếp sản phẩm thành các nhóm hợp lý",
@@ -4832,7 +5327,9 @@
     "unhide_item": "Khôi phục dòng này",
     "unit_no": "Số căn hộ",
     "unit_type": "Loại căn hộ",
-    "upload_failed": "Tải ảnh lên không thành công"
+    "upload_failed": "Tải ảnh lên không thành công",
+    "item_na": "Không áp dụng",
+    "meter_gas": "Gas"
   },
   "inspection_template": {
     "active_count": "{{active}}/{{total}} dòng đang hoạt động",
@@ -4867,5 +5364,29 @@
     "email": "Gửi email",
     "close": "Đóng",
     "new_tab": "Mở trong tab mới"
+  },
+  "error_boundary": {
+    "title": "Đã xảy ra lỗi",
+    "description": "Có lỗi không mong muốn khi hiển thị trang này. Vui lòng tải lại.",
+    "try_again": "Thử lại",
+    "reload": "Tải lại trang"
+  },
+  "space_photos": {
+    "loading": "Đang tải ảnh…",
+    "dropzone": "Kéo ảnh vào đây hoặc bấm để chọn",
+    "formats": "JPG, PNG, WebP — tối đa 20 MB mỗi ảnh",
+    "ready_count": "{{count}} ảnh chờ tải lên",
+    "primary": "Ảnh chính",
+    "caption_placeholder": "Thêm chú thích…"
+  },
+  "doc_versions": {
+    "button": "Phiên bản",
+    "dialog_title": "Phiên bản đã khoá",
+    "description": "Mỗi lần tài liệu này được gửi email hoặc khoá, một bản PDF không thể chỉnh sửa sẽ được lưu lại.",
+    "empty": "Chưa có phiên bản nào được khoá.",
+    "preview": "Xem trước phiên bản này",
+    "toast_frozen": "Đã khoá phiên bản",
+    "toast_frozen_desc": "Đã lưu v{{version}} thành bản chụp không thể chỉnh sửa.",
+    "toast_failed": "Khoá phiên bản thất bại"
   }
 }

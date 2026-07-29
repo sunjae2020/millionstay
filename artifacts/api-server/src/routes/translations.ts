@@ -92,16 +92,21 @@ router.delete("/v1/translations/languages/:code", async (req, res): Promise<void
 
 /* ──────────────────────── Translations ──────────────────────── */
 
-// GET /v1/translations?lang=ko
+// GET /v1/translations?lang=ko[&prefix=admin.]
 // Returns every known key (union across all languages, base = en) with the
-// English reference value and the value for the requested language.
+// English reference value and the value for the requested language. `prefix`
+// narrows the result to one key namespace — the admin UI now holds thousands of
+// keys, so the page-oriented editors ask for just the group they render.
 router.get("/v1/translations", async (req, res): Promise<void> => {
   const lang = String(req.query.lang ?? "").toLowerCase();
   if (!lang) {
     res.status(400).json({ success: false, error: { code: "MISSING_LANG" } });
     return;
   }
-  const all = await db.select().from(translationsTable);
+  const prefix = String(req.query.prefix ?? "").trim();
+  const all = (await db.select().from(translationsTable)).filter(
+    (r) => !prefix || r.key === prefix || r.key.startsWith(prefix + "."),
+  );
   const keys = new Set<string>();
   const enMap = new Map<string, string>();
   const langMap = new Map<string, { value: string; id: number; source: string; reviewed_at: Date | null }>();

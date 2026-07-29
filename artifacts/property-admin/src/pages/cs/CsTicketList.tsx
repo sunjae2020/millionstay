@@ -121,8 +121,9 @@ export default function CsTicketList() {
         key: "requester_type",
         header: "csticket.col_type",
         cell: (ticket) => {
-          const rc = REQUESTER_CONFIG[ticket.requester_type ?? "guest"] ?? REQUESTER_CONFIG.guest;
-          return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${rc.color}`}>{rc.label}</span>;
+          const rkey = REQUESTER_CONFIG[ticket.requester_type ?? "guest"] ? (ticket.requester_type ?? "guest") : "guest";
+          const rc = REQUESTER_CONFIG[rkey];
+          return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${rc.color}`}>{t(`csticket.requester_${rkey}` as any, rc.label)}</span>;
         },
       },
       {
@@ -292,7 +293,7 @@ export default function CsTicketList() {
                 <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {REQUESTER_TYPES.map(rt => (
-                    <SelectItem key={rt} value={rt}>{rt === "All" ? t("csticket.all_types", "All types") : (REQUESTER_CONFIG[rt]?.label ?? rt)}</SelectItem>
+                    <SelectItem key={rt} value={rt}>{rt === "All" ? t("csticket.all_types", "All types") : t(`csticket.requester_${rt}` as any, REQUESTER_CONFIG[rt]?.label ?? rt)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

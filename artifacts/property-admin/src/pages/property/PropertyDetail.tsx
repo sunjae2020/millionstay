@@ -340,10 +340,10 @@ export default function PropertyDetail() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Pending">Pending</SelectItem>
-                            <SelectItem value="Active">Active</SelectItem>
-                            <SelectItem value="Suspended">Suspended</SelectItem>
-                            <SelectItem value="Rejected">Rejected</SelectItem>
+                            <SelectItem value="Pending">{t("common.pending")}</SelectItem>
+                            <SelectItem value="Active">{t("common.active")}</SelectItem>
+                            <SelectItem value="Suspended">{t("common.suspended")}</SelectItem>
+                            <SelectItem value="Rejected">{t("common.rejected")}</SelectItem>
                           </SelectContent>
                         </Select>
                       )}

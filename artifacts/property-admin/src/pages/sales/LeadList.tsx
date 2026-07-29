@@ -29,6 +29,15 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; header: string;
   Lost:               { label: "Lost",      bg: "bg-red-50 border-red-200",       header: "bg-red-100 text-red-700",       badge: "bg-red-100 text-red-700 border-red-200",       dot: "bg-red-400" },
 };
 
+// Maps the API's status values onto the `lead.status_*` i18n keys.
+const STATUS_KEY: Record<string, string> = {
+  New: "new",
+  Contacted: "contacted",
+  Qualified: "qualified",
+  ConvertedToBooking: "converted",
+  Lost: "lost",
+};
+
 const NEXT_STATUS: Record<string, string | null> = {
   New: "Contacted",
   Contacted: "Qualified",
@@ -122,7 +131,7 @@ function KanbanView({ leads, onMove, onDelete }: {
         return (
           <div key={status} className={`flex-shrink-0 w-64 rounded-lg border ${cfg.bg} flex flex-col`}>
             <div className={`flex items-center justify-between px-3 py-2 rounded-t-lg ${cfg.header}`}>
-              <span className="text-xs font-semibold">{cfg.label}</span>
+              <span className="text-xs font-semibold">{t(`lead.status_${STATUS_KEY[status] ?? status}` as any, cfg.label)}</span>
               <span className="text-[10px] font-bold bg-white/60 rounded-full px-1.5 py-0.5">{items.length}</span>
             </div>
             <div className={`flex-1 p-2 space-y-2 min-h-[200px] max-h-[600px] overflow-y-auto`}>
@@ -178,7 +187,7 @@ export default function LeadList() {
 
   function handleMove(id: number, newStatus: string) {
     updateMutation.mutate({ id, data: { lead_status: newStatus } }, {
-      onSuccess: () => toast({ title: t("lead.move_to", { stage: STATUS_CONFIG[newStatus]?.label ?? newStatus }) }),
+      onSuccess: () => toast({ title: t("lead.move_to", { stage: t(`lead.status_${STATUS_KEY[newStatus] ?? newStatus}` as any, STATUS_CONFIG[newStatus]?.label ?? newStatus) }) }),
       onError: () => toast({ title: t("common.error"), variant: "destructive" }),
     });
   }
@@ -225,7 +234,7 @@ export default function LeadList() {
         editable: {
           type: "select",
           getValue: (l) => l.lead_status,
-          options: LEAD_STATUSES.map((s) => ({ value: s, label: STATUS_CONFIG[s]?.label ?? s })),
+          options: LEAD_STATUSES.map((s) => ({ value: s, label: t(`lead.status_${STATUS_KEY[s] ?? s}` as any, STATUS_CONFIG[s]?.label ?? s) })),
         },
         cell: (l) => <LeadStatusBadge status={l.lead_status} />,
       },
@@ -347,7 +356,7 @@ export default function LeadList() {
                   <SelectContent>
                     <SelectItem value="__all">{t("lead.all_statuses")}</SelectItem>
                     {LEAD_STATUSES.map(s => (
-                      <SelectItem key={s} value={s}>{STATUS_CONFIG[s]?.label ?? s}</SelectItem>
+                      <SelectItem key={s} value={s}>{t(`lead.status_${STATUS_KEY[s] ?? s}` as any, STATUS_CONFIG[s]?.label ?? s)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

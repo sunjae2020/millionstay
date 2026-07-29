@@ -189,10 +189,10 @@ export default function SuburbList() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="_all">{t("suburb.all_countries") || "All Countries"}</SelectItem>
-                  <SelectItem value="AU">Australia</SelectItem>
-                  <SelectItem value="US">United States</SelectItem>
-                  <SelectItem value="GB">United Kingdom</SelectItem>
-                  <SelectItem value="NZ">New Zealand</SelectItem>
+                  <SelectItem value="AU">{t("suburb.country_au")}</SelectItem>
+                  <SelectItem value="US">{t("suburb.country_us")}</SelectItem>
+                  <SelectItem value="GB">{t("suburb.country_gb")}</SelectItem>
+                  <SelectItem value="NZ">{t("suburb.country_nz")}</SelectItem>
                 </SelectContent>
               </Select>
               <Input

@@ -207,8 +207,8 @@ export default function SpacePolicyDetail() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Active">Active</SelectItem>
-                        <SelectItem value="Inactive">Inactive</SelectItem>
+                        <SelectItem value="Active">{t("common.active")}</SelectItem>
+                        <SelectItem value="Inactive">{t("common.inactive")}</SelectItem>
                       </SelectContent>
                     </Select>
                   )}

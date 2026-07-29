@@ -31,6 +31,7 @@ interface SpacePhotoManagerProps {
 }
 
 export function SpacePhotoManager({ spaceId }: SpacePhotoManagerProps) {
+  const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [images, setImages] = useState<SpaceImage[]>([]);
@@ -146,7 +147,7 @@ export function SpacePhotoManager({ spaceId }: SpacePhotoManagerProps) {
   if (loading) {
     return (
       <div className="flex items-center gap-2 p-6 text-muted-foreground text-sm">
-        <Loader2 className="h-4 w-4 animate-spin" /> Loading photos...
+        <Loader2 className="h-4 w-4 animate-spin" /> {t("space_photos.loading")}
       </div>
     );
   }
@@ -186,19 +187,19 @@ export function SpacePhotoManager({ spaceId }: SpacePhotoManagerProps) {
           onChange={handleFileSelect}
         />
         <ImagePlus className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
-        <p className="text-sm font-medium text-slate-700">Drop photos here or click to select</p>
-        <p className="text-xs text-muted-foreground mt-1">JPG, PNG, WebP — up to 20 MB each</p>
+        <p className="text-sm font-medium text-slate-700">{t("space_photos.dropzone")}</p>
+        <p className="text-xs text-muted-foreground mt-1">{t("space_photos.formats")}</p>
       </div>
 
       {pendingFiles.length > 0 && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-blue-800">{pendingFiles.length} photo(s) ready to upload</p>
+            <p className="text-sm font-medium text-blue-800">{t("space_photos.ready_count", { count: pendingFiles.length })}</p>
             <p className="text-xs text-primary mt-0.5">{pendingFiles.map((f) => f.name).join(", ")}</p>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" className="text-primary" onClick={() => setPendingFiles([])}>
-              Clear
+              {t("common.clear")}
             </Button>
             <Button size="sm" className="gap-1.5" onClick={handleUpload} disabled={uploading}>
               {uploading ? (
@@ -240,7 +241,7 @@ export function SpacePhotoManager({ spaceId }: SpacePhotoManagerProps) {
                 />
                 {image.is_primary && (
                   <div className="absolute top-2 left-2 flex items-center gap-1 bg-primary text-white text-xs font-medium px-2 py-0.5 rounded-full">
-                    <Star className="h-3 w-3 fill-white" /> Primary
+                    <Star className="h-3 w-3 fill-white" /> {t("space_photos.primary")}
                   </div>
                 )}
               </div>
@@ -251,7 +252,7 @@ export function SpacePhotoManager({ spaceId }: SpacePhotoManagerProps) {
                     <Input
                       value={captionEdits[image.id] ?? ""}
                       onChange={(e) => setCaptionEdits((prev) => ({ ...prev, [image.id]: e.target.value }))}
-                      placeholder="Add caption..."
+                      placeholder={t("space_photos.caption_placeholder")}
                       className="h-8 text-xs"
                     />
                     {captionEdits[image.id] !== (image.caption ?? "") && (

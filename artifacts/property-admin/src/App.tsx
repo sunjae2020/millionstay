@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Switch, Route, Router as WouterRouter, Redirect, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { initTheme } from "@/lib/theme";
@@ -140,6 +141,7 @@ const queryClient = new QueryClient({
 });
 
 function ProtectedRouter() {
+  const { t } = useTranslation();
   const { user, isLoading } = useAuth();
   const [location] = useLocation();
 
@@ -148,7 +150,7 @@ function ProtectedRouter() {
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-3">
           <div className="h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-muted-foreground">Loading...</p>
+          <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
         </div>
       </div>
     );
@@ -179,6 +181,7 @@ function Router() {
   // so direct-URL access falls through to the catch-all (menus are hidden too,
   // see Layout/useModules). Defaults to enabled while loading / when unset.
   const { homestayEnabled } = useModules();
+  const { t } = useTranslation();
   return (
     <Switch>
       {/* ── Auth (public) ──────────────────────────────── */}
@@ -317,7 +320,7 @@ function Router() {
       <Route path="/finance/invoices/:id" component={InvoiceDetail} />
 
       <Route path="/finance/transactions">
-        {() => <ComingSoonPage title="Transactions" subtitle="View all financial transactions" />}
+        {() => <ComingSoonPage title={t("nav.transaction")} subtitle={t("coming_soon.sub_transactions")} />}
       </Route>
       <Route path="/finance/receipts" component={ReceiptList} />
 
@@ -366,15 +369,15 @@ function Router() {
       <Route path="/settings/suburbs/:id" component={SuburbDetail} />
 
       <Route path="/settings/system-log">
-        {() => <ComingSoonPage title="System Log" subtitle="Audit trail of system events" />}
+        {() => <ComingSoonPage title={t("nav.system_log")} subtitle={t("coming_soon.sub_system_log")} />}
       </Route>
 
       <Route path="/settings/reports/bookings" component={BookingReportPage} />
       <Route path="/settings/reports/revenue">
-        {() => <ComingSoonPage title="Revenue Report" subtitle="Revenue breakdown and trends" />}
+        {() => <ComingSoonPage title={t("nav.revenue_report")} subtitle={t("coming_soon.sub_revenue_report")} />}
       </Route>
       <Route path="/settings/reports/occupancy">
-        {() => <ComingSoonPage title="Occupancy Report" subtitle="Space occupancy over time" />}
+        {() => <ComingSoonPage title={t("nav.occupancy_report")} subtitle={t("coming_soon.sub_occupancy_report")} />}
       </Route>
 
       {/* ── MAINTENANCE (legacy, not in sidebar) ─────── */}

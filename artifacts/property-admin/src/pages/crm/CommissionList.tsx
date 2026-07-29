@@ -172,12 +172,12 @@ export default function CommissionList() {
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-destructive" />
-              {isSuperAdmin ? "Delete Commission" : "Archive Commission"}
+              {isSuperAdmin ? t("common.del_dialog_title_delete", { entity: t("nav.commission") }) : t("common.del_dialog_title_archive", { entity: t("nav.commission") })}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {isSuperAdmin
-                ? "Choose how to remove this commission. Archiving hides it from view but keeps the data. Permanent deletion cannot be undone."
-                : "This commission will be archived and hidden from view. A Super Admin can restore it if needed."}
+                ? t("common.del_dialog_desc_super")
+                : t("common.del_dialog_desc_plain")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className={isSuperAdmin ? "flex-col sm:flex-row gap-2" : ""}>
@@ -187,14 +187,14 @@ export default function CommissionList() {
               className="border-amber-300 text-amber-700 hover:bg-amber-50"
               onClick={() => deleteId && archiveMutation.mutate({ id: deleteId })}
               disabled={archiveMutation.isPending}>
-              Archive
+              {t("common.archive")}
             </Button>
             {isSuperAdmin && (
               <Button
                 variant="destructive"
                 onClick={handlePermanentDelete}
                 disabled={isPermanentDeleting}>
-                Delete Forever
+                {t("common.delete_forever")}
               </Button>
             )}
           </AlertDialogFooter>

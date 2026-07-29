@@ -24,18 +24,18 @@ type ExchangeRate = {
 };
 
 const SUPPORTED = [
-  { code: "AUD", label: "AUD — Australian Dollar" },
-  { code: "USD", label: "USD — US Dollar" },
-  { code: "KRW", label: "KRW — Korean Won" },
-  { code: "MYR", label: "MYR — Malaysian Ringgit" },
-  { code: "JPY", label: "JPY — Japanese Yen" },
-  { code: "CNY", label: "CNY — Chinese Yuan" },
-  { code: "THB", label: "THB — Thai Baht" },
-  { code: "VND", label: "VND — Vietnamese Dong" },
-  { code: "PHP", label: "PHP — Philippine Peso" },
-  { code: "SGD", label: "SGD — Singapore Dollar" },
-  { code: "EUR", label: "EUR — Euro" },
-  { code: "GBP", label: "GBP — British Pound" },
+  { code: "AUD", label: "exchange_rate.cur_aud" },
+  { code: "USD", label: "exchange_rate.cur_usd" },
+  { code: "KRW", label: "exchange_rate.cur_krw" },
+  { code: "MYR", label: "exchange_rate.cur_myr" },
+  { code: "JPY", label: "exchange_rate.cur_jpy" },
+  { code: "CNY", label: "exchange_rate.cur_cny" },
+  { code: "THB", label: "exchange_rate.cur_thb" },
+  { code: "VND", label: "exchange_rate.cur_vnd" },
+  { code: "PHP", label: "exchange_rate.cur_php" },
+  { code: "SGD", label: "exchange_rate.cur_sgd" },
+  { code: "EUR", label: "exchange_rate.cur_eur" },
+  { code: "GBP", label: "exchange_rate.cur_gbp" },
 ];
 
 async function fetchRates(): Promise<{ data: ExchangeRate[] }> {
@@ -314,7 +314,7 @@ export default function ExchangeRateList() {
               <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {SUPPORTED.filter((c) => c.code !== "AUD").map((c) => (
-                  <SelectItem key={c.code} value={c.code}>{c.label}</SelectItem>
+                  <SelectItem key={c.code} value={c.code}>{c.code} — {t(c.label)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

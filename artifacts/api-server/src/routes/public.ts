@@ -1666,18 +1666,31 @@ router.get("/v1/public/languages", async (_req, res): Promise<void> => {
 });
 
 /* ───────────────────────────────────────────────────────
-   GET /api/v1/public/translations/:lang
+   GET /api/v1/public/translations/:lang[?prefix=admin.]
    No auth. Flat { key: value } map for the requested language.
-   The website overlays these on top of its bundled defaults.
+   The website overlays these on top of its bundled defaults. `prefix` narrows
+   the payload to one namespace and strips it from the returned keys, so the
+   admin app can pull only its own `admin.*` overrides.
 ──────────────────────────────────────────────────────── */
 router.get("/v1/public/translations/:lang", async (req, res): Promise<void> => {
   const lang = String(req.params.lang).toLowerCase();
+  const prefix = String(req.query.prefix ?? "").trim();
   const rows = await db
     .select({ key: translationsTable.key, value: translationsTable.value })
     .from(translationsTable)
     .where(eq(translationsTable.lang, lang));
   const out: Record<string, string> = {};
-  for (const r of rows) if (r.value !== "") out[r.key] = r.value;
+  for (const r of rows) {
+    if (r.value === "") continue;
+    if (!prefix) {
+      // Admin-console strings are a separate namespace — never ship them to the
+      // public sites, which ask for this endpoint without a prefix.
+      if (r.key.startsWith("admin.")) continue;
+      out[r.key] = r.value;
+    } else if (r.key.startsWith(prefix)) {
+      out[r.key.slice(prefix.length)] = r.value;
+    }
+  }
   res.json({ success: true, data: out });
 });
 

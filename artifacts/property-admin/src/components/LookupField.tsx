@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -39,6 +40,7 @@ export function LookupField({
   searchPlaceholder = "Search...",
   disabled,
 }: LookupFieldProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
@@ -106,7 +108,7 @@ export function LookupField({
             <ScrollArea className="h-64">
               <div className="flex flex-col gap-1">
                 {options.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-6">No results found</p>
+                  <p className="text-sm text-muted-foreground text-center py-6">{t("common.no_results")}</p>
                 ) : (
                   options.map((opt) => (
                     <button
@@ -226,7 +228,7 @@ export function MultiLookupField({
             <ScrollArea className="h-64">
               <div className="flex flex-col gap-1">
                 {options.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-6">No results found</p>
+                  <p className="text-sm text-muted-foreground text-center py-6">{t("common.no_results")}</p>
                 ) : (
                   options.map((opt) => {
                     const selected = values.includes(opt.id);

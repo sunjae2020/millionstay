@@ -730,11 +730,11 @@ export default function SpaceDetail() {
                             <SelectValue placeholder={t("space.placeholder_type")} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Private Room">Private Room</SelectItem>
-                            <SelectItem value="Shared Room">Shared Room</SelectItem>
-                            <SelectItem value="Whole Property">Whole Property</SelectItem>
-                            <SelectItem value="Homestay">Homestay</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
+                            <SelectItem value="Private Room">{t("space.type_private")}</SelectItem>
+                            <SelectItem value="Shared Room">{t("space.type_shared")}</SelectItem>
+                            <SelectItem value="Whole Property">{t("space.type_whole")}</SelectItem>
+                            <SelectItem value="Homestay">{t("nav.homestay_placements", "Homestay")}</SelectItem>
+                            <SelectItem value="Other">{t("space.type_other")}</SelectItem>
                           </SelectContent>
                         </Select>
                       )}
@@ -757,9 +757,9 @@ export default function SpaceDetail() {
                             <SelectValue placeholder={t("space.placeholder_booking_mode")} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Instant">Instant</SelectItem>
-                            <SelectItem value="Request">Request</SelectItem>
-                            <SelectItem value="Manual">Manual</SelectItem>
+                            <SelectItem value="Instant">{t("space.mode_instant")}</SelectItem>
+                            <SelectItem value="Request">{t("space.mode_request")}</SelectItem>
+                            <SelectItem value="Manual">{t("space.mode_manual")}</SelectItem>
                           </SelectContent>
                         </Select>
                       )}

@@ -648,12 +648,13 @@ function SidebarLogo({
   collapsed?: boolean;
   onToggle?: () => void;
 }) {
+  const { t } = useTranslation();
   if (collapsed) {
     return (
       <div className="h-14 flex items-center justify-center border-b border-sidebar-border flex-shrink-0">
         <button
           onClick={onToggle}
-          title="Expand sidebar"
+          title={t("common.expand_sidebar")}
           className="hidden md:flex h-7 w-7 items-center justify-center rounded text-sidebar-foreground/50 hover:text-sidebar-primary hover:bg-sidebar-accent transition-colors"
         >
           <ChevronsRight className="h-4 w-4" />
@@ -677,7 +678,7 @@ function SidebarLogo({
       {/* Collapse button — desktop only */}
       <button
         onClick={onToggle}
-        title="Collapse sidebar"
+        title={t("common.collapse_sidebar")}
         className="hidden md:flex flex-shrink-0 h-6 w-6 rounded items-center justify-center text-sidebar-foreground/40 hover:text-sidebar-primary hover:bg-sidebar-accent transition-colors"
       >
         <ChevronsLeft className="h-4 w-4" />
@@ -764,7 +765,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <button
             className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md hover:bg-sidebar-accent text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors md:hidden"
             onClick={() => setSidebarOpen(false)}
-            aria-label="Close menu"
+            aria-label={t("common.close_menu")}
           >
             <X className="h-4 w-4" />
           </button>
@@ -792,7 +793,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </Link>
             ) : (
               <>
-                <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">Dashboards</p>
+                <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">{t("nav.dashboards")}</p>
                 {(() => {
                   const onDashboard = location === "/" || location === "/dashboard";
                   return (
@@ -832,7 +833,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <button
             onClick={() => setSidebarOpen(true)}
             className="p-2 rounded-md hover:bg-muted transition-colors text-foreground/70 hover:text-foreground md:hidden"
-            aria-label="Open menu"
+            aria-label={t("common.open_menu")}
           >
             <Menu className="h-5 w-5" />
           </button>
