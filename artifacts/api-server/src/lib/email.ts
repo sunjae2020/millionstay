@@ -8,20 +8,13 @@ import { resolveTemplate, renderString } from "./documents/templateEngine";
 import { resolveCompanyInfo } from "./documents/companyInfo";
 import { DOC_TOKENS, formatDocMoney } from "./documents/theme";
 import { DEFAULT_CURRENCY } from "./currency";
+import { resolveEmailBrand, renderEmailShell, type EmailBrand } from "./emailBrand";
+import { escapeHtml } from "./htmlEscape";
 
 let resend: Resend | null = null;
 let resendKey: string | null = null;
 
-/** HTML-escape user-supplied text before interpolating into templates. */
-export function escapeHtml(input: string | null | undefined): string {
-  if (input == null) return "";
-  return String(input)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
+export { escapeHtml };
 
 /** Escape and clip a name for safe rendering. */
 function safeName(name: string | null | undefined, max = 80): string {
@@ -90,7 +83,6 @@ export function emailSender(): { from: string; replyTo?: string } {
   }
   return { from: configured };
 }
-const LOGO_URL = process.env.EMAIL_LOGO_URL ?? "https://www.millionstay.com/millionstay-logo.png";
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL ?? "millionstay.com@gmail.com";
 
 /**
@@ -137,7 +129,8 @@ export async function sendDocumentEmail(
   opts: DocumentEmailOptions,
 ): Promise<{ ok: boolean; id?: string; skipped?: boolean; error?: string; subject: string }> {
   const lang = normalizeLang(typeof opts.lang === "string" ? opts.lang : opts.lang);
-  const subject = opts.subject ?? t(lang, "email.subject", { doc: opts.docTypeLabel, ref: opts.ref });
+  const brand = await resolveEmailBrand();
+  const subject = opts.subject ?? t(lang, "email.subject", { brand: brand.name, doc: opts.docTypeLabel, ref: opts.ref });
   const recipients = (Array.isArray(opts.to) ? opts.to : [opts.to]).map((x) => x.trim()).filter(Boolean);
   const toLabel = recipients.join(", ");
 
@@ -147,38 +140,24 @@ export async function sendDocumentEmail(
     return { ok: false, skipped: true, error: "Email service not configured", subject };
   }
 
-  const supportEmail = await resolveSupportEmail();
+  const supportEmail = brand.supportEmail;
   const greeting = opts.toName
     ? t(lang, "email.greeting.named", { name: `<strong>${safeName(opts.toName)}</strong>` })
     : t(lang, "email.greeting.plain");
-  const html = `
-<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-  body{font-family:'Inter',-apple-system,sans-serif;margin:0;padding:0;background:#f9fafb;color:#111;}
-  .container{max-width:560px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
-  .header{background:#fff;padding:28px 32px;border-bottom:1px solid #f0f0f0;}
-  .header img{height:36px;width:auto;display:block;}
-  .body{padding:32px;}
-  .ref-box{background:#FFF7F0;border:1px solid #FCD9B6;border-radius:10px;padding:16px 20px;margin:20px 0;}
-  .ref-box .label{font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:#999;}
-  .ref-box .ref{font-size:18px;font-weight:700;color:#E8621A;font-family:monospace;letter-spacing:0.04em;}
-  .amount{font-size:15px;color:#111;margin-top:8px;font-weight:600;}
-  .footer{padding:20px 32px;border-top:1px solid #f0f0f0;font-size:12px;color:#999;text-align:center;}
-</style></head><body>
-<div class="container">
-  <div class="header"><img src="${LOGO_URL}" alt="MillionStay" /></div>
-  <div class="body">
-    <p style="font-size:16px;">${greeting}</p>
-    <p style="color:#555;font-size:14px;">${t(lang, "email.body", { doc: escapeHtml(opts.docTypeLabel) })}</p>
-    <div class="ref-box">
+  const html = renderEmailShell({
+    brand,
+    footerLines: [t(lang, "email.sentTo", { to: escapeHtml(toLabel) })],
+    body: `
+    <p class="lead">${greeting}</p>
+    <p>${t(lang, "email.body", { doc: escapeHtml(opts.docTypeLabel) })}</p>
+    <div class="box">
       <div class="label">${escapeHtml(opts.docTypeLabel)}</div>
       <div class="ref">${escapeHtml(opts.ref)}</div>
       ${opts.amountLabel ? `<div class="amount">${escapeHtml(opts.amountLabel)}</div>` : ""}
     </div>
-    ${opts.note ? `<p style="font-size:13px;color:#555;">${escapeHtml(opts.note)}</p>` : ""}
-    <p style="font-size:13px;color:#999;">${t(lang, "email.questions", { email: `<a href="mailto:${supportEmail}" style="color:#E8621A;">${supportEmail}</a>` })}</p>
-  </div>
-  <div class="footer">© ${new Date().getFullYear()} MillionStay Pty Ltd · ${t(lang, "email.sentTo", { to: escapeHtml(toLabel) })}</div>
-</div></body></html>`;
+    ${opts.note ? `<p class="muted">${escapeHtml(opts.note)}</p>` : ""}
+    <p class="muted">${t(lang, "email.questions", { email: `<a href="mailto:${supportEmail}">${escapeHtml(supportEmail)}</a>` })}</p>`,
+  });
 
   const payload = {
     ...emailSender(),
@@ -273,36 +252,25 @@ export async function sendPasswordResetEmail(
   const safeTo = escapeHtml(opts.to);
   const safeUrl = escapeHtml(opts.resetUrl);
   const productLabel = opts.product ?? "Admin";
+  const brand = await resolveEmailBrand();
 
-  const html = `
-<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-  body{font-family:-apple-system,sans-serif;margin:0;padding:0;background:#f9fafb;color:#111;}
-  .container{max-width:560px;margin:32px auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
-  .header{background:#fff;padding:28px 32px;border-bottom:1px solid #f0f0f0;text-align:left;}
-  .header img{height:36px;width:auto;display:block;}
-  .body{padding:32px;}
-  .btn{display:block;text-align:center;background:#E8621A;color:white;text-decoration:none;padding:14px 24px;border-radius:12px;font-weight:700;font-size:15px;margin:24px 0;}
-  .note{font-size:12px;color:#999;margin-top:16px;}
-  .footer{padding:20px 32px;border-top:1px solid #f0f0f0;font-size:12px;color:#999;text-align:center;}
-</style></head><body>
-<div class="container">
-  <div class="header"><img src="${LOGO_URL}" alt="MillionStay" /></div>
-  <div class="body">
-    <p style="font-size:16px;">Hi <strong>${safeNameVal}</strong>,</p>
-    <p style="color:#555;font-size:14px;">We received a request to reset the password for your MillionStay ${escapeHtml(productLabel)} account. Click the button below to set a new password:</p>
+  const html = renderEmailShell({
+    brand,
+    footerLines: [`This email was sent to ${safeTo}`],
+    body: `
+    <p class="lead">Hi <strong>${safeNameVal}</strong>,</p>
+    <p>We received a request to reset the password for your ${escapeHtml(brand.name)} ${escapeHtml(productLabel)} account. Click the button below to set a new password:</p>
     <a href="${safeUrl}" class="btn">Reset My Password →</a>
-    <p class="note">⏱ This link expires in <strong>1 hour</strong>. If you didn't request this, you can safely ignore this email — your password won't change.</p>
-    <p style="font-size:13px;color:#999;">If the button doesn't work, copy and paste this URL into your browser:<br>
-      <span style="color:#E8621A;word-break:break-all;">${safeUrl}</span>
-    </p>
-  </div>
-  <div class="footer">© ${new Date().getFullYear()} MillionStay Pty Ltd · This email was sent to ${safeTo}</div>
-</div></body></html>`;
+    <p class="muted">⏱ This link expires in <strong>1 hour</strong>. If you didn't request this, you can safely ignore this email — your password won't change.</p>
+    <p class="muted">If the button doesn't work, copy and paste this URL into your browser:<br>
+      <span style="color:${brand.color};word-break:break-all;">${safeUrl}</span>
+    </p>`,
+  });
   try {
     await client.emails.send({
       ...emailSender(),
       to: [opts.to],
-      subject: `[MillionStay ${productLabel}] Password Reset Request`,
+      subject: `[${brand.name} ${productLabel}] Password Reset Request`,
       html,
     });
     console.log(`[email] Password reset sent to ${opts.to}`);
@@ -319,33 +287,21 @@ export async function sendRegistrationRequestEmail(to: string, name: string, adm
     console.log(`[email] RESEND_API_KEY not set — skipping registration notification`);
     return false;
   }
-  const html = `
-<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-  body{font-family:-apple-system,sans-serif;margin:0;padding:0;background:#f9fafb;color:#111;}
-  .container{max-width:560px;margin:32px auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
-  .header{background:#fff;padding:28px 32px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;}
-  .header img{height:36px;width:auto;}
-  .header .tag{font-size:13px;font-weight:600;color:#E8621A;}
-  .body{padding:32px;}
-  .info-box{background:#fff7f0;border:1px solid #fcd9b6;border-radius:10px;padding:16px;margin:16px 0;}
-  .btn{display:block;text-align:center;background:#E8621A;color:white;text-decoration:none;padding:14px 24px;border-radius:12px;font-weight:700;font-size:15px;margin:20px 0;}
-  .footer{padding:20px 32px;border-top:1px solid #f0f0f0;font-size:12px;color:#999;text-align:center;}
-</style></head><body>
-<div class="container">
-  <div class="header"><img src="${LOGO_URL}" alt="MillionStay" /><span class="tag">New Access Request</span></div>
-  <div class="body">
-    <p style="font-size:15px;">A new admin account request has been submitted and is awaiting your approval.</p>
-    <div class="info-box">
+  const brand = await resolveEmailBrand();
+  const html = renderEmailShell({
+    brand,
+    tag: "New Access Request",
+    body: `
+    <p class="lead">A new admin account request has been submitted and is awaiting your approval.</p>
+    <div class="box">
       <strong>${safeName(name)}</strong><br>
-      <span style="color:#555;">${escapeHtml(to)}</span>
+      <span>${escapeHtml(to)}</span>
     </div>
-    <p style="font-size:14px;color:#555;">Please log in to the admin panel and navigate to <strong>Settings → Users</strong> to review and approve or reject this request.</p>
-    <a href="${escapeHtml(adminPanelUrl)}/settings/users" class="btn">Review in Admin Panel →</a>
-  </div>
-  <div class="footer">© ${new Date().getFullYear()} MillionStay Pty Ltd</div>
-</div></body></html>`;
+    <p>Please log in to the admin panel and navigate to <strong>Settings → Users</strong> to review and approve or reject this request.</p>
+    <a href="${escapeHtml(adminPanelUrl)}/settings/users" class="btn">Review in Admin Panel →</a>`,
+  });
   try {
-    await client.emails.send({ ...emailSender(), to: [to], subject: "[MillionStay Admin] New Account Request", html });
+    await client.emails.send({ ...emailSender(), to: [to], subject: `[${brand.name} Admin] New Account Request`, html });
     console.log(`[email] Registration notification sent to ${to}`);
     return true;
   } catch (err) {
@@ -376,7 +332,6 @@ export async function sendBookingConfirmation(data: BookingConfirmationData): Pr
   }
 
   const { to, guestName, bookingRef, spaceName, propertyAddress, checkIn, checkOut, weeklyRate, totalDue, currency = "AUD", isLongTerm } = data;
-  const supportEmail = await resolveSupportEmail();
 
   // Bank-transfer details, env-driven so each tenant shows its own account — a
   // hardcoded AU account would send Korean guests to the wrong bank. A KRW
@@ -415,49 +370,37 @@ export async function sendBookingConfirmation(data: BookingConfirmationData): Pr
       <p style="font-size:12px;color:#555;margin-top:10px;">⏱ Please complete the transfer within <strong>48 hours</strong>.</p>
     </div>`;
 
-  const html = `
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><style>
-  body { font-family: -apple-system, sans-serif; margin: 0; padding: 0; background: #f9fafb; color: #111; }
-  .container { max-width: 600px; margin: 32px auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-  .header { background: #fff; padding: 28px 32px; border-bottom: 1px solid #f0f0f0; }
-  .header img { height: 40px; width: auto; display: block; margin-bottom: 8px; }
-  .header p { margin: 0; color: #E8621A; font-weight: 600; font-size: 14px; }
-  .body { padding: 32px; }
-  .ref-box { background: #fff7f0; border: 2px solid #E8621A; border-radius: 12px; padding: 16px 20px; text-align: center; margin-bottom: 24px; }
-  .ref-box .label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #666; }
-  .ref-box .ref { font-size: 22px; font-weight: 900; color: #E8621A; font-family: monospace; letter-spacing: 0.05em; }
-  .section { margin-bottom: 20px; }
-  .section h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: #999; margin: 0 0 10px; }
-  .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
-  .row:last-child { border-bottom: none; }
-  .row .label { color: #555; }
-  .row .value { font-weight: 600; color: #111; }
-  .total-box { background: #E8621A; border-radius: 12px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
-  .total-box span { color: white; font-weight: 700; font-size: 15px; }
-  .total-box .amount { font-size: 22px; }
-  .portal-btn { display: block; text-align: center; background: #E8621A; color: white; text-decoration: none; padding: 14px 24px; border-radius: 12px; font-weight: 700; font-size: 15px; margin: 24px 0; }
-  .footer { padding: 24px 32px; border-top: 1px solid #f0f0f0; font-size: 12px; color: #999; text-align: center; }
-  .bank-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 16px; margin-top: 20px; }
-  .bank-box h3 { color: #1d4ed8; margin: 0 0 10px; font-size: 14px; }
-</style></head>
-<body>
-<div class="container">
-  <div class="header">
-    <img src="${LOGO_URL}" alt="MillionStay" />
-    <p>${isLongTerm ? "Long-term Stay Application Received" : "Booking Application Submitted"}</p>
-  </div>
-  <div class="body">
-    <p style="font-size:16px;">Hi <strong>${safeName(guestName)}</strong>,</p>
-    <p style="color:#555;font-size:14px;">
+  const brand = await resolveEmailBrand();
+  const html = renderEmailShell({
+    brand,
+    maxWidth: 600,
+    tag: isLongTerm ? "Long-term Stay Application Received" : "Booking Application Submitted",
+    footerLines: [`This email was sent to ${escapeHtml(to)}`],
+    extraStyles: `
+  .ref-hero{background:${brand.accentBg};border:2px solid ${brand.color};border-radius:12px;padding:16px 20px;text-align:center;margin-bottom:24px;}
+  .ref-hero .label{font-size:12px;text-transform:uppercase;letter-spacing:0.08em;color:${brand.inkMuted};}
+  .ref-hero .ref{font-size:22px;font-weight:900;color:${brand.color};font-family:'SFMono-Regular',Menlo,monospace;letter-spacing:0.05em;}
+  .section{margin-bottom:20px;}
+  .section h3{font-size:13px;text-transform:uppercase;letter-spacing:0.06em;color:${brand.inkFaint};margin:0 0 10px;}
+  .row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid ${brand.border};font-size:14px;}
+  .row:last-child{border-bottom:none;}
+  .row .label{color:${brand.inkMuted};}
+  .row .value{font-weight:600;color:${brand.ink};}
+  .total-box{background:${brand.color};border-radius:12px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;margin-top:20px;}
+  .total-box span{color:#fff;font-weight:700;font-size:15px;}
+  .total-box .amount{font-size:22px;}
+  .bank-box{background:${brand.accentBg};border:1px solid ${brand.accentBorder};border-radius:12px;padding:16px;margin-top:20px;}
+  .bank-box h3{color:${brand.color};margin:0 0 10px;font-size:14px;}`,
+    body: `
+    <p class="lead">Hi <strong>${safeName(guestName)}</strong>,</p>
+    <p>
       ${isLongTerm
         ? "Your long-term stay application has been received. Our team will review and contact you within 24–48 hours."
         : "Your booking application has been submitted. Please complete the bank transfer to confirm your room."
       }
     </p>
 
-    <div class="ref-box">
+    <div class="ref-hero">
       <div class="label">Booking Reference</div>
       <div class="ref">${escapeHtml(bookingRef)}</div>
     </div>
@@ -480,27 +423,20 @@ export async function sendBookingConfirmation(data: BookingConfirmationData): Pr
 
     ${!isLongTerm ? bankBox : ""}
 
-    <a href="${PORTAL_URL}/portal/bookings" class="portal-btn">
+    <a href="${PORTAL_URL}/portal/bookings" class="btn">
       Access Your Guest Portal →
     </a>
 
-    <p style="font-size:13px;color:#999;">
-      Questions? Contact us at <a href="mailto:${supportEmail}" style="color:#E8621A;">${supportEmail}</a>
-    </p>
-  </div>
-  <div class="footer">
-    © ${new Date().getFullYear()} MillionStay Pty Ltd · Melbourne Student &amp; Nomad Accommodation<br>
-    This email was sent to ${to}
-  </div>
-</div>
-</body>
-</html>`;
+    <p class="muted">
+      Questions? Contact us at <a href="mailto:${brand.supportEmail}">${escapeHtml(brand.supportEmail)}</a>
+    </p>`,
+  });
 
   try {
     await client.emails.send({
       ...emailSender(),
       to: [to],
-      subject: `[MillionStay] Booking Confirmed — ${bookingRef}`,
+      subject: `[${brand.name}] Booking Confirmed — ${bookingRef}`,
       html,
     });
     console.log(`[email] Confirmation sent to ${to} (${bookingRef})`);
@@ -542,45 +478,31 @@ export async function sendLeadNotificationEmail(data: LeadNotificationData): Pro
   const safeRef = escapeHtml(data.leadRef);
   const safeType = escapeHtml(data.inquiryType);
 
-  const html = `
-<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-  body{font-family:-apple-system,sans-serif;margin:0;padding:0;background:#f9fafb;color:#111;}
-  .container{max-width:560px;margin:32px auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
-  .header{background:#fff;padding:28px 32px;border-bottom:1px solid #f0f0f0;}
-  .header img{height:36px;width:auto;display:block;}
-  .body{padding:24px 32px;}
-  .ref{display:inline-block;background:#FFF3EC;color:#E8621A;font-weight:700;padding:4px 10px;border-radius:6px;font-size:13px;}
-  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;}
-  td{padding:8px 0;border-bottom:1px solid #f3f4f6;vertical-align:top;}
-  td.k{color:#6b7280;width:120px;}
-  .msg{background:#f9fafb;border-radius:10px;padding:14px 16px;font-size:14px;color:#374151;white-space:pre-wrap;margin-top:6px;}
-  .footer{padding:18px 32px;border-top:1px solid #f0f0f0;font-size:12px;color:#999;text-align:center;}
-</style></head><body>
-<div class="container">
-  <div class="header"><img src="${LOGO_URL}" alt="MillionStay" /></div>
-  <div class="body">
-    <p style="font-size:14px;color:#6b7280;margin:0 0 6px;">New ${safeType} inquiry</p>
-    <h2 style="margin:0 0 12px;font-size:20px;">${fullName || "(no name)"} &nbsp; <span class="ref">${safeRef}</span></h2>
-    <table>
-      <tr><td class="k">Email</td><td><a href="mailto:${safeEmail}" style="color:#E8621A;">${safeEmail}</a></td></tr>
+  const brand = await resolveEmailBrand();
+  const html = renderEmailShell({
+    brand,
+    tag: `New ${safeType} inquiry`,
+    footerLines: ["Internal notification"],
+    extraStyles: `
+  .ref{display:inline-block;background:${brand.accentBg};color:${brand.color};font-weight:700;padding:4px 10px;border-radius:6px;font-size:13px;}
+  .msg{background:${brand.pageBg};border-radius:10px;padding:14px 16px;font-size:14px;color:${brand.inkMuted};white-space:pre-wrap;margin-top:6px;}`,
+    body: `
+    <h2>${fullName || "(no name)"} &nbsp; <span class="ref">${safeRef}</span></h2>
+    <table class="kv">
+      <tr><td class="k">Email</td><td><a href="mailto:${safeEmail}">${safeEmail}</a></td></tr>
       ${safePhone ? `<tr><td class="k">Phone</td><td>${safePhone}</td></tr>` : ""}
       ${safeDesc ? `<tr><td class="k">Details</td><td style="white-space:pre-wrap;">${safeDesc}</td></tr>` : ""}
     </table>
-    ${safeMessage ? `<p style="font-size:13px;color:#6b7280;margin:16px 0 4px;">Message:</p><div class="msg">${safeMessage}</div>` : ""}
-    <p style="font-size:13px;color:#9ca3af;margin-top:24px;">View this lead in the admin panel.</p>
-  </div>
-  <div class="footer">
-    © ${new Date().getFullYear()} MillionStay · Internal notification
-  </div>
-</div>
-</body></html>`;
+    ${safeMessage ? `<p class="muted" style="margin:16px 0 4px;">Message:</p><div class="msg">${safeMessage}</div>` : ""}
+    <p class="muted" style="margin-top:24px;">View this lead in the admin panel.</p>`,
+  });
 
   try {
     await client.emails.send({
       ...emailSender(),
       to: [to],
       replyTo: data.email,
-      subject: `[MillionStay Lead] ${data.inquiryType} — ${fullName || data.email} (${data.leadRef})`,
+      subject: `[${brand.name} Lead] ${data.inquiryType} — ${fullName || data.email} (${data.leadRef})`,
       html,
     });
     console.log(`[email] Lead notification sent for ${data.leadRef} → ${to}`);
@@ -664,7 +586,7 @@ export async function sendHomestayHostEmail(opts: HomestayHostEmailOptions): Pro
     return false;
   }
   const copy = HOMESTAY_EMAIL_COPY[opts.kind];
-  const supportEmail = await resolveSupportEmail();
+  const brand = await resolveEmailBrand();
   const portalUrl = opts.portalUrl ?? `${PORTAL_URL}/host-portal`;
   const noteHtml = opts.note
     ? `<div style="margin-top:16px;padding:12px 16px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;color:#9a3412;font-size:14px;">${escapeHtml(opts.note)}</div>`
@@ -690,18 +612,11 @@ export async function sendHomestayHostEmail(opts: HomestayHostEmailOptions): Pro
     <p style="font-size:13px;color:#9ca3af;margin:20px 0 0;">Application reference: <strong>${escapeHtml(opts.applicationRef)}</strong></p>`;
   }
 
-  const html = `<!DOCTYPE html><html><body style="margin:0;background:#faf9f7;font-family:-apple-system,Segoe UI,Roboto,sans-serif;">
-<div style="max-width:560px;margin:0 auto;padding:24px;">
-  <div style="text-align:center;padding:8px 0 16px;"><img src="${LOGO_URL}" alt="MillionStay" style="height:32px;" /></div>
-  <div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:28px;">
-    ${cardInner}
-  </div>
-  <div style="text-align:center;color:#9ca3af;font-size:12px;padding:16px;">
-    Questions? Contact us at <a href="mailto:${supportEmail}" style="color:#f97316;">${supportEmail}</a><br/>
-    © ${new Date().getFullYear()} MillionStay
-  </div>
-</div>
-</body></html>`;
+  const html = renderEmailShell({
+    brand,
+    footerLines: [`Questions? Contact us at <a href="mailto:${brand.supportEmail}">${escapeHtml(brand.supportEmail)}</a>`],
+    body: cardInner,
+  });
   const attachments = (opts.attachments ?? []).map((a) => ({ filename: a.filename, content: a.content.toString("base64") }));
   try {
     await client.emails.send({ ...emailSender(), to: [opts.to], subject, html, ...(attachments.length ? { attachments } : {}) });
@@ -741,29 +656,23 @@ export async function sendApplicationAckEmail(opts: ApplicationAckEmailOptions):
     console.log(`[email] (skipped — no RESEND_API_KEY) ${opts.appTypeLabel} ack → ${opts.to}`);
     return false;
   }
-  const supportEmail = await resolveSupportEmail();
+  const brand = await resolveEmailBrand();
   const intro = opts.intro
-    ?? `Thank you for submitting your ${opts.appTypeLabel.toLowerCase()} to MillionStay. We've received it and our team will be in touch shortly. Please keep your reference below for any follow-up.`;
+    ?? `Thank you for submitting your ${opts.appTypeLabel.toLowerCase()} to ${brand.name}. We've received it and our team will be in touch shortly. Please keep your reference below for any follow-up.`;
   const pdfNote = opts.pdf
-    ? `<p style="font-size:13px;color:#6b7280;margin:12px 0 0;">A copy of your application is attached as a PDF for your records.</p>`
+    ? `<p class="muted">A copy of your application is attached as a PDF for your records.</p>`
     : "";
 
-  const html = `<!DOCTYPE html><html><body style="margin:0;background:#faf9f7;font-family:-apple-system,Segoe UI,Roboto,sans-serif;">
-<div style="max-width:560px;margin:0 auto;padding:24px;">
-  <div style="text-align:center;padding:8px 0 16px;"><img src="${LOGO_URL}" alt="MillionStay" style="height:32px;" /></div>
-  <div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:28px;">
-    <h1 style="font-size:20px;margin:0 0 12px;color:#1f2937;">Application received</h1>
-    <p style="font-size:14px;color:#4b5563;line-height:1.6;margin:0;">Hi ${safeName(opts.toName) || "there"},</p>
-    <p style="font-size:14px;color:#4b5563;line-height:1.6;margin:12px 0 0;">${escapeHtml(intro)}</p>
+  const html = renderEmailShell({
+    brand,
+    footerLines: [`Questions? Contact us at <a href="mailto:${brand.supportEmail}">${escapeHtml(brand.supportEmail)}</a>`],
+    body: `
+    <h2>Application received</h2>
+    <p>Hi ${safeName(opts.toName) || "there"},</p>
+    <p>${escapeHtml(intro)}</p>
     ${pdfNote}
-    <p style="font-size:13px;color:#9ca3af;margin:20px 0 0;">${escapeHtml(opts.appTypeLabel)} reference: <strong>${escapeHtml(opts.ref)}</strong></p>
-  </div>
-  <div style="text-align:center;color:#9ca3af;font-size:12px;padding:16px;">
-    Questions? Contact us at <a href="mailto:${supportEmail}" style="color:#f97316;">${supportEmail}</a><br/>
-    © ${new Date().getFullYear()} MillionStay
-  </div>
-</div>
-</body></html>`;
+    <p class="muted" style="margin-top:20px;">${escapeHtml(opts.appTypeLabel)} reference: <strong>${escapeHtml(opts.ref)}</strong></p>`,
+  });
 
   const attachments = opts.pdf
     ? [{ filename: opts.filename ?? `${opts.ref}.pdf`, content: opts.pdf.toString("base64") }]
@@ -834,25 +743,15 @@ export async function sendMarketingEmail(
 
   // 2. Unsubscribe link (Spam Act s.18).
   const unsubUrl = buildUnsubscribeUrl(to, channel);
-  const html = `
-<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-  body{font-family:'Inter',-apple-system,sans-serif;margin:0;padding:0;background:#f9fafb;color:#111;}
-  .container{max-width:560px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
-  .header{background:#fff;padding:28px 32px;border-bottom:1px solid #f0f0f0;}
-  .header img{height:36px;width:auto;display:block;}
-  .body{padding:32px;font-size:14px;color:#374151;line-height:1.6;}
-  .footer{padding:20px 32px;border-top:1px solid #f0f0f0;font-size:12px;color:#999;text-align:center;}
-  .footer a{color:#E8621A;}
-</style></head><body>
-<div class="container">
-  <div class="header"><img src="${LOGO_URL}" alt="MillionStay" /></div>
-  <div class="body">${opts.bodyHtml}</div>
-  <div class="footer">
-    © ${new Date().getFullYear()} MillionStay Pty Ltd · Melbourne, Victoria, Australia<br/>
-    You are receiving this because you opted in to marketing from MillionStay.<br/>
-    <a href="${unsubUrl}">Unsubscribe</a> · <a href="${PORTAL_URL}/privacy-policy">Privacy Policy</a>
-  </div>
-</div></body></html>`;
+  const brand = await resolveEmailBrand();
+  const html = renderEmailShell({
+    brand,
+    body: opts.bodyHtml,
+    footerLines: [
+      `You are receiving this because you opted in to marketing from ${escapeHtml(brand.name)}.`,
+      `<a href="${unsubUrl}">Unsubscribe</a> · <a href="${PORTAL_URL}/privacy-policy">Privacy Policy</a>`,
+    ],
+  });
 
   try {
     const result = await client.emails.send({
@@ -987,11 +886,8 @@ export async function sendInspectionSignLinkEmail(
   }
 
   const lang = normalizeLang(opts.lang ?? process.env.DEFAULT_DOC_LANG ?? "en");
-  const company = await resolveCompanyInfo(lang).catch(() => null);
-  const brand = company?.tradingName || "MillionStay";
-  const logoUrl = company?.logoUrl || LOGO_URL;
-  const legalName = company?.legalName || "MillionStay Pty Ltd";
-  const supportEmail = company?.email || (await resolveSupportEmail());
+  const brand = await resolveEmailBrand();
+  const supportEmail = brand.supportEmail;
 
   const copy = SIGN_LINK_COPY[lang] ?? SIGN_LINK_COPY.en!;
   const phaseLabel = copy.phase[opts.phase];
@@ -1000,45 +896,30 @@ export async function sendInspectionSignLinkEmail(
     ? copy.expiry(new Date(opts.expiresAt).toISOString().slice(0, 10))
     : null;
 
-  const html = `
-<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-  body{font-family:-apple-system,'Malgun Gothic',sans-serif;margin:0;padding:0;background:#f9fafb;color:#111;}
-  .container{max-width:560px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
-  .header{background:#fff;padding:28px 32px;border-bottom:1px solid #f0f0f0;}
-  .header img{height:36px;width:auto;display:block;}
-  .body{padding:32px;}
-  .btn{display:block;text-align:center;background:${DOC_TOKENS.brand};color:#fff;text-decoration:none;padding:14px 24px;border-radius:12px;font-weight:700;font-size:15px;margin:24px 0;}
-  .box{background:${DOC_TOKENS.accentBg};border:1px solid ${DOC_TOKENS.accentBorder};border-radius:10px;padding:16px 20px;margin:20px 0;}
-  .box .label{font-size:12px;letter-spacing:0.04em;color:#999;}
-  .box .value{font-size:15px;font-weight:700;color:#111;}
-  .note{font-size:12px;color:#999;margin-top:16px;}
-  .footer{padding:20px 32px;border-top:1px solid #f0f0f0;font-size:12px;color:#999;text-align:center;}
-</style></head><body>
-<div class="container">
-  <div class="header"><img src="${logoUrl}" alt="${escapeHtml(brand)}" /></div>
-  <div class="body">
-    <p style="font-size:16px;">${escapeHtml(copy.greeting(safeName(opts.toName)))}</p>
-    <p style="color:#555;font-size:14px;line-height:1.7;">${escapeHtml(copy.intro(phaseLabel))}</p>
+  const html = renderEmailShell({
+    brand,
+    footerLines: [escapeHtml(opts.to)],
+    body: `
+    <p class="lead">${escapeHtml(copy.greeting(safeName(opts.toName)))}</p>
+    <p>${escapeHtml(copy.intro(phaseLabel))}</p>
     <div class="box">
-      ${opts.unit ? `<div class="label">${escapeHtml(copy.unitLabel)}</div><div class="value">${escapeHtml(opts.unit)}</div>` : ""}
+      ${opts.unit ? `<div class="label">${escapeHtml(copy.unitLabel)}</div><div class="amount">${escapeHtml(opts.unit)}</div>` : ""}
       <div class="label" style="margin-top:${opts.unit ? "10px" : "0"};">${escapeHtml(copy.refLabel)}</div>
-      <div class="value" style="font-family:monospace;">${escapeHtml(opts.reportRef)}</div>
+      <div class="ref">${escapeHtml(opts.reportRef)}</div>
     </div>
     <a href="${safeUrl}" class="btn">${escapeHtml(copy.cta)} →</a>
-    ${expiry ? `<p class="note">${escapeHtml(expiry)}</p>` : ""}
-    <p style="font-size:13px;color:#999;">${escapeHtml(copy.fallback)}<br>
-      <span style="color:${DOC_TOKENS.brand};word-break:break-all;">${safeUrl}</span>
+    ${expiry ? `<p class="muted">${escapeHtml(expiry)}</p>` : ""}
+    <p class="muted">${escapeHtml(copy.fallback)}<br>
+      <span style="color:${brand.color};word-break:break-all;">${safeUrl}</span>
     </p>
-    <p style="font-size:13px;color:#999;">${escapeHtml(copy.questions(supportEmail))}</p>
-  </div>
-  <div class="footer">© ${new Date().getFullYear()} ${escapeHtml(legalName)} · ${escapeHtml(opts.to)}</div>
-</div></body></html>`;
+    <p class="muted">${escapeHtml(copy.questions(supportEmail))}</p>`,
+  });
 
   try {
     const { data, error } = await client.emails.send({
       ...emailSender(),
       to: [opts.to],
-      subject: copy.subject(brand, phaseLabel),
+      subject: copy.subject(brand.name, phaseLabel),
       html,
     });
     if (error || !data?.id) {
@@ -1182,11 +1063,8 @@ export async function sendAppointmentConfirmationEmail(
   }
 
   const lang = normalizeLang(opts.lang ?? process.env.DEFAULT_DOC_LANG ?? "en");
-  const company = await resolveCompanyInfo(lang).catch(() => null);
-  const brand = company?.tradingName || "MillionStay";
-  const logoUrl = company?.logoUrl || LOGO_URL;
-  const legalName = company?.legalName || "MillionStay Pty Ltd";
-  const supportEmail = company?.email || (await resolveSupportEmail());
+  const brand = await resolveEmailBrand();
+  const supportEmail = brand.supportEmail;
 
   const copy = APPOINTMENT_COPY[lang] ?? APPOINTMENT_COPY.en!;
   const locale = docLocale(lang);
@@ -1204,56 +1082,43 @@ export async function sendAppointmentConfirmationEmail(
 
   const row = (label: string, value: string) => `
       <div class="label" style="margin-top:10px;">${escapeHtml(label)}</div>
-      <div class="value">${escapeHtml(value)}</div>`;
+      <div class="amount">${escapeHtml(value)}</div>`;
 
-  const html = `
-<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-  body{font-family:-apple-system,'Malgun Gothic',sans-serif;margin:0;padding:0;background:#f9fafb;color:#111;}
-  .container{max-width:560px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
-  .header{background:#fff;padding:28px 32px;border-bottom:1px solid #f0f0f0;}
-  .header img{height:36px;width:auto;display:block;}
-  .body{padding:32px;}
-  .box{background:${DOC_TOKENS.accentBg};border:1px solid ${DOC_TOKENS.accentBorder};border-radius:10px;padding:16px 20px;margin:20px 0;}
-  .box .label{font-size:12px;letter-spacing:0.04em;color:#999;}
-  .box .value{font-size:15px;font-weight:700;color:#111;}
-  .footer{padding:20px 32px;border-top:1px solid #f0f0f0;font-size:12px;color:#999;text-align:center;}
-</style></head><body>
-<div class="container">
-  <div class="header"><img src="${logoUrl}" alt="${escapeHtml(brand)}" /></div>
-  <div class="body">
-    <p style="font-size:16px;">${escapeHtml(copy.greeting(safeName(opts.toName)))}</p>
-    <p style="color:#555;font-size:14px;line-height:1.7;">${escapeHtml(copy.intro)}</p>
+  const html = renderEmailShell({
+    brand,
+    footerLines: [escapeHtml(opts.to)],
+    body: `
+    <p class="lead">${escapeHtml(copy.greeting(safeName(opts.toName)))}</p>
+    <p>${escapeHtml(copy.intro)}</p>
     <div class="box">
       <div class="label" style="margin-top:0;">${escapeHtml(copy.whenLabel)}</div>
-      <div class="value">${escapeHtml(whenText)}</div>
+      <div class="amount">${escapeHtml(whenText)}</div>
       ${opts.unit ? row(copy.unitLabel, opts.unit) : ""}
       ${opts.visitorName ? row(copy.visitorLabel, opts.visitorName) : ""}
       ${opts.locationNote ? row(copy.accessLabel, opts.locationNote) : ""}
       <div class="label" style="margin-top:10px;">${escapeHtml(copy.refLabel)}</div>
-      <div class="value" style="font-family:monospace;">${escapeHtml(opts.orderRef)}</div>
+      <div class="ref">${escapeHtml(opts.orderRef)}</div>
     </div>
-    <p style="font-size:13px;color:#999;">${escapeHtml(copy.icsNote)}</p>
-    <p style="font-size:13px;color:#999;">${escapeHtml(copy.reschedule(supportEmail))}</p>
-  </div>
-  <div class="footer">© ${new Date().getFullYear()} ${escapeHtml(legalName)} · ${escapeHtml(opts.to)}</div>
-</div></body></html>`;
+    <p class="muted">${escapeHtml(copy.icsNote)}</p>
+    <p class="muted">${escapeHtml(copy.reschedule(supportEmail))}</p>`,
+  });
 
   const ics = buildAppointmentIcs([{
     uid: `wo-${opts.orderRef}@millionstay`,
     start: opts.start,
     end: opts.end,
-    summary: `[${brand}] ${opts.title}`,
+    summary: `[${brand.name}] ${opts.title}`,
     description: [opts.locationNote, copy.reschedule(supportEmail)].filter(Boolean).join("\n"),
     location: opts.unit ?? null,
     sequence: opts.sequence ?? 0,
-    organizer: { name: brand, email: supportEmail },
-  }], { calendarName: brand });
+    organizer: { name: brand.name, email: supportEmail },
+  }], { calendarName: brand.name });
 
   try {
     const { data, error } = await client.emails.send({
       ...emailSender(),
       to: [opts.to],
-      subject: copy.subject(brand, dateShort),
+      subject: copy.subject(brand.name, dateShort),
       html,
       attachments: [{ filename: "invite.ics", content: Buffer.from(ics, "utf8").toString("base64") }],
     });

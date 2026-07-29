@@ -18,6 +18,8 @@ import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import { Resend } from "resend";
 import { emailSender } from "../email";
+import { resolveEmailBrand, renderEmailShell } from "../emailBrand";
+import { escapeHtml } from "../htmlEscape";
 import { eq } from "drizzle-orm";
 import { db, guestUsersTable, homestayStudentRequestsTable } from "@workspace/db";
 
@@ -25,18 +27,6 @@ import { db, guestUsersTable, homestayStudentRequestsTable } from "@workspace/db
 // with the existing reset flow.
 const BCRYPT_COST = 12;
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour — matches guest-auth.ts
-
-const LOGO_URL = process.env.EMAIL_LOGO_URL ?? "https://www.millionstay.com/millionstay-logo.png";
-
-function escapeHtml(input: string | null | undefined): string {
-  if (input == null) return "";
-  return String(input)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
 
 export interface StudentPortalInviteResult {
   ok: true;
@@ -155,37 +145,26 @@ async function sendInviteEmail(opts: {
   const safeTo = escapeHtml(opts.to);
   const safeUrl = escapeHtml(opts.inviteUrl);
 
-  const html = `
-<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-  body{font-family:-apple-system,sans-serif;margin:0;padding:0;background:#f9fafb;color:#111;}
-  .container{max-width:560px;margin:32px auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
-  .header{background:#fff;padding:28px 32px;border-bottom:1px solid #f0f0f0;text-align:left;}
-  .header img{height:36px;width:auto;display:block;}
-  .body{padding:32px;}
-  .btn{display:block;text-align:center;background:#E8621A;color:white;text-decoration:none;padding:14px 24px;border-radius:12px;font-weight:700;font-size:15px;margin:24px 0;}
-  .note{font-size:12px;color:#999;margin-top:16px;}
-  .footer{padding:20px 32px;border-top:1px solid #f0f0f0;font-size:12px;color:#999;text-align:center;}
-</style></head><body>
-<div class="container">
-  <div class="header"><img src="${LOGO_URL}" alt="MillionStay" /></div>
-  <div class="body">
-    <p style="font-size:16px;">Hi <strong>${safeNameVal}</strong>,</p>
-    <p style="color:#555;font-size:14px;">Your MillionStay student portal is ready. Set your password to log in and view your homestay placement, invoices and payments in one place.</p>
+  const brand = await resolveEmailBrand();
+  const html = renderEmailShell({
+    brand,
+    footerLines: [`This email was sent to ${safeTo}`],
+    body: `
+    <p class="lead">Hi <strong>${safeNameVal}</strong>,</p>
+    <p>Your ${escapeHtml(brand.name)} student portal is ready. Set your password to log in and view your homestay placement, invoices and payments in one place.</p>
     <a href="${safeUrl}" class="btn">Set Up My Portal →</a>
-    <p class="note">⏱ This link expires in <strong>1 hour</strong>. If you weren't expecting this, you can safely ignore this email.</p>
-    <p style="font-size:13px;color:#999;">If the button doesn't work, copy and paste this URL into your browser:<br>
-      <span style="color:#E8621A;word-break:break-all;">${safeUrl}</span>
-    </p>
-  </div>
-  <div class="footer">© ${new Date().getFullYear()} MillionStay Pty Ltd · This email was sent to ${safeTo}</div>
-</div></body></html>`;
+    <p class="muted">⏱ This link expires in <strong>1 hour</strong>. If you weren't expecting this, you can safely ignore this email.</p>
+    <p class="muted">If the button doesn't work, copy and paste this URL into your browser:<br>
+      <span style="color:${brand.color};word-break:break-all;">${safeUrl}</span>
+    </p>`,
+  });
 
   try {
     const client = new Resend(key);
     await client.emails.send({
       ...emailSender(),
       to: [opts.to],
-      subject: "Set up your MillionStay student portal",
+      subject: `Set up your ${brand.name} student portal`,
       html,
     });
     console.log(`[email] Student portal invite sent to ${opts.to}`);

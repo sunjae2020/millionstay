@@ -30,6 +30,7 @@ import { generatePlacementRef } from "../lib/homestayRef.js";
 import { formatPersonName } from "../lib/nameFormat.js";
 import { createSigningRequest, signingBaseUrl, type SignerSpec } from "../services/contractSigning.js";
 import { sendHomestayHostEmail, emailSender } from "../lib/email.js";
+import { resolveEmailBrand, renderEmailShell } from "../lib/emailBrand.js";
 import { notifyPlacementProposed, notifyPlacementActivated, notifyPaymentReminder } from "../lib/homestay/notify.js";
 import { logAction } from "../utils/auditLog.js";
 import { getStripe } from "./stripe.js";
@@ -481,7 +482,7 @@ homestayPlacementAdminRouter.post("/v1/homestay-placement-payments/:paymentId/se
       const subject = tpl ? renderString(tpl.subject || `Homestay payment due (${row.placement_ref})`, vars) : `Homestay payment due (${row.placement_ref})`;
       const inner = tpl ? renderString(tpl.bodyHtml, vars)
         : `<p>Hi ${vars.name}, your homestay payment of <strong>${vars.amount}</strong> is due. <a href="${vars.pay_url}">Pay now</a>. Ref: ${vars.ref}.</p>`;
-      const html = `<!DOCTYPE html><html><body style="margin:0;background:#faf9f7;font-family:-apple-system,Segoe UI,Roboto,sans-serif;"><div style="max-width:560px;margin:0 auto;padding:24px;"><div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:28px;">${inner}</div></div></body></html>`;
+      const html = renderEmailShell({ brand: await resolveEmailBrand(), body: inner });
       try { await new Resend(process.env.RESEND_API_KEY).emails.send({ ...emailSender(), to: [studentEmail], subject, html }); } catch (e) { console.error("[homestay-placements] send email failed:", e); }
     }
 

@@ -224,13 +224,15 @@ const LABELS: Dict = {
   },
 
   // ── Email cover (when documents are emailed) ──────────────────────────
+  // {brand} = the sending tenant's trading name (Settings → Organisation), never
+  // a hard-coded "MillionStay" — a Metheim invoice must say Metheim.
   "email.subject": {
-    en: "{doc} {ref} from MillionStay",
-    ko: "MillionStay {doc} {ref}",
-    zh: "MillionStay {doc} {ref}",
-    ja: "MillionStay {doc} {ref}",
-    th: "{doc} {ref} จาก MillionStay",
-    vi: "{doc} {ref} từ MillionStay",
+    en: "{doc} {ref} from {brand}",
+    ko: "{brand} {doc} {ref}",
+    zh: "{brand} {doc} {ref}",
+    ja: "{brand} {doc} {ref}",
+    th: "{doc} {ref} จาก {brand}",
+    vi: "{doc} {ref} từ {brand}",
   },
   "email.greeting.named": {
     en: "Hi {name},", ko: "{name}님, 안녕하세요.", zh: "您好 {name}：", ja: "{name} 様", th: "เรียน คุณ{name},", vi: "Xin chào {name},",

@@ -12,6 +12,7 @@ import { renderSampleDocumentHtml } from "../lib/documents/sampleDocs.js";
 import { normalizeLang, t } from "../lib/documents/i18n.js";
 import { buildDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename.js";
 import { emailSender } from "../lib/email.js";
+import { resolveEmailBrand, renderEmailShell } from "../lib/emailBrand.js";
 import { logAction } from "../utils/auditLog.js";
 
 const router: IRouter = Router();
@@ -130,7 +131,9 @@ router.post("/v1/document-templates/:id/test-send", async (req, res): Promise<vo
 
     const vars = { ...sampleVarsFromSchema(resolved.variablesSchema), ...(req.body?.vars ?? {}) };
     const subject = renderString(resolved.subject || `[Test] ${tpl.name}`, vars);
-    const html = renderString(resolved.bodyHtml, vars);
+    // Wrap in the same tenant-branded shell real sends use, so a test preview
+    // shows the logo/palette the recipient would actually get.
+    const html = renderEmailShell({ brand: await resolveEmailBrand(), body: renderString(resolved.bodyHtml, vars) });
     const client = new Resend(process.env.RESEND_API_KEY);
     const result = await client.emails.send({ ...emailSender(), to: [to], subject: `[TEST] ${subject}`, html });
     res.json({ data: { sentTo: to, id: (result as any)?.data?.id ?? null, locale } });
