@@ -65,14 +65,28 @@ try {
     );
     const have = new Map(existing.rows.map((r) => [r.key, r]));
 
+    // A "human" row whose value equals the bundle is not an override — demote it
+    // so the overlay stops shipping it. (Also unsticks rows written by the first
+    // version of this script, which marked everything human.)
+    const demote = [...have.values()]
+      .filter((r) => r.source === "human" && wanted.get(r.key) === r.value)
+      .map((r) => r.key);
+    if (demote.length > 0 && !DRY) {
+      await pool.query(
+        `UPDATE translations SET source = 'bundle' WHERE lang = $1 AND key = ANY($2::text[])`,
+        [lang, demote],
+      );
+      for (const k of demote) have.get(k).source = "bundle";
+    }
+
     // Human edits win — never overwrite what somebody typed in the UI.
     const rows = [...wanted].filter(([k, v]) => {
       const row = have.get(k);
       return !row || (row.source !== "human" && row.value !== v);
     });
-    const edited = [...have.values()].filter((r) => r.source === "human").length;
+    const edited = [...have.values()].filter((r) => r.source === "human").length - (DRY ? demote.length : 0);
 
-    console.log(`${lang}: bundle ${wanted.size} · write ${rows.length} · human-edited kept ${edited}`);
+    console.log(`${lang}: bundle ${wanted.size} · write ${rows.length} · demote ${demote.length} · human-edited kept ${edited}`);
     if (DRY) continue;
 
     // Chunked upsert — one statement per 500 keys keeps the parameter count sane.
