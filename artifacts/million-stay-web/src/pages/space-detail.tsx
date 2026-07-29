@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useParams, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
+import { formatPostalAddress, orderFallbackFromLang, type AddressLang } from "@workspace/address";
 import { useGetPublicSpace, getGetPublicSpaceQueryKey, useListPublicSpaces } from "@/lib/guest-api";
 import { useAuthStore } from "@/lib/store";
 import { Navbar } from "@/components/navbar";
@@ -280,7 +281,7 @@ function RelatedCard({ space }: { space: Record<string, unknown> }) {
 export default function SpaceDetail() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { token } = useAuthStore();
   const [selectedProduct, setSelectedProduct] = useState<number | null>(null);
 
@@ -415,8 +416,17 @@ export default function SpaceDetail() {
   }
 
   const images = (space.images ?? []) as Array<{ id?: number | string | null; file_url: string; thumbnail_url?: string | null; caption?: string | null }>;
-  const addressParts = [space.property_address, space.suburb_name, space.property_state].filter(Boolean);
-  const addressStr = addressParts.join(", ") + (space.property_postcode ? ` ${space.property_postcode}` : "");
+  const addressLang = (i18n.language.slice(0, 2) || "en") as AddressLang;
+  const addressStr = formatPostalAddress(
+    {
+      line1: space.property_address,
+      suburb: space.suburb_name,
+      state: space.property_state,
+      postcode: space.property_postcode,
+    },
+    addressLang,
+    { orderFallbackCountry: orderFallbackFromLang(addressLang) },
+  );
   const amenities = (space.options ?? []) as Array<{ id: number | string; name: string }>;
   // Korean lease tiers = accommodation products carrying a 보증금 (deposit_amount),
   // sorted by deposit asc (higher deposit ⇒ lower monthly rent). Selecting one
@@ -473,7 +483,7 @@ export default function SpaceDetail() {
                   <p className="text-xs text-gray-400 mt-1 max-w-xs leading-relaxed">{t("space.fx_payment_note")}</p>
                 )}
               </div>
-              {addressParts.length > 0 && (
+              {addressStr && (
                 <p className="text-sm text-gray-500 flex items-center gap-1">
                   <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
                   {DEV_SITE ? (space.suburb_name ?? "") : `${space.suburb_name ?? ""}, Melbourne`}

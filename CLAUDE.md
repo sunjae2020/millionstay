@@ -147,20 +147,15 @@ gates it, so keep it green. Two notable classes were fixed:
   tenant's `DEFAULT_DOC_LANG`. Status chips must go through `statusLabel(lang, …)`
   — never render a raw DB status into a document.
 - **Postal addresses follow the address's own country (UPU S42), not the reader's.**
-  Compose them with `formatPostalAddress(parts, lang)`
-  ([artifacts/api-server/src/lib/documents/address.ts](artifacts/api-server/src/lib/documents/address.ts)),
-  never by hand-joining fields. KR/JP/CN/TW addresses read largest-unit-first and
-  space-separated (`대한민국 경기도 안양시 동안구 동안로 35, 109동 901호`); every other
-  country keeps its Western comma order even inside a Korean document
+  Compose every address — API and apps alike — with `formatPostalAddress(parts, lang)`
+  from **`@workspace/address`** (`lib/address/`); never hand-join address fields.
+  KR/JP/CN/TW read largest-unit-first and space-separated
+  (`대한민국 경기도 안양시 동안구 동안로 35, 109동 901호`); every other country keeps its
+  Western comma order even inside a Korean document
   (`Level 5, 120 Collins St, Melbourne, VIC 3000, 호주`). `lang` only picks the
-  language of the **country name** — the body is never reordered or translated.
-  Country lookup/aliases live in
-  [artifacts/api-server/src/lib/documents/countries.ts](artifacts/api-server/src/lib/documents/countries.ts)
-  (mirror of property-admin/src/lib/countries.ts — keep both in sync). Records
-  saved without a country are laid out as domestic via
-  `{ orderFallbackCountry: await resolveIssuerCountry() }`; the assumed country
-  is used for ordering only, never printed. `resolveCompanyInfo(lang)` applies the
-  same rule to the issuer block, so pass the document's language where one is in scope.
+  language of the **country name**. Full rule, including the blank-country
+  fallback and the two deliberate deviations from S42:
+  [docs/ADDRESS_FORMAT_RULE.md](docs/ADDRESS_FORMAT_RULE.md).
 - **Document filenames** follow `문서이름-고객이름_YYYYMMDD.pdf` and are built
   **server-side** by `buildDocumentFilename()` +
   `setDocumentDownloadHeaders()` ([artifacts/api-server/src/lib/documents/filename.ts](artifacts/api-server/src/lib/documents/filename.ts)),

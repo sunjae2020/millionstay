@@ -10,7 +10,7 @@ import { generateLeaseRentInvoices } from "../lib/billing/leaseRentInvoices";
 import { buildContractHtml, type ContractDocInput } from "../lib/documents/contractDocument";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { buildDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename";
-import { formatPostalAddress } from "../lib/documents/address";
+import { formatPostalAddress } from "@workspace/address";
 import { resolveCompanyInfo, resolveIssuerCountry } from "../lib/documents/companyInfo";
 import { normalizeLang, t, type DocLang } from "../lib/documents/i18n";
 import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";

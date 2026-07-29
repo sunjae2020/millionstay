@@ -15,7 +15,7 @@ import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
 import { formatDocMoney } from "../lib/documents/theme";
 import { sendDocumentEmail, resolveDocEmailCopy } from "../lib/email";
 import { buildDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename.js";
-import { formatPostalAddress } from "../lib/documents/address.js";
+import { formatPostalAddress } from "@workspace/address";
 import { getStripe } from "./stripe";
 import { postInvoicePaid } from "../lib/billing/gl";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";

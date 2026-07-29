@@ -32,6 +32,7 @@ import { formatPersonName } from "@/lib/nameFormat";
 import { useModules } from "@/hooks/useModules";
 import { KoreanAddressSearch, type KoreanAddress } from "@/components/KoreanAddressSearch";
 import { formatDate } from "@/lib/date";
+import { formatPostalAddress, orderFallbackFromLang, type AddressLang } from "@workspace/address";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 
 const ACCOUNT_TYPES_WITH_FINANCE = ["SpaceOwner", "Agent", "ServiceHost", "Partner", "HomestayHost"];
@@ -146,7 +147,7 @@ const TX_KIND_COLORS: Record<string, string> = {
 };
 
 export default function AccountDetail() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { currency: brandCurrency } = useBrand();
   const { homestayEnabled } = useModules();
   const typeOptions = accountTypeOptions(homestayEnabled);
@@ -156,6 +157,9 @@ export default function AccountDetail() {
   const [, navigate] = useLocation();
   const qc = useQueryClient();
   const { previewConfig, openPreview, closePreview } = useDocumentPreview();
+  // Addresses follow their own country's order; the UI language only picks the
+  // country name (and the layout for records saved without a country).
+  const addressLang = (i18n.language.slice(0, 2) || "en") as AddressLang;
 
   const { data: account, isLoading } = useGetAccount(
     id!, { query: { enabled: !isNew && !!id, queryKey: getGetAccountQueryKey(id!) } }
@@ -805,7 +809,10 @@ export default function AccountDetail() {
                               { label: t('account.label_department'), value: c.department },
                               { label: t('account.label_nationality'), value: c.nationality },
                               { label: t('account.label_website'), value: c.website },
-                              { label: t('account.label_address'), wide: true, value: [c.address_line1, c.suburb, c.state, c.postcode, c.country].filter(Boolean).join(", ") },
+                              { label: t('account.label_address'), wide: true, value: formatPostalAddress(
+                                { line1: c.address_line1, suburb: c.suburb, state: c.state, postcode: c.postcode, country: c.country },
+                                addressLang, { orderFallbackCountry: orderFallbackFromLang(addressLang) },
+                              ) },
                               { label: t('account.label_notes'), wide: true, value: c.description },
                             ],
                             detailUrl: `/crm/contacts/${c.id}`,

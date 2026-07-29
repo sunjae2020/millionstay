@@ -1,8 +1,9 @@
-import type { DocLang } from "./i18n.js";
-import { addressOrderFor, countryName } from "./countries.js";
+import { addressOrderFor, countryName, type AddressLang } from "./countries.js";
+
+export * from "./countries.js";
 
 /**
- * Postal address rendering, per UPU S42 (the international addressing standard
+ * Postal address rendering, shared by the API and every frontend, per UPU S42 (the international addressing standard
  * Korea Post, USPS, Royal Mail and Japan Post all follow):
  *
  *   1. The address body is written the way the **destination country** writes
@@ -60,7 +61,7 @@ function postcodeLabel(postcode: string, country: string | null | undefined): st
  */
 export function formatPostalAddress(
   parts: AddressParts,
-  lang: DocLang,
+  lang: AddressLang,
   opts: {
     /**
      * Country to assume for ORDERING when the record has none — pass the
@@ -105,4 +106,13 @@ export function formatPostalAddress(
  */
 export function formatAddressBlob(blob: string | null | undefined): string {
   return clean(blob);
+}
+
+/**
+ * Ordering fallback for a record with no country stored, derived from the
+ * language being displayed. The API has a better signal — the issuer's own
+ * country — so this is for frontends, which only know the UI language.
+ */
+export function orderFallbackFromLang(lang: AddressLang): string {
+  return { ko: "대한민국", ja: "일본", zh: "중국", en: "", th: "", vi: "" }[lang] ?? "";
 }

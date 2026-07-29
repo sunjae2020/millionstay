@@ -72,6 +72,7 @@
     "zod": "catalog:"
   },
   "dependencies": {
+    "@workspace/address": "workspace:*",
     "@workspace/design-tokens": "workspace:*",
     "i18next": "^26.0.3",
     "react-i18next": "^17.0.2"

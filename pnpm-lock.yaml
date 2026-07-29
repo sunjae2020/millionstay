@@ -276,6 +276,9 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^0.100.1
         version: 0.100.1(zod@3.25.76)
+      '@workspace/address':
+        specifier: workspace:*
+        version: link:../../lib/address
       '@workspace/api-zod':
         specifier: workspace:*
         version: link:../../lib/api-zod
@@ -397,6 +400,9 @@ importers:
       '@types/leaflet':
         specifier: ^1.9.21
         version: 1.9.21
+      '@workspace/address':
+        specifier: workspace:*
+        version: link:../../lib/address
       '@workspace/design-tokens':
         specifier: workspace:*
         version: link:../../lib/design-tokens
@@ -779,6 +785,9 @@ importers:
 
   artifacts/owner-portal:
     dependencies:
+      '@workspace/address':
+        specifier: workspace:*
+        version: link:../../lib/address
       '@workspace/design-tokens':
         specifier: workspace:*
         version: link:../../lib/design-tokens
@@ -984,6 +993,9 @@ importers:
       '@tiptap/starter-kit':
         specifier: ^3.26.1
         version: 3.26.1
+      '@workspace/address':
+        specifier: workspace:*
+        version: link:../../lib/address
       '@workspace/design-tokens':
         specifier: workspace:*
         version: link:../../lib/design-tokens
@@ -1367,6 +1379,8 @@ importers:
       zod:
         specifier: 'catalog:'
         version: 3.25.76
+
+  lib/address: {}
 
   lib/api-client-react:
     dependencies:

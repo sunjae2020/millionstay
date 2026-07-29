@@ -13,7 +13,7 @@ import { db, integrationSettings, brandingSettingsTable, BRANDING_SINGLETON_ID }
 import { eq } from "drizzle-orm";
 import { getCompanyInfo, type CompanyInfo } from "./theme";
 import { setDocDateFormat, normalizeLang, type DocLang } from "./i18n";
-import { formatPostalAddress } from "./address";
+import { formatPostalAddress } from "@workspace/address";
 
 export const COMPANY_INFO_KEY = "company_info";
 

@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
+import { formatPostalAddress, orderFallbackFromLang, type AddressLang } from "@workspace/address";
 import { MapPin, Home, ChevronRight } from "lucide-react";
 
 interface Space {
@@ -25,7 +26,8 @@ interface Property {
 }
 
 export default function PropertiesPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const addressLang = (i18n.language.slice(0, 2) || "en") as AddressLang;
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -81,7 +83,11 @@ export default function PropertiesPage() {
                       <h3 className="font-semibold text-foreground text-lg">{property.name}</h3>
                       <div className="flex items-center gap-1 text-sm text-muted-foreground mt-0.5">
                         <MapPin className="w-3 h-3" />
-                        {property.address}, {property.city}, {property.state} {property.postcode}
+                        {formatPostalAddress(
+                          { line1: property.address, suburb: property.city, state: property.state, postcode: property.postcode },
+                          addressLang,
+                          { orderFallbackCountry: orderFallbackFromLang(addressLang) },
+                        )}
                       </div>
                     </div>
                   </div>

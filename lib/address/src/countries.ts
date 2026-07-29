@@ -1,17 +1,19 @@
-import type { DocLang } from "./i18n.js";
 
 /**
- * Country vocabulary for generated documents.
+ * Country vocabulary for address rendering, shared by the API and every app.
  *
  * `accounts.address_country` is free text and holds a mix of ISO codes ("KR")
  * and names in whichever language the record was kept in ("대한민국",
- * "Australia"). Documents need two things from it: which address *order* the
+ * "Australia"). Rendering needs two things from it: which address *order* the
  * country uses, and how to write the country's name in the reader's language.
  *
- * Mirrors the option list in property-admin/src/lib/countries.ts — that one
- * drives the admin dropdown, this one drives rendering. Keep the aliases in
- * sync when a country is added.
+ * property-admin/src/lib/countries.ts drives the admin dropdown (stored values
+ * + legacy aliases); this drives display. Keep the aliases in sync when a
+ * country is added.
  */
+
+/** Languages the apps render documents and UI in. */
+export type AddressLang = "en" | "ko" | "ja" | "zh" | "th" | "vi";
 
 /** Address ordering convention used by a country's postal service. */
 export type AddressOrder = "largest-first" | "smallest-first";
@@ -22,7 +24,7 @@ interface CountryEntry {
   order: AddressOrder;
   /** Lower-cased spellings that map onto this country. */
   aliases: string[];
-  names: Readonly<Record<DocLang, string>>;
+  names: Readonly<Record<AddressLang, string>>;
 }
 
 /**
@@ -103,7 +105,7 @@ export function addressOrderFor(country: string | null | undefined): AddressOrde
  * through unchanged — a hand-typed country is better shown as typed than
  * dropped.
  */
-export function countryName(country: string | null | undefined, lang: DocLang): string {
+export function countryName(country: string | null | undefined, lang: AddressLang): string {
   const raw = (country ?? "").trim();
   const entry = lookup(raw);
   return entry ? entry.names[lang] ?? entry.names.en : raw;

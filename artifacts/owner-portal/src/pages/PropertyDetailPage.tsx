@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { formatDate } from "@/lib/dateFormat";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
+import { formatPostalAddress, orderFallbackFromLang, type AddressLang } from "@workspace/address";
 import { formatMoney } from "@/lib/money";
 
 interface Space {
@@ -108,7 +109,8 @@ const STATUS_CLS: Record<string, string> = {
 
 export default function PropertyDetailPage() {
   const params = useParams<{ id: string }>();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const addressLang = (i18n.language.slice(0, 2) || "en") as AddressLang;
   const [data, setData] = useState<PropertyDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -182,15 +184,17 @@ export default function PropertyDetailPage() {
                   <h1 className="text-2xl font-bold text-foreground">{data.property.name}</h1>
                   <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
                     <MapPin className="w-3 h-3" />
-                    {[
-                      data.property.address,
-                      data.property.address2,
-                      data.property.city,
-                      data.property.state,
-                      data.property.postcode,
-                    ]
-                      .filter(Boolean)
-                      .join(", ")}
+                    {formatPostalAddress(
+                      {
+                        line1: data.property.address,
+                        line2: data.property.address2,
+                        suburb: data.property.city,
+                        state: data.property.state,
+                        postcode: data.property.postcode,
+                      },
+                      addressLang,
+                      { orderFallbackCountry: orderFallbackFromLang(addressLang) },
+                    )}
                   </div>
                 </div>
               </div>

@@ -73,11 +73,12 @@
     "zod": "catalog:"
   },
   "dependencies": {
-    "@workspace/design-tokens": "workspace:*",
     "@tiptap/extension-link": "^3.26.1",
     "@tiptap/extension-placeholder": "^3.26.1",
     "@tiptap/react": "^3.26.1",
     "@tiptap/starter-kit": "^3.26.1",
+    "@workspace/address": "workspace:*",
+    "@workspace/design-tokens": "workspace:*",
     "i18next": "^26.0.3",
     "react-i18next": "^17.0.2"
   }
