@@ -289,7 +289,11 @@ export default function PageTranslations() {
             <Select value={prefix} onValueChange={(v) => { setPrefix(v); setEdits({}); }}>
               <SelectTrigger className="w-72 mt-1"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {sitePages.map((p) => (<SelectItem key={p.prefix} value={p.prefix}>{p.label}</SelectItem>))}
+                {sitePages.map((p) => (
+                  <SelectItem key={p.prefix} value={p.prefix}>
+                    {t(`page_translations.page_${p.prefix.replace(/\./g, "_")}`, { defaultValue: p.label })}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
