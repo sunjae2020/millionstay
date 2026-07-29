@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { db, propertiesTable, spacesTable, contactsTable, accountsTable, bookingsTable, leadsTable, tasksTable, invoicesTable, contractsTable, workOrdersTable, systemLogsTable, homestayPlacementsTable, homestayStudentRequestsTable, homestayPlacementPaymentsTable, agentCommissionLedgerTable } from "@workspace/db";
 import { eq, count, and, gte, lte, lt, sql, desc, isNull, inArray } from "drizzle-orm";
 import { listEntries, trialBalance } from "../lib/billing/gl";
+import { countableUnitFilter } from "../lib/unitScope";
 
 const router: IRouter = Router();
 
@@ -21,7 +22,7 @@ router.get("/v1/dashboard/stats", async (_req, res) => {
       [pendingBookings],
     ] = await Promise.all([
       db.select({ count: count() }).from(propertiesTable),
-      db.select({ count: count() }).from(spacesTable),
+      db.select({ count: count() }).from(spacesTable).where(countableUnitFilter),
       db.select({ count: count() }).from(contactsTable),
       db.select({ count: count() }).from(accountsTable),
       db.select({ count: count() }).from(leadsTable),
@@ -65,7 +66,7 @@ router.get("/v1/dashboard/overview/kpis", async (_req, res) => {
       db.select({ count: count() }).from(bookingsTable).where(and(eq(bookingsTable.check_in_date, today), eq(bookingsTable.booking_status, "Confirmed"))),
       db.select({ count: count() }).from(bookingsTable).where(and(eq(bookingsTable.check_out_date, today), eq(bookingsTable.booking_status, "Active"))),
       db.select({ count: count() }).from(bookingsTable).where(eq(bookingsTable.booking_status, "Active")),
-      db.select({ count: count() }).from(spacesTable).where(eq(spacesTable.status, "Active")),
+      db.select({ count: count() }).from(spacesTable).where(and(eq(spacesTable.status, "Active"), countableUnitFilter)),
       db.select({ count: count() }).from(bookingsTable).where(eq(bookingsTable.booking_status, "Active")),
       db.select({ amount: invoicesTable.amount }).from(invoicesTable).where(and(eq(invoicesTable.status, "Paid"), gte(invoicesTable.created_at, new Date(monthStart)), lt(invoicesTable.created_at, new Date(nextMonth)))),
     ]);
@@ -429,7 +430,7 @@ router.get("/v1/dashboard/floor-board", async (req, res) => {
       .from(spacesTable)
       .leftJoin(propertiesTable, eq(spacesTable.property_id, propertiesTable.id))
       .where(and(
-        isNull(spacesTable.deleted_at),
+        countableUnitFilter,
         sql`${spacesTable.floor_number} is not null`,
         sql`${spacesTable.property_id} is not null`,
       ))
@@ -474,7 +475,7 @@ router.get("/v1/dashboard/floor-board", async (req, res) => {
       .leftJoin(accountsTable, eq(spacesTable.landlord_account_id, accountsTable.id))
       .where(and(
         eq(spacesTable.property_id, pid),
-        isNull(spacesTable.deleted_at),
+        countableUnitFilter,
         sql`${spacesTable.floor_number} is not null`,
       ));
 

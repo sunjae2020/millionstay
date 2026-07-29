@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "wouter";
 import { apiFetch } from "@/lib/apiFetch";
+import { unitSpaces } from "@/lib/unitScope";
 import {
   useListBookings, useListProperties, useListSpaces,
   useCreateBooking, useCheckInBooking, useCheckOutBooking,
@@ -345,9 +346,9 @@ export function QuickBookingPanel({ open, onClose }: { open: boolean; onClose: (
 
   const { data: properties } = useListProperties();
   const { data: spaces } = useListSpaces();
-  const filteredSpaces = spaces?.filter(s =>
+  const filteredSpaces = unitSpaces(spaces).filter(s =>
     s.status === "Active" && (!selectedPropertyId || s.property_id === selectedPropertyId)
-  ) ?? [];
+  );
 
   const createMutation = useCreateBooking({
     mutation: {

@@ -79,6 +79,7 @@ router.get("/v1/spaces", async (req, res): Promise<void> => {
       property_id: spacesTable.property_id,
       property_name: propertiesTable.name,
       parent_space_id: spacesTable.parent_space_id,
+      custom_type_name: spacesTable.custom_type_name,
       space_policy_id: spacesTable.space_policy_id,
       policy_name: spacePoliciesTable.name,
       landlord_account_id: spacesTable.landlord_account_id,

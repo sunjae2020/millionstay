@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { apiFetch } from "@/lib/apiFetch";
+import { unitSpaces } from "@/lib/unitScope";
 import {
   useListSuburbs, useListProperties, useListSpaces,
   useListContacts, useListAccounts, useListTasks, useListLeads,
@@ -155,8 +156,10 @@ export default function OverviewTab() {
   const today = new Date().toISOString().slice(0, 10);
   const thisMonth = today.slice(0, 7);
 
-  const activeSpaces = spaces?.filter(s => s.status === "Active" || s.status === "Occupied").length ?? 0;
-  const totalSpaces = spaces?.length ?? 0;
+  // Type container rows (e.g. Metheim's 8 타입) are not lettable units — see @/lib/unitScope.
+  const units = unitSpaces(spaces);
+  const activeSpaces = units.filter(s => s.status === "Active" || s.status === "Occupied").length;
+  const totalSpaces = units.length;
   const activeBookings = bookings?.filter(b => b.booking_status === "Active").length ?? 0;
   const occupancyPct = activeSpaces > 0 ? Math.min(100, Math.round((activeBookings / activeSpaces) * 100)) : 0;
 

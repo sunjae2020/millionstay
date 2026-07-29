@@ -172,6 +172,11 @@ gates it, so keep it green. Two notable classes were fixed:
 - **Money columns** (`invoices.amount`, `promotions.discount_amount`) are
   `numeric(10,2)` → Drizzle returns **strings**; wrap with `Number()` before math.
 - **Lookup endpoints** return `{ id, display, ...extra }` consistently.
+- **Counting units:** some tenants model unit *types* as spaces that real units hang
+  off via `parent_space_id` (Metheim 여수: 8 타입 rows over 269 units). Those rows are
+  masters, not lettable units — dashboards/reports must filter them out via
+  `countableUnitFilter` (api-server) / `unitSpaces()` (property-admin), never
+  `spaces.length`. See [docs/tenants/metheim/UNIT_INVENTORY.md](docs/tenants/metheim/UNIT_INVENTORY.md).
 - **Validation:** prefer Zod schemas from `@workspace/api-zod`.
 - **Auth:** guest/admin/partner JWTs are separate. Partner auth
   (`PARTNER_JWT_SECRET`) is order-sensitive in Express routing — don't reorder

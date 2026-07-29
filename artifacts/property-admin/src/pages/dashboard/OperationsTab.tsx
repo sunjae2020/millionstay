@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { apiFetch } from "@/lib/apiFetch";
+import { unitSpaces } from "@/lib/unitScope";
 import { useListWorkOrders, useListSpaces, useListProperties } from "@workspace/api-client-react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import {
@@ -125,7 +126,7 @@ export default function OperationsTab() {
   }
 
   const propOptions = properties ?? [];
-  const activeSpaces = (spaces ?? []).filter(s => s.status === "Active");
+  const activeSpaces = unitSpaces(spaces).filter(s => s.status === "Active");
   const filteredSpaces = propFilter === "all"
     ? activeSpaces
     : activeSpaces.filter(s => String(s.property_id) === propFilter);

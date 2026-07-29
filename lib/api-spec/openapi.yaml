@@ -3438,6 +3438,8 @@ components:
           type: ["integer", "null"]
         parent_space_name:
           type: ["string", "null"]
+        custom_type_name:
+          type: ["string", "null"]
         space_policy_id:
           type: ["integer", "null"]
         policy_name:

@@ -508,6 +508,7 @@ export const ListSpacesResponseItem = zod.object({
   property_name: zod.string().nullish(),
   parent_space_id: zod.number().nullish(),
   parent_space_name: zod.string().nullish(),
+  custom_type_name: zod.string().nullish(),
   space_policy_id: zod.number().nullish(),
   policy_name: zod.string().nullish(),
   landlord_account_id: zod.number().nullish(),

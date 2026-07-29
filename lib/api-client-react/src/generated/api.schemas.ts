@@ -292,6 +292,8 @@ export interface SpaceListItem {
   /** @nullable */
   parent_space_name?: string | null;
   /** @nullable */
+  custom_type_name?: string | null;
+  /** @nullable */
   space_policy_id?: number | null;
   /** @nullable */
   policy_name?: string | null;
