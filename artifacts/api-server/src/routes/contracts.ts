@@ -9,6 +9,13 @@ import { resolveLeaseTermsFromProduct } from "../lib/leaseTerms";
 import { generateLeaseRentInvoices } from "../lib/billing/leaseRentInvoices";
 import { buildContractHtml, splitAnnex, type ContractDocInput, type ContractPremises, type ContractSignature } from "../lib/documents/contractDocument";
 import { buildKoreanLeaseHtml, type KoreanLeaseDocInput } from "../lib/documents/koreanLeaseDocument";
+import { buildHousingStandardLeasePdf, type HousingStandardLeaseInput } from "../lib/documents/forms/housingStandardLeaseForm";
+import {
+  buildLeaseAttachmentsHtml,
+  LEASE_ATTACHMENT_KINDS,
+  type LeaseAttachmentInput,
+  type LeaseAttachmentKind,
+} from "../lib/documents/leaseAttachments";
 import { readStoredCompanyInfo } from "../lib/documents/companyInfo";
 import { paymentInfoTable } from "@workspace/db";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
@@ -433,6 +440,8 @@ router.post("/v1/contracts", async (req, res): Promise<void> => {
     monthly_rent: data.monthly_rent ?? lease?.effective_monthly ?? null,
     advance_amount: data.advance_amount ?? null,
     contract_category: data.contract_category ?? null,
+    lease_form: data.lease_form ?? null,
+    doc_attachments: normalizeAttachmentsInput(data.doc_attachments),
     down_payment: data.down_payment ?? null,
     down_payment_date: data.down_payment_date ?? null,
     balance_amount: data.balance_amount ?? null,
@@ -585,10 +594,55 @@ function contractTemplateVars(
   };
 }
 
+/** 발급할 계약서 서식 — contracts.lease_form. */
+export type ContractLeaseForm = "housing_standard" | "mlt_standard" | "general";
+
+/** 어드민이 보낸 첨부 선택(배열 또는 이미 JSON 문자열) → 저장할 JSON 문자열. */
+function normalizeAttachmentsInput(raw: unknown): string | null {
+  const valid = new Set<string>(LEASE_ATTACHMENT_KINDS);
+  const list = Array.isArray(raw)
+    ? raw
+    : typeof raw === "string" && raw.trim()
+      ? (() => { try { return JSON.parse(raw); } catch { return raw.split(","); } })()
+      : null;
+  if (!Array.isArray(list)) return null;
+  const kinds = list.filter((k): k is string => typeof k === "string").map((k) => k.trim()).filter((k) => valid.has(k));
+  return kinds.length ? JSON.stringify(kinds) : null;
+}
+
+/** contracts.doc_attachments(JSON 배열) → 유효한 첨부 키만. */
+function parseAttachmentKinds(raw: string | null | undefined): LeaseAttachmentKind[] {
+  if (!raw?.trim()) return [];
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    // 손으로 넣은 쉼표 목록도 받아 준다.
+    parsed = raw.split(",").map((s) => s.trim());
+  }
+  if (!Array.isArray(parsed)) return [];
+  const valid = new Set<string>(LEASE_ATTACHMENT_KINDS);
+  return parsed.filter((k): k is LeaseAttachmentKind => typeof k === "string" && valid.has(k));
+}
+
+export interface BuiltContractDoc {
+  doc: ContractDocInput;
+  tenantAccountId: number | null;
+  lease: KoreanLeaseDocInput | null;
+  /** 선택된 계약서 서식. null 이면 기존 동작(general). */
+  leaseForm: ContractLeaseForm | null;
+  /** 법무부 주택임대차표준계약서 입력값. */
+  housing: HousingStandardLeaseInput;
+  /** 계약 상세에서 체크한 첨부 문서 종류. */
+  attachmentKinds: LeaseAttachmentKind[];
+  /** 첨부 문서 렌더링 입력값. */
+  attachments: LeaseAttachmentInput;
+}
+
 export async function buildContractDocInput(
   id: number,
   lang: DocLang = "en",
-): Promise<{ doc: ContractDocInput; tenantAccountId: number | null; lease: KoreanLeaseDocInput | null } | null> {
+): Promise<BuiltContractDoc | null> {
   const [row] = await db.select().from(contractsTable).where(eq(contractsTable.id, id));
   if (!row) return null;
   const [c] = await enrichContracts([row]);
@@ -744,9 +798,82 @@ export async function buildContractDocInput(
     };
   }
 
+  // 법무부 주택임대차표준계약서 — 등록임대사업자가 아닌 일반 임대인용 서식.
+  // 원본 정부 PDF 위에 값만 얹으므로(forms/housingStandardLeaseForm) 여기서는
+  // 계약 데이터를 서식 입력 모양으로 옮기기만 한다.
+  const storedCompany = await readStoredCompanyInfo();
+  const housingBuildingName = premises?.building ?? property?.name ?? null;
+  const housing: HousingStandardLeaseInput = {
+    // 보증금만 있으면 전세, 차임만 있으면 월세, 둘 다면 보증금 있는 월세.
+    kind: actualMonthlyRent ? (row.bond_amount ? "deposit_monthly" : "monthly") : "jeonse",
+    contract_kind: "new",
+    property_address: [premises?.location, housingBuildingName].filter(Boolean).join(" ") || null,
+    land_category: property?.land_category ?? null,
+    land_area_m2: property?.land_area_m2 ?? null,
+    building_structure_use: premises?.structure_use ?? property?.building_structure ?? null,
+    building_area_m2: premises?.supply_area_m2 ?? premises?.exclusive_area_m2 ?? null,
+    leased_portion: premises?.unit_no ?? null,
+    leased_area_m2: premises?.exclusive_area_m2 ?? null,
+    deposit_amount: row.bond_amount,
+    down_payment: row.down_payment,
+    balance_amount: row.balance_amount,
+    balance_date: row.balance_date,
+    monthly_rent: actualMonthlyRent,
+    rent_due_day: row.rent_due_day,
+    handover_date: row.start_date,
+    start_date: row.start_date,
+    end_date: row.end_date,
+    signed_on: row.signed_at ?? row.effective_date ?? row.created_at,
+    landlord: {
+      name: (c as any).landlord_name || storedCompany.company_name || null,
+      address: landlordAddress || storedCompany.address1 || null,
+      phone: storedCompany.phone ?? null,
+      id_no: storedCompany.biz_no ?? storedCompany.abn ?? null,
+    },
+    tenant: {
+      name: (c as any).tenant_name ?? null,
+      address: tenantAddress,
+      phone: tenantPhone,
+    },
+  };
+
+  // 계약서 뒤에 붙일 첨부 문서 — 계약 상세에서 고른 것만.
+  const attachmentKinds = parseAttachmentKinds(row.doc_attachments);
+  const attachments: LeaseAttachmentInput = {
+    premises_address: premises?.location ?? null,
+    building_name: housingBuildingName,
+    unit_no: premises?.unit_no ?? null,
+    unit_type: premises?.unit_type ?? null,
+    registry: property
+      ? {
+          lot_address: property.lot_address,
+          building_use: property.building_use,
+          building_structure: property.building_structure,
+          leased_area_m2: premises?.exclusive_area_m2 ?? null,
+          leased_portion: "전유부분 전체",
+          land_category: property.land_category,
+          land_area_m2: property.land_area_m2,
+          land_right_type: property.land_right_type,
+          land_share_m2: premises?.land_share_m2 ?? null,
+        }
+      : null,
+    landlord: { name: housing.landlord.name, address: housing.landlord.address, phone: housing.landlord.phone },
+    tenant: { name: housing.tenant.name, address: housing.tenant.address, phone: housing.tenant.phone },
+    start_date: row.start_date,
+    end_date: row.end_date,
+    deposit_amount: row.bond_amount,
+    monthly_rent: actualMonthlyRent,
+    signed_on: row.signed_at ? String(row.signed_at) : row.effective_date ?? row.start_date,
+    special_terms: annexText,
+  };
+
   return {
     tenantAccountId: row.tenant_account_id ?? null,
     lease,
+    leaseForm: (row.lease_form as ContractLeaseForm | null) ?? null,
+    housing,
+    attachmentKinds,
+    attachments,
     doc: {
       contract_ref: c.contract_ref,
       status: c.status,
@@ -810,6 +937,64 @@ export async function renderContractHtml(
   return buildContractHtml(built.doc, company, forPrint, lang);
 }
 
+/** 여러 PDF 를 한 파일로 잇는다(계약서 + 첨부서류). */
+async function mergePdfs(parts: Uint8Array[]): Promise<Buffer> {
+  if (parts.length === 1) return Buffer.from(parts[0]);
+  const { PDFDocument } = await import("pdf-lib");
+  const out = await PDFDocument.create();
+  for (const part of parts) {
+    const src = await PDFDocument.load(part);
+    const pages = await out.copyPages(src, src.getPageIndices());
+    for (const p of pages) out.addPage(p);
+  }
+  return Buffer.from(await out.save());
+}
+
+/**
+ * 계약서를 PDF 로 발급한다 — 서식에 따라 렌더링 경로가 다르다.
+ *
+ *  - `housing_standard` : 법무부 주택임대차표준계약서. 정부 원본 PDF 를 배경으로
+ *    값만 얹으므로 HTML 을 거치지 않는다(글꼴·괘선이 원본 그 자체).
+ *  - 그 밖 : 기존대로 HTML → 크로미움 인쇄.
+ *
+ * 계약 상세에서 첨부 문서를 골랐으면 그 묶음을 계약서 뒤에 이어 붙인다.
+ * `renewal_refusal`(계약갱신 거절통지서)은 표준서식 원본의 [별지2]라서
+ * 표준서식 경로에서는 같은 PDF 안에서 처리된다.
+ */
+export async function renderContractPdf(
+  built: BuiltContractDoc,
+  lang: DocLang,
+  signatures?: ContractSignature[] | null,
+): Promise<Buffer> {
+  const parts: Uint8Array[] = [];
+
+  if (built.leaseForm === "housing_standard") {
+    const sealOf = (role: string) =>
+      signatures?.find((s) => s.role?.toLowerCase() === role)?.signatureImage ?? null;
+    parts.push(
+      await buildHousingStandardLeasePdf(
+        {
+          ...built.housing,
+          landlord: { ...built.housing.landlord, seal_image: sealOf("landlord") },
+          tenant: { ...built.housing.tenant, seal_image: sealOf("tenant") },
+        },
+        { includeRenewalRefusal: built.attachmentKinds.includes("renewal_refusal") },
+      ),
+    );
+  } else {
+    parts.push(new Uint8Array(await htmlToPdf(await renderContractHtml(built, true, lang, signatures))));
+  }
+
+  const attachmentsHtml = buildLeaseAttachmentsHtml(
+    built.attachmentKinds,
+    built.attachments,
+    await resolveCompanyInfo(),
+  );
+  if (attachmentsHtml) parts.push(new Uint8Array(await htmlToPdf(attachmentsHtml)));
+
+  return mergePdfs(parts);
+}
+
 /**
  * Render a contract as a branded agreement document.
  *   GET /v1/contracts/:id/pdf  [?format=html]
@@ -821,11 +1006,11 @@ router.get("/v1/contracts/:id/pdf", async (req, res): Promise<void> => {
   const built = await buildContractDocInput(id, lang);
   if (!built) { res.status(404).json({ error: "Not found" }); return; }
 
-  const asHtml = req.query.format === "html";
-  const html = await renderContractHtml(built, !asHtml, lang);
-  if (asHtml) { res.type("html").send(html); return; }
+  // 주택임대차표준계약서는 정부 원본 PDF 오버레이라 HTML 표현이 없다 — 항상 PDF.
+  const asHtml = req.query.format === "html" && built.leaseForm !== "housing_standard";
+  if (asHtml) { res.type("html").send(await renderContractHtml(built, false, lang)); return; }
   try {
-    const pdf = await htmlToPdf(html);
+    const pdf = await renderContractPdf(built, lang);
     setDocumentDownloadHeaders(res, buildDocumentFilename({
       docName: t(lang, "doctype.contract"), customerName: built.doc.tenant_name,
     }));
@@ -871,7 +1056,7 @@ router.post("/v1/contracts/:id/email", async (req, res): Promise<void> => {
   const lang = normalizeLang(req.body?.lang as string);
   let pdf: Buffer;
   try {
-    pdf = await htmlToPdf(await renderContractHtml(built, true, lang));
+    pdf = await renderContractPdf(built, lang);
   } catch (err) {
     if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
     res.status(500).json({ error: "Failed to generate PDF" }); return;
@@ -913,7 +1098,7 @@ router.post("/v1/contracts/:id/freeze", async (req, res): Promise<void> => {
   if (!built) { res.status(404).json({ error: "Not found" }); return; }
   let pdf: Buffer;
   try {
-    pdf = await htmlToPdf(await renderContractHtml(built, true, lang));
+    pdf = await renderContractPdf(built, lang);
   } catch (err) {
     if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
     res.status(500).json({ error: "Failed to generate PDF" }); return;
@@ -952,6 +1137,8 @@ router.put("/v1/contracts/:id", async (req, res): Promise<void> => {
         monthly_rent: data.monthly_rent ?? null,
         advance_amount: data.advance_amount ?? null,
         contract_category: data.contract_category ?? null,
+        lease_form: data.lease_form ?? null,
+        doc_attachments: normalizeAttachmentsInput(data.doc_attachments),
         down_payment: data.down_payment ?? null,
         down_payment_date: data.down_payment_date ?? null,
         balance_amount: data.balance_amount ?? null,

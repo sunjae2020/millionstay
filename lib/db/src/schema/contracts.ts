@@ -36,6 +36,11 @@ export const contractsTable = pgTable("contracts", {
   expiry_date: text("expiry_date"),
   termination_reason: text("termination_reason"),
   document_url: text("document_url"),
+  // 발급할 계약서 서식: housing_standard(법무부 주택임대차표준계약서) /
+  // mlt_standard(민간임대주택 표준임대차계약서) / general(자사 일반 임대차계약서).
+  lease_form: text("lease_form"),
+  // 계약서 뒤에 붙일 첨부 문서 키 목록(JSON 배열). leaseAttachments.ts 의 종류와 1:1.
+  doc_attachments: text("doc_attachments"),
   terms_text: text("terms_text"),
   notes: text("notes"),
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

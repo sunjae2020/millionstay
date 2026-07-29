@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useForm, Controller } from "react-hook-form";
 import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
@@ -40,6 +41,33 @@ const CONTRACT_CATEGORIES = [
   { value: "short_term", labelKey: "contract.cat_short" },
   { value: "long_term", labelKey: "contract.cat_long" },
 ];
+/** contracts.doc_attachments 는 JSON 배열 문자열로 저장된다. 깨진 값도 빈 목록으로. */
+function parseAttachments(raw: unknown): string[] {
+  if (Array.isArray(raw)) return raw.filter((v): v is string => typeof v === "string");
+  if (typeof raw !== "string" || !raw.trim()) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === "string") : [];
+  } catch {
+    return raw.split(",").map((v) => v.trim()).filter(Boolean);
+  }
+}
+
+/** 발급할 계약서 서식 — contracts.lease_form. */
+const LEASE_FORMS = [
+  { value: "general", labelKey: "contract.form_general" },
+  { value: "housing_standard", labelKey: "contract.form_housing_standard" },
+  { value: "mlt_standard", labelKey: "contract.form_mlt_standard" },
+];
+/** 계약서 뒤에 붙일 수 있는 첨부 문서 — api-server leaseAttachments.ts 와 키가 같아야 한다. */
+const LEASE_ATTACHMENTS = [
+  { value: "special_terms", labelKey: "contract.attach_special_terms" },
+  { value: "deposit_consent", labelKey: "contract.attach_deposit_consent" },
+  { value: "trust_confirmation", labelKey: "contract.attach_trust_confirmation" },
+  { value: "guarantee_undertaking", labelKey: "contract.attach_guarantee_undertaking" },
+  // 표준서식 원본의 [별지2] — 주택임대차표준계약서로 발급할 때만 의미가 있다(빈 양식 교부).
+  { value: "renewal_refusal", labelKey: "contract.attach_renewal_refusal" },
+];
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-700",
   Sent: "bg-blue-100 text-blue-700",
@@ -62,6 +90,8 @@ interface FormData {
   bond_amount: string;
   advance_amount: string;
   contract_category: string;
+  lease_form: string;
+  doc_attachments: string[];
   down_payment: string;
   down_payment_date: string;
   balance_amount: string;
@@ -244,7 +274,8 @@ export default function ContractDetail() {
       landlord_account_id: null, space_id: null,
       start_date: "", end_date: "", weekly_rate: "", total_rent: "",
       bond_amount: "", advance_amount: "",
-      contract_category: "", down_payment: "", down_payment_date: "",
+      contract_category: "", lease_form: "", doc_attachments: [],
+      down_payment: "", down_payment_date: "",
       balance_amount: "", balance_date: "", monthly_rent: "", rent_due_day: "",
       currency: brandCurrency,
       document_url: "", terms_text: "", notes: "",
@@ -266,6 +297,8 @@ export default function ContractDetail() {
         bond_amount: contract.bond_amount != null ? String(contract.bond_amount) : "",
         advance_amount: contract.advance_amount != null ? String(contract.advance_amount) : "",
         contract_category: (contract as any).contract_category ?? "",
+        lease_form: (contract as any).lease_form ?? "",
+        doc_attachments: parseAttachments((contract as any).doc_attachments),
         down_payment: (contract as any).down_payment != null ? String((contract as any).down_payment) : "",
         down_payment_date: (contract as any).down_payment_date ?? "",
         balance_amount: (contract as any).balance_amount != null ? String((contract as any).balance_amount) : "",
@@ -480,6 +513,8 @@ export default function ContractDetail() {
     bond_amount: data.bond_amount ? Number(data.bond_amount) : null,
     advance_amount: data.advance_amount ? Number(data.advance_amount) : null,
     contract_category: data.contract_category || null,
+    lease_form: data.lease_form || null,
+    doc_attachments: data.doc_attachments ?? [],
     down_payment: data.down_payment ? Number(data.down_payment) : null,
     down_payment_date: data.down_payment_date || null,
     balance_amount: data.balance_amount ? Number(data.balance_amount) : null,
@@ -679,6 +714,44 @@ export default function ContractDetail() {
                     </Select>
                   )} />
                 </div>
+                <div>
+                  <Label>{t('contract.label_lease_form')}</Label>
+                  <Controller name="lease_form" control={control} render={({ field }) => (
+                    <Select value={field.value || undefined} onValueChange={field.onChange}>
+                      <SelectTrigger><SelectValue placeholder={t('contract.ph_select_lease_form')} /></SelectTrigger>
+                      <SelectContent>
+                        {LEASE_FORMS.map(f => <SelectItem key={f.value} value={f.value}>{t(f.labelKey)}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )} />
+                  <p className="text-xs text-muted-foreground mt-1">{t('contract.hint_lease_form')}</p>
+                </div>
+              </div>
+
+              {/* Attachments printed after the agreement itself */}
+              <div className="mt-4">
+                <Label>{t('contract.label_doc_attachments')}</Label>
+                <Controller name="doc_attachments" control={control} render={({ field }) => (
+                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {LEASE_ATTACHMENTS.map(a => {
+                      const selected = (field.value ?? []).includes(a.value);
+                      return (
+                        <label key={a.value} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <Checkbox
+                            checked={selected}
+                            onCheckedChange={(checked) => field.onChange(
+                              checked
+                                ? [...(field.value ?? []), a.value]
+                                : (field.value ?? []).filter((v: string) => v !== a.value),
+                            )}
+                          />
+                          {t(a.labelKey)}
+                        </label>
+                      );
+                    })}
+                  </div>
+                )} />
+                <p className="text-xs text-muted-foreground mt-1">{t('contract.hint_doc_attachments')}</p>
               </div>
             </div>
 
