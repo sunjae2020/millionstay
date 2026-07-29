@@ -17,6 +17,7 @@
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import { Resend } from "resend";
+import { emailSender } from "../email";
 import { eq } from "drizzle-orm";
 import { db, guestUsersTable, homestayStudentRequestsTable } from "@workspace/db";
 
@@ -25,8 +26,6 @@ import { db, guestUsersTable, homestayStudentRequestsTable } from "@workspace/db
 const BCRYPT_COST = 12;
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour — matches guest-auth.ts
 
-// Mirror lib/email.ts's Resend config (module-private there, so re-read here).
-const FROM = process.env.EMAIL_FROM ?? "MillionStay <noreply@contact.millionstay.com>";
 const LOGO_URL = process.env.EMAIL_LOGO_URL ?? "https://www.millionstay.com/millionstay-logo.png";
 
 function escapeHtml(input: string | null | undefined): string {
@@ -184,7 +183,7 @@ async function sendInviteEmail(opts: {
   try {
     const client = new Resend(key);
     await client.emails.send({
-      from: FROM,
+      ...emailSender(),
       to: [opts.to],
       subject: "Set up your MillionStay student portal",
       html,

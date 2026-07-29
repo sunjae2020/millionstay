@@ -8,9 +8,8 @@
 //
 // English only (project i18n policy: transactional lifecycle emails are English).
 import { Resend } from "resend";
+import { emailSender } from "../email";
 
-// Mirror lib/email.ts / studentPortalInvite.ts's Resend config.
-const FROM = process.env.EMAIL_FROM ?? "MillionStay <noreply@contact.millionstay.com>";
 const LOGO_URL = process.env.EMAIL_LOGO_URL ?? "https://www.millionstay.com/millionstay-logo.png";
 
 function escapeHtml(input: string | null | undefined): string {
@@ -72,7 +71,7 @@ export async function sendHomestayNotification(opts: {
   try {
     const client = new Resend(key);
     await client.emails.send({
-      from: FROM,
+      ...emailSender(),
       to: [to],
       ...(cc ? { cc: [cc] } : {}),
       subject: opts.subject,

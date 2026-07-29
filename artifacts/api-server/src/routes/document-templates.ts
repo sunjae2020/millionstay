@@ -11,10 +11,10 @@ import { renderDocumentShell } from "../lib/documents/theme.js";
 import { renderSampleDocumentHtml } from "../lib/documents/sampleDocs.js";
 import { normalizeLang, t } from "../lib/documents/i18n.js";
 import { buildDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename.js";
+import { emailSender } from "../lib/email.js";
 import { logAction } from "../utils/auditLog.js";
 
 const router: IRouter = Router();
-const FROM = process.env.EMAIL_FROM ?? "MillionStay <noreply@contact.millionstay.com>";
 
 // GET /v1/document-templates?kind= — list with available locales.
 router.get("/v1/document-templates", async (req, res): Promise<void> => {
@@ -132,7 +132,7 @@ router.post("/v1/document-templates/:id/test-send", async (req, res): Promise<vo
     const subject = renderString(resolved.subject || `[Test] ${tpl.name}`, vars);
     const html = renderString(resolved.bodyHtml, vars);
     const client = new Resend(process.env.RESEND_API_KEY);
-    const result = await client.emails.send({ from: FROM, to: [to], subject: `[TEST] ${subject}`, html });
+    const result = await client.emails.send({ ...emailSender(), to: [to], subject: `[TEST] ${subject}`, html });
     res.json({ data: { sentTo: to, id: (result as any)?.data?.id ?? null, locale } });
   } catch (err) {
     console.error("[document-templates] test-send failed:", err);

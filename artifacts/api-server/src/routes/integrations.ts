@@ -5,6 +5,7 @@ import { Resend } from "resend";
 import type { Request, Response } from "express";
 import { db, integrationSettings } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { emailSender } from "../lib/email.js";
 
 const router: IRouter = Router();
 
@@ -212,7 +213,10 @@ router.post("/v1/integrations/cloudinary/test", async (_req: Request, res: Respo
 
 router.post("/v1/integrations/resend/test", async (req: Request, res: Response): Promise<void> => {
   const resendKey = await getEnvVar("RESEND_API_KEY");
-  const emailFrom = await getEnvVar("EMAIL_FROM") ?? "onboarding@resend.dev";
+  // Loads EMAIL_FROM into process.env; emailSender() then applies the same
+  // free-mail guard as real sends, so the test mirrors production behaviour.
+  await getEnvVar("EMAIL_FROM");
+  const sender = emailSender();
   if (!resendKey) {
     res.status(400).json({ success: false, error: "RESEND_API_KEY not configured" });
     return;
@@ -225,7 +229,7 @@ router.post("/v1/integrations/resend/test", async (req: Request, res: Response):
   try {
     const resend = new Resend(resendKey);
     const result = await resend.emails.send({
-      from: emailFrom,
+      ...sender,
       to: [to_email],
       subject: "MillionStay — Resend Test Email",
       html: "<p>This is a test email from MillionStay Admin. Resend is connected successfully.</p>",

@@ -29,7 +29,7 @@ import { Resend } from "resend";
 import { generatePlacementRef } from "../lib/homestayRef.js";
 import { formatPersonName } from "../lib/nameFormat.js";
 import { createSigningRequest, signingBaseUrl, type SignerSpec } from "../services/contractSigning.js";
-import { sendHomestayHostEmail } from "../lib/email.js";
+import { sendHomestayHostEmail, emailSender } from "../lib/email.js";
 import { notifyPlacementProposed, notifyPlacementActivated, notifyPaymentReminder } from "../lib/homestay/notify.js";
 import { logAction } from "../utils/auditLog.js";
 import { getStripe } from "./stripe.js";
@@ -482,7 +482,7 @@ homestayPlacementAdminRouter.post("/v1/homestay-placement-payments/:paymentId/se
       const inner = tpl ? renderString(tpl.bodyHtml, vars)
         : `<p>Hi ${vars.name}, your homestay payment of <strong>${vars.amount}</strong> is due. <a href="${vars.pay_url}">Pay now</a>. Ref: ${vars.ref}.</p>`;
       const html = `<!DOCTYPE html><html><body style="margin:0;background:#faf9f7;font-family:-apple-system,Segoe UI,Roboto,sans-serif;"><div style="max-width:560px;margin:0 auto;padding:24px;"><div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:28px;">${inner}</div></div></body></html>`;
-      try { await new Resend(process.env.RESEND_API_KEY).emails.send({ from: process.env.EMAIL_FROM ?? "MillionStay <noreply@contact.millionstay.com>", to: [studentEmail], subject, html }); } catch (e) { console.error("[homestay-placements] send email failed:", e); }
+      try { await new Resend(process.env.RESEND_API_KEY).emails.send({ ...emailSender(), to: [studentEmail], subject, html }); } catch (e) { console.error("[homestay-placements] send email failed:", e); }
     }
 
     void logAction({ entityType: ENTITY, entityId: row.id, action: "PAYMENT", actorId: (req as any).user?.id ?? null, newValue: { payment_id: pay.id, sent: true, stripe_session: session.id } });

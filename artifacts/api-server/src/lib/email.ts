@@ -41,7 +41,55 @@ function getResend(): Resend | null {
   return resend;
 }
 
-const FROM = process.env.EMAIL_FROM ?? "MillionStay <noreply@contact.millionstay.com>";
+const DEFAULT_FROM = "MillionStay <noreply@contact.millionstay.com>";
+
+/**
+ * Free / shared mailbox providers. An ESP can only send from a domain the
+ * account owns and verified, so an org contact address on one of these (e.g. a
+ * tenant whose Settings → Organisation email is `…@gmail.com`) must never end
+ * up as the envelope From — Resend rejects the whole send with
+ * "This API key is not authorized to send emails from gmail.com".
+ */
+const FREE_MAIL_DOMAINS = new Set([
+  "gmail.com", "googlemail.com", "naver.com", "daum.net", "hanmail.net", "kakao.com",
+  "nate.com", "outlook.com", "hotmail.com", "live.com", "msn.com",
+  "yahoo.com", "yahoo.co.jp", "ymail.com", "icloud.com", "me.com",
+  "aol.com", "proton.me", "protonmail.com", "qq.com", "163.com", "126.com",
+]);
+
+/** Pull the bare address out of `Name <addr@host>` or a plain address. */
+function bareAddress(from: string): string {
+  const m = from.match(/<([^>]+)>/);
+  return (m?.[1] ?? from).trim().toLowerCase();
+}
+
+/**
+ * Envelope sender for every outbound email.
+ *
+ * `EMAIL_FROM` is tenant-configurable (env, or Settings → Integrations which
+ * writes it into `process.env`), so it is read per-send rather than captured at
+ * import time. When it is missing, malformed, or points at a free-mail domain
+ * the provider cannot authorise, we fall back to the verified default sender and
+ * keep the configured address as Reply-To so replies still reach the tenant.
+ */
+export function emailSender(): { from: string; replyTo?: string } {
+  const configured = (process.env.EMAIL_FROM ?? "").trim();
+  if (!configured) return { from: DEFAULT_FROM };
+  const address = bareAddress(configured);
+  const domain = address.split("@")[1];
+  if (!domain || !address.includes("@")) {
+    console.warn(`[email] EMAIL_FROM is not a valid address (${configured}) — using ${DEFAULT_FROM}`);
+    return { from: DEFAULT_FROM };
+  }
+  if (FREE_MAIL_DOMAINS.has(domain)) {
+    console.warn(
+      `[email] EMAIL_FROM domain "${domain}" cannot be used as a sender (free/shared mailbox) — ` +
+        `sending from ${DEFAULT_FROM} with Reply-To ${address}. Configure EMAIL_FROM to an address on a domain verified with the email provider.`,
+    );
+    return { from: DEFAULT_FROM, replyTo: address };
+  }
+  return { from: configured };
+}
 const LOGO_URL = process.env.EMAIL_LOGO_URL ?? "https://www.millionstay.com/millionstay-logo.png";
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL ?? "millionstay.com@gmail.com";
 
@@ -133,7 +181,7 @@ export async function sendDocumentEmail(
 </div></body></html>`;
 
   const payload = {
-    from: FROM,
+    ...emailSender(),
     to: recipients,
     subject,
     html,
@@ -252,7 +300,7 @@ export async function sendPasswordResetEmail(
 </div></body></html>`;
   try {
     await client.emails.send({
-      from: FROM,
+      ...emailSender(),
       to: [opts.to],
       subject: `[MillionStay ${productLabel}] Password Reset Request`,
       html,
@@ -297,7 +345,7 @@ export async function sendRegistrationRequestEmail(to: string, name: string, adm
   <div class="footer">© ${new Date().getFullYear()} MillionStay Pty Ltd</div>
 </div></body></html>`;
   try {
-    await client.emails.send({ from: FROM, to: [to], subject: "[MillionStay Admin] New Account Request", html });
+    await client.emails.send({ ...emailSender(), to: [to], subject: "[MillionStay Admin] New Account Request", html });
     console.log(`[email] Registration notification sent to ${to}`);
     return true;
   } catch (err) {
@@ -450,7 +498,7 @@ export async function sendBookingConfirmation(data: BookingConfirmationData): Pr
 
   try {
     await client.emails.send({
-      from: FROM,
+      ...emailSender(),
       to: [to],
       subject: `[MillionStay] Booking Confirmed — ${bookingRef}`,
       html,
@@ -529,7 +577,7 @@ export async function sendLeadNotificationEmail(data: LeadNotificationData): Pro
 
   try {
     await client.emails.send({
-      from: FROM,
+      ...emailSender(),
       to: [to],
       replyTo: data.email,
       subject: `[MillionStay Lead] ${data.inquiryType} — ${fullName || data.email} (${data.leadRef})`,
@@ -656,7 +704,7 @@ export async function sendHomestayHostEmail(opts: HomestayHostEmailOptions): Pro
 </body></html>`;
   const attachments = (opts.attachments ?? []).map((a) => ({ filename: a.filename, content: a.content.toString("base64") }));
   try {
-    await client.emails.send({ from: FROM, to: [opts.to], subject, html, ...(attachments.length ? { attachments } : {}) });
+    await client.emails.send({ ...emailSender(), to: [opts.to], subject, html, ...(attachments.length ? { attachments } : {}) });
     console.log(`[email] Homestay ${opts.kind} sent for ${opts.applicationRef} → ${opts.to}${tpl ? " (template)" : ""}${attachments.length ? " (+pdf)" : ""}`);
     return true;
   } catch (err) {
@@ -722,7 +770,7 @@ export async function sendApplicationAckEmail(opts: ApplicationAckEmailOptions):
     : [];
   try {
     await client.emails.send({
-      from: FROM,
+      ...emailSender(),
       to: [opts.to],
       subject: `We received your ${opts.appTypeLabel} (${opts.ref})`,
       html,
@@ -808,7 +856,7 @@ export async function sendMarketingEmail(
 
   try {
     const result = await client.emails.send({
-      from: FROM,
+      ...emailSender(),
       to: [to],
       subject: opts.subject,
       html,
@@ -988,7 +1036,7 @@ export async function sendInspectionSignLinkEmail(
 
   try {
     const { data, error } = await client.emails.send({
-      from: FROM,
+      ...emailSender(),
       to: [opts.to],
       subject: copy.subject(brand, phaseLabel),
       html,
@@ -1203,7 +1251,7 @@ export async function sendAppointmentConfirmationEmail(
 
   try {
     const { data, error } = await client.emails.send({
-      from: FROM,
+      ...emailSender(),
       to: [opts.to],
       subject: copy.subject(brand, dateShort),
       html,
