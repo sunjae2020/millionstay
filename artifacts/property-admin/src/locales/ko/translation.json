@@ -5220,15 +5220,7 @@
     "confirm_delete": "이 서류를 삭제할까요?",
     "empty": "등록된 서류가 없습니다.",
     "col_file": "파일",
-    "col_kind": "종류",
-    "col_date": "등록일",
-    "type_business_registration": "사업자등록증",
-    "type_bank_passbook": "통장 사본",
-    "type_seal_certificate": "법인인감증명서",
-    "type_corporate_register": "법인등기부등본",
-    "type_rental_business_registration": "임대사업자등록증",
-    "type_representative_id": "대표자 신분증",
-    "type_other": "기타"
+    "col_date": "등록일"
   },
   "settings_email_templates": {
     "page_subtitle": "자동 이메일 알림 사용자 지정"

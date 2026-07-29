@@ -22,6 +22,11 @@ export const documentsTable = pgTable(
     file_size: integer("file_size").notNull(),
     mime_type: varchar("mime_type", { length: 100 }).notNull(),
     cloudinary_public_id: varchar("cloudinary_public_id", { length: 255 }).notNull(),
+    // Cloudinary resource_type the asset was stored under. Signed URLs and
+    // deletes must use the same value. "image" is Cloudinary's default and what
+    // every row predating this column was uploaded as; "raw" covers documents
+    // the image pipeline refuses (Office files, archives, oversized PDFs).
+    resource_type: varchar("resource_type", { length: 16 }).notNull().default("image"),
     // Document Hub: human reference + version for frozen document snapshots.
     doc_ref: varchar("doc_ref", { length: 64 }),
     version: integer("version"),

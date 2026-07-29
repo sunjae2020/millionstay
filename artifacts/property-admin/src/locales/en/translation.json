@@ -5220,15 +5220,7 @@
     "confirm_delete": "Delete this document?",
     "empty": "No documents yet.",
     "col_file": "File",
-    "col_kind": "Type",
-    "col_date": "Uploaded",
-    "type_business_registration": "Business registration certificate",
-    "type_bank_passbook": "Bank passbook copy",
-    "type_seal_certificate": "Seal certificate",
-    "type_corporate_register": "Corporate register extract",
-    "type_rental_business_registration": "Rental business registration",
-    "type_representative_id": "Representative ID",
-    "type_other": "Other"
+    "col_date": "Uploaded"
   },
   "settings_email_templates": {
     "page_subtitle": "Customise automated email notifications"

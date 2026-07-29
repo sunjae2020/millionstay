@@ -89,12 +89,21 @@ export async function uploadToCloudinary(
  * and remain on permanent CDN URLs — switching them to signed URLs would break
  * SEO and browser caching. Only use this helper for assets uploaded as
  * `authenticated`.
+ *
+ * `resourceType` must match what the asset was uploaded as. It defaults to
+ * "image" — Cloudinary's default, and what every asset predating the
+ * `documents.resource_type` column was stored as.
  */
-export function generateSignedUrl(publicId: string, expiresInSeconds = 900): string {
+export function generateSignedUrl(
+  publicId: string,
+  expiresInSeconds = 900,
+  resourceType = "image",
+): string {
   if (!publicId) throw new Error("generateSignedUrl: publicId is required");
   return cloudinary.url(publicId, {
     sign_url: true,
     type: "authenticated",
+    resource_type: resourceType,
     secure: true,
     expires_at: Math.floor(Date.now() / 1000) + expiresInSeconds,
   });
@@ -109,7 +118,7 @@ export function generateSignedUrl(publicId: string, expiresInSeconds = 900): str
 export async function uploadPrivateToCloudinary(
   buffer: Buffer,
   options: Record<string, unknown> = {},
-): Promise<{ public_id: string; bytes: number; format: string }> {
+): Promise<{ public_id: string; bytes: number; format: string; resource_type: string }> {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
@@ -125,6 +134,9 @@ export async function uploadPrivateToCloudinary(
             public_id: (res as any).public_id,
             bytes: (res as any).bytes,
             format: (res as any).format,
+            // Callers that pass `resource_type: "auto"` need to know what it
+            // actually resolved to, so signed URLs and deletes can match.
+            resource_type: (res as any).resource_type ?? "image",
           });
       },
     );
@@ -182,10 +194,10 @@ export async function listCloudinaryResources(
   return { resources, next_cursor: (res.next_cursor as string | undefined) ?? null };
 }
 
-export async function deleteFromCloudinary(publicId: string): Promise<void> {
+export async function deleteFromCloudinary(publicId: string, resourceType = "image"): Promise<void> {
   if (!publicId) return;
   try {
-    await cloudinary.uploader.destroy(publicId);
+    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
   } catch (err) {
     console.error("Cloudinary delete error:", err);
   }

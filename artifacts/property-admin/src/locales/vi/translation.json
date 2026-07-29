@@ -5220,15 +5220,7 @@
     "confirm_delete": "Xóa tài liệu này?",
     "empty": "Chưa có tài liệu nào.",
     "col_file": "Tệp",
-    "col_kind": "Loại",
-    "col_date": "Ngày tải lên",
-    "type_business_registration": "Giấy chứng nhận đăng ký kinh doanh",
-    "type_bank_passbook": "Bản sao sổ ngân hàng",
-    "type_seal_certificate": "Giấy chứng nhận con dấu",
-    "type_corporate_register": "Trích lục đăng ký doanh nghiệp",
-    "type_rental_business_registration": "Giấy đăng ký kinh doanh cho thuê",
-    "type_representative_id": "Giấy tờ tùy thân người đại diện",
-    "type_other": "Khác"
+    "col_date": "Ngày tải lên"
   },
   "settings_email_templates": {
     "page_subtitle": "Tùy chỉnh thông báo email tự động"

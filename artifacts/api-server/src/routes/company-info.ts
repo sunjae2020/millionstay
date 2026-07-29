@@ -33,7 +33,6 @@ const CompanyInfoBody = z.object({
   timezone: z.string().optional(),
   logo_url: z.string().optional(),
   stamp_url: z.string().optional(),
-  brand_color: z.string().optional(),
   ceo: z.string().optional(),
   biz_no: z.string().optional(),
   // 법인등록번호 — landlord block of a Korean lease agreement.
@@ -78,6 +77,20 @@ const ORG_DOC_ROLES = new Set(["SuperAdmin", "Super Admin", "superadmin", "super
 
 const orgDocUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } });
 
+/**
+ * Busboy hands multipart filenames back as latin1, so a Korean filename arrives
+ * as mojibake ("사업자등록증.pdf" -> "á á ¦á …"). Re-read the bytes as UTF-8 and
+ * normalise, since macOS submits decomposed Hangul (NFD) that renders as
+ * separate jamo everywhere else. ASCII names round-trip unchanged.
+ */
+function decodeUploadFilename(name: string): string {
+  try {
+    return Buffer.from(name, "latin1").toString("utf8").normalize("NFC");
+  } catch {
+    return name;
+  }
+}
+
 function requireOrgDocRole(req: Request, res: Response, next: NextFunction): void {
   const role = (req as any).user?.role ?? "";
   if (!ORG_DOC_ROLES.has(role)) {
@@ -100,13 +113,12 @@ router.get("/v1/company-info/documents", requireOrgDocRole, async (_req, res): P
     .orderBy(desc(documentsTable.created_at));
   res.json(rows.map((d) => ({
     id: d.id,
-    doc_type: d.doc_type,
     file_name: d.file_name,
     file_size: d.file_size,
     mime_type: d.mime_type,
     created_at: d.created_at,
     // 15-minute signed URL — the asset itself is private on Cloudinary.
-    signed_url: generateSignedUrl(d.cloudinary_public_id, 900),
+    signed_url: generateSignedUrl(d.cloudinary_public_id, 900, d.resource_type),
   })));
 });
 
@@ -118,18 +130,26 @@ router.post(
     if (!req.file) { res.status(400).json({ error: "A file is required" }); return; }
     if (!isCloudinaryConfigured()) { res.status(503).json({ error: "File storage is not configured" }); return; }
 
-    const docType = (typeof req.body?.doc_type === "string" && req.body.doc_type.trim() ? req.body.doc_type : "other")
-      .slice(0, 32);
+    const fileName = decodeUploadFilename(req.file.originalname).slice(0, 255);
     try {
-      const up = await uploadPrivateToCloudinary(req.file.buffer, { folder: cldFolder("private/organisation") });
+      // "auto" instead of Cloudinary's default image pipeline: company paperwork
+      // arrives as PDFs, scans, Office files and archives, and the image
+      // pipeline rejects anything it cannot decode ("Unsupported ZIP file").
+      const up = await uploadPrivateToCloudinary(req.file.buffer, {
+        folder: cldFolder("private/organisation"),
+        resource_type: "auto",
+      });
       const [row] = await db.insert(documentsTable).values({
         entity_type: ORG_ENTITY_TYPE,
         entity_id: ORG_ENTITY_ID,
-        doc_type: docType,
-        file_name: req.file.originalname.slice(0, 255),
+        // Kept for the shared documents table's NOT NULL contract; the vault
+        // does not categorise company paperwork.
+        doc_type: "other",
+        file_name: fileName,
         file_size: req.file.size,
         mime_type: req.file.mimetype.slice(0, 100),
         cloudinary_public_id: up.public_id,
+        resource_type: up.resource_type,
         uploaded_by: (req as any).user?.id ?? null,
         uploaded_by_type: "User",
         // Company records are kept for the life of the entity, not purged.
@@ -137,12 +157,15 @@ router.post(
       } as never).returning();
       await logAction({
         entityType: "company_document", entityId: ORG_ENTITY_ID, action: "CREATE",
-        newValue: { doc_type: docType, file_name: req.file.originalname },
+        newValue: { file_name: fileName },
       }).catch(() => {});
       res.status(201).json({ success: true, document: row });
     } catch (err) {
-      console.error("[company-info] document upload failed:", err instanceof Error ? err.message : err);
-      res.status(500).json({ error: "File upload failed" });
+      // Surface Cloudinary's own reason — "File upload failed" alone left no way
+      // to tell a rejected file type from an outage.
+      const reason = (err as any)?.message ?? String(err);
+      console.error(`[company-info] document upload failed (${fileName}):`, reason);
+      res.status(500).json({ error: `File upload failed: ${reason}` });
     }
   },
 );
@@ -158,10 +181,10 @@ router.delete("/v1/company-info/documents/:docId", requireOrgDocRole, async (req
   ));
   if (!doc) { res.status(404).json({ error: "Not found" }); return; }
   await db.update(documentsTable).set({ deleted_at: new Date() }).where(eq(documentsTable.id, doc.id));
-  await deleteFromCloudinary(doc.cloudinary_public_id);
+  await deleteFromCloudinary(doc.cloudinary_public_id, doc.resource_type);
   await logAction({
     entityType: "company_document", entityId: ORG_ENTITY_ID, action: "DELETE",
-    oldValue: { doc_type: doc.doc_type, file_name: doc.file_name },
+    oldValue: { file_name: doc.file_name },
   }).catch(() => {});
   res.status(204).end();
 });

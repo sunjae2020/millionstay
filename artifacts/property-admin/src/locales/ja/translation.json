@@ -5220,15 +5220,7 @@
     "confirm_delete": "この書類を削除しますか？",
     "empty": "書類がまだありません。",
     "col_file": "ファイル",
-    "col_kind": "種類",
-    "col_date": "登録日",
-    "type_business_registration": "事業者登録証",
-    "type_bank_passbook": "通帳のコピー",
-    "type_seal_certificate": "印鑑証明書",
-    "type_corporate_register": "法人登記簿謄本",
-    "type_rental_business_registration": "賃貸事業者登録証",
-    "type_representative_id": "代表者の身分証明書",
-    "type_other": "その他"
+    "col_date": "登録日"
   },
   "settings_email_templates": {
     "page_subtitle": "自動メール通知をカスタマイズ"

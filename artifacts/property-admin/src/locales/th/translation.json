@@ -5220,15 +5220,7 @@
     "confirm_delete": "ลบเอกสารนี้หรือไม่",
     "empty": "ยังไม่มีเอกสาร",
     "col_file": "ไฟล์",
-    "col_kind": "ประเภท",
-    "col_date": "วันที่อัปโหลด",
-    "type_business_registration": "หนังสือรับรองการจดทะเบียนธุรกิจ",
-    "type_bank_passbook": "สำเนาสมุดบัญชีธนาคาร",
-    "type_seal_certificate": "หนังสือรับรองตราประทับ",
-    "type_corporate_register": "หนังสือรับรองนิติบุคคล",
-    "type_rental_business_registration": "ใบจดทะเบียนธุรกิจให้เช่า",
-    "type_representative_id": "บัตรประจำตัวผู้แทน",
-    "type_other": "อื่น ๆ"
+    "col_date": "วันที่อัปโหลด"
   },
   "settings_email_templates": {
     "page_subtitle": "ปรับแต่งการแจ้งเตือนอีเมลอัตโนมัติ"

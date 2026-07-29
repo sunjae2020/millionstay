@@ -5220,15 +5220,7 @@
     "confirm_delete": "要删除此文件吗？",
     "empty": "暂无文件。",
     "col_file": "文件",
-    "col_kind": "类型",
-    "col_date": "上传日期",
-    "type_business_registration": "营业执照",
-    "type_bank_passbook": "银行存折复印件",
-    "type_seal_certificate": "印鉴证明",
-    "type_corporate_register": "法人登记簿誊本",
-    "type_rental_business_registration": "租赁事业者登记证",
-    "type_representative_id": "法定代表人身份证件",
-    "type_other": "其他"
+    "col_date": "上传日期"
   },
   "settings_email_templates": {
     "page_subtitle": "自定义自动电子邮件通知"
