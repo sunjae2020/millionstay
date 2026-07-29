@@ -6,6 +6,7 @@ import { z } from "zod";
 import { logAction } from "../utils/auditLog";
 import { COMPANY_INFO_KEY, readStoredCompanyInfo } from "../lib/documents/companyInfo";
 import { permanentRetentionDate } from "../lib/retention";
+import { decodeUploadFilename } from "../lib/uploadFilename";
 import {
   uploadPrivateToCloudinary, deleteFromCloudinary,
   cldFolder, isCloudinaryConfigured, generateSignedUrl,
@@ -76,20 +77,6 @@ const ORG_ENTITY_ID = 1;
 const ORG_DOC_ROLES = new Set(["SuperAdmin", "Super Admin", "superadmin", "super_admin", "Admin"]);
 
 const orgDocUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } });
-
-/**
- * Busboy hands multipart filenames back as latin1, so a Korean filename arrives
- * as mojibake ("사업자등록증.pdf" -> "á á ¦á …"). Re-read the bytes as UTF-8 and
- * normalise, since macOS submits decomposed Hangul (NFD) that renders as
- * separate jamo everywhere else. ASCII names round-trip unchanged.
- */
-function decodeUploadFilename(name: string): string {
-  try {
-    return Buffer.from(name, "latin1").toString("utf8").normalize("NFC");
-  } catch {
-    return name;
-  }
-}
 
 function requireOrgDocRole(req: Request, res: Response, next: NextFunction): void {
   const role = (req as any).user?.role ?? "";

@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import multer from "multer";
 import { db, knowledgeDocumentsTable, chatConversationsTable, chatMessagesTable } from "@workspace/db";
 import { eq, desc, asc } from "drizzle-orm";
+import { decodeUploadFilename } from "../lib/uploadFilename";
 
 // NOTE: paths live under /api/v1 (protected by the app-level requireAuth) but
 // deliberately NOT under /api/v1/admin — in development that prefix is shadowed
@@ -85,7 +86,7 @@ router.post("/v1/knowledge", upload.single("file"), async (req, res): Promise<vo
       const extracted = await extractText(file);
       if (!contentText) contentText = extracted.text;
       sourceType = extracted.sourceType;
-      if (!title) title = file.originalname || "Untitled document";
+      if (!title) title = decodeUploadFilename(file.originalname) || "Untitled document";
     }
 
     if (!title) { res.status(400).json({ error: "title is required" }); return; }

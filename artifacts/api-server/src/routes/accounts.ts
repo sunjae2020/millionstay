@@ -17,6 +17,7 @@ import {
   cldFolder, isCloudinaryConfigured, generateSignedUrl,
 } from "../utils/cloudinary";
 import { calcRetentionDate } from "../lib/retention";
+import { decodeUploadFilename } from "../lib/uploadFilename";
 import {
   ListAccountsQueryParams,
   CreateAccountBody,
@@ -431,7 +432,7 @@ router.post("/v1/accounts/:id/documents", docUpload.single("file"), async (req, 
       entity_type: "account",
       entity_id: id,
       doc_type: docType,
-      file_name: req.file.originalname.slice(0, 255),
+      file_name: decodeUploadFilename(req.file.originalname).slice(0, 255),
       file_size: req.file.size,
       mime_type: req.file.mimetype.slice(0, 100),
       cloudinary_public_id: up.public_id,

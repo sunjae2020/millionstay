@@ -19,6 +19,7 @@ import {
   portraitCropTransformation,
 } from "../lib/contacts/idDocumentOcr";
 import { formatFirstName, formatLastName } from "../lib/nameFormat";
+import { decodeUploadFilename } from "../lib/uploadFilename";
 import {
   ListContactsQueryParams,
   CreateContactBody,
@@ -219,7 +220,7 @@ router.post(
         const up = await uploadPrivateToCloudinary(file.buffer, { folder: cldFolder("private/contacts") });
         stored[side] = {
           public_id: up.public_id,
-          file_name: file.originalname.slice(0, 255),
+          file_name: decodeUploadFilename(file.originalname).slice(0, 255),
           file_size: file.size,
           mime_type: file.mimetype.slice(0, 100),
           preview_url: generateSignedUrl(up.public_id, 900),

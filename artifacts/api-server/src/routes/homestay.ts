@@ -26,6 +26,7 @@ import { getAckRule } from "../lib/applicationEmails.js";
 import { sendHomestayHostEmail, sendLeadNotificationEmail } from "../lib/email.js";
 import { isCloudinaryConfigured, uploadPrivateToCloudinary, generateSignedUrl, cldFolder } from "../utils/cloudinary.js";
 import { logAction } from "../utils/auditLog.js";
+import { decodeUploadFilename } from "../lib/uploadFilename.js";
 import { parsePageParams, pageMeta } from "../utils/pagination.js";
 
 const HOMESTAY_ENTITY = "homestay_host_application";
@@ -357,7 +358,7 @@ homestayPortalRouter.post("/v1/homestay/documents", upload.single("file"), async
     entity_type: "HomestayHostApplication",
     entity_id: app.id,
     doc_type,
-    file_name: file.originalname.slice(0, 255),
+    file_name: decodeUploadFilename(file.originalname).slice(0, 255),
     file_size: file.size,
     mime_type: file.mimetype.slice(0, 100),
     cloudinary_public_id: uploaded.public_id,

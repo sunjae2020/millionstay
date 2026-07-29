@@ -19,6 +19,7 @@ import {
 import { requireServiceHostAuth, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth";
 import { isCloudinaryConfigured, uploadToCloudinary, uploadPrivateToCloudinary, generateSignedUrl, deleteFromCloudinary, cldFolder } from "../utils/cloudinary";
 import { parsePageParams, pageMeta } from "../utils/pagination";
+import { decodeUploadFilename } from "../lib/uploadFilename";
 
 const router: IRouter = Router();
 const ALLOWED_PHOTO_MIME = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"]);
@@ -279,7 +280,7 @@ router.post(
 
       const docType = String((req.body?.doc_type ?? "other")).toLowerCase();
       if (!DOC_TYPES.has(docType)) { res.status(400).json({ success: false, error: { code: "INVALID_TYPE", message: `doc_type must be one of: ${[...DOC_TYPES].join(", ")}` } }); return; }
-      const title = typeof req.body?.title === "string" && req.body.title.trim() ? req.body.title.trim() : file.originalname;
+      const title = typeof req.body?.title === "string" && req.body.title.trim() ? req.body.title.trim() : decodeUploadFilename(file.originalname);
 
       const uploaded = await uploadPrivateToCloudinary(file.buffer, { folder: cldFolder("partner-documents"), resource_type: "auto" });
       publicId = uploaded.public_id;
