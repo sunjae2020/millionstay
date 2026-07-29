@@ -13,11 +13,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useBrand } from "@/contexts/ThemeContext";
 import { SUPPORTED_CURRENCIES } from "@/lib/currency";
-import { ArrowLeft, Trash2, Save, Plus, FileDown, Eye, Mail } from "lucide-react";
+import { ArrowLeft, Trash2, Save, Plus, FileText } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentVersions } from "@/components/DocumentVersions";
 import { FileText as FileTextIcon } from "lucide-react";
+import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 
 interface LineItem { name: string; quantity: number; unit_price: number; }
 
@@ -47,6 +48,7 @@ export default function QuoteDetail() {
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<LineItem[]>([{ name: "", quantity: 1, unit_price: 0 }]);
   const [pdfBusy, setPdfBusy] = useState(false);
+  const { previewConfig, openPreview, closePreview } = useDocumentPreview();
   const [saving, setSaving] = useState(false);
 
   const { data: quote, refetch } = useQuery({
@@ -131,21 +133,6 @@ export default function QuoteDetail() {
     if (res.ok) { invalidate(); navigate("/documents/quotes"); }
   };
 
-  const handlePdf = async (mode: "download" | "preview") => {
-    setPdfBusy(true);
-    try {
-      const path = mode === "preview" ? `/api/v1/quotes/${id}/pdf?format=html` : `/api/v1/quotes/${id}/pdf`;
-      const res = await apiFetch(path);
-      if (!res.ok) { const b = await res.json().catch(() => null); throw new Error(b?.error ?? `HTTP ${res.status}`); }
-      const url = URL.createObjectURL(await res.blob());
-      if (mode === "preview") window.open(url, "_blank", "noopener,noreferrer");
-      else { const a = document.createElement("a"); a.href = url; a.download = `${quote?.quote_ref ?? "quote"}.pdf`; document.body.appendChild(a); a.click(); a.remove(); }
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    } catch (err) {
-      toast({ title: t("quote.toast_pdf_unavailable", "PDF unavailable"), description: err instanceof Error ? err.message : t("quote.error", "Error"), variant: "destructive" });
-    } finally { setPdfBusy(false); }
-  };
-
   const convertToInvoice = async () => {
     if (!window.confirm(t("quote.confirm_convert", "Convert this quote into a draft invoice?"))) return;
     try {
@@ -191,9 +178,13 @@ export default function QuoteDetail() {
             <Button variant="outline" onClick={() => navigate("/documents/quotes")}><ArrowLeft className="h-4 w-4 mr-1" /> {t("common.back", "Back")}</Button>
             {!isNew && (
               <>
-                <Button variant="outline" disabled={pdfBusy} onClick={() => handlePdf("preview")}><Eye className="h-4 w-4 mr-1" /> {t("quote.preview", "Preview")}</Button>
-                <Button variant="outline" disabled={pdfBusy} onClick={() => handlePdf("download")}><FileDown className="h-4 w-4 mr-1" /> {t("quote.pdf", "PDF")}</Button>
-                <Button variant="outline" disabled={pdfBusy} onClick={handleEmail}><Mail className="h-4 w-4 mr-1" /> {t("quote.email", "Email")}</Button>
+                <Button variant="outline" disabled={pdfBusy} onClick={() => openPreview({
+                  title: quote?.quote_ref ?? t("quote.quote", "Quote"),
+                  filename: `${quote?.quote_ref ?? "quote"}.pdf`,
+                  source: { kind: "api", path: `/api/v1/quotes/${id}/pdf` },
+                  onEmail: handleEmail,
+                  emailLabel: t("quote.email", "Email"),
+                })}><FileText className="h-4 w-4 mr-1" /> {t("quote.preview", "Preview")}</Button>
                 <DocumentVersions entityType="quote" entityId={Number(id)} freezeUrl={`/api/v1/quotes/${id}/freeze`} />
                 <Button variant="destructive" onClick={remove}><Trash2 className="h-4 w-4 mr-1" /> {t("common.delete", "Delete")}</Button>
               </>
@@ -303,6 +294,8 @@ export default function QuoteDetail() {
             </div>
           </div>
         </div>
+
+        <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
       </div>
     </Layout>
   );

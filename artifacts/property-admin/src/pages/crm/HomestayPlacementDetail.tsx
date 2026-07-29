@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatDate, formatDateTime } from "@/lib/date";
 import { useBrand } from "@/contexts/ThemeContext";
+import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 import { formatMoney } from "@/lib/currency";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -99,6 +100,7 @@ export default function HomestayPlacementDetail() {
   const [statusOpen, setStatusOpen] = useState(false);
   const [nextStatus, setNextStatus] = useState<PlacementStatus>("Active");
   const [sendOpen, setSendOpen] = useState(false);
+  const { previewConfig, openPreview, closePreview } = useDocumentPreview();
   const [sendSel, setSendSel] = useState({ applicant: true, host: true, agent: false, ops: false, serviceHost: false });
   const [chargeOpen, setChargeOpen] = useState(false);
   const [chargeKind, setChargeKind] = useState<"upfront" | "monthly">("upfront");
@@ -409,9 +411,17 @@ export default function HomestayPlacementDetail() {
                 {latestSigning.signed_at && <span className="text-xs text-muted-foreground">· {formatDateTime(latestSigning.signed_at)}</span>}
               </div>
               <div className="flex flex-wrap gap-2">
-                <a href={`${PUBLIC_SIGNING}/${latestSigning.token}/preview`} target="_blank" rel="noopener noreferrer">
-                  <Button size="sm" variant="outline" className="gap-1.5"><FileText className="h-4 w-4" /> {t("homestayPlacement.btn_preview")}</Button>
-                </a>
+                <Button size="sm" variant="outline" className="gap-1.5"
+                  onClick={() => openPreview({
+                    title: t("homestayPlacement.btn_preview"),
+                    filename: `placement-${id}.pdf`,
+                    // Signed placements have a frozen PDF; unsigned ones an HTML draft.
+                    source: { kind: "url", href: `${PUBLIC_SIGNING}/${latestSigning.token}/${contractSigned ? "pdf" : "preview"}` },
+                    onEmail: contractSigned ? () => { closePreview(); setSendOpen(true); } : undefined,
+                    emailLabel: t("homestayPlacement.btn_send"),
+                  })}>
+                  <FileText className="h-4 w-4" /> {t("homestayPlacement.btn_preview")}
+                </Button>
                 {!contractSigned && (
                   <button
                     onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/sign/${latestSigning.token}`); toast({ title: t("homestayPlacement.toast_link_copied") }); }}
@@ -422,9 +432,6 @@ export default function HomestayPlacementDetail() {
                 )}
                 {contractSigned && (
                   <>
-                    <a href={`${PUBLIC_SIGNING}/${latestSigning.token}/pdf`} target="_blank" rel="noopener noreferrer">
-                      <Button size="sm" variant="outline" className="gap-1.5"><FileText className="h-4 w-4" /> {t("homestayPlacement.btn_download")}</Button>
-                    </a>
                     <Button size="sm" className="gap-1.5" onClick={() => setSendOpen(true)}><Send className="h-4 w-4" /> {t("homestayPlacement.btn_send")}</Button>
                   </>
                 )}
@@ -556,6 +563,8 @@ export default function HomestayPlacementDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
     </Layout>
   );
 }

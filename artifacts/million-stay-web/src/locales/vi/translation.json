@@ -2687,5 +2687,15 @@
     "unavailable": "Liên kết không khả dụng",
     "unit": "Căn hộ",
     "upload_failed": "Tải ảnh lên thất bại."
+  },
+  "doc_preview": {
+    "title": "Xem trước tài liệu",
+    "loading": "Đang chuẩn bị tài liệu…",
+    "failed": "Không thể tải tài liệu.",
+    "print": "In",
+    "download": "Tải xuống",
+    "email": "Gửi email",
+    "close": "Đóng",
+    "new_tab": "Mở trong tab mới"
   }
 }

@@ -7,6 +7,7 @@ import { FileText, FileSignature, Send, Copy, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
 import { formatDateTime } from "@/lib/date";
+import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 
 const SIGNING_API = "/api/v1/contract-signing";
 const PUBLIC_SIGNING = "/api/v1/public/contract-signing";
@@ -37,6 +38,7 @@ export function HomestaySignatureCard({
   const { t } = useTranslation();
   const { toast } = useToast();
   const [sendOpen, setSendOpen] = useState(false);
+  const { previewConfig, openPreview, closePreview } = useDocumentPreview();
   const [sel, setSel] = useState({ applicant: true, agent: false, ops: false });
 
   const { data: signing, refetch: refetchSigning } = useQuery({
@@ -121,9 +123,19 @@ export function HomestaySignatureCard({
               {latest.signed_at && <span className="text-xs text-muted-foreground">· {formatDateTime(latest.signed_at)}</span>}
             </div>
             <div className="flex flex-wrap gap-2">
-              <a href={`${PUBLIC_SIGNING}/${latest.token}/preview`} target="_blank" rel="noopener noreferrer">
-                <Button size="sm" variant="outline" className="gap-1.5"><FileText className="h-4 w-4" /> {t("homestayDoc.btn_preview")}</Button>
-              </a>
+              <Button size="sm" variant="outline" className="gap-1.5"
+                onClick={() => openPreview({
+                  title: t("homestayDoc.btn_preview"),
+                  filename: `${latest.context_type}-${latest.id}.pdf`,
+                  // Signed documents have a frozen PDF; unsigned ones only an
+                  // HTML draft preview.
+                  source: { kind: "url", href: `${PUBLIC_SIGNING}/${latest.token}/${signed ? "pdf" : "preview"}` },
+                  // Only a signed document can be emailed on (via the resend picker).
+                  onEmail: signed ? () => { closePreview(); setSendOpen(true); } : undefined,
+                  emailLabel: t("homestayDoc.btn_resend"),
+                })}>
+                <FileText className="h-4 w-4" /> {t("homestayDoc.btn_preview")}
+              </Button>
               {!signed && (
                 <button
                   onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/sign/${latest.token}`); toast({ title: t("homestayDoc.toast_link_copied") }); }}
@@ -134,9 +146,6 @@ export function HomestaySignatureCard({
               )}
               {signed && (
                 <>
-                  <a href={`${PUBLIC_SIGNING}/${latest.token}/pdf`} target="_blank" rel="noopener noreferrer">
-                    <Button size="sm" variant="outline" className="gap-1.5"><FileText className="h-4 w-4" /> {t("homestayDoc.btn_download")}</Button>
-                  </a>
                   <Button size="sm" className="gap-1.5" onClick={() => setSendOpen(true)}><Send className="h-4 w-4" /> {t("homestayDoc.btn_resend")}</Button>
                 </>
               )}
@@ -185,6 +194,8 @@ export function HomestaySignatureCard({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
     </div>
   );
 }

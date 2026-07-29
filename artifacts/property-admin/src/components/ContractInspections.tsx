@@ -7,16 +7,15 @@
  * item-by-item filling happens on the mobile-friendly /inspections/:id page,
  * because it is done at the unit, on a phone.
  */
-import { useState } from "react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { ClipboardList, ExternalLink, FileDown, Loader2, Printer } from "lucide-react";
+import { ClipboardList, ExternalLink, FileText, Loader2, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { apiFetch, apiJson } from "@/lib/apiFetch";
-import { useToast } from "@/hooks/use-toast";
+import { apiJson } from "@/lib/apiFetch";
 import { formatDate } from "@/lib/date";
+import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 
 interface InspectionItem {
   hidden: boolean;
@@ -46,8 +45,7 @@ const STATUS_STYLES: Record<string, string> = {
 export default function ContractInspections({ contractId }: { contractId: string | number }) {
   const { t, i18n } = useTranslation();
   const [, navigate] = useLocation();
-  const { toast } = useToast();
-  const [busy, setBusy] = useState(false);
+  const { previewConfig, openPreview, closePreview } = useDocumentPreview();
 
   const lang = i18n.language;
   const { data: report, isLoading, error } = useQuery({
@@ -57,25 +55,11 @@ export default function ContractInspections({ contractId }: { contractId: string
     queryFn: async () => (await apiJson<{ data: Inspection }>(`/api/v1/contracts/${contractId}/inspection?lang=${encodeURIComponent(lang)}`)).data,
   });
 
-  async function openPdf(path: string, filename: string) {
-    setBusy(true);
-    try {
-      const res = await apiFetch(path);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    } catch (err) {
-      toast({ title: t("inspection.pdf_failed"), description: err instanceof Error ? err.message : undefined, variant: "destructive" });
-    } finally {
-      setBusy(false);
-    }
+  // Both the blank form and the filled checklist open in the shared preview
+  // (print / download / close). Checklists have no document-email endpoint —
+  // the tenant gets a signing link instead, from the checklist page.
+  function openPdf(path: string, filename: string, title: string) {
+    openPreview({ title, filename, source: { kind: "api", path } });
   }
 
   const visible = (report?.items ?? []).filter((i) => !i.hidden);
@@ -93,8 +77,8 @@ export default function ContractInspections({ contractId }: { contractId: string
           <p className="text-xs text-muted-foreground mt-0.5">{t("inspection.tab_desc")}</p>
         </div>
         <Button
-          size="sm" variant="outline" disabled={busy}
-          onClick={() => openPdf(`/api/v1/inspection-form/blank.pdf?lang=${encodeURIComponent(lang)}`, "unit-inspection-blank.pdf")}
+          size="sm" variant="outline"
+          onClick={() => openPdf(`/api/v1/inspection-form/blank.pdf?lang=${encodeURIComponent(lang)}`, "unit-inspection-blank.pdf", t("inspection.blank_pdf"))}
         >
           <Printer className="w-3.5 h-3.5 mr-1" />{t("inspection.blank_pdf")}
         </Button>
@@ -155,14 +139,16 @@ export default function ContractInspections({ contractId }: { contractId: string
               <ExternalLink className="w-3.5 h-3.5 mr-1" />{t("inspection.open")}
             </Button>
             <Button
-              size="sm" variant="outline" disabled={busy}
-              onClick={() => openPdf(`/api/v1/inspections/${report.id}/document.pdf?lang=${encodeURIComponent(lang)}`, `${report.report_ref}.pdf`)}
+              size="sm" variant="outline"
+              onClick={() => openPdf(`/api/v1/inspections/${report.id}/document.pdf?lang=${encodeURIComponent(lang)}`, `${report.report_ref}.pdf`, report.report_ref)}
             >
-              <FileDown className="w-3.5 h-3.5 mr-1" />{t("inspection.filled_pdf")}
+              <FileText className="w-3.5 h-3.5 mr-1" />{t("inspection.filled_pdf")}
             </Button>
           </div>
         </div>
       )}
+
+      <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
     </div>
   );
 }

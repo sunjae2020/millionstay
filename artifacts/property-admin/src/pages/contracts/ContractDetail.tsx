@@ -27,6 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DocumentVersions } from "@/components/DocumentVersions";
 import { HomestaySignatureCard } from "@/components/HomestaySignatureCard";
 import ContractInspections from "@/components/ContractInspections";
+import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 import { useBrand } from "@/contexts/ThemeContext";
 import { SUPPORTED_CURRENCIES } from "@/lib/currency";
 
@@ -393,20 +394,23 @@ export default function ContractDetail() {
     onError: (err: any) => toast({ title: t('contract.settlement_failed'), description: String(err?.message ?? err), variant: "destructive" }),
   });
 
-  const downloadReceipt = async (invoice: any) => {
-    try {
-      const res = await apiFetch(`/api/v1/invoices/${invoice.id}/receipt/pdf`);
-      if (!res.ok) throw new Error(await res.text());
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${invoice.invoice_ref ?? "receipt"}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      toast({ title: t('contract.receipt_failed'), description: err instanceof Error ? err.message : String(err), variant: "destructive" });
-    }
+  // Receipt for a paid invoice — opens the shared preview (print / download / email).
+  const previewReceipt = (invoice: any) => {
+    openPreview({
+      title: `${invoice.invoice_ref ?? t('contract.btn_receipt')} · ${t('contract.btn_receipt')}`,
+      filename: `${invoice.invoice_ref ?? "receipt"}.pdf`,
+      source: { kind: "api", path: `/api/v1/invoices/${invoice.id}/receipt/pdf` },
+      onEmail: async () => {
+        try {
+          const res = await apiFetch(`/api/v1/invoices/${invoice.id}/receipt/email`, { method: "POST" });
+          const body = await res.json().catch(() => null);
+          if (!res.ok) throw new Error(body?.error ?? `HTTP ${res.status}`);
+          toast({ title: t('contract.toast_email_sent'), description: t('contract.toast_email_sent_desc', { to: body?.to ?? t('contract.recipient') }) });
+        } catch (err) {
+          toast({ title: t('contract.toast_email_failed'), description: err instanceof Error ? err.message : String(err), variant: "destructive" });
+        }
+      },
+    });
   };
 
   const submitCostForm = () => {
@@ -489,40 +493,7 @@ export default function ContractDetail() {
 
   const { toast } = useToast();
   const [pdfBusy, setPdfBusy] = useState(false);
-  const handlePdf = async (mode: "download" | "preview") => {
-    setPdfBusy(true);
-    try {
-      const path = mode === "preview"
-        ? `/api/v1/contracts/${id}/pdf?format=html`
-        : `/api/v1/contracts/${id}/pdf`;
-      const res = await apiFetch(path);
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        throw new Error(body?.error ?? `HTTP ${res.status}`);
-      }
-      const url = URL.createObjectURL(await res.blob());
-      if (mode === "preview") {
-        window.open(url, "_blank", "noopener,noreferrer");
-      } else {
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${contract?.contract_ref ?? "contract"}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      }
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    } catch (err) {
-      toast({
-        title: t('contract.toast_pdf_unavailable'),
-        description: err instanceof Error ? err.message : t('contract.toast_pdf_failed'),
-        variant: "destructive",
-      });
-    } finally {
-      setPdfBusy(false);
-    }
-  };
-
+  const { previewConfig, openPreview, closePreview } = useDocumentPreview();
   const handleEmail = async () => {
     if (!window.confirm(t('contract.confirm_email'))) return;
     setPdfBusy(true);
@@ -595,14 +566,14 @@ export default function ContractDetail() {
               </Button>
               {!isNew && (
                 <>
-                  <Button type="button" variant="outline" disabled={pdfBusy} onClick={() => handlePdf("preview")}>
+                  <Button type="button" variant="outline" disabled={pdfBusy} onClick={() => openPreview({
+                    title: contract?.contract_ref ?? t('contract.btn_preview'),
+                    filename: `${contract?.contract_ref ?? "contract"}.pdf`,
+                    source: { kind: "api", path: `/api/v1/contracts/${id}/pdf` },
+                    onEmail: handleEmail,
+                    emailLabel: t('contract.btn_email'),
+                  })}>
                     <Eye className="h-4 w-4 mr-2" />{t('contract.btn_preview')}
-                  </Button>
-                  <Button type="button" variant="outline" disabled={pdfBusy} onClick={() => handlePdf("download")}>
-                    <FileDown className="h-4 w-4 mr-2" />PDF
-                  </Button>
-                  <Button type="button" variant="outline" disabled={pdfBusy} onClick={handleEmail}>
-                    <Mail className="h-4 w-4 mr-2" />{t('contract.btn_email')}
                   </Button>
                   <DocumentVersions entityType="contract" entityId={Number(id)} freezeUrl={`/api/v1/contracts/${id}/freeze`} />
                 </>
@@ -1002,7 +973,7 @@ export default function ContractDetail() {
                         <td className="px-4 py-3">
                           <div className="flex gap-1">
                             {invoice.status === "Paid" ? (
-                              <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => downloadReceipt(invoice)}>
+                              <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => previewReceipt(invoice)}>
                                 <FileDown className="w-3.5 h-3.5 mr-1" />{t('contract.btn_receipt')}
                               </Button>
                             ) : (
@@ -1474,6 +1445,8 @@ export default function ContractDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
     </Layout>
   );
 }

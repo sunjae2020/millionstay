@@ -350,7 +350,8 @@
     "save_failed": "Lưu thất bại",
     "click_to_edit": "Nhấp để chỉnh sửa",
     "remove": "Xóa",
-    "open_detail": "Mở trang chi tiết"
+    "open_detail": "Mở trang chi tiết",
+    "preview": "Xem trước"
   },
   "lang": {
     "label": "Ngôn ngữ"
@@ -4856,5 +4857,15 @@
     "source_contracts": "Nhận nhà / trả nhà",
     "source_bookings": "Nhận phòng / trả phòng",
     "source_invoices": "Hóa đơn & thu tiền"
+  },
+  "doc_preview": {
+    "title": "Xem trước tài liệu",
+    "loading": "Đang chuẩn bị tài liệu…",
+    "failed": "Không thể tải tài liệu.",
+    "print": "In",
+    "download": "Tải xuống",
+    "email": "Gửi email",
+    "close": "Đóng",
+    "new_tab": "Mở trong tab mới"
   }
 }

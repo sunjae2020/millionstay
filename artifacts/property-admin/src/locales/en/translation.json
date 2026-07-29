@@ -353,7 +353,8 @@
     "save_failed": "Save failed",
     "click_to_edit": "Click to edit",
     "remove": "Remove",
-    "open_detail": "Open detail page"
+    "open_detail": "Open detail page",
+    "preview": "Preview"
   },
   "lang": {
     "label": "Language",
@@ -4946,5 +4947,15 @@
     "source_contracts": "Move-in / move-out",
     "source_bookings": "Check-in / check-out",
     "source_invoices": "Billing & payments"
+  },
+  "doc_preview": {
+    "title": "Document preview",
+    "loading": "Preparing the document…",
+    "failed": "The document could not be loaded.",
+    "print": "Print",
+    "download": "Download",
+    "email": "Send email",
+    "close": "Close",
+    "new_tab": "Open in new tab"
   }
 }

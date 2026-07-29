@@ -331,6 +331,17 @@
       "tenancy": "賃貸契約",
       "placement": "配置",
       "passport": "パスポート"
-    }
+    },
+    "preview": "プレビュー"
+  },
+  "doc_preview": {
+    "title": "ドキュメントプレビュー",
+    "loading": "ドキュメントを準備しています…",
+    "failed": "ドキュメントを読み込めませんでした。",
+    "print": "印刷",
+    "download": "ダウンロード",
+    "email": "メールを送信",
+    "close": "閉じる",
+    "new_tab": "新しいタブで開く"
   }
 }

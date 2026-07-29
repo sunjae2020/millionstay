@@ -22,7 +22,7 @@ import { AccountIdentityPanel, type FillSource } from "@/components/AccountIdent
 import { EntityPreviewDialog, type EntityPreview } from "@/components/EntityPreviewDialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch, apiJson } from "@/lib/apiFetch";
-import { ArrowLeft, Save, ExternalLink, AlertTriangle, Building2, FileText, Download, Upload, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, ExternalLink, AlertTriangle, Building2, FileText, Eye, Upload, Trash2 } from "lucide-react";
 import { Link } from "wouter";
 import { useBrand } from "@/contexts/ThemeContext";
 import { SUPPORTED_CURRENCIES, formatMoney } from "@/lib/currency";
@@ -32,6 +32,7 @@ import { formatPersonName } from "@/lib/nameFormat";
 import { useModules } from "@/hooks/useModules";
 import { KoreanAddressSearch, type KoreanAddress } from "@/components/KoreanAddressSearch";
 import { formatDate } from "@/lib/date";
+import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 
 const ACCOUNT_TYPES_WITH_FINANCE = ["SpaceOwner", "Agent", "ServiceHost", "Partner", "HomestayHost"];
 
@@ -154,6 +155,7 @@ export default function AccountDetail() {
   const id = isNew ? null : parseInt(params.id ?? "0", 10);
   const [, navigate] = useLocation();
   const qc = useQueryClient();
+  const { previewConfig, openPreview, closePreview } = useDocumentPreview();
 
   const { data: account, isLoading } = useGetAccount(
     id!, { query: { enabled: !isNew && !!id, queryKey: getGetAccountQueryKey(id!) } }
@@ -1001,10 +1003,11 @@ export default function AccountDetail() {
                           <td className="px-4 py-3 text-muted-foreground">{d.doc_type}</td>
                           <td className="px-4 py-3 text-muted-foreground">{formatDate(d.created_at)}</td>
                           <td className="px-4 py-3 text-right whitespace-nowrap">
-                            <a href={d.signed_url} target="_blank" rel="noreferrer"
+                            <button type="button"
+                              onClick={() => openPreview({ title: d.file_name, filename: d.file_name, source: { kind: "url", href: d.signed_url } })}
                               className="text-primary hover:underline inline-flex items-center gap-1 text-xs">
-                              <Download className="h-3.5 w-3.5" /> {t('common.download')}
-                            </a>
+                              <Eye className="h-3.5 w-3.5" /> {t('common.preview', 'Preview')}
+                            </button>
                             <button type="button" onClick={() => void handleDocDelete(d.id)}
                               className="ml-3 text-destructive hover:underline inline-flex items-center gap-1 text-xs">
                               <Trash2 className="h-3.5 w-3.5" /> {t('common.remove')}
@@ -1174,6 +1177,7 @@ export default function AccountDetail() {
       </div>
 
       <EntityPreviewDialog preview={preview} onClose={() => setPreview(null)} />
+      <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
     </Layout>
   );
 }

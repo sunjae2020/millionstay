@@ -31,6 +31,7 @@ import { useBrand } from "@/contexts/ThemeContext";
 import { SUPPORTED_CURRENCIES } from "@/lib/currency";
 import { BookingConditionReports } from "./BookingConditionReports";
 import { BookingDepositSettlement } from "./BookingDepositSettlement";
+import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -83,6 +84,7 @@ export default function BookingDetail() {
   const [, setLocation] = useLocation();
   const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState("details");
+  const { previewConfig, openPreview, closePreview } = useDocumentPreview();
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [extendDialogOpen, setExtendDialogOpen] = useState(false);
   const [rejectDocId, setRejectDocId] = useState<number | null>(null);
@@ -514,7 +516,12 @@ export default function BookingDetail() {
                         <tr key={doc.id} className="border-b hover:bg-gray-50">
                           <td className="px-4 py-3">{doc.doc_type ?? "—"}</td>
                           <td className="px-4 py-3 text-primary">
-                            {doc.file_url ? <a href={doc.file_url} target="_blank" rel="noreferrer" className="hover:underline">{doc.file_name ?? doc.file_url}</a> : doc.file_name ?? "—"}
+                            {doc.file_url
+                              ? <button type="button" className="hover:underline text-left"
+                                  onClick={() => openPreview({ title: doc.file_name ?? doc.doc_type ?? "", filename: doc.file_name ?? "document", source: { kind: "url", href: doc.file_url! } })}>
+                                  {doc.file_name ?? doc.file_url}
+                                </button>
+                              : doc.file_name ?? "—"}
                           </td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${DOC_STATUS_COLORS[doc.verified_status] ?? "bg-gray-100 text-gray-700"}`}>
@@ -911,6 +918,8 @@ export default function BookingDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
     </Layout>
   );
 }

@@ -331,6 +331,17 @@
       "tenancy": "임대차계약",
       "placement": "배정서",
       "passport": "여권"
-    }
+    },
+    "preview": "미리보기"
+  },
+  "doc_preview": {
+    "title": "문서 미리보기",
+    "loading": "문서를 준비하는 중…",
+    "failed": "문서를 불러오지 못했습니다.",
+    "print": "인쇄",
+    "download": "다운로드",
+    "email": "이메일 보내기",
+    "close": "닫기",
+    "new_tab": "새 탭에서 열기"
   }
 }

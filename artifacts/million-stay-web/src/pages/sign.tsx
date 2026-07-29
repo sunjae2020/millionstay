@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRoute } from "wouter";
-import { Loader2, CheckCircle2, AlertCircle, FileText, Download, ArrowRight } from "lucide-react";
+import { Loader2, CheckCircle2, AlertCircle, FileText, ArrowRight } from "lucide-react";
 import { HomestayLayout } from "@/components/homestay/HomestayLayout";
 import { HsPageHero } from "@/components/homestay/sections";
 import { HS, HS_FONT, HS_TINT } from "@/lib/homestay-theme";
@@ -15,6 +15,7 @@ import {
   type SigningRequest,
 } from "@/lib/signing-api";
 import { APP_NAME } from "../lib/appName";
+import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 
 const CONTEXT_LABEL: Record<string, string> = {
   host_app: "Host Family Application",
@@ -58,6 +59,7 @@ export default function Sign() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const { previewConfig, openPreview, closePreview } = useDocumentPreview();
 
   useEffect(() => {
     let active = true;
@@ -136,9 +138,11 @@ export default function Sign() {
               </h2>
               <p className="mt-2 text-gray-600">{loadError.message}</p>
               {loadError.code === "already_signed" && (
-                <a href={signedPdfUrl(token)} target="_blank" rel="noopener noreferrer" className="mt-6 inline-block">
-                  <HsButton><Download className="w-4 h-4" /> Download signed PDF</HsButton>
-                </a>
+                <div className="mt-6 inline-block">
+                  <HsButton onClick={() => openPreview({ title: "Signed document", filename: `${token}.pdf`, href: signedPdfUrl(token) })}>
+                    <FileText className="w-4 h-4" /> View signed PDF
+                  </HsButton>
+                </div>
               )}
             </div>
           )}
@@ -155,9 +159,9 @@ export default function Sign() {
                 Your signature has been recorded. A signed PDF copy has been emailed to you.
               </p>
               <div className="mt-7 flex flex-col sm:flex-row items-center justify-center gap-3">
-                <a href={signedPdfUrl(token)} target="_blank" rel="noopener noreferrer">
-                  <HsButton><Download className="w-4 h-4" /> Download signed PDF</HsButton>
-                </a>
+                <HsButton onClick={() => openPreview({ title: "Signed document", filename: `${token}.pdf`, href: signedPdfUrl(token) })}>
+                  <FileText className="w-4 h-4" /> View signed PDF
+                </HsButton>
                 <a
                   href={isHost ? "/host-portal" : "/"}
                   className="inline-flex items-center gap-2 rounded-xl border px-5 py-3 text-sm font-semibold transition"
@@ -173,11 +177,14 @@ export default function Sign() {
           {!loading && req && !done && (
             <div className={`${card} p-6 md:p-8`}>
               {/* Preview the full application before signing */}
-              <a
-                href={previewUrl(token)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-between rounded-xl border px-4 py-3 transition hover:opacity-90"
+              <button
+                type="button"
+                onClick={() => openPreview({
+                  title: `Your ${contextLabel.toLowerCase()}`,
+                  filename: `${token}.pdf`,
+                  href: previewUrl(token),
+                })}
+                className="w-full flex items-center justify-between rounded-xl border px-4 py-3 transition hover:opacity-90"
                 style={{ borderColor: HS.cream, backgroundColor: HS_TINT.cream }}
               >
                 <span className="flex items-center gap-2 text-sm font-semibold" style={{ color: HS.darkBrown }}>
@@ -185,7 +192,7 @@ export default function Sign() {
                   Preview your {contextLabel.toLowerCase()} (PDF)
                 </span>
                 <ArrowRight className="w-4 h-4" style={{ color: HS.brand }} />
-              </a>
+              </button>
 
               <h2 className="mt-7 text-lg font-bold" style={{ fontFamily: HS_FONT.head, color: HS.darkBrown }}>
                 Sign below
@@ -230,6 +237,8 @@ export default function Sign() {
           )}
         </div>
       </section>
+
+      <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
     </HomestayLayout>
   );
 }

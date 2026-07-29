@@ -125,6 +125,18 @@ gates it, so keep it green. Two notable classes were fixed:
   the key there, then fill every other locale via `scripts/translate-i18n.mjs`
   (or the admin AI-translate endpoint) and verify before calling the change done.
   When new content's translatability is unclear, confirm by text first.
+- **Documents open in the preview modal, never a bare download.** Every PDF,
+  report or sample a user can view — existing and **all future ones** — goes
+  through the shared `DocumentPreviewDialog` + `useDocumentPreview()` hook
+  (`src/components/DocumentPreviewDialog.tsx`, one copy per app: `property-admin`,
+  `million-stay-web`, `owner-portal`; add one to a portal the first time it needs
+  a document). It renders the document inline and offers **새 탭 / 인쇄 /
+  다운로드 / 이메일 보내기 / 닫기**; pass `onEmail` only when the document type
+  actually has a send endpoint (invoice, receipt, quote, contract, signed
+  e-sign doc), and omit it otherwise (settlements, checklists, samples).
+  Sources are `{ kind: "api", path, init? }` for authenticated server-rendered
+  PDFs or `{ kind: "url", href }` for signed/public URLs. Do not add a new
+  `a.download = …` / `window.open(blobUrl)` path.
 - **Money columns** (`invoices.amount`, `promotions.discount_amount`) are
   `numeric(10,2)` → Drizzle returns **strings**; wrap with `Number()` before math.
 - **Lookup endpoints** return `{ id, display, ...extra }` consistently.

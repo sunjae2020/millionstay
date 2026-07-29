@@ -6,11 +6,12 @@ import { Layout, PageHeader } from "@/components/Layout";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Eye, FileDown, FileText, Receipt, FileSignature, ExternalLink, Mail } from "lucide-react";
+import { Search, Eye, FileText, Receipt, FileSignature, ExternalLink } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
 import { formatDate } from "@/lib/date";
+import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 
@@ -65,6 +66,7 @@ export default function DocumentHub() {
   const [type, setType] = useState("_all");
   const [docLang, setDocLang] = useState("en");
   const [busy, setBusy] = useState<string | null>(null);
+  const { previewConfig, openPreview, closePreview } = useDocumentPreview();
 
   const { data, isLoading } = useQuery({
     queryKey: ["documents", q, type],
@@ -73,42 +75,18 @@ export default function DocumentHub() {
 
   const rows: HubDocument[] = Array.isArray(data) ? data : [];
 
-  // Render the document's PDF, then download it or open an HTML preview tab.
-  const handlePdf = async (doc: HubDocument, mode: "download" | "preview") => {
-    const key = `${doc.doc_type}:${doc.source_id}:${mode}`;
-    setBusy(key);
-    try {
-      const params = new URLSearchParams();
-      if (mode === "preview") params.set("format", "html");
-      if (docLang !== "en") params.set("lang", docLang);
-      const qs = params.toString();
-      const path = qs ? `${doc.pdf_url}?${qs}` : doc.pdf_url;
-      const res = await apiFetch(path);
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        throw new Error(body?.error ?? `HTTP ${res.status}`);
-      }
-      const url = URL.createObjectURL(await res.blob());
-      if (mode === "preview") {
-        window.open(url, "_blank", "noopener,noreferrer");
-      } else {
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${doc.ref}${doc.doc_type === "Receipt" ? "-receipt" : ""}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      }
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    } catch (err) {
-      toast({
-        title: t("document_hub.pdf_unavailable", "PDF unavailable"),
-        description: err instanceof Error ? err.message : t("document_hub.pdf_generate_failed", "Failed to generate document."),
-        variant: "destructive",
-      });
-    } finally {
-      setBusy(null);
-    }
+  // Open the document in the shared preview dialog (print / download / email).
+  const handlePreview = (doc: HubDocument) => {
+    const params = new URLSearchParams();
+    if (docLang !== "en") params.set("lang", docLang);
+    const qs = params.toString();
+    openPreview({
+      title: `${doc.ref} · ${doc.doc_type}`,
+      filename: `${doc.ref}${doc.doc_type === "Receipt" ? "-receipt" : ""}.pdf`,
+      source: { kind: "api", path: qs ? `${doc.pdf_url}?${qs}` : doc.pdf_url },
+      onEmail: () => handleEmail(doc),
+      emailLabel: t("document_hub.email_lang", "Email ({{lang}})", { lang: docLang.toUpperCase() }),
+    });
   };
 
   // Email the document (PDF + cover) to its recipient in the selected language.
@@ -195,16 +173,8 @@ export default function DocumentHub() {
         cell: (doc) => (
           <div className="flex items-center gap-1 justify-end">
             <button className="p-1.5 rounded hover:bg-muted transition-colors disabled:opacity-40"
-              title={t("document_hub.preview", "Preview")} disabled={!!busy} onClick={() => handlePdf(doc, "preview")}>
+              title={t("document_hub.preview", "Preview")} disabled={!!busy} onClick={() => handlePreview(doc)}>
               <Eye className="h-3.5 w-3.5 text-muted-foreground" />
-            </button>
-            <button className="p-1.5 rounded hover:bg-muted transition-colors disabled:opacity-40"
-              title={t("document_hub.download_pdf", "Download PDF")} disabled={!!busy} onClick={() => handlePdf(doc, "download")}>
-              <FileDown className="h-3.5 w-3.5 text-muted-foreground" />
-            </button>
-            <button className="p-1.5 rounded hover:bg-muted transition-colors disabled:opacity-40"
-              title={t("document_hub.email_lang", "Email ({{lang}})", { lang: docLang.toUpperCase() })} disabled={!!busy} onClick={() => handleEmail(doc)}>
-              <Mail className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
             <Link href={doc.detail_url}>
               <button className="p-1.5 rounded hover:bg-muted transition-colors" title={t("document_hub.open_record", "Open record")}>
@@ -262,6 +232,8 @@ export default function DocumentHub() {
           }
         />
       </div>
+
+      <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
     </Layout>
   );
 }

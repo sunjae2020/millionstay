@@ -8,7 +8,7 @@ import {
   MapPin,
   Home,
   FileText,
-  Download,
+  Eye,
   Calendar,
   DollarSign,
   Percent,
@@ -18,6 +18,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { formatDate } from "@/lib/dateFormat";
+import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 import { formatMoney } from "@/lib/money";
 
 interface Space {
@@ -116,6 +117,7 @@ export default function PropertyDetailPage() {
   const [desc, setDesc] = useState("");
   const [editingDesc, setEditingDesc] = useState(false);
   const [savingDesc, setSavingDesc] = useState(false);
+  const { previewConfig, openPreview, closePreview } = useDocumentPreview();
 
   useEffect(() => {
     setLoading(true);
@@ -399,12 +401,11 @@ export default function PropertyDetailPage() {
             ) : (
               <div className="space-y-2">
                 {data.documents.map((doc, i) => (
-                  <a
+                  <button
                     key={i}
-                    href={doc.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-between gap-3 p-3 border border-border rounded-lg bg-muted/10 hover:bg-muted/30 transition-colors"
+                    type="button"
+                    onClick={() => openPreview({ title: doc.file_name, filename: doc.file_name, href: doc.file_url })}
+                    className="w-full text-left flex items-center justify-between gap-3 p-3 border border-border rounded-lg bg-muted/10 hover:bg-muted/30 transition-colors"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
@@ -415,14 +416,16 @@ export default function PropertyDetailPage() {
                         </p>
                       </div>
                     </div>
-                    <Download className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                  </a>
+                    <Eye className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  </button>
                 ))}
               </div>
             )}
           </Section>
         </>
       )}
+
+      <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
     </Layout>
   );
 }

@@ -3,8 +3,9 @@ import { useTranslation } from "react-i18next";
 import { Layout } from "@/components/Layout";
 import { apiGet } from "@/lib/api";
 import { TablePagination } from "@/components/TablePagination";
+import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 import { formatDate } from "@/lib/dateFormat";
-import { FileText, Download, Search, FileSignature, ReceiptText, FileArchive, Loader2 } from "lucide-react";
+import { FileText, Eye, Search, FileSignature, ReceiptText, FileArchive, Loader2 } from "lucide-react";
 
 interface OwnerDocument {
   id: string;
@@ -53,6 +54,7 @@ export default function DocumentsPage() {
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const [total, setTotal] = useState(0);
   const [downloading, setDownloading] = useState<string | null>(null);
+  const { previewConfig, openPreview, closePreview } = useDocumentPreview();
 
   useEffect(() => {
     const id = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 300);
@@ -78,11 +80,13 @@ export default function DocumentsPage() {
     return () => { cancelled = true; };
   }, [page, pageSize, debouncedSearch]);
 
-  const download = async (doc: OwnerDocument) => {
+  // Resolve the short-lived signed URL, then show it in the preview dialog
+  // (print / download / close) instead of dumping it into a new tab.
+  const preview = async (doc: OwnerDocument) => {
     setDownloading(doc.id);
     try {
       const r = await apiGet<{ success: boolean; data: { url: string } }>(`/v1/owner/documents/${doc.id}/download`);
-      if (r.data?.url) window.open(r.data.url, "_blank", "noopener");
+      if (r.data?.url) openPreview({ title: doc.file_name, filename: doc.file_name, href: r.data.url });
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -161,12 +165,12 @@ export default function DocumentsPage() {
                   <td className="px-4 py-3 text-muted-foreground">{formatDate(doc.created_at)}</td>
                   <td className="px-4 py-3 text-right">
                     <button
-                      onClick={() => download(doc)}
+                      onClick={() => preview(doc)}
                       disabled={downloading === doc.id}
                       className="inline-flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50"
                     >
-                      {downloading === doc.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-                      {t("documents.download", "Download")}
+                      {downloading === doc.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Eye className="w-3.5 h-3.5" />}
+                      {t("documents.preview", "Preview")}
                     </button>
                   </td>
                 </tr>
@@ -184,6 +188,8 @@ export default function DocumentsPage() {
           onPageSize={setPageSize}
         />
       </div>
+
+      <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
     </Layout>
   );
 }

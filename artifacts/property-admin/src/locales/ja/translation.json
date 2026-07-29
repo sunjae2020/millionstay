@@ -353,7 +353,8 @@
     "save_failed": "保存に失敗しました",
     "click_to_edit": "クリックして編集",
     "remove": "削除",
-    "open_detail": "詳細ページを開く"
+    "open_detail": "詳細ページを開く",
+    "preview": "プレビュー"
   },
   "lang": {
     "label": "言語",
@@ -4946,5 +4947,15 @@
     "source_contracts": "入居・退去",
     "source_bookings": "チェックイン・アウト",
     "source_invoices": "請求・入金"
+  },
+  "doc_preview": {
+    "title": "ドキュメントプレビュー",
+    "loading": "ドキュメントを準備しています…",
+    "failed": "ドキュメントを読み込めませんでした。",
+    "print": "印刷",
+    "download": "ダウンロード",
+    "email": "メールを送信",
+    "close": "閉じる",
+    "new_tab": "新しいタブで開く"
   }
 }

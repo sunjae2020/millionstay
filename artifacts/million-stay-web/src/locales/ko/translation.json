@@ -2281,5 +2281,15 @@
     "unavailable": "이용할 수 없는 링크",
     "unit": "세대",
     "upload_failed": "사진 업로드에 실패했습니다."
+  },
+  "doc_preview": {
+    "title": "문서 미리보기",
+    "loading": "문서를 준비하는 중…",
+    "failed": "문서를 불러오지 못했습니다.",
+    "print": "인쇄",
+    "download": "다운로드",
+    "email": "이메일 보내기",
+    "close": "닫기",
+    "new_tab": "새 탭에서 열기"
   }
 }

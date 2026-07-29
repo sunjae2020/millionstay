@@ -2,10 +2,11 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { History, FileDown, Lock } from "lucide-react";
+import { History, Eye, Lock } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { formatDateTime } from "@/lib/date";
+import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 
 interface Snapshot {
   id: string;
@@ -36,6 +37,7 @@ export function DocumentVersions({
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [freezing, setFreezing] = useState(false);
+  const { previewConfig, openPreview, closePreview } = useDocumentPreview();
 
   const queryKey = ["doc-snapshots", entityType, String(entityId)];
   const { data, isLoading } = useQuery({
@@ -95,10 +97,14 @@ export function DocumentVersions({
                     </div>
                   </div>
                   {s.download_url ? (
-                    <a href={s.download_url} target="_blank" rel="noopener noreferrer"
-                      className="p-1.5 rounded hover:bg-muted" title="Download this version">
-                      <FileDown className="h-4 w-4 text-muted-foreground" />
-                    </a>
+                    <button type="button" className="p-1.5 rounded hover:bg-muted" title="Preview this version"
+                      onClick={() => openPreview({
+                        title: `${s.file_name} · v${s.version ?? "?"}`,
+                        filename: s.file_name,
+                        source: { kind: "url", href: s.download_url! },
+                      })}>
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    </button>
                   ) : <span className="text-xs text-muted-foreground">unavailable</span>}
                 </div>
               ))}
@@ -111,6 +117,8 @@ export function DocumentVersions({
           </div>
         </DialogContent>
       </Dialog>
+
+      <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
     </>
   );
 }

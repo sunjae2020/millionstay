@@ -13,7 +13,7 @@ import { useRoute } from "wouter";
 import { useTranslation } from "react-i18next";
 import {
   AlertCircle, Camera, Check, CheckCircle2, ChevronDown, ChevronRight,
-  Download, Loader2, Minus, TriangleAlert, X,
+  FileText, Loader2, Minus, TriangleAlert, X,
 } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import SignaturePad from "@/components/SignaturePad";
+import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 import {
   getInspection, respondToItem, signInspection, uploadInspectionPhoto,
   inspectionPdfUrl, InspectionError,
@@ -50,6 +51,7 @@ export default function InspectionSign() {
   const [uploading, setUploading] = useState<number | null>(null);
   const [signerName, setSignerName] = useState("");
   const [signature, setSignature] = useState<string | null>(null);
+  const { previewConfig, openPreview, closePreview } = useDocumentPreview();
   const [consent, setConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -168,9 +170,14 @@ export default function InspectionSign() {
         </div>
         <h1 className="mt-5 text-2xl font-bold">{t("inspectionSign.done_title")}</h1>
         <p className="mt-2 text-muted-foreground">{t("inspectionSign.done_desc")}</p>
-        <a href={inspectionPdfUrl(token, i18n.language)} target="_blank" rel="noopener noreferrer" className="mt-6 inline-block">
-          <Button><Download className="w-4 h-4 mr-1.5" />{t("inspectionSign.download_pdf")}</Button>
-        </a>
+        <Button className="mt-6" onClick={() => openPreview({
+          title: t("inspectionSign.download_pdf"),
+          filename: `${token}.pdf`,
+          href: inspectionPdfUrl(token, i18n.language),
+        })}>
+          <FileText className="w-4 h-4 mr-1.5" />{t("inspectionSign.download_pdf")}
+        </Button>
+        <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
       </div>,
     );
   }

@@ -14,10 +14,11 @@ import { useParams, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  ArrowLeft, Camera, Check, ChevronDown, ChevronRight, Copy, FileDown, Link2,
+  ArrowLeft, Camera, Check, ChevronDown, ChevronRight, Copy, FileText, Link2,
   Eye, EyeOff, Loader2, Mail, Minus, Plus, Trash2, TriangleAlert, X,
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
+import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -79,6 +80,7 @@ export default function InspectionDetail() {
   const { toast } = useToast();
 
   const [phase, setPhase] = useState<Phase>("move_in");
+  const { previewConfig, openPreview, closePreview } = useDocumentPreview();
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const [addOpen, setAddOpen] = useState(false);
   const [newLabel, setNewLabel] = useState("");
@@ -218,18 +220,14 @@ export default function InspectionDetail() {
     }
   }
 
-  async function downloadPdf() {
-    const res = await apiFetch(`/api/v1/inspections/${id}/document.pdf?lang=${encodeURIComponent(lang)}`);
-    if (!res.ok) { toast({ title: t("inspection.pdf_failed"), variant: "destructive" }); return; }
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${report?.report_ref ?? "inspection"}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  // Preview the checklist PDF (print / download). Delivery to the tenant goes
+  // through the signing link below, not a document email.
+  function previewPdf() {
+    openPreview({
+      title: report?.report_ref ?? t("inspection.tab_title"),
+      filename: `${report?.report_ref ?? "inspection"}.pdf`,
+      source: { kind: "api", path: `/api/v1/inspections/${id}/document.pdf?lang=${encodeURIComponent(lang)}` },
+    });
   }
 
   const statusOf = (item: InspectionItem): ItemStatus | null =>
@@ -298,7 +296,7 @@ export default function InspectionDetail() {
             </p>
           </div>
           <div className="flex flex-col gap-2 shrink-0">
-            <Button size="sm" variant="outline" onClick={downloadPdf}><FileDown className="w-3.5 h-3.5 mr-1" />PDF</Button>
+            <Button size="sm" variant="outline" onClick={previewPdf}><FileText className="w-3.5 h-3.5 mr-1" />PDF</Button>
           </div>
         </div>
 
@@ -652,6 +650,8 @@ export default function InspectionDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
     </Layout>
   );
 }

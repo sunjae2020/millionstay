@@ -2759,5 +2759,15 @@
     "unavailable": "Link unavailable",
     "unit": "Unit",
     "upload_failed": "Photo upload failed."
+  },
+  "doc_preview": {
+    "title": "Document preview",
+    "loading": "Preparing the document…",
+    "failed": "The document could not be loaded.",
+    "print": "Print",
+    "download": "Download",
+    "email": "Send email",
+    "close": "Close",
+    "new_tab": "Open in new tab"
   }
 }

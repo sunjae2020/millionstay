@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiJson, apiFetch } from "@/lib/apiFetch";
-import { useToast } from "@/hooks/use-toast";
+import { apiJson } from "@/lib/apiFetch";
 import { Button } from "@/components/ui/button";
-import { Plus, Wallet, Lock, Trash2, Send, FileDown } from "lucide-react";
+import { Plus, Wallet, Lock, Trash2, Send, FileText } from "lucide-react";
+import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 
@@ -63,12 +63,11 @@ export function BookingDepositSettlement({ bookingId }: { bookingId: string }) {
 
 function SettlementCard({ s, onChanged }: { s: Settlement; onChanged: () => void }) {
   const { t } = useTranslation();
-  const { toast } = useToast();
   const { currencyPosition } = useBrand();
   const money = (n: string | number, ccy: string) => formatMoney(n, ccy, currencyPosition);
   const editable = s.status === "draft" || s.status === "proposed";
   const [showAdd, setShowAdd] = useState(false);
-  const [pdfBusy, setPdfBusy] = useState(false);
+  const { previewConfig, openPreview, closePreview } = useDocumentPreview();
 
   async function addDeduction(p: { description: string; amount: number }) {
     await apiJson(`/api/v1/deposit-settlements/${s.id}/deductions`, { method: "POST", body: JSON.stringify(p) });
@@ -81,26 +80,15 @@ function SettlementCard({ s, onChanged }: { s: Settlement; onChanged: () => void
   async function propose() { await apiJson(`/api/v1/deposit-settlements/${s.id}/propose`, { method: "POST", body: "{}" }); onChanged(); }
   async function finalize() { await apiJson(`/api/v1/deposit-settlements/${s.id}/finalize`, { method: "POST", body: "{}" }); onChanged(); }
 
-  // Download the branded move-out confirmation ("퇴거 세대 확인서") PDF.
-  async function downloadPdf() {
-    setPdfBusy(true);
-    try {
-      const res = await apiFetch(`/api/v1/deposit-settlements/${s.id}/document.pdf`);
-      if (!res.ok) { const b = await res.json().catch(() => null); throw new Error(b?.error ?? `HTTP ${res.status}`); }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${s.settlement_ref}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    } catch (err) {
-      toast({ title: t("deposit_settlement.pdf_failed"), description: err instanceof Error ? err.message : undefined, variant: "destructive" });
-    } finally {
-      setPdfBusy(false);
-    }
+  // Preview the branded move-out confirmation ("퇴거 세대 확인서") — print / download.
+  // No email button: settlements have no document-email endpoint (the tenant is
+  // notified through the propose step instead).
+  function previewPdf() {
+    openPreview({
+      title: s.settlement_ref,
+      filename: `${s.settlement_ref}.pdf`,
+      source: { kind: "api", path: `/api/v1/deposit-settlements/${s.id}/document.pdf` },
+    });
   }
 
   return (
@@ -111,7 +99,7 @@ function SettlementCard({ s, onChanged }: { s: Settlement; onChanged: () => void
           <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_STYLE[s.status] ?? "bg-gray-100"}`}>{s.status}</span>
         </div>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={downloadPdf} disabled={pdfBusy}><FileDown className="w-3.5 h-3.5 mr-1" /> {t("deposit_settlement.download_pdf")}</Button>
+          <Button size="sm" variant="outline" onClick={previewPdf}><FileText className="w-3.5 h-3.5 mr-1" /> {t("deposit_settlement.download_pdf")}</Button>
           {s.status === "draft" && <Button size="sm" variant="outline" onClick={propose}><Send className="w-3.5 h-3.5 mr-1" /> {t("deposit_settlement.propose")}</Button>}
           {s.status !== "finalized" && <Button size="sm" onClick={finalize}><Lock className="w-3.5 h-3.5 mr-1" /> {t("deposit_settlement.finalize_post")}</Button>}
         </div>
@@ -145,6 +133,8 @@ function SettlementCard({ s, onChanged }: { s: Settlement; onChanged: () => void
       </div>
 
       {s.status === "finalized" && <div className="px-4 py-2 border-t bg-gray-50 text-xs text-muted-foreground flex items-center gap-1.5"><Lock className="w-3.5 h-3.5" /> {t("deposit_settlement.finalized_gl")}</div>}
+
+      <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
     </div>
   );
 }

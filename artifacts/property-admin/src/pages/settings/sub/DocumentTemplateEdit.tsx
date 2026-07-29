@@ -11,6 +11,7 @@ import { ArrowLeft, Save, Send, CheckCircle2, Eye, Code, Type, FileText } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiFetch";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 
 const API = "/api/v1/document-templates";
 // Guest-facing documents (invoice/quote/agreements) ship six locales.
@@ -59,6 +60,7 @@ export default function DocumentTemplateEdit() {
   const [locale, setLocale] = useState("en");
   const [drafts, setDrafts] = useState<Record<string, { subject: string; body_html: string }>>({});
   const [mode, setMode] = useState<"visual" | "html" | "preview">("visual");
+  const { previewConfig, openPreview, closePreview } = useDocumentPreview();
 
   // Seed editable drafts from the fetched translations.
   useEffect(() => {
@@ -108,16 +110,18 @@ export default function DocumentTemplateEdit() {
     onError: (e: any) => toast({ title: t("documentTemplate.error"), description: e.message, variant: "destructive" }),
   });
 
-  // Render the current locale's body to a real branded PDF and open it (the
-  // inline preview only shows the body HTML; this shows the final document).
-  const samplePdf = useMutation({
-    mutationFn: async () => {
-      const res = await apiFetch(`${API}/${id}/test-generate`, { method: "POST", body: JSON.stringify({ locale }) });
-      if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error ?? "Failed to generate sample PDF");
-      const blob = await res.blob();
-      window.open(URL.createObjectURL(blob), "_blank");
+  // Render the current locale's body to a real branded PDF in the shared
+  // preview dialog (the inline preview only shows the body HTML; this shows the
+  // final document, with print/download). Sample PDFs have no recipient, so no
+  // email button — use "Send test" on email templates instead.
+  const openSamplePdf = () => openPreview({
+    title: `${tpl?.name ?? t("documentTemplate.btn_sample_pdf")} · ${locale.toUpperCase()}`,
+    filename: `${tpl?.key ?? "template"}-${locale}-sample.pdf`,
+    source: {
+      kind: "api",
+      path: `${API}/${id}/test-generate`,
+      init: { method: "POST", body: JSON.stringify({ locale }) },
     },
-    onError: (e: any) => toast({ title: t("documentTemplate.error"), description: e.message, variant: "destructive" }),
   });
 
   if (isLoading) return <Layout><p className="p-6 text-sm text-muted-foreground">{t("common.loading")}</p></Layout>;
@@ -136,7 +140,7 @@ export default function DocumentTemplateEdit() {
           <div className="flex flex-wrap gap-2">
             <Link href="/settings/document-templates"><Button variant="outline" size="sm" className="gap-1.5"><ArrowLeft className="h-4 w-4" /> {t("common.back")}</Button></Link>
             {isEmail && <Button variant="outline" size="sm" className="gap-1.5" onClick={() => testSend.mutate()} disabled={testSend.isPending}><Send className="h-4 w-4" /> {t("documentTemplate.btn_test")}</Button>}
-            {!isEmail && <Button variant="outline" size="sm" className="gap-1.5" onClick={() => samplePdf.mutate()} disabled={samplePdf.isPending}><FileText className="h-4 w-4" /> {samplePdf.isPending ? t("common.loading") : t("documentTemplate.btn_sample_pdf")}</Button>}
+            {!isEmail && <Button variant="outline" size="sm" className="gap-1.5" onClick={openSamplePdf}><FileText className="h-4 w-4" /> {t("documentTemplate.btn_sample_pdf")}</Button>}
             <Button variant="outline" size="sm" className="gap-1.5" onClick={() => save.mutate()} disabled={save.isPending}><Save className="h-4 w-4" /> {t("documentTemplate.btn_save")}</Button>
             <Button size="sm" className="gap-1.5" onClick={() => publish.mutate()} disabled={publish.isPending}><CheckCircle2 className="h-4 w-4" /> {t("documentTemplate.btn_publish")}</Button>
           </div>
@@ -202,6 +206,8 @@ export default function DocumentTemplateEdit() {
           </div>
         </div>
       </div>
+
+      <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
     </Layout>
   );
 }

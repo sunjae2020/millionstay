@@ -321,6 +321,17 @@
       "tenancy": "Thuê nhà",
       "placement": "Bố trí",
       "passport": "Hộ chiếu"
-    }
+    },
+    "preview": "Xem trước"
+  },
+  "doc_preview": {
+    "title": "Xem trước tài liệu",
+    "loading": "Đang chuẩn bị tài liệu…",
+    "failed": "Không thể tải tài liệu.",
+    "print": "In",
+    "download": "Tải xuống",
+    "email": "Gửi email",
+    "close": "Đóng",
+    "new_tab": "Mở trong tab mới"
   }
 }

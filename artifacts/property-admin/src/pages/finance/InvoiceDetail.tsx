@@ -27,10 +27,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useBrand } from "@/contexts/ThemeContext";
 import { SUPPORTED_CURRENCIES } from "@/lib/currency";
-import { ArrowLeft, Trash2, Save, FileDown, Eye, Mail } from "lucide-react";
+import { ArrowLeft, Trash2, Save, FileText } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentVersions } from "@/components/DocumentVersions";
+import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-600",
@@ -62,42 +63,7 @@ export default function InvoiceDetail() {
   const [payMethod, setPayMethod] = useState("BankTransfer");
   const [pdfBusy, setPdfBusy] = useState(false);
   const { toast } = useToast();
-
-  // Generate the branded PDF, then either download it or open a preview tab.
-  const handlePdf = async (mode: "download" | "preview") => {
-    setPdfBusy(true);
-    try {
-      const path = mode === "preview"
-        ? `/api/v1/invoices/${id}/pdf?format=html`
-        : `/api/v1/invoices/${id}/pdf`;
-      const res = await apiFetch(path);
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        throw new Error(body?.error ?? `HTTP ${res.status}`);
-      }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      if (mode === "preview") {
-        window.open(url, "_blank", "noopener,noreferrer");
-      } else {
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${invoice?.invoice_ref ?? "invoice"}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      }
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    } catch (err) {
-      toast({
-        title: t('invoice.pdf_unavailable'),
-        description: err instanceof Error ? err.message : t('invoice.pdf_failed_desc'),
-        variant: "destructive",
-      });
-    } finally {
-      setPdfBusy(false);
-    }
-  };
+  const { previewConfig, openPreview, closePreview } = useDocumentPreview();
 
   // Email the branded invoice PDF to the billing account.
   const handleEmail = async () => {
@@ -207,14 +173,18 @@ export default function InvoiceDetail() {
             </Button>
             {!isNew && (
               <>
-                <Button variant="outline" disabled={pdfBusy} onClick={() => handlePdf("preview")}>
-                  <Eye className="h-4 w-4 mr-1" /> {t('invoice.btn_preview')}
-                </Button>
-                <Button variant="outline" disabled={pdfBusy} onClick={() => handlePdf("download")}>
-                  <FileDown className="h-4 w-4 mr-1" /> {t('invoice.btn_pdf')}
-                </Button>
-                <Button variant="outline" disabled={pdfBusy} onClick={handleEmail}>
-                  <Mail className="h-4 w-4 mr-1" /> {t('invoice.btn_email')}
+                <Button
+                  variant="outline"
+                  disabled={pdfBusy}
+                  onClick={() => openPreview({
+                    title: invoice?.invoice_ref ?? t('invoice.title'),
+                    filename: `${invoice?.invoice_ref ?? "invoice"}.pdf`,
+                    source: { kind: "api", path: `/api/v1/invoices/${id}/pdf` },
+                    onEmail: handleEmail,
+                    emailLabel: t('invoice.btn_email'),
+                  })}
+                >
+                  <FileText className="h-4 w-4 mr-1" /> {t('invoice.btn_preview')}
                 </Button>
                 <DocumentVersions entityType="invoice" entityId={Number(id)} freezeUrl={`/api/v1/invoices/${id}/freeze`} />
               </>
@@ -403,6 +373,8 @@ export default function InvoiceDetail() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
       </div>
     </Layout>
   );

@@ -353,7 +353,8 @@
     "save_failed": "저장 실패",
     "click_to_edit": "클릭하여 편집",
     "remove": "제거",
-    "open_detail": "상세 페이지 열기"
+    "open_detail": "상세 페이지 열기",
+    "preview": "미리보기"
   },
   "lang": {
     "label": "언어",
@@ -4946,5 +4947,15 @@
     "source_contracts": "입주·퇴거",
     "source_bookings": "체크인·체크아웃",
     "source_invoices": "청구·수납"
+  },
+  "doc_preview": {
+    "title": "문서 미리보기",
+    "loading": "문서를 준비하는 중…",
+    "failed": "문서를 불러오지 못했습니다.",
+    "print": "인쇄",
+    "download": "다운로드",
+    "email": "이메일 보내기",
+    "close": "닫기",
+    "new_tab": "새 탭에서 열기"
   }
 }
