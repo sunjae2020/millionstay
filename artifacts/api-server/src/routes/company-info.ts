@@ -9,7 +9,7 @@ import { permanentRetentionDate } from "../lib/retention";
 import { decodeUploadFilename } from "../lib/uploadFilename";
 import {
   uploadPrivateToCloudinary, deleteFromCloudinary,
-  cldFolder, isCloudinaryConfigured, generateSignedUrl,
+  cldFolder, isCloudinaryConfigured, fetchPrivateAsset,
 } from "../utils/cloudinary";
 
 /**
@@ -104,9 +104,46 @@ router.get("/v1/company-info/documents", requireOrgDocRole, async (_req, res): P
     file_size: d.file_size,
     mime_type: d.mime_type,
     created_at: d.created_at,
-    // 15-minute signed URL — the asset itself is private on Cloudinary.
-    signed_url: generateSignedUrl(d.cloudinary_public_id, 900, d.resource_type),
   })));
+});
+
+// GET /v1/company-info/documents/:docId/file — stream the asset itself.
+//
+// Not a Cloudinary URL handed to the browser: the account blocks PDF delivery
+// through the image pipeline, so a signed delivery URL returns 401 and the
+// preview renders blank. Fetching server-side sidesteps that, keeps the
+// account's api_key off the client, and re-checks the role on every view.
+router.get("/v1/company-info/documents/:docId/file", requireOrgDocRole, async (req, res): Promise<void> => {
+  const docId = String(req.params["docId"] ?? "");
+  if (!docId) { res.status(400).json({ error: "Invalid request" }); return; }
+  const [doc] = await db.select().from(documentsTable).where(and(
+    eq(documentsTable.id, docId),
+    eq(documentsTable.entity_type, ORG_ENTITY_TYPE),
+    eq(documentsTable.entity_id, ORG_ENTITY_ID),
+    isNull(documentsTable.deleted_at),
+  ));
+  if (!doc) { res.status(404).json({ error: "Not found" }); return; }
+
+  // Raw assets carry their extension in the public_id; image-pipeline assets
+  // need the format passed separately.
+  const ext = doc.file_name.includes(".") ? doc.file_name.split(".").pop()! : "";
+  const format = doc.resource_type === "raw" ? "" : ext;
+  try {
+    const asset = await fetchPrivateAsset(doc.cloudinary_public_id, {
+      format,
+      resourceType: doc.resource_type,
+    });
+    res.setHeader("Content-Type", doc.mime_type || asset.contentType);
+    res.setHeader("Content-Length", asset.buffer.length);
+    // inline so the preview modal renders it instead of downloading.
+    res.setHeader("Content-Disposition", `inline; filename*=UTF-8''${encodeURIComponent(doc.file_name)}`);
+    res.setHeader("Cache-Control", "private, no-store");
+    res.end(asset.buffer);
+  } catch (err) {
+    const reason = (err as any)?.message ?? String(err);
+    console.error(`[company-info] document fetch failed (${doc.file_name}):`, reason);
+    res.status(502).json({ error: `Could not load the document: ${reason}` });
+  }
 });
 
 router.post(

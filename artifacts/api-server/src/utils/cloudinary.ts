@@ -110,6 +110,34 @@ export function generateSignedUrl(
 }
 
 /**
+ * Fetch a private asset's bytes using Cloudinary's authenticated download API.
+ *
+ * Delivery URLs are not enough for documents: the account blocks PDF and ZIP
+ * delivery through the image pipeline, so `generateSignedUrl` on a stored PDF
+ * comes back 401 and a preview iframe renders blank. The download API is signed
+ * with the API secret rather than served from the CDN, so it is unaffected.
+ *
+ * Call this server-side only — the signed URL carries the account's api_key.
+ */
+export async function fetchPrivateAsset(
+  publicId: string,
+  { format = "", resourceType = "image", expiresInSeconds = 300 } = {},
+): Promise<{ buffer: Buffer; contentType: string }> {
+  if (!publicId) throw new Error("fetchPrivateAsset: publicId is required");
+  const url = cloudinary.utils.private_download_url(publicId, format, {
+    resource_type: resourceType,
+    type: "authenticated",
+    expires_at: Math.floor(Date.now() / 1000) + expiresInSeconds,
+  });
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Cloudinary download failed (${res.status})`);
+  return {
+    buffer: Buffer.from(await res.arrayBuffer()),
+    contentType: res.headers.get("content-type") ?? "application/octet-stream",
+  };
+}
+
+/**
  * Sprint A-6 — Upload a sensitive file (e.g. passport, contract PDF) using
  * Cloudinary `authenticated` mode so it can ONLY be served via signed URLs.
  *

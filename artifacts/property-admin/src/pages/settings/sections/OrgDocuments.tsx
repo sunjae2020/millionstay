@@ -11,9 +11,9 @@ import { formatDate } from "@/lib/date";
  * Settings → Organisation → Company documents.
  *
  * The company's own paperwork (business registration certificate, bank passbook
- * copy, seal certificate …) filed against the organisation itself. Files are
- * private on Cloudinary and served through 15-minute signed URLs; the backend
- * restricts every verb to SuperAdmin/Admin.
+ * copy, seal certificate …) filed against the organisation itself. Files live
+ * privately on Cloudinary and are streamed back through our own API, which
+ * restricts every verb — viewing included — to SuperAdmin/Admin.
  *
  * Retention is deliberately permanent — these are corporate records, not
  * personal information, so the APP 11 purge job never touches them and deletion
@@ -26,7 +26,6 @@ interface OrgDocument {
   file_size: number;
   mime_type: string;
   created_at: string;
-  signed_url: string;
 }
 
 const ENDPOINT = "/api/v1/company-info/documents";
@@ -119,7 +118,9 @@ export function OrgDocuments() {
                       onClick={() => openPreview({
                         title: d.file_name,
                         filename: d.file_name,
-                        source: { kind: "url", href: d.signed_url },
+                        // Served by our API, not a Cloudinary URL: the account
+                        // blocks PDF delivery, so a signed URL renders blank.
+                        source: { kind: "api", path: `${ENDPOINT}/${d.id}/file` },
                       })}
                       className="text-primary hover:underline inline-flex items-center gap-1 text-xs">
                       <Eye className="h-3.5 w-3.5" /> {t("common.preview", "Preview")}
