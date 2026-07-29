@@ -4671,7 +4671,8 @@
     "page_dev_nav": "Tòa nhà · Điều hướng",
     "page_dev_footer": "Tòa nhà · Chân trang",
     "page_dev_form": "Tòa nhà · Biểu mẫu dùng chung",
-    "site_homestay": "Homestay"
+    "site_homestay": "Homestay",
+    "badge_default": "mặc định"
   },
   "blog_categories": {
     "title": "Danh mục Blog",

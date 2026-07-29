@@ -4671,7 +4671,8 @@
     "page_dev_terms": "Building · Terms",
     "page_dev_nav": "Building · Navigation",
     "page_dev_footer": "Building · Footer",
-    "page_dev_form": "Building · Shared Forms"
+    "page_dev_form": "Building · Shared Forms",
+    "badge_default": "default"
   },
   "blog_categories": {
     "title": "Blog Categories",

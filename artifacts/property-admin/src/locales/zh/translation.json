@@ -4344,7 +4344,8 @@
     "page_dev_terms": "楼盘 · 使用条款",
     "page_dev_nav": "楼盘 · 导航",
     "page_dev_footer": "楼盘 · 页脚",
-    "page_dev_form": "楼盘 · 公共表单"
+    "page_dev_form": "楼盘 · 公共表单",
+    "badge_default": "默认"
   },
   "blog_categories": {
     "title": "博客分类",

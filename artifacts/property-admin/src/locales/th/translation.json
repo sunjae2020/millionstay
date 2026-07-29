@@ -4344,7 +4344,8 @@
     "page_dev_terms": "อาคาร · ข้อกำหนดการใช้งาน",
     "page_dev_nav": "อาคาร · เมนูนำทาง",
     "page_dev_footer": "อาคาร · ส่วนท้าย",
-    "page_dev_form": "อาคาร · ฟอร์มที่ใช้ร่วมกัน"
+    "page_dev_form": "อาคาร · ฟอร์มที่ใช้ร่วมกัน",
+    "badge_default": "ค่าเริ่มต้น"
   },
   "blog_categories": {
     "title": "หมวดหมู่บล็อก",

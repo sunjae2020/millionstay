@@ -232,6 +232,11 @@ export default function PageTranslations() {
           return (
             <>
               {shortKey}
+              {r.source === "bundle" && (
+                <Badge variant="outline" className="ml-1 text-[10px] px-1 py-0 font-normal text-muted-foreground">
+                  {t("page_translations.badge_default", { defaultValue: "default" })}
+                </Badge>
+              )}
               {!isEn && r.needs_review && (
                 <Badge className="ml-1 bg-amber-100 text-amber-800 hover:bg-amber-100 text-[10px] px-1 py-0">AI</Badge>
               )}

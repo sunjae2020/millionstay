@@ -1,18 +1,19 @@
 /**
  * seed-admin-i18n-keys.mjs
  *
- * Publishes the property-admin English resource bundle into the `translations`
- * table under the `admin.` namespace, so the admin console's own labels become
+ * Publishes the property-admin resource bundles into the `translations` table
+ * under the `admin.` namespace, so the admin console's own labels become
  * editable from Content → Page Translations → Admin Console.
  *
  * Model:
- *   - Only the English rows are seeded. They are the reference column in the
- *     editor and the source text the AI-translate button works from.
- *   - Other languages stay absent until somebody saves an override. The console
- *     overlays `admin.*` rows on top of its bundled JSON, so "no row" means
- *     "use the shipped translation" — nothing changes until an editor types.
- *   - Re-runnable: values are refreshed from the bundle and keys that no longer
- *     exist are pruned (across every language, since they are dead keys).
+ *   - Every shipped locale is seeded, so an editor opening any language sees the
+ *     wording the console currently shows instead of an empty field.
+ *   - Seeded rows carry source="bundle". The runtime overlay skips those (they
+ *     are identical to the JSON the app already ships), so a normal page load
+ *     downloads only the values a human actually changed. Saving through the UI
+ *     flips the row to source="human", which is what makes it take effect.
+ *   - Re-runnable: values are refreshed from the bundle, human edits are left
+ *     alone, and keys that no longer exist are pruned across every language.
  *
  * Usage:
  *   DATABASE_URL=... node scripts/seed-admin-i18n-keys.mjs
@@ -25,7 +26,8 @@ import { dirname, join } from "node:path";
 
 const { Pool } = pg;
 const __dir = dirname(fileURLToPath(import.meta.url));
-const EN_JSON = join(__dir, "../../property-admin/src/locales/en/translation.json");
+const LOCALES = join(__dir, "../../property-admin/src/locales");
+const LANGS = ["en", "ko", "ja", "zh", "th", "vi"];
 const PREFIX = "admin.";
 const DRY = process.argv.includes("--dry-run");
 
@@ -45,49 +47,61 @@ function flatten(obj, prefix = "", out = {}) {
   return out;
 }
 
-const bundle = flatten(JSON.parse(readFileSync(EN_JSON, "utf8")));
-const wanted = new Map(Object.entries(bundle).map(([k, v]) => [PREFIX + k, v]));
-console.log(`Bundle: ${wanted.size} admin keys from ${EN_JSON}`);
+function bundleFor(lang) {
+  const flat = flatten(JSON.parse(readFileSync(join(LOCALES, lang, "translation.json"), "utf8")));
+  return new Map(Object.entries(flat).map(([k, v]) => [PREFIX + k, v]));
+}
 
 const pool = new Pool({ connectionString: DATABASE_URL, ssl: { rejectUnauthorized: false } });
 
 try {
-  const existing = await pool.query(
-    `SELECT key, value FROM translations WHERE lang = 'en' AND key LIKE $1`,
+  const enKeys = new Set(bundleFor("en").keys());
+
+  for (const lang of LANGS) {
+    const wanted = bundleFor(lang);
+    const existing = await pool.query(
+      `SELECT key, value, source FROM translations WHERE lang = $1 AND key LIKE $2`,
+      [lang, PREFIX + "%"],
+    );
+    const have = new Map(existing.rows.map((r) => [r.key, r]));
+
+    // Human edits win — never overwrite what somebody typed in the UI.
+    const rows = [...wanted].filter(([k, v]) => {
+      const row = have.get(k);
+      return !row || (row.source !== "human" && row.value !== v);
+    });
+    const edited = [...have.values()].filter((r) => r.source === "human").length;
+
+    console.log(`${lang}: bundle ${wanted.size} · write ${rows.length} · human-edited kept ${edited}`);
+    if (DRY) continue;
+
+    // Chunked upsert — one statement per 500 keys keeps the parameter count sane.
+    for (let i = 0; i < rows.length; i += 500) {
+      const chunk = rows.slice(i, i + 500);
+      const values = chunk.map((_, n) => `($${n * 3 + 1}, $${n * 3 + 2}, $${n * 3 + 3}, 'bundle')`).join(",");
+      await pool.query(
+        `INSERT INTO translations (lang, key, value, source) VALUES ${values}
+         ON CONFLICT (lang, key) DO UPDATE
+           SET value = EXCLUDED.value, source = 'bundle', updated_at = now()
+           WHERE translations.source <> 'human'`,
+        chunk.flatMap(([k, v]) => [lang, k, v]),
+      );
+    }
+  }
+
+  // Keys that left the English bundle are dead everywhere.
+  const all = await pool.query(`SELECT DISTINCT key FROM translations WHERE key LIKE $1`, [PREFIX + "%"]);
+  const stale = all.rows.map((r) => r.key).filter((k) => !enKeys.has(k));
+  if (stale.length > 0 && !DRY) {
+    await pool.query(`DELETE FROM translations WHERE key = ANY($1::text[])`, [stale]);
+  }
+  console.log(`Pruned ${stale.length} dead keys${DRY ? " (dry run)" : ""}.`);
+
+  const total = await pool.query(
+    `SELECT lang, count(*)::int AS n FROM translations WHERE key LIKE $1 GROUP BY lang ORDER BY lang`,
     [PREFIX + "%"],
   );
-  const have = new Map(existing.rows.map((r) => [r.key, r.value]));
-
-  const toInsert = [...wanted].filter(([k]) => !have.has(k));
-  const toUpdate = [...wanted].filter(([k, v]) => have.has(k) && have.get(k) !== v);
-  const stale = [...have.keys()].filter((k) => !wanted.has(k));
-
-  console.log(`Insert ${toInsert.length} · update ${toUpdate.length} · prune ${stale.length}`);
-  if (DRY) {
-    for (const k of stale.slice(0, 20)) console.log(`  stale: ${k}`);
-    process.exit(0);
-  }
-
-  // Chunked upsert — one statement per 500 keys keeps the parameter count sane.
-  const rows = [...toInsert, ...toUpdate];
-  for (let i = 0; i < rows.length; i += 500) {
-    const chunk = rows.slice(i, i + 500);
-    const values = chunk.map((_, n) => `('en', $${n * 2 + 1}, $${n * 2 + 2}, 'human', now())`).join(",");
-    await pool.query(
-      `INSERT INTO translations (lang, key, value, source, reviewed_at) VALUES ${values}
-       ON CONFLICT (lang, key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
-      chunk.flatMap(([k, v]) => [k, v]),
-    );
-    console.log(`  upserted ${Math.min(i + 500, rows.length)}/${rows.length}`);
-  }
-
-  if (stale.length > 0) {
-    await pool.query(`DELETE FROM translations WHERE key = ANY($1::text[])`, [stale]);
-    console.log(`  pruned ${stale.length} dead keys (all languages)`);
-  }
-
-  const total = await pool.query(`SELECT count(*)::int AS n FROM translations WHERE key LIKE $1`, [PREFIX + "%"]);
-  console.log(`Done. ${total.rows[0].n} admin.* rows in translations.`);
+  console.log("Done:", total.rows.map((r) => `${r.lang}=${r.n}`).join(" "));
 } finally {
   await pool.end();
 }

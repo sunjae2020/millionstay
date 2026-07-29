@@ -1676,12 +1676,16 @@ router.get("/v1/public/translations/:lang", async (req, res): Promise<void> => {
   const lang = String(req.params.lang).toLowerCase();
   const prefix = String(req.query.prefix ?? "").trim();
   const rows = await db
-    .select({ key: translationsTable.key, value: translationsTable.value })
+    .select({ key: translationsTable.key, value: translationsTable.value, source: translationsTable.source })
     .from(translationsTable)
     .where(eq(translationsTable.lang, lang));
   const out: Record<string, string> = {};
   for (const r of rows) {
     if (r.value === "") continue;
+    // source="bundle" rows mirror the JSON the client already ships (seeded so
+    // editors can see and edit the current wording) — sending them back would
+    // just double the payload.
+    if (r.source === "bundle") continue;
     if (!prefix) {
       // Admin-console strings are a separate namespace — never ship them to the
       // public sites, which ask for this endpoint without a prefix.

@@ -4344,7 +4344,8 @@
     "page_dev_terms": "建物 · 利用規約",
     "page_dev_nav": "建物 · ナビゲーション",
     "page_dev_footer": "建物 · フッター",
-    "page_dev_form": "建物 · 共通フォーム"
+    "page_dev_form": "建物 · 共通フォーム",
+    "badge_default": "既定"
   },
   "blog_categories": {
     "title": "ブログカテゴリ",

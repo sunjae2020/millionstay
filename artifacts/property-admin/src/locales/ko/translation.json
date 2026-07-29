@@ -4344,7 +4344,8 @@
     "page_dev_terms": "건물 · 이용약관",
     "page_dev_nav": "건물 · 내비게이션",
     "page_dev_footer": "건물 · 푸터",
-    "page_dev_form": "건물 · 공통 폼"
+    "page_dev_form": "건물 · 공통 폼",
+    "badge_default": "기본값"
   },
   "blog_categories": {
     "title": "블로그 카테고리",
