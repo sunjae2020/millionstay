@@ -133,7 +133,10 @@ export async function htmlToPdf(html: string): Promise<Buffer> {
     const bytes = await page.pdf({
       format: "A4",
       printBackground: true,
-      margin: { top: "16mm", bottom: "16mm", left: "14mm", right: "14mm" },
+      // Page margins live in the document CSS (`@page` in theme.ts) — a CSS
+      // @page margin wins over this option, so keeping a value here would only
+      // be misleading. Zero here, real margins there.
+      margin: { top: "0", bottom: "0", left: "0", right: "0" },
     });
     return Buffer.from(bytes);
   } finally {

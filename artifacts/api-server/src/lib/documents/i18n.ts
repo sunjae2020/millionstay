@@ -186,6 +186,9 @@ const LABELS: Dict = {
 
   // ── Move-out confirmation / deposit settlement (퇴거 세대 확인서) ──────────
   "doctype.move_out":     { en: "Move-out Confirmation", ko: "퇴거 세대 확인서", zh: "退租确认书", ja: "退去世帯確認書", th: "หนังสือยืนยันการย้ายออก", vi: "Xác nhận trả phòng" },
+  "doctype.inspection":   { en: "Unit Inspection", ko: "세대점검표", zh: "房屋验收表", ja: "住戸点検表", th: "ใบตรวจสภาพห้อง", vi: "Phiếu kiểm tra căn hộ" },
+  "doctype.blank_form":   { en: "Blank Form", ko: "빈 양식", zh: "空白表格", ja: "白紙様式", th: "แบบฟอร์มเปล่า", vi: "Mẫu trống" },
+  "doctype.sample":       { en: "Sample", ko: "샘플", zh: "样本", ja: "サンプル", th: "ตัวอย่าง", vi: "Mẫu" },
   "moveout.heading":      { en: "Move-out Confirmation", ko: "퇴거 세대 확인서", zh: "退租确认书", ja: "退去世帯確認書", th: "หนังสือยืนยันการย้ายออก", vi: "Xác nhận trả phòng" },
   "moveout.asOf":         { en: "as of {date}",          ko: "{date} 기준",     zh: "截至 {date}",  ja: "{date} 基準",     th: "ณ วันที่ {date}",       vi: "tính đến {date}" },
   "moveout.household":    { en: "Household",             ko: "세대 정보",       zh: "住户信息",     ja: "世帯情報",        th: "ข้อมูลผู้เช่า",         vi: "Thông tin hộ" },

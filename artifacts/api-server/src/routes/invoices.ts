@@ -14,6 +14,7 @@ import { resolveTemplateBody } from "../lib/documents/templateEngine";
 import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
 import { formatDocMoney } from "../lib/documents/theme";
 import { sendDocumentEmail, resolveDocEmailCopy } from "../lib/email";
+import { buildDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename.js";
 import { getStripe } from "./stripe";
 import { postInvoicePaid } from "../lib/billing/gl";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
@@ -338,7 +339,7 @@ router.get("/v1/invoices/:id/pdf", async (req, res): Promise<void> => {
     return;
   }
 
-  await sendPdf(res, html, docInput.invoice_ref);
+  await sendPdf(res, html, { docName: t(lang, "doctype.invoice"), customerName: docInput.account_name });
 });
 
 /**
@@ -358,15 +359,18 @@ router.get("/v1/invoices/:id/receipt/pdf", async (req, res): Promise<void> => {
   const html = buildReceiptHtml(docInput, await resolveCompanyInfo(), !asHtml, lang, terms);
 
   if (asHtml) { res.type("html").send(html); return; }
-  await sendPdf(res, html, `${docInput.invoice_ref}-receipt`);
+  await sendPdf(res, html, { docName: t(lang, "doctype.receipt"), customerName: docInput.account_name });
 });
 
 /** Render HTML to PDF and stream it, mapping renderer failures to HTTP codes. */
-async function sendPdf(res: import("express").Response, html: string, refBase: string): Promise<void> {
+async function sendPdf(
+  res: import("express").Response,
+  html: string,
+  naming: { docName: string; customerName?: string | null },
+): Promise<void> {
   try {
     const pdf = await htmlToPdf(html);
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `inline; filename="${refBase}.pdf"`);
+    setDocumentDownloadHeaders(res, buildDocumentFilename(naming));
     res.setHeader("Content-Length", String(pdf.length));
     res.send(pdf);
   } catch (err) {
@@ -422,7 +426,11 @@ async function emailInvoiceDocument(req: import("express").Request, res: import(
     amountLabel,
     note: copy.note ?? fallbackNote,
     subject: copy.subject,
-    pdf, filename: `${docInput.invoice_ref}${kind === "receipt" ? "-receipt" : ""}.pdf`,
+    pdf,
+    filename: buildDocumentFilename({
+      docName: t(lang, kind === "receipt" ? "doctype.receipt" : "doctype.invoice"),
+      customerName: docInput.account_name,
+    }),
   });
 
   await db.insert(emailLogsTable).values({

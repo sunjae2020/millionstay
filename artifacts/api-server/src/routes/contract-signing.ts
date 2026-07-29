@@ -33,6 +33,15 @@ import {
   type RecipientSelection,
 } from "../services/applicationDocs.js";
 import { isCloudinaryConfigured, generateSignedUrl } from "../utils/cloudinary.js";
+import { buildDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename.js";
+import { normalizeLang, t } from "../lib/documents/i18n.js";
+
+/** Name of the first signer on a request — the person the document is about. */
+function primarySignerName(row: { signers: unknown }): string | null {
+  const signers = Array.isArray(row.signers) ? row.signers : [];
+  const first = signers.find((s): s is { name?: unknown } => !!s && typeof s === "object");
+  return typeof first?.name === "string" && first.name.trim() ? first.name.trim() : null;
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    PUBLIC — token-addressed signing (no auth)
@@ -282,9 +291,10 @@ contractSigningPublicRouter.get("/v1/public/contract-signing/:token/pdf", async 
       res.status(503).json({ error: "pdf_unavailable", message: "The signed PDF could not be generated." });
       return;
     }
-    const ref = await refForSigning(row);
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `inline; filename="${ref}.pdf"`);
+    setDocumentDownloadHeaders(res, buildDocumentFilename({
+      docName: t(normalizeLang(req.query.lang as string), "doctype.contract"),
+      customerName: primarySignerName(row),
+    }));
     res.send(pdf);
   } catch (err) {
     console.error("[ContractSign] pdf error:", err);

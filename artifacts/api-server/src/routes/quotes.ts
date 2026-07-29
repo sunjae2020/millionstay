@@ -7,6 +7,7 @@ import { logAction } from "../utils/auditLog";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import { buildQuoteHtml, type QuoteDocInput } from "../lib/documents/quoteDocument";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
+import { buildDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
 import { normalizeLang, t } from "../lib/documents/i18n";
 import { resolveTemplateBody } from "../lib/documents/templateEngine";
@@ -269,8 +270,9 @@ router.get("/v1/quotes/:id/pdf", async (req, res): Promise<void> => {
   if (asHtml) { res.type("html").send(html); return; }
   try {
     const pdf = await htmlToPdf(html);
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `inline; filename="${docInput.quote_ref}.pdf"`);
+    setDocumentDownloadHeaders(res, buildDocumentFilename({
+      docName: t(lang, "doctype.quote"), customerName: docInput.party_name,
+    }));
     res.setHeader("Content-Length", String(pdf.length));
     res.send(pdf);
   } catch (err) {
@@ -304,7 +306,7 @@ router.post("/v1/quotes/:id/email", async (req, res): Promise<void> => {
     to, toName: docInput.party_name, lang, docTypeLabel: t(lang, "doctype.quote"), ref: docInput.quote_ref,
     amountLabel: `${Number(docInput.total ?? 0).toLocaleString("en-AU", { minimumFractionDigits: 2 })} ${docInput.currency || DEFAULT_CURRENCY}`,
     note: docInput.valid_until ? t(lang, "email.note.validUntil", { date: docInput.valid_until }) : null,
-    pdf, filename: `${docInput.quote_ref}.pdf`,
+    pdf, filename: buildDocumentFilename({ docName: t(lang, "doctype.quote"), customerName: docInput.party_name }),
   });
 
   await db.insert(emailLogsTable).values({

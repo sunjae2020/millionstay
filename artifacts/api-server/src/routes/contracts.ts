@@ -9,6 +9,7 @@ import { resolveLeaseTermsFromProduct } from "../lib/leaseTerms";
 import { generateLeaseRentInvoices } from "../lib/billing/leaseRentInvoices";
 import { buildContractHtml, type ContractDocInput } from "../lib/documents/contractDocument";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
+import { buildDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
 import { normalizeLang, t, type DocLang } from "../lib/documents/i18n";
 import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
@@ -558,8 +559,9 @@ router.get("/v1/contracts/:id/pdf", async (req, res): Promise<void> => {
   if (asHtml) { res.type("html").send(html); return; }
   try {
     const pdf = await htmlToPdf(html);
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `inline; filename="${built.doc.contract_ref}.pdf"`);
+    setDocumentDownloadHeaders(res, buildDocumentFilename({
+      docName: t(lang, "doctype.contract"), customerName: built.doc.tenant_name,
+    }));
     res.setHeader("Content-Length", String(pdf.length));
     res.send(pdf);
   } catch (err) {
@@ -602,7 +604,7 @@ router.post("/v1/contracts/:id/email", async (req, res): Promise<void> => {
     amountLabel,
     note: copy.note ?? t(lang, "email.note.reviewAgreement"),
     subject: copy.subject,
-    pdf, filename: `${built.doc.contract_ref}.pdf`,
+    pdf, filename: buildDocumentFilename({ docName: t(lang, "doctype.contract"), customerName: built.doc.tenant_name }),
   });
 
   await db.insert(emailLogsTable).values({

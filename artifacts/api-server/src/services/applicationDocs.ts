@@ -22,6 +22,7 @@ import {
 } from "@workspace/db";
 import { buildServiceBriefHtml } from "../lib/documents/serviceBrief.js";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf.js";
+import { buildDocumentFilename } from "../lib/documents/filename.js";
 import {
   buildApplicationHtml,
   studentApplicationToDoc,
@@ -376,7 +377,7 @@ export async function emailApplicationPdf(
     : signing.context_type === "contract" ? "Accommodation Agreement"
     : "Student Application";
   const { entityType, templateCode } = logMeta(signing.context_type);
-  const filename = `${ref}.pdf`;
+  const filename = buildDocumentFilename({ docName: docTypeLabel, customerName: recipients.applicant?.name });
   const targets: Array<{ email: string; name?: string }> = [];
   if (select.applicant && recipients.applicant) targets.push(recipients.applicant);
   if (select.host && recipients.host) targets.push(recipients.host);
@@ -501,7 +502,7 @@ export async function sendServiceBriefs(placementId: number, ref: string): Promi
       const result = await sendDocumentEmail({
         to: email, toName: name, lang: "en",
         docTypeLabel: "Service Assignment", ref: `${ref}-SVC-${svc.id}`,
-        pdf, filename: `${ref}-service-${svc.id}.pdf`,
+        pdf, filename: buildDocumentFilename({ docName: "Service Assignment", customerName: name ?? studentLabel }),
         note: "You've been assigned a service for this placement. The brief is attached. It contains only the information required to perform and bill your service — please keep the student's details confidential.",
       });
       if (result.ok) sent.push(email);

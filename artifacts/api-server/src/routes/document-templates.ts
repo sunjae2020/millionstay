@@ -9,6 +9,8 @@ import { resolveTemplate, renderString, sampleVarsFromSchema } from "../lib/docu
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf.js";
 import { renderDocumentShell } from "../lib/documents/theme.js";
 import { renderSampleDocumentHtml } from "../lib/documents/sampleDocs.js";
+import { normalizeLang, t } from "../lib/documents/i18n.js";
+import { buildDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename.js";
 import { logAction } from "../utils/auditLog.js";
 
 const router: IRouter = Router();
@@ -162,8 +164,11 @@ router.post("/v1/document-templates/:id/test-generate", async (req, res): Promis
         forPrint: true,
       });
     const pdf = await htmlToPdf(html);
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `inline; filename="${tpl.key}-${locale}-sample.pdf"`);
+    // Samples have no counterparty — the "customer" slot carries the localised
+    // word for sample so the file is obviously not a real document.
+    setDocumentDownloadHeaders(res, buildDocumentFilename({
+      docName: tpl.name, customerName: t(normalizeLang(locale), "doctype.sample"),
+    }));
     res.setHeader("Content-Length", String(pdf.length));
     res.send(pdf);
   } catch (err) {

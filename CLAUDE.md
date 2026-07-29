@@ -137,6 +137,19 @@ gates it, so keep it green. Two notable classes were fixed:
   Sources are `{ kind: "api", path, init? }` for authenticated server-rendered
   PDFs or `{ kind: "url", href }` for signed/public URLs. Do not add a new
   `a.download = …` / `window.open(blobUrl)` path.
+- **Document filenames** follow `문서이름-고객이름_YYYYMMDD.pdf` and are built
+  **server-side** by `buildDocumentFilename()` +
+  `setDocumentDownloadHeaders()` ([artifacts/api-server/src/lib/documents/filename.ts](artifacts/api-server/src/lib/documents/filename.ts)),
+  which also writes the RFC 5987 `filename*` needed for Korean names. The
+  preview modal reads the name back off `Content-Disposition`, so the save
+  dialog always matches the API — never hand-roll a filename in a route or a
+  frontend download.
+- **Document page geometry** lives in one place: the `@page` rule in
+  [artifacts/api-server/src/lib/documents/theme.ts](artifacts/api-server/src/lib/documents/theme.ts).
+  A CSS `@page` margin overrides puppeteer's `margin` option (measured, not
+  assumed), so `pdf.ts` passes zeros. Every page gets the same 32px top/bottom
+  margin as the 32px horizontal padding; `@page :first` drops the top margin so
+  the brand bar still bleeds to the edge of page 1.
 - **Money columns** (`invoices.amount`, `promotions.discount_amount`) are
   `numeric(10,2)` → Drizzle returns **strings**; wrap with `Number()` before math.
 - **Lookup endpoints** return `{ id, display, ...extra }` consistently.

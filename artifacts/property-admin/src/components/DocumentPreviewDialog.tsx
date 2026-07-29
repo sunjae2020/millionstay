@@ -14,6 +14,20 @@ import { apiFetch } from "@/lib/apiFetch";
  *            account/contact documents). Fetched cross-origin is unreliable,
  *            so it is handed straight to the iframe.
  */
+/**
+ * Pull the filename out of a Content-Disposition header, preferring the RFC
+ * 5987 `filename*=UTF-8''…` form so Korean/Japanese names survive intact.
+ */
+function filenameFromContentDisposition(header: string | null): string | null {
+  if (!header) return null;
+  const extended = /filename\*=\s*UTF-8''([^;]+)/i.exec(header);
+  if (extended?.[1]) {
+    try { return decodeURIComponent(extended[1].trim()); } catch { /* fall through */ }
+  }
+  const plain = /filename\s*=\s*"([^"]+)"/i.exec(header) ?? /filename\s*=\s*([^;]+)/i.exec(header);
+  return plain?.[1]?.trim() || null;
+}
+
 export type DocumentPreviewSource =
   | { kind: "api"; path: string; init?: RequestInit }
   | { kind: "url"; href: string };
@@ -48,6 +62,9 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
   const { t } = useTranslation();
   const frameRef = useRef<HTMLIFrameElement>(null);
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
+  // Filename the server put in Content-Disposition — the API owns the
+  // 문서이름-고객이름_YYYYMMDD convention, so prefer it over the caller's guess.
+  const [serverFilename, setServerFilename] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [emailBusy, setEmailBusy] = useState(false);
@@ -68,6 +85,7 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
 
     if (source.kind === "url") {
       setObjectUrl(source.href);
+      setServerFilename(null);
       setError(null);
       setLoading(false);
       return;
@@ -76,6 +94,7 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
     setLoading(true);
     setError(null);
     setObjectUrl(null);
+    setServerFilename(null);
     void (async () => {
       try {
         const res = await apiFetch(source.path, source.init);
@@ -83,10 +102,12 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
           const body = await res.json().catch(() => null);
           throw new Error(body?.error ?? `HTTP ${res.status}`);
         }
+        const fromHeader = filenameFromContentDisposition(res.headers.get("Content-Disposition"));
         const blob = await res.blob();
         if (cancelled) return;
         created = URL.createObjectURL(blob);
         setObjectUrl(created);
+        if (fromHeader) setServerFilename(fromHeader);
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : String(err));
       } finally {
@@ -107,6 +128,7 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
   useEffect(() => {
     if (!open) {
       setObjectUrl(null);
+      setServerFilename(null);
       setError(null);
       setEmailBusy(false);
     }
@@ -133,13 +155,13 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
     if (!objectUrl || !config) return;
     const a = document.createElement("a");
     a.href = objectUrl;
-    a.download = config.filename;
+    a.download = serverFilename ?? config.filename;
     a.target = "_blank";
     a.rel = "noopener noreferrer";
     document.body.appendChild(a);
     a.click();
     a.remove();
-  }, [objectUrl, config]);
+  }, [objectUrl, config, serverFilename]);
 
   const handleEmail = useCallback(async () => {
     if (!config?.onEmail) return;

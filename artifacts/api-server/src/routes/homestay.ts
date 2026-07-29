@@ -19,6 +19,7 @@ import { formatFirstName, formatLastName } from "../lib/nameFormat.js";
 import { signPartnerJWT, requireHomestayAuth, invalidatePartnerCache, type PartnerAuthPayload } from "../middlewares/requirePartnerAuth.js";
 import { createSigningRequest } from "../services/contractSigning.js";
 import { renderApplicationPdf } from "../services/applicationDocs.js";
+import { buildDocumentFilename } from "../lib/documents/filename.js";
 import { hostApplicationToDoc } from "../lib/documents/applicationPdf.js";
 import { getAckRule } from "../lib/applicationEmails.js";
 import { sendHomestayHostEmail, sendLeadNotificationEmail } from "../lib/email.js";
@@ -264,7 +265,7 @@ homestayPublicRouter.post("/v1/public/homestay-host-applications", async (req, r
         let attachments: Array<{ filename: string; content: Buffer }> | undefined;
         if (rule.attach_pdf) {
           const pdf = await renderApplicationPdf(hostApplicationToDoc(appRow!, undefined, { signed: false }));
-          if (pdf) attachments = [{ filename: `${application_ref}.pdf`, content: pdf }];
+          if (pdf) attachments = [{ filename: buildDocumentFilename({ docName: "Host Family Application", customerName: `${first_name ?? ""} ${last_name ?? ""}`.trim() }), content: pdf }];
         }
         await sendHomestayHostEmail({ to: email, toName: first_name, applicationRef: application_ref, kind: "received", attachments });
       })().catch((e) => console.error("[homestay] received email failed:", e));

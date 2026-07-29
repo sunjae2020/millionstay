@@ -197,7 +197,16 @@ export function renderDocumentShell(opts: RenderShellOptions): string {
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Sans+Thai:wght@400;500;700&display=swap" />
 <style>
-  @page { size: A4; margin: 0; }
+  /* Page geometry — the single lever for every generated document (all builders
+     go through this shell). Left/right breathing room comes from the 32px
+     padding on .doc-header/.doc-body/.doc-footer, which only applies once at
+     the start of the flow; without a page margin, content that spills onto page
+     2+ would butt right up against the paper edge. So give every page the same
+     32px top/bottom margin as the horizontal padding, and drop it on page 1
+     only, where the brand bar and header are meant to bleed to the top edge.
+     A CSS @page margin overrides puppeteer's margin option — see pdf.ts. */
+  @page { size: A4; margin: 32px 0; }
+  @page :first { margin-top: 0; }
   * { box-sizing: border-box; }
   body {
     font-family: ${t.font};
