@@ -2,7 +2,17 @@ import { Router } from "express";
 import { DEFAULT_CURRENCY } from "../lib/currency";
 import { db, contractsTable, accountsTable, spacesTable, propertiesTable, contractProductsTable, accommodationCatalogTable, bookingsTable, recurringSchedulesTable, bookingServicesTable, invoicesTable, invoiceLineItemsTable, contractLineItemsTable, contractRelatedCostsTable } from "@workspace/db";
 import { eq, ilike, and, like, desc, isNull, inArray } from "drizzle-orm";
+import multer from "multer";
 import { logAction } from "../utils/auditLog";
+import { documentsTable } from "@workspace/db";
+import { cldFolder, fetchPrivateAsset, isCloudinaryConfigured, uploadPrivateToCloudinary } from "../utils/cloudinary";
+import { calcRetentionDate } from "../lib/retention";
+import { decodeUploadFilename } from "../lib/uploadFilename";
+import {
+  resolveSigningPolicy,
+  SIGNING_BLOCKED_MESSAGE,
+  type SigningPolicy,
+} from "../lib/contracts/signingPolicy";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import { getRateToAud } from "../lib/rateSnapshot";
 import { resolveLeaseTermsFromProduct } from "../lib/leaseTerms";
@@ -508,7 +518,8 @@ router.get("/v1/contracts/:id", async (req, res): Promise<void> => {
   const [row] = await db.select().from(contractsTable).where(eq(contractsTable.id, id));
   if (!row) { res.status(404).json({ error: "NOT_FOUND" }); return; }
   const [result] = await enrichContracts([row]);
-  res.json(result);
+  // 서명 방식은 서버가 정본이다 — 어드민은 이 값으로 온라인 서명 버튼을 켜고 끈다.
+  res.json({ ...result, signing_policy: resolveSigningPolicy(row) });
 });
 
 /** Build the branded-document input for a contract (enriched names + fields). */
@@ -1040,6 +1051,21 @@ export async function renderContractHtml(
   return buildContractHtml(built.doc, company, forPrint, lang);
 }
 
+/**
+ * 발행 전 관문 — 계약서 서식이 선택돼 있어야 한다.
+ *
+ * 세입자와 계약할 때 3가지 서식(일반 / 주택임대차표준 / 민간임대주택 표준) 중
+ * 하나를 반드시 고르게 하는 규칙이다. 저장은 자유롭게 두고(과거 이관 데이터가
+ * 그대로 열려야 하므로) **밖으로 나가거나 확정되는 행위**에서만 막는다:
+ * 이메일 발송 · 스냅숏 동결 · 서명 요청. 미리보기(/pdf)는 검토 단계라 열어 둔다.
+ */
+function leaseFormMissing(row: typeof contractsTable.$inferSelect): boolean {
+  return !row.lease_form?.trim();
+}
+
+const LEASE_FORM_REQUIRED_MESSAGE =
+  "계약서 서식을 먼저 선택해 주세요 — 일반 임대차계약서 / 주택임대차표준계약서 / 민간임대주택 표준임대차계약서 중 하나입니다.";
+
 /** 여러 PDF 를 한 파일로 잇는다(계약서 + 첨부서류). */
 async function mergePdfs(parts: Uint8Array[]): Promise<Buffer> {
   if (parts.length === 1) return Buffer.from(parts[0]);
@@ -1158,6 +1184,7 @@ router.post("/v1/contracts/:id/email", async (req, res): Promise<void> => {
   if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
   const built = await buildContractDocInput(id, normalizeLang(req.body?.lang as string));
   if (!built) { res.status(404).json({ error: "Not found" }); return; }
+  if (!built.leaseForm) { res.status(400).json({ error: LEASE_FORM_REQUIRED_MESSAGE, code: "LEASE_FORM_REQUIRED" }); return; }
 
   const parsed = parseRecipients(req.body?.to);
   if (parsed.invalid.length) { res.status(400).json({ error: `Invalid email address: ${parsed.invalid.join(", ")}` }); return; }
@@ -1211,6 +1238,7 @@ router.post("/v1/contracts/:id/freeze", async (req, res): Promise<void> => {
   const lang = normalizeLang(req.body?.lang as string);
   const built = await buildContractDocInput(id, lang);
   if (!built) { res.status(404).json({ error: "Not found" }); return; }
+  if (!built.leaseForm) { res.status(400).json({ error: LEASE_FORM_REQUIRED_MESSAGE, code: "LEASE_FORM_REQUIRED" }); return; }
   let pdf: Buffer;
   try {
     pdf = await renderContractPdf(built, lang);
@@ -1323,11 +1351,229 @@ router.post("/v1/contracts/:id/sign", async (req, res): Promise<void> => {
  * /sign/:token; on signing the contract advances Draft/Sent → Signed and a signed
  * PDF is generated + emailed (see contract-signing.ts / applicationDocs.ts).
  */
+/**
+ * 계약서 발행 설정만 부분 갱신 — 발행 위저드가 쓰는 전용 엔드포인트.
+ *
+ *   PATCH /v1/contracts/:id/issue-config
+ *   { lease_form, doc_attachments[], signing_mode, signing_mode_reason }
+ *
+ * 전체 PUT 은 보내지 않은 필드를 NULL 로 덮으므로(그리고 Signed/Active 는 잠김)
+ * 위저드가 서식·첨부·서명방식만 건드릴 수 있게 따로 뚫었다. 넘기지 않은 키는
+ * 그대로 둔다.
+ */
+router.patch("/v1/contracts/:id/issue-config", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const [existing] = await db.select().from(contractsTable).where(eq(contractsTable.id, id));
+  if (!existing) { res.status(404).json({ error: "NOT_FOUND" }); return; }
+  // 체결된 계약의 서식을 바꾸면 이미 받은 서명·발행본과 어긋난다.
+  if (existing.status === "Signed" || existing.status === "Active") {
+    res.status(409).json({ error: "체결·진행 중인 계약은 발행 설정을 바꿀 수 없습니다.", code: "CONTRACT_LOCKED" });
+    return;
+  }
+
+  const data = req.body ?? {};
+  const updates: Record<string, unknown> = { updated_at: new Date() };
+  if ("lease_form" in data) {
+    const form = typeof data.lease_form === "string" ? data.lease_form.trim() : "";
+    const valid = ["general", "housing_standard", "mlt_standard"];
+    if (form && !valid.includes(form)) { res.status(400).json({ error: "Unknown lease_form" }); return; }
+    updates.lease_form = form || null;
+  }
+  if ("doc_attachments" in data) updates.doc_attachments = normalizeAttachmentsInput(data.doc_attachments);
+  if ("signing_mode" in data) {
+    const mode = typeof data.signing_mode === "string" ? data.signing_mode.trim() : "";
+    if (mode && mode !== "online" && mode !== "wet") { res.status(400).json({ error: "Unknown signing_mode" }); return; }
+    updates.signing_mode = mode || null;
+  }
+  if ("signing_mode_reason" in data) {
+    const reason = typeof data.signing_mode_reason === "string" ? data.signing_mode_reason.trim() : "";
+    updates.signing_mode_reason = reason || null;
+  }
+
+  const [row] = await db.update(contractsTable).set(updates as never)
+    .where(eq(contractsTable.id, id)).returning();
+  await logAction({
+    entityType: "contract", entityId: id, action: "UPDATE",
+    oldValue: {
+      lease_form: existing.lease_form, doc_attachments: existing.doc_attachments,
+      signing_mode: existing.signing_mode,
+    },
+    newValue: updates,
+  }).catch(() => {});
+  res.json({ ...row, signing_policy: resolveSigningPolicy(row) });
+});
+
+/**
+ * 서명본 스캔 보관 — 출력·날인한 계약서를 다시 서류함에 넣는다.
+ *
+ *   POST /v1/contracts/:id/signed-scan   (multipart, field name "file")
+ *   body: signed_on=YYYY-MM-DD, set_signed=true|false, freeze_issued=true|false
+ *
+ * 1달 초과 계약은 온라인 서명을 쓰지 않으므로, 날인한 원본을 스캔해 올리는 이
+ * 경로가 유일한 체결 증빙이 된다. 옵션 둘을 모두 끄면 파일만 보관한다.
+ *  - set_signed     계약 상태를 Signed 로 바꾸고 signed_at 에 실제 날인일을 넣는다.
+ *  - freeze_issued  같은 시점의 발행본 PDF 도 함께 동결해 "보낸 원본 + 서명본"이
+ *                   한 쌍으로 서류함에 남게 한다.
+ */
+const scanUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
+
+/** 계약에 딸린 업로드 문서 목록(기본: 서명본 스캔). */
+router.get("/v1/contracts/:id/documents", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const docType = typeof req.query.doc_type === "string" && req.query.doc_type.trim()
+    ? req.query.doc_type.trim() : "signed_contract";
+  const rows = await db.select({
+    id: documentsTable.id,
+    doc_type: documentsTable.doc_type,
+    file_name: documentsTable.file_name,
+    file_size: documentsTable.file_size,
+    mime_type: documentsTable.mime_type,
+    created_at: documentsTable.created_at,
+  }).from(documentsTable).where(and(
+    eq(documentsTable.entity_type, "contract"),
+    eq(documentsTable.entity_id, id),
+    eq(documentsTable.doc_type, docType),
+    isNull(documentsTable.deleted_at),
+  )).orderBy(desc(documentsTable.created_at));
+  res.json(rows);
+});
+
+/**
+ * 업로드 문서를 서버가 받아서 그대로 흘려 준다.
+ *
+ * Cloudinary 서명 전송 URL 을 브라우저에 주면 안 된다 — 계정이 이미지 파이프라인의
+ * PDF 전송을 막아 401 이 나고 미리보기가 빈 화면이 된다(company-info 와 같은 이유).
+ */
+router.get("/v1/contracts/:id/documents/:docId/file", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  const docId = String(req.params.docId ?? "");
+  if (!Number.isFinite(id) || !docId) { res.status(400).json({ error: "Invalid request" }); return; }
+  const [doc] = await db.select().from(documentsTable).where(and(
+    eq(documentsTable.id, docId),
+    eq(documentsTable.entity_type, "contract"),
+    eq(documentsTable.entity_id, id),
+    isNull(documentsTable.deleted_at),
+  ));
+  if (!doc) { res.status(404).json({ error: "Not found" }); return; }
+
+  // raw 자산은 확장자가 public_id 에 붙어 있고, 이미지 파이프라인 자산은 format 을 따로 넘긴다.
+  const ext = doc.file_name.includes(".") ? doc.file_name.split(".").pop()! : "";
+  const format = doc.resource_type === "raw" ? "" : ext;
+  try {
+    const asset = await fetchPrivateAsset(doc.cloudinary_public_id, { format, resourceType: doc.resource_type });
+    res.setHeader("Content-Type", doc.mime_type || asset.contentType);
+    res.setHeader("Content-Length", asset.buffer.length);
+    res.setHeader("Content-Disposition", `inline; filename*=UTF-8''${encodeURIComponent(doc.file_name)}`);
+    res.setHeader("Cache-Control", "private, no-store");
+    res.end(asset.buffer);
+  } catch (err) {
+    const reason = (err as any)?.message ?? String(err);
+    console.error(`[contracts] document fetch failed (${doc.file_name}):`, reason);
+    res.status(502).json({ error: `Could not load the document: ${reason}` });
+  }
+});
+
+router.post("/v1/contracts/:id/signed-scan", scanUpload.single("file"), async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (!req.file) { res.status(400).json({ error: "A scanned file is required" }); return; }
+  if (!isCloudinaryConfigured()) { res.status(503).json({ error: "File storage is not configured" }); return; }
+
+  const [contract] = await db.select().from(contractsTable).where(eq(contractsTable.id, id));
+  if (!contract) { res.status(404).json({ error: "NOT_FOUND" }); return; }
+
+  const asBool = (v: unknown): boolean => v === true || v === "true" || v === "1";
+  const setSigned = asBool(req.body?.set_signed);
+  const freezeIssued = asBool(req.body?.freeze_issued);
+  // 업로드일과 실제 날인일이 다를 수 있어 날인일을 따로 받는다(비면 오늘).
+  const rawSignedOn = typeof req.body?.signed_on === "string" ? req.body.signed_on.trim() : "";
+  const signedOn = /^\d{4}-\d{2}-\d{2}$/.test(rawSignedOn) ? new Date(`${rawSignedOn}T00:00:00Z`) : new Date();
+  if (Number.isNaN(signedOn.getTime())) { res.status(400).json({ error: "Invalid signed_on date" }); return; }
+
+  let document;
+  try {
+    // resource_type:auto — PDF 는 raw 로 떨어져야 한다(이미지 파이프라인은 PDF 전송을 막는다).
+    const up = await uploadPrivateToCloudinary(req.file.buffer, {
+      folder: cldFolder("private/contracts"),
+      resource_type: "auto",
+    });
+    [document] = await db.insert(documentsTable).values({
+      entity_type: "contract",
+      entity_id: id,
+      doc_type: "signed_contract",
+      doc_ref: contract.contract_ref,
+      file_name: decodeUploadFilename(req.file.originalname).slice(0, 255),
+      file_size: req.file.size,
+      mime_type: req.file.mimetype.slice(0, 100),
+      cloudinary_public_id: up.public_id,
+      resource_type: up.resource_type ?? "image",
+      uploaded_by: (req as any).user?.id ?? null,
+      uploaded_by_type: "User",
+      retention_until: calcRetentionDate("contract"),
+    } as never).returning();
+  } catch (err) {
+    console.error("[contracts] signed scan upload failed:", err instanceof Error ? err.message : err);
+    res.status(500).json({ error: "File upload failed" });
+    return;
+  }
+
+  // 발행본 PDF 동결은 부수적 — 실패해도 스캔 보관을 되돌리지 않는다.
+  let frozen: Awaited<ReturnType<typeof freezeDocument>> = null;
+  if (freezeIssued) {
+    try {
+      const lang = normalizeLang(req.body?.lang as string);
+      const built = await buildContractDocInput(id, lang);
+      if (built?.leaseForm) {
+        const pdf = await renderContractPdf(built, lang);
+        frozen = await freezeDocument({
+          entityType: "contract", entityId: id,
+          docType: snapshotDocType("contract"), ref: built.doc.contract_ref, pdf,
+        });
+      }
+    } catch (err) {
+      console.error("[contracts] freeze alongside signed scan failed:", err instanceof Error ? err.message : err);
+    }
+  }
+
+  if (setSigned) {
+    await db.update(contractsTable)
+      .set({ status: "Signed", signed_at: signedOn, updated_at: new Date() })
+      .where(eq(contractsTable.id, id));
+  }
+
+  await logAction({
+    entityType: "contract", entityId: id, action: "UPDATE",
+    newValue: {
+      signed_scan_document_id: document?.id ?? null,
+      signed_on: signedOn.toISOString().slice(0, 10),
+      set_signed: setSigned,
+      frozen_version: frozen?.version ?? null,
+    },
+  }).catch(() => {});
+
+  res.status(201).json({ success: true, document, frozen, status: setSigned ? "Signed" : contract.status });
+});
+
 router.post("/v1/contracts/:id/issue-signing", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
   const [contract] = await db.select().from(contractsTable).where(eq(contractsTable.id, id));
   if (!contract) { res.status(404).json({ error: "NOT_FOUND" }); return; }
+  if (leaseFormMissing(contract)) {
+    res.status(400).json({ error: LEASE_FORM_REQUIRED_MESSAGE, code: "LEASE_FORM_REQUIRED" }); return;
+  }
+  // 온라인 서명은 단기(1달 이하) + 자사 일반 계약서에서만. 그 밖은 출력·날인 대상이다.
+  const policy = resolveSigningPolicy(contract);
+  if (!policy.online_allowed) {
+    res.status(409).json({
+      error: SIGNING_BLOCKED_MESSAGE[policy.blocked_reason ?? "long_term"],
+      code: "SIGNING_NOT_ALLOWED",
+      signing_policy: policy,
+    });
+    return;
+  }
 
   const signers: SignerSpec[] = [];
   if (contract.tenant_account_id) {

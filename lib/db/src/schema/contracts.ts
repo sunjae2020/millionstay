@@ -41,6 +41,10 @@ export const contractsTable = pgTable("contracts", {
   // 발급할 계약서 서식: housing_standard(법무부 주택임대차표준계약서) /
   // mlt_standard(민간임대주택 표준임대차계약서) / general(자사 일반 임대차계약서).
   lease_form: text("lease_form"),
+  // 서명 방식 수동 재지정: online(온라인 서명) / wet(출력 후 날인). null 이면
+  // 계약기간으로 자동 판정한다(1달 이하 = online). signingPolicy.ts 참고.
+  signing_mode: text("signing_mode"),
+  signing_mode_reason: text("signing_mode_reason"),
   // 계약서 뒤에 붙일 첨부 문서 키 목록(JSON 배열). leaseAttachments.ts 의 종류와 1:1.
   doc_attachments: text("doc_attachments"),
   // 민간임대주택 표준임대차계약서(별지 제24호서식) 법정 기재사항 — 0033.

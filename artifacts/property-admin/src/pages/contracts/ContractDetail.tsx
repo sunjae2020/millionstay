@@ -22,13 +22,20 @@ import {
 } from "@workspace/api-client-react";
 import { LookupSelect } from "@/components/LookupSelect";
 import { AccountLookupSelect } from "@/components/AccountLookupSelect";
-import { ArrowLeft, Save, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail, Receipt, ClipboardList, Wallet, Check } from "lucide-react";
+import { ArrowLeft, Save, Trash2, CalendarDays, Plus, Pencil, List, FileDown, Eye, Mail, Receipt, ClipboardList, Wallet, Check, FileSignature } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentVersions } from "@/components/DocumentVersions";
 import { HomestaySignatureCard } from "@/components/HomestaySignatureCard";
 import ContractInspections from "@/components/ContractInspections";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
+import {
+  ContractIssueWizard,
+  LEASE_ATTACHMENT_OPTIONS,
+  LEASE_FORM_OPTIONS,
+  type SigningPolicy,
+} from "@/components/ContractIssueWizard";
+import { SignedScanCard } from "@/components/SignedScanCard";
 import { useBrand } from "@/contexts/ThemeContext";
 import { SUPPORTED_CURRENCIES } from "@/lib/currency";
 
@@ -53,13 +60,6 @@ function parseAttachments(raw: unknown): string[] {
   }
 }
 
-/** 발급할 계약서 서식 — contracts.lease_form. */
-const LEASE_FORMS = [
-  { value: "general", labelKey: "contract.form_general" },
-  { value: "housing_standard", labelKey: "contract.form_housing_standard" },
-  { value: "mlt_standard", labelKey: "contract.form_mlt_standard" },
-];
-/** 계약서 뒤에 붙일 수 있는 첨부 문서 — api-server leaseAttachments.ts 와 키가 같아야 한다. */
 /**
  * 민간임대주택 표준임대차계약서(별지 제24호서식)가 요구하는 법정 기재사항의 선택지.
  * 값은 api-server mltStandardLeaseForm.ts 의 타입과 1:1 — 바꾸면 서식 체크박스가 어긋난다.
@@ -80,14 +80,6 @@ const MLT_YES_NO = ["", "yes", "no"] as const;
 const toTriState = (v: unknown): string => (v === true ? "yes" : v === false ? "no" : "");
 const fromTriState = (v: string): boolean | null => (v === "yes" ? true : v === "no" ? false : null);
 
-const LEASE_ATTACHMENTS = [
-  { value: "special_terms", labelKey: "contract.attach_special_terms" },
-  { value: "deposit_consent", labelKey: "contract.attach_deposit_consent" },
-  { value: "trust_confirmation", labelKey: "contract.attach_trust_confirmation" },
-  { value: "guarantee_undertaking", labelKey: "contract.attach_guarantee_undertaking" },
-  // 표준서식 원본의 [별지2] — 주택임대차표준계약서로 발급할 때만 의미가 있다(빈 양식 교부).
-  { value: "renewal_refusal", labelKey: "contract.attach_renewal_refusal" },
-];
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-700",
   Sent: "bg-blue-100 text-blue-700",
@@ -628,6 +620,17 @@ export default function ContractDetail() {
   const { toast } = useToast();
   const [pdfBusy, setPdfBusy] = useState(false);
   const { previewConfig, openPreview, closePreview } = useDocumentPreview();
+  const [wizardOpen, setWizardOpen] = useState(false);
+  // 서명 방식은 서버가 판정한다(GET /v1/contracts/:id → signing_policy).
+  const signingPolicy: SigningPolicy | null = (contract as any)?.signing_policy ?? null;
+  /** 계약서 PDF 미리보기 — 위저드의 검토·발행 단계도 이 모달을 그대로 쓴다. */
+  const openContractPreview = () => openPreview({
+    title: contract?.contract_ref ?? t('contract.btn_preview'),
+    filename: `${contract?.contract_ref ?? "contract"}.pdf`,
+    source: { kind: "api", path: `/api/v1/contracts/${id}/pdf` },
+    email: { recipientsPath: `/api/v1/contracts/${id}/email-recipients`, send: handleEmail },
+    emailLabel: t('contract.btn_email'),
+  });
   const handleEmail = async (to: string[]) => {
     setPdfBusy(true);
     try {
@@ -704,13 +707,10 @@ export default function ContractDetail() {
               </Button>
               {!isNew && (
                 <>
-                  <Button type="button" variant="outline" disabled={pdfBusy} onClick={() => openPreview({
-                    title: contract?.contract_ref ?? t('contract.btn_preview'),
-                    filename: `${contract?.contract_ref ?? "contract"}.pdf`,
-                    source: { kind: "api", path: `/api/v1/contracts/${id}/pdf` },
-                    email: { recipientsPath: `/api/v1/contracts/${id}/email-recipients`, send: handleEmail },
-                    emailLabel: t('contract.btn_email'),
-                  })}>
+                  <Button type="button" onClick={() => setWizardOpen(true)}>
+                    <FileSignature className="h-4 w-4 mr-2" />{t('contract.btn_issue')}
+                  </Button>
+                  <Button type="button" variant="outline" disabled={pdfBusy} onClick={openContractPreview}>
                     <Eye className="h-4 w-4 mr-2" />{t('contract.btn_preview')}
                   </Button>
                   <DocumentVersions entityType="contract" entityId={Number(id)} freezeUrl={`/api/v1/contracts/${id}/freeze`} />
@@ -734,14 +734,20 @@ export default function ContractDetail() {
                 <Badge className={statusColors[status] ?? ""}>{status}</Badge>
                 {contract.sent_at && <span className="text-xs text-muted-foreground">{t('contract.sent_at_label', { date: formatDate(contract.sent_at) })}</span>}
                 {contract.signed_at && <span className="text-xs text-muted-foreground">{t('contract.signed_at_label', { date: formatDate(contract.signed_at) })}</span>}
+                {signingPolicy && (
+                  <Badge variant="secondary" className="text-[11px]">
+                    {t(signingPolicy.mode === "online" ? 'contract.signing_online' : 'contract.signing_wet')}
+                    {signingPolicy.term_days != null && ` · ${t('contract.wiz_days', { count: signingPolicy.term_days })}`}
+                  </Badge>
+                )}
               </div>
               {fsmActions()}
             </div>
           )}
 
           <div className="grid grid-cols-1 gap-6 max-w-4xl">
-            {/* E-signature */}
-            {!isNew && contract && (
+            {/* E-signature — 단기(1달 이하) 계약만 온라인 서명 대상이다. */}
+            {!isNew && contract && signingPolicy?.online_allowed && (
               <HomestaySignatureCard
                 contextType="contract"
                 contextId={Number(id)}
@@ -749,6 +755,9 @@ export default function ContractDetail() {
                 issuePath={`/api/v1/contracts/${id}/issue-signing`}
               />
             )}
+
+            {/* 출력·날인 계약의 서명본 스캔 보관 */}
+            {!isNew && contract && <SignedScanCard contractId={Number(id)} />}
 
             {/* General */}
             <div className="border rounded-lg bg-white p-4 sm:p-6">
@@ -811,7 +820,7 @@ export default function ContractDetail() {
                     <Select value={field.value || undefined} onValueChange={field.onChange}>
                       <SelectTrigger><SelectValue placeholder={t('contract.ph_select_lease_form')} /></SelectTrigger>
                       <SelectContent>
-                        {LEASE_FORMS.map(f => <SelectItem key={f.value} value={f.value}>{t(f.labelKey)}</SelectItem>)}
+                        {LEASE_FORM_OPTIONS.map(f => <SelectItem key={f.value} value={f.value}>{t(f.labelKey)}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   )} />
@@ -824,7 +833,7 @@ export default function ContractDetail() {
                 <Label>{t('contract.label_doc_attachments')}</Label>
                 <Controller name="doc_attachments" control={control} render={({ field }) => (
                   <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {LEASE_ATTACHMENTS.map(a => {
+                    {LEASE_ATTACHMENT_OPTIONS.map(a => {
                       const selected = (field.value ?? []).includes(a.value);
                       // 계약갱신 거절통지서는 주택임대차표준계약서 원본의 [별지2]다 —
                       // 다른 서식으로 발급하면 붙을 곳이 없으므로 고르지 못하게 막는다.
@@ -1803,6 +1812,19 @@ export default function ContractDetail() {
         </DialogContent>
       </Dialog>
 
+      {!isNew && contract && (
+        <ContractIssueWizard
+          open={wizardOpen}
+          onClose={() => setWizardOpen(false)}
+          contractId={Number(id)}
+          contractRef={contract.contract_ref}
+          leaseForm={(contract as any).lease_form ?? null}
+          attachments={parseAttachments((contract as any).doc_attachments)}
+          signingPolicy={signingPolicy}
+          onOpenPreview={openContractPreview}
+          onIssued={() => qc.invalidateQueries({ queryKey: getGetContractQueryKey(Number(id)) })}
+        />
+      )}
       <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
     </Layout>
   );
