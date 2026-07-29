@@ -5195,7 +5195,26 @@
     "inspection_template_desc": "Các dòng áp dụng cho mọi danh sách kiểm tra đơn vị"
   },
   "settings_org": {
-    "page_subtitle": "Hồ sơ công ty và thông tin liên hệ"
+    "page_subtitle": "Hồ sơ công ty và thông tin liên hệ",
+    "tab_info": "Thông tin công ty",
+    "tab_documents": "Hồ sơ công ty"
+  },
+  "settings_org_docs": {
+    "description": "Hồ sơ quan trọng của công ty — giấy chứng nhận đăng ký kinh doanh, bản sao sổ ngân hàng và tương tự. Tệp được lưu riêng tư và chỉ mở qua liên kết có hiệu lực ngắn; chỉ vai trò quản trị mới thấy tab này.",
+    "upload": "Tải tệp lên",
+    "upload_failed": "Tải lên thất bại",
+    "confirm_delete": "Xóa tài liệu này?",
+    "empty": "Chưa có tài liệu nào.",
+    "col_file": "Tệp",
+    "col_kind": "Loại",
+    "col_date": "Ngày tải lên",
+    "type_business_registration": "Giấy chứng nhận đăng ký kinh doanh",
+    "type_bank_passbook": "Bản sao sổ ngân hàng",
+    "type_seal_certificate": "Giấy chứng nhận con dấu",
+    "type_corporate_register": "Trích lục đăng ký doanh nghiệp",
+    "type_rental_business_registration": "Giấy đăng ký kinh doanh cho thuê",
+    "type_representative_id": "Giấy tờ tùy thân người đại diện",
+    "type_other": "Khác"
   },
   "settings_email_templates": {
     "page_subtitle": "Tùy chỉnh thông báo email tự động"

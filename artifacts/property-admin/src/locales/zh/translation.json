@@ -5195,7 +5195,26 @@
     "inspection_template_desc": "房屋点检表包含的项目配置"
   },
   "settings_org": {
-    "page_subtitle": "公司资料和联系方式"
+    "page_subtitle": "公司资料和联系方式",
+    "tab_info": "公司信息",
+    "tab_documents": "公司文件"
+  },
+  "settings_org_docs": {
+    "description": "公司主要文件，如营业执照、银行存折复印件等。文件以私密方式保存，仅通过短时有效链接查看；此标签页仅管理员角色可见。",
+    "upload": "上传文件",
+    "upload_failed": "上传失败",
+    "confirm_delete": "要删除此文件吗？",
+    "empty": "暂无文件。",
+    "col_file": "文件",
+    "col_kind": "类型",
+    "col_date": "上传日期",
+    "type_business_registration": "营业执照",
+    "type_bank_passbook": "银行存折复印件",
+    "type_seal_certificate": "印鉴证明",
+    "type_corporate_register": "法人登记簿誊本",
+    "type_rental_business_registration": "租赁事业者登记证",
+    "type_representative_id": "法定代表人身份证件",
+    "type_other": "其他"
   },
   "settings_email_templates": {
     "page_subtitle": "自定义自动电子邮件通知"

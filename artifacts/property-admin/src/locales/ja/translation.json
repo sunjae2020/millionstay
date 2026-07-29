@@ -5195,7 +5195,26 @@
     "inspection_template_desc": "住戸点検表に含める項目の構成"
   },
   "settings_org": {
-    "page_subtitle": "会社プロフィールと連絡先"
+    "page_subtitle": "会社プロフィールと連絡先",
+    "tab_info": "会社情報",
+    "tab_documents": "会社書類"
+  },
+  "settings_org_docs": {
+    "description": "事業者登録証、通帳のコピーなど、会社の主要書類を保管します。ファイルは非公開で保存され、短時間だけ有効なリンクで表示されます。このタブは管理者権限のみ表示されます。",
+    "upload": "ファイルをアップロード",
+    "upload_failed": "アップロードに失敗しました",
+    "confirm_delete": "この書類を削除しますか？",
+    "empty": "書類がまだありません。",
+    "col_file": "ファイル",
+    "col_kind": "種類",
+    "col_date": "登録日",
+    "type_business_registration": "事業者登録証",
+    "type_bank_passbook": "通帳のコピー",
+    "type_seal_certificate": "印鑑証明書",
+    "type_corporate_register": "法人登記簿謄本",
+    "type_rental_business_registration": "賃貸事業者登録証",
+    "type_representative_id": "代表者の身分証明書",
+    "type_other": "その他"
   },
   "settings_email_templates": {
     "page_subtitle": "自動メール通知をカスタマイズ"

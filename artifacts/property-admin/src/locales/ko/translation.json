@@ -5195,7 +5195,26 @@
     "inspection_template_desc": "세대점검표에 들어갈 항목 구성"
   },
   "settings_org": {
-    "page_subtitle": "회사 프로필 및 연락처 정보"
+    "page_subtitle": "회사 프로필 및 연락처 정보",
+    "tab_info": "회사 정보",
+    "tab_documents": "회사 서류"
+  },
+  "settings_org_docs": {
+    "description": "사업자등록증, 통장 사본 등 회사의 주요 서류를 보관합니다. 파일은 비공개로 저장되며 짧게 유효한 링크로만 열립니다. 이 탭은 관리자 권한에게만 보입니다.",
+    "upload": "파일 업로드",
+    "upload_failed": "업로드에 실패했습니다",
+    "confirm_delete": "이 서류를 삭제할까요?",
+    "empty": "등록된 서류가 없습니다.",
+    "col_file": "파일",
+    "col_kind": "종류",
+    "col_date": "등록일",
+    "type_business_registration": "사업자등록증",
+    "type_bank_passbook": "통장 사본",
+    "type_seal_certificate": "법인인감증명서",
+    "type_corporate_register": "법인등기부등본",
+    "type_rental_business_registration": "임대사업자등록증",
+    "type_representative_id": "대표자 신분증",
+    "type_other": "기타"
   },
   "settings_email_templates": {
     "page_subtitle": "자동 이메일 알림 사용자 지정"

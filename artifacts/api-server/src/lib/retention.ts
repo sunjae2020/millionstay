@@ -22,6 +22,22 @@ export const RETENTION_DAYS: Record<string, number> = {
   other: 365 * 2,
 };
 
+/**
+ * Corporate paperwork (business registration certificate, bank passbook copy,
+ * company seal certificate, property title deeds …) is company record-keeping,
+ * not personal information — APP 11 destruction does not apply and the business
+ * must be able to produce it for the life of the entity. Stored with a
+ * far-future retention date so the purge job never touches it; deletion stays a
+ * deliberate manual act.
+ */
+export const PERMANENT_RETENTION_YEARS = 100;
+
+export function permanentRetentionDate(from: Date = new Date()): Date {
+  const d = new Date(from);
+  d.setFullYear(d.getFullYear() + PERMANENT_RETENTION_YEARS);
+  return d;
+}
+
 export function calcRetentionDate(docType: string, from: Date = new Date()): Date {
   const days = RETENTION_DAYS[docType] ?? RETENTION_DAYS["other"];
   const d = new Date(from);

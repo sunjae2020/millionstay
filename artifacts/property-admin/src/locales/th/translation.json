@@ -5195,7 +5195,26 @@
     "inspection_template_desc": "รายการที่มีในแบบตรวจสภาพห้อง"
   },
   "settings_org": {
-    "page_subtitle": "โปรไฟล์บริษัทและรายละเอียดการติดต่อ"
+    "page_subtitle": "โปรไฟล์บริษัทและรายละเอียดการติดต่อ",
+    "tab_info": "ข้อมูลบริษัท",
+    "tab_documents": "เอกสารบริษัท"
+  },
+  "settings_org_docs": {
+    "description": "เอกสารสำคัญของบริษัท เช่น หนังสือรับรองการจดทะเบียนธุรกิจและสำเนาสมุดบัญชีธนาคาร ไฟล์จัดเก็บแบบส่วนตัวและเปิดผ่านลิงก์ที่มีอายุสั้น แท็บนี้แสดงเฉพาะผู้ใช้ระดับผู้ดูแลระบบ",
+    "upload": "อัปโหลดไฟล์",
+    "upload_failed": "อัปโหลดไม่สำเร็จ",
+    "confirm_delete": "ลบเอกสารนี้หรือไม่",
+    "empty": "ยังไม่มีเอกสาร",
+    "col_file": "ไฟล์",
+    "col_kind": "ประเภท",
+    "col_date": "วันที่อัปโหลด",
+    "type_business_registration": "หนังสือรับรองการจดทะเบียนธุรกิจ",
+    "type_bank_passbook": "สำเนาสมุดบัญชีธนาคาร",
+    "type_seal_certificate": "หนังสือรับรองตราประทับ",
+    "type_corporate_register": "หนังสือรับรองนิติบุคคล",
+    "type_rental_business_registration": "ใบจดทะเบียนธุรกิจให้เช่า",
+    "type_representative_id": "บัตรประจำตัวผู้แทน",
+    "type_other": "อื่น ๆ"
   },
   "settings_email_templates": {
     "page_subtitle": "ปรับแต่งการแจ้งเตือนอีเมลอัตโนมัติ"

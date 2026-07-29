@@ -5195,7 +5195,26 @@
     "inspection_template_desc": "Rows carried by every unit inspection checklist"
   },
   "settings_org": {
-    "page_subtitle": "Company profile and contact details"
+    "page_subtitle": "Company profile and contact details",
+    "tab_info": "Company info",
+    "tab_documents": "Company documents"
+  },
+  "settings_org_docs": {
+    "description": "Key company paperwork — business registration certificate, bank passbook copy and the like. Files are stored privately and shared through short-lived links; only Admin roles can see this tab.",
+    "upload": "Upload file",
+    "upload_failed": "Upload failed",
+    "confirm_delete": "Delete this document?",
+    "empty": "No documents yet.",
+    "col_file": "File",
+    "col_kind": "Type",
+    "col_date": "Uploaded",
+    "type_business_registration": "Business registration certificate",
+    "type_bank_passbook": "Bank passbook copy",
+    "type_seal_certificate": "Seal certificate",
+    "type_corporate_register": "Corporate register extract",
+    "type_rental_business_registration": "Rental business registration",
+    "type_representative_id": "Representative ID",
+    "type_other": "Other"
   },
   "settings_email_templates": {
     "page_subtitle": "Customise automated email notifications"
