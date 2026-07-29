@@ -21,6 +21,7 @@ import { createSigningRequest } from "../services/contractSigning.js";
 import { renderApplicationPdf } from "../services/applicationDocs.js";
 import { buildDocumentFilename } from "../lib/documents/filename.js";
 import { hostApplicationToDoc } from "../lib/documents/applicationPdf.js";
+import { normalizeLang } from "../lib/documents/i18n.js";
 import { getAckRule } from "../lib/applicationEmails.js";
 import { sendHomestayHostEmail, sendLeadNotificationEmail } from "../lib/email.js";
 import { isCloudinaryConfigured, uploadPrivateToCloudinary, generateSignedUrl, cldFolder } from "../utils/cloudinary.js";
@@ -264,7 +265,7 @@ homestayPublicRouter.post("/v1/public/homestay-host-applications", async (req, r
         if (!rule.send_ack_email) return;
         let attachments: Array<{ filename: string; content: Buffer }> | undefined;
         if (rule.attach_pdf) {
-          const pdf = await renderApplicationPdf(hostApplicationToDoc(appRow!, undefined, { signed: false }));
+          const pdf = await renderApplicationPdf(hostApplicationToDoc(appRow!, undefined, { signed: false, lang: normalizeLang(body?.lang) }));
           if (pdf) attachments = [{ filename: buildDocumentFilename({ docName: "Host Family Application", customerName: `${first_name ?? ""} ${last_name ?? ""}`.trim() }), content: pdf }];
         }
         await sendHomestayHostEmail({ to: email, toName: first_name, applicationRef: application_ref, kind: "received", attachments });

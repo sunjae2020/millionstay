@@ -129,7 +129,7 @@ export function buildInvoiceBody(inv: InvoiceDocInput, lang: DocLang = "en", ter
         <div class="ref-chip" style="font-size:20px;">${escapeHtml(inv.invoice_ref)}</div>
         <div style="font-size:13px;color:#777;margin-top:4px;">${t(lang, "issued")} ${formatDate(inv.created_at, lang)}</div>
       </div>
-      <span class="badge" style="background:${style.bg};color:${style.fg};">${escapeHtml(status)}</span>
+      <span class="badge" style="background:${style.bg};color:${style.fg};">${escapeHtml(statusLabel(lang, status))}</span>
     </div>
 
     <div class="section">

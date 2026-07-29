@@ -137,6 +137,15 @@ gates it, so keep it green. Two notable classes were fixed:
   Sources are `{ kind: "api", path, init? }` for authenticated server-rendered
   PDFs or `{ kind: "url", href }` for signed/public URLs. Do not add a new
   `a.download = …` / `window.open(blobUrl)` path.
+- **Document translations** live in two server-side dictionaries, not in the app
+  locale JSONs: [artifacts/api-server/src/lib/documents/i18n.ts](artifacts/api-server/src/lib/documents/i18n.ts)
+  (shared chrome — doc types, statuses, money/date labels, service names) and
+  [artifacts/api-server/src/lib/documents/applicationLabels.ts](artifacts/api-server/src/lib/documents/applicationLabels.ts)
+  (the form-shaped application/service-brief labels, keyed by their English
+  text). Every entry carries all six locales (en/ko/ja/zh/th/vi). Builders take
+  a `lang: DocLang`; endpoints resolve it from `?lang=` and fall back to the
+  tenant's `DEFAULT_DOC_LANG`. Status chips must go through `statusLabel(lang, …)`
+  — never render a raw DB status into a document.
 - **Document filenames** follow `문서이름-고객이름_YYYYMMDD.pdf` and are built
   **server-side** by `buildDocumentFilename()` +
   `setDocumentDownloadHeaders()` ([artifacts/api-server/src/lib/documents/filename.ts](artifacts/api-server/src/lib/documents/filename.ts)),

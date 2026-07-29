@@ -23,6 +23,7 @@ import {
 import { buildServiceBriefHtml } from "../lib/documents/serviceBrief.js";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf.js";
 import { buildDocumentFilename } from "../lib/documents/filename.js";
+import { normalizeLang, type DocLang } from "../lib/documents/i18n.js";
 import {
   buildApplicationHtml,
   studentApplicationToDoc,
@@ -128,7 +129,7 @@ export async function sendApplicationAck(params: {
 /** Build the ApplicationDocInput for a signing request's underlying record. */
 export async function buildDocForSigning(
   signing: Pick<SigningRow, "context_type" | "context_id" | "status" | "signers" | "signatures" | "signed_at">,
-  opts: { signed?: boolean } = {},
+  opts: { signed?: boolean; lang?: DocLang } = {},
 ): Promise<ApplicationDocInput | null> {
   const view = {
     status: signing.status,
@@ -214,17 +215,18 @@ function toContractSignatures(raw: unknown): ContractSignature[] {
  */
 export async function buildSignedDocumentHtml(
   signing: Pick<SigningRow, "context_type" | "context_id" | "status" | "signers" | "signatures" | "signed_at">,
-  opts: { signed?: boolean; forPrint?: boolean } = {},
+  opts: { signed?: boolean; forPrint?: boolean; lang?: DocLang } = {},
 ): Promise<string | null> {
+  const lang = opts.lang ?? normalizeLang(undefined);
   if (signing.context_type === "contract") {
-    const built = await buildContractDocInput(signing.context_id);
+    const built = await buildContractDocInput(signing.context_id, lang);
     if (!built) return null;
     const signed = opts.signed ?? signing.status === "signed";
     const sigs = toContractSignatures(signing.signatures);
     const doc = { ...built.doc, signed, signatures: sigs.length ? sigs : null };
-    return buildContractHtml(doc, await resolveCompanyInfo(), opts.forPrint ?? true);
+    return buildContractHtml(doc, await resolveCompanyInfo(), opts.forPrint ?? true, lang);
   }
-  const doc = await buildDocForSigning(signing, { signed: opts.signed });
+  const doc = await buildDocForSigning(signing, { signed: opts.signed, lang });
   return doc ? buildApplicationHtml(doc, opts.forPrint ?? true) : null;
 }
 
@@ -495,6 +497,7 @@ export async function sendServiceBriefs(placementId: number, ref: string): Promi
         student_label: studentLabel,
         host_label: hostLabel,
         notes: svc.notes,
+        lang: normalizeLang(undefined),
       }, company);
       let pdf: Buffer;
       try { pdf = await htmlToPdf(html); } catch { continue; }

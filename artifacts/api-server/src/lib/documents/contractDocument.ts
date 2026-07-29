@@ -6,7 +6,8 @@
  * document shell so colour/typography stay consistent with all other documents.
  */
 import { renderDocumentShell, escapeHtml, getCompanyInfo, formatDocMoney, type CompanyInfo } from "./theme";
-import { t, formatDocDate, formatDocDateTime, type DocLang } from "./i18n";
+import { t, formatDocDate, formatDocDateTime, statusLabel, type DocLang } from "./i18n";
+import { al, roleLabel } from "./applicationLabels";
 
 /** A priced add-on service line (from contract_line_items, item_type=Service):
  *  airport pickup, initial settlement, prepaid phone, etc. */
@@ -88,20 +89,20 @@ function renderDrawnSignatures(c: ContractDocInput, lang: DocLang): string {
   const sigs = c.signatures ?? [];
   if (!sigs.length) return "";
   const cards = sigs.map((s) => {
-    const roleLabel = escapeHtml(s.role.charAt(0).toUpperCase() + s.role.slice(1));
+    const role = escapeHtml(roleLabel(lang, s.role));
     const sigArea = c.signed && s.signatureImage
       ? `<img src="${s.signatureImage}" alt="Signature of ${escapeHtml(s.name)}" style="max-height:64px;max-width:100%;display:block;" />`
       : `<div style="border-bottom:1px solid #999;height:48px;"></div>
-         <div style="font-size:11px;color:#bbb;margin-top:4px;">Pending signature</div>`;
+         <div style="font-size:11px;color:#bbb;margin-top:4px;">${escapeHtml(al(lang, "Pending signature"))}</div>`;
     const meta = c.signed && s.signatureImage
       ? `<div style="font-size:11px;color:#777;margin-top:8px;line-height:1.6;">
-           <strong style="color:#555;">${escapeHtml(s.name)}</strong> · ${roleLabel}<br/>
+           <strong style="color:#555;">${escapeHtml(s.name)}</strong> · ${role}<br/>
            ${s.email ? `${escapeHtml(s.email)}<br/>` : ""}
            ${t(lang, "signed")} ${formatDateTime(s.serverSignedAt, lang)}${s.ip ? ` · IP ${escapeHtml(s.ip)}` : ""}<br/>
            <span style="color:#999;">${escapeHtml(s.consentText ?? "Consent recorded electronically.")}</span>
          </div>`
       : `<div style="font-size:11px;color:#777;margin-top:8px;">
-           <strong style="color:#555;">${escapeHtml(s.name)}</strong> · ${roleLabel}
+           <strong style="color:#555;">${escapeHtml(s.name)}</strong> · ${role}
          </div>`;
     return `<div style="flex:1 1 240px;min-width:220px;padding:14px;border:1px solid #f0f0f0;border-radius:10px;">
       ${sigArea}${meta}
@@ -188,7 +189,7 @@ export function buildContractBody(c: ContractDocInput, lang: DocLang = "en", com
         <div class="ref-chip" style="font-size:20px;">${escapeHtml(c.contract_ref)}</div>
         <div style="font-size:13px;color:#777;margin-top:4px;">${t(lang, "prepared")} ${formatDate(c.created_at, lang)}</div>
       </div>
-      <span class="badge" style="background:#FFF7F0;color:${brand};">${escapeHtml(c.status || "Draft")}</span>
+      <span class="badge" style="background:#FFF7F0;color:${brand};">${escapeHtml(statusLabel(lang, c.status || "Draft"))}</span>
     </div>
 
     <div class="section">

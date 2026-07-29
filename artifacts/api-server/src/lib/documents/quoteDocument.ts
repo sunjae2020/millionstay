@@ -63,7 +63,7 @@ export function buildQuoteBody(q: QuoteDocInput, lang: DocLang = "en", termsHtml
         <div class="ref-chip" style="font-size:20px;">${escapeHtml(q.quote_ref)}</div>
         <div style="font-size:13px;color:#777;margin-top:4px;">${t(lang, "prepared")} ${formatDate(q.created_at, lang)}</div>
       </div>
-      <span class="badge" style="background:#dbeafe;color:#1d4ed8;">${escapeHtml(q.status || "Draft")}</span>
+      <span class="badge" style="background:#dbeafe;color:#1d4ed8;">${escapeHtml(statusLabel(lang, q.status || "Draft"))}</span>
     </div>
 
     <div class="section">

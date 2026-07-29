@@ -284,6 +284,14 @@ const LABELS: Dict = {
   "status.Declined": { en: "Declined",  ko: "거절됨",    zh: "已拒绝", ja: "却下",     th: "ปฏิเสธแล้ว", vi: "Đã từ chối" },
   "status.Expired":  { en: "Expired",   ko: "만료됨",    zh: "已过期", ja: "期限切れ", th: "หมดอายุ",   vi: "Đã hết hạn" },
   "status.Overdue":  { en: "Overdue",   ko: "연체",      zh: "逾期",   ja: "期限超過", th: "เกินกำหนด", vi: "Quá hạn" },
+  // Application / placement lifecycle (student, host family, short-term).
+  "status.Submitted": { en: "Submitted", ko: "제출됨",  zh: "已提交", ja: "提出済",   th: "ส่งแล้ว",     vi: "Đã nộp" },
+  "status.Approved":  { en: "Approved",  ko: "승인됨",  zh: "已批准", ja: "承認済",   th: "อนุมัติแล้ว",  vi: "Đã duyệt" },
+  "status.Rejected":  { en: "Rejected",  ko: "반려됨",  zh: "已拒绝", ja: "却下",     th: "ถูกปฏิเสธ",   vi: "Bị từ chối" },
+  "status.Placed":    { en: "Placed",    ko: "배정 완료", zh: "已安置", ja: "配属済",  th: "จัดที่พักแล้ว", vi: "Đã sắp xếp" },
+  "status.Active":    { en: "Active",    ko: "진행 중",  zh: "进行中", ja: "進行中",   th: "กำลังดำเนินการ", vi: "Đang hoạt động" },
+  "status.Completed": { en: "Completed", ko: "완료됨",  zh: "已完成", ja: "完了",     th: "เสร็จสิ้น",    vi: "Đã hoàn tất" },
+  "status.Cancelled": { en: "Cancelled", ko: "취소됨",  zh: "已取消", ja: "キャンセル", th: "ยกเลิกแล้ว",  vi: "Đã hủy" },
 };
 
 /** Localised display label for a document status; falls back to the raw value. */

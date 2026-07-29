@@ -12,6 +12,7 @@ import { generateStudentRef } from "../lib/homestayRef.js";
 import { createSigningRequest, type SignerSpec } from "../services/contractSigning.js";
 import { sendApplicationAck } from "../services/applicationDocs.js";
 import { studentApplicationToDoc } from "../lib/documents/applicationPdf.js";
+import { normalizeLang } from "../lib/documents/i18n.js";
 import { sendLeadNotificationEmail } from "../lib/email.js";
 import { logAction } from "../utils/auditLog.js";
 import { rankHosts } from "../lib/homestay/matching.js";
@@ -125,7 +126,7 @@ homestayStudentPublicRouter.post("/v1/public/homestay-student-requests", async (
         toName: is_minor ? (guardian_name || studentName) : studentName,
         appTypeLabel: "Student Application",
         ref: request_ref,
-        buildDoc: () => studentApplicationToDoc(row!, undefined, { signed: false }),
+        buildDoc: () => studentApplicationToDoc(row!, undefined, { signed: false, lang: normalizeLang(req.body?.lang) }),
       }).catch((e) => console.error("[homestay-student] ack email failed:", e));
     }
 

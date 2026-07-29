@@ -12,6 +12,7 @@ import { generateShortTermRef } from "../lib/homestayRef.js";
 import { createSigningRequest, type SignerSpec } from "../services/contractSigning.js";
 import { sendApplicationAck } from "../services/applicationDocs.js";
 import { shortTermApplicationToDoc } from "../lib/documents/applicationPdf.js";
+import { normalizeLang } from "../lib/documents/i18n.js";
 import { sendLeadNotificationEmail } from "../lib/email.js";
 import { logAction } from "../utils/auditLog.js";
 import { parsePageParams, pageMeta } from "../utils/pagination.js";
@@ -85,7 +86,7 @@ shortTermPublicRouter.post("/v1/public/short-term-applications", async (req, res
       toName: applicantName,
       appTypeLabel: "Short-term Accommodation Application",
       ref: request_ref,
-      buildDoc: () => shortTermApplicationToDoc(row!, undefined, { signed: false }),
+      buildDoc: () => shortTermApplicationToDoc(row!, undefined, { signed: false, lang: normalizeLang(req.body?.lang) }),
     }).catch((e) => console.error("[short-term] ack email failed:", e));
 
     // Ops notification — best-effort, never blocks the response.

@@ -251,7 +251,9 @@ contractSigningPublicRouter.get("/v1/public/contract-signing/:token/preview", as
       res.send(snapshot);
       return;
     }
-    const html = await buildSignedDocumentHtml(row, { signed: row.status === "signed", forPrint: false });
+    const html = await buildSignedDocumentHtml(row, {
+      signed: row.status === "signed", forPrint: false, lang: normalizeLang(req.query.lang as string),
+    });
     if (!html) {
       res.status(404).send("Document unavailable");
       return;
