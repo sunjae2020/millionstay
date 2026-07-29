@@ -5390,5 +5390,19 @@
     "toast_frozen": "Version frozen",
     "toast_frozen_desc": "Saved v{{version}} as an immutable snapshot.",
     "toast_failed": "Freeze failed"
+  },
+  "doc_email": {
+    "title": "Send by email",
+    "to": "Recipients",
+    "placeholder": "name@example.com",
+    "add": "Add recipient",
+    "remove": "Remove",
+    "suggestions": "On this record",
+    "loading": "Looking up the recipient…",
+    "invalid": "Check this address: {{email}}",
+    "send": "Send",
+    "role_customer": "Customer",
+    "role_contact": "Contact",
+    "role_landlord": "Landlord"
   }
 }

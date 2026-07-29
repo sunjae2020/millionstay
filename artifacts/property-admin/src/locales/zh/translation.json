@@ -5390,5 +5390,19 @@
     "toast_frozen": "版本已锁定",
     "toast_frozen_desc": "已将 v{{version}} 保存为不可修改的快照。",
     "toast_failed": "锁定失败"
+  },
+  "doc_email": {
+    "title": "通过邮件发送",
+    "to": "收件人",
+    "placeholder": "name@example.com",
+    "add": "添加收件人",
+    "remove": "删除",
+    "suggestions": "该记录的联系人",
+    "loading": "正在获取收件人…",
+    "invalid": "请检查此地址：{{email}}",
+    "send": "发送",
+    "role_customer": "客户",
+    "role_contact": "负责人",
+    "role_landlord": "房东"
   }
 }

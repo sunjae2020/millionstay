@@ -60,7 +60,8 @@ async function resolveSupportEmail(): Promise<string> {
 const PORTAL_URL = process.env.PUBLIC_WEB_URL ?? "https://www.millionstay.com";
 
 export interface DocumentEmailOptions {
-  to: string;
+  /** One address or several — the document send dialog lets admins add more. */
+  to: string | string[];
   toName?: string | null;
   /** Document type label, already localised to `lang` (e.g. "청구서"). */
   docTypeLabel: string;
@@ -89,10 +90,12 @@ export async function sendDocumentEmail(
 ): Promise<{ ok: boolean; id?: string; skipped?: boolean; error?: string; subject: string }> {
   const lang = normalizeLang(typeof opts.lang === "string" ? opts.lang : opts.lang);
   const subject = opts.subject ?? t(lang, "email.subject", { doc: opts.docTypeLabel, ref: opts.ref });
+  const recipients = (Array.isArray(opts.to) ? opts.to : [opts.to]).map((x) => x.trim()).filter(Boolean);
+  const toLabel = recipients.join(", ");
 
   const client = getResend();
   if (!client) {
-    console.log(`[email] RESEND_API_KEY not set — skipping ${opts.docTypeLabel} ${opts.ref} to ${opts.to}`);
+    console.log(`[email] RESEND_API_KEY not set — skipping ${opts.docTypeLabel} ${opts.ref} to ${toLabel}`);
     return { ok: false, skipped: true, error: "Email service not configured", subject };
   }
 
@@ -126,12 +129,12 @@ export async function sendDocumentEmail(
     ${opts.note ? `<p style="font-size:13px;color:#555;">${escapeHtml(opts.note)}</p>` : ""}
     <p style="font-size:13px;color:#999;">${t(lang, "email.questions", { email: `<a href="mailto:${supportEmail}" style="color:#E8621A;">${supportEmail}</a>` })}</p>
   </div>
-  <div class="footer">© ${new Date().getFullYear()} MillionStay Pty Ltd · ${t(lang, "email.sentTo", { to: escapeHtml(opts.to) })}</div>
+  <div class="footer">© ${new Date().getFullYear()} MillionStay Pty Ltd · ${t(lang, "email.sentTo", { to: escapeHtml(toLabel) })}</div>
 </div></body></html>`;
 
   const payload = {
     from: FROM,
-    to: [opts.to],
+    to: recipients,
     subject,
     html,
     attachments: [{ filename: opts.filename, content: opts.pdf.toString("base64") }],
@@ -146,7 +149,7 @@ export async function sendDocumentEmail(
     try {
       const { data, error } = await client.emails.send(payload);
       if (!error && data?.id) {
-        console.log(`[email] ${opts.docTypeLabel} ${opts.ref} sent to ${opts.to} (${data.id})`);
+        console.log(`[email] ${opts.docTypeLabel} ${opts.ref} sent to ${toLabel} (${data.id})`);
         return { ok: true, id: data.id, subject };
       }
       const e = error as { statusCode?: number; name?: string; message?: string } | null;
@@ -156,7 +159,7 @@ export async function sendDocumentEmail(
         await new Promise((r) => setTimeout(r, 600 * attempt));
         continue;
       }
-      console.error(`[email] Resend rejected ${opts.docTypeLabel} ${opts.ref} to ${opts.to}:`, lastError);
+      console.error(`[email] Resend rejected ${opts.docTypeLabel} ${opts.ref} to ${toLabel}:`, lastError);
       return { ok: false, error: lastError, subject };
     } catch (err) {
       // Network/transport failure (rare — SDK normally returns errors in-band).

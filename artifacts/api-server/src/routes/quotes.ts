@@ -13,6 +13,7 @@ import { normalizeLang, t } from "../lib/documents/i18n";
 import { resolveTemplateBody } from "../lib/documents/templateEngine";
 import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
 import { sendDocumentEmail } from "../lib/email";
+import { parseRecipients, quotePartyRecipients, toRecipientsResponse } from "../lib/documents/recipients";
 
 const router = Router();
 
@@ -283,14 +284,25 @@ router.get("/v1/quotes/:id/pdf", async (req, res): Promise<void> => {
 });
 
 /** Email a quote to its recipient as a branded PDF; advances Draft → Sent. */
+/** Addresses offered by the send dialog for a quote (account or bare lead). */
+router.get("/v1/quotes/:id/email-recipients", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const [row] = await db.select().from(quotesTable).where(eq(quotesTable.id, id));
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  res.json(toRecipientsResponse(await quotePartyRecipients(row.account_id, row.lead_id)));
+});
+
 router.post("/v1/quotes/:id/email", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
   const docInput = await buildQuoteDocInput(id);
   if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
 
-  const to = (req.body?.to as string)?.trim() || docInput.party_email;
-  if (!to) { res.status(400).json({ error: "No recipient email — set one on the account/lead or pass { to }." }); return; }
+  const parsed = parseRecipients(req.body?.to ?? docInput.party_email);
+  if (parsed.invalid.length) { res.status(400).json({ error: `Invalid email address: ${parsed.invalid.join(", ")}` }); return; }
+  const to = parsed.to;
+  if (!to.length) { res.status(400).json({ error: "No recipient email — set one on the account/lead or pass { to }." }); return; }
 
   const lang = normalizeLang(req.body?.lang as string);
   const quoteTerms = await resolveTemplateBody("pdf", "pdf.quote", lang, { ref: docInput.quote_ref, valid_until: docInput.valid_until ?? "" });
@@ -310,7 +322,7 @@ router.post("/v1/quotes/:id/email", async (req, res): Promise<void> => {
   });
 
   await db.insert(emailLogsTable).values({
-    template_code: "document.quote", to_email: to, to_name: docInput.party_name ?? null,
+    template_code: "document.quote", to_email: to.join(", "), to_name: docInput.party_name ?? null,
     subject: result.subject, resend_message_id: result.id ?? null, status: result.ok ? "Sent" : "Failed",
     entity_type: "quote", entity_id: id, error_message: result.error ?? null,
   }).catch(() => {});

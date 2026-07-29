@@ -66,17 +66,21 @@ export default function InvoiceDetail() {
   const { previewConfig, openPreview, closePreview } = useDocumentPreview();
 
   // Email the branded invoice PDF to the billing account.
-  const handleEmail = async () => {
-    if (!window.confirm(t('invoice.email_confirm'))) return;
+  const handleEmail = async (to: string[]) => {
     setPdfBusy(true);
     try {
-      const res = await apiFetch(`/api/v1/invoices/${id}/email`, { method: "POST" });
+      const res = await apiFetch(`/api/v1/invoices/${id}/email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to }),
+      });
       const body = await res.json().catch(() => null);
       if (!res.ok) throw new Error(body?.error ?? `HTTP ${res.status}`);
-      toast({ title: t('invoice.email_sent'), description: t('invoice.email_sent_desc', { to: body?.to ?? t('invoice.recipient') }) });
+      toast({ title: t('invoice.email_sent'), description: t('invoice.email_sent_desc', { to: to.join(", ") }) });
       refetch();
     } catch (err) {
       toast({ title: t('invoice.email_failed'), description: err instanceof Error ? err.message : t('invoice.error'), variant: "destructive" });
+      throw err;
     } finally {
       setPdfBusy(false);
     }
@@ -180,7 +184,10 @@ export default function InvoiceDetail() {
                     title: invoice?.invoice_ref ?? t('invoice.title'),
                     filename: `${invoice?.invoice_ref ?? "invoice"}.pdf`,
                     source: { kind: "api", path: `/api/v1/invoices/${id}/pdf` },
-                    onEmail: handleEmail,
+                    email: {
+                      recipientsPath: `/api/v1/invoices/${id}/email-recipients`,
+                      send: handleEmail,
+                    },
                     emailLabel: t('invoice.btn_email'),
                   })}
                 >

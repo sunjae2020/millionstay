@@ -16,6 +16,7 @@ import { normalizeLang, t, type DocLang } from "../lib/documents/i18n";
 import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
 import { formatDocMoney } from "../lib/documents/theme";
 import { sendDocumentEmail, resolveDocEmailCopy } from "../lib/email";
+import { accountRecipients, parseRecipients, toRecipientsResponse } from "../lib/documents/recipients";
 import { resolveTemplate } from "../lib/documents/templateEngine";
 import { createSigningRequest, type SignerSpec } from "../services/contractSigning";
 import { emailLogsTable } from "@workspace/db";
@@ -582,18 +583,34 @@ router.get("/v1/contracts/:id/pdf", async (req, res): Promise<void> => {
 });
 
 /** Email a contract to the tenant as a branded PDF; advances Draft → Sent. */
+/**
+ * Addresses offered by the send dialog for a contract: the tenant account (+its
+ * contacts) first, then the landlord side as an optional extra recipient.
+ */
+router.get("/v1/contracts/:id/email-recipients", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const [row] = await db.select().from(contractsTable).where(eq(contractsTable.id, id));
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  const tenant = await accountRecipients(row.tenant_account_id);
+  const landlord = (await accountRecipients(row.landlord_account_id)).map((r) => ({ ...r, role: "landlord" as const }));
+  res.json(toRecipientsResponse([...tenant, ...landlord]));
+});
+
 router.post("/v1/contracts/:id/email", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
   const built = await buildContractDocInput(id, normalizeLang(req.body?.lang as string));
   if (!built) { res.status(404).json({ error: "Not found" }); return; }
 
-  let to = (req.body?.to as string)?.trim() || null;
-  if (!to && built.tenantAccountId) {
+  const parsed = parseRecipients(req.body?.to);
+  if (parsed.invalid.length) { res.status(400).json({ error: `Invalid email address: ${parsed.invalid.join(", ")}` }); return; }
+  let to = parsed.to;
+  if (!to.length && built.tenantAccountId) {
     const [acc] = await db.select().from(accountsTable).where(eq(accountsTable.id, built.tenantAccountId));
-    to = acc?.account_email ?? null;
+    to = acc?.account_email ? [acc.account_email] : [];
   }
-  if (!to) { res.status(400).json({ error: "No recipient email — set one on the tenant account or pass { to }." }); return; }
+  if (!to.length) { res.status(400).json({ error: "No recipient email — set one on the tenant account or pass { to }." }); return; }
 
   const lang = normalizeLang(req.body?.lang as string);
   let pdf: Buffer;
@@ -618,7 +635,7 @@ router.post("/v1/contracts/:id/email", async (req, res): Promise<void> => {
   });
 
   await db.insert(emailLogsTable).values({
-    template_code: "document.contract", to_email: to, to_name: built.doc.tenant_name ?? null,
+    template_code: "document.contract", to_email: to.join(", "), to_name: built.doc.tenant_name ?? null,
     subject: result.subject, resend_message_id: result.id ?? null, status: result.ok ? "Sent" : "Failed",
     entity_type: "contract", entity_id: id, error_message: result.error ?? null,
   }).catch(() => {});

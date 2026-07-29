@@ -152,17 +152,21 @@ export default function QuoteDetail() {
     }
   };
 
-  const handleEmail = async () => {
-    if (!window.confirm(t("quote.confirm_email", "Email this quote (PDF) to the recipient?"))) return;
+  const handleEmail = async (to: string[]) => {
     setPdfBusy(true);
     try {
-      const res = await apiFetch(`/api/v1/quotes/${id}/email`, { method: "POST" });
+      const res = await apiFetch(`/api/v1/quotes/${id}/email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to }),
+      });
       const body = await res.json().catch(() => null);
       if (!res.ok) throw new Error(body?.error ?? `HTTP ${res.status}`);
-      toast({ title: t("quote.toast_email_sent", "Email sent"), description: t("quote.toast_email_sent_desc", "Quote emailed to {{to}}.", { to: body?.to ?? t("quote.recipient_fallback", "recipient") }) });
+      toast({ title: t("quote.toast_email_sent", "Email sent"), description: t("quote.toast_email_sent_desc", "Quote emailed to {{to}}.", { to: to.join(", ") }) });
       refetch();
     } catch (err) {
       toast({ title: t("quote.toast_email_failed", "Email failed"), description: err instanceof Error ? err.message : t("quote.error", "Error"), variant: "destructive" });
+      throw err;
     } finally { setPdfBusy(false); }
   };
 
@@ -182,7 +186,7 @@ export default function QuoteDetail() {
                   title: quote?.quote_ref ?? t("quote.quote", "Quote"),
                   filename: `${quote?.quote_ref ?? "quote"}.pdf`,
                   source: { kind: "api", path: `/api/v1/quotes/${id}/pdf` },
-                  onEmail: handleEmail,
+                  email: { recipientsPath: `/api/v1/quotes/${id}/email-recipients`, send: handleEmail },
                   emailLabel: t("quote.email", "Email"),
                 })}><FileText className="h-4 w-4 mr-1" /> {t("quote.preview", "Preview")}</Button>
                 <DocumentVersions entityType="quote" entityId={Number(id)} freezeUrl={`/api/v1/quotes/${id}/freeze`} />

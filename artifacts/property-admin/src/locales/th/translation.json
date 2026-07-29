@@ -5390,5 +5390,19 @@
     "toast_frozen": "ล็อกเวอร์ชันแล้ว",
     "toast_frozen_desc": "บันทึก v{{version}} เป็นสำเนาที่แก้ไขไม่ได้แล้ว",
     "toast_failed": "ล็อกเวอร์ชันไม่สำเร็จ"
+  },
+  "doc_email": {
+    "title": "ส่งทางอีเมล",
+    "to": "ผู้รับ",
+    "placeholder": "name@example.com",
+    "add": "เพิ่มผู้รับ",
+    "remove": "ลบ",
+    "suggestions": "ผู้ติดต่อในระเบียนนี้",
+    "loading": "กำลังค้นหาผู้รับ…",
+    "invalid": "โปรดตรวจสอบที่อยู่นี้: {{email}}",
+    "send": "ส่ง",
+    "role_customer": "ลูกค้า",
+    "role_contact": "ผู้ดูแล",
+    "role_landlord": "เจ้าของ"
   }
 }

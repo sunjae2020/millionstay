@@ -14,6 +14,7 @@ import { resolveTemplateBody } from "../lib/documents/templateEngine";
 import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
 import { formatDocMoney } from "../lib/documents/theme";
 import { sendDocumentEmail, resolveDocEmailCopy } from "../lib/email";
+import { accountRecipients, parseRecipients, toRecipientsResponse } from "../lib/documents/recipients";
 import { buildDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename.js";
 import { formatPostalAddress } from "@workspace/address";
 import { getStripe } from "./stripe";
@@ -396,8 +397,12 @@ async function emailInvoiceDocument(req: import("express").Request, res: import(
   const docInput = await buildInvoiceDocInput(id, lang);
   if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
 
-  const to = (req.body?.to as string)?.trim() || docInput.account_email;
-  if (!to) { res.status(400).json({ error: "No recipient email — set one on the linked account or pass { to }." }); return; }
+  // The send dialog posts the (editable, possibly multiple) recipients; with no
+  // body we fall back to the account's billing address as before.
+  const parsed = parseRecipients(req.body?.to ?? docInput.account_email);
+  if (parsed.invalid.length) { res.status(400).json({ error: `Invalid email address: ${parsed.invalid.join(", ")}` }); return; }
+  const to = parsed.to;
+  if (!to.length) { res.status(400).json({ error: "No recipient email — set one on the linked account or pass { to }." }); return; }
   const company = await resolveCompanyInfo(lang);
   const terms = kind === "invoice"
     ? await resolveTemplateBody("pdf", "pdf.invoice", lang, { ref: docInput.invoice_ref, due_date: docInput.due_date ?? "" })
@@ -433,7 +438,7 @@ async function emailInvoiceDocument(req: import("express").Request, res: import(
   });
 
   await db.insert(emailLogsTable).values({
-    template_code: `document.${kind}`, to_email: to, to_name: docInput.account_name ?? null,
+    template_code: `document.${kind}`, to_email: to.join(", "), to_name: docInput.account_name ?? null,
     subject: result.subject, resend_message_id: result.id ?? null, status: result.ok ? "Sent" : "Failed",
     entity_type: "invoice", entity_id: id, error_message: result.error ?? null,
   }).catch(() => {});
@@ -454,6 +459,23 @@ async function emailInvoiceDocument(req: import("express").Request, res: import(
   }
   res.json({ ok: true, id: result.id, to });
 }
+
+/**
+ * Addresses the send dialog offers for an invoice/receipt: the billing
+ * account's own email plus its primary/secondary contacts.
+ *   GET /v1/invoices/:id/email-recipients        → { default, candidates }
+ *   GET /v1/invoices/:id/receipt/email-recipients
+ */
+async function invoiceEmailRecipients(req: import("express").Request, res: import("express").Response): Promise<void> {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const [row] = await db.select().from(invoicesTable).where(eq(invoicesTable.id, id));
+  if (!row) { res.status(404).json({ error: "Not found" }); return; }
+  res.json(toRecipientsResponse(await accountRecipients(row.account_id)));
+}
+
+router.get("/v1/invoices/:id/email-recipients", invoiceEmailRecipients);
+router.get("/v1/invoices/:id/receipt/email-recipients", invoiceEmailRecipients);
 
 router.post("/v1/invoices/:id/email", (req, res) => emailInvoiceDocument(req, res, "invoice"));
 router.post("/v1/invoices/:id/receipt/email", (req, res) => emailInvoiceDocument(req, res, "receipt"));

@@ -5390,5 +5390,19 @@
     "toast_frozen": "버전 고정 완료",
     "toast_frozen_desc": "v{{version}}을(를) 수정 불가 사본으로 저장했습니다.",
     "toast_failed": "버전 고정 실패"
+  },
+  "doc_email": {
+    "title": "이메일 보내기",
+    "to": "받는 사람",
+    "placeholder": "name@example.com",
+    "add": "수신자 추가",
+    "remove": "삭제",
+    "suggestions": "이 문서의 연락처",
+    "loading": "수신자를 불러오는 중…",
+    "invalid": "주소를 확인해 주세요: {{email}}",
+    "send": "보내기",
+    "role_customer": "고객",
+    "role_contact": "담당자",
+    "role_landlord": "임대인"
   }
 }

@@ -5390,5 +5390,19 @@
     "toast_frozen": "Đã khoá phiên bản",
     "toast_frozen_desc": "Đã lưu v{{version}} thành bản chụp không thể chỉnh sửa.",
     "toast_failed": "Khoá phiên bản thất bại"
+  },
+  "doc_email": {
+    "title": "Gửi qua email",
+    "to": "Người nhận",
+    "placeholder": "name@example.com",
+    "add": "Thêm người nhận",
+    "remove": "Xóa",
+    "suggestions": "Liên hệ trong hồ sơ này",
+    "loading": "Đang tìm người nhận…",
+    "invalid": "Vui lòng kiểm tra địa chỉ: {{email}}",
+    "send": "Gửi",
+    "role_customer": "Khách hàng",
+    "role_contact": "Người phụ trách",
+    "role_landlord": "Chủ nhà"
   }
 }

@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Loader2, Printer, Download, Mail, X, ExternalLink, AlertTriangle } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
+import { DocumentEmailDialog, type DocumentEmailTarget } from "@/components/DocumentEmailDialog";
 
 /**
  * Where the previewed document comes from.
@@ -41,8 +42,18 @@ export interface DocumentPreviewConfig {
   /**
    * Optional — only documents that have a recipient (invoice, quote, contract,
    * receipt, settlement …) get an email button.
+   *
+   * Prefer `email`: it opens the recipient editor (prefilled with the
+   * customer's / 담당자's address, editable, multiple addresses) before
+   * sending. `onEmail` stays for flows that already own a send dialog.
    */
   onEmail?: () => Promise<void> | void;
+  /** Sends through the shared recipient editor. Takes precedence over `onEmail`. */
+  email?: {
+    /** GET endpoint returning `{ default, candidates }` for the prefill. */
+    recipientsPath?: string;
+    send: (to: string[]) => Promise<void>;
+  };
   /** Overrides the default "Send email" label. */
   emailLabel?: string;
 }
@@ -68,6 +79,7 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [emailBusy, setEmailBusy] = useState(false);
+  const [emailTarget, setEmailTarget] = useState<DocumentEmailTarget | null>(null);
 
   const open = config !== null;
   const source = config?.source ?? null;
@@ -127,6 +139,7 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
   // Drop the preview when the dialog closes so reopening always refetches.
   useEffect(() => {
     if (!open) {
+      setEmailTarget(null);
       setObjectUrl(null);
       setServerFilename(null);
       setError(null);
@@ -164,6 +177,15 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
   }, [objectUrl, config, serverFilename]);
 
   const handleEmail = useCallback(async () => {
+    // Preferred path: let the admin review/edit the recipients first.
+    if (config?.email) {
+      setEmailTarget({
+        title: config.title,
+        recipientsPath: config.email.recipientsPath,
+        send: config.email.send,
+      });
+      return;
+    }
     if (!config?.onEmail) return;
     setEmailBusy(true);
     try {
@@ -174,6 +196,7 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
   }, [config]);
 
   return (
+    <>
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
       <DialogContent className="max-w-5xl w-[95vw] h-[92vh] p-0 gap-0 flex flex-col">
         <DialogHeader className="px-5 py-3 border-b shrink-0">
@@ -225,7 +248,7 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
             <Download className="h-4 w-4 mr-1.5" />
             {t("doc_preview.download", "Download")}
           </Button>
-          {config?.onEmail && (
+          {(config?.email || config?.onEmail) && (
             <Button variant="outline" size="sm" onClick={() => void handleEmail()} disabled={emailBusy}>
               {emailBusy ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Mail className="h-4 w-4 mr-1.5" />}
               {config.emailLabel ?? t("doc_preview.email", "Send email")}
@@ -238,6 +261,10 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Recipient editor — sibling, not nested, so the two modals stack cleanly. */}
+    <DocumentEmailDialog target={emailTarget} onClose={() => setEmailTarget(null)} />
+    </>
   );
 }
 

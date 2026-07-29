@@ -400,15 +400,23 @@ export default function ContractDetail() {
       title: `${invoice.invoice_ref ?? t('contract.btn_receipt')} · ${t('contract.btn_receipt')}`,
       filename: `${invoice.invoice_ref ?? "receipt"}.pdf`,
       source: { kind: "api", path: `/api/v1/invoices/${invoice.id}/receipt/pdf` },
-      onEmail: async () => {
-        try {
-          const res = await apiFetch(`/api/v1/invoices/${invoice.id}/receipt/email`, { method: "POST" });
-          const body = await res.json().catch(() => null);
-          if (!res.ok) throw new Error(body?.error ?? `HTTP ${res.status}`);
-          toast({ title: t('contract.toast_email_sent'), description: t('contract.toast_email_sent_desc', { to: body?.to ?? t('contract.recipient') }) });
-        } catch (err) {
-          toast({ title: t('contract.toast_email_failed'), description: err instanceof Error ? err.message : String(err), variant: "destructive" });
-        }
+      email: {
+        recipientsPath: `/api/v1/invoices/${invoice.id}/receipt/email-recipients`,
+        send: async (to) => {
+          try {
+            const res = await apiFetch(`/api/v1/invoices/${invoice.id}/receipt/email`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ to }),
+            });
+            const body = await res.json().catch(() => null);
+            if (!res.ok) throw new Error(body?.error ?? `HTTP ${res.status}`);
+            toast({ title: t('contract.toast_email_sent'), description: t('contract.toast_email_sent_desc', { to: to.join(", ") }) });
+          } catch (err) {
+            toast({ title: t('contract.toast_email_failed'), description: err instanceof Error ? err.message : String(err), variant: "destructive" });
+            throw err;
+          }
+        },
       },
     });
   };
@@ -494,17 +502,21 @@ export default function ContractDetail() {
   const { toast } = useToast();
   const [pdfBusy, setPdfBusy] = useState(false);
   const { previewConfig, openPreview, closePreview } = useDocumentPreview();
-  const handleEmail = async () => {
-    if (!window.confirm(t('contract.confirm_email'))) return;
+  const handleEmail = async (to: string[]) => {
     setPdfBusy(true);
     try {
-      const res = await apiFetch(`/api/v1/contracts/${id}/email`, { method: "POST" });
+      const res = await apiFetch(`/api/v1/contracts/${id}/email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to }),
+      });
       const body = await res.json().catch(() => null);
       if (!res.ok) throw new Error(body?.error ?? `HTTP ${res.status}`);
-      toast({ title: t('contract.toast_email_sent'), description: t('contract.toast_email_sent_desc', { to: body?.to ?? t('contract.recipient') }) });
+      toast({ title: t('contract.toast_email_sent'), description: t('contract.toast_email_sent_desc', { to: to.join(", ") }) });
       refetch();
     } catch (err) {
       toast({ title: t('contract.toast_email_failed'), description: err instanceof Error ? err.message : t('contract.error'), variant: "destructive" });
+      throw err;
     } finally {
       setPdfBusy(false);
     }
@@ -570,7 +582,7 @@ export default function ContractDetail() {
                     title: contract?.contract_ref ?? t('contract.btn_preview'),
                     filename: `${contract?.contract_ref ?? "contract"}.pdf`,
                     source: { kind: "api", path: `/api/v1/contracts/${id}/pdf` },
-                    onEmail: handleEmail,
+                    email: { recipientsPath: `/api/v1/contracts/${id}/email-recipients`, send: handleEmail },
                     emailLabel: t('contract.btn_email'),
                   })}>
                     <Eye className="h-4 w-4 mr-2" />{t('contract.btn_preview')}

@@ -21,6 +21,8 @@ export interface DocumentRowSpec {
   pdfPath: string;
   /** POST endpoint that emails the document; omit/null hides the email button. */
   emailPath?: string | null;
+  /** GET endpoint for the prefilled recipients. Derived from `emailPath` by default. */
+  recipientsPath?: string;
   /** Record page opened by the second action button; omit to hide it. */
   detailUrl?: string | null;
   /** Download filename. Defaults to `<ref>.pdf`. */
@@ -54,16 +56,14 @@ export function useDocumentRowActions<T>(resolve: (row: T) => DocumentRowSpec | 
   resolveRef.current = resolve;
 
   const sendEmail = useCallback(
-    async (spec: DocumentRowSpec) => {
+    async (spec: DocumentRowSpec, to: string[]) => {
       if (!spec.emailPath) return;
-      const type = spec.typeLabel.toLowerCase();
-      if (!window.confirm(t("document_hub.email_confirm", "Email this {{type}} to its recipient?", { type }))) return;
       setBusy(true);
       try {
         const res = await apiFetch(spec.emailPath, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({}),
+          body: JSON.stringify({ to }),
         });
         const body = await res.json().catch(() => null);
         if (!res.ok) throw new Error(body?.error ?? `HTTP ${res.status}`);
@@ -71,15 +71,17 @@ export function useDocumentRowActions<T>(resolve: (row: T) => DocumentRowSpec | 
           title: t("document_hub.email_sent", "Email sent"),
           description: t("document_hub.email_sent_desc", "{{type}} emailed to {{recipient}}.", {
             type: spec.typeLabel,
-            recipient: body?.to ?? t("document_hub.recipient", "recipient"),
+            recipient: to.join(", "),
           }),
         });
       } catch (err) {
+        // Rethrown so the recipient dialog stays open and shows the reason.
         toast({
           title: t("document_hub.email_failed", "Email failed"),
           description: err instanceof Error ? err.message : t("document_hub.error", "Error"),
           variant: "destructive",
         });
+        throw err;
       } finally {
         setBusy(false);
       }
@@ -93,7 +95,14 @@ export function useDocumentRowActions<T>(resolve: (row: T) => DocumentRowSpec | 
         title: `${spec.ref} · ${spec.typeLabel}`,
         filename: spec.filename ?? `${spec.ref}.pdf`,
         source: { kind: "api", path: spec.pdfPath },
-        ...(spec.emailPath ? { onEmail: () => sendEmail(spec) } : {}),
+        ...(spec.emailPath
+          ? {
+              email: {
+                recipientsPath: spec.recipientsPath ?? spec.emailPath.replace(/\/email$/, "/email-recipients"),
+                send: (to: string[]) => sendEmail(spec, to),
+              },
+            }
+          : {}),
       });
     },
     [openPreview, sendEmail],

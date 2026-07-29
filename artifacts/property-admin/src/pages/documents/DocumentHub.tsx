@@ -84,28 +84,31 @@ export default function DocumentHub() {
       title: `${doc.ref} · ${doc.doc_type}`,
       filename: `${doc.ref}${doc.doc_type === "Receipt" ? "-receipt" : ""}.pdf`,
       source: { kind: "api", path: qs ? `${doc.pdf_url}?${qs}` : doc.pdf_url },
-      onEmail: () => handleEmail(doc),
+      email: {
+        recipientsPath: doc.pdf_url.replace(/\/pdf$/, "/email-recipients"),
+        send: (to) => handleEmail(doc, to),
+      },
       emailLabel: t("document_hub.email_lang", "Email ({{lang}})", { lang: docLang.toUpperCase() }),
     });
   };
 
   // Email the document (PDF + cover) to its recipient in the selected language.
-  const handleEmail = async (doc: HubDocument) => {
+  const handleEmail = async (doc: HubDocument, to: string[]) => {
     const emailUrl = doc.pdf_url.replace(/\/pdf$/, "/email");
-    if (!window.confirm(t("document_hub.email_confirm", "Email this {{type}} to its recipient?", { type: doc.doc_type.toLowerCase() }))) return;
     const key = `${doc.doc_type}:${doc.source_id}:email`;
     setBusy(key);
     try {
       const res = await apiFetch(emailUrl, {
         method: "POST",
-        body: JSON.stringify({ lang: docLang }),
+        body: JSON.stringify({ lang: docLang, to }),
         headers: { "Content-Type": "application/json" },
       });
       const body = await res.json().catch(() => null);
       if (!res.ok) throw new Error(body?.error ?? `HTTP ${res.status}`);
-      toast({ title: t("document_hub.email_sent", "Email sent"), description: t("document_hub.email_sent_desc", "{{type}} emailed to {{recipient}}.", { type: doc.doc_type, recipient: body?.to ?? t("document_hub.recipient", "recipient") }) });
+      toast({ title: t("document_hub.email_sent", "Email sent"), description: t("document_hub.email_sent_desc", "{{type}} emailed to {{recipient}}.", { type: doc.doc_type, recipient: to.join(", ") }) });
     } catch (err) {
       toast({ title: t("document_hub.email_failed", "Email failed"), description: err instanceof Error ? err.message : t("document_hub.error", "Error"), variant: "destructive" });
+      throw err;   // keeps the recipient dialog open with the reason
     } finally {
       setBusy(null);
     }
