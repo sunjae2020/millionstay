@@ -5397,7 +5397,8 @@
     "toast_frozen_desc": "已将 v{{version}} 保存为不可修改的快照。",
     "toast_failed": "锁定失败",
     "freeze_now": "锁定当前版本",
-    "freezing": "锁定中…"
+    "freezing": "锁定中…",
+    "unavailable": "不可用"
   },
   "doc_email": {
     "title": "通过邮件发送",

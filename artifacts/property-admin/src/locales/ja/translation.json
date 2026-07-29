@@ -5397,7 +5397,8 @@
     "toast_frozen_desc": "v{{version}}を変更不可のスナップショットとして保存しました。",
     "toast_failed": "確定に失敗しました",
     "freeze_now": "現在のバージョンを確定",
-    "freezing": "確定中…"
+    "freezing": "確定中…",
+    "unavailable": "利用できません"
   },
   "doc_email": {
     "title": "メールで送信",

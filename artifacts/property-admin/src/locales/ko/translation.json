@@ -5397,7 +5397,8 @@
     "toast_frozen_desc": "v{{version}}을(를) 수정 불가 사본으로 저장했습니다.",
     "toast_failed": "버전 고정 실패",
     "freeze_now": "현재 버전 고정",
-    "freezing": "고정 중…"
+    "freezing": "고정 중…",
+    "unavailable": "파일 없음"
   },
   "doc_email": {
     "title": "이메일 보내기",

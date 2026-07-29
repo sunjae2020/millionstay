@@ -5397,7 +5397,8 @@
     "toast_frozen_desc": "Saved v{{version}} as an immutable snapshot.",
     "toast_failed": "Freeze failed",
     "freeze_now": "Freeze current version",
-    "freezing": "Freezing…"
+    "freezing": "Freezing…",
+    "unavailable": "unavailable"
   },
   "doc_email": {
     "title": "Send by email",

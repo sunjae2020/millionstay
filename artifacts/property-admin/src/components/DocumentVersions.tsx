@@ -107,7 +107,7 @@ export function DocumentVersions({
                       })}>
                       <Eye className="h-4 w-4 text-muted-foreground" />
                     </button>
-                  ) : <span className="text-xs text-muted-foreground">unavailable</span>}
+                  ) : <span className="text-xs text-muted-foreground">{t("doc_versions.unavailable")}</span>}
                 </div>
               ))}
             </div>

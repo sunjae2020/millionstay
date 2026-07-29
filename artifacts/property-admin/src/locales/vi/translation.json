@@ -5397,7 +5397,8 @@
     "toast_frozen_desc": "Đã lưu v{{version}} thành bản chụp không thể chỉnh sửa.",
     "toast_failed": "Khoá phiên bản thất bại",
     "freeze_now": "Khoá phiên bản hiện tại",
-    "freezing": "Đang khoá…"
+    "freezing": "Đang khoá…",
+    "unavailable": "không khả dụng"
   },
   "doc_email": {
     "title": "Gửi qua email",
