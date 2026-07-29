@@ -113,6 +113,7 @@ function PhotoGallery({
   images: Array<{ id?: number | string | null; file_url: string; thumbnail_url?: string | null; caption?: string | null }>;
   spaceName: string;
 }) {
+  const { t } = useTranslation();
   const [modalOpen, setModalOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
   const [carouselIdx, setCarouselIdx] = useState(0);
@@ -131,7 +132,7 @@ function PhotoGallery({
       <div className="h-56 md:h-72 rounded-xl bg-gradient-to-br from-primary to-brand-navy flex flex-col items-center justify-center gap-3">
         <span className="text-5xl">📸</span>
         <p className="text-white font-semibold">{spaceName}</p>
-        <p className="text-white/70 text-sm">Photos coming soon</p>
+        <p className="text-white/70 text-sm">{t("space.photos_soon")}</p>
       </div>
     );
   }
@@ -202,6 +203,8 @@ function SpaceMiniMap({
 }: {
   lat: number; lng: number; name: string; address?: string; blurred?: boolean;
 }) {
+  const { t } = useTranslation();
+  const approxLabel = t("space_detail.approx_location");
   const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!containerRef.current) return;
@@ -229,7 +232,7 @@ function SpaceMiniMap({
           iconAnchor: [10, 10],
         });
         L.marker([lat, lng], { icon }).addTo(map)
-          .bindPopup(`<div style="font-family:Inter,sans-serif;font-size:12px"><strong>${name}</strong><br/><span style="color:#888;font-size:11px">Approximate location</span></div>`);
+          .bindPopup(`<div style="font-family:Inter,sans-serif;font-size:12px"><strong>${name}</strong><br/><span style="color:#888;font-size:11px">${approxLabel}</span></div>`);
       } else {
         const icon = L.divIcon({
           className: "",
@@ -242,7 +245,7 @@ function SpaceMiniMap({
       }
     });
     return () => { map?.remove(); };
-  }, [lat, lng, name, address, blurred]);
+  }, [lat, lng, name, address, blurred, approxLabel]);
   return <div ref={containerRef} className="w-full h-full" />;
 }
 
@@ -408,8 +411,8 @@ export default function SpaceDetail() {
       <div className="min-h-screen flex flex-col">
         {DEV_SITE ? <DevNavbar /> : <Navbar />}
         <div className="max-w-6xl mx-auto py-16 text-center">
-          <h1 className="text-2xl font-bold">Space not found</h1>
-          <Button onClick={() => setLocation("/search")} className="mt-4">Browse spaces</Button>
+          <h1 className="text-2xl font-bold">{t("space_detail.not_found")}</h1>
+          <Button onClick={() => setLocation("/search")} className="mt-4">{t("space_detail.browse")}</Button>
         </div>
       </div>
     );
@@ -453,8 +456,8 @@ export default function SpaceDetail() {
             <ChevronLeft className="h-5 w-5" />
           </button>
           <div>
-            <p className="font-cursive text-white/70 text-xs italic">Room Details</p>
-            <h1 className="text-white text-xl font-bold italic">Booking</h1>
+            <p className="font-cursive text-white/70 text-xs italic">{t("space_detail.room_details")}</p>
+            <h1 className="text-white text-xl font-bold italic">{t("space_detail.booking")}</h1>
           </div>
         </div>
       </div>
@@ -520,7 +523,7 @@ export default function SpaceDetail() {
               <>
                 <Separator />
                 <div>
-                  <h2 className="text-base font-bold text-gray-800 mb-4">Key Features</h2>
+                  <h2 className="text-base font-bold text-gray-800 mb-4">{t("space_detail.key_features")}</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {amenities.map((opt) => (
                       <div key={opt.id} className="flex items-center gap-2.5 text-sm text-gray-700">
@@ -597,7 +600,7 @@ export default function SpaceDetail() {
               <>
                 <Separator />
                 <div>
-                  <h2 className="text-base font-bold text-gray-800 mb-4">Stay Plans</h2>
+                  <h2 className="text-base font-bold text-gray-800 mb-4">{t("space_detail.stay_plans")}</h2>
                   <div className="space-y-2">
                     {space.products.map((p) => {
                       const baseRate = Number(space.base_weekly_price ?? 0);
@@ -611,7 +614,7 @@ export default function SpaceDetail() {
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-semibold text-gray-800">{p.name}</span>
                               {p.product_tag === "best_value" && (
-                                <span className="text-xs bg-green-100 text-green-700 font-semibold px-1.5 py-0.5 rounded">Best Value</span>
+                                <span className="text-xs bg-green-100 text-green-700 font-semibold px-1.5 py-0.5 rounded">{t("space_detail.best_value")}</span>
                               )}
                               {saving && saving > 0 && (
                                 <span className="text-xs bg-primary/10 text-primary font-semibold px-1.5 py-0.5 rounded">Save {formatDisplayPrice(saving, priceCurrency).primary}/wk</span>
@@ -630,30 +633,30 @@ export default function SpaceDetail() {
             {/* Fee breakdown */}
             <Separator />
             <div>
-              <h2 className="text-base font-bold text-gray-800 mb-3">Fee Breakdown</h2>
+              <h2 className="text-base font-bold text-gray-800 mb-3">{t("space_detail.fee_breakdown")}</h2>
               <div className="rounded-xl border bg-white p-4 space-y-2.5 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Weekly rent</span>
+                  <span className="text-gray-500">{t("space_detail.weekly_rent")}</span>
                   <span className="font-semibold">{money(weeklyRate)}</span>
                 </div>
                 {productAdminFee != null && productAdminFee > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Admission Fee (one-time)</span>
+                    <span className="text-gray-500">{t("space_detail.admission_fee")}</span>
                     <span>{money(productAdminFee)}</span>
                   </div>
                 )}
                 {productCleaningFee != null && productCleaningFee > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Cleaning Fee (one-time)</span>
+                    <span className="text-gray-500">{t("space_detail.cleaning_fee_once")}</span>
                     <span>{money(productCleaningFee)}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Security Bond</span>
+                  <span className="text-gray-500">{t("booking_new.security_bond")}</span>
                   <span>{productBond != null ? money(productBond) : `${money(weeklyRate * 4)} (4 wk)`}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Initial Rent (2 wk)</span>
+                  <span className="text-gray-500">{t("booking_new.initial_rent_2wk")}</span>
                   <span>{money(weeklyRate * 2)}</span>
                 </div>
               </div>
@@ -668,7 +671,7 @@ export default function SpaceDetail() {
               {/* Booking section card */}
               <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
                 <div className="bg-primary px-5 py-3">
-                  <p className="text-white font-semibold text-sm tracking-wide">Booking Section</p>
+                  <p className="text-white font-semibold text-sm tracking-wide">{t("space_detail.booking_section")}</p>
                 </div>
                 <div className="p-5 space-y-4">
                   <div>
@@ -689,13 +692,13 @@ export default function SpaceDetail() {
                   {/* Date inputs */}
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-1">Check In</label>
+                      <label className="block text-xs font-medium text-gray-500 mb-1">{t("booking_new.check_in")}</label>
                       <DateInput value={checkIn} onChange={(v) => handleCheckInChange(v)}
                         min={format(new Date(), "yyyy-MM-dd")}
                         className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:ring-primary/30" />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-1">Check Out</label>
+                      <label className="block text-xs font-medium text-gray-500 mb-1">{t("booking_new.check_out")}</label>
                       <DateInput value={checkOut} onChange={setCheckOut}
                         min={checkIn || format(new Date(), "yyyy-MM-dd")}
                         className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:ring-primary/30" />
@@ -711,29 +714,29 @@ export default function SpaceDetail() {
                         <span>{money(Number(rentTotal ?? 0))}</span>
                       </div>
                       <div className="border-t border-primary/30 pt-1.5 space-y-1">
-                        <p className="text-gray-400 font-medium">Initial payment (once-off):</p>
+                        <p className="text-gray-400 font-medium">{t("space_detail.initial_payment")}</p>
                         <div className="flex justify-between text-gray-500">
                           <span>Security Bond{productBond == null ? " (4 wk)" : " (refundable)"}</span>
                           <span>{money(deposit)}</span>
                         </div>
                         {adminFee > 0 && (
                           <div className="flex justify-between text-gray-500">
-                            <span>Admin Fee</span>
+                            <span>{t("booking_new.admin_fee")}</span>
                             <span>{money(adminFee)}</span>
                           </div>
                         )}
                         {cleaningFee > 0 && (
                           <div className="flex justify-between text-gray-500">
-                            <span>Cleaning Fee</span>
+                            <span>{t("booking_new.cleaning_fee")}</span>
                             <span>{money(cleaningFee)}</span>
                           </div>
                         )}
                         <div className="flex justify-between text-gray-500">
-                          <span>Initial Rent (2 wk)</span>
+                          <span>{t("booking_new.initial_rent_2wk")}</span>
                           <span>{money(initialRent)}</span>
                         </div>
                         <div className="flex justify-between font-bold text-gray-800 border-t border-primary/30 pt-1">
-                          <span>Est. Due Today</span>
+                          <span>{t("booking_new.est_due_today")}</span>
                           <span className="text-primary">{money(totalToday)}</span>
                         </div>
                       </div>
@@ -796,7 +799,7 @@ export default function SpaceDetail() {
         {relatedSpaces.length > 0 && (
           <div className="mt-12">
             <div className="text-center mb-6">
-              <p className="font-cursive text-primary text-xl italic">Choose Your Room</p>
+              <p className="font-cursive text-primary text-xl italic">{t("space_detail.choose_room")}</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {relatedSpaces.map((s) => <RelatedCard key={s.id as number} space={s} />)}

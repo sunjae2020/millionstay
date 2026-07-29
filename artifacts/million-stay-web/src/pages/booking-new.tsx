@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, Link } from "wouter";
 import { getApiBase } from "@/lib/api-base";
 import { formatDate } from "@/lib/dateFormat";
@@ -39,8 +40,9 @@ const RATE_UNIT_SHORT = PRICE_UNIT === "month" ? "/월" : PRICE_UNIT === "day" ?
 /*  Constants                                     */
 /* ────────────────────────────────────────────── */
 
-const SHORT_STEPS = ["Stay Details", "Extra Services", "Payment", "Confirmed"];
-const LONG_STEPS  = ["Stay Details", "Extra Services", "Payment Plans", "Review", "Account"];
+// Step labels are i18n keys; StepIndicator translates them at render time.
+const SHORT_STEPS = ["step_stay", "step_services", "step_payment", "step_confirmed"];
+const LONG_STEPS  = ["step_stay", "step_services", "step_plans", "step_review", "step_account"];
 
 type ServiceItem = {
   id: number;
@@ -80,6 +82,7 @@ function saveSession(data: Record<string, unknown>) {
 /* ────────────────────────────────────────────── */
 
 function StepIndicator({ steps, current }: { steps: string[]; current: number }) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center justify-center gap-0 mb-8 overflow-x-auto px-2">
       {steps.map((label, i) => {
@@ -97,7 +100,7 @@ function StepIndicator({ steps, current }: { steps: string[]; current: number })
               </div>
               <span className={`text-[10px] font-medium hidden sm:block text-center max-w-[72px] leading-tight ${
                 active ? "text-primary" : done ? "text-primary/60" : "text-gray-400"
-              }`}>{label}</span>
+              }`}>{t(`booking_new.${label}`)}</span>
             </div>
             {i < steps.length - 1 && (
               <div className={`w-8 sm:w-14 h-0.5 mx-1 mb-4 transition-all ${i < current ? "bg-primary" : "bg-gray-200"}`} />
@@ -140,13 +143,14 @@ function SummaryCard({
   const cardProRata = weeklyRate > 0 && cardDays > 0 && !isLong
     ? Math.round((weeklyRate / 7) * cardDays * 100) / 100
     : 0;
+  const { t } = useTranslation();
   const cardLongBond = bond > 0 ? bond : weeklyRate * 4;
   const shortTotal   = cardProRata + bond + adminFee + cleaningFee + servicesTotal;
   const longInitial  = cardLongBond + adminFee + cleaningFee + (weeklyRate * 2) + servicesTotal;
 
   return (
     <div className="rounded-2xl border bg-white shadow-sm p-5 space-y-4 sticky top-24">
-      <h3 className="font-semibold text-gray-800 text-sm">Booking Summary</h3>
+      <h3 className="font-semibold text-gray-800 text-sm">{t("booking_new.summary_title")}</h3>
       <div className="space-y-1.5 text-xs text-gray-600">
         {Boolean(session.space_name) && (
           <div className="flex items-start gap-1.5"><Home className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" /><span>{session.space_name as string}</span></div>
@@ -169,31 +173,31 @@ function SummaryCard({
       {isLong ? (
         <div className="space-y-1.5 text-xs">
           <div className="flex justify-between text-gray-500">
-            <span>Security Bond{bond > 0 ? "" : " (4 wk)"}</span>
+            <span>{bond > 0 ? t("booking_new.security_bond") : t("booking_new.security_bond_4wk")}</span>
             <span>{money(cardLongBond)}</span>
           </div>
-          {adminFee > 0 && <div className="flex justify-between text-gray-500"><span>Admin Fee</span><span>{money(adminFee)}</span></div>}
-          {cleaningFee > 0 && <div className="flex justify-between text-gray-500"><span>Cleaning Fee</span><span>{money(cleaningFee)}</span></div>}
-          <div className="flex justify-between text-gray-500"><span>Initial Rent (2 wk)</span><span>{money(weeklyRate * 2)}</span></div>
-          {servicesTotal > 0 && <div className="flex justify-between text-gray-500"><span>Extra Services</span><span>{money(servicesTotal)}</span></div>}
+          {adminFee > 0 && <div className="flex justify-between text-gray-500"><span>{t("booking_new.admin_fee")}</span><span>{money(adminFee)}</span></div>}
+          {cleaningFee > 0 && <div className="flex justify-between text-gray-500"><span>{t("booking_new.cleaning_fee")}</span><span>{money(cleaningFee)}</span></div>}
+          <div className="flex justify-between text-gray-500"><span>{t("booking_new.initial_rent_2wk")}</span><span>{money(weeklyRate * 2)}</span></div>
+          {servicesTotal > 0 && <div className="flex justify-between text-gray-500"><span>{t("booking_new.extra_services")}</span><span>{money(servicesTotal)}</span></div>}
           <Separator />
-          <div className="flex justify-between font-bold text-sm"><span>Est. Due Today</span><span className="text-primary">{money(longInitial)}</span></div>
-          <p className="text-gray-400 text-[10px]">Exact amount confirmed before payment</p>
+          <div className="flex justify-between font-bold text-sm"><span>{t("booking_new.est_due_today")}</span><span className="text-primary">{money(longInitial)}</span></div>
+          <p className="text-gray-400 text-[10px]">{t("booking_new.exact_before_payment")}</p>
         </div>
       ) : (
         <div className="space-y-1.5 text-xs">
           {cardProRata > 0 && (
             <div className="flex justify-between text-gray-500">
-              <span>Rent <span className="text-gray-400">({cardDays}d)</span></span>
+              <span>{t("booking_new.rent")} <span className="text-gray-400">({cardDays}d)</span></span>
               <span>{money(cardProRata)}</span>
             </div>
           )}
-          {bond > 0 && <div className="flex justify-between text-gray-500"><span>Security Bond</span><span>{money(bond)}</span></div>}
-          {adminFee > 0 && <div className="flex justify-between text-gray-500"><span>Admin Fee</span><span>{money(adminFee)}</span></div>}
-          {cleaningFee > 0 && <div className="flex justify-between text-gray-500"><span>Cleaning Fee</span><span>{money(cleaningFee)}</span></div>}
-          {servicesTotal > 0 && <div className="flex justify-between text-gray-500"><span>Extra Services</span><span>{money(servicesTotal)}</span></div>}
+          {bond > 0 && <div className="flex justify-between text-gray-500"><span>{t("booking_new.security_bond")}</span><span>{money(bond)}</span></div>}
+          {adminFee > 0 && <div className="flex justify-between text-gray-500"><span>{t("booking_new.admin_fee")}</span><span>{money(adminFee)}</span></div>}
+          {cleaningFee > 0 && <div className="flex justify-between text-gray-500"><span>{t("booking_new.cleaning_fee")}</span><span>{money(cleaningFee)}</span></div>}
+          {servicesTotal > 0 && <div className="flex justify-between text-gray-500"><span>{t("booking_new.extra_services")}</span><span>{money(servicesTotal)}</span></div>}
           <Separator />
-          <div className="flex justify-between font-bold text-sm"><span>Total Due Today</span><span className="text-primary">{money(shortTotal)}</span></div>
+          <div className="flex justify-between font-bold text-sm"><span>{t("booking_new.total_due_today")}</span><span className="text-primary">{money(shortTotal)}</span></div>
         </div>
       )}
 
@@ -201,7 +205,7 @@ function SummaryCard({
         <>
           <Separator />
           <div className="space-y-1">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Add-ons Selected</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">{t("booking_new.addons_selected")}</p>
             {selectedServices.map((id) => {
               const svc = serviceItems.find((s) => s.id === id);
               if (!svc) return null;
@@ -219,20 +223,21 @@ function SummaryCard({
 /* ────────────────────────────────────────────── */
 
 function BankTransferDetails({ total, ref_ }: { total: number; ref_: string }) {
+  const { t } = useTranslation();
   const fields = [
-    { label: "Bank",           value: COMPANY.bank.name },
-    { label: "Account Name",   value: COMPANY.bank.accountName },
+    { label: t("booking_new.bank"),         value: COMPANY.bank.name },
+    { label: t("booking_new.account_name"), value: COMPANY.bank.accountName },
     // BSB is an Australian bank code; hidden on non-AUD (e.g. Korean) instances.
     ...(BASE_CCY === "AUD" ? [{ label: "BSB", value: COMPANY.bank.bsb }] : []),
-    { label: "Account No.",    value: COMPANY.bank.accountNo },
-    { label: "Amount",         value: money(total) },
-    { label: "Reference",      value: ref_ || "Your Name + Check-in Date" },
+    { label: t("booking_new.account_no"),   value: COMPANY.bank.accountNo },
+    { label: t("booking_new.amount"),       value: money(total) },
+    { label: t("booking_new.reference"),    value: ref_ || t("booking_new.reference_hint") },
   ];
   return (
     <div className="rounded-xl border border-blue-100 bg-blue-50 p-5 space-y-4">
       <div className="flex items-center gap-2">
         <Banknote className="h-5 w-5 text-blue-600" />
-        <p className="font-semibold text-blue-800">Bank Transfer Details</p>
+        <p className="font-semibold text-blue-800">{t("booking_new.bank_title")}</p>
       </div>
       <div className="space-y-2">
         {fields.map(({ label, value }) => (
@@ -245,8 +250,7 @@ function BankTransferDetails({ total, ref_ }: { total: number; ref_: string }) {
       <div className="flex items-start gap-2 bg-white rounded-lg px-3 py-2.5 border border-blue-100">
         <Mail className="h-4 w-4 text-primary mt-0.5 shrink-0" />
         <p className="text-xs text-gray-600">
-          After submitting, a <strong>confirmation email with invoice</strong> will be sent to your email address.
-          Please complete the bank transfer within <strong>48 hours</strong> and include the reference number.
+          {t("booking_new.bank_note")}
         </p>
       </div>
     </div>
@@ -262,6 +266,7 @@ function BankTransferDetails({ total, ref_ }: { total: number; ref_: string }) {
 const DEV_SITE = isDevelopmentSite();
 
 export default function BookingNew() {
+  const { t } = useTranslation();
   const [location, setLocation] = useLocation();
   const { token, guest, logout } = useAuthStore();
   const { toast } = useToast();
@@ -435,7 +440,7 @@ export default function BookingNew() {
   /* ─── Payment / Submit ─── */
   const handlePayment = async () => {
     if (paymentMethod === "card" && (!cardNumber || !cardExpiry || !cardCvc || !cardName)) {
-      toast({ title: "Please fill in all card details", variant: "destructive" });
+      toast({ title: t("booking_new.err_card_details"), variant: "destructive" });
       return;
     }
     setPaying(true);
@@ -454,7 +459,7 @@ export default function BookingNew() {
       setBookingRef(res.booking_ref);
       setConfirmed(true);
     } catch {
-      toast({ title: "Submission failed", description: "Please check your details and try again.", variant: "destructive" });
+      toast({ title: t("booking_new.err_submit"), description: t("booking_new.err_submit_desc"), variant: "destructive" });
     } finally {
       setPaying(false);
     }
@@ -480,10 +485,10 @@ export default function BookingNew() {
       });
       if (!bookingRes.ok) throw new Error("Booking creation failed");
       sessionStorage.removeItem(SESSION_KEY);
-      toast({ title: "Booking created!", description: "Complete payment and upload documents from your portal." });
+      toast({ title: t("booking_new.created_title"), description: t("booking_new.created_desc_portal") });
       setLocation("/portal/bookings");
     } catch {
-      toast({ title: "Could not create booking", description: "Please try again.", variant: "destructive" });
+      toast({ title: t("booking_new.err_create"), description: t("booking_new.err_try_again"), variant: "destructive" });
     } finally {
       setCreatingBooking(false);
     }
@@ -492,10 +497,10 @@ export default function BookingNew() {
   /* ─── Inline login / register for long-term step 4 → create booking → My Bookings ─── */
   const handleInlineLogin = async () => {
     if (!loginEmail || !loginPassword) {
-      toast({ title: "Please enter your email and password", variant: "destructive" }); return;
+      toast({ title: t("booking_new.err_email_password"), variant: "destructive" }); return;
     }
     if (loginMode === "register" && !registerName.trim()) {
-      toast({ title: "Please enter your full name", variant: "destructive" }); return;
+      toast({ title: t("booking_new.err_full_name"), variant: "destructive" }); return;
     }
     setLoggingIn(true);
     try {
@@ -516,7 +521,7 @@ export default function BookingNew() {
 
       if (!authRes.ok) {
         const errData = await authRes.json().catch(() => ({}));
-        const errMsg = errData.error ?? (loginMode === "register" ? "Registration failed" : "Invalid credentials");
+        const errMsg = errData.error ?? (loginMode === "register" ? t("booking_new.register_failed") : t("booking_new.invalid_credentials"));
         throw new Error(errMsg);
       }
 
@@ -524,7 +529,7 @@ export default function BookingNew() {
       const newToken = authData.token;
       useAuthStore.getState().setAuth(newToken, authData.user);
 
-      toast({ title: loginMode === "register" ? "Account created! Creating your booking…" : "Signed in! Creating your booking…" });
+      toast({ title: loginMode === "register" ? t("booking_new.account_created_creating") : t("booking_new.signed_in_creating") });
 
       /* 2. Create the booking with the fresh token */
       const bookingRes = await fetch(`${getApiBase()}/api/v1/guest/bookings`, {
@@ -544,11 +549,11 @@ export default function BookingNew() {
       sessionStorage.removeItem(SESSION_KEY);
 
       /* 3. Go directly to My Bookings in the portal */
-      toast({ title: "Booking created!", description: "You can now complete payment and upload documents." });
+      toast({ title: t("booking_new.created_title"), description: t("booking_new.created_desc_pay") });
       setLocation("/portal/bookings");
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Unknown error";
-      toast({ title: "Failed", description: msg, variant: "destructive" });
+      const msg = err instanceof Error ? err.message : t("booking_new.unknown_error");
+      toast({ title: t("booking_new.failed"), description: msg, variant: "destructive" });
     } finally {
       setLoggingIn(false);
     }
@@ -574,13 +579,13 @@ export default function BookingNew() {
               }`}>
                 <Calendar className="h-3.5 w-3.5" />
                 {isLong
-                  ? `Long-term Stay — ${stayWeeks} weeks (${stayWeeks} × ${weeklyRate ? `${money(weeklyRate)}${RATE_UNIT_SHORT}` : "TBD"})`
-                  : `Short-term Stay — ${stayWeeks} week${stayWeeks > 1 ? "s" : ""} (under 4 weeks)`}
+                  ? t("booking_new.badge_long", { weeks: stayWeeks, rate: weeklyRate ? `${money(weeklyRate)}${RATE_UNIT_SHORT}` : t("booking_new.tbd") })
+                  : t("booking_new.badge_short", { weeks: stayWeeks })}
               </div>
 
               {/* Property */}
               <div className="bg-white rounded-2xl border p-6 space-y-4">
-                <h2 className="font-semibold text-lg text-gray-800">Your Stay</h2>
+                <h2 className="font-semibold text-lg text-gray-800">{t("booking_new.your_stay")}</h2>
                 {isLoading ? <div className="h-14 bg-gray-100 animate-pulse rounded-xl" /> :
                   space ? (
                     <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
@@ -592,8 +597,8 @@ export default function BookingNew() {
 
                 <div className="grid grid-cols-2 gap-3">
                   {([
-                    { label: "Check In",  key: "check_in_date" },
-                    { label: "Check Out", key: "check_out_date" },
+                    { label: t("booking_new.check_in"),  key: "check_in_date" },
+                    { label: t("booking_new.check_out"), key: "check_out_date" },
                   ] as const).map(({ label, key }) => (
                     <div key={key}>
                       <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</label>
@@ -608,37 +613,37 @@ export default function BookingNew() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Number of Guests</label>
+                  <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t("booking_new.num_guests")}</label>
                   <div className="flex items-center gap-3 mt-2">
                     <button onClick={() => setNumGuests(Math.max(1, numGuests - 1))}
                       className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:border-primary text-lg">−</button>
                     <span className="w-8 text-center font-semibold">{numGuests}</span>
                     <button onClick={() => setNumGuests(Math.min(space?.max_occupancy ?? 6, numGuests + 1))}
                       className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:border-primary text-lg">+</button>
-                    <span className="text-sm text-gray-500">guest{numGuests > 1 ? "s" : ""}</span>
+                    <span className="text-sm text-gray-500">{t("booking_new.guests_unit", { count: numGuests })}</span>
                   </div>
                 </div>
               </div>
 
               {/* Guest Details */}
               <div className="bg-white rounded-2xl border p-6 space-y-4">
-                <h2 className="font-semibold text-lg text-gray-800">Guest Details</h2>
+                <h2 className="font-semibold text-lg text-gray-800">{t("booking_new.guest_details")}</h2>
                 {guest ? (
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs text-gray-500 font-medium">First Name</label>
+                      <label className="text-xs text-gray-500 font-medium">{t("booking_new.first_name")}</label>
                       <div className="mt-1 h-10 border border-gray-100 bg-gray-50 rounded-lg px-3 flex items-center text-sm text-gray-700">{guest.first_name ?? ""}</div>
                     </div>
                     <div>
-                      <label className="text-xs text-gray-500 font-medium">Last Name</label>
+                      <label className="text-xs text-gray-500 font-medium">{t("booking_new.last_name")}</label>
                       <div className="mt-1 h-10 border border-gray-100 bg-gray-50 rounded-lg px-3 flex items-center text-sm text-gray-700">{guest.last_name ?? ""}</div>
                     </div>
                     <div className="col-span-2">
-                      <label className="text-xs text-gray-500 font-medium">Email</label>
+                      <label className="text-xs text-gray-500 font-medium">{t("booking_new.email")}</label>
                       <div className="mt-1 h-10 border border-gray-100 bg-gray-50 rounded-lg px-3 flex items-center text-sm text-gray-700">{guest.email}</div>
                     </div>
                     <div className="col-span-2">
-                      <label className="text-xs text-gray-500 font-medium">Phone <span className="text-gray-400">(optional)</span></label>
+                      <label className="text-xs text-gray-500 font-medium">{t("booking_new.phone")} <span className="text-gray-400">({t("booking_new.optional")})</span></label>
                       <Input value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} placeholder="010-0000-0000" className="mt-1 h-10" />
                     </div>
                   </div>
@@ -646,34 +651,34 @@ export default function BookingNew() {
                   /* Long-term guest preview — no login yet */
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs text-gray-500 font-medium">First Name <span className="text-red-400">*</span></label>
-                      <Input value={guestName.split(" ")[0] ?? ""} onChange={(e) => setGuestName(e.target.value + " " + (guestName.split(" ")[1] ?? ""))} placeholder="Jane" className="mt-1 h-10" />
+                      <label className="text-xs text-gray-500 font-medium">{t("booking_new.first_name")} <span className="text-red-400">*</span></label>
+                      <Input value={guestName.split(" ")[0] ?? ""} onChange={(e) => setGuestName(e.target.value + " " + (guestName.split(" ")[1] ?? ""))} placeholder={t("booking_new.ph_first_name")} className="mt-1 h-10" />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-500 font-medium">Last Name <span className="text-red-400">*</span></label>
-                      <Input value={guestName.split(" ").slice(1).join(" ")} onChange={(e) => setGuestName((guestName.split(" ")[0] ?? "") + " " + e.target.value)} placeholder="Smith" className="mt-1 h-10" />
+                      <label className="text-xs text-gray-500 font-medium">{t("booking_new.last_name")} <span className="text-red-400">*</span></label>
+                      <Input value={guestName.split(" ").slice(1).join(" ")} onChange={(e) => setGuestName((guestName.split(" ")[0] ?? "") + " " + e.target.value)} placeholder={t("booking_new.ph_last_name")} className="mt-1 h-10" />
                     </div>
                     <div className="col-span-2">
-                      <label className="text-xs text-gray-500 font-medium">Email <span className="text-red-400">*</span></label>
+                      <label className="text-xs text-gray-500 font-medium">{t("booking_new.email")} <span className="text-red-400">*</span></label>
                       <Input type="email" value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)} placeholder="jane@example.com" className="mt-1 h-10" />
                     </div>
                     <div className="col-span-2">
-                      <label className="text-xs text-gray-500 font-medium">Phone</label>
+                      <label className="text-xs text-gray-500 font-medium">{t("booking_new.phone")}</label>
                       <Input value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} placeholder="010-0000-0000" className="mt-1 h-10" />
                     </div>
                     <div className="col-span-2">
                       <div className="flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
                         <Info className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
-                        <p className="text-xs text-blue-700">You can continue without an account. We'll ask you to sign in or register before final payment.</p>
+                        <p className="text-xs text-blue-700">{t("booking_new.no_account_hint")}</p>
                       </div>
                     </div>
                   </div>
                 )}
 
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Special Requests</label>
+                  <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t("booking_new.special_requests")}</label>
                   <textarea value={specialRequests} onChange={(e) => setSpecialRequests(e.target.value)}
-                    maxLength={500} placeholder="Any special requests or requirements..." rows={3}
+                    maxLength={500} placeholder={t("booking_new.special_requests_ph")} rows={3}
                     className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none" />
                   <p className="text-right text-xs text-gray-400 mt-1">{specialRequests.length}/500</p>
                 </div>
@@ -681,7 +686,7 @@ export default function BookingNew() {
 
               <Button onClick={() => { updateSession({ num_guests: numGuests, special_requests: specialRequests, guest_name: guestName, guest_email: guestEmail, guest_phone: guestPhone }); setStep(1); }}
                 className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12 rounded-xl text-base">
-                Continue to Extra Services <ChevronRight className="h-5 w-5 ml-1" />
+                {t("booking_new.continue_services")} <ChevronRight className="h-5 w-5 ml-1" />
               </Button>
             </div>
             <div className="lg:col-span-1">
@@ -695,11 +700,11 @@ export default function BookingNew() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-5">
               <div className="bg-white rounded-2xl border p-6">
-                <h2 className="font-semibold text-lg text-gray-800 mb-1">Extra Services</h2>
-                <p className="text-sm text-gray-500 mb-5">Enhance your arrival experience — all services are optional.</p>
+                <h2 className="font-semibold text-lg text-gray-800 mb-1">{t("booking_new.extra_services")}</h2>
+                <p className="text-sm text-gray-500 mb-5">{t("booking_new.services_sub")}</p>
                 <div className="space-y-3">
                   {serviceItems.length === 0 && (
-                    <p className="text-xs text-gray-400 text-center py-4">Loading available services…</p>
+                    <p className="text-xs text-gray-400 text-center py-4">{t("booking_new.services_loading")}</p>
                   )}
                   {serviceItems.map((svc) => {
                     const selected = selectedServices.includes(svc.id);
@@ -722,7 +727,7 @@ export default function BookingNew() {
                             <div className="flex items-center gap-2">
                               <p className={`font-semibold text-sm ${selected || mandatory ? "text-primary" : "text-gray-800"}`}>{svc.name}</p>
                               {mandatory && (
-                                <span className="text-xs bg-primary/10 text-primary font-semibold px-1.5 py-0.5 rounded">Included</span>
+                                <span className="text-xs bg-primary/10 text-primary font-semibold px-1.5 py-0.5 rounded">{t("booking_new.included")}</span>
                               )}
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
@@ -741,14 +746,14 @@ export default function BookingNew() {
                   })}
                 </div>
                 {selectedServices.length === 0 && (
-                  <p className="text-xs text-gray-400 text-center mt-4">No services selected — you can add them later by contacting us.</p>
+                  <p className="text-xs text-gray-400 text-center mt-4">{t("booking_new.no_services")}</p>
                 )}
               </div>
 
               <div className="flex gap-3">
-                <Button variant="outline" onClick={() => setStep(0)} className="flex-1 h-12 rounded-xl"><ChevronLeft className="h-4 w-4 mr-1" />Back</Button>
+                <Button variant="outline" onClick={() => setStep(0)} className="flex-1 h-12 rounded-xl"><ChevronLeft className="h-4 w-4 mr-1" />{t("booking_new.back")}</Button>
                 <Button onClick={() => setStep(2)} className="flex-[2] bg-primary hover:bg-primary/90 text-white font-bold h-12 rounded-xl">
-                  {isLong ? "View Payment Plans" : "Continue to Payment"} <ChevronRight className="h-5 w-5 ml-1" />
+                  {isLong ? t("booking_new.view_plans") : t("booking_new.continue_payment")} <ChevronRight className="h-5 w-5 ml-1" />
                 </Button>
               </div>
             </div>
@@ -763,14 +768,14 @@ export default function BookingNew() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-5">
               <div className="bg-white rounded-2xl border p-6 space-y-5">
-                <h2 className="font-semibold text-lg text-gray-800">Payment</h2>
+                <h2 className="font-semibold text-lg text-gray-800">{t("booking_new.payment_title")}</h2>
 
                 {/* Amount breakdown */}
                 <div className="bg-primary/5 border border-primary/20 rounded-xl px-5 py-4 space-y-2 text-sm">
                   {proRataRent > 0 && (
                     <div className="flex justify-between text-gray-600">
                       <span>
-                        Rent
+                        {t("booking_new.rent")}
                         {weeklyRate > 0 && stayDays > 0 && (
                           <span className="text-xs text-gray-400 ml-1">({money(weeklyRate)}{RATE_UNIT_SHORT} ÷ 7 × {stayDays} days)</span>
                         )}
@@ -778,21 +783,21 @@ export default function BookingNew() {
                       <span>{money(proRataRent)}</span>
                     </div>
                   )}
-                  {bond > 0 && <div className="flex justify-between text-gray-600"><span>Security Bond</span><span>{money(bond)}</span></div>}
-                  {adminFee > 0 && <div className="flex justify-between text-gray-600"><span>Admin Fee</span><span>{money(adminFee)}</span></div>}
-                  {cleaningFee > 0 && <div className="flex justify-between text-gray-600"><span>Cleaning Fee</span><span>{money(cleaningFee)}</span></div>}
+                  {bond > 0 && <div className="flex justify-between text-gray-600"><span>{t("booking_new.security_bond")}</span><span>{money(bond)}</span></div>}
+                  {adminFee > 0 && <div className="flex justify-between text-gray-600"><span>{t("booking_new.admin_fee")}</span><span>{money(adminFee)}</span></div>}
+                  {cleaningFee > 0 && <div className="flex justify-between text-gray-600"><span>{t("booking_new.cleaning_fee")}</span><span>{money(cleaningFee)}</span></div>}
                   {selectedServices.map((id) => { const s = serviceItems.find((x) => x.id === id); if (!s) return null; return (
                     <div key={id} className="flex justify-between text-gray-600"><span>{s.name}</span><span>{money(s.base_price ?? 0)}</span></div>
                   ); })}
                   <Separator />
-                  <div className="flex justify-between font-bold text-base"><span>Total</span><span className="text-primary">{money(totalShort)}</span></div>
+                  <div className="flex justify-between font-bold text-base"><span>{t("booking_new.total")}</span><span className="text-primary">{money(totalShort)}</span></div>
                 </div>
 
                 {/* Payment method toggle */}
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Payment Method</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">{t("booking_new.payment_method")}</p>
                   <div className="flex rounded-xl overflow-hidden border border-gray-200">
-                    {([["card", CreditCard, "Credit / Debit Card"], ["bank", Banknote, "Bank Transfer"]] as const).map(([m, Icon, label]) => (
+                    {([["card", CreditCard, t("booking_new.method_card")], ["bank", Banknote, t("booking_new.method_bank")]] as const).map(([m, Icon, label]) => (
                       <button key={m} onClick={() => setPaymentMethod(m as "card" | "bank")}
                         className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-colors ${paymentMethod === m ? "bg-primary text-white" : "text-gray-500 hover:bg-gray-50"}`}>
                         <Icon className="h-4 w-4" />{label}
@@ -803,17 +808,17 @@ export default function BookingNew() {
 
                 {paymentMethod === "card" ? (
                   <div className="space-y-3">
-                    <div><label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Name on Card</label>
-                      <Input value={cardName} onChange={(e) => setCardName(e.target.value)} placeholder="Jane Smith" className="mt-1 h-11" /></div>
-                    <div><label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Card Number</label>
+                    <div><label className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t("booking_new.name_on_card")}</label>
+                      <Input value={cardName} onChange={(e) => setCardName(e.target.value)} placeholder={t("booking_new.ph_full_name")} className="mt-1 h-11" /></div>
+                    <div><label className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t("booking_new.card_number")}</label>
                       <Input value={cardNumber} onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, "").slice(0, 16))} placeholder="1234 5678 9012 3456" className="mt-1 h-11 font-mono" /></div>
                     <div className="grid grid-cols-2 gap-3">
-                      <div><label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Expiry</label>
+                      <div><label className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t("booking_new.expiry")}</label>
                         <Input value={cardExpiry} onChange={(e) => setCardExpiry(e.target.value)} placeholder="MM/YY" className="mt-1 h-11 font-mono" /></div>
                       <div><label className="text-xs font-semibold uppercase tracking-wide text-gray-500">CVC</label>
                         <Input value={cardCvc} onChange={(e) => setCardCvc(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="123" className="mt-1 h-11 font-mono" /></div>
                     </div>
-                    <p className="text-xs text-gray-400 flex items-center gap-1.5"><Lock className="h-3 w-3" />Payments are encrypted and secure.</p>
+                    <p className="text-xs text-gray-400 flex items-center gap-1.5"><Lock className="h-3 w-3" />{t("booking_new.secure_note")}</p>
                   </div>
                 ) : (
                   <BankTransferDetails total={totalShort} ref_={`${[guest?.first_name, guest?.last_name].filter(Boolean).join(" ") || "Guest"} ${session.check_in_date ?? ""}`} />
@@ -821,10 +826,10 @@ export default function BookingNew() {
               </div>
 
               <div className="flex gap-3">
-                <Button variant="outline" onClick={() => setStep(1)} className="flex-1 h-12 rounded-xl"><ChevronLeft className="h-4 w-4 mr-1" />Back</Button>
+                <Button variant="outline" onClick={() => setStep(1)} className="flex-1 h-12 rounded-xl"><ChevronLeft className="h-4 w-4 mr-1" />{t("booking_new.back")}</Button>
                 <Button onClick={handlePayment} disabled={paying} className="flex-[2] bg-primary hover:bg-primary/90 text-white font-bold h-12 rounded-xl">
-                  {paying ? "Processing…" :
-                    paymentMethod === "card" ? `Pay ${money(totalShort)}` : "Submit & Receive Invoice"}
+                  {paying ? t("booking_new.processing") :
+                    paymentMethod === "card" ? t("booking_new.pay_amount", { amount: money(totalShort) }) : t("booking_new.submit_invoice")}
                   {paymentMethod === "card" ? <CreditCard className="h-4 w-4 ml-2" /> : <Mail className="h-4 w-4 ml-2" />}
                 </Button>
               </div>
@@ -841,16 +846,16 @@ export default function BookingNew() {
             <div className="lg:col-span-2 space-y-5">
               <div className="bg-white rounded-2xl border p-6 space-y-5">
                 <div>
-                  <h2 className="font-semibold text-lg text-gray-800">Payment Plans</h2>
-                  <p className="text-sm text-gray-500 mt-1">Breakdown of fees required before move-in for long-term stays.</p>
+                  <h2 className="font-semibold text-lg text-gray-800">{t("booking_new.plans_title")}</h2>
+                  <p className="text-sm text-gray-500 mt-1">{t("booking_new.plans_sub")}</p>
                 </div>
 
                 {[
-                  { label: `Security Bond${bond > 0 ? "" : " (4 weeks)"}`, amount: longBond,      note: "Refundable at end of tenancy (subject to condition)", color: "blue" },
-                  ...(adminFee > 0   ? [{ label: "Admin Fee",    amount: adminFee,    note: "One-time application processing fee", color: "orange" }] : []),
-                  ...(cleaningFee > 0 ? [{ label: "Cleaning Fee", amount: cleaningFee, note: "End-of-stay deep cleaning",            color: "orange" }] : []),
-                  { label: "Initial Rent (2 weeks)",  amount: weeklyRate * 2, note: "Advance rent — due before check-in", color: "green" },
-                  ...(servicesTotal > 0 ? [{ label: "Extra Services", amount: servicesTotal, note: selectedServices.map((id) => serviceItems.find((s) => s.id === id)?.name).join(", "), color: "purple" }] : []),
+                  { label: bond > 0 ? t("booking_new.security_bond") : t("booking_new.security_bond_4w"), amount: longBond, note: t("booking_new.note_bond"), color: "blue" },
+                  ...(adminFee > 0   ? [{ label: t("booking_new.admin_fee"),    amount: adminFee,    note: t("booking_new.note_admin"), color: "orange" }] : []),
+                  ...(cleaningFee > 0 ? [{ label: t("booking_new.cleaning_fee"), amount: cleaningFee, note: t("booking_new.note_cleaning"), color: "orange" }] : []),
+                  { label: t("booking_new.initial_rent_2w"),  amount: weeklyRate * 2, note: t("booking_new.note_initial_rent"), color: "green" },
+                  ...(servicesTotal > 0 ? [{ label: t("booking_new.extra_services"), amount: servicesTotal, note: selectedServices.map((id) => serviceItems.find((s) => s.id === id)?.name).join(", "), color: "purple" }] : []),
                 ].map(({ label, amount, note, color }) => (
                   <div key={label} className={`flex items-start justify-between gap-4 p-4 rounded-xl border ${
                     color === "blue"   ? "border-blue-100 bg-blue-50" :
@@ -871,18 +876,18 @@ export default function BookingNew() {
                 <Separator />
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="font-bold text-base text-gray-800">Estimated Total Due Today</p>
-                    <p className="text-xs text-gray-400 mt-0.5">Exact amount confirmed upon approval</p>
+                    <p className="font-bold text-base text-gray-800">{t("booking_new.est_total_today")}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{t("booking_new.exact_on_approval")}</p>
                   </div>
                   <p className="font-black text-2xl text-primary">{money(totalLong)}</p>
                 </div>
 
                 <div className="bg-gray-50 rounded-xl px-4 py-3 space-y-1.5">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Ongoing Rent</p>
-                  {weeklyRate > 0 && <p className="text-sm text-gray-700"><span className="font-bold">{money(weeklyRate)}{RATE_UNIT}</span> — due weekly in advance after check-in</p>}
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">{t("booking_new.ongoing_rent")}</p>
+                  {weeklyRate > 0 && <p className="text-sm text-gray-700"><span className="font-bold">{money(weeklyRate)}{RATE_UNIT}</span> — {t("booking_new.rent_due_note")}</p>}
                   {proRataRent > 0 && stayDays > 0 && (
                     <p className="text-xs text-gray-500 mt-1">
-                      Estimated total rent: <span className="font-semibold text-gray-700">{money(proRataRent)}</span>
+                      {t("booking_new.est_total_rent")} <span className="font-semibold text-gray-700">{money(proRataRent)}</span>
                       <span className="text-gray-400"> ({money(weeklyRate)}{RATE_UNIT_SHORT} ÷ 7 × {stayDays} days)</span>
                     </p>
                   )}
@@ -890,9 +895,9 @@ export default function BookingNew() {
               </div>
 
               <div className="flex gap-3">
-                <Button variant="outline" onClick={() => setStep(1)} className="flex-1 h-12 rounded-xl"><ChevronLeft className="h-4 w-4 mr-1" />Back</Button>
+                <Button variant="outline" onClick={() => setStep(1)} className="flex-1 h-12 rounded-xl"><ChevronLeft className="h-4 w-4 mr-1" />{t("booking_new.back")}</Button>
                 <Button onClick={() => setStep(3)} className="flex-[2] bg-primary hover:bg-primary/90 text-white font-bold h-12 rounded-xl">
-                  Review & Confirm <ChevronRight className="h-5 w-5 ml-1" />
+                  {t("booking_new.review_confirm")} <ChevronRight className="h-5 w-5 ml-1" />
                 </Button>
               </div>
             </div>
@@ -907,18 +912,18 @@ export default function BookingNew() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-5">
               <div className="bg-white rounded-2xl border p-6 space-y-5">
-                <h2 className="font-semibold text-lg text-gray-800">Review Your Booking</h2>
+                <h2 className="font-semibold text-lg text-gray-800">{t("booking_new.review_title")}</h2>
                 <div className="space-y-3 text-sm">
                   {[
-                    ["Property", session.space_name as string],
-                    ["Address",  session.property_address as string],
-                    ["Check In", formatDate(session.check_in_date as string)],
-                    ["Check Out", formatDate(session.check_out_date as string)],
-                    ["Stay Duration", `${stayWeeks} weeks`],
-                    ["Weekly Rate", weeklyRate ? `${money(weeklyRate)}${RATE_UNIT}` : "TBD"],
-                    ["Guests", String(session.num_guests ?? numGuests)],
-                    ...(selectedServices.length > 0 ? [["Extra Services", selectedServices.map((id) => serviceItems.find((s) => s.id === id)?.name).join(", ")]] : []),
-                    ...(session.special_requests ? [["Special Requests", session.special_requests as string]] : []),
+                    [t("booking_new.f_property"), session.space_name as string],
+                    [t("booking_new.f_address"),  session.property_address as string],
+                    [t("booking_new.check_in"), formatDate(session.check_in_date as string)],
+                    [t("booking_new.check_out"), formatDate(session.check_out_date as string)],
+                    [t("booking_new.f_duration"), t("booking_new.weeks", { count: stayWeeks })],
+                    [t("booking_new.f_weekly_rate"), weeklyRate ? `${money(weeklyRate)}${RATE_UNIT}` : t("booking_new.tbd")],
+                    [t("booking_new.f_guests"), String(session.num_guests ?? numGuests)],
+                    ...(selectedServices.length > 0 ? [[t("booking_new.extra_services"), selectedServices.map((id) => serviceItems.find((s) => s.id === id)?.name).join(", ")]] : []),
+                    ...(session.special_requests ? [[t("booking_new.special_requests"), session.special_requests as string]] : []),
                   ].map(([label, value]) => value ? (
                     <div key={label} className="flex gap-3">
                       <span className="text-gray-500 w-36 shrink-0">{label}</span>
@@ -928,20 +933,20 @@ export default function BookingNew() {
                 </div>
 
                 <div className="bg-primary/5 border border-primary/20 rounded-xl px-5 py-4">
-                  <div className="flex justify-between font-bold"><span>Est. Total Due at Confirmation</span><span className="text-primary">{money(totalLong)}</span></div>
+                  <div className="flex justify-between font-bold"><span>{t("booking_new.est_total_confirm")}</span><span className="text-primary">{money(totalLong)}</span></div>
                 </div>
 
                 <div className="flex items-start gap-2 text-xs text-gray-500">
                   <AlertCircle className="h-4 w-4 text-yellow-500 mt-0.5 shrink-0" />
-                  <p>By proceeding you agree to our <Link href="/house-rules" className="text-primary underline">House Rules</Link> and <Link href="/privacy-policy" className="text-primary underline">Privacy Policy</Link>. Your booking is subject to management approval.</p>
+                  <p>{t("booking_new.agree_prefix")} <Link href="/house-rules" className="text-primary underline">{t("booking_new.house_rules")}</Link>{t("booking_new.agree_join")}<Link href="/privacy-policy" className="text-primary underline">{t("booking_new.privacy_policy")}</Link>{t("booking_new.agree_suffix")}</p>
                 </div>
               </div>
 
               <div className="flex gap-3">
-                <Button variant="outline" onClick={() => setStep(2)} className="flex-1 h-12 rounded-xl"><ChevronLeft className="h-4 w-4 mr-1" />Back</Button>
+                <Button variant="outline" onClick={() => setStep(2)} className="flex-1 h-12 rounded-xl"><ChevronLeft className="h-4 w-4 mr-1" />{t("booking_new.back")}</Button>
                 <Button onClick={handleProceedFromReview} disabled={creatingBooking}
                   className="flex-[2] bg-primary hover:bg-primary/90 text-white font-bold h-12 rounded-xl">
-                  {creatingBooking ? "Creating booking…" : token ? "Create Booking & Go to My Portal" : "Create Account to Continue"}
+                  {creatingBooking ? t("booking_new.creating_booking") : token ? t("booking_new.create_booking_portal") : t("booking_new.create_account_continue")}
                   <ChevronRight className="h-5 w-5 ml-1" />
                 </Button>
               </div>
@@ -960,14 +965,14 @@ export default function BookingNew() {
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
                   <LogIn className="h-6 w-6 text-primary" />
                 </div>
-                <h2 className="font-bold text-xl text-gray-800">Create or Sign In</h2>
-                <p className="text-sm text-gray-500 mt-1">An account lets you access your Guest Portal to pay, upload documents, and track your booking.</p>
+                <h2 className="font-bold text-xl text-gray-800">{t("booking_new.account_title")}</h2>
+                <p className="text-sm text-gray-500 mt-1">{t("booking_new.account_sub")}</p>
               </div>
 
               <div className="flex items-start gap-2.5 bg-primary/5 border border-primary/20 rounded-xl px-4 py-3">
                 <LayoutDashboard className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                 <p className="text-xs text-gray-700">
-                  After signing in, your <strong>Guest Portal</strong> will be available — view your invoice, pay by card or bank transfer, and upload required documents all in one place.
+                  {t("booking_new.portal_note")}
                 </p>
               </div>
 
@@ -976,7 +981,7 @@ export default function BookingNew() {
                 {(["register", "login"] as const).map((mode) => (
                   <button key={mode} onClick={() => setLoginMode(mode)}
                     className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${loginMode === mode ? "bg-primary text-white" : "text-gray-500 hover:bg-gray-50"}`}>
-                    {mode === "register" ? "Create Account" : "Already have an account"}
+                    {mode === "register" ? t("booking_new.tab_register") : t("booking_new.tab_login")}
                   </button>
                 ))}
               </div>
@@ -985,26 +990,26 @@ export default function BookingNew() {
               <div className="space-y-3">
                 {loginMode === "register" && (
                   <div>
-                    <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Full Name <span className="text-red-400">*</span></label>
+                    <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t("booking_new.full_name")} <span className="text-red-400">*</span></label>
                     <Input value={registerName} onChange={(e) => setRegisterName(e.target.value)}
-                      placeholder="Jane Smith" className="mt-1 h-11" />
+                      placeholder={t("booking_new.ph_full_name")} className="mt-1 h-11" />
                   </div>
                 )}
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Email Address <span className="text-red-400">*</span></label>
+                  <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t("booking_new.email_address")} <span className="text-red-400">*</span></label>
                   <Input type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)}
                     placeholder="jane@example.com" className="mt-1 h-11" autoComplete="email" />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">Password <span className="text-red-400">*</span></label>
+                  <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">{t("booking_new.password")} <span className="text-red-400">*</span></label>
                   <Input type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)}
-                    placeholder={loginMode === "register" ? "Create a password (12+ chars, mixed case, number, symbol)" : "••••••••"} className="mt-1 h-11" autoComplete={loginMode === "register" ? "new-password" : "current-password"} />
+                    placeholder={loginMode === "register" ? t("booking_new.ph_password") : "••••••••"} className="mt-1 h-11" autoComplete={loginMode === "register" ? "new-password" : "current-password"} />
                 </div>
                 {loginMode === "register" && (
                   <>
                     <p className="text-xs text-gray-400 flex items-center gap-1.5">
                       <Lock className="h-3 w-3 shrink-0" />
-                      Your details are encrypted and only used to manage your booking.
+                      {t("booking_new.encrypted_note")}
                     </p>
                     {/* Sprint B-1: Marketing consent (Spam Act 2003) */}
                     <label className="flex items-start gap-2.5 cursor-pointer pt-1">
@@ -1016,8 +1021,8 @@ export default function BookingNew() {
                         data-testid="checkbox-marketing-consent"
                       />
                       <span className="text-xs text-gray-600 leading-relaxed">
-                        <span className="font-medium">Optional:</span> Email me deals & updates from {APP_NAME}.
-                        <span className="block text-[11px] text-gray-400 mt-0.5">Unsubscribe anytime. Booking emails are not affected.</span>
+                        <span className="font-medium">{t("booking_new.optional_label")}</span> {t("booking_new.marketing_text", { appName: APP_NAME })}
+                        <span className="block text-[11px] text-gray-400 mt-0.5">{t("booking_new.marketing_unsub")}</span>
                       </span>
                     </label>
                   </>
@@ -1027,16 +1032,16 @@ export default function BookingNew() {
               <Button onClick={handleInlineLogin} disabled={loggingIn}
                 className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12 rounded-xl">
                 {loggingIn
-                  ? "Please wait…"
+                  ? t("booking_new.please_wait")
                   : loginMode === "register"
-                    ? "Create Account & Go to My Bookings"
-                    : "Log In & Go to My Bookings"}
+                    ? t("booking_new.register_go")
+                    : t("booking_new.login_go")}
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
 
               <div className="text-center">
                 <button onClick={() => setStep(3)} className="text-sm text-gray-400 hover:text-gray-600">
-                  ← Back to Review
+                  ← {t("booking_new.back_to_review")}
                 </button>
               </div>
             </div>
@@ -1056,9 +1061,9 @@ export default function BookingNew() {
       <div className="bg-gradient-to-r from-[#c05010] via-[#e07828] to-[#c86820] py-8 px-4">
         <div className="max-w-5xl mx-auto">
           <p className="text-white/70 text-sm italic mb-1">
-            {isLong ? "Long-term Stay — 4 weeks or more" : "Short-term Stay — under 4 weeks"}
+            {isLong ? t("booking_new.hero_long") : t("booking_new.hero_short")}
           </p>
-          <h1 className="text-2xl font-bold text-white tracking-wide">Complete Your Booking</h1>
+          <h1 className="text-2xl font-bold text-white tracking-wide">{t("booking_new.page_title")}</h1>
         </div>
       </div>
 
@@ -1073,17 +1078,17 @@ export default function BookingNew() {
                 <Sparkles className="h-10 w-10 text-green-600" />
               </motion.div>
               <h2 className="text-2xl font-bold text-gray-800">
-                {paymentMethod === "bank" ? "Application Submitted!" : "Booking Confirmed!"}
+                {paymentMethod === "bank" ? t("booking_new.app_submitted") : t("booking_new.booking_confirmed")}
               </h2>
               {bookingRef && (
                 <p className="text-sm text-gray-500 mt-1">
-                  Reference: <span className="font-mono font-bold text-primary">{bookingRef}</span>
+                  {t("booking_new.reference")}: <span className="font-mono font-bold text-primary">{bookingRef}</span>
                 </p>
               )}
               <p className="text-sm text-gray-500 mt-2">
                 {isLong
-                  ? "Your application is being reviewed. We'll contact you within 24–48 hours."
-                  : "Your booking is confirmed. A confirmation email has been sent."}
+                  ? t("booking_new.review_24_48")
+                  : t("booking_new.confirmed_email")}
               </p>
             </div>
 
@@ -1102,15 +1107,15 @@ export default function BookingNew() {
                   <LayoutDashboard className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-800">Access Your Guest Portal</p>
-                  <p className="text-xs text-gray-500">Manage your booking, invoice, and documents in one place</p>
+                  <p className="font-semibold text-gray-800">{t("booking_new.portal_cta_title")}</p>
+                  <p className="text-xs text-gray-500">{t("booking_new.portal_cta_sub")}</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                 {[
-                  ["📄", "View & download invoice"],
-                  ["📁", "Upload required documents"],
-                  ["📅", "Track booking status"],
+                  ["📄", t("booking_new.feat_invoice")],
+                  ["📁", t("booking_new.feat_docs")],
+                  ["📅", t("booking_new.feat_status")],
                 ].map(([icon, text]) => (
                   <div key={text} className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
                     <span>{icon}</span><span className="text-gray-600">{text}</span>
@@ -1121,25 +1126,25 @@ export default function BookingNew() {
                 <div className="space-y-2">
                   <Button onClick={() => setLocation("/portal/bookings")}
                     className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12 rounded-xl">
-                    <LayoutDashboard className="h-4 w-4 mr-2" /> Open Guest Portal
+                    <LayoutDashboard className="h-4 w-4 mr-2" /> {t("booking_new.open_portal")}
                     <ExternalLink className="h-4 w-4 ml-2 opacity-70" />
                   </Button>
                   <p className="text-center text-xs text-gray-400">
-                    자동으로 이동합니다 <span className="font-semibold text-primary">{redirectCountdown}초</span> 후…
+                    {t("booking_new.redirect_note", { seconds: redirectCountdown })}
                   </p>
                 </div>
               ) : (
                 <Button onClick={() => setLocation("/login?redirect=/portal/bookings")}
                   className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12 rounded-xl">
-                  <LogIn className="h-4 w-4 mr-2" /> Sign In to Access Portal
+                  <LogIn className="h-4 w-4 mr-2" /> {t("booking_new.signin_portal")}
                 </Button>
               )}
             </div>
 
             {/* Secondary actions */}
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button variant="outline" onClick={() => setLocation("/")} className="flex-1 rounded-xl">Back to Home</Button>
-              <Button variant="outline" onClick={() => setLocation("/search")} className="flex-1 rounded-xl">Browse More Rooms</Button>
+              <Button variant="outline" onClick={() => setLocation("/")} className="flex-1 rounded-xl">{t("booking_new.back_home")}</Button>
+              <Button variant="outline" onClick={() => setLocation("/search")} className="flex-1 rounded-xl">{t("booking_new.browse_more")}</Button>
             </div>
           </div>
         ) : stepContent}
