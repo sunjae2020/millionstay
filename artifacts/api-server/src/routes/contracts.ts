@@ -11,6 +11,15 @@ import { buildContractHtml, splitAnnex, type ContractDocInput, type ContractPrem
 import { buildKoreanLeaseHtml, type KoreanLeaseDocInput } from "../lib/documents/koreanLeaseDocument";
 import { buildHousingStandardLeasePdf, type HousingStandardLeaseInput } from "../lib/documents/forms/housingStandardLeaseForm";
 import {
+  buildMltStandardLeasePdf,
+  type MltGuaranteeNoneReason,
+  type MltGuaranteeStatus,
+  type MltHousingType,
+  type MltRentalType,
+  type MltStandardLeaseInput,
+  type MltSupplyKind,
+} from "../lib/documents/forms/mltStandardLeaseForm";
+import {
   buildLeaseAttachmentsHtml,
   LEASE_ATTACHMENT_KINDS,
   type LeaseAttachmentInput,
@@ -418,6 +427,41 @@ router.get("/v1/contracts", async (req, res): Promise<void> => {
   res.json(result);
 });
 
+/**
+ * 민간임대주택 표준임대차계약서(별지 제24호서식) 법정 기재사항을 요청 본문에서 뽑는다.
+ * 서식이 정해 둔 값만 통과시키고(오타로 체크박스가 사라지지 않게), 나머지는 null.
+ */
+function mltLeaseFields(data: Record<string, unknown>) {
+  const pick = <T extends string>(v: unknown, allowed: readonly T[]): T | null =>
+    typeof v === "string" && (allowed as readonly string[]).includes(v) ? (v as T) : null;
+  const bool = (v: unknown): boolean | null => (typeof v === "boolean" ? v : null);
+  const num = (v: unknown): number | null =>
+    v === null || v === undefined || v === "" || !Number.isFinite(Number(v)) ? null : Number(v);
+  const str = (v: unknown): string | null => (typeof v === "string" && v.trim() ? v.trim() : null);
+  return {
+    mlt_landlord_rental_biz_no: str(data.mlt_landlord_rental_biz_no),
+    mlt_housing_type: pick(data.mlt_housing_type, ["apartment", "row_house", "multiplex", "multi_family", "other"] as const),
+    mlt_rental_type: pick(data.mlt_rental_type, ["public_support", "long_term", "short_term"] as const),
+    mlt_rental_term_years: num(data.mlt_rental_term_years),
+    mlt_rental_type_other: str(data.mlt_rental_type_other),
+    mlt_supply_kind: pick(data.mlt_supply_kind, ["built", "purchased"] as const),
+    mlt_mandatory_start_date: str(data.mlt_mandatory_start_date),
+    mlt_over_100_units: bool(data.mlt_over_100_units),
+    mlt_ancillary_facilities: str(data.mlt_ancillary_facilities),
+    mlt_senior_lien: bool(data.mlt_senior_lien),
+    mlt_senior_lien_kind: str(data.mlt_senior_lien_kind),
+    mlt_senior_lien_amount: num(data.mlt_senior_lien_amount),
+    mlt_senior_lien_date: str(data.mlt_senior_lien_date),
+    mlt_tax_arrears: bool(data.mlt_tax_arrears),
+    mlt_guarantee_status: pick(data.mlt_guarantee_status, ["joined", "partial", "not_joined"] as const),
+    mlt_guarantee_amount: num(data.mlt_guarantee_amount),
+    mlt_guarantee_none_reason: pick(data.mlt_guarantee_none_reason, ["zero", "priority", "public_landlord", "tenant_guarantee"] as const),
+    mlt_late_fee_rate: num(data.mlt_late_fee_rate),
+    interim_payment: num(data.interim_payment),
+    interim_payment_date: str(data.interim_payment_date),
+  };
+}
+
 router.post("/v1/contracts", async (req, res): Promise<void> => {
   const data = req.body;
   const contract_ref = await nextContractRef();
@@ -442,6 +486,7 @@ router.post("/v1/contracts", async (req, res): Promise<void> => {
     contract_category: data.contract_category ?? null,
     lease_form: data.lease_form ?? null,
     doc_attachments: normalizeAttachmentsInput(data.doc_attachments),
+    ...mltLeaseFields(data),
     down_payment: data.down_payment ?? null,
     down_payment_date: data.down_payment_date ?? null,
     balance_amount: data.balance_amount ?? null,
@@ -633,6 +678,7 @@ export interface BuiltContractDoc {
   leaseForm: ContractLeaseForm | null;
   /** 법무부 주택임대차표준계약서 입력값. */
   housing: HousingStandardLeaseInput;
+  mlt: MltStandardLeaseInput;
   /** 계약 상세에서 체크한 첨부 문서 종류. */
   attachmentKinds: LeaseAttachmentKind[];
   /** 첨부 문서 렌더링 입력값. */
@@ -837,6 +883,62 @@ export async function buildContractDocInput(
     },
   };
 
+  // 민간임대주택 표준임대차계약서(별지 제24호서식) — 등록임대사업자 전용 법정서식.
+  // 서식이 요구하는 법정 고지사항(종류·의무기간·선순위·체납·보증)은 계약에
+  // 스냅숏으로 저장해 둔 mlt_* 컬럼(0033)에서 온다. 주민등록번호는 저장하지
+  // 않으므로 해당 칸은 늘 비어 나가고 수기로 채운다.
+  const mltAccounts = await resolveLeaseAccounts();
+  const mltAccount = mltAccounts.find((a) => a.label.includes("보증금")) ?? mltAccounts[0] ?? null;
+  const mlt: MltStandardLeaseInput = {
+    signed_on: row.signed_at ?? row.effective_date ?? row.created_at,
+    landlord: {
+      name: (c as any).landlord_name || storedCompany.company_name || null,
+      address: landlordAddress || storedCompany.address1 || null,
+      phone: storedCompany.phone ?? null,
+      id_no: storedCompany.biz_no ?? storedCompany.abn ?? null,
+    },
+    landlord_rental_biz_no: row.mlt_landlord_rental_biz_no ?? null,
+    tenant: {
+      name: (c as any).tenant_name ?? null,
+      address: tenantAddress,
+      phone: tenantPhone,
+    },
+    property_address: [premises?.location, housingBuildingName, premises?.unit_no ? `${premises.unit_no}호` : null]
+      .filter(Boolean).join(" ") || null,
+    housing_type: (row.mlt_housing_type as MltHousingType | null) ?? null,
+    area_exclusive_m2: premises?.exclusive_area_m2 ?? null,
+    area_common_residential_m2: premises?.residential_common_area_m2 ?? null,
+    area_common_other_m2: premises?.other_common_area_m2 ?? null,
+    rental_type: (row.mlt_rental_type as MltRentalType | null) ?? null,
+    rental_term_years: row.mlt_rental_term_years ?? null,
+    rental_type_other: row.mlt_rental_type_other ?? null,
+    supply_kind: (row.mlt_supply_kind as MltSupplyKind | null) ?? null,
+    mandatory_start_date: row.mlt_mandatory_start_date ?? null,
+    over_100_units: row.mlt_over_100_units ?? null,
+    ancillary_facilities: row.mlt_ancillary_facilities ?? null,
+    senior_lien: row.mlt_senior_lien ?? null,
+    senior_lien_kind: row.mlt_senior_lien_kind ?? null,
+    senior_lien_amount: row.mlt_senior_lien_amount ?? null,
+    senior_lien_date: row.mlt_senior_lien_date ?? null,
+    tax_arrears: row.mlt_tax_arrears ?? null,
+    guarantee_status: (row.mlt_guarantee_status as MltGuaranteeStatus | null) ?? null,
+    guarantee_amount: row.mlt_guarantee_amount ?? null,
+    guarantee_none_reason: (row.mlt_guarantee_none_reason as MltGuaranteeNoneReason | null) ?? null,
+    deposit_amount: row.bond_amount,
+    monthly_rent: actualMonthlyRent,
+    start_date: row.start_date,
+    end_date: row.end_date,
+    down_payment: row.down_payment,
+    interim_payment: row.interim_payment,
+    interim_payment_date: row.interim_payment_date,
+    balance_amount: row.balance_amount,
+    balance_date: row.balance_date,
+    account_number: mltAccount?.account_number ?? null,
+    bank_name: mltAccount?.bank_name ?? null,
+    account_holder: mltAccount?.account_name ?? null,
+    late_fee_rate: row.mlt_late_fee_rate ?? null,
+  };
+
   // 계약서 뒤에 붙일 첨부 문서 — 계약 상세에서 고른 것만.
   const attachmentKinds = parseAttachmentKinds(row.doc_attachments);
   const attachments: LeaseAttachmentInput = {
@@ -872,6 +974,7 @@ export async function buildContractDocInput(
     lease,
     leaseForm: (row.lease_form as ContractLeaseForm | null) ?? null,
     housing,
+    mlt,
     attachmentKinds,
     attachments,
     doc: {
@@ -955,6 +1058,8 @@ async function mergePdfs(parts: Uint8Array[]): Promise<Buffer> {
  *
  *  - `housing_standard` : 법무부 주택임대차표준계약서. 정부 원본 PDF 를 배경으로
  *    값만 얹으므로 HTML 을 거치지 않는다(글꼴·괘선이 원본 그 자체).
+ *  - `mlt_standard` : 민간임대주택 표준임대차계약서(별지 제24호서식). 등록임대
+ *    사업자 법정서식이라 문구를 고칠 수 없다 — 같은 오버레이 방식, 6쪽 고정.
  *  - 그 밖 : 기존대로 HTML → 크로미움 인쇄.
  *
  * 계약 상세에서 첨부 문서를 골랐으면 그 묶음을 계약서 뒤에 이어 붙인다.
@@ -968,9 +1073,18 @@ export async function renderContractPdf(
 ): Promise<Buffer> {
   const parts: Uint8Array[] = [];
 
-  if (built.leaseForm === "housing_standard") {
-    const sealOf = (role: string) =>
-      signatures?.find((s) => s.role?.toLowerCase() === role)?.signatureImage ?? null;
+  const sealOf = (role: string) =>
+    signatures?.find((s) => s.role?.toLowerCase() === role)?.signatureImage ?? null;
+
+  if (built.leaseForm === "mlt_standard") {
+    parts.push(
+      await buildMltStandardLeasePdf({
+        ...built.mlt,
+        landlord: { ...built.mlt.landlord, seal_image: sealOf("landlord") },
+        tenant: { ...built.mlt.tenant, seal_image: sealOf("tenant") },
+      }),
+    );
+  } else if (built.leaseForm === "housing_standard") {
     parts.push(
       await buildHousingStandardLeasePdf(
         {
@@ -1007,7 +1121,8 @@ router.get("/v1/contracts/:id/pdf", async (req, res): Promise<void> => {
   if (!built) { res.status(404).json({ error: "Not found" }); return; }
 
   // 주택임대차표준계약서는 정부 원본 PDF 오버레이라 HTML 표현이 없다 — 항상 PDF.
-  const asHtml = req.query.format === "html" && built.leaseForm !== "housing_standard";
+  const isGovForm = built.leaseForm === "housing_standard" || built.leaseForm === "mlt_standard";
+  const asHtml = req.query.format === "html" && !isGovForm;
   if (asHtml) { res.type("html").send(await renderContractHtml(built, false, lang)); return; }
   try {
     const pdf = await renderContractPdf(built, lang);
@@ -1139,6 +1254,7 @@ router.put("/v1/contracts/:id", async (req, res): Promise<void> => {
         contract_category: data.contract_category ?? null,
         lease_form: data.lease_form ?? null,
         doc_attachments: normalizeAttachmentsInput(data.doc_attachments),
+        ...mltLeaseFields(data),
         down_payment: data.down_payment ?? null,
         down_payment_date: data.down_payment_date ?? null,
         balance_amount: data.balance_amount ?? null,
