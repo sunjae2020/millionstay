@@ -60,6 +60,26 @@ const LEASE_FORMS = [
   { value: "mlt_standard", labelKey: "contract.form_mlt_standard" },
 ];
 /** 계약서 뒤에 붙일 수 있는 첨부 문서 — api-server leaseAttachments.ts 와 키가 같아야 한다. */
+/**
+ * 민간임대주택 표준임대차계약서(별지 제24호서식)가 요구하는 법정 기재사항의 선택지.
+ * 값은 api-server mltStandardLeaseForm.ts 의 타입과 1:1 — 바꾸면 서식 체크박스가 어긋난다.
+ */
+const MLT_HOUSING_TYPES = ["apartment", "row_house", "multiplex", "multi_family", "other"] as const;
+const MLT_RENTAL_TYPES = ["public_support", "long_term", "short_term"] as const;
+/** 의무기간 선택지는 종류에 따라 다르다 — 단기만 6·4년. */
+const MLT_TERM_YEARS: Record<string, number[]> = {
+  public_support: [10, 8],
+  long_term: [10, 8],
+  short_term: [6, 4],
+};
+const MLT_SUPPLY_KINDS = ["built", "purchased"] as const;
+const MLT_GUARANTEE_STATUSES = ["joined", "partial", "not_joined"] as const;
+const MLT_GUARANTEE_NONE_REASONS = ["zero", "priority", "public_landlord", "tenant_guarantee"] as const;
+/** 서식의 "예 / 아니오" 칸 — 모르는 값은 어느 쪽도 찍지 않으므로 빈 값을 남겨 둔다. */
+const MLT_YES_NO = ["", "yes", "no"] as const;
+const toTriState = (v: unknown): string => (v === true ? "yes" : v === false ? "no" : "");
+const fromTriState = (v: string): boolean | null => (v === "yes" ? true : v === "no" ? false : null);
+
 const LEASE_ATTACHMENTS = [
   { value: "special_terms", labelKey: "contract.attach_special_terms" },
   { value: "deposit_consent", labelKey: "contract.attach_deposit_consent" },
@@ -92,6 +112,26 @@ interface FormData {
   contract_category: string;
   lease_form: string;
   doc_attachments: string[];
+  mlt_landlord_rental_biz_no: string;
+  mlt_housing_type: string;
+  mlt_rental_type: string;
+  mlt_rental_term_years: string;
+  mlt_rental_type_other: string;
+  mlt_supply_kind: string;
+  mlt_mandatory_start_date: string;
+  mlt_over_100_units: string;
+  mlt_ancillary_facilities: string;
+  mlt_senior_lien: string;
+  mlt_senior_lien_kind: string;
+  mlt_senior_lien_amount: string;
+  mlt_senior_lien_date: string;
+  mlt_tax_arrears: string;
+  mlt_guarantee_status: string;
+  mlt_guarantee_amount: string;
+  mlt_guarantee_none_reason: string;
+  mlt_late_fee_rate: string;
+  interim_payment: string;
+  interim_payment_date: string;
   down_payment: string;
   down_payment_date: string;
   balance_amount: string;
@@ -268,14 +308,19 @@ export default function ContractDetail() {
   const ledgerOpen = ledgerRows.filter((r) => r.invoice && r.invoice.status !== "Paid");
   const sumAmount = (rows: typeof ledgerRows) => rows.reduce((s, r) => s + Number(r.invoice?.amount ?? 0), 0);
 
-  const { register, handleSubmit, reset, control } = useForm<FormData>({
+  const { register, handleSubmit, reset, control, watch } = useForm<FormData>({
     defaultValues: {
       booking_id: null, product_id: null, tenant_account_id: null,
       landlord_account_id: null, space_id: null,
       start_date: "", end_date: "", weekly_rate: "", total_rent: "",
       bond_amount: "", advance_amount: "",
       contract_category: "", lease_form: "", doc_attachments: [],
-      down_payment: "", down_payment_date: "",
+      down_payment: "", down_payment_date: "", interim_payment: "", interim_payment_date: "",
+      mlt_landlord_rental_biz_no: "", mlt_housing_type: "", mlt_rental_type: "", mlt_rental_term_years: "",
+      mlt_rental_type_other: "", mlt_supply_kind: "", mlt_mandatory_start_date: "", mlt_over_100_units: "",
+      mlt_ancillary_facilities: "", mlt_senior_lien: "", mlt_senior_lien_kind: "", mlt_senior_lien_amount: "",
+      mlt_senior_lien_date: "", mlt_tax_arrears: "", mlt_guarantee_status: "", mlt_guarantee_amount: "",
+      mlt_guarantee_none_reason: "", mlt_late_fee_rate: "",
       balance_amount: "", balance_date: "", monthly_rent: "", rent_due_day: "",
       currency: brandCurrency,
       document_url: "", terms_text: "", notes: "",
@@ -300,6 +345,26 @@ export default function ContractDetail() {
         lease_form: (contract as any).lease_form ?? "",
         doc_attachments: parseAttachments((contract as any).doc_attachments),
         down_payment: (contract as any).down_payment != null ? String((contract as any).down_payment) : "",
+        interim_payment: (contract as any).interim_payment != null ? String((contract as any).interim_payment) : "",
+        interim_payment_date: (contract as any).interim_payment_date ?? "",
+        mlt_landlord_rental_biz_no: (contract as any).mlt_landlord_rental_biz_no ?? "",
+        mlt_housing_type: (contract as any).mlt_housing_type ?? "",
+        mlt_rental_type: (contract as any).mlt_rental_type ?? "",
+        mlt_rental_term_years: (contract as any).mlt_rental_term_years != null ? String((contract as any).mlt_rental_term_years) : "",
+        mlt_rental_type_other: (contract as any).mlt_rental_type_other ?? "",
+        mlt_supply_kind: (contract as any).mlt_supply_kind ?? "",
+        mlt_mandatory_start_date: (contract as any).mlt_mandatory_start_date ?? "",
+        mlt_over_100_units: toTriState((contract as any).mlt_over_100_units),
+        mlt_ancillary_facilities: (contract as any).mlt_ancillary_facilities ?? "",
+        mlt_senior_lien: toTriState((contract as any).mlt_senior_lien),
+        mlt_senior_lien_kind: (contract as any).mlt_senior_lien_kind ?? "",
+        mlt_senior_lien_amount: (contract as any).mlt_senior_lien_amount != null ? String((contract as any).mlt_senior_lien_amount) : "",
+        mlt_senior_lien_date: (contract as any).mlt_senior_lien_date ?? "",
+        mlt_tax_arrears: toTriState((contract as any).mlt_tax_arrears),
+        mlt_guarantee_status: (contract as any).mlt_guarantee_status ?? "",
+        mlt_guarantee_amount: (contract as any).mlt_guarantee_amount != null ? String((contract as any).mlt_guarantee_amount) : "",
+        mlt_guarantee_none_reason: (contract as any).mlt_guarantee_none_reason ?? "",
+        mlt_late_fee_rate: (contract as any).mlt_late_fee_rate != null ? String((contract as any).mlt_late_fee_rate) : "",
         down_payment_date: (contract as any).down_payment_date ?? "",
         balance_amount: (contract as any).balance_amount != null ? String((contract as any).balance_amount) : "",
         balance_date: (contract as any).balance_date ?? "",
@@ -516,6 +581,26 @@ export default function ContractDetail() {
     lease_form: data.lease_form || null,
     doc_attachments: data.doc_attachments ?? [],
     down_payment: data.down_payment ? Number(data.down_payment) : null,
+    interim_payment: data.interim_payment ? Number(data.interim_payment) : null,
+    interim_payment_date: data.interim_payment_date || null,
+    mlt_landlord_rental_biz_no: data.mlt_landlord_rental_biz_no || null,
+    mlt_housing_type: data.mlt_housing_type || null,
+    mlt_rental_type: data.mlt_rental_type || null,
+    mlt_rental_term_years: data.mlt_rental_term_years ? Number(data.mlt_rental_term_years) : null,
+    mlt_rental_type_other: data.mlt_rental_type_other || null,
+    mlt_supply_kind: data.mlt_supply_kind || null,
+    mlt_mandatory_start_date: data.mlt_mandatory_start_date || null,
+    mlt_over_100_units: fromTriState(data.mlt_over_100_units),
+    mlt_ancillary_facilities: data.mlt_ancillary_facilities || null,
+    mlt_senior_lien: fromTriState(data.mlt_senior_lien),
+    mlt_senior_lien_kind: data.mlt_senior_lien_kind || null,
+    mlt_senior_lien_amount: data.mlt_senior_lien_amount ? Number(data.mlt_senior_lien_amount) : null,
+    mlt_senior_lien_date: data.mlt_senior_lien_date || null,
+    mlt_tax_arrears: fromTriState(data.mlt_tax_arrears),
+    mlt_guarantee_status: data.mlt_guarantee_status || null,
+    mlt_guarantee_amount: data.mlt_guarantee_amount ? Number(data.mlt_guarantee_amount) : null,
+    mlt_guarantee_none_reason: data.mlt_guarantee_none_reason || null,
+    mlt_late_fee_rate: data.mlt_late_fee_rate ? Number(data.mlt_late_fee_rate) : null,
     down_payment_date: data.down_payment_date || null,
     balance_amount: data.balance_amount ? Number(data.balance_amount) : null,
     balance_date: data.balance_date || null,
@@ -526,6 +611,12 @@ export default function ContractDetail() {
     terms_text: data.terms_text || null,
     notes: data.notes || null,
   });
+
+  // 서식·종류에 따라 보여 줄 칸이 달라진다(민간임대주택 표준임대차계약서 전용 항목).
+  const leaseForm = watch("lease_form");
+  const rentalType = watch("mlt_rental_type");
+  const seniorLien = watch("mlt_senior_lien");
+  const guaranteeStatus = watch("mlt_guarantee_status");
 
   const onSubmit = (data: FormData) => {
     if (isNew) createMutation.mutate({ data: buildPayload(data) });
@@ -735,10 +826,17 @@ export default function ContractDetail() {
                   <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {LEASE_ATTACHMENTS.map(a => {
                       const selected = (field.value ?? []).includes(a.value);
+                      // 계약갱신 거절통지서는 주택임대차표준계약서 원본의 [별지2]다 —
+                      // 다른 서식으로 발급하면 붙을 곳이 없으므로 고르지 못하게 막는다.
+                      const unavailable = a.value === "renewal_refusal" && leaseForm !== "housing_standard";
                       return (
-                        <label key={a.value} className="flex items-center gap-2 text-sm cursor-pointer">
+                        <label
+                          key={a.value}
+                          className={`flex items-center gap-2 text-sm ${unavailable ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
+                        >
                           <Checkbox
-                            checked={selected}
+                            disabled={unavailable}
+                            checked={selected && !unavailable}
                             onCheckedChange={(checked) => field.onChange(
                               checked
                                 ? [...(field.value ?? []), a.value]
@@ -786,6 +884,170 @@ export default function ContractDetail() {
               </div>
             </div>
 
+            {/* 민간임대주택 표준임대차계약서(별지 제24호서식) 법정 기재사항 — 그 서식으로 발급할 때만. */}
+            {leaseForm === "mlt_standard" && (
+            <div className="border rounded-lg bg-white p-4 sm:p-6">
+              <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-1">{t('contract.section_mlt')}</h2>
+              <p className="text-xs text-muted-foreground mb-4">{t('contract.hint_mlt')}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label>{t('contract.label_mlt_rental_biz_no')}</Label>
+                  <Input {...register("mlt_landlord_rental_biz_no")} placeholder={t('contract.ph_mlt_rental_biz_no')} />
+                </div>
+                <div>
+                  <Label>{t('contract.label_mlt_housing_type')}</Label>
+                  <Controller name="mlt_housing_type" control={control} render={({ field }) => (
+                    <Select value={field.value || undefined} onValueChange={field.onChange}>
+                      <SelectTrigger><SelectValue placeholder={t('contract.ph_mlt_unset')} /></SelectTrigger>
+                      <SelectContent>
+                        {MLT_HOUSING_TYPES.map(v => <SelectItem key={v} value={v}>{t(`contract.mlt_housing_${v}`)}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )} />
+                </div>
+                <div>
+                  <Label>{t('contract.label_mlt_rental_type')}</Label>
+                  <Controller name="mlt_rental_type" control={control} render={({ field }) => (
+                    <Select value={field.value || undefined} onValueChange={field.onChange}>
+                      <SelectTrigger><SelectValue placeholder={t('contract.ph_mlt_unset')} /></SelectTrigger>
+                      <SelectContent>
+                        {MLT_RENTAL_TYPES.map(v => <SelectItem key={v} value={v}>{t(`contract.mlt_rental_${v}`)}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )} />
+                </div>
+                <div>
+                  <Label>{t('contract.label_mlt_term_years')}</Label>
+                  <Controller name="mlt_rental_term_years" control={control} render={({ field }) => (
+                    <Select value={field.value || undefined} onValueChange={field.onChange} disabled={!rentalType}>
+                      <SelectTrigger><SelectValue placeholder={t('contract.ph_mlt_unset')} /></SelectTrigger>
+                      <SelectContent>
+                        {(MLT_TERM_YEARS[rentalType] ?? []).map(y => (
+                          <SelectItem key={y} value={String(y)}>{t('contract.mlt_years', { years: y })}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )} />
+                </div>
+                <div>
+                  <Label>{t('contract.label_mlt_type_other')}</Label>
+                  <Input {...register("mlt_rental_type_other")} placeholder={t('contract.ph_mlt_type_other')} />
+                </div>
+                <div>
+                  <Label>{t('contract.label_mlt_supply_kind')}</Label>
+                  <Controller name="mlt_supply_kind" control={control} render={({ field }) => (
+                    <Select value={field.value || undefined} onValueChange={field.onChange}>
+                      <SelectTrigger><SelectValue placeholder={t('contract.ph_mlt_unset')} /></SelectTrigger>
+                      <SelectContent>
+                        {MLT_SUPPLY_KINDS.map(v => <SelectItem key={v} value={v}>{t(`contract.mlt_supply_${v}`)}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )} />
+                </div>
+                <div>
+                  <Label>{t('contract.label_mlt_mandatory_start')}</Label>
+                  <Controller name="mlt_mandatory_start_date" control={control} render={({ field }) => (
+                    <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                  )} />
+                </div>
+                <div>
+                  <Label>{t('contract.label_mlt_over_100')}</Label>
+                  <Controller name="mlt_over_100_units" control={control} render={({ field }) => (
+                    <Select value={field.value || undefined} onValueChange={field.onChange}>
+                      <SelectTrigger><SelectValue placeholder={t('contract.ph_mlt_unset')} /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="yes">{t('contract.mlt_yes')}</SelectItem>
+                        <SelectItem value="no">{t('contract.mlt_no')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )} />
+                </div>
+                <div className="sm:col-span-2">
+                  <Label>{t('contract.label_mlt_facilities')}</Label>
+                  <Input {...register("mlt_ancillary_facilities")} placeholder={t('contract.ph_mlt_facilities')} />
+                </div>
+
+                <div>
+                  <Label>{t('contract.label_mlt_senior_lien')}</Label>
+                  <Controller name="mlt_senior_lien" control={control} render={({ field }) => (
+                    <Select value={field.value || undefined} onValueChange={field.onChange}>
+                      <SelectTrigger><SelectValue placeholder={t('contract.ph_mlt_unset')} /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="no">{t('contract.mlt_lien_none')}</SelectItem>
+                        <SelectItem value="yes">{t('contract.mlt_lien_exists')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )} />
+                </div>
+                <div>
+                  <Label>{t('contract.label_mlt_tax_arrears')}</Label>
+                  <Controller name="mlt_tax_arrears" control={control} render={({ field }) => (
+                    <Select value={field.value || undefined} onValueChange={field.onChange}>
+                      <SelectTrigger><SelectValue placeholder={t('contract.ph_mlt_unset')} /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="no">{t('contract.mlt_lien_none')}</SelectItem>
+                        <SelectItem value="yes">{t('contract.mlt_lien_exists')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )} />
+                </div>
+                {seniorLien === "yes" && (
+                  <>
+                    <div>
+                      <Label>{t('contract.label_mlt_lien_kind')}</Label>
+                      <Input {...register("mlt_senior_lien_kind")} placeholder={t('contract.ph_mlt_lien_kind')} />
+                    </div>
+                    <div>
+                      <Label>{t('contract.label_mlt_lien_amount')}</Label>
+                      <Input {...register("mlt_senior_lien_amount")} type="number" step="0.01" min="0" />
+                    </div>
+                    <div>
+                      <Label>{t('contract.label_mlt_lien_date')}</Label>
+                      <Controller name="mlt_senior_lien_date" control={control} render={({ field }) => (
+                        <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                      )} />
+                    </div>
+                  </>
+                )}
+
+                <div>
+                  <Label>{t('contract.label_mlt_guarantee')}</Label>
+                  <Controller name="mlt_guarantee_status" control={control} render={({ field }) => (
+                    <Select value={field.value || undefined} onValueChange={field.onChange}>
+                      <SelectTrigger><SelectValue placeholder={t('contract.ph_mlt_unset')} /></SelectTrigger>
+                      <SelectContent>
+                        {MLT_GUARANTEE_STATUSES.map(v => <SelectItem key={v} value={v}>{t(`contract.mlt_guarantee_${v}`)}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )} />
+                </div>
+                {(guaranteeStatus === "joined" || guaranteeStatus === "partial") && (
+                  <div>
+                    <Label>{t('contract.label_mlt_guarantee_amount')}</Label>
+                    <Input {...register("mlt_guarantee_amount")} type="number" step="0.01" min="0" />
+                  </div>
+                )}
+                {guaranteeStatus === "not_joined" && (
+                  <div>
+                    <Label>{t('contract.label_mlt_guarantee_reason')}</Label>
+                    <Controller name="mlt_guarantee_none_reason" control={control} render={({ field }) => (
+                      <Select value={field.value || undefined} onValueChange={field.onChange}>
+                        <SelectTrigger><SelectValue placeholder={t('contract.ph_mlt_unset')} /></SelectTrigger>
+                        <SelectContent>
+                          {MLT_GUARANTEE_NONE_REASONS.map(v => <SelectItem key={v} value={v}>{t(`contract.mlt_reason_${v}`)}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    )} />
+                  </div>
+                )}
+                <div>
+                  <Label>{t('contract.label_mlt_late_fee_rate')}</Label>
+                  <Input {...register("mlt_late_fee_rate")} type="number" step="0.01" min="0" max="100" />
+                </div>
+              </div>
+            </div>
+            )}
+
             {/* Payment Terms (Korean lease structure) */}
             <div className="border rounded-lg bg-white p-4 sm:p-6">
               <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-4">{t('contract.section_payment_terms')}</h2>
@@ -809,6 +1071,16 @@ export default function ContractDetail() {
                 <div>
                   <Label>{t('contract.label_down_payment_date')}</Label>
                   <Controller name="down_payment_date" control={control} render={({ field }) => (
+                    <DateInput value={field.value ?? ""} onChange={field.onChange} />
+                  )} />
+                </div>
+                <div>
+                  <Label>{t('contract.label_interim_payment')}</Label>
+                  <Input {...register("interim_payment")} type="number" step="0.01" min="0" />
+                </div>
+                <div>
+                  <Label>{t('contract.label_interim_payment_date')}</Label>
+                  <Controller name="interim_payment_date" control={control} render={({ field }) => (
                     <DateInput value={field.value ?? ""} onChange={field.onChange} />
                   )} />
                 </div>
