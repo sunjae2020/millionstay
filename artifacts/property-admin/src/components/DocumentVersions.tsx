@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -33,6 +34,7 @@ export function DocumentVersions({
   entityId: number | string;
   freezeUrl: string;
 }) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);

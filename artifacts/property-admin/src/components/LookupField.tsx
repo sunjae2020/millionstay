@@ -158,6 +158,7 @@ export function MultiLookupField({
   onSearch,
   searchPlaceholder = "Search...",
 }: MultiLookupFieldProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
