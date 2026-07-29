@@ -8,7 +8,7 @@ import { getRateToAud } from "../lib/rateSnapshot";
 import { buildInvoiceHtml, type InvoiceDocInput } from "../lib/documents/invoiceDocument";
 import { buildReceiptHtml } from "../lib/documents/receiptDocument";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
-import { resolveCompanyInfo } from "../lib/documents/companyInfo";
+import { resolveCompanyInfo, resolveIssuerCountry } from "../lib/documents/companyInfo";
 import { normalizeLang, t, type DocLang } from "../lib/documents/i18n";
 import { resolveTemplateBody } from "../lib/documents/templateEngine";
 import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
@@ -287,7 +287,7 @@ async function buildInvoiceDocInput(invoiceId: number, lang: DocLang): Promise<I
         state: acc.address_state,
         postcode: acc.address_postcode,
         country: acc.address_country,
-      }, lang) || null;
+      }, lang, { orderFallbackCountry: await resolveIssuerCountry() }) || null;
     }
   }
 

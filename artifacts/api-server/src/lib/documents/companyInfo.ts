@@ -86,6 +86,15 @@ function composeAddress(s: StoredCompanyInfo, lang: DocLang): string {
  * `lang` only affects address ordering — pass the document's language so the
  * issuer block reads naturally for its reader; it defaults to the tenant's.
  */
+/**
+ * The issuer's own country (Settings → Organisation). Counterparty addresses
+ * saved without a country are laid out as if they were domestic, which they
+ * almost always are.
+ */
+export async function resolveIssuerCountry(): Promise<string> {
+  return (await readStoredCompanyInfo()).country?.trim() ?? "";
+}
+
 export async function resolveCompanyInfo(lang?: DocLang): Promise<CompanyInfo> {
   const defaults = getCompanyInfo();
   await syncDocDateFormat();

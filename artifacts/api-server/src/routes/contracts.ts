@@ -11,7 +11,7 @@ import { buildContractHtml, type ContractDocInput } from "../lib/documents/contr
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { buildDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename";
 import { formatPostalAddress } from "../lib/documents/address";
-import { resolveCompanyInfo } from "../lib/documents/companyInfo";
+import { resolveCompanyInfo, resolveIssuerCountry } from "../lib/documents/companyInfo";
 import { normalizeLang, t, type DocLang } from "../lib/documents/i18n";
 import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
 import { formatDocMoney } from "../lib/documents/theme";
@@ -470,6 +470,7 @@ export async function buildContractDocInput(id: number, lang: DocLang = "en"): P
 
   // Enrich tenant/landlord contact + the rent billing frequency so the agreement
   // can show per-party detail and a subdivided fee breakdown.
+  const issuerCountry = await resolveIssuerCountry();
   const composeAddr = (a: typeof accountsTable.$inferSelect | undefined): string | null =>
     a
       ? formatPostalAddress({
@@ -478,7 +479,7 @@ export async function buildContractDocInput(id: number, lang: DocLang = "en"): P
           state: a.address_state,
           postcode: a.address_postcode,
           country: a.address_country,
-        }, lang) || null
+        }, lang, { orderFallbackCountry: issuerCountry }) || null
       : null;
   let tenantEmail: string | null = null, tenantAddress: string | null = null;
   let landlordEmail: string | null = null, landlordAddress: string | null = null;

@@ -1,19 +1,25 @@
 import type { DocLang } from "./i18n.js";
+import { addressOrderFor, countryName } from "./countries.js";
 
 /**
- * Postal address ordering differs by language, and a document that mixes the
- * two reads as a translation mistake to whoever receives it.
+ * Postal address rendering, per UPU S42 (the international addressing standard
+ * Korea Post, USPS, Royal Mail and Japan Post all follow):
  *
- * Western order runs small → large and separates with commas:
- *   `동안로 35, 109동 901호, 안양시 동안구, 경기도 14054, 대한민국`
+ *   1. The address body is written the way the **destination country** writes
+ *      it — that country's postal service does the final delivery, so its
+ *      order is the one that matters. It is never reordered or translated.
+ *   2. Only the **country name** is written in the reader's language.
  *
- * CJK order runs large → small and separates with spaces, keeping any commas
- * that belong *inside* the street line:
- *   `대한민국 경기도 안양시 동안구 동안로 35, 109동 901호`
+ * So the same Australian address keeps its Western order inside a Korean
+ * document, and only "Australia" becomes "호주":
  *
- * The postcode is appended in the form each language actually writes it —
- * `(우) 14054` in Korean, `〒154-0004` in Japanese — rather than being wedged
- * next to the province the way an Australian address does it.
+ *   Level 5, 120 Collins St, Melbourne VIC 3000, 호주
+ *   대한민국 경기도 안양시 동안구 동안로 35, 109동 901호
+ *
+ * One deliberate deviation from S42: for CJK countries the country name goes
+ * **first**, not on a trailing line. S42's trailing-country rule exists for
+ * envelopes; Korean and Japanese business documents write the country at the
+ * front so the whole address stays consistently largest-unit-first.
  */
 export interface AddressParts {
   /** Street / road-name line, plus unit or building detail. */
@@ -24,48 +30,64 @@ export interface AddressParts {
   /** State / province — 도, 都道府県, 省. */
   state?: string | null;
   postcode?: string | null;
+  /** Free text as stored: "대한민국", "Australia", "KR"… */
   country?: string | null;
-}
-
-/** Languages whose addresses run country → … → street. */
-const CJK_ORDER: ReadonlySet<string> = new Set(["ko", "ja", "zh"]);
-
-/** True when addresses for this document language read largest-unit first. */
-export function usesLargestFirstAddress(lang: DocLang): boolean {
-  return CJK_ORDER.has(lang);
 }
 
 const clean = (v: string | null | undefined): string => (v ?? "").trim();
 
-/** Postcode as the language writes it, or "" when there is none. */
-function postcodeLabel(postcode: string, lang: DocLang): string {
+/** Korean spellings that should print the Korean postcode marker. */
+const KR_ALIASES = ["kr", "kor", "korea", "south korea", "republic of korea", "한국", "대한민국"];
+const JP_ALIASES = ["jp", "jpn", "japan", "일본", "日本"];
+
+/**
+ * Postcode as the destination country writes it. The marker belongs to the
+ * address's own convention, not the reader's — 〒 is recognised worldwide and
+ * (우) is what a Korean address prints.
+ */
+function postcodeLabel(postcode: string, country: string | null | undefined): string {
   if (!postcode) return "";
-  if (lang === "ko") return `(우) ${postcode}`;
-  if (lang === "ja") return `〒${postcode}`;
+  const c = clean(country).toLowerCase();
+  if (KR_ALIASES.includes(c)) return `(우) ${postcode}`;
+  if (JP_ALIASES.includes(c)) return `〒${postcode}`;
   return postcode;
 }
 
 /**
- * Render a single-line postal address in the given document language.
+ * Render a single-line postal address. Ordering follows `parts.country`;
+ * `lang` only decides which language the country name is written in.
  * Empty parts are dropped; an all-empty address returns "".
  */
-export function formatPostalAddress(parts: AddressParts, lang: DocLang): string {
+export function formatPostalAddress(
+  parts: AddressParts,
+  lang: DocLang,
+  opts: {
+    /**
+     * Country to assume for ORDERING when the record has none — pass the
+     * issuer's own country, since a blank country almost always means a
+     * domestic address. It is never printed: an assumed country has no place
+     * on a document, only an assumed layout does.
+     */
+     orderFallbackCountry?: string | null;
+  } = {},
+): string {
   const line1 = clean(parts.line1);
   const line2 = clean(parts.line2);
   const suburb = clean(parts.suburb);
   const state = clean(parts.state);
   const postcode = clean(parts.postcode);
-  const country = clean(parts.country);
+  const country = countryName(parts.country, lang);
 
-  if (usesLargestFirstAddress(lang)) {
-    // Largest unit first, space-separated. The street line keeps its own commas
-    // (`동안로 35, 109동 901호`), which is exactly how Koreans write it.
+  const orderCountry = clean(parts.country) || clean(opts.orderFallbackCountry);
+  if (addressOrderFor(orderCountry) === "largest-first") {
+    // 대한민국 경기도 안양시 동안구 동안로 35, 109동 901호 (우) 14054
+    // Space-separated; the street line keeps its own commas, which is exactly
+    // how a Korean address is written.
     const head = [country, state, suburb, line1, line2].filter(Boolean).join(" ");
-    const pc = postcodeLabel(postcode, lang);
-    return [head, pc].filter(Boolean).join(" ");
+    return [head, postcodeLabel(postcode, orderCountry)].filter(Boolean).join(" ");
   }
 
-  // Western: street → city → state+postcode → country, comma-separated.
+  // Level 5, 120 Collins St, Melbourne VIC 3000, 호주
   return [
     line1,
     line2,
@@ -78,9 +100,8 @@ export function formatPostalAddress(parts: AddressParts, lang: DocLang): string 
 }
 
 /**
- * Same ordering rules for an address whose parts were never captured
- * separately — a single free-text blob is returned untouched, because
- * re-ordering text we cannot parse would do more harm than good.
+ * An address we only hold as one free-text blob is returned untouched —
+ * reordering text we cannot parse would do more harm than good.
  */
 export function formatAddressBlob(blob: string | null | undefined): string {
   return clean(blob);
