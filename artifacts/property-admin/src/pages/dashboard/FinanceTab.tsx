@@ -68,7 +68,7 @@ function shortMonth(m: string) {
 }
 
 export default function FinanceTab() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { currency, currencyPosition } = useBrand();
   const fmt = (n: number) => formatMoney(n, currency, currencyPosition);
   const [summary, setSummary] = useState<FinanceSummary | null>(null);
@@ -116,13 +116,13 @@ export default function FinanceTab() {
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
   const currentMonth = new Date().toISOString().slice(0, 7);
-  const currentMonthLabel = new Date().toLocaleDateString("en", { month: "long", year: "numeric" });
+  const currentMonthLabel = new Date().toLocaleDateString(i18n.language, { month: "long", year: "numeric" });
 
   const donutData = summary ? [
-    { name: "Paid", value: summary.paid_count },
-    { name: "Outstanding", value: summary.sent_count },
-    { name: "Draft", value: summary.draft_count },
-    { name: "Overdue", value: summary.overdue_count },
+    { name: t("dash_finance.status_paid"), value: summary.paid_count },
+    { name: t("dash_finance.status_sent"), value: summary.sent_count },
+    { name: t("dash_finance.status_draft"), value: summary.draft_count },
+    { name: t("dash_finance.status_overdue"), value: summary.overdue_count },
   ].filter(d => d.value > 0) : [];
 
   const maxPropRevenue = byProp[0]?.revenue ?? 1;

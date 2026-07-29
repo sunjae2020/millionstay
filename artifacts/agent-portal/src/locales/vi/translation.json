@@ -22,7 +22,13 @@
     "tbd": "Chưa xác định",
     "back": "Quay lại",
     "cancel": "Hủy",
-    "page_not_found": "Không tìm thấy trang"
+    "page_not_found": "Không tìm thấy trang",
+    "rows_per_page": "Số dòng mỗi trang:",
+    "prev_page": "Trang trước",
+    "next_page": "Trang sau",
+    "switch_to_light": "Chuyển sang chế độ sáng",
+    "switch_to_dark": "Chuyển sang chế độ tối",
+    "dismiss": "Đóng"
   },
   "login": {
     "headline_1": "Phát triển danh mục của bạn",
@@ -249,5 +255,28 @@
     "err_mismatch": "Mật khẩu không khớp.",
     "err_failed": "Đặt lại thất bại. Liên kết có thể đã hết hạn.",
     "err_network": "Lỗi mạng."
+  },
+  "auth": {
+    "forgot_title": "Đặt lại mật khẩu",
+    "forgot_subtitle": "Nhập email tài khoản, chúng tôi sẽ gửi liên kết đặt lại mật khẩu.",
+    "forgot_sent": "Nếu tồn tại tài khoản cho {{email}}, liên kết đặt lại đã được gửi. Vui lòng kiểm tra hộp thư. Liên kết hết hạn sau 1 giờ.",
+    "email_label": "Địa chỉ email",
+    "send_reset_link": "Gửi liên kết đặt lại",
+    "sending": "Đang gửi…",
+    "back_to_login": "Quay lại đăng nhập",
+    "reset_title": "Đặt mật khẩu mới",
+    "reset_subtitle": "Hãy chọn mật khẩu mạnh mà bạn chưa dùng ở nơi khác.",
+    "reset_needs_link": "Trang này cần liên kết đặt lại từ email. Vui lòng mở liên kết trong thư chúng tôi đã gửi.",
+    "reset_done": "Mật khẩu đã được cập nhật. Bạn có thể đăng nhập ngay.",
+    "continue_to_login": "Tới trang đăng nhập",
+    "new_password": "Mật khẩu mới",
+    "confirm_password": "Xác nhận mật khẩu mới",
+    "password_policy": "Từ 12 ký tự · cần có chữ hoa, chữ thường, số và ký tự đặc biệt.",
+    "set_new_password": "Đặt mật khẩu mới",
+    "updating": "Đang cập nhật…",
+    "err_policy": "Mật khẩu phải có từ 12 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.",
+    "err_mismatch": "Mật khẩu không khớp.",
+    "err_reset_failed": "Đặt lại thất bại. Liên kết có thể đã hết hạn.",
+    "err_network": "Lỗi kết nối mạng."
   }
 }

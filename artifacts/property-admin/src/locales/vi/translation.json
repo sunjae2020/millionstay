@@ -365,7 +365,13 @@
     "del_dialog_desc_super": "Chọn cách xử lý bản ghi này. Lưu trữ sẽ ẩn khỏi danh sách nhưng vẫn giữ dữ liệu; xoá vĩnh viễn thì không thể hoàn tác.",
     "del_dialog_desc_plain": "Bản ghi này sẽ được lưu trữ và ẩn khỏi danh sách. Quản trị viên cấp cao có thể khôi phục khi cần.",
     "delete_failed": "Xoá không thành công.",
-    "email": "Email"
+    "email": "Email",
+    "done": "Xong",
+    "unknown_error": "Lỗi không xác định",
+    "switch_to_light": "Chuyển sang chế độ sáng",
+    "switch_to_dark": "Chuyển sang chế độ tối",
+    "light_mode": "Chế độ sáng",
+    "dark_mode": "Chế độ tối"
   },
   "lang": {
     "label": "Ngôn ngữ",
@@ -5389,7 +5395,9 @@
     "preview": "Xem trước phiên bản này",
     "toast_frozen": "Đã khoá phiên bản",
     "toast_frozen_desc": "Đã lưu v{{version}} thành bản chụp không thể chỉnh sửa.",
-    "toast_failed": "Khoá phiên bản thất bại"
+    "toast_failed": "Khoá phiên bản thất bại",
+    "freeze_now": "Khoá phiên bản hiện tại",
+    "freezing": "Đang khoá…"
   },
   "doc_email": {
     "title": "Gửi qua email",

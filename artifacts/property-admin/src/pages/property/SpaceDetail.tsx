@@ -209,7 +209,7 @@ export default function SpaceDetail() {
       setAddSvcId(""); setAddSvcMandatory(false); setAddSvcPrice("");
       await loadSpaceServices();
     } catch (e: unknown) {
-      toast({ title: t("common.error"), description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
+      toast({ title: t("common.error"), description: e instanceof Error ? e.message : t("common.unknown_error"), variant: "destructive" });
     } finally {
       setAddSvcSaving(false);
     }

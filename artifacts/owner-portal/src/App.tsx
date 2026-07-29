@@ -1,4 +1,5 @@
 import { Switch, Route, Router as WouterRouter } from "wouter";
+import { useTranslation } from "react-i18next";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import LoginPage from "@/pages/LoginPage";
@@ -18,12 +19,13 @@ import SupportDetailPage from "@/pages/SupportDetailPage";
 import { OWNER_SITE_ENABLED } from "@/lib/flags";
 
 function PortalRoutes() {
+  const { t } = useTranslation();
   const { user, loading } = useAuth();
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-muted-foreground text-sm">Loading...</div>
+        <div className="text-muted-foreground text-sm">{t("common.loading")}</div>
       </div>
     );
   }
@@ -52,7 +54,7 @@ function PortalRoutes() {
       <Route path="/support" component={SupportPage} />
       <Route path="/support/:id" component={SupportDetailPage} />
       <Route>
-        <div className="p-8 text-muted-foreground">Page not found</div>
+        <div className="p-8 text-muted-foreground">{t("common.page_not_found")}</div>
       </Route>
     </Switch>
   );

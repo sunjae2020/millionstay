@@ -30,7 +30,14 @@
     "ongoing": "Ongoing",
     "tbd": "TBD",
     "clear": "Clear",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "rows_per_page": "Rows per page:",
+    "prev_page": "Previous page",
+    "next_page": "Next page",
+    "page_not_found": "Page not found",
+    "switch_to_light": "Switch to light mode",
+    "switch_to_dark": "Switch to dark mode",
+    "dismiss": "Dismiss"
   },
   "login": {
     "headline_1": "Your properties,",
@@ -343,5 +350,28 @@
     "email": "Send email",
     "close": "Close",
     "new_tab": "Open in new tab"
+  },
+  "auth": {
+    "forgot_title": "Reset your password",
+    "forgot_subtitle": "Enter your account email and we'll send you a reset link.",
+    "forgot_sent": "If an account exists for {{email}}, a reset link has been sent. Please check your inbox. The link expires in 1 hour.",
+    "email_label": "Email address",
+    "send_reset_link": "Send reset link",
+    "sending": "Sending…",
+    "back_to_login": "Back to login",
+    "reset_title": "Set a new password",
+    "reset_subtitle": "Choose a strong password you haven't used elsewhere.",
+    "reset_needs_link": "This page requires a reset link from your email. Please open the link in the message we sent you.",
+    "reset_done": "Your password has been updated. You can now sign in.",
+    "continue_to_login": "Continue to login",
+    "new_password": "New password",
+    "confirm_password": "Confirm new password",
+    "password_policy": "12+ chars · upper + lower + digit + special required.",
+    "set_new_password": "Set new password",
+    "updating": "Updating…",
+    "err_policy": "Password must be 12+ chars with upper, lower, digit, and special.",
+    "err_mismatch": "Passwords do not match.",
+    "err_reset_failed": "Reset failed. The link may have expired.",
+    "err_network": "Network error."
   }
 }

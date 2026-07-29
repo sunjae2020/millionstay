@@ -30,7 +30,14 @@
     "ongoing": "进行中",
     "tbd": "待定",
     "clear": "清除",
-    "cancel": "取消"
+    "cancel": "取消",
+    "rows_per_page": "每页行数:",
+    "prev_page": "上一页",
+    "next_page": "下一页",
+    "page_not_found": "页面不存在",
+    "switch_to_light": "切换到浅色模式",
+    "switch_to_dark": "切换到深色模式",
+    "dismiss": "关闭"
   },
   "login": {
     "headline_1": "您的物业,",
@@ -343,5 +350,28 @@
     "email": "发送邮件",
     "close": "关闭",
     "new_tab": "在新标签页中打开"
+  },
+  "auth": {
+    "forgot_title": "重置密码",
+    "forgot_subtitle": "输入注册邮箱，我们将向您发送重置链接。",
+    "forgot_sent": "若 {{email}} 已注册，重置链接已发送，请查收邮箱。链接将在 1 小时后失效。",
+    "email_label": "邮箱地址",
+    "send_reset_link": "发送重置链接",
+    "sending": "发送中…",
+    "back_to_login": "返回登录",
+    "reset_title": "设置新密码",
+    "reset_subtitle": "请设置一个未在其他网站使用过的高强度密码。",
+    "reset_needs_link": "此页面需通过邮件中的重置链接访问，请打开我们发送的邮件链接。",
+    "reset_done": "密码已更新，现在可以登录了。",
+    "continue_to_login": "前往登录",
+    "new_password": "新密码",
+    "confirm_password": "确认新密码",
+    "password_policy": "至少 12 位 · 需包含大写、小写、数字和特殊字符。",
+    "set_new_password": "设置新密码",
+    "updating": "更新中…",
+    "err_policy": "密码需至少 12 位，并包含大写、小写、数字和特殊字符。",
+    "err_mismatch": "两次输入的密码不一致。",
+    "err_reset_failed": "重置失败，链接可能已过期。",
+    "err_network": "网络错误。"
   }
 }

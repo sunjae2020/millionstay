@@ -253,7 +253,7 @@ export function MultiLookupField({
                 )}
               </div>
             </ScrollArea>
-            <Button variant="outline" onClick={() => setOpen(false)}>Done</Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>{t("common.done")}</Button>
           </div>
         </DialogContent>
       </Dialog>

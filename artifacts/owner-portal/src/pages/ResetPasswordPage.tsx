@@ -1,4 +1,5 @@
 import { useEffect, useState, FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "wouter";
 import { Lock, Eye, EyeOff, CheckCircle2, Loader2 } from "lucide-react";
 import { APP_NAME } from "@/lib/appName";
@@ -18,6 +19,7 @@ function readToken(loc: string): string {
 }
 
 export default function ResetPasswordPage() {
+  const { t } = useTranslation();
   const [location, setLocation] = useLocation();
   const [token, setToken] = useState("");
   const [pw, setPw] = useState("");
@@ -35,8 +37,8 @@ export default function ResetPasswordPage() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!policyOk) { setError("Password must be 12+ chars with upper, lower, digit, and special."); return; }
-    if (!pwMatches) { setError("Passwords do not match."); return; }
+    if (!policyOk) { setError(t("auth.err_policy")); return; }
+    if (!pwMatches) { setError(t("auth.err_mismatch")); return; }
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/auth/partner/reset-password`, {
@@ -45,9 +47,9 @@ export default function ResetPasswordPage() {
         body: JSON.stringify({ token, new_password: pw }),
       });
       const json = await res.json();
-      if (!res.ok || !json.success) { setError(json?.error ?? "Reset failed. The link may have expired."); setLoading(false); return; }
+      if (!res.ok || !json.success) { setError(json?.error ?? t("auth.err_reset_failed")); setLoading(false); return; }
       setDone(true);
-    } catch { setError("Network error."); }
+    } catch { setError(t("auth.err_network")); }
     setLoading(false);
   }
 
@@ -60,32 +62,32 @@ export default function ResetPasswordPage() {
           ) : (
             <img src={import.meta.env.VITE_LOGO_URL || `${import.meta.env.BASE_URL}logo-horizontal.png`} alt={APP_NAME} className={`mb-6 w-auto ${import.meta.env.VITE_LOGO_URL ? "h-11" : "h-7"}`} />
           )}
-          <h1 className="text-2xl font-bold text-slate-900">Set a new password</h1>
-          <p className="text-slate-500 text-sm mt-1">Choose a strong password you haven't used elsewhere.</p>
+          <h1 className="text-2xl font-bold text-slate-900">{t("auth.reset_title")}</h1>
+          <p className="text-slate-500 text-sm mt-1">{t("auth.reset_subtitle")}</p>
         </div>
 
         {!token && (
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            This page requires a reset link from your email. Please open the link in the message we sent you.
+            {t("auth.reset_needs_link")}
           </div>
         )}
 
         {done ? (
           <div className="space-y-4 text-center">
             <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto" />
-            <p className="text-slate-700 text-sm">Your password has been updated. You can now sign in.</p>
+            <p className="text-slate-700 text-sm">{t("auth.reset_done")}</p>
             <button
               onClick={() => setLocation("/")}
               className="w-full h-11 rounded-lg text-sm font-semibold text-white shadow-md"
               style={{ background: `linear-gradient(135deg, ${BRAND} 0%, color-mix(in srgb, hsl(var(--brand-orange)) 72%, white) 100%)` }}
             >
-              Continue to login
+              {t("auth.continue_to_login")}
             </button>
           </div>
         ) : (
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-slate-700">New password</label>
+              <label className="block text-sm font-medium text-slate-700">{t("auth.new_password")}</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
@@ -100,11 +102,11 @@ export default function ResetPasswordPage() {
                 </button>
               </div>
               <p className={`text-xs mt-1 ${pw && !policyOk ? "text-red-600" : "text-slate-500"}`}>
-                12+ chars · upper + lower + digit + special required.
+                {t("auth.password_policy")}
               </p>
             </div>
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-slate-700">Confirm new password</label>
+              <label className="block text-sm font-medium text-slate-700">{t("auth.confirm_password")}</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
@@ -123,9 +125,9 @@ export default function ResetPasswordPage() {
               className="w-full h-11 rounded-lg text-sm font-semibold text-white transition-opacity disabled:opacity-60 flex items-center justify-center gap-2 shadow-md"
               style={{ background: `linear-gradient(135deg, ${BRAND} 0%, color-mix(in srgb, hsl(var(--brand-orange)) 72%, white) 100%)` }}
             >
-              {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Updating...</> : "Set new password"}
+              {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> {t("auth.updating")}</> : t("auth.set_new_password")}
             </button>
-            <Link href="/"><a className="block text-center text-sm text-slate-500 hover:text-slate-700">Back to login</a></Link>
+            <Link href="/"><a className="block text-center text-sm text-slate-500 hover:text-slate-700">{t("auth.back_to_login")}</a></Link>
           </form>
         )}
       </div>

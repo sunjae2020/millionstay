@@ -166,10 +166,10 @@ export default function SuburbDetail() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="AU">AU — Australia</SelectItem>
-                        <SelectItem value="US">US — United States</SelectItem>
-                        <SelectItem value="GB">GB — United Kingdom</SelectItem>
-                        <SelectItem value="NZ">NZ — New Zealand</SelectItem>
+                        <SelectItem value="AU">AU — {t("suburb.country_au")}</SelectItem>
+                        <SelectItem value="US">US — {t("suburb.country_us")}</SelectItem>
+                        <SelectItem value="GB">GB — {t("suburb.country_gb")}</SelectItem>
+                        <SelectItem value="NZ">NZ — {t("suburb.country_nz")}</SelectItem>
                       </SelectContent>
                     </Select>
                   )}

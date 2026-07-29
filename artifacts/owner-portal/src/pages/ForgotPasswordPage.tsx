@@ -1,4 +1,5 @@
 import { useState, FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Mail, ArrowLeft, Loader2 } from "lucide-react";
 import { APP_NAME } from "@/lib/appName";
@@ -7,6 +8,7 @@ const BRAND = "hsl(var(--brand-orange))";
 const API_BASE = "/api/v1";
 
 export default function ForgotPasswordPage() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -34,28 +36,27 @@ export default function ForgotPasswordPage() {
           ) : (
             <img src={import.meta.env.VITE_LOGO_URL || `${import.meta.env.BASE_URL}logo-horizontal.png`} alt={APP_NAME} className={`mb-6 w-auto ${import.meta.env.VITE_LOGO_URL ? "h-11" : "h-7"}`} />
           )}
-          <h1 className="text-2xl font-bold text-slate-900">Reset your password</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t("auth.forgot_title")}</h1>
           <p className="text-slate-500 text-sm mt-1">
-            Enter your account email and we'll send you a reset link.
+            {t("auth.forgot_subtitle")}
           </p>
         </div>
 
         {submitted ? (
           <div className="space-y-4">
             <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-              If an account exists for <strong>{email}</strong>, a reset link has been sent. Please check your inbox.
-              The link expires in 1 hour.
+              {t("auth.forgot_sent", { email })}
             </div>
             <Link href="/">
               <a className="flex items-center justify-center gap-2 w-full h-11 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50">
-                <ArrowLeft className="h-4 w-4" /> Back to login
+                <ArrowLeft className="h-4 w-4" /> {t("auth.back_to_login")}
               </a>
             </Link>
           </div>
         ) : (
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-slate-700">Email address</label>
+              <label className="block text-sm font-medium text-slate-700">{t("auth.email_label")}</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
@@ -75,10 +76,10 @@ export default function ForgotPasswordPage() {
               className="w-full h-11 rounded-lg text-sm font-semibold text-white transition-opacity disabled:opacity-60 flex items-center justify-center gap-2 shadow-md"
               style={{ background: `linear-gradient(135deg, ${BRAND} 0%, color-mix(in srgb, hsl(var(--brand-orange)) 72%, white) 100%)` }}
             >
-              {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Sending...</> : "Send reset link"}
+              {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> {t("auth.sending")}</> : t("auth.send_reset_link")}
             </button>
             <Link href="/">
-              <a className="block text-center text-sm text-slate-500 hover:text-slate-700">Back to login</a>
+              <a className="block text-center text-sm text-slate-500 hover:text-slate-700">{t("auth.back_to_login")}</a>
             </Link>
           </form>
         )}

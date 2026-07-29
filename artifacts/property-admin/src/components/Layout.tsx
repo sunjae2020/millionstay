@@ -854,8 +854,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <button
             onClick={toggleDarkMode}
             className="p-2 rounded-md hover:bg-muted transition-colors text-foreground/70 hover:text-foreground"
-            aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
-            title={darkMode ? "Light mode" : "Dark mode"}
+            aria-label={darkMode ? t("common.switch_to_light") : t("common.switch_to_dark")}
+            title={darkMode ? t("common.light_mode") : t("common.dark_mode")}
           >
             {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>

@@ -113,7 +113,7 @@ export function DocumentVersions({
             </div>
             <div className="flex justify-end">
               <Button type="button" disabled={freezing} onClick={freezeNow}>
-                <Lock className="h-4 w-4 mr-1" /> {freezing ? "Freezing…" : "Freeze current version"}
+                <Lock className="h-4 w-4 mr-1" /> {freezing ? t("doc_versions.freezing") : t("doc_versions.freeze_now")}
               </Button>
             </div>
           </div>

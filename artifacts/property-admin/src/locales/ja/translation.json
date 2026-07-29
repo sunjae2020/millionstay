@@ -365,7 +365,13 @@
     "del_dialog_title_archive": "{{entity}}をアーカイブ",
     "del_dialog_desc_super": "このレコードの扱いを選択してください。アーカイブすると一覧から隠れますがデータは残ります。完全削除は元に戻せません。",
     "del_dialog_desc_plain": "このレコードはアーカイブされ、一覧から表示されなくなります。必要な場合はスーパー管理者が復元できます。",
-    "delete_failed": "削除できませんでした。"
+    "delete_failed": "削除できませんでした。",
+    "done": "完了",
+    "unknown_error": "不明なエラー",
+    "switch_to_light": "ライトモードに切り替え",
+    "switch_to_dark": "ダークモードに切り替え",
+    "light_mode": "ライトモード",
+    "dark_mode": "ダークモード"
   },
   "lang": {
     "label": "言語",
@@ -5389,7 +5395,9 @@
     "preview": "このバージョンをプレビュー",
     "toast_frozen": "バージョンを確定しました",
     "toast_frozen_desc": "v{{version}}を変更不可のスナップショットとして保存しました。",
-    "toast_failed": "確定に失敗しました"
+    "toast_failed": "確定に失敗しました",
+    "freeze_now": "現在のバージョンを確定",
+    "freezing": "確定中…"
   },
   "doc_email": {
     "title": "メールで送信",

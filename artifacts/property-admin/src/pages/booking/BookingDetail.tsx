@@ -898,7 +898,7 @@ export default function BookingDetail() {
           className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center p-4"
           onClick={() => setPreviewPhotoUrl(null)}
         >
-          <img src={previewPhotoUrl} alt="Preview" className="max-w-full max-h-full rounded-lg" />
+          <img src={previewPhotoUrl} alt={t("common.preview")} className="max-w-full max-h-full rounded-lg" />
         </div>
       )}
 

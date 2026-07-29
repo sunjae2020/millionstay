@@ -30,7 +30,13 @@
     "back": "戻る",
     "tbd": "未定",
     "ongoing": "進行中",
-    "dismiss": "閉じる"
+    "dismiss": "閉じる",
+    "rows_per_page": "1ページあたりの件数:",
+    "prev_page": "前のページ",
+    "next_page": "次のページ",
+    "page_not_found": "ページが見つかりません",
+    "switch_to_light": "ライトモードに切り替え",
+    "switch_to_dark": "ダークモードに切り替え"
   },
   "login": {
     "headline_1": "すべてのジョブで",
@@ -372,5 +378,28 @@
     "range": "{{total}}件中 {{from}}–{{to}}",
     "prev": "前のページ",
     "next": "次のページ"
+  },
+  "auth": {
+    "forgot_title": "パスワードの再設定",
+    "forgot_subtitle": "ご登録のメールアドレスを入力すると、再設定リンクをお送りします。",
+    "forgot_sent": "{{email}} のアカウントが存在する場合、再設定リンクを送信しました。受信トレイをご確認ください。リンクは1時間で失効します。",
+    "email_label": "メールアドレス",
+    "send_reset_link": "再設定リンクを送信",
+    "sending": "送信中…",
+    "back_to_login": "ログインに戻る",
+    "reset_title": "新しいパスワードを設定",
+    "reset_subtitle": "他のサービスで使っていない強力なパスワードを設定してください。",
+    "reset_needs_link": "このページはメールの再設定リンクからアクセスしてください。お送りしたメールのリンクを開いてください。",
+    "reset_done": "パスワードを更新しました。ログインできます。",
+    "continue_to_login": "ログインへ進む",
+    "new_password": "新しいパスワード",
+    "confirm_password": "新しいパスワード（確認）",
+    "password_policy": "12文字以上 · 大文字・小文字・数字・記号をすべて含めてください。",
+    "set_new_password": "パスワードを変更",
+    "updating": "更新中…",
+    "err_policy": "パスワードは12文字以上で、大文字・小文字・数字・記号をすべて含める必要があります。",
+    "err_mismatch": "パスワードが一致しません。",
+    "err_reset_failed": "再設定に失敗しました。リンクの有効期限が切れている可能性があります。",
+    "err_network": "ネットワークエラーです。"
   }
 }

@@ -365,7 +365,13 @@
     "del_dialog_title_archive": "Archive {{entity}}",
     "del_dialog_desc_super": "Choose how to remove this record. Archiving hides it from view but keeps the data. Permanent deletion cannot be undone.",
     "del_dialog_desc_plain": "This record will be archived and hidden from view. A Super Admin can restore it if needed.",
-    "delete_failed": "Failed to delete."
+    "delete_failed": "Failed to delete.",
+    "done": "Done",
+    "unknown_error": "Unknown error",
+    "switch_to_light": "Switch to light mode",
+    "switch_to_dark": "Switch to dark mode",
+    "light_mode": "Light mode",
+    "dark_mode": "Dark mode"
   },
   "lang": {
     "label": "Language",
@@ -5389,7 +5395,9 @@
     "preview": "Preview this version",
     "toast_frozen": "Version frozen",
     "toast_frozen_desc": "Saved v{{version}} as an immutable snapshot.",
-    "toast_failed": "Freeze failed"
+    "toast_failed": "Freeze failed",
+    "freeze_now": "Freeze current version",
+    "freezing": "Freezing…"
   },
   "doc_email": {
     "title": "Send by email",
