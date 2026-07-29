@@ -182,7 +182,10 @@
       "policy": "นโยบายเพศ",
       "price": "ราคารายสัปดาห์"
     },
-    "tab_homestay": "โฮมสเตย์"
+    "tab_homestay": "โฮมสเตย์",
+    "search": "ค้นหา",
+    "prev_page": "หน้าก่อนหน้า",
+    "next_page": "หน้าถัดไป"
   },
   "filter": {
     "location": "ทำเล",
@@ -239,7 +242,9 @@
     "verified": "ที่พักผ่านการตรวจสอบแล้ว",
     "secure_payment": "ชำระเงินปลอดภัยผ่าน Stripe",
     "deposit_refund": "คืนเงินมัดจำภายใน 14 วัน",
-    "support": "ซัพพอร์ต 24 ชั่วโมง"
+    "support": "ซัพพอร์ต 24 ชั่วโมง",
+    "view_space": "ดูรายละเอียด",
+    "photos_soon": "รูปภาพเร็ว ๆ นี้"
   },
   "booking": {
     "summary": "สรุปการจอง",
@@ -337,7 +342,10 @@
     "space_not_found": "ไม่พบห้องพัก",
     "browse_spaces": "ดูห้องพัก",
     "privacy_notice": "Creating an account is subject to our Privacy Policy. Passport, visa, and financial documents requested later are collected to verify your eligibility and are held securely.",
-    "privacy_link": "Privacy Policy."
+    "privacy_link": "Privacy Policy.",
+    "special_requests_placeholder": "หากมีความต้องการพิเศษหรือคำถาม กรุณาระบุ…",
+    "payment_received": "ได้รับการชำระเงินแล้ว",
+    "payment_cancelled": "ยกเลิกการชำระเงินแล้ว"
   },
   "house_rules": {
     "hero_tagline": "อยู่ร่วมกันอย่างมีความสุข",
@@ -1385,7 +1393,9 @@
     "share": "แชร์",
     "share_title": "แชร์บทความนี้",
     "more_articles": "บทความอื่น ๆ",
-    "no_content": "ไม่มีเนื้อหา"
+    "no_content": "ไม่มีเนื้อหา",
+    "empty": "ยังไม่มีบทความ",
+    "empty_hint": "โปรดกลับมาใหม่เพื่ออ่านเคล็ดลับและคู่มือ"
   },
   "chat": {
     "title": "ผู้ช่วย {{appName}}",
@@ -1785,6 +1795,14 @@
       "hero_lead": "เงื่อนไขการให้บริการจับคู่และตรวจสอบที่พักโฮมสเตย์ของ Million Homestay",
       "hero_title": "ข้อกำหนดในการให้บริการ",
       "page_title": "ข้อกำหนดในการให้บริการ"
+    },
+    "nav": {
+      "home_aria": "หน้าแรก Million Homestay",
+      "toggle_menu": "เปิด/ปิดเมนู",
+      "change_language": "เปลี่ยนภาษา"
+    },
+    "coming_soon": {
+      "not_found": "ไม่พบหน้านี้"
     }
   },
   "cstranslate": {
@@ -1942,7 +1960,8 @@
       "rent": "เช่า",
       "management": "รับบริหาร",
       "about": "เกี่ยวกับ Metheim",
-      "directions": "การเดินทาง"
+      "directions": "การเดินทาง",
+      "menu": "เมนู"
     },
     "footer": {
       "desc": "อาคารเดียว สามทางเลือก — ซื้อยูนิต เข้าพักระยะสั้นหรือยาว หรือมอบให้เราบริหาร",
@@ -2396,5 +2415,40 @@
     "email": "ส่งอีเมล",
     "close": "ปิด",
     "new_tab": "เปิดในแท็บใหม่"
+  },
+  "condition_report": {
+    "empty": "ยังไม่มีรายงานสภาพห้อง",
+    "empty_hint": "เมื่อผู้จัดการอาคารเผยแพร่รายงานการตรวจเข้าอยู่หรือย้ายออก จะแสดงที่นี่ให้คุณตรวจสอบ",
+    "settlement": "การคืนเงินประกัน",
+    "await_ack": "รอการยืนยันจากคุณ",
+    "acknowledged": "ยืนยันแล้ว",
+    "finalized": "เสร็จสิ้นแล้ว",
+    "deposit_held": "เงินประกันที่ถือไว้",
+    "deductions": "ยอดหักลบ",
+    "refund": "ยอดคืนให้คุณ",
+    "ack_settlement": "ยืนยันการคืนเงิน",
+    "status_published": "รอคุณตรวจสอบ",
+    "status_agreed": "ยอมรับแล้ว",
+    "status_disputed": "โต้แย้ง",
+    "status_finalized": "สิ้นสุดแล้ว",
+    "dispute_placeholder": "อธิบายปัญหา (เช่น รอยขีดข่วนบนพื้นที่มีอยู่ก่อนแล้ว)…"
+  },
+  "currency": {
+    "label": "สกุลเงิน",
+    "aud": "ดอลลาร์ออสเตรเลีย",
+    "usd": "ดอลลาร์สหรัฐ",
+    "krw": "วอนเกาหลี",
+    "jpy": "เยนญี่ปุ่น",
+    "cny": "หยวนจีน",
+    "myr": "ริงกิตมาเลเซีย",
+    "sgd": "ดอลลาร์สิงคโปร์",
+    "thb": "บาทไทย",
+    "php": "เปโซฟิลิปปินส์",
+    "eur": "ยูโร",
+    "gbp": "ปอนด์อังกฤษ"
+  },
+  "sign": {
+    "title_agreement": "ลงนามในสัญญา",
+    "title_application": "ลงนามในใบสมัคร"
   }
 }

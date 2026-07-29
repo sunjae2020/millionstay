@@ -181,7 +181,10 @@
     "tab_private": "Private",
     "tab_entire": "Entire",
     "tab_shared": "Shared",
-    "tab_homestay": "Homestay"
+    "tab_homestay": "Homestay",
+    "search": "Search",
+    "prev_page": "Previous page",
+    "next_page": "Next page"
   },
   "space": {
     "rent": {
@@ -201,7 +204,9 @@
     "mixed": "Mixed Gender",
     "entire": "Entire Space",
     "room": "Room Space",
-    "bed": "Bed Space"
+    "bed": "Bed Space",
+    "view_space": "View Space",
+    "photos_soon": "Photos coming soon"
   },
   "booking": {
     "step1": "Stay Details",
@@ -254,7 +259,10 @@
     "space_not_found": "Space not found.",
     "browse_spaces": "Browse spaces",
     "privacy_notice": "Creating an account is subject to our Privacy Policy. Passport, visa, and financial documents requested later are collected to verify your eligibility and are held securely.",
-    "privacy_link": "Privacy Policy."
+    "privacy_link": "Privacy Policy.",
+    "special_requests_placeholder": "Any special needs or questions...",
+    "payment_received": "Payment received",
+    "payment_cancelled": "Payment cancelled"
   },
   "house_rules": {
     "hero_tagline": "Living together, harmoniously",
@@ -1280,7 +1288,9 @@
     "share": "Share",
     "share_title": "Share this article",
     "more_articles": "More Articles",
-    "no_content": "No content available."
+    "no_content": "No content available.",
+    "empty": "No posts yet",
+    "empty_hint": "Check back soon for tips, guides, and insights."
   },
   "chat": {
     "title": "{{appName}} Assistant",
@@ -1574,7 +1584,10 @@
       "host": "Host Family",
       "partners": "Partners",
       "contact": "Contact Us",
-      "become_host": "Become a Host"
+      "become_host": "Become a Host",
+      "home_aria": "Million Homestay home",
+      "toggle_menu": "Toggle menu",
+      "change_language": "Change language"
     },
     "footer": {
       "tagline": "A review-and-match homestay service in Australia — real people, real homes, matched with care.",
@@ -1864,7 +1877,8 @@
       "badge": "Coming soon",
       "body": "This part of Million Homestay is on its way. Host families can apply today, and you're welcome to get in touch in the meantime.",
       "become_host": "Become a Host",
-      "contact_us": "Contact us"
+      "contact_us": "Contact us",
+      "not_found": "Page not found"
     },
     "contact": {
       "layout_title": "Contact",
@@ -2315,7 +2329,8 @@
       "rent": "Rent",
       "management": "Management",
       "about": "About",
-      "directions": "Directions"
+      "directions": "Directions",
+      "menu": "Menu"
     },
     "footer": {
       "desc": "One building, three ways to make it yours — buy a unit, stay short or long term, or entrust it to us to manage.",
@@ -2769,5 +2784,40 @@
     "email": "Send email",
     "close": "Close",
     "new_tab": "Open in new tab"
+  },
+  "condition_report": {
+    "empty": "No condition reports yet.",
+    "empty_hint": "When your property manager publishes a move-in or move-out inspection, it will appear here for your review.",
+    "settlement": "Deposit settlement",
+    "await_ack": "Awaiting your acknowledgement",
+    "acknowledged": "Acknowledged",
+    "finalized": "Finalized",
+    "deposit_held": "Deposit held",
+    "deductions": "Deductions",
+    "refund": "Refund to you",
+    "ack_settlement": "Acknowledge settlement",
+    "status_published": "Awaiting your review",
+    "status_agreed": "Agreed",
+    "status_disputed": "Disputed",
+    "status_finalized": "Finalized",
+    "dispute_placeholder": "Describe the issue (e.g. pre-existing scratch on the floor)…"
+  },
+  "currency": {
+    "label": "Currency",
+    "aud": "Australian Dollar",
+    "usd": "US Dollar",
+    "krw": "Korean Won",
+    "jpy": "Japanese Yen",
+    "cny": "Chinese Yuan",
+    "myr": "Malaysian Ringgit",
+    "sgd": "Singapore Dollar",
+    "thb": "Thai Baht",
+    "php": "Philippine Peso",
+    "eur": "Euro",
+    "gbp": "British Pound"
+  },
+  "sign": {
+    "title_agreement": "Sign agreement",
+    "title_application": "Sign application"
   }
 }

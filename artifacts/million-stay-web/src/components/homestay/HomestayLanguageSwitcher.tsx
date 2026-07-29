@@ -36,6 +36,7 @@ function FlagIcon({ iso, size = 18 }: { iso: string; size?: number }) {
 }
 
 export function HomestayLanguageSwitcher({ className = "" }: { className?: string }) {
+  const { t } = useTranslation();
   const { i18n } = useTranslation();
   const [languages, setLanguages] = useState<LangOption[]>(FALLBACK_LANGUAGES);
   const [open, setOpen] = useState(false);
@@ -85,7 +86,7 @@ export function HomestayLanguageSwitcher({ className = "" }: { className?: strin
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
         style={{ color: HS.darkBrown }}
-        aria-label="Change language"
+        aria-label={t("homestay.nav.change_language")}
       >
         <FlagIcon iso={current.iso} />
         <span className="hidden sm:inline">{current.label}</span>

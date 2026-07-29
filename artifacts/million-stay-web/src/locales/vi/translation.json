@@ -178,7 +178,10 @@
     "tab_all": "Tất cả",
     "tab_private": "Riêng tư",
     "tab_entire": "Toàn bộ",
-    "tab_shared": "Chung"
+    "tab_shared": "Chung",
+    "search": "Tìm kiếm",
+    "prev_page": "Trang trước",
+    "next_page": "Trang sau"
   },
   "space": {
     "rent": {
@@ -198,7 +201,9 @@
     "mixed": "Giới tính hỗn hợp",
     "entire": "Toàn bộ không gian",
     "room": "Không gian phòng",
-    "bed": "Không gian giường"
+    "bed": "Không gian giường",
+    "view_space": "Xem chi tiết",
+    "photos_soon": "Ảnh sắp cập nhật"
   },
   "booking": {
     "step1": "Chi tiết lưu trú",
@@ -250,7 +255,10 @@
     "space_not_found": "Không tìm thấy không gian này.",
     "browse_spaces": "Xem các không gian",
     "privacy_notice": "Việc tạo tài khoản tuân theo Chính sách Bảo mật của chúng tôi. Hộ chiếu, visa và giấy tờ tài chính được yêu cầu sau đó sẽ được thu thập để xác minh điều kiện của bạn và được lưu trữ an toàn.",
-    "privacy_link": "Chính sách Bảo mật."
+    "privacy_link": "Chính sách Bảo mật.",
+    "special_requests_placeholder": "Nếu có yêu cầu đặc biệt hoặc câu hỏi, hãy ghi tại đây…",
+    "payment_received": "Đã nhận thanh toán",
+    "payment_cancelled": "Thanh toán đã bị huỷ"
   },
   "house_rules": {
     "hero_tagline": "Sống cùng nhau, hài hòa",
@@ -1249,7 +1257,9 @@
     "share": "Chia sẻ",
     "share_title": "Chia sẻ bài viết này",
     "more_articles": "Xem thêm bài viết",
-    "no_content": "Bài viết này chưa có nội dung."
+    "no_content": "Bài viết này chưa có nội dung.",
+    "empty": "Chưa có bài viết",
+    "empty_hint": "Hãy quay lại sau để xem mẹo và hướng dẫn."
   },
   "chat": {
     "title": "Trợ lý {{appName}}",
@@ -1531,7 +1541,10 @@
       "host": "Gia Đình Bản Xứ",
       "partners": "Đối Tác",
       "contact": "Liên Hệ",
-      "become_host": "Trở Thành Gia Đình Bản Xứ"
+      "become_host": "Trở Thành Gia Đình Bản Xứ",
+      "home_aria": "Trang chủ Million Homestay",
+      "toggle_menu": "Mở/đóng menu",
+      "change_language": "Đổi ngôn ngữ"
     },
     "footer": {
       "tagline": "Dịch vụ homestay đánh giá và ghép cặp tại Úc — con người thật, ngôi nhà thật, được ghép nối cẩn thận.",
@@ -1820,7 +1833,8 @@
       "badge": "Sắp ra mắt",
       "body": "Phần này của Million Homestay đang được hoàn thiện. Các gia đình host có thể đăng ký ngay hôm nay, và bạn cũng có thể liên hệ với chúng tôi trong thời gian này.",
       "become_host": "Trở thành Host",
-      "contact_us": "Liên hệ chúng tôi"
+      "contact_us": "Liên hệ chúng tôi",
+      "not_found": "Không tìm thấy trang"
     },
     "contact": {
       "layout_title": "Liên hệ",
@@ -2257,7 +2271,8 @@
       "rent": "Cho thuê",
       "management": "Ủy thác quản lý",
       "about": "Về Metheim",
-      "directions": "Đường đến"
+      "directions": "Đường đến",
+      "menu": "Menu"
     },
     "footer": {
       "desc": "Một tòa nhà, ba lựa chọn — mua căn hộ, ở ngắn hay dài hạn, hoặc giao cho chúng tôi vận hành.",
@@ -2697,5 +2712,40 @@
     "email": "Gửi email",
     "close": "Đóng",
     "new_tab": "Mở trong tab mới"
+  },
+  "condition_report": {
+    "empty": "Chưa có báo cáo tình trạng nào.",
+    "empty_hint": "Khi ban quản lý công bố biên bản kiểm tra nhận hoặc trả phòng, nó sẽ hiển thị tại đây để bạn xem.",
+    "settlement": "Quyết toán tiền cọc",
+    "await_ack": "Đang chờ bạn xác nhận",
+    "acknowledged": "Đã xác nhận",
+    "finalized": "Đã hoàn tất",
+    "deposit_held": "Tiền cọc đang giữ",
+    "deductions": "Khoản khấu trừ",
+    "refund": "Số tiền hoàn lại",
+    "ack_settlement": "Xác nhận quyết toán",
+    "status_published": "Đang chờ bạn xem",
+    "status_agreed": "Đã đồng ý",
+    "status_disputed": "Đã khiếu nại",
+    "status_finalized": "Đã chốt",
+    "dispute_placeholder": "Mô tả vấn đề (ví dụ: vết xước sàn có từ trước)…"
+  },
+  "currency": {
+    "label": "Tiền tệ",
+    "aud": "Đô la Úc",
+    "usd": "Đô la Mỹ",
+    "krw": "Won Hàn Quốc",
+    "jpy": "Yên Nhật",
+    "cny": "Nhân dân tệ",
+    "myr": "Ringgit Malaysia",
+    "sgd": "Đô la Singapore",
+    "thb": "Baht Thái",
+    "php": "Peso Philippines",
+    "eur": "Euro",
+    "gbp": "Bảng Anh"
+  },
+  "sign": {
+    "title_agreement": "Ký hợp đồng",
+    "title_application": "Ký đơn đăng ký"
   }
 }

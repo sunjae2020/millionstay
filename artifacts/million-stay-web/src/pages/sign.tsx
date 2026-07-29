@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useRoute } from "wouter";
 import { Loader2, CheckCircle2, AlertCircle, FileText, ArrowRight } from "lucide-react";
 import { HomestayLayout } from "@/components/homestay/HomestayLayout";
@@ -46,6 +47,7 @@ function HsButton({
 }
 
 export default function Sign() {
+  const { t } = useTranslation();
   const [, params] = useRoute("/sign/:token");
   const token = params?.token ?? "";
 
@@ -230,7 +232,7 @@ export default function Sign() {
 
               <div className="mt-7">
                 <HsButton type="button" onClick={handleSubmit} disabled={submitting || !consent || requiredMissing}>
-                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : isContract ? "Sign agreement" : "Sign application"}
+                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : isContract ? t("sign.title_agreement") : t("sign.title_application")}
                 </HsButton>
               </div>
             </div>

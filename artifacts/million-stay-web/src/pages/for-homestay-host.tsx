@@ -230,7 +230,7 @@ export default function ForHomestayHost() {
       <div className="relative overflow-hidden shrink-0" style={{ height: "200px" }}>
         <img
           src="https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=1920&q=80"
-          alt="Become a homestay host"
+          alt={t("homestay.hosts.hero_title")}
           className="absolute inset-0 w-full h-full object-cover object-center"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/60" />

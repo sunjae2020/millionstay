@@ -183,7 +183,10 @@
       "policy": "性別ポリシー",
       "price": "週額料金"
     },
-    "tab_homestay": "ホームステイ"
+    "tab_homestay": "ホームステイ",
+    "search": "検索",
+    "prev_page": "前のページ",
+    "next_page": "次のページ"
   },
   "filter": {
     "location": "エリア",
@@ -240,7 +243,9 @@
     "verified": "審査済み物件",
     "secure_payment": "Stripe による安全な決済",
     "deposit_refund": "退去後14日以内に敷金返還",
-    "support": "24時間サポート"
+    "support": "24時間サポート",
+    "view_space": "詳細を見る",
+    "photos_soon": "写真は準備中です"
   },
   "booking": {
     "summary": "予約内容",
@@ -338,7 +343,10 @@
     "space_not_found": "物件が見つかりません。",
     "browse_spaces": "物件を探す",
     "privacy_notice": "Creating an account is subject to our Privacy Policy. Passport, visa, and financial documents requested later are collected to verify your eligibility and are held securely.",
-    "privacy_link": "Privacy Policy."
+    "privacy_link": "Privacy Policy.",
+    "special_requests_placeholder": "特別なご要望やご質問をご記入ください…",
+    "payment_received": "お支払いを受け付けました",
+    "payment_cancelled": "お支払いがキャンセルされました"
   },
   "house_rules": {
     "hero_tagline": "共に、心地よく暮らす",
@@ -1386,7 +1394,9 @@
     "share": "シェア",
     "share_title": "この記事をシェア",
     "more_articles": "他の記事を読む",
-    "no_content": "コンテンツがありません。"
+    "no_content": "コンテンツがありません。",
+    "empty": "記事はまだありません",
+    "empty_hint": "お役立ち情報やガイドを近日公開予定です。"
   },
   "chat": {
     "title": "{{appName}} アシスタント",
@@ -1786,6 +1796,14 @@
       "hero_lead": "Million Homestay がレビュー・マッチング型ホームステイサービスを提供する際の利用規約です。",
       "hero_title": "利用規約",
       "page_title": "利用規約"
+    },
+    "nav": {
+      "home_aria": "Million Homestay ホーム",
+      "toggle_menu": "メニューを開閉",
+      "change_language": "言語を変更"
+    },
+    "coming_soon": {
+      "not_found": "ページが見つかりません"
     }
   },
   "cstranslate": {
@@ -1943,7 +1961,8 @@
       "rent": "賃貸",
       "management": "運営委託",
       "about": "Metheimについて",
-      "directions": "アクセス"
+      "directions": "アクセス",
+      "menu": "メニュー"
     },
     "footer": {
       "desc": "ひとつの建物、三つの選択 — 住戸を購入、短期・長期で滞在、または運営をお任せください。",
@@ -2397,5 +2416,40 @@
     "email": "メールを送信",
     "close": "閉じる",
     "new_tab": "新しいタブで開く"
+  },
+  "condition_report": {
+    "empty": "点検表はまだありません。",
+    "empty_hint": "管理者が入居または退去の点検表を公開すると、ここでご確認いただけます。",
+    "settlement": "敷金精算",
+    "await_ack": "確認待ち",
+    "acknowledged": "確認済み",
+    "finalized": "確定済み",
+    "deposit_held": "預かり敷金",
+    "deductions": "控除額",
+    "refund": "返金額",
+    "ack_settlement": "精算内容を確認",
+    "status_published": "確認待ち",
+    "status_agreed": "同意済み",
+    "status_disputed": "異議あり",
+    "status_finalized": "確定済み",
+    "dispute_placeholder": "問題の内容をご記入ください（例: 入居前からある床の傷）…"
+  },
+  "currency": {
+    "label": "通貨",
+    "aud": "オーストラリアドル",
+    "usd": "米ドル",
+    "krw": "韓国ウォン",
+    "jpy": "日本円",
+    "cny": "中国元",
+    "myr": "マレーシアリンギット",
+    "sgd": "シンガポールドル",
+    "thb": "タイバーツ",
+    "php": "フィリピンペソ",
+    "eur": "ユーロ",
+    "gbp": "英ポンド"
+  },
+  "sign": {
+    "title_agreement": "契約書に署名",
+    "title_application": "申込書に署名"
   }
 }

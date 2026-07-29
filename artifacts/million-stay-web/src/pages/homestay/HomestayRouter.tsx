@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Switch, Route, useLocation } from "wouter";
 import HomestayHome from "./Home";
 import HomestayContact from "./Contact";
@@ -34,6 +35,7 @@ function HashRedirect({ to }: { to: string }) {
 // sub-pages are now #anchored sections, with their old URLs redirected below so
 // existing links and search-engine results keep working.
 export default function HomestayRouter() {
+  const { t } = useTranslation();
   return (
     <Switch>
       <Route path="/" component={HomestayHome} />
@@ -79,7 +81,7 @@ export default function HomestayRouter() {
       <Route path="/host-portal" component={HostPortal} />
       <Route path="/sign/:token" component={Sign} />
 
-      <Route>{() => <HomestayComingSoon title="Page not found" />}</Route>
+      <Route>{() => <HomestayComingSoon title={t("homestay.coming_soon.not_found")} />}</Route>
     </Switch>
   );
 }

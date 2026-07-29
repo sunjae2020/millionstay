@@ -196,7 +196,7 @@ export default function Search() {
 
       {/* ── Hero Banner ── */}
       <div className="relative h-52 md:h-60 overflow-hidden shrink-0">
-        <img src={heroBg} alt="Search" className="absolute inset-0 w-full h-full object-cover object-center" />
+        <img src={heroBg} alt={t("search.search")} className="absolute inset-0 w-full h-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/30 to-black/55" />
         <div className="absolute inset-0 flex flex-col items-start justify-end px-8 pb-8 max-w-7xl mx-auto w-full">
           <p className="font-cursive text-white/80 text-lg italic mb-1">{t("search.hero_tagline")}</p>
@@ -624,7 +624,7 @@ export default function Search() {
                         onClick={() => goToPage(page - 1)}
                         disabled={page === 1}
                         className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-sm text-gray-500 hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-white"
-                        aria-label="Previous page"
+                        aria-label={t("search.prev_page")}
                       >
                         ‹
                       </button>
@@ -664,7 +664,7 @@ export default function Search() {
                         onClick={() => goToPage(page + 1)}
                         disabled={page === totalPages}
                         className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-sm text-gray-500 hover:border-primary hover:text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors bg-white"
-                        aria-label="Next page"
+                        aria-label={t("search.next_page")}
                       >
                         ›
                       </button>

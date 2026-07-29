@@ -232,7 +232,7 @@ export function DevNavbar() {
             <button
               className={`min-[860px]:hidden p-2 ${dark ? "text-white" : "text-gray-700 hover:text-primary"}`}
               onClick={() => setMobileOpen((v) => !v)}
-              aria-label="Menu"
+              aria-label={t("dev.nav.menu")}
             >
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>

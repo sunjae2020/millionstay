@@ -353,7 +353,7 @@ export default function Booking() {
                               <span className="text-muted-foreground">({t("booking.optional")})</span>
                             </FormLabel>
                             <FormControl>
-                              <Input {...field} placeholder="Any special needs or questions..." data-testid="input-special-requests" />
+                              <Input {...field} placeholder={t("booking.special_requests_placeholder")} data-testid="input-special-requests" />
                             </FormControl>
                           </FormItem>
                         )}

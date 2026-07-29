@@ -140,7 +140,10 @@
       "policy": "性别政策",
       "price": "周租金"
     },
-    "tab_homestay": "寄宿家庭"
+    "tab_homestay": "寄宿家庭",
+    "search": "搜索",
+    "prev_page": "上一页",
+    "next_page": "下一页"
   },
   "space": {
     "rent": {
@@ -160,7 +163,9 @@
     "mixed": "男女混住",
     "entire": "整套公寓",
     "room": "独立房间",
-    "bed": "床位"
+    "bed": "床位",
+    "view_space": "查看房源",
+    "photos_soon": "照片准备中"
   },
   "booking": {
     "step1": "住宿详情",
@@ -213,7 +218,10 @@
     "space_not_found": "找不到该房间。",
     "browse_spaces": "浏览房间",
     "privacy_notice": "Creating an account is subject to our Privacy Policy. Passport, visa, and financial documents requested later are collected to verify your eligibility and are held securely.",
-    "privacy_link": "Privacy Policy."
+    "privacy_link": "Privacy Policy.",
+    "special_requests_placeholder": "如有特殊需求或疑问，请在此填写…",
+    "payment_received": "已收到付款",
+    "payment_cancelled": "付款已取消"
   },
   "house_rules": {
     "hero_tagline": "和睦共处，美好生活",
@@ -1239,7 +1247,9 @@
     "share": "分享",
     "share_title": "分享此文章",
     "more_articles": "更多文章",
-    "no_content": "暂无内容。"
+    "no_content": "暂无内容。",
+    "empty": "暂无文章",
+    "empty_hint": "敬请期待实用技巧与指南。"
   },
   "chat": {
     "title": "{{appName}} 助手",
@@ -1639,6 +1649,14 @@
       "hero_lead": "本条款规定 Million Homestay 提供审核与匹配寄宿家庭服务的相关规则。",
       "hero_title": "服务条款",
       "page_title": "服务条款"
+    },
+    "nav": {
+      "home_aria": "Million Homestay 首页",
+      "toggle_menu": "展开/收起菜单",
+      "change_language": "切换语言"
+    },
+    "coming_soon": {
+      "not_found": "页面不存在"
     }
   },
   "cstranslate": {
@@ -1796,7 +1814,8 @@
       "rent": "租赁",
       "management": "委托管理",
       "about": "关于 Metheim",
-      "directions": "交通位置"
+      "directions": "交通位置",
+      "menu": "菜单"
     },
     "footer": {
       "desc": "一栋建筑，三种选择 — 购买单元、短期或长期入住，或委托我们运营。",
@@ -2250,5 +2269,40 @@
     "email": "发送邮件",
     "close": "关闭",
     "new_tab": "在新标签页中打开"
+  },
+  "condition_report": {
+    "empty": "暂无验房报告。",
+    "empty_hint": "物业发布入住或退租验房报告后，将显示在此处供您查看。",
+    "settlement": "押金结算",
+    "await_ack": "等待您确认",
+    "acknowledged": "已确认",
+    "finalized": "已完成",
+    "deposit_held": "已收押金",
+    "deductions": "扣除金额",
+    "refund": "退还金额",
+    "ack_settlement": "确认结算",
+    "status_published": "待您查看",
+    "status_agreed": "已同意",
+    "status_disputed": "已提出异议",
+    "status_finalized": "已确定",
+    "dispute_placeholder": "请说明问题（例如：入住前已存在的地板划痕）…"
+  },
+  "currency": {
+    "label": "货币",
+    "aud": "澳大利亚元",
+    "usd": "美元",
+    "krw": "韩元",
+    "jpy": "日元",
+    "cny": "人民币",
+    "myr": "马来西亚林吉特",
+    "sgd": "新加坡元",
+    "thb": "泰铢",
+    "php": "菲律宾比索",
+    "eur": "欧元",
+    "gbp": "英镑"
+  },
+  "sign": {
+    "title_agreement": "签署合同",
+    "title_application": "签署申请书"
   }
 }

@@ -181,7 +181,10 @@
     "tab_private": "개인실",
     "tab_entire": "전체 공간",
     "tab_shared": "다인실",
-    "tab_homestay": "홈스테이"
+    "tab_homestay": "홈스테이",
+    "search": "검색",
+    "prev_page": "이전 페이지",
+    "next_page": "다음 페이지"
   },
   "space": {
     "rent": {
@@ -201,7 +204,9 @@
     "mixed": "남녀 공용",
     "entire": "전체 공간",
     "room": "개인실",
-    "bed": "다인실"
+    "bed": "다인실",
+    "view_space": "상세 보기",
+    "photos_soon": "사진 준비 중"
   },
   "booking": {
     "step1": "숙박 상세 정보",
@@ -254,7 +259,10 @@
     "space_not_found": "숙소를 찾을 수 없습니다.",
     "browse_spaces": "숙소 둘러보기",
     "privacy_notice": "Creating an account is subject to our Privacy Policy. Passport, visa, and financial documents requested later are collected to verify your eligibility and are held securely.",
-    "privacy_link": "Privacy Policy."
+    "privacy_link": "Privacy Policy.",
+    "special_requests_placeholder": "특별히 요청하실 사항이나 궁금한 점을 적어 주세요…",
+    "payment_received": "결제가 완료되었습니다",
+    "payment_cancelled": "결제가 취소되었습니다"
   },
   "house_rules": {
     "hero_tagline": "함께 조화롭게 생활해요",
@@ -1280,7 +1288,9 @@
     "share": "공유",
     "share_title": "이 게시물 공유하기",
     "more_articles": "다른 게시물 보기",
-    "no_content": "내용이 없습니다."
+    "no_content": "내용이 없습니다.",
+    "empty": "아직 등록된 글이 없습니다",
+    "empty_hint": "유용한 정보와 가이드를 곧 올려 드리겠습니다."
   },
   "chat": {
     "title": "{{appName}} 어시스턴트",
@@ -1680,6 +1690,14 @@
       "hero_lead": "Million Homestay가 심사 및 매칭 홈스테이 서비스를 제공하는 데 적용되는 이용약관입니다.",
       "hero_title": "이용 약관",
       "page_title": "이용 약관"
+    },
+    "nav": {
+      "home_aria": "Million Homestay 홈",
+      "toggle_menu": "메뉴 열기/닫기",
+      "change_language": "언어 변경"
+    },
+    "coming_soon": {
+      "not_found": "페이지를 찾을 수 없습니다"
     }
   },
   "cstranslate": {
@@ -1837,7 +1855,8 @@
       "rent": "임대",
       "management": "위탁관리",
       "about": "메트하임 소개",
-      "directions": "찾아오기"
+      "directions": "찾아오기",
+      "menu": "메뉴"
     },
     "footer": {
       "desc": "하나의 건물, 세 가지 선택 — 세대를 분양받거나, 단기·장기로 머무르거나, 위탁 운영을 맡기세요.",
@@ -2291,5 +2310,40 @@
     "email": "이메일 보내기",
     "close": "닫기",
     "new_tab": "새 탭에서 열기"
+  },
+  "condition_report": {
+    "empty": "아직 등록된 점검표가 없습니다.",
+    "empty_hint": "관리자가 입주 또는 퇴거 점검표를 게시하면 이곳에서 확인하실 수 있습니다.",
+    "settlement": "보증금 정산",
+    "await_ack": "확인 대기 중",
+    "acknowledged": "확인 완료",
+    "finalized": "정산 완료",
+    "deposit_held": "예치 보증금",
+    "deductions": "공제 금액",
+    "refund": "환급 금액",
+    "ack_settlement": "정산 내용 확인",
+    "status_published": "검토 대기 중",
+    "status_agreed": "동의함",
+    "status_disputed": "이의 제기",
+    "status_finalized": "확정됨",
+    "dispute_placeholder": "어떤 점이 문제인지 적어 주세요(예: 입주 전부터 있던 바닥 흠집)…"
+  },
+  "currency": {
+    "label": "통화",
+    "aud": "호주 달러",
+    "usd": "미국 달러",
+    "krw": "대한민국 원",
+    "jpy": "일본 엔",
+    "cny": "중국 위안",
+    "myr": "말레이시아 링깃",
+    "sgd": "싱가포르 달러",
+    "thb": "태국 바트",
+    "php": "필리핀 페소",
+    "eur": "유로",
+    "gbp": "영국 파운드"
+  },
+  "sign": {
+    "title_agreement": "계약서 서명",
+    "title_application": "신청서 서명"
   }
 }

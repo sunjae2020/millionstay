@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { getApiBase } from "@/lib/api-base";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -41,6 +42,7 @@ const RATING_STYLE: Record<string, string> = {
 };
 
 export function ConditionReports({ bookingId, token }: { bookingId: string | number; token: string }) {
+  const { t } = useTranslation();
   const [reports, setReports] = React.useState<Report[] | null>(null);
   const [loading, setLoading] = React.useState(true);
 
@@ -74,8 +76,8 @@ export function ConditionReports({ bookingId, token }: { bookingId: string | num
     return (
       <div className="bg-white rounded-2xl border p-8 text-center text-gray-400">
         <ShieldCheck className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-        <p>No condition reports yet.</p>
-        <p className="text-xs mt-1">When your property manager publishes a move-in or move-out inspection, it will appear here for your review.</p>
+        <p>{t("condition_report.empty")}</p>
+        <p className="text-xs mt-1">{t("condition_report.empty_hint")}</p>
       </div>
     );
   }
@@ -102,6 +104,7 @@ function money(n: string | number, ccy: string) {
 }
 
 function DepositSettlements({ bookingId, token }: { bookingId: string | number; token: string }) {
+  const { t } = useTranslation();
   const [rows, setRows] = React.useState<Settlement[] | null>(null);
 
   const load = React.useCallback(async () => {
@@ -133,16 +136,16 @@ function DepositSettlements({ bookingId, token }: { bookingId: string | number; 
           <div className="px-6 py-4 border-b bg-gray-50 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Wallet className="h-4 w-4 text-primary" />
-              <span className="text-sm font-bold text-gray-800">Deposit settlement</span>
+              <span className="text-sm font-bold text-gray-800">{t("condition_report.settlement")}</span>
               <span className="text-xs font-mono text-gray-400">{s.settlement_ref}</span>
             </div>
-            <span className="text-xs font-semibold text-gray-500">{s.status === "proposed" ? "Awaiting your acknowledgement" : s.status === "tenant_ack" ? "Acknowledged" : s.status === "finalized" ? "Finalized" : s.status}</span>
+            <span className="text-xs font-semibold text-gray-500">{s.status === "proposed" ? t("condition_report.await_ack") : s.status === "tenant_ack" ? t("condition_report.acknowledged") : s.status === "finalized" ? t("condition_report.finalized") : s.status}</span>
           </div>
           <div className="p-6 space-y-4">
             <div className="grid grid-cols-3 gap-3 text-sm">
-              <div className="rounded-xl border p-3"><p className="text-xs text-gray-500">Deposit held</p><p className="font-semibold">{money(s.deposit_held, s.currency)}</p></div>
-              <div className="rounded-xl border p-3"><p className="text-xs text-gray-500">Deductions</p><p className="font-semibold text-red-600">−{money(s.total_deducted, s.currency)}</p></div>
-              <div className="rounded-xl border p-3 bg-green-50/50"><p className="text-xs text-gray-500">Refund to you</p><p className="font-semibold text-green-700">{money(s.refund_amount, s.currency)}</p></div>
+              <div className="rounded-xl border p-3"><p className="text-xs text-gray-500">{t("condition_report.deposit_held")}</p><p className="font-semibold">{money(s.deposit_held, s.currency)}</p></div>
+              <div className="rounded-xl border p-3"><p className="text-xs text-gray-500">{t("condition_report.deductions")}</p><p className="font-semibold text-red-600">−{money(s.total_deducted, s.currency)}</p></div>
+              <div className="rounded-xl border p-3 bg-green-50/50"><p className="text-xs text-gray-500">{t("condition_report.refund")}</p><p className="font-semibold text-green-700">{money(s.refund_amount, s.currency)}</p></div>
             </div>
             {s.deductions.length > 0 && (
               <div className="space-y-1.5">
@@ -155,7 +158,7 @@ function DepositSettlements({ bookingId, token }: { bookingId: string | number; 
               </div>
             )}
             {s.status === "proposed" && (
-              <Button size="sm" onClick={() => acknowledge(s.id)} className="gap-1.5"><CheckCircle2 className="h-3.5 w-3.5" /> Acknowledge settlement</Button>
+              <Button size="sm" onClick={() => acknowledge(s.id)} className="gap-1.5"><CheckCircle2 className="h-3.5 w-3.5" /> {t("condition_report.ack_settlement")}</Button>
             )}
           </div>
         </div>
@@ -210,11 +213,12 @@ function ReportCard({ report, token, onChanged }: { report: Report; token: strin
 }
 
 function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation();
   const map: Record<string, { label: string; cls: string }> = {
-    published: { label: "Awaiting your review", cls: "bg-blue-50 text-blue-700 border-blue-200" },
-    tenant_agreed: { label: "Agreed", cls: "bg-green-50 text-green-700 border-green-200" },
-    disputed: { label: "Disputed", cls: "bg-red-50 text-red-700 border-red-200" },
-    finalized: { label: "Finalized", cls: "bg-gray-100 text-gray-600 border-gray-200" },
+    published: { label: t("condition_report.status_published"), cls: "bg-blue-50 text-blue-700 border-blue-200" },
+    tenant_agreed: { label: t("condition_report.status_agreed"), cls: "bg-green-50 text-green-700 border-green-200" },
+    disputed: { label: t("condition_report.status_disputed"), cls: "bg-red-50 text-red-700 border-red-200" },
+    finalized: { label: t("condition_report.status_finalized"), cls: "bg-gray-100 text-gray-600 border-gray-200" },
   };
   const s = map[status] ?? { label: status, cls: "bg-gray-100 text-gray-600 border-gray-200" };
   return <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${s.cls}`}>{s.label}</span>;
@@ -225,6 +229,7 @@ function ItemRow({
 }: {
   item: Item; reportId: number; token: string; decision: "agreed" | "disputed" | null; locked: boolean; onChanged: () => void;
 }) {
+  const { t } = useTranslation();
   const [busy, setBusy] = React.useState(false);
   const [showDispute, setShowDispute] = React.useState(false);
   const [comment, setComment] = React.useState(item.responses[0]?.comment ?? "");
@@ -326,7 +331,7 @@ function ItemRow({
               <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                placeholder="Describe the issue (e.g. pre-existing scratch on the floor)…"
+                placeholder={t("condition_report.dispute_placeholder")}
                 className="w-full text-sm border rounded-lg px-3 py-2 min-h-[70px]"
               />
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadPhoto(f); }} />

@@ -50,7 +50,7 @@ export function HomestayNavbar() {
       }}
     >
       <div className="max-w-6xl mx-auto px-5 h-[72px] flex items-center justify-between">
-        <Link href="/" aria-label="Million Homestay home" className="flex items-center">
+        <Link href="/" aria-label={t("homestay.nav.home_aria")} className="flex items-center">
           <HomestayWordmark markSize={30} />
         </Link>
 
@@ -96,7 +96,7 @@ export function HomestayNavbar() {
             className="p-2 -mr-2"
             style={{ color: HS.navy }}
             onClick={() => setOpen((v) => !v)}
-            aria-label="Toggle menu"
+            aria-label={t("homestay.nav.toggle_menu")}
             aria-expanded={open}
           >
             {open ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}

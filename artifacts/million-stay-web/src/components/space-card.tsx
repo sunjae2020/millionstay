@@ -65,7 +65,7 @@ export function SpaceCard({ space, index = 0, highlighted = false, checkIn = "",
       data-testid={`space-card-${space.id}`}
     >
       <Link href={`/spaces/${space.id}${checkIn || checkOut ? `?${new URLSearchParams([["check_in", checkIn], ["check_out", checkOut]].filter(([, v]) => v) as [string, string][]).toString()}` : ""}`} className="absolute inset-0 z-10">
-        <span className="sr-only">View Space</span>
+        <span className="sr-only">{t("space.view_space")}</span>
       </Link>
 
       {/* ── Image ── */}
@@ -81,7 +81,7 @@ export function SpaceCard({ space, index = 0, highlighted = false, checkIn = "",
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex flex-col items-center justify-center gap-1">
             <span className="text-4xl">🏠</span>
-            <span className="text-xs text-primary">Photos coming soon</span>
+            <span className="text-xs text-primary">{t("space.photos_soon")}</span>
           </div>
         )}
         <Button

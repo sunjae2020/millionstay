@@ -1,10 +1,12 @@
 import { CheckCircle2, XCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useSupportEmail } from "@/lib/guest-api";
 import { APP_NAME } from "../lib/appName";
 
 // Stripe redirect target for payments (homestay placements + regular invoices).
 // Reads ?status=success|cancelled&ref=… (HSP-… or MS-INV-…) and shows a confirmation.
 export default function PaymentResult() {
+  const { t } = useTranslation();
   const params = new URLSearchParams(window.location.search);
   const status = params.get("status") ?? "success";
   const ref = params.get("ref") ?? "";
@@ -20,7 +22,7 @@ export default function PaymentResult() {
           <XCircle className="w-12 h-12 mx-auto text-gray-400" />
         )}
         <h1 className="mt-5 text-2xl font-bold text-gray-900">
-          {ok ? "Payment received" : "Payment cancelled"}
+          {ok ? t("booking.payment_received") : t("booking.payment_cancelled")}
         </h1>
         <p className="mt-2 text-gray-600">
           {ok

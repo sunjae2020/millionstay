@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Calendar, User, Tag, ChevronRight, BookOpen } from "lucide-react";
@@ -42,6 +43,7 @@ async function fetchBlogPosts(category?: string) {
 }
 
 export default function Blog() {
+  const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState("All");
 
   const { data: CATEGORIES = DEFAULT_CATEGORIES } = useQuery({
@@ -108,8 +110,8 @@ export default function Blog() {
           ) : posts.length === 0 ? (
             <div className="py-20 flex flex-col items-center text-center">
               <BookOpen className="h-12 w-12 text-gray-300 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">No posts yet</h3>
-              <p className="text-gray-500 text-sm">Check back soon for tips, guides, and insights.</p>
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">{t("blog_post.empty")}</h3>
+              <p className="text-gray-500 text-sm">{t("blog_post.empty_hint")}</p>
             </div>
           ) : (
             <>

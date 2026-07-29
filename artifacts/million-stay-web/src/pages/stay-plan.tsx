@@ -120,7 +120,7 @@ export default function StayPlan() {
 
       {/* Banner */}
       <div className="relative h-52 md:h-64 overflow-hidden">
-        <img src={heroBg} alt="Stay Plans" className="absolute inset-0 w-full h-full object-cover object-center" />
+        <img src={heroBg} alt={t("stay_plan.title")} className="absolute inset-0 w-full h-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/50" />
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
           <p className="font-cursive text-white/80 text-lg italic mb-1">{t("stay_plan.hero_tagline")}</p>
