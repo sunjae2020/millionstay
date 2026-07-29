@@ -750,7 +750,7 @@ async function renderInspectionPdf(
   hiddenCodes?: Set<string>,
   lang = "ko",
 ): Promise<void> {
-  const company = await resolveCompanyInfo();
+  const company = await resolveCompanyInfo(normalizeLang(lang));
   const html = buildUnitInspectionHtml({ data, templateKey, company, forPrint: true, hiddenCodes, lang });
   if (format === "html") { res.setHeader("Content-Type", "text/html; charset=utf-8"); res.send(html); return; }
   try {

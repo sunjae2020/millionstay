@@ -266,7 +266,7 @@ router.get("/v1/quotes/:id/pdf", async (req, res): Promise<void> => {
   const terms = await resolveTemplateBody("pdf", "pdf.quote", lang, {
     ref: docInput.quote_ref, valid_until: docInput.valid_until ?? "",
   });
-  const html = buildQuoteHtml(docInput, await resolveCompanyInfo(), !asHtml, lang, terms);
+  const html = buildQuoteHtml(docInput, await resolveCompanyInfo(lang), !asHtml, lang, terms);
   if (asHtml) { res.type("html").send(html); return; }
   try {
     const pdf = await htmlToPdf(html);
@@ -296,7 +296,7 @@ router.post("/v1/quotes/:id/email", async (req, res): Promise<void> => {
   const quoteTerms = await resolveTemplateBody("pdf", "pdf.quote", lang, { ref: docInput.quote_ref, valid_until: docInput.valid_until ?? "" });
   let pdf: Buffer;
   try {
-    pdf = await htmlToPdf(buildQuoteHtml(docInput, await resolveCompanyInfo(), true, lang, quoteTerms));
+    pdf = await htmlToPdf(buildQuoteHtml(docInput, await resolveCompanyInfo(lang), true, lang, quoteTerms));
   } catch (err) {
     if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
     res.status(500).json({ error: "Failed to generate PDF" }); return;
@@ -333,7 +333,7 @@ router.post("/v1/quotes/:id/freeze", async (req, res): Promise<void> => {
   const quoteTerms = await resolveTemplateBody("pdf", "pdf.quote", lang, { ref: docInput.quote_ref, valid_until: docInput.valid_until ?? "" });
   let pdf: Buffer;
   try {
-    pdf = await htmlToPdf(buildQuoteHtml(docInput, await resolveCompanyInfo(), true, lang, quoteTerms));
+    pdf = await htmlToPdf(buildQuoteHtml(docInput, await resolveCompanyInfo(lang), true, lang, quoteTerms));
   } catch (err) {
     if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
     res.status(500).json({ error: "Failed to generate PDF" }); return;

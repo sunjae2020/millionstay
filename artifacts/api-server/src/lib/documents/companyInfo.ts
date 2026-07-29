@@ -12,7 +12,8 @@
 import { db, integrationSettings, brandingSettingsTable, BRANDING_SINGLETON_ID } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { getCompanyInfo, type CompanyInfo } from "./theme";
-import { setDocDateFormat } from "./i18n";
+import { setDocDateFormat, normalizeLang, type DocLang } from "./i18n";
+import { formatPostalAddress } from "./address";
 
 export const COMPANY_INFO_KEY = "company_info";
 
@@ -72,23 +73,24 @@ export async function readStoredCompanyInfo(): Promise<StoredCompanyInfo> {
   }
 }
 
-/** Compose a single-line address from the stored parts. */
-function composeAddress(s: StoredCompanyInfo): string {
-  return [
-    s.address1,
-    s.address2,
-    s.suburb,
-    [s.state, s.postcode].filter(Boolean).join(" ").trim() || null,
-    s.country,
-  ].filter(Boolean).join(", ");
+/** Compose a single-line address from the stored parts, in `lang` order. */
+function composeAddress(s: StoredCompanyInfo, lang: DocLang): string {
+  return formatPostalAddress({
+    line1: s.address1, line2: s.address2, suburb: s.suburb,
+    state: s.state, postcode: s.postcode, country: s.country,
+  }, lang);
 }
 
-/** Resolve the document CompanyInfo: stored values override env defaults. */
-export async function resolveCompanyInfo(): Promise<CompanyInfo> {
+/**
+ * Resolve the document CompanyInfo: stored values override env defaults.
+ * `lang` only affects address ordering — pass the document's language so the
+ * issuer block reads naturally for its reader; it defaults to the tenant's.
+ */
+export async function resolveCompanyInfo(lang?: DocLang): Promise<CompanyInfo> {
   const defaults = getCompanyInfo();
   await syncDocDateFormat();
   const s = await readStoredCompanyInfo();
-  const address = composeAddress(s);
+  const address = composeAddress(s, normalizeLang(lang));
   return {
     legalName: s.company_name?.trim() || defaults.legalName,
     tradingName: s.trading_name?.trim() || defaults.tradingName,

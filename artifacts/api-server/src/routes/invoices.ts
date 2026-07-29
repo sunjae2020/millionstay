@@ -9,12 +9,13 @@ import { buildInvoiceHtml, type InvoiceDocInput } from "../lib/documents/invoice
 import { buildReceiptHtml } from "../lib/documents/receiptDocument";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
-import { normalizeLang, t } from "../lib/documents/i18n";
+import { normalizeLang, t, type DocLang } from "../lib/documents/i18n";
 import { resolveTemplateBody } from "../lib/documents/templateEngine";
 import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
 import { formatDocMoney } from "../lib/documents/theme";
 import { sendDocumentEmail, resolveDocEmailCopy } from "../lib/email";
 import { buildDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename.js";
+import { formatPostalAddress } from "../lib/documents/address.js";
 import { getStripe } from "./stripe";
 import { postInvoicePaid } from "../lib/billing/gl";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
@@ -269,7 +270,7 @@ router.post("/v1/invoices/:id/void", async (req, res): Promise<void> => {
  * Build the enriched document input for a single invoice, including the
  * billing account's email + formatted address (needed for the Bill-To block).
  */
-async function buildInvoiceDocInput(invoiceId: number): Promise<InvoiceDocInput | null> {
+async function buildInvoiceDocInput(invoiceId: number, lang: DocLang): Promise<InvoiceDocInput | null> {
   const row = await db.select().from(invoicesTable).where(eq(invoicesTable.id, invoiceId)).then(r => r[0]);
   if (!row) return null;
   const [enriched] = await enrichInvoices([row]);
@@ -280,12 +281,13 @@ async function buildInvoiceDocInput(invoiceId: number): Promise<InvoiceDocInput 
     const [acc] = await db.select().from(accountsTable).where(eq(accountsTable.id, row.account_id));
     if (acc) {
       account_email = acc.account_email ?? null;
-      account_address = [
-        acc.address_line1,
-        acc.address_suburb,
-        [acc.address_state, acc.address_postcode].filter(Boolean).join(" "),
-        acc.address_country,
-      ].filter(Boolean).join(", ") || null;
+      account_address = formatPostalAddress({
+        line1: acc.address_line1,
+        suburb: acc.address_suburb,
+        state: acc.address_state,
+        postcode: acc.address_postcode,
+        country: acc.address_country,
+      }, lang) || null;
     }
   }
 
@@ -324,15 +326,14 @@ router.get("/v1/invoices/:id/pdf", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
-  const docInput = await buildInvoiceDocInput(id);
-  if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
-
   const asHtml = req.query.format === "html";
   const lang = normalizeLang(req.query.lang as string);
+  const docInput = await buildInvoiceDocInput(id, lang);
+  if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
   const terms = await resolveTemplateBody("pdf", "pdf.invoice", lang, {
     ref: docInput.invoice_ref, due_date: docInput.due_date ?? "",
   });
-  const html = buildInvoiceHtml(docInput, await resolveCompanyInfo(), !asHtml, lang, terms);
+  const html = buildInvoiceHtml(docInput, await resolveCompanyInfo(lang), !asHtml, lang, terms);
 
   if (asHtml) {
     res.type("html").send(html);
@@ -350,13 +351,12 @@ router.get("/v1/invoices/:id/receipt/pdf", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
-  const docInput = await buildInvoiceDocInput(id);
-  if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
-
   const asHtml = req.query.format === "html";
   const lang = normalizeLang(req.query.lang as string);
+  const docInput = await buildInvoiceDocInput(id, lang);
+  if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
   const terms = await resolveTemplateBody("pdf", "pdf.receipt", lang, { ref: docInput.invoice_ref });
-  const html = buildReceiptHtml(docInput, await resolveCompanyInfo(), !asHtml, lang, terms);
+  const html = buildReceiptHtml(docInput, await resolveCompanyInfo(lang), !asHtml, lang, terms);
 
   if (asHtml) { res.type("html").send(html); return; }
   await sendPdf(res, html, { docName: t(lang, "doctype.receipt"), customerName: docInput.account_name });
@@ -392,14 +392,13 @@ function moneyLabel(amount: string | number | null, currency: string | null): st
 async function emailInvoiceDocument(req: import("express").Request, res: import("express").Response, kind: "invoice" | "receipt"): Promise<void> {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
-  const docInput = await buildInvoiceDocInput(id);
+  const lang = normalizeLang(req.body?.lang as string);
+  const docInput = await buildInvoiceDocInput(id, lang);
   if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
 
   const to = (req.body?.to as string)?.trim() || docInput.account_email;
   if (!to) { res.status(400).json({ error: "No recipient email — set one on the linked account or pass { to }." }); return; }
-
-  const lang = normalizeLang(req.body?.lang as string);
-  const company = await resolveCompanyInfo();
+  const company = await resolveCompanyInfo(lang);
   const terms = kind === "invoice"
     ? await resolveTemplateBody("pdf", "pdf.invoice", lang, { ref: docInput.invoice_ref, due_date: docInput.due_date ?? "" })
     : await resolveTemplateBody("pdf", "pdf.receipt", lang, { ref: docInput.invoice_ref });
@@ -463,10 +462,10 @@ router.post("/v1/invoices/:id/receipt/email", (req, res) => emailInvoiceDocument
 async function freezeInvoiceDocument(req: import("express").Request, res: import("express").Response, kind: "invoice" | "receipt"): Promise<void> {
   const id = Number(req.params.id);
   if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
-  const docInput = await buildInvoiceDocInput(id);
-  if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
   const lang = normalizeLang(req.body?.lang as string);
-  const company = await resolveCompanyInfo();
+  const docInput = await buildInvoiceDocInput(id, lang);
+  if (!docInput) { res.status(404).json({ error: "Not found" }); return; }
+  const company = await resolveCompanyInfo(lang);
   const terms = kind === "invoice"
     ? await resolveTemplateBody("pdf", "pdf.invoice", lang, { ref: docInput.invoice_ref, due_date: docInput.due_date ?? "" })
     : await resolveTemplateBody("pdf", "pdf.receipt", lang, { ref: docInput.invoice_ref });

@@ -70,7 +70,7 @@ export interface ResolvedRecipients {
  */
 export async function renderApplicationPdf(doc: ApplicationDocInput): Promise<Buffer | null> {
   try {
-    const html = buildApplicationHtml(doc, true, await resolveCompanyInfo());
+    const html = buildApplicationHtml(doc, true, await resolveCompanyInfo(doc.lang));
     return await htmlToPdf(html);
   } catch (err) {
     if (err instanceof PdfUnavailableError) {
@@ -224,7 +224,7 @@ export async function buildSignedDocumentHtml(
     const signed = opts.signed ?? signing.status === "signed";
     const sigs = toContractSignatures(signing.signatures);
     const doc = { ...built.doc, signed, signatures: sigs.length ? sigs : null };
-    return buildContractHtml(doc, await resolveCompanyInfo(), opts.forPrint ?? true, lang);
+    return buildContractHtml(doc, await resolveCompanyInfo(lang), opts.forPrint ?? true, lang);
   }
   const doc = await buildDocForSigning(signing, { signed: opts.signed, lang });
   return doc ? buildApplicationHtml(doc, opts.forPrint ?? true) : null;

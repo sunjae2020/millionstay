@@ -468,7 +468,7 @@ adminRouter.get("/v1/deposit-settlements/:id/document.pdf", async (req, res): Pr
     const asHtml = req.query.format === "html";
     const lang = normalizeLang(req.query.lang as string);
     const note = await resolveTemplateBody("pdf", "pdf.move_out_confirmation", lang, { ref: docInput.settlement_ref });
-    const html = buildMoveOutSettlementHtml(docInput, await resolveCompanyInfo(), !asHtml, lang, note);
+    const html = buildMoveOutSettlementHtml(docInput, await resolveCompanyInfo(lang), !asHtml, lang, note);
 
     if (asHtml) { res.type("html").send(html); return; }
     const pdf = await htmlToPdf(html);

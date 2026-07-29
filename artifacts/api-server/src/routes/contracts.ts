@@ -10,6 +10,7 @@ import { generateLeaseRentInvoices } from "../lib/billing/leaseRentInvoices";
 import { buildContractHtml, type ContractDocInput } from "../lib/documents/contractDocument";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { buildDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename";
+import { formatPostalAddress } from "../lib/documents/address";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo";
 import { normalizeLang, t, type DocLang } from "../lib/documents/i18n";
 import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
@@ -470,7 +471,15 @@ export async function buildContractDocInput(id: number, lang: DocLang = "en"): P
   // Enrich tenant/landlord contact + the rent billing frequency so the agreement
   // can show per-party detail and a subdivided fee breakdown.
   const composeAddr = (a: typeof accountsTable.$inferSelect | undefined): string | null =>
-    a ? ([a.address_suburb, a.address_state, a.address_postcode, a.address_country].filter(Boolean).join(", ") || null) : null;
+    a
+      ? formatPostalAddress({
+          line1: a.address_line1,
+          suburb: a.address_suburb,
+          state: a.address_state,
+          postcode: a.address_postcode,
+          country: a.address_country,
+        }, lang) || null
+      : null;
   let tenantEmail: string | null = null, tenantAddress: string | null = null;
   let landlordEmail: string | null = null, landlordAddress: string | null = null;
   if (row.tenant_account_id) {
@@ -555,7 +564,7 @@ router.get("/v1/contracts/:id/pdf", async (req, res): Promise<void> => {
   if (!built) { res.status(404).json({ error: "Not found" }); return; }
 
   const asHtml = req.query.format === "html";
-  const html = buildContractHtml(built.doc, await resolveCompanyInfo(), !asHtml, lang);
+  const html = buildContractHtml(built.doc, await resolveCompanyInfo(lang), !asHtml, lang);
   if (asHtml) { res.type("html").send(html); return; }
   try {
     const pdf = await htmlToPdf(html);
@@ -588,7 +597,7 @@ router.post("/v1/contracts/:id/email", async (req, res): Promise<void> => {
   const lang = normalizeLang(req.body?.lang as string);
   let pdf: Buffer;
   try {
-    pdf = await htmlToPdf(buildContractHtml(built.doc, await resolveCompanyInfo(), true, lang));
+    pdf = await htmlToPdf(buildContractHtml(built.doc, await resolveCompanyInfo(lang), true, lang));
   } catch (err) {
     if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
     res.status(500).json({ error: "Failed to generate PDF" }); return;
@@ -630,7 +639,7 @@ router.post("/v1/contracts/:id/freeze", async (req, res): Promise<void> => {
   if (!built) { res.status(404).json({ error: "Not found" }); return; }
   let pdf: Buffer;
   try {
-    pdf = await htmlToPdf(buildContractHtml(built.doc, await resolveCompanyInfo(), true, lang));
+    pdf = await htmlToPdf(buildContractHtml(built.doc, await resolveCompanyInfo(lang), true, lang));
   } catch (err) {
     if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
     res.status(500).json({ error: "Failed to generate PDF" }); return;

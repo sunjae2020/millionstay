@@ -935,13 +935,13 @@ export async function sendInspectionSignLinkEmail(
     return { ok: false, skipped: true, error: "Email service not configured" };
   }
 
-  const company = await resolveCompanyInfo().catch(() => null);
+  const lang = normalizeLang(opts.lang ?? process.env.DEFAULT_DOC_LANG ?? "en");
+  const company = await resolveCompanyInfo(lang).catch(() => null);
   const brand = company?.tradingName || "MillionStay";
   const logoUrl = company?.logoUrl || LOGO_URL;
   const legalName = company?.legalName || "MillionStay Pty Ltd";
   const supportEmail = company?.email || (await resolveSupportEmail());
 
-  const lang = normalizeLang(opts.lang ?? process.env.DEFAULT_DOC_LANG ?? "en");
   const copy = SIGN_LINK_COPY[lang] ?? SIGN_LINK_COPY.en!;
   const phaseLabel = copy.phase[opts.phase];
   const safeUrl = escapeHtml(opts.url);
@@ -1130,13 +1130,13 @@ export async function sendAppointmentConfirmationEmail(
     return { ok: false, skipped: true, error: "Email service not configured" };
   }
 
-  const company = await resolveCompanyInfo().catch(() => null);
+  const lang = normalizeLang(opts.lang ?? process.env.DEFAULT_DOC_LANG ?? "en");
+  const company = await resolveCompanyInfo(lang).catch(() => null);
   const brand = company?.tradingName || "MillionStay";
   const logoUrl = company?.logoUrl || LOGO_URL;
   const legalName = company?.legalName || "MillionStay Pty Ltd";
   const supportEmail = company?.email || (await resolveSupportEmail());
 
-  const lang = normalizeLang(opts.lang ?? process.env.DEFAULT_DOC_LANG ?? "en");
   const copy = APPOINTMENT_COPY[lang] ?? APPOINTMENT_COPY.en!;
   const locale = docLocale(lang);
   const tz = process.env.DEFAULT_TIMEZONE ?? undefined;

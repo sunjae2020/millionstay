@@ -113,7 +113,7 @@ const sampleMoveOut: MoveOutDocInput = {
  */
 export async function renderSampleDocumentHtml(key: string, bodyHtml: string, localeRaw: string): Promise<string | null> {
   const lang = normalizeLang(localeRaw);
-  const company = await resolveCompanyInfo();
+  const company = await resolveCompanyInfo(lang);
   const body = bodyHtml?.trim();
 
   if (key === "pdf.invoice") {
