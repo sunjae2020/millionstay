@@ -160,6 +160,12 @@ export const CreatePropertyBody = zod.object({
   owner_account_id: zod.number().nullish(),
   suburb_id: zod.number().nullish(),
   description: zod.string().nullish(),
+  lot_address: zod.string().nullish(),
+  building_use: zod.string().nullish(),
+  building_structure: zod.string().nullish(),
+  land_category: zod.string().nullish(),
+  land_area_m2: zod.number().nullish(),
+  land_right_type: zod.string().nullish(),
 });
 
 /**
@@ -186,6 +192,12 @@ export const GetPropertyResponse = zod.object({
   suburb_id: zod.number().nullish(),
   suburb_name: zod.string().nullish(),
   description: zod.string().nullish(),
+  lot_address: zod.string().nullish(),
+  building_use: zod.string().nullish(),
+  building_structure: zod.string().nullish(),
+  land_category: zod.string().nullish(),
+  land_area_m2: zod.number().nullish(),
+  land_right_type: zod.string().nullish(),
   created_at: zod.coerce.date(),
   updated_at: zod.coerce.date(),
 });
@@ -211,6 +223,12 @@ export const UpdatePropertyBody = zod.object({
   owner_account_id: zod.number().nullish(),
   suburb_id: zod.number().nullish(),
   description: zod.string().nullish(),
+  lot_address: zod.string().nullish(),
+  building_use: zod.string().nullish(),
+  building_structure: zod.string().nullish(),
+  land_category: zod.string().nullish(),
+  land_area_m2: zod.number().nullish(),
+  land_right_type: zod.string().nullish(),
 });
 
 export const UpdatePropertyResponse = zod.object({
@@ -230,6 +248,12 @@ export const UpdatePropertyResponse = zod.object({
   suburb_id: zod.number().nullish(),
   suburb_name: zod.string().nullish(),
   description: zod.string().nullish(),
+  lot_address: zod.string().nullish(),
+  building_use: zod.string().nullish(),
+  building_structure: zod.string().nullish(),
+  land_category: zod.string().nullish(),
+  land_area_m2: zod.number().nullish(),
+  land_right_type: zod.string().nullish(),
   created_at: zod.coerce.date(),
   updated_at: zod.coerce.date(),
 });
@@ -269,6 +293,12 @@ export const UpdatePropertyStatusResponse = zod.object({
   suburb_id: zod.number().nullish(),
   suburb_name: zod.string().nullish(),
   description: zod.string().nullish(),
+  lot_address: zod.string().nullish(),
+  building_use: zod.string().nullish(),
+  building_structure: zod.string().nullish(),
+  land_category: zod.string().nullish(),
+  land_area_m2: zod.number().nullish(),
+  land_right_type: zod.string().nullish(),
   created_at: zod.coerce.date(),
   updated_at: zod.coerce.date(),
 });

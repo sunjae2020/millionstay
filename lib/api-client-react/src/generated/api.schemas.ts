@@ -108,6 +108,18 @@ export interface Property {
   suburb_name?: string | null;
   /** @nullable */
   description?: string | null;
+  /** @nullable */
+  lot_address?: string | null;
+  /** @nullable */
+  building_use?: string | null;
+  /** @nullable */
+  building_structure?: string | null;
+  /** @nullable */
+  land_category?: string | null;
+  /** @nullable */
+  land_area_m2?: number | null;
+  /** @nullable */
+  land_right_type?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -137,6 +149,18 @@ export interface CreatePropertyBody {
   suburb_id?: number | null;
   /** @nullable */
   description?: string | null;
+  /** @nullable */
+  lot_address?: string | null;
+  /** @nullable */
+  building_use?: string | null;
+  /** @nullable */
+  building_structure?: string | null;
+  /** @nullable */
+  land_category?: string | null;
+  /** @nullable */
+  land_area_m2?: number | null;
+  /** @nullable */
+  land_right_type?: string | null;
 }
 
 export interface UpdatePropertyBody {
@@ -164,6 +188,18 @@ export interface UpdatePropertyBody {
   suburb_id?: number | null;
   /** @nullable */
   description?: string | null;
+  /** @nullable */
+  lot_address?: string | null;
+  /** @nullable */
+  building_use?: string | null;
+  /** @nullable */
+  building_structure?: string | null;
+  /** @nullable */
+  land_category?: string | null;
+  /** @nullable */
+  land_area_m2?: number | null;
+  /** @nullable */
+  land_right_type?: string | null;
 }
 
 export interface UpdatePropertyStatusBody {

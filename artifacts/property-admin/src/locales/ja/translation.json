@@ -1452,7 +1452,20 @@
     "bulk_start_upload": "新規アップロードを開始",
     "bulk_remove_title": "セッションを削除",
     "bulk_remove_desc": "このアップロードセッションを履歴から削除します。すでにアップロードされた写真には影響しません。",
-    "bulk_remove_confirm": "削除"
+    "bulk_remove_confirm": "削除",
+    "registry_heading": "土地・建物の登記情報",
+    "registry_hint": "賃貸借契約書の別紙にある不動産表示の表に印刷されます。住戸ごとの面積は各スペースで設定します。",
+    "label_lot_address": "所在地（地番）",
+    "placeholder_lot_address": "登記上の地番住所（住居表示と異なる場合があります）",
+    "label_building_use": "建物用途",
+    "placeholder_building_use": "例：共同住宅",
+    "label_building_structure": "建物構造",
+    "placeholder_building_structure": "例：鉄筋コンクリート造",
+    "label_land_category": "土地地目",
+    "placeholder_land_category": "例：宅地",
+    "label_land_area": "土地面積（㎡）",
+    "label_land_right_type": "敷地権の種類",
+    "placeholder_land_right_type": "例：所有権敷地権"
   },
   "space": {
     "new": "新規スペース",
@@ -3502,7 +3515,8 @@
     "ceo_placeholder": "氏名",
     "biz_no_label": "事業者登録番号",
     "privacy_officer_label": "個人情報保護責任者",
-    "privacy_officer_placeholder": "氏名（メール）"
+    "privacy_officer_placeholder": "氏名（メール）",
+    "corp_no_label": "法人登録番号"
   },
   "settings_dbsync": {
     "page_title": "DB 同期",

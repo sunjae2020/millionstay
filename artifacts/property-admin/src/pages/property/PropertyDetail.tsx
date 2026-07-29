@@ -39,6 +39,14 @@ interface PropertyForm {
   lng: string;
   approval_status: string;
   description: string;
+  // Land/building registry details (등기부 표시) — printed on the 부동산의 표식
+  // table of a Korean lease agreement's 별지.
+  lot_address: string;
+  building_use: string;
+  building_structure: string;
+  land_category: string;
+  land_area_m2: string;
+  land_right_type: string;
 }
 
 export default function PropertyDetail() {
@@ -80,6 +88,8 @@ export default function PropertyDetail() {
       name: "", address: "", address2: "", city: "", state: "",
       postcode: "", country_code: "AU", lat: "", lng: "",
       approval_status: "Pending", description: "",
+      lot_address: "", building_use: "", building_structure: "",
+      land_category: "", land_area_m2: "", land_right_type: "",
     },
   });
 
@@ -97,6 +107,12 @@ export default function PropertyDetail() {
         lng: property.lng?.toString() ?? "",
         approval_status: property.approval_status ?? "Pending",
         description: property.description ?? "",
+        lot_address: property.lot_address ?? "",
+        building_use: property.building_use ?? "",
+        building_structure: property.building_structure ?? "",
+        land_category: property.land_category ?? "",
+        land_area_m2: property.land_area_m2?.toString() ?? "",
+        land_right_type: property.land_right_type ?? "",
       });
       setSuburbId(property.suburb_id ?? null);
       setSuburbName(property.suburb_name ?? null);
@@ -174,6 +190,12 @@ export default function PropertyDetail() {
       approval_status: data.approval_status,
       suburb_id: suburbId,
       description: data.description || null,
+      lot_address: data.lot_address || null,
+      building_use: data.building_use || null,
+      building_structure: data.building_structure || null,
+      land_category: data.land_category || null,
+      land_area_m2: data.land_area_m2 ? parseFloat(data.land_area_m2) : null,
+      land_right_type: data.land_right_type || null,
     };
     if (isNew) {
       createMutation.mutate({ data: payload });
@@ -353,6 +375,37 @@ export default function PropertyDetail() {
                   <div className="col-span-2 flex flex-col gap-1.5">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("property.label_description")}</Label>
                     <Textarea {...register("description")} placeholder={t("property.placeholder_description")} rows={4} />
+                  </div>
+
+                  {/* Land/building registry — printed on the 부동산의 표식 table
+                      of a lease agreement's 별지. Per-unit areas live on spaces. */}
+                  <div className="col-span-2 pt-2 border-t">
+                    <h3 className="text-sm font-semibold">{t("property.registry_heading")}</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">{t("property.registry_hint")}</p>
+                  </div>
+                  <div className="col-span-2 flex flex-col gap-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("property.label_lot_address")}</Label>
+                    <Input {...register("lot_address")} placeholder={t("property.placeholder_lot_address")} />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("property.label_building_use")}</Label>
+                    <Input {...register("building_use")} placeholder={t("property.placeholder_building_use")} />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("property.label_building_structure")}</Label>
+                    <Input {...register("building_structure")} placeholder={t("property.placeholder_building_structure")} />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("property.label_land_category")}</Label>
+                    <Input {...register("land_category")} placeholder={t("property.placeholder_land_category")} />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("property.label_land_area")}</Label>
+                    <Input {...register("land_area_m2")} type="number" step="any" placeholder="3519" />
+                  </div>
+                  <div className="col-span-2 flex flex-col gap-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("property.label_land_right_type")}</Label>
+                    <Input {...register("land_right_type")} placeholder={t("property.placeholder_land_right_type")} />
                   </div>
                 </div>
               </form>

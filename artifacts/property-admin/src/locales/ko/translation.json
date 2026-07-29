@@ -1452,7 +1452,20 @@
     "bulk_start_upload": "새 업로드 시작",
     "bulk_remove_title": "세션 제거",
     "bulk_remove_desc": "이 업로드 세션을 기록에서 제거합니다. 이미 업로드된 사진에는 영향을 주지 않습니다.",
-    "bulk_remove_confirm": "제거"
+    "bulk_remove_confirm": "제거",
+    "registry_heading": "토지·건물 등기 정보",
+    "registry_hint": "임대차 계약서 별지의 부동산 표식 표에 인쇄됩니다. 세대별 면적은 각 공간에서 설정합니다.",
+    "label_lot_address": "소재지(지번)",
+    "placeholder_lot_address": "등기상 지번 주소 (도로명 주소와 다를 수 있음)",
+    "label_building_use": "건물 용도",
+    "placeholder_building_use": "예: 공동주택",
+    "label_building_structure": "건물 구조",
+    "placeholder_building_structure": "예: 철근콘크리트 구조",
+    "label_land_category": "토지 지목",
+    "placeholder_land_category": "예: 대(垈)",
+    "label_land_area": "토지 면적 (㎡)",
+    "label_land_right_type": "대지권 종류",
+    "placeholder_land_right_type": "예: 소유권 대지권"
   },
   "space": {
     "new": "새 공간",
@@ -3502,7 +3515,8 @@
     "ceo_placeholder": "성명",
     "biz_no_label": "사업자등록번호",
     "privacy_officer_label": "개인정보 보호책임자",
-    "privacy_officer_placeholder": "이름 (이메일)"
+    "privacy_officer_placeholder": "이름 (이메일)",
+    "corp_no_label": "법인등록번호"
   },
   "settings_dbsync": {
     "page_title": "DB 동기화",

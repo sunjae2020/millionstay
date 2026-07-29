@@ -32,9 +32,9 @@ import {
   placementToDoc,
   type ApplicationDocInput,
 } from "../lib/documents/applicationPdf.js";
-import { buildContractHtml, type ContractSignature } from "../lib/documents/contractDocument.js";
+import { type ContractSignature } from "../lib/documents/contractDocument.js";
 import { resolveCompanyInfo } from "../lib/documents/companyInfo.js";
-import { buildContractDocInput } from "../routes/contracts.js";
+import { buildContractDocInput, renderContractHtml } from "../routes/contracts.js";
 import { isCloudinaryConfigured, uploadPrivateToCloudinary, cldFolder } from "../utils/cloudinary.js";
 import { sendDocumentEmail, sendApplicationAckEmail } from "../lib/email.js";
 import { resolveTemplate } from "../lib/documents/templateEngine.js";
@@ -187,7 +187,7 @@ export async function buildDocForSigning(
     });
   }
   // "contract" (regular tenancy/accommodation agreement) is rendered through its
-  // own builder (buildContractHtml), not the ApplicationDocInput shell — see
+  // own builder (renderContractHtml), not the ApplicationDocInput shell — see
   // buildSignedDocumentHtml. buildDocForSigning is only used by the application
   // shell paths, so it returns null here.
   return null;
@@ -209,7 +209,7 @@ function toContractSignatures(raw: unknown): ContractSignature[] {
 
 /**
  * Render the document for a signing request to HTML. Homestay applications use
- * the ApplicationDocInput shell; a regular "contract" uses buildContractHtml
+ * the ApplicationDocInput shell; a regular "contract" uses renderContractHtml
  * (reusing the same renderer as /v1/contracts/:id/pdf, with drawn signatures
  * embedded once signed). Returns null when the underlying record is gone.
  */
@@ -224,7 +224,7 @@ export async function buildSignedDocumentHtml(
     const signed = opts.signed ?? signing.status === "signed";
     const sigs = toContractSignatures(signing.signatures);
     const doc = { ...built.doc, signed, signatures: sigs.length ? sigs : null };
-    return buildContractHtml(doc, await resolveCompanyInfo(lang), opts.forPrint ?? true, lang);
+    return renderContractHtml({ ...built, doc }, opts.forPrint ?? true, lang, signed ? sigs : null);
   }
   const doc = await buildDocForSigning(signing, { signed: opts.signed, lang });
   return doc ? buildApplicationHtml(doc, opts.forPrint ?? true) : null;

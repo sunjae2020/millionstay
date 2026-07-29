@@ -33,6 +33,34 @@ export interface ContractSignature {
   consentText?: string | null;
 }
 
+/**
+ * The leased unit as described in a Korean lease agreement's 부동산의 표시 table.
+ * Read from the contract's `spaces` row (plus its property) at build time, so a
+ * single standard agreement renders correctly for whichever unit type applies
+ * (Metheim 여수: A / A-1 / B / C / D / D-1 / E / E-1) without per-type templates.
+ * Every field is optional — rows with no value are omitted from the table.
+ */
+export interface ContractPremises {
+  /** Street address of the building (소재지). */
+  location?: string | null;
+  /** Building / property name (건물명). */
+  building?: string | null;
+  /** Unit number (호수), e.g. "101". */
+  unit_no?: string | null;
+  /** Floor (층). */
+  floor?: string | null;
+  /** Unit type name (타입), e.g. "A-1타입" — from the parent type space. */
+  unit_type?: string | null;
+  /** Structure / permitted use (구조 · 용도). */
+  structure_use?: string | null;
+  exclusive_area_m2?: number | null;
+  residential_common_area_m2?: number | null;
+  supply_area_m2?: number | null;
+  other_common_area_m2?: number | null;
+  contract_area_m2?: number | null;
+  land_share_m2?: number | null;
+}
+
 export interface ContractDocInput {
   contract_ref: string;
   status: string;
@@ -43,6 +71,8 @@ export interface ContractDocInput {
   landlord_email?: string | null;
   landlord_address?: string | null;
   space_name?: string | null;
+  /** Leased unit detail for the 부동산의 표시 table (Korean lease agreements). */
+  premises?: ContractPremises | null;
   product_name?: string | null;
   booking_ref?: string | null;
   start_date: string | null;
@@ -59,6 +89,12 @@ export interface ContractDocInput {
   /** Priced add-on services (airport pickup, settlement, prepaid phone, …). */
   additional_services?: ContractServiceLine[] | null;
   terms_text: string | null;
+  /**
+   * Annex / special terms (별지 · 특약사항). Rendered on its own page at the end
+   * of the SAME PDF so the agreement and its annex stay one file. Callers split
+   * this out of the template body at the `[별지]` marker (see ANNEX_MARKER).
+   */
+  annex_text?: string | null;
   notes: string | null;
   signed_at: string | Date | null;
   created_at: string | Date | null;
@@ -112,6 +148,78 @@ function renderDrawnSignatures(c: ContractDocInput, lang: DocLang): string {
     <h3>${t(lang, "signatures")}</h3>
     <div style="display:flex;flex-wrap:wrap;gap:16px;margin-top:12px;">${cards.join("")}</div>
   </div>`;
+}
+
+/**
+ * Marker that splits a template body into the agreement clauses and its annex.
+ * Everything after the first occurrence becomes the 별지 page of the same PDF.
+ */
+export const ANNEX_MARKER = "[별지]";
+
+/** Split a template body at ANNEX_MARKER into { terms, annex }. */
+export function splitAnnex(body: string | null | undefined): { terms: string | null; annex: string | null } {
+  if (!body?.trim()) return { terms: null, annex: null };
+  const at = body.indexOf(ANNEX_MARKER);
+  if (at < 0) return { terms: body, annex: null };
+  return {
+    terms: body.slice(0, at).trim() || null,
+    annex: body.slice(at + ANNEX_MARKER.length).trim() || null,
+  };
+}
+
+/** Format an area in m² with the Korean 평 equivalent (1평 = 3.3058 m²). */
+function area(value: number | null | undefined): string | null {
+  if (value == null || !Number.isFinite(Number(value))) return null;
+  const m2 = Number(value);
+  if (m2 === 0) return null;
+  const pyeong = m2 / 3.305785;
+  return `${m2.toLocaleString(undefined, { maximumFractionDigits: 3 })} m² (${pyeong.toFixed(2)}평)`;
+}
+
+/**
+ * 부동산의 표시 — the leased unit described from its `spaces` row. Only rows with
+ * a value are printed, so a unit missing (say) 대지지분 simply omits that line.
+ */
+function renderPremises(c: ContractDocInput, lang: DocLang): string {
+  const p = c.premises;
+  if (!p) return "";
+  const rows: Array<[string, string | null]> = [
+    [t(lang, "location"), p.location ?? null],
+    [t(lang, "building"), p.building ?? null],
+    [t(lang, "unitNo"), p.unit_no ?? null],
+    [t(lang, "floor"), p.floor ?? null],
+    [t(lang, "unitType"), p.unit_type ?? null],
+    [t(lang, "structureUse"), p.structure_use ?? null],
+    [t(lang, "areaExclusive"), area(p.exclusive_area_m2)],
+    [t(lang, "areaResidentialCommon"), area(p.residential_common_area_m2)],
+    [t(lang, "areaSupply"), area(p.supply_area_m2)],
+    [t(lang, "areaOtherCommon"), area(p.other_common_area_m2)],
+    [t(lang, "areaContract"), area(p.contract_area_m2)],
+    [t(lang, "areaLandShare"), area(p.land_share_m2)],
+  ].filter((r): r is [string, string] => r[1] != null && String(r[1]).trim() !== "");
+  if (!rows.length) return "";
+  const body = rows.map(([label, value]) =>
+    `<tr><th style="text-align:left;width:34%;padding:7px 10px;background:#FAFAFA;border:1px solid #EEE;font-size:12px;color:#666;font-weight:600;">${escapeHtml(label)}</th>
+         <td style="padding:7px 10px;border:1px solid #EEE;font-size:13px;color:#333;">${escapeHtml(String(value))}</td></tr>`,
+  ).join("");
+  return `<div class="section">
+      <h3>${t(lang, "propertyDescription")}</h3>
+      <table style="width:100%;border-collapse:collapse;margin-top:10px;">${body}</table>
+    </div>`;
+}
+
+/**
+ * 별지 (특약사항) — rendered on a fresh page at the end of the same document, so
+ * the agreement and its annex are delivered as one PDF rather than two files.
+ */
+function renderAnnex(text: string | null | undefined, lang: DocLang): string {
+  if (!text?.trim()) return "";
+  const paragraphs = text.split(/\n{2,}/).map(p =>
+    `<p style="margin:0 0 12px;font-size:13px;color:#333;white-space:pre-wrap;">${escapeHtml(p.trim())}</p>`,
+  ).join("");
+  return `<div class="section" style="page-break-before:always;break-before:page;margin-top:24px;">
+      <h3>${t(lang, "annex")}</h3>${paragraphs}
+    </div>`;
 }
 
 /** Render free-text terms, preserving paragraph breaks, with escaping. */
@@ -206,6 +314,8 @@ export function buildContractBody(c: ContractDocInput, lang: DocLang = "en", com
       ${c.landlord_address ? row(t(lang, "address"), escapeHtml(c.landlord_address)) : ""}
     </div>
 
+    ${renderPremises(c, lang)}
+
     <div class="section">
       <h3>${t(lang, "premisesTerm")}</h3>
       ${c.space_name ? row(t(lang, "premises"), escapeHtml(c.space_name)) : ""}
@@ -251,6 +361,8 @@ export function buildContractBody(c: ContractDocInput, lang: DocLang = "en", com
         </div>
       </div>
     </div>`}
+
+    ${renderAnnex(c.annex_text, lang)}
   `;
 }
 

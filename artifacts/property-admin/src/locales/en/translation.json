@@ -1452,7 +1452,20 @@
     "bulk_start_upload": "Start New Upload",
     "bulk_remove_title": "Remove Session",
     "bulk_remove_desc": "This will remove this upload session from the history. Photos already uploaded will not be affected.",
-    "bulk_remove_confirm": "Remove"
+    "bulk_remove_confirm": "Remove",
+    "registry_heading": "Land & Building Registry",
+    "registry_hint": "Printed on the property description table of a lease agreement annex. Per-unit areas are set on each space.",
+    "label_lot_address": "Lot address",
+    "placeholder_lot_address": "Registered lot address (may differ from the street address)",
+    "label_building_use": "Building use",
+    "placeholder_building_use": "e.g. Apartment complex",
+    "label_building_structure": "Building structure",
+    "placeholder_building_structure": "e.g. Reinforced concrete",
+    "label_land_category": "Land category",
+    "placeholder_land_category": "e.g. Building site",
+    "label_land_area": "Land area (m²)",
+    "label_land_right_type": "Land right type",
+    "placeholder_land_right_type": "e.g. Ownership land right"
   },
   "space": {
     "new": "New Space",
@@ -3502,7 +3515,8 @@
     "ceo_placeholder": "Full name",
     "biz_no_label": "Business registration no.",
     "privacy_officer_label": "Privacy officer",
-    "privacy_officer_placeholder": "Name (email)"
+    "privacy_officer_placeholder": "Name (email)",
+    "corp_no_label": "Corporate registration no."
   },
   "settings_dbsync": {
     "page_title": "DB Sync",

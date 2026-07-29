@@ -59,6 +59,8 @@ export interface StoredCompanyInfo {
   // (KR business-registration info, legally displayed publicly on a commerce site).
   ceo?: string;
   biz_no?: string;
+  /** 법인등록번호 — printed in the landlord block of a Korean lease agreement. */
+  corp_no?: string;
   privacy_officer?: string;
 }
 

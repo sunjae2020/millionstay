@@ -3148,6 +3148,20 @@ components:
           type: ["string", "null"]
         description:
           type: ["string", "null"]
+        # Land/building registry (등기부 표시) — printed on the 부동산의 표식
+        # table of a Korean lease agreement's 별지.
+        lot_address:
+          type: ["string", "null"]
+        building_use:
+          type: ["string", "null"]
+        building_structure:
+          type: ["string", "null"]
+        land_category:
+          type: ["string", "null"]
+        land_area_m2:
+          type: ["number", "null"]
+        land_right_type:
+          type: ["string", "null"]
         created_at:
           type: string
           format: date-time
@@ -3191,6 +3205,20 @@ components:
           type: ["integer", "null"]
         description:
           type: ["string", "null"]
+        # Land/building registry (등기부 표시) — printed on the 부동산의 표식
+        # table of a Korean lease agreement's 별지.
+        lot_address:
+          type: ["string", "null"]
+        building_use:
+          type: ["string", "null"]
+        building_structure:
+          type: ["string", "null"]
+        land_category:
+          type: ["string", "null"]
+        land_area_m2:
+          type: ["number", "null"]
+        land_right_type:
+          type: ["string", "null"]
       required:
         - name
 
@@ -3222,6 +3250,20 @@ components:
         suburb_id:
           type: ["integer", "null"]
         description:
+          type: ["string", "null"]
+        # Land/building registry (등기부 표시) — printed on the 부동산의 표식
+        # table of a Korean lease agreement's 별지.
+        lot_address:
+          type: ["string", "null"]
+        building_use:
+          type: ["string", "null"]
+        building_structure:
+          type: ["string", "null"]
+        land_category:
+          type: ["string", "null"]
+        land_area_m2:
+          type: ["number", "null"]
+        land_right_type:
           type: ["string", "null"]
 
     UpdatePropertyStatusBody:

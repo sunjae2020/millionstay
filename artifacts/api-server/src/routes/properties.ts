@@ -104,6 +104,14 @@ router.get("/v1/properties/:id", async (req, res): Promise<void> => {
       suburb_id: propertiesTable.suburb_id,
       suburb_name: suburbsTable.name,
       description: propertiesTable.description,
+      // Land/building registry (등기부 표시) — fills the 부동산의 표식 table on
+      // a Korean lease agreement's 별지.
+      lot_address: propertiesTable.lot_address,
+      building_use: propertiesTable.building_use,
+      building_structure: propertiesTable.building_structure,
+      land_category: propertiesTable.land_category,
+      land_area_m2: propertiesTable.land_area_m2,
+      land_right_type: propertiesTable.land_right_type,
       created_at: propertiesTable.created_at,
       updated_at: propertiesTable.updated_at,
     })

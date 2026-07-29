@@ -36,6 +36,8 @@ const CompanyInfoBody = z.object({
   brand_color: z.string().optional(),
   ceo: z.string().optional(),
   biz_no: z.string().optional(),
+  // 법인등록번호 — landlord block of a Korean lease agreement.
+  corp_no: z.string().optional(),
   privacy_officer: z.string().optional(),
 }).strip();
 
@@ -58,7 +60,6 @@ router.put("/v1/company-info", async (req, res): Promise<void> => {
   res.json({ ok: true, ...parsed.data });
 });
 
-export default router;
 // ── Company documents (사업자등록증 / 통장사본 / 인감증명서 …) ──────────────
 //
 // The company's own paperwork, filed against the organisation rather than any
@@ -165,3 +166,4 @@ router.delete("/v1/company-info/documents/:docId", requireOrgDocRole, async (req
   res.status(204).end();
 });
 
+export default router;

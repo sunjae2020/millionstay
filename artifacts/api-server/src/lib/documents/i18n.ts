@@ -171,6 +171,26 @@ const LABELS: Dict = {
   "freq.weekly":      { en: "Weekly",      ko: "매주",  zh: "每周",   ja: "毎週", th: "รายสัปดาห์", vi: "Hàng tuần" },
   "freq.fortnightly": { en: "Fortnightly", ko: "격주",  zh: "每两周", ja: "隔週", th: "รายปักษ์",   vi: "Hai tuần một lần" },
 
+  // ── Property description table (부동산의 표시) — Korean lease agreements ────
+  // Filled from the contract's `spaces` row (unit type + the six Korean area
+  // columns), so one standard agreement adapts to whichever unit type applies.
+  "propertyDescription": { en: "Property Description", ko: "부동산의 표시", zh: "不动产的表示", ja: "不動産の表示", th: "รายละเอียดทรัพย์สิน", vi: "Mô tả bất động sản" },
+  "location":         { en: "Location",           ko: "소재지",       zh: "所在地",     ja: "所在地",     th: "ที่ตั้ง",           vi: "Địa điểm" },
+  "building":         { en: "Building",           ko: "건물명",       zh: "建筑名称",   ja: "建物名",     th: "อาคาร",             vi: "Tòa nhà" },
+  "unitNo":           { en: "Unit",               ko: "호수",         zh: "房号",       ja: "号室",       th: "ห้อง",              vi: "Căn hộ" },
+  "floor":            { en: "Floor",              ko: "층",           zh: "楼层",       ja: "階",         th: "ชั้น",              vi: "Tầng" },
+  "unitType":         { en: "Unit type",          ko: "타입",         zh: "户型",       ja: "タイプ",     th: "ประเภทห้อง",        vi: "Loại căn" },
+  "structureUse":     { en: "Structure / Use",    ko: "구조 · 용도",  zh: "结构 · 用途", ja: "構造・用途", th: "โครงสร้าง · การใช้", vi: "Kết cấu · Mục đích" },
+  "areaExclusive":    { en: "Exclusive area",     ko: "전용면적",     zh: "专用面积",   ja: "専有面積",   th: "พื้นที่ใช้สอยส่วนตัว", vi: "Diện tích riêng" },
+  "areaResidentialCommon": { en: "Residential common area", ko: "주거공용면적", zh: "居住公用面积", ja: "住居共用面積", th: "พื้นที่ส่วนกลางที่พัก", vi: "Diện tích chung nhà ở" },
+  "areaSupply":       { en: "Supply area",        ko: "공급면적",     zh: "供给面积",   ja: "供給面積",   th: "พื้นที่จัดสรร",     vi: "Diện tích cung cấp" },
+  "areaOtherCommon":  { en: "Other common area",  ko: "기타공용면적", zh: "其他公用面积", ja: "その他共用面積", th: "พื้นที่ส่วนกลางอื่น", vi: "Diện tích chung khác" },
+  "areaContract":     { en: "Contract area",      ko: "계약면적",     zh: "合同面积",   ja: "契約面積",   th: "พื้นที่ตามสัญญา",   vi: "Diện tích hợp đồng" },
+  "areaLandShare":    { en: "Land share",         ko: "대지지분",     zh: "土地份额",   ja: "敷地権割合", th: "สัดส่วนที่ดิน",     vi: "Phần đất" },
+
+  // ── Annex / special terms (별지 · 특약사항) — bound into the same PDF ───────
+  "annex":            { en: "Annex — Special Terms", ko: "별지 — 특약사항", zh: "附件 — 特别约定", ja: "別紙 — 特約事項", th: "ภาคผนวก — ข้อตกลงพิเศษ", vi: "Phụ lục — Điều khoản đặc biệt" },
+
   // ── Additional services & fees (airport pickup, settlement, prepaid phone…) ──
   "additionalServices": { en: "Additional Services & Fees", ko: "추가 서비스 및 비용", zh: "附加服务与费用", ja: "追加サービス・料金", th: "บริการและค่าใช้จ่ายเพิ่มเติม", vi: "Dịch vụ & phí bổ sung" },
   "servicesSubtotal":   { en: "Services subtotal",          ko: "서비스 합계",        zh: "服务小计",        ja: "サービス小計",      th: "ยอดรวมบริการ",            vi: "Tổng phụ dịch vụ" },

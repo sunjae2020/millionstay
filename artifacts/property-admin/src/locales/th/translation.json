@@ -1452,7 +1452,20 @@
     "bulk_start_upload": "เริ่มอัปโหลดใหม่",
     "bulk_remove_title": "ลบเซสชัน",
     "bulk_remove_desc": "การดำเนินการนี้จะลบเซสชันอัปโหลดนี้ออกจากประวัติ รูปภาพที่อัปโหลดไปแล้วจะไม่ได้รับผลกระทบ",
-    "bulk_remove_confirm": "ลบ"
+    "bulk_remove_confirm": "ลบ",
+    "registry_heading": "ข้อมูลทะเบียนที่ดินและอาคาร",
+    "registry_hint": "จะพิมพ์ในตารางรายละเอียดทรัพย์สินของภาคผนวกสัญญาเช่า พื้นที่ของแต่ละห้องตั้งค่าที่พื้นที่นั้น ๆ",
+    "label_lot_address": "ที่ตั้ง (เลขที่โฉนด)",
+    "placeholder_lot_address": "ที่อยู่ตามทะเบียน (อาจต่างจากที่อยู่ถนน)",
+    "label_building_use": "ประเภทการใช้อาคาร",
+    "placeholder_building_use": "เช่น อาคารชุดพักอาศัย",
+    "label_building_structure": "โครงสร้างอาคาร",
+    "placeholder_building_structure": "เช่น คอนกรีตเสริมเหล็ก",
+    "label_land_category": "ประเภทที่ดิน",
+    "placeholder_land_category": "เช่น ที่ดินปลูกสร้าง",
+    "label_land_area": "เนื้อที่ดิน (ตร.ม.)",
+    "label_land_right_type": "ประเภทสิทธิในที่ดิน",
+    "placeholder_land_right_type": "เช่น สิทธิความเป็นเจ้าของ"
   },
   "space": {
     "new": "พื้นที่ใหม่",
@@ -3502,7 +3515,8 @@
     "ceo_placeholder": "ชื่อ-นามสกุล",
     "biz_no_label": "เลขทะเบียนธุรกิจ",
     "privacy_officer_label": "ผู้รับผิดชอบข้อมูลส่วนบุคคล",
-    "privacy_officer_placeholder": "ชื่อ (อีเมล)"
+    "privacy_officer_placeholder": "ชื่อ (อีเมล)",
+    "corp_no_label": "เลขทะเบียนนิติบุคคล"
   },
   "settings_dbsync": {
     "page_title": "ซิงค์ฐานข้อมูล",

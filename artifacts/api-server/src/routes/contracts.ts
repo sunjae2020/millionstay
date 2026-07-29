@@ -7,7 +7,10 @@ import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelet
 import { getRateToAud } from "../lib/rateSnapshot";
 import { resolveLeaseTermsFromProduct } from "../lib/leaseTerms";
 import { generateLeaseRentInvoices } from "../lib/billing/leaseRentInvoices";
-import { buildContractHtml, type ContractDocInput } from "../lib/documents/contractDocument";
+import { buildContractHtml, splitAnnex, type ContractDocInput, type ContractPremises, type ContractSignature } from "../lib/documents/contractDocument";
+import { buildKoreanLeaseHtml, type KoreanLeaseDocInput } from "../lib/documents/koreanLeaseDocument";
+import { readStoredCompanyInfo } from "../lib/documents/companyInfo";
+import { paymentInfoTable } from "@workspace/db";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
 import { buildDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename";
 import { formatPostalAddress } from "@workspace/address";
@@ -17,7 +20,7 @@ import { freezeDocument, snapshotDocType } from "../lib/documents/freeze";
 import { formatDocMoney } from "../lib/documents/theme";
 import { sendDocumentEmail, resolveDocEmailCopy } from "../lib/email";
 import { accountRecipients, parseRecipients, toRecipientsResponse } from "../lib/documents/recipients";
-import { resolveTemplate } from "../lib/documents/templateEngine";
+import { resolveTemplate, renderString } from "../lib/documents/templateEngine";
 import { createSigningRequest, type SignerSpec } from "../services/contractSigning";
 import { emailLogsTable } from "@workspace/db";
 
@@ -455,18 +458,185 @@ router.get("/v1/contracts/:id", async (req, res): Promise<void> => {
 });
 
 /** Build the branded-document input for a contract (enriched names + fields). */
-export async function buildContractDocInput(id: number, lang: DocLang = "en"): Promise<{ doc: ContractDocInput; tenantAccountId: number | null } | null> {
+/**
+ * Describe the leased unit for a Korean lease agreement's 부동산의 표시 table.
+ *
+ * Metheim models unit *types* as parent spaces that real units hang off via
+ * `parent_space_id`, and the Korean area breakdown is authored on those type
+ * rows (see docs/tenants/metheim/UNIT_INVENTORY.md). So each field falls back
+ * unit → type: one standard agreement then renders correct per-type areas
+ * without a separate template per type.
+ */
+async function buildContractPremises(
+  spaceId: number | null | undefined,
+): Promise<{ premises: ContractPremises; property: typeof propertiesTable.$inferSelect | null } | null> {
+  if (!spaceId) return null;
+  const [space] = await db.select().from(spacesTable).where(eq(spacesTable.id, spaceId));
+  if (!space) return null;
+
+  let parent: typeof space | undefined;
+  if (space.parent_space_id) {
+    [parent] = await db.select().from(spacesTable).where(eq(spacesTable.id, space.parent_space_id));
+  }
+  const inherited = (key: keyof typeof space): number | null => {
+    const own = space[key] as number | null | undefined;
+    if (own != null) return Number(own);
+    const up = parent?.[key] as number | null | undefined;
+    return up != null ? Number(up) : null;
+  };
+
+  let property: typeof propertiesTable.$inferSelect | undefined;
+  if (space.property_id) {
+    [property] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, space.property_id));
+  }
+
+  return {
+    property: property ?? null,
+    premises: {
+      location: [property?.address, property?.address2].filter(Boolean).join(" ") || null,
+      building: property?.name ?? null,
+      unit_no: space.name ?? null,
+      floor: space.floor_number != null ? String(space.floor_number) : null,
+      // Unit rows carry the type in `custom_type_name` ("A-1타입"); the parent
+      // type space is named for it. `space_type` is a system enum
+      // ("Whole Property") and must never reach a contract.
+      unit_type: space.custom_type_name ?? parent?.name ?? null,
+      structure_use: property?.building_use ?? null,
+      exclusive_area_m2: inherited("exclusive_area_m2"),
+      residential_common_area_m2: inherited("residential_common_area_m2"),
+      supply_area_m2: inherited("supply_area_m2"),
+      other_common_area_m2: inherited("other_common_area_m2"),
+      contract_area_m2: inherited("contract_area_m2"),
+      land_share_m2: inherited("land_share_m2"),
+    },
+  };
+}
+
+/**
+ * Resolve the two 납부계좌 rows (임대료 / 보증금) from `payment_info`. Matched by
+ * keyword on the row name so ops control the mapping from Settings → Payment
+ * Info; when only one active account exists it is used for both lines.
+ */
+async function resolveLeaseAccounts(): Promise<KoreanLeaseDocInput["accounts"]> {
+  const rows = await db.select().from(paymentInfoTable)
+    .where(and(eq(paymentInfoTable.status, "Active"), isNull(paymentInfoTable.deleted_at)));
+  if (!rows.length) return [];
+  const find = (...keywords: string[]) =>
+    rows.find((r) => keywords.some((k) => (r.name ?? "").includes(k)));
+  const rent = find("임대료", "월세", "차임") ?? rows[0];
+  const deposit = find("보증금") ?? rows[0];
+  const line = (label: string, r: typeof rows[number]) => ({
+    label,
+    bank_name: r.bank_name,
+    account_number: r.account_number,
+    account_name: r.account_name,
+  });
+  return [line("임대료 납부계좌", rent), line("보증금 납부계좌", deposit)];
+}
+
+/**
+ * The {{variables}} an editable lease-agreement body may reference. Names match
+ * the `variables_schema` seeded on the template, so the Templates Studio shows
+ * the same list ops can insert. Unknown/blank values render as empty strings.
+ */
+function contractTemplateVars(
+  c: Record<string, any>,
+  row: typeof contractsTable.$inferSelect,
+  premises: ContractPremises | null,
+  rents: { list: number | null; actual: number | null },
+): Record<string, unknown> {
+  const currency = c.currency ?? DEFAULT_CURRENCY;
+  const m = (v: unknown) => (v == null || v === "" ? "" : formatDocMoney(Number(v), currency));
+  const a = (v: number | null | undefined) =>
+    v == null ? "" : `${Number(v).toLocaleString(undefined, { maximumFractionDigits: 3 })}`;
+  return {
+    contract_ref: c.contract_ref ?? "",
+    tenant_name: c.tenant_name ?? "",
+    landlord_name: c.landlord_name ?? "",
+    start_date: row.start_date ?? "",
+    end_date: row.end_date ?? "",
+    // 부동산의 표시 — sourced from the contract's space (unit → type fallback).
+    location: premises?.location ?? "",
+    building: premises?.building ?? "",
+    unit_no: premises?.unit_no ?? "",
+    floor: premises?.floor ?? "",
+    unit_type: premises?.unit_type ?? "",
+    structure_use: premises?.structure_use ?? "",
+    area_exclusive: a(premises?.exclusive_area_m2),
+    area_residential_common: a(premises?.residential_common_area_m2),
+    area_supply: a(premises?.supply_area_m2),
+    area_other_common: a(premises?.other_common_area_m2),
+    area_contract: a(premises?.contract_area_m2),
+    area_land_share: a(premises?.land_share_m2),
+    // Korean lease payment terms (계약서 구분 / 계약금·잔금·보증금·월세).
+    contract_category: row.contract_category ?? "",
+    deposit_amount: m(row.bond_amount),
+    // 차임 as written on the agreement (rate-card list price) vs the 특판가 the
+    // tenant actually pays each month.
+    monthly_rent: m(rents.list ?? rents.actual),
+    promo_monthly_rent: m(rents.actual ?? rents.list),
+    rent_due_day: row.rent_due_day != null ? String(row.rent_due_day) : "",
+    down_payment: m(row.down_payment),
+    down_payment_date: row.down_payment_date ?? "",
+    balance_amount: m(row.balance_amount),
+    balance_date: row.balance_date ?? "",
+    total_rent: m(row.total_rent),
+    currency,
+  };
+}
+
+export async function buildContractDocInput(
+  id: number,
+  lang: DocLang = "en",
+): Promise<{ doc: ContractDocInput; tenantAccountId: number | null; lease: KoreanLeaseDocInput | null } | null> {
   const [row] = await db.select().from(contractsTable).where(eq(contractsTable.id, id));
   if (!row) return null;
   const [c] = await enrichContracts([row]);
   // Terms: per-contract terms_text wins; otherwise fall back to the editable
   // PDF template (Templates Studio → PDF tab: `pdf.tenancy_agreement`), then the
   // legacy `contract.terms` (contract kind), then to none — all locale-aware.
+  // The leased unit (부동산의 표시) — also the source of the {{area_*}} / {{unit_*}}
+  // template variables, so one standard agreement adapts to each unit type.
+  const resolvedPremises = await buildContractPremises(row.space_id);
+  const premises = resolvedPremises?.premises ?? null;
+  const property = resolvedPremises?.property ?? null;
+
+  // Korean leases print TWO rents: the list rate recorded on the agreement
+  // (차임 — the rate-card product's monthly price) and the discounted 특판가 the
+  // tenant actually pays (the contract's own monthly_rent). When no rate-card
+  // product is linked, both are the contract's rent and the clause still reads
+  // correctly.
+  let listMonthlyRent: number | null = null;
+  if (row.product_id) {
+    const [p] = await db.select({ price: accommodationCatalogTable.price })
+      .from(accommodationCatalogTable).where(eq(accommodationCatalogTable.id, row.product_id));
+    listMonthlyRent = p?.price ?? null;
+  }
+  const actualMonthlyRent = row.monthly_rent ?? row.weekly_rate ?? null;
+
   let termsText = c.terms_text;
+  let annexText: string | null = null;
+  // True when the Korean standard lease template supplied the body — that same
+  // flag selects the Korean lease *layout* (부동산 표기 / 계약내용 / 당사자 표 /
+  // 계약일반조항 / 별지) instead of the generic accommodation-agreement shell.
+  let isKoreanLease = false;
   if (!termsText?.trim()) {
-    const pdfTpl = await resolveTemplate({ kind: "pdf", key: "pdf.tenancy_agreement", locale: lang });
-    const tpl = pdfTpl?.bodyHtml?.trim() ? pdfTpl : await resolveTemplate({ kind: "contract", key: "contract.terms", locale: lang });
-    if (tpl?.bodyHtml?.trim()) termsText = tpl.bodyHtml;
+    // Preference order: the Korean standard lease body (`pdf.lease_agreement`,
+    // e.g. 시행사 (주)HK 임대차 계약서 — clauses + [별지] annex in one body) →
+    // the generic tenancy terms → the legacy `contract.terms`.
+    const leaseTpl = await resolveTemplate({ kind: "pdf", key: "pdf.lease_agreement", locale: lang });
+    const tenancyTpl = leaseTpl?.bodyHtml?.trim() ? null : await resolveTemplate({ kind: "pdf", key: "pdf.tenancy_agreement", locale: lang });
+    const tpl = leaseTpl?.bodyHtml?.trim() ? leaseTpl
+      : tenancyTpl?.bodyHtml?.trim() ? tenancyTpl
+      : await resolveTemplate({ kind: "contract", key: "contract.terms", locale: lang });
+    if (tpl?.bodyHtml?.trim()) {
+      // Substitute {{variables}} from the contract + its space, then split the
+      // annex out so it prints as the last page of the SAME PDF.
+      const split = splitAnnex(renderString(tpl.bodyHtml, contractTemplateVars(c, row, premises, { list: listMonthlyRent, actual: actualMonthlyRent })));
+      termsText = split.terms;
+      annexText = split.annex;
+      isKoreanLease = tpl === leaseTpl;
+    }
   }
 
   // Enrich tenant/landlord contact + the rent billing frequency so the agreement
@@ -482,11 +652,11 @@ export async function buildContractDocInput(id: number, lang: DocLang = "en"): P
           country: a.address_country,
         }, lang, { orderFallbackCountry: issuerCountry }) || null
       : null;
-  let tenantEmail: string | null = null, tenantAddress: string | null = null;
+  let tenantEmail: string | null = null, tenantAddress: string | null = null, tenantPhone: string | null = null;
   let landlordEmail: string | null = null, landlordAddress: string | null = null;
   if (row.tenant_account_id) {
     const [a] = await db.select().from(accountsTable).where(eq(accountsTable.id, row.tenant_account_id));
-    tenantEmail = a?.account_email ?? null; tenantAddress = composeAddr(a);
+    tenantEmail = a?.account_email ?? null; tenantAddress = composeAddr(a); tenantPhone = a?.phone1 ?? a?.phone2 ?? null;
   }
   if (row.landlord_account_id) {
     const [a] = await db.select().from(accountsTable).where(eq(accountsTable.id, row.landlord_account_id));
@@ -521,8 +691,62 @@ export async function buildContractDocInput(id: number, lang: DocLang = "en"): P
     notes: s.notes,
   }));
 
+  // Korean standard lease payload — only when the 임대차 계약서 template drives
+  // the body. Everything type-specific comes from `premises` (the space), so one
+  // template covers every unit type.
+  let lease: KoreanLeaseDocInput | null = null;
+  if (isKoreanLease) {
+    const stored = await readStoredCompanyInfo();
+    const buildingName = premises?.building ?? property?.name ?? "";
+    lease = {
+      contract_ref: c.contract_ref,
+      title: `${buildingName} 임대차 계약서`.trim(),
+      premises,
+      registry: property
+        ? {
+            lot_address: property.lot_address,
+            building_use: property.building_use,
+            building_structure: property.building_structure,
+            land_category: property.land_category,
+            land_area_m2: property.land_area_m2,
+            land_right_type: property.land_right_type,
+            leased_portion: "전유부분 전체",
+          }
+        : null,
+      landlord: {
+        name: (c as any).landlord_name || stored.company_name || null,
+        address: landlordAddress || stored.address1 || null,
+        phone: stored.phone ?? null,
+        email: landlordEmail || stored.email || null,
+        business_no: stored.biz_no ?? stored.abn ?? null,
+        corporate_no: stored.corp_no ?? null,
+      },
+      tenant: {
+        name: (c as any).tenant_name ?? null,
+        address: tenantAddress,
+        phone: tenantPhone,
+        email: tenantEmail,
+      },
+      currency: c.currency ?? DEFAULT_CURRENCY,
+      deposit_amount: row.bond_amount,
+      down_payment: row.down_payment,
+      down_payment_date: row.down_payment_date,
+      balance_amount: row.balance_amount,
+      balance_date: row.balance_date,
+      monthly_rent: listMonthlyRent ?? actualMonthlyRent,
+      rent_due_day: row.rent_due_day,
+      start_date: row.start_date,
+      end_date: row.end_date,
+      signed_on: row.signed_at ?? row.effective_date ?? row.created_at,
+      accounts: await resolveLeaseAccounts(),
+      clauses_text: termsText,
+      annex_text: annexText,
+    };
+  }
+
   return {
     tenantAccountId: row.tenant_account_id ?? null,
+    lease,
     doc: {
       contract_ref: c.contract_ref,
       status: c.status,
@@ -533,6 +757,7 @@ export async function buildContractDocInput(id: number, lang: DocLang = "en"): P
       landlord_email: landlordEmail,
       landlord_address: landlordAddress,
       space_name: (c as any).space_name ?? null,
+      premises,
       product_name: (c as any).product_name ?? null,
       booking_ref: (c as any).booking_ref ?? null,
       start_date: c.start_date,
@@ -547,11 +772,42 @@ export async function buildContractDocInput(id: number, lang: DocLang = "en"): P
       currency: c.currency,
       additional_services: additionalServices,
       terms_text: termsText,
+      annex_text: annexText,
       notes: c.notes,
       signed_at: c.signed_at,
       created_at: c.created_at,
     },
   };
+}
+
+/**
+ * Render a built contract to HTML with the right layout: the Korean standard
+ * 임대차 계약서 when that template drives the body, otherwise the generic
+ * accommodation-agreement shell. Optional signatures are placed on the 날인
+ * position of each party (Korean layout) or the signature block (generic).
+ */
+export async function renderContractHtml(
+  built: { doc: ContractDocInput; lease: KoreanLeaseDocInput | null },
+  forPrint: boolean,
+  lang: DocLang,
+  signatures?: ContractSignature[] | null,
+): Promise<string> {
+  const company = await resolveCompanyInfo(lang);
+  if (built.lease) {
+    const sealOf = (role: string) =>
+      signatures?.find((s) => s.role?.toLowerCase() === role)?.signatureImage ?? null;
+    return buildKoreanLeaseHtml(
+      {
+        ...built.lease,
+        landlord: { ...built.lease.landlord, seal_image: sealOf("landlord") },
+        tenant: { ...built.lease.tenant, seal_image: sealOf("tenant") },
+      },
+      company,
+      forPrint,
+      lang,
+    );
+  }
+  return buildContractHtml(built.doc, company, forPrint, lang);
 }
 
 /**
@@ -566,7 +822,7 @@ router.get("/v1/contracts/:id/pdf", async (req, res): Promise<void> => {
   if (!built) { res.status(404).json({ error: "Not found" }); return; }
 
   const asHtml = req.query.format === "html";
-  const html = buildContractHtml(built.doc, await resolveCompanyInfo(lang), !asHtml, lang);
+  const html = await renderContractHtml(built, !asHtml, lang);
   if (asHtml) { res.type("html").send(html); return; }
   try {
     const pdf = await htmlToPdf(html);
@@ -615,7 +871,7 @@ router.post("/v1/contracts/:id/email", async (req, res): Promise<void> => {
   const lang = normalizeLang(req.body?.lang as string);
   let pdf: Buffer;
   try {
-    pdf = await htmlToPdf(buildContractHtml(built.doc, await resolveCompanyInfo(lang), true, lang));
+    pdf = await htmlToPdf(await renderContractHtml(built, true, lang));
   } catch (err) {
     if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
     res.status(500).json({ error: "Failed to generate PDF" }); return;
@@ -657,7 +913,7 @@ router.post("/v1/contracts/:id/freeze", async (req, res): Promise<void> => {
   if (!built) { res.status(404).json({ error: "Not found" }); return; }
   let pdf: Buffer;
   try {
-    pdf = await htmlToPdf(buildContractHtml(built.doc, await resolveCompanyInfo(lang), true, lang));
+    pdf = await htmlToPdf(await renderContractHtml(built, true, lang));
   } catch (err) {
     if (err instanceof PdfUnavailableError) { res.status(503).json({ error: err.message }); return; }
     res.status(500).json({ error: "Failed to generate PDF" }); return;

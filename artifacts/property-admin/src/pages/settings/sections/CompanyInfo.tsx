@@ -30,6 +30,8 @@ interface CompanyForm {
   timezone: string;
   ceo: string;
   biz_no: string;
+  /** 법인등록번호 — printed in the landlord block of a Korean lease agreement. */
+  corp_no: string;
   privacy_officer: string;
 }
 
@@ -51,6 +53,7 @@ const DEFAULTS: CompanyForm = {
   timezone: "Australia/Melbourne",
   ceo: "",
   biz_no: "",
+  corp_no: "",
   privacy_officer: "",
 };
 
@@ -219,6 +222,10 @@ export function CompanyInfo() {
         <div className="space-y-1.5">
           <Label>{t("settings_company.biz_no_label")}</Label>
           <Input {...register("biz_no")} placeholder="000-00-00000" />
+        </div>
+        <div className="space-y-1.5">
+          <Label>{t("settings_company.corp_no_label")}</Label>
+          <Input {...register("corp_no")} placeholder="000000-0000000" />
         </div>
         <div className="space-y-1.5 col-span-2">
           <Label>{t("settings_company.privacy_officer_label")}</Label>

@@ -1452,7 +1452,20 @@
     "bulk_start_upload": "Bắt đầu tải lên mới",
     "bulk_remove_title": "Xóa phiên",
     "bulk_remove_desc": "Thao tác này sẽ xóa phiên tải lên này khỏi lịch sử. Ảnh đã tải lên sẽ không bị ảnh hưởng.",
-    "bulk_remove_confirm": "Xóa"
+    "bulk_remove_confirm": "Xóa",
+    "registry_heading": "Thông tin đăng ký đất & công trình",
+    "registry_hint": "Được in trong bảng mô tả bất động sản ở phụ lục hợp đồng thuê. Diện tích từng căn được đặt ở mỗi không gian.",
+    "label_lot_address": "Địa chỉ thửa đất",
+    "placeholder_lot_address": "Địa chỉ theo đăng ký (có thể khác địa chỉ đường phố)",
+    "label_building_use": "Mục đích sử dụng công trình",
+    "placeholder_building_use": "VD: Nhà chung cư",
+    "label_building_structure": "Kết cấu công trình",
+    "placeholder_building_structure": "VD: Bê tông cốt thép",
+    "label_land_category": "Loại đất",
+    "placeholder_land_category": "VD: Đất ở",
+    "label_land_area": "Diện tích đất (m²)",
+    "label_land_right_type": "Loại quyền sử dụng đất",
+    "placeholder_land_right_type": "VD: Quyền sở hữu"
   },
   "space": {
     "new": "Không gian mới",
@@ -3502,7 +3515,8 @@
     "privacy_officer_placeholder": "Tên (email)",
     "abn_label": "ABN",
     "website_label": "Website",
-    "country_nz": "New Zealand"
+    "country_nz": "New Zealand",
+    "corp_no_label": "Số đăng ký pháp nhân"
   },
   "settings_dbsync": {
     "page_title": "Đồng bộ DB",
