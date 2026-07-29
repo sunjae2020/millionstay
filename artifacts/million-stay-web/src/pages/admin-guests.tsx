@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import AdminLayout from "@/components/admin-layout";
 import { formatDate } from "@/lib/dateFormat";
@@ -16,6 +17,7 @@ type Guest = {
 };
 
 export default function AdminGuests() {
+  const { t } = useTranslation();
   const [guests, setGuests] = useState<Guest[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -43,7 +45,7 @@ export default function AdminGuests() {
       <div className="p-8 max-w-6xl">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Guests</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t("legacy_admin.nav_guests")}</h1>
             <p className="text-gray-500 text-sm mt-0.5">{guests.length} registered guests</p>
           </div>
         </div>
@@ -52,7 +54,7 @@ export default function AdminGuests() {
           <div className="relative max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="Search by name, email, nationality…"
+              placeholder={t("legacy_admin.search_guests")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9 h-9 text-sm"
@@ -65,20 +67,20 @@ export default function AdminGuests() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-gray-50">
-                  <th className="text-left px-5 py-3 font-semibold text-gray-600">Name</th>
-                  <th className="text-left px-5 py-3 font-semibold text-gray-600">Email</th>
-                  <th className="text-left px-5 py-3 font-semibold text-gray-600">Phone</th>
-                  <th className="text-left px-5 py-3 font-semibold text-gray-600">Nationality</th>
-                  <th className="text-left px-5 py-3 font-semibold text-gray-600">Status</th>
-                  <th className="text-left px-5 py-3 font-semibold text-gray-600">Joined</th>
+                  <th className="text-left px-5 py-3 font-semibold text-gray-600">{t("legacy_admin.col_name")}</th>
+                  <th className="text-left px-5 py-3 font-semibold text-gray-600">{t("booking_new.email")}</th>
+                  <th className="text-left px-5 py-3 font-semibold text-gray-600">{t("booking_new.phone")}</th>
+                  <th className="text-left px-5 py-3 font-semibold text-gray-600">{t("legacy_admin.col_nationality")}</th>
+                  <th className="text-left px-5 py-3 font-semibold text-gray-600">{t("legacy_admin.col_status")}</th>
+                  <th className="text-left px-5 py-3 font-semibold text-gray-600">{t("legacy_admin.col_joined")}</th>
                 </tr>
               </thead>
               <tbody>
                 {loading && (
-                  <tr><td colSpan={6} className="text-center py-10 text-gray-400">Loading…</td></tr>
+                  <tr><td colSpan={6} className="text-center py-10 text-gray-400">{t("legacy_admin.loading")}</td></tr>
                 )}
                 {!loading && filtered.length === 0 && (
-                  <tr><td colSpan={6} className="text-center py-10 text-gray-400">No guests found</td></tr>
+                  <tr><td colSpan={6} className="text-center py-10 text-gray-400">{t("legacy_admin.no_guests")}</td></tr>
                 )}
                 {filtered.map((g) => (
                   <tr key={g.id} className="border-b last:border-0 hover:bg-gray-50 transition-colors">
@@ -90,7 +92,7 @@ export default function AdminGuests() {
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${
                         g.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
                       }`}>
-                        {g.isActive ? "Active" : "Inactive"}
+                        {g.isActive ? t("legacy_admin.active") : t("legacy_admin.inactive")}
                       </span>
                     </td>
                     <td className="px-5 py-3 text-gray-400">{formatDate(g.createdAt)}</td>

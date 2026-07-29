@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import AdminLayout from "@/components/admin-layout";
 import { Camera, Home } from "lucide-react";
@@ -17,6 +18,7 @@ type Space = {
 };
 
 export default function AdminSpaces() {
+  const { t } = useTranslation();
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [loading, setLoading] = useState(true);
   const [, setLocation] = useLocation();
@@ -35,7 +37,7 @@ export default function AdminSpaces() {
       <div className="p-8 max-w-6xl">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Spaces</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t("legacy_admin.nav_spaces")}</h1>
             <p className="text-gray-500 text-sm mt-0.5">{spaces.length} listed spaces</p>
           </div>
         </div>
@@ -45,7 +47,7 @@ export default function AdminSpaces() {
             {[1,2,3,4,5,6].map((i) => <div key={i} className="bg-white rounded-2xl border h-64 animate-pulse" />)}
           </div>
         ) : spaces.length === 0 ? (
-          <div className="text-center py-20 text-gray-400">No spaces found</div>
+          <div className="text-center py-20 text-gray-400">{t("legacy_admin.no_spaces")}</div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {spaces.map((space) => (

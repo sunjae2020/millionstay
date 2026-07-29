@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, Link } from "wouter";
 import AdminLayout from "@/components/admin-layout";
 import { StatusBadge } from "@/components/status-badge";
@@ -20,6 +21,7 @@ type Booking = {
 };
 
 export default function AdminDashboard() {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<Stats | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [, setLocation] = useLocation();
@@ -38,16 +40,16 @@ export default function AdminDashboard() {
   }, [setLocation]);
 
   const STAT_CARDS = stats ? [
-    { label: "Total Bookings", value: stats.totalBookings, icon: CalendarCheck, color: "text-blue-600 bg-blue-50" },
-    { label: "Total Guests", value: stats.totalGuests, icon: Users, color: "text-green-600 bg-green-50" },
-    { label: "Active Spaces", value: stats.activeSpaces, icon: Home, color: "text-primary bg-primary/10" },
-    { label: "Pending Docs", value: stats.pendingDocuments, icon: FileWarning, color: "text-amber-600 bg-amber-50" },
+    { label: t("legacy_admin.stat_bookings"), value: stats.totalBookings, icon: CalendarCheck, color: "text-blue-600 bg-blue-50" },
+    { label: t("legacy_admin.stat_guests"), value: stats.totalGuests, icon: Users, color: "text-green-600 bg-green-50" },
+    { label: t("legacy_admin.stat_spaces"), value: stats.activeSpaces, icon: Home, color: "text-primary bg-primary/10" },
+    { label: t("legacy_admin.stat_docs"), value: stats.pendingDocuments, icon: FileWarning, color: "text-amber-600 bg-amber-50" },
   ] : [];
 
   return (
     <AdminLayout>
       <div className="p-8 max-w-6xl">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">{t("legacy_admin.nav_dashboard")}</h1>
         <p className="text-gray-500 text-sm mb-8">{APP_NAME} overview — Melbourne</p>
 
         {stats ? (
@@ -70,26 +72,26 @@ export default function AdminDashboard() {
 
         <div className="bg-white rounded-2xl border">
           <div className="flex items-center justify-between px-6 py-4 border-b">
-            <h2 className="font-semibold text-gray-800">Recent Bookings</h2>
+            <h2 className="font-semibold text-gray-800">{t("legacy_admin.recent_bookings")}</h2>
             <Link href="/admin/bookings">
-              <span className="text-sm text-primary font-medium hover:underline cursor-pointer">View all</span>
+              <span className="text-sm text-primary font-medium hover:underline cursor-pointer">{t("legacy_admin.view_all")}</span>
             </Link>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-gray-50">
-                  <th className="text-left px-6 py-3 font-semibold text-gray-600">Ref</th>
-                  <th className="text-left px-6 py-3 font-semibold text-gray-600">Guest</th>
-                  <th className="text-left px-6 py-3 font-semibold text-gray-600">Space</th>
-                  <th className="text-left px-6 py-3 font-semibold text-gray-600">Check In</th>
-                  <th className="text-left px-6 py-3 font-semibold text-gray-600">Status</th>
-                  <th className="text-left px-6 py-3 font-semibold text-gray-600">Created</th>
+                  <th className="text-left px-6 py-3 font-semibold text-gray-600">{t("legacy_admin.col_ref")}</th>
+                  <th className="text-left px-6 py-3 font-semibold text-gray-600">{t("legacy_admin.col_guest")}</th>
+                  <th className="text-left px-6 py-3 font-semibold text-gray-600">{t("legacy_admin.col_space")}</th>
+                  <th className="text-left px-6 py-3 font-semibold text-gray-600">{t("booking_new.check_in")}</th>
+                  <th className="text-left px-6 py-3 font-semibold text-gray-600">{t("legacy_admin.col_status")}</th>
+                  <th className="text-left px-6 py-3 font-semibold text-gray-600">{t("legacy_admin.col_created")}</th>
                 </tr>
               </thead>
               <tbody>
                 {bookings.length === 0 && (
-                  <tr><td colSpan={6} className="text-center py-10 text-gray-400">No bookings yet</td></tr>
+                  <tr><td colSpan={6} className="text-center py-10 text-gray-400">{t("legacy_admin.no_bookings_yet")}</td></tr>
                 )}
                 {bookings.map((b) => (
                   <tr key={b.id} className="border-b last:border-0 hover:bg-gray-50 transition-colors">

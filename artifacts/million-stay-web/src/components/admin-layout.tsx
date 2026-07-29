@@ -1,4 +1,5 @@
 import { useLocation, Link } from "wouter";
+import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import {
   LayoutDashboard, CalendarCheck, Users, Home, LogOut, ChevronRight,
@@ -6,14 +7,16 @@ import {
 
 const ADMIN_KEY = "ms_admin_key";
 
+// Labels are i18n keys, translated where the nav renders.
 const NAV = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/bookings", label: "Bookings", icon: CalendarCheck },
-  { href: "/admin/guests", label: "Guests", icon: Users },
-  { href: "/admin/spaces", label: "Spaces", icon: Home },
+  { href: "/admin/dashboard", label: "legacy_admin.nav_dashboard", icon: LayoutDashboard },
+  { href: "/admin/bookings", label: "legacy_admin.nav_bookings", icon: CalendarCheck },
+  { href: "/admin/guests", label: "legacy_admin.nav_guests", icon: Users },
+  { href: "/admin/spaces", label: "legacy_admin.nav_spaces", icon: Home },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
   const [location, setLocation] = useLocation();
 
   useEffect(() => {
@@ -34,7 +37,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <Link href="/" className="flex items-center gap-2">
             <span className="text-primary font-extrabold text-xl tracking-tight">MILLION</span>
           </Link>
-          <p className="text-[10px] text-gray-400 mt-0.5 font-medium uppercase tracking-wider">Admin Panel</p>
+          <p className="text-[10px] text-gray-400 mt-0.5 font-medium uppercase tracking-wider">{t("legacy_admin.panel")}</p>
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1">
@@ -46,7 +49,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   active ? "bg-primary/10 text-primary" : "text-gray-600 hover:bg-gray-100"
                 }`}>
                   <Icon className="h-4 w-4 shrink-0" />
-                  {label}
+                  {t(label)}
                   {active && <ChevronRight className="h-3 w-3 ml-auto" />}
                 </span>
               </Link>

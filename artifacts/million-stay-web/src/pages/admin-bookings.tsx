@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, Link } from "wouter";
 import AdminLayout from "@/components/admin-layout";
 import { StatusBadge } from "@/components/status-badge";
@@ -23,6 +24,7 @@ type Booking = {
 const ALL_STATUSES = ["All", "Draft", "PendingPayment", "Confirmed", "Active", "Cancelled", "Completed"];
 
 export default function AdminBookings() {
+  const { t } = useTranslation();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -53,7 +55,7 @@ export default function AdminBookings() {
       <div className="p-8 max-w-7xl">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Bookings</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t("legacy_admin.nav_bookings")}</h1>
             <p className="text-gray-500 text-sm mt-0.5">{bookings.length} total bookings</p>
           </div>
         </div>
@@ -62,7 +64,7 @@ export default function AdminBookings() {
           <div className="relative flex-1 min-w-[200px] max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="Search by ref, guest, space…"
+              placeholder={t("legacy_admin.search_bookings")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9 h-9 text-sm"
@@ -88,22 +90,22 @@ export default function AdminBookings() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-gray-50">
-                  <th className="text-left px-5 py-3 font-semibold text-gray-600">Ref</th>
-                  <th className="text-left px-5 py-3 font-semibold text-gray-600">Guest</th>
-                  <th className="text-left px-5 py-3 font-semibold text-gray-600">Space</th>
-                  <th className="text-left px-5 py-3 font-semibold text-gray-600">Check In</th>
-                  <th className="text-left px-5 py-3 font-semibold text-gray-600">Check Out</th>
-                  <th className="text-left px-5 py-3 font-semibold text-gray-600">Amount</th>
-                  <th className="text-left px-5 py-3 font-semibold text-gray-600">Status</th>
-                  <th className="text-left px-5 py-3 font-semibold text-gray-600">Date</th>
+                  <th className="text-left px-5 py-3 font-semibold text-gray-600">{t("legacy_admin.col_ref")}</th>
+                  <th className="text-left px-5 py-3 font-semibold text-gray-600">{t("legacy_admin.col_guest")}</th>
+                  <th className="text-left px-5 py-3 font-semibold text-gray-600">{t("legacy_admin.col_space")}</th>
+                  <th className="text-left px-5 py-3 font-semibold text-gray-600">{t("booking_new.check_in")}</th>
+                  <th className="text-left px-5 py-3 font-semibold text-gray-600">{t("booking_new.check_out")}</th>
+                  <th className="text-left px-5 py-3 font-semibold text-gray-600">{t("booking_new.amount")}</th>
+                  <th className="text-left px-5 py-3 font-semibold text-gray-600">{t("legacy_admin.col_status")}</th>
+                  <th className="text-left px-5 py-3 font-semibold text-gray-600">{t("legacy_admin.col_date")}</th>
                 </tr>
               </thead>
               <tbody>
                 {loading && (
-                  <tr><td colSpan={8} className="text-center py-10 text-gray-400">Loading…</td></tr>
+                  <tr><td colSpan={8} className="text-center py-10 text-gray-400">{t("legacy_admin.loading")}</td></tr>
                 )}
                 {!loading && filtered.length === 0 && (
-                  <tr><td colSpan={8} className="text-center py-10 text-gray-400">No bookings found</td></tr>
+                  <tr><td colSpan={8} className="text-center py-10 text-gray-400">{t("legacy_admin.no_bookings")}</td></tr>
                 )}
                 {filtered.map((b) => (
                   <tr key={b.id} className="border-b last:border-0 hover:bg-gray-50 transition-colors">

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, Link } from "wouter";
 import AdminLayout from "@/components/admin-layout";
 import { StatusBadge } from "@/components/status-badge";
@@ -30,6 +31,7 @@ const BOOKING_STATUSES = ["Draft", "PendingPayment", "Confirmed", "Active", "Can
 const DOC_STATUSES = ["Pending", "Approved", "Rejected"];
 
 export default function AdminBookingDetail({ params }: { params: { id: string } }) {
+  const { t } = useTranslation();
   const [booking, setBooking] = useState<BookingDetail | null>(null);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -59,7 +61,7 @@ export default function AdminBookingDetail({ params }: { params: { id: string } 
       toast({ title: `Status updated to ${status}` });
       load();
     } catch {
-      toast({ title: "Update failed", variant: "destructive" });
+      toast({ title: t("legacy_admin.err_update"), variant: "destructive" });
     } finally {
       setUpdating(false);
     }
@@ -76,7 +78,7 @@ export default function AdminBookingDetail({ params }: { params: { id: string } 
       toast({ title: `Document ${status}` });
       load();
     } catch {
-      toast({ title: "Update failed", variant: "destructive" });
+      toast({ title: t("legacy_admin.err_update"), variant: "destructive" });
     }
   };
 
@@ -84,7 +86,7 @@ export default function AdminBookingDetail({ params }: { params: { id: string } 
     return (
       <AdminLayout>
         <div className="p-8 flex items-center justify-center min-h-96">
-          <div className="animate-pulse text-gray-400">Loading…</div>
+          <div className="animate-pulse text-gray-400">{t("legacy_admin.loading")}</div>
         </div>
       </AdminLayout>
     );
@@ -110,7 +112,7 @@ export default function AdminBookingDetail({ params }: { params: { id: string } 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-5">
           <div className="lg:col-span-2 space-y-5">
             <div className="bg-white rounded-2xl border p-6">
-              <h2 className="font-semibold text-gray-800 mb-4">Booking Details</h2>
+              <h2 className="font-semibold text-gray-800 mb-4">{t("legacy_admin.booking_details")}</h2>
               <div className="grid grid-cols-2 gap-y-3 text-sm">
                 {[
                   ["Space", booking.spaceName],
@@ -129,7 +131,7 @@ export default function AdminBookingDetail({ params }: { params: { id: string } 
             </div>
 
             <div className="bg-white rounded-2xl border p-6">
-              <h2 className="font-semibold text-gray-800 mb-4">Guest Information</h2>
+              <h2 className="font-semibold text-gray-800 mb-4">{t("legacy_admin.guest_info")}</h2>
               <div className="grid grid-cols-2 gap-y-3 text-sm">
                 {[
                   ["Name", `${booking.guestFirstName} ${booking.guestLastName}`],
@@ -147,7 +149,7 @@ export default function AdminBookingDetail({ params }: { params: { id: string } 
 
             {booking.documents.length > 0 && (
               <div className="bg-white rounded-2xl border p-6">
-                <h2 className="font-semibold text-gray-800 mb-4">Documents</h2>
+                <h2 className="font-semibold text-gray-800 mb-4">{t("legacy_admin.documents")}</h2>
                 <div className="space-y-3">
                   {booking.documents.map((doc) => (
                     <div key={doc.id} className="flex items-center justify-between border rounded-xl px-4 py-3">
@@ -169,11 +171,11 @@ export default function AdminBookingDetail({ params }: { params: { id: string } 
                         {doc.status === "Pending" && doc.fileUrl && (
                           <>
                             <button onClick={() => updateDocStatus(doc.id, "Approved")}
-                              className="text-green-600 hover:text-green-700" title="Approve">
+                              className="text-green-600 hover:text-green-700" title={t("legacy_admin.approve")}>
                               <CheckCircle className="h-5 w-5" />
                             </button>
                             <button onClick={() => updateDocStatus(doc.id, "Rejected")}
-                              className="text-red-500 hover:text-red-600" title="Reject">
+                              className="text-red-500 hover:text-red-600" title={t("legacy_admin.reject")}>
                               <XCircle className="h-5 w-5" />
                             </button>
                           </>
@@ -187,7 +189,7 @@ export default function AdminBookingDetail({ params }: { params: { id: string } 
 
             {booking.invoices.length > 0 && (
               <div className="bg-white rounded-2xl border p-6">
-                <h2 className="font-semibold text-gray-800 mb-4">Invoices</h2>
+                <h2 className="font-semibold text-gray-800 mb-4">{t("legacy_admin.invoices")}</h2>
                 <div className="space-y-2">
                   {booking.invoices.map((inv) => (
                     <div key={inv.id} className="flex items-center justify-between text-sm border rounded-xl px-4 py-3">
@@ -208,7 +210,7 @@ export default function AdminBookingDetail({ params }: { params: { id: string } 
 
           <div className="space-y-4">
             <div className="bg-white rounded-2xl border p-5">
-              <h2 className="font-semibold text-gray-800 mb-4 text-sm uppercase tracking-wide">Update Status</h2>
+              <h2 className="font-semibold text-gray-800 mb-4 text-sm uppercase tracking-wide">{t("legacy_admin.update_status")}</h2>
               <div className="space-y-2">
                 {BOOKING_STATUSES.map((s) => (
                   <Button
@@ -230,14 +232,14 @@ export default function AdminBookingDetail({ params }: { params: { id: string } 
             </div>
 
             <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 text-sm text-primary">
-              <p className="font-semibold mb-1">Quick Guide</p>
+              <p className="font-semibold mb-1">{t("legacy_admin.quick_guide")}</p>
               <ul className="space-y-1 text-xs text-primary">
-                <li><strong>Draft</strong> — Initial booking</li>
-                <li><strong>PendingPayment</strong> — Awaiting payment & docs</li>
-                <li><strong>Confirmed</strong> — Docs verified, ready</li>
-                <li><strong>Active</strong> — Guest is checked in</li>
-                <li><strong>Completed</strong> — Stay finished</li>
-                <li><strong>Cancelled</strong> — Booking cancelled</li>
+                <li><strong>Draft</strong> — {t("legacy_admin.guide_draft")}</li>
+                <li><strong>PendingPayment</strong> — {t("legacy_admin.guide_pending")}</li>
+                <li><strong>Confirmed</strong> — {t("legacy_admin.guide_confirmed")}</li>
+                <li><strong>Active</strong> — {t("legacy_admin.guide_active")}</li>
+                <li><strong>Completed</strong> — {t("legacy_admin.guide_completed")}</li>
+                <li><strong>Cancelled</strong> — {t("legacy_admin.guide_cancelled")}</li>
               </ul>
             </div>
           </div>
