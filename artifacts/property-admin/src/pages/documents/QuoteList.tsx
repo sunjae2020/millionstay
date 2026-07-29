@@ -12,6 +12,7 @@ import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import { formatDate } from "@/lib/date";
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
+import { useDocumentRowActions } from "@/components/DocumentRowActions";
 
 const STATUS_COLORS: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-500",
@@ -41,6 +42,14 @@ export default function QuoteList() {
   const [q, setQ] = useState("");
   const { data, isLoading } = useQuery({ queryKey: ["quotes", q], queryFn: () => fetchQuotes(q) });
   const rows: any[] = Array.isArray(data) ? data : [];
+
+  const { documentActionsColumn, documentPreview } = useDocumentRowActions<any>((r) => ({
+    ref: r.quote_ref,
+    typeLabel: t("quote.doc_label", "Quote"),
+    pdfPath: `/api/v1/quotes/${r.id}/pdf`,
+    emailPath: `/api/v1/quotes/${r.id}/email`,
+    detailUrl: `/documents/quotes/${r.id}`,
+  }));
 
   const columns: ColumnDef<any>[] = useMemo(
     () => [
@@ -80,8 +89,9 @@ export default function QuoteList() {
         header: "common.status",
         cell: (r) => <Badge className={`text-xs ${STATUS_COLORS[r.status] ?? ""}`}>{r.status}</Badge>,
       },
+      documentActionsColumn,
     ],
-    [t, currency, currencyPosition],
+    [t, currency, currencyPosition, documentActionsColumn],
   );
 
   return (
@@ -116,6 +126,8 @@ export default function QuoteList() {
           }
         />
       </div>
+
+      {documentPreview}
     </Layout>
   );
 }

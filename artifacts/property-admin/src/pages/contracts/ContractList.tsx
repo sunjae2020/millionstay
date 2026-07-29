@@ -18,6 +18,7 @@ import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 import { formatDate } from "@/lib/date";
+import { useDocumentRowActions } from "@/components/DocumentRowActions";
 
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-700",
@@ -45,6 +46,14 @@ export default function ContractList() {
   const { data: contracts, isLoading } = useListContracts(params, {
     query: { queryKey: getListContractsQueryKey(params) },
   });
+
+  const { documentActionsColumn, documentPreview } = useDocumentRowActions<Contract>((c) => ({
+    ref: c.contract_ref,
+    typeLabel: t("nav.contract"),
+    pdfPath: `/api/v1/contracts/${c.id}/pdf`,
+    emailPath: `/api/v1/contracts/${c.id}/email`,
+    detailUrl: `/contracts/contracts/${c.id}`,
+  }));
 
   const columns: ColumnDef<Contract>[] = useMemo(
     () => [
@@ -102,8 +111,9 @@ export default function ContractList() {
           </Badge>
         ),
       },
+      documentActionsColumn,
     ],
-    [t, currency, currencyPosition],
+    [t, currency, currencyPosition, documentActionsColumn],
   );
 
   return (
@@ -162,6 +172,8 @@ export default function ContractList() {
           }
         />
       </div>
+
+      {documentPreview}
     </Layout>
   );
 }

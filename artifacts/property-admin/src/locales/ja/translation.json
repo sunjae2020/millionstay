@@ -2743,7 +2743,8 @@
     "toast_convert_failed": "変換に失敗しました",
     "toast_email_sent": "メールを送信しました",
     "toast_email_sent_desc": "見積書を {{to}} にメールで送信しました。",
-    "toast_email_failed": "メールの送信に失敗しました"
+    "toast_email_failed": "メールの送信に失敗しました",
+    "doc_label": "見積書"
   },
   "media": {
     "page_title": "メディアライブラリ",

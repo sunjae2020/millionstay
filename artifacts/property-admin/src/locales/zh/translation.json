@@ -2743,7 +2743,8 @@
     "toast_convert_failed": "转换失败",
     "toast_email_sent": "邮件已发送",
     "toast_email_sent_desc": "报价单已通过邮件发送至 {{to}}。",
-    "toast_email_failed": "邮件发送失败"
+    "toast_email_failed": "邮件发送失败",
+    "doc_label": "报价单"
   },
   "media": {
     "page_title": "媒体库",

@@ -2743,7 +2743,8 @@
     "toast_convert_failed": "전환 실패",
     "toast_email_sent": "이메일 전송됨",
     "toast_email_sent_desc": "견적서를 {{to}}에게 이메일로 보냈습니다.",
-    "toast_email_failed": "이메일 전송 실패"
+    "toast_email_failed": "이메일 전송 실패",
+    "doc_label": "견적서"
   },
   "media": {
     "page_title": "미디어 라이브러리",

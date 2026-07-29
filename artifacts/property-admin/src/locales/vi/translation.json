@@ -2743,7 +2743,8 @@
     "toast_email_sent_desc": "Đã gửi báo giá qua email cho {{to}}.",
     "toast_email_failed": "Gửi email thất bại",
     "pdf": "PDF",
-    "email": "Email"
+    "email": "Email",
+    "doc_label": "Báo giá"
   },
   "media": {
     "page_title": "Thư viện Media",

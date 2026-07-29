@@ -17,6 +17,7 @@ import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 import { formatDate } from "@/lib/date";
+import { useDocumentRowActions } from "@/components/DocumentRowActions";
 
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-600",
@@ -43,6 +44,14 @@ export default function InvoiceList() {
   const { data: invoicesRaw = [], isLoading } = useListInvoices(params, {
     query: { queryKey: getListInvoicesQueryKey(params) },
   });
+
+  const { documentActionsColumn, documentPreview } = useDocumentRowActions<Invoice>((inv) => ({
+    ref: inv.invoice_ref,
+    typeLabel: t("nav.invoice"),
+    pdfPath: `/api/v1/invoices/${inv.id}/pdf`,
+    emailPath: `/api/v1/invoices/${inv.id}/email`,
+    detailUrl: `/finance/invoices/${inv.id}`,
+  }));
 
   const columns: ColumnDef<Invoice>[] = useMemo(
     () => [
@@ -96,8 +105,9 @@ export default function InvoiceList() {
           </span>
         ),
       },
+      documentActionsColumn,
     ],
-    [t, currency, currencyPosition],
+    [t, currency, currencyPosition, documentActionsColumn],
   );
 
   return (
@@ -154,6 +164,8 @@ export default function InvoiceList() {
           }
         />
       </div>
+
+      {documentPreview}
     </Layout>
   );
 }

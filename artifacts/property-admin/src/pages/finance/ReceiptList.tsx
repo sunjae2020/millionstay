@@ -6,12 +6,13 @@ import { Layout, PageHeader } from "@/components/Layout";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Download } from "lucide-react";
+import { Search } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
-import { formatDate, formatDateTime } from "@/lib/date";
-import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { formatDateTime } from "@/lib/date";
+import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
+import { useDocumentRowActions } from "@/components/DocumentRowActions";
 
 const STATUS_COLORS: Record<string, string> = {
   Paid:  "bg-green-100 text-green-700",
@@ -55,6 +56,15 @@ export default function ReceiptList() {
 
   const rows: any[] = Array.isArray(data) ? data : [];
   const totalPaid = rows.reduce((sum, r) => sum + (r.amount ?? 0), 0);
+
+  const { documentActionsColumn, documentPreview } = useDocumentRowActions<any>((r) => ({
+    ref: r.invoice_ref,
+    typeLabel: t("nav.receipt"),
+    filename: `${r.invoice_ref}-receipt.pdf`,
+    pdfPath: `/api/v1/invoices/${r.id}/receipt/pdf`,
+    emailPath: `/api/v1/invoices/${r.id}/receipt/email`,
+    detailUrl: `/finance/invoices/${r.id}`,
+  }));
 
   const columns: ColumnDef<any>[] = useMemo(
     () => [
@@ -126,22 +136,9 @@ export default function ReceiptList() {
         header: "invoice.col_status",
         cell: (r) => <Badge className={`text-xs ${STATUS_COLORS[r.status] ?? ""}`}>{r.status}</Badge>,
       },
-      {
-        key: ACTIONS_KEY,
-        header: "",
-        hideable: false,
-        sortable: false,
-        align: "right",
-        cell: (r) => (
-          <Link href={`/finance/invoices/${r.id}`}>
-            <button className="p-1.5 rounded hover:bg-muted transition-colors" title={t("invoice.view_receipt")}>
-              <Download className="h-3.5 w-3.5 text-muted-foreground" />
-            </button>
-          </Link>
-        ),
-      },
+      documentActionsColumn,
     ],
-    [t, currency, currencyPosition],
+    [t, currency, currencyPosition, documentActionsColumn],
   );
 
   return (
@@ -184,6 +181,8 @@ export default function ReceiptList() {
           }
         />
       </div>
+
+      {documentPreview}
     </Layout>
   );
 }

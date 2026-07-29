@@ -2743,7 +2743,8 @@
     "toast_convert_failed": "แปลงไม่สำเร็จ",
     "toast_email_sent": "ส่งอีเมลแล้ว",
     "toast_email_sent_desc": "ส่งใบเสนอราคาทางอีเมลถึง {{to}} แล้ว",
-    "toast_email_failed": "ส่งอีเมลไม่สำเร็จ"
+    "toast_email_failed": "ส่งอีเมลไม่สำเร็จ",
+    "doc_label": "ใบเสนอราคา"
   },
   "media": {
     "page_title": "คลังสื่อ",
