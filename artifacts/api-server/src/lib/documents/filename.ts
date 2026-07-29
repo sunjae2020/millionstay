@@ -61,9 +61,13 @@ export function buildDocumentFilename(parts: DocFilenameParts): string {
  */
 function asciiFallback(filename: string): string {
   const cleaned = filename.replace(/[^\x20-\x7e]/g, "").replace(/["\\]/g, "").replace(/\s+/g, " ").trim();
-  // Strip a leading separator left behind when the whole doc name was non-ASCII.
-  const trimmed = cleaned.replace(/^[-_\s]+/, "");
-  return trimmed.length > 4 ? trimmed : `document_${documentDateStamp()}.pdf`;
+  // Strip separators left behind where non-ASCII segments were removed.
+  const trimmed = cleaned.replace(/^[-_\s]+/, "").replace(/[-_\s]+(?=\.)/, "");
+  // A fully Korean/Japanese/Thai name reduces to just the date stamp, which is
+  // useless as a filename. Only keep the stripped version when it still carries
+  // letters; otherwise use a neutral, self-describing name.
+  const hasLetters = /[A-Za-z]{2}/.test(trimmed.replace(/\.pdf$/i, ""));
+  return hasLetters && trimmed.length > 4 ? trimmed : `document_${documentDateStamp()}.pdf`;
 }
 
 /**

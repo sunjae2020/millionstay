@@ -14,9 +14,22 @@ export type DocLang = "en" | "ko" | "zh" | "ja" | "th" | "vi";
 
 const SUPPORTED: DocLang[] = ["en", "ko", "zh", "ja", "th", "vi"];
 
+/**
+ * The tenant-wide default document language, used when a request carries no
+ * (or an unrecognised) `lang`. MillionStay leaves this unset → English; a
+ * white-label instance sets `DEFAULT_DOC_LANG` in its config.env (Metheim = `ko`)
+ * so all its invoices/receipts/quotes/contracts/applications render in the local
+ * language by default, without every caller having to pass `?lang=`.
+ * Read once at module load — it is fixed for the life of the process.
+ */
+const DEFAULT_DOC_LANG: DocLang = (() => {
+  const l = (process.env.DEFAULT_DOC_LANG ?? "").toLowerCase().slice(0, 2);
+  return (SUPPORTED as string[]).includes(l) ? (l as DocLang) : "en";
+})();
+
 export function normalizeLang(input: string | undefined | null): DocLang {
   const l = (input ?? "").toLowerCase().slice(0, 2);
-  return (SUPPORTED as string[]).includes(l) ? (l as DocLang) : "en";
+  return (SUPPORTED as string[]).includes(l) ? (l as DocLang) : DEFAULT_DOC_LANG;
 }
 
 /** Intl locale used for date formatting per document language. */

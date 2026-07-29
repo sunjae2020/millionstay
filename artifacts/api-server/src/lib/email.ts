@@ -6,7 +6,8 @@ import { buildAppointmentIcs } from "./ical";
 import { buildUnsubscribeUrl } from "./unsubscribeToken";
 import { resolveTemplate, renderString } from "./documents/templateEngine";
 import { resolveCompanyInfo } from "./documents/companyInfo";
-import { DOC_TOKENS } from "./documents/theme";
+import { DOC_TOKENS, formatDocMoney } from "./documents/theme";
+import { DEFAULT_CURRENCY } from "./currency";
 
 let resend: Resend | null = null;
 let resendKey: string | null = null;
@@ -326,6 +327,43 @@ export async function sendBookingConfirmation(data: BookingConfirmationData): Pr
   const { to, guestName, bookingRef, spaceName, propertyAddress, checkIn, checkOut, weeklyRate, totalDue, currency = "AUD", isLongTerm } = data;
   const supportEmail = await resolveSupportEmail();
 
+  // Bank-transfer details, env-driven so each tenant shows its own account — a
+  // hardcoded AU account would send Korean guests to the wrong bank. A KRW
+  // instance renders the KR layout (은행/예금주/계좌번호, no BSB); MillionStay
+  // keeps the AU (BSB) layout.
+  const company = await resolveCompanyInfo().catch(() => null);
+  const KR = DEFAULT_CURRENCY === "KRW";
+  const bank = {
+    name: process.env.BANK_NAME ?? "Commonwealth Bank of Australia",
+    accountName: process.env.BANK_ACCOUNT_NAME ?? company?.legalName ?? "MillionStay Pty Ltd",
+    bsb: process.env.BANK_BSB ?? "063-000",
+    accountNo: process.env.BANK_ACCOUNT_NO ?? "1234 5678",
+  };
+  const weeklyRateStr = weeklyRate ? formatDocMoney(weeklyRate, currency) : "";
+  const totalDueStr = totalDue ? formatDocMoney(totalDue, currency) : "";
+
+  const bankBox = KR
+    ? `
+    <div class="bank-box">
+      <h3>🏦 무통장 입금 안내</h3>
+      <div class="row"><span class="label">은행</span><span class="value">${escapeHtml(bank.name)}</span></div>
+      <div class="row"><span class="label">예금주</span><span class="value">${escapeHtml(bank.accountName)}</span></div>
+      <div class="row"><span class="label">계좌번호</span><span class="value">${escapeHtml(bank.accountNo)}</span></div>
+      ${totalDueStr ? `<div class="row"><span class="label">입금액</span><span class="value">${escapeHtml(totalDueStr)}</span></div>` : ""}
+      <div class="row"><span class="label">입금자명(참조)</span><span class="value">${escapeHtml(bookingRef)}</span></div>
+      <p style="font-size:12px;color:#555;margin-top:10px;">⏱ <strong>48시간 이내</strong>에 입금해 주시기 바랍니다.</p>
+    </div>`
+    : `
+    <div class="bank-box">
+      <h3>🏦 Bank Transfer Details</h3>
+      <div class="row"><span class="label">Bank</span><span class="value">${escapeHtml(bank.name)}</span></div>
+      <div class="row"><span class="label">Account Name</span><span class="value">${escapeHtml(bank.accountName)}</span></div>
+      <div class="row"><span class="label">BSB</span><span class="value">${escapeHtml(bank.bsb)}</span></div>
+      <div class="row"><span class="label">Account No.</span><span class="value">${escapeHtml(bank.accountNo)}</span></div>
+      <div class="row"><span class="label">Reference</span><span class="value">${escapeHtml(bookingRef)}</span></div>
+      <p style="font-size:12px;color:#555;margin-top:10px;">⏱ Please complete the transfer within <strong>48 hours</strong>.</p>
+    </div>`;
+
   const html = `
 <!DOCTYPE html>
 <html>
@@ -379,27 +417,17 @@ export async function sendBookingConfirmation(data: BookingConfirmationData): Pr
       <div class="row"><span class="label">Address</span><span class="value">${escapeHtml(propertyAddress)}</span></div>
       <div class="row"><span class="label">Check In</span><span class="value">${escapeHtml(checkIn)}</span></div>
       <div class="row"><span class="label">Check Out</span><span class="value">${escapeHtml(checkOut)}</span></div>
-      ${weeklyRate ? `<div class="row"><span class="label">Weekly Rate</span><span class="value">$${weeklyRate.toLocaleString()} ${currency}/week</span></div>` : ""}
+      ${weeklyRateStr ? `<div class="row"><span class="label">Weekly Rate</span><span class="value">${escapeHtml(weeklyRateStr)}/week</span></div>` : ""}
     </div>
 
     ${totalDue ? `
     <div class="total-box">
       <span>Amount Due</span>
-      <span class="amount">$${totalDue.toLocaleString()} ${currency}</span>
+      <span class="amount">${escapeHtml(totalDueStr)}</span>
     </div>
     ` : ""}
 
-    ${!isLongTerm ? `
-    <div class="bank-box">
-      <h3>🏦 Bank Transfer Details</h3>
-      <div class="row"><span class="label">Bank</span><span class="value">Commonwealth Bank of Australia</span></div>
-      <div class="row"><span class="label">Account Name</span><span class="value">MillionStay Pty Ltd</span></div>
-      <div class="row"><span class="label">BSB</span><span class="value">063-000</span></div>
-      <div class="row"><span class="label">Account No.</span><span class="value">1234 5678</span></div>
-      <div class="row"><span class="label">Reference</span><span class="value">${escapeHtml(bookingRef)}</span></div>
-      <p style="font-size:12px;color:#555;margin-top:10px;">⏱ Please complete the transfer within <strong>48 hours</strong>.</p>
-    </div>
-    ` : ""}
+    ${!isLongTerm ? bankBox : ""}
 
     <a href="${PORTAL_URL}/portal/bookings" class="portal-btn">
       Access Your Guest Portal →
