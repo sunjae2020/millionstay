@@ -954,7 +954,8 @@
     "b3_tag": "学生生活",
     "b3_title": "预算有限畅玩墨尔本：免费和低价娱乐",
     "b3_excerpt": "探索市集、公园、画廊和活动，不需要大量花费。",
-    "b3_date": "2025年1月"
+    "b3_date": "2025年1月",
+    "team_alt": "我们的团队"
   },
   "student": {
     "hero_tagline": "海外留学生项目",
@@ -1033,7 +1034,11 @@
     "visa_other": "其他",
     "success_title": "咨询已发送！",
     "success_text": "谢谢您，{{name}}。我们的学生支持团队将在24小时内通过 {{email}} 与您联系。",
-    "send_another": "再次咨询"
+    "send_another": "再次咨询",
+    "alt_campus": "校园中的学生",
+    "alt_studying": "正在学习的学生",
+    "alt_group": "学生小组",
+    "err_send": "发送失败，请重试。"
   },
   "agent": {
     "hero_tagline": "合作伙伴计划",
@@ -1117,7 +1122,12 @@
     "enq_message_placeholder": "您的问题或留言...",
     "enquiry_success_title": "消息已发送！",
     "enquiry_success_text": "我们将尽快通过 {{email}} 回复您。",
-    "send_another": "再次发送消息"
+    "send_another": "再次发送消息",
+    "alt_partnership": "商务合作",
+    "alt_professionals": "房地产专业人士",
+    "alt_property": "墨尔本房产",
+    "err_submit": "提交失败，请重试。",
+    "err_send": "发送失败，请重试。"
   },
   "faq": {
     "hero_tagline": "有问题？",
@@ -1202,7 +1212,18 @@
     "v_pw_upper": "必须包含大写字母",
     "v_pw_digit": "必须包含数字",
     "v_pw_special": "必须包含特殊字符",
-    "v_terms": "您必须同意条款"
+    "v_terms": "您必须同意条款",
+    "reset_title": "设置新密码",
+    "reset_subtitle": "请设置一个未在其他网站使用过的高强度密码。",
+    "reset_done": "密码已更新，现在可以使用新密码登录。",
+    "new_password": "新密码",
+    "confirm_password": "确认新密码",
+    "ph_min_chars": "至少 12 位",
+    "updating": "更新中…",
+    "set_new_password": "设置新密码",
+    "forgot_title": "重置密码",
+    "sending": "发送中…",
+    "send_reset_link": "发送重置链接"
   },
   "contact_page": {
     "hero_tagline": "我们期待您的来信",
@@ -2285,7 +2306,10 @@
     "status_agreed": "已同意",
     "status_disputed": "已提出异议",
     "status_finalized": "已确定",
-    "dispute_placeholder": "请说明问题（例如：入住前已存在的地板划痕）…"
+    "dispute_placeholder": "请说明问题（例如：入住前已存在的地板划痕）…",
+    "your_photos": "您上传的照片",
+    "cancel": "取消",
+    "submit_dispute": "提交异议"
   },
   "currency": {
     "label": "货币",
@@ -2303,7 +2327,8 @@
   },
   "sign": {
     "title_agreement": "签署合同",
-    "title_application": "签署申请书"
+    "title_application": "签署申请书",
+    "signed_document": "已签署文件"
   },
   "booking_new": {
     "step_stay": "入住信息",
@@ -2470,5 +2495,42 @@
     "initial_payment": "首次付款（一次性）：",
     "choose_room": "选择您的房间",
     "approx_location": "大致位置"
+  },
+  "owner_landing": {
+    "type_all": "全部类型",
+    "type_entire": "整套房源",
+    "type_room": "独立房间",
+    "type_bed": "合住房间",
+    "type_homestay": "寄宿家庭",
+    "site_not_found": "未找到该站点",
+    "site_unavailable": "此页面当前不可用。",
+    "type": "类型",
+    "max_price": "每周最高价格",
+    "no_results": "暂无符合条件的房源。",
+    "get_in_touch": "联系我们",
+    "err_generic": "出现问题",
+    "thanks": "感谢您的留言，我们会尽快联系。",
+    "ph_name": "您的姓名",
+    "ph_email": "邮箱",
+    "ph_phone": "电话（选填）",
+    "ph_message": "留言内容"
+  },
+  "privacy": {
+    "title": "隐私政策",
+    "tagline": "我们重视您的隐私",
+    "home": "首页",
+    "effective_date": "生效日期",
+    "contact_officer": "联系我们的隐私负责人",
+    "contact_intro": "如有隐私相关咨询、查阅请求或投诉，请通过以下方式联系我们：",
+    "officer_label": "隐私负责人：",
+    "website_label": "网站：",
+    "address_label": "地址：",
+    "access_data_label": "查阅您的数据：",
+    "contents": "目录",
+    "related": "相关链接",
+    "faq": "常见问题",
+    "contact_us": "联系我们",
+    "regulator": "澳大利亚隐私监管机构",
+    "regulator_note": "如需独立咨询或提出投诉，请联系澳大利亚信息专员办公室（OAIC）。"
   }
 }

@@ -12,16 +12,17 @@ import type { PublicSpacesParams, SpaceSummary } from "@/lib/guest-api";
 import { APP_NAME } from "../lib/appName";
 import { useDisplayCurrency } from "@/contexts/DisplayCurrencyContext";
 
+// Labels are i18n keys, resolved where the <select> renders.
 const SPACE_TYPES: Array<{ value: PublicSpacesParams["space_type"]; label: string }> = [
-  { value: undefined, label: "All types" },
-  { value: "EntireSpace", label: "Whole property" },
-  { value: "RoomSpace", label: "Private room" },
-  { value: "BedSpace", label: "Shared room" },
-  { value: "Homestay", label: "Homestay" },
+  { value: undefined, label: "owner_landing.type_all" },
+  { value: "EntireSpace", label: "owner_landing.type_entire" },
+  { value: "RoomSpace", label: "owner_landing.type_room" },
+  { value: "BedSpace", label: "owner_landing.type_bed" },
+  { value: "Homestay", label: "owner_landing.type_homestay" },
 ];
 
 export default function OwnerLanding({ slug }: { slug: string }) {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const lang = i18n.language || "en";
   const { data, isLoading, isError } = useOwnerSite(slug);
   const site = data?.data;
@@ -67,8 +68,8 @@ export default function OwnerLanding({ slug }: { slug: string }) {
   if (isError || !site) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 text-center px-6">
-        <h1 className="text-2xl font-bold text-gray-800">Site not found</h1>
-        <p className="text-gray-500 mt-2">This landing page is not available.</p>
+        <h1 className="text-2xl font-bold text-gray-800">{t("owner_landing.site_not_found")}</h1>
+        <p className="text-gray-500 mt-2">{t("owner_landing.site_unavailable")}</p>
         <a href="https://millionstay.com" className="mt-4 text-sm font-medium" style={{ color: accent }}>
           Go to {APP_NAME} →
         </a>
@@ -120,19 +121,19 @@ export default function OwnerLanding({ slug }: { slug: string }) {
       <section id="search" className="max-w-6xl mx-auto px-6 py-12">
         <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 sm:p-5 flex flex-wrap items-end gap-3">
           <div className="flex-1 min-w-[150px]">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Type</label>
+            <label className="block text-xs font-medium text-gray-500 mb-1">{t("owner_landing.type")}</label>
             <select
               value={spaceType ?? ""}
               onChange={(e) => setSpaceType((e.target.value || undefined) as PublicSpacesParams["space_type"])}
               className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
             >
-              {SPACE_TYPES.map((t) => (
-                <option key={t.label} value={t.value ?? ""}>{t.label}</option>
+              {SPACE_TYPES.map((opt) => (
+                <option key={opt.label} value={opt.value ?? ""}>{t(opt.label)}</option>
               ))}
             </select>
           </div>
           <div className="flex-1 min-w-[150px]">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Max weekly price</label>
+            <label className="block text-xs font-medium text-gray-500 mb-1">{t("owner_landing.max_price")}</label>
             <input
               type="number"
               inputMode="numeric"
@@ -159,7 +160,7 @@ export default function OwnerLanding({ slug }: { slug: string }) {
               ))}
             </div>
           ) : spaces.length === 0 ? (
-            <p className="text-center text-gray-500 py-16">No stays match your search right now.</p>
+            <p className="text-center text-gray-500 py-16">{t("owner_landing.no_results")}</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {spaces.map((s) => (
@@ -173,7 +174,7 @@ export default function OwnerLanding({ slug }: { slug: string }) {
       {/* ── Contact ── */}
       <section className="bg-gray-50 border-t border-gray-200 py-16">
         <div className="max-w-xl mx-auto px-6">
-          <h2 className="text-2xl font-bold text-gray-900 text-center">Get in touch</h2>
+          <h2 className="text-2xl font-bold text-gray-900 text-center">{t("owner_landing.get_in_touch")}</h2>
           {(content.contact_email || content.contact_phone) && (
             <p className="text-center text-gray-500 mt-2 text-sm">
               {[content.contact_email, content.contact_phone].filter(Boolean).join("  ·  ")}
@@ -232,6 +233,7 @@ function SpaceCard({ space, accent }: { space: SpaceSummary; accent: string }) {
 }
 
 function InquiryForm({ slug, accent }: { slug: string; accent: string }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [err, setErr] = useState("");
@@ -244,7 +246,7 @@ function InquiryForm({ slug, accent }: { slug: string; accent: string }) {
       await submitOwnerInquiry(slug, form);
       setState("sent");
     } catch (e2) {
-      setErr(e2 instanceof Error ? e2.message : "Something went wrong");
+      setErr(e2 instanceof Error ? e2.message : t("owner_landing.err_generic"));
       setState("error");
     }
   }
@@ -253,7 +255,7 @@ function InquiryForm({ slug, accent }: { slug: string; accent: string }) {
     return (
       <div className="mt-6 flex flex-col items-center text-center gap-2 py-6">
         <CheckCircle2 className="w-10 h-10" style={{ color: accent }} />
-        <p className="font-medium text-gray-800">Thanks — we'll be in touch shortly.</p>
+        <p className="font-medium text-gray-800">{t("owner_landing.thanks")}</p>
       </div>
     );
   }
@@ -261,17 +263,17 @@ function InquiryForm({ slug, accent }: { slug: string; accent: string }) {
   return (
     <form onSubmit={submit} className="mt-6 space-y-3">
       <div className="grid sm:grid-cols-2 gap-3">
-        <input required placeholder="Your name" value={form.name}
+        <input required placeholder={t("owner_landing.ph_name")} value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
           className="rounded-lg border border-gray-300 px-3 py-2 text-sm" />
-        <input required type="email" placeholder="Email" value={form.email}
+        <input required type="email" placeholder={t("owner_landing.ph_email")} value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
           className="rounded-lg border border-gray-300 px-3 py-2 text-sm" />
       </div>
-      <input placeholder="Phone (optional)" value={form.phone}
+      <input placeholder={t("owner_landing.ph_phone")} value={form.phone}
         onChange={(e) => setForm({ ...form, phone: e.target.value })}
         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
-      <textarea placeholder="Message" rows={4} value={form.message}
+      <textarea placeholder={t("owner_landing.ph_message")} rows={4} value={form.message}
         onChange={(e) => setForm({ ...form, message: e.target.value })}
         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm resize-y" />
       {err && <p className="text-sm text-red-600">{err}</p>}

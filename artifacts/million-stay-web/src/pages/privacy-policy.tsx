@@ -3,6 +3,7 @@ import { Footer } from "@/components/footer";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import heroBg from "@assets/MS_Homepage_Photo_1920x1080_1775403929888.jpg";
+import { useTranslation } from "react-i18next";
 import { APP_NAME } from "../lib/appName";
 
 const SECTIONS = [
@@ -108,23 +109,24 @@ function fade(delay = 0) {
 }
 
 export default function PrivacyPolicy() {
+  const { t } = useTranslation();
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Navbar />
 
       {/* Hero */}
       <section className="relative h-52 sm:h-64 overflow-hidden">
-        <img src={heroBg} alt="Privacy Policy" className="absolute inset-0 w-full h-full object-cover" />
+        <img src={heroBg} alt={t("privacy.title")} className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/30 to-black/55" />
         <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
-          <p className="text-white/80 italic text-sm sm:text-base mb-1">Your privacy matters to us</p>
-          <h1 className="text-white font-bold italic text-3xl sm:text-4xl drop-shadow-lg">Privacy Policy</h1>
+          <p className="text-white/80 italic text-sm sm:text-base mb-1">{t("privacy.tagline")}</p>
+          <h1 className="text-white font-bold italic text-3xl sm:text-4xl drop-shadow-lg">{t("privacy.title")}</h1>
         </div>
         <div className="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm py-2 px-4 sm:px-8">
           <div className="max-w-7xl mx-auto flex items-center gap-2 text-xs text-gray-500">
-            <Link href="/" className="hover:text-primary transition-colors">Home</Link>
+            <Link href="/" className="hover:text-primary transition-colors">{t("privacy.home")}</Link>
             <span>›</span>
-            <span className="text-gray-700 font-medium">Privacy Policy</span>
+            <span className="text-gray-700 font-medium">{t("privacy.title")}</span>
           </div>
         </div>
       </section>
@@ -136,7 +138,7 @@ export default function PrivacyPolicy() {
           {/* Sections list */}
           <div className="lg:col-span-3 space-y-8">
             <motion.div {...fade(0)} className="bg-primary/5 border border-primary/20 rounded-xl px-6 py-4">
-              <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">Effective Date</p>
+              <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">{t("privacy.effective_date")}</p>
               <p className="text-sm text-gray-700 font-semibold">19 April 2026</p>
               <p className="text-xs text-gray-500 mt-2">This policy applies to T/A {APP_NAME} and complies with the Privacy Act 1988 (Cth), the 13 Australian Privacy Principles, the Notifiable Data Breaches scheme and the Spam Act 2003 (Cth).</p>
             </motion.div>
@@ -160,19 +162,19 @@ export default function PrivacyPolicy() {
 
             {/* Contact note */}
             <motion.div {...fade(0.6)} className="bg-primary/5 border border-primary/20 rounded-xl px-6 py-5">
-              <h4 className="text-sm font-bold text-gray-800 mb-2">Contact Our Privacy Officer</h4>
+              <h4 className="text-sm font-bold text-gray-800 mb-2">{t("privacy.contact_officer")}</h4>
               <p className="text-sm text-gray-600 leading-relaxed">
-                For any privacy-related enquiries, access requests, or complaints, please contact us at:
+                {t("privacy.contact_intro")}
               </p>
               <div className="mt-3 space-y-1 text-sm">
-                <p className="text-gray-700"><span className="font-medium">Privacy Officer:</span>{" "}
+                <p className="text-gray-700"><span className="font-medium">{t("privacy.officer_label")}</span>{" "}
                   <a href="mailto:millionstay.com@gmail.com" className="text-primary hover:underline">millionstay.com@gmail.com</a>
                 </p>
-                <p className="text-gray-700"><span className="font-medium">Website:</span>{" "}
+                <p className="text-gray-700"><span className="font-medium">{t("privacy.website_label")}</span>{" "}
                   <a href="https://www.millionstay.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">www.millionstay.com</a>
                 </p>
-                <p className="text-gray-700"><span className="font-medium">Address:</span> Melbourne, Victoria, Australia</p>
-                <p className="text-gray-700 pt-2"><span className="font-medium">Access your data:</span>{" "}
+                <p className="text-gray-700"><span className="font-medium">{t("privacy.address_label")}</span> Melbourne, Victoria, Australia</p>
+                <p className="text-gray-700 pt-2"><span className="font-medium">{t("privacy.access_data_label")}</span>{" "}
                   <Link href="/portal/my-data" className="text-primary hover:underline">/portal/my-data</Link>
                 </p>
               </div>
@@ -185,7 +187,7 @@ export default function PrivacyPolicy() {
 
               {/* Jump to section */}
               <motion.div {...fade(0.1)} className="bg-gray-50 rounded-xl p-5 border border-gray-100">
-                <h4 className="text-sm font-bold uppercase tracking-wide text-gray-700 mb-3">Contents</h4>
+                <h4 className="text-sm font-bold uppercase tracking-wide text-gray-700 mb-3">{t("privacy.contents")}</h4>
                 <ul className="space-y-1.5">
                   {SECTIONS.map((s) => (
                     <li key={s.number} className="flex items-start gap-2 text-sm text-gray-600">
@@ -198,12 +200,12 @@ export default function PrivacyPolicy() {
 
               {/* Related links */}
               <motion.div {...fade(0.2)} className="bg-gray-50 rounded-xl p-5 border border-gray-100">
-                <h4 className="text-sm font-bold uppercase tracking-wide text-gray-700 mb-3">Related</h4>
+                <h4 className="text-sm font-bold uppercase tracking-wide text-gray-700 mb-3">{t("privacy.related")}</h4>
                 <ul className="space-y-1.5">
                   {[
-                    { label: "House Rules", href: "/house-rules" },
-                    { label: "FAQ", href: "/faq" },
-                    { label: "Contact Us", href: "/contact" },
+                    { label: t("booking_new.house_rules"), href: "/house-rules" },
+                    { label: t("privacy.faq"), href: "/faq" },
+                    { label: t("privacy.contact_us"), href: "/contact" },
                   ].map((link) => (
                     <li key={link.label}>
                       <Link href={link.href} className="text-sm text-gray-600 hover:text-primary transition-colors flex items-center gap-1.5">
@@ -218,9 +220,9 @@ export default function PrivacyPolicy() {
               {/* OAIC reference */}
               <motion.div {...fade(0.3)} className="rounded-xl overflow-hidden border border-primary/20">
                 <div className="bg-primary px-5 py-4 text-white">
-                  <h4 className="font-bold text-sm mb-1">Australian Privacy Regulator</h4>
+                  <h4 className="font-bold text-sm mb-1">{t("privacy.regulator")}</h4>
                   <p className="text-xs text-white/80 mb-3">
-                    For independent advice or to lodge a complaint, contact the Office of the Australian Information Commissioner.
+                    {t("privacy.regulator_note")}
                   </p>
                   <a
                     href="https://www.oaic.gov.au"

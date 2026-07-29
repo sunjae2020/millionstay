@@ -1054,7 +1054,18 @@
     "v_pw_upper": "大文字を含む必要があります",
     "v_pw_digit": "数字を含む必要があります",
     "v_pw_special": "記号を含む必要があります",
-    "v_terms": "利用規約に同意する必要があります"
+    "v_terms": "利用規約に同意する必要があります",
+    "reset_title": "新しいパスワードを設定",
+    "reset_subtitle": "他のサービスで使っていない強力なパスワードを設定してください。",
+    "reset_done": "パスワードを更新しました。新しいパスワードでログインできます。",
+    "new_password": "新しいパスワード",
+    "confirm_password": "新しいパスワード（確認）",
+    "ph_min_chars": "12文字以上",
+    "updating": "更新中…",
+    "set_new_password": "パスワードを変更",
+    "forgot_title": "パスワードの再設定",
+    "sending": "送信中…",
+    "send_reset_link": "再設定リンクを送信"
   },
   "errors": {
     "not_found": "ページが見つかりません",
@@ -1150,7 +1161,8 @@
     "b3_tag": "学生生活",
     "b3_title": "予算でメルボルンを楽しむ：無料＆格安のアクティビティ",
     "b3_excerpt": "マーケット、公園、ギャラリー、イベント——お金をかけずに楽しもう。",
-    "b3_date": "2025年1月"
+    "b3_date": "2025年1月",
+    "team_alt": "私たちのチーム"
   },
   "student": {
     "hero_tagline": "海外留学生プログラム",
@@ -1229,7 +1241,11 @@
     "visa_other": "その他",
     "success_title": "お問い合わせを送信しました！",
     "success_text": "ありがとうございます、{{name}}様。学生サポートチームが24時間以内に {{email}} へご連絡します。",
-    "send_another": "もう一度お問い合わせする"
+    "send_another": "もう一度お問い合わせする",
+    "alt_campus": "キャンパスの学生",
+    "alt_studying": "勉強する学生",
+    "alt_group": "学生グループ",
+    "err_send": "送信に失敗しました。もう一度お試しください。"
   },
   "agent": {
     "hero_tagline": "パートナープログラム",
@@ -1313,7 +1329,12 @@
     "enq_message_placeholder": "ご質問またはメッセージ...",
     "enquiry_success_title": "メッセージを送信しました！",
     "enquiry_success_text": "近日中に {{email}} へ返信いたします。",
-    "send_another": "別のメッセージを送信"
+    "send_another": "別のメッセージを送信",
+    "alt_partnership": "ビジネスパートナーシップ",
+    "alt_professionals": "不動産のプロフェッショナル",
+    "alt_property": "メルボルンの物件",
+    "err_submit": "送信に失敗しました。もう一度お試しください。",
+    "err_send": "送信に失敗しました。もう一度お試しください。"
   },
   "faq": {
     "hero_tagline": "ご質問はありますか？",
@@ -2432,7 +2453,10 @@
     "status_agreed": "同意済み",
     "status_disputed": "異議あり",
     "status_finalized": "確定済み",
-    "dispute_placeholder": "問題の内容をご記入ください（例: 入居前からある床の傷）…"
+    "dispute_placeholder": "問題の内容をご記入ください（例: 入居前からある床の傷）…",
+    "your_photos": "アップロードした写真",
+    "cancel": "キャンセル",
+    "submit_dispute": "異議を申し立てる"
   },
   "currency": {
     "label": "通貨",
@@ -2450,7 +2474,8 @@
   },
   "sign": {
     "title_agreement": "契約書に署名",
-    "title_application": "申込書に署名"
+    "title_application": "申込書に署名",
+    "signed_document": "署名済み書類"
   },
   "booking_new": {
     "step_stay": "滞在情報",
@@ -2617,5 +2642,42 @@
     "initial_payment": "初回のお支払い（1回限り）:",
     "choose_room": "お部屋をお選びください",
     "approx_location": "おおよその位置"
+  },
+  "owner_landing": {
+    "type_all": "すべてのタイプ",
+    "type_entire": "一棟まるごと",
+    "type_room": "個室",
+    "type_bed": "相部屋",
+    "type_homestay": "ホームステイ",
+    "site_not_found": "サイトが見つかりません",
+    "site_unavailable": "このページは現在ご利用いただけません。",
+    "type": "タイプ",
+    "max_price": "週額の上限",
+    "no_results": "条件に合うお部屋がありません。",
+    "get_in_touch": "お問い合わせ",
+    "err_generic": "問題が発生しました",
+    "thanks": "ありがとうございます。追ってご連絡します。",
+    "ph_name": "お名前",
+    "ph_email": "メールアドレス",
+    "ph_phone": "電話番号（任意）",
+    "ph_message": "お問い合わせ内容"
+  },
+  "privacy": {
+    "title": "プライバシーポリシー",
+    "tagline": "お客様のプライバシーを大切にします",
+    "home": "ホーム",
+    "effective_date": "施行日",
+    "contact_officer": "個人情報保護責任者への連絡",
+    "contact_intro": "個人情報に関するお問い合わせ、開示請求、苦情は下記までご連絡ください。",
+    "officer_label": "個人情報保護責任者:",
+    "website_label": "ウェブサイト:",
+    "address_label": "住所:",
+    "access_data_label": "データの確認:",
+    "contents": "目次",
+    "related": "関連ページ",
+    "faq": "よくある質問",
+    "contact_us": "お問い合わせ",
+    "regulator": "オーストラリアの個人情報監督機関",
+    "regulator_note": "第三者による助言や苦情の申し立ては、オーストラリア情報コミッショナー事務局（OAIC）へご連絡ください。"
   }
 }

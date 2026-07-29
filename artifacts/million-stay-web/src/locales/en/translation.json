@@ -995,7 +995,8 @@
     "b3_tag": "Student Life",
     "b3_title": "Melbourne on a Budget: Free & Cheap Things to Do",
     "b3_excerpt": "Explore markets, parks, galleries and events without spending a fortune.",
-    "b3_date": "Jan 2025"
+    "b3_date": "Jan 2025",
+    "team_alt": "Our team"
   },
   "student": {
     "hero_tagline": "Overseas Student Program",
@@ -1074,7 +1075,11 @@
     "visa_other": "Other",
     "success_title": "Enquiry Sent!",
     "success_text": "Thank you, {{name}}. Our student support team will contact you at {{email}} within 24 hours.",
-    "send_another": "Send another enquiry"
+    "send_another": "Send another enquiry",
+    "alt_campus": "Students on campus",
+    "alt_studying": "Students studying",
+    "alt_group": "Student group",
+    "err_send": "Failed to send. Please try again."
   },
   "agent": {
     "hero_tagline": "Partner Program",
@@ -1158,7 +1163,12 @@
     "enq_message_placeholder": "Your question or message...",
     "enquiry_success_title": "Message Sent!",
     "enquiry_success_text": "We'll get back to you at {{email}} shortly.",
-    "send_another": "Send another message"
+    "send_another": "Send another message",
+    "alt_partnership": "Business partnership",
+    "alt_professionals": "Real estate professionals",
+    "alt_property": "Melbourne property",
+    "err_submit": "Failed to submit. Please try again.",
+    "err_send": "Failed to send. Please try again."
   },
   "faq": {
     "hero_tagline": "Got questions?",
@@ -1243,7 +1253,18 @@
     "v_pw_upper": "Must contain an uppercase letter",
     "v_pw_digit": "Must contain a digit",
     "v_pw_special": "Must contain a special character",
-    "v_terms": "You must accept the terms"
+    "v_terms": "You must accept the terms",
+    "reset_title": "Set a new password",
+    "reset_subtitle": "Choose a strong password you haven't used elsewhere.",
+    "reset_done": "Your password has been updated. You can now sign in with your new password.",
+    "new_password": "New password",
+    "confirm_password": "Confirm new password",
+    "ph_min_chars": "At least 12 characters",
+    "updating": "Updating…",
+    "set_new_password": "Set new password",
+    "forgot_title": "Reset your password",
+    "sending": "Sending…",
+    "send_reset_link": "Send reset link"
   },
   "contact_page": {
     "hero_tagline": "We'd love to hear from you",
@@ -2800,7 +2821,10 @@
     "status_agreed": "Agreed",
     "status_disputed": "Disputed",
     "status_finalized": "Finalized",
-    "dispute_placeholder": "Describe the issue (e.g. pre-existing scratch on the floor)…"
+    "dispute_placeholder": "Describe the issue (e.g. pre-existing scratch on the floor)…",
+    "your_photos": "Your photos",
+    "cancel": "Cancel",
+    "submit_dispute": "Submit dispute"
   },
   "currency": {
     "label": "Currency",
@@ -2818,7 +2842,8 @@
   },
   "sign": {
     "title_agreement": "Sign agreement",
-    "title_application": "Sign application"
+    "title_application": "Sign application",
+    "signed_document": "Signed document"
   },
   "booking_new": {
     "step_stay": "Stay Details",
@@ -2985,5 +3010,42 @@
     "initial_payment": "Initial payment (once-off):",
     "choose_room": "Choose Your Room",
     "approx_location": "Approximate location"
+  },
+  "owner_landing": {
+    "type_all": "All types",
+    "type_entire": "Whole property",
+    "type_room": "Private room",
+    "type_bed": "Shared room",
+    "type_homestay": "Homestay",
+    "site_not_found": "Site not found",
+    "site_unavailable": "This landing page is not available.",
+    "type": "Type",
+    "max_price": "Max weekly price",
+    "no_results": "No stays match your search right now.",
+    "get_in_touch": "Get in touch",
+    "err_generic": "Something went wrong",
+    "thanks": "Thanks — we'll be in touch shortly.",
+    "ph_name": "Your name",
+    "ph_email": "Email",
+    "ph_phone": "Phone (optional)",
+    "ph_message": "Message"
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "tagline": "Your privacy matters to us",
+    "home": "Home",
+    "effective_date": "Effective Date",
+    "contact_officer": "Contact Our Privacy Officer",
+    "contact_intro": "For any privacy-related enquiries, access requests, or complaints, please contact us at:",
+    "officer_label": "Privacy Officer:",
+    "website_label": "Website:",
+    "address_label": "Address:",
+    "access_data_label": "Access your data:",
+    "contents": "Contents",
+    "related": "Related",
+    "faq": "FAQ",
+    "contact_us": "Contact Us",
+    "regulator": "Australian Privacy Regulator",
+    "regulator_note": "For independent advice or to lodge a complaint, contact the Office of the Australian Information Commissioner."
   }
 }

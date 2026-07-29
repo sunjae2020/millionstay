@@ -977,7 +977,8 @@
     "b3_tag": "Đời Sống Sinh Viên",
     "b3_title": "Melbourne Với Chi Phí Thấp: Những Hoạt Động Miễn Phí & Giá Rẻ",
     "b3_excerpt": "Khám phá chợ, công viên, phòng triển lãm và sự kiện mà không tốn nhiều tiền.",
-    "b3_date": "Th1 2025"
+    "b3_date": "Th1 2025",
+    "team_alt": "Đội ngũ của chúng tôi"
   },
   "student": {
     "hero_tagline": "Chương Trình Sinh Viên Quốc Tế",
@@ -1054,7 +1055,11 @@
     "visa_other": "Khác",
     "success_title": "Đã Gửi Yêu Cầu!",
     "success_text": "Cảm ơn bạn, {{name}}. Đội ngũ hỗ trợ sinh viên của chúng tôi sẽ liên hệ với bạn qua {{email}} trong vòng 24 giờ.",
-    "send_another": "Gửi yêu cầu khác"
+    "send_another": "Gửi yêu cầu khác",
+    "alt_campus": "Sinh viên trong khuôn viên trường",
+    "alt_studying": "Sinh viên đang học",
+    "alt_group": "Nhóm sinh viên",
+    "err_send": "Gửi không thành công. Vui lòng thử lại."
   },
   "agent": {
     "hero_tagline": "Chương Trình Đối Tác",
@@ -1133,7 +1138,12 @@
     "enq_message_placeholder": "Câu hỏi hoặc tin nhắn của bạn...",
     "enquiry_success_title": "Đã gửi tin nhắn!",
     "enquiry_success_text": "Chúng tôi sẽ phản hồi bạn qua {{email}} trong thời gian sớm nhất.",
-    "send_another": "Gửi tin nhắn khác"
+    "send_another": "Gửi tin nhắn khác",
+    "alt_partnership": "Hợp tác kinh doanh",
+    "alt_professionals": "Chuyên gia bất động sản",
+    "alt_property": "Bất động sản Melbourne",
+    "err_submit": "Gửi không thành công. Vui lòng thử lại.",
+    "err_send": "Gửi không thành công. Vui lòng thử lại."
   },
   "faq": {
     "hero_tagline": "Bạn có thắc mắc?",
@@ -1215,7 +1225,18 @@
     "v_pw_upper": "Phải chứa chữ hoa",
     "v_pw_digit": "Phải chứa chữ số",
     "v_pw_special": "Phải chứa ký tự đặc biệt",
-    "v_terms": "Bạn phải đồng ý với điều khoản"
+    "v_terms": "Bạn phải đồng ý với điều khoản",
+    "reset_title": "Đặt mật khẩu mới",
+    "reset_subtitle": "Hãy chọn mật khẩu mạnh mà bạn chưa dùng ở nơi khác.",
+    "reset_done": "Mật khẩu đã được cập nhật. Bạn có thể đăng nhập bằng mật khẩu mới.",
+    "new_password": "Mật khẩu mới",
+    "confirm_password": "Xác nhận mật khẩu mới",
+    "ph_min_chars": "Ít nhất 12 ký tự",
+    "updating": "Đang cập nhật…",
+    "set_new_password": "Đặt mật khẩu mới",
+    "forgot_title": "Đặt lại mật khẩu",
+    "sending": "Đang gửi…",
+    "send_reset_link": "Gửi liên kết đặt lại"
   },
   "contact_page": {
     "hero_tagline": "Chúng tôi rất mong nhận được phản hồi từ bạn",
@@ -2728,7 +2749,10 @@
     "status_agreed": "Đã đồng ý",
     "status_disputed": "Đã khiếu nại",
     "status_finalized": "Đã chốt",
-    "dispute_placeholder": "Mô tả vấn đề (ví dụ: vết xước sàn có từ trước)…"
+    "dispute_placeholder": "Mô tả vấn đề (ví dụ: vết xước sàn có từ trước)…",
+    "your_photos": "Ảnh của bạn",
+    "cancel": "Huỷ",
+    "submit_dispute": "Gửi khiếu nại"
   },
   "currency": {
     "label": "Tiền tệ",
@@ -2746,7 +2770,8 @@
   },
   "sign": {
     "title_agreement": "Ký hợp đồng",
-    "title_application": "Ký đơn đăng ký"
+    "title_application": "Ký đơn đăng ký",
+    "signed_document": "Tài liệu đã ký"
   },
   "booking_new": {
     "step_stay": "Thông tin lưu trú",
@@ -2913,5 +2938,42 @@
     "initial_payment": "Thanh toán ban đầu (một lần):",
     "choose_room": "Chọn phòng của bạn",
     "approx_location": "Vị trí tương đối"
+  },
+  "owner_landing": {
+    "type_all": "Tất cả loại",
+    "type_entire": "Nguyên căn",
+    "type_room": "Phòng riêng",
+    "type_bed": "Phòng chung",
+    "type_homestay": "Homestay",
+    "site_not_found": "Không tìm thấy trang",
+    "site_unavailable": "Trang này hiện không khả dụng.",
+    "type": "Loại",
+    "max_price": "Giá tối đa mỗi tuần",
+    "no_results": "Chưa có chỗ ở phù hợp với tìm kiếm.",
+    "get_in_touch": "Liên hệ",
+    "err_generic": "Đã xảy ra lỗi",
+    "thanks": "Cảm ơn — chúng tôi sẽ liên hệ sớm.",
+    "ph_name": "Tên của bạn",
+    "ph_email": "Email",
+    "ph_phone": "Điện thoại (tuỳ chọn)",
+    "ph_message": "Nội dung"
+  },
+  "privacy": {
+    "title": "Chính sách bảo mật",
+    "tagline": "Chúng tôi coi trọng quyền riêng tư của bạn",
+    "home": "Trang chủ",
+    "effective_date": "Ngày hiệu lực",
+    "contact_officer": "Liên hệ cán bộ bảo vệ dữ liệu",
+    "contact_intro": "Mọi thắc mắc, yêu cầu truy cập hoặc khiếu nại về quyền riêng tư, vui lòng liên hệ:",
+    "officer_label": "Cán bộ bảo vệ dữ liệu:",
+    "website_label": "Website:",
+    "address_label": "Địa chỉ:",
+    "access_data_label": "Xem dữ liệu của bạn:",
+    "contents": "Mục lục",
+    "related": "Liên quan",
+    "faq": "Câu hỏi thường gặp",
+    "contact_us": "Liên hệ",
+    "regulator": "Cơ quan quản lý quyền riêng tư Úc",
+    "regulator_note": "Để được tư vấn độc lập hoặc khiếu nại, hãy liên hệ Văn phòng Uỷ viên Thông tin Úc (OAIC)."
   }
 }

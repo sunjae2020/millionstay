@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "wouter";
 import { AuthLayout } from "../components/auth-layout";
 import { Lock, Eye, EyeOff, CheckCircle2 } from "lucide-react";
@@ -24,6 +25,7 @@ function readTokenFromHashOrQuery(loc: string): string {
 }
 
 export default function ResetPassword() {
+  const { t } = useTranslation();
   const [location, setLocation] = useLocation();
   const [token, setToken] = useState("");
   const [pw, setPw] = useState("");
@@ -74,8 +76,8 @@ export default function ResetPassword() {
   return (
     <AuthLayout>
       <div className="text-center space-y-1">
-        <h1 className="text-2xl font-bold text-foreground">Set a new password</h1>
-        <p className="text-sm text-muted-foreground">Choose a strong password you haven't used elsewhere.</p>
+        <h1 className="text-2xl font-bold text-foreground">{t("auth.reset_title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("auth.reset_subtitle")}</p>
       </div>
 
             {!token && (
@@ -87,7 +89,7 @@ export default function ResetPassword() {
             {done ? (
               <div className="space-y-4 text-center">
                 <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto" />
-                <p className="text-gray-700">Your password has been updated. You can now sign in with your new password.</p>
+                <p className="text-gray-700">{t("auth.reset_done")}</p>
                 <Button onClick={() => setLocation("/login")} className="w-full bg-primary hover:bg-primary/90 text-white h-11">
                   Continue to login
                 </Button>
@@ -95,7 +97,7 @@ export default function ResetPassword() {
             ) : (
               <form onSubmit={onSubmit} className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-700 block mb-1">New password</label>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">{t("auth.new_password")}</label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
@@ -104,7 +106,7 @@ export default function ResetPassword() {
                       value={pw}
                       onChange={(e) => setPw(e.target.value)}
                       className="pl-9 pr-10 h-11"
-                      placeholder="At least 12 characters"
+                      placeholder={t("auth.ph_min_chars")}
                       autoComplete="new-password"
                     />
                     <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
@@ -116,7 +118,7 @@ export default function ResetPassword() {
                   </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700 block mb-1">Confirm new password</label>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">{t("auth.confirm_password")}</label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
@@ -137,7 +139,7 @@ export default function ResetPassword() {
                   disabled={loading || !token || !policyOk || !pwMatches}
                   className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12 rounded-xl"
                 >
-                  {loading ? "Updating..." : "Set new password"}
+                  {loading ? t("auth.updating") : t("auth.set_new_password")}
                 </Button>
                 <Link href="/login" className="block text-center text-sm text-muted-foreground hover:text-primary">
                   Back to login

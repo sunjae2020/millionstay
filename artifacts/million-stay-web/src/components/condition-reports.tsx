@@ -284,8 +284,8 @@ function ItemRow({
           </div>
           {item.description && <p className="text-sm text-gray-600 mt-1">{item.description}</p>}
         </div>
-        {decision === "agreed" && <span className="inline-flex items-center gap-1 text-green-600 text-xs font-semibold shrink-0"><CheckCircle2 className="h-4 w-4" />Agreed</span>}
-        {decision === "disputed" && <span className="inline-flex items-center gap-1 text-red-600 text-xs font-semibold shrink-0"><AlertTriangle className="h-4 w-4" />Disputed</span>}
+        {decision === "agreed" && <span className="inline-flex items-center gap-1 text-green-600 text-xs font-semibold shrink-0"><CheckCircle2 className="h-4 w-4" />{t("condition_report.status_agreed")}</span>}
+        {decision === "disputed" && <span className="inline-flex items-center gap-1 text-red-600 text-xs font-semibold shrink-0"><AlertTriangle className="h-4 w-4" />{t("condition_report.status_disputed")}</span>}
       </div>
 
       {adminPhotos.length > 0 && (
@@ -300,7 +300,7 @@ function ItemRow({
 
       {tenantPhotos.length > 0 && (
         <div className="mt-3">
-          <p className="text-[11px] text-gray-400 mb-1">Your photos</p>
+          <p className="text-[11px] text-gray-400 mb-1">{t("condition_report.your_photos")}</p>
           <div className="flex gap-2 flex-wrap">
             {tenantPhotos.map((p) => (
               <a key={p.id} href={p.file_url} target="_blank" rel="noreferrer" className="block">
@@ -340,9 +340,9 @@ function ItemRow({
                   <Camera className="h-3.5 w-3.5" /> Add photo
                 </Button>
                 <Button size="sm" disabled={busy} onClick={() => respond("disputed")} className="gap-1.5 bg-red-600 hover:bg-red-700">
-                  {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <AlertTriangle className="h-3.5 w-3.5" />} Submit dispute
+                  {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <AlertTriangle className="h-3.5 w-3.5" />} {t("condition_report.submit_dispute")}
                 </Button>
-                <Button size="sm" variant="ghost" disabled={busy} onClick={() => setShowDispute(false)}>Cancel</Button>
+                <Button size="sm" variant="ghost" disabled={busy} onClick={() => setShowDispute(false)}>{t("condition_report.cancel")}</Button>
               </div>
             </div>
           )}

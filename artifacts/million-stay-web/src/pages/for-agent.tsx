@@ -70,7 +70,7 @@ export default function ForAgent() {
       }
       setSubmitted(true);
     } catch (err) {
-      setRegisterError(err instanceof Error ? err.message : "Failed to submit. Please try again.");
+      setRegisterError(err instanceof Error ? err.message : t("agent.err_submit"));
     } finally {
       setRegistering(false);
     }
@@ -100,7 +100,7 @@ export default function ForAgent() {
       }
       setEnquirySubmitted(true);
     } catch (err) {
-      setEnquiryError(err instanceof Error ? err.message : "Failed to send. Please try again.");
+      setEnquiryError(err instanceof Error ? err.message : t("agent.err_send"));
     } finally {
       setEnquiring(false);
     }
@@ -121,7 +121,7 @@ export default function ForAgent() {
       <div className="relative overflow-hidden shrink-0" style={{ height: "260px" }}>
         <img
           src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1920&q=80"
-          alt="For Agents"
+          alt={t("agent.hero_title")}
           className="absolute inset-0 w-full h-full object-cover object-center"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/60" />
@@ -161,15 +161,15 @@ export default function ForAgent() {
           <motion.div {...fade(0.12)} className="flex-1 grid grid-cols-2 gap-3 max-w-md w-full">
             <div className="col-span-2 rounded-2xl overflow-hidden h-44 shadow-md">
               <img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&q=80"
-                alt="Business partnership" className="w-full h-full object-cover" />
+                alt={t("agent.alt_partnership")} className="w-full h-full object-cover" />
             </div>
             <div className="rounded-2xl overflow-hidden h-32 shadow-md">
               <img src="https://images.unsplash.com/photo-1554774853-aae0a22c8aa4?w=600&q=80"
-                alt="Real estate professionals" className="w-full h-full object-cover" />
+                alt={t("agent.alt_professionals")} className="w-full h-full object-cover" />
             </div>
             <div className="rounded-2xl overflow-hidden h-32 shadow-md">
               <img src="https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&q=80"
-                alt="Melbourne property" className="w-full h-full object-cover" />
+                alt={t("agent.alt_property")} className="w-full h-full object-cover" />
             </div>
           </motion.div>
         </div>

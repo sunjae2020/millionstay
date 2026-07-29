@@ -63,7 +63,7 @@ export default function ForStudent() {
       }
       setSubmitted(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send. Please try again.");
+      setError(err instanceof Error ? err.message : t("student.err_send"));
     } finally {
       setSending(false);
     }
@@ -82,7 +82,7 @@ export default function ForStudent() {
 
       {/* ── Hero Banner ── */}
       <div className="relative overflow-hidden shrink-0" style={{ height: "260px" }}>
-        <img src={heroBg} alt="For Students" className="absolute inset-0 w-full h-full object-cover object-center" />
+        <img src={heroBg} alt={t("student.hero_title")} className="absolute inset-0 w-full h-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60" />
         <div className="absolute inset-0 flex flex-col items-start justify-end px-8 pb-8 max-w-7xl mx-auto w-full">
           <p className="font-cursive text-white/75 text-lg italic mb-1">{t("student.hero_tagline")}</p>
@@ -120,15 +120,15 @@ export default function ForStudent() {
           <motion.div {...fade(0.12)} className="flex-1 grid grid-cols-2 gap-3 max-w-md w-full">
             <div className="col-span-2 rounded-2xl overflow-hidden h-44 shadow-md">
               <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=800&q=80"
-                alt="Students on campus" className="w-full h-full object-cover" />
+                alt={t("student.alt_campus")} className="w-full h-full object-cover" />
             </div>
             <div className="rounded-2xl overflow-hidden h-32 shadow-md">
               <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&q=80"
-                alt="Students studying" className="w-full h-full object-cover" />
+                alt={t("student.alt_studying")} className="w-full h-full object-cover" />
             </div>
             <div className="rounded-2xl overflow-hidden h-32 shadow-md">
               <img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&q=80"
-                alt="Student group" className="w-full h-full object-cover" />
+                alt={t("student.alt_group")} className="w-full h-full object-cover" />
             </div>
           </motion.div>
         </div>

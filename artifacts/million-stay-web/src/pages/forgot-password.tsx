@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { AuthLayout } from "../components/auth-layout";
 import { Mail, ArrowLeft } from "lucide-react";
@@ -9,6 +10,7 @@ import { getApiBase } from "@/lib/api-base";
 const API_BASE = `${getApiBase()}/api/v1`;
 
 export default function ForgotPassword() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -31,7 +33,7 @@ export default function ForgotPassword() {
   return (
     <AuthLayout>
       <div className="text-center space-y-1">
-        <h1 className="text-2xl font-bold text-foreground">Reset your password</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t("auth.forgot_title")}</h1>
         <p className="text-sm text-muted-foreground">
                 Enter your email and we'll send you a link to set a new password.
               </p>
@@ -53,7 +55,7 @@ export default function ForgotPassword() {
             ) : (
               <form onSubmit={onSubmit} className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-700 block mb-1">Email address</label>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">{t("auth.email_label")}</label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
@@ -72,7 +74,7 @@ export default function ForgotPassword() {
                   disabled={loading || !email.trim()}
                   className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12 rounded-xl"
                 >
-                  {loading ? "Sending..." : "Send reset link"}
+                  {loading ? t("auth.sending") : t("auth.send_reset_link")}
                 </Button>
                 <Link href="/login" className="block text-center text-sm text-muted-foreground hover:text-primary">
                   Back to login

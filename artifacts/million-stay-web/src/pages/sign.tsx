@@ -141,7 +141,7 @@ export default function Sign() {
               <p className="mt-2 text-gray-600">{loadError.message}</p>
               {loadError.code === "already_signed" && (
                 <div className="mt-6 inline-block">
-                  <HsButton onClick={() => openPreview({ title: "Signed document", filename: `${token}.pdf`, href: signedPdfUrl(token) })}>
+                  <HsButton onClick={() => openPreview({ title: t("sign.signed_document"), filename: `${token}.pdf`, href: signedPdfUrl(token) })}>
                     <FileText className="w-4 h-4" /> View signed PDF
                   </HsButton>
                 </div>
@@ -161,7 +161,7 @@ export default function Sign() {
                 Your signature has been recorded. A signed PDF copy has been emailed to you.
               </p>
               <div className="mt-7 flex flex-col sm:flex-row items-center justify-center gap-3">
-                <HsButton onClick={() => openPreview({ title: "Signed document", filename: `${token}.pdf`, href: signedPdfUrl(token) })}>
+                <HsButton onClick={() => openPreview({ title: t("sign.signed_document"), filename: `${token}.pdf`, href: signedPdfUrl(token) })}>
                   <FileText className="w-4 h-4" /> View signed PDF
                 </HsButton>
                 <a

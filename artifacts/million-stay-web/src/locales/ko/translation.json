@@ -995,7 +995,8 @@
     "b3_tag": "학생 생활",
     "b3_title": "예산으로 즐기는 멜버른: 무료 & 저렴한 즐길거리",
     "b3_excerpt": "마켓, 공원, 갤러리, 이벤트 — 많은 돈 없이 즐기기.",
-    "b3_date": "2025년 1월"
+    "b3_date": "2025년 1월",
+    "team_alt": "우리 팀"
   },
   "student": {
     "hero_tagline": "해외 유학생 프로그램",
@@ -1074,7 +1075,11 @@
     "visa_other": "기타",
     "success_title": "문의가 접수되었습니다!",
     "success_text": "감사합니다, {{name}}님. 학생 지원 팀이 {{email}}으로 24시간 내에 연락드리겠습니다.",
-    "send_another": "다시 문의하기"
+    "send_another": "다시 문의하기",
+    "alt_campus": "캠퍼스의 학생들",
+    "alt_studying": "공부하는 학생들",
+    "alt_group": "학생 그룹",
+    "err_send": "전송에 실패했습니다. 다시 시도해 주세요."
   },
   "agent": {
     "hero_tagline": "파트너 프로그램",
@@ -1158,7 +1163,12 @@
     "enq_message_placeholder": "질문이나 메시지...",
     "enquiry_success_title": "메시지가 발송되었습니다!",
     "enquiry_success_text": "{{email}}으로 곧 답변드리겠습니다.",
-    "send_another": "다른 메시지 보내기"
+    "send_another": "다른 메시지 보내기",
+    "alt_partnership": "비즈니스 파트너십",
+    "alt_professionals": "부동산 전문가",
+    "alt_property": "멜버른 매물",
+    "err_submit": "제출에 실패했습니다. 다시 시도해 주세요.",
+    "err_send": "전송에 실패했습니다. 다시 시도해 주세요."
   },
   "faq": {
     "hero_tagline": "궁금하신가요?",
@@ -1243,7 +1253,18 @@
     "v_pw_upper": "대문자를 포함해야 합니다",
     "v_pw_digit": "숫자를 포함해야 합니다",
     "v_pw_special": "특수문자를 포함해야 합니다",
-    "v_terms": "약관에 동의해야 합니다"
+    "v_terms": "약관에 동의해야 합니다",
+    "reset_title": "새 비밀번호 설정",
+    "reset_subtitle": "다른 곳에서 쓰지 않은 안전한 비밀번호를 사용하세요.",
+    "reset_done": "비밀번호가 변경되었습니다. 새 비밀번호로 로그인하세요.",
+    "new_password": "새 비밀번호",
+    "confirm_password": "새 비밀번호 확인",
+    "ph_min_chars": "12자 이상",
+    "updating": "변경 중…",
+    "set_new_password": "비밀번호 변경",
+    "forgot_title": "비밀번호 재설정",
+    "sending": "전송 중…",
+    "send_reset_link": "재설정 링크 보내기"
   },
   "contact_page": {
     "hero_tagline": "여러분의 의견을 듣고 싶습니다",
@@ -2326,7 +2347,10 @@
     "status_agreed": "동의함",
     "status_disputed": "이의 제기",
     "status_finalized": "확정됨",
-    "dispute_placeholder": "어떤 점이 문제인지 적어 주세요(예: 입주 전부터 있던 바닥 흠집)…"
+    "dispute_placeholder": "어떤 점이 문제인지 적어 주세요(예: 입주 전부터 있던 바닥 흠집)…",
+    "your_photos": "내가 올린 사진",
+    "cancel": "취소",
+    "submit_dispute": "이의 제기하기"
   },
   "currency": {
     "label": "통화",
@@ -2344,7 +2368,8 @@
   },
   "sign": {
     "title_agreement": "계약서 서명",
-    "title_application": "신청서 서명"
+    "title_application": "신청서 서명",
+    "signed_document": "서명 완료 문서"
   },
   "booking_new": {
     "step_stay": "숙박 정보",
@@ -2511,5 +2536,42 @@
     "initial_payment": "최초 납부 금액(1회):",
     "choose_room": "원하는 객실을 골라 보세요",
     "approx_location": "대략적인 위치"
+  },
+  "owner_landing": {
+    "type_all": "전체 유형",
+    "type_entire": "건물 전체",
+    "type_room": "개인실",
+    "type_bed": "다인실",
+    "type_homestay": "홈스테이",
+    "site_not_found": "사이트를 찾을 수 없습니다",
+    "site_unavailable": "이 페이지는 현재 이용할 수 없습니다.",
+    "type": "유형",
+    "max_price": "주간 최대 금액",
+    "no_results": "조건에 맞는 매물이 없습니다.",
+    "get_in_touch": "문의하기",
+    "err_generic": "문제가 발생했습니다",
+    "thanks": "감사합니다. 곧 연락드리겠습니다.",
+    "ph_name": "이름",
+    "ph_email": "이메일",
+    "ph_phone": "연락처(선택)",
+    "ph_message": "문의 내용"
+  },
+  "privacy": {
+    "title": "개인정보처리방침",
+    "tagline": "여러분의 개인정보를 소중히 지킵니다",
+    "home": "홈",
+    "effective_date": "시행일",
+    "contact_officer": "개인정보 보호책임자 연락처",
+    "contact_intro": "개인정보 관련 문의, 열람 요청, 불만 접수는 아래로 연락해 주세요.",
+    "officer_label": "개인정보 보호책임자:",
+    "website_label": "웹사이트:",
+    "address_label": "주소:",
+    "access_data_label": "내 데이터 열람:",
+    "contents": "목차",
+    "related": "관련 문서",
+    "faq": "자주 묻는 질문",
+    "contact_us": "문의하기",
+    "regulator": "호주 개인정보 감독기관",
+    "regulator_note": "독립적인 상담이나 민원 접수는 호주 정보위원회(OAIC)로 문의하세요."
   }
 }

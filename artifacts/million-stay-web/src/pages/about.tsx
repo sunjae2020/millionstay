@@ -137,7 +137,7 @@ export default function About() {
 
       {/* Banner */}
       <div className="relative h-52 md:h-64 overflow-hidden">
-        <img src={heroBg} alt="About Us" className="absolute inset-0 w-full h-full object-cover object-center" />
+        <img src={heroBg} alt={t("about.hero_title")} className="absolute inset-0 w-full h-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/50" />
         <div className="absolute inset-0 flex flex-col items-start justify-end px-8 pb-8 max-w-7xl mx-auto w-full">
           <p className="font-cursive text-white/70 text-sm italic mb-1">{t("about.hero_tagline")}</p>
@@ -166,7 +166,7 @@ export default function About() {
             <div className="rounded-2xl overflow-hidden shadow-lg w-full max-w-md aspect-[4/3]">
               <img
                 src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&q=80"
-                alt="Our team"
+                alt={t("about.team_alt")}
                 className="w-full h-full object-cover"
               />
             </div>
