@@ -129,7 +129,7 @@ function amountKo(value: number | null | undefined): string {
  * numeric format — so `ko` documents spell them out and other languages keep the
  * configured format.
  */
-function leaseDate(value: string | Date | null | undefined, lang: DocLang): string {
+export function leaseDate(value: string | Date | null | undefined, lang: DocLang): string {
   if (value == null || value === "") return "";
   if (lang !== "ko") return formatDocDate(value, lang);
   const d = value instanceof Date ? value : new Date(value);

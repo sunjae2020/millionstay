@@ -8,7 +8,7 @@ import { db, documentTemplatesTable, documentTemplateTranslationsTable } from "@
 import { resolveTemplate, renderString, sampleVarsFromSchema } from "../lib/documents/templateEngine.js";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf.js";
 import { renderDocumentShell } from "../lib/documents/theme.js";
-import { renderSampleDocumentHtml } from "../lib/documents/sampleDocs.js";
+import { renderSampleDocumentHtml, sampleTemplateVars } from "../lib/documents/sampleDocs.js";
 import { normalizeLang, t } from "../lib/documents/i18n.js";
 import { buildDocumentFilename, setDocumentDownloadHeaders } from "../lib/documents/filename.js";
 import { emailSender } from "../lib/email.js";
@@ -155,12 +155,20 @@ router.post("/v1/document-templates/:id/test-generate", async (req, res): Promis
     const resolved = await resolveTemplate({ kind: tpl.kind, key: tpl.key, locale, publishedOnly: false });
     if (!resolved) { res.status(404).json({ error: "No translation to render" }); return; }
 
-    const vars = { ...sampleVarsFromSchema(resolved.variablesSchema), ...(req.body?.vars ?? {}) };
+    // 스키마에서 만든 자리표시자(`[tenant_name]`, `100.00`)는 완성된 문서 위에서
+    // 깨져 보이므로, 표본 데이터가 준비된 템플릿은 그 값으로 덮어쓴다.
+    const vars = {
+      ...sampleVarsFromSchema(resolved.variablesSchema),
+      ...(sampleTemplateVars(tpl.key, resolved.locale || locale) ?? {}),
+      ...(req.body?.vars ?? {}),
+    };
     const bodyHtml = renderString(resolved.bodyHtml, vars);
     // For the four document templates, render the FULL branded document with
     // representative student/host/financial data so ops see the real output;
     // other templates fall back to the body wrapped in the generic shell.
-    const html = (await renderSampleDocumentHtml(tpl.key, bodyHtml, locale))
+    // 실제로 해석된 로케일로 렌더링한다(ko 번역만 있는 템플릿을 en 으로 미리보기해도
+    // 한국식 날짜 표기를 유지하기 위함).
+    const html = (await renderSampleDocumentHtml(tpl.key, bodyHtml, resolved.locale || locale))
       ?? renderDocumentShell({
         docType: tpl.name,
         bodyHtml: `<div class="section">${bodyHtml}</div>`,

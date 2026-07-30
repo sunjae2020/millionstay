@@ -18,7 +18,7 @@ import { getRateToAud } from "../lib/rateSnapshot";
 import { resolveLeaseTermsFromProduct } from "../lib/leaseTerms";
 import { generateLeaseRentInvoices } from "../lib/billing/leaseRentInvoices";
 import { buildContractHtml, splitAnnex, type ContractDocInput, type ContractPremises, type ContractSignature } from "../lib/documents/contractDocument";
-import { buildKoreanLeaseHtml, type KoreanLeaseDocInput } from "../lib/documents/koreanLeaseDocument";
+import { buildKoreanLeaseHtml, leaseDate, type KoreanLeaseDocInput } from "../lib/documents/koreanLeaseDocument";
 import { buildHousingStandardLeasePdf, type HousingStandardLeaseInput } from "../lib/documents/forms/housingStandardLeaseForm";
 import {
   buildMltStandardLeasePdf,
@@ -609,8 +609,11 @@ function contractTemplateVars(
   row: typeof contractsTable.$inferSelect,
   premises: ContractPremises | null,
   rents: { list: number | null; actual: number | null },
+  lang: DocLang = "en",
 ): Record<string, unknown> {
   const currency = c.currency ?? DEFAULT_CURRENCY;
+  // 계약 조항 본문 안의 날짜는 한국 계약서 표기(2026년 08월 01일)를 따른다.
+  const d = (v: string | null | undefined) => (v ? leaseDate(v, lang) : "");
   const m = (v: unknown) => (v == null || v === "" ? "" : formatDocMoney(Number(v), currency));
   const a = (v: number | null | undefined) =>
     v == null ? "" : `${Number(v).toLocaleString(undefined, { maximumFractionDigits: 3 })}`;
@@ -618,8 +621,8 @@ function contractTemplateVars(
     contract_ref: c.contract_ref ?? "",
     tenant_name: c.tenant_name ?? "",
     landlord_name: c.landlord_name ?? "",
-    start_date: row.start_date ?? "",
-    end_date: row.end_date ?? "",
+    start_date: d(row.start_date),
+    end_date: d(row.end_date),
     // 부동산의 표시 — sourced from the contract's space (unit → type fallback).
     location: premises?.location ?? "",
     building: premises?.building ?? "",
@@ -642,9 +645,9 @@ function contractTemplateVars(
     promo_monthly_rent: m(rents.actual ?? rents.list),
     rent_due_day: row.rent_due_day != null ? String(row.rent_due_day) : "",
     down_payment: m(row.down_payment),
-    down_payment_date: row.down_payment_date ?? "",
+    down_payment_date: d(row.down_payment_date),
     balance_amount: m(row.balance_amount),
-    balance_date: row.balance_date ?? "",
+    balance_date: d(row.balance_date),
     total_rent: m(row.total_rent),
     currency,
   };
@@ -743,7 +746,7 @@ export async function buildContractDocInput(
     if (tpl?.bodyHtml?.trim()) {
       // Substitute {{variables}} from the contract + its space, then split the
       // annex out so it prints as the last page of the SAME PDF.
-      const split = splitAnnex(renderString(tpl.bodyHtml, contractTemplateVars(c, row, premises, { list: listMonthlyRent, actual: actualMonthlyRent })));
+      const split = splitAnnex(renderString(tpl.bodyHtml, contractTemplateVars(c, row, premises, { list: listMonthlyRent, actual: actualMonthlyRent }, lang)));
       termsText = split.terms;
       annexText = split.annex;
       isKoreanLease = tpl === leaseTpl;
