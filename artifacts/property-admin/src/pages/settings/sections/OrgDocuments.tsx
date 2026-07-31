@@ -1,9 +1,10 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Eye, FileText, Trash2, Upload } from "lucide-react";
+import { Eye, FileText, FolderUp, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
+import { FileDropZone, DIRECTORY_INPUT_PROPS } from "@/components/FileDropZone";
 import { apiFetch, apiJson } from "@/lib/apiFetch";
 import { formatDate } from "@/lib/date";
 
@@ -36,6 +37,7 @@ export function OrgDocuments() {
   const { previewConfig, openPreview, closePreview } = useDocumentPreview();
 
   const fileRef = useRef<HTMLInputElement>(null);
+  const folderRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,15 +46,16 @@ export function OrgDocuments() {
     queryFn: () => apiJson<OrgDocument[]>(ENDPOINT),
   });
 
-  async function handleUpload(files?: FileList | null) {
-    if (!files?.length) return;
+  async function handleUpload(input?: FileList | File[] | null) {
+    const files = (input ? Array.from(input) : []).filter((f) => f.size > 0);
+    if (!files.length) return;
     setUploading(true);
     setError(null);
     const failures: string[] = [];
     try {
       // Uploaded one at a time so a single rejected file does not take the rest
       // of the selection down with it.
-      for (const file of Array.from(files)) {
+      for (const file of files) {
         const form = new FormData();
         form.append("file", file);
         const res = await apiFetch(ENDPOINT, { method: "POST", body: form });
@@ -68,6 +71,7 @@ export function OrgDocuments() {
       setUploading(false);
       qc.invalidateQueries({ queryKey: ["org-documents"] });
       if (fileRef.current) fileRef.current.value = "";
+      if (folderRef.current) folderRef.current.value = "";
     }
   }
 
@@ -84,14 +88,23 @@ export function OrgDocuments() {
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <input ref={fileRef} type="file" multiple className="hidden"
           onChange={(e) => void handleUpload(e.target.files)} />
+        <input ref={folderRef} type="file" multiple className="hidden"
+          {...DIRECTORY_INPUT_PROPS}
+          onChange={(e) => void handleUpload(e.target.files)} />
         <Button type="button" variant="outline" size="sm" className="gap-1.5"
           disabled={uploading} onClick={() => fileRef.current?.click()}>
           <Upload className="h-4 w-4" />
           {uploading ? t("common.loading") : t("settings_org_docs.upload")}
         </Button>
+        <Button type="button" variant="outline" size="sm" className="gap-1.5"
+          disabled={uploading} onClick={() => folderRef.current?.click()}>
+          <FolderUp className="h-4 w-4" />
+          {t("file_drop.upload_folder", "Upload folder")}
+        </Button>
         {error && <p className="text-xs text-destructive">{error}</p>}
       </div>
 
+      <FileDropZone onFiles={(files) => void handleUpload(files)} busy={uploading}>
       <div className="rounded-md border bg-card overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 border-b">
@@ -136,6 +149,7 @@ export function OrgDocuments() {
           </tbody>
         </table>
       </div>
+      </FileDropZone>
 
       <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
     </div>

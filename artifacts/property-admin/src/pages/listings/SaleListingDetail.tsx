@@ -17,6 +17,7 @@ import {
   Loader2, X, Star,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { FileDropZone } from "@/components/FileDropZone";
 import { apiFetch } from "@/lib/apiFetch";
 
 // Non-English locales the guest site (million-stay-web) ships. English is the
@@ -136,7 +137,7 @@ export default function SaleListingDetail() {
     setTranslations((prev) => ({ ...prev, [lang]: { ...(prev[lang] ?? EMPTY_COPY), [field]: val } }));
 
   // Upload files → Cloudinary (via backend) → return URLs.
-  async function uploadFiles(files: FileList): Promise<string[]> {
+  async function uploadFiles(files: FileList | File[]): Promise<string[]> {
     const fd = new FormData();
     Array.from(files).forEach((f) => fd.append("images", f));
     const res = await apiFetch("/api/v1/sale-listings/images", { method: "POST", body: fd });
@@ -161,9 +162,16 @@ export default function SaleListingDetail() {
 
   async function onGallerySelected(e: React.ChangeEvent<HTMLInputElement>) {
     if (!e.target.files?.length) return;
+    await addGalleryFiles(Array.from(e.target.files));
+  }
+
+  /** Shared by the picker and by drag-drop / ⌘V of a group of photos. */
+  async function addGalleryFiles(picked: File[]) {
+    const files = picked.filter((f) => f.type.startsWith("image/"));
+    if (!files.length) return;
     setUploading(true);
     try {
-      const urls = await uploadFiles(e.target.files);
+      const urls = await uploadFiles(files);
       setStruct((prev) => ({ ...prev, gallery: [...prev.gallery, ...urls] }));
     } catch (err: any) {
       toast({ title: t("listings.upload_error"), description: err.message, variant: "destructive" });
@@ -303,6 +311,7 @@ export default function SaleListingDetail() {
 
             <div>
               <Label className="mb-2 block">{t("listings.field_gallery")}</Label>
+              <FileDropZone onFiles={(files) => void addGalleryFiles(files)} busy={uploading}>
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                 {struct.gallery.map((url, i) => (
                   <div key={`${url}-${i}`} className="relative group aspect-[4/3] rounded-lg border overflow-hidden bg-muted">
@@ -326,6 +335,7 @@ export default function SaleListingDetail() {
                 </button>
                 <input ref={galleryInputRef} type="file" accept="image/*" multiple className="hidden" onChange={onGallerySelected} />
               </div>
+              </FileDropZone>
             </div>
           </TabsContent>
 

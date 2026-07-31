@@ -22,7 +22,8 @@ import { AccountIdentityPanel, type FillSource } from "@/components/AccountIdent
 import { EntityPreviewDialog, type EntityPreview } from "@/components/EntityPreviewDialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch, apiJson } from "@/lib/apiFetch";
-import { ArrowLeft, Save, ExternalLink, AlertTriangle, Building2, FileText, Eye, Upload, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, ExternalLink, AlertTriangle, Building2, FileText, FolderUp, Eye, Upload, Trash2 } from "lucide-react";
+import { FileDropZone, DIRECTORY_INPUT_PROPS } from "@/components/FileDropZone";
 import { Link } from "wouter";
 import { useBrand } from "@/contexts/ThemeContext";
 import { SUPPORTED_CURRENCIES, formatMoney } from "@/lib/currency";
@@ -199,25 +200,34 @@ export default function AccountDetail() {
 
   // Account files: upload / delete straight from the Files tab.
   const docInputRef = useRef<HTMLInputElement>(null);
+  const docFolderRef = useRef<HTMLInputElement>(null);
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [docError, setDocError] = useState<string | null>(null);
 
-  async function handleDocUpload(file?: File) {
-    if (!file || !id) return;
+  /** Takes a whole selection — picked, dropped or pasted — one POST per file. */
+  async function handleDocUpload(input?: FileList | File[] | null) {
+    const files = (input ? Array.from(input) : []).filter((f) => f.size > 0);
+    if (!files.length || !id) return;
     setUploadingDoc(true);
     setDocError(null);
+    const failures: string[] = [];
     try {
-      const form = new FormData();
-      form.append("file", file);
-      const res = await apiFetch(`/api/v1/accounts/${id}/documents`, { method: "POST", body: form });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(data?.error ?? t('account.file_upload_failed'));
-      qc.invalidateQueries({ queryKey: ["account-documents", id] });
+      // One at a time so a single rejected file does not take the rest down.
+      for (const file of files) {
+        const form = new FormData();
+        form.append("file", file);
+        const res = await apiFetch(`/api/v1/accounts/${id}/documents`, { method: "POST", body: form });
+        const data = await res.json().catch(() => null);
+        if (!res.ok) failures.push(`${file.name}: ${data?.error ?? res.status}`);
+      }
+      if (failures.length) setDocError(failures.join(" / "));
     } catch (err) {
       setDocError(err instanceof Error ? err.message : t('account.file_upload_failed'));
     } finally {
       setUploadingDoc(false);
+      qc.invalidateQueries({ queryKey: ["account-documents", id] });
       if (docInputRef.current) docInputRef.current.value = "";
+      if (docFolderRef.current) docFolderRef.current.value = "";
     }
   }
 
@@ -979,15 +989,24 @@ export default function AccountDetail() {
             {/* ── Files ───────────────────────────────────────────────── */}
             <TabsContent value="documents">
               <div className="max-w-4xl mb-3 flex items-center gap-3">
-                <input ref={docInputRef} type="file" className="hidden"
-                  onChange={(e) => void handleDocUpload(e.target.files?.[0])} />
+                <input ref={docInputRef} type="file" multiple className="hidden"
+                  onChange={(e) => void handleDocUpload(e.target.files)} />
+                <input ref={docFolderRef} type="file" multiple className="hidden"
+                  {...DIRECTORY_INPUT_PROPS}
+                  onChange={(e) => void handleDocUpload(e.target.files)} />
                 <Button type="button" variant="outline" size="sm" className="gap-1.5"
                   disabled={uploadingDoc} onClick={() => docInputRef.current?.click()}>
                   <Upload className="h-4 w-4" />
                   {uploadingDoc ? t('common.loading') : t('account.upload_file')}
                 </Button>
+                <Button type="button" variant="outline" size="sm" className="gap-1.5"
+                  disabled={uploadingDoc} onClick={() => docFolderRef.current?.click()}>
+                  <FolderUp className="h-4 w-4" />
+                  {t("file_drop.upload_folder", "Upload folder")}
+                </Button>
                 {docError && <p className="text-xs text-destructive">{docError}</p>}
               </div>
+              <FileDropZone onFiles={(files) => void handleDocUpload(files)} busy={uploadingDoc} className="max-w-4xl">
               <div className="rounded-md border bg-card overflow-x-auto max-w-4xl">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50 border-b">
@@ -1026,6 +1045,7 @@ export default function AccountDetail() {
                   </tbody>
                 </table>
               </div>
+              </FileDropZone>
             </TabsContent>
 
             <TabsContent value="bookings">

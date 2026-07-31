@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, FolderOpen, Upload, CheckCircle2, XCircle, AlertCircle, ImageIcon, Loader2 } from "lucide-react";
 import { saveSession } from "./BulkPhotoUploadList";
+import { FileDropZone, relativePathOf } from "@/components/FileDropZone";
 
 interface SpaceRow {
   id: number;
@@ -70,14 +71,18 @@ export default function BulkPhotoUpload() {
     queryFn: () => apiFetch("/api/v1/spaces").then((r) => r.json()),
   });
 
-  const handleFolderSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = Array.from(e.target.files ?? []);
+  /**
+   * Group a picked/dropped folder tree by its immediate sub-folder, which is
+   * the space name. Works for the folder picker (webkitRelativePath) and for a
+   * folder dragged out of Finder/Explorer alike — see `relativePathOf`.
+   */
+  const acceptFiles = useCallback(
+    (files: File[]) => {
       if (!files.length) return;
 
       const map = new Map<string, File[]>();
       for (const file of files) {
-        const parts = file.webkitRelativePath.split("/");
+        const parts = relativePathOf(file).split("/");
         const key = parts.length >= 3 ? parts[1] : parts[0];
         const arr = map.get(key) ?? [];
         arr.push(file);
@@ -103,6 +108,11 @@ export default function BulkPhotoUpload() {
       setDone(false);
     },
     [spaces],
+  );
+
+  const handleFolderSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => acceptFiles(Array.from(e.target.files ?? [])),
+    [acceptFiles],
   );
 
   const setMatch = (folderName: string, spaceId: number | null) => {
@@ -212,7 +222,8 @@ export default function BulkPhotoUpload() {
 
       <div className="p-6 space-y-6 max-w-5xl">
         {/* Step 1 — Folder picker */}
-        <div className="border rounded-lg p-8 bg-muted/30 flex flex-col items-center gap-4">
+        <FileDropZone onFiles={acceptFiles} busy={uploading} hideHint alwaysPaste
+          className="border p-8 bg-muted/30 flex flex-col items-center gap-4">
           <FolderOpen className="h-12 w-12 text-muted-foreground" />
           <div className="text-center">
             <p className="font-medium">{t("bulk_photo.select_root_folder")}</p>
@@ -234,7 +245,10 @@ export default function BulkPhotoUpload() {
             accept="image/*"
             onChange={handleFolderSelect}
           />
-        </div>
+          <p className="text-xs text-muted-foreground">
+            {t("file_drop.hint", "Drag files or a folder here, or press ⌘/Ctrl+V to paste them")}
+          </p>
+        </FileDropZone>
 
         {/* Summary badges */}
         {groups.length > 0 && (

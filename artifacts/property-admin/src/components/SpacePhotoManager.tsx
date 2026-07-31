@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { apiFetch, getStoredToken } from "@/lib/apiFetch";
 import { ImagePlus, Star, Trash2, Upload, Loader2, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { filesFromDataTransfer } from "@/components/FileDropZone";
 
 function apiFetchMultipart(path: string, body: FormData): Promise<Response> {
   const token = getStoredToken();
@@ -34,6 +35,7 @@ interface SpacePhotoManagerProps {
 export function SpacePhotoManager({ spaceId }: SpacePhotoManagerProps) {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pasteArmed = useRef(false);
 
   const [images, setImages] = useState<SpaceImage[]>([]);
   const [imageSource, setImageSource] = useState<"own" | "parent" | "property">("own");
@@ -75,16 +77,36 @@ export function SpacePhotoManager({ spaceId }: SpacePhotoManagerProps) {
     setIsDragging(false);
   }
 
-  function handleDrop(e: React.DragEvent) {
+  /** Drop — a folder of photos is walked so the whole tree is staged at once. */
+  async function handleDrop(e: React.DragEvent) {
     e.preventDefault();
     setIsDragging(false);
-    const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"));
-    if (files.length > 0) setPendingFiles((prev) => [...prev, ...files]);
+    stageFiles(await filesFromDataTransfer(e.dataTransfer));
   }
 
+  function stageFiles(files: File[]) {
+    const images = files.filter((f) => f.type.startsWith("image/"));
+    if (images.length > 0) setPendingFiles((prev) => [...prev, ...images]);
+  }
+
+  // ⌘/Ctrl+V with photos copied in Finder/Explorer, while the pointer is on the
+  // drop area — the same gesture the rest of the admin uses.
+  useEffect(() => {
+    function onPaste(e: ClipboardEvent) {
+      if (!pasteArmed.current || uploading) return;
+      const target = e.target as HTMLElement | null;
+      if (target?.closest("input:not([type='file']), textarea, [contenteditable='true']")) return;
+      const files = Array.from(e.clipboardData?.files ?? []);
+      if (!files.length) return;
+      e.preventDefault();
+      stageFiles(files);
+    }
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  }, [uploading]);
+
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []).filter((f) => f.type.startsWith("image/"));
-    if (files.length > 0) setPendingFiles((prev) => [...prev, ...files]);
+    stageFiles(Array.from(e.target.files ?? []));
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
@@ -170,9 +192,11 @@ export function SpacePhotoManager({ spaceId }: SpacePhotoManagerProps) {
       )}
 
       <div
+        onMouseEnter={() => { pasteArmed.current = true; }}
+        onMouseLeave={() => { pasteArmed.current = false; }}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
+        onDrop={(e) => void handleDrop(e)}
         onClick={() => !pendingFiles.length && fileInputRef.current?.click()}
         className={cn(
           "border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer",
@@ -190,6 +214,9 @@ export function SpacePhotoManager({ spaceId }: SpacePhotoManagerProps) {
         <ImagePlus className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
         <p className="text-sm font-medium text-slate-700">{t("space_photos.dropzone")}</p>
         <p className="text-xs text-muted-foreground mt-1">{t("space_photos.formats")}</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          {t("file_drop.hint", "Drag files or a folder here, or press ⌘/Ctrl+V to paste them")}
+        </p>
       </div>
 
       {pendingFiles.length > 0 && (

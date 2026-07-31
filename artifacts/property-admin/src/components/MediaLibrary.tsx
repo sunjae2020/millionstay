@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Upload, Copy, Trash2, ImageOff, Check } from "lucide-react";
+import { FileDropZone } from "@/components/FileDropZone";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -78,11 +79,14 @@ export function MediaGrid({
       toast({ variant: "destructive", title: t("media.toast_delete_failed_title"), description: t("media.toast_delete_failed_desc") }),
   });
 
-  const handleUpload = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
+  const handleUpload = async (input: FileList | File[] | null) => {
+    // Dropped folders arrive flattened, so anything that is not an image (a
+    // stray .DS_Store, a PDF) is dropped before it reaches Cloudinary.
+    const files = (input ? Array.from(input) : []).filter((f) => f.type.startsWith("image/"));
+    if (files.length === 0) return;
     setUploading(true);
     try {
-      for (const file of Array.from(files)) {
+      for (const file of files) {
         const fd = new FormData();
         fd.append("image", file);
         fd.append("folder", folder);
@@ -141,6 +145,7 @@ export function MediaGrid({
         </div>
       </div>
 
+      <FileDropZone onFiles={(files) => void handleUpload(files)} busy={uploading}>
       {isLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
           {Array.from({ length: 10 }).map((_, i) => (
@@ -204,6 +209,7 @@ export function MediaGrid({
           ))}
         </div>
       )}
+      </FileDropZone>
     </div>
   );
 }

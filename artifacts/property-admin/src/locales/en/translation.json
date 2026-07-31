@@ -5614,6 +5614,8 @@
     "personOnly": "Identity and visa documents are destroyed after 30 days, so they must be filed against the person they identify — not a contract.",
     "confirm": "File this document",
     "alreadyFiled": "Filed against {{type}} #{{id}} as {{docType}}.",
+    "uploadFolder": "Upload folder",
+    "emptyDrop": "Nothing here yet. Drag a folder of documents in, paste files with ⌘/Ctrl+V, or use the buttons above.",
     "status": {
       "all": "All",
       "review": "Needs review",
@@ -5741,5 +5743,11 @@
     "allComplete": "Every tenancy has its required paperwork.",
     "noneExpiring": "Nothing is due for renewal in this window.",
     "expiredNotice": "{{n}} tenancies are past their end date with no successor."
+  },
+  "file_drop": {
+    "hint": "Drag files or a folder here, or press ⌘/Ctrl+V to paste them",
+    "drop_now": "Drop the files here",
+    "uploading": "Uploading…",
+    "upload_folder": "Upload folder"
   }
 }

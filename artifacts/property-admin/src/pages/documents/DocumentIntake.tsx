@@ -6,11 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, FileText, Loader2, RefreshCw, Trash2, Upload, Wand2 } from "lucide-react";
+import { Eye, FileText, FolderUp, Loader2, RefreshCw, Trash2, Upload, Wand2 } from "lucide-react";
 import { apiFetch, apiJson } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/date";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
+import { FileDropZone, chunkFiles, DIRECTORY_INPUT_PROPS } from "@/components/FileDropZone";
 
 /**
  * Bulk document intake — 서류 일괄 업로드 & 검토.
@@ -110,6 +111,9 @@ const FIELD_ORDER = [
   "notes",
 ] as const;
 
+/** Matches the server's per-request cap; bigger drops are split into batches. */
+const MAX_FILES_PER_REQUEST = 50;
+
 function formatSize(bytes: number | null): string {
   if (!bytes) return "—";
   if (bytes < 1024) return `${bytes} B`;
@@ -124,6 +128,7 @@ export default function DocumentIntake() {
   const { previewConfig, openPreview, closePreview } = useDocumentPreview();
 
   const fileRef = useRef<HTMLInputElement>(null);
+  const folderRef = useRef<HTMLInputElement>(null);
   const [statusFilter, setStatusFilter] = useState("review");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -184,21 +189,32 @@ export default function DocumentIntake() {
     void qc.invalidateQueries({ queryKey: ["document-intake-summary"] });
   }
 
-  async function handleUpload(files: FileList | null) {
-    if (!files?.length) return;
+  async function handleUpload(input: FileList | File[] | null) {
+    const files = (input ? Array.from(input) : []).filter((f) => f.size > 0);
+    if (!files.length) return;
     setUploading(true);
     try {
-      const form = new FormData();
-      for (const f of Array.from(files)) form.append("files", f);
-      const res = await apiFetch("/api/v1/document-intake", { method: "POST", body: form });
-      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Upload failed");
-      const body = (await res.json()) as { uploaded: number; scanning: number; failed: Array<{ file_name: string }> };
+      // The server takes 50 files per request, so a dropped folder larger than
+      // that goes up as several batches instead of being silently truncated.
+      let uploaded = 0;
+      let scanning = 0;
+      let failed = 0;
+      for (const group of chunkFiles(files, MAX_FILES_PER_REQUEST)) {
+        const form = new FormData();
+        for (const f of group) form.append("files", f);
+        const res = await apiFetch("/api/v1/document-intake", { method: "POST", body: form });
+        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Upload failed");
+        const body = (await res.json()) as { uploaded: number; scanning: number; failed: Array<{ file_name: string }> };
+        uploaded += body.uploaded;
+        scanning += body.scanning;
+        failed += body.failed.length;
+      }
       toast({
         title: t("intake.uploaded", "Uploaded"),
         description: t(
           "intake.uploadedDesc",
           "{{uploaded}} file(s) stored, {{scanning}} being read. {{failed}} failed.",
-          { uploaded: body.uploaded, scanning: body.scanning, failed: body.failed.length },
+          { uploaded, scanning, failed },
         ),
       });
       setStatusFilter("_all");
@@ -212,6 +228,7 @@ export default function DocumentIntake() {
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
+      if (folderRef.current) folderRef.current.value = "";
     }
   }
 
@@ -310,9 +327,22 @@ export default function DocumentIntake() {
           className="hidden"
           onChange={(e) => void handleUpload(e.target.files)}
         />
+        <input
+          ref={folderRef}
+          type="file"
+          multiple
+          className="hidden"
+          {...DIRECTORY_INPUT_PROPS}
+          onChange={(e) => void handleUpload(e.target.files)}
+        />
         <Button onClick={() => fileRef.current?.click()} disabled={uploading}>
           {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
           {t("intake.upload", "Upload files")}
+        </Button>
+
+        <Button variant="outline" onClick={() => folderRef.current?.click()} disabled={uploading}>
+          <FolderUp className="mr-2 h-4 w-4" />
+          {t("intake.uploadFolder", "Upload folder")}
         </Button>
 
         {confidentBatch && (
@@ -351,15 +381,32 @@ export default function DocumentIntake() {
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
         {/* ── Queue ───────────────────────────────────────────────────── */}
-        <div className="rounded-lg border bg-card">
-          <div className="border-b px-4 py-2 text-sm font-medium">
-            {t("intake.queue", "Queue")}
+        {/* Doubles as the drop target: a folder dragged out of Finder/Explorer,
+            or files pasted with ⌘/Ctrl+V, go straight into the queue. */}
+        <FileDropZone
+          onFiles={(files) => void handleUpload(files)}
+          busy={uploading}
+          hideHint
+          alwaysPaste
+          className="border bg-card"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2 text-sm font-medium">
+            <span>{t("intake.queue", "Queue")}</span>
+            <span className="flex items-center gap-1 text-xs font-normal text-muted-foreground">
+              {t("file_drop.hint", "Drag files or a folder here, or press ⌘/Ctrl+V to paste them")}
+            </span>
           </div>
+          {uploading && (
+            <div className="flex items-center gap-2 border-b bg-muted/40 px-4 py-2 text-xs text-muted-foreground">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              {t("file_drop.uploading", "Uploading…")}
+            </div>
+          )}
           {isLoading ? (
             <div className="p-6 text-center text-sm text-muted-foreground">{t("common.loading", "Loading…")}</div>
           ) : !items?.length ? (
             <div className="p-6 text-center text-sm text-muted-foreground">
-              {t("intake.empty", "Nothing here. Upload a folder of documents to start.")}
+              {t("intake.emptyDrop", "Nothing here yet. Drag a folder of documents in, paste files with ⌘/Ctrl+V, or use the buttons above.")}
             </div>
           ) : (
             <ul className="max-h-[70vh] divide-y overflow-y-auto">
@@ -402,7 +449,7 @@ export default function DocumentIntake() {
               ))}
             </ul>
           )}
-        </div>
+        </FileDropZone>
 
         {/* ── Review pane ─────────────────────────────────────────────── */}
         <div className="rounded-lg border bg-card p-4">

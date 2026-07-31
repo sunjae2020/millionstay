@@ -22,8 +22,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DateInput } from "@/components/ui/date-input";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
-import { Upload } from "lucide-react";
+import { FolderUp, Upload } from "lucide-react";
 import EntityDocuments, { entityDocumentsKey } from "@/components/EntityDocuments";
+import { FileDropZone, DIRECTORY_INPUT_PROPS } from "@/components/FileDropZone";
 
 /** 오늘 날짜를 YYYY-MM-DD 로. 날인일 기본값. */
 function today(): string {
@@ -36,6 +37,7 @@ export default function ContractDocuments({ contractId }: { contractId: number }
   const { toast } = useToast();
   const qc = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
+  const folderRef = useRef<HTMLInputElement>(null);
 
   const [isExecution, setIsExecution] = useState(false);
   const [signedOn, setSignedOn] = useState(today());
@@ -72,8 +74,9 @@ export default function ContractDocuments({ contractId }: { contractId: number }
     return `${file.name}: ${data?.error ?? res.status}`;
   }
 
-  async function handleUpload(files?: FileList | null) {
-    if (!files?.length) return;
+  async function handleUpload(input?: FileList | File[] | null) {
+    const files = (input ? Array.from(input) : []).filter((f) => f.size > 0);
+    if (!files.length) return;
     setUploading(true);
     setError(null);
     const failures: string[] = [];
@@ -83,7 +86,7 @@ export default function ContractDocuments({ contractId }: { contractId: number }
         if (failure) failures.push(failure);
       } else {
         // 한 건씩 — 하나가 거부돼도 나머지는 올라간다.
-        for (const file of Array.from(files)) {
+        for (const file of files) {
           const failure = await uploadAttachment(file);
           if (failure) failures.push(failure);
         }
@@ -100,12 +103,19 @@ export default function ContractDocuments({ contractId }: { contractId: number }
       // 쓰는 키와 정확히 같아야 그 목록이 새로고침된다.
       qc.invalidateQueries({ queryKey: ["doc-snapshots", "contract", String(contractId)] });
       if (fileRef.current) fileRef.current.value = "";
+      if (folderRef.current) folderRef.current.value = "";
     }
   }
 
   return (
     <div className="space-y-4">
-      <div className="border rounded-lg bg-white p-4 sm:p-6">
+      {/* 파인더/탐색기에서 끌어다 놓거나 ⌘/Ctrl+V 로 붙여넣어도 같은 경로로 올라간다. */}
+      <FileDropZone
+        onFiles={(files) => void handleUpload(files)}
+        busy={uploading}
+        hideHint
+        className="border rounded-lg bg-white p-4 sm:p-6"
+      >
         <h2 className="text-sm font-semibold uppercase text-primary tracking-wide mb-1">{t("contract_docs.section")}</h2>
         <p className="text-xs text-muted-foreground mb-4">{t("entity_docs.description")}</p>
 
@@ -143,14 +153,31 @@ export default function ContractDocuments({ contractId }: { contractId: number }
           accept="application/pdf,image/png,image/jpeg,image/tiff"
           onChange={(e) => void handleUpload(e.target.files)}
         />
-        <Button type="button" variant="outline" className="mt-4 gap-1.5"
-          disabled={uploading} onClick={() => fileRef.current?.click()}>
-          <Upload className="h-4 w-4" />
-          {uploading ? t("contract.scan_uploading") : t("entity_docs.upload")}
-        </Button>
+        <input
+          ref={folderRef} type="file" multiple className="hidden"
+          {...DIRECTORY_INPUT_PROPS}
+          accept="application/pdf,image/png,image/jpeg,image/tiff"
+          onChange={(e) => void handleUpload(e.target.files)}
+        />
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button type="button" variant="outline" className="gap-1.5"
+            disabled={uploading} onClick={() => fileRef.current?.click()}>
+            <Upload className="h-4 w-4" />
+            {uploading ? t("contract.scan_uploading") : t("entity_docs.upload")}
+          </Button>
+          {/* 체결 처리는 한 건만 받으므로 폴더 통째 업로드는 일반 첨부일 때만. */}
+          {!isExecution && (
+            <Button type="button" variant="outline" className="gap-1.5"
+              disabled={uploading} onClick={() => folderRef.current?.click()}>
+              <FolderUp className="h-4 w-4" />
+              {t("file_drop.upload_folder", "Upload folder")}
+            </Button>
+          )}
+        </div>
         <p className="text-[11px] text-muted-foreground mt-1.5">{t("contract.scan_formats")}</p>
+        <p className="text-[11px] text-muted-foreground">{t("file_drop.hint", "Drag files or a folder here, or press ⌘/Ctrl+V to paste them")}</p>
         {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
-      </div>
+      </FileDropZone>
 
       <EntityDocuments entityType="contract" entityId={contractId} hideUpload />
     </div>

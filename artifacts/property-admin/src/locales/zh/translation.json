@@ -5614,6 +5614,8 @@
     "personOnly": "身份证件与签证文件将在 30 天后销毁，因此必须归档到本人名下，而不是合同。",
     "confirm": "归档此文件",
     "alreadyFiled": "已作为 {{docType}} 归档至 {{type}} #{{id}}。",
+    "uploadFolder": "上传文件夹",
+    "emptyDrop": "暂无内容。可拖入文件夹、用 ⌘/Ctrl+V 粘贴文件，或使用上方按钮。",
     "status": {
       "all": "全部",
       "review": "待复核",
@@ -5741,5 +5743,11 @@
     "allComplete": "所有合同的必备文件均已齐全。",
     "noneExpiring": "该期间内没有需要续签的合同。",
     "expiredNotice": "有 {{n}} 份合同已到期且没有后续合同。"
+  },
+  "file_drop": {
+    "hint": "将文件或文件夹拖到此处，或按 ⌘/Ctrl+V 粘贴",
+    "drop_now": "放开即可上传",
+    "uploading": "上传中…",
+    "upload_folder": "上传文件夹"
   }
 }

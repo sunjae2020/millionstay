@@ -5614,6 +5614,8 @@
     "personOnly": "Giấy tờ tùy thân và thị thực bị hủy sau 30 ngày, nên phải lưu theo cá nhân chứ không phải theo hợp đồng.",
     "confirm": "Lưu tài liệu này",
     "alreadyFiled": "Đã lưu vào {{type}} #{{id}} dưới dạng {{docType}}.",
+    "uploadFolder": "Tải thư mục lên",
+    "emptyDrop": "Chưa có gì ở đây. Kéo một thư mục tài liệu vào, dán tệp bằng ⌘/Ctrl+V, hoặc dùng các nút phía trên.",
     "status": {
       "all": "Tất cả",
       "review": "Cần xem xét",
@@ -5741,5 +5743,11 @@
     "allComplete": "Mọi hợp đồng đều đủ giấy tờ bắt buộc.",
     "noneExpiring": "Không có hợp đồng nào cần gia hạn trong khoảng này.",
     "expiredNotice": "Có {{n}} hợp đồng đã hết hạn mà chưa có hợp đồng kế tiếp."
+  },
+  "file_drop": {
+    "hint": "Kéo tệp hoặc thư mục vào đây, hoặc nhấn ⌘/Ctrl+V để dán",
+    "drop_now": "Thả tệp vào đây để tải lên",
+    "uploading": "Đang tải lên…",
+    "upload_folder": "Tải thư mục lên"
   }
 }

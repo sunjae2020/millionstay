@@ -5614,6 +5614,8 @@
     "personOnly": "신분증·비자는 30일 후 파기되므로 계약이 아니라 해당 인물에게 첨부해야 합니다.",
     "confirm": "이 서류 첨부하기",
     "alreadyFiled": "{{type}} #{{id}}에 {{docType}}(으)로 첨부되었습니다.",
+    "uploadFolder": "폴더 업로드",
+    "emptyDrop": "아직 없습니다. 서류 폴더를 끌어 놓거나 ⌘/Ctrl+V로 붙여넣고, 위 버튼을 써도 됩니다.",
     "status": {
       "all": "전체",
       "review": "검토 필요",
@@ -5741,5 +5743,11 @@
     "allComplete": "필수 서류가 빠진 계약이 없습니다.",
     "noneExpiring": "이 기간에 갱신할 계약이 없습니다.",
     "expiredNotice": "만료됐는데 후속 계약이 없는 계약이 {{n}}건 있습니다."
+  },
+  "file_drop": {
+    "hint": "파일이나 폴더를 여기로 끌어 놓거나 ⌘/Ctrl+V로 붙여넣으세요",
+    "drop_now": "여기에 놓으면 업로드됩니다",
+    "uploading": "업로드 중…",
+    "upload_folder": "폴더 업로드"
   }
 }

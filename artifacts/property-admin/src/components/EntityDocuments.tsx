@@ -1,9 +1,10 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Eye, FileText, Lock, Trash2, Upload } from "lucide-react";
+import { Eye, FileText, FolderUp, Lock, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
+import { FileDropZone, DIRECTORY_INPUT_PROPS } from "@/components/FileDropZone";
 import { apiFetch, apiJson } from "@/lib/apiFetch";
 import { formatDate } from "@/lib/date";
 
@@ -97,6 +98,7 @@ export default function EntityDocuments({ entityType, entityId, defaultDocType =
   // file by year and keyword later. The year defaults to now because an optional
   // field left blank on every upload indexes nothing — and it is the year on the
   // document that matters, so it stays editable.
+  const folderRef = useRef<HTMLInputElement>(null);
   const [docYear, setDocYear] = useState<string>(String(new Date().getFullYear()));
   const [tagInput, setTagInput] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -110,14 +112,15 @@ export default function EntityDocuments({ entityType, entityId, defaultDocType =
     queryFn: () => apiJson<EntityDocument[]>(listPath),
   });
 
-  async function handleUpload(files?: FileList | null) {
-    if (!files?.length) return;
+  async function handleUpload(input?: FileList | File[] | null) {
+    const files = (input ? Array.from(input) : []).filter((f) => f.size > 0);
+    if (!files.length) return;
     setUploading(true);
     setError(null);
     const failures: string[] = [];
     try {
       // One at a time so a single rejected file does not take the rest down.
-      for (const file of Array.from(files)) {
+      for (const file of files) {
         const form = new FormData();
         form.append("file", file);
         form.append("entity_type", entityType);
@@ -138,6 +141,7 @@ export default function EntityDocuments({ entityType, entityId, defaultDocType =
       setUploading(false);
       qc.invalidateQueries({ queryKey });
       if (fileRef.current) fileRef.current.value = "";
+      if (folderRef.current) folderRef.current.value = "";
     }
   }
 
@@ -174,16 +178,32 @@ export default function EntityDocuments({ entityType, entityId, defaultDocType =
             />
             <input ref={fileRef} type="file" multiple className="hidden"
               onChange={(e) => void handleUpload(e.target.files)} />
+            <input ref={folderRef} type="file" multiple className="hidden"
+              {...DIRECTORY_INPUT_PROPS}
+              onChange={(e) => void handleUpload(e.target.files)} />
             <Button type="button" variant="outline" size="sm" className="gap-1.5"
               disabled={uploading} onClick={() => fileRef.current?.click()}>
               <Upload className="h-4 w-4" />
               {uploading ? t("common.loading") : t("entity_docs.upload")}
+            </Button>
+            <Button type="button" variant="outline" size="sm" className="gap-1.5"
+              disabled={uploading} onClick={() => folderRef.current?.click()}>
+              <FolderUp className="h-4 w-4" />
+              {t("file_drop.upload_folder", "Upload folder")}
             </Button>
           </div>
         </>
       )}
       {error && <p className="mb-3 text-xs text-destructive">{error}</p>}
 
+      {/* Dropping a folder of scans onto the list is the fastest way to file a
+          record's paperwork; the panel keeps its own per-file POST loop. */}
+      <FileDropZone
+        onFiles={(files) => void handleUpload(files)}
+        disabled={hideUpload}
+        busy={uploading}
+        hideHint={hideUpload}
+      >
       <div className="rounded-lg border bg-white overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 border-b">
@@ -255,6 +275,7 @@ export default function EntityDocuments({ entityType, entityId, defaultDocType =
           </tbody>
         </table>
       </div>
+      </FileDropZone>
 
       <DocumentPreviewDialog config={previewConfig} onClose={closePreview} />
     </div>
