@@ -41,6 +41,9 @@ interface LibraryDocument {
   file_url: string;
   entity_label: string | null;
   detail_url: string | null;
+  /** The unit this document ultimately belongs to — via its contract, usually. */
+  space_id: number | null;
+  space_name: string | null;
 }
 
 interface Facet<T> {
@@ -54,6 +57,8 @@ interface LibraryResponse {
     years: Array<Facet<number | null>>;
     doc_types: Array<Facet<string>>;
     entity_types: Array<Facet<string>>;
+    /** Units carry a label because there are hundreds of them, and they need a picker. */
+    units: Array<{ value: number; label: string; count: number }>;
   };
   /** True when the result set hit the server's cap — narrow the filters. */
   truncated: boolean;
@@ -120,6 +125,8 @@ export default function DocumentLibrary() {
   const [year, setYear] = useState<string>("_all");
   const [docType, setDocType] = useState<string>("_all");
   const [entityType, setEntityType] = useState<string>("_all");
+  // Units are a dropdown, not chips: Metheim alone has 269 of them.
+  const [unit, setUnit] = useState<string>("_all");
 
   const [editing, setEditing] = useState<LibraryDocument | null>(null);
   const [editYear, setEditYear] = useState("");
@@ -134,8 +141,9 @@ export default function DocumentLibrary() {
     if (year !== "_all") p.set("year", year);
     if (docType !== "_all") p.set("doc_type", docType);
     if (entityType !== "_all") p.set("entity_type", entityType);
+    if (unit !== "_all") p.set("space_id", unit);
     return p.toString();
-  }, [query, year, docType, entityType]);
+  }, [query, year, docType, entityType, unit]);
 
   const { data, isLoading } = useQuery<LibraryResponse>({
     queryKey: ["document-library", params],
@@ -178,12 +186,14 @@ export default function DocumentLibrary() {
     }
   }
 
-  const activeFilters = [year !== "_all", docType !== "_all", entityType !== "_all", Boolean(query)].filter(Boolean).length;
+  const activeFilters = [year !== "_all", docType !== "_all", entityType !== "_all", unit !== "_all", Boolean(query)]
+    .filter(Boolean).length;
 
   function clearFilters() {
     setYear("_all");
     setDocType("_all");
     setEntityType("_all");
+    setUnit("_all");
     setSearch("");
     setQuery("");
   }
@@ -273,6 +283,20 @@ export default function DocumentLibrary() {
         </div>
 
         <div className="space-y-2">
+          <p className="text-xs font-medium text-muted-foreground">{t("library.byUnit", "Unit")}</p>
+          <select
+            value={unit}
+            onChange={(e) => setUnit(e.target.value)}
+            className="h-9 w-full max-w-xs rounded-md border bg-background px-2 text-sm"
+          >
+            <option value="_all">{t("library.allUnits", "All units")}</option>
+            {(data?.facets.units ?? []).map((u) => (
+              <option key={u.value} value={String(u.value)}>{u.label} ({u.count})</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-2">
           <p className="text-xs font-medium text-muted-foreground">{t("library.byRecord", "Filed against")}</p>
           <Chips
             items={data?.facets.entity_types ?? []}
@@ -293,7 +317,7 @@ export default function DocumentLibrary() {
         <table className="w-full text-sm">
           <thead className="border-b bg-muted/50">
             <tr>
-              {["col_doc", "col_type", "col_year", "col_tags", "col_record", "col_size", "col_uploaded"].map((k) => (
+              {["col_doc", "col_type", "col_year", "col_unit", "col_tags", "col_record", "col_size", "col_uploaded"].map((k) => (
                 <th key={k} className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {t(`library.${k}`, k)}
                 </th>
@@ -303,9 +327,9 @@ export default function DocumentLibrary() {
           </thead>
           <tbody className="divide-y">
             {isLoading ? (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-sm text-muted-foreground">{t("common.loading", "Loading…")}</td></tr>
+              <tr><td colSpan={9} className="px-4 py-8 text-center text-sm text-muted-foreground">{t("common.loading", "Loading…")}</td></tr>
             ) : !data?.documents.length ? (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-sm text-muted-foreground">{t("library.empty", "No documents match these filters.")}</td></tr>
+              <tr><td colSpan={9} className="px-4 py-8 text-center text-sm text-muted-foreground">{t("library.empty", "No documents match these filters.")}</td></tr>
             ) : (
               data.documents.map((d) => (
                 <tr key={d.id} className="transition-colors hover:bg-muted/30">
@@ -320,6 +344,17 @@ export default function DocumentLibrary() {
                     {typeLabel(d.doc_type)}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{d.doc_year ?? "—"}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
+                    {d.space_name ? (
+                      <button
+                        type="button"
+                        onClick={() => setUnit(String(d.space_id))}
+                        className="hover:underline"
+                      >
+                        {d.space_name}
+                      </button>
+                    ) : "—"}
+                  </td>
                   <td className="px-4 py-3">
                     {d.tags.length ? (
                       <span className="flex flex-wrap gap-1">

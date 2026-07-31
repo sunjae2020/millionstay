@@ -120,7 +120,8 @@
     "calendar": "工作日历",
     "dashboards": "仪表板",
     "document_intake": "批量导入",
-    "document_library": "文件索引"
+    "document_library": "文件索引",
+    "document_checklist": "文件检查"
   },
   "dashboard": {
     "title": "仪表板",
@@ -5682,7 +5683,10 @@
       "property": "房产",
       "space": "房号",
       "work_order": "工单"
-    }
+    },
+    "byUnit": "房号",
+    "allUnits": "全部房号",
+    "col_unit": "房号"
   },
   "doc_type": {
     "contract": "合同",
@@ -5701,5 +5705,33 @@
     "repair_record": "维修记录",
     "bank_account_copy": "银行账户复印件",
     "other": "其他"
+  },
+  "compliance": {
+    "title": "文件检查",
+    "subtitle": "查看缺少必备文件的合同，以及即将到期需要续签的合同。",
+    "tab": {
+      "incomplete": "缺少文件",
+      "expiring": "即将到期",
+      "all": "全部合同"
+    },
+    "withinDays": "{{n}} 天内",
+    "legend": "必备",
+    "legendRecommended": "建议",
+    "level": {
+      "required": "必备",
+      "recommended": "建议"
+    },
+    "col_contract": "合同",
+    "col_unit": "房号",
+    "col_tenant": "承租人",
+    "col_term": "租期",
+    "col_expiry": "到期",
+    "col_docs": "文件",
+    "inDays": "剩 {{n}} 天",
+    "expiredAgo": "已逾期 {{n}} 天",
+    "renewed": "已续签",
+    "allComplete": "所有合同的必备文件均已齐全。",
+    "noneExpiring": "该期间内没有需要续签的合同。",
+    "expiredNotice": "有 {{n}} 份合同已到期且没有后续合同。"
   }
 }

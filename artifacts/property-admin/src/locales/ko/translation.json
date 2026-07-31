@@ -120,7 +120,8 @@
     "calendar": "업무 캘린더",
     "dashboards": "대시보드",
     "document_intake": "일괄 업로드",
-    "document_library": "문서 색인"
+    "document_library": "문서 색인",
+    "document_checklist": "서류 점검"
   },
   "dashboard": {
     "title": "대시보드",
@@ -5682,7 +5683,10 @@
       "property": "매물",
       "space": "세대",
       "work_order": "작업지시"
-    }
+    },
+    "byUnit": "세대",
+    "allUnits": "전체 세대",
+    "col_unit": "세대"
   },
   "doc_type": {
     "contract": "계약서",
@@ -5701,5 +5705,33 @@
     "repair_record": "하자·수선 내역",
     "bank_account_copy": "계좌·통장 사본",
     "other": "기타"
+  },
+  "compliance": {
+    "title": "서류 점검",
+    "subtitle": "필수 서류가 빠진 계약과 갱신이 다가온 계약을 한눈에 봅니다.",
+    "tab": {
+      "incomplete": "누락 서류",
+      "expiring": "만료 임박",
+      "all": "전체 계약"
+    },
+    "withinDays": "{{n}}일 이내",
+    "legend": "필수",
+    "legendRecommended": "권장",
+    "level": {
+      "required": "필수",
+      "recommended": "권장"
+    },
+    "col_contract": "계약",
+    "col_unit": "세대",
+    "col_tenant": "임차인",
+    "col_term": "계약기간",
+    "col_expiry": "만료",
+    "col_docs": "서류",
+    "inDays": "D-{{n}}",
+    "expiredAgo": "{{n}}일 지남",
+    "renewed": "갱신됨",
+    "allComplete": "필수 서류가 빠진 계약이 없습니다.",
+    "noneExpiring": "이 기간에 갱신할 계약이 없습니다.",
+    "expiredNotice": "만료됐는데 후속 계약이 없는 계약이 {{n}}건 있습니다."
   }
 }

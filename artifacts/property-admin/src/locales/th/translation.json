@@ -120,7 +120,8 @@
     "calendar": "ปฏิทินงาน",
     "dashboards": "แดชบอร์ด",
     "document_intake": "นำเข้าเป็นชุด",
-    "document_library": "ดัชนีเอกสาร"
+    "document_library": "ดัชนีเอกสาร",
+    "document_checklist": "ตรวจสอบเอกสาร"
   },
   "dashboard": {
     "title": "แดชบอร์ด",
@@ -5682,7 +5683,10 @@
       "property": "อสังหาริมทรัพย์",
       "space": "ห้อง",
       "work_order": "ใบสั่งงาน"
-    }
+    },
+    "byUnit": "ห้อง",
+    "allUnits": "ทุกห้อง",
+    "col_unit": "ห้อง"
   },
   "doc_type": {
     "contract": "สัญญา",
@@ -5701,5 +5705,33 @@
     "repair_record": "ประวัติการซ่อม",
     "bank_account_copy": "สำเนาบัญชีธนาคาร",
     "other": "อื่น ๆ"
+  },
+  "compliance": {
+    "title": "ตรวจสอบเอกสาร",
+    "subtitle": "ดูสัญญาที่ยังขาดเอกสารจำเป็น และสัญญาที่ใกล้ครบกำหนดต่ออายุ",
+    "tab": {
+      "incomplete": "เอกสารที่ขาด",
+      "expiring": "ใกล้ครบกำหนด",
+      "all": "สัญญาทั้งหมด"
+    },
+    "withinDays": "ภายใน {{n}} วัน",
+    "legend": "จำเป็น",
+    "legendRecommended": "แนะนำ",
+    "level": {
+      "required": "จำเป็น",
+      "recommended": "แนะนำ"
+    },
+    "col_contract": "สัญญา",
+    "col_unit": "ห้อง",
+    "col_tenant": "ผู้เช่า",
+    "col_term": "ระยะเวลา",
+    "col_expiry": "ครบกำหนด",
+    "col_docs": "เอกสาร",
+    "inDays": "อีก {{n}} วัน",
+    "expiredAgo": "เลยมา {{n}} วัน",
+    "renewed": "ต่ออายุแล้ว",
+    "allComplete": "ทุกสัญญามีเอกสารจำเป็นครบถ้วน",
+    "noneExpiring": "ไม่มีสัญญาที่ต้องต่ออายุในช่วงนี้",
+    "expiredNotice": "มี {{n}} สัญญาที่เลยกำหนดแล้วและยังไม่มีสัญญาต่อเนื่อง"
   }
 }

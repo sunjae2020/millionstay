@@ -120,7 +120,8 @@
     "calendar": "Work Calendar",
     "dashboards": "Dashboards",
     "document_intake": "Bulk intake",
-    "document_library": "Document index"
+    "document_library": "Document index",
+    "document_checklist": "Document check"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -5682,7 +5683,10 @@
       "property": "Property",
       "space": "Unit",
       "work_order": "Work order"
-    }
+    },
+    "byUnit": "Unit",
+    "allUnits": "All units",
+    "col_unit": "Unit"
   },
   "doc_type": {
     "contract": "Contract",
@@ -5701,5 +5705,33 @@
     "repair_record": "Repair record",
     "bank_account_copy": "Bank account copy",
     "other": "Other"
+  },
+  "compliance": {
+    "title": "Document check",
+    "subtitle": "Tenancies missing required paperwork, and those coming up for renewal.",
+    "tab": {
+      "incomplete": "Missing documents",
+      "expiring": "Expiring soon",
+      "all": "All contracts"
+    },
+    "withinDays": "Within {{n}} days",
+    "legend": "Required",
+    "legendRecommended": "Recommended",
+    "level": {
+      "required": "Required",
+      "recommended": "Recommended"
+    },
+    "col_contract": "Contract",
+    "col_unit": "Unit",
+    "col_tenant": "Tenant",
+    "col_term": "Term",
+    "col_expiry": "Expiry",
+    "col_docs": "Documents",
+    "inDays": "D-{{n}}",
+    "expiredAgo": "{{n}} days overdue",
+    "renewed": "Renewed",
+    "allComplete": "Every tenancy has its required paperwork.",
+    "noneExpiring": "Nothing is due for renewal in this window.",
+    "expiredNotice": "{{n}} tenancies are past their end date with no successor."
   }
 }

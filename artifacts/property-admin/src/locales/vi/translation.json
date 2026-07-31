@@ -120,7 +120,8 @@
     "calendar": "Lịch công việc",
     "dashboards": "Bảng điều khiển",
     "document_intake": "Nhập hàng loạt",
-    "document_library": "Chỉ mục tài liệu"
+    "document_library": "Chỉ mục tài liệu",
+    "document_checklist": "Kiểm tra tài liệu"
   },
   "dashboard": {
     "title": "Bảng điều khiển",
@@ -5682,7 +5683,10 @@
       "property": "Bất động sản",
       "space": "Căn hộ",
       "work_order": "Lệnh công việc"
-    }
+    },
+    "byUnit": "Căn hộ",
+    "allUnits": "Tất cả căn hộ",
+    "col_unit": "Căn hộ"
   },
   "doc_type": {
     "contract": "Hợp đồng",
@@ -5701,5 +5705,33 @@
     "repair_record": "Hồ sơ sửa chữa",
     "bank_account_copy": "Bản sao tài khoản ngân hàng",
     "other": "Khác"
+  },
+  "compliance": {
+    "title": "Kiểm tra tài liệu",
+    "subtitle": "Các hợp đồng còn thiếu giấy tờ bắt buộc và các hợp đồng sắp đến hạn gia hạn.",
+    "tab": {
+      "incomplete": "Thiếu tài liệu",
+      "expiring": "Sắp hết hạn",
+      "all": "Tất cả hợp đồng"
+    },
+    "withinDays": "Trong {{n}} ngày",
+    "legend": "Bắt buộc",
+    "legendRecommended": "Nên có",
+    "level": {
+      "required": "Bắt buộc",
+      "recommended": "Nên có"
+    },
+    "col_contract": "Hợp đồng",
+    "col_unit": "Căn hộ",
+    "col_tenant": "Bên thuê",
+    "col_term": "Thời hạn",
+    "col_expiry": "Hết hạn",
+    "col_docs": "Tài liệu",
+    "inDays": "Còn {{n}} ngày",
+    "expiredAgo": "Quá {{n}} ngày",
+    "renewed": "Đã gia hạn",
+    "allComplete": "Mọi hợp đồng đều đủ giấy tờ bắt buộc.",
+    "noneExpiring": "Không có hợp đồng nào cần gia hạn trong khoảng này.",
+    "expiredNotice": "Có {{n}} hợp đồng đã hết hạn mà chưa có hợp đồng kế tiếp."
   }
 }

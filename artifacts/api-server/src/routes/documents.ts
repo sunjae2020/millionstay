@@ -7,6 +7,7 @@ import {
 import { and, eq, ilike, inArray, notInArray, isNull, or, sql, desc } from "drizzle-orm";
 import { listSnapshots } from "../lib/documents/freeze";
 import { calcRetentionDate } from "../lib/retention";
+import { CONTRACT_CHECKLIST, evaluateChecklist } from "../lib/documents/checklist";
 import { decodeUploadFilename } from "../lib/uploadFilename";
 import { logAction } from "../utils/auditLog";
 import {
@@ -499,6 +500,25 @@ async function labelEntities(
   return labels;
 }
 
+/**
+ * The unit a document ultimately belongs to.
+ *
+ * Paperwork is filed against the record it concerns — usually a contract, not a
+ * unit — but "everything ever filed for 1503호" is what people actually ask,
+ * and that has to survive tenants coming and going. So a contract's document
+ * inherits the contract's unit, and a document filed straight onto a space
+ * keeps its own.
+ *
+ * Written as one expression because the row query, the filter and the facet
+ * count must all agree on the answer.
+ */
+const docSpaceId = sql<number | null>`case
+  when ${documentsTable.entity_type} = 'space' then ${documentsTable.entity_id}
+  when ${documentsTable.entity_type} = 'contract'
+    then (select c.space_id from contracts c where c.id = ${documentsTable.entity_id})
+  else null
+end`;
+
 function detailUrlFor(entityType: string, entityId: number): string | null {
   if (entityType === "contact") return `/account/contacts/${entityId}`;
   const meta = LABELLED_ENTITIES[entityType as keyof typeof LABELLED_ENTITIES];
@@ -548,31 +568,58 @@ router.get("/v1/documents/library", async (req, res): Promise<void> => {
   if (year === "_none") conds.push(isNull(documentsTable.doc_year));
   else if (parsedYear) conds.push(eq(documentsTable.doc_year, parsedYear));
 
+  const spaceId = Number(req.query["space_id"]);
+  if (Number.isInteger(spaceId) && spaceId > 0) conds.push(sql`${docSpaceId} = ${spaceId}`);
+
   const rows = await db
-    .select().from(documentsTable)
+    .select({ doc: documentsTable, space_id: docSpaceId })
+    .from(documentsTable)
     .where(and(...conds))
     .orderBy(desc(documentsTable.doc_year), desc(documentsTable.created_at))
     .limit(500);
 
-  const labels = await labelEntities(rows);
+  const docs = rows.map((r) => r.doc);
+  const labels = await labelEntities(docs);
+
+  const rowSpaceIds = [...new Set(rows.map((r) => r.space_id).filter((v): v is number => v != null))];
+  const rowSpaces = rowSpaceIds.length
+    ? await db.select({ id: spacesTable.id, name: spacesTable.name })
+        .from(spacesTable).where(inArray(spacesTable.id, rowSpaceIds))
+    : [];
+  const rowSpaceNames = new Map(rowSpaces.map((sp) => [sp.id, sp.name]));
 
   // Facets ignore the filter they describe, so selecting 2023 does not reduce
   // the year list to just 2023 and strand the user there.
   const facetConds = base;
-  const [years, types, entityTypes] = await Promise.all([
+  const [years, types, entityTypes, unitFacets] = await Promise.all([
     db.select({ value: documentsTable.doc_year, count: sql<number>`count(*)::int` })
       .from(documentsTable).where(and(...facetConds)).groupBy(documentsTable.doc_year),
     db.select({ value: documentsTable.doc_type, count: sql<number>`count(*)::int` })
       .from(documentsTable).where(and(...facetConds)).groupBy(documentsTable.doc_type),
     db.select({ value: documentsTable.entity_type, count: sql<number>`count(*)::int` })
       .from(documentsTable).where(and(...facetConds)).groupBy(documentsTable.entity_type),
+    // Units are in the hundreds, so this feeds a searchable picker rather than
+    // the chip rows the other facets use.
+    db.select({ value: docSpaceId, count: sql<number>`count(*)::int` })
+      .from(documentsTable)
+      .where(and(...facetConds, sql`${docSpaceId} is not null`))
+      .groupBy(docSpaceId),
   ]);
 
+  const facetSpaceIds = unitFacets.map((u) => u.value).filter((v): v is number => v != null);
+  const facetSpaces = facetSpaceIds.length
+    ? await db.select({ id: spacesTable.id, name: spacesTable.name })
+        .from(spacesTable).where(inArray(spacesTable.id, facetSpaceIds))
+    : [];
+  const facetSpaceNames = new Map(facetSpaces.map((sp) => [sp.id, sp.name]));
+
   res.json({
-    documents: rows.map((d) => ({
-      ...toDto(d),
-      entity_label: labels.get(`${d.entity_type}:${d.entity_id}`) ?? null,
-      detail_url: detailUrlFor(d.entity_type, d.entity_id),
+    documents: rows.map((r) => ({
+      ...toDto(r.doc),
+      entity_label: labels.get(`${r.doc.entity_type}:${r.doc.entity_id}`) ?? null,
+      detail_url: detailUrlFor(r.doc.entity_type, r.doc.entity_id),
+      space_id: r.space_id,
+      space_name: r.space_id != null ? (rowSpaceNames.get(r.space_id) ?? null) : null,
     })),
     // Newest year first; documents with no year sort to the end as null.
     facets: {
@@ -581,8 +628,166 @@ router.get("/v1/documents/library", async (req, res): Promise<void> => {
         .sort((a, b) => (b.value ?? 0) - (a.value ?? 0)),
       doc_types: types.sort((a, b) => b.count - a.count),
       entity_types: entityTypes.sort((a, b) => b.count - a.count),
+      units: unitFacets
+        .filter((u) => u.value != null)
+        .map((u) => ({ value: u.value as number, label: facetSpaceNames.get(u.value as number) ?? `#${u.value}`, count: u.count }))
+        .sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true })),
     },
-    truncated: rows.length === 500,
+    truncated: docs.length === 500,
+  });
+});
+
+
+// ── Compliance: what is missing, and what is about to expire ─────────────────
+//
+// Two questions with the same shape — "which tenancies need attention?" — so
+// they are answered by one pass over the contracts rather than two screens
+// asking the database the same thing twice.
+
+/** Contracts in scope. `Completed` tenancies are history, not a to-do list. */
+const COMPLIANCE_STATUSES = ["Active", "Signed", "Draft"];
+
+/** Default expiry horizon. 90 days is roughly the notice period a renewal needs. */
+const DEFAULT_EXPIRY_DAYS = 90;
+
+interface ComplianceRow {
+  contract_id: number;
+  contract_ref: string;
+  status: string;
+  space_id: number | null;
+  space_name: string | null;
+  tenant_name: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  /** Negative once the end date has passed. Null when the contract has no end. */
+  days_to_expiry: number | null;
+  checklist: ReturnType<typeof evaluateChecklist>["lines"];
+  missing_required: string[];
+  complete: boolean;
+  /** A later contract already exists on the same unit — the renewal is done. */
+  has_successor: boolean;
+  detail_url: string;
+}
+
+/**
+ * GET /v1/documents/compliance?days=90
+ *
+ * One row per in-scope contract: which checklist items are filed, which are
+ * missing, how long until it expires, and whether a successor tenancy already
+ * covers the unit.
+ */
+router.get("/v1/documents/compliance", async (req, res): Promise<void> => {
+  const days = Number(req.query["days"]);
+  const horizon = Number.isInteger(days) && days > 0 && days <= 730 ? days : DEFAULT_EXPIRY_DAYS;
+
+  const contracts = await db
+    .select({
+      id: contractsTable.id,
+      contract_ref: contractsTable.contract_ref,
+      status: contractsTable.status,
+      space_id: contractsTable.space_id,
+      tenant_account_id: contractsTable.tenant_account_id,
+      start_date: contractsTable.start_date,
+      end_date: contractsTable.end_date,
+    })
+    .from(contractsTable)
+    .where(and(
+      isNull(contractsTable.deleted_at),
+      inArray(contractsTable.status, COMPLIANCE_STATUSES),
+    ));
+
+  if (!contracts.length) {
+    res.json({ rows: [], horizon_days: horizon, checklist: CONTRACT_CHECKLIST });
+    return;
+  }
+
+  // Everything filed against these contracts, in one query rather than one per
+  // contract — the N+1 shape this codebase has been bitten by before.
+  const filed = await db
+    .select({ entity_id: documentsTable.entity_id, doc_type: documentsTable.doc_type })
+    .from(documentsTable)
+    .where(and(
+      eq(documentsTable.entity_type, "contract"),
+      isNull(documentsTable.deleted_at),
+      inArray(documentsTable.entity_id, contracts.map((c) => c.id)),
+    ));
+  const typesByContract = new Map<number, Set<string>>();
+  for (const row of filed) {
+    if (!typesByContract.has(row.entity_id)) typesByContract.set(row.entity_id, new Set());
+    typesByContract.get(row.entity_id)!.add(row.doc_type);
+  }
+
+  const spaceIds = [...new Set(contracts.map((c) => c.space_id).filter((v): v is number => v != null))];
+  const spaces = spaceIds.length
+    ? await db.select({ id: spacesTable.id, name: spacesTable.name })
+        .from(spacesTable).where(inArray(spacesTable.id, spaceIds))
+    : [];
+  const spaceNames = new Map(spaces.map((s) => [s.id, s.name]));
+
+  const accountIds = [...new Set(contracts.map((c) => c.tenant_account_id).filter((v): v is number => v != null))];
+  const accounts = accountIds.length
+    ? await db.select({ id: accountsTable.id, name: accountsTable.name })
+        .from(accountsTable).where(inArray(accountsTable.id, accountIds))
+    : [];
+  const accountNames = new Map(accounts.map((a) => [a.id, a.name]));
+
+  // A renewal is "done" when another contract on the same unit starts at or
+  // after this one ends. Checking the unit rather than the tenant is deliberate:
+  // a new tenant moving in also means this tenancy needs no renewal chasing.
+  const bySpace = new Map<number, Array<{ start: string | null }>>();
+  for (const c of contracts) {
+    if (c.space_id == null) continue;
+    if (!bySpace.has(c.space_id)) bySpace.set(c.space_id, []);
+    bySpace.get(c.space_id)!.push({ start: c.start_date });
+  }
+
+  // Compare dates as YYYY-MM-DD strings — the columns are text, and lexical
+  // order is chronological in that format.
+  const today = new Date().toISOString().slice(0, 10);
+  const MS_PER_DAY = 86_400_000;
+
+  const rows: ComplianceRow[] = contracts.map((c) => {
+    const evaluated = evaluateChecklist(typesByContract.get(c.id) ?? []);
+    const daysToExpiry = c.end_date
+      ? Math.round((Date.parse(`${c.end_date}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / MS_PER_DAY)
+      : null;
+    const successors = c.space_id != null ? (bySpace.get(c.space_id) ?? []) : [];
+    const hasSuccessor = Boolean(
+      c.end_date && successors.some((s) => s.start != null && s.start >= c.end_date!),
+    );
+
+    return {
+      contract_id: c.id,
+      contract_ref: c.contract_ref,
+      status: c.status,
+      space_id: c.space_id,
+      space_name: c.space_id != null ? (spaceNames.get(c.space_id) ?? null) : null,
+      tenant_name: c.tenant_account_id != null ? (accountNames.get(c.tenant_account_id) ?? null) : null,
+      start_date: c.start_date,
+      end_date: c.end_date,
+      days_to_expiry: Number.isFinite(daysToExpiry as number) ? daysToExpiry : null,
+      checklist: evaluated.lines,
+      missing_required: evaluated.missingRequired,
+      complete: evaluated.complete,
+      has_successor: hasSuccessor,
+      detail_url: `/booking/contracts/${c.id}`,
+    };
+  });
+
+  rows.sort((a, b) => (a.days_to_expiry ?? Infinity) - (b.days_to_expiry ?? Infinity));
+
+  res.json({
+    rows,
+    horizon_days: horizon,
+    checklist: CONTRACT_CHECKLIST,
+    summary: {
+      total: rows.length,
+      incomplete: rows.filter((r) => !r.complete).length,
+      // Already past its end date and nothing has replaced it.
+      expired: rows.filter((r) => r.days_to_expiry != null && r.days_to_expiry < 0 && !r.has_successor).length,
+      expiring: rows.filter((r) =>
+        r.days_to_expiry != null && r.days_to_expiry >= 0 && r.days_to_expiry <= horizon && !r.has_successor).length,
+    },
   });
 });
 

@@ -120,7 +120,8 @@
     "calendar": "業務カレンダー",
     "dashboards": "ダッシュボード",
     "document_intake": "一括取り込み",
-    "document_library": "文書索引"
+    "document_library": "文書索引",
+    "document_checklist": "書類チェック"
   },
   "dashboard": {
     "title": "ダッシュボード",
@@ -5682,7 +5683,10 @@
       "property": "物件",
       "space": "住戸",
       "work_order": "作業指示"
-    }
+    },
+    "byUnit": "住戸",
+    "allUnits": "すべての住戸",
+    "col_unit": "住戸"
   },
   "doc_type": {
     "contract": "契約書",
@@ -5701,5 +5705,33 @@
     "repair_record": "修繕履歴",
     "bank_account_copy": "口座・通帳の写し",
     "other": "その他"
+  },
+  "compliance": {
+    "title": "書類チェック",
+    "subtitle": "必要書類が欠けている契約と、更新が近い契約をまとめて確認します。",
+    "tab": {
+      "incomplete": "書類の不足",
+      "expiring": "満了間近",
+      "all": "すべての契約"
+    },
+    "withinDays": "{{n}}日以内",
+    "legend": "必須",
+    "legendRecommended": "推奨",
+    "level": {
+      "required": "必須",
+      "recommended": "推奨"
+    },
+    "col_contract": "契約",
+    "col_unit": "住戸",
+    "col_tenant": "借主",
+    "col_term": "契約期間",
+    "col_expiry": "満了",
+    "col_docs": "書類",
+    "inDays": "あと{{n}}日",
+    "expiredAgo": "{{n}}日超過",
+    "renewed": "更新済み",
+    "allComplete": "必要書類が欠けている契約はありません。",
+    "noneExpiring": "この期間に更新すべき契約はありません。",
+    "expiredNotice": "満了後に後続契約がない契約が{{n}}件あります。"
   }
 }
