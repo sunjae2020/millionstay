@@ -5508,7 +5508,8 @@
     "download": "ダウンロード",
     "email": "メールを送信",
     "close": "閉じる",
-    "new_tab": "新しいタブで開く"
+    "new_tab": "新しいタブで開く",
+    "open_record": "レコードへ移動"
   },
   "error_boundary": {
     "title": "問題が発生しました",
@@ -5682,6 +5683,16 @@
       "property": "物件",
       "space": "住戸",
       "work_order": "作業指示"
+    },
+    "type": {
+      "contract": "契約書",
+      "signed_contract": "署名済み原本",
+      "tax_invoice": "税務請求書",
+      "receipt": "領収書",
+      "property_document": "不動産書類",
+      "id_document": "身分証明書",
+      "visa_document": "ビザ書類",
+      "other": "その他"
     }
   }
 }

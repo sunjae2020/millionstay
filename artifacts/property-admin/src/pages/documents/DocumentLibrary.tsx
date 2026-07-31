@@ -77,6 +77,8 @@ const DOC_TYPES = [
 /** Sentinel used by both the UI and the API for "no year recorded". */
 const NO_YEAR = "_none";
 
+
+
 function formatSize(bytes: number): string {
   if (!bytes) return "—";
   if (bytes < 1024) return `${bytes} B`;
@@ -89,6 +91,19 @@ export default function DocumentLibrary() {
   const { toast } = useToast();
   const qc = useQueryClient();
   const { previewConfig, openPreview, closePreview } = useDocumentPreview();
+
+  /**
+   * Label for a document type. The per-record panel stopped asking users for a
+   * type and its `entity_docs.type_*` keys went with it, so the library carries
+   * its own — otherwise the chips fall back to raw keys like "contract".
+   */
+  const typeLabel = (value: string) => t(`library.type.${value}`, value);
+
+  /** One description of where a document is filed, used by the row and the preview. */
+  const locationLabel = (doc: { entity_type: string; entity_id: number; entity_label: string | null }) => {
+    const kind = t(`library.entity.${doc.entity_type}`, doc.entity_type);
+    return doc.entity_label ? `${kind} · ${doc.entity_label}` : `${kind} #${doc.entity_id}`;
+  };
 
   const [search, setSearch] = useState("");
   // Committed separately from the input so every keystroke is not a request.
@@ -244,7 +259,7 @@ export default function DocumentLibrary() {
             items={data?.facets.doc_types ?? []}
             selected={docType}
             onSelect={setDocType}
-            label={(v) => t(`entity_docs.type_${v}`, String(v))}
+            label={(v) => typeLabel(String(v))}
           />
         </div>
 
@@ -293,7 +308,7 @@ export default function DocumentLibrary() {
                     {d.title && <span className="block truncate text-xs text-muted-foreground">{d.file_name}</span>}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
-                    {t(`entity_docs.type_${d.doc_type}`, d.doc_type)}
+                    {typeLabel(d.doc_type)}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{d.doc_year ?? "—"}</td>
                   <td className="px-4 py-3">
@@ -317,7 +332,7 @@ export default function DocumentLibrary() {
                   <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
                     {d.detail_url ? (
                       <Link href={d.detail_url} className="inline-flex items-center gap-1 text-primary hover:underline">
-                        {d.entity_label || `${t(`library.entity.${d.entity_type}`, d.entity_type)} #${d.entity_id}`}
+                        {locationLabel(d)}
                         <ExternalLink className="h-3 w-3" />
                       </Link>
                     ) : (
@@ -329,7 +344,12 @@ export default function DocumentLibrary() {
                   <td className="whitespace-nowrap px-4 py-3 text-right">
                     <button
                       type="button"
-                      onClick={() => openPreview({ title: d.title || d.file_name, filename: d.file_name, source: { kind: "api", path: d.file_url } })}
+                      onClick={() => openPreview({
+                        title: d.title || d.file_name,
+                        filename: d.file_name,
+                        source: { kind: "api", path: d.file_url },
+                        location: { label: locationLabel(d), href: d.detail_url ?? undefined },
+                      })}
                       className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
                     >
                       <Eye className="h-3.5 w-3.5" /> {t("common.preview", "Preview")}
@@ -376,7 +396,7 @@ export default function DocumentLibrary() {
                     className="h-9 w-full rounded-md border bg-background px-2 text-sm"
                   >
                     {DOC_TYPES.map((dt) => (
-                      <option key={dt} value={dt}>{t(`entity_docs.type_${dt}`, dt)}</option>
+                      <option key={dt} value={dt}>{typeLabel(dt)}</option>
                     ))}
                   </select>
                 </label>

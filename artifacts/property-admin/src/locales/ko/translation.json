@@ -5508,7 +5508,8 @@
     "download": "다운로드",
     "email": "이메일 보내기",
     "close": "닫기",
-    "new_tab": "새 탭에서 열기"
+    "new_tab": "새 탭에서 열기",
+    "open_record": "레코드로 이동"
   },
   "error_boundary": {
     "title": "문제가 발생했습니다",
@@ -5682,6 +5683,16 @@
       "property": "매물",
       "space": "세대",
       "work_order": "작업지시"
+    },
+    "type": {
+      "contract": "계약서",
+      "signed_contract": "서명 원본",
+      "tax_invoice": "세금계산서",
+      "receipt": "영수증",
+      "property_document": "부동산 서류",
+      "id_document": "신분증",
+      "visa_document": "비자 서류",
+      "other": "기타"
     }
   }
 }

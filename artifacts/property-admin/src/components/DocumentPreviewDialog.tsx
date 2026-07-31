@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "wouter";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, Printer, Download, Mail, X, ExternalLink, AlertTriangle } from "lucide-react";
+import { Loader2, Printer, Download, Mail, X, ExternalLink, AlertTriangle, FolderOpen, ArrowUpRight } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { DocumentEmailDialog, type DocumentEmailTarget } from "@/components/DocumentEmailDialog";
 
@@ -56,6 +57,18 @@ export interface DocumentPreviewConfig {
   };
   /** Overrides the default "Send email" label. */
   emailLabel?: string;
+  /**
+   * Where this document is filed, shown under the title with a shortcut to the
+   * record. Opened from the document library a preview is otherwise
+   * context-free — you can read the page but not tell which contract it hangs
+   * off, which is the first thing anyone asks next.
+   */
+  location?: {
+    /** Human label, e.g. "계약 · MS-C-2026-014 · 1513호 후승재". */
+    label: string;
+    /** In-app route to the owning record. Omitted when there is nothing to open. */
+    href?: string;
+  };
 }
 
 interface Props {
@@ -71,6 +84,7 @@ interface Props {
  */
 export function DocumentPreviewDialog({ config, onClose }: Props) {
   const { t } = useTranslation();
+  const [, setLocation] = useLocation();
   const frameRef = useRef<HTMLIFrameElement>(null);
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
   // Filename the server put in Content-Disposition — the API owns the
@@ -203,6 +217,24 @@ export function DocumentPreviewDialog({ config, onClose }: Props) {
           <DialogTitle className="text-base truncate pr-8">
             {config?.title ?? t("doc_preview.title", "Document preview")}
           </DialogTitle>
+          {config?.location && (
+            <div className="flex items-center gap-1.5 pr-8 text-xs text-muted-foreground">
+              <FolderOpen className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{config.location.label}</span>
+              {config.location.href && (
+                <button
+                  type="button"
+                  // Navigating away closes the dialog first: leaving a modal
+                  // open over a page the user just moved to is disorienting.
+                  onClick={() => { const href = config.location!.href!; onClose(); setLocation(href); }}
+                  className="inline-flex shrink-0 items-center gap-1 text-primary hover:underline"
+                >
+                  {t("doc_preview.open_record", "Go to record")}
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          )}
         </DialogHeader>
 
         <div className="flex-1 min-h-0 bg-muted/40">

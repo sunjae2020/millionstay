@@ -5508,7 +5508,8 @@
     "download": "Tải xuống",
     "email": "Gửi email",
     "close": "Đóng",
-    "new_tab": "Mở trong tab mới"
+    "new_tab": "Mở trong tab mới",
+    "open_record": "Đến bản ghi"
   },
   "error_boundary": {
     "title": "Đã xảy ra lỗi",
@@ -5682,6 +5683,16 @@
       "property": "Bất động sản",
       "space": "Căn hộ",
       "work_order": "Lệnh công việc"
+    },
+    "type": {
+      "contract": "Hợp đồng",
+      "signed_contract": "Bản gốc đã ký",
+      "tax_invoice": "Hóa đơn thuế",
+      "receipt": "Biên lai",
+      "property_document": "Giấy tờ bất động sản",
+      "id_document": "Giấy tờ tùy thân",
+      "visa_document": "Giấy tờ thị thực",
+      "other": "Khác"
     }
   }
 }

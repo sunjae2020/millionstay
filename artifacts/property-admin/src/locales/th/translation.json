@@ -5508,7 +5508,8 @@
     "download": "ดาวน์โหลด",
     "email": "ส่งอีเมล",
     "close": "ปิด",
-    "new_tab": "เปิดในแท็บใหม่"
+    "new_tab": "เปิดในแท็บใหม่",
+    "open_record": "ไปที่รายการ"
   },
   "error_boundary": {
     "title": "เกิดข้อผิดพลาด",
@@ -5682,6 +5683,16 @@
       "property": "อสังหาริมทรัพย์",
       "space": "ห้อง",
       "work_order": "ใบสั่งงาน"
+    },
+    "type": {
+      "contract": "สัญญา",
+      "signed_contract": "ต้นฉบับที่ลงนาม",
+      "tax_invoice": "ใบกำกับภาษี",
+      "receipt": "ใบเสร็จ",
+      "property_document": "เอกสารอสังหาริมทรัพย์",
+      "id_document": "เอกสารแสดงตน",
+      "visa_document": "เอกสารวีซ่า",
+      "other": "อื่น ๆ"
     }
   }
 }

@@ -5508,7 +5508,8 @@
     "download": "下载",
     "email": "发送邮件",
     "close": "关闭",
-    "new_tab": "在新标签页中打开"
+    "new_tab": "在新标签页中打开",
+    "open_record": "前往记录"
   },
   "error_boundary": {
     "title": "出现问题",
@@ -5682,6 +5683,16 @@
       "property": "房产",
       "space": "房号",
       "work_order": "工单"
+    },
+    "type": {
+      "contract": "合同",
+      "signed_contract": "签署原件",
+      "tax_invoice": "税务发票",
+      "receipt": "收据",
+      "property_document": "房产文件",
+      "id_document": "身份证件",
+      "visa_document": "签证文件",
+      "other": "其他"
     }
   }
 }

@@ -5508,7 +5508,8 @@
     "download": "Download",
     "email": "Send email",
     "close": "Close",
-    "new_tab": "Open in new tab"
+    "new_tab": "Open in new tab",
+    "open_record": "Go to record"
   },
   "error_boundary": {
     "title": "Something went wrong",
@@ -5682,6 +5683,16 @@
       "property": "Property",
       "space": "Unit",
       "work_order": "Work order"
+    },
+    "type": {
+      "contract": "Contract",
+      "signed_contract": "Signed original",
+      "tax_invoice": "Tax invoice",
+      "receipt": "Receipt",
+      "property_document": "Property document",
+      "id_document": "Identity document",
+      "visa_document": "Visa document",
+      "other": "Other"
     }
   }
 }
