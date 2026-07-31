@@ -942,7 +942,7 @@
   },
   "contract": {
     "new": "Hợp đồng mới",
-    "search_placeholder": "Tìm mã hợp đồng...",
+    "search_placeholder": "Tìm mã hợp đồng, người thuê hoặc phòng...",
     "all_statuses": "Tất cả trạng thái",
     "no_contracts": "Không tìm thấy hợp đồng nào",
     "col_ref": "Mã hợp đồng",
@@ -1228,7 +1228,14 @@
     "scan_uploading": "Đang tải lên…",
     "scan_uploaded": "Đã lưu bản scan đã ký.",
     "scan_upload_failed": "Không tải được bản scan lên.",
-    "scan_formats": "PDF, PNG, JPG hoặc TIFF, tối đa 25 MB"
+    "scan_formats": "PDF, PNG, JPG hoặc TIFF, tối đa 25 MB",
+    "all_categories": "Tất cả loại",
+    "all_forms": "Tất cả mẫu",
+    "all_years": "Tất cả năm",
+    "year_value": "Năm {{year}}",
+    "filter_date_from": "Từ ngày",
+    "filter_date_to": "Đến ngày",
+    "filter_reset": "Đặt lại"
   },
   "invoice": {
     "new": "Tạo hóa đơn mới",

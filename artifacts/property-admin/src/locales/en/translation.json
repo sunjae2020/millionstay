@@ -942,7 +942,7 @@
   },
   "contract": {
     "new": "New Contract",
-    "search_placeholder": "Search contract ref...",
+    "search_placeholder": "Search ref, tenant or space...",
     "all_statuses": "All statuses",
     "no_contracts": "No contracts found",
     "col_ref": "Contract Ref",
@@ -1228,7 +1228,14 @@
     "scan_uploading": "Uploading…",
     "scan_uploaded": "Signed scan filed.",
     "scan_upload_failed": "Could not upload the scan.",
-    "scan_formats": "PDF, PNG, JPG or TIFF up to 25 MB"
+    "scan_formats": "PDF, PNG, JPG or TIFF up to 25 MB",
+    "all_categories": "All types",
+    "all_forms": "All forms",
+    "all_years": "All years",
+    "year_value": "{{year}}",
+    "filter_date_from": "Period from",
+    "filter_date_to": "Period to",
+    "filter_reset": "Reset"
   },
   "invoice": {
     "new": "New Invoice",

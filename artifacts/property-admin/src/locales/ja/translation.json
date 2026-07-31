@@ -942,7 +942,7 @@
   },
   "contract": {
     "new": "新規契約",
-    "search_placeholder": "契約番号を検索...",
+    "search_placeholder": "契約番号・賃借人・部屋を検索...",
     "all_statuses": "すべてのステータス",
     "no_contracts": "契約が見つかりません",
     "col_ref": "契約番号",
@@ -1228,7 +1228,14 @@
     "scan_uploading": "アップロード中…",
     "scan_uploaded": "署名済みスキャンを保管しました。",
     "scan_upload_failed": "スキャンをアップロードできませんでした。",
-    "scan_formats": "PDF・PNG・JPG・TIFF、最大25MB"
+    "scan_formats": "PDF・PNG・JPG・TIFF、最大25MB",
+    "all_categories": "すべての区分",
+    "all_forms": "すべての様式",
+    "all_years": "すべての年度",
+    "year_value": "{{year}}年",
+    "filter_date_from": "期間 開始",
+    "filter_date_to": "期間 終了",
+    "filter_reset": "リセット"
   },
   "invoice": {
     "new": "新規請求書",

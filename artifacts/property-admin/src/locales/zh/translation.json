@@ -942,7 +942,7 @@
   },
   "contract": {
     "new": "新建合同",
-    "search_placeholder": "搜索合同编号...",
+    "search_placeholder": "搜索合同编号、承租人或空间...",
     "all_statuses": "所有状态",
     "no_contracts": "没有合同",
     "col_ref": "合同编号",
@@ -1228,7 +1228,14 @@
     "scan_uploading": "上传中…",
     "scan_uploaded": "已保管签署件扫描。",
     "scan_upload_failed": "未能上传扫描件。",
-    "scan_formats": "PDF、PNG、JPG 或 TIFF，最大 25MB"
+    "scan_formats": "PDF、PNG、JPG 或 TIFF，最大 25MB",
+    "all_categories": "全部类别",
+    "all_forms": "全部格式",
+    "all_years": "全部年份",
+    "year_value": "{{year}}年",
+    "filter_date_from": "起始日期",
+    "filter_date_to": "结束日期",
+    "filter_reset": "重置"
   },
   "invoice": {
     "new": "新建发票",

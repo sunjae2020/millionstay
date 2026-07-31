@@ -12,13 +12,30 @@ import {
   type ListContractsParams,
   type Contract,
 } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Search } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Plus, Search, X } from "lucide-react";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 import { formatDate } from "@/lib/date";
 import { useDocumentRowActions } from "@/components/DocumentRowActions";
+import { apiJson } from "@/lib/apiFetch";
+
+/** 계약 구분 / 서식 코드 → i18n 키. 이관 데이터는 자유 문자열이라 매핑이 없으면 값 그대로 보여준다. */
+const CATEGORY_LABELS: Record<string, string> = {
+  sale: "contract.cat_sale",
+  jeonse: "contract.cat_jeonse",
+  wolse: "contract.cat_wolse",
+  short_term: "contract.cat_short",
+  long_term: "contract.cat_long",
+};
+const LEASE_FORM_LABELS: Record<string, string> = {
+  general: "contract.form_general",
+  housing_standard: "contract.form_housing_standard",
+  mlt_standard: "contract.form_mlt_standard",
+};
+
+type ContractFacets = { years: string[]; categories: string[]; lease_forms: string[] };
 
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-700",
@@ -34,14 +51,40 @@ export default function ContractList() {
   const { currency, currencyPosition } = useBrand();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("_all");
+  const [category, setCategory] = useState("_all");
+  const [leaseForm, setLeaseForm] = useState("_all");
+  const [year, setYear] = useState("_all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [showDeleted, setShowDeleted] = useState(false);
   const qc = useQueryClient();
 
-  const params: ListContractsParams & { deleted?: string } = {
+  const { data: facets } = useQuery<ContractFacets>({
+    queryKey: ["contract-facets", showDeleted],
+    queryFn: () => apiJson<ContractFacets>(`/api/v1/contracts/facets${showDeleted ? "?deleted=only" : ""}`),
+  });
+
+  const params: ListContractsParams & Record<string, string | undefined> = {
     q: q || undefined,
     status: status === "_all" ? undefined : status,
+    contract_category: category === "_all" ? undefined : category,
+    lease_form: leaseForm === "_all" ? undefined : leaseForm,
+    year: year === "_all" ? undefined : year,
+    date_from: dateFrom || undefined,
+    date_to: dateTo || undefined,
     ...(showDeleted ? { deleted: "only" } : {}),
   };
+
+  const hasFilters =
+    !!q || status !== "_all" || category !== "_all" || leaseForm !== "_all" ||
+    year !== "_all" || !!dateFrom || !!dateTo;
+  const resetFilters = () => {
+    setQ(""); setStatus("_all"); setCategory("_all");
+    setLeaseForm("_all"); setYear("_all"); setDateFrom(""); setDateTo("");
+  };
+  const categoryOptions = facets?.categories ?? [];
+  const leaseFormOptions = facets?.lease_forms ?? [];
+  const yearOptions = facets?.years ?? [];
 
   const { data: contracts, isLoading } = useListContracts(params, {
     query: { queryKey: getListContractsQueryKey(params) },
@@ -145,7 +188,7 @@ export default function ContractList() {
           onToggleShowDeleted={setShowDeleted}
           toolbarExtra={
             <div className="flex flex-wrap items-center gap-2">
-              <div className="relative w-56">
+              <div className="relative w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   className="pl-9"
@@ -155,7 +198,7 @@ export default function ContractList() {
                 />
               </div>
               <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-36">
                   <SelectValue placeholder={t("contract.all_statuses")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -168,6 +211,73 @@ export default function ContractList() {
                   <SelectItem value="Terminated">{t("contract.status_terminated")}</SelectItem>
                 </SelectContent>
               </Select>
+              {categoryOptions.length > 0 && (
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder={t("contract.all_categories")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all">{t("contract.all_categories")}</SelectItem>
+                    {categoryOptions.map(c => (
+                      <SelectItem key={c} value={c}>
+                        {CATEGORY_LABELS[c] ? t(CATEGORY_LABELS[c]) : c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              {leaseFormOptions.length > 0 && (
+                <Select value={leaseForm} onValueChange={setLeaseForm}>
+                  <SelectTrigger className="w-44">
+                    <SelectValue placeholder={t("contract.all_forms")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all">{t("contract.all_forms")}</SelectItem>
+                    {leaseFormOptions.map(f => (
+                      <SelectItem key={f} value={f}>
+                        {LEASE_FORM_LABELS[f] ? t(LEASE_FORM_LABELS[f]) : f}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              {yearOptions.length > 0 && (
+                <Select value={year} onValueChange={setYear}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder={t("contract.all_years")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all">{t("contract.all_years")}</SelectItem>
+                    {yearOptions.map(y => (
+                      <SelectItem key={y} value={y}>{t("contract.year_value", { year: y })}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <div className="flex items-center gap-1">
+                <Input
+                  type="date"
+                  className="w-36"
+                  aria-label={t("contract.filter_date_from")}
+                  title={t("contract.filter_date_from")}
+                  value={dateFrom}
+                  onChange={e => setDateFrom(e.target.value)}
+                />
+                <span className="text-muted-foreground text-sm">~</span>
+                <Input
+                  type="date"
+                  className="w-36"
+                  aria-label={t("contract.filter_date_to")}
+                  title={t("contract.filter_date_to")}
+                  value={dateTo}
+                  onChange={e => setDateTo(e.target.value)}
+                />
+              </div>
+              {hasFilters && (
+                <Button variant="ghost" size="sm" onClick={resetFilters}>
+                  <X className="h-4 w-4 mr-1" />{t("contract.filter_reset")}
+                </Button>
+              )}
             </div>
           }
         />

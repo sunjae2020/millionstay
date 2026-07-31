@@ -942,7 +942,7 @@
   },
   "contract": {
     "new": "สัญญาใหม่",
-    "search_placeholder": "ค้นหารหัสสัญญา...",
+    "search_placeholder": "ค้นหาเลขที่สัญญา ผู้เช่า หรือห้อง...",
     "all_statuses": "ทุกสถานะ",
     "no_contracts": "ไม่พบสัญญา",
     "col_ref": "รหัสสัญญา",
@@ -1228,7 +1228,14 @@
     "scan_uploading": "กำลังอัปโหลด…",
     "scan_uploaded": "จัดเก็บไฟล์สแกนที่ลงนามแล้ว",
     "scan_upload_failed": "ไม่สามารถอัปโหลดไฟล์สแกนได้",
-    "scan_formats": "PDF, PNG, JPG หรือ TIFF ไม่เกิน 25 MB"
+    "scan_formats": "PDF, PNG, JPG หรือ TIFF ไม่เกิน 25 MB",
+    "all_categories": "ทุกประเภท",
+    "all_forms": "ทุกแบบฟอร์ม",
+    "all_years": "ทุกปี",
+    "year_value": "ปี {{year}}",
+    "filter_date_from": "ช่วงเวลาเริ่ม",
+    "filter_date_to": "ช่วงเวลาสิ้นสุด",
+    "filter_reset": "ล้างตัวกรอง"
   },
   "invoice": {
     "new": "ใบแจ้งหนี้ใหม่",
