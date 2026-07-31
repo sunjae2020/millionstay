@@ -5691,9 +5691,10 @@
       "space": "住戸",
       "work_order": "作業指示"
     },
-    "byUnit": "住戸",
-    "allUnits": "すべての住戸",
-    "col_unit": "住戸"
+    "col_unit": "住戸",
+    "allYears": "すべての年度",
+    "allTypes": "すべての種類",
+    "allRecords": "すべての対象"
   },
   "doc_type": {
     "contract": "契約書",

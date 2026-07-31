@@ -568,6 +568,8 @@ router.get("/v1/documents/library", async (req, res): Promise<void> => {
   if (year === "_none") conds.push(isNull(documentsTable.doc_year));
   else if (parsedYear) conds.push(eq(documentsTable.doc_year, parsedYear));
 
+  // Still accepted even though the screen has no unit picker: the unit column
+  // is derived from the same expression, so narrowing to one unit is free.
   const spaceId = Number(req.query["space_id"]);
   if (Number.isInteger(spaceId) && spaceId > 0) conds.push(sql`${docSpaceId} = ${spaceId}`);
 
@@ -591,27 +593,14 @@ router.get("/v1/documents/library", async (req, res): Promise<void> => {
   // Facets ignore the filter they describe, so selecting 2023 does not reduce
   // the year list to just 2023 and strand the user there.
   const facetConds = base;
-  const [years, types, entityTypes, unitFacets] = await Promise.all([
+  const [years, types, entityTypes] = await Promise.all([
     db.select({ value: documentsTable.doc_year, count: sql<number>`count(*)::int` })
       .from(documentsTable).where(and(...facetConds)).groupBy(documentsTable.doc_year),
     db.select({ value: documentsTable.doc_type, count: sql<number>`count(*)::int` })
       .from(documentsTable).where(and(...facetConds)).groupBy(documentsTable.doc_type),
     db.select({ value: documentsTable.entity_type, count: sql<number>`count(*)::int` })
       .from(documentsTable).where(and(...facetConds)).groupBy(documentsTable.entity_type),
-    // Units are in the hundreds, so this feeds a searchable picker rather than
-    // the chip rows the other facets use.
-    db.select({ value: docSpaceId, count: sql<number>`count(*)::int` })
-      .from(documentsTable)
-      .where(and(...facetConds, sql`${docSpaceId} is not null`))
-      .groupBy(docSpaceId),
   ]);
-
-  const facetSpaceIds = unitFacets.map((u) => u.value).filter((v): v is number => v != null);
-  const facetSpaces = facetSpaceIds.length
-    ? await db.select({ id: spacesTable.id, name: spacesTable.name })
-        .from(spacesTable).where(inArray(spacesTable.id, facetSpaceIds))
-    : [];
-  const facetSpaceNames = new Map(facetSpaces.map((sp) => [sp.id, sp.name]));
 
   res.json({
     documents: rows.map((r) => ({
@@ -628,10 +617,6 @@ router.get("/v1/documents/library", async (req, res): Promise<void> => {
         .sort((a, b) => (b.value ?? 0) - (a.value ?? 0)),
       doc_types: types.sort((a, b) => b.count - a.count),
       entity_types: entityTypes.sort((a, b) => b.count - a.count),
-      units: unitFacets
-        .filter((u) => u.value != null)
-        .map((u) => ({ value: u.value as number, label: facetSpaceNames.get(u.value as number) ?? `#${u.value}`, count: u.count }))
-        .sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true })),
     },
     truncated: docs.length === 500,
   });

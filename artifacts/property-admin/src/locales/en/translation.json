@@ -5691,9 +5691,10 @@
       "space": "Unit",
       "work_order": "Work order"
     },
-    "byUnit": "Unit",
-    "allUnits": "All units",
-    "col_unit": "Unit"
+    "col_unit": "Unit",
+    "allYears": "All years",
+    "allTypes": "All types",
+    "allRecords": "All records"
   },
   "doc_type": {
     "contract": "Contract",

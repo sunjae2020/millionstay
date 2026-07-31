@@ -57,8 +57,6 @@ interface LibraryResponse {
     years: Array<Facet<number | null>>;
     doc_types: Array<Facet<string>>;
     entity_types: Array<Facet<string>>;
-    /** Units carry a label because there are hundreds of them, and they need a picker. */
-    units: Array<{ value: number; label: string; count: number }>;
   };
   /** True when the result set hit the server's cap — narrow the filters. */
   truncated: boolean;
@@ -125,8 +123,6 @@ export default function DocumentLibrary() {
   const [year, setYear] = useState<string>("_all");
   const [docType, setDocType] = useState<string>("_all");
   const [entityType, setEntityType] = useState<string>("_all");
-  // Units are a dropdown, not chips: Metheim alone has 269 of them.
-  const [unit, setUnit] = useState<string>("_all");
 
   const [editing, setEditing] = useState<LibraryDocument | null>(null);
   const [editYear, setEditYear] = useState("");
@@ -141,9 +137,8 @@ export default function DocumentLibrary() {
     if (year !== "_all") p.set("year", year);
     if (docType !== "_all") p.set("doc_type", docType);
     if (entityType !== "_all") p.set("entity_type", entityType);
-    if (unit !== "_all") p.set("space_id", unit);
     return p.toString();
-  }, [query, year, docType, entityType, unit]);
+  }, [query, year, docType, entityType]);
 
   const { data, isLoading } = useQuery<LibraryResponse>({
     queryKey: ["document-library", params],
@@ -186,51 +181,15 @@ export default function DocumentLibrary() {
     }
   }
 
-  const activeFilters = [year !== "_all", docType !== "_all", entityType !== "_all", unit !== "_all", Boolean(query)]
+  const activeFilters = [year !== "_all", docType !== "_all", entityType !== "_all", Boolean(query)]
     .filter(Boolean).length;
 
   function clearFilters() {
     setYear("_all");
     setDocType("_all");
     setEntityType("_all");
-    setUnit("_all");
     setSearch("");
     setQuery("");
-  }
-
-  /** A facet chip row — same shape for years, types and records. */
-  function Chips<T extends string | number | null>({
-    items, selected, onSelect, label,
-  }: {
-    items: Array<Facet<T>>;
-    selected: string;
-    onSelect: (v: string) => void;
-    label: (v: T) => string;
-  }) {
-    return (
-      <div className="flex flex-wrap gap-1.5">
-        <button
-          type="button"
-          onClick={() => onSelect("_all")}
-          className={`rounded-full border px-2.5 py-1 text-xs ${selected === "_all" ? "border-primary bg-primary/10" : "hover:bg-muted"}`}
-        >
-          {t("library.all", "All")}
-        </button>
-        {items.map((f) => {
-          const key = f.value == null ? NO_YEAR : String(f.value);
-          return (
-            <button
-              key={key}
-              type="button"
-              onClick={() => onSelect(key)}
-              className={`rounded-full border px-2.5 py-1 text-xs ${selected === key ? "border-primary bg-primary/10" : "hover:bg-muted"}`}
-            >
-              {label(f.value)} <span className="text-muted-foreground">{f.count}</span>
-            </button>
-          );
-        })}
-      </div>
-    );
   }
 
   return (
@@ -240,72 +199,69 @@ export default function DocumentLibrary() {
         subtitle={t("library.subtitle", "Every filed document across all records — browse by year, type and keyword.")}
       />
 
-      <div className="mb-4 space-y-3 rounded-lg border bg-card p-4">
-        <form
-          className="flex gap-2"
-          onSubmit={(e) => { e.preventDefault(); setQuery(search); }}
+      {/* One row: keyword, then the three dimensions people actually filter by.
+          Chips read well with a handful of values but the year and type lists
+          grow, and stacking three of them pushed the results themselves below
+          the fold. Selects stay one line high no matter how many options. */}
+      <form
+        className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border bg-card p-3"
+        onSubmit={(e) => { e.preventDefault(); setQuery(search); }}
+      >
+        <div className="relative min-w-[200px] flex-1">
+          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            className="pl-8"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t("library.searchPlaceholder", "Search file name, title or keyword…")}
+          />
+        </div>
+
+        <select
+          value={year}
+          onChange={(e) => setYear(e.target.value)}
+          aria-label={t("library.byYear", "Year")}
+          className="h-9 rounded-md border bg-background px-2 text-sm"
         >
-          <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              className="pl-8"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t("library.searchPlaceholder", "Search file name, title or keyword…")}
-            />
-          </div>
-          <Button type="submit" variant="outline">{t("library.search", "Search")}</Button>
-          {activeFilters > 0 && (
-            <Button type="button" variant="ghost" onClick={clearFilters}>
-              <X className="mr-1 h-4 w-4" />{t("library.clear", "Clear")}
-            </Button>
-          )}
-        </form>
+          <option value="_all">{t("library.allYears", "All years")}</option>
+          {(data?.facets.years ?? []).map((f) => (
+            <option key={f.value == null ? NO_YEAR : String(f.value)} value={f.value == null ? NO_YEAR : String(f.value)}>
+              {f.value == null ? t("library.noYear", "No year") : f.value} ({f.count})
+            </option>
+          ))}
+        </select>
 
-        <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground">{t("library.byYear", "Year")}</p>
-          <Chips
-            items={data?.facets.years ?? []}
-            selected={year}
-            onSelect={setYear}
-            label={(v) => (v == null ? t("library.noYear", "No year") : String(v))}
-          />
-        </div>
+        <select
+          value={docType}
+          onChange={(e) => setDocType(e.target.value)}
+          aria-label={t("library.byType", "Document type")}
+          className="h-9 rounded-md border bg-background px-2 text-sm"
+        >
+          <option value="_all">{t("library.allTypes", "All types")}</option>
+          {(data?.facets.doc_types ?? []).map((f) => (
+            <option key={f.value} value={f.value}>{typeLabel(f.value)} ({f.count})</option>
+          ))}
+        </select>
 
-        <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground">{t("library.byType", "Document type")}</p>
-          <Chips
-            items={data?.facets.doc_types ?? []}
-            selected={docType}
-            onSelect={setDocType}
-            label={(v) => typeLabel(String(v))}
-          />
-        </div>
+        <select
+          value={entityType}
+          onChange={(e) => setEntityType(e.target.value)}
+          aria-label={t("library.byRecord", "Filed against")}
+          className="h-9 rounded-md border bg-background px-2 text-sm"
+        >
+          <option value="_all">{t("library.allRecords", "All records")}</option>
+          {(data?.facets.entity_types ?? []).map((f) => (
+            <option key={f.value} value={f.value}>{t(`library.entity.${f.value}`, f.value)} ({f.count})</option>
+          ))}
+        </select>
 
-        <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground">{t("library.byUnit", "Unit")}</p>
-          <select
-            value={unit}
-            onChange={(e) => setUnit(e.target.value)}
-            className="h-9 w-full max-w-xs rounded-md border bg-background px-2 text-sm"
-          >
-            <option value="_all">{t("library.allUnits", "All units")}</option>
-            {(data?.facets.units ?? []).map((u) => (
-              <option key={u.value} value={String(u.value)}>{u.label} ({u.count})</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground">{t("library.byRecord", "Filed against")}</p>
-          <Chips
-            items={data?.facets.entity_types ?? []}
-            selected={entityType}
-            onSelect={setEntityType}
-            label={(v) => t(`library.entity.${v}`, String(v))}
-          />
-        </div>
-      </div>
+        <Button type="submit" variant="outline">{t("library.search", "Search")}</Button>
+        {activeFilters > 0 && (
+          <Button type="button" variant="ghost" onClick={clearFilters}>
+            <X className="mr-1 h-4 w-4" />{t("library.clear", "Clear")}
+          </Button>
+        )}
+      </form>
 
       {data?.truncated && (
         <p className="mb-3 rounded border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
@@ -345,15 +301,7 @@ export default function DocumentLibrary() {
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{d.doc_year ?? "—"}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
-                    {d.space_name ? (
-                      <button
-                        type="button"
-                        onClick={() => setUnit(String(d.space_id))}
-                        className="hover:underline"
-                      >
-                        {d.space_name}
-                      </button>
-                    ) : "—"}
+                    {d.space_name ?? "—"}
                   </td>
                   <td className="px-4 py-3">
                     {d.tags.length ? (

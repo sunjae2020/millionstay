@@ -5691,9 +5691,10 @@
       "space": "Căn hộ",
       "work_order": "Lệnh công việc"
     },
-    "byUnit": "Căn hộ",
-    "allUnits": "Tất cả căn hộ",
-    "col_unit": "Căn hộ"
+    "col_unit": "Căn hộ",
+    "allYears": "Tất cả năm",
+    "allTypes": "Tất cả loại",
+    "allRecords": "Tất cả bản ghi"
   },
   "doc_type": {
     "contract": "Hợp đồng",

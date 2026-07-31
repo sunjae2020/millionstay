@@ -5691,9 +5691,10 @@
       "space": "세대",
       "work_order": "작업지시"
     },
-    "byUnit": "세대",
-    "allUnits": "전체 세대",
-    "col_unit": "세대"
+    "col_unit": "세대",
+    "allYears": "전체 연도",
+    "allTypes": "전체 종류",
+    "allRecords": "전체 대상"
   },
   "doc_type": {
     "contract": "계약서",

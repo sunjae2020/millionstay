@@ -5691,9 +5691,10 @@
       "space": "房号",
       "work_order": "工单"
     },
-    "byUnit": "房号",
-    "allUnits": "全部房号",
-    "col_unit": "房号"
+    "col_unit": "房号",
+    "allYears": "全部年份",
+    "allTypes": "全部类型",
+    "allRecords": "全部对象"
   },
   "doc_type": {
     "contract": "合同",

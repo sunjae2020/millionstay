@@ -5691,9 +5691,10 @@
       "space": "ห้อง",
       "work_order": "ใบสั่งงาน"
     },
-    "byUnit": "ห้อง",
-    "allUnits": "ทุกห้อง",
-    "col_unit": "ห้อง"
+    "col_unit": "ห้อง",
+    "allYears": "ทุกปี",
+    "allTypes": "ทุกประเภท",
+    "allRecords": "ทุกรายการ"
   },
   "doc_type": {
     "contract": "สัญญา",
