@@ -118,7 +118,8 @@
     "sale_listings": "分譲・販売物件",
     "booking_contract": "予約・契約",
     "calendar": "業務カレンダー",
-    "dashboards": "ダッシュボード"
+    "dashboards": "ダッシュボード",
+    "document_intake": "一括取り込み"
   },
   "dashboard": {
     "title": "ダッシュボード",
@@ -5573,5 +5574,74 @@
     "type_other": "その他",
     "type_signed_contract": "署名済み原本（スキャン）",
     "evidence": "証跡"
+  },
+  "intake": {
+    "title": "書類の一括取り込み",
+    "subtitle": "既存の書類をまとめてアップロードします。内容を読み取って該当レコードを提案し、確認後にはじめて添付されます。",
+    "upload": "ファイルをアップロード",
+    "uploaded": "アップロード完了",
+    "uploadedDesc": "{{uploaded}}件を保存、{{scanning}}件を読み取り中。{{failed}}件は失敗。",
+    "uploadFailed": "アップロードに失敗しました",
+    "fileConfident": "確実な一致をすべて添付",
+    "summary": "確認待ち {{review}} 件 · 添付可 {{ready}} 件 · 添付済 {{filed}} 件",
+    "queue": "待ち行列",
+    "empty": "まだありません。書類フォルダをアップロードして開始してください。",
+    "selectPrompt": "左の一覧から書類を選ぶと確認できます。",
+    "rescan": "再読み取り",
+    "rescanFailed": "再読み取りに失敗しました",
+    "confirmDiscard": "{{name}} を破棄しますか？ファイルは削除されます。",
+    "discardFailed": "破棄できませんでした",
+    "filed": "添付完了",
+    "fileFailed": "添付できませんでした",
+    "batchFiled": "一括添付が完了しました",
+    "batchFiledDesc": "{{filed}}件を添付、{{skipped}}件は確認が必要です。",
+    "candidates": "候補レコード",
+    "docTypeLabel": "書類の種類",
+    "entityTypeLabel": "添付先",
+    "searchRecord": "レコードを検索…",
+    "noRecords": "一致するレコードがありません。",
+    "personOnly": "身分証明書・ビザは30日後に破棄されるため、契約ではなく本人に添付する必要があります。",
+    "confirm": "この書類を添付",
+    "alreadyFiled": "{{type}} #{{id}} に {{docType}} として添付済みです。",
+    "status": {
+      "all": "すべて",
+      "review": "確認が必要",
+      "scanned": "添付可",
+      "pending": "読み取り中",
+      "failed": "読み取り失敗",
+      "filed": "添付済み",
+      "discarded": "破棄済み"
+    },
+    "docType": {
+      "contract": "契約書",
+      "tax_invoice": "税務請求書",
+      "receipt": "領収書",
+      "property_document": "不動産書類",
+      "id_document": "身分証明書",
+      "visa_document": "ビザ書類",
+      "other": "その他"
+    },
+    "entity": {
+      "contract": "契約",
+      "contact": "個人"
+    },
+    "source": {
+      "filename": "ファイル名から",
+      "ai": "AI読み取り"
+    },
+    "field": {
+      "party_name": "借主",
+      "counterparty_name": "貸主",
+      "unit_label": "住戸",
+      "building_name": "建物名",
+      "address": "住所",
+      "start_date": "契約開始",
+      "end_date": "契約終了",
+      "document_date": "作成日",
+      "deposit_amount": "保証金",
+      "monthly_rent": "月額賃料",
+      "reference": "文書番号",
+      "notes": "備考"
+    }
   }
 }

@@ -82,3 +82,4 @@ export * from "./sale_listings";
 export * from "./sale_inquiries";
 export * from "./user_table_prefs";
 export * from "./partner_payouts";
+export * from "./document_intake";

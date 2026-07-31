@@ -118,7 +118,8 @@
     "sale_listings": "분양·판매 물건",
     "booking_contract": "예약 & 계약",
     "calendar": "업무 캘린더",
-    "dashboards": "대시보드"
+    "dashboards": "대시보드",
+    "document_intake": "일괄 업로드"
   },
   "dashboard": {
     "title": "대시보드",
@@ -5573,5 +5574,74 @@
     "type_other": "기타",
     "type_signed_contract": "서명본 스캔",
     "evidence": "증빙"
+  },
+  "intake": {
+    "title": "서류 일괄 업로드",
+    "subtitle": "기존 서류를 한꺼번에 올리면 내용을 읽어 해당 레코드를 찾아 줍니다. 확인을 눌러야 실제로 첨부됩니다.",
+    "upload": "파일 업로드",
+    "uploaded": "업로드 완료",
+    "uploadedDesc": "{{uploaded}}건 저장, {{scanning}}건 판독 중. {{failed}}건 실패.",
+    "uploadFailed": "업로드 실패",
+    "fileConfident": "확실한 건 모두 첨부",
+    "summary": "검토 대기 {{review}} · 첨부 준비 {{ready}} · 첨부 완료 {{filed}}",
+    "queue": "대기 목록",
+    "empty": "아직 없습니다. 서류 폴더를 업로드해 시작하세요.",
+    "selectPrompt": "왼쪽 목록에서 서류를 선택하면 검토할 수 있습니다.",
+    "rescan": "다시 판독",
+    "rescanFailed": "다시 판독 실패",
+    "confirmDiscard": "{{name}} 항목을 버릴까요? 파일이 삭제됩니다.",
+    "discardFailed": "삭제하지 못했습니다",
+    "filed": "첨부 완료",
+    "fileFailed": "첨부하지 못했습니다",
+    "batchFiled": "일괄 첨부 완료",
+    "batchFiledDesc": "{{filed}}건 첨부, {{skipped}}건은 검토가 필요합니다.",
+    "candidates": "추천 레코드",
+    "docTypeLabel": "서류 종류",
+    "entityTypeLabel": "첨부 대상",
+    "searchRecord": "레코드 검색…",
+    "noRecords": "일치하는 레코드가 없습니다.",
+    "personOnly": "신분증·비자는 30일 후 파기되므로 계약이 아니라 해당 인물에게 첨부해야 합니다.",
+    "confirm": "이 서류 첨부하기",
+    "alreadyFiled": "{{type}} #{{id}}에 {{docType}}(으)로 첨부되었습니다.",
+    "status": {
+      "all": "전체",
+      "review": "검토 필요",
+      "scanned": "첨부 준비",
+      "pending": "판독 중",
+      "failed": "판독 실패",
+      "filed": "첨부 완료",
+      "discarded": "삭제됨"
+    },
+    "docType": {
+      "contract": "계약서",
+      "tax_invoice": "세금계산서",
+      "receipt": "영수증",
+      "property_document": "부동산 서류",
+      "id_document": "신분증",
+      "visa_document": "비자 서류",
+      "other": "기타"
+    },
+    "entity": {
+      "contract": "계약",
+      "contact": "인물"
+    },
+    "source": {
+      "filename": "파일명 기준",
+      "ai": "AI 판독"
+    },
+    "field": {
+      "party_name": "임차인",
+      "counterparty_name": "임대인",
+      "unit_label": "세대",
+      "building_name": "건물명",
+      "address": "주소",
+      "start_date": "계약 시작",
+      "end_date": "계약 종료",
+      "document_date": "작성일",
+      "deposit_amount": "보증금",
+      "monthly_rent": "월세",
+      "reference": "문서번호",
+      "notes": "비고"
+    }
   }
 }

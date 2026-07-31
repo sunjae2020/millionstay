@@ -28,6 +28,7 @@ import {
   CalendarDays,
   FileText,
   FileSignature,
+  Upload,
   Box,
   Tag,
   Receipt,
@@ -160,6 +161,7 @@ function getNav(
       defaultOpen: false,
       items: [
         { href: "/documents", label: t("nav.all_documents"), icon: FileText },
+        { href: "/documents/intake", label: t("nav.document_intake"), icon: Upload },
         { href: "/documents/quotes", label: t("nav.quotes"), icon: FileText },
         { href: "/finance/invoices", label: t("nav.invoice"), icon: Receipt },
         { href: "/finance/receipts", label: t("nav.receipt"), icon: Receipt },

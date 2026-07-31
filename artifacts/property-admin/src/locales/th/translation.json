@@ -118,7 +118,8 @@
     "sale_listings": "รายการขาย",
     "booking_contract": "การจอง & สัญญา",
     "calendar": "ปฏิทินงาน",
-    "dashboards": "แดชบอร์ด"
+    "dashboards": "แดชบอร์ด",
+    "document_intake": "นำเข้าเป็นชุด"
   },
   "dashboard": {
     "title": "แดชบอร์ด",
@@ -5573,5 +5574,74 @@
     "type_other": "อื่น ๆ",
     "type_signed_contract": "ต้นฉบับที่ลงนาม (สแกน)",
     "evidence": "หลักฐาน"
+  },
+  "intake": {
+    "title": "นำเข้าเอกสารเป็นชุด",
+    "subtitle": "อัปโหลดเอกสารเดิมทีละหลายไฟล์ ระบบจะอ่านเนื้อหาและจับคู่กับรายการที่เกี่ยว แล้วจัดเก็บเมื่อคุณยืนยันเท่านั้น",
+    "upload": "อัปโหลดไฟล์",
+    "uploaded": "อัปโหลดแล้ว",
+    "uploadedDesc": "บันทึกแล้ว {{uploaded}} ไฟล์ กำลังอ่าน {{scanning}} ไฟล์ ล้มเหลว {{failed}} ไฟล์",
+    "uploadFailed": "อัปโหลดไม่สำเร็จ",
+    "fileConfident": "จัดเก็บรายการที่ตรงแน่นอนทั้งหมด",
+    "summary": "รอตรวจ {{review}} · พร้อมจัดเก็บ {{ready}} · จัดเก็บแล้ว {{filed}}",
+    "queue": "คิวงาน",
+    "empty": "ยังไม่มีรายการ อัปโหลดโฟลเดอร์เอกสารเพื่อเริ่มต้น",
+    "selectPrompt": "เลือกเอกสารจากคิวเพื่อตรวจสอบ",
+    "rescan": "อ่านใหม่",
+    "rescanFailed": "อ่านใหม่ไม่สำเร็จ",
+    "confirmDiscard": "ทิ้ง {{name}} หรือไม่? ไฟล์จะถูกลบ",
+    "discardFailed": "ทิ้งไม่สำเร็จ",
+    "filed": "จัดเก็บแล้ว",
+    "fileFailed": "จัดเก็บไม่สำเร็จ",
+    "batchFiled": "จัดเก็บเป็นชุดแล้ว",
+    "batchFiledDesc": "จัดเก็บ {{filed}} รายการ เหลือ {{skipped}} รายการที่ต้องตรวจสอบ",
+    "candidates": "รายการที่แนะนำ",
+    "docTypeLabel": "ประเภทเอกสาร",
+    "entityTypeLabel": "จัดเก็บไว้ที่",
+    "searchRecord": "ค้นหารายการ…",
+    "noRecords": "ไม่พบรายการที่ตรงกัน",
+    "personOnly": "เอกสารแสดงตนและวีซ่าจะถูกทำลายหลัง 30 วัน จึงต้องจัดเก็บไว้กับบุคคลนั้น ไม่ใช่กับสัญญา",
+    "confirm": "จัดเก็บเอกสารนี้",
+    "alreadyFiled": "จัดเก็บไว้ที่ {{type}} #{{id}} เป็น {{docType}} แล้ว",
+    "status": {
+      "all": "ทั้งหมด",
+      "review": "ต้องตรวจสอบ",
+      "scanned": "พร้อมจัดเก็บ",
+      "pending": "กำลังอ่าน",
+      "failed": "อ่านไม่สำเร็จ",
+      "filed": "จัดเก็บแล้ว",
+      "discarded": "ทิ้งแล้ว"
+    },
+    "docType": {
+      "contract": "สัญญา",
+      "tax_invoice": "ใบกำกับภาษี",
+      "receipt": "ใบเสร็จ",
+      "property_document": "เอกสารอสังหาริมทรัพย์",
+      "id_document": "เอกสารแสดงตน",
+      "visa_document": "เอกสารวีซ่า",
+      "other": "อื่น ๆ"
+    },
+    "entity": {
+      "contract": "สัญญา",
+      "contact": "บุคคล"
+    },
+    "source": {
+      "filename": "จากชื่อไฟล์",
+      "ai": "อ่านด้วย AI"
+    },
+    "field": {
+      "party_name": "ผู้เช่า",
+      "counterparty_name": "ผู้ให้เช่า",
+      "unit_label": "ห้อง",
+      "building_name": "ชื่ออาคาร",
+      "address": "ที่อยู่",
+      "start_date": "เริ่มสัญญา",
+      "end_date": "สิ้นสุดสัญญา",
+      "document_date": "วันที่เอกสาร",
+      "deposit_amount": "เงินมัดจำ",
+      "monthly_rent": "ค่าเช่ารายเดือน",
+      "reference": "เลขที่เอกสาร",
+      "notes": "หมายเหตุ"
+    }
   }
 }

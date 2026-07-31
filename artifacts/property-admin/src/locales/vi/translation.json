@@ -118,7 +118,8 @@
     "sale_listings": "Tin rao bán",
     "booking_contract": "Đặt chỗ & Hợp đồng",
     "calendar": "Lịch công việc",
-    "dashboards": "Bảng điều khiển"
+    "dashboards": "Bảng điều khiển",
+    "document_intake": "Nhập hàng loạt"
   },
   "dashboard": {
     "title": "Bảng điều khiển",
@@ -5573,5 +5574,74 @@
     "type_other": "Khác",
     "type_signed_contract": "Bản gốc đã ký (bản scan)",
     "evidence": "Bằng chứng"
+  },
+  "intake": {
+    "title": "Nhập tài liệu hàng loạt",
+    "subtitle": "Tải lên hàng loạt giấy tờ sẵn có. Hệ thống đọc nội dung, đề xuất bản ghi phù hợp và chỉ lưu hồ sơ sau khi bạn xác nhận.",
+    "upload": "Tải tệp lên",
+    "uploaded": "Đã tải lên",
+    "uploadedDesc": "Đã lưu {{uploaded}} tệp, đang đọc {{scanning}} tệp, {{failed}} tệp lỗi.",
+    "uploadFailed": "Tải lên thất bại",
+    "fileConfident": "Lưu tất cả kết quả khớp chắc chắn",
+    "summary": "Chờ duyệt {{review}} · Sẵn sàng {{ready}} · Đã lưu {{filed}}",
+    "queue": "Hàng chờ",
+    "empty": "Chưa có gì ở đây. Tải lên một thư mục tài liệu để bắt đầu.",
+    "selectPrompt": "Chọn một tài liệu trong hàng chờ để xem xét.",
+    "rescan": "Đọc lại",
+    "rescanFailed": "Đọc lại thất bại",
+    "confirmDiscard": "Bỏ {{name}}? Tệp sẽ bị xóa.",
+    "discardFailed": "Không thể bỏ",
+    "filed": "Đã lưu hồ sơ",
+    "fileFailed": "Không thể lưu hồ sơ",
+    "batchFiled": "Đã lưu hồ sơ hàng loạt",
+    "batchFiledDesc": "Đã lưu {{filed}}, còn {{skipped}} cần xem xét.",
+    "candidates": "Bản ghi gợi ý",
+    "docTypeLabel": "Loại tài liệu",
+    "entityTypeLabel": "Lưu vào",
+    "searchRecord": "Tìm bản ghi…",
+    "noRecords": "Không có bản ghi phù hợp.",
+    "personOnly": "Giấy tờ tùy thân và thị thực bị hủy sau 30 ngày, nên phải lưu theo cá nhân chứ không phải theo hợp đồng.",
+    "confirm": "Lưu tài liệu này",
+    "alreadyFiled": "Đã lưu vào {{type}} #{{id}} dưới dạng {{docType}}.",
+    "status": {
+      "all": "Tất cả",
+      "review": "Cần xem xét",
+      "scanned": "Sẵn sàng lưu",
+      "pending": "Đang đọc",
+      "failed": "Đọc thất bại",
+      "filed": "Đã lưu",
+      "discarded": "Đã bỏ"
+    },
+    "docType": {
+      "contract": "Hợp đồng",
+      "tax_invoice": "Hóa đơn thuế",
+      "receipt": "Biên lai",
+      "property_document": "Giấy tờ bất động sản",
+      "id_document": "Giấy tờ tùy thân",
+      "visa_document": "Giấy tờ thị thực",
+      "other": "Khác"
+    },
+    "entity": {
+      "contract": "Hợp đồng",
+      "contact": "Cá nhân"
+    },
+    "source": {
+      "filename": "Từ tên tệp",
+      "ai": "AI đọc"
+    },
+    "field": {
+      "party_name": "Bên thuê",
+      "counterparty_name": "Bên cho thuê",
+      "unit_label": "Căn hộ",
+      "building_name": "Tên tòa nhà",
+      "address": "Địa chỉ",
+      "start_date": "Bắt đầu",
+      "end_date": "Kết thúc",
+      "document_date": "Ngày lập",
+      "deposit_amount": "Tiền đặt cọc",
+      "monthly_rent": "Tiền thuê tháng",
+      "reference": "Số hiệu",
+      "notes": "Ghi chú"
+    }
   }
 }

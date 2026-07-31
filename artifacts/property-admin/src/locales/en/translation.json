@@ -118,7 +118,8 @@
     "sale_listings": "Sale Listings",
     "booking_contract": "Bookings & Contracts",
     "calendar": "Work Calendar",
-    "dashboards": "Dashboards"
+    "dashboards": "Dashboards",
+    "document_intake": "Bulk intake"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -5573,5 +5574,74 @@
     "type_other": "Other",
     "type_signed_contract": "Signed original (scan)",
     "evidence": "Evidence"
+  },
+  "intake": {
+    "title": "Bulk document intake",
+    "subtitle": "Upload existing paperwork in bulk. Each file is read, matched to a record, and filed only after you confirm it.",
+    "upload": "Upload files",
+    "uploaded": "Uploaded",
+    "uploadedDesc": "{{uploaded}} file(s) stored, {{scanning}} being read. {{failed}} failed.",
+    "uploadFailed": "Upload failed",
+    "fileConfident": "File all confident matches",
+    "summary": "{{review}} awaiting review · {{ready}} ready · {{filed}} filed",
+    "queue": "Queue",
+    "empty": "Nothing here. Upload a folder of documents to start.",
+    "selectPrompt": "Pick a document from the queue to review it.",
+    "rescan": "Re-read",
+    "rescanFailed": "Re-scan failed",
+    "confirmDiscard": "Discard {{name}}? The file will be deleted.",
+    "discardFailed": "Could not discard",
+    "filed": "Filed",
+    "fileFailed": "Could not file",
+    "batchFiled": "Batch filed",
+    "batchFiledDesc": "{{filed}} filed, {{skipped}} left for review.",
+    "candidates": "Suggested records",
+    "docTypeLabel": "Document type",
+    "entityTypeLabel": "File against",
+    "searchRecord": "Search for a record…",
+    "noRecords": "No matching records.",
+    "personOnly": "Identity and visa documents are destroyed after 30 days, so they must be filed against the person they identify — not a contract.",
+    "confirm": "File this document",
+    "alreadyFiled": "Filed against {{type}} #{{id}} as {{docType}}.",
+    "status": {
+      "all": "All",
+      "review": "Needs review",
+      "scanned": "Ready to file",
+      "pending": "Reading",
+      "failed": "Read failed",
+      "filed": "Filed",
+      "discarded": "Discarded"
+    },
+    "docType": {
+      "contract": "Contract",
+      "tax_invoice": "Tax invoice",
+      "receipt": "Receipt",
+      "property_document": "Property document",
+      "id_document": "Identity document",
+      "visa_document": "Visa document",
+      "other": "Other"
+    },
+    "entity": {
+      "contract": "Contract",
+      "contact": "Person"
+    },
+    "source": {
+      "filename": "From filename",
+      "ai": "Read by AI"
+    },
+    "field": {
+      "party_name": "Tenant",
+      "counterparty_name": "Landlord",
+      "unit_label": "Unit",
+      "building_name": "Building",
+      "address": "Address",
+      "start_date": "Term start",
+      "end_date": "Term end",
+      "document_date": "Document date",
+      "deposit_amount": "Deposit",
+      "monthly_rent": "Monthly rent",
+      "reference": "Reference",
+      "notes": "Notes"
+    }
   }
 }

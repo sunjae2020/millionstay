@@ -118,7 +118,8 @@
     "sale_listings": "销售房源",
     "booking_contract": "预订与合同",
     "calendar": "工作日历",
-    "dashboards": "仪表板"
+    "dashboards": "仪表板",
+    "document_intake": "批量导入"
   },
   "dashboard": {
     "title": "仪表板",
@@ -5573,5 +5574,74 @@
     "type_other": "其他",
     "type_signed_contract": "签署原件（扫描）",
     "evidence": "凭证"
+  },
+  "intake": {
+    "title": "文件批量导入",
+    "subtitle": "一次性上传既有文件。系统会读取内容并匹配对应记录，确认后才会正式归档。",
+    "upload": "上传文件",
+    "uploaded": "上传完成",
+    "uploadedDesc": "已保存 {{uploaded}} 个，正在读取 {{scanning}} 个，失败 {{failed}} 个。",
+    "uploadFailed": "上传失败",
+    "fileConfident": "归档所有确定匹配",
+    "summary": "待复核 {{review}} · 可归档 {{ready}} · 已归档 {{filed}}",
+    "queue": "队列",
+    "empty": "暂无内容。上传文件夹即可开始。",
+    "selectPrompt": "从左侧队列中选择一份文件进行复核。",
+    "rescan": "重新读取",
+    "rescanFailed": "重新读取失败",
+    "confirmDiscard": "确定丢弃 {{name}}？文件将被删除。",
+    "discardFailed": "无法丢弃",
+    "filed": "已归档",
+    "fileFailed": "无法归档",
+    "batchFiled": "批量归档完成",
+    "batchFiledDesc": "已归档 {{filed}} 个，{{skipped}} 个仍需复核。",
+    "candidates": "推荐记录",
+    "docTypeLabel": "文件类型",
+    "entityTypeLabel": "归档到",
+    "searchRecord": "搜索记录…",
+    "noRecords": "没有匹配的记录。",
+    "personOnly": "身份证件与签证文件将在 30 天后销毁，因此必须归档到本人名下，而不是合同。",
+    "confirm": "归档此文件",
+    "alreadyFiled": "已作为 {{docType}} 归档至 {{type}} #{{id}}。",
+    "status": {
+      "all": "全部",
+      "review": "待复核",
+      "scanned": "可归档",
+      "pending": "读取中",
+      "failed": "读取失败",
+      "filed": "已归档",
+      "discarded": "已丢弃"
+    },
+    "docType": {
+      "contract": "合同",
+      "tax_invoice": "税务发票",
+      "receipt": "收据",
+      "property_document": "房产文件",
+      "id_document": "身份证件",
+      "visa_document": "签证文件",
+      "other": "其他"
+    },
+    "entity": {
+      "contract": "合同",
+      "contact": "个人"
+    },
+    "source": {
+      "filename": "来自文件名",
+      "ai": "AI 读取"
+    },
+    "field": {
+      "party_name": "承租人",
+      "counterparty_name": "出租人",
+      "unit_label": "房号",
+      "building_name": "楼宇名称",
+      "address": "地址",
+      "start_date": "起始日",
+      "end_date": "到期日",
+      "document_date": "文件日期",
+      "deposit_amount": "押金",
+      "monthly_rent": "月租",
+      "reference": "文件编号",
+      "notes": "备注"
+    }
   }
 }
