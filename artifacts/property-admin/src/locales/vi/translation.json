@@ -5555,25 +5555,16 @@
   },
   "entity_docs": {
     "tab_title": "Tài liệu",
-    "description": "Tài liệu lưu theo bản ghi này — bản scan gốc đã ký, phụ lục, giấy chứng nhận. Tệp được lưu riêng tư và chỉ mở qua liên kết đã xác thực có thời hạn ngắn. Bản chụp tài liệu đã phát hành là bằng chứng đã gửi nên không thể xoá.",
+    "description": "Tài liệu lưu theo bản ghi này. Tệp được lưu riêng tư và chỉ mở qua liên kết đã xác thực có thời hạn ngắn. Bản gốc đã ký và bản chụp đã phát hành là bằng chứng nên không thể xoá.",
     "upload": "Tải tệp lên",
     "upload_failed": "Tải lên thất bại",
     "confirm_delete": "Xoá tài liệu này?",
     "empty": "Chưa có tài liệu.",
     "col_file": "Tệp",
-    "col_type": "Loại",
     "col_size": "Kích thước",
     "col_date": "Ngày tải lên",
     "issued_version": "Đã phát hành v{{version}}",
-    "type_contract": "Hợp đồng / bản gốc đã ký",
-    "type_property_document": "Tài liệu bất động sản",
-    "type_tax_invoice": "Hoá đơn thuế",
-    "type_receipt": "Biên nhận",
-    "type_id_document": "Giấy tờ tùy thân",
-    "type_visa_document": "Tài liệu thị thực",
-    "type_other": "Khác",
-    "type_signed_contract": "Bản gốc đã ký (bản scan)",
-    "evidence": "Bằng chứng"
+    "signed_original": "Bản gốc đã ký"
   },
   "intake": {
     "title": "Nhập tài liệu hàng loạt",
@@ -5643,5 +5634,10 @@
       "reference": "Số hiệu",
       "notes": "Ghi chú"
     }
+  },
+  "contract_docs": {
+    "section": "Tài liệu hợp đồng",
+    "is_signed_original": "Đây là bản gốc đã ký",
+    "is_signed_original_help": "Đồng thời ghi nhận hợp đồng đã ký kết. Chỉ lưu tài liệu thì không tích chọn."
   }
 }

@@ -5555,25 +5555,16 @@
   },
   "entity_docs": {
     "tab_title": "文件",
-    "description": "归档于此记录的文件，可上传已签署原件扫描件、附件、证明等。文件私密存储，仅通过带认证的短期链接打开。已发出文件的快照作为发送凭证，无法删除。",
+    "description": "归档于此记录的文件。文件私密存储，仅通过带认证的短期链接打开。签署原件与已发出快照作为凭证，无法删除。",
     "upload": "上传文件",
     "upload_failed": "上传失败",
     "confirm_delete": "要删除此文件吗？",
     "empty": "暂无文件。",
     "col_file": "文件",
-    "col_type": "类型",
     "col_size": "大小",
     "col_date": "上传日期",
     "issued_version": "已发出 v{{version}}",
-    "type_contract": "合同 · 签署原件",
-    "type_property_document": "房产文件",
-    "type_tax_invoice": "税务发票",
-    "type_receipt": "收据",
-    "type_id_document": "身份证件",
-    "type_visa_document": "签证文件",
-    "type_other": "其他",
-    "type_signed_contract": "签署原件（扫描）",
-    "evidence": "凭证"
+    "signed_original": "签署原件"
   },
   "intake": {
     "title": "文件批量导入",
@@ -5643,5 +5634,10 @@
       "reference": "文件编号",
       "notes": "备注"
     }
+  },
+  "contract_docs": {
+    "section": "合同文件",
+    "is_signed_original": "这是签署盖章的合同原件",
+    "is_signed_original_help": "同时完成签订处理。仅归档文件时请不要勾选。"
   }
 }

@@ -28,7 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DocumentVersions } from "@/components/DocumentVersions";
 import { HomestaySignatureCard } from "@/components/HomestaySignatureCard";
 import ContractInspections from "@/components/ContractInspections";
-import EntityDocuments from "@/components/EntityDocuments";
+import ContractDocuments from "@/components/ContractDocuments";
 import { DocumentPreviewDialog, useDocumentPreview } from "@/components/DocumentPreviewDialog";
 import {
   ContractIssueWizard,
@@ -36,7 +36,6 @@ import {
   LEASE_FORM_OPTIONS,
   type SigningPolicy,
 } from "@/components/ContractIssueWizard";
-import { SignedScanCard } from "@/components/SignedScanCard";
 import { useBrand } from "@/contexts/ThemeContext";
 import { SUPPORTED_CURRENCIES } from "@/lib/currency";
 
@@ -1499,21 +1498,10 @@ export default function ContractDetail() {
 
           {activeTab === "inspections" && <ContractInspections contractId={id!} />}
 
-          {/* One filing cabinet, two ways in. The scan card is a *contract
-              execution* action (날인일 + 상태 전이 + 발행본 동결), not plain
-              storage, so it keeps its own form — but it no longer lists files:
-              everything it saves lands in the table below, which is the single
-              place documents are listed.
-
-              Identity documents are deliberately not offered here: they belong
-              to the person (contact) so their 30-day APP 11 retention is not
-              stretched to the contract's 7 years. */}
-          {activeTab === "documents" && (
-            <div className="space-y-4">
-              {contract && <SignedScanCard contractId={Number(id)} />}
-              <EntityDocuments entityType="contract" entityId={id!} docTypes={["contract", "property_document", "other"]} />
-            </div>
-          )}
+          {/* 계약 서류함 — 업로드도 목록도 이 컴포넌트 하나가 갖는다.
+              신분증·비자는 여기 올리지 않는다: 30일 파기(APP 11) 대상이라
+              7년 보관하는 계약에 붙이면 보존기간이 어긋난다. */}
+          {activeTab === "documents" && contract && <ContractDocuments contractId={Number(id)} />}
 
           </div>
         </div>

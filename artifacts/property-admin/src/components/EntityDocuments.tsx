@@ -14,8 +14,13 @@ import { formatDate } from "@/lib/date";
  * page can grow a documents tab without another copy of upload/list/preview.
  * It reads the shared `documents` table through /v1/documents, which returns
  * both manual uploads and the immutable snapshots frozen when a document was
- * sent to the customer — the snapshots are marked and cannot be deleted, since
- * they are the exact bytes the customer received.
+ * sent to the customer.
+ *
+ * The document *type* is never asked of the user — it exists to drive the
+ * retention policy, not to be filled in. Uploads take the type that matches the
+ * record they are filed against (`defaultDocType`), and callers that have an
+ * upload flow of their own (a contract's signed original) pass `hideUpload` and
+ * post the file themselves, so a page never grows two upload buttons.
  *
  * Files are streamed back through our own API rather than a Cloudinary URL: the
  * account blocks PDF delivery through the image pipeline, so a signed URL
@@ -37,19 +42,27 @@ export interface EntityDocument {
   file_url: string;
 }
 
+export type DocumentEntityType =
+  | "contract" | "invoice" | "quote" | "booking" | "account"
+  | "contact" | "property" | "space" | "work_order";
+
 interface Props {
-  entityType: "contract" | "invoice" | "quote" | "booking" | "account" | "contact" | "property" | "space" | "work_order";
+  entityType: DocumentEntityType;
   entityId: string | number;
   /**
-   * Document types offered in the upload picker, in order. The classification
-   * is what sets the file's retention period server-side, so the caller picks
-   * the ones that make sense for its record. Identity documents are only
-   * accepted on a person (contact) — the API refuses them elsewhere.
+   * Classification stored with uploads from this panel. It sets the retention
+   * period server-side, so it follows the record — a contract's paperwork is
+   * kept for the contract's 7 years, not the 2-year default.
    */
-  docTypes?: string[];
+  defaultDocType?: string;
+  /** Caller owns the upload control (see the contract's execution form). */
+  hideUpload?: boolean;
 }
 
-const DEFAULT_DOC_TYPES = ["contract", "property_document", "other"];
+/** Query key the panel reads, so an outside uploader can refresh the list. */
+export function entityDocumentsKey(entityType: string, entityId: string | number): string[] {
+  return ["entity-documents", entityType, String(entityId)];
+}
 
 /**
  * Types filed as evidence rather than as working attachments: the signed
@@ -70,18 +83,17 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export default function EntityDocuments({ entityType, entityId, docTypes = DEFAULT_DOC_TYPES }: Props) {
+export default function EntityDocuments({ entityType, entityId, defaultDocType = "other", hideUpload }: Props) {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const { previewConfig, openPreview, closePreview } = useDocumentPreview();
 
   const fileRef = useRef<HTMLInputElement>(null);
-  const [docType, setDocType] = useState(docTypes[0] ?? "other");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const listPath = `/api/v1/documents/entity/${entityType}/${entityId}`;
-  const queryKey = ["entity-documents", entityType, String(entityId)];
+  const queryKey = entityDocumentsKey(entityType, entityId);
 
   const { data: docs, isLoading } = useQuery<EntityDocument[]>({
     queryKey,
@@ -100,7 +112,7 @@ export default function EntityDocuments({ entityType, entityId, docTypes = DEFAU
         form.append("file", file);
         form.append("entity_type", entityType);
         form.append("entity_id", String(entityId));
-        form.append("doc_type", docType);
+        form.append("doc_type", defaultDocType);
         const res = await apiFetch("/api/v1/documents", { method: "POST", body: form });
         if (!res.ok) {
           const data = await res.json().catch(() => null);
@@ -129,34 +141,27 @@ export default function EntityDocuments({ entityType, entityId, docTypes = DEFAU
 
   return (
     <div>
-      <p className="text-sm text-muted-foreground mb-4">{t("entity_docs.description")}</p>
+      {!hideUpload && (
+        <>
+          <p className="text-sm text-muted-foreground mb-4">{t("entity_docs.description")}</p>
+          <div className="mb-3">
+            <input ref={fileRef} type="file" multiple className="hidden"
+              onChange={(e) => void handleUpload(e.target.files)} />
+            <Button type="button" variant="outline" size="sm" className="gap-1.5"
+              disabled={uploading} onClick={() => fileRef.current?.click()}>
+              <Upload className="h-4 w-4" />
+              {uploading ? t("common.loading") : t("entity_docs.upload")}
+            </Button>
+          </div>
+        </>
+      )}
+      {error && <p className="mb-3 text-xs text-destructive">{error}</p>}
 
-      <div className="mb-3 flex flex-wrap items-center gap-3">
-        <select
-          value={docType}
-          onChange={(e) => setDocType(e.target.value)}
-          className="h-9 rounded-md border bg-background px-2 text-sm"
-        >
-          {docTypes.map((dt) => (
-            <option key={dt} value={dt}>{t(`entity_docs.type_${dt}`)}</option>
-          ))}
-        </select>
-        <input ref={fileRef} type="file" multiple className="hidden"
-          onChange={(e) => void handleUpload(e.target.files)} />
-        <Button type="button" variant="outline" size="sm" className="gap-1.5"
-          disabled={uploading} onClick={() => fileRef.current?.click()}>
-          <Upload className="h-4 w-4" />
-          {uploading ? t("common.loading") : t("entity_docs.upload")}
-        </Button>
-        {error && <p className="text-xs text-destructive">{error}</p>}
-      </div>
-
-      <div className="rounded-md border bg-card overflow-x-auto">
+      <div className="rounded-lg border bg-white overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-muted/50 border-b">
             <tr>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("entity_docs.col_file")}</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("entity_docs.col_type")}</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("entity_docs.col_size")}</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs uppercase tracking-wide">{t("entity_docs.col_date")}</th>
               <th className="px-4 py-3" />
@@ -164,9 +169,9 @@ export default function EntityDocuments({ entityType, entityId, docTypes = DEFAU
           </thead>
           <tbody className="divide-y">
             {isLoading ? (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("common.loading")}</td></tr>
+              <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("common.loading")}</td></tr>
             ) : !docs?.length ? (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("entity_docs.empty")}</td></tr>
+              <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground text-sm">{t("entity_docs.empty")}</td></tr>
             ) : (
               docs.map((d) => (
                 <tr key={d.id} className="hover:bg-muted/30 transition-colors">
@@ -174,21 +179,17 @@ export default function EntityDocuments({ entityType, entityId, docTypes = DEFAU
                     <span className="flex items-center gap-1.5">
                       <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                       {d.file_name}
-                      {d.version != null ? (
-                        <span className="ml-1 inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                      {/* The only classification worth surfacing: this file is
+                          evidence, which is why it has no delete action. */}
+                      {isEvidence(d) && (
+                        <span className="ml-1 inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground whitespace-nowrap">
                           <Lock className="h-3 w-3" />
-                          {t("entity_docs.issued_version", { version: d.version })}
+                          {d.version != null
+                            ? t("entity_docs.issued_version", { version: d.version })
+                            : t("entity_docs.signed_original")}
                         </span>
-                      ) : isEvidence(d) ? (
-                        <span className="ml-1 inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
-                          <Lock className="h-3 w-3" />
-                          {t("entity_docs.evidence")}
-                        </span>
-                      ) : null}
+                      )}
                     </span>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                    {t(`entity_docs.type_${d.doc_type}`, d.doc_type)}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatSize(d.file_size)}</td>
                   <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{d.created_at ? formatDate(d.created_at) : "—"}</td>

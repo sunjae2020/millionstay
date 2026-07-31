@@ -5555,25 +5555,16 @@
   },
   "entity_docs": {
     "tab_title": "서류",
-    "description": "이 레코드에 보관하는 서류입니다. 서명 원본 스캔본, 별지, 증명서 등을 올릴 수 있습니다. 파일은 비공개로 저장되며 인증된 단기 링크로만 열립니다. 발행된 문서 스냅숏은 발송 증빙이므로 삭제할 수 없습니다.",
+    "description": "이 계약에 보관하는 서류입니다. 파일은 비공개로 저장되며 인증된 단기 링크로만 열립니다. 서명 원본과 발행본은 증빙이므로 삭제할 수 없습니다.",
     "upload": "파일 업로드",
     "upload_failed": "업로드 실패",
     "confirm_delete": "이 서류를 삭제할까요?",
     "empty": "등록된 서류가 없습니다.",
     "col_file": "파일",
-    "col_type": "종류",
     "col_size": "크기",
     "col_date": "등록일",
     "issued_version": "발행본 v{{version}}",
-    "type_contract": "계약서 · 서명 원본",
-    "type_property_document": "부동산 서류",
-    "type_tax_invoice": "세금계산서",
-    "type_receipt": "영수증",
-    "type_id_document": "신분증",
-    "type_visa_document": "비자 서류",
-    "type_other": "기타",
-    "type_signed_contract": "서명본 스캔",
-    "evidence": "증빙"
+    "signed_original": "서명 원본"
   },
   "intake": {
     "title": "서류 일괄 업로드",
@@ -5643,5 +5634,10 @@
       "reference": "문서번호",
       "notes": "비고"
     }
+  },
+  "contract_docs": {
+    "section": "계약 서류",
+    "is_signed_original": "서명·날인한 계약 원본입니다",
+    "is_signed_original_help": "체결 처리까지 함께 합니다. 그냥 서류만 보관하려면 체크하지 마세요."
   }
 }
