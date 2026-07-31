@@ -1171,10 +1171,16 @@ export default function ContractDetail() {
         </div>
       </form>
 
-      {/* Payment Schedule & Services Tabs */}
+      {/* Payment Schedule & Services Tabs.
+
+          The strip sits outside the <form> (no nested forms), so it has to repeat
+          the form body's own padding and column width to line up with the cards
+          above — `max-w-7xl mx-auto` centred it instead, which pushed its left
+          edge inwards on wide screens. */}
       {!isNew && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-8 space-y-4">
-          <div className="flex border-b gap-1">
+        <div className="px-4 sm:px-6 pb-8">
+          <div className="max-w-4xl space-y-4">
+          <div className="flex flex-wrap border-b gap-1">
             {[
               { id: "line-items", label: `${t('contract.tab_line_items')}${lineItems.length ? ` (${lineItems.length})` : ""}`, icon: <List className="w-3.5 h-3.5" /> },
               { id: "related-costs", label: `${t('contract.tab_related_costs')}${relatedCosts.length ? ` (${relatedCosts.length})` : ""}`, icon: <Receipt className="w-3.5 h-3.5" /> },
@@ -1504,6 +1510,7 @@ export default function ContractDetail() {
             <EntityDocuments entityType="contract" entityId={id!} docTypes={["contract", "property_document", "other"]} />
           )}
 
+          </div>
         </div>
       )}
 
