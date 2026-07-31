@@ -1217,7 +1217,7 @@
     "wiz_wet_title": "Print-and-seal steps",
     "wiz_wet_step1": "Print the contract; landlord and tenant complete it and apply their seals.",
     "wiz_wet_step2": "Scan the completed contract.",
-    "wiz_wet_step3": "Upload the scan under “Signed scan” below to file it in the contract vault.",
+    "wiz_wet_step3": "File the scan in the Documents tab — tick “This file is the signed original” before uploading.",
     "wiz_save_failed": "Could not save the issue settings.",
     "wiz_signing_failed": "Could not send the signing request.",
     "wiz_signing_issued": "Signing request sent.",

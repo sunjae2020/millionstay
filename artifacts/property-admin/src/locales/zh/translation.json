@@ -1217,7 +1217,7 @@
     "wiz_wet_title": "打印盖章流程",
     "wiz_wet_step1": "打印合同，由出租人和承租人填写并盖章（印鉴）。",
     "wiz_wet_step2": "扫描填写完成的合同。",
-    "wiz_wet_step3": "在下方“签署件扫描保管”上传扫描文件，即可存入合同档案库。",
+    "wiz_wet_step3": "在“文件”标签页勾选“这是签署盖章的合同原件”后上传扫描件即可。",
     "wiz_save_failed": "未能保存发出设置。",
     "wiz_signing_failed": "未能发送签署请求。",
     "wiz_signing_issued": "已发送签署请求。",

@@ -1217,7 +1217,7 @@
     "wiz_wet_title": "Quy trình in và đóng dấu",
     "wiz_wet_step1": "In hợp đồng; người cho thuê và người thuê điền và đóng dấu.",
     "wiz_wet_step2": "Scan hợp đồng đã hoàn tất.",
-    "wiz_wet_step3": "Tải bản scan lên ở phần “Lưu bản scan đã ký” bên dưới để lưu vào kho hồ sơ hợp đồng.",
+    "wiz_wet_step3": "Tải bản scan ở tab Tài liệu — tích “Đây là bản gốc đã ký” trước khi tải lên.",
     "wiz_save_failed": "Không lưu được cài đặt phát hành.",
     "wiz_signing_failed": "Không gửi được yêu cầu ký.",
     "wiz_signing_issued": "Đã gửi yêu cầu ký.",
