@@ -3,13 +3,14 @@ import { eq, ilike, and, sql, isNull, inArray, SQL } from "drizzle-orm";
 import { db, contractTypesTable } from "@workspace/db";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 
+import { keywordCondition } from "../lib/listSearch";
 const router: IRouter = Router();
 
 router.get("/v1/contract-types", async (req, res): Promise<void> => {
   try {
     const { q, is_active } = req.query as Record<string, string>;
     const conditions: SQL[] = [deletedFilter(contractTypesTable.deleted_at, req)];
-    if (q) conditions.push(ilike(contractTypesTable.name, `%${q}%`));
+    if (q) conditions.push(keywordCondition(q, [contractTypesTable.name, contractTypesTable.description]));
     if (is_active === "true") conditions.push(eq(contractTypesTable.is_active, true));
     if (is_active === "false") conditions.push(eq(contractTypesTable.is_active, false));
 

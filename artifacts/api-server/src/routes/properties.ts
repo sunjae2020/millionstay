@@ -17,6 +17,7 @@ import {
   UpdatePropertyStatusResponse,
 } from "@workspace/api-zod";
 
+import { keywordCondition, accountIdsByName } from "../lib/listSearch";
 const router: IRouter = Router();
 
 router.get("/v1/properties", async (req, res): Promise<void> => {
@@ -31,7 +32,17 @@ router.get("/v1/properties", async (req, res): Promise<void> => {
   if (approval_status) conditions.push(eq(propertiesTable.approval_status, approval_status));
   if (owner_account_id) conditions.push(eq(propertiesTable.owner_account_id, owner_account_id));
   if (suburb_id) conditions.push(eq(propertiesTable.suburb_id, suburb_id));
-  if (search) conditions.push(ilike(propertiesTable.name, `%${search}%`));
+  // 매물명에 더해 주소·도시·우편번호·설명과 소유주 계정 이름으로도 찾는다.
+  if (search) {
+    conditions.push(keywordCondition(
+      search,
+      [
+        propertiesTable.name, propertiesTable.address, propertiesTable.lot_address,
+        propertiesTable.city, propertiesTable.postcode, propertiesTable.description,
+      ],
+      [{ column: propertiesTable.owner_account_id, ids: await accountIdsByName(search) }],
+    ));
+  }
 
   const rows = await db
     .select({

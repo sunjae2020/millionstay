@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Pencil } from "lucide-react";
 import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { ALL, SearchBox, DateRangeFilter, FacetSelect, ResetFiltersButton, useListFacets, useYearLabel } from "@/components/list-filters";
 import { useQueryClient } from "@tanstack/react-query";
 
 const statusColors: Record<string, string> = {
@@ -33,17 +34,32 @@ export default function WorkOrderList() {
   const { t } = useTranslation();
   const [, navigate] = useLocation();
   const [q, setQ] = useState("");
-  const [status, setStatus] = useState("_all");
-  const [priority, setPriority] = useState("_all");
+  const [status, setStatus] = useState(ALL);
+  const [priority, setPriority] = useState(ALL);
+  const [category, setCategory] = useState(ALL);
+  const [year, setYear] = useState(ALL);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [showDeleted, setShowDeleted] = useState(false);
   const qc = useQueryClient();
 
-  const params: ListWorkOrdersParams & { deleted?: string } = {
+  const params: ListWorkOrdersParams & Record<string, string | undefined> = {
     q: q || undefined,
-    status: status === "_all" ? undefined : status,
-    priority: priority === "_all" ? undefined : priority,
+    status: status === ALL ? undefined : status,
+    priority: priority === ALL ? undefined : priority,
+    category: category === ALL ? undefined : category,
+    year: year === ALL ? undefined : year,
+    date_from: dateFrom || undefined,
+    date_to: dateTo || undefined,
     ...(showDeleted ? { deleted: "only" } : {}),
   };
+  const { data: facets } = useListFacets("work-orders", showDeleted);
+  const yearLabel = useYearLabel();
+  const hasFilters = !!q || status !== ALL || priority !== ALL || category !== ALL || year !== ALL || !!dateFrom || !!dateTo;
+  const resetFilters = () => {
+    setQ(""); setStatus(ALL); setPriority(ALL); setCategory(ALL); setYear(ALL); setDateFrom(""); setDateTo("");
+  };
+
   const { data: workOrdersRaw = [], isLoading } = useListWorkOrders(params, {
     query: { queryKey: getListWorkOrdersQueryKey(params) },
   });
@@ -148,14 +164,7 @@ export default function WorkOrderList() {
           onToggleShowDeleted={setShowDeleted}
           toolbarExtra={
             <div className="flex flex-wrap items-center gap-2">
-              <div className="relative w-56">
-                <Input
-                  placeholder={t("workorder.search_placeholder")}
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  className="pl-4"
-                />
-              </div>
+              <SearchBox value={q} onChange={setQ} placeholder={t("workorder.search_placeholder")} />
               <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger className="w-44">
                   <SelectValue />
@@ -181,6 +190,16 @@ export default function WorkOrderList() {
                   <SelectItem value="Urgent">{t("workorder.priority_urgent")}</SelectItem>
                 </SelectContent>
               </Select>
+              <FacetSelect
+                value={category} onChange={setCategory} options={facets?.categories ?? []}
+                allLabel={t("common.all_types")} className="w-40"
+              />
+              <FacetSelect
+                value={year} onChange={setYear} options={facets?.years ?? []}
+                allLabel={t("common.all_years")} labelOf={yearLabel} className="w-32"
+              />
+              <DateRangeFilter from={dateFrom} to={dateTo} onFrom={setDateFrom} onTo={setDateTo} />
+              <ResetFiltersButton show={hasFilters} onClick={resetFilters} />
             </div>
           }
         />

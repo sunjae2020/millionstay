@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { SearchBox } from "@/components/list-filters";
 import { Languages, Save, Sparkles, Loader2, ExternalLink, CheckCheck } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
@@ -122,6 +123,7 @@ export default function PageTranslations() {
   const [prefix, setPrefix] = useState(PAGES.find((p) => p.site === SITES[0]!.id)!.prefix);
   const [lang, setLang] = useState("ko");
   const [edits, setEdits] = useState<Record<string, string>>({});
+  const [q, setQ] = useState("");
 
   const sitePages = PAGES.filter((p) => p.site === site);
   const page = PAGES.find((p) => p.prefix === prefix)!;
@@ -138,10 +140,16 @@ export default function PageTranslations() {
   const rowsQ = useQuery({ queryKey: ["page-translations", lang, prefix], queryFn: () => fetchRows(lang, prefix) });
   const pageRows = useMemo(() => {
     const all = rowsQ.data ?? [];
+    const term = q.trim().toLowerCase();
     return all
       .filter((r) => r.key === prefix || r.key.startsWith(prefix + "."))
+      // 키·원문(en)·번역문 어디에 걸려도 찾는다 — 문구를 보고 키를 찾는 일이 대부분이다.
+      .filter((r) => !term
+        || r.key.toLowerCase().includes(term)
+        || (r.en ?? "").toLowerCase().includes(term)
+        || (r.value ?? "").toLowerCase().includes(term))
       .sort((a, b) => a.key.localeCompare(b.key));
-  }, [rowsQ.data, prefix]);
+  }, [rowsQ.data, prefix, q]);
 
   const dirtyCount = Object.keys(edits).length;
   const missingCount = pageRows.filter((r) => !(r.value ?? "").trim()).length;
@@ -398,6 +406,7 @@ export default function PageTranslations() {
           data={pageRows}
           isLoading={rowsQ.isLoading}
           rowKey={(r) => r.key}
+          toolbarExtra={<SearchBox value={q} onChange={setQ} placeholder={t("common.search_ph_generic")} />}
           emptyText={t("page_translations.no_keys", { defaultValue: "No keys for this page yet. Seed the English source first." })}
         />
       </div>

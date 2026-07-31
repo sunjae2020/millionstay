@@ -374,7 +374,14 @@
     "switch_to_light": "라이트 모드로 전환",
     "switch_to_dark": "다크 모드로 전환",
     "light_mode": "라이트 모드",
-    "dark_mode": "다크 모드"
+    "dark_mode": "다크 모드",
+    "filter_date_from": "기간 시작",
+    "filter_date_to": "기간 종료",
+    "filter_reset": "초기화",
+    "year_value": "{{year}}년",
+    "all_years": "전체 연도",
+    "all_types": "전체 유형",
+    "search_ph_generic": "검색..."
   },
   "lang": {
     "label": "언어",

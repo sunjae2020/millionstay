@@ -11,6 +11,7 @@ import {
   DeleteCommissionParams,
 } from "@workspace/api-zod";
 
+import { keywordCondition } from "../lib/listSearch";
 const router: IRouter = Router();
 
 router.get("/v1/commissions", async (req, res): Promise<void> => {
@@ -19,7 +20,7 @@ router.get("/v1/commissions", async (req, res): Promise<void> => {
   const { search, status } = parsed.data;
   const conditions: SQL[] = [deletedFilter(commissionsTable.deleted_at, req)];
   if (status) conditions.push(eq(commissionsTable.status, status));
-  if (search) conditions.push(ilike(commissionsTable.name, `%${search}%`));
+  if (search) conditions.push(keywordCondition(search, [commissionsTable.name, commissionsTable.description]));
   const rows = await db.select().from(commissionsTable)
     .where(and(...conditions))
     .orderBy(commissionsTable.name);

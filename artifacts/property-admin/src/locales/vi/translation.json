@@ -374,7 +374,14 @@
     "switch_to_light": "Chuyển sang chế độ sáng",
     "switch_to_dark": "Chuyển sang chế độ tối",
     "light_mode": "Chế độ sáng",
-    "dark_mode": "Chế độ tối"
+    "dark_mode": "Chế độ tối",
+    "filter_date_from": "Từ ngày",
+    "filter_date_to": "Đến ngày",
+    "filter_reset": "Đặt lại",
+    "year_value": "Năm {{year}}",
+    "all_years": "Tất cả năm",
+    "all_types": "Tất cả loại",
+    "search_ph_generic": "Tìm kiếm..."
   },
   "lang": {
     "label": "Ngôn ngữ",

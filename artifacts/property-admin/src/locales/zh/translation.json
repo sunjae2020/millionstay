@@ -374,7 +374,14 @@
     "switch_to_light": "切换到浅色模式",
     "switch_to_dark": "切换到深色模式",
     "light_mode": "浅色模式",
-    "dark_mode": "深色模式"
+    "dark_mode": "深色模式",
+    "filter_date_from": "起始日期",
+    "filter_date_to": "结束日期",
+    "filter_reset": "重置",
+    "year_value": "{{year}}年",
+    "all_years": "全部年份",
+    "all_types": "全部类型",
+    "search_ph_generic": "搜索..."
   },
   "lang": {
     "label": "语言",

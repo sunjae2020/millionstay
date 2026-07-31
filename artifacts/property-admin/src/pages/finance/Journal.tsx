@@ -5,6 +5,7 @@ import { Layout } from "@/components/Layout";
 import { DateInput } from "@/components/ui/date-input";
 import { apiFetch } from "@/lib/apiFetch";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
+import { SearchBox } from "@/components/list-filters";
 import { formatDate } from "@/lib/date";
 
 type GlLine = {
@@ -66,6 +67,7 @@ export default function Journal() {
   const { t } = useTranslation();
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [q, setQ] = useState("");
 
   const { data: entriesResp } = useQuery({
     queryKey: ["gl-entries", from, to],
@@ -76,8 +78,13 @@ export default function Journal() {
     queryFn: () => fetchTrialBalance(from, to),
   });
 
-  const entries = entriesResp?.data ?? [];
-  const trialBalance = tbResp?.data ?? [];
+  // 계정 코드·계정명·전표 적요를 한 키워드로 훑는다(GL 조회는 계정을 찾는 일이 대부분).
+  const term = q.trim().toLowerCase();
+  const matches = (...vals: unknown[]) =>
+    !term || vals.some((v) => String(v ?? "").toLowerCase().includes(term));
+  const entries = (entriesResp?.data ?? []).filter((e: any) =>
+    matches(e.description, e.source_type) || (e.lines ?? []).some((l: any) => matches(l.account_code, l.account_name)));
+  const trialBalance = (tbResp?.data ?? []).filter((r: TrialBalanceRow) => matches(r.account_code, r.account_name));
   const totals = tbResp?.totals ?? { debit: "0", credit: "0" };
 
   const columns: ColumnDef<TrialBalanceRow>[] = useMemo(
@@ -138,6 +145,7 @@ export default function Journal() {
             emptyText={t("journal.empty")}
             toolbarExtra={
               <div className="flex flex-wrap items-center gap-2">
+                <SearchBox value={q} onChange={setQ} placeholder={t("common.search_ph_generic")} className="w-52" />
                 <div className="flex items-center gap-1.5">
                   <label className="text-xs font-medium text-muted-foreground">{t("journal.filter_from")}</label>
                   <DateInput

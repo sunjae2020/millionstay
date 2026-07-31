@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
-import { eq, desc, and, ilike, or, sql, isNull, inArray } from "drizzle-orm";
+import { eq, desc, and, ilike, or, sql, isNull, inArray, gte, lte } from "drizzle-orm";
 import { db, csTicketsTable, csMessagesTable, guestUsersTable, partnerUsersTable, bookingsTable, workOrdersTable, spacesTable } from "@workspace/db";
 import { requireAuth } from "../middlewares/requireAuth";
 import { isCloudinaryConfigured, uploadToCloudinary, cldFolder } from "../utils/cloudinary";
@@ -9,6 +9,7 @@ import { dispatchWorkOrder } from "../lib/dispatch/workOrderDispatch";
 import { logAction } from "../utils/auditLog";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 
+import { keywordCondition } from "../lib/listSearch";
 const router: IRouter = Router();
 
 async function nextWorkOrderRef(): Promise<string> {
@@ -101,10 +102,13 @@ router.get("/v1/cs-tickets", requireAuth, async (req, res): Promise<void> => {
     if (status) conditions.push(eq(csTicketsTable.status, status));
     if (category) conditions.push(eq(csTicketsTable.category, category));
     if (requester_type) conditions.push(eq(csTicketsTable.requester_type, requester_type));
-    if (q) conditions.push(or(
-      ilike(csTicketsTable.subject, `%${q}%`),
-      ilike(csTicketsTable.ticket_ref, `%${q}%`),
-    ));
+    if (q) conditions.push(keywordCondition(q, [
+      csTicketsTable.subject, csTicketsTable.ticket_ref, csTicketsTable.description,
+    ]));
+    // 접수 기간(created_at 은 timestamp — 종료일은 그 날 끝까지 포함시킨다).
+    const { date_from, date_to } = req.query as Record<string, string>;
+    if (date_from) conditions.push(gte(csTicketsTable.created_at, new Date(`${date_from}T00:00:00`)));
+    if (date_to) conditions.push(lte(csTicketsTable.created_at, new Date(`${date_to}T23:59:59.999`)));
 
     // Requester is either a guest (guest_user_id) or a partner-portal user
     // (partner_user_id). Resolve a single display name/email via COALESCE.

@@ -12,6 +12,7 @@ import {
   promotionsTable,
 } from "@workspace/db";
 
+import { keywordCondition } from "../lib/listSearch";
 const router: IRouter = Router();
 
 router.get("/v1/accommodations", async (req, res): Promise<void> => {
@@ -20,9 +21,12 @@ router.get("/v1/accommodations", async (req, res): Promise<void> => {
 
     const conditions: SQL[] = [];
     if (q) {
-      conditions.push(
-        sql`(${ilike(accommodationCatalogTable.name, `%${q}%`)} OR ${ilike(accommodationCatalogTable.item_description, `%${q}%`)})`
-      );
+      // 상품명·설명에 더해 상품 태그로도 찾는다.
+      conditions.push(keywordCondition(q, [
+        accommodationCatalogTable.name,
+        accommodationCatalogTable.item_description,
+        accommodationCatalogTable.product_tag,
+      ]));
     }
     if (product_group_id) conditions.push(eq(accommodationCatalogTable.product_group_id, Number(product_group_id)));
     if (product_type_id) conditions.push(eq(accommodationCatalogTable.product_type_id, Number(product_type_id)));

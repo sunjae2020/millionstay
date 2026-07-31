@@ -20,6 +20,7 @@ import {
   BlockSpaceAvailabilityResponse,
 } from "@workspace/api-zod";
 
+import { keywordCondition, propertyIdsByName, accountIdsByName } from "../lib/listSearch";
 const router: IRouter = Router();
 
 async function getSpaceOptionIds(spaceId: number): Promise<number[]> {
@@ -67,7 +68,21 @@ router.get("/v1/spaces", async (req, res): Promise<void> => {
   if (status) conditions.push(eq(spacesTable.status, status));
   if (property_id) conditions.push(eq(spacesTable.property_id, property_id));
   if (booking_mode) conditions.push(eq(spacesTable.booking_mode, booking_mode));
-  if (search) conditions.push(ilike(spacesTable.name, `%${search}%`));
+  // 세대명만 훑던 검색을 유형명·설명과 소속 매물/임대인 이름까지 넓힌다.
+  if (search) {
+    const [propertyIds, accountIds] = await Promise.all([propertyIdsByName(search), accountIdsByName(search)]);
+    conditions.push(keywordCondition(
+      search,
+      [spacesTable.name, spacesTable.custom_type_name, spacesTable.description],
+      [
+        { column: spacesTable.property_id, ids: propertyIds },
+        { column: spacesTable.landlord_account_id, ids: accountIds },
+      ],
+    ));
+  }
+  // 층별 조회(관리대장이 층 단위로 돌아간다).
+  const { floor_number } = req.query as Record<string, string>;
+  if (floor_number) conditions.push(eq(spacesTable.floor_number, Number(floor_number)));
 
   const rows = await db
     .select({

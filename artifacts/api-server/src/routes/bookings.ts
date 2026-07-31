@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { DEFAULT_CURRENCY } from "../lib/currency";
 import { eq, ne, ilike, and, between, gte, lte, SQL, or, isNull, inArray } from "drizzle-orm";
+import { periodOverlapConditions, yearOverlapConditions, distinctYears } from "../lib/listSearch";
 import {
   db,
   bookingsTable,
@@ -171,6 +172,10 @@ router.get("/v1/bookings", async (req, res): Promise<void> => {
   if (status) conditions.push(eq(bookingsTable.status, status));
   if (check_in_from) conditions.push(gte(bookingsTable.check_in_date, check_in_from));
   if (check_in_to) conditions.push(lte(bookingsTable.check_in_date, check_in_to));
+  // 체류 기간이 지정 구간과 겹치는 예약(zod 파라미터 스키마 밖이라 req.query 에서 직접 읽는다).
+  const { date_from, date_to, year } = req.query as Record<string, string>;
+  conditions.push(...periodOverlapConditions(bookingsTable.check_in_date, bookingsTable.check_out_date, date_from, date_to));
+  conditions.push(...yearOverlapConditions(bookingsTable.check_in_date, bookingsTable.check_out_date, year));
 
   const rows = await db
     .select()
@@ -187,11 +192,19 @@ router.get("/v1/bookings", async (req, res): Promise<void> => {
       (b) =>
         b.booking_ref.toLowerCase().includes(s) ||
         (b.account_name ?? "").toLowerCase().includes(s) ||
-        (b.contact_name ?? "").toLowerCase().includes(s)
+        (b.contact_name ?? "").toLowerCase().includes(s) ||
+        // 공간(호수)으로도 찾을 수 있어야 한다 — 목록에 함께 보이는 축이다.
+        ((b as { space_name?: string | null }).space_name ?? "").toLowerCase().includes(s)
     );
   }
 
   res.json(filtered);
+});
+
+/** 연도 선택지(체크인 기준). "/:id" 보다 먼저 선언해야 한다. */
+router.get("/v1/bookings/facets", async (req, res): Promise<void> => {
+  const base = deletedFilter(bookingsTable.deleted_at, req);
+  res.json({ years: await distinctYears(bookingsTable, bookingsTable.check_in_date, base) });
 });
 
 router.post("/v1/bookings", async (req, res): Promise<void> => {

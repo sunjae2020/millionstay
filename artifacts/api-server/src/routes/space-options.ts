@@ -14,6 +14,7 @@ import {
   ListSpaceOptionsResponse,
 } from "@workspace/api-zod";
 
+import { keywordCondition } from "../lib/listSearch";
 const router: IRouter = Router();
 
 router.get("/v1/space-options", async (req, res): Promise<void> => {
@@ -25,7 +26,7 @@ router.get("/v1/space-options", async (req, res): Promise<void> => {
   const { search, category } = parsed.data;
 
   const conditions: SQL[] = [deletedFilter(spaceOptionsTable.deleted_at, req)];
-  if (search) conditions.push(ilike(spaceOptionsTable.name, `%${search}%`));
+  if (search) conditions.push(keywordCondition(search, [spaceOptionsTable.name, spaceOptionsTable.display_name]));
   if (category) conditions.push(eq(spaceOptionsTable.category, category));
 
   const options = await db

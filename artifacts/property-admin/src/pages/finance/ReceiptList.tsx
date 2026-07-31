@@ -10,6 +10,7 @@ import { Search } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { formatDateTime } from "@/lib/date";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
+import { ALL, SearchBox, DateRangeFilter, FacetSelect, ResetFiltersButton, useListFacets, useYearLabel } from "@/components/list-filters";
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 import { useDocumentRowActions } from "@/components/DocumentRowActions";
@@ -28,11 +29,14 @@ const METHOD_LABELS: Record<string, string> = {
   stripe:        "Stripe",
 };
 
-async function fetchReceipts(q?: string, method?: string) {
+async function fetchReceipts(q?: string, method?: string, year?: string, from?: string, to?: string) {
   const params = new URLSearchParams();
   params.set("status", "Paid");
   if (q) params.set("q", q);
   if (method && method !== "_all") params.set("payment_method", method);
+  if (year && year !== ALL) params.set("year", year);
+  if (from) params.set("date_from", from);
+  if (to) params.set("date_to", to);
   const res = await apiFetch(`/api/v1/invoices?${params}`);
   if (!res.ok) throw new Error("Failed to fetch receipts");
   const data = await res.json();
@@ -47,11 +51,18 @@ export default function ReceiptList() {
   const { t } = useTranslation();
   const { currency, currencyPosition } = useBrand();
   const [q, setQ] = useState("");
-  const [methodFilter, setMethodFilter] = useState("_all");
+  const [methodFilter, setMethodFilter] = useState(ALL);
+  const [year, setYear] = useState(ALL);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const { data: facets } = useListFacets("invoices");
+  const yearLabel = useYearLabel();
+  const hasFilters = !!q || methodFilter !== ALL || year !== ALL || !!dateFrom || !!dateTo;
+  const resetFilters = () => { setQ(""); setMethodFilter(ALL); setYear(ALL); setDateFrom(""); setDateTo(""); };
 
   const { data, isLoading } = useQuery({
-    queryKey: ["receipts", q, methodFilter],
-    queryFn: () => fetchReceipts(q || undefined, methodFilter),
+    queryKey: ["receipts", q, methodFilter, year, dateFrom, dateTo],
+    queryFn: () => fetchReceipts(q || undefined, methodFilter, year, dateFrom, dateTo),
   });
 
   const rows: any[] = Array.isArray(data) ? data : [];
@@ -158,15 +169,7 @@ export default function ReceiptList() {
           emptyText={t("finance.no_receipts") || "No receipts found"}
           toolbarExtra={
             <div className="flex flex-wrap items-center gap-2">
-              <div className="relative w-56">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  className="pl-9"
-                  placeholder={t("invoice.search_placeholder")}
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                />
-              </div>
+              <SearchBox value={q} onChange={setQ} placeholder={t("invoice.search_placeholder")} />
               <Select value={methodFilter} onValueChange={setMethodFilter}>
                 <SelectTrigger className="w-44"><SelectValue placeholder={t("invoice.label_payment_method")} /></SelectTrigger>
                 <SelectContent>
@@ -177,6 +180,12 @@ export default function ReceiptList() {
                   <SelectItem value="stripe">{t("invoice.status_paid")}</SelectItem>
                 </SelectContent>
               </Select>
+              <FacetSelect
+                value={year} onChange={setYear} options={facets?.years ?? []}
+                allLabel={t("common.all_years")} labelOf={yearLabel} className="w-32"
+              />
+              <DateRangeFilter from={dateFrom} to={dateTo} onFrom={setDateFrom} onTo={setDateTo} />
+              <ResetFiltersButton show={hasFilters} onClick={resetFilters} />
             </div>
           }
         />

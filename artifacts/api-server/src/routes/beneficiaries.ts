@@ -11,6 +11,7 @@ import {
   DeleteBeneficiaryParams,
 } from "@workspace/api-zod";
 
+import { keywordCondition, accountIdsByName } from "../lib/listSearch";
 const router: IRouter = Router();
 
 const SELECT_FIELDS = {
@@ -41,7 +42,14 @@ router.get("/v1/beneficiaries", async (req, res): Promise<void> => {
   if (status) conditions.push(eq(beneficiariesTable.status, status));
   if (contract_product_id) conditions.push(eq(beneficiariesTable.contract_product_id, contract_product_id));
   if (account_id) conditions.push(eq(beneficiariesTable.account_id, account_id));
-  if (q) conditions.push(ilike(beneficiariesTable.name, `%${q}%`));
+  // 수취인명·비고와 연결된 계정 이름으로도 찾는다.
+  if (q) {
+    conditions.push(keywordCondition(
+      q,
+      [beneficiariesTable.name, beneficiariesTable.notes],
+      [{ column: beneficiariesTable.account_id, ids: await accountIdsByName(q) }],
+    ));
+  }
 
   const rows = await db
     .select(SELECT_FIELDS)

@@ -374,7 +374,14 @@
     "switch_to_light": "สลับเป็นโหมดสว่าง",
     "switch_to_dark": "สลับเป็นโหมดมืด",
     "light_mode": "โหมดสว่าง",
-    "dark_mode": "โหมดมืด"
+    "dark_mode": "โหมดมืด",
+    "filter_date_from": "ช่วงเวลาเริ่ม",
+    "filter_date_to": "ช่วงเวลาสิ้นสุด",
+    "filter_reset": "ล้างตัวกรอง",
+    "year_value": "ปี {{year}}",
+    "all_years": "ทุกปี",
+    "all_types": "ทุกประเภท",
+    "search_ph_generic": "ค้นหา..."
   },
   "lang": {
     "label": "ภาษา",

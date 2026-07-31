@@ -374,7 +374,14 @@
     "switch_to_light": "Switch to light mode",
     "switch_to_dark": "Switch to dark mode",
     "light_mode": "Light mode",
-    "dark_mode": "Dark mode"
+    "dark_mode": "Dark mode",
+    "filter_date_from": "Period from",
+    "filter_date_to": "Period to",
+    "filter_reset": "Reset",
+    "year_value": "{{year}}",
+    "all_years": "All years",
+    "all_types": "All types",
+    "search_ph_generic": "Search..."
   },
   "lang": {
     "label": "Language",

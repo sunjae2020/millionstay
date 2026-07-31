@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { SearchBox } from "@/components/list-filters";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileText, Mail, FileCheck, FileType, Eye, Globe, Plus } from "lucide-react";
@@ -110,6 +111,7 @@ export default function DocumentTemplates() {
   const { t } = useTranslation();
   const [kind, setKind] = useState<Kind>("email");
   const [createOpen, setCreateOpen] = useState(false);
+  const [q, setQ] = useState("");
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["document-templates", kind],
@@ -119,6 +121,14 @@ export default function DocumentTemplates() {
       return (await res.json()).data ?? [];
     },
   });
+
+  // 템플릿은 종류별로 수십 개다 — 이름·키·설명을 한 키워드로 훑는다.
+  const filtered = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    if (!term) return rows;
+    return rows.filter((r) =>
+      [r.name, r.key, r.description, r.category].some((v) => String(v ?? "").toLowerCase().includes(term)));
+  }, [rows, q]);
 
   const columns: ColumnDef<TemplateRow>[] = useMemo(() => [
     {
@@ -201,10 +211,11 @@ export default function DocumentTemplates() {
         <DataTable
           tableKey="document-templates"
           columns={columns}
-          data={rows}
+          data={filtered}
           isLoading={isLoading}
           rowKey={(r) => r.id}
           emptyText={t("documentTemplate.empty")}
+          toolbarExtra={<SearchBox value={q} onChange={setQ} placeholder={t("common.search_ph_generic")} />}
         />
       </div>
 

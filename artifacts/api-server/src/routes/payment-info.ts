@@ -11,6 +11,7 @@ import {
   DeletePaymentInfoParams,
 } from "@workspace/api-zod";
 
+import { keywordCondition } from "../lib/listSearch";
 const router: IRouter = Router();
 
 router.get("/v1/payment-info", async (req, res): Promise<void> => {
@@ -19,7 +20,11 @@ router.get("/v1/payment-info", async (req, res): Promise<void> => {
   const { search, payment_type } = parsed.data;
   const conditions: SQL[] = [deletedFilter(paymentInfoTable.deleted_at, req)];
   if (payment_type) conditions.push(eq(paymentInfoTable.payment_type, payment_type));
-  if (search) conditions.push(ilike(paymentInfoTable.name, `%${search}%`));
+  // 은행명·예금주로도 찾는다(계좌를 이름으로만 기억하지 않는다).
+  if (search) conditions.push(keywordCondition(search, [
+    paymentInfoTable.name, paymentInfoTable.bank_name, paymentInfoTable.account_name,
+    paymentInfoTable.account_number, paymentInfoTable.description,
+  ]));
   const rows = await db.select().from(paymentInfoTable)
     .where(and(...conditions))
     .orderBy(paymentInfoTable.name);

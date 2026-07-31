@@ -4,6 +4,7 @@ import { db, contractProductsTable, spacesTable, promotionsTable } from "@worksp
 import { eq, ilike, and, isNull, inArray } from "drizzle-orm";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 
+import { keywordCondition } from "../lib/listSearch";
 const router = Router();
 
 async function enrich(products: (typeof contractProductsTable.$inferSelect)[]) {
@@ -44,7 +45,7 @@ async function enrich(products: (typeof contractProductsTable.$inferSelect)[]) {
 router.get("/v1/contract-products", async (req, res): Promise<void> => {
   const { q, status, product_type, space_id, promotion_id, term_type } = req.query as Record<string, string>;
   const conditions: any[] = [deletedFilter(contractProductsTable.deleted_at, req)];
-  if (q) conditions.push(ilike(contractProductsTable.name, `%${q}%`));
+  if (q) conditions.push(keywordCondition(q, [contractProductsTable.name, contractProductsTable.description, contractProductsTable.notes]));
   if (status) conditions.push(eq(contractProductsTable.status, status));
   if (product_type) conditions.push(eq(contractProductsTable.product_type, product_type));
   if (space_id) conditions.push(eq(contractProductsTable.space_id, Number(space_id)));

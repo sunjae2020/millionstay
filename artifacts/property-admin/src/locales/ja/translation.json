@@ -374,7 +374,14 @@
     "switch_to_light": "ライトモードに切り替え",
     "switch_to_dark": "ダークモードに切り替え",
     "light_mode": "ライトモード",
-    "dark_mode": "ダークモード"
+    "dark_mode": "ダークモード",
+    "filter_date_from": "期間 開始",
+    "filter_date_to": "期間 終了",
+    "filter_reset": "リセット",
+    "year_value": "{{year}}年",
+    "all_years": "すべての年度",
+    "all_types": "すべての種類",
+    "search_ph_generic": "検索..."
   },
   "lang": {
     "label": "言語",

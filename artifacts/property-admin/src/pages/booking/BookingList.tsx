@@ -12,6 +12,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, List, Calendar } from "lucide-react";
 import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { ALL, SearchBox, DateRangeFilter, FacetSelect, ResetFiltersButton, useListFacets, useYearLabel } from "@/components/list-filters";
 import { formatDate } from "@/lib/date";
 
 const BOOKING_STATUS_COLORS: Record<string, string> = {
@@ -124,15 +125,28 @@ export default function BookingList() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [sourceFilter, setSourceFilter] = useState("");
+  const [year, setYear] = useState(ALL);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [showDeleted, setShowDeleted] = useState(false);
   const qc = useQueryClient();
 
-  const params: ListBookingsParams & { deleted?: string } = {
+  const params: ListBookingsParams & Record<string, string | undefined> = {
     search: search || undefined,
     booking_status: statusFilter || undefined,
     booking_source: sourceFilter || undefined,
+    year: year === ALL ? undefined : year,
+    date_from: dateFrom || undefined,
+    date_to: dateTo || undefined,
     ...(showDeleted ? { deleted: "only" } : {}),
   };
+  const { data: facets } = useListFacets("bookings", showDeleted);
+  const yearLabel = useYearLabel();
+  const hasFilters = !!search || !!statusFilter || !!sourceFilter || year !== ALL || !!dateFrom || !!dateTo;
+  const resetFilters = () => {
+    setSearch(""); setStatusFilter(""); setSourceFilter(""); setYear(ALL); setDateFrom(""); setDateTo("");
+  };
+
   const { data: bookings, isLoading } = useListBookings(params, {
     query: { queryKey: getListBookingsQueryKey(params) },
   });
@@ -265,10 +279,7 @@ export default function BookingList() {
             onToggleShowDeleted={setShowDeleted}
             toolbarExtra={
               <div className="flex flex-wrap items-center gap-2">
-                <div className="relative w-56">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input className="pl-9" placeholder={t("booking.search_placeholder")} value={search} onChange={(e) => setSearch(e.target.value)} />
-                </div>
+                <SearchBox value={search} onChange={setSearch} placeholder={t("booking.search_placeholder")} />
                 <Select value={statusFilter || "_all"} onValueChange={(v) => setStatusFilter(v === "_all" ? "" : v)}>
                   <SelectTrigger className="w-[160px]"><SelectValue placeholder={t("booking.all_statuses")} /></SelectTrigger>
                   <SelectContent>
@@ -285,6 +296,12 @@ export default function BookingList() {
                     {["Direct", "Agent", "Website", "Referral"].map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                   </SelectContent>
                 </Select>
+                <FacetSelect
+                  value={year} onChange={setYear} options={facets?.years ?? []}
+                  allLabel={t("common.all_years")} labelOf={yearLabel} className="w-32"
+                />
+                <DateRangeFilter from={dateFrom} to={dateTo} onFrom={setDateFrom} onTo={setDateTo} />
+                <ResetFiltersButton show={hasFilters} onClick={resetFilters} />
               </div>
             }
           />

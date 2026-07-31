@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Plus, FileText } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
+import { ALL, SearchBox, DateRangeFilter, FacetSelect, ResetFiltersButton, useListFacets, useYearLabel } from "@/components/list-filters";
 import { formatDate } from "@/lib/date";
 import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
@@ -27,9 +28,13 @@ function fmtDate(d: string | null) {
   return formatDate(d);
 }
 
-async function fetchQuotes(q: string): Promise<any[]> {
+async function fetchQuotes(q: string, status: string, year: string, from: string, to: string): Promise<any[]> {
   const params = new URLSearchParams();
   if (q) params.set("q", q);
+  if (status !== ALL) params.set("status", status);
+  if (year !== ALL) params.set("year", year);
+  if (from) params.set("date_from", from);
+  if (to) params.set("date_to", to);
   const res = await apiFetch(`/api/v1/quotes?${params}`);
   if (!res.ok) throw new Error("Failed to fetch quotes");
   return res.json();
@@ -40,7 +45,18 @@ export default function QuoteList() {
   const { currency, currencyPosition } = useBrand();
   const [, navigate] = useLocation();
   const [q, setQ] = useState("");
-  const { data, isLoading } = useQuery({ queryKey: ["quotes", q], queryFn: () => fetchQuotes(q) });
+  const [status, setStatus] = useState(ALL);
+  const [year, setYear] = useState(ALL);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const { data: facets } = useListFacets("quotes");
+  const yearLabel = useYearLabel();
+  const hasFilters = !!q || status !== ALL || year !== ALL || !!dateFrom || !!dateTo;
+  const resetFilters = () => { setQ(""); setStatus(ALL); setYear(ALL); setDateFrom(""); setDateTo(""); };
+  const { data, isLoading } = useQuery({
+    queryKey: ["quotes", q, status, year, dateFrom, dateTo],
+    queryFn: () => fetchQuotes(q, status, year, dateFrom, dateTo),
+  });
   const rows: any[] = Array.isArray(data) ? data : [];
 
   const { documentActionsColumn, documentPreview } = useDocumentRowActions<any>((r) => ({
@@ -118,10 +134,20 @@ export default function QuoteList() {
           }
           toolbarExtra={
             <div className="flex flex-wrap items-center gap-2">
-              <div className="relative w-56">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input className="pl-9" placeholder={t("quote.search_placeholder", "Search by reference…")} value={q} onChange={(e) => setQ(e.target.value)} />
-              </div>
+              <SearchBox value={q} onChange={setQ} placeholder={t("quote.search_placeholder", "Search by reference…")} />
+              <FacetSelect
+                value={status} onChange={setStatus}
+                options={["Draft", "Sent", "Accepted", "Declined", "Expired"]}
+                allLabel={t("quote.all_statuses", "All statuses")}
+                labelOf={(v) => t(`quote.status_${v.toLowerCase()}`, v)}
+                className="w-36"
+              />
+              <FacetSelect
+                value={year} onChange={setYear} options={facets?.years ?? []}
+                allLabel={t("common.all_years")} labelOf={yearLabel} className="w-32"
+              />
+              <DateRangeFilter from={dateFrom} to={dateTo} onFrom={setDateFrom} onTo={setDateTo} />
+              <ResetFiltersButton show={hasFilters} onClick={resetFilters} />
             </div>
           }
         />

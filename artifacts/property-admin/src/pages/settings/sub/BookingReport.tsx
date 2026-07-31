@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
+import { SearchBox } from "@/components/list-filters";
 import { useQuery } from "@tanstack/react-query";
 import { BarChart2, Download, Search } from "lucide-react";
 import { useBrand } from "@/contexts/ThemeContext";
@@ -54,13 +55,20 @@ export default function BookingReportPage() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [status, setStatus] = useState("_all");
+  const [q, setQ] = useState("");
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["booking-report", from, to, status],
     queryFn: () => fetchReport({ from, to, ...(status !== "_all" ? { status } : {}) }),
   });
 
-  const rows: any[] = data?.data ?? [];
+  const allRows: any[] = data?.data ?? [];
+  // 보고서 API 는 기간·상태만 받는다 — 예약번호·투숙객·공간은 화면에서 좁힌다.
+  const term = q.trim().toLowerCase();
+  const rows = term
+    ? allRows.filter((r) => [r.booking_ref, r.guest_name, r.space_name]
+        .some((v) => String(v ?? "").toLowerCase().includes(term)))
+    : allRows;
   const meta = data?.meta ?? {};
 
   const columns: ColumnDef<any>[] = useMemo(() => [
@@ -145,6 +153,7 @@ export default function BookingReportPage() {
           isLoading={isLoading}
           rowKey={(r) => r.id}
           emptyText={t("bookingReport.empty")}
+          toolbarExtra={<SearchBox value={q} onChange={setQ} placeholder={t("common.search_ph_generic")} />}
         />
 
         {rows.length > 0 && (

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, CheckCircle2, AlertCircle, Trash2 } from "lucide-react";
 import { formatDateTime } from "@/lib/date";
 import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { SearchBox } from "@/components/list-filters";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,6 +49,7 @@ export default function BulkPhotoUploadList() {
   const [, navigate] = useLocation();
   const [sessions, setSessions] = useState<UploadSession[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [q, setQ] = useState("");
 
   useEffect(() => {
     setSessions(loadSessions());
@@ -59,6 +61,13 @@ export default function BulkPhotoUploadList() {
     setSessions(updated);
     setDeleteId(null);
   }
+
+  // 업로드 이력은 브라우저에 남는 로컬 기록이라 서버 검색이 없다 — 표시 항목으로 훑는다.
+  const rows = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    if (!term) return sessions;
+    return sessions.filter((s) => JSON.stringify(s).toLowerCase().includes(term));
+  }, [sessions, q]);
 
   const columns: ColumnDef<UploadSession>[] = useMemo(
     () => [
@@ -143,8 +152,9 @@ export default function BulkPhotoUploadList() {
         <DataTable
           tableKey="bulk-photo-upload"
           columns={columns}
-          data={sessions}
+          data={rows}
           rowKey={(session) => session.id}
+          toolbarExtra={<SearchBox value={q} onChange={setQ} placeholder={t("common.search_ph_generic")} />}
           emptyText={
             <div className="flex flex-col items-center gap-3 text-muted-foreground py-10">
               <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">

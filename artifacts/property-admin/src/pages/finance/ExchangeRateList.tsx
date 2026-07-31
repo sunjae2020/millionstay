@@ -11,6 +11,7 @@ import { apiFetch } from "@/lib/apiFetch";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { DataTable, ACTIONS_KEY, type ColumnDef } from "@/components/ui/data-table";
+import { SearchBox } from "@/components/list-filters";
 
 type ExchangeRate = {
   id: number;
@@ -89,6 +90,7 @@ export default function ExchangeRateList() {
   const { t } = useTranslation();
   const [from, setFrom] = useState("KRW");
   const [rate, setRate] = useState("");
+  const [rateQuery, setRateQuery] = useState("");
 
   const ratesQ = useQuery({ queryKey: ["exchange-rates"], queryFn: fetchRates });
   const syncInfoQ = useQuery({ queryKey: ["exchange-rates", "sync-info"], queryFn: fetchSyncInfo });
@@ -128,7 +130,11 @@ export default function ExchangeRateList() {
     },
   });
 
-  const rows = ratesQ.data?.data ?? [];
+  const allRates = ratesQ.data?.data ?? [];
+  // 통화 코드로 바로 좁힐 수 있게(목록이 길어지면 통화 쌍을 눈으로 찾기 어렵다).
+  const rows = allRates.filter((r: ExchangeRate) =>
+    !rateQuery.trim()
+    || `${r.from_currency}${r.to_currency}`.toLowerCase().includes(rateQuery.trim().toLowerCase()));
   const info = syncInfoQ.data?.data;
   const live = liveQ.data?.data;
   const liveRates = live?.rates ?? {};
@@ -373,6 +379,7 @@ export default function ExchangeRateList() {
         isLoading={ratesQ.isLoading}
         rowKey={(r) => r.id}
         emptyText={t("exchange_rate.empty_state")}
+        toolbarExtra={<SearchBox value={rateQuery} onChange={setRateQuery} placeholder={t("common.search_ph_generic")} className="w-48" />}
       />
     </Layout>
   );

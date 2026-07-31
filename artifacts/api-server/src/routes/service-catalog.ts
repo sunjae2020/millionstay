@@ -3,6 +3,7 @@ import { eq, ilike, and, sql, isNull, inArray, SQL, asc } from "drizzle-orm";
 import { db, serviceCatalogTable } from "@workspace/db";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 
+import { keywordCondition } from "../lib/listSearch";
 const router: IRouter = Router();
 
 /* ── GET /v1/services ──────────────────────────────────── */
@@ -11,7 +12,7 @@ router.get("/v1/services", async (req, res): Promise<void> => {
     const { q, service_type, status, limit = "100", offset = "0" } = req.query as Record<string, string>;
 
     const conditions: SQL[] = [deletedFilter(serviceCatalogTable.deleted_at, req)];
-    if (q) conditions.push(ilike(serviceCatalogTable.name, `%${q}%`));
+    if (q) conditions.push(keywordCondition(q, [serviceCatalogTable.name, serviceCatalogTable.description]));
     if (service_type) conditions.push(eq(serviceCatalogTable.service_type, service_type));
     if (status) conditions.push(eq(serviceCatalogTable.status, status));
 

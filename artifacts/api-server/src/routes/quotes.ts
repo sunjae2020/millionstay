@@ -4,6 +4,7 @@ import { db, quotesTable, quoteLineItemsTable, accountsTable, leadsTable, spaces
 import { eq, ilike, and, isNull, inArray, asc, desc } from "drizzle-orm";
 import { z } from "zod";
 import { logAction } from "../utils/auditLog";
+import { keywordCondition, accountIdsByName, dateRangeConditions, yearConditions, distinctYears } from "../lib/listSearch";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import { buildQuoteHtml, type QuoteDocInput } from "../lib/documents/quoteDocument";
 import { htmlToPdf, PdfUnavailableError } from "../lib/documents/pdf";
@@ -79,14 +80,29 @@ async function recomputeTotals(quoteId: number): Promise<void> {
 }
 
 router.get("/v1/quotes", async (req, res): Promise<void> => {
-  const { q, status, account_id, lead_id } = req.query as Record<string, string>;
+  const { q, status, account_id, lead_id, date_from, date_to, year } = req.query as Record<string, string>;
   const conditions: any[] = [deletedFilter(quotesTable.deleted_at, req)];
-  if (q) conditions.push(ilike(quotesTable.quote_ref, `%${q}%`));
+  // 견적번호·설명에 더해 견적 대상(계정) 이름으로도 찾는다.
+  if (q) {
+    conditions.push(keywordCondition(
+      q,
+      [quotesTable.quote_ref, quotesTable.description],
+      [{ column: quotesTable.account_id, ids: await accountIdsByName(q) }],
+    ));
+  }
   if (status) conditions.push(eq(quotesTable.status, status));
+  conditions.push(...dateRangeConditions(quotesTable.valid_until, date_from, date_to));
+  conditions.push(...yearConditions(quotesTable.valid_until, year));
   if (account_id) conditions.push(eq(quotesTable.account_id, Number(account_id)));
   if (lead_id) conditions.push(eq(quotesTable.lead_id, Number(lead_id)));
   const rows = await db.select().from(quotesTable).where(and(...conditions)).orderBy(desc(quotesTable.id));
   res.json(await enrichQuotes(rows));
+});
+
+/** 연도 선택지(유효기한 기준). "/:id" 보다 먼저 선언해야 한다. */
+router.get("/v1/quotes/facets", async (req, res): Promise<void> => {
+  const base = deletedFilter(quotesTable.deleted_at, req);
+  res.json({ years: await distinctYears(quotesTable, quotesTable.valid_until, base) });
 });
 
 router.post("/v1/quotes", async (req, res): Promise<void> => {

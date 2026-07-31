@@ -14,6 +14,7 @@ import {
 import { insertLeadWithGeneratedRef } from "../lib/leadRef.js";
 import { formatFirstName, formatLastName } from "../lib/nameFormat.js";
 
+import { keywordCondition } from "../lib/listSearch";
 const router: IRouter = Router();
 
 /** Canonical person-name casing on write — see lib/nameFormat.ts. */
@@ -34,13 +35,12 @@ router.get("/v1/leads", async (req, res): Promise<void> => {
   if (nationality) conditions.push(eq(leadsTable.nationality, nationality));
   if (preferred_space_type) conditions.push(eq(leadsTable.preferred_space_type, preferred_space_type));
   if (status) conditions.push(eq(leadsTable.status, status));
+  // 이름·연락처에 더해 문의번호와 문의 내용으로도 찾는다.
   if (search) {
-    conditions.push(or(
-      ilike(leadsTable.first_name, `%${search}%`),
-      ilike(leadsTable.last_name, `%${search}%`),
-      ilike(leadsTable.email, `%${search}%`),
-      ilike(leadsTable.phone, `%${search}%`),
-    )!);
+    conditions.push(keywordCondition(search, [
+      leadsTable.first_name, leadsTable.last_name, leadsTable.email,
+      leadsTable.phone, leadsTable.lead_ref, leadsTable.message,
+    ]));
   }
 
   const rows = await db

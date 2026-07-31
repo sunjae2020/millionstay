@@ -37,6 +37,7 @@ const UpdatePromotionParams = z.object({ id: z.coerce.number().int() });
 const UpdatePromotionBody = CreatePromotionBody.partial();
 const DeletePromotionParams = z.object({ id: z.coerce.number().int() });
 
+import { keywordCondition } from "../lib/listSearch";
 const router: IRouter = Router();
 
 router.get("/v1/promotions", async (req, res): Promise<void> => {
@@ -46,7 +47,8 @@ router.get("/v1/promotions", async (req, res): Promise<void> => {
   const conditions: SQL[] = [deletedFilter(promotionsTable.deleted_at, req)];
   if (status) conditions.push(eq(promotionsTable.status, status));
   if (promotion_type) conditions.push(eq(promotionsTable.promotion_type, promotion_type));
-  if (search) conditions.push(ilike(promotionsTable.name, `%${search}%`));
+  // 프로모션 코드로 찾는 경우가 많다.
+  if (search) conditions.push(keywordCondition(search, [promotionsTable.name, promotionsTable.code, promotionsTable.description]));
   const rows = await db.select().from(promotionsTable)
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(promotionsTable.name);

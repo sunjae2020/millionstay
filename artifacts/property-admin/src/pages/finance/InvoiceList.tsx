@@ -18,6 +18,7 @@ import { useBrand } from "@/contexts/ThemeContext";
 import { formatMoney } from "@/lib/currency";
 import { formatDate } from "@/lib/date";
 import { useDocumentRowActions } from "@/components/DocumentRowActions";
+import { ALL, SearchBox, DateRangeFilter, FacetSelect, ResetFiltersButton, useListFacets, useYearLabel } from "@/components/list-filters";
 
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-600",
@@ -31,15 +32,26 @@ export default function InvoiceList() {
   const { currency, currencyPosition } = useBrand();
   const [, navigate] = useLocation();
   const [q, setQ] = useState("");
-  const [status, setStatus] = useState("_all");
+  const [status, setStatus] = useState(ALL);
+  const [year, setYear] = useState(ALL);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [showDeleted, setShowDeleted] = useState(false);
   const qc = useQueryClient();
+  const { data: facets } = useListFacets("invoices", showDeleted);
+  const yearLabel = useYearLabel();
 
-  const params: ListInvoicesParams & { deleted?: string } = {
+  const params: ListInvoicesParams & Record<string, string | undefined> = {
     q: q || undefined,
-    status: status === "_all" ? undefined : status,
+    status: status === ALL ? undefined : status,
+    year: year === ALL ? undefined : year,
+    date_from: dateFrom || undefined,
+    date_to: dateTo || undefined,
     ...(showDeleted ? { deleted: "only" } : {}),
   };
+
+  const hasFilters = !!q || status !== ALL || year !== ALL || !!dateFrom || !!dateTo;
+  const resetFilters = () => { setQ(""); setStatus(ALL); setYear(ALL); setDateFrom(""); setDateTo(""); };
 
   const { data: invoicesRaw = [], isLoading } = useListInvoices(params, {
     query: { queryKey: getListInvoicesQueryKey(params) },
@@ -140,14 +152,7 @@ export default function InvoiceList() {
           onToggleShowDeleted={setShowDeleted}
           toolbarExtra={
             <div className="flex flex-wrap items-center gap-2">
-              <div className="relative w-56">
-                <Input
-                  placeholder={t("invoice.search_placeholder")}
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  className="pl-4"
-                />
-              </div>
+              <SearchBox value={q} onChange={setQ} placeholder={t("invoice.search_placeholder")} />
               <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger className="w-44">
                   <SelectValue />
@@ -160,6 +165,12 @@ export default function InvoiceList() {
                   <SelectItem value="Void">{t("invoice.status_void")}</SelectItem>
                 </SelectContent>
               </Select>
+              <FacetSelect
+                value={year} onChange={setYear} options={facets?.years ?? []}
+                allLabel={t("common.all_years")} labelOf={yearLabel} className="w-32"
+              />
+              <DateRangeFilter from={dateFrom} to={dateTo} onFrom={setDateFrom} onTo={setDateTo} />
+              <ResetFiltersButton show={hasFilters} onClick={resetFilters} />
             </div>
           }
         />

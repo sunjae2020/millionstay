@@ -7,6 +7,7 @@ import { sendAppointmentConfirmationEmail } from "../lib/email";
 import { eq, ilike, and, isNull, inArray, desc } from "drizzle-orm";
 import { dispatchWorkOrder } from "../lib/dispatch/workOrderDispatch";
 import { logAction } from "../utils/auditLog";
+import { keywordCondition, spaceIdsByName, propertyIdsByName, dateRangeConditions, yearConditions, distinctYears, distinctValues } from "../lib/listSearch";
 import { deletedFilter, makeBulkDelete, makeBulkRestore } from "../lib/softDelete";
 import { uploadToCloudinary, isCloudinaryConfigured, cldFolder } from "../utils/cloudinary";
 import { getRateToAud } from "../lib/rateSnapshot";
@@ -119,17 +120,46 @@ function appointmentFieldsFrom(body: any, { partial }: { partial: boolean }): Ap
 }
 
 router.get("/v1/work-orders", async (req, res): Promise<void> => {
-  const { q, status, priority, property_id } = req.query as Record<string, string>;
+  const {
+    q, status, priority, property_id, space_id, category,
+    date_from, date_to, year,
+  } = req.query as Record<string, string>;
   const conditions: any[] = [deletedFilter(workOrdersTable.deleted_at, req)];
-  if (q) conditions.push(ilike(workOrdersTable.title, `%${q}%`));
+  // 제목만 훑던 검색을 작업번호·내용과 대상 공간/매물 이름까지 넓힌다.
+  if (q) {
+    const [spaceIds, propertyIds] = await Promise.all([spaceIdsByName(q), propertyIdsByName(q)]);
+    conditions.push(keywordCondition(
+      q,
+      [workOrdersTable.order_ref, workOrdersTable.title, workOrdersTable.description],
+      [
+        { column: workOrdersTable.space_id, ids: spaceIds },
+        { column: workOrdersTable.property_id, ids: propertyIds },
+      ],
+    ));
+  }
   if (status) conditions.push(eq(workOrdersTable.status, status));
   if (priority) conditions.push(eq(workOrdersTable.priority, priority));
+  if (category) conditions.push(eq(workOrdersTable.category, category));
+  if (space_id) conditions.push(eq(workOrdersTable.space_id, Number(space_id)));
   if (property_id) conditions.push(eq(workOrdersTable.property_id, Number(property_id)));
+  // 기간은 예정일 기준(미정 건은 접수일로 대체하지 않는다 — 일정 조회가 목적).
+  conditions.push(...dateRangeConditions(workOrdersTable.scheduled_at, date_from, date_to));
+  conditions.push(...yearConditions(workOrdersTable.scheduled_at, year));
   const rows = await db.select().from(workOrdersTable)
     .where(and(...conditions))
     .orderBy(workOrdersTable.id);
   const result = await enrichWorkOrders(rows);
   res.json(result);
+});
+
+/** 연도·작업 종류 선택지. "/:id" 보다 먼저 선언해야 한다. */
+router.get("/v1/work-orders/facets", async (req, res): Promise<void> => {
+  const base = deletedFilter(workOrdersTable.deleted_at, req);
+  const [years, categories] = await Promise.all([
+    distinctYears(workOrdersTable, workOrdersTable.scheduled_at, base),
+    distinctValues(workOrdersTable, workOrdersTable.category, base),
+  ]);
+  res.json({ years, categories });
 });
 
 router.post("/v1/work-orders", async (req, res): Promise<void> => {

@@ -11,6 +11,7 @@ import {
   DeleteTaskParams,
 } from "@workspace/api-zod";
 
+import { keywordCondition } from "../lib/listSearch";
 const router: IRouter = Router();
 
 router.get("/v1/tasks", async (req, res): Promise<void> => {
@@ -25,10 +26,7 @@ router.get("/v1/tasks", async (req, res): Promise<void> => {
   if (due_date_to) conditions.push(lte(tasksTable.due_date, due_date_to));
   if (status) conditions.push(eq(tasksTable.status, status));
   if (search) {
-    conditions.push(or(
-      ilike(tasksTable.name, `%${search}%`),
-      ilike(tasksTable.subject, `%${search}%`),
-    )!);
+    conditions.push(keywordCondition(search, [tasksTable.name, tasksTable.subject, tasksTable.description]));
   }
 
   const rows = await db

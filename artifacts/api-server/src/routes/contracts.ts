@@ -4,6 +4,10 @@ import { db, contractsTable, accountsTable, spacesTable, propertiesTable, contra
 import { eq, ilike, and, or, like, desc, isNull, inArray, gte, lte, sql } from "drizzle-orm";
 import multer from "multer";
 import { logAction } from "../utils/auditLog";
+import {
+  keywordCondition, accountIdsByName, spaceIdsByName,
+  yearOverlapConditions, periodOverlapConditions, distinctYears, distinctValues,
+} from "../lib/listSearch";
 import { documentsTable } from "@workspace/db";
 import { cldFolder, fetchPrivateAsset, isCloudinaryConfigured, uploadPrivateToCloudinary } from "../utils/cloudinary";
 import { calcRetentionDate } from "../lib/retention";
@@ -424,25 +428,19 @@ async function enrichContracts(rows: (typeof contractsTable.$inferSelect)[]) {
 
 /**
  * 계약 목록 검색의 키워드 조건.
- * 계약번호뿐 아니라 임차인·임대인 계정명과 공간명으로도 찾을 수 있어야 해서,
- * 이름이 걸리는 account/space id 를 먼저 뽑아 OR 조건으로 붙인다
- * (조인 대신 2회 선행 조회 — 목록 쿼리를 단순하게 유지하고 enrich 경로와도 일관).
+ * 계약번호·비고뿐 아니라 임차인·임대인 계정명과 공간명으로도 찾을 수 있어야 한다.
  */
 async function contractKeywordCondition(q: string) {
-  const term = `%${q}%`;
-  const [accountRows, spaceRows] = await Promise.all([
-    db.select({ id: accountsTable.id }).from(accountsTable).where(ilike(accountsTable.name, term)),
-    db.select({ id: spacesTable.id }).from(spacesTable).where(ilike(spacesTable.name, term)),
-  ]);
-  const accountIds = accountRows.map(r => r.id);
-  const spaceIds = spaceRows.map(r => r.id);
-  const parts: any[] = [ilike(contractsTable.contract_ref, term)];
-  if (accountIds.length) {
-    parts.push(inArray(contractsTable.tenant_account_id, accountIds));
-    parts.push(inArray(contractsTable.landlord_account_id, accountIds));
-  }
-  if (spaceIds.length) parts.push(inArray(contractsTable.space_id, spaceIds));
-  return or(...parts);
+  const [accountIds, spaceIds] = await Promise.all([accountIdsByName(q), spaceIdsByName(q)]);
+  return keywordCondition(
+    q,
+    [contractsTable.contract_ref, contractsTable.notes],
+    [
+      { column: contractsTable.tenant_account_id, ids: accountIds },
+      { column: contractsTable.landlord_account_id, ids: accountIds },
+      { column: contractsTable.space_id, ids: spaceIds },
+    ],
+  );
 }
 
 router.get("/v1/contracts", async (req, res): Promise<void> => {
@@ -455,14 +453,9 @@ router.get("/v1/contracts", async (req, res): Promise<void> => {
   if (status) conditions.push(eq(contractsTable.status, status));
   if (contract_category) conditions.push(eq(contractsTable.contract_category, contract_category));
   if (lease_form) conditions.push(eq(contractsTable.lease_form, lease_form));
-  // 년도별: 해당 연도에 계약 기간이 걸쳐 있는 건(시작만 보면 다년 계약이 빠진다).
-  if (/^\d{4}$/.test(year ?? "")) {
-    conditions.push(lte(contractsTable.start_date, `${year}-12-31`));
-    conditions.push(or(isNull(contractsTable.end_date), gte(contractsTable.end_date, `${year}-01-01`)));
-  }
-  // 기간별: 지정 구간과 계약 기간이 겹치는 건.
-  if (date_from) conditions.push(or(isNull(contractsTable.end_date), gte(contractsTable.end_date, date_from)));
-  if (date_to) conditions.push(or(isNull(contractsTable.start_date), lte(contractsTable.start_date, date_to)));
+  // 년도별·기간별 모두 "계약 기간이 걸쳐 있는" 기준(시작일만 보면 다년 계약이 빠진다).
+  conditions.push(...yearOverlapConditions(contractsTable.start_date, contractsTable.end_date, year));
+  conditions.push(...periodOverlapConditions(contractsTable.start_date, contractsTable.end_date, date_from, date_to));
   if (tenant_account_id) conditions.push(eq(contractsTable.tenant_account_id, Number(tenant_account_id)));
   if (account_id) conditions.push(eq(contractsTable.tenant_account_id, Number(account_id)));
   if (space_id) conditions.push(eq(contractsTable.space_id, Number(space_id)));
@@ -480,23 +473,12 @@ router.get("/v1/contracts", async (req, res): Promise<void> => {
  */
 router.get("/v1/contracts/facets", async (req, res): Promise<void> => {
   const base = deletedFilter(contractsTable.deleted_at, req);
-  const [yearRows, categoryRows, formRows] = await Promise.all([
-    db.select({ v: sql<string>`substring(${contractsTable.start_date} from 1 for 4)` })
-      .from(contractsTable)
-      .where(and(base, sql`${contractsTable.start_date} is not null`))
-      .groupBy(sql`substring(${contractsTable.start_date} from 1 for 4)`),
-    db.select({ v: contractsTable.contract_category }).from(contractsTable)
-      .where(and(base, sql`${contractsTable.contract_category} is not null`))
-      .groupBy(contractsTable.contract_category),
-    db.select({ v: contractsTable.lease_form }).from(contractsTable)
-      .where(and(base, sql`${contractsTable.lease_form} is not null`))
-      .groupBy(contractsTable.lease_form),
+  const [years, categories, lease_forms] = await Promise.all([
+    distinctYears(contractsTable, contractsTable.start_date, base),
+    distinctValues(contractsTable, contractsTable.contract_category, base),
+    distinctValues(contractsTable, contractsTable.lease_form, base),
   ]);
-  res.json({
-    years: yearRows.map(r => r.v).filter(v => /^\d{4}$/.test(v ?? "")).sort().reverse(),
-    categories: categoryRows.map(r => r.v).filter(Boolean).sort(),
-    lease_forms: formRows.map(r => r.v).filter(Boolean).sort(),
-  });
+  res.json({ years, categories, lease_forms });
 });
 
 /**

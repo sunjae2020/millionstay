@@ -16,6 +16,7 @@ import {
 import { postPartnerPayoutAccrued, postPartnerPayoutPaid } from "../lib/billing/gl";
 import { logAction } from "../utils/auditLog";
 
+import { keywordCondition, accountIdsByName } from "../lib/listSearch";
 const router: IRouter = Router();
 
 const num = (v: unknown): number => Number(v ?? 0);
@@ -43,7 +44,13 @@ router.get("/v1/service-hosts", async (req, res): Promise<void> => {
   const { search, status } = parsed.data;
   const conditions: SQL[] = [];
   if (status) conditions.push(eq(serviceHostsTable.status, status));
-  if (search) conditions.push(ilike(serviceHostsTable.name, `%${search}%`));
+  if (search) {
+    conditions.push(keywordCondition(
+      search,
+      [serviceHostsTable.name, serviceHostsTable.description],
+      [{ column: serviceHostsTable.account_id, ids: await accountIdsByName(search) }],
+    ));
+  }
   const rows = await db
     .select()
     .from(serviceHostsTable)

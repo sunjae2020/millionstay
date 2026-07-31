@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Building2, Plus, ImageOff, Lock } from "lucide-react";
 import { apiFetch } from "@/lib/apiFetch";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
+import { ALL, SearchBox, ResetFiltersButton } from "@/components/list-filters";
 
 const CATEGORY_COLORS: Record<string, string> = {
   presale: "bg-indigo-100 text-indigo-700",
@@ -43,6 +44,7 @@ async function fetchListings(params: Record<string, string>) {
 export default function SaleListingsList() {
   const { t } = useTranslation();
   const qc = useQueryClient();
+  const [q, setQ] = useState("");
   const [category, setCategory] = useState("_all");
   const [status, setStatus] = useState("_all");
 
@@ -53,6 +55,17 @@ export default function SaleListingsList() {
       status: status !== "_all" ? status : "",
     }),
   });
+
+  // 분양/판매 목록 API 는 키워드를 받지 않는다(목록이 작다) — 표시 항목 기준 클라이언트 필터.
+  const rows = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    if (!term) return listings;
+    // 제목·위치 문구는 로케일별 translations 안에 있다 — 전체 언어를 훑어야
+    // 한국어로 등록하고 영어로 검색하는 경우에도 걸린다.
+    return listings.filter((l: any) =>
+      JSON.stringify(l.translations ?? {}).toLowerCase().includes(term)
+      || String(l.category ?? "").toLowerCase().includes(term));
+  }, [listings, q]);
 
   const columns: ColumnDef<any>[] = useMemo(
     () => [
@@ -179,12 +192,13 @@ export default function SaleListingsList() {
         <DataTable
           tableKey="sale-listings"
           columns={columns}
-          data={listings}
+          data={rows}
           isLoading={isLoading}
           rowKey={(row) => row.id}
           editing={{ resource: "sale-listings", onEdited: () => qc.invalidateQueries({ queryKey: ["sale-listings"] }) }}
           toolbarExtra={
             <div className="flex flex-wrap items-center gap-2">
+              <SearchBox value={q} onChange={setQ} placeholder={t("common.search_ph_generic")} />
               <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger className="w-40"><SelectValue placeholder={t("listings.col_category")} /></SelectTrigger>
                 <SelectContent>
@@ -202,6 +216,10 @@ export default function SaleListingsList() {
                   <SelectItem value="sold">{t("listings.status_sold")}</SelectItem>
                 </SelectContent>
               </Select>
+              <ResetFiltersButton
+                show={!!q || category !== "_all" || status !== "_all"}
+                onClick={() => { setQ(""); setCategory("_all"); setStatus("_all"); }}
+              />
             </div>
           }
           emptyText={

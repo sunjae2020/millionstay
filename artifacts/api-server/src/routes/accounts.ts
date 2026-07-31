@@ -27,6 +27,7 @@ import {
   DeleteAccountParams,
 } from "@workspace/api-zod";
 
+import { keywordCondition, contactIdsByName } from "../lib/listSearch";
 const router: IRouter = Router();
 
 async function enrichAccount(row: typeof accountsTable.$inferSelect) {
@@ -68,11 +69,21 @@ router.get("/v1/accounts", async (req, res): Promise<void> => {
   const conditions: SQL[] = [deletedFilter(accountsTable.deleted_at, req)];
   if (account_type) conditions.push(eq(accountsTable.account_type, account_type));
   if (status) conditions.push(eq(accountsTable.status, status));
+  // 이름·이메일에 더해 사업자등록번호·대표자·전화·주소, 그리고 대표 연락처 이름으로도 찾는다.
   if (search) {
-    conditions.push(or(
-      ilike(accountsTable.name, `%${search}%`),
-      ilike(accountsTable.account_email, `%${search}%`),
-    )!);
+    const contactIds = await contactIdsByName(search);
+    conditions.push(keywordCondition(
+      search,
+      [
+        accountsTable.name, accountsTable.account_email, accountsTable.biz_registration_no,
+        accountsTable.ceo_name, accountsTable.phone1, accountsTable.address_suburb,
+        accountsTable.description,
+      ],
+      [
+        { column: accountsTable.primary_contact_id, ids: contactIds },
+        { column: accountsTable.secondary_contact_id, ids: contactIds },
+      ],
+    ));
   }
   const rows = await db.select().from(accountsTable)
     .where(and(...conditions))

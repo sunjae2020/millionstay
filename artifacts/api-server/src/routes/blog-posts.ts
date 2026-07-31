@@ -42,6 +42,7 @@ const UpdateBlogPostBody = z.object({
 });
 const IdParams = z.object({ id: z.coerce.number().int() });
 
+import { keywordCondition } from "../lib/listSearch";
 const router: IRouter = Router();
 
 router.get("/v1/blog-posts", async (req, res): Promise<void> => {
@@ -51,7 +52,9 @@ router.get("/v1/blog-posts", async (req, res): Promise<void> => {
   const conditions: SQL[] = [deletedFilter(blogPostsTable.deleted_at, req)];
   if (status) conditions.push(eq(blogPostsTable.status, status));
   if (category) conditions.push(eq(blogPostsTable.category, category));
-  if (search) conditions.push(ilike(blogPostsTable.title, `%${search}%`));
+  if (search) conditions.push(keywordCondition(search, [
+    blogPostsTable.title, blogPostsTable.slug, blogPostsTable.excerpt, blogPostsTable.category,
+  ]));
   const rows = await db.select().from(blogPostsTable)
     .where(and(...conditions))
     .orderBy(desc(blogPostsTable.created_at));

@@ -4,6 +4,7 @@ import { db, invoicesTable, invoiceLineItemsTable, bookingsTable, contractsTable
 import { eq, ilike, and, asc, isNull, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { logAction } from "../utils/auditLog";
+import { keywordCondition, accountIdsByName, dateRangeConditions, yearConditions, distinctYears } from "../lib/listSearch";
 import { getRateToAud } from "../lib/rateSnapshot";
 import { buildInvoiceHtml, type InvoiceDocInput } from "../lib/documents/invoiceDocument";
 import { buildReceiptHtml } from "../lib/documents/receiptDocument";
@@ -121,10 +122,23 @@ async function enrichInvoices(rows: (typeof invoicesTable.$inferSelect)[]) {
 }
 
 router.get("/v1/invoices", async (req, res): Promise<void> => {
-  const { q, status, booking_id, contract_id, account_id } = req.query as Record<string, string>;
+  const {
+    q, status, booking_id, contract_id, account_id,
+    date_from, date_to, year, payment_method,
+  } = req.query as Record<string, string>;
   const conditions: any[] = [deletedFilter(invoicesTable.deleted_at, req)];
-  if (q) conditions.push(ilike(invoicesTable.invoice_ref, `%${q}%`));
+  // 청구번호·설명뿐 아니라 화면에 함께 보이는 청구 대상(계정) 이름으로도 찾는다.
+  if (q) {
+    conditions.push(keywordCondition(
+      q,
+      [invoicesTable.invoice_ref, invoicesTable.description],
+      [{ column: invoicesTable.account_id, ids: await accountIdsByName(q) }],
+    ));
+  }
   if (status) conditions.push(eq(invoicesTable.status, status));
+  if (payment_method) conditions.push(eq(invoicesTable.payment_method, payment_method));
+  conditions.push(...dateRangeConditions(invoicesTable.due_date, date_from, date_to));
+  conditions.push(...yearConditions(invoicesTable.due_date, year));
   if (booking_id) conditions.push(eq(invoicesTable.booking_id, Number(booking_id)));
   if (contract_id) conditions.push(eq(invoicesTable.contract_id, Number(contract_id)));
   if (account_id) conditions.push(eq(invoicesTable.account_id, Number(account_id)));
@@ -133,6 +147,12 @@ router.get("/v1/invoices", async (req, res): Promise<void> => {
     .orderBy(invoicesTable.id);
   const result = await enrichInvoices(rows);
   res.json(result);
+});
+
+/** 연도 선택지. 목록이 필터로 좁혀져도 선택지가 사라지지 않게 전체에서 뽑는다. "/:id" 보다 먼저. */
+router.get("/v1/invoices/facets", async (req, res): Promise<void> => {
+  const base = deletedFilter(invoicesTable.deleted_at, req);
+  res.json({ years: await distinctYears(invoicesTable, invoicesTable.due_date, base) });
 });
 
 router.post("/v1/invoices", async (req, res): Promise<void> => {

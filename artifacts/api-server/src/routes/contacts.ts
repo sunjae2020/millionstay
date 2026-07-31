@@ -29,6 +29,7 @@ import {
   DeleteContactParams,
 } from "@workspace/api-zod";
 
+import { keywordCondition } from "../lib/listSearch";
 const router: IRouter = Router();
 
 /**
@@ -52,13 +53,13 @@ router.get("/v1/contacts", async (req, res): Promise<void> => {
   if (gender) conditions.push(eq(contactsTable.gender, gender));
   if (portal_enabled !== undefined) conditions.push(eq(contactsTable.portal_enabled, portal_enabled));
   if (status) conditions.push(eq(contactsTable.status, status));
+  // 이름·이메일·휴대폰에 더해 회사명·직함·사무실 번호·SNS 로도 찾는다(명함에서 넘어온 축).
   if (search) {
-    conditions.push(or(
-      ilike(contactsTable.first_name, `%${search}%`),
-      ilike(contactsTable.last_name, `%${search}%`),
-      ilike(contactsTable.email, `%${search}%`),
-      ilike(contactsTable.mobile_number, `%${search}%`),
-    )!);
+    conditions.push(keywordCondition(search, [
+      contactsTable.first_name, contactsTable.last_name, contactsTable.other_name,
+      contactsTable.email, contactsTable.mobile_number, contactsTable.office_number,
+      contactsTable.company_name, contactsTable.job_title, contactsTable.sns_id,
+    ]));
   }
   const rows = await db.select().from(contactsTable)
     .where(and(...conditions))

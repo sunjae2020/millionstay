@@ -14,6 +14,7 @@ import {
   ListSuburbsResponse,
 } from "@workspace/api-zod";
 
+import { keywordCondition } from "../lib/listSearch";
 const router: IRouter = Router();
 
 router.get("/v1/suburbs", async (req, res): Promise<void> => {
@@ -28,12 +29,9 @@ router.get("/v1/suburbs", async (req, res): Promise<void> => {
   if (country_code) conditions.push(eq(suburbsTable.country_code, country_code));
   if (state) conditions.push(eq(suburbsTable.state, state));
   if (search) {
-    conditions.push(
-      or(
-        ilike(suburbsTable.name, `%${search}%`),
-        ilike(suburbsTable.area_name, `%${search}%`)
-      ) as SQL
-    );
+    conditions.push(keywordCondition(search, [
+      suburbsTable.name, suburbsTable.area_name, suburbsTable.postcode, suburbsTable.state,
+    ]));
   }
 
   const suburbs = await db
